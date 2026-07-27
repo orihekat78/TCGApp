@@ -228,16 +228,14 @@ describe('runActionFlow', () => {
     if (!result.ok) expect(result.reason).toBe('not-allowed');
   });
 
-  it('returns not-allowed when no target candidates (no opp chars + no opp evidence)', async () => {
+  it('does not open a source picker when no source has a legal target', async () => {
     const s = setupForAction();
     s.players.opp.scene = [];
     s.players.opp.evidence = [];
     useGameStateStore.setState({ gameState: s });
-    const promise = runActionFlow({ player: 'self' });
-    // source 選択は通る
-    await pickAndConfirmPicker('s1');
-    const result = await promise;
+    const result = await runActionFlow({ player: 'self' });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toBe('not-allowed');
+    expect(useTargetPickerStore.getState().phase).toEqual({ phase: 'idle' });
   });
 });

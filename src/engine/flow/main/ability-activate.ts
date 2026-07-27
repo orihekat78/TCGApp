@@ -119,6 +119,7 @@ export function activateDeclaredAbility(
       ctx.costPaid = { alternativeCost: { providerUid: plan.providerUid } };
     } else {
       engineCost.pay(state, ability.cost, ctx);
+      ctx.costPaid ??= {};
     }
   }
   try {

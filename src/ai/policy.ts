@@ -18,7 +18,8 @@ import { resolveActionAgainstChar, resolveActionAgainstCase } from './action-res
 import { HeuristicPolicy } from './policies/heuristic.js';
 import { makeDeclaredAbilCtx } from './ability-ctx.js';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
-import { drainAiEffectPicks, hasPendingHumanPick } from '@/engine/effect/apply-pick.js';
+import { applyChoiceAndContinuation, drainAiEffectPicks, hasPendingHumanPick } from '@/engine/effect/apply-pick.js';
+import { _peekPendingEffectChoiceSide } from '@/engine/effect/pending-state.js';
 
 type Player = 'self' | 'opp';
 
@@ -140,6 +141,24 @@ export interface AIPolicy {
  * これを超えると playTurn は throw する (バグ検出用)。
  */
 const PLAY_TURN_SAFETY_CAP = 200;
+
+/**
+ * CPU-owned choice has no UI surface. Resolve it here before control returns to
+ * the opponent driver; otherwise the surfaced side-channel locks that driver
+ * indefinitely. Later target picks are drained in the same resolution cycle.
+ */
+function drainAiEffectChoices(state: GameState): void {
+  const humanSide = (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide ?? null;
+  for (let resolved = 0; resolved < PLAY_TURN_SAFETY_CAP; resolved++) {
+    const pending = _peekPendingEffectChoiceSide();
+    if (!pending || pending.player === humanSide) return;
+    const choiceIndex = pending.options[0]?.index;
+    if (choiceIndex === undefined) return;
+    applyChoiceAndContinuation(state, pending, choiceIndex);
+    engine.resolve.runAllUntilEmpty(state);
+    drainAiEffectPicks(state, new HeuristicPolicy());
+  }
+}
 
 /**
  * makeCtx — Move 適用時に flow.* に渡す最小 EffectCtx を生成する。
@@ -437,6 +456,7 @@ export function stepTurn(
     // __pendingEffectPickQueue へ積んだ pick が drain されず no-op になる。heuristic で順次解決する
     // (chooseAtomTarget は walk と同じ HeuristicPolicy を使用。continuation も BUG-107 機構で進む)。
     drainAiEffectPicks(draft, new HeuristicPolicy());
+    drainAiEffectChoices(draft);
   });
   const pausedForHuman = hasPendingHumanPick(s);
   return {

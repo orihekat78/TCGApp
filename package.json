@@ -56,6 +56,7 @@
     "check:codex-efficiency": "node scripts/check-codex-efficiency.mjs",
     "check:codex-quality": "node scripts/check-codex-quality.mjs",
     "check:wave-scope": "tsx scripts/check-wave-scope.ts",
+    "check:you-vs-cpu-loop": "tsx scripts/you-vs-cpu-validation-loop.ts",
     "lint:bug-closure": "tsx scripts/lint-bug-closure.ts",
     "lint:qa": "tsx scripts/lint-qa-trace.ts",
     "qa:adjudication:bootstrap": "tsx scripts/qa-adjudication.ts --bootstrap",

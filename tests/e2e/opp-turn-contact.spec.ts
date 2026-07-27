@@ -142,6 +142,45 @@ test.describe('user_request #3: opp ターン中 contact UI', () => {
     expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
   });
 
+  test('cutin候補ありでパス後、CPUターンが停止せず自分のターンへ戻る', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await page.evaluate((makeCharSrc) => {
+      eval(makeCharSrc);
+      // @ts-expect-error -- makeChar defined via eval
+      const mc = makeChar;
+      const w = window as unknown as GameWindow;
+      const gs = w.__game.createSampleGameState() as ReturnType<GameWindow['__game']['getState']>['gameState'];
+      gs.turn.player = 'opp';
+      gs.turn.phase = 'main';
+      gs.turn.number = 2;
+      gs.players.opp.scene = [mc('o1', 'D11003', 'active')];
+      gs.players.self.scene = [mc('s1', 'D08003', 'sleep'), mc('s2', 'D08005', 'active')];
+      gs.players.self.hand = ['D11017'];
+      w.__game.setGameState(gs);
+      w.__game.dispatch({ type: 'actionDeclareChar', byUid: 'o1', targetUid: 's1' });
+    }, MAKE_CHAR_FN);
+
+    await expect(page.locator('[data-testid="guard-picker-modal"]')).toBeVisible({ timeout: 3000 });
+    await page.getByTestId('guard-picker-skip').click();
+    const skipBtn = page.getByTestId('hand-zone-pick-skip');
+    await expect(skipBtn).toBeVisible({ timeout: 3000 });
+    await expect(page.locator('.hand-zone-pick-banner')).toContainText('カットイン可能 1枚');
+    await skipBtn.click();
+
+    // The first defender is removed, then the CPU may legitimately declare a
+    // second action against the remaining active character. Pass every public
+    // decision and require that it can end its turn once no target remains.
+    await expect(page.locator('[data-testid="guard-picker-modal"]')).toBeVisible({ timeout: 3000 });
+    await page.getByTestId('guard-picker-skip').click();
+
+    await expect.poll(
+      () => page.evaluate(() => (window as unknown as GameWindow).__game.getState().gameState.turn.player),
+      { timeout: 5000 },
+    ).toBe('self');
+
+    expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
+  });
+
   test('action[case]: OppTurnOverlay status に "事件" が表示される', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await page.evaluate((makeCharSrc) => {

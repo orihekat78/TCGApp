@@ -16,6 +16,9 @@ import type { CardDef, EffectCtx, GameState } from '@/engine/types';
 import { dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/useEngineDispatch';
 import { driveOppTurn, _resetIsDriving } from '@/ui/hooks/useOppTurnDriver';
 import { useGameStateStore } from '@/ui/state/store';
+import { _clearPendingEffectChoiceSide, _peekPendingEffectChoiceSide, pushPendingEffectChoiceSide, type PendingEffectChoiceSide } from '@/engine/effect/pending-state';
+import { _clearPendingEffectPickQueue, _peekPendingEffectPickSide, _pushPendingEffectPickSideForTest, type PendingEffectPickSide } from '@/engine/effect/resolve-picks';
+import { registerAll } from '@/cards';
 
 type HumanSide = 'self' | 'opp' | null;
 type DeckPlaceSide = { player: 'self' | 'opp'; ownerPlayer: 'self' | 'opp'; cardIds: string[] };
@@ -66,6 +69,38 @@ function cpuReorderCard(): CardDef {
   } as CardDef;
 }
 
+function cpuChoiceCard(): CardDef {
+  return {
+    id: 'CPU-CHOICE',
+    no: 'CPU-CHOICE',
+    kind: 'character',
+    names: ['CPU-CHOICE'],
+    colors: ['green'],
+    level: 1,
+    ap: 1000,
+    lp: 1,
+    traits: [],
+    rarity: 'C',
+    imageUrl: '',
+    abilities: [{
+      id: 'a1',
+      type: 'declared',
+      scope: 'on-scene',
+      effect: {
+        kind: 'choice',
+        chooser: 'owner',
+        options: [
+          { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+          { kind: 'atom', verb: 'noop', args: {} },
+        ],
+      },
+      description: 'test',
+      ruleRefs: [],
+    }],
+    ruleRefs: [],
+  } as CardDef;
+}
+
 function reorderState(): GameState {
   const state = createEmptyGameState();
   state.turn.player = 'opp';
@@ -83,6 +118,9 @@ beforeEach(() => {
   _resetTargetExpanders();
   _resetIsDriving();
   registerCardDef(cpuReorderCard());
+  registerCardDef(cpuChoiceCard());
+  _clearPendingEffectChoiceSide();
+  _clearPendingEffectPickQueue();
   g.__humanPlayerSide = 'self';
   g.__pendingDeckReorderSide = null;
   g.__pendingDeckPlaceSide = null;
@@ -90,9 +128,13 @@ beforeEach(() => {
   store.setGameState(null);
   store.setPendingDeckReorder(null);
   store.setPendingDeckPlace(null);
+  store.setPendingEffectPick(null);
+  store.setPendingEffectChoice(null);
 });
 
 afterEach(() => {
+  _clearPendingEffectChoiceSide();
+  _clearPendingEffectPickQueue();
   g.__humanPlayerSide = null;
   g.__pendingDeckReorderSide = null;
   g.__pendingDeckPlaceSide = null;
@@ -100,9 +142,28 @@ afterEach(() => {
   store.setGameState(null);
   store.setPendingDeckReorder(null);
   store.setPendingDeckPlace(null);
+  store.setPendingEffectPick(null);
+  store.setPendingEffectChoice(null);
 });
 
 describe('CPU pause for human-owned deck decisions', () => {
+  it('resolves B09075 a2 for CPU without pausing its AP pick', () => {
+    registerAll();
+    const state = createEmptyGameState();
+    state.turn.player = 'opp';
+    state.turn.phase = 'main';
+    mutate.scene.enter(state, 'opp', 'B09075', { active: true });
+    mutate.scene.enter(state, 'opp', 'D11017', { active: true });
+
+    const step = stepTurn(state, new DeclaredOnly(), 'opp');
+
+    expect(step.move).toMatchObject({ kind: 'declaredAbility', abilityId: 'a2' });
+    expect(_peekPendingEffectPickSide()).toBeNull();
+    expect(step.paused).toBeUndefined();
+    expect(step.nextState.log.filter(entry => entry.action === 'effect:charModifyAP:awaiting-pick')).toHaveLength(1);
+    expect(step.nextState.log.filter(entry => entry.action === 'effect:charModifyAP')).toHaveLength(1);
+  });
+
   it('does not choose a CPU move while the human must order unresolved effects', () => {
     const state = reorderState();
     state.pendingEffects = ['human-a', 'human-b'].map((id, index) => ({
@@ -168,6 +229,53 @@ describe('CPU pause for human-owned deck decisions', () => {
 
     expect(result.moves.map(move => move.kind)).toEqual(['declaredAbility']);
     expect(result.paused).toEqual({ humanPick: true });
+  });
+
+  it('CPU-owned choice is resolved before returning the step to the opponent driver', () => {
+    const state = createEmptyGameState();
+    state.turn.player = 'opp';
+    state.turn.phase = 'main';
+    state.players.opp.deck = ['CPU-DRAW'];
+    mutate.scene.enter(state, 'opp', 'CPU-CHOICE', { active: true });
+
+    const step = stepTurn(state, new DeclaredOnly(), 'opp');
+
+    expect(step.move?.kind).toBe('declaredAbility');
+    expect(_peekPendingEffectChoiceSide()).toBeNull();
+    expect(step.nextState.players.opp.hand).toContain('CPU-DRAW');
+  });
+
+  it('does not surface a CPU-owned effect pick into the human UI store', () => {
+    const pending: PendingEffectPickSide = {
+      player: 'opp',
+      ownerPlayer: 'opp',
+      candidates: [],
+      atomVerb: 'charModifyAP',
+      atomArgs: {},
+      nMin: 0,
+      nMax: 1,
+      source: { player: 'opp', cardId: 'CPU-REORDER', abilityId: 'a1' },
+    };
+    _pushPendingEffectPickSideForTest(pending);
+
+    surfacePendingSideChannels();
+
+    expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
+    expect(_peekPendingEffectPickSide()).toMatchObject({ player: 'opp' });
+  });
+
+  it('does not surface a CPU-owned effect choice into the human UI store', () => {
+    const pending: PendingEffectChoiceSide = {
+      player: 'opp',
+      source: { player: 'opp', cardId: 'CPU-CHOICE', abilityId: 'a1' },
+      options: [{ index: 0, verb: 'draw', args: { player: 'self', n: 1 } }],
+    };
+    pushPendingEffectChoiceSide(pending);
+
+    surfacePendingSideChannels();
+
+    expect(useGameStateStore.getState().pendingEffectChoice).toBeNull();
+    expect(_peekPendingEffectChoiceSide()).toMatchObject({ player: 'opp' });
   });
 
   it('uses deckPlace ownerPlayer, not the target deck player, for the human pause gate', () => {

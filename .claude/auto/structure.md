@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 259
-- **ファイル数**: 5440
+- **ファイル数**: 5485
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -446,6 +446,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-265.md`
     - `BUG-266.md`
     - `BUG-267.md`
+    - `BUG-268.md`
+    - `BUG-269.md` — Escape abandoned an active match
+    - `BUG-270.md` — CPU AP pick left the match on the opponent-turn overlay
+    - `BUG-271.md` — Resolved effect history was shown as an active stack
+    - `BUG-272.md` — 宣言能力の選択中に別行動を開始できる
+    - `BUG-273.md` — 攻撃対象がないアクション元を選べて操作不能になる
+    - `BUG-274.md` — 複数パートナー能力の選択が盤面で停止する
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1289,6 +1296,40 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-17.md` — 2026-07-14〜15 bug wave session
     - `2026-07-18-task7-qa-offline-lint.md` — Task 7 — Q&A offline lint
     - `2026-07-19.md` — memory — 現セッション scratchpad
+    - `2026-07-27-conan-tcg-play-method-next-task-prompt.md` — Paste into a new task
+    - `2026-07-27-you-vs-cpu-human-validation-loop-recovery.md` — YOU vs CPU validation loop recovery
+    - `2026-07-27-you-vs-cpu-human-validation-loop-state.json`
+    - `2026-07-27-you-vs-cpu-human-validation-pause-and-play-method-handoff.md` — YOU vs CPU pause and play-method handoff
+    - `2026-07-27-you-vs-cpu-human-validation-row-005.md` — Row 005 — 少年探偵団・標準 vs 緑アグロ
+    - `2026-07-27-you-vs-cpu-human-validation-row-006.md` — Row 006 — 少年探偵団・標準 vs 青緑
+    - `2026-07-27-you-vs-cpu-human-validation-row-007.md` — Row 007 少年探偵団・標準 vs 疾風
+    - `2026-07-27-you-vs-cpu-human-validation-row-008.md` — Row 008 少年探偵団・標準 vs デッキ破壊
+    - `2026-07-27-you-vs-cpu-human-validation-row-009.md` — row 009 — 少年探偵団・標準 vs 白黄前髪
+    - `2026-07-27-you-vs-cpu-human-validation-row-010.md` — row 010: 少年探偵団・標準 vs 黒カットイン
+    - `2026-07-27-you-vs-cpu-human-validation-row-012.md` — row 012: 警察・標準 vs 緑アグロ
+    - `2026-07-27-you-vs-cpu-human-validation-row-013.md` — row 013: 警察・標準 vs 黒赤デッキ
+    - `2026-07-27-you-vs-cpu-human-validation-row-014.md` — Row 014: police vs blue-green
+    - `2026-07-27-you-vs-cpu-human-validation-row-015-attempt-1.md` — Row 015 attempt 1: police vs fast
+    - `2026-07-27-you-vs-cpu-human-validation-row-015-attempt-2.md` — Row 015 attempt 2: police vs fast
+    - `2026-07-27-you-vs-cpu-human-validation-row-015-attempt-3.md` — Row 015 attempt 3: police vs fast
+    - `2026-07-27-you-vs-cpu-human-validation-row-015-attempt-4.md` — Row 015 attempt 4: 警察・標準 vs 疾風
+    - `2026-07-27-you-vs-cpu-human-validation-row-015-attempt-5.md` — Row 015 attempt 5: 警察・標準 vs 疾風
+    - `2026-07-27-you-vs-cpu-human-validation-row-016-attempt-1.md` — Row 016 attempt 1: 警察・標準 vs デッキ破壊
+    - `2026-07-27-you-vs-cpu-human-validation-row-017-attempt-1.md` — Row 017 attempt 1: 警察・標準 vs 白黄前髪
+    - `2026-07-27-you-vs-cpu-human-validation-row-018-attempt-1.md` — Row 018 attempt 1: 警察・標準 vs 黒カットイン
+    - `2026-07-27-you-vs-cpu-human-validation-row-019-attempt-1.md` — Row 019 attempt 1 — blocked UI restart
+    - `2026-07-27-you-vs-cpu-human-validation-row-019-attempt-2.md` — Row 019 attempt 2 — clean public rerun
+    - `2026-07-27-you-vs-cpu-human-validation-row-020-attempt-1.md` — Row 020 attempt 1 — blocked UI restart
+    - `2026-07-27-you-vs-cpu-human-validation-row-020-attempt-2.md` — Row 020 attempt 2 — blocked UI restart
+    - `2026-07-27-you-vs-cpu-human-validation-row-020-attempt-3.md` — Row 020 attempt 3 — clean public rerun
+    - `2026-07-27-you-vs-cpu-human-validation-row-021-attempt-1.md` — Row 021 attempt 1 — blocked UI restart
+    - `2026-07-27-you-vs-cpu-human-validation-row-021-attempt-2.md` — Row 021 attempt 2 — green aggro vs black-red
+    - `2026-07-27-you-vs-cpu-human-validation-row-022-attempt-2.md` — Row 022 attempt 2
+    - `2026-07-27-you-vs-cpu-human-validation-row-023-attempt-2.md` — Row 023 attempt 2
+    - `2026-07-27-you-vs-cpu-human-validation-row-024-attempt-3.md` — Row 024 attempt 3 — browser recovery evidence
+    - `2026-07-27-you-vs-cpu-human-validation-row-025-attempt-1.md` — Row 025 attempt 1 — public UI completion
+    - `2026-07-27-you-vs-cpu-human-validation-worklist.csv`
+    - `2026-07-27-you-vs-cpu-human-validation.md` — YOU vs CPU human validation
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1544,6 +1585,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `INDEX.md` — メタゲーム UI 統合設計書 (Phase 10) — INDEX
     - **`plans/`**
       - `2026-06-19-cpu-visualize-and-interrupt-lock-plan.md` — CPU逐次プレイ可視化 + 効果解決中ロック 実装計画
+      - `2026-07-27-you-vs-cpu-human-validation-plan.md` — YOU vs CPU 人間プレイヤー再現・品質検証計画
     - **`qa-adjudication/`**
       - `0.json`
       - `1.json`
@@ -2076,6 +2118,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - `taskA-validate-specs.cjs`
   - `tsconfig.json`
   - `wf-certify.mjs`
+  - `you-vs-cpu-validation-loop.ts`
 - **`src/`** — TypeScript ソース
   - **`ai/`** — AI policies (Random / Heuristic / MCTS / リプレイ)
     - **`policies/`**
@@ -5574,6 +5617,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `structure-root-portability.test.ts`
     - `structure-tracked-files.test.ts`
     - `taskA-codegen-use-condition.test.ts`
+    - `you-vs-cpu-validation-loop.test.ts`
   - **`smoke/`** — 1000 戦 AI vs AI smoke テスト
     - `aggregate.test.ts` — tests/smoke/aggregate — Phase 9-A pure aggregation tests
     - `format-md.test.ts` — tests/smoke/format-md — Phase 9-A Markdown formatter tests
@@ -5671,6 +5715,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useStackedCardCostPicker.test.ts`
       - `useStageScale.test.ts` — Cleanup #6 (user_request 関連): Playmat scale hook tests
       - `useTargetPicker.test.ts` — Phase 8 Task 8.2: useTargetPicker
+      - `useTopBar.test.ts`
     - **`router/`**
       - `useGlobalShortcuts.test.tsx`
     - **`services/`**

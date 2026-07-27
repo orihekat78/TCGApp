@@ -116,6 +116,8 @@ describe('B10094 mixed declared-ability source picker', () => {
     });
 
     expect(container.querySelectorAll('.card-list-pick-shell')).toHaveLength(4);
+    expect(container.querySelectorAll('[data-action-id][aria-disabled="true"]')).toHaveLength(8);
+    expect(container.querySelector<HTMLButtonElement>('.end-turn-btn')?.disabled).toBe(true);
     for (const uid of ['evidence:self:0', 'case:self', 'hand:self:1', 'physical-pa-mr']) {
       expect(container.querySelector(`[data-testid="card-list-pick-${uid}"]`)).not.toBeNull();
       expect(container.querySelector(`[data-testid="card-list-pick-detail-${uid}"]`)).not.toBeNull();
@@ -141,6 +143,11 @@ describe('B10094 mixed declared-ability source picker', () => {
     });
     expect(container.querySelector('.card-list-modal')).toBeNull();
     expect(container.querySelector('[data-uid="scene-source"]')?.classList.contains('candidate')).toBe(true);
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+    expect(useTargetPickerStore.getState().phase).toEqual({ phase: 'idle' });
 
     act(() => useTargetPickerStore.getState()._setPhase({ phase: 'picking', purpose: 'declared-ability:source', candidates: ['physical-pa-mr'] }));
     const paMr = container.querySelector<HTMLElement>('[data-testid="pa-mr-self"]');

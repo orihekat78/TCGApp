@@ -26,7 +26,7 @@ import { event as engineEvent } from '@/engine/event/index.js';
 import { def as readDef } from '@/engine/read/def.js';
 // Round 4j-fix (BUG-034): `@/engine` 経由で取得し vite dev mode の module duplication 回避
 import { _drainPendingHirameki, _drainPendingMisread, _peekPendingHirameki, _markPendingHiramekiGainDeferred } from '@/engine';
-import { _drainPendingEffectPickSide, _peekPendingEffectPickSide, _drainPendingEffectChoiceSide, _drainPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
+import { _drainPendingEffectPickSide, _peekPendingEffectPickSide, _drainPendingEffectChoiceSide, _peekPendingEffectChoiceSide, _drainPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
 import { _drainPendingChooseInterceptSide, _drainPendingEffectRepeatOptionalSide, _drainPendingRpsSide, _drainPendingSetCardChoiceSide, _drainPendingSetCardReplacementSide } from '@/engine/effect/pending-state.js';
 import { _drainPendingDeckRevealSide, _drainPendingPublicHandRevealSide, _drainPendingDeckReorderSide, _drainPendingDeckPlaceSide, _drainPendingContactStartAxId } from '@/engine/effect/atom-handlers';
 import { isAllowed } from './useEngineDispatch/can-check.js';
@@ -518,13 +518,21 @@ export function surfacePendingSideChannels(): void {
     if (misreadSide) store.setPendingMisread(misreadSide);
   }
   // FIFO 先頭は、現在表示中の decision が決着するまで消費しない。
-  // opp pending も順番を保って次の driver tick へ渡し、human pending を上書きしない。
-  if (store.pendingEffectPick === null && _peekPendingEffectPickSide() !== null) {
+  // CPU 所有の pick を人間 UI に移すと driveOppTurn の pending guard が解除されず停止する。
+  // human 所有だけを modal state へ移し、CPU 所有は AI policy の drain に残す。
+  const pendingEffectPick = _peekPendingEffectPickSide();
+  const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+  if (store.pendingEffectPick === null
+    && pendingEffectPick !== null
+    && (humanSide === null || pendingEffectPick.player === humanSide)) {
     const effectPickSide = _drainPendingEffectPickSide();
     if (effectPickSide) store.setPendingEffectPick(effectPickSide);
   }
   // BUG-121: auto-phase enter 由来 choice の取り残し防止 (useOppTurnDriver 経路)
-  if (store.pendingEffectChoice === null) {
+  const pendingEffectChoice = _peekPendingEffectChoiceSide();
+  if (store.pendingEffectChoice === null
+    && pendingEffectChoice !== null
+    && (humanSide === null || pendingEffectChoice.player === humanSide)) {
     const effectChoiceSide = _drainPendingEffectChoiceSide();
     if (effectChoiceSide) store.setPendingEffectChoice(effectChoiceSide);
   }

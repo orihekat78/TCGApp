@@ -15,6 +15,11 @@ const DEFAULT: TopBarData = {
   effectStackCount: 0,
 };
 
+/** Resolved entries are retained as history and are not an active stack. */
+export function countUnresolvedEffects(gameState: GameState): number {
+  return gameState.pendingEffects.filter((entry) => entry.state === 'pending' || entry.state === 'resolving').length;
+}
+
 /**
  * gameState から TopBar 用データを返す。null 時は DEFAULT。
  */
@@ -24,7 +29,7 @@ export function useTopBar(): TopBarData {
     return {
       turn: s.gameState.turn,
       scratchTrace: s.gameState.scratchTrace,
-      effectStackCount: s.gameState.pendingEffects.length,
+      effectStackCount: countUnresolvedEffects(s.gameState),
     };
   });
 }

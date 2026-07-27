@@ -328,6 +328,16 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   const pendingDeckReorder = useGameStateStore((s) => s.pendingDeckReorder);
   const pickerPhase = useTargetPickerStore((s) => s.phase);
   const { pick: pickTarget, confirm: confirmTarget, cancel: cancelTarget } = useTargetPicker();
+  useEffect(() => {
+    if (pickerPhase.phase === 'idle') return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      cancelTarget();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [pickerPhase.phase, cancelTarget]);
   // 効果解決中ロック (rules/05 割り込み禁止): 効果スタック非空 or 人間の未解決 decision 待ち中は
   // ActionsPanel の全メインアクションを塞ぐ。decision modal / 盤面 pick はロック対象外。
   const interactionLocked = useGameStateStore(selectInteractionLocked);
@@ -904,7 +914,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           }
           canAssist={gameState ? canAssistForUi(gameState, 'self') : false}
           canSolveCase={gameState ? canSolveCaseForUi(gameState, 'self') : false}
-          interactionLocked={interactionLocked}
+          // A source picker is a live, unresolved player decision.  Starting a
+          // second action here used to cancel/restart the picker asynchronously,
+          // leaving a source with no longer-visible candidates and no way to end
+          // the turn (BUG-272).
+          interactionLocked={interactionLocked || pickerPhase.phase !== 'idle'}
           actionMode={
             pickerPhase.phase !== 'idle' &&
             typeof pickerPhase.purpose === 'string' &&
@@ -918,7 +932,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           onActionItemClick={(id: ActionItemId) => {
             // 効果解決中ロック (rules/05 割り込み禁止): 念のためハンドラ側でも弾く
             // (ActionsPanel 側で disabled 済だが、プログラム経由の呼び出しを保険でブロック)。
-            if (interactionLocked) return;
+            if (interactionLocked || pickerPhase.phase !== 'idle') return;
             // Round 2: picker stack 整理 — 別 ACTIONS item を選んだら現在の picker は
             // キャンセル (ガイドラベル + outline glow 消す)。flow 内で再度 start() するなら
             // そこで再開始される (useTargetPicker.start は "既に picking 中" の自動 cancel

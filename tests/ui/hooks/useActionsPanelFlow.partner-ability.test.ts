@@ -14,6 +14,7 @@ import { runPartnerAbilityFlow } from '@/ui/hooks/useActionsPanelFlow';
 import { useGameStateStore } from '@/ui/state/store';
 import { useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
 import { useConfirmationStore } from '@/ui/hooks/useConfirmation';
+import { useChoicePickerStore } from '@/ui/hooks/useChoicePicker';
 import { createEmptyGameState } from '@/engine/state-factory';
 import {
   register as registerCardDef,
@@ -88,11 +89,28 @@ async function rejectConfirmation(): Promise<void> {
   await new Promise<void>((r2) => setTimeout(r2, 0));
 }
 
+async function chooseAbility(index: number): Promise<void> {
+  const r = useChoicePickerStore.getState()._resolver!;
+  useChoicePickerStore.getState()._setCurrent(null);
+  useChoicePickerStore.getState()._setResolver(null);
+  r({ kind: 'choose', index });
+  await new Promise<void>((r2) => setTimeout(r2, 0));
+}
+
+async function cancelAbilityChoice(): Promise<void> {
+  const r = useChoicePickerStore.getState()._resolver!;
+  useChoicePickerStore.getState()._setCurrent(null);
+  useChoicePickerStore.getState()._setResolver(null);
+  r({ kind: 'cancel' });
+  await new Promise<void>((r2) => setTimeout(r2, 0));
+}
+
 describe('runPartnerAbilityFlow', () => {
   beforeEach(() => {
     useGameStateStore.setState({ gameState: null });
     useTargetPickerStore.getState()._reset();
     useConfirmationStore.getState()._reset();
+    useChoicePickerStore.getState()._reset();
     resetDefRegistry();
   });
 
@@ -136,7 +154,7 @@ describe('runPartnerAbilityFlow', () => {
     expect(useGameStateStore.getState().gameState).toBe(before);
   });
 
-  it('with multiple abilities: picker → pick → confirm → dispatch', async () => {
+  it('with multiple abilities: visible choice picker → choose → confirm → dispatch', async () => {
     registerCardDef(
       makeCard('P-MULTI', {
         abilities: [makeDeclaredAbil('a1'), makeDeclaredAbil('a2'), makeDeclaredAbil('a3')],
@@ -146,14 +164,11 @@ describe('runPartnerAbilityFlow', () => {
     const promise = runPartnerAbilityFlow({ player: 'self' });
 
     // picker が起動
-    const phase = useTargetPickerStore.getState().phase;
-    expect(phase.phase).toBe('picking');
-    if (phase.phase === 'picking') {
-      expect(phase.candidates).toEqual(['a1', 'a2', 'a3']);
-      expect(phase.purpose).toBe('partner-ability');
-    }
+    expect(useTargetPickerStore.getState().phase).toEqual({ phase: 'idle' });
+    expect(useChoicePickerStore.getState().current?.options.map((option) => option.label))
+      .toEqual(['a1 desc', 'a2 desc', 'a3 desc']);
 
-    await pickAndConfirmPicker('a2');
+    await chooseAbility(1);
     expect(useConfirmationStore.getState().current).not.toBeNull();
     await acceptConfirmation();
 
@@ -165,7 +180,7 @@ describe('runPartnerAbilityFlow', () => {
     expect(lastLog?.target).toBe('a2');
   });
 
-  it('with multiple abilities: picker cancel → cancelled', async () => {
+  it('with multiple abilities: visible choice cancel → cancelled', async () => {
     registerCardDef(
       makeCard('P-MULTI', {
         abilities: [makeDeclaredAbil('a1'), makeDeclaredAbil('a2')],
@@ -173,7 +188,7 @@ describe('runPartnerAbilityFlow', () => {
     );
     useGameStateStore.setState({ gameState: setupWithPartner('P-MULTI') });
     const promise = runPartnerAbilityFlow({ player: 'self' });
-    await cancelPicker();
+    await cancelAbilityChoice();
     const result = await promise;
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toBe('cancelled');

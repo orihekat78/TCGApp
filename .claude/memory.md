@@ -67,3 +67,12 @@
 - B04059 source color was wrongly blue; corrected to red. Meta catalog and deck now render every `colors` value, including B10097 blue+black; focused CARDS/DECK Playwright and B04059 metadata tests pass.
 - CI does not check in official TSV catalog data by design. Inventory and Task-A codegen tests inject temporary minimal catalogs through `CONAN_CARDS_DATA_DIR`; CT-P10 metadata parity runs only when the local official catalog exists. This keeps CI legal/reproducible while retaining local source-to-printing verification.
 - Follow-up: SceneArea's detail control had a 220px transparent hitbox for its magnifier. It now uses an 18px hitbox inside the card art; desktop/mobile set-card E2E asserts non-icon art clicks never open details.
+
+## 2026-07-27 YOU vs CPU validation handoff
+
+- Plan: `.claude/specs/plans/2026-07-27-you-vs-cpu-human-validation-plan.md`; the next-task prompt is updated.
+- Inventory the current decks from the live UI at task start, then test the ordered N x N matrix including mirrors.
+- YOU decisions use public information and the actual UI only; no direct dispatch, state or pending injection, or hidden information.
+- Completion covers judgment, rules, state, and UI clarity across match, `#deck`, and `#cards` at desktop and 851x393.
+- 2026-07-27 input-stop follow-up: BUG-272/273 lock concurrent ActionsPanel entry and remove action sources without targets; BUG-274 routes multiple partner abilities through ChoicePicker and lets Escape cancel board-only target pickers. Focused 42 UI tests plus typecheck passed; campaign remains paused before row 026.
+- Play-method boundary: rows 001--025 showed that public-UI legality checks alone do not make YOU play like a skilled Conan TCG player. Before row 026, create a separate, evidence-based expert-play method from the official rules, cards, and observed UI. Keep it separate from engine validation; later match logs must explain alternatives, tempo, evidence race, hand economy, action targets, and risk using public information only.

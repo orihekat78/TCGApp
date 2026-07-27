@@ -342,6 +342,31 @@ describe('engine.flow.main.useDeclaredAbility', () => {
       expect(hasWarning, 'costPaid 提供時は warning なし').toBe(false);
     });
 
+    it('activateDeclaredAbility は sleepSelf 支払い後に false-positive warning を記録しない', () => {
+      const cardDef: CardDef = {
+        id: 'COST_CARD3', no: '0002/COST_CARD3', kind: 'character',
+        names: ['コスト持ち3'], colors: ['赤'], level: 1, ap: 1000, lp: 1,
+        traits: [], rarity: 'C', imageUrl: 't.jpg', ruleRefs: [],
+        abilities: [{
+          id: 'a1', type: 'declared', scope: 'on-scene', cost: { kind: 'sleepSelf' },
+          effect: { kind: 'atom', verb: 'noop', args: {} },
+          description: '【宣言】【スリープ】: noop', ruleRefs: [],
+        }],
+      };
+      registerCardDef(cardDef);
+      _resetUidCounter();
+      let uid = '';
+      const s = produce(createEmptyGameState(), draft => {
+        draft.turn = { number: 2, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+        uid = mutate.scene.enter(draft, 'self', 'COST_CARD3', {}).uid;
+      });
+
+      const after = produce(s, draft => activateDeclaredAbility(draft, uid, 'a1'));
+
+      expect(after.players.self.scene.find(c => c.uid === uid)?.state, 'sleepSelf コストを支払う').toBe('sleep');
+      expect(after.log.some(e => e.action === 'declaredAbility:cost-not-paid'), '支払済み経路に誤警告を残さない').toBe(false);
+    });
+
     it('ability.cost 未定義 → warning log なし (cost 不要な declared ability)', () => {
       const cardDef: CardDef = {
         id: 'NO_COST',

@@ -224,10 +224,21 @@ export async function runPartnerAbilityFlow(opts: { player: Player }): Promise<F
   if (ids.length === 1) {
     chosenId = ids[0];
   } else {
-    const picker = useTargetPicker();
-    const picked = await picker.start({ candidates: ids, purpose: 'partner-ability' });
-    if (picked === null) return { ok: false, reason: 'cancelled' };
-    chosenId = picked;
+    // Ability ids are not board UIDs. Present the existing public choice modal
+    // instead of routing them through TargetPicker, which has no clickable
+    // surface for `a1` / `a2` candidates.
+    const partnerCardId = state.players[opts.player].partner.cardId;
+    const partnerDef = partnerCardId ? engine.cards.get(partnerCardId) : null;
+    const options = ids.map((id, index) => {
+      const ability = partnerDef?.abilities.find((entry) => entry.id === id);
+      return { index, label: ability?.description ?? `能力 (${id})` };
+    });
+    const choice = await useChoicePicker().ask({
+      sourceName: partnerCardId ? cardIdToDisplayName(partnerCardId) : 'パートナー',
+      options,
+    });
+    if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
+    chosenId = ids[choice.index];
   }
 
   // Phase 8.8c: cost 情報を取得 (modal 本文表示用)。
@@ -743,7 +754,11 @@ export async function runActionFlow(opts: { player: Player }): Promise<FlowResul
   const state = useGameStateStore.getState().gameState;
   if (state === null) return { ok: false, reason: 'no-state' };
 
-  const sources = enumActionSourceCandidates(state, opts.player);
+  // An unresolved source picker locks the action panel.  Only offer sources
+  // that already have a legal public target; otherwise selecting one leaves
+  // the target picker empty and the player cannot continue (BUG-273).
+  const sources = enumActionSourceCandidates(state, opts.player)
+    .filter((source) => enumActionTargetCandidates(state, source).length > 0);
   if (sources.length === 0) return { ok: false, reason: 'not-allowed' };
 
   const picker = useTargetPicker();

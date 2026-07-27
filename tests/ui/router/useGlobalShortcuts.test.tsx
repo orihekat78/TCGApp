@@ -26,6 +26,19 @@ describe('useGlobalShortcuts modal priority', () => {
     container.remove();
   });
 
+  it('match中のEscapeは進行中の対戦をHOMEへ離脱させない', () => {
+    const onNav = vi.fn();
+    act(() => {
+      root.render(<ShortcutHarness route="match" onNav={onNav} />);
+    });
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    });
+
+    expect(onNav).not.toHaveBeenCalled();
+  });
+
   it('CardList aria-modal表示中のEscapeはモーダルだけを閉じHOMEへ遷移しない', () => {
     const onNav = vi.fn();
     const onClose = vi.fn();
