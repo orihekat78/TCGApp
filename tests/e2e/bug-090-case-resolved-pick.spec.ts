@@ -11,7 +11,7 @@
 //   5. HandZone が pick mode で auto-expand → 手札カードを選択 → リムーブエリアへ移動
 
 import { test, expect, type Page } from '@playwright/test';
-import { setupGamePage, buildGameState, getGameState, dispatchAction } from './helpers';
+import { setupGamePage, buildGameState, getGameState } from './helpers';
 
 async function primeHumanSelf(page: Page): Promise<void> {
   await page.evaluate(() => {
@@ -40,9 +40,9 @@ function applyFixture(gs: AnyState): void {
   const self = players.self;
   const opp = players.opp;
 
-  // self: D08026 (青) 事件編, FILE 6, deck 十分, 手札2枚, partner active, scene/evidence 空
-  self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
-  self.case = { cardId: 'D08026', status: '事件編', requiredEvidence: 7, colors: ['青'], declaredUseCount: {} };
+  // self: 黒カットインの実カード構成、事件編, FILE 6, deck 十分, 手札2枚
+  self.partner = { cardId: 'D07001', state: 'active', location: 'partner-area' };
+  self.case = { cardId: 'B06105', status: '事件編', requiredEvidence: 7, colors: ['黒'], declaredUseCount: {} };
   const fb = { type: 'card-back', cardId: 'D08017' };
   self.file = [fb, fb, fb, fb, fb, fb]; // 6 → auto-phase +2 = 8 → 解決編
   self.deck = ['D08017', 'D08017', 'D08017', 'D08017'];
@@ -92,8 +92,8 @@ test.describe('BUG-090 — human auto-phase 解決編移行で a1 discard pick �
     const handBefore = (before.players.self as { hand: string[] }).hand.length;
     const removeBefore = ((before.players.self as { remove?: string[] }).remove ?? []).length;
 
-    const pickUid = pending!.candidates[0]!.uid;
-    await dispatchAction(page, { type: 'effectPickResolve', pickedUid: pickUid });
+    // row055 再確認: internal dispatch ではなく、実画面と同じ visible HandZone click を通す。
+    await page.locator('.hand-card--pickable').first().click();
 
     await expect
       .poll(async () => ((await getGameState(page)).players.self as { hand: string[] }).hand.length, { timeout: 5000 })
@@ -103,8 +103,10 @@ test.describe('BUG-090 — human auto-phase 解決編移行で a1 discard pick �
     const removeAfter = ((after.players.self as { remove?: string[] }).remove ?? []).length;
     expect(removeAfter, '選んだ手札がリムーブエリアへ').toBe(removeBefore + 1);
 
-    // pick 解決後は pendingEffectPick が消える
+    // pick 解決後は pendingEffectPick と visible prompt が消え、通常操作へ戻る。
     expect(await getPendingEffectPick(page)).toBeNull();
+    await expect(page.getByText('手札から1枚選んでリムーブしてください')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'ターン終了' })).toBeEnabled();
 
     expect(errors, 'console error 0').toEqual([]);
   });

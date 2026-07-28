@@ -14,6 +14,7 @@ import { engine } from '@/engine';
 import { resolve } from '@/engine/resolve/index.js';
 import { buildMvpDeckPair, buildDeckPair, type DeckId } from './deckBuilder.js';
 import { promptMulligan } from '@/ui/hooks/useMulligan.js';
+import { BUG_274_PARTNER } from '@/ui/fixtures/bug274PartnerFixture.js';
 import type { GameState } from '@/engine/types/game-state';
 import type { CardId } from '@/engine/types';
 
@@ -70,10 +71,18 @@ export async function performGameStart(
   const decks = deckSelection
     ? buildDeckPair(deckSelection)
     : buildMvpDeckPair();
+  const usesBug274Fixture = deckSelection?.selfDeckId === 'TEST-BUG-274'
+    || deckSelection?.oppDeckId === 'TEST-BUG-274';
+  if (usesBug274Fixture) engine.cards.register(BUG_274_PARTNER);
   // Phase A: init / decideFirstPlayer / dealOpeningHand × 2
   let state = produce(createEmptyGameState(), (draft) => {
     engine.flow.setup.init(draft, decks);
-    engine.flow.setup.decideFirstPlayer(draft, 'random');
+    // The public regression fixture must expose the self partner immediately.
+    engine.flow.setup.decideFirstPlayer(
+      draft,
+      deckSelection?.selfDeckId === 'TEST-BUG-274' ? 'manual' : 'random',
+      deckSelection?.selfDeckId === 'TEST-BUG-274' ? 'self' : undefined,
+    );
     engine.flow.setup.dealOpeningHand(draft, 'self');
     engine.flow.setup.dealOpeningHand(draft, 'opp');
   });

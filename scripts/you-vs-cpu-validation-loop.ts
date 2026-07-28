@@ -15,7 +15,7 @@ export type ResumeInstruction = {
   youId: string;
   cpuId: string;
   viewport: string;
-  setupUrl: "http://localhost:5174/#setup";
+  setupUrl: "http://127.0.0.1:5174/#setup";
   action: "resume-current-row" | "open-fresh-browser";
   recovery: {
     consecutiveRuntimeFailures: number;
@@ -29,7 +29,7 @@ export type ValidationLoopState = {
   consecutiveRuntimeFailures: number;
 };
 
-const SETUP_URL = "http://localhost:5174/#setup" as const;
+const SETUP_URL = "http://127.0.0.1:5174/#setup" as const;
 
 export function parseValidationWorklist(csv: string): ValidationRow[] {
   const lines = csv
@@ -129,7 +129,10 @@ export function buildResumeInstruction(
     viewport: current.viewport,
     setupUrl: SETUP_URL,
     action:
-      consecutiveRuntimeFailures >= 2
+      // A runtime/UI stall is never terminal for a validation row.  Retrying
+      // the same tab can preserve a modal or selection dead-end, so recover
+      // through the public setup flow on the first failure.
+      consecutiveRuntimeFailures >= 1
         ? "open-fresh-browser"
         : "resume-current-row",
     recovery: {

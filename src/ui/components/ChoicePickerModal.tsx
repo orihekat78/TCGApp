@@ -9,7 +9,7 @@
 //   - useChoicePicker store の current を Playmat が subscribe し、open=true で表示。
 //   - option クリック → onPick(index) → ctx.dyn.choiceIndex に積まれ resolveEffectPicks が unwrap。
 
-import type { JSX } from 'react';
+import { useEffect, type JSX } from 'react';
 import './ChoicePickerModal.css';
 
 export type ChoiceOptionView = { index: number; label: string };
@@ -26,6 +26,17 @@ export type ChoicePickerModalProps = {
 
 export function ChoicePickerModal(props: ChoicePickerModalProps): JSX.Element | null {
   const { open, sourceName, options, onPick, onCancel } = props;
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      onCancel();
+    };
+    window.addEventListener('keydown', onKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', onKeyDown, { capture: true });
+  }, [open, onCancel]);
   if (!open) return null;
   return (
     <div
