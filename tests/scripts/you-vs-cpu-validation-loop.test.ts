@@ -27,22 +27,32 @@ describe("YOU-vs-CPU validation loop guard", () => {
       youId: "d08",
       cpuId: "d11",
       viewport: "desktop",
-      setupUrl: "http://localhost:5174/#setup",
+      setupUrl: "http://127.0.0.1:5174/#setup",
       action: "resume-current-row",
     });
   });
 
-  it("reopens a fresh browser from setup after consecutive runtime failures", () => {
+  it("reopens a fresh browser from setup after the first runtime failure", () => {
     const rows = parseValidationWorklist(`row,you_id,cpu_id,viewport,status\n024,green,mill,desktop,queued\n`);
 
-    expect(buildResumeInstruction(rows, 2)).toMatchObject({
+    expect(buildResumeInstruction(rows, 1)).toMatchObject({
       row: "024",
       action: "open-fresh-browser",
-      setupUrl: "http://localhost:5174/#setup",
+      setupUrl: "http://127.0.0.1:5174/#setup",
       recovery: {
-        consecutiveRuntimeFailures: 2,
+        consecutiveRuntimeFailures: 1,
         inspectPublicUiBeforeAction: true,
       },
+    });
+  });
+
+  it("keeps retrying the same row instead of emitting a terminal interruption", () => {
+    const rows = parseValidationWorklist(`row,you_id,cpu_id,viewport,status\n024,green,mill,desktop,queued\n025,green,white,desktop,queued\n`);
+
+    expect(buildResumeInstruction(rows, 3)).toMatchObject({
+      row: "024",
+      action: "open-fresh-browser",
+      recovery: { consecutiveRuntimeFailures: 3 },
     });
   });
 

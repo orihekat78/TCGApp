@@ -9,8 +9,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 ## サマリ
 
 - **対象ルート**: `.`
-- **ディレクトリ数**: 261
-- **ファイル数**: 5522
+- **ディレクトリ数**: 262
+- **ファイル数**: 5562
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -453,6 +453,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-272.md` — 宣言能力の選択中に別行動を開始できる
     - `BUG-273.md` — 攻撃対象がないアクション元を選べて操作不能になる
     - `BUG-274.md` — 複数パートナー能力の選択が盤面で停止する
+    - `BUG-275.md` — favicon 未定義による 404
+    - `BUG-276.md` — 5174二重待受による検証先の分裂
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1352,6 +1354,41 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-27-you-vs-cpu-human-validation-row-026-start-readiness.md` — 行026 開始可能性
     - `2026-07-27-you-vs-cpu-human-validation-worklist.csv`
     - `2026-07-27-you-vs-cpu-human-validation.md` — YOU vs CPU human validation
+    - `2026-07-28-you-vs-cpu-human-validation-completion-audit.md` — YOU-vs-CPU validation completion audit
+    - `2026-07-28-you-vs-cpu-human-validation-row-026-attempt-1.md` — Row 026 attempt 1 -- in progress
+    - `2026-07-28-you-vs-cpu-human-validation-row-026-attempt-2.md` — Row 026 attempt 2 -- public UI completion
+    - `2026-07-28-you-vs-cpu-human-validation-row-027-attempt-1.md` — Row 027 attempt 1 -- in progress
+    - `2026-07-28-you-vs-cpu-human-validation-row-027-attempt-2.md` — Row 027 attempt 2 -- public UI in progress
+    - `2026-07-28-you-vs-cpu-human-validation-row-028-attempt-1.md` — Row 028 attempt 1 -- public UI in progress
+    - `2026-07-28-you-vs-cpu-human-validation-row-029-attempt-1.md` — Row 029 attempt 1 -- normal public completion
+    - `2026-07-28-you-vs-cpu-human-validation-row-030-attempt-1.md` — Row 030 attempt 1 -- normal public completion
+    - `2026-07-28-you-vs-cpu-human-validation-row-031-attempt-1.md` — Row 031 attempt 1 -- completed
+    - `2026-07-28-you-vs-cpu-human-validation-row-032-attempt-1.md` — Row 032 attempt 1 -- public UI in progress
+    - `2026-07-28-you-vs-cpu-human-validation-row-033-attempt-1.md` — Row 033 attempt 1 -- public UI in progress
+    - `2026-07-28-you-vs-cpu-human-validation-row-034-attempt-1.md` — Row 034 attempt 1 -- public UI in progress
+    - `2026-07-28-you-vs-cpu-human-validation-row-035-attempt-1.md` — Row 035 attempt 1 -- public UI in progress
+    - `2026-07-28-you-vs-cpu-human-validation-row-036-attempt-1.md` — Row 036 -- blue-green vs 疾風
+    - `2026-07-28-you-vs-cpu-human-validation-row-037-attempt-1.md` — YOU-vs-CPU row 037 attempt 1
+    - `2026-07-28-you-vs-cpu-human-validation-row-038-attempt-1.md` — YOU-vs-CPU row 038 attempt 1
+    - `2026-07-28-you-vs-cpu-human-validation-row-039-attempt-1.md` — YOU-vs-CPU row 039 attempt 1
+    - `2026-07-28-you-vs-cpu-human-validation-row-040-attempt-1.md` — YOU-vs-CPU row 040 attempt 1
+    - `2026-07-28-you-vs-cpu-human-validation-row-041-attempt-1.md` — YOU-vs-CPU row 041 attempt 1
+    - `2026-07-28-you-vs-cpu-human-validation-row-042-attempt-1.md` — YOU-vs-CPU row 042 attempt 1
+    - `2026-07-28-you-vs-cpu-human-validation-row-043-attempt-1.md` — YOU-vs-CPU row 043 attempt 1
+    - `2026-07-28-you-vs-cpu-human-validation-row-044-attempt-1.md` — YOU-vs-CPU row 044 attempt 1
+    - `2026-07-28-you-vs-cpu-human-validation-row-045-attempt-1.md` — YOU-vs-CPU row 045 attempt 1
+    - `2026-07-28-you-vs-cpu-human-validation-row-046-attempt-1.md` — YOU-vs-CPU row 046 attempt 1
+    - `2026-07-28-you-vs-cpu-human-validation-row-047-attempt-1.md` — YOU-vs-CPU row 047 attempt 1
+    - `2026-07-28-you-vs-cpu-human-validation-row-048-attempt-1.md` — YOU-vs-CPU row 048 attempt 1
+    - `2026-07-28-you-vs-cpu-human-validation-row-049-attempt-1.md` — YOU-vs-CPU row 049 attempt 1
+    - `2026-07-28-you-vs-cpu-human-validation-row-050-attempt-1.md` — YOU-vs-CPU row 050 attempt 1
+    - `2026-07-28-you-vs-cpu-human-validation-row-051-attempt-1.md` — YOU-vs-CPU row 051 attempt 1
+    - `2026-07-28-you-vs-cpu-human-validation-row-052-attempt-1.md` — YOU-vs-CPU row 052 attempt 1
+    - `2026-07-28-you-vs-cpu-human-validation-row-053-attempt-1.md` — YOU-vs-CPU row 053 attempt 1 — complete
+    - `2026-07-28-you-vs-cpu-human-validation-row-054-attempt-1.md` — YOU-vs-CPU row 054 attempt 1 — complete
+    - `2026-07-28-you-vs-cpu-human-validation-row-055-attempt-1.md` — YOU-vs-CPU row 055 attempt 1 — active checkpoint
+    - `2026-07-28-you-vs-cpu-human-validation-row-055-attempt-2.md` — YOU-vs-CPU row 055 attempt 2
+    - `2026-07-28-you-vs-cpu-human-validation-row-055-attempt-3.md` — YOU-vs-CPU row 055 attempt 3
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -2030,6 +2067,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `vite-env.d.ts` — / <reference types="vite/client" />
   - **`tests/`**
     - **`e2e/`**
+      - `bug-275-favicon.spec.ts`
       - `bug274-public-fixture.spec.ts`
       - `cards.spec.ts` — spec: .claude/specs/meta-ui/11-cards-rebuild.md
       - `deck.spec.ts` — spec: .claude/specs/meta-ui/ (Phase 18: DeckEditor リデザイン + 同 ID 3 枚上限の UI 可視化)
@@ -2045,6 +2083,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - `tsconfig.json`
   - `tsconfig.node.json`
   - `vite.config.meta.ts` — spec: .claude/specs/meta-ui/01-project-setup.md
+- **`public/`**
+  - `favicon.svg`
 - **`scripts/`** — ビルド・メンテナンスツール
   - **`_archive/`**
     - **`survey/`**
@@ -2155,7 +2195,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - `taskA-validate-specs.cjs`
   - `tsconfig.json`
   - `wf-certify.mjs`
-  - `you-vs-cpu-validation-loop.ts`
+  - `you-vs-cpu-validation-loop.ts` — A runtime/UI stall is never terminal for a validation row.  Retrying
 - **`src/`** — TypeScript ソース
   - **`ai/`** — AI policies (Random / Heuristic / MCTS / リプレイ)
     - **`policies/`**
@@ -5637,6 +5677,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `customGameStart.side-mapping.test.ts`
     - `engineStub.deck-limit.test.ts` — rules: 02-deck-construction.md
     - `matchSession.race.test.ts` — Leaving match for the result route must clear transient ownership while
+    - `playwright-config.test.ts`
   - **`scripts/`**
     - `build-tcg-runtime-packet.test.ts`
     - `check-codex-quality.test.ts`
