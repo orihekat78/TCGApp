@@ -20,7 +20,7 @@ import { readRemoveSetCardWitness } from './remove-set-card-witness.js';
 import { eligibleRemoveSetCards } from './remove-set-card-eligible.js';
 import { char as readChar } from '@/engine/read/char.js';
 import { _clearPendingSetCardReplacementSide, _peekPendingSetCardReplacementSide, _restorePendingSetCardReplacementSide } from '@/engine/effect/pending-state.js';
-import { _abortEventJournal, _beginEventJournal, _commitEventJournal, _restoreEntryIdCounter, _snapshotEntryIdCounter, _withEventsSuppressed } from '@/engine/event/registry.js';
+import { _abortEventJournal, _beginEventJournal, _commitEventJournal, _withEventsSuppressed } from '@/engine/event/registry.js';
 import { produce } from '@/engine/produce.js';
 
 /**
@@ -38,7 +38,6 @@ export function pay(state: GameState, cost: Cost, ctx: EffectCtx): PayResult {
   const prevViaCost = ctx.viaCost;
   const stateBefore = cloneForAuthorization(state);
   const ctxBefore = cloneForAuthorization(ctx);
-  const entryIdBefore = _snapshotEntryIdCounter();
   const replacementBefore = _peekPendingSetCardReplacementSide();
   let journal: ReturnType<typeof _beginEventJournal> | null = null;
   ctx.viaCost = true;
@@ -54,7 +53,6 @@ export function pay(state: GameState, cost: Cost, ctx: EffectCtx): PayResult {
         _withEventsSuppressed(() => payInner(draft, cost, preparedCtx, { paidItems: [], releasedTriggers: [] }));
       });
     } finally {
-      _restoreEntryIdCounter(entryIdBefore);
       _restorePendingSetCardReplacementSide(replacementBefore);
     }
     journal = _beginEventJournal();
@@ -67,7 +65,6 @@ export function pay(state: GameState, cost: Cost, ctx: EffectCtx): PayResult {
     if (journal !== null) _abortEventJournal(journal);
     restoreMutable(state, stateBefore);
     restoreMutable(ctx, ctxBefore);
-    _restoreEntryIdCounter(entryIdBefore);
     _restorePendingSetCardReplacementSide(replacementBefore);
     throw error;
   } finally {
@@ -105,7 +102,6 @@ export function canPayAtomically(state: GameState, cost: Cost, ctx: EffectCtx): 
 /** Replacement-aware, listener-free authorization for public payment gates. */
 export function canPayWithPreflight(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
   if (!canPayAtomically(state, cost, ctx)) return false;
-  const entryIdBefore = _snapshotEntryIdCounter();
   const replacementBefore = _peekPendingSetCardReplacementSide();
   try {
     const preparedState = cloneForAuthorization(state);
@@ -117,7 +113,6 @@ export function canPayWithPreflight(state: GameState, cost: Cost, ctx: EffectCtx
   } catch {
     return false;
   } finally {
-    _restoreEntryIdCounter(entryIdBefore);
     _restorePendingSetCardReplacementSide(replacementBefore);
   }
 }

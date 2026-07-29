@@ -13,8 +13,12 @@
 // DeckReorderModalHost を土台に 2-bucket 割当を追加 (SouzaReorderModal.css 流用)。
 
 import { useEffect, useState, type JSX } from 'react';
-import { useGameStateStore } from '@/ui/state/store.js';
+import {
+  useGameStateStore,
+  type PendingDecisionIdentity,
+} from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
+import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import { CardExpandModal } from './CardExpandModal.js';
@@ -26,7 +30,7 @@ export function DeckPlaceModalHost(): JSX.Element | null {
   // S2 B01093: gate は選択者 (ownerPlayer) — 対象デッキ所有者 (player) ではない。
   // 「相手デッキの top 1 を公開し、自分が上か下かを選ぶ」で human に modal を出すための座標系是正。
   return pending && pending.ownerPlayer === 'self'
-    ? <DeckPlaceModalInner key={pending.cardIds.join('|')} cardIds={pending.cardIds} />
+    ? <DeckPlaceModalInner key={`${pending.decisionId ?? 'legacy'}:${pending.cardIds.join('|')}`} pending={pending} />
     : null;
 }
 
@@ -36,7 +40,12 @@ function asRows(cardIds: readonly string[]): Row[] {
   return cardIds.map((cardId, index) => ({ cardId, occurrenceId: `${cardId}#${index}`, bucket: 'top' }));
 }
 
-function DeckPlaceModalInner({ cardIds }: { cardIds: readonly string[] }): JSX.Element {
+function DeckPlaceModalInner({
+  pending,
+}: {
+  pending: { cardIds: readonly string[] } & PendingDecisionIdentity;
+}): JSX.Element {
+  const { cardIds } = pending;
   // リスト順 = 各バケツ内の相対順 (top 行同士 / bottom 行同士でリスト上にある方が先)。
   const [rows, setRows] = useState<Row[]>(() => asRows(cardIds));
   const [dragIdx, setDragIdx] = useState<number | null>(null);
@@ -63,7 +72,7 @@ function DeckPlaceModalInner({ cardIds }: { cardIds: readonly string[] }): JSX.E
   const confirm = (): void => {
     const top = rows.filter((r) => r.bucket === 'top').map((r) => r.cardId);
     const bottom = rows.filter((r) => r.bucket === 'bottom').map((r) => r.cardId);
-    dispatchEngineAction({ type: 'deckPlaceResolve', top, bottom });
+    dispatchEngineAction(bindPendingDecision(pending, { type: 'deckPlaceResolve', top, bottom }));
   };
 
   return (

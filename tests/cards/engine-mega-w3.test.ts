@@ -32,6 +32,7 @@ import { B02047 } from '@/cards/ct-p02/B02047';
 import { B05115 } from '@/cards/ct-p05/B05115';
 import { B09004 } from '@/cards/ct-p09/B09004';
 import type { AbilityDef, CardDef, Effect, EffectCtx, GameState, ActionContext, SceneCharacter } from '@/engine/types';
+import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
 
 type G = { __humanPlayerSide?: 'self' | 'opp' | null };
 const setHuman = (s: 'self' | 'opp' | null) => { (globalThis as G).__humanPlayerSide = s; };
@@ -379,7 +380,7 @@ describe('B05115 exemplar (human optional 経路)', () => {
     useGameStateStore.getState().setGameState(mid);
     surfacePendingSideChannels();
     expect(useGameStateStore.getState().pendingEffectOptional, 'optional surface').not.toBeNull();
-    const r = dispatchEngineAction({ type: 'optionalResolve', run: true });
+    const r = dispatchCurrentDecision({ type: 'optionalResolve', run: true });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.some(c => c.cardId === 'B05115'), 'リムーブから登場').toBe(true);
@@ -399,7 +400,7 @@ describe('B05115 exemplar (human optional 経路)', () => {
     useGameStateStore.getState().setGameState(gone);
     surfacePendingSideChannels();
     expect(useGameStateStore.getState().pendingEffectOptional, 'optional surface').not.toBeNull();
-    const r = dispatchEngineAction({ type: 'optionalResolve', run: true });
+    const r = dispatchCurrentDecision({ type: 'optionalResolve', run: true });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.some(c => c.cardId === 'B05115'), '登場しない (sourceRequired)').toBe(false);
@@ -481,19 +482,19 @@ describe('B09004 exemplar (human optional 経路)', () => {
     useGameStateStore.getState().setGameState(mid);
     surfacePendingSideChannels();
     expect(useGameStateStore.getState().pendingEffectOptional, 'optional surface').not.toBeNull();
-    const r = dispatchEngineAction({ type: 'optionalResolve', run: true });
+    const r = dispatchCurrentDecision({ type: 'optionalResolve', run: true });
     expect(r.ok).toBe(true);
     // 手札 discard pick → 2枚から1枚 (human pick surface)
     const pend1 = useGameStateStore.getState().pendingEffectPick;
     expect(pend1?.atomVerb).toBe('discard');
-    const r2 = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pend1!.candidates[0]!.uid });
+    const r2 = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pend1!.candidates[0]!.uid });
     expect(r2.ok).toBe(true);
     // lv7以下 sceneRemove pick
     const pend2 = useGameStateStore.getState().pendingEffectPick;
     expect(pend2?.atomVerb).toBe('sceneRemove');
     const victim = pend2!.candidates.find(c => c.uid === 'victim#1');
     expect(victim, 'lv3 victim が候補').toBeDefined();
-    const r3 = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: victim!.uid });
+    const r3 = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: victim!.uid });
     expect(r3.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.hand.length, '公開2枚のうち1枚リムーブ').toBe(1);

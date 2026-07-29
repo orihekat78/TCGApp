@@ -16,12 +16,13 @@
 //   - try/catch でループを包み、エンジン bug / invariant 違反を 'invariant-fail' で受ける
 //   - movesPerTurn に各ターンの move 数を記録 (debug 用)
 
-import { performance } from 'node:perf_hooks';
 import type { GameState } from '@/engine/types';
 import { engine } from '@/engine';
 import { produce } from '@/engine/produce';
 import { playTurn, type AIPolicy } from './policy.js';
 import type { Move } from './move-enumerator.js';
+import { withIsolatedPendingRuntimeState } from '@/engine/effect/runtime-state.js';
+import { withHeadlessDecisionContext } from './headless-decision-context.js';
 
 type Player = 'self' | 'opp';
 
@@ -74,6 +75,11 @@ const DEFAULT_MAX_TURNS = 100;
  *   - 例外 / invariant 違反は 'invariant-fail' で捕捉
  */
 export function runMatch(opts: MatchOpts): MatchResult {
+  return withHeadlessDecisionContext(() =>
+    withIsolatedPendingRuntimeState(opts.initialState, () => runIsolatedMatch(opts)));
+}
+
+function runIsolatedMatch(opts: MatchOpts): MatchResult {
   const maxTurns = opts.maxTurns ?? DEFAULT_MAX_TURNS;
   let state = opts.initialState;
   const movesPerTurn: number[] = [];
@@ -102,8 +108,9 @@ export function runMatch(opts: MatchOpts): MatchResult {
 
       // 2. エンドフェイズ → ターン交替
       state = produce(state, draft => {
-        engine.flow.endTurn(draft, currentPlayer);
-        // ターン終了時 trigger の解消 (rules/05)
+        engine.flow.endTurn(draft, currentPlayer, { startNextTurn: true });
+        // End triggers, cleanup, transfer, and the next auto phase are one
+        // serializable continuation (rules/05).
         engine.resolve.runAllUntilEmpty(draft);
       });
 
@@ -112,20 +119,6 @@ export function runMatch(opts: MatchOpts): MatchResult {
 
       // turn.number > maxTurns になっていれば draw 扱い
       if (state.turn.number > maxTurns) break;
-
-      // 3. 次プレイヤーのオートフェイズ
-      const nextPlayer = state.turn.player;
-      state = produce(state, draft => {
-        // 旧ターンのフラグをリセット (handUseUsed / nextHintUsed / assistedThisTurn 等)
-        // engine.flow.endTurn は flag リセットを行わない (Phase 4 設計) ので
-        // 駆動側で明示的にリセットする。
-        engine.mutate.flag.resetTurnFlags(draft, currentPlayer);
-        engine.mutate.flag.resetTurnFlags(draft, nextPlayer);
-        // isFirstPlayerFirstTurn フラグの解除
-        draft.turn.isFirstPlayerFirstTurn = false;
-        engine.flow.runAutoPhase(draft, nextPlayer);
-        engine.resolve.runAllUntilEmpty(draft);
-      });
 
       // オートフェイズ中のドローやリフレッシュで gameResult が決まる可能性
       if (state.gameResult) break;

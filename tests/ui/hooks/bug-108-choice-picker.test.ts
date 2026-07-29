@@ -18,6 +18,7 @@ import { char as readChar } from '@/engine/read/char';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import type { GameState } from '@/engine/types';
 import { sceneChar } from '../../helpers/fixtures';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 
 // D11012 (横溝重悟, 警察 Lv4 LP0) を source ('shigo') + 効果対象 ('target') の 2 体置く。
@@ -88,7 +89,7 @@ describe('D11012 a1 — choice 択一 UI (BUG-108)', () => {
     expect(useGameStateStore.getState().pendingEffectPick?.atomVerb, 'AP option 選択').toBe('charModifyAP');
 
     // target ('target' = 警察 LP0) を resolve → AP+2000
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'target' });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'target' });
     const gs = useGameStateStore.getState().gameState!;
     expect(readChar.ap(gs, 'target'), 'AP 4000 + 2000').toBe(6000);
   });
@@ -105,7 +106,7 @@ describe('D11012 a1 — choice 択一 UI (BUG-108)', () => {
     expect((await promise).ok).toBe(true);
 
     expect(useGameStateStore.getState().pendingEffectPick?.atomVerb, 'LP option 選択').toBe('charModifyLP');
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'target' });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'target' });
     const gs = useGameStateStore.getState().gameState!;
     expect(readChar.lp(gs, 'target'), 'LP 0 + 1').toBe(1);
   });

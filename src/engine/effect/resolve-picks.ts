@@ -34,6 +34,7 @@ import { run as runEffect } from './resolver.js';
 import { eventUseAllowed } from '../flow/main/hand-use-card.js';
 import { cardOccurrenceUid } from '../target/card-occurrence.js';
 import { peekPublicHandRevealToken, takePublicHandRevealToken } from './atom-handlers/_shared.js';
+import { chooseHeuristicAtomTarget } from './heuristic-atom-target.js';
 
 type Player = 'self' | 'opp';
 
@@ -223,6 +224,7 @@ export type ChooseAtomTargetFn = (
 // queue/save boundary. Persist only a string handle in GameState; callbacks stay
 // in a bounded module registry so serialization never stores executable values.
 const RUNTIME_ATOM_TARGET_POLICY_HANDLE = '__runtimeAtomTargetPolicyHandle';
+const BUILTIN_HEURISTIC_POLICY_HANDLE = 'builtin:heuristic';
 const RUNTIME_ATOM_TARGET_POLICY_LIMIT = 4096;
 const runtimeAtomTargetPolicies = new Map<string, ChooseAtomTargetFn>();
 let runtimeAtomTargetPolicySequence = 0;
@@ -233,8 +235,16 @@ export function resetRuntimeAtomTargetPolicySession(): void {
   runtimeAtomTargetPolicySequence = 0;
 }
 
-function rememberRuntimeAtomTargetPolicy(ctx: EffectCtx, policy: ChooseAtomTargetFn | undefined): void {
+function rememberRuntimeAtomTargetPolicy(
+  ctx: EffectCtx,
+  policy: ChooseAtomTargetFn | undefined,
+  policyKey: ResolveEffectPicksOpts['runtimeAtomTargetPolicyKey'],
+): void {
   const dyn = (ctx.dyn ??= {}) as Record<string, unknown>;
+  if (policyKey === 'heuristic') {
+    dyn[RUNTIME_ATOM_TARGET_POLICY_HANDLE] = BUILTIN_HEURISTIC_POLICY_HANDLE;
+    return;
+  }
   if (!policy) {
     // Continuation re-walks normally omit the callback. Preserve the policy
     // handle captured at the original AI entry; session reset is the explicit
@@ -242,6 +252,7 @@ function rememberRuntimeAtomTargetPolicy(ctx: EffectCtx, policy: ChooseAtomTarge
     return;
   }
   const existing = dyn[RUNTIME_ATOM_TARGET_POLICY_HANDLE];
+  if (existing === BUILTIN_HEURISTIC_POLICY_HANDLE) return;
   const handle = typeof existing === 'string'
     ? existing
     : `runtime-atom-policy:${++runtimeAtomTargetPolicySequence}`;
@@ -258,6 +269,7 @@ function rememberRuntimeAtomTargetPolicy(ctx: EffectCtx, policy: ChooseAtomTarge
 
 export function rememberedRuntimeAtomTargetPolicy(ctx: EffectCtx): ChooseAtomTargetFn | undefined {
   const handle = (ctx.dyn as Record<string, unknown> | undefined)?.[RUNTIME_ATOM_TARGET_POLICY_HANDLE];
+  if (handle === BUILTIN_HEURISTIC_POLICY_HANDLE) return chooseHeuristicAtomTarget;
   return typeof handle === 'string'
     ? runtimeAtomTargetPolicies.get(handle)
     : undefined;
@@ -266,6 +278,8 @@ export function rememberedRuntimeAtomTargetPolicy(ctx: EffectCtx): ChooseAtomTar
 export interface ResolveEffectPicksOpts {
   /** Phase 7-3: heuristic chooser。未指定なら先頭採用 (Phase 7-2 互換)。 */
   chooseAtomTarget?: ChooseAtomTargetFn;
+  /** JSON 復元後も再構築できる built-in chooser の識別子。 */
+  runtimeAtomTargetPolicyKey?: 'heuristic';
   /** chooser に渡される byPlayer (省略時 'self')。 */
   byPlayer?: Player;
   /**
@@ -713,7 +727,13 @@ function substituteAtomPick(
       // chooseAiPick が honor。空なら undefined (従来 pending と byte 等価)。
       ...(forcedUids.length > 0 ? { forcedUids } : {}),
     });
-    return atom as Effect; // 未解決のまま返却
+    // A pre-walk already materialized the human decision. Return a no-op
+    // carrier so the runtime atom handler cannot enqueue the same pick again.
+    // Runtime handlers still receive the original atom: their caller observes
+    // the newly queued decision and pauses without re-running the carrier.
+    return opts._fromAtomHandler === true
+      ? atom as Effect
+      : { kind: 'parallel', steps: [] };
   }
 
   takePublicHandRevealToken(ctx);
@@ -873,7 +893,11 @@ export function resolveEffectPicks(
   opts: ResolveEffectPicksOpts = {},
 ): Effect {
   if (opts._fromAtomHandler !== true) {
-    rememberRuntimeAtomTargetPolicy(ctx, opts.chooseAtomTarget);
+    rememberRuntimeAtomTargetPolicy(
+      ctx,
+      opts.chooseAtomTarget,
+      opts.runtimeAtomTargetPolicyKey,
+    );
   }
   // Continuation atom handlers only receive EffectCtx.  Persist a tri-state
   // owner: known human side, known non-human (`null`), or marker absent for

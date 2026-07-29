@@ -107,6 +107,34 @@ describe('LogPanel', () => {
     expect(html).toMatch(/: remove/);
   });
 
+  it('redacts a private log target from opponents and spectators', () => {
+    const entries: LogEntry[] = [
+      makeEntry({
+        ts: 1,
+        player: 'self',
+        turn: 1,
+        action: 'effect:evidencePeek',
+        target: 'PRIVATE-EVIDENCE',
+        targetAudience: 'self',
+      }),
+    ];
+
+    const ownerHtml = strip(renderToString(
+      <LogPanel entries={entries} open={true} viewer="self" />,
+    ));
+    const opponentHtml = strip(renderToString(
+      <LogPanel entries={entries} open={true} viewer="opp" />,
+    ));
+    const spectatorHtml = strip(renderToString(
+      <LogPanel entries={entries} open={true} viewer={null} />,
+    ));
+
+    expect(ownerHtml).toContain('PRIVATE-EVIDENCE');
+    expect(opponentHtml).not.toContain('PRIVATE-EVIDENCE');
+    expect(spectatorHtml).not.toContain('PRIVATE-EVIDENCE');
+    expect(opponentHtml).toContain('effect:evidencePeek');
+  });
+
   // BUG-069 (2026-05-28): scene char uid / partner uid を表示名に解決する
   describe('uid resolution (BUG-069)', () => {
     beforeAll(() => {

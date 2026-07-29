@@ -19,6 +19,7 @@ import { registerAll } from '@/cards';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import type { GameState } from '@/engine/types';
 import { sceneChar } from '../../helpers/fixtures';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 
 // 直接 push (mutate.scene.enter は 'enter' を emit して D11014 a1 疾風 を誤発火させるため)
@@ -63,11 +64,11 @@ describe('D11014 a2 — human 経路の $entered bind 伝播 (BUG-107)', () => {
     expect(useGameStateStore.getState().pendingEffectPick?.atomVerb, 'step1 discard pick が surface').toBe('discard');
 
     // discard pick を解決 → continuation [step2,step3] 再 queue → step2 sceneEnter pick が surface
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pendingUidFor('D08013') });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pendingUidFor('D08013') });
     expect(useGameStateStore.getState().pendingEffectPick?.atomVerb, 'step2 sceneEnter pick が surface').toBe('sceneEnter');
 
     // sceneEnter pick を解決 → 萩原千速 登場 + $entered 書込 → continuation [step3] conditional → draw
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pendingUidFor('D11011') });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pendingUidFor('D11011') });
 
     const gs = useGameStateStore.getState().gameState!;
     expect(gs.players.self.scene.map((c) => c.cardId), '萩原千速 が登場').toContain('D11011');
@@ -82,8 +83,8 @@ describe('D11014 a2 — human 経路の $entered bind 伝播 (BUG-107)', () => {
     useGameStateStore.setState({ gameState: setupD11014a2('D11012') });
 
     dispatchEngineAction({ type: 'declaredAbility', uid: 'shigo', abilId: 'a2' });
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pendingUidFor('D08013') });
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pendingUidFor('D11012') });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pendingUidFor('D08013') });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pendingUidFor('D11012') });
 
     const gs = useGameStateStore.getState().gameState!;
     expect(gs.players.self.scene.map((c) => c.cardId), '警察 Lv4 が登場').toContain('D11012');

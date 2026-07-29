@@ -20,6 +20,7 @@ import type { CardDef, EffectCtx, GameState } from '@/engine/types';
 import { dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { sceneChar } from '../helpers/fixtures';
+import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
 
 const H5 = 'BUG196_HEIJI_L5';
 const H6 = 'BUG196_HEIJI_L6';
@@ -142,7 +143,7 @@ describe('BUG-196 B04018 / B04018P 遠山和葉', () => {
     runAllUntilEmpty(s);
     useGameStateStore.getState().setGameState(s);
     surfacePendingSideChannels();
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'target' })).toEqual({ ok: true });
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'target' })).toEqual({ ok: true });
     let after = useGameStateStore.getState().gameState!;
     expect(read.char.hasKeyword(after, 'target', '迅速')).toBe(false);
     after = produce(after, draft => mutate.char.clearTurnEffects(draft, 'target', 'turn'));
@@ -187,7 +188,7 @@ describe('BUG-196 B04018 / B04018P 遠山和葉', () => {
     expect(pending.candidates.map(c => c.cardId)).toEqual([H5]);
     expect(useGameStateStore.getState().gameState?.players.self.scene[0]?.state).toBe('sleep');
     expect(useGameStateStore.getState().gameState?.players.self.remove).toContain(COST);
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pending.candidates[0]!.uid })).toEqual({ ok: true });
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pending.candidates[0]!.uid })).toEqual({ ok: true });
     expect(useGameStateStore.getState().gameState?.players.self.scene.map(c => c.cardId)).toContain(H5);
     expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
   });
@@ -196,7 +197,7 @@ describe('BUG-196 B04018 / B04018P 遠山和葉', () => {
     const skipped = base(); skipped.players.self.hand = [COST]; skipped.players.self.remove = [H5];
     useGameStateStore.getState().setGameState(skipped);
     expect(dispatchEngineAction({ type: 'declaredAbility', uid: 'kazuha', abilId: 'a3' }).ok).toBe(true);
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null })).toEqual({ ok: true });
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null })).toEqual({ ok: true });
     expect(useGameStateStore.getState().gameState?.players.self.scene.map(c => c.cardId)).toEqual(['B04018']);
 
     const full = base(); full.players.self.hand = [COST]; full.players.self.remove = [H5];
@@ -204,7 +205,7 @@ describe('BUG-196 B04018 / B04018P 遠山和葉', () => {
     useGameStateStore.getState().setGameState(full); useGameStateStore.getState().setPendingEffectPick(null);
     expect(dispatchEngineAction({ type: 'declaredAbility', uid: 'kazuha', abilId: 'a3' }).ok).toBe(true);
     const pending = useGameStateStore.getState().pendingEffectPick!;
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pending.candidates[0]!.uid, switchRemoveUid: 'kazuha' })).toEqual({ ok: true });
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pending.candidates[0]!.uid, switchRemoveUid: 'kazuha' })).toEqual({ ok: true });
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene).toHaveLength(5);
     expect(after.players.self.scene.map(c => c.cardId)).toContain(H5);

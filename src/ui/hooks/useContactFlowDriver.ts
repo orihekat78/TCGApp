@@ -154,7 +154,7 @@ export function useContactFlowDriver(): void {
     if (pendingRps !== null) return;
     if (pendingSetCardChoice !== null || pendingSetCardReplacement !== null) return;
 
-    const ax = flow.action._getContext(activeActionId);
+    const ax = flow.action._getContext(gameState, activeActionId);
     if (!ax) {
       useGameStateStore.getState().setActiveActionId(null);
       return;

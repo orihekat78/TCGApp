@@ -26,6 +26,7 @@ import { B06034 } from '@/cards/ct-p06/B06034';
 import { B06049 } from '@/cards/ct-p06/B06049';
 import { D03004 } from '@/cards/ct-d03/D03004';
 import type { AbilityDef, CardDef, Effect, EffectCtx, GameState, SceneCharacter } from '@/engine/types';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 type Player = 'self' | 'opp';
 const setHuman = (v: Player | null) => { (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide = v; };
@@ -108,7 +109,7 @@ describe('BUG-249 public direct invoke order gate', () => {
     useGameStateStore.setState({ gameState: s });
 
     expect(dispatchEngineAction({ type: 'declaredAbility', uid: 'B06023#0', abilId: 'a2', costParams: { flipFaceUpEvidence: { indices: [0] } } } as never).ok).toBe(true);
-    expect(dispatchEngineAction({ type: 'optionalResolve', run: true }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: true }).ok).toBe(true);
     const group = resolve.pendingOwnerOrderGroup(useGameStateStore.getState().gameState!, 'self');
     expect(group.map(entry => entry.source.cardId)).toEqual(['B06023', B06049.id]);
     expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
@@ -287,7 +288,7 @@ describe('B06023 金棒博士 production (declared → cost flip → optional in
     setHuman('self');
     declare(board());
     expect(useGameStateStore.getState().pendingEffectOptional, 'invoke optional surface').not.toBeNull();
-    expect(dispatchEngineAction({ type: 'optionalResolve', run: true }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: true }).ok).toBe(true);
     const group = resolve.pendingOwnerOrderGroup(useGameStateStore.getState().gameState!, 'self');
     expect(group.map(entry => entry.source.cardId)).toEqual(['B06023', 'HIR_DRAW']);
     expect(dispatchEngineAction({ type: 'resolveEffectOrder', player: 'self', entryIds: group.map(entry => entry.id) }).ok).toBe(true);
@@ -299,7 +300,7 @@ describe('B06023 金棒博士 production (declared → cost flip → optional in
   it('run:false (decline) → cost flip のみ / invoke draw なし', () => {
     setHuman('self');
     declare(board());
-    expect(dispatchEngineAction({ type: 'optionalResolve', run: false }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: false }).ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.evidence[0].faceUp, 'コスト flip は実行済').toBe(true);
     expect(after.players.self.hand.length, 'decline → invoke なし').toBe(0);
@@ -325,14 +326,14 @@ describe('B06034 鬼丸城 production (【ヒラメキ】fire → flip pick → 
     const pending = _drainPendingHirameki();
     expect(pending, 'B06034【ヒラメキ】検出').not.toBeNull();
     useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
-    expect(dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
   }
   function resolveFlipPick(cardId: string): void {
     const pick = useGameStateStore.getState().pendingEffectPick!;
     expect(pick, 'flip pick surface').not.toBeNull();
     const c = pick.candidates.find((x) => x.cardId === cardId)!;
     expect(c, `候補に ${cardId}`).toBeTruthy();
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: c.uid }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: c.uid }).ok).toBe(true);
   }
 
   it('① fire → flip pick(HIR_DRAW) → inner optional run → HIR_DRAW ヒラメキ draw', () => {
@@ -341,7 +342,7 @@ describe('B06034 鬼丸城 production (【ヒラメキ】fire → flip pick → 
     resolveFlipPick('HIR_DRAW');
     // conditional true (YAIBA + ヒラメキ印字) → inner optional surface
     expect(useGameStateStore.getState().pendingEffectOptional, 'inner optional surface').not.toBeNull();
-    expect(dispatchEngineAction({ type: 'optionalResolve', run: true }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: true }).ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.evidence.find((e) => e.cardId === 'HIR_DRAW')?.faceUp, 'HIR_DRAW 表向き化').toBe(true);
     expect(after.players.self.hand.length, 'invoke → HIR_DRAW draw1').toBe(1);
@@ -352,7 +353,7 @@ describe('B06034 鬼丸城 production (【ヒラメキ】fire → flip pick → 
     fire(board());
     resolveFlipPick('HIR_DRAW');
     expect(useGameStateStore.getState().pendingEffectOptional, 'inner optional surface').not.toBeNull();
-    expect(dispatchEngineAction({ type: 'optionalResolve', run: false }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: false }).ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.evidence.find((e) => e.cardId === 'HIR_DRAW')?.faceUp, 'flip は実行済 (表のまま)').toBe(true);
     expect(after.players.self.hand.length, 'decline → invoke なし').toBe(0);
@@ -382,7 +383,7 @@ describe('B06034 鬼丸城 production (【ヒラメキ】fire → flip pick → 
     const pick = useGameStateStore.getState().pendingEffectPick!;
     expect(pick, 'flip pick surface').not.toBeNull();
     // 「1つまで」= 0 可 (rules/15): pick skip
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null }).ok).toBe(true);
     expect(useGameStateStore.getState().pendingEffectOptional, '0枚 → optional 出さない').toBeNull();
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.evidence.find((e) => e.cardId === 'HIR_DRAW')?.faceUp, 'flip なし').toBe(false);

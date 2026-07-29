@@ -16,6 +16,7 @@ import type { JSX } from 'react';
 import type { Effect } from '@/engine/types';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
+import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import { choiceOptionLabel } from '@/ui/hooks/useActionsPanelFlow.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { sceneCap } from '@/engine/read/scene-cap.js';
@@ -60,13 +61,16 @@ export function EffectChoiceModalHost(): JSX.Element | null {
         });
       });
       if (switchRemoveUid !== null) {
-        dispatchEngineAction({ type: 'choiceResolve', choiceIndex: index, switchRemoveUid });
+        dispatchEngineAction(bindPendingDecision(
+          pending,
+          { type: 'choiceResolve', choiceIndex: index, switchRemoveUid },
+        ));
       } else {
-        dispatchEngineAction({ type: 'choiceResolve', choiceIndex: index });
+        dispatchEngineAction(bindPendingDecision(pending, { type: 'choiceResolve', choiceIndex: index }));
       }
       return;
     }
-    dispatchEngineAction({ type: 'choiceResolve', choiceIndex: index });
+    dispatchEngineAction(bindPendingDecision(pending, { type: 'choiceResolve', choiceIndex: index }));
   };
 
   return (

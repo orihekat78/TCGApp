@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `112f9b12cfb3`
+> Source hash: `856f7a4314f9`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **2213** ファイル（[全体 index](./index.md)）
+このグループ: **2215** ファイル（[全体 index](./index.md)）
 
 ## cards/_shared (11)
 
@@ -2225,12 +2225,13 @@
 | [`src/cards/pr-01/PR303.ts`](../../../src/cards/pr-01/PR303.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/cards/pr-01/PR304.ts`](../../../src/cards/pr-01/PR304.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`17-icons.md`](../../rules/17-icons.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
 
-## ai (16)
+## ai (18)
 
 | ソース | 参照ルール |
 | ------ | --------- |
 | [`src/ai/ability-ctx.ts`](../../../src/ai/ability-ctx.ts) | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/ai/action-resolution.ts`](../../../src/ai/action-resolution.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) |
+| [`src/ai/headless-decision-context.ts`](../../../src/ai/headless-decision-context.ts) | _(参照なし)_ |
 | [`src/ai/index.ts`](../../../src/ai/index.ts) | _(参照なし)_ |
 | [`src/ai/match.ts`](../../../src/ai/match.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`04-game-setup.md`](../../rules/04-game-setup.md) / [`05-turn-phases.md`](../../rules/05-turn-phases.md) |
 | [`src/ai/move-enumerator.ts`](../../../src/ai/move-enumerator.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`07-action-flow.md`](../../rules/07-action-flow.md) / [`11-reasoning.md`](../../rules/11-reasoning.md) / [`13-keywords.md`](../../rules/13-keywords.md) |
@@ -2243,5 +2244,6 @@
 | [`src/ai/policies/state-evaluator.ts`](../../../src/ai/policies/state-evaluator.ts) | _(参照なし)_ |
 | [`src/ai/policy.ts`](../../../src/ai/policy.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`07-action-flow.md`](../../rules/07-action-flow.md) / [`13-keywords.md`](../../rules/13-keywords.md) |
 | [`src/ai/replay/index.ts`](../../../src/ai/replay/index.ts) | _(参照なし)_ |
+| [`src/ai/replay/nondeterminism.ts`](../../../src/ai/replay/nondeterminism.ts) | _(参照なし)_ |
 | [`src/ai/replay/player.ts`](../../../src/ai/replay/player.ts) | _(参照なし)_ |
 | [`src/ai/replay/recorder.ts`](../../../src/ai/replay/recorder.ts) | _(参照なし)_ |

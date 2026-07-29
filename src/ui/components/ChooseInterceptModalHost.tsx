@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
+import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
@@ -19,7 +20,7 @@ export function ChooseInterceptModalHost(): JSX.Element | null {
   const name = protector?.names[0] ?? pending.protector.cardId;
   const hand = gameState.players.self.hand;
   const resolve = (discardIndex: number | null): void => {
-    dispatchEngineAction({ type: 'chooseInterceptResolve', discardIndex });
+    dispatchEngineAction(bindPendingDecision(pending, { type: 'chooseInterceptResolve', discardIndex }));
   };
 
   return (

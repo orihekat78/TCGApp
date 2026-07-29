@@ -413,7 +413,7 @@
       "evidence": [
         "rules:.claude/rules/20-color-and-switch.md:11",
         "src:src/cards/ct-p04/B04018.shared.ts:82",
-        "tests:tests/cards/B04018-family.test.ts:117",
+        "tests:tests/cards/B04018-family.test.ts:118",
         "tests:tests/cards/B04018-family.test.ts:211",
         "tests:tests/cards/B04018-family.test.ts:212"
       ],
@@ -443,7 +443,7 @@
       "evidence": [
         "rules:.claude/rules/10-action-event.md:36",
         "src:src/cards/ct-p04/B04028.ts:26",
-        "src:src/engine/listeners/triggered.ts:597",
+        "src:src/engine/listeners/triggered.ts:598",
         "src:src/engine/listeners/triggered.ts:619"
       ],
       "noteCodes": [
@@ -537,8 +537,8 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:16",
         "src:src/cards/ct-p05/B05011.ts:17",
-        "src:src/engine/event/registry.ts:187",
-        "src:src/engine/resolve/stack.ts:181"
+        "src:src/engine/event/registry.ts:181",
+        "src:src/engine/resolve/stack.ts:207"
       ],
       "noteCodes": [
         "B05011-SIMULTANEOUS-ORDER-TEST-MISSING"

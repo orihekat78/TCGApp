@@ -543,6 +543,7 @@ function resolveDeferredEntryPicks(state: GameState, entry: EffectStackEntry): E
   const aiPolicy = new HeuristicPolicy();
   const resolved = resolveEffectPicks(state, entry.effect, resolveCtx, {
     chooseAtomTarget: isHumanEffect ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+    runtimeAtomTargetPolicyKey: isHumanEffect ? undefined : 'heuristic',
     byPlayer: entry.source.player,
     humanChooser: isHumanEffect,
     source: { cardId: entry.source.cardId ?? '', abilityId },

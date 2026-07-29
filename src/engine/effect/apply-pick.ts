@@ -1018,6 +1018,7 @@ export function applyChoiceAndContinuation(
   const continuation = _takePendingChoiceContinuation();
   // BUG-114: choice surface 時の bindings (cutin の $contact.* 等) を resume ctx へ復元。
   const resumeBindings = _takePendingChoiceBindings() ?? {};
+  const sourcePlayer = continuation?.ctx.source.player ?? pending.sourcePlayer ?? pending.player;
   // 再 walk 用 ctx (triggered.ts の resolveCtx と同 shape の plain object、Immer draft 非由来)。
   // source.uid は option1 (charGrantKeyword uid:'$self') の $self 解決 + event.queue source に使用。
   const ctx: EffectCtx = continuation?.ctx ?? {
@@ -1025,7 +1026,7 @@ export function applyChoiceAndContinuation(
       cardId: pending.source.cardId,
       uid: pending.source.uid,
       abilityId: pending.source.abilityId,
-      player: pending.player,
+      player: sourcePlayer,
       area: 'scene',
       ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
     },
@@ -1054,7 +1055,7 @@ export function applyChoiceAndContinuation(
     state,
     resolved as never,
     {
-      player: pending.player,
+      player: sourcePlayer,
       uid: pending.source.uid,
       cardId: pending.source.cardId,
       ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),

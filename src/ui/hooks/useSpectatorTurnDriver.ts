@@ -15,7 +15,6 @@ import { stepTurn } from '@/ai/policy.js';
 import type { Move } from '@/ai/move-enumerator.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import * as flow from '@/engine/flow/index.js';
-import { mutate as engineMutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
 import { dispatchEngineAction, surfacePendingSideChannels } from './useEngineDispatch.js';
 import { movePresentationDelay } from './movePresentationDelay.js';
@@ -38,15 +37,16 @@ function driveSelfTurn(): void {
   if (current.turn.player !== 'self') return;
   if (current.gameResult) return;
   if (store.activeActionId) return;
-  if (store.pendingPublicHandReveal?.lifetime === 'effect') return;
+  if (store.pendingDeckReveal || store.pendingPublicHandReveal?.lifetime === 'effect') return;
   if (isDriving) return;
   isDriving = true;
   try {
     const result = stepTurn(current, new HeuristicPolicy(), 'self', { pauseOnAction: true });
     previousMoveKind = result.paused?.move?.kind ?? result.move?.kind ?? null;
-    store.setGameState(result.nextState);
+    store.setGameState(result.nextState, { preserveRuntime: true });
     surfacePendingSideChannels();
-    if (useGameStateStore.getState().pendingPublicHandReveal?.lifetime === 'effect') return;
+    const surfaced = useGameStateStore.getState();
+    if (surfaced.pendingDeckReveal || surfaced.pendingPublicHandReveal?.lifetime === 'effect') return;
 
     if (result.paused) {
       // BUG-138 (X8): 観戦モードは __humanPlayerSide=null のため humanPick pause は発生しない
@@ -77,12 +77,7 @@ function driveSelfTurn(): void {
       produce(s, (draft) => {
         if (draft.gameResult) return;
         if (draft.turn.player !== 'self') return;
-        flow.endTurn(draft, 'self');
-        runAllUntilEmpty(draft);
-        if (draft.gameResult) return;
-        engineMutate.flag.resetTurnFlags(draft, 'opp');
-        draft.turn.isFirstPlayerFirstTurn = false;
-        flow.startTurn(draft, 'opp');
+        flow.endTurn(draft, 'self', { startNextTurn: true });
         runAllUntilEmpty(draft);
       }),
     );
@@ -111,9 +106,10 @@ export function useSpectatorTurnDriver(): void {
   const isAiPaused = useGameStateStore((s) => s.isAiPaused);
   const aiStepCounter = useGameStateStore((s) => s.aiStepCounter);
   const aiMoveTick = useGameStateStore((s) => s.oppMoveTick);
+  const pendingDeckReveal = useGameStateStore((s) => s.pendingDeckReveal);
   const pendingPublicHandReveal = useGameStateStore((s) => s.pendingPublicHandReveal);
   useEffect(() => {
-    if (!spectatorMode || turnPlayer !== 'self' || activeActionId !== null || pendingPublicHandReveal?.lifetime === 'effect') return undefined;
+    if (!spectatorMode || turnPlayer !== 'self' || activeActionId !== null || pendingDeckReveal || pendingPublicHandReveal?.lifetime === 'effect') return undefined;
     // Phase 12-B: paused なら step 要求があった時だけ進む
     if (isAiPaused) {
       if (aiStepCounter <= _lastConsumedStep) return undefined;
@@ -122,5 +118,5 @@ export function useSpectatorTurnDriver(): void {
     const delay = isAiPaused ? 0 : movePresentationDelay(previousMoveKind, aiSpeedMs);
     const id = setTimeout(driveSelfTurn, delay);
     return () => clearTimeout(id);
-  }, [spectatorMode, turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, aiMoveTick, pendingPublicHandReveal]);
+  }, [spectatorMode, turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, aiMoveTick, pendingDeckReveal, pendingPublicHandReveal]);
 }

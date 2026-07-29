@@ -21,6 +21,7 @@ import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { selectInteractionLocked } from '@/ui/state/interactionLock';
 import { useGameStateStore } from '@/ui/state/store';
 import { sceneChar } from '../helpers/fixtures';
+import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
 
 const AP8000 = 'BUG195_AP8000';
 const AP9000 = 'BUG195_AP9000';
@@ -74,7 +75,7 @@ describe('BUG-195 eventRemoveByAP', () => {
     expect(pending?.atomVerb).toBe('sceneRemove');
     expect(pending?.candidates.map(c => c.uid)).toEqual(['ap8000']);
 
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'ap8000' })).toEqual({ ok: true });
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'ap8000' })).toEqual({ ok: true });
     const store = useGameStateStore.getState();
     expect(store.gameState?.players.opp.scene.map(c => c.uid)).toEqual(['ap9000']);
     expect(store.gameState?.players.opp.remove).toContain(AP8000);
@@ -86,7 +87,7 @@ describe('BUG-195 eventRemoveByAP', () => {
   it('D02015: 0枚選択でもpendingとlockを残さない', () => {
     useGameStateStore.getState().setGameState(fixture());
     expect(dispatchEngineAction({ type: 'handUseCard', player: 'self', cardId: 'D02015' }).ok).toBe(true);
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null })).toEqual({ ok: true });
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null })).toEqual({ ok: true });
     const store = useGameStateStore.getState();
     expect(store.gameState?.players.opp.scene.map(c => c.uid)).toEqual(['ap8000']);
     expect(store.pendingEffectPick).toBeNull();
@@ -131,7 +132,7 @@ describe('BUG-195 eventRemoveByAP', () => {
 
     expect(dispatchEngineAction({ type: 'declaredAbility', uid: 'source', abilId: abilityId })).toEqual({ ok: true });
     expect(useGameStateStore.getState().pendingEffectPick?.candidates.map(c => c.uid)).toContain('target');
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'target' })).toEqual({ ok: true });
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'target' })).toEqual({ ok: true });
     const store = useGameStateStore.getState();
     expect(store.gameState?.players.opp.scene).toHaveLength(0);
     expect(store.pendingEffectPick).toBeNull();

@@ -232,7 +232,7 @@ export function canDeclaredAbility(state: GameState, uid: string, abilId: string
 /** Common admission boundary for every declared-ability caller. */
 function canStartDeclaredAbility(state: GameState, player: 'self' | 'opp'): boolean {
   if (state.turn.player !== player || state.turn.phase !== 'main') return false;
-  if (_getResolutionLock().locked || _hasOpenActionContext()) return false;
+  if (_getResolutionLock().locked || _hasOpenActionContext(state)) return false;
   if (state.pendingEffects.some((entry) => entry.state === 'pending')) return false;
   return !hasPendingHumanPick(state);
 }
@@ -443,6 +443,7 @@ export function useDeclaredAbility(
   const aiPolicy = new HeuristicPolicy();
   const resolvedEffect = resolveEffectPicks(state, ability.effect, resolveCtx, {
     chooseAtomTarget: isHumanEffect ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+    runtimeAtomTargetPolicyKey: isHumanEffect ? undefined : 'heuristic',
     byPlayer: found.player,
     humanChooser: isHumanEffect,
     source: { cardId: found.cardId, abilityId: abilId },

@@ -16,6 +16,7 @@ import { dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/use
 import { useGameStateStore } from '@/ui/state/store';
 import { sceneChar } from '../../helpers/fixtures';
 import type { CardDef, GameState } from '@/engine/types';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 const ENTERING = 'QA_B03023_ENTERING';
 const TOP = 'QA_B03023_TOP';
@@ -112,7 +113,7 @@ function orderCombination(firstCardId: 'B03023' | 'B04012'): void {
 
   const pick = useGameStateStore.getState().pendingEffectPick;
   expect(pick?.source.cardId).toBe('B04012');
-  expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pick!.candidates[0]!.uid })).toEqual({ ok: true });
+  expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pick!.candidates[0]!.uid })).toEqual({ ok: true });
 
   const afterPickSurface = useGameStateStore.getState().pendingDeckReveal;
   expect(afterPickSurface?.source?.cardId).toBe('B03023');

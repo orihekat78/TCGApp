@@ -66,6 +66,9 @@ const ENGINE_INTERNAL_CHANNELS = new Set<string>([
   // 専用 store field を持たず dispatch drain → store.setActiveActionId(id) 直結 (useContactFlowDriver が
   // 既存の activeActionId 監視で拾う = 専用 Modal/Overlay 不要)。標準 4 点配線の対象外。
   'ContactStartAxId',
+  // Ownership metadata for the persisted pending-runtime snapshot. This keeps
+  // one GameState from consuming another state's globals; it has no UI.
+  'RuntimeStateMarker',
 ]);
 
 function walk(dir: string, out: string[] = []): string[] {

@@ -18,6 +18,7 @@ import { _resetIsDriving } from '@/ui/hooks/useOppTurnDriver';
 import { _resetSpectatorDriving } from '@/ui/hooks/useSpectatorTurnDriver';
 import { MATCH_SESSION_RESET_STATE, useGameStateStore } from '@/ui/state/store';
 import { _setHumanPlayerSide } from '@/engine/listeners/triggered';
+import { _resetResolutionLock } from '@/engine/resolve/stack';
 
 export type MatchSessionToken = number;
 
@@ -53,6 +54,7 @@ export function resetMatchSession(options: { preserveGameState?: boolean } = {})
     ? { ...MATCH_SESSION_RESET_STATE, gameState: preservedGameState }
     : MATCH_SESSION_RESET_STATE);
   flow.action._resetActionContexts();
+  _resetResolutionLock();
   resetPendingEffectSession();
   resetRuntimeAtomTargetPolicySession();
   resetPendingAtomSession();

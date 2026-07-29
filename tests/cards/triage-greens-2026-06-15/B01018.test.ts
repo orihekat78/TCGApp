@@ -47,6 +47,7 @@ import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { sceneChar } from '../../helpers/fixtures';
 import type { CardDef, GameState } from '@/engine/types';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 // 江戸川コナンでない通常キャラ decoy (cardName 条件のみで弾かれるべき)。
 // id 衝突回避のため DEC_B01018_ prefix。
@@ -192,7 +193,7 @@ describe('B01018 宮野志保 — gate5 runtime behavior', () => {
       expect(pending, 'B01018 の【ヒラメキ】が発火 (pending set)').not.toBeNull();
       expect(pending!.cardId, 'pending は B01018 のヒラメキ').toBe('B01018');
       useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
-      const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' });
+      const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' });
       expect(r.ok).toBe(true);
       const after = useGameStateStore.getState().gameState!;
       expect(after.players.self.hand.length, 'fire → 手札 +1').toBe(startHand + 1);
@@ -212,7 +213,7 @@ describe('B01018 宮野志保 — gate5 runtime behavior', () => {
       const pending = _drainPendingHirameki();
       expect(pending, 'ヒラメキが発火 (任意発動 surface)').not.toBeNull();
       useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
-      const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'skip' });
+      const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'skip' });
       expect(r.ok).toBe(true);
       const after = useGameStateStore.getState().gameState!;
       expect(after.players.self.hand.length, 'skip → 手札不変 (ドローしない)').toBe(startHand);

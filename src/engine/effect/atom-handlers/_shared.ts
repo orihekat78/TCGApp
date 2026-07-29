@@ -29,10 +29,10 @@ export type PublicHandRevealSide = {
   source: { cardId?: string; abilityId?: string; uid?: string };
 };
 
-let publicHandRevealSequence = 0;
-
-export function publicHandRevealToken(ctx: EffectCtx): string {
-  const token = `public-hand-reveal:${++publicHandRevealSequence}`;
+export function publicHandRevealToken(s: GameState, ctx: EffectCtx): string {
+  const next = (s.publicHandRevealSeq ?? 0) + 1;
+  s.publicHandRevealSeq = next;
+  const token = `public-hand-reveal:${next}`;
   (ctx.causal ??= {}).publicHandRevealToken = token;
   return token;
 }
@@ -262,7 +262,6 @@ export function targetFilterToPredicate(filter: TargetFilter | undefined): (card
 export function resetPendingAtomSession(): void {
   (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | PendingDeckRevealSide[] | null }).__pendingDeckRevealSide = null;
   (globalThis as { __pendingPublicHandRevealSide?: PublicHandRevealSide | PublicHandRevealSide[] | null }).__pendingPublicHandRevealSide = null;
-  publicHandRevealSequence = 0;
   (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = null;
   (globalThis as { __pendingDeckPlaceSide?: PendingDeckPlaceSide | null }).__pendingDeckPlaceSide = null;
   (globalThis as { __pendingContactStartAxId?: string | null }).__pendingContactStartAxId = null;

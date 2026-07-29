@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `c430444a0cc7`
+> Source hash: `c6724dfa8fbb`
 
 `src/engine/effect/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -26,7 +26,7 @@
 - [`engine-api-resolver`](../by-spec/engine-api-resolver.md)
 - [`phase-3b-design`](../by-spec/refactor-plan--phase-3b-design.md)
 
-## 📄 ソース (19)
+## 📄 ソース (21)
 
 - [`src/engine/effect/apply-pick.ts`](../../../../src/engine/effect/apply-pick.ts)
 - [`src/engine/effect/atom-handlers.ts`](../../../../src/engine/effect/atom-handlers.ts)
@@ -39,11 +39,13 @@
 - [`src/engine/effect/atom-pick-spec.ts`](../../../../src/engine/effect/atom-pick-spec.ts)
 - [`src/engine/effect/consult-choose-intercept.ts`](../../../../src/engine/effect/consult-choose-intercept.ts)
 - [`src/engine/effect/consult-leave-intercept.ts`](../../../../src/engine/effect/consult-leave-intercept.ts)
+- [`src/engine/effect/heuristic-atom-target.ts`](../../../../src/engine/effect/heuristic-atom-target.ts)
 - [`src/engine/effect/index.ts`](../../../../src/engine/effect/index.ts)
 - [`src/engine/effect/invoke-hirameki.ts`](../../../../src/engine/effect/invoke-hirameki.ts)
 - [`src/engine/effect/invoke-leave-to-remove.ts`](../../../../src/engine/effect/invoke-leave-to-remove.ts)
 - [`src/engine/effect/pending-state.ts`](../../../../src/engine/effect/pending-state.ts)
 - [`src/engine/effect/resolve-picks.ts`](../../../../src/engine/effect/resolve-picks.ts)
 - [`src/engine/effect/resolver.ts`](../../../../src/engine/effect/resolver.ts)
+- [`src/engine/effect/runtime-state.ts`](../../../../src/engine/effect/runtime-state.ts)
 - [`src/engine/effect/validate-spec-files.ts`](../../../../src/engine/effect/validate-spec-files.ts)
-- [`src/engine/effect/validate.ts`](../../../../src/engine/effect/validate.ts)
+- _...ほか 1 件_

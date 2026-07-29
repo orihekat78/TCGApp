@@ -45,6 +45,7 @@ import { useGameStateStore } from '@/ui/state/store';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { B06090 } from '@/cards/ct-p06/B06090';
 import type { GameState, CardDef, EffectCtx } from '@/engine/types';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 type Player = 'self' | 'opp';
 type G = { __pendingEffectPickQueue?: PendingEffectPickSide[]; __humanPlayerSide?: Player | null };
@@ -122,7 +123,7 @@ function fireA1(s: GameState, optRun: boolean): void {
   const r0 = dispatchEngineAction({ type: 'handUseCard', player: 'self', cardId: 'B06090' });
   expect(r0.ok, 'handUseCard ok').toBe(true);
   expect(useGameStateStore.getState().pendingEffectOptional, '【登場時】で optional surface (human)').not.toBeNull();
-  const r1 = dispatchEngineAction({ type: 'optionalResolve', run: optRun });
+  const r1 = dispatchCurrentDecision({ type: 'optionalResolve', run: optRun });
   expect(r1.ok, `optionalResolve run=${optRun} ok`).toBe(true);
 }
 
@@ -185,7 +186,7 @@ describe('B06090 a1 — 【登場時】 自スリープ→リムーブの[喫茶
       'opt-in で B06090 は sleep 済').toBe('sleep');
 
     const cand = pending.candidates.find((c) => c.cardId === POARO_L5)!;
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: cand.uid });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: cand.uid });
 
     const after = useGameStateStore.getState().gameState!;
     const entered = after.players.self.scene.find((c) => c.cardId === POARO_L5);
@@ -201,7 +202,7 @@ describe('B06090 a1 — 【登場時】 自スリープ→リムーブの[喫茶
     fireA1(a1Base([POARO_L5]), true); // 有効候補あり だが 0体 decline
     const pending = useGameStateStore.getState().pendingEffectPick!;
     expect(pending.nMin, '0枚 decline channel').toBe(0);
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null });
 
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.find((c) => c.cardId === 'B06090')?.state, 'B06090 は sleep 済 (chain step0)').toBe('sleep');

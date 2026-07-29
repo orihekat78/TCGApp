@@ -76,6 +76,7 @@ function makeReservedHandler(hookName: string) {
       const effectCopy = JSON.parse(JSON.stringify(entry.effect)) as Effect;
       const resolved = resolveEffectPicks(state, effectCopy, baseCtx, {
         chooseAtomTarget: isHumanEffect ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+        runtimeAtomTargetPolicyKey: isHumanEffect ? undefined : 'heuristic',
         byPlayer: owner,
         humanChooser: isHumanEffect,
         source: { cardId: entry.source.cardId ?? '', abilityId: 'reserved' },

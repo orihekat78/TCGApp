@@ -81,7 +81,7 @@ export function OppTurnOverlay(): JSX.Element | null {
   if (humanContactDecision) return null;
 
   const activeActionId = store.activeActionId;
-  const ax = activeActionId ? flow.action._getContext(activeActionId) : null;
+  const ax = activeActionId ? flow.action._getContext(gameState, activeActionId) : null;
   const statusText = ax
     ? buildActionStatus(gameState, ax)
     : '相手のターン処理中';

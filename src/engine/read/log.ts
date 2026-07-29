@@ -3,6 +3,15 @@
 
 import type { GameState, LogEntry } from '@/engine/types';
 
+export type LogViewer = 'self' | 'opp' | null;
+
+export function redactLogEntryForViewer(entry: LogEntry, viewer: LogViewer): LogEntry {
+  if (entry.targetAudience === undefined || entry.targetAudience === viewer) return entry;
+  const publicEntry = { ...entry };
+  delete publicEntry.target;
+  return publicEntry;
+}
+
 // 末尾 n 件取得
 function tail(s: GameState, n: number): LogEntry[] {
   if (n <= 0) return [];

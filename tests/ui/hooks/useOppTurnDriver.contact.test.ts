@@ -52,7 +52,7 @@ describe('useOppTurnDriver — Commit 2.5 contact integration', () => {
     if (axId !== null) {
       // action paused → opp 側 byUid はスリープ化済
       expect(after.turn.player).toBe('opp');
-      const ax = flow.action._getContext(axId);
+      const ax = flow.action._getContext(after, axId);
       expect(ax).toBeDefined();
       expect(ax?.byPlayer).toBe('opp');
     } else {

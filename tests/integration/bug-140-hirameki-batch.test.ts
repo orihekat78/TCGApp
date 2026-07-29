@@ -33,6 +33,7 @@ import { _resetActionContexts } from '@/engine/flow/action/state-machine';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _resetTargetExpanders } from '@/engine/flow/action/target-expander';
 import type { GameState } from '@/engine/types/game-state';
+import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
 
 function fullReset(): void {
   engine.cards._resetRegistry();
@@ -74,7 +75,7 @@ function emitAndFire(s: GameState, cardId: string): GameState {
   expect(pending).not.toBeNull();
   expect(pending!.cardId).toBe(cardId);
   useGameStateStore.setState({ gameState: emitted, pendingHirameki: pending });
-  const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' });
+  const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' });
   expect(r.ok).toBe(true);
   expect(useGameStateStore.getState().pendingHirameki).toBeNull();
   return useGameStateStore.getState().gameState!;

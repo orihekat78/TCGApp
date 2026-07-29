@@ -193,6 +193,7 @@ describe('BUG-218 Playmat interaction adjudication', () => {
     await expect(flowPromise).resolves.toEqual({ ok: true });
     const actionId = useGameStateStore.getState().activeActionId;
     expect(actionId).not.toBeNull();
-    expect(_getContext(actionId!)?.target).toEqual({ kind: 'case', player: 'opp' });
+    expect(_getContext(useGameStateStore.getState().gameState!, actionId!)?.target)
+      .toEqual({ kind: 'case', player: 'opp' });
   });
 });

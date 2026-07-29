@@ -17,6 +17,7 @@ import { useGameStateStore } from '@/ui/state/store.js';
 import { actionLabel } from '@/ui/services/actionLabel.js';
 import { cardIdToDisplayName } from '@/ui/services/uidNames.js';
 import type { LogEntry } from '@/engine/types/game-state';
+import { redactLogEntryForViewer, type LogViewer } from '@/engine/read/log.js';
 import './RecentActionToast.css';
 
 const TOAST_DURATION_MS = 1500; // BUG-062: 連続 CPU move でも視認可能な短め
@@ -41,7 +42,10 @@ export function RecentActionToast(): JSX.Element | null {
   useEffect(() => {
     if (!gameState) return;
     if (logLen > lastSeenLenRef.current) {
-      const newEntries = gameState.log.slice(lastSeenLenRef.current, logLen);
+      const viewer = (globalThis as { __humanPlayerSide?: LogViewer }).__humanPlayerSide ?? null;
+      const newEntries = gameState.log
+        .slice(lastSeenLenRef.current, logLen)
+        .map((entry) => redactLogEntryForViewer(entry, viewer));
       queueRef.current = [...queueRef.current, ...newEntries];
       lastSeenLenRef.current = logLen;
       // 何も表示中でなければ即時 dequeue

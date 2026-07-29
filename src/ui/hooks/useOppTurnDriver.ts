@@ -24,7 +24,6 @@ import type { Move } from '@/ai/move-enumerator.js';
 import type { GameState } from '@/engine/types/game-state.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import * as flow from '@/engine/flow/index.js';
-import { mutate as engineMutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
 import { dispatchEngineAction, surfacePendingSideChannels } from './useEngineDispatch.js';
 import { movePresentationDelay } from './movePresentationDelay.js';
@@ -72,7 +71,7 @@ export function driveOppTurn(): void {
     const step = stepTurn(current, new HeuristicPolicy(), 'opp', { pauseOnAction: true });
     previousMoveKind = step.paused?.move?.kind ?? step.move?.kind ?? null;
     // 中間 state を store にコミット (action 直前 / 通常 move 適用後 / pause 時は不変参照)
-    store.setGameState(step.nextState);
+    store.setGameState(step.nextState, { preserveRuntime: true });
     // Public reveals must reach the UI before another CPU move. Private CPU
     // looks never enter this side channel, so they do not stall the driver.
     surfacePendingSideChannels();
@@ -115,12 +114,7 @@ export function driveOppTurn(): void {
       produce(s, (draft) => {
         if (draft.gameResult) return;
         if (draft.turn.player !== 'opp') return;
-        flow.endTurn(draft, 'opp');
-        runAllUntilEmpty(draft);
-        if (draft.gameResult) return;
-        engineMutate.flag.resetTurnFlags(draft, 'self');
-        draft.turn.isFirstPlayerFirstTurn = false;
-        flow.startTurn(draft, 'self');
+        flow.endTurn(draft, 'opp', { startNextTurn: true });
         runAllUntilEmpty(draft);
       }),
     );

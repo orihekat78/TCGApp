@@ -18,6 +18,7 @@ import { mutate } from '@/engine/mutate';
 import { produce } from '@/engine/produce';
 import { runAllUntilEmpty } from '@/engine/resolve';
 import { _clearPendingEffectChoiceSide, _drainPendingEffectChoiceSide } from '@/engine/effect/pending-state';
+import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
 
 function reset(): void {
   engine.cards._resetRegistry();
@@ -83,9 +84,9 @@ describe('B06025 ケロ介: action-removed evidence occurrence reentry', () => {
     const pending = trigger(state);
     expect(pending.occurrence).toEqual({ player: 'self', cardId: 'B06025', removeIndex: 1 });
 
-    expect(dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' })).toEqual({ ok: true });
+    expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' })).toEqual({ ok: true });
     expect(useGameStateStore.getState().pendingEffectPick?.atomVerb).toBe('sceneRemove');
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'target' }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'target' }).ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene).toHaveLength(0);
     expect(after.players.self.scene.map(c => c.cardId)).toEqual(['B06025']);
@@ -99,7 +100,7 @@ describe('B06025 ケロ介: action-removed evidence occurrence reentry', () => {
     state.players.opp.scene = [targetChar()];
     trigger(state);
 
-    expect(dispatchEngineAction({ type: 'hiramekiResolve', choice: 'skip' }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'skip' }).ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene).toHaveLength(1);
     expect(after.players.self.scene).toHaveLength(0);
@@ -111,7 +112,7 @@ describe('B06025 ケロ介: action-removed evidence occurrence reentry', () => {
     state.players.self.remove = ['B06025'];
     trigger(state, 0);
 
-    expect(dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' })).toEqual({ ok: true });
+    expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' })).toEqual({ ok: true });
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene).toHaveLength(0);
     expect(after.players.self.remove).toEqual(['B06025']);
@@ -123,8 +124,8 @@ describe('B06025 ケロ介: action-removed evidence occurrence reentry', () => {
     state.players.opp.scene = [targetChar()];
     trigger(state, 1);
 
-    expect(dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'target' }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'target' }).ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene).toHaveLength(0);
     expect(after.players.self.scene).toHaveLength(0);
@@ -157,7 +158,7 @@ describe('B06025 ケロ介: action-removed evidence occurrence reentry', () => {
     state.players.self.scene = [kerChar(), { ...targetChar(), uid: 'ally', cardId: 'B06024' }];
     const choice = enterA1(state, 'self');
     expect(choice?.options).toHaveLength(2);
-    expect(dispatchEngineAction({ type: 'choiceResolve', choiceIndex: 0 }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'choiceResolve', choiceIndex: 0 }).ok).toBe(true);
     let after = useGameStateStore.getState().gameState!;
     expect(readChar.hasKeyword(after, 'ker', '突撃')).toBe(true);
     after = produce(after, draft => mutate.char.clearTurnEffects(draft, 'ker', 'turn'));
@@ -169,7 +170,7 @@ describe('B06025 ケロ介: action-removed evidence occurrence reentry', () => {
     state.players.opp.scene = [kerChar(), { ...targetChar(), uid: 'ally', cardId: 'B06024' }];
     const choice = enterA1(state, 'opp');
     expect(choice?.player).toBe('opp');
-    expect(dispatchEngineAction({ type: 'choiceResolve', choiceIndex: 1 }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'choiceResolve', choiceIndex: 1 }).ok).toBe(true);
     let after = useGameStateStore.getState().gameState!;
     expect(readChar.ap(after, 'ker')).toBe(6000);
     after = produce(after, draft => mutate.char.clearTurnEffects(draft, 'ker', 'turn'));

@@ -23,6 +23,7 @@ import {
   passGuard,
   advance,
   snapshotAP,
+  _getContext,
   _resetActionContexts,
 } from '@/engine/flow/action/state-machine';
 import { _resetTargetExpanders } from '@/engine/flow/action/target-expander';
@@ -260,29 +261,29 @@ describe('integration: 1-turn round-trip', () => {
       const s3 = produce(s2, draft => {
         passGuard(draft, ax!);
       });
-      expect(ax?.phase).toBe('leave-resolution');
+      expect(_getContext(s3, ax!.id)?.phase).toBe('leave-resolution');
 
       // advance: leave-resolution → contact-pending
       const s4 = produce(s3, draft => {
         advance(draft, ax!);
       });
-      expect(ax?.phase).toBe('contact-pending');
+      expect(_getContext(s4, ax!.id)?.phase).toBe('contact-pending');
 
       // advance: contact-pending → action-1 (contact:start + contact:order-set emit)
       const s5 = produce(s4, draft => {
         advance(draft, ax!);
       });
-      expect(ax?.phase).toBe('action-1');
+      expect(_getContext(s5, ax!.id)?.phase).toBe('action-1');
       // 行動順: AP 同値 → 防御側(=opp) 先 (rules/08)
-      expect(ax?.firstUid).toBe(defUid);
-      expect(ax?.secondUid).toBe(atkUid);
+      expect(_getContext(s5, ax!.id)?.firstUid).toBe(defUid);
+      expect(_getContext(s5, ax!.id)?.secondUid).toBe(atkUid);
 
       // action-1 → action-2 → judge
       const s6 = produce(s5, draft => {
         advance(draft, ax!);
         advance(draft, ax!);
       });
-      expect(ax?.phase).toBe('judge');
+      expect(_getContext(s6, ax!.id)?.phase).toBe('judge');
 
       // snapshotAP + judge
       const s7 = produce(s6, draft => {
@@ -302,7 +303,7 @@ describe('integration: 1-turn round-trip', () => {
         advance(draft, ax!);
         advance(draft, ax!);
       });
-      expect(ax?.phase).toBe('action-end');
+      expect(_getContext(s8, ax!.id)).toBeUndefined();
 
       // Hook 順序検証
       const idxOf = (h: HookName) => recorded.indexOf(h);

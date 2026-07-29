@@ -14,6 +14,7 @@
 import { useEffect } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from './useEngineDispatch.js';
+import { bindPendingDecision } from './useEngineDispatch/types.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 
 function getHumanPlayerSide(): 'self' | 'opp' | null {
@@ -39,6 +40,6 @@ export function useMisreadFlowDriver(): void {
     const picks = ai.chooseMisreadTriggers
       ? ai.chooseMisreadTriggers(gameState, pending.reasoningUid, pending.candidates)
       : []; // フォールバック: 全スキップ
-    dispatchEngineAction({ type: 'misreadResolve', picks });
+    dispatchEngineAction(bindPendingDecision(pending, { type: 'misreadResolve', picks }));
   }, [pending, gameState, spectatorMode]);
 }

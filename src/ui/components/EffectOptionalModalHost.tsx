@@ -15,6 +15,7 @@
 import type { JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
+import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import { def as readDef } from '@/engine/read/def.js';
 import './ChoicePickerModal.css';
 
@@ -27,7 +28,7 @@ export function EffectOptionalModalHost(): JSX.Element | null {
   const desc = def?.abilities?.find((a) => a.id === pending.source.abilityId)?.description ?? '';
 
   const resolve = (run: boolean): void => {
-    dispatchEngineAction({ type: 'optionalResolve', run });
+    dispatchEngineAction(bindPendingDecision(pending, { type: 'optionalResolve', run }));
   };
 
   return (

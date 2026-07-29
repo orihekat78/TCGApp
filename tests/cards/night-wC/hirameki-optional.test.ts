@@ -19,6 +19,7 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { B06032 } from '@/cards/ct-p06/B06032';
 import { B09081 } from '@/cards/ct-p09/B09081';
 import type { GameState, CardDef, SceneCharacter } from '@/engine/types';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 type Player = 'self' | 'opp';
 const setHuman = (v: Player | null) => { (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide = v; };
@@ -51,7 +52,7 @@ function fireHirameki(s: GameState, ownerCardId: string, actorUid = 'atk'): void
   const pending = _drainPendingHirameki();
   expect(pending, 'ヒラメキ optional hook 検出').not.toBeNull();
   useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
-  const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' });
+  const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' });
   expect(r.ok, 'hiramekiResolve fire ok').toBe(true);
 }
 const store = () => useGameStateStore.getState();
@@ -88,17 +89,17 @@ describe('B06032 ヒラメキ (human) — 手札1リムーブ→[YAIBA]Lv5をス
   it('run:true → discard→sceneEnter pick で Lv5[YAIBA]のみ登場 (スリープ)、decoy は remove 残存', () => {
     setHuman('self');
     fireHirameki(boardResolved(), 'B06032');
-    expect(dispatchEngineAction({ type: 'optionalResolve', run: true }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: true }).ok).toBe(true);
     // discard pick (HAND1) を解決
     let pick = store().pendingEffectPick!;
     expect(pick, 'discard pick surface').not.toBeNull();
     expect(pick.candidates.map((c) => c.cardId)).toEqual(['HAND1']);
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pick.candidates[0].uid }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pick.candidates[0].uid }).ok).toBe(true);
     // sceneEnter pick (Lv5 YAIBA のみ) を解決
     pick = store().pendingEffectPick!;
     expect(pick, 'sceneEnter pick surface').not.toBeNull();
     expect(pick.candidates.map((c) => c.cardId), 'filter 実評価: Lv5 YAIBA のみ').toEqual(['YAIBA5']);
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pick.candidates[0].uid }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pick.candidates[0].uid }).ok).toBe(true);
     const after = store().gameState!;
     const revived = after.players.self.scene.find((c) => c.cardId === 'YAIBA5');
     expect(revived, 'YAIBA5 が登場').toBeTruthy();
@@ -112,7 +113,7 @@ describe('B06032 ヒラメキ (human) — 手札1リムーブ→[YAIBA]Lv5をス
   it('run:false (decline) → discard なし・登場なし (「してもよい」= 0 選択)', () => {
     setHuman('self');
     fireHirameki(boardResolved(), 'B06032');
-    expect(dispatchEngineAction({ type: 'optionalResolve', run: false }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: false }).ok).toBe(true);
     expect(store().pendingEffectPick, 'pick は surface しない').toBeNull();
     const after = store().gameState!;
     expect(after.players.self.scene.some((c) => c.cardId === 'YAIBA5'), '登場なし').toBe(false);
@@ -143,17 +144,17 @@ describe('B09081 a2 ヒラメキ (human) — 手札1リムーブ→アクショ�
     setHuman('self');
     fireHirameki(board(), 'B09081', 'atk');
     expect(store().pendingEffectOptional, 'optional surface').not.toBeNull();
-    expect(dispatchEngineAction({ type: 'optionalResolve', run: true }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: true }).ok).toBe(true);
     const pick = store().pendingEffectPick!;
     expect(pick.candidates.map((c) => c.cardId)).toEqual(['HAND1']); // discard pick
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pick.candidates[0].uid }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pick.candidates[0].uid }).ok).toBe(true);
     const after = store().gameState!;
     expect(after.players.opp.scene.find((c) => c.uid === 'atk')!.state, 'アクション中のキャラ(atk)がスタン').toBe('stun');
   });
   it('decline → スタンなし・手札残存', () => {
     setHuman('self');
     fireHirameki(board(), 'B09081', 'atk');
-    expect(dispatchEngineAction({ type: 'optionalResolve', run: false }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: false }).ok).toBe(true);
     const after = store().gameState!;
     expect(after.players.opp.scene.find((c) => c.uid === 'atk')!.state).toBe('active');
     expect(after.players.self.hand).toContain('HAND1');

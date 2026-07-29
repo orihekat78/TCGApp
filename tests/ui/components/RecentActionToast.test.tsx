@@ -12,6 +12,7 @@ describe('RecentActionToast', () => {
   let root: Root;
 
   beforeEach(() => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -24,6 +25,7 @@ describe('RecentActionToast', () => {
     act(() => root.unmount());
     container.remove();
     useGameStateStore.setState({ gameState: null });
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   });
 
   it('announces the visible action without taking pointer input from the board', async () => {
@@ -35,5 +37,26 @@ describe('RecentActionToast', () => {
     expect(toast).not.toBeNull();
     expect(toast?.getAttribute('role')).toBe('status');
     expect(getComputedStyle(toast!).pointerEvents).toBe('none');
+  });
+
+  it('does not announce a private target to the other player', async () => {
+    const gameState = createSampleGameState();
+    gameState.log = [{
+      ts: 1,
+      player: 'opp',
+      turn: 1,
+      action: 'effect:evidencePeek',
+      target: 'PRIVATE-EVIDENCE',
+      targetAudience: 'opp',
+    }];
+    useGameStateStore.setState({ gameState });
+
+    await act(async () => {
+      root.render(<RecentActionToast />);
+    });
+
+    const toast = container.querySelector<HTMLElement>('[data-testid="recent-action-toast"]');
+    expect(toast).not.toBeNull();
+    expect(toast?.textContent).not.toContain('PRIVATE-EVIDENCE');
   });
 });

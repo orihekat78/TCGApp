@@ -30,15 +30,22 @@ test.describe('Phase 9-G.2: リプレイ UI', () => {
     // (file input は test では使いにくいため、direct API path で検証)
     await page.evaluate(() => {
       const w = window as unknown as GameWindow;
-      const initialState = w.__game.createSampleGameState();
+      const initialState = w.__game.createSampleGameState() as {
+        pendingEffects: unknown[];
+        players: { opp: { deck: string[] } };
+      };
+      initialState.pendingEffects = [];
+      initialState.players.opp.deck = Array.from(
+        { length: 40 },
+        (_, index) => `replay-opp-deck-${index}`,
+      );
       const log = {
         schemaVersion: 1,
         initialState,
         moves: [
-          { turn: 1, player: 'self', move: { kind: 'endTurn' } },
-          { turn: 1, player: 'opp', move: { kind: 'endTurn' } },
+          { turn: 4, player: 'self', move: { kind: 'endTurn' } },
         ],
-        result: { winner: 'self', reason: 'turn-cap', turns: 1 },
+        result: { winner: 'draw', reason: 'turn-cap', turns: 5 },
       };
       // React state は外から書けないので、file input event を simulate
       const fileInput = document.querySelector('[data-testid="game-setup-replay-file"]') as HTMLInputElement | null;
@@ -53,7 +60,7 @@ test.describe('Phase 9-G.2: リプレイ UI', () => {
 
     // FileReader が async 動作 → ReplayPanel 表示を polling
     await expect(page.locator('[data-testid="replay-panel"]')).toBeVisible({ timeout: 5000 });
-    await expect(page.locator('[data-testid="replay-progress"]')).toHaveText(/0 ?\/ ?2/);
+    await expect(page.locator('[data-testid="replay-progress"]')).toHaveText(/0 ?\/ ?1/);
 
     expect(errors).toEqual([]);
   });
@@ -63,15 +70,22 @@ test.describe('Phase 9-G.2: リプレイ UI', () => {
 
     await page.evaluate(() => {
       const w = window as unknown as GameWindow;
-      const initialState = w.__game.createSampleGameState();
+      const initialState = w.__game.createSampleGameState() as {
+        pendingEffects: unknown[];
+        players: { opp: { deck: string[] } };
+      };
+      initialState.pendingEffects = [];
+      initialState.players.opp.deck = Array.from(
+        { length: 40 },
+        (_, index) => `replay-opp-deck-${index}`,
+      );
       const log = {
         schemaVersion: 1,
         initialState,
         moves: [
-          { turn: 1, player: 'self', move: { kind: 'endTurn' } },
-          { turn: 1, player: 'opp', move: { kind: 'endTurn' } },
+          { turn: 4, player: 'self', move: { kind: 'endTurn' } },
         ],
-        result: { winner: 'self', reason: 'turn-cap', turns: 1 },
+        result: { winner: 'draw', reason: 'turn-cap', turns: 5 },
       };
       const fileInput = document.querySelector('[data-testid="game-setup-replay-file"]') as HTMLInputElement | null;
       if (!fileInput) throw new Error('replay file input not found');
@@ -85,9 +99,9 @@ test.describe('Phase 9-G.2: リプレイ UI', () => {
 
     await expect(page.locator('[data-testid="replay-panel"]')).toBeVisible({ timeout: 5000 });
 
-    // step 1 回 → progress 1/2
+    // step 1 回 → progress 1/1
     await page.locator('[data-testid="replay-step"]').click();
-    await expect(page.locator('[data-testid="replay-progress"]')).toHaveText(/1 ?\/ ?2/);
+    await expect(page.locator('[data-testid="replay-progress"]')).toHaveText(/1 ?\/ ?1/);
 
     // speed preset 1500 を選択
     await page.locator('[data-testid="replay-speed-1500"]').click();

@@ -56,6 +56,7 @@ import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { sceneChar } from '../../helpers/fixtures';
 import { B09038 } from '@/cards/ct-p09/B09038';
 import type { AbilityDef, CardDef, GameState, ActionContext } from '@/engine/types';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 type G = {
   __pendingEffectPickQueue?: PendingEffectPickSide[];
@@ -120,7 +121,7 @@ function fireA2(s: GameState, optRun: boolean): void {
   const r0 = dispatchEngineAction({ type: 'handUseCard', player: 'self', cardId: 'B09038' });
   expect(r0.ok, 'handUseCard ok').toBe(true);
   expect(useGameStateStore.getState().pendingEffectOptional, 'enter で optional surface (human)').not.toBeNull();
-  const r1 = dispatchEngineAction({ type: 'optionalResolve', run: optRun });
+  const r1 = dispatchCurrentDecision({ type: 'optionalResolve', run: optRun });
   expect(r1.ok, `optionalResolve run=${optRun} ok`).toBe(true);
 }
 
@@ -187,7 +188,7 @@ describe('B09038 黒羽盗一 — gate5 runtime behavior', () => {
     const deckBefore = beforePick.players.self.deck.length;
 
     // 0体 decline
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null });
 
     const after = useGameStateStore.getState().gameState!;
     // ★ BUG-111 #2: sequence-origin continuation の decline は mandatory tail (draw) を実行する。
@@ -216,7 +217,7 @@ describe('B09038 黒羽盗一 — gate5 runtime behavior', () => {
     const pending = useGameStateStore.getState().pendingEffectPick;
     expect(pending?.atomVerb, '候補0でも任意の sceneEnter 決定を surface').toBe('sceneEnter');
     expect(pending?.candidates, '選択可能候補は0件').toEqual([]);
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null });
     const after = useGameStateStore.getState().gameState!;
     // ★ 候補0 でも mandatory draw が発火 (deck top を手札へ)
     expect(inHand(after, 'SET_TOP'), '★ 候補0 でも mandatory draw 発火 (deck top を手札へ)').toBe(true);
@@ -239,7 +240,7 @@ describe('B09038 黒羽盗一 — gate5 runtime behavior', () => {
     const pending = useGameStateStore.getState().pendingEffectPick!;
     const cand = pending.candidates.find((c) => c.cardId === YUSAKU_L6)!;
     expect(cand, 'YUSAKU_L6 が sceneEnter 候補').toBeTruthy();
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: cand.uid });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: cand.uid });
 
     const after = useGameStateStore.getState().gameState!;
     // sceneEnter: 工藤優作Lv6 が現場に登場 (active = 「登場させ」default、enterSleep 無し)

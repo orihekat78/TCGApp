@@ -11,8 +11,17 @@ import { pendingOwnerOrderGroup } from '@/engine/resolve/stack.js';
 
 // ---- can-check (前段ガード) ----
 
+function matchesPendingDecision(
+  pending: { decisionId: string } | null,
+  action: { decisionId: string },
+): boolean {
+  // Legacy tests may inject both values without an id at runtime. Shipped
+  // TypeScript callers cannot construct a decision response without one.
+  return pending !== null && pending.decisionId === action.decisionId;
+}
+
 export function isAllowed(state: GameState, action: EngineAction): boolean {
-  if (isNewPrimaryAction(action) && hasExclusivePublicActionContext()) return false;
+  if (isNewPrimaryAction(action) && hasExclusivePublicActionContext(state)) return false;
   switch (action.type) {
     case 'reasoning':
       return flow.canReason(state, action.uid);
@@ -40,7 +49,7 @@ export function isAllowed(state: GameState, action: EngineAction): boolean {
     case 'actionDeclareCase':
       return flow.canActionAgainstCase(state, action.byUid, action.targetPlayer);
     case 'actionGuard': {
-      const ax = flow.action._getContext(action.actionId);
+      const ax = flow.action._getContext(state, action.actionId);
       if (!ax) return false;
       if (ax.phase !== 'guard-window') return false;
       if (action.guarderUid === null) return true; // pass はいつでも可
@@ -48,63 +57,93 @@ export function isAllowed(state: GameState, action: EngineAction): boolean {
       return flow.guard.canGuard(state, ax.byUid, action.guarderUid, ax.target.kind === 'char' ? ax.target.uid : undefined);
     }
     case 'actionContact': {
-      const ax = flow.action._getContext(action.actionId);
+      const ax = flow.action._getContext(state, action.actionId);
       if (!ax) return false;
       if (ax.phase !== 'action-1' && ax.phase !== 'action-2' && ax.phase !== 'action-1-redo') return false;
+      const currentUid = ax.phase === 'action-2' ? ax.secondUid : ax.firstUid;
+      if (!currentUid || ownerOfUid(state, currentUid) !== action.player) return false;
       if (action.choice.kind === 'pass') return true;
       if (action.choice.kind === 'cutin') return flow.contact.canCutIn(state, ax, action.player, action.choice.cardId);
       if (action.choice.kind === 'disguise') return flow.contact.canDisguise(state, ax, action.player, action.choice.cardId);
       return false;
     }
     case 'actionAdvance': {
-      const ax = flow.action._getContext(action.actionId);
-      return !!ax && ax.phase !== 'action-end';
+      const ax = flow.action._getContext(state, action.actionId);
+      if (!ax || hasBlockingResolutionPrompt()) return false;
+      switch (ax.phase) {
+        case 'leave-resolution':
+        case 'contact-pending':
+        case 'contact-end':
+          return true;
+        case 'action-1':
+          return ax.firstActed !== undefined;
+        case 'action-2':
+          return ax.secondActed !== undefined;
+        case 'action-1-redo':
+          return ax.firstRedoActed !== undefined;
+        case 'judge':
+          return ax.judgeResolved === true;
+        default:
+          return false;
+      }
     }
     case 'actionJudge': {
-      const ax = flow.action._getContext(action.actionId);
-      return !!ax && ax.phase === 'judge';
+      const ax = flow.action._getContext(state, action.actionId);
+      return !!ax
+        && ax.phase === 'judge'
+        && ax.judgeResolved !== true
+        && !hasBlockingResolutionPrompt();
     }
     case 'hiramekiResolve': {
       // pendingHirameki が set されているときのみ有効
-      return useGameStateStore.getState().pendingHirameki !== null;
+      return matchesPendingDecision(useGameStateStore.getState().pendingHirameki, action);
     }
     case 'misreadResolve': {
       const pending = useGameStateStore.getState().pendingMisread;
-      return pending !== null && _canResolveMisreadPicks(state, pending, action.picks);
+      return matchesPendingDecision(pending, action)
+        && _canResolveMisreadPicks(state, pending!, action.picks);
     }
     case 'optionalResolve': {
       // 2026-06-06 タスクC: pendingEffectOptional が set されているときのみ有効
-      return useGameStateStore.getState().pendingEffectOptional !== null;
+      return matchesPendingDecision(useGameStateStore.getState().pendingEffectOptional, action);
     }
-    case 'leaveInterceptResolve':
-      return useGameStateStore.getState().pendingLeaveIntercept !== null;
+    case 'leaveInterceptResolve': {
+      const pending = useGameStateStore.getState().pendingLeaveIntercept;
+      if (!matchesPendingDecision(pending, action) || pending === null) return false;
+      const ax = flow.action._getContext(state, pending.actionId);
+      const stateOwned = ax?.pendingLeaveIntercept;
+      return ax?.phase === 'judge'
+        && stateOwned?.player === pending.player
+        && stateOwned.targetUid === pending.targetUid
+        && stateOwned.interceptorUid === pending.interceptorUid;
+    }
     case 'rpsResolve':
-      return useGameStateStore.getState().pendingRps !== null;
+      return matchesPendingDecision(useGameStateStore.getState().pendingRps, action);
     case 'setCardChoiceResolve':
-      return useGameStateStore.getState().pendingSetCardChoice !== null;
+      return matchesPendingDecision(useGameStateStore.getState().pendingSetCardChoice, action);
     case 'setCardReplacementResolve':
-      return useGameStateStore.getState().pendingSetCardReplacement !== null;
+      return matchesPendingDecision(useGameStateStore.getState().pendingSetCardReplacement, action);
     case 'chooseInterceptResolve': {
-      return useGameStateStore.getState().pendingChooseIntercept !== null;
+      return matchesPendingDecision(useGameStateStore.getState().pendingChooseIntercept, action);
     }
     case 'repeatOptionalResolve': {
-      return useGameStateStore.getState().pendingEffectRepeatOptional !== null;
+      return matchesPendingDecision(useGameStateStore.getState().pendingEffectRepeatOptional, action);
     }
     case 'deckReorderResolve': {
       // BUG-136: pendingDeckReorder が set されているときのみ有効
-      return useGameStateStore.getState().pendingDeckReorder !== null;
+      return matchesPendingDecision(useGameStateStore.getState().pendingDeckReorder, action);
     }
     case 'deckPlaceResolve': {
       // mini-wave #5 P2: pendingDeckPlace が set されているときのみ有効
-      return useGameStateStore.getState().pendingDeckPlace !== null;
+      return matchesPendingDecision(useGameStateStore.getState().pendingDeckPlace, action);
     }
     case 'choiceResolve': {
       // BUG-121: pendingEffectChoice が set されているときのみ有効
-      return useGameStateStore.getState().pendingEffectChoice !== null;
+      return matchesPendingDecision(useGameStateStore.getState().pendingEffectChoice, action);
     }
     case 'effectPickResolve': {
       // BUG-054: pendingEffectPick が set されているときのみ有効
-      return useGameStateStore.getState().pendingEffectPick !== null;
+      return matchesPendingDecision(useGameStateStore.getState().pendingEffectPick, action);
     }
     case 'setEffectOrder': {
       // resolution lock 中は禁止
@@ -139,10 +178,41 @@ export function isAllowed(state: GameState, action: EngineAction): boolean {
   }
 }
 
-/** Human resolution prompts and action contexts own public dispatch until resolved. */
-function hasExclusivePublicActionContext(): boolean {
+function ownerOfUid(state: GameState, uid: string): 'self' | 'opp' | null {
+  if (uid === 'partner:self') return 'self';
+  if (uid === 'partner:opp') return 'opp';
+  if (state.players.self.scene.some(character => character.uid === uid)) return 'self';
+  if (state.players.opp.scene.some(character => character.uid === uid)) return 'opp';
+  return null;
+}
+
+function hasBlockingResolutionPrompt(): boolean {
   const store = useGameStateStore.getState();
-  if (_getResolutionLock().locked || store.activeActionId !== null) return true;
+  if (_getResolutionLock().locked) return true;
+  return store.pendingHirameki !== null
+    || store.pendingMisread !== null
+    || store.pendingEffectPick !== null
+    || store.pendingEffectChoice !== null
+    || store.pendingEffectOptional !== null
+    || store.pendingChooseIntercept !== null
+    || store.pendingLeaveIntercept !== null
+    || store.pendingRps !== null
+    || store.pendingSetCardChoice !== null
+    || store.pendingSetCardReplacement !== null
+    || store.pendingEffectRepeatOptional !== null
+    || store.pendingDeckReveal !== null
+    || store.pendingDeckReorder !== null
+    || store.pendingDeckPlace !== null;
+}
+
+/** Human resolution prompts and action contexts own public dispatch until resolved. */
+function hasExclusivePublicActionContext(state: GameState): boolean {
+  const store = useGameStateStore.getState();
+  if (
+    _getResolutionLock().locked
+    || store.activeActionId !== null
+    || flow.action._hasOpenActionContext(state)
+  ) return true;
   return store.pendingHirameki !== null
     || store.pendingMisread !== null
     || store.pendingEffectPick !== null

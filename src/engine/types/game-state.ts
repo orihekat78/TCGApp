@@ -223,6 +223,8 @@ export type LogEntry = {
   turn: number;
   action: string;
   target?: string;
+  /** When set, target is private to this player; action/result remain public. */
+  targetAudience?: 'self' | 'opp';
   result?: string;
 };
 
@@ -232,6 +234,7 @@ export type LogEntry = {
 import type { EffectStackEntry, ReasoningContinuation } from './effect-stack.js';
 import type { ReservedEffectEntry } from './reserved-effect.js';
 import type { TargetFilter } from './effect.js'; // engine A3 wave (2026-07-11): actionCutinBanOppFilter (B05007)
+import type { ActionContext } from './results.js';
 
 export type GameState = {
   turn: {
@@ -242,6 +245,37 @@ export type GameState = {
   };
   players: { self: PlayerState; opp: PlayerState };
   pendingEffects: EffectStackEntry[];
+  /** Serializable in-flight action state. Optional only for legacy saves. */
+  actionContexts?: Record<string, ActionContext>;
+  /** Monotonic ActionContext allocator. Optional only for legacy saves. */
+  actionContextSeq?: number;
+  /** Monotonic EffectStackEntry allocator. Optional only for legacy saves. */
+  effectEntrySeq?: number;
+  /** Monotonic scene-character UID allocator. Optional only for legacy saves. */
+  sceneUidSeq?: number;
+  /**
+   * Serializable turn-boundary continuation. End-phase effects must finish
+   * before cleanup, expiry, turn transfer, and the optional next-turn start.
+   */
+  pendingTurnTransition?: {
+    endingPlayer: 'self' | 'opp';
+    stage: 'after-end-start' | 'after-cleanup' | 'after-turn-end';
+    startNextTurn: boolean;
+  };
+  /** Monotonic identity for a serializable human-decision continuation. */
+  pendingRuntimeSeq?: number;
+  /**
+   * Human-decision side channels paused by the resolver. The runtime globals
+   * are only a live-process cache; this snapshot is the save/replay authority.
+   */
+  pendingRuntimeState?: {
+    token: number;
+    snapshot: Array<{
+      key: string;
+      present: boolean;
+      value?: unknown;
+    }>;
+  };
   /**
    * Monotonic identity allocator for one hook emission.  Kept in GameState so
    * a saved/replayed match cannot accidentally merge two separate timings.
@@ -264,6 +298,10 @@ export type GameState = {
   effectTriggerBatchConfirmedContext?: boolean;
   /** Monotonic set-card occurrence allocator; absent only in legacy saved state. */
   setCardInstanceSeq?: number;
+  /** Persisted allocator for delayed reserved-effect identities. */
+  reservedEffectSeq?: number;
+  /** Persisted allocator for public-hand reveal resolution tokens. */
+  publicHandRevealSeq?: number;
   /**
    * 離場後予約効果 queue (mega-wave W6 step8, row75)。コストで源カードが盤面を離れる
    * 「ターン終了時〜」(B08069) /「このターン中、次に〜したとき」(B01058) をカード位置非依存で保持。

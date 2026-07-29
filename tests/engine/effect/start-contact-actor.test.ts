@@ -30,7 +30,7 @@ describe('startContact selected actor', () => {
     const state = base();
     runEffect(state, selected, ctx());
     const id = _drainPendingContactStartAxId();
-    expect(flowAction._getContext(id!)?.byUid).toBe('sleeping-ally');
+    expect(flowAction._getContext(state, id!)?.byUid).toBe('sleeping-ally');
     expect(state.players.self.scene.find((char) => char.uid === 'sleeping-ally')?.state).toBe('sleep');
   });
 
@@ -40,14 +40,14 @@ describe('startContact selected actor', () => {
     state.players.self.scene = state.players.self.scene.filter((char) => char.uid !== 'host');
     runEffect(state, selected, ctx());
     const id = _drainPendingContactStartAxId();
-    expect(flowAction._getContext(id!)?.byUid).toBe('sleeping-ally');
+    expect(flowAction._getContext(state, id!)?.byUid).toBe('sleeping-ally');
   });
 
   it('keeps omitted actorUid compatible with the source actor', () => {
     const state = base();
     runEffect(state, { kind: 'atom', verb: 'startContact', args: { targetUid: '$target.uid' } }, ctx());
     const id = _drainPendingContactStartAxId();
-    expect(flowAction._getContext(id!)?.byUid).toBe('host');
+    expect(flowAction._getContext(state, id!)?.byUid).toBe('host');
   });
 
   it('fails closed for stale or invalid selected actors and targets', () => {

@@ -9,8 +9,14 @@ import { def as readDef } from '../../read/def.js'; // S2 wave (2026-07-11, PR27
 import { removeExcludedSourceCardId } from '../../read/effect-source.js';
 import { requireField, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait } from './_shared.js';
 import { allCardNameComponentsForDef } from '../../target/card-def-registry.js';
+import {
+  pushPendingEffectChoiceSide,
+  setPendingChoiceBindings,
+  setPendingChoiceResume,
+  toPlainDeep,
+} from '../pending-state.js';
 import type { Player } from './_shared.js';
-import type { GameState, AtomVerb, EffectCtx, Candidate } from '../../types/index.js';
+import type { GameState, AtomVerb, EffectCtx, Candidate, Effect } from '../../types/index.js';
 
 function markCutinEffectEntry(ctx: EffectCtx, char: { turnEffects: Record<string, unknown> }): void {
   if (ctx.source.resolutionKind === 'cutin') {
@@ -557,8 +563,63 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
           : [];
       }
       // W6 step10 (row9): byPlayer = 効果 source 側 — leave:intercept の「相手の能力や効果」帰属判定用
-      mutate.scene.removeToRemove(s, srUid, (a.cause as RemoveCause) ?? 'effect', undefined, { byPlayer: ctx.source.player });
-      // BUG-073: effect log
+      const rawLeaveInterceptDecision = a.leaveInterceptDecision;
+      const leaveInterceptDecision = rawLeaveInterceptDecision !== null
+        && typeof rawLeaveInterceptDecision === 'object'
+        && !Array.isArray(rawLeaveInterceptDecision)
+        && typeof (rawLeaveInterceptDecision as Record<string, unknown>).interceptorUid === 'string'
+        && typeof (rawLeaveInterceptDecision as Record<string, unknown>).accept === 'boolean'
+        ? {
+            interceptorUid: (rawLeaveInterceptDecision as { interceptorUid: string }).interceptorUid,
+            accept: (rawLeaveInterceptDecision as { accept: boolean }).accept,
+          }
+        : undefined;
+      const removeResult = mutate.scene.removeToRemove(
+        s,
+        srUid,
+        (a.cause as RemoveCause) ?? 'effect',
+        undefined,
+        { byPlayer: ctx.source.player, leaveInterceptDecision },
+      );
+      if (removeResult.deferred && removeResult.pendingLeaveIntercept) {
+        const pending = removeResult.pendingLeaveIntercept;
+        const resume: Effect = {
+          kind: 'choice',
+          chooser: pending.player === ctx.source.player ? 'self' : 'opp',
+          options: [true, false].map((accept) => ({
+            kind: 'atom' as const,
+            verb: 'sceneRemove',
+            args: {
+              ...toPlainDeep(a),
+              uid: srUid,
+              leaveInterceptDecision: { interceptorUid: pending.interceptorUid, accept },
+            },
+          })),
+        };
+        pushPendingEffectChoiceSide({
+          player: pending.player,
+          sourcePlayer: ctx.source.player,
+          source: {
+            cardId: ctx.source.cardId ?? '',
+            abilityId: ctx.source.abilityId ?? '',
+            uid: ctx.source.uid ?? '',
+            ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}),
+            ...(ctx.source.triggerBatch !== undefined ? { triggerBatch: ctx.source.triggerBatch } : {}),
+            ...(ctx.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: ctx.source.ownerChosenOrder } : {}),
+            ...(ctx.source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: ctx.source.ownerOrderConfirmed } : {}),
+            ...(ctx.source.declaredBatch !== undefined ? { declaredBatch: ctx.source.declaredBatch } : {}),
+          },
+          options: [
+            { index: 0, label: 'Use leave intercept' },
+            { index: 1, label: 'Do not use leave intercept' },
+          ],
+        });
+        setPendingChoiceResume(resume);
+        setPendingChoiceBindings(toPlainDeep({ ...(ctx.bindings as Record<string, unknown>) }));
+        (ctx.dyn ??= {}).runtimeChoicePending = true;
+        return;
+      }
+      if (removeResult.deferred) return;
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid });
       return;
     }

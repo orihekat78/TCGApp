@@ -25,6 +25,7 @@ import { useGameStateStore } from '@/ui/state/store';
 import { makeChar } from '../helpers/fixtures';
 import { misreadX } from '@/cards/_shared/misreadX';
 import type { GameState, CardDef, AbilityDef, ActionContext, Effect } from '@/engine/types';
+import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
 
 function defOf(o: Partial<CardDef> & { id: string }): CardDef {
   return {
@@ -279,7 +280,7 @@ describe('wave3 G04 — misread:performed observer (人間 defender / UI dispatc
 
     // store へ転送 → UI dispatch で misread 解決 (ここで misread:performed emit が走る)
     useGameStateStore.setState({ gameState: s, pendingMisread: pending });
-    const r = dispatchEngineAction({ type: 'misreadResolve', picks: [{ uid: 'm1', x: 1000 }] });
+    const r = dispatchCurrentDecision({ type: 'misreadResolve', picks: [{ uid: 'm1', x: 1000 }] });
     expect(r.ok).toBe(true);
 
     const after = useGameStateStore.getState().gameState!;

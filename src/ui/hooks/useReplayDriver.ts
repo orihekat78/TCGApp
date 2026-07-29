@@ -15,9 +15,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReplayLog } from '@/ai/replay/recorder.js';
-import { applyMove } from '@/ai/policy.js';
+import { stepTurn } from '@/ai/policy.js';
+import { replayLog, ScriptedPolicy } from '@/ai/replay/player.js';
+import { replayNondeterminism } from '@/ai/replay/nondeterminism.js';
+import { withHeadlessDecisionContext } from '@/ai/headless-decision-context.js';
+import { withIsolatedPendingRuntimeState } from '@/engine/effect/runtime-state.js';
 import { produce } from '@/engine/produce';
-import { runAllUntilEmpty } from '@/engine/resolve';
+import { engine } from '@/engine';
 import type { GameState } from '@/engine/types';
 import { useGameStateStore } from '@/ui/state/store.js';
 
@@ -45,21 +49,43 @@ export type ReplayDriverApi = {
 
 /** initialState から moves[0..upto-1] を apply した結果の GameState を返す */
 export function computeStateAt(log: ReplayLog, upto: number): GameState {
-  let st = log.initialState;
-  for (let i = 0; i < upto && i < log.moves.length; i++) {
-    const m = log.moves[i];
-    try {
-      st = produce(st, (draft) => {
-        applyMove(draft, m.move, m.player);
-        runAllUntilEmpty(draft);
-      });
-    } catch {
-      // apply 失敗時は state そのまま (記録時から engine が壊れた可能性)
-      break;
+  const bounded = Math.max(0, Math.min(upto, log.moves.length));
+  if (bounded === log.moves.length) return replayLog(log).finalState;
+  const run = (): GameState => {
+    let state = log.initialState;
+    for (let i = 0; i < bounded; i++) {
+      const recorded = log.moves[i];
+      if (state.turn.number !== recorded.turn) {
+        throw new Error(
+          `replay turn mismatch at move ${i}: expected ${recorded.turn}, got ${state.turn.number}`,
+        );
+      }
+      if (state.turn.player !== recorded.player) {
+        throw new Error(
+          `replay player mismatch at move ${i}: expected ${state.turn.player}, got ${recorded.player}`,
+        );
+      }
+      const policy = new ScriptedPolicy(`replay-ui-${i}`, [recorded.move]);
+      const step = stepTurn(state, policy, recorded.player);
+      if (policy.remaining() !== 0 || !step.move) {
+        throw new Error(`replay move ${i} was not consumed`);
+      }
+      state = step.nextState;
+      if (recorded.move.kind === 'endTurn' && !state.gameResult) {
+        state = produce(state, (draft) => {
+          engine.flow.endTurn(draft, recorded.player, { startNextTurn: true });
+          engine.resolve.runAllUntilEmpty(draft);
+        });
+      }
+      if (state.gameResult) break;
     }
-    if (st.gameResult) break;
-  }
-  return st;
+    return state;
+  };
+  const runHeadless = (): GameState => withHeadlessDecisionContext(() =>
+    withIsolatedPendingRuntimeState(log.initialState, run));
+  return log.schemaVersion === 2
+    ? replayNondeterminism(log.nondeterminism, runHeadless, { requireAll: bounded === log.moves.length })
+    : runHeadless();
 }
 
 export function useReplayDriver(): ReplayDriverApi {
@@ -67,6 +93,7 @@ export function useReplayDriver(): ReplayDriverApi {
   const [currentMoveIndex, setCurrentMoveIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [speedMs, setSpeedMs] = useState<number>(600);
+  const currentMoveIndexRef = useRef<number>(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const applyStateToStore = useCallback((newLog: ReplayLog | null, idx: number) => {
@@ -80,7 +107,9 @@ export function useReplayDriver(): ReplayDriverApi {
   }, []);
 
   const loadLog = useCallback((newLog: ReplayLog) => {
+    replayLog(newLog);
     setLog(newLog);
+    currentMoveIndexRef.current = 0;
     setCurrentMoveIndex(0);
     setIsPlaying(false);
     applyStateToStore(newLog, 0);
@@ -88,24 +117,25 @@ export function useReplayDriver(): ReplayDriverApi {
 
   const unloadLog = useCallback(() => {
     setLog(null);
+    currentMoveIndexRef.current = 0;
     setCurrentMoveIndex(0);
     setIsPlaying(false);
   }, []);
 
   const step = useCallback(() => {
-    setCurrentMoveIndex((cur) => {
-      if (!log) return cur;
-      const next = Math.min(cur + 1, log.moves.length);
-      applyStateToStore(log, next);
-      return next;
-    });
+    if (!log) return;
+    const next = Math.min(currentMoveIndexRef.current + 1, log.moves.length);
+    applyStateToStore(log, next);
+    currentMoveIndexRef.current = next;
+    setCurrentMoveIndex(next);
   }, [log, applyStateToStore]);
 
   const seek = useCallback((idx: number) => {
     if (!log) return;
     const clamped = Math.max(0, Math.min(idx, log.moves.length));
-    setCurrentMoveIndex(clamped);
     applyStateToStore(log, clamped);
+    currentMoveIndexRef.current = clamped;
+    setCurrentMoveIndex(clamped);
   }, [log, applyStateToStore]);
 
   const play = useCallback(() => {
@@ -127,15 +157,15 @@ export function useReplayDriver(): ReplayDriverApi {
       return undefined;
     }
     intervalRef.current = setInterval(() => {
-      setCurrentMoveIndex((cur) => {
-        if (cur >= log.moves.length) {
-          setIsPlaying(false);
-          return cur;
-        }
-        const next = cur + 1;
-        applyStateToStore(log, next);
-        return next;
-      });
+      const current = currentMoveIndexRef.current;
+      if (current >= log.moves.length) {
+        setIsPlaying(false);
+        return;
+      }
+      const next = current + 1;
+      applyStateToStore(log, next);
+      currentMoveIndexRef.current = next;
+      setCurrentMoveIndex(next);
     }, speedMs);
     return () => {
       if (intervalRef.current !== null) {

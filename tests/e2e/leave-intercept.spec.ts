@@ -5,7 +5,6 @@ import {
   dispatchAction,
   getActiveActionId,
   getGameState,
-  waitForPhase,
 } from './helpers';
 
 async function expectLoadedCardArt(card: Locator, imageFile: string): Promise<void> {
@@ -50,13 +49,11 @@ test(`B01092 legal opponent contact removal opens leave intercept details and ${
   await page.getByTestId('guard-picker-skip').click();
 
   // UI が guard 後を action-1 まで進める。以降のコンタクト選択と判定は公開 dispatch を通す。
-  await waitForPhase(page, 'action-1');
-  await dispatchAction(page, { type: 'actionContact', actionId, player: 'opp', choice: { kind: 'pass' } });
-  await dispatchAction(page, { type: 'actionAdvance', actionId });
-  await waitForPhase(page, 'action-2');
-  await dispatchAction(page, { type: 'actionContact', actionId, player: 'self', choice: { kind: 'pass' } });
-  await dispatchAction(page, { type: 'actionAdvance', actionId });
-  await dispatchAction(page, { type: 'actionJudge', actionId });
+  // action-1 belongs to the self-owned target. Use its public pass control;
+  // the contact driver then resolves the opponent-owned action-2 and judge.
+  const contactPass = page.getByTestId('hand-zone-pick-skip');
+  await expect(contactPass).toBeVisible();
+  await contactPass.click();
 
   await expect(page.locator('[data-testid="leave-intercept-modal"]')).toBeVisible();
   const interceptor = page.locator('[data-testid="leave-intercept-card-interceptor"]');

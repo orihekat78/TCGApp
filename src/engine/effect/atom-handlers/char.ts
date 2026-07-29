@@ -359,7 +359,14 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
             // 既定は従来どおり裏向き (rules/16) — B08036 等の既存 consumer は引数無しで裏向き前提 = byte 互換。
             mutate.char.setCard(s, scUid, cid, a.faceUp === true);
           }
-          mutate.log.append(s, { ts: Date.now(), player: setOwnerP, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: setIds.join(',') });
+          mutate.log.append(s, {
+            ts: Date.now(),
+            player: setOwnerP,
+            turn: s.turn.number,
+            action: 'effect:charSetCard',
+            target: scUid,
+            result: a.faceUp === true ? setIds.join(',') : `set=${setIds.length}:face-down`,
+          });
           return;
         }
         return;
@@ -429,7 +436,14 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
       mutate.char.setCard(s, scUid, scCardId, a.faceUp as boolean);
       refreshAfterSet?.();
       // BUG-073: effect log
-      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: scCardId });
+      mutate.log.append(s, {
+        ts: Date.now(),
+        player: ctx.source.player,
+        turn: s.turn.number,
+        action: 'effect:charSetCard',
+        target: scUid,
+        result: a.faceUp === true ? scCardId : 'face-down',
+      });
       return;
     }
 

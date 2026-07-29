@@ -12,8 +12,12 @@
 // 既存 SouzaReorderModal.css のスタイルを流用 (同じ「デッキ下へ送る順」UI)。
 
 import { useEffect, useState, type JSX } from 'react';
-import { useGameStateStore } from '@/ui/state/store.js';
+import {
+  useGameStateStore,
+  type PendingDecisionIdentity,
+} from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
+import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import { CardExpandModal } from './CardExpandModal.js';
@@ -24,7 +28,7 @@ export function DeckReorderModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingDeckReorder);
   // pending.cardIds をローカルで並べ替え。pending が変わるたび key で再マウントして初期化する。
   return pending && pending.player === 'self'
-    ? <DeckReorderModalInner key={pending.cardIds.join('|')} cardIds={pending.cardIds} />
+    ? <DeckReorderModalInner key={`${pending.decisionId ?? 'legacy'}:${pending.cardIds.join('|')}`} pending={pending} />
     : null;
 }
 
@@ -34,7 +38,12 @@ function asOrderedCards(cardIds: readonly string[]): OrderedCard[] {
   return cardIds.map((cardId, index) => ({ cardId, occurrenceId: `${cardId}#${index}` }));
 }
 
-function DeckReorderModalInner({ cardIds }: { cardIds: readonly string[] }): JSX.Element {
+function DeckReorderModalInner({
+  pending,
+}: {
+  pending: { cardIds: readonly string[] } & PendingDecisionIdentity;
+}): JSX.Element {
+  const { cardIds } = pending;
   // order は cardId の配列 (重複カード対応のため index ベースで扱う)。
   const [order, setOrder] = useState<OrderedCard[]>(() => asOrderedCards(cardIds));
   const [dragIdx, setDragIdx] = useState<number | null>(null);
@@ -55,7 +64,10 @@ function DeckReorderModalInner({ cardIds }: { cardIds: readonly string[] }): JSX
   };
 
   const confirm = (): void => {
-    dispatchEngineAction({ type: 'deckReorderResolve', order: order.map((card) => card.cardId) });
+    dispatchEngineAction(bindPendingDecision(
+      pending,
+      { type: 'deckReorderResolve', order: order.map((card) => card.cardId) },
+    ));
   };
 
   return (

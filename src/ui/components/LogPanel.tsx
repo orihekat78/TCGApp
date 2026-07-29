@@ -10,6 +10,7 @@
 import { useEffect, type JSX, type MouseEvent, type ReactNode } from 'react';
 import type { GameState, LogEntry } from '@/engine/types/game-state.js';
 import { def as readDef } from '@/engine/read/def.js';
+import { redactLogEntryForViewer, type LogViewer } from '@/engine/read/log.js';
 import { uidToDisplayName } from '@/ui/services/uidNames.js';
 import './LogPanel.css';
 
@@ -69,6 +70,8 @@ export type LogPanelProps = {
   gameState?: GameState | null;
   /** BUG-231: 既知カードIDを共通カード拡大modalへ渡す。未指定時は静的表示を保つ。 */
   onCardExpand?: (cardId: string) => void;
+  /** Exact hidden targets are visible only to their owner. null means spectator. */
+  viewer?: LogViewer;
 };
 
 // Round 2: ACTION_LABEL を engine 側 log entry に合わせて拡張。
@@ -151,7 +154,7 @@ function formatTime(ts: number): string {
   return `${hh}:${mm}:${ss}`;
 }
 
-export function LogPanel({ entries, open, maxEntries = 30, onClose, gameState, onCardExpand }: LogPanelProps): JSX.Element | null {
+export function LogPanel({ entries, open, maxEntries = 30, onClose, gameState, onCardExpand, viewer }: LogPanelProps): JSX.Element | null {
   useEffect(() => {
     if (!open || !onClose) return;
     const handleEscape = (e: KeyboardEvent): void => {
@@ -168,7 +171,13 @@ export function LogPanel({ entries, open, maxEntries = 30, onClose, gameState, o
   if (!open) return null;
 
   // engine の log は append 順 (古→新)。逆順にして上が新しい表示にする。
-  const sorted = entries.slice(-maxEntries).reverse();
+  const resolvedViewer = viewer === undefined
+    ? ((globalThis as { __humanPlayerSide?: LogViewer }).__humanPlayerSide ?? null)
+    : viewer;
+  const sorted = entries
+    .slice(-maxEntries)
+    .reverse()
+    .map((entry) => redactLogEntryForViewer(entry, resolvedViewer));
 
   // Round 3b: backdrop click 閉。
   //   - `.log-panel-backdrop` 透明レイヤ (z=199) で panel の外側 click を捕捉。

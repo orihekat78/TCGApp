@@ -73,6 +73,19 @@ export type ActionContext = {
   /** 1番目/2番目が cutIn/disguise したか (pass=false, action=true) */
   firstActed?: boolean;
   secondActed?: boolean;
+  /** Whether the optional first-player redo decision was explicitly answered. */
+  firstRedoActed?: boolean;
+  /** Judge work completed; actionAdvance may not leave judge before this is true. */
+  judgeResolved?: boolean;
+  /**
+   * Serializable human leave-intercept decision. The ActionContext owns this
+   * state so a save/reload cannot lose a paused contact judgment.
+   */
+  pendingLeaveIntercept?: {
+    player: 'self' | 'opp';
+    targetUid: string;
+    interceptorUid: string;
+  };
   /** 1コンタクト1枚 (rules/09): プレイヤー単位で cutIn 使用済みフラグ */
   cutInUsed?: { self?: boolean; opp?: boolean };
   /** 防御側のコンタクト免疫 (turnEffects から snapshot) */

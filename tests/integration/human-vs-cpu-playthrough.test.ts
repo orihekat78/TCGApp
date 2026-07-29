@@ -24,7 +24,10 @@ import {
   registerMisreadListener,
   _resetPendingMisread,
 } from '@/engine/listeners/misread';
-import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import {
+  bindPendingDecision,
+  dispatchEngineAction,
+} from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { driveOppTurn, _resetIsDriving } from '@/ui/hooks/useOppTurnDriver';
 import { createEmptyGameState } from '@/engine/state-factory';
@@ -109,7 +112,7 @@ describe('human vs CPU integration E2E (Commit 6)', () => {
     dispatchEngineAction({ type: 'actionJudge', actionId: axId! });
     dispatchEngineAction({ type: 'actionAdvance', actionId: axId! }); // judge → contact-end
     dispatchEngineAction({ type: 'actionAdvance', actionId: axId! }); // contact-end → action-end
-    const ax = engine.flow.action._getContext(axId!);
+    const ax = engine.flow.action._getContext(useGameStateStore.getState().gameState!, axId!);
     expect(ax).toBeUndefined(); // action-end で _deleteContext される
   });
 
@@ -154,7 +157,11 @@ describe('human vs CPU integration E2E (Commit 6)', () => {
       abilityId: 'a2',
     });
 
-    const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' });
+    const pending = useGameStateStore.getState().pendingHirameki!;
+    const r = dispatchEngineAction(bindPendingDecision(
+      pending,
+      { type: 'hiramekiResolve', choice: 'fire' },
+    ));
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.hand.length).toBe(1);

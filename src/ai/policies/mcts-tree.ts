@@ -31,6 +31,7 @@ import { runAllUntilEmpty } from '@/engine/resolve';
 import { runMatch } from '../match.js';
 import { HeuristicPolicy, type HeuristicPolicyOptions } from './heuristic.js';
 import { defaultStateEvaluator, type StateEvaluator } from './state-evaluator.js';
+import { withHeadlessDecisionContext } from '../headless-decision-context.js';
 
 type Player = 'self' | 'opp';
 
@@ -116,6 +117,12 @@ export class MCTSTreePolicy implements AIPolicy {
   }
 
   choose(state: GameState, candidates: Move[], byPlayer: Player): Move | null {
+    return withHeadlessDecisionContext(
+      () => this.chooseHeadless(state, candidates, byPlayer),
+    );
+  }
+
+  private chooseHeadless(state: GameState, candidates: Move[], byPlayer: Player): Move | null {
     if (candidates.length === 0) return null;
     if (candidates.length === 1) return candidates[0];
     if (candidates.every((m) => m.kind === 'endTurn')) return candidates[0];

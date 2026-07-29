@@ -18,6 +18,7 @@ import { event } from '../event/index.js';
 import { runAutoPhase } from './auto-phase.js';
 import { scene as sceneMutator } from '../mutate/scene.js';
 import { char as charMutator } from '../mutate/char.js';
+import { flag as flagMutator } from '../mutate/flag.js';
 
 type Player = 'self' | 'opp';
 
@@ -66,13 +67,73 @@ export function startMainPhase(state: GameState, p: Player): void {
  *   6. turn:end (ターン完全終了直前)
  *   7. turn.number++ & turn.player を入替 (次ターンへ)
  */
-export function endTurn(state: GameState, p: Player): void {
+export function endTurn(
+  state: GameState,
+  p: Player,
+  options: { startNextTurn?: boolean } = {},
+): void {
+  if (state.pendingTurnTransition) {
+    throw new Error('flow.endTurn: a turn transition is already pending');
+  }
+  if (state.turn.player !== p) {
+    throw new Error(`flow.endTurn: ${p} is not the current turn player`);
+  }
   state.turn.phase = 'end';
   event.emit(state, 'phase:main:end', { player: p }, undefined);
   event.emit(state, 'phase:end:start', { player: p }, undefined);
-  // 呼出元はここで engine.resolve.runAllUntilEmpty を回す責務を持つ
-  // (Phase 5 で「ターン終了時」trigger が積まれる)
-  event.emit(state, 'phase:end:cleanup', { player: p }, undefined);
+  state.pendingTurnTransition = {
+    endingPlayer: p,
+    stage: 'after-end-start',
+    startNextTurn: options.startNextTurn === true,
+  };
+
+  // Preserve the historical synchronous fast path when no effect fired.
+  // Otherwise runAllUntilEmpty resumes this serializable continuation.
+  while (
+    state.pendingTurnTransition
+    && !state.pendingEffects.some(entry => entry.state === 'pending')
+    && _continueTurnTransition(state)
+  ) {
+    // Each stage may emit a hook and queue work. Stop at that boundary.
+  }
+}
+
+/**
+ * Advance exactly one safe turn-boundary stage after the effect stack drains.
+ * Returns true when a stage advanced.
+ */
+export function _continueTurnTransition(state: GameState): boolean {
+  const transition = state.pendingTurnTransition;
+  if (!transition || state.gameResult) return false;
+  if (state.pendingEffects.some(entry => entry.state === 'pending')) return false;
+
+  const p = transition.endingPlayer;
+  if (transition.stage === 'after-end-start') {
+    transition.stage = 'after-cleanup';
+    event.emit(state, 'phase:end:cleanup', { player: p }, undefined);
+    return true;
+  }
+
+  if (transition.stage === 'after-cleanup') {
+    transition.stage = 'after-turn-end';
+    finalizeEndTurnCleanup(state, p);
+    return true;
+  }
+
+  const startNextTurn = transition.startNextTurn;
+  const nextPlayer: Player = p === 'self' ? 'opp' : 'self';
+  state.turn.number += 1;
+  state.turn.player = nextPlayer;
+  delete state.pendingTurnTransition;
+  if (startNextTurn && !state.gameResult) {
+    flagMutator.resetTurnFlags(state, nextPlayer);
+    state.turn.isFirstPlayerFirstTurn = false;
+    startTurn(state, nextPlayer);
+  }
+  return true;
+}
+
+function finalizeEndTurnCleanup(state: GameState, p: Player): void {
   // Task D E4 (2026-06-12): removeOnTurnEnd / toDeckBottomOnTurnEnd の consume。
   // typed flag removeOnTurnEnd は従来 writer/consumer ゼロ (コメントのみ) だった正規実装。
   // 「ターン終了時、このキャラをリムーブする」(B09032) → removeToRemove (leave:to-remove 発火 ✓ rules/17)
@@ -142,7 +203,4 @@ export function endTurn(state: GameState, p: Player): void {
     );
   }
   event.emit(state, 'turn:end', { player: p }, undefined);
-  // ターン情報の繰上げ
-  state.turn.number += 1;
-  state.turn.player = p === 'self' ? 'opp' : 'self';
 }

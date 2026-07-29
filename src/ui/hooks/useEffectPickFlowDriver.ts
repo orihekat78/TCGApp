@@ -10,6 +10,7 @@
 import { useEffect } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from './useEngineDispatch.js';
+import { bindPendingDecision } from './useEngineDispatch/types.js';
 
 export function useEffectPickFlowDriver(): void {
   const pending = useGameStateStore((s) => s.pendingEffectPick);
@@ -22,7 +23,7 @@ export function useEffectPickFlowDriver(): void {
     if (pending.player !== 'self') {
       // AI side の fallback: 先頭候補を選ぶ (将来 chooseAtomTarget 経由予定)
       const first = pending.candidates[0]?.uid ?? null;
-      dispatchEngineAction({ type: 'effectPickResolve', pickedUid: first });
+      dispatchEngineAction(bindPendingDecision(pending, { type: 'effectPickResolve', pickedUid: first }));
     }
     // self の場合は EffectPickerModal が render + 操作 → dispatch
   }, [pending]);
@@ -32,7 +33,7 @@ export function useEffectPickFlowDriver(): void {
   useEffect(() => {
     if (!pendingChoice) return;
     if (pendingChoice.player !== 'self') {
-      dispatchEngineAction({ type: 'choiceResolve', choiceIndex: 0 });
+      dispatchEngineAction(bindPendingDecision(pendingChoice, { type: 'choiceResolve', choiceIndex: 0 }));
     }
   }, [pendingChoice]);
   // 2026-06-06 タスクC: optional (「〜してもよい」) の AI/spectator fallback。
@@ -42,18 +43,24 @@ export function useEffectPickFlowDriver(): void {
   useEffect(() => {
     if (!pendingOptional) return;
     if (pendingOptional.player !== 'self') {
-      dispatchEngineAction({ type: 'optionalResolve', run: false });
+      dispatchEngineAction(bindPendingDecision(pendingOptional, { type: 'optionalResolve', run: false }));
     }
   }, [pendingOptional]);
   useEffect(() => {
     if (!pendingChooseIntercept || pendingChooseIntercept.player === 'self') return;
     const hand = useGameStateStore.getState().gameState?.players[pendingChooseIntercept.player].hand ?? [];
-    dispatchEngineAction({ type: 'chooseInterceptResolve', discardIndex: hand.length > 0 ? 0 : null });
+    dispatchEngineAction(bindPendingDecision(
+      pendingChooseIntercept,
+      { type: 'chooseInterceptResolve', discardIndex: hand.length > 0 ? 0 : null },
+    ));
   }, [pendingChooseIntercept]);
   useEffect(() => {
     if (!pendingRepeatOptional) return;
     if (pendingRepeatOptional.player !== 'self') {
-      dispatchEngineAction({ type: 'repeatOptionalResolve', run: false });
+      dispatchEngineAction(bindPendingDecision(
+        pendingRepeatOptional,
+        { type: 'repeatOptionalResolve', run: false },
+      ));
     }
   }, [pendingRepeatOptional]);
 }

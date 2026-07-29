@@ -40,6 +40,7 @@ import { runAllUntilEmpty } from '@/engine/resolve';
 import type { CardDef } from '@/engine/types/card-def';
 import type { GameState, SceneCharacter } from '@/engine/types/game-state';
 import { makeChar as baseChar } from '../helpers/fixtures';
+import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
 
 const TEST_REASONER: CardDef = {
   id: 'TEST_R',
@@ -192,7 +193,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     useGameStateStore.setState({ gameState: s, pendingMisread: pending });
 
     // 両方 pick で dispatch
-    const r = dispatchEngineAction({
+    const r = dispatchCurrentDecision({
       type: 'misreadResolve',
       picks: [
         { uid: 'm1', x: 2000 },
@@ -222,7 +223,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     const pending = _drainPendingMisread();
     useGameStateStore.setState({ gameState: s, pendingMisread: pending });
 
-    const r = dispatchEngineAction({ type: 'misreadResolve', picks: [] });
+    const r = dispatchCurrentDecision({ type: 'misreadResolve', picks: [] });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     // pick 0 件で m1 はアクティブのまま、r1 LP もそのまま
@@ -249,7 +250,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     expect(reasoningEndCount).toBe(0);
 
     useGameStateStore.setState({ gameState: s, pendingMisread: pending });
-    expect(dispatchEngineAction({ type: 'misreadResolve', picks: [] })).toMatchObject({ ok: true });
+    expect(dispatchCurrentDecision({ type: 'misreadResolve', picks: [] })).toMatchObject({ ok: true });
 
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.evidence.map((card) => card.cardId)).toEqual(['e1', 'e2', 'e3']);
@@ -276,7 +277,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     expect(step.paused).toEqual({ humanPick: true });
     expect(step.nextState.players.opp.evidence).toEqual([]);
 
-    useGameStateStore.getState().setGameState(step.nextState);
+    useGameStateStore.getState().setGameState(step.nextState, { preserveRuntime: true });
     surfacePendingSideChannels();
     expect(useGameStateStore.getState().pendingMisread).toMatchObject({
       player: 'self',
@@ -299,7 +300,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     const pending = _drainPendingMisread();
     useGameStateStore.setState({ gameState: s, pendingMisread: pending });
 
-    const result = dispatchEngineAction({ type: 'misreadResolve', picks });
+    const result = dispatchCurrentDecision({ type: 'misreadResolve', picks });
 
     expect(result).toMatchObject({ ok: false, reason: 'not-allowed' });
     const after = useGameStateStore.getState();
@@ -319,7 +320,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     s.players.self.scene[0].state = 'sleep';
     useGameStateStore.setState({ gameState: s, pendingMisread: pending });
 
-    const result = dispatchEngineAction({
+    const result = dispatchCurrentDecision({
       type: 'misreadResolve', picks: [{ uid: 'm1', x: 2000 }],
     });
 
@@ -339,7 +340,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     s.players.opp.scene = [];
     useGameStateStore.setState({ gameState: s, pendingMisread: pending });
 
-    const result = dispatchEngineAction({ type: 'misreadResolve', picks: [] });
+    const result = dispatchCurrentDecision({ type: 'misreadResolve', picks: [] });
 
     expect(result).toMatchObject({ ok: false, reason: 'not-allowed' });
     expect(useGameStateStore.getState().pendingMisread).not.toBeNull();

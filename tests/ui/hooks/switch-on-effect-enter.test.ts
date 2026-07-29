@@ -14,6 +14,7 @@ import { registerAll } from '@/cards';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import type { GameState } from '@/engine/types';
 import { sceneChar } from '../../helpers/fixtures';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 
 // shigo(D11014, source) + フィラー4枚 = 現場満杯(5枚)。reanimate 対象は remove。
@@ -58,11 +59,11 @@ describe('switch-on-effect-enter — 現場満杯の reanimate を switch で登
     const r1 = dispatchEngineAction({ type: 'declaredAbility', uid: 'shigo', abilId: 'a2' });
     expect(r1.ok).toBe(true);
     // discard 解決 → step2 sceneEnter pick surface (満杯でも human は早期 skip されない)
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pendingUidFor('D08013') });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pendingUidFor('D08013') });
     expect(useGameStateStore.getState().pendingEffectPick?.atomVerb, '満杯でも reanimate pick が出る').toBe('sceneEnter');
 
     // reanimate pick を switchRemoveUid='f1' 付きで解決 (UI が SceneSwitchPickerModal で収集した想定)
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pendingUidFor('D11011'), switchRemoveUid: 'f1' });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pendingUidFor('D11011'), switchRemoveUid: 'f1' });
 
     const gs = useGameStateStore.getState().gameState!;
     expect(gs.players.self.scene.length, 'スイッチなので現場 5 枚維持').toBe(5);
@@ -81,9 +82,9 @@ describe('switch-on-effect-enter — 現場満杯の reanimate を switch で登
     useGameStateStore.setState({ gameState: setupFull('D11011') });
 
     dispatchEngineAction({ type: 'declaredAbility', uid: 'shigo', abilId: 'a2' });
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pendingUidFor('D08013') });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pendingUidFor('D08013') });
     // 辞退 = pickedUid:null (Playmat: SceneSwitchPickerModal cancel 時の挙動)
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null });
 
     const gs = useGameStateStore.getState().gameState!;
     expect(gs.players.self.scene.some((c) => c.cardId === 'D11011'), 'reanimate されない').toBe(false);

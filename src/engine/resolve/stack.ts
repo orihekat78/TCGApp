@@ -25,6 +25,12 @@ import { run as runEffect } from '../effect/resolver.js';
 import { evalCond } from '../cond/eval.js';
 import { _getResolutionLock, _setResolutionLock, event } from '../event/registry.js';
 import { _resolveReasoningContinuation } from '../flow/main/reasoning.js';
+import { _continueTurnTransition } from '../flow/turn.js';
+import {
+  clearPersistedPendingRuntimeState,
+  hydratePendingRuntimeState,
+  persistPendingRuntimeState,
+} from '../effect/runtime-state.js';
 import { _peekPendingDeckPlaceSide, _peekPendingDeckReorderSide } from '../effect/atom-handlers/_shared.js';
 import {
   _peekPendingEffectChoiceSide,
@@ -36,6 +42,8 @@ import {
   _peekPendingSetCardChoiceSide,
   _peekPendingSetCardReplacementSide,
 } from '../effect/pending-state.js';
+import { _peekPendingHirameki } from '../listeners/hirameki.js';
+import { _peekPendingMisread } from '../listeners/misread.js';
 
 const SAFETY_CAP = 1000;
 
@@ -43,6 +51,24 @@ function cancelPendingAfterGameEnd(state: GameState): void {
   for (const entry of state.pendingEffects) {
     if (entry.state === 'pending') entry.state = 'cancelled';
   }
+  delete state.pendingTurnTransition;
+  clearPersistedPendingRuntimeState(state);
+}
+
+function hasPendingDecisionExceptPick(): boolean {
+  return Boolean(
+    _peekPendingEffectChoiceSide()
+    || _peekPendingEffectOptionalSide()
+    || _peekPendingEffectRepeatOptionalSide()
+    || _peekPendingChooseInterceptSide()
+    || _peekPendingRpsSide()
+    || _peekPendingSetCardChoiceSide()
+    || _peekPendingSetCardReplacementSide()
+    || _peekPendingDeckReorderSide()
+    || _peekPendingDeckPlaceSide()
+    || _peekPendingHirameki()
+    || _peekPendingMisread(),
+  );
 }
 
 // BUG-132 GAP-2 (2026-06-12): declaredReaction entry の pick/dyn を解決時に substitute する
@@ -276,34 +302,42 @@ export function runOne(state: GameState, entry: EffectStackEntry): void {
  * Safety cap: 1000 iterations.
  */
 export function runAllUntilEmpty(state: GameState): void {
+  hydratePendingRuntimeState(state);
   for (let i = 0; i < SAFETY_CAP; i++) {
     if (state.gameResult !== undefined) {
       cancelPendingAfterGameEnd(state);
       return;
     }
     const e = next(state);
-    if (e === null) return;
     // A human decision is a hard resolution boundary. Do not let a sibling
     // stack entry overtake it or overwrite a single-slot side channel. A
     // just-selected pick may still run its own `effect:pick-resolved` entry
     // while a later FIFO pick is waiting.
-    if (
-      _peekPendingEffectChoiceSide()
-      || _peekPendingEffectOptionalSide()
-      || _peekPendingEffectRepeatOptionalSide()
-      || _peekPendingChooseInterceptSide()
-      || _peekPendingRpsSide()
-      || _peekPendingSetCardChoiceSide()
-      || _peekPendingSetCardReplacementSide()
-      || _peekPendingDeckReorderSide()
-      || _peekPendingDeckPlaceSide()
-    ) return;
+    if (hasPendingDecisionExceptPick()) {
+      persistPendingRuntimeState(state);
+      return;
+    }
     const pendingPick = _peekPendingEffectPickSide();
+    if (e === null) {
+      if (pendingPick) {
+        persistPendingRuntimeState(state);
+        return;
+      }
+      if (_continueTurnTransition(state)) continue;
+      clearPersistedPendingRuntimeState(state);
+      return;
+    }
     if (
       pendingPick?.source.triggerBatch !== undefined
       && e.triggeredBy.hook !== 'effect:pick-resolved'
-    ) return;
-    if (shouldPauseForOwnerOrder(state, e)) return;
+    ) {
+      persistPendingRuntimeState(state);
+      return;
+    }
+    if (shouldPauseForOwnerOrder(state, e)) {
+      clearPersistedPendingRuntimeState(state);
+      return;
+    }
     runOne(state, e);
   }
   // Provide the last-seen entry's details for debuggability (Phase 4+ scenarios).
@@ -364,6 +398,11 @@ export function lock(_state: GameState, reason: string): void {
 }
 
 export function unlock(_state: GameState): void {
+  _resetResolutionLock();
+}
+
+/** Match-session boundary reset for module-owned resolution state. */
+export function _resetResolutionLock(): void {
   _setResolutionLock(false, null);
 }
 

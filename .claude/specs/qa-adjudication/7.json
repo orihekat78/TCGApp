@@ -10,7 +10,7 @@
         "method":  "manual-semantic",
         "evidence":  [
                          "src:src/cards/ct-p01/B01018.ts:53",
-                         "tests:tests/cards/triage-greens-2026-06-15/B01018.test.ts:93"
+                         "tests:tests/cards/triage-greens-2026-06-15/B01018.test.ts:94"
                      ]
     },
     {
@@ -33,7 +33,7 @@
         "evidence":  [
                          "src:src/cards/ct-p01/B01030.ts:35",
                          "src:src/cards/ct-p01/B01030.ts:40",
-                         "src:src/engine/effect/atom-handlers/core.ts:1233"
+                         "src:src/engine/effect/atom-handlers/core.ts:1239"
                      ]
     },
     {

@@ -30,6 +30,7 @@ import { B07056 } from '@/cards/ct-p07/B07056';
 import { B07056P } from '@/cards/ct-p07/B07056P';
 import { B07015 } from '@/cards/ct-p07/B07015';
 import { B05042 } from '@/cards/ct-p05/B05042';
+import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
 
 const eventUseTrigger = {
   hook: 'effect:declared' as const,
@@ -470,7 +471,7 @@ describe('BUG-254 action-case Hirameki visibility', () => {
     const pending = _drainPendingHirameki();
     expect(pending).toMatchObject({ player: 'self', cardId: 'B04028', abilityId: 'a2' });
     useGameStateStore.setState({ gameState: afterAction, pendingHirameki: pending });
-    expect(dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
     expect(useGameStateStore.getState().gameState!.players.self.evidence).toEqual([
       expect.objectContaining({ cardId: 'DRAWN', faceUp: false }),
     ]);
@@ -485,7 +486,7 @@ describe('BUG-254 action-case Hirameki visibility', () => {
     });
     const pending = _drainPendingHirameki();
     useGameStateStore.setState({ gameState: afterAction, pendingHirameki: pending });
-    expect(dispatchEngineAction({ type: 'hiramekiResolve', choice: 'skip' }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'skip' }).ok).toBe(true);
     expect(useGameStateStore.getState().gameState!.players.self.deck).toEqual(['SKIPPED']);
 
     const suppressed = createEmptyGameState();
