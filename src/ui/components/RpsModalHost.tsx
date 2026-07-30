@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
+import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import './ChoicePickerModal.css';
 
 const hands = [
@@ -20,7 +21,7 @@ export function RpsModalHost(): JSX.Element | null {
         <div className="cp-body"><p className="cp-sub">Choose a hand.</p></div>
         <div className="cp-actions"><ul className="cp-list">
           {hands.map(([hand, label]) => (
-            <li key={hand}><button type="button" className="cp-cand" data-testid={`rps-${hand}`} onClick={() => dispatchEngineAction({ type: 'rpsResolve', hand })}>{label}</button></li>
+            <li key={hand}><button type="button" className="cp-cand" data-testid={`rps-${hand}`} onClick={() => dispatchEngineAction(bindPendingDecision(pending, { type: 'rpsResolve', hand }))}>{label}</button></li>
           ))}
         </ul></div>
       </div>

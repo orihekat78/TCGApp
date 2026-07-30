@@ -76,6 +76,7 @@ import { useEvidenceFlipPickerStore, useEvidenceFlipPicker } from '../hooks/useE
 import { useHandCostPickerStore, useHandCostPicker } from '../hooks/useHandCostPicker.js';
 import { useStackedCardCostPickerStore, useStackedCardCostPicker } from '../hooks/useStackedCardCostPicker.js';
 import { dispatchEngineAction } from '../hooks/useEngineDispatch.js';
+import { bindPendingDecision } from '../hooks/useEngineDispatch/types.js';
 import { useGameStateStore } from '../state/store.js';
 import { selectInteractionLocked } from '../state/interactionLock.js';
 import { def as readDef } from '@/engine/read/def.js';
@@ -556,7 +557,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       event.preventDefault();
-      dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+      dispatchEngineAction(bindPendingDecision(
+        pendingPickForArea,
+        { type: 'effectPickResolve', pickedUid: null },
+      ));
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -571,7 +575,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
     }
   }
   const handleScenePick = isScenePick ? (uid: string): void => {
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid });
+    if (!pendingPickForArea) return;
+    dispatchEngineAction(bindPendingDecision(
+      pendingPickForArea,
+      { type: 'effectPickResolve', pickedUid: uid },
+    ));
   } : undefined;
 
   // rules/20 §スイッチ: switch victim (常に self 現場) も現場直接クリックで収集 (旧 SceneSwitchPickerModal 廃止)。
@@ -606,8 +614,14 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   // 満杯でない sceneEnter / 他 area pick は従来通り即 resolve。
   const resolveSceneEnterPick = async (uid: string): Promise<void> => {
     const st = useGameStateStore.getState();
-    const pend = st.pendingEffectPick;
+    const pend = pendingPickForArea;
     const gs = st.gameState;
+    if (!pend) return;
+    const currentPending = st.pendingEffectPick;
+    const isCurrent = pend.decisionId === undefined
+      ? currentPending === pend
+      : currentPending?.decisionId === pend.decisionId;
+    if (!isCurrent) return;
     if (pend && pend.atomVerb === 'sceneEnter' && gs && gs.players[pend.player].scene.length >= sceneCap(gs, pend.player)) {
       const reanimateCardId = pend.candidates.find((c) => c.uid === uid)?.cardId ?? '';
       const sceneChars = gs.players[pend.player].scene.map((c) => ({
@@ -626,14 +640,17 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
       });
       if (removeUid === null) {
         setSwitchSessionActive(false);
-        dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+        dispatchEngineAction(bindPendingDecision(pend, { type: 'effectPickResolve', pickedUid: null }));
         return;
       }
       setSwitchSessionActive(false);
-      dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid, switchRemoveUid: removeUid });
+      dispatchEngineAction(bindPendingDecision(
+        pend,
+        { type: 'effectPickResolve', pickedUid: uid, switchRemoveUid: removeUid },
+      ));
       return;
     }
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid });
+    dispatchEngineAction(bindPendingDecision(pend, { type: 'effectPickResolve', pickedUid: uid }));
   };
 
   // Phase 8.6: target picker state を subscribe して候補ハイライト + click ハンドラを派生
@@ -871,7 +888,14 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
                 if (cardId) useNextHintPicker().acceptUse(cardId);
               }
               : isDiscardPick
-              ? (uid) => { dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid }); }
+              ? (uid) => {
+                if (pendingPickForArea) {
+                  dispatchEngineAction(bindPendingDecision(
+                    pendingPickForArea,
+                    { type: 'effectPickResolve', pickedUid: uid },
+                  ));
+                }
+              }
               : undefined
           }
           pickCanSkip={
@@ -881,11 +905,25 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             isCutinPick
               ? handleCutinPass
               : isHandSceneEnterPick
-              ? () => { dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null }); }
+              ? () => {
+                if (pendingPickForArea) {
+                  dispatchEngineAction(bindPendingDecision(
+                    pendingPickForArea,
+                    { type: 'effectPickResolve', pickedUid: null },
+                  ));
+                }
+              }
               : isNextHintPick
               ? () => useNextHintPicker().acceptSkip()
               : isDiscardPick
-              ? () => { dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null }); }
+              ? () => {
+                if (pendingPickForArea) {
+                  dispatchEngineAction(bindPendingDecision(
+                    pendingPickForArea,
+                    { type: 'effectPickResolve', pickedUid: null },
+                  ));
+                }
+              }
               : undefined
           }
           // BUG-165 UI 側 (wave-10 2026-07-02): nMax>1 の discard pick (B04005/B07002
@@ -895,12 +933,19 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           pickNMin={isDiscardPick ? pendingPickForArea?.nMin : undefined}
           pickNMax={isDiscardPick ? pendingPickForArea?.nMax : undefined}
           onPickMulti={isDiscardPick ? (uids) => {
+            if (!pendingPickForArea) return;
             const first = uids[0];
             if (first === undefined) {
-              dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+              dispatchEngineAction(bindPendingDecision(
+                pendingPickForArea,
+                { type: 'effectPickResolve', pickedUid: null },
+              ));
               return;
             }
-            dispatchEngineAction({ type: 'effectPickResolve', pickedUid: first, pickedUids: uids });
+            dispatchEngineAction(bindPendingDecision(
+              pendingPickForArea,
+              { type: 'effectPickResolve', pickedUid: first, pickedUids: uids },
+            ));
           } : undefined}
         />
 
@@ -1162,25 +1207,39 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               pickCanSkip={isPickModeForThisArea && (pendingPickForArea?.nMin ?? 1) === 0 && scenePickForced.length === 0}
               pickForcedUids={isPickModeForThisArea ? pendingPickForArea?.forcedUids : undefined}
               onPickSkip={isPickModeForThisArea ? () => {
-                dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+                if (pendingPickForArea) {
+                  dispatchEngineAction(bindPendingDecision(
+                    pendingPickForArea,
+                    { type: 'effectPickResolve', pickedUid: null },
+                  ));
+                }
               } : undefined}
               pickNMin={isPickModeForThisArea ? pendingPickForArea?.nMin : undefined}
               pickNMax={isPickModeForThisArea ? pendingPickForArea?.nMax : undefined}
               onPickMulti={isPickModeForThisArea ? async (uids) => {
+                const pendE = pendingPickForArea;
+                if (!pendE) return;
+                const stE = useGameStateStore.getState();
+                const currentPending = stE.pendingEffectPick;
+                const isCurrent = pendE.decisionId === undefined
+                  ? currentPending === pendE
+                  : currentPending?.decisionId === pendE.decisionId;
+                if (!isCurrent) return;
                 // Phase 2c union 化: 0 枚選択は skip 形態 (pickedUid:null 単独) で dispatch
                 // (旧実装でも pickedUid null 時は pickedUids が無視され skip 経路だった — 挙動同一)
                 const first = uids[0];
                 if (first === undefined) {
-                  dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+                  dispatchEngineAction(bindPendingDecision(
+                    pendE,
+                    { type: 'effectPickResolve', pickedUid: null },
+                  ));
                   return;
                 }
                 // cluster14: multi-card sceneEnter (B09010「2枚まで登場」) が現場満杯を超える場合、
                 //   overflow 枚数 (= 登場枚数 − room) ぶん退場キャラを SceneSwitchPickerModal で収集する (rules/20 スイッチ)。
                 //   charStackCard 等 他 multi-pick verb は従来通り即 dispatch (sceneEnter 以外は分岐しない)。
-                const stE = useGameStateStore.getState();
-                const pendE = stE.pendingEffectPick;
                 const gsE = stE.gameState;
-                if (pendE && pendE.atomVerb === 'sceneEnter' && gsE) {
+                if (pendE.atomVerb === 'sceneEnter' && gsE) {
                   const room = sceneCap(gsE, pendE.player) - gsE.players[pendE.player].scene.length; // engine E3 P11: 現場登場上限 (case override 可)
 
                   const overflow = Math.max(0, uids.length - room);
@@ -1201,17 +1260,26 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
                       if (v === null) {
                         // cancel = 全辞退。B09010 は skipResolvesAtom により後続 FILE上1リムーブは解決される。
                         setSwitchSessionActive(false);
-                        dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+                        dispatchEngineAction(bindPendingDecision(
+                          pendE,
+                          { type: 'effectPickResolve', pickedUid: null },
+                        ));
                         return;
                       }
                       victims.push(v);
                     }
                     setSwitchSessionActive(false);
-                    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: first, pickedUids: uids, switchRemoveUids: victims });
+                    dispatchEngineAction(bindPendingDecision(
+                      pendE,
+                      { type: 'effectPickResolve', pickedUid: first, pickedUids: uids, switchRemoveUids: victims },
+                    ));
                     return;
                   }
                 }
-                dispatchEngineAction({ type: 'effectPickResolve', pickedUid: first, pickedUids: uids });
+                dispatchEngineAction(bindPendingDecision(
+                  pendE,
+                  { type: 'effectPickResolve', pickedUid: first, pickedUids: uids },
+                ));
               } : undefined}
               pickDistinctNames={isPickModeForThisArea ? (pendingPickForArea as { distinctNames?: boolean } | undefined)?.distinctNames : undefined}
               pickComponents={isPickModeForThisArea && (pendingPickForArea as { distinctNames?: boolean } | undefined)?.distinctNames
@@ -1252,7 +1320,14 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               <button
                 type="button"
                 className="scene-pick-skip-btn"
-                onClick={() => dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null })}
+                onClick={() => {
+                  if (pendingPickForArea) {
+                    dispatchEngineAction(bindPendingDecision(
+                      pendingPickForArea,
+                      { type: 'effectPickResolve', pickedUid: null },
+                    ));
+                  }
+                }}
                 data-testid="scene-pick-skip"
               >
                 選ばない
@@ -1356,8 +1431,14 @@ function PlaymatHiramekiPickerModal(): JSX.Element | null {
       cardId={pending.cardId}
       cardName={cardName}
       abilityText={abilityText}
-      onFire={() => dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' })}
-      onSkip={() => dispatchEngineAction({ type: 'hiramekiResolve', choice: 'skip' })}
+      onFire={() => dispatchEngineAction(bindPendingDecision(
+        pending,
+        { type: 'hiramekiResolve', choice: 'fire' },
+      ))}
+      onSkip={() => dispatchEngineAction(bindPendingDecision(
+        pending,
+        { type: 'hiramekiResolve', choice: 'skip' },
+      ))}
     />
   );
 }
@@ -1406,15 +1487,15 @@ function PlaymatMisreadPickerModal(): JSX.Element | null {
   return (
     <MisreadPickerModal
       open={true}
-      decisionKey={`${pending.player}:${pending.reasoningPlayer}:${pending.reasoningUid}:${pending.candidates.map((c) => `${c.uid}/${c.x}`).join(',')}`}
+      decisionKey={`${pending.decisionId ?? 'legacy'}:${pending.player}:${pending.reasoningPlayer}:${pending.reasoningUid}:${pending.candidates.map((c) => `${c.uid}/${c.x}`).join(',')}`}
       reasoningName={reasoningName}
       reasoningLp={reasoningLp}
       candidates={candidateViews}
       onConfirm={(picks) => {
-        dispatchEngineAction({ type: 'misreadResolve', picks });
+        dispatchEngineAction(bindPendingDecision(pending, { type: 'misreadResolve', picks }));
       }}
       onSkip={() => {
-        dispatchEngineAction({ type: 'misreadResolve', picks: [] });
+        dispatchEngineAction(bindPendingDecision(pending, { type: 'misreadResolve', picks: [] }));
       }}
     />
   );

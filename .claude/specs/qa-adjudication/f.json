@@ -26,7 +26,7 @@
       "evidence": [
         "rules:.claude/rules/26-qa-deck-refresh.md:70",
         "src:src/cards/ct-p01/B01018.ts:53",
-        "tests:tests/cards/triage-greens-2026-06-15/B01018.test.ts:122"
+        "tests:tests/cards/triage-greens-2026-06-15/B01018.test.ts:123"
       ],
       "noteCodes": [
         "RAW-READ"
@@ -264,7 +264,7 @@
         "rules:.claude/rules/16-card-set.md:28",
         "src:src/cards/ct-d08/D08021.ts:22",
         "src:src/cards/ct-p03/B03006.ts:6",
-        "src:src/engine/mutate/scene.ts:666"
+        "src:src/engine/mutate/scene.ts:691"
       ],
       "noteCodes": [
         "STACK-IS-NOT-SET-TEST-MISSING"
@@ -1054,7 +1054,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06008.ts:52",
-        "tests:tests/cards/engine-mega-w4.test.ts:540"
+        "tests:tests/cards/engine-mega-w4.test.ts:541"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -1414,7 +1414,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p08/B08006.ts:55",
-        "tests:tests/cards/engine-mega-w4.test.ts:971"
+        "tests:tests/cards/engine-mega-w4.test.ts:972"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -1615,7 +1615,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09048.ts:80",
-        "tests:tests/cards/engine-mega-w4.test.ts:951"
+        "tests:tests/cards/engine-mega-w4.test.ts:952"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"

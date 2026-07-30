@@ -184,6 +184,24 @@ describe('engine.effect.runAtom', () => {
       });
       expect(result.players.self.evidence).toHaveLength(0);
       expect(result.players.self.hand).toContain('D08013');
+      expect(result.log.at(-1)?.targetAudience).toBeUndefined();
+    });
+
+    it('裏向き証拠の cardId は所有者だけが読める log target にする', () => {
+      const s = createEmptyGameState();
+      s.players.self.evidence = [
+        { cardId: 'PRIVATE-EVIDENCE', faceUp: false, origin: { turn: 1, via: 'opening' } },
+      ];
+
+      const result = produce(s, draft => {
+        runAtom(draft, 'evidenceToHand', { player: 'self', target: 'PRIVATE-EVIDENCE' }, makeCtx());
+      });
+
+      expect(result.log.at(-1)).toMatchObject({
+        action: 'effect:evidenceToHand',
+        target: 'PRIVATE-EVIDENCE',
+        targetAudience: 'self',
+      });
     });
   });
 
@@ -582,6 +600,7 @@ describe('engine.effect.runAtom', () => {
       });
       expect(result.players.self.scene[0].setCards).toEqual([{ cardId: 'DECK_TOP', faceUp: false, instanceId: 'set:1' }]);
       expect(result.players.self.deck).toEqual(['DECK_2', 'DECK_3']);
+      expect(JSON.stringify(result.log.at(-1))).not.toContain('DECK_TOP');
     });
 
     it('fromDeckTop: 空デッキでは silent no-op', () => {
@@ -603,6 +622,28 @@ describe('engine.effect.runAtom', () => {
       });
       expect(result.players.self.scene).toHaveLength(0);
       expect(result.players.self.remove, '裏向き set でもリムーブ時は cardId が見える').toContain('SET_X');
+    });
+  });
+
+  describe('非公開領域のログ', () => {
+    it('デッキから手札へ加えたカードIDを共有ログへ残さない', () => {
+      const s = createEmptyGameState();
+      s.players.self.deck = ['SECRET_HAND'];
+      const result = produce(s, draft => {
+        runAtom(draft, 'handAddFromDeck', { player: 'self', cardId: 'SECRET_HAND' }, makeCtx());
+      });
+      expect(result.players.self.hand).toEqual(['SECRET_HAND']);
+      expect(JSON.stringify(result.log.at(-1))).not.toContain('SECRET_HAND');
+    });
+
+    it('FILEから手札へ加えたカードIDを共有ログへ残さない', () => {
+      const s = createEmptyGameState();
+      s.players.self.file = [{ cardId: 'SECRET_FILE', faceUp: false, type: 'card-back' }];
+      const result = produce(s, draft => {
+        runAtom(draft, 'filePopToHand', { player: 'self' }, makeCtx());
+      });
+      expect(result.players.self.hand).toEqual(['SECRET_FILE']);
+      expect(JSON.stringify(result.log.at(-1))).not.toContain('SECRET_FILE');
     });
   });
 

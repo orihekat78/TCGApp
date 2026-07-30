@@ -89,7 +89,7 @@
       "evidence": [
         "rules:.claude/rules/22-qa-action-contact.md:45",
         "src:src/cards/ct-p01/B01028.ts:23",
-        "src:src/engine/flow/action/state-machine.ts:261"
+        "src:src/engine/flow/action/state-machine.ts:269"
       ],
       "noteCodes": [
         "RAW-READ",
@@ -512,9 +512,9 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:11",
         "src:src/cards/ct-p04/B04018.shared.ts:46",
-        "tests:tests/cards/B04018-family.test.ts:117",
-        "tests:tests/cards/B04018-family.test.ts:158",
-        "tests:tests/cards/B04018-family.test.ts:159"
+        "tests:tests/cards/B04018-family.test.ts:118",
+        "tests:tests/cards/B04018-family.test.ts:159",
+        "tests:tests/cards/B04018-family.test.ts:160"
       ],
       "noteCodes": [
         "B04018-OPP-TURN-LEAVE-DRAW-COVERED"

@@ -9,7 +9,9 @@ import { startTurn, endTurn, startMainPhase } from '@/engine/flow/turn';
 import { event } from '@/engine/event/index';
 import { mutate } from '@/engine/mutate/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
+import { runAllUntilEmpty } from '@/engine/resolve';
 import type { GameState, HookName } from '@/engine/types';
+import { sceneChar } from '../../helpers/fixtures';
 
 function makeStateWithDeck(deckSize: number, opts: { player?: 'self' | 'opp'; turnNo?: number } = {}): GameState {
   const initial = createEmptyGameState();
@@ -141,5 +143,37 @@ describe('engine.flow.endTurn', () => {
       endTurn(draft, 'self');
     });
     expect(cleanupPayload).toEqual({ player: 'self' });
+  });
+
+  it('ターン終了時効果を終了時清掃より先に解決し、終了プレイヤーを優先する', () => {
+    const s = produce(makeStateWithDeck(10), draft => {
+      draft.players.self.scene = [sceneChar('SELF-END', 'self-end')];
+      draft.players.opp.scene = [sceneChar('OPP-END', 'opp-end')];
+    });
+    event.on('phase:end:start', (state) => {
+      event.queue(
+        state,
+        { kind: 'atom', verb: 'charSetTurnEffect', args: { uid: 'self-end', key: 'apMod_turn', val: 1000 } },
+        { player: 'self', uid: 'self-end' },
+      );
+      event.queue(
+        state,
+        { kind: 'atom', verb: 'charSetTurnEffect', args: { uid: 'opp-end', key: 'apMod_turn', val: 1000 } },
+        { player: 'opp', uid: 'opp-end' },
+      );
+    });
+
+    const after = produce(s, draft => {
+      endTurn(draft, 'self');
+      runAllUntilEmpty(draft);
+    });
+
+    const resolvedTargets = after.log
+      .filter(entry => entry.action === 'effect:charSetTurnEffect')
+      .map(entry => entry.target);
+    expect(resolvedTargets).toEqual(['self-end', 'opp-end']);
+    expect(after.players.self.scene[0]?.turnEffects.apMod_turn).toBeUndefined();
+    expect(after.players.opp.scene[0]?.turnEffects.apMod_turn).toBeUndefined();
+    expect(after.turn).toMatchObject({ number: 2, player: 'opp' });
   });
 });

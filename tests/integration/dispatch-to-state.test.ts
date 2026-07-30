@@ -90,7 +90,7 @@ describe('integration: dispatch → state (end-to-end 配線テスト)', () => {
 
     // 3. 'judge' phase に到達するまで advance 連射 (max 10 step、安全策)
     for (let i = 0; i < 10; i++) {
-      const ax = engine.flow.action._getContext(actionId!);
+      const ax = engine.flow.action._getContext(useGameStateStore.getState().gameState!, actionId!);
       if (!ax) break;
       if (ax.phase === 'judge') break;
       if (ax.phase === 'action-end' || ax.phase === 'contact-end') break;
@@ -98,7 +98,7 @@ describe('integration: dispatch → state (end-to-end 配線テスト)', () => {
     }
 
     // 4. judge phase に到達したことを確認
-    const axAtJudge = engine.flow.action._getContext(actionId!);
+    const axAtJudge = engine.flow.action._getContext(useGameStateStore.getState().gameState!, actionId!);
     expect(axAtJudge?.phase).toBe('judge');
 
     // 5. actionJudge → 証拠変動
@@ -132,7 +132,7 @@ describe('integration: dispatch → state (end-to-end 配線テスト)', () => {
     dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: null });
 
     for (let i = 0; i < 10; i++) {
-      const ax = engine.flow.action._getContext(actionId);
+      const ax = engine.flow.action._getContext(useGameStateStore.getState().gameState!, actionId);
       if (!ax || ax.phase === 'judge') break;
       if (ax.phase === 'action-end' || ax.phase === 'contact-end') break;
       dispatchEngineAction({ type: 'actionAdvance', actionId });

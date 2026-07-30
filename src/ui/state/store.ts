@@ -13,14 +13,25 @@ import { mutate } from '@/engine/mutate';
 import type { GameState } from '@/engine/types/game-state';
 import type { EffectCtx } from '@/engine/types';
 import type { ContinuationFrame, PendingEffectSource } from '@/engine/effect/pending-state';
+import {
+  hydratePendingRuntimeState,
+  resetPendingRuntimeState,
+} from '@/engine/effect/runtime-state.js';
+import { surfacePendingSideChannels } from './surface-pending.js';
 
 export type GameStateMutator = (state: GameState) => GameState;
+export type PendingDecisionIdentity = { decisionId: string };
+type PendingDecision<T> = T & PendingDecisionIdentity;
+export type SetGameStateOptions = {
+  /** Keep live resolver channels while committing the next state of one session. */
+  preserveRuntime?: boolean;
+};
 
 export type GameStateStore = {
   /** 現在のゲーム状態。未ロード時は null。 */
   gameState: GameState | null;
   /** state を全置換する（ゲーム開始 / リセット / リプレイ読み込み用） */
-  setGameState: (state: GameState | null) => void;
+  setGameState: (state: GameState | null, options?: SetGameStateOptions) => void;
   /** 新規対戦開始前に GameState と UI 上の対戦一時状態を一括破棄する。 */
   resetMatchSessionState: () => void;
   /**
@@ -37,6 +48,8 @@ export type GameStateStore = {
    */
   activeActionId: string | null;
   setActiveActionId: (id: string | null) => void;
+  /** Monotonic UI decision identity. Deliberately survives match-session reset. */
+  pendingDecisionSeq: number;
   /**
    * Phase 8 完全クローズ Commit 3a: アクション[事件] による証拠リムーブで
    * ヒラメキ能力が検出された時の保留状態。
@@ -45,7 +58,7 @@ export type GameStateStore = {
    * - useHiramekiFlowDriver が監視し、self owner ならモーダル / opp owner なら AI 自動
    * - `hiramekiResolve` dispatch で fire/skip 決定 → クリア
    */
-  pendingHirameki: PendingHirameki | null;
+  pendingHirameki: PendingDecision<PendingHirameki> | null;
   setPendingHirameki: (p: PendingHirameki | null) => void;
   /**
    * Phase 8 完全クローズ Commit 3b: 推理に対する human-side ミスリード保留状態。
@@ -54,7 +67,7 @@ export type GameStateStore = {
    * - useMisreadFlowDriver が監視し、self defender ならモーダル open
    * - `misreadResolve` dispatch で picks 決定 → クリア
    */
-  pendingMisread: PendingMisread | null;
+  pendingMisread: PendingDecision<PendingMisread> | null;
   setPendingMisread: (p: PendingMisread | null) => void;
   /**
    * Task2/4: アクティブカード信号 — 効果解決中 / CPU が今動かしているカードの uid + 行動ラベル。
@@ -109,34 +122,34 @@ export type GameStateStore = {
    * post-dispatch drain で本 field に転送 → useEffectPickFlowDriver が modal を
    * 開きユーザー選択を待つ。
    */
-  pendingEffectPick: PendingEffectPick | null;
+  pendingEffectPick: PendingDecision<PendingEffectPick> | null;
   setPendingEffectPick: (p: PendingEffectPick | null) => void;
   /**
    * BUG-121: enter トリガ等の human 複数 option choice 待ち state。pendingEffectPick と同型 —
    * resolve-picks が humanChooser fired 時に globalThis 側チャネルにセット → useEngineDispatch
    * post-dispatch drain で本 field に転送 → ChoiceResolveModalHost が modal を開き選択を待つ。
    */
-  pendingEffectChoice: PendingEffectChoice | null;
+  pendingEffectChoice: PendingDecision<PendingEffectChoice> | null;
   setPendingEffectChoice: (p: PendingEffectChoice | null) => void;
   /**
    * 2026-06-06 タスクC: optional 決定 (「〜してもよい」) 待ち state。pendingEffectChoice と同型 —
    * resolve-picks の optional case が humanChooser fired 時に globalThis 側チャネルにセット →
    * useEngineDispatch drain で本 field に転送 → EffectOptionalModalHost が「する/しない」modal を開き選択を待つ。
    */
-  pendingEffectOptional: PendingEffectOptional | null;
+  pendingEffectOptional: PendingDecision<PendingEffectOptional> | null;
   setPendingEffectOptional: (p: PendingEffectOptional | null) => void;
-  pendingChooseIntercept: PendingChooseIntercept | null;
+  pendingChooseIntercept: PendingDecision<PendingChooseIntercept> | null;
   setPendingChooseIntercept: (p: PendingChooseIntercept | null) => void;
-  pendingLeaveIntercept: PendingLeaveIntercept | null;
+  pendingLeaveIntercept: PendingDecision<PendingLeaveIntercept> | null;
   setPendingLeaveIntercept: (p: PendingLeaveIntercept | null) => void;
-  pendingRps: PendingRps | null;
+  pendingRps: PendingDecision<PendingRps> | null;
   setPendingRps: (p: PendingRps | null) => void;
-  pendingSetCardChoice: PendingSetCardChoice | null;
+  pendingSetCardChoice: PendingDecision<PendingSetCardChoice> | null;
   setPendingSetCardChoice: (p: PendingSetCardChoice | null) => void;
-  pendingSetCardReplacement: PendingSetCardReplacement | null;
+  pendingSetCardReplacement: PendingDecision<PendingSetCardReplacement> | null;
   setPendingSetCardReplacement: (p: PendingSetCardReplacement | null) => void;
   /** repeatOptional の各round決定。body実行後、残回数があれば次roundへ遷移する。 */
-  pendingEffectRepeatOptional: PendingEffectRepeatOptional | null;
+  pendingEffectRepeatOptional: PendingDecision<PendingEffectRepeatOptional> | null;
   setPendingEffectRepeatOptional: (p: PendingEffectRepeatOptional | null) => void;
   /**
    * user_request 20260522_01 #12 BUG-061: D11019「15の受難」等の
@@ -153,14 +166,14 @@ export type GameStateStore = {
    * engine 側 PendingDeckReorderSide と同 shape。human 所有 & 2 枚以上なら移動前にsetされ、
    * DeckReorderModal確定時に指定順で底へ移して後続効果を再開する。
    */
-  pendingDeckReorder: PendingDeckReorder | null;
+  pendingDeckReorder: PendingDecision<PendingDeckReorder> | null;
   setPendingDeckReorder: (p: PendingDeckReorder | null) => void;
   /**
    * mini-wave #5 P2: deckPlaceSplitBound「見た各カードを上か下へ」の振り分け待ち。
    * engine 側 PendingDeckPlaceSide と同 shape。human 所有時だけ set され DeckPlaceModal で
    * top/bottom へ割当。deckPlaceResolve dispatch で適用して null へ。
    */
-  pendingDeckPlace: PendingDeckPlace | null;
+  pendingDeckPlace: PendingDecision<PendingDeckPlace> | null;
   setPendingDeckPlace: (p: PendingDeckPlace | null) => void;
   /**
    * 2026-05-26 ヒラメキ効果検証 demo モード。
@@ -270,6 +283,8 @@ export type PendingEffectPick = {
 /** BUG-121: human 複数 option choice 保留 (PendingEffectChoiceSide と同 shape)。 */
 export type PendingEffectChoice = {
   player: 'self' | 'opp';
+  /** Decision owner can differ from the player whose effect is paused. */
+  sourcePlayer?: 'self' | 'opp';
   publicHandRevealToken?: string;
   source: PendingEffectSource & { uid: string };
   options: { index: number; verb?: string; args?: Record<string, unknown>; label?: string; sceneEnter?: boolean }[];
@@ -369,6 +384,21 @@ export type PendingMisread = {
   candidates: { uid: string; x: number }[];
 };
 
+function setPendingDecision<T extends object>(
+  set: (updater: (state: GameStateStore) => Partial<GameStateStore>) => void,
+  key: keyof GameStateStore,
+  pending: T | null,
+): void {
+  set((state) => {
+    if (pending === null) return { [key]: null } as Partial<GameStateStore>;
+    const next = state.pendingDecisionSeq + 1;
+    return {
+      [key]: { ...pending, decisionId: `decision:${next}` },
+      pendingDecisionSeq: next,
+    } as Partial<GameStateStore>;
+  });
+}
+
 export const MATCH_SESSION_RESET_STATE = {
   gameState: null,
   activeActionId: null,
@@ -398,12 +428,94 @@ export const MATCH_SESSION_RESET_STATE = {
   cutinDemoSelectedCardId: null,
 } as const;
 
+const PENDING_SURFACE_RESET_STATE = {
+  pendingHirameki: null,
+  pendingMisread: null,
+  pendingEffectPick: null,
+  pendingEffectChoice: null,
+  pendingEffectOptional: null,
+  pendingChooseIntercept: null,
+  pendingLeaveIntercept: null,
+  pendingRps: null,
+  pendingSetCardChoice: null,
+  pendingSetCardReplacement: null,
+  pendingEffectRepeatOptional: null,
+  pendingDeckReveal: null,
+  pendingPublicHandReveal: null,
+  pendingDeckReorder: null,
+  pendingDeckPlace: null,
+} as const;
+
+function latestOpenActionContext(
+  state: GameState,
+): NonNullable<GameState['actionContexts']>[string] | undefined {
+  const open = Object.values(state.actionContexts ?? {})
+    .filter((context) => context.phase !== 'action-end');
+  const allocated = state.actionContextSeq === undefined
+    ? undefined
+    : open.find((context) => context.id === `ax_${state.actionContextSeq}`);
+  if (allocated) return allocated;
+  return open.sort((left, right) => {
+    const leftSeq = /^ax_(\d+)$/.exec(left.id)?.[1];
+    const rightSeq = /^ax_(\d+)$/.exec(right.id)?.[1];
+    if (leftSeq !== undefined && rightSeq !== undefined) {
+      const sequenceDelta = Number(rightSeq) - Number(leftSeq);
+      if (sequenceDelta !== 0) return sequenceDelta;
+    }
+    const turnDelta = right.startedAt.turn - left.startedAt.turn;
+    if (turnDelta !== 0) return turnDelta;
+    const timeDelta = right.startedAt.nano - left.startedAt.nano;
+    if (timeDelta !== 0) return timeDelta;
+    return right.id.localeCompare(left.id, undefined, { numeric: true });
+  })[0];
+}
+
 export const useGameStateStore = create<GameStateStore>((set, get) => ({
   gameState: null,
-  setGameState: (state) => set({
-    gameState: state === null ? null : produce(state, (draft) => mutate.char.ensureSetCardInstanceIds(draft)),
-  }),
-  resetMatchSessionState: () => set(MATCH_SESSION_RESET_STATE),
+  setGameState: (state, options) => {
+    const gameState = state === null
+      ? null
+      : produce(state, (draft) => mutate.char.ensureSetCardInstanceIds(draft));
+    if (options?.preserveRuntime !== true) resetPendingRuntimeState();
+    if (gameState !== null) hydratePendingRuntimeState(gameState);
+    const openAction = gameState === null
+      ? undefined
+      : latestOpenActionContext(gameState);
+    set((store) => {
+      const surfaceReset = options?.preserveRuntime === true
+        ? {
+            ...PENDING_SURFACE_RESET_STATE,
+            pendingDeckReveal: store.pendingDeckReveal,
+            pendingPublicHandReveal: store.pendingPublicHandReveal,
+          }
+        : PENDING_SURFACE_RESET_STATE;
+      const pending = openAction?.pendingLeaveIntercept;
+      if (!pending) {
+        return {
+          ...surfaceReset,
+          gameState,
+          activeActionId: openAction?.id ?? null,
+        };
+      }
+      const nextDecision = store.pendingDecisionSeq + 1;
+      return {
+        ...surfaceReset,
+        gameState,
+        activeActionId: openAction.id,
+        pendingLeaveIntercept: {
+          ...pending,
+          actionId: openAction.id,
+          decisionId: `decision:${nextDecision}`,
+        },
+        pendingDecisionSeq: nextDecision,
+      };
+    });
+    if (gameState !== null) surfacePendingSideChannels(get);
+  },
+  resetMatchSessionState: () => {
+    resetPendingRuntimeState();
+    set(MATCH_SESSION_RESET_STATE);
+  },
   dispatch: (mutator) => {
     const current = get().gameState;
     if (current === null) return;
@@ -417,10 +529,11 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   },
   activeActionId: null,
   setActiveActionId: (id) => set({ activeActionId: id }),
+  pendingDecisionSeq: 0,
   pendingHirameki: null,
-  setPendingHirameki: (p) => set({ pendingHirameki: p }),
+  setPendingHirameki: (p) => setPendingDecision(set, 'pendingHirameki', p),
   pendingMisread: null,
-  setPendingMisread: (p) => set({ pendingMisread: p }),
+  setPendingMisread: (p) => setPendingDecision(set, 'pendingMisread', p),
   activeCardUid: null,
   activeCardLabel: null,
   setActiveCard: (uid, label) => set({ activeCardUid: uid, activeCardLabel: label }),
@@ -435,31 +548,31 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   aiStepCounter: 0,
   incrementAiStep: () => set((s) => ({ aiStepCounter: s.aiStepCounter + 1 })),
   pendingEffectPick: null,
-  setPendingEffectPick: (p) => set({ pendingEffectPick: p }),
+  setPendingEffectPick: (p) => setPendingDecision(set, 'pendingEffectPick', p),
   pendingEffectChoice: null,
-  setPendingEffectChoice: (p) => set({ pendingEffectChoice: p }),
+  setPendingEffectChoice: (p) => setPendingDecision(set, 'pendingEffectChoice', p),
   pendingEffectOptional: null,
-  setPendingEffectOptional: (p) => set({ pendingEffectOptional: p }),
+  setPendingEffectOptional: (p) => setPendingDecision(set, 'pendingEffectOptional', p),
   pendingChooseIntercept: null,
-  setPendingChooseIntercept: (p) => set({ pendingChooseIntercept: p }),
+  setPendingChooseIntercept: (p) => setPendingDecision(set, 'pendingChooseIntercept', p),
   pendingLeaveIntercept: null,
-  setPendingLeaveIntercept: (p) => set({ pendingLeaveIntercept: p }),
+  setPendingLeaveIntercept: (p) => setPendingDecision(set, 'pendingLeaveIntercept', p),
   pendingRps: null,
-  setPendingRps: (p) => set({ pendingRps: p }),
+  setPendingRps: (p) => setPendingDecision(set, 'pendingRps', p),
   pendingSetCardChoice: null,
-  setPendingSetCardChoice: (p) => set({ pendingSetCardChoice: p }),
+  setPendingSetCardChoice: (p) => setPendingDecision(set, 'pendingSetCardChoice', p),
   pendingSetCardReplacement: null,
-  setPendingSetCardReplacement: (p) => set({ pendingSetCardReplacement: p }),
+  setPendingSetCardReplacement: (p) => setPendingDecision(set, 'pendingSetCardReplacement', p),
   pendingEffectRepeatOptional: null,
-  setPendingEffectRepeatOptional: (p) => set({ pendingEffectRepeatOptional: p }),
+  setPendingEffectRepeatOptional: (p) => setPendingDecision(set, 'pendingEffectRepeatOptional', p),
   pendingDeckReveal: null,
   setPendingDeckReveal: (p) => set({ pendingDeckReveal: p }),
   pendingPublicHandReveal: null,
   setPendingPublicHandReveal: (p) => set({ pendingPublicHandReveal: p }),
   pendingDeckReorder: null,
-  setPendingDeckReorder: (p) => set({ pendingDeckReorder: p }),
+  setPendingDeckReorder: (p) => setPendingDecision(set, 'pendingDeckReorder', p),
   pendingDeckPlace: null,
-  setPendingDeckPlace: (p) => set({ pendingDeckPlace: p }),
+  setPendingDeckPlace: (p) => setPendingDecision(set, 'pendingDeckPlace', p),
   hiramekiDemoMode: 'idle',
   setHiramekiDemoMode: (m) => set({ hiramekiDemoMode: m }),
   hiramekiDemoSelectedCardId: null,

@@ -346,7 +346,7 @@ export function atomHandReveal(s: GameState, a: Record<string, unknown>, ctx: Ef
           cardIds: [...target],
           handSnapshot: [...s.players[hrP].hand],
           lifetime: publicLifetime,
-          resolutionToken: publicHandRevealToken(ctx),
+          resolutionToken: publicHandRevealToken(s, ctx),
           source: { cardId: ctx.source.cardId, abilityId: ctx.source.abilityId, uid: ctx.source.uid },
         });
       }
@@ -535,7 +535,7 @@ export function atomFilePopToHand(s: GameState, a: Record<string, unknown>, ctx:
         (ctx.dyn ??= {}).chainStepNoApply = true; // Phase 3c: chain break 信号を ctx.dyn へ (resolver chain case が読む)
       }
       // BUG-073: effect log (popped が無い場合も log には残す)
-      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:filePopToHand', result: popped ? popped.cardId : 'none' });
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:filePopToHand', result: popped ? 'moved=1' : 'none' });
       return;
     }
 
@@ -819,6 +819,7 @@ export function atomPeekOwnEvidence(s: GameState, a: Record<string, unknown>, ct
   mutate.log.append(s, {
     ts: Date.now(), player: p, turn: s.turn.number,
     action: 'effect:evidencePeek', target: top.cardId, result: top.faceUp ? 'faceUp' : 'faceDown',
+    targetAudience: top.faceUp ? undefined : p,
   });
 }
 
@@ -898,10 +899,15 @@ export function atomEvidenceToHand(s: GameState, a: Record<string, unknown>, ctx
           mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand', result: 'none' });
           return;
         }
-        const topId = evList[evList.length - 1]!.cardId;
+        const top = evList[evList.length - 1]!;
+        const topId = top.cardId;
         evList.pop();
         mutate.hand.add(s, p, [topId]);
-        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand', target: topId, result: 'ok' });
+        mutate.log.append(s, {
+          ts: Date.now(), player: p, turn: s.turn.number,
+          action: 'effect:evidenceToHand', target: topId,
+          targetAudience: top.faceUp ? undefined : p, result: 'ok',
+        });
         return;
       }
       const ethArgs = (a.target === undefined && hasNorMax(a))
@@ -916,13 +922,19 @@ export function atomEvidenceToHand(s: GameState, a: Record<string, unknown>, ctx
       const list = s.players[p].evidence;
       const idx = list.findIndex(e => e.cardId === target);
       let moved = false;
+      let targetAudience: Player | undefined;
       if (idx !== -1) {
+        targetAudience = list[idx]!.faceUp ? undefined : p;
         list.splice(idx, 1);
         mutate.hand.add(s, p, [target]);
         moved = true;
       }
       // BUG-073: effect log
-      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand', target, result: moved ? 'ok' : 'not-found' });
+      mutate.log.append(s, {
+        ts: Date.now(), player: p, turn: s.turn.number,
+        action: 'effect:evidenceToHand', target, targetAudience,
+        result: moved ? 'ok' : 'not-found',
+      });
       return;
     }
 
@@ -1228,7 +1240,7 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
         }
         setCardMoveBinding(ctx, a.bind, moved);
         if (moved.length > 0) refreshDeckForEffect(s, hadP, ctx);
-        mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', target: moved.map(({ cardId }) => cardId).join(','), result: moved.length ? 'ok' : 'none' });
+        mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', result: moved.length ? `moved=${moved.length}` : 'none' });
         return;
       }
       const rawHadCardId = a.cardId;
@@ -1268,7 +1280,7 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
       }
       setCardMoveBinding(ctx, a.bind, moved ? [{ cardId: hadCardId, area: 'hand', player: hadP, index: handIndex }] : []);
       if (moved) refreshDeckForEffect(s, hadP, ctx);
-      mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', target: hadCardId, result: moved ? 'ok' : 'not-found' });
+      mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', result: moved ? 'moved=1' : 'not-found' });
       return;
     }
 
@@ -1295,7 +1307,7 @@ export function atomHandAddFromDeckBottom(s: GameState, a: Record<string, unknow
       mutate.hand.add(s, hadbP, [bottomId]);
       // take でデッキが空になったら即リフレッシュ (rules/14 即座 / B03051 Q&A: 残1枚→手札→リフレッシュ)。
       mutate.deck.refreshAfterTake(s, hadbP, resolvingEventCardId(ctx, hadbP));
-      mutate.log.append(s, { ts: Date.now(), player: hadbP, turn: s.turn.number, action: 'effect:handAddFromDeckBottom', target: bottomId, result: 'ok' });
+      mutate.log.append(s, { ts: Date.now(), player: hadbP, turn: s.turn.number, action: 'effect:handAddFromDeckBottom', result: 'moved=1' });
       return;
     }
 

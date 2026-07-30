@@ -90,7 +90,10 @@ describe('reasoning continuation consumers', () => {
     const log: ReplayLog = {
       schemaVersion: 1,
       initialState: stateWithReasoning(),
-      moves: [{ turn: 2, player: 'self', move: reasoningMove }],
+      moves: [
+        { turn: 2, player: 'self', move: reasoningMove },
+        { turn: 3, player: 'opp', move: { kind: 'endTurn' } },
+      ],
       result: { winner: 'draw', reason: 'turn-cap', turns: 2 },
     };
 

@@ -55,6 +55,7 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { sceneChar as baseScene } from '../../helpers/fixtures';
 import type { GameState, SceneCharacter, CardDef, AbilityDef } from '@/engine/types';
 import { B05015 } from '@/cards/ct-p05/B05015';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 type Player = 'self' | 'opp';
 const sc = (cardId: string, uid: string, state: 'active' | 'sleep' | 'stun' = 'active'): SceneCharacter =>
@@ -198,7 +199,7 @@ describe('B05015 a2 — 【ヒラメキ】リムーブの レベル6以下[小�
     expect(pending, 'ヒラメキ optional hook 検出 → pending push').not.toBeNull();
     expect(pending!.cardId).toBe('B05015');
     useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
-    const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' });
+    const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' });
     expect(r.ok, 'hiramekiResolve fire ok').toBe(true);
   }
 
@@ -208,7 +209,7 @@ describe('B05015 a2 — 【ヒラメキ】リムーブの レベル6以下[小�
     const pick = useGameStateStore.getState().pendingEffectPick!;
     expect(pick, 'sceneEnter pick が surface').not.toBeNull();
     expect(pick.candidates.map((c) => c.cardId), 'filter 実評価: 候補は Lv6 小嶋元太 のみ (Lv7/非小嶋元太 除外)').toEqual([KOJI6]);
-    const r2 = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pick.candidates[0].uid });
+    const r2 = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pick.candidates[0].uid });
     expect(r2.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.some((c) => c.cardId === KOJI6), 'Lv6 小嶋元太 が登場').toBe(true);
@@ -222,7 +223,7 @@ describe('B05015 a2 — 【ヒラメキ】リムーブの レベル6以下[小�
     const pick = useGameStateStore.getState().pendingEffectPick!;
     expect(pick.candidates.map((c) => c.cardId)).toEqual([KOJI6]);
     expect(pick.nMin, '「1枚まで」→ 0 選択可 (nMin 0)').toBe(0);
-    const r2 = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    const r2 = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null });
     expect(r2.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.length, '0 選択 → 誰も登場しない').toBe(0);

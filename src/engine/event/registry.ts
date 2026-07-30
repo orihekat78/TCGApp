@@ -23,20 +23,9 @@ export type Listener = (state: GameState, payload: unknown, source: unknown) => 
 
 const registry: Map<HookName, Listener[]> = new Map();
 
-// Auto-increment counter for EffectStackEntry IDs. Module-level singleton.
-let entryIdCounter = 0;
 let suppressedEventDepth = 0;
 type JournaledEmit = { state: GameState; name: HookName; payload: unknown; source?: unknown };
 let eventJournal: JournaledEmit[] | null = null;
-
-/** Payment preparation may emit against an isolated state clone. Preserve IDs. */
-export function _snapshotEntryIdCounter(): number {
-  return entryIdCounter;
-}
-
-export function _restoreEntryIdCounter(snapshot: number): void {
-  entryIdCounter = snapshot;
-}
 
 /** Run a preparation pass without invoking listener closures or queueing effects. */
 export function _withEventsSuppressed<T>(fn: () => T): T {
@@ -65,9 +54,14 @@ export function _commitEventJournal(journal: JournaledEmit[]): void {
   for (const entry of journal) emit(entry.state, entry.name, entry.payload, entry.source);
 }
 
-function nextEntryId(): string {
-  entryIdCounter += 1;
-  return `e_${entryIdCounter}`;
+function nextEntryId(state: GameState): string {
+  let seq = state.effectEntrySeq ?? 0;
+  for (const entry of state.pendingEffects) {
+    const match = /^e_(\d+)$/.exec(entry.id);
+    if (match) seq = Math.max(seq, Number(match[1]));
+  }
+  state.effectEntrySeq = seq + 1;
+  return `e_${state.effectEntrySeq}`;
 }
 
 // Resolution lock — module-level alongside the registry. UI consults via
@@ -123,7 +117,7 @@ export function buildEntry(
   } = {},
 ): EffectStackEntry {
   return {
-    id: nextEntryId(),
+    id: nextEntryId(state),
     source: normalizeSource(opts.source),
     triggeredBy: { hook: opts.hook ?? 'manual', payload: opts.payload },
     triggeredAt: {
@@ -259,7 +253,6 @@ function queue(
  */
 function _resetRegistry(): void {
   registry.clear();
-  entryIdCounter = 0;
   suppressedEventDepth = 0;
   eventJournal = null;
   resolutionLocked = false;

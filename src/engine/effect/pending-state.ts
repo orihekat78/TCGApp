@@ -321,6 +321,8 @@ export function _clearPendingEffectPickQueue(): void {
 
 export type PendingEffectChoiceSide = {
   player: Player;
+  /** Decision owner can differ from the player whose effect is paused. */
+  sourcePlayer?: Player;
   publicHandRevealToken?: string;
   /** 元 ability の特定 + 再開 ctx 復元 + option1 の $self 解決 + event.queue source に使用 */
   source: PendingEffectSource & { uid: string };
@@ -681,6 +683,7 @@ export function resetPendingEffectSession(): void {
   g.__pendingSetCardChoiceGuard = null;
   g.__pendingSetCardChoiceContinuation = null;
   g.__pendingSetCardReplacementSide = null;
+  delete (globalThis as { __pendingRuntimeStateMarker?: unknown }).__pendingRuntimeStateMarker;
 }
 
 // --- optional 再開 ctx の bindings 復元 (engine wave-18: BUG-114 choice-bindings の対称、$contact.* / ctx.contact 保持) ---

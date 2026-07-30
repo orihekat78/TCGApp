@@ -19,6 +19,7 @@ import { B08059 } from '@/cards/ct-p08/B08059';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import type { AbilityDef, ActionContext, CardDef, EffectCtx } from '@/engine/types';
+import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
 
 const invalidHirameki: CardDef = {
   id: 'VER25_HIRAMEKI', no: 'TEST/VER25_HIRAMEKI', kind: 'event', names: ['Ver.2.5 ヒラメキ'], colors: [], level: 1,
@@ -109,7 +110,7 @@ describe('official rule manual Ver.2.5', () => {
     expect(pending).toMatchObject({ player: 'self', cardId: invalidHirameki.id, abilityId: 'a1', effectValid: false });
 
     useGameStateStore.setState({ gameState: afterAction, pendingHirameki: pending });
-    expect(dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
     expect(useGameStateStore.getState().gameState!.players.self.deck).toEqual(['DRAWN']);
     expect(useGameStateStore.getState().gameState!.log).toEqual(expect.arrayContaining([
       expect.objectContaining({ action: 'hirameki:fire', target: invalidHirameki.id }),

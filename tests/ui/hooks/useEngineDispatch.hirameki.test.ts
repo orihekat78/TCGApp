@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types';
 import { useGameStateStore } from '@/ui/state/store';
 import { engine } from '@/engine';
 import { registerAll } from '@/cards';
@@ -82,6 +83,12 @@ const pausedHiramekiTarget: CardDef = {
 };
 
 describe('hiramekiResolve dispatch (Commit 3a)', () => {
+  function resolvePendingHirameki(choice: 'fire' | 'skip') {
+    const pending = useGameStateStore.getState().pendingHirameki;
+    if (!pending) throw new Error('expected pending Hirameki');
+    return dispatchEngineAction(bindPendingDecision(pending, { type: 'hiramekiResolve', choice }));
+  }
+
   beforeAll(() => {
     registerAll();
     registerHiramekiListener();
@@ -144,7 +151,7 @@ describe('hiramekiResolve dispatch (Commit 3a)', () => {
       pendingHirameki: { player: 'self', cardId: 'D08013', abilityId: 'a2' },
     });
 
-    const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' });
+    const r = resolvePendingHirameki('fire');
     expect(r.ok).toBe(true);
     // pendingHirameki クリア
     expect(useGameStateStore.getState().pendingHirameki).toBeNull();
@@ -164,7 +171,7 @@ describe('hiramekiResolve dispatch (Commit 3a)', () => {
       pendingHirameki: { player: 'self', cardId: 'D08013', abilityId: 'a2' },
     });
 
-    const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' });
+    const r = resolvePendingHirameki('fire');
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.hand).toEqual([]);
@@ -184,10 +191,13 @@ describe('hiramekiResolve dispatch (Commit 3a)', () => {
       pendingHirameki: { player: 'self', cardId: PAUSED_HIRAMEKI_ID, abilityId: 'a1' },
     });
 
-    expect(dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
+    expect(resolvePendingHirameki('fire').ok).toBe(true);
     const pick = useGameStateStore.getState().pendingEffectPick;
     expect(pick?.atomVerb).toBe('sceneSetState');
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: target.uid }).ok).toBe(true);
+    expect(dispatchEngineAction(bindPendingDecision(pick!, {
+      type: 'effectPickResolve',
+      pickedUid: target.uid,
+    })).ok).toBe(true);
 
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene.find((c) => c.uid === target.uid)?.state, 'pause 前の選択効果').toBe('sleep');
@@ -205,7 +215,7 @@ describe('hiramekiResolve dispatch (Commit 3a)', () => {
       pendingHirameki: { player: 'self', cardId: 'D08013', abilityId: 'a2' },
     });
 
-    const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'skip' });
+    const r = resolvePendingHirameki('skip');
     expect(r.ok).toBe(true);
     expect(useGameStateStore.getState().pendingHirameki).toBeNull();
     const after = useGameStateStore.getState().gameState!;
@@ -216,7 +226,11 @@ describe('hiramekiResolve dispatch (Commit 3a)', () => {
   it('pendingHirameki なし状態で hiramekiResolve dispatch → not-allowed', () => {
     const s = makeStateWithDeckAndPending();
     useGameStateStore.setState({ gameState: s, pendingHirameki: null });
-    const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' });
+    const r = dispatchEngineAction({
+      type: 'hiramekiResolve',
+      choice: 'fire',
+      decisionId: 'missing-decision',
+    });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.reason).toBe('not-allowed');
   });

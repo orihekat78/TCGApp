@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
+import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import { cancelSetCardCostChoice, confirmSetCardCostChoice, toggleSetCardCostChoice } from '@/ui/hooks/useSetCardCostPicker.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { CardExpandModal } from './CardExpandModal.js';
@@ -27,7 +28,7 @@ export function SetCardChoiceModalHost(): JSX.Element | null {
       <div className="cp-body"><ul className="cp-list">{pending.entries.map((entry) => {
         const hidden = entry.hidden ?? true;
         const hiddenLabel = entry.hostLabel ? `${entry.hostLabel}のセットカード ${entry.ordinal}` : `Set card ${entry.ordinal}`;
-        return <li key={entry.instanceId} className={`cp-choice-row${selected.has(entry.instanceId) ? ' cp-choice-row--selected' : ''}`}><SelectableCardTile cardId={entry.cardId ?? ''} instanceId={entry.instanceId} hidden={hidden} hiddenLabel={hiddenLabel} selectTestId={`set-card-choice-${entry.ordinal}`} selected={selected.has(entry.instanceId)} onSelect={() => isCost ? toggleSetCardCostChoice(entry.instanceId) : dispatchEngineAction({ type: 'setCardChoiceResolve', instanceId: entry.instanceId })} onExpand={!hidden ? expandModal.open : undefined} /></li>;
+        return <li key={entry.instanceId} className={`cp-choice-row${selected.has(entry.instanceId) ? ' cp-choice-row--selected' : ''}`}><SelectableCardTile cardId={entry.cardId ?? ''} instanceId={entry.instanceId} hidden={hidden} hiddenLabel={hiddenLabel} selectTestId={`set-card-choice-${entry.ordinal}`} selected={selected.has(entry.instanceId)} onSelect={() => isCost ? toggleSetCardCostChoice(entry.instanceId) : dispatchEngineAction(bindPendingDecision(pending, { type: 'setCardChoiceResolve', instanceId: entry.instanceId }))} onExpand={!hidden ? expandModal.open : undefined} /></li>;
       })}</ul></div>
       {isCost && <div className="cp-actions">
         <button type="button" className="cp-btn cp-btn-cancel" data-testid="set-card-cost-cancel" onClick={cancelSetCardCostChoice}>キャンセル</button>

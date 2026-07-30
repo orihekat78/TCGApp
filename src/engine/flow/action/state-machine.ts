@@ -6,11 +6,8 @@
 //   declared → guard-window → leave-resolution → contact-pending →
 //   action-1 → action-2 → (action-1-redo if applicable) → judge → contact-end → action-end
 //
-// ActionContext は **モジュールレベルの Map** で保持する (state に積まない)。
-// 理由:
-//   - Immer の produce() は state を新規オブジェクトに置き換えるため
-//   - 状態機械の遷移は副作用として state を mutate するが、context 自体は GameState 外
-//   - テスト用に _resetActionContexts() を公開
+// ActionContext は GameState に保持する。save/replay/produce rollback の境界を越えても
+// 進行中アクションと採番が一致し、別matchへmodule-global stateが漏れない。
 //
 // 注意: caller は produce(state, draft => { flow.action.declare(draft, ...); ... }) で呼ぶ。
 
@@ -23,6 +20,7 @@ import { canActionAgainstChar, canActionAgainstCase } from '../main/action.js';
 import { canGuard, mustGuardCandidates } from '../guard.js';
 import { buildContactBindings } from '../contact.js';
 import { computeOrder } from './order.js';
+import { contextForState } from './context-registry.js';
 import {
   candidates as targetCandidates,
   consumeMustTargetSelfOnce,
@@ -65,27 +63,37 @@ function formatContactDetail(s: GameState, aUid: string, bUid: string): string {
   return `${formatContactSide(s, aUid)} VS ${formatContactSide(s, bUid)}`;
 }
 
-// ActionContext モジュールレベル保持
-const _contexts: Map<string, ActionContext> = new Map();
-let _idCounter = 0;
-
-function nextId(): string {
-  _idCounter += 1;
-  return `ax_${_idCounter}`;
+function contexts(state: GameState): Record<string, ActionContext> {
+  state.actionContexts ??= {};
+  return state.actionContexts;
 }
 
+function nextId(state: GameState): string {
+  let seq = state.actionContextSeq ?? 0;
+  for (const id of Object.keys(state.actionContexts ?? {})) {
+    const match = /^ax_(\d+)$/.exec(id);
+    if (match) seq = Math.max(seq, Number(match[1]));
+  }
+  state.actionContextSeq = seq + 1;
+  return `ax_${state.actionContextSeq}`;
+}
+
+/** @deprecated ActionContext is state-owned; retained as a no-op for old setup code. */
 export function _resetActionContexts(): void {
-  _contexts.clear();
-  _idCounter = 0;
+  // no-op
 }
 
-export function _getContext(id: string): ActionContext | undefined {
-  return _contexts.get(id);
+export function _getContext(state: GameState, id: string): ActionContext | undefined {
+  return state.actionContexts?.[id];
 }
 
+/**
+ * Immer の produce 境界を越えて保持された ActionContext は frozen object になり得る。
+ * public mutator は必ず現在の GameState 内の draft-owned instance へ解決してから更新する。
+ */
 /** A declared ability cannot begin while any ActionContext is still resolving. */
-export function _hasOpenActionContext(): boolean {
-  return [..._contexts.values()].some((context) => context.phase !== 'action-end');
+export function _hasOpenActionContext(state: GameState): boolean {
+  return Object.values(state.actionContexts ?? {}).some((context) => context.phase !== 'action-end');
 }
 
 /**
@@ -93,10 +101,10 @@ export function _hasOpenActionContext(): boolean {
  *
  * advance が 'action-end' に遷移したとき呼ぶ。
  * 長いゲームでの Map の無限成長を防ぐためのメモリ管理。
- * (GameState に積まないのは Immer の produce 境界を越えないため — 上部コメント参照)
+ * Context 本体は GameState 所有。完了時に state registry から除去する。
  */
-export function _deleteContext(id: string): void {
-  _contexts.delete(id);
+export function _deleteContext(state: GameState, id: string): void {
+  if (state.actionContexts) delete state.actionContexts[id];
 }
 
 /**
@@ -167,7 +175,7 @@ export function declare(state: GameState, byUid: string, target: Target): Action
   sleepActor(state, byUid);
 
   // ActionContext 生成
-  const id = nextId();
+  const id = nextId(state);
   const ax: ActionContext = {
     id,
     byUid,
@@ -177,7 +185,7 @@ export function declare(state: GameState, byUid: string, target: Target): Action
     startedAt: { turn: state.turn.number, nano: Date.now() },
     cutInUsed: {},
   };
-  _contexts.set(id, ax);
+  contexts(state)[id] = ax;
 
   // action:declare emit (spec: { byUid, target })
   // 2026-06-06 タスクC: triggerCharMatches が payload.uid/player を読めるよう uid/player を併記
@@ -236,7 +244,7 @@ export function startFromEffect(state: GameState, byUid: string, targetUid: stri
   const targetSide: Player = byPlayer === 'self' ? 'opp' : 'self';
   if (!state.players[targetSide].scene.some((c) => c.uid === targetUid)) return null;
 
-  const id = nextId();
+  const id = nextId(state);
   const ax: ActionContext = {
     id,
     byUid,
@@ -247,7 +255,7 @@ export function startFromEffect(state: GameState, byUid: string, targetUid: stri
     cutInUsed: {},
     generatedByEffect: true,
   };
-  _contexts.set(id, ax);
+  contexts(state)[id] = ax;
   // contact-pending → action-1 (contact:start emit + order 計算は既存分岐を再利用)
   advance(state, ax);
   return ax;
@@ -262,6 +270,7 @@ export function startFromEffect(state: GameState, byUid: string, targetUid: stri
  * - phase → 'leave-resolution'
  */
 export function tryGuard(state: GameState, ax: ActionContext, guardUid: string): void {
+  ax = contextForState(state, ax);
   // Task D E4: アクション対象キャラ自身はガード不可 (B09028/B09054 Q&A、sleepGuard 重複領域)
   const guardExclude = ax.target.kind === 'char' ? ax.target.uid : undefined;
   if (!canGuard(state, ax.byUid, guardUid, guardExclude)) {
@@ -306,6 +315,7 @@ export function tryGuard(state: GameState, ax: ActionContext, guardUid: string):
  * - phase: char target → 'leave-resolution', case target → 'judge' (actionCase 側で処理)
  */
 export function passGuard(state: GameState, ax: ActionContext): void {
+  ax = contextForState(state, ax);
   // W2b (2026-07-03, r28): mustGuard 義務 (B09040 a2)。ガード可能な義務 char が居る限り
   // pass 不可 (公式Q&A)。スリープ/ブレット/対象自身は candidates() 除外で義務から自動免除。
   // AI (action-resolution) / UI (useContactFlowDriver) は事前に義務 char へ誘導するため、
@@ -343,6 +353,7 @@ export function passGuard(state: GameState, ax: ActionContext): void {
  * - contact:before-judge emit (spec: { aUid, bUid, aAP, bAP })
  */
 export function snapshotAP(state: GameState, ax: ActionContext): void {
+  ax = contextForState(state, ax);
   const aUid = ax.byUid;
   let bUid: string;
   if (ax.guardUid) {
@@ -381,6 +392,7 @@ export function snapshotAP(state: GameState, ax: ActionContext): void {
  * rules/07: ガードまでに攻撃キャラ or 対象が現場を離れた場合、アクションはその時点で終了
  */
 export function abortIfMissing(state: GameState, ax: ActionContext): void {
+  ax = contextForState(state, ax);
   const byMissing =
     ax.byUid !== 'partner:self' &&
     ax.byUid !== 'partner:opp' &&
@@ -415,7 +427,7 @@ export function abortIfMissing(state: GameState, ax: ActionContext): void {
       { player: ax.byPlayer, uid: ax.byUid },
     );
     // メモリ管理: 中断時も Context を削除
-    _deleteContext(ax.id);
+    _deleteContext(state, ax.id);
   }
 }
 
@@ -425,6 +437,7 @@ export function abortIfMissing(state: GameState, ax: ActionContext): void {
  * 各フェーズで適切な Hook を emit しつつ次フェーズへ。
  */
 export function advance(state: GameState, ax: ActionContext): void {
+  ax = contextForState(state, ax);
   const phase = ax.phase;
 
   if (phase === 'declared') {
@@ -550,7 +563,7 @@ export function advance(state: GameState, ax: ActionContext): void {
       );
     }
     // メモリ管理: action-end に到達した Context は不要なので削除 (長いゲーム対策)
-    _deleteContext(ax.id);
+    _deleteContext(state, ax.id);
     return;
   }
 

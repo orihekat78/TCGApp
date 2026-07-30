@@ -82,7 +82,7 @@ describe('B10010 工藤新一', () => {
     result = produce(result, draft => applyPickAndContinuation(draft, pick, pick.candidates[1]!.uid));
     const reorder = _drainPendingDeckReorderSide()!;
     result = produce(result, draft => applyDeckReorderAndContinuation(draft, reorder, [TAIL.id, shinichi.id, eventDecoy.id]));
-    runAllUntilEmpty(result);
+    result = produce(result, draft => runAllUntilEmpty(draft));
     const discard = _drainPendingEffectPickSide()!;
     expect(discard.candidates.map(candidate => candidate.cardId)).toEqual([ran.id]);
     result = produce(result, draft => applyPickAndContinuation(draft, discard, discard.candidates[0]!.uid));

@@ -31,6 +31,7 @@ import { useGameStateStore } from '@/ui/state/store';
 import { registerAll } from '@/cards/index';
 import { sceneChar } from '../helpers/fixtures';
 import type { CardDef, GameState } from '@/engine/types';
+import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
 
 type G = {
   __pendingEffectPickQueue?: PendingEffectPickSide[];
@@ -98,7 +99,7 @@ describe('BUG-135 回帰 — sequence 中間 skippable pick の decline で必�
     expect(pending?.candidates.map((c) => c.cardId)).toEqual([HAI]);
 
     // sceneEnter を decline (0枚 = 誰も登場させない)
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null });
 
     const after = useGameStateStore.getState().gameState!;
     // 期待: 誰も登場しない (scene は PR155 のみ) + draw 1 が発火 (hand 2→3 / deck 3→2)
@@ -131,9 +132,9 @@ describe('BUG-135 回帰 — sequence 中間 skippable pick の decline で必�
     const hcUid = p1!.candidates.find((c) => c.cardId === HC)!.uid;
 
     // discard を適用 (HC をリムーブ) → chain proceed → 内側 sequence の sceneSetState pick が surface
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: hcUid });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: hcUid });
     expect(useGameStateStore.getState().pendingEffectPick?.atomVerb).toBe('sceneSetState');
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null });
 
     const after = useGameStateStore.getState().gameState!;
     // 期待: 必須 remainder evidenceGain が発火 (証拠 +1) — chain→内側sequence の nest で remainder 脱落なし
@@ -163,7 +164,7 @@ describe('BUG-135 回帰 — sequence 中間 skippable pick の decline で必�
     expect(useGameStateStore.getState().pendingEffectPick?.atomVerb).toBe('discard');
 
     // discard を decline (手札を捨てない) → chain break
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null });
 
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.evidence.length).toBe(0); // evidenceGain 不発火

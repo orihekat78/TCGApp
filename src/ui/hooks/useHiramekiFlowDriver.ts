@@ -11,6 +11,7 @@
 import { useEffect } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from './useEngineDispatch.js';
+import { bindPendingDecision } from './useEngineDispatch/types.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 
 export function useHiramekiFlowDriver(): void {
@@ -30,6 +31,9 @@ export function useHiramekiFlowDriver(): void {
     const fire = ai.chooseHiramekiTrigger
       ? ai.chooseHiramekiTrigger(gameState, { cardId: pending.cardId, abilityId: pending.abilityId })
       : true;
-    dispatchEngineAction({ type: 'hiramekiResolve', choice: fire ? 'fire' : 'skip' });
+    dispatchEngineAction(bindPendingDecision(
+      pending,
+      { type: 'hiramekiResolve', choice: fire ? 'fire' : 'skip' },
+    ));
   }, [pending, gameState]);
 }

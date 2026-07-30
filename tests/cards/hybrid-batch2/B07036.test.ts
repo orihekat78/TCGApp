@@ -33,6 +33,7 @@ import { useGameStateStore } from '@/ui/state/store';
 import { sceneChar } from '../../helpers/fixtures';
 import type { AbilityDef, CardDef, GameState, SceneCharacter } from '@/engine/types';
 import { B07036 } from '@/cards/ct-p07/B07036';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 type G = { __humanPlayerSide?: 'self' | 'opp' | null };
 const setHuman = (s: 'self' | 'opp' | null) => { (globalThis as G).__humanPlayerSide = s; };
@@ -145,25 +146,25 @@ describe('B07036 中森青子 a1 — 【解決編】【登場時】 optional[白
     expect(opt(), '解決編 + optional surface').not.toBeNull();
 
     // opt-in
-    expect(dispatchEngineAction({ type: 'optionalResolve', run: true }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: true }).ok).toBe(true);
 
     // step1: sleep 白 pick (kaito=黒羽快斗 を選ぶ)
     const p1 = pick();
     expect(p1?.atomVerb, 'step1 = sceneSetState(sleep)').toBe('sceneSetState');
     expect(p1!.candidates.some(c => c.uid === 'kaito'), 'kaito が白候補').toBe(true);
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'kaito' }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'kaito' }).ok).toBe(true);
 
     // step2: discard hand pick
     const p2 = pick();
     expect(p2?.atomVerb, 'step2 = discard').toBe('discard');
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: p2!.candidates[0]!.uid }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: p2!.candidates[0]!.uid }).ok).toBe(true);
 
     // step3: sceneRemove lv7以下 pick (TGT を選ぶ / DECOY(lv8) は候補外)
     const p3 = pick();
     expect(p3?.atomVerb, 'step3 = sceneRemove').toBe('sceneRemove');
     expect(p3!.candidates.some(c => c.uid === 'tgt'), 'TGT(lv5) 候補').toBe(true);
     expect(p3!.candidates.some(c => c.uid === 'decoy'), 'DECOY(lv8) は levelMax:7 で除外').toBe(false);
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'tgt' }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'tgt' }).ok).toBe(true);
 
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.find(c => c.uid === 'kaito')!.state, 'kaito sleep').toBe('sleep');
@@ -188,20 +189,20 @@ describe('B07036 中森青子 a1 — 【解決編】【登場時】 optional[白
     const deckBefore = mid.players.self.deck.length;
     useGameStateStore.getState().setGameState(mid);
     surfacePendingSideChannels();
-    expect(dispatchEngineAction({ type: 'optionalResolve', run: true }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: true }).ok).toBe(true);
 
     // sleep: 白 wother (非黒羽快斗) を選ぶ
     const p1 = pick();
     expect(p1?.atomVerb).toBe('sceneSetState');
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'wother' }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'wother' }).ok).toBe(true);
     // discard
     const p2 = pick();
     expect(p2?.atomVerb).toBe('discard');
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: p2!.candidates[0]!.uid }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: p2!.candidates[0]!.uid }).ok).toBe(true);
     // sceneRemove
     const p3 = pick();
     expect(p3?.atomVerb).toBe('sceneRemove');
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'tgt' }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'tgt' }).ok).toBe(true);
 
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.find(c => c.uid === 'wother')!.state, 'wother sleep').toBe('sleep');
@@ -221,7 +222,7 @@ describe('B07036 中森青子 a1 — 【解決編】【登場時】 optional[白
     useGameStateStore.getState().setGameState(mid);
     surfacePendingSideChannels();
     expect(opt(), 'surface').not.toBeNull();
-    expect(dispatchEngineAction({ type: 'optionalResolve', run: false }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: false }).ok).toBe(true);
     expect(pick() ?? null, 'decline → pick 出ない').toBeNull();
 
     const after = useGameStateStore.getState().gameState!;
@@ -243,7 +244,7 @@ describe('B07036 中森青子 a1 — 【解決編】【登場時】 optional[白
     useGameStateStore.getState().setGameState(mid);
     surfacePendingSideChannels();
     expect(opt(), 'optional 自体は surface (yes/no は payability 非依存)').not.toBeNull();
-    expect(dispatchEngineAction({ type: 'optionalResolve', run: true }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: true }).ok).toBe(true);
 
     // 第1 step 候補0 → pick surface せず chain no-op
     expect(pick() ?? null, '白候補0 → pick 出ない').toBeNull();
@@ -263,19 +264,19 @@ describe('B07036 中森青子 a1 — 【解決編】【登場時】 optional[白
     const deckBefore = mid.players.self.deck.length;
     useGameStateStore.getState().setGameState(mid);
     surfacePendingSideChannels();
-    expect(dispatchEngineAction({ type: 'optionalResolve', run: true }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: true }).ok).toBe(true);
 
     // sleep 黒羽快斗
     expect(pick()?.atomVerb).toBe('sceneSetState');
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'kaito' }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'kaito' }).ok).toBe(true);
     // discard
     expect(pick()?.atomVerb).toBe('discard');
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pick()!.candidates[0]!.uid }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pick()!.candidates[0]!.uid }).ok).toBe(true);
     // sceneRemove → skip (0枚)
     const p3 = pick();
     expect(p3?.atomVerb, 'step3 = sceneRemove').toBe('sceneRemove');
     expect(p3!.nMin, 'sceneRemove min=0 (「1枚まで」)').toBe(0);
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null }).ok).toBe(true);
 
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene.some(c => c.uid === 'tgt'), 'skip → TGT 残存 (0 remove)').toBe(true);

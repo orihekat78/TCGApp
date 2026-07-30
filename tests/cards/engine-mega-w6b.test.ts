@@ -18,9 +18,14 @@ import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { mutate } from '@/engine/mutate/index';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types';
 import { useGameStateStore } from '@/ui/state/store';
 import { run as runEffect } from '@/engine/effect/resolver';
 import { drainAiEffectPicks } from '@/engine/effect/apply-pick';
+import {
+  _peekPendingEffectChoiceSide,
+  resetPendingEffectSession,
+} from '@/engine/effect/pending-state';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { registerReservedEffectListener, _resetReservedEffectsRegistered } from '@/engine/listeners/reserved-effects';
 import { endTurn } from '@/engine/flow/turn';
@@ -120,6 +125,7 @@ function reserveBase(): GameState {
 beforeEach(() => {
   useGameStateStore.getState().resetMatchSessionState();
   event._resetRegistry(); _resetTriggeredRegistered(); _resetReservedEffectsRegistered(); _resetUidCounter(); resetDefRegistry();
+  resetPendingEffectSession();
   _clearPendingEffectPickQueue();
   setHuman(null);
   for (const d of [HSUP, HDRAW, PLAIN7, MOB7, ARMER, COP4, COP5, SLEEPY1, SLEEPY2]) registerCardDef(d);
@@ -129,6 +135,12 @@ beforeEach(() => {
 });
 
 describe('W6b step7 (row70): setEvidenceGainSuppress + hirameki defer', () => {
+  function resolvePendingHirameki(choice: 'fire' | 'skip') {
+    const pending = useGameStateStore.getState().pendingHirameki;
+    if (!pending) throw new Error('expected pending Hirameki');
+    return dispatchEngineAction(bindPendingDecision(pending, { type: 'hiramekiResolve', choice }));
+  }
+
   it('§7-1 fast path 回帰: ヒラメキ無し証拠 → actionJudge 同 dispatch 内で self 証拠+1 / opp 証拠-1', () => {
     useGameStateStore.getState().setGameState(caseAttackBase('PLAIN7'));
     driveUnguardedCaseAction();
@@ -155,7 +167,7 @@ describe('W6b step7 (row70): setEvidenceGainSuppress + hirameki defer', () => {
     let gainFired = 0;
     const off = event.on('evidence:gain', () => { gainFired += 1; });
     driveUnguardedCaseAction();
-    const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'skip' } as never);
+    const r = resolvePendingHirameki('skip');
     expect(r.ok).toBe(true);
     off();
     const after = useGameStateStore.getState().gameState!;
@@ -168,7 +180,7 @@ describe('W6b step7 (row70): setEvidenceGainSuppress + hirameki defer', () => {
     let gainFired = 0;
     const off = event.on('evidence:gain', () => { gainFired += 1; });
     driveUnguardedCaseAction();
-    const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' } as never);
+    const r = resolvePendingHirameki('fire');
     expect(r.ok).toBe(true);
     off();
     const after = useGameStateStore.getState().gameState!;
@@ -184,7 +196,7 @@ describe('W6b step7 (row70): setEvidenceGainSuppress + hirameki defer', () => {
     s.players.self.remove = ['MOB7', 'MOB7'];
     useGameStateStore.getState().setGameState(s);
     driveUnguardedCaseAction();
-    const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'skip' } as never);
+    const r = resolvePendingHirameki('skip');
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.evidence.length).toBe(1); // refresh → gain
@@ -207,7 +219,7 @@ describe('W6b step7 (row70): setEvidenceGainSuppress + hirameki defer', () => {
     const mid = useGameStateStore.getState().gameState!;
     expect(mid.players.self.evidence.length).toBe(0); // defer 中
     const oppHandBefore = mid.players.opp.hand.length;
-    const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' } as never);
+    const r = resolvePendingHirameki('fire');
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.evidence.length).toBe(1); // suppress 無し → gain は走る
@@ -377,7 +389,7 @@ describe('W6b step9 (row65): startContact 本実装 (効果によるコンタク
     });
     const axId = _drainPendingContactStartAxId();
     expect(axId).toBeTruthy();
-    const ax = flowAction._getContext(axId!)!;
+    const ax = flowAction._getContext(s, axId!)!;
     expect(ax.phase).toBe('action-1'); // contact-pending → action-1 まで自動遷移
     expect(ax.generatedByEffect).toBe(true);
     expect(ax.guardUid).toBeUndefined(); // ガード窓は存在しない
@@ -390,7 +402,6 @@ describe('W6b step9 (row65): startContact 本実装 (効果によるコンタク
     const atk = s.players.self.scene.find((c) => c.uid === 'atk')!;
     expect(atk.state).toBe('active');
     expect(atk.turnEffects.actedCharThisTurn).toBeFalsy();
-    flowAction._deleteContext(axId!);
   });
 
   it('§9-2 AP 判定 → 敗者リムーブ + contact:end は emit / action:end は emit しない', () => {
@@ -403,7 +414,7 @@ describe('W6b step9 (row65): startContact 本実装 (効果によるコンタク
     const s = produce(base, (d) => {
       runEffect(d, START as never, scCtx());
       axId = _drainPendingContactStartAxId();
-      const ax = flowAction._getContext(axId!)!;
+      const ax = flowAction._getContext(d, axId!)!;
       // action-1/action-2 両者 pass → judge → contact-end → action-end (driver 相当を直接駆動)
       contactFlow.pass(d, ax, ax.firstUid === 'atk' ? 'self' : 'opp');
       flowAction.advance(d, ax);
@@ -430,7 +441,7 @@ describe('W6b step9 (row65): startContact 本実装 (効果によるコンタク
     const s = produce(base, (d) => {
       runEffect(d, START as never, scCtx());
       axId = _drainPendingContactStartAxId();
-      const ax = flowAction._getContext(axId!)!;
+      const ax = flowAction._getContext(d, axId!)!;
       // 防御側 (opp) がカットイン、攻撃側 pass
       const oppFirst = ax.firstUid === 'dft';
       if (oppFirst) {
@@ -640,6 +651,60 @@ describe('W6b step10 (row9): leave:intercept pre-splice consult (B01092 hand / B
     });
     expect(s.players.self.remove).toEqual([]);
     expect(s.players.self.scene.map((c) => c.cardId)).toEqual(['VICTIM', 'GUARDIAN']);
+  });
+
+  it('effect-driven human leave intercept pauses, survives JSON restore, and resumes the original source continuation', () => {
+    setHuman('self');
+    const paused = produce(interceptBase('opp'), (d) => {
+      d.players.self.deck = ['PLAIN7'];
+      d.players.opp.deck = ['MOB7'];
+      event.queue(
+        d,
+        {
+          kind: 'sequence',
+          steps: [
+            { kind: 'atom', verb: 'sceneRemove', args: { uid: 'victim', cause: 'effect' } },
+            { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+          ],
+        },
+        { player: 'opp', cardId: 'PLAIN7', uid: 'atk' },
+      );
+      runAllUntilEmpty(d);
+    });
+
+    expect(paused.players.self.scene.map((c) => c.uid)).toEqual(['victim', 'grd']);
+    expect(paused.log).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ action: 'effect:sceneRemove', target: 'victim' }),
+    ]));
+    expect(_peekPendingEffectChoiceSide()).toMatchObject({
+      player: 'self',
+      sourcePlayer: 'opp',
+      options: [{ index: 0, label: expect.any(String) }, { index: 1, label: expect.any(String) }],
+    });
+
+    resetPendingEffectSession();
+    useGameStateStore.getState().setGameState(
+      JSON.parse(JSON.stringify(paused)) as GameState,
+    );
+    const pending = useGameStateStore.getState().pendingEffectChoice;
+    expect(pending).toMatchObject({
+      player: 'self',
+      sourcePlayer: 'opp',
+      options: [{ index: 0 }, { index: 1 }],
+    });
+    expect(dispatchEngineAction(bindPendingDecision(
+      pending!,
+      { type: 'choiceResolve', choiceIndex: 0 },
+    ))).toEqual({ ok: true });
+
+    const resumed = useGameStateStore.getState().gameState!;
+    expect(resumed.players.self.hand).toEqual(['VICTIM']);
+    expect(resumed.players.self.remove).toContain('GUARDIAN');
+    expect(resumed.players.opp.hand).toEqual(['MOB7']);
+    expect(resumed.players.self.hand).not.toContain('MOB7');
+    expect(resumed.log).toEqual(expect.arrayContaining([
+      expect.objectContaining({ action: 'effect:sceneRemove', target: 'victim' }),
+    ]));
   });
 
   it('§11-1 findCardOnBoard hand sentinel: 在中 → area hand / 不在 → null', () => {

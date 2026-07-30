@@ -23,6 +23,7 @@ import type { GameState, ActionContext, Candidate } from '@/engine/types';
 // 必要な submodule のみ直接 import する。
 import { cards as engineCards } from '@/engine/cards/index.js';
 import { read as engineRead } from '@/engine/read/index.js';
+import { chooseHeuristicAtomTarget } from '@/engine/effect/heuristic-atom-target.js';
 import { RandomPolicy, type RandomPolicyOptions } from './random.js';
 
 /** 旧コード互換: `engine.cards` / `engine.read` のみ使用していたため facade で代替。 */
@@ -404,65 +405,7 @@ export class HeuristicPolicy implements AIPolicy {
     candidates: ReadonlyArray<Candidate>,
     byPlayer: 'self' | 'opp',
   ): Candidate | null {
-    type CharCand = Candidate & { kind: 'char' };
-    const chars = candidates.filter((c): c is CharCand => c.kind === 'char');
-    if (chars.length === 0) return null;
-
-    const oppSide: 'self' | 'opp' = byPlayer === 'self' ? 'opp' : 'self';
-    const enemies = chars.filter((c) => c.player === oppSide);
-    const allies = chars.filter((c) => c.player === byPlayer);
-
-    const pickMaxAP = (pool: CharCand[]): CharCand | null =>
-      pool.reduce<CharCand | null>(
-        (best, c) => (best === null || apOf(state, c.uid) > apOf(state, best.uid) ? c : best),
-        null,
-      );
-    const pickMinAP = (pool: CharCand[]): CharCand | null =>
-      pool.reduce<CharCand | null>(
-        (best, c) => (best === null || apOf(state, c.uid) < apOf(state, best.uid) ? c : best),
-        null,
-      );
-    const pickMaxLP = (pool: CharCand[]): CharCand | null =>
-      pool.reduce<CharCand | null>(
-        (best, c) => (best === null || lpOf(state, c.uid) > lpOf(state, best.uid) ? c : best),
-        null,
-      );
-    const charState = (uid: string): 'active' | 'sleep' | 'stun' => engine.read.char.state(state, uid);
-
-    switch (atomVerb) {
-      case 'sceneRemove': {
-        return pickMaxAP(enemies) ?? pickMaxLP(enemies);
-      }
-      case 'sceneSetState': {
-        const targetState = atomArgs['state'];
-        if (targetState === 'sleep' || targetState === 'stun') {
-          const activeEnemies = enemies.filter((c) => charState(c.uid) === 'active');
-          return pickMaxAP(activeEnemies) ?? pickMaxAP(enemies);
-        }
-        if (targetState === 'active') {
-          const downedAllies = allies.filter((c) => {
-            const st = charState(c.uid);
-            return st === 'sleep' || st === 'stun';
-          });
-          return pickMaxAP(downedAllies) ?? pickMaxAP(allies);
-        }
-        return null;
-      }
-      case 'charModifyAP': {
-        const delta = typeof atomArgs['delta'] === 'number' ? (atomArgs['delta'] as number) : 0;
-        if (delta > 0) return pickMinAP(allies);
-        if (delta < 0) return pickMaxAP(enemies);
-        return null;
-      }
-      case 'charModifyLP': {
-        const delta = typeof atomArgs['delta'] === 'number' ? (atomArgs['delta'] as number) : 0;
-        if (delta > 0) return pickMaxLP(allies);
-        if (delta < 0) return pickMaxLP(enemies);
-        return null;
-      }
-      default:
-        return null;
-    }
+    return chooseHeuristicAtomTarget(state, atomVerb, atomArgs, candidates, byPlayer);
   }
 }
 

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `3c1f9d2dff71`
+> Source hash: `a4665b546843`
 
 公式ルール [`16-card-set.md`](../../../rules/16-card-set.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

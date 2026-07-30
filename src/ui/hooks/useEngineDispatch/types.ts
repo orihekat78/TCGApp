@@ -2,6 +2,8 @@
 import type { AbilityCostParams } from '@/engine/flow/index.js';
 
 export type Player = 'self' | 'opp';
+export type DecisionResponse = { decisionId: string };
+type BoundDecision<T> = T & DecisionResponse;
 
 /**
  * Phase 8.1+ で扱うメインフェイズ単発 action。
@@ -43,14 +45,14 @@ export type EngineAction =
   | { type: 'actionContact'; actionId: string; player: Player; choice: ContactChoice }
   | { type: 'actionAdvance'; actionId: string }
   | { type: 'actionJudge'; actionId: string }
-  | { type: 'leaveInterceptResolve'; accept: boolean }
-  | { type: 'rpsResolve'; hand: 'rock' | 'paper' | 'scissors' }
-  | { type: 'setCardChoiceResolve'; instanceId: string }
-  | { type: 'setCardReplacementResolve'; targetUid: string | null }
+  | BoundDecision<{ type: 'leaveInterceptResolve'; accept: boolean }>
+  | BoundDecision<{ type: 'rpsResolve'; hand: 'rock' | 'paper' | 'scissors' }>
+  | BoundDecision<{ type: 'setCardChoiceResolve'; instanceId: string }>
+  | BoundDecision<{ type: 'setCardReplacementResolve'; targetUid: string | null }>
   // Phase 8 完全クローズ Commit 3a: ヒラメキ発動 / スキップ決定
-  | { type: 'hiramekiResolve'; choice: 'fire' | 'skip' }
+  | BoundDecision<{ type: 'hiramekiResolve'; choice: 'fire' | 'skip' }>
   // Phase 8 完全クローズ Commit 3b: ミスリード発動キャラ複数選択
-  | { type: 'misreadResolve'; picks: ReadonlyArray<{ uid: string; x: number }> }
+  | BoundDecision<{ type: 'misreadResolve'; picks: ReadonlyArray<{ uid: string; x: number }> }>
   // user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択結果
   // Phase 2c: optional 引数群の required/optional を 4 形態の union で明示。
   //   - skip:   pickedUid=null 単独 (「選ばない」— n.min===0 任意効果のみ。pending と対の
@@ -60,24 +62,24 @@ export type EngineAction =
   //             cardIds:'$pick.cardIds' を resolved 配列で受ける。pickedUid は先頭要素)
   //   - switch: switchRemoveUid 必須 (効果登場 sceneEnter が現場満杯のとき SceneSwitchPickerModal
   //             で収集した退場キャラ uid。rules/20 スイッチで switchEnter — switch-on-effect-enter)
-  | { type: 'effectPickResolve'; pickedUid: null }
-  | { type: 'effectPickResolve'; pickedUid: string }
-  | { type: 'effectPickResolve'; pickedUid: string; pickedUids: string[] }
-  | { type: 'effectPickResolve'; pickedUid: string; switchRemoveUid: string }
+  | BoundDecision<{ type: 'effectPickResolve'; pickedUid: null }>
+  | BoundDecision<{ type: 'effectPickResolve'; pickedUid: string }>
+  | BoundDecision<{ type: 'effectPickResolve'; pickedUid: string; pickedUids: string[] }>
+  | BoundDecision<{ type: 'effectPickResolve'; pickedUid: string; switchRemoveUid: string }>
   // cluster14: multi-card sceneEnter (B09010「2枚まで登場」) が現場満杯のとき、UI が overflow 枚数ぶん
   //   集めた退場 uid 群を pickedUids と同時に運ぶ。switchRemoveUid (単数) は付けない → 既存 discrimination 不変。
-  | { type: 'effectPickResolve'; pickedUid: string; pickedUids: string[]; switchRemoveUids: string[] }
+  | BoundDecision<{ type: 'effectPickResolve'; pickedUid: string; pickedUids: string[]; switchRemoveUids: string[] }>
   // BUG-121: human 複数 option choice の選択結果 (enter トリガ等)。pendingEffectChoice を解決する。
-  | { type: 'choiceResolve'; choiceIndex: number }
-  | { type: 'choiceResolve'; choiceIndex: number; switchRemoveUid: string }
+  | BoundDecision<{ type: 'choiceResolve'; choiceIndex: number }>
+  | BoundDecision<{ type: 'choiceResolve'; choiceIndex: number; switchRemoveUid: string }>
   // 2026-06-06 タスクC: optional (「〜してもよい」) の決定。pendingEffectOptional を解決する。
-  | { type: 'optionalResolve'; run: boolean }
-  | { type: 'chooseInterceptResolve'; discardIndex: number | null }
-  | { type: 'repeatOptionalResolve'; run: boolean }
+  | BoundDecision<{ type: 'optionalResolve'; run: boolean }>
+  | BoundDecision<{ type: 'chooseInterceptResolve'; discardIndex: number | null }>
+  | BoundDecision<{ type: 'repeatOptionalResolve'; run: boolean }>
   // BUG-136: deckToBottomBound「好きな順番でデッキの下に移す」の順序確定。order = 底ブロックの新順 (cardId 列)。
-  | { type: 'deckReorderResolve'; order: string[] }
+  | BoundDecision<{ type: 'deckReorderResolve'; order: string[] }>
   // mini-wave #5 P2: deckPlaceSplitBound「各カードを上か下へ」の振り分け確定。top/bottom = 各バケツの cardId 列 (順序込み)。
-  | { type: 'deckPlaceResolve'; top: string[]; bottom: string[] }
+  | BoundDecision<{ type: 'deckPlaceResolve'; top: string[]; bottom: string[] }>
   // Phase 8 完全クローズ Commit 5: 効果スタック同所有者順序設定 (▲▼ UI)
   | { type: 'setEffectOrder'; entryId: string; order: number; player: Player }
   /** entryIds is the exact visible group snapshot; stale confirmations are rejected. */
@@ -87,3 +89,11 @@ export type EngineAction =
 export type DispatchResult =
   | { ok: true }
   | { ok: false; reason: 'no-state' | 'not-allowed' | 'engine-error'; detail?: string };
+
+/** Attach the identity captured by the rendered pending decision, if present. */
+export function bindPendingDecision<T extends { type: EngineAction['type'] }>(
+  pending: DecisionResponse,
+  action: T,
+): T & DecisionResponse {
+  return { ...action, decisionId: pending.decisionId };
+}

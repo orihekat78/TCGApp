@@ -6,6 +6,7 @@ import { applyPickAndContinuation, applyPickSkipAndContinuation } from '@/engine
 import { _drainPendingDeckReorderSide, _drainPendingDeckRevealSide } from '@/engine/effect/atom-handlers';
 import { register as registerCardDef, _resetRegistry as resetCardDefRegistry } from '@/engine/read/def';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types';
 import { useGameStateStore } from '@/ui/state/store';
 import { B04026 } from '@/cards/ct-p04/B04026';
 import type { CardDef, Effect, EffectCtx, GameState } from '@/engine/types';
@@ -97,7 +98,8 @@ describe('BUG-191 B04026 reorder continuation', () => {
 
     useGameStateStore.getState().setGameState(state);
     useGameStateStore.getState().setPendingDeckReorder(reorder!);
-    const result = dispatchEngineAction({ type: 'deckReorderResolve', order: ['RED-B', 'RED-A'] });
+    const pending = useGameStateStore.getState().pendingDeckReorder!;
+    const result = dispatchEngineAction(bindPendingDecision(pending, { type: 'deckReorderResolve', order: ['RED-B', 'RED-A'] }));
 
     expect(result).toEqual({ ok: true });
     const after = useGameStateStore.getState();
@@ -117,7 +119,8 @@ describe('BUG-191 B04026 reorder continuation', () => {
       occurrences: [{ cardId: 'RED-A', index: 0 }, { cardId: 'RED-A', index: 2 }],
     });
 
-    expect(dispatchEngineAction({ type: 'deckReorderResolve', order: ['RED-A', 'RED-A'] })).toEqual({ ok: true });
+    const pending = useGameStateStore.getState().pendingDeckReorder!;
+    expect(dispatchEngineAction(bindPendingDecision(pending, { type: 'deckReorderResolve', order: ['RED-A', 'RED-A'] }))).toEqual({ ok: true });
     expect(useGameStateStore.getState().gameState!.players.self.deck).toEqual(['TAIL', 'RED-A', 'RED-A']);
   });
 
@@ -132,11 +135,12 @@ describe('BUG-191 B04026 reorder continuation', () => {
     useGameStateStore.getState().setGameState(state);
     useGameStateStore.getState().setPendingDeckReorder(pending);
 
-    const result = dispatchEngineAction({ type: 'deckReorderResolve', order: ['RED-A', 'TAIL'] });
+    const surfaced = useGameStateStore.getState().pendingDeckReorder!;
+    const result = dispatchEngineAction(bindPendingDecision(surfaced, { type: 'deckReorderResolve', order: ['RED-A', 'TAIL'] }));
 
     expect(result.ok).toBe(false);
     expect(useGameStateStore.getState().gameState!.players.self.deck).toEqual(['RED-A', 'RED-B', 'TAIL']);
-    expect(useGameStateStore.getState().pendingDeckReorder).toEqual(pending);
+    expect(useGameStateStore.getState().pendingDeckReorder).toMatchObject(pending);
   });
 
   it('rejects a stale deck snapshot before moving any occurrence', () => {
@@ -150,11 +154,12 @@ describe('BUG-191 B04026 reorder continuation', () => {
     useGameStateStore.getState().setGameState(state);
     useGameStateStore.getState().setPendingDeckReorder(pending);
 
-    const result = dispatchEngineAction({ type: 'deckReorderResolve', order: ['RED-B', 'RED-A'] });
+    const surfaced = useGameStateStore.getState().pendingDeckReorder!;
+    const result = dispatchEngineAction(bindPendingDecision(surfaced, { type: 'deckReorderResolve', order: ['RED-B', 'RED-A'] }));
 
     expect(result.ok).toBe(false);
     expect(useGameStateStore.getState().gameState!.players.self.deck).toEqual(['TAIL', 'RED-A', 'RED-B']);
-    expect(useGameStateStore.getState().pendingDeckReorder).toEqual(pending);
+    expect(useGameStateStore.getState().pendingDeckReorder).toMatchObject(pending);
   });
 });
 
@@ -182,14 +187,16 @@ describe('BUG-190 B04026 zero-match decisions', () => {
 
     useGameStateStore.getState().setGameState(state);
     useGameStateStore.getState().setPendingDeckReorder(reorder!);
-    expect(dispatchEngineAction({ type: 'deckReorderResolve', order: ['RED-B', 'RED-A'] })).toEqual({ ok: true });
+    const pendingReorder = useGameStateStore.getState().pendingDeckReorder!;
+    expect(dispatchEngineAction(bindPendingDecision(pendingReorder, { type: 'deckReorderResolve', order: ['RED-B', 'RED-A'] }))).toEqual({ ok: true });
     const afterReorder = useGameStateStore.getState();
     expect(afterReorder.gameState!.players.self.deck).toEqual(['RED-B', 'RED-A']);
     expect(afterReorder.pendingEffectPick?.atomVerb).toBe('sceneEnter');
     expect(afterReorder.pendingEffectPick?.candidates).toEqual([]);
     expect(afterReorder.pendingEffectPick?.nMin).toBe(0);
 
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null })).toEqual({ ok: true });
+    const pendingPick = useGameStateStore.getState().pendingEffectPick!;
+    expect(dispatchEngineAction(bindPendingDecision(pendingPick, { type: 'effectPickResolve', pickedUid: null }))).toEqual({ ok: true });
     expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
   });
 });

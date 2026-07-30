@@ -29,6 +29,7 @@ import { _drainPendingChooseInterceptSide, resetPendingEffectSession } from '@/e
 import { dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { sceneChar } from '../../helpers/fixtures';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 describe('public hand reveal window', () => {
   beforeEach(() => {
@@ -77,6 +78,75 @@ describe('public hand reveal window', () => {
 
     expect(_drainPendingPublicHandRevealSide()?.source.cardId).toBe('FIRST-SOURCE');
     expect(_drainPendingPublicHandRevealSide()?.source.cardId).toBe('SECOND-SOURCE');
+  });
+
+  it('preserves a live presentation channel across a same-session state commit', () => {
+    const state = createEmptyGameState();
+    state.players.opp.hand = ['VISIBLE'];
+    runEffect(state, {
+      kind: 'atom',
+      verb: 'handReveal',
+      args: { player: 'opp', all: true, audience: 'all', lifetime: 'presentation' },
+    }, {
+      source: { player: 'self', cardId: 'SOURCE', abilityId: 'a1', uid: 'source#1' },
+      bindings: {},
+    });
+
+    useGameStateStore.getState().setGameState(state, { preserveRuntime: true });
+
+    expect(useGameStateStore.getState().pendingPublicHandReveal).toMatchObject({
+      cardIds: ['VISIBLE'],
+      lifetime: 'presentation',
+      source: { cardId: 'SOURCE' },
+    });
+
+    useGameStateStore.getState().setGameState(state, { preserveRuntime: true });
+
+    expect(useGameStateStore.getState().pendingPublicHandReveal).toMatchObject({
+      cardIds: ['VISIBLE'],
+      lifetime: 'presentation',
+      source: { cardId: 'SOURCE' },
+    });
+  });
+
+  it('preserves an already-surfaced deck presentation across a live state commit', () => {
+    const state = createEmptyGameState();
+    useGameStateStore.setState({
+      gameState: state,
+      pendingDeckReveal: {
+        player: 'self',
+        visibility: 'public',
+        viewer: 'all',
+        revealed: ['VISIBLE'],
+        matched: 'VISIBLE',
+        presentation: 'reveal-return',
+      },
+    });
+
+    useGameStateStore.getState().setGameState(state, { preserveRuntime: true });
+
+    expect(useGameStateStore.getState().pendingDeckReveal).toMatchObject({
+      revealed: ['VISIBLE'],
+      presentation: 'reveal-return',
+    });
+  });
+
+  it('drops a stale presentation channel when installing a new authority', () => {
+    const oldState = createEmptyGameState();
+    oldState.players.opp.hand = ['STALE'];
+    runEffect(oldState, {
+      kind: 'atom',
+      verb: 'handReveal',
+      args: { player: 'opp', all: true, audience: 'all', lifetime: 'presentation' },
+    }, {
+      source: { player: 'self', cardId: 'OLD', abilityId: 'a1', uid: 'old#1' },
+      bindings: {},
+    });
+
+    useGameStateStore.getState().setGameState(createEmptyGameState());
+
+    expect(useGameStateStore.getState().pendingPublicHandReveal).toBeNull();
+    expect(_drainPendingPublicHandRevealSide()).toBeNull();
   });
 
   it('uses explicit hand-reveal descriptors instead of log text for public hand visibility', () => {
@@ -196,7 +266,7 @@ describe('public hand reveal window', () => {
       },
     });
 
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'hand:opp:0:A' })).toMatchObject({ ok: false });
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'hand:opp:0:A' })).toMatchObject({ ok: false });
     expect(useGameStateStore.getState().gameState!.players.opp.hand).toEqual(['A', 'B']);
     expect(useGameStateStore.getState().pendingPublicHandReveal).toBeNull();
     expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
@@ -410,7 +480,7 @@ describe('public hand reveal window', () => {
         publicHandRevealToken: 'public-hand-reveal:skip',
       },
     });
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null })).toMatchObject({ ok: true });
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null })).toMatchObject({ ok: true });
     expect(useGameStateStore.getState().pendingPublicHandReveal).toBeNull();
   });
 });

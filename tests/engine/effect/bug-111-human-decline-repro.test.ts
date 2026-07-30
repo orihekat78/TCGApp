@@ -24,6 +24,7 @@ import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import type { PendingEffectPickSide } from '@/engine/effect/resolve-picks';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/useEngineDispatch';
+import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types';
 import { drainAiEffectPicks } from '@/engine/effect/apply-pick';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { useGameStateStore } from '@/ui/state/store';
@@ -156,7 +157,7 @@ describe('BUG-111 #2 — human-decline 経路の chain-gate / mandatory-tail', (
     expect(pendingBefore?.atomVerb).toBe('charRemoveSetCard');
 
     // 0枚 decline
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    dispatchEngineAction(bindPendingDecision(pendingBefore!, { type: 'effectPickResolve', pickedUid: null }));
 
     const after = useGameStateStore.getState();
     // 期待: step2 sceneRemove が発火しない = opp decoy が現場に残る + 新たな pending pick が surface しない
@@ -175,7 +176,8 @@ describe('BUG-111 #2 — human-decline 経路の chain-gate / mandatory-tail', (
     expect(r1.ok).toBe(true);
     expect(useGameStateStore.getState().pendingEffectPick?.atomVerb).toBe('charRemoveSetCard');
     // decline
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    const pending = useGameStateStore.getState().pendingEffectPick!;
+    dispatchEngineAction(bindPendingDecision(pending, { type: 'effectPickResolve', pickedUid: null }));
     const after = useGameStateStore.getState();
     const total = after.gameState!.players.self.scene.length + after.gameState!.players.opp.scene.length;
     expect(total).toBe(2); // step2 sceneRemove 不発火 → 両 char 残存
@@ -189,7 +191,7 @@ describe('BUG-111 #2 — human-decline 経路の chain-gate / mandatory-tail', (
     const pendingBefore = useGameStateStore.getState().pendingEffectPick;
     expect(pendingBefore?.atomVerb).toBe('charRemoveSetCard');
 
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    dispatchEngineAction(bindPendingDecision(pendingBefore!, { type: 'effectPickResolve', pickedUid: null }));
 
     const after = useGameStateStore.getState();
     // 期待: draw 1 が発火 = hand +1 / deck -1
@@ -208,12 +210,14 @@ describe('BUG-111 #2 — human-decline 経路の chain-gate / mandatory-tail', (
     expect(useGameStateStore.getState().pendingEffectPick?.atomVerb).toBe('charRemoveSetCard');
     expect(useGameStateStore.getState().pendingEffectChoice).toBeNull();
 
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null }); // 0-pick decline
+    const pendingPick = useGameStateStore.getState().pendingEffectPick!;
+    dispatchEngineAction(bindPendingDecision(pendingPick, { type: 'effectPickResolve', pickedUid: null })); // 0-pick decline
     const afterDecline = useGameStateStore.getState();
     expect(afterDecline.pendingEffectChoice).not.toBeNull(); // continuationで初めてsurface
     expect(afterDecline.gameState!.players.self.hand.length).toBe(0); // auto-option0 していない (draw 未発火)
 
-    dispatchEngineAction({ type: 'choiceResolve', choiceIndex: 1 }); // option1 = draw 2 を human が選ぶ
+    const pendingChoice = useGameStateStore.getState().pendingEffectChoice!;
+    dispatchEngineAction(bindPendingDecision(pendingChoice, { type: 'choiceResolve', choiceIndex: 1 })); // option1 = draw 2 を human が選ぶ
     const afterChoice = useGameStateStore.getState();
     expect(afterChoice.gameState!.players.self.hand.length).toBe(2); // draw 2 のみ (二重実行なら 3)
     setHuman(null);

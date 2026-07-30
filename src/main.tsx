@@ -18,13 +18,16 @@ if (import.meta.env.DEV) {
     store: useGameStateStore,
     getState: () => useGameStateStore.getState(),
     setGameState: (gs: ReturnType<typeof createSampleGameState>) =>
-      useGameStateStore.setState({ gameState: gs }),
+      useGameStateStore.getState().setGameState(gs),
     createSampleGameState,
     dispatch: dispatchEngineAction,
     flow: engine.flow,
     read: engine.read,
     cond: engine.cond,
-    getActionContext: (id: string) => engine.flow.action._getContext(id),
+    getActionContext: (id: string) => {
+      const state = useGameStateStore.getState().gameState;
+      return state ? engine.flow.action._getContext(state, id) : undefined;
+    },
     // BUG-108: E2E が ChoicePickerModal の実 DOM render + option click を検証するための bridge。
     choicePicker: {
       ask: (req: Parameters<ReturnType<typeof useChoicePicker>['ask']>[0]) => useChoicePicker().ask(req),

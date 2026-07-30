@@ -25,6 +25,7 @@ import { char as readChar } from '@/engine/read/char';
 import { caseDeclaredEvidenceFlip } from '@/cards/_shared/caseDeclaredEvidenceFlip';
 import { produce } from '@/engine/produce';
 import type { CardDef, GameState } from '@/engine/types';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 const CASE_DEF: CardDef = {
   id: 'TCASE', no: 'TCASE', kind: 'case', names: ['青の古城探索事件'], colors: ['青'], traits: [],
@@ -129,7 +130,7 @@ describe('runDeclaredAbilityFlow — flipFaceUpEvidence コスト (BUG-085)', ()
 
     // 5) scene キャラ pick を resolve → AP+2000 適用
     const charUid = after.players.self.scene.find((c) => c.cardId === 'TCHAR')!.uid;
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: charUid });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: charUid });
     const after2 = useGameStateStore.getState().gameState!;
     expect(readChar.ap(after2, charUid)).toBe(5000); // 3000 + 2*1000
   });
@@ -166,7 +167,7 @@ describe('runDeclaredAbilityFlow — flipFaceUpEvidence コスト (BUG-085)', ()
     expect(after.players.self.evidence[0].faceUp).toBe(false);
     expect(after.players.self.evidence[1].faceUp).toBe(true);
     const charUid = after.players.self.scene.find((c) => c.cardId === 'TCHAR')!.uid;
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: charUid });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: charUid });
     expect(readChar.ap(useGameStateStore.getState().gameState!, charUid)).toBe(4000);
   });
 });

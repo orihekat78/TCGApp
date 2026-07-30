@@ -558,7 +558,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05039.ts:1",
-        "tests:tests/cards/bug-140-deferred-real-cards.test.ts:114"
+        "tests:tests/cards/bug-140-deferred-real-cards.test.ts:115"
       ]
     },
     {
@@ -613,7 +613,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05069.ts:1",
-        "tests:tests/cards/bug-195-event-remove-by-ap.test.ts:110"
+        "tests:tests/cards/bug-195-event-remove-by-ap.test.ts:111"
       ]
     },
     {
@@ -885,7 +885,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p07/B07015.ts:1",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:209"
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:210"
       ]
     },
     {
@@ -940,7 +940,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p07/B07056.ts:1",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:356"
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:357"
       ]
     },
     {
@@ -1034,7 +1034,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p08/B08006.ts:1",
-        "tests:tests/cards/engine-mega-w4.test.ts:843"
+        "tests:tests/cards/engine-mega-w4.test.ts:844"
       ]
     },
     {
@@ -1143,7 +1143,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p08/B08069.ts:1",
-        "tests:tests/cards/engine-mega-w6b.test.ts:85"
+        "tests:tests/cards/engine-mega-w6b.test.ts:90"
       ]
     },
     {
@@ -1340,7 +1340,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09048.ts:1",
-        "tests:tests/cards/engine-mega-w4.test.ts:578"
+        "tests:tests/cards/engine-mega-w4.test.ts:579"
       ]
     },
     {
@@ -1386,7 +1386,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09081.ts:1",
-        "tests:tests/cards/night-wC/hirameki-optional.test.ts:52"
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:53"
       ]
     },
     {
@@ -1768,7 +1768,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-d03/D03002.ts:1",
-        "tests:tests/cards/bug-135-sequence-middle-skip.test.ts:105"
+        "tests:tests/cards/bug-135-sequence-middle-skip.test.ts:106"
       ]
     },
     {
@@ -2128,7 +2128,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/pr-01/PR155.ts:1",
-        "tests:tests/cards/bug-135-sequence-middle-skip.test.ts:97"
+        "tests:tests/cards/bug-135-sequence-middle-skip.test.ts:98"
       ]
     },
     {

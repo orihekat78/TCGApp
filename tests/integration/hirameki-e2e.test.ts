@@ -38,6 +38,7 @@ import { _resetActionContexts } from '@/engine/flow/action/state-machine';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _resetTargetExpanders } from '@/engine/flow/action/target-expander';
 import type { GameState } from '@/engine/types/game-state';
+import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
 
 function fullReset(): void {
   engine.cards._resetRegistry();
@@ -98,7 +99,7 @@ describe('Hirameki E2E 結合検証 (Phase 5 advance)', () => {
     useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
 
     // fire dispatch → ability effect queue + resolve
-    const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' });
+    const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     // hiramekiDraw n=1 が解決 → self hand +1 (deck から)
@@ -119,7 +120,7 @@ describe('Hirameki E2E 結合検証 (Phase 5 advance)', () => {
     const pending = _drainPendingHirameki();
     useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
 
-    const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'skip' });
+    const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'skip' });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.hand.length).toBe(startHand);
@@ -172,7 +173,7 @@ describe('Hirameki E2E 結合検証 (Phase 5 advance)', () => {
     expect(pending!.abilityId).toBe('a2');
 
     useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
-    const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' });
+    const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' });
     // sceneSetState は対象 0 で no-op、dispatch は ok を返す
     expect(r.ok).toBe(true);
     expect(useGameStateStore.getState().pendingHirameki).toBeNull();

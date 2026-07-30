@@ -44,6 +44,8 @@ describe('spectator move presentation timing', () => {
       activeActionId: null,
       activeCardUid: null,
       activeCardLabel: null,
+      pendingDeckReveal: null,
+      pendingPublicHandReveal: null,
     });
   });
 
@@ -101,5 +103,32 @@ describe('spectator move presentation timing', () => {
     expect(stepTurnMock).toHaveBeenCalledOnce();
     await act(async () => vi.advanceTimersByTime(0));
     expect(stepTurnMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not advance while a public deck reveal is visible', async () => {
+    const before = useGameStateStore.getState().gameState!;
+    stepTurnMock.mockReturnValue({
+      move: { kind: 'endTurn' },
+      nextState: before,
+      done: true,
+    });
+    useGameStateStore.setState({
+      pendingDeckReveal: {
+        player: 'self',
+        visibility: 'public',
+        viewer: 'all',
+        revealed: ['VISIBLE'],
+        matched: 'VISIBLE',
+        presentation: 'reveal-return',
+      },
+    });
+
+    act(() => root.render(<Probe />));
+    await act(async () => vi.advanceTimersByTime(1_000));
+    expect(stepTurnMock).not.toHaveBeenCalled();
+
+    act(() => useGameStateStore.getState().setPendingDeckReveal(null));
+    await act(async () => vi.advanceTimersByTime(0));
+    expect(stepTurnMock).toHaveBeenCalledOnce();
   });
 });

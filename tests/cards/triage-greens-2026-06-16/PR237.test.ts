@@ -59,6 +59,7 @@ import { registerAll } from '@/cards/index';
 import { makeChar } from '../../helpers/fixtures';
 import { PR237 } from '@/cards/pr-01/PR237';
 import type { CardDef, GameState, ActionContext } from '@/engine/types';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 // ---- 合成 def (id prefix DEC_PR237_ で衝突回避 / abilities:[] で再帰トリガ回避) ----
 function pchar(id: string, over: Partial<CardDef> = {}): CardDef {
@@ -166,7 +167,7 @@ function emitHirameki(s: GameState, choice: 'fire' | 'skip'): GameState {
   expect(pending!.abilityId).toBe('a2');
   expect(pending!.player, 'pending.player = self (証拠を失った側)').toBe('self');
   useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
-  const r = dispatchEngineAction({ type: 'hiramekiResolve', choice });
+  const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice });
   expect(r.ok, `hiramekiResolve ${choice} ok`).toBe(true);
   expect(useGameStateStore.getState().pendingHirameki, 'pending クリア').toBeNull();
   return useGameStateStore.getState().gameState!;

@@ -48,6 +48,7 @@ describe('B03040 a1 — 自分が証拠を得たとき自証拠 top1 を peek (z
     runAllUntilEmpty(s);
     expect(peekLogs(s).length).toBe(1);
     expect(peekLogs(s)[0].result).toBe('faceDown'); // 裏向き証拠を見た
+    expect(peekLogs(s)[0].targetAudience).toBe('self');
     expect(s.players.self.evidence.length).toBe(evLenBefore); // zone 不変
     expect(s.players.self.evidence[s.players.self.evidence.length - 1].faceUp).toBe(false); // 元に戻す = faceUp 不変
   });

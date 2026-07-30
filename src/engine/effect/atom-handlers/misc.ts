@@ -228,7 +228,15 @@ export function atomSetEvidenceGainSuppress(s: GameState, a: Record<string, unkn
     }
 
 // mega-wave W6 step8 (row75) 用の module-level id counter (event/registry.ts nextEntryId と同 posture)
-let _reservedIdCounter = 0;
+function nextReservedEffectId(s: GameState): string {
+  const restoredMax = s.reservedEffects.reduce((max, entry) => {
+    const match = /^re_(\d+)$/.exec(entry.id);
+    return match ? Math.max(max, Number(match[1])) : max;
+  }, 0);
+  const next = Math.max(s.reservedEffectSeq ?? 0, restoredMax) + 1;
+  s.reservedEffectSeq = next;
+  return `re_${next}`;
+}
 
 export function atomReserveEffect(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       // mega-wave W6 step8 (2026-07-04, row75): 離場後予約。args.effect (nested Effect JSON) を
@@ -243,10 +251,9 @@ export function atomReserveEffect(s: GameState, a: Record<string, unknown>, ctx:
       const reEffect = a.effect as Effect | undefined;
       if (!reHook || (reMode !== 'turn-end' && reMode !== 'next-match') || !reEffect) return; // fail-closed
       if (!s.reservedEffects) s.reservedEffects = []; // 旧 state 防御 (W6 step6 turnEffects init と同型)
-      _reservedIdCounter += 1;
       const reP = ctx.source.player as Player;
       s.reservedEffects.push({
-        id: `re_${_reservedIdCounter}`,
+        id: nextReservedEffectId(s),
         trigger: {
           hook: reHook,
           mode: reMode,

@@ -11,7 +11,7 @@
       "evidence": [
         "rules:.claude/rules/25-qa-effects-resolution.md:25",
         "src:src/cards/ct-p01/B01005.ts:13",
-        "src:src/ui/hooks/useEngineDispatch.ts:272"
+        "src:src/ui/hooks/useEngineDispatch.ts:286"
       ],
       "noteCodes": [
         "OWNER-ORDER-INTEGRATION-TEST-MISSING"

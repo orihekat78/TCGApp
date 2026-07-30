@@ -29,6 +29,7 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import type { ActionContext, CardDef, EffectCtx, GameState } from '@/engine/types';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
+import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
 
 type Player = 'self' | 'opp';
 const globals = globalThis as { __humanPlayerSide?: Player | null };
@@ -175,7 +176,7 @@ function fireHumanHirameki(state: GameState, attackerUid: string): void {
   const pending = _drainPendingHirameki();
   expect(pending).not.toBeNull();
   useGameStateStore.setState({ gameState: afterEvidence, pendingHirameki: pending });
-  expect(dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
+  expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
 }
 
 describe('B06035 hirameki', () => {
@@ -183,14 +184,14 @@ describe('B06035 hirameki', () => {
     const { state, attackerUid, victimUid } = hiramekiBoard();
     fireHumanHirameki(state, attackerUid);
     expect(useGameStateStore.getState().pendingEffectOptional).not.toBeNull();
-    expect(dispatchEngineAction({ type: 'optionalResolve', run: true }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: true }).ok).toBe(true);
     let pick = useGameStateStore.getState().pendingEffectPick!;
     expect(pick.candidates.map(c => c.cardId)).toEqual(['NON_DETECTIVE']);
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pick.candidates[0]!.uid }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pick.candidates[0]!.uid }).ok).toBe(true);
     pick = useGameStateStore.getState().pendingEffectPick!;
     expect(pick.nMin).toBe(0);
     expect(pick.candidates.map(c => c.uid)).toContain(victimUid);
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: victimUid }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: victimUid }).ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.hand).not.toContain('NON_DETECTIVE');
     expect(after.players.self.remove).toContain('NON_DETECTIVE');
@@ -201,11 +202,11 @@ describe('B06035 hirameki', () => {
   it('human: コスト支払い後もキャラ選択を0枚にできる', () => {
     const { state, attackerUid } = hiramekiBoard();
     fireHumanHirameki(state, attackerUid);
-    dispatchEngineAction({ type: 'optionalResolve', run: true });
+    dispatchCurrentDecision({ type: 'optionalResolve', run: true });
     const handPick = useGameStateStore.getState().pendingEffectPick!;
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: handPick.candidates[0]!.uid });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: handPick.candidates[0]!.uid });
     expect(useGameStateStore.getState().pendingEffectPick!.nMin).toBe(0);
-    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null }).ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene).toHaveLength(2);
     expect(after.players.self.remove).toContain('NON_DETECTIVE');
@@ -214,7 +215,7 @@ describe('B06035 hirameki', () => {
   it('human: 手札リムーブ自体を辞退でき、後続pickは出ない', () => {
     const { state, attackerUid } = hiramekiBoard();
     fireHumanHirameki(state, attackerUid);
-    expect(dispatchEngineAction({ type: 'optionalResolve', run: false }).ok).toBe(true);
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: false }).ok).toBe(true);
     const after = useGameStateStore.getState();
     expect(after.pendingEffectPick).toBeNull();
     expect(after.gameState!.players.self.hand).toEqual(['NON_DETECTIVE']);

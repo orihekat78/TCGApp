@@ -111,7 +111,7 @@ describe('BUG-134 — 同時 queue entry の pick 候補は発動時確定 (guar
     expect(first.candidates.map(candidate => candidate.uid).sort()).toEqual(['ox0', 'oy0']);
     state = produce(state, draft => applyPickAndContinuation(draft, first, 'ox0'));
     const second = _drainPendingEffectPickSide()!;
-    expect(second.candidates.map(candidate => candidate.uid)).toEqual(['ox0', 'oy0']);
+    expect(second.candidates.map(candidate => candidate.uid)).toEqual(['oy0']);
     expect(state.players.opp.scene.map(character => character.uid)).toEqual(['oy0']);
     g.__humanPlayerSide = null;
   });

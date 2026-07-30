@@ -49,6 +49,7 @@ import { registerAll } from '@/cards/index';
 import { sceneChar } from '../../helpers/fixtures';
 import { B05028 } from '@/cards/ct-p05/B05028';
 import type { AbilityDef, CardDef, GameState, EffectCtx } from '@/engine/types';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 type G = {
   __pendingEffectPickQueue?: PendingEffectPickSide[];
@@ -181,7 +182,7 @@ describe('B05028 服部平蔵 — gate5 runtime behavior', () => {
     expect(useGameStateStore.getState().pendingEffectPick?.atomVerb).toBe('charRemoveSetCard');
 
     // 0枚 decline (production dispatch 経路 = chain-origin continuation drop)
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null });
 
     const after = useGameStateStore.getState();
     // 期待: step2 sceneRemove 不発火 = AP≤8000 char (AP8000/AP7000) が現場に残る + 新 pick が surface しない
@@ -203,7 +204,7 @@ describe('B05028 服部平蔵 — gate5 runtime behavior', () => {
     fireA1ViaDispatch(a1Base());
     const pending = useGameStateStore.getState().pendingEffectPick!;
     // step1: SET_SELF を pick (set-card を実除去)
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'setself#0' });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'setself#0' });
 
     const mid = useGameStateStore.getState();
     // step1 の効果: SET_SELF の set-card が 1枚リムーブ (host は現場に残る — charRemoveSetCard セマンティクス)
@@ -227,7 +228,7 @@ describe('B05028 服部平蔵 — gate5 runtime behavior', () => {
     expect(pending2.candidates.length, 'apMax:8000 で AP9000 のみ除外 → 5 件').toBe(5);
 
     // step2: AP7000 (相手陣) を選択 → リムーブ
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'ap7#0' });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'ap7#0' });
     const after = useGameStateStore.getState();
     const oppUids = after.gameState!.players.opp.scene.map((c) => c.uid);
     expect(oppUids, 'AP7000 が現場から除去 (sceneRemove)').not.toContain('ap7#0');
@@ -238,7 +239,7 @@ describe('B05028 服部平蔵 — gate5 runtime behavior', () => {
   // ===== a1 step2 境界: AP8000 は候補 / AP9000 は候補外 (apMax boundary) — pick せず候補集合のみ厳密確認 =====
   it('a1 step2 apMax 境界: AP8000=候補内 / AP9000=候補外 (apMax は ≤ 比較)', () => {
     fireA1ViaDispatch(a1Base());
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'setopp#0' }); // step1 resolve (相手 set-card)
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'setopp#0' }); // step1 resolve (相手 set-card)
     const pending2 = useGameStateStore.getState().pendingEffectPick!;
     expect(pending2.atomVerb).toBe('sceneRemove');
     const apUids = pending2.candidates.map((c) => c.uid);
@@ -346,7 +347,7 @@ describe('B05028 服部平蔵 — gate5 runtime behavior', () => {
     // step1: POLICE を選択
     const p1 = useGameStateStore.getState().pendingEffectPick!;
     expect(p1.atomVerb, 'step1 charSetCard').toBe('charSetCard');
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'pol#0' });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'pol#0' });
 
     const mid = useGameStateStore.getState();
     const pol = mid.gameState!.players.self.scene.find((c) => c.uid === 'pol#0')!;
@@ -360,7 +361,7 @@ describe('B05028 服部平蔵 — gate5 runtime behavior', () => {
     expect(p2?.atomVerb, 'step2 charSetCard が surface (sequence step は独立)').toBe('charSetCard');
     const p2uids = p2.candidates.map((c) => c.uid);
     expect(p2uids, '相手陣 OPPCHAR が step2 候補 (side:opp)').toContain('opp#0');
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'opp#0' });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'opp#0' });
 
     const after = useGameStateStore.getState();
     const oc = after.gameState!.players.opp.scene.find((c) => c.uid === 'opp#0')!;
@@ -392,7 +393,7 @@ describe('B05028 服部平蔵 — gate5 runtime behavior', () => {
     expect((p1 as { continuation?: { kind?: string } }).continuation?.kind, 'step1 continuation は sequence-origin').toBe('sequence');
 
     // step1 を 0枚 decline (sequence-origin → step2 は発火するべき = mandatory-tail)
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null });
 
     const mid = useGameStateStore.getState();
     const pol = mid.gameState!.players.self.scene.find((c) => c.uid === 'pol#0')!;
@@ -404,7 +405,7 @@ describe('B05028 服部平蔵 — gate5 runtime behavior', () => {
     expect(p2uids, 'step2 候補は相手陣 OPPCHAR').toContain('opp#0');
 
     // step2 も decline 可 (「1枚まで」)
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null });
     const after = useGameStateStore.getState();
     const oc = after.gameState!.players.opp.scene.find((c) => c.uid === 'opp#0')!;
     expect(oc.setCards.length, 'step2 も 0枚 decline → 相手にもセットされない').toBe(0);

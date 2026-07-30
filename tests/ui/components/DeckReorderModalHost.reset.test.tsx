@@ -55,6 +55,7 @@ describe('DeckReorderModalHost consecutive decisions', () => {
       player: 'self',
       cardIds: ['UNKNOWN-CARD', 'DUPLICATE-CARD', 'DUPLICATE-CARD'],
     });
+    const decisionId = useGameStateStore.getState().pendingDeckReorder!.decisionId;
     act(() => root.render(<DeckReorderModalHost />));
 
     const before = [...container.querySelectorAll<HTMLElement>('[data-instance-id]')]
@@ -94,6 +95,7 @@ describe('DeckReorderModalHost consecutive decisions', () => {
     act(() => (container.querySelector('[data-testid="deck-reorder-confirm-btn"]') as HTMLButtonElement).click());
     expect(dispatchEngineActionMock).toHaveBeenCalledWith({
       type: 'deckReorderResolve',
+      decisionId,
       order: ['DUPLICATE-CARD', 'UNKNOWN-CARD', 'DUPLICATE-CARD'],
     });
   });

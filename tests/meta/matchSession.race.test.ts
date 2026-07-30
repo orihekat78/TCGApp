@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { registerAll } from '@/cards';
 import { engine } from '@/engine';
 import { event } from '@/engine/event/index';
+import { createEmptyGameState } from '@/engine/state-factory';
 import { useMulliganStore, resolveMulligan } from '@/ui/hooks/useMulligan';
 import { useTargetPicker, useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
 import {
@@ -90,5 +91,15 @@ describe('real match-session cancellation race', () => {
     endMatchSession({ preserveGameState: true });
     expect(useGameStateStore.getState().gameState).toBe(freshState);
     expect(useGameStateStore.getState().pendingEffectOptional).toBeNull();
+  });
+
+  it('a fresh match session cannot inherit the previous match resolution lock', () => {
+    const oldState = createEmptyGameState();
+    engine.resolve.lock(oldState, 'old-match');
+    expect(engine.resolve.isLocked(oldState)).toBe(true);
+
+    beginMatchSession('self');
+
+    expect(engine.resolve.isLocked(oldState)).toBe(false);
   });
 });

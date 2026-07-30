@@ -9,6 +9,7 @@ import { produce } from 'immer';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { runAtom, _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types';
 import { useGameStateStore } from '@/ui/state/store';
 import type { EffectCtx, GameState } from '@/engine/types';
 
@@ -102,7 +103,8 @@ describe('BUG-136 — deckReorderResolve dispatch', () => {
     useGameStateStore.getState().setGameState(s0);
     useGameStateStore.getState().setPendingDeckReorder({ player: 'self', cardIds: ['C', 'D', 'E'] });
 
-    const r = dispatchEngineAction({ type: 'deckReorderResolve', order: ['E', 'D', 'C'] });
+    const pending = useGameStateStore.getState().pendingDeckReorder!;
+    const r = dispatchEngineAction(bindPendingDecision(pending, { type: 'deckReorderResolve', order: ['E', 'D', 'C'] }));
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState();
     expect(after.gameState!.players.self.deck).toEqual(['A', 'B', 'E', 'D', 'C']);
@@ -117,7 +119,8 @@ describe('BUG-136 — deckReorderResolve dispatch', () => {
     useGameStateStore.getState().setGameState(s0);
     useGameStateStore.getState().setPendingDeckReorder({ player: 'self', cardIds: ['C', 'D', 'E'] });
 
-    dispatchEngineAction({ type: 'deckReorderResolve', order: ['X', 'Y', 'Z'] }); // 不正
+    const pending = useGameStateStore.getState().pendingDeckReorder!;
+    dispatchEngineAction(bindPendingDecision(pending, { type: 'deckReorderResolve', order: ['X', 'Y', 'Z'] })); // 不正
     const after = useGameStateStore.getState();
     expect(after.gameState!.players.self.deck).toEqual(['A', 'B', 'C', 'D', 'E']); // 不変
   });

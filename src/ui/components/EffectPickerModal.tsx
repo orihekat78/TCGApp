@@ -10,6 +10,7 @@ import type { JSX } from 'react';
 import { useEffect, useState } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
+import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { isSceneDirectPick } from '@/ui/services/scenePick.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
@@ -94,17 +95,20 @@ export function EffectPickerModal(): JSX.Element | null {
   const handleMultiConfirm = (): void => {
     const first = multiSelected[0];
     if (first === undefined) {
-      dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+      dispatchEngineAction(bindPendingDecision(pending, { type: 'effectPickResolve', pickedUid: null }));
       return;
     }
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: first, pickedUids: multiSelected });
+    dispatchEngineAction(bindPendingDecision(
+      pending,
+      { type: 'effectPickResolve', pickedUid: first, pickedUids: multiSelected },
+    ));
   };
 
   const handlePick = (uid: string): void => {
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid });
+    dispatchEngineAction(bindPendingDecision(pending, { type: 'effectPickResolve', pickedUid: uid }));
   };
   const handleSkip = (): void => {
-    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    dispatchEngineAction(bindPendingDecision(pending, { type: 'effectPickResolve', pickedUid: null }));
   };
 
   /**

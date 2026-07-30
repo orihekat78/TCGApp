@@ -67,6 +67,7 @@ import { registerAll } from '@/cards/index';
 import { sceneChar } from '../../helpers/fixtures';
 import { B04051 } from '@/cards/ct-p04/B04051';
 import type { CardDef, GameState } from '@/engine/types';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 type G = {
   __pendingEffectPickQueue?: PendingEffectPickSide[];
@@ -145,7 +146,7 @@ function emitHirameki(s: GameState, choice: 'fire' | 'skip'): GameState {
   expect(pending!.cardId).toBe('B04051');
   expect(pending!.abilityId).toBe('a2');
   useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
-  const r = dispatchEngineAction({ type: 'hiramekiResolve', choice });
+  const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice });
   expect(r.ok, `hiramekiResolve ${choice} ok`).toBe(true);
   expect(useGameStateStore.getState().pendingHirameki, 'pending クリア').toBeNull();
   return useGameStateStore.getState().gameState!;

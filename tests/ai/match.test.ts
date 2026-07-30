@@ -16,6 +16,11 @@ import { runMatch } from '@/ai/match';
 import { RandomPolicy } from '@/ai/policies/random';
 import type { AIPolicy } from '@/ai/policy';
 import type { Move } from '@/ai/move-enumerator';
+import {
+  _peekPendingEffectOptionalSide,
+  pushPendingEffectOptionalSide,
+  resetPendingEffectSession,
+} from '@/engine/effect/pending-state';
 
 function expectOfficialIdLimit(deck: readonly string[]): void {
   const counts = new Map<string, number>();
@@ -78,6 +83,7 @@ describe('runMatch — AI vs AI driver', () => {
     _resetActionContexts();
     _resetTargetExpanders();
     _resetUidCounter();
+    resetPendingEffectSession();
     registerAll();
   });
 
@@ -147,6 +153,61 @@ describe('runMatch — AI vs AI driver', () => {
     expect(result.reason).toBe('turn-cap');
     // After turn 1 ends, turn.number → 2 (> maxTurns=1) → loop exits
     expect(result.turns).toBeGreaterThanOrEqual(1);
+  });
+
+  it('isolates a new headless match from caller pending decisions', () => {
+    const initialState = setupFreshGame();
+    let observedAbilityId: string | undefined;
+    class ObserveAndEnd implements AIPolicy {
+      readonly name = 'observe-and-end';
+      choose(_s: GameState, candidates: Move[]): Move | null {
+        observedAbilityId = _peekPendingEffectOptionalSide()?.source.abilityId;
+        return candidates.find((move) => move.kind === 'endTurn') ?? null;
+      }
+    }
+    pushPendingEffectOptionalSide({
+      player: 'self',
+      source: { cardId: 'STALE', abilityId: 'old-session', uid: 'STALE#1' },
+    });
+
+    runMatch({
+      selfPolicy: new ObserveAndEnd(),
+      oppPolicy: new ObserveAndEnd(),
+      initialState,
+      maxTurns: 1,
+    });
+
+    expect(observedAbilityId).toBeUndefined();
+  });
+
+  it('isolates headless match decisions from the caller human-player identity', () => {
+    const root = globalThis as { __humanPlayerSide?: 'self' | 'opp' | null };
+    const hadHumanSide = Object.prototype.hasOwnProperty.call(root, '__humanPlayerSide');
+    const previousHumanSide = root.__humanPlayerSide;
+    let observedHumanSide: 'self' | 'opp' | null | undefined;
+    class ObserveAndEnd implements AIPolicy {
+      readonly name = 'observe-human-side-and-end';
+      choose(_s: GameState, candidates: Move[]): Move | null {
+        observedHumanSide = root.__humanPlayerSide;
+        return candidates.find((move) => move.kind === 'endTurn') ?? null;
+      }
+    }
+
+    try {
+      root.__humanPlayerSide = 'self';
+      runMatch({
+        selfPolicy: new ObserveAndEnd(),
+        oppPolicy: new ObserveAndEnd(),
+        initialState: setupFreshGame(),
+        maxTurns: 1,
+      });
+
+      expect(observedHumanSide).toBeNull();
+      expect(root.__humanPlayerSide).toBe('self');
+    } finally {
+      if (hadHumanSide) root.__humanPlayerSide = previousHumanSide;
+      else delete root.__humanPlayerSide;
+    }
   });
 
   it('movesPerTurn length equals turns played', () => {

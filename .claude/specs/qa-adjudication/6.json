@@ -214,7 +214,7 @@
         "rules:.claude/rules/16-card-set.md:33",
         "src:src/cards/ct-d08/D08021.ts:22",
         "src:src/cards/ct-p03/B03006.ts:6",
-        "src:src/engine/mutate/scene.ts:350"
+        "src:src/engine/mutate/scene.ts:375"
       ],
       "noteCodes": [
         "STACKED-CARDS-REMOVE-WITH-HOST-TEST-MISSING"
@@ -1412,7 +1412,7 @@
       "evidence": [
         "rules:.claude/rules/09-cutin-disguise.md:23",
         "src:src/cards/ct-p10/B10086.ts:27",
-        "src:src/engine/flow/contact.ts:128"
+        "src:src/engine/flow/contact.ts:130"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION-MISSING"

@@ -9,8 +9,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 ## サマリ
 
 - **対象ルート**: `.`
-- **ディレクトリ数**: 262
-- **ファイル数**: 5562
+- **ディレクトリ数**: 263
+- **ファイル数**: 5573
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1389,6 +1389,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-28-you-vs-cpu-human-validation-row-055-attempt-1.md` — YOU-vs-CPU row 055 attempt 1 — active checkpoint
     - `2026-07-28-you-vs-cpu-human-validation-row-055-attempt-2.md` — YOU-vs-CPU row 055 attempt 2
     - `2026-07-28-you-vs-cpu-human-validation-row-055-attempt-3.md` — YOU-vs-CPU row 055 attempt 3
+    - `2026-07-29-engine-adversarial.md` — Session memory
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -2208,11 +2209,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `state-evaluator.ts` — ai.policies.state-evaluator — Phase 9-F.2 静的評価関数
     - **`replay/`**
       - `index.ts` — ai.replay — Phase 9-G.1 barrel
+      - `nondeterminism.ts`
       - `player.ts` — ai.replay.player — Phase 9-G.1 (replay playback)
       - `recorder.ts` — ai.replay.recorder — Phase 9-G.1 (engine-side replay recording)
     - `.gitkeep`
     - `ability-ctx.ts` — ai.ability-ctx — Phase 8.8d: EffectCtx 構築ヘルパ
     - `action-resolution.ts` — ai.action-resolution — Phase 8.7c: アクション宣言の共通解決ヘルパ
+    - `headless-decision-context.ts`
     - `index.ts` — ai namespace barrel — Phase 6 Group A
     - `match.ts` — ai.match — AI vs AI single-match driver (Phase 6 Group C Task 6.5)
     - `move-enumerator.ts` — ai.move-enumerator — 合法手の全列挙 (Phase 6 Group A Task 6.1)
@@ -4480,12 +4483,14 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `atom-pick-spec.ts` — engine.effect.ATOM_PICK_SPEC — pick系 atom 短縮形の唯一の権威ソース。
       - `consult-choose-intercept.ts`
       - `consult-leave-intercept.ts` — engine.effect.consult-leave-intercept — 現場離脱の pre-splice consult (mega-wave W6 s…
+      - `heuristic-atom-target.ts`
       - `index.ts` — engine.effect namespace barrel
       - `invoke-hirameki.ts` — engine.effect.invoke-hirameki — 別カードの【ヒラメキ】効果を明示的に発動させる (証拠リムーブ契機でない)
       - `invoke-leave-to-remove.ts` — engine.effect.invoke-leave-to-remove — リムーブエリア在中カードの【現場リムーブ時】明示発動
       - `pending-state.ts` — engine.effect.pending-state — pick/choice/…
       - `resolve-picks.ts` — engine.effect.resolveEffectPicks — Phase 7-2 (BUG-035 fix) + Phase 7-3 (AI polic…
       - `resolver.ts` — engine.effect.run — Effect Descriptor 解釈器 (resolver)
+      - `runtime-state.ts`
       - `validate-spec-files.ts` — engine.effect.validate-spec-files — Node 専用 ruleRefs 実在チェック
       - `validate.ts` — engine.effect.validate / engine.cards.validate — static lint pass (pure)
     - **`event/`**
@@ -4494,6 +4499,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `registry.ts` — engine.event — Hook Registry 実装
     - **`flow/`**
       - **`action/`**
+        - `context-registry.ts`
         - `order.ts` — engine.flow.action.order — computeOrder (rules/08)
         - `state-machine.ts` — engine.flow.action — アクション状態機械 (Phase 4 Group B Task 4.4)
         - `target-expander.ts` — engine.flow.action target expander (G29) + mustBeTargeted (G28)
@@ -4756,6 +4762,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `.gitkeep`
       - `interactionLock.ts` — src/ui/state/interactionLock — 効果解決中の入力ロック判定
       - `store.ts` — src/ui/state/store.ts — Phase 7 Task 7.1
+      - `surface-pending.ts`
       - `tutorialStore.ts` — Phase 9a-1: チュートリアル進行ストア
     - **`styles/`**
       - `tokens.css`
@@ -5433,6 +5440,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `triggerchar-target-2026-06-06.spec.ts` — E2E: triggerChar→target ($trigger.uid) の実機 text-faithfulness 検証。
     - `user-bug-wave-ui.spec.ts`
   - **`engine/`** — Engine ユニットテスト
+    - **`adversarial/`**
+      - `state-owned-runtime.test.ts`
     - **`cards/`**
       - `registry.test.ts` — engine.cards.* — registry namespace tests
       - `tsv-loader.test.ts` — engine.cards.* — TSV loader tests
@@ -5659,6 +5668,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `fingerprint.test.ts`
   - **`helpers/`**
     - `card-probe-harness.ts` — tests/helpers/card-probe-harness.ts — 汎用 probe scenario runner ("probe compiler"…
+    - `dispatch-current-decision.ts`
     - `fixtures.ts` — tests/helpers/fixtures.ts — テスト共通 fixture (refactor Phase 1c, 2026-06-12)
   - **`integration/`** — 統合テスト (engine + UI dispatch)
     - `.gitkeep`
@@ -5779,6 +5789,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useConfirmation.test.ts` — Phase 8 Task 8.3: useConfirmation (Q9 厳格モード モーダル)
       - `useContactFlowDriver.test.ts` — Phase 8 完全クローズ Commit 2: ContactFlowDriver smoke tests
       - `useEngineDispatch.action-fsm.test.ts` — Phase 8 完全クローズ Commit 2: per-step action dispatch tests
+      - `useEngineDispatch.decision-identity.test.ts`
       - `useEngineDispatch.effect-order.test.ts` — Phase 8 完全クローズ Commit 5: setEffectOrder dispatch tests
       - `useEngineDispatch.hirameki.test.ts` — Phase 8 完全クローズ Commit 3a: hiramekiResolve dispatch tests
       - `useEngineDispatch.test.ts` — Phase 8 Task 8.1: useEngineDispatch / dispatchEngineAction
@@ -5790,6 +5801,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useOppTurnDriver.case-resolved-pick.test.ts` — BUG-090: human の auto-phase で 事件編→解決編 になり case card a1 (case:to-resolved →
       - `useOppTurnDriver.contact.test.ts` — Phase 8 完全クローズ Commit 2.5: useOppTurnDriver per-step contact integration
       - `useOppTurnDriver.test.ts` — Phase 8.7b: useOppTurnDriver tests
+      - `useReplayDriver.test.tsx`
       - `useSceneSwitchPickerStore.test.ts` — tests/ui/hooks/useSceneSwitchPickerStore.test.…
       - `useSpectatorTurnDriver.presentation.test.tsx`
       - `useStackedCardCostPicker.test.ts`

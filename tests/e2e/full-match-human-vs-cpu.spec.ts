@@ -76,17 +76,17 @@ async function resolvePendingPrompts(page: Page): Promise<void> {
       const pick = st.pendingEffectPick;
       if (pick && pick.player === 'self') {
         const picked = pick.nMin >= 1 ? (pick.candidates[0]?.uid ?? null) : null;
-        w.__game.dispatch({ type: 'effectPickResolve', pickedUid: picked });
+        w.__game.dispatch({ type: 'effectPickResolve', pickedUid: picked, decisionId: pick.decisionId });
         continue;
       }
       const opt = st.pendingEffectOptional;
       if (opt && opt.player === 'self') {
-        w.__game.dispatch({ type: 'optionalResolve', run: false }); // robot は「しない」固定 (合法手)
+        w.__game.dispatch({ type: 'optionalResolve', run: false, decisionId: opt.decisionId }); // robot は「しない」固定 (合法手)
         continue;
       }
       const choice = st.pendingEffectChoice;
       if (choice && choice.player === 'self') {
-        w.__game.dispatch({ type: 'choiceResolve', choiceIndex: 0 });
+        w.__game.dispatch({ type: 'choiceResolve', choiceIndex: 0, decisionId: choice.decisionId });
         continue;
       }
       break;

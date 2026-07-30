@@ -26,15 +26,22 @@ import { event as engineEvent } from '@/engine/event/index.js';
 import { def as readDef } from '@/engine/read/def.js';
 // Round 4j-fix (BUG-034): `@/engine` 経由で取得し vite dev mode の module duplication 回避
 import { _drainPendingHirameki, _drainPendingMisread, _peekPendingHirameki, _markPendingHiramekiGainDeferred } from '@/engine';
-import { _drainPendingEffectPickSide, _peekPendingEffectPickSide, _drainPendingEffectChoiceSide, _peekPendingEffectChoiceSide, _drainPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
+import { _drainPendingEffectPickSide, _drainPendingEffectChoiceSide, _drainPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
 import { _drainPendingChooseInterceptSide, _drainPendingEffectRepeatOptionalSide, _drainPendingRpsSide, _drainPendingSetCardChoiceSide, _drainPendingSetCardReplacementSide } from '@/engine/effect/pending-state.js';
 import { _drainPendingDeckRevealSide, _drainPendingPublicHandRevealSide, _drainPendingDeckReorderSide, _drainPendingDeckPlaceSide, _drainPendingContactStartAxId } from '@/engine/effect/atom-handlers';
+import { restorePendingRuntimeState, snapshotPendingRuntimeState } from '@/engine/effect/runtime-state.js';
+import {
+  hasLinkedPublicHandRevealDecision as hasLinkedPublicHandRevealDecisionFromStore,
+  surfacePendingSideChannels as surfacePendingSideChannelsFromStore,
+  surfacePublicHandReveal as surfacePublicHandRevealFromStore,
+} from '@/ui/state/surface-pending.js';
 import { isAllowed } from './useEngineDispatch/can-check.js';
 import { _resumeDeferredReasoning } from '@/engine/flow/main/reasoning.js';
 import { _resolveMisreadPicks } from '@/engine/listeners/misread.js';
 import type { EngineAction, DispatchResult, Player } from './useEngineDispatch/types.js';
 // Phase 3d: public 型 (ContactChoice/EngineAction/DispatchResult) は types.ts を barrel 再 export し importer 不変。
 export type { ContactChoice, EngineAction, DispatchResult } from './useEngineDispatch/types.js';
+export { bindPendingDecision } from './useEngineDispatch/types.js';
 
 /**
  * Phase 8 完全クローズ Commit 2: actionDeclareChar/Case 直後に
@@ -58,21 +65,16 @@ function sameCardMultiset(left: readonly string[], right: readonly string[]): bo
 }
 
 function hasLinkedPublicHandRevealDecision(token: string): boolean {
-  const state = useGameStateStore.getState();
-  return state.pendingEffectPick?.publicHandRevealToken === token
-    || state.pendingEffectChoice?.publicHandRevealToken === token
-    || state.pendingEffectOptional?.publicHandRevealToken === token
-    || state.pendingChooseIntercept?.publicHandRevealToken === token;
+  return hasLinkedPublicHandRevealDecisionFromStore(
+    useGameStateStore.getState,
+    token,
+  );
 }
 
 function surfacePublicHandReveal(
   reveal: NonNullable<ReturnType<typeof _drainPendingPublicHandRevealSide>>,
 ): void {
-  // An effect window only exists while its exact causal decision is pending.
-  // Auto/no-candidate paths have already consumed that cause; surfacing a timer
-  // window here would unnecessarily pause CPU and spectator drivers.
-  if (reveal.lifetime === 'effect' && !hasLinkedPublicHandRevealDecision(reveal.resolutionToken)) return;
-  useGameStateStore.getState().setPendingPublicHandReveal(reveal);
+  surfacePublicHandRevealFromStore(useGameStateStore.getState, reveal);
 }
 
 // BUG-109: resolveCardIdFromPickUid + pick build/continuation 実行は engine の
@@ -141,7 +143,7 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       return;
     }
     case 'actionGuard': {
-      const ax = flow.action._getContext(action.actionId);
+      const ax = flow.action._getContext(draft, action.actionId);
       if (!ax) return;
       if (action.guarderUid === null) {
         flow.action.passGuard(draft, ax);
@@ -151,32 +153,29 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       return;
     }
     case 'actionContact': {
-      const ax = flow.action._getContext(action.actionId);
+      const ax = flow.action._getContext(draft, action.actionId);
       if (!ax) return;
-      // first/second の actedフラグも更新 (advance() の redo 判定用)
-      const actorUid =
-        action.player === ax.byPlayer ? ax.byUid : (ax.guardUid ?? (ax.target.kind === 'char' ? ax.target.uid : ''));
-      const isFirst = ax.firstUid === actorUid;
       if (action.choice.kind === 'cutin') {
         flow.contact.cutIn(draft, ax, action.player, action.choice.cardId);
-        if (isFirst) ax.firstActed = true; else ax.secondActed = true;
       } else if (action.choice.kind === 'disguise') {
         flow.contact.disguise(draft, ax, action.player, action.choice.cardId);
-        if (isFirst) ax.firstActed = true; else ax.secondActed = true;
       } else {
         flow.contact.pass(draft, ax, action.player);
-        if (isFirst) ax.firstActed = false; else ax.secondActed = false;
       }
+      const acted = action.choice.kind !== 'pass';
+      if (ax.phase === 'action-1') ax.firstActed = acted;
+      else if (ax.phase === 'action-2') ax.secondActed = acted;
+      else ax.firstRedoActed = acted;
       return;
     }
     case 'actionAdvance': {
-      const ax = flow.action._getContext(action.actionId);
+      const ax = flow.action._getContext(draft, action.actionId);
       if (!ax) return;
       flow.action.advance(draft, ax);
       return;
     }
     case 'actionJudge': {
-      const ax = flow.action._getContext(action.actionId);
+      const ax = flow.action._getContext(draft, action.actionId);
       if (!ax) return;
       // user_request 20260522_01 #8 fix: case target でも guard 成立した場合は
       // 証拠変動なし — contact AP 判定で攻撃キャラ or ガードキャラのリムーブ
@@ -194,12 +193,15 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
         } else {
           flow.actionCase.gainSelfEvidence(draft, ax);
         }
+        ax.judgeResolved = true;
       } else {
         // char target OR case target + guard 成立 → contact AP 判定
         flow.action.snapshotAP(draft, ax);
         const result = flow.contact.judge(draft, ax);
         if (result.deferred && result.pendingLeaveIntercept) {
-          useGameStateStore.getState().setPendingLeaveIntercept({ ...result.pendingLeaveIntercept, actionId: ax.id });
+          ax.pendingLeaveIntercept = result.pendingLeaveIntercept;
+        } else {
+          ax.judgeResolved = true;
         }
       }
       return;
@@ -207,10 +209,21 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
     case 'leaveInterceptResolve': {
       const pending = useGameStateStore.getState().pendingLeaveIntercept;
       if (!pending) return;
-      const ax = flow.action._getContext(pending.actionId);
-      if (!ax?.apSnapshot) return;
-      mutate.scene.resolveLeaveIntercept(draft, pending.targetUid, 'contact-ap', ax.apSnapshot.aUid, undefined, pending.interceptorUid, action.accept);
-      flow.contact.judge(draft, ax);
+      const ax = flow.action._getContext(draft, pending.actionId);
+      const stateOwnedPending = ax?.pendingLeaveIntercept;
+      if (!ax?.apSnapshot || !stateOwnedPending) return;
+      const removal = mutate.scene.resolveLeaveIntercept(
+        draft,
+        stateOwnedPending.targetUid,
+        'contact-ap',
+        ax.apSnapshot.aUid,
+        undefined,
+        stateOwnedPending.interceptorUid,
+        action.accept,
+      );
+      delete ax.pendingLeaveIntercept;
+      flow.contact.judge(draft, ax, removal);
+      ax.judgeResolved = true;
       return;
     }
     case 'hiramekiResolve': {
@@ -261,6 +274,7 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
           const isHumanHirameki = hiramekiHumanSide !== null && pending.player === hiramekiHumanSide;
           const resolved = resolveEffectPicks(draft, ability.effect as never, ctx, {
             chooseAtomTarget: isHumanHirameki ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+            runtimeAtomTargetPolicyKey: isHumanHirameki ? undefined : 'heuristic',
             byPlayer: pending.player,
             humanChooser: isHumanHirameki,
             source: { cardId: pending.cardId, abilityId: pending.abilityId },
@@ -464,19 +478,10 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       return;
     }
     case 'endTurn': {
-      // Round 2 修正: 旧実装は endTurn のみで、次プレイヤーの startTurn を呼ばなかった。
-      // 結果 (a) opp.turn 開始時に auto-phase 走らず、(b) opp.endTurn 後 self.turn でも
-      // 同様 — 後攻 Human の auto-phase 欠落 + phase が 'end' のまま固定 → ターン終了
-      // button 永続 disabled の root cause だった。次プレイヤーまで進めて phase='main'
-      // に遷移させ、両プレイヤー対称な turn boundary を保証する。
-      // (smoke harness src/ai/match.ts L106-112 と同等の遷移パターン)
-      const nextPlayer: Player = action.player === 'self' ? 'opp' : 'self';
-      flow.endTurn(draft, action.player);
-      runAllUntilEmpty(draft);
-      if (draft.gameResult) return;
-      mutate.flag.resetTurnFlags(draft, nextPlayer);
-      draft.turn.isFirstPlayerFirstTurn = false;
-      flow.startTurn(draft, nextPlayer);
+      // The serialized turn continuation owns cleanup, transfer, and next-turn
+      // startup. If a human decision pauses an end trigger, a later resolution
+      // dispatch resumes the same boundary without starting the next turn early.
+      flow.endTurn(draft, action.player, { startNextTurn: true });
       runAllUntilEmpty(draft);
       return;
     }
@@ -508,77 +513,7 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
  * effectPickResolve 等の「queue 空なら null クリア」特殊処理は dispatchEngineAction 専用。
  */
 export function surfacePendingSideChannels(): void {
-  const store = useGameStateStore.getState();
-  if (store.pendingHirameki === null) {
-    const hiramekiSide = _drainPendingHirameki();
-    if (hiramekiSide) store.setPendingHirameki(hiramekiSide);
-  }
-  if (store.pendingMisread === null) {
-    const misreadSide = _drainPendingMisread();
-    if (misreadSide) store.setPendingMisread(misreadSide);
-  }
-  // FIFO 先頭は、現在表示中の decision が決着するまで消費しない。
-  // CPU 所有の pick を人間 UI に移すと driveOppTurn の pending guard が解除されず停止する。
-  // human 所有だけを modal state へ移し、CPU 所有は AI policy の drain に残す。
-  const pendingEffectPick = _peekPendingEffectPickSide();
-  const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
-  if (store.pendingEffectPick === null
-    && pendingEffectPick !== null
-    && (humanSide === null || pendingEffectPick.player === humanSide)) {
-    const effectPickSide = _drainPendingEffectPickSide();
-    if (effectPickSide) store.setPendingEffectPick(effectPickSide);
-  }
-  // BUG-121: auto-phase enter 由来 choice の取り残し防止 (useOppTurnDriver 経路)
-  const pendingEffectChoice = _peekPendingEffectChoiceSide();
-  if (store.pendingEffectChoice === null
-    && pendingEffectChoice !== null
-    && (humanSide === null || pendingEffectChoice.player === humanSide)) {
-    const effectChoiceSide = _drainPendingEffectChoiceSide();
-    if (effectChoiceSide) store.setPendingEffectChoice(effectChoiceSide);
-  }
-  // 2026-06-06 タスクC: optional 決定の取り残し防止 (choice と同様)
-  if (store.pendingEffectOptional === null) {
-    const effectOptionalSide = _drainPendingEffectOptionalSide();
-    if (effectOptionalSide) store.setPendingEffectOptional(effectOptionalSide);
-  }
-  if (store.pendingRps === null) {
-    const rpsSide = _drainPendingRpsSide();
-    if (rpsSide) store.setPendingRps(rpsSide);
-  }
-  if (store.pendingSetCardChoice === null) {
-    const setCardChoiceSide = _drainPendingSetCardChoiceSide();
-    if (setCardChoiceSide) store.setPendingSetCardChoice(setCardChoiceSide);
-  }
-  if (store.pendingSetCardReplacement === null) {
-    const setCardReplacementSide = _drainPendingSetCardReplacementSide();
-    if (setCardReplacementSide) store.setPendingSetCardReplacement(setCardReplacementSide);
-  }
-  if (store.pendingChooseIntercept === null) {
-    const chooseInterceptSide = _drainPendingChooseInterceptSide();
-    if (chooseInterceptSide) store.setPendingChooseIntercept(chooseInterceptSide);
-  }
-  if (store.pendingEffectRepeatOptional === null) {
-    const repeatOptionalSide = _drainPendingEffectRepeatOptionalSide();
-    if (repeatOptionalSide) store.setPendingEffectRepeatOptional(repeatOptionalSide);
-  }
-  if (store.pendingDeckReveal === null) {
-    const deckRevealSide = _drainPendingDeckRevealSide();
-    if (deckRevealSide) store.setPendingDeckReveal(deckRevealSide);
-  }
-  if (store.pendingPublicHandReveal === null) {
-    const publicHandRevealSide = _drainPendingPublicHandRevealSide();
-    if (publicHandRevealSide) surfacePublicHandReveal(publicHandRevealSide);
-  }
-  // BUG-136: deckToBottomBound 順序選択の取り残し防止 (auto-phase / ターンドライバ経路)
-  if (store.pendingDeckReorder === null) {
-    const deckReorderSide = _drainPendingDeckReorderSide();
-    if (deckReorderSide) store.setPendingDeckReorder(deckReorderSide);
-  }
-  // mini-wave #5 P2: deckPlaceSplitBound 振り分けの取り残し防止 (同経路)
-  if (store.pendingDeckPlace === null) {
-    const deckPlaceSide = _drainPendingDeckPlaceSide();
-    if (deckPlaceSide) store.setPendingDeckPlace(deckPlaceSide);
-  }
+  surfacePendingSideChannelsFromStore(useGameStateStore.getState);
 }
 
 /**
@@ -594,7 +529,6 @@ export function surfacePendingSideChannels(): void {
  */
 export function dispatchEngineAction(action: EngineAction): DispatchResult {
   const store = useGameStateStore.getState();
-  const pendingReplacementBefore = store.pendingSetCardReplacement;
   const current = store.gameState;
   const publicHandRevealBefore = store.pendingPublicHandReveal;
   const pendingPickBefore = store.pendingEffectPick;
@@ -619,6 +553,7 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
   }
 
   _justDeclaredAxId = null;
+  const pendingRuntimeBefore = snapshotPendingRuntimeState();
   try {
     store.dispatch((state) =>
       produce(state, (draft) => {
@@ -639,6 +574,13 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     if (_justDeclaredAxId) {
       store.setActiveActionId(_justDeclaredAxId);
       _justDeclaredAxId = null;
+    }
+    if (action.type === 'actionJudge') {
+      const committed = useGameStateStore.getState().gameState;
+      const ax = committed ? flow.action._getContext(committed, action.actionId) : undefined;
+      if (ax?.pendingLeaveIntercept) {
+        store.setPendingLeaveIntercept({ ...ax.pendingLeaveIntercept, actionId: ax.id });
+      }
     }
     // mega-wave W6 step9 (row65): 効果内 startContact が生成した ax を driver に渡す。
     // _justDeclaredAxId と違い「どの EngineAction type から呼ばれたか」を問わない汎用 drain
@@ -761,7 +703,8 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     return { ok: true };
   } catch (e) {
     _justDeclaredAxId = null;
-    store.setPendingSetCardReplacement(pendingReplacementBefore);
+    restorePendingRuntimeState(pendingRuntimeBefore);
+    useGameStateStore.setState(store, true);
     const detail = e instanceof Error ? e.message : String(e);
     return { ok: false, reason: 'engine-error', detail };
   }

@@ -161,7 +161,7 @@
       "adjudicationResult": "test-gap",
       "sourceRefs": [
         "src/cards/ct-p01/B01005.ts:13",
-        "src/ui/hooks/useEngineDispatch.ts:272"
+        "src/ui/hooks/useEngineDispatch.ts:286"
       ],
       "testRefs": []
     },
@@ -474,7 +474,7 @@
         "src/cards/ct-p01/B01018.ts:53"
       ],
       "testRefs": [
-        "tests/cards/triage-greens-2026-06-15/B01018.test.ts:122"
+        "tests/cards/triage-greens-2026-06-15/B01018.test.ts:123"
       ]
     },
     {
@@ -493,7 +493,7 @@
         "src/cards/ct-p01/B01018.ts:27"
       ],
       "testRefs": [
-        "tests/cards/triage-greens-2026-06-15/B01018.test.ts:93"
+        "tests/cards/triage-greens-2026-06-15/B01018.test.ts:94"
       ]
     },
     {
@@ -512,7 +512,7 @@
         "src/cards/ct-p01/B01018.ts:53"
       ],
       "testRefs": [
-        "tests/cards/triage-greens-2026-06-15/B01018.test.ts:93"
+        "tests/cards/triage-greens-2026-06-15/B01018.test.ts:94"
       ]
     },
     {
@@ -638,7 +638,7 @@
       "adjudicationResult": "test-gap",
       "sourceRefs": [
         "src/cards/ct-p01/B01023.ts:58",
-        "src/engine/effect/atom-handlers/char.ts:369",
+        "src/engine/effect/atom-handlers/char.ts:376",
         "src/engine/flow/main/hand-use-card.ts:295"
       ],
       "testRefs": []
@@ -738,7 +738,7 @@
       "adjudicationResult": "test-gap",
       "sourceRefs": [
         "src/cards/ct-p01/B01028.ts:23",
-        "src/engine/flow/action/state-machine.ts:261"
+        "src/engine/flow/action/state-machine.ts:269"
       ],
       "testRefs": []
     },
@@ -777,7 +777,7 @@
       "sourceRefs": [
         "src/cards/ct-p01/B01030.ts:35",
         "src/cards/ct-p01/B01030.ts:40",
-        "src/engine/effect/atom-handlers/core.ts:1233"
+        "src/engine/effect/atom-handlers/core.ts:1239"
       ],
       "testRefs": []
     },
@@ -5416,7 +5416,7 @@
       "adjudicationResult": "test-gap",
       "sourceRefs": [
         "src/cards/ct-p03/B03002.ts:13",
-        "src/engine/resolve/stack.ts:113"
+        "src/engine/resolve/stack.ts:139"
       ],
       "testRefs": []
     },
@@ -5584,7 +5584,7 @@
       "sourceRefs": [
         "src/cards/ct-d08/D08021.ts:22",
         "src/cards/ct-p03/B03006.ts:6",
-        "src/engine/mutate/scene.ts:666"
+        "src/engine/mutate/scene.ts:691"
       ],
       "testRefs": []
     },
@@ -5623,7 +5623,7 @@
       "sourceRefs": [
         "src/cards/ct-d08/D08021.ts:22",
         "src/cards/ct-p03/B03006.ts:6",
-        "src/engine/mutate/scene.ts:350"
+        "src/engine/mutate/scene.ts:375"
       ],
       "testRefs": []
     },
@@ -5642,7 +5642,7 @@
       "adjudicationResult": "test-gap",
       "sourceRefs": [
         "src/cards/ct-p03/B03006.ts:6",
-        "src/engine/mutate/scene.ts:350"
+        "src/engine/mutate/scene.ts:375"
       ],
       "testRefs": []
     },
@@ -5958,7 +5958,7 @@
       "adjudicationResult": "test-gap",
       "sourceRefs": [
         "src/cards/ct-p03/B03017.ts:12",
-        "src/engine/flow/contact.ts:88"
+        "src/engine/flow/contact.ts:89"
       ],
       "testRefs": []
     },
@@ -5976,7 +5976,7 @@
       "adjudicationResult": "test-gap",
       "sourceRefs": [
         "src/cards/ct-p03/B03017.ts:15",
-        "src/engine/flow/action/state-machine.ts:442"
+        "src/engine/flow/action/state-machine.ts:455"
       ],
       "testRefs": []
     },
@@ -5994,7 +5994,7 @@
       "adjudicationResult": "test-gap",
       "sourceRefs": [
         "src/cards/ct-p03/B03017.ts:15",
-        "src/engine/flow/action/state-machine.ts:510"
+        "src/engine/flow/action/state-machine.ts:523"
       ],
       "testRefs": []
     },
@@ -10677,7 +10677,7 @@
         "src/cards/ct-p04/B04018.shared.ts:82"
       ],
       "testRefs": [
-        "tests/cards/B04018-family.test.ts:117",
+        "tests/cards/B04018-family.test.ts:118",
         "tests/cards/B04018-family.test.ts:211",
         "tests/cards/B04018-family.test.ts:212"
       ]
@@ -10718,9 +10718,9 @@
         "src/cards/ct-p04/B04018.shared.ts:46"
       ],
       "testRefs": [
-        "tests/cards/B04018-family.test.ts:117",
-        "tests/cards/B04018-family.test.ts:158",
-        "tests/cards/B04018-family.test.ts:159"
+        "tests/cards/B04018-family.test.ts:118",
+        "tests/cards/B04018-family.test.ts:159",
+        "tests/cards/B04018-family.test.ts:160"
       ]
     },
     {
@@ -11097,7 +11097,7 @@
         "src/cards/ct-p04/B04027.ts:83"
       ],
       "testRefs": [
-        "tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:277"
+        "tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:278"
       ]
     },
     {
@@ -11132,7 +11132,7 @@
       "adjudicationResult": "test-gap",
       "sourceRefs": [
         "src/cards/ct-p04/B04028.ts:26",
-        "src/engine/listeners/triggered.ts:597",
+        "src/engine/listeners/triggered.ts:598",
         "src/engine/listeners/triggered.ts:619"
       ],
       "testRefs": []
@@ -11245,7 +11245,7 @@
       "adjudicationResult": "test-gap",
       "sourceRefs": [
         "src/cards/ct-p04/B04030.ts:23",
-        "src/engine/effect/atom-handlers/scene.ts:686"
+        "src/engine/effect/atom-handlers/scene.ts:747"
       ],
       "testRefs": []
     },
@@ -12387,7 +12387,7 @@
         "src/cards/ct-p04/B04064.ts:51"
       ],
       "testRefs": [
-        "tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:356"
+        "tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:357"
       ]
     },
     {
@@ -14078,8 +14078,8 @@
       "adjudicationResult": "test-gap",
       "sourceRefs": [
         "src/cards/ct-p05/B05011.ts:17",
-        "src/engine/event/registry.ts:187",
-        "src/engine/resolve/stack.ts:181"
+        "src/engine/event/registry.ts:181",
+        "src/engine/resolve/stack.ts:207"
       ],
       "testRefs": []
     },
@@ -15227,7 +15227,7 @@
         "src/cards/ct-p05/B05039.ts:1"
       ],
       "testRefs": [
-        "tests/cards/bug-140-deferred-real-cards.test.ts:114"
+        "tests/cards/bug-140-deferred-real-cards.test.ts:115"
       ]
     },
     {
@@ -16369,7 +16369,7 @@
         "src/cards/ct-p05/B05069.ts:1"
       ],
       "testRefs": [
-        "tests/cards/bug-195-event-remove-by-ap.test.ts:110"
+        "tests/cards/bug-195-event-remove-by-ap.test.ts:111"
       ]
     },
     {
@@ -18683,7 +18683,7 @@
         "src/cards/ct-p06/B06008.ts:52"
       ],
       "testRefs": [
-        "tests/cards/engine-mega-w4.test.ts:540"
+        "tests/cards/engine-mega-w4.test.ts:541"
       ]
     },
     {
@@ -19414,7 +19414,7 @@
         "src/cards/ct-p06/B06023.ts:60"
       ],
       "testRefs": [
-        "tests/cards/night-wC2b/invoke-hirameki.test.ts:110"
+        "tests/cards/night-wC2b/invoke-hirameki.test.ts:111"
       ]
     },
     {
@@ -19740,7 +19740,7 @@
         "src/cards/ct-p06/B06032.ts:65"
       ],
       "testRefs": [
-        "tests/cards/night-wC/hirameki-optional.test.ts:52"
+        "tests/cards/night-wC/hirameki-optional.test.ts:53"
       ]
     },
     {
@@ -23799,7 +23799,7 @@
         "src/cards/ct-p07/B07015.ts:1"
       ],
       "testRefs": [
-        "tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:209"
+        "tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:210"
       ]
     },
     {
@@ -24589,7 +24589,7 @@
         "src/cards/ct-p07/B07036.ts:96"
       ],
       "testRefs": [
-        "tests/cards/hybrid-batch2/B07036.test.ts:119"
+        "tests/cards/hybrid-batch2/B07036.test.ts:120"
       ]
     },
     {
@@ -25283,7 +25283,7 @@
         "src/cards/ct-p07/B07056.ts:1"
       ],
       "testRefs": [
-        "tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:356"
+        "tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:357"
       ]
     },
     {
@@ -27071,7 +27071,7 @@
         "src/cards/ct-p07/B07096.ts:56"
       ],
       "testRefs": [
-        "tests/cards/engine-mega-w4.test.ts:594"
+        "tests/cards/engine-mega-w4.test.ts:595"
       ]
     },
     {
@@ -27673,7 +27673,7 @@
         "src/cards/ct-p08/B08006.ts:55"
       ],
       "testRefs": [
-        "tests/cards/engine-mega-w4.test.ts:971"
+        "tests/cards/engine-mega-w4.test.ts:972"
       ]
     },
     {
@@ -27743,7 +27743,7 @@
         "src/cards/ct-p08/B08006.ts:54"
       ],
       "testRefs": [
-        "tests/cards/engine-mega-w4.test.ts:843"
+        "tests/cards/engine-mega-w4.test.ts:844"
       ]
     },
     {
@@ -27762,7 +27762,7 @@
         "src/cards/ct-p08/B08006.ts:1"
       ],
       "testRefs": [
-        "tests/cards/engine-mega-w4.test.ts:843"
+        "tests/cards/engine-mega-w4.test.ts:844"
       ]
     },
     {
@@ -27798,7 +27798,7 @@
         "src/cards/ct-p08/B08006.ts:54"
       ],
       "testRefs": [
-        "tests/cards/engine-mega-w4.test.ts:843"
+        "tests/cards/engine-mega-w4.test.ts:844"
       ]
     },
     {
@@ -30448,7 +30448,7 @@
         "src/cards/ct-p08/B08069.ts:1"
       ],
       "testRefs": [
-        "tests/cards/engine-mega-w6b.test.ts:85"
+        "tests/cards/engine-mega-w6b.test.ts:90"
       ]
     },
     {
@@ -33534,7 +33534,7 @@
         "src/cards/ct-p09/B09048.ts:1"
       ],
       "testRefs": [
-        "tests/cards/engine-mega-w4.test.ts:578"
+        "tests/cards/engine-mega-w4.test.ts:579"
       ]
     },
     {
@@ -33553,7 +33553,7 @@
         "src/cards/ct-p09/B09048.ts:80"
       ],
       "testRefs": [
-        "tests/cards/engine-mega-w4.test.ts:951"
+        "tests/cards/engine-mega-w4.test.ts:952"
       ]
     },
     {
@@ -35110,7 +35110,7 @@
         "src/cards/ct-p09/B09081.ts:1"
       ],
       "testRefs": [
-        "tests/cards/night-wC/hirameki-optional.test.ts:52"
+        "tests/cards/night-wC/hirameki-optional.test.ts:53"
       ]
     },
     {
@@ -40439,7 +40439,7 @@
       "adjudicationResult": "test-gap",
       "sourceRefs": [
         "src/cards/ct-p10/B10086.ts:27",
-        "src/engine/flow/contact.ts:128"
+        "src/engine/flow/contact.ts:130"
       ],
       "testRefs": []
     },
@@ -42251,7 +42251,7 @@
         "src/cards/ct-d03/D03002.ts:1"
       ],
       "testRefs": [
-        "tests/cards/bug-135-sequence-middle-skip.test.ts:105"
+        "tests/cards/bug-135-sequence-middle-skip.test.ts:106"
       ]
     },
     {
@@ -46387,7 +46387,7 @@
         "src/cards/ct-d11/D11019.ts:70"
       ],
       "testRefs": [
-        "tests/ai/replay/recorder.test.ts:39"
+        "tests/ai/replay/recorder.test.ts:58"
       ]
     },
     {
@@ -48791,7 +48791,7 @@
         "src/cards/pr-01/PR155.ts:1"
       ],
       "testRefs": [
-        "tests/cards/bug-135-sequence-middle-skip.test.ts:97"
+        "tests/cards/bug-135-sequence-middle-skip.test.ts:98"
       ]
     },
     {

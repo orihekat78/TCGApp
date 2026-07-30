@@ -247,7 +247,7 @@
       "evidence": [
         "rules:.claude/rules/25-qa-effects-resolution.md:79",
         "src:src/cards/ct-p03/B03002.ts:13",
-        "src:src/engine/resolve/stack.ts:113"
+        "src:src/engine/resolve/stack.ts:139"
       ],
       "noteCodes": [
         "NEXT-HINT-EVENT-OWN-EFFECT-ORDER-TEST-MISSING"
@@ -262,7 +262,7 @@
       "evidence": [
         "rules:.claude/rules/09-cutin-disguise.md:23",
         "src:src/cards/ct-p03/B03017.ts:12",
-        "src:src/engine/flow/contact.ts:88"
+        "src:src/engine/flow/contact.ts:89"
       ],
       "noteCodes": [
         "SELF-TURN-CUTIN-NO-EFFECT-UNTESTED"
@@ -277,7 +277,7 @@
       "evidence": [
         "rules:.claude/rules/08-contact.md:51",
         "src:src/cards/ct-p03/B03017.ts:15",
-        "src:src/engine/flow/action/state-machine.ts:510"
+        "src:src/engine/flow/action/state-machine.ts:523"
       ],
       "noteCodes": [
         "CUTIN-STATE-CHANGE-CONTACT-PERSISTS-UNTESTED"

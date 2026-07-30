@@ -2,13 +2,13 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `112f9b12cfb3`
+> Source hash: `856f7a4314f9`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **141** ファイル（[全体 index](./index.md)）
+このグループ: **145** ファイル（[全体 index](./index.md)）
 
-## engine/effect (19)
+## engine/effect (21)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -23,20 +23,23 @@
 | [`src/engine/effect/atom-pick-spec.ts`](../../../src/engine/effect/atom-pick-spec.ts) | _(参照なし)_ |
 | [`src/engine/effect/consult-choose-intercept.ts`](../../../src/engine/effect/consult-choose-intercept.ts) | _(参照なし)_ |
 | [`src/engine/effect/consult-leave-intercept.ts`](../../../src/engine/effect/consult-leave-intercept.ts) | _(参照なし)_ |
+| [`src/engine/effect/heuristic-atom-target.ts`](../../../src/engine/effect/heuristic-atom-target.ts) | _(参照なし)_ |
 | [`src/engine/effect/index.ts`](../../../src/engine/effect/index.ts) | _(参照なし)_ |
 | [`src/engine/effect/invoke-hirameki.ts`](../../../src/engine/effect/invoke-hirameki.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/engine/effect/invoke-leave-to-remove.ts`](../../../src/engine/effect/invoke-leave-to-remove.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/engine/effect/pending-state.ts`](../../../src/engine/effect/pending-state.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
 | [`src/engine/effect/resolve-picks.ts`](../../../src/engine/effect/resolve-picks.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/effect/resolver.ts`](../../../src/engine/effect/resolver.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
+| [`src/engine/effect/runtime-state.ts`](../../../src/engine/effect/runtime-state.ts) | _(参照なし)_ |
 | [`src/engine/effect/validate-spec-files.ts`](../../../src/engine/effect/validate-spec-files.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/effect/validate.ts`](../../../src/engine/effect/validate.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 
-## engine/flow (19)
+## engine/flow (20)
 
 | ソース | 参照ルール |
 | ------ | --------- |
 | [`src/engine/flow/action-case.ts`](../../../src/engine/flow/action-case.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`10-action-event.md`](../../rules/10-action-event.md) |
+| [`src/engine/flow/action/context-registry.ts`](../../../src/engine/flow/action/context-registry.ts) | _(参照なし)_ |
 | [`src/engine/flow/action/order.ts`](../../../src/engine/flow/action/order.ts) | [`08-contact.md`](../../rules/08-contact.md) |
 | [`src/engine/flow/action/state-machine.ts`](../../../src/engine/flow/action/state-machine.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
 | [`src/engine/flow/action/target-expander.ts`](../../../src/engine/flow/action/target-expander.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) |
@@ -107,7 +110,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (62)
+## その他 (63)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -172,4 +175,5 @@
 | [`src/ui/services/uidNames.ts`](../../../src/ui/services/uidNames.ts) | _(参照なし)_ |
 | [`src/ui/state/interactionLock.ts`](../../../src/ui/state/interactionLock.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/ui/state/store.ts`](../../../src/ui/state/store.ts) | _(参照なし)_ |
+| [`src/ui/state/surface-pending.ts`](../../../src/ui/state/surface-pending.ts) | _(参照なし)_ |
 | [`src/ui/state/tutorialStore.ts`](../../../src/ui/state/tutorialStore.ts) | _(参照なし)_ |

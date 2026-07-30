@@ -40,7 +40,7 @@
       "evidence": [
         "rules:.claude/rules/16-card-set.md:13",
         "src:src/cards/ct-p01/B01023.ts:58",
-        "src:src/engine/effect/atom-handlers/char.ts:369",
+        "src:src/engine/effect/atom-handlers/char.ts:376",
         "src:src/engine/flow/main/hand-use-card.ts:295"
       ],
       "noteCodes": [

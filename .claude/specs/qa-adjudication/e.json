@@ -299,7 +299,7 @@
       "evidence": [
         "rules:.claude/rules/16-card-set.md:30",
         "src:src/cards/ct-p03/B03006.ts:6",
-        "src:src/engine/mutate/scene.ts:350"
+        "src:src/engine/mutate/scene.ts:375"
       ],
       "noteCodes": [
         "STACKED-CARD-NO-INFO-NO-TRIGGER-TEST-MISSING"
@@ -315,7 +315,7 @@
         "rules:.claude/rules/07-action-flow.md:21",
         "rules:.claude/rules/08-contact.md:22",
         "src:src/cards/ct-p03/B03017.ts:15",
-        "src:src/engine/flow/action/state-machine.ts:442"
+        "src:src/engine/flow/action/state-machine.ts:455"
       ],
       "noteCodes": [
         "CUTIN-AFTER-GUARD-WINDOW-UNTESTED"

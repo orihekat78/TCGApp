@@ -67,6 +67,7 @@ import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { B03031 } from '@/cards/ct-p03/B03031';
 import { B03059 } from '@/cards/ct-p03/B03059';
 import type { CardDef, GameState } from '@/engine/types';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
 type G = {
   __pendingEffectPickQueue?: PendingEffectPickSide[];
@@ -170,7 +171,7 @@ function emitHirameki(s: GameState, choice: 'fire' | 'skip'): GameState {
   expect(pending!.abilityId).toBe('a2');
   expect(pending!.player, 'pending.player = self (証拠を失った側)').toBe('self');
   useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
-  const r = dispatchEngineAction({ type: 'hiramekiResolve', choice });
+  const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice });
   expect(r.ok, `hiramekiResolve ${choice} ok`).toBe(true);
   expect(useGameStateStore.getState().pendingHirameki, 'pending クリア').toBeNull();
   return useGameStateStore.getState().gameState!;

@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
+import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import { def as readDef } from '@/engine/read/def.js';
 import './ChoicePickerModal.css';
 
@@ -24,8 +25,8 @@ export function EffectRepeatOptionalModalHost(): JSX.Element | null {
         <div className="cp-body"><p className="cp-sub">Choose whether to repeat.</p></div>
         <div className="cp-actions">
           <ul className="cp-list">
-            <li><button type="button" className="cp-cand" data-testid="repeat-opt-run-yes" onClick={() => dispatchEngineAction({ type: 'repeatOptionalResolve', run: true })}>する</button></li>
-            <li><button type="button" className="cp-cand" data-testid="repeat-opt-run-no" onClick={() => dispatchEngineAction({ type: 'repeatOptionalResolve', run: false })}>しない</button></li>
+            <li><button type="button" className="cp-cand" data-testid="repeat-opt-run-yes" onClick={() => dispatchEngineAction(bindPendingDecision(pending, { type: 'repeatOptionalResolve', run: true }))}>する</button></li>
+            <li><button type="button" className="cp-cand" data-testid="repeat-opt-run-no" onClick={() => dispatchEngineAction(bindPendingDecision(pending, { type: 'repeatOptionalResolve', run: false }))}>しない</button></li>
           </ul>
         </div>
       </div>

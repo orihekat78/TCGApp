@@ -133,14 +133,39 @@ function applyMrEntryRemoval(s: GameState, p: Player, enteringCardId: string): b
 }
 
 /** UID 生成カウンタ管理 (GameState に直接持たない — state 外のモジュールローカル) */
-let _uidCounter = 0;
-function generateUid(cardId: string): string {
-  return `${cardId}#${++_uidCounter}`;
+function maxPersistedUidSequence(value: unknown, seen = new WeakSet<object>()): number {
+  if (typeof value === 'string') {
+    const match = /#(\d+)$/.exec(value);
+    return match ? Number(match[1]) : 0;
+  }
+  if (value === null || typeof value !== 'object' || seen.has(value)) return 0;
+  seen.add(value);
+  let max = 0;
+  for (const entry of Object.values(value)) {
+    max = Math.max(max, maxPersistedUidSequence(entry, seen));
+  }
+  return max;
+}
+
+function generateUid(state: GameState, cardId: string): string {
+  let seq = state.sceneUidSeq ?? maxPersistedUidSequence(state);
+  for (const player of ['self', 'opp'] as const) {
+    const characters = [
+      ...state.players[player].scene,
+      ...(state.players[player].partnerAreaMR ? [state.players[player].partnerAreaMR] : []),
+    ];
+    for (const character of characters) {
+      const match = /#(\d+)$/.exec(character.uid);
+      if (match) seq = Math.max(seq, Number(match[1]));
+    }
+  }
+  state.sceneUidSeq = seq + 1;
+  return `${cardId}#${state.sceneUidSeq}`;
 }
 
 /** UID カウンタのリセット (テスト用) */
 export function _resetUidCounter(): void {
-  _uidCounter = 0;
+  // no-op: UID allocation is GameState-owned.
 }
 
 /**
@@ -161,7 +186,7 @@ function enter(s: GameState, p: Player, cardId: string, opts: EnterOpts): SceneC
   s.turnState[p].enterCountThisTurn = prevTurnEnter + 1;
   const char: SceneCharacter = {
     cardId,
-    uid: generateUid(cardId),
+    uid: generateUid(s, cardId),
     state: opts.active === false || def.card(cardId)?.entersSleep === true ? 'sleep' : 'active',
     isNamed: opts.named ?? false,
     enterOrder: currentCount + 1,

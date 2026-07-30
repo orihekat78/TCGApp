@@ -43,7 +43,32 @@ export async function getGameState(page: Page): Promise<GameStateLike> {
 export async function dispatchAction<T = { ok: boolean; reason?: string }>(page: Page, action: unknown): Promise<T> {
   return (await page.evaluate((act) => {
     const w = window as unknown as GameWindow;
-    return w.__game.dispatch(act) as unknown;
+    if (!act || typeof act !== 'object') return w.__game.dispatch(act) as unknown;
+    const bound = { ...(act as Record<string, unknown>) };
+    const pendingKeyByType: Record<string, string> = {
+      effectPickResolve: 'pendingEffectPick',
+      choiceResolve: 'pendingEffectChoice',
+      optionalResolve: 'pendingEffectOptional',
+      chooseInterceptResolve: 'pendingChooseIntercept',
+      repeatOptionalResolve: 'pendingEffectRepeatOptional',
+      deckReorderResolve: 'pendingDeckReorder',
+      deckPlaceResolve: 'pendingDeckPlace',
+      leaveInterceptResolve: 'pendingLeaveIntercept',
+      rpsResolve: 'pendingRps',
+      setCardChoiceResolve: 'pendingSetCardChoice',
+      setCardReplacementResolve: 'pendingSetCardReplacement',
+      hiramekiResolve: 'pendingHirameki',
+      misreadResolve: 'pendingMisread',
+    };
+    const pendingKey = pendingKeyByType[String(bound.type)];
+    const uiState = w.__game.getState() as unknown as Record<string, unknown>;
+    const pending = pendingKey
+      ? uiState[pendingKey] as { decisionId?: string } | null | undefined
+      : null;
+    if (bound.decisionId === undefined && pending?.decisionId !== undefined) {
+      bound.decisionId = pending.decisionId;
+    }
+    return w.__game.dispatch(bound) as unknown;
   }, action)) as T;
 }
 

@@ -14,6 +14,7 @@ import { playTurn, stepTurn, type AIPolicy } from '@/ai/policy';
 import type { Move } from '@/ai/move-enumerator';
 import type { CardDef, EffectCtx, GameState } from '@/engine/types';
 import { dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/useEngineDispatch';
+import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types';
 import { driveOppTurn, _resetIsDriving } from '@/ui/hooks/useOppTurnDriver';
 import { useGameStateStore } from '@/ui/state/store';
 import { _clearPendingEffectChoiceSide, _peekPendingEffectChoiceSide, pushPendingEffectChoiceSide, type PendingEffectChoiceSide } from '@/engine/effect/pending-state';
@@ -205,7 +206,7 @@ describe('CPU pause for human-owned deck decisions', () => {
     const blockedNextStep = stepTurn(step.nextState, policy, 'opp');
     expect(blockedNextStep).toMatchObject({ move: null, paused: { humanPick: true } });
 
-    useGameStateStore.getState().setGameState(step.nextState);
+    useGameStateStore.getState().setGameState(step.nextState, { preserveRuntime: true });
     surfacePendingSideChannels();
     const surfaced = useGameStateStore.getState().pendingDeckReorder;
     expect(surfaced).toMatchObject({
@@ -218,7 +219,7 @@ describe('CPU pause for human-owned deck decisions', () => {
     driveOppTurn();
     expect(useGameStateStore.getState().gameState).toBe(beforeBlockedDrive);
 
-    const resolved = dispatchEngineAction({ type: 'deckReorderResolve', order: ['H-B', 'H-A'] });
+    const resolved = dispatchEngineAction(bindPendingDecision(surfaced!, { type: 'deckReorderResolve', order: ['H-B', 'H-A'] }));
     expect(resolved.ok).toBe(true);
     expect(useGameStateStore.getState().gameState?.players.self.deck).toEqual(['TAIL', 'H-B', 'H-A']);
     expect(useGameStateStore.getState().pendingDeckReorder).toBeNull();
@@ -290,7 +291,7 @@ describe('CPU pause for human-owned deck decisions', () => {
 
     expect(step).toMatchObject({ move: null, paused: { humanPick: true } });
     expect(chooseCalls).toBe(0);
-    useGameStateStore.getState().setGameState(step.nextState);
+    useGameStateStore.getState().setGameState(step.nextState, { preserveRuntime: true });
     surfacePendingSideChannels();
     expect(useGameStateStore.getState().pendingDeckPlace).toMatchObject({
       player: 'opp', ownerPlayer: 'self', cardIds: ['X', 'Y'],

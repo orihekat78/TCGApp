@@ -443,7 +443,7 @@
                       "evidence":  [
                                        "rules:.claude/rules/15-abilities-effects.md:60",
                                        "src:src/cards/ct-p04/B04027.ts:83",
-                                       "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:277"
+                                       "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:278"
                                    ]
                   },
                   {
@@ -454,7 +454,7 @@
                       "method":  "manual-semantic",
                       "evidence":  [
                                        "src:src/cards/ct-p04/B04030.ts:23",
-                                       "src:src/engine/effect/atom-handlers/scene.ts:686"
+                                       "src:src/engine/effect/atom-handlers/scene.ts:747"
                                    ],
                       "noteCodes":  [
                                         "B04030-STUN-STATE-SEMANTICS-TEST-MISSING"

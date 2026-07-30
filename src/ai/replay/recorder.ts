@@ -7,8 +7,10 @@
 //   (recordMatch depends on @/ai/match which depends on @/engine umbrella).
 
 import { runMatch, type MatchOpts, type MatchResult } from '../match.js';
+import type { AIPolicy } from '../policy.js';
 import type { Move } from '../move-enumerator.js';
 import type { GameState } from '@/engine/types';
+import { captureNondeterminism, type ReplayNondeterminism } from './nondeterminism.js';
 
 type Player = 'self' | 'opp';
 
@@ -18,16 +20,44 @@ export type ReplayMove = {
   move: Move;
 };
 
-export type ReplayLog = {
+type ReplayResult = {
+  winner: 'self' | 'opp' | 'draw' | 'invariant-fail';
+  reason: 'evidence' | 'deck-out' | 'turn-cap' | 'invariant';
+  turns: number;
+  error?: string;
+};
+
+export type ReplayLogV1 = {
   schemaVersion: 1;
   initialState: GameState;
   moves: ReplayMove[];
-  result: {
-    winner: 'self' | 'opp' | 'draw' | 'invariant-fail';
-    reason: 'evidence' | 'deck-out' | 'turn-cap' | 'invariant';
-    turns: number;
-  };
+  result: ReplayResult;
 };
+
+export type ReplayLogV2 = {
+  schemaVersion: 2;
+  initialState: GameState;
+  moves: ReplayMove[];
+  result: ReplayResult;
+  nondeterminism: ReplayNondeterminism;
+};
+
+export type ReplayLog = ReplayLogV1 | ReplayLogV2;
+
+function isolatePolicyNondeterminism(
+  policy: AIPolicy,
+  withoutCapture: <T>(run: () => T) => T,
+): AIPolicy {
+  return new Proxy(policy, {
+    get(target, property, receiver) {
+      const value = Reflect.get(target, property, receiver);
+      if (typeof value !== 'function') return value;
+      return (...args: unknown[]) => withoutCapture(
+        () => Reflect.apply(value, target, args),
+      );
+    },
+  });
+}
 
 /**
  * recordMatch — runMatch を wrap し、各 turn の moves を ReplayLog に蓄積する。
@@ -37,30 +67,50 @@ export type ReplayLog = {
  *   // log を JSON.stringify でファイル保存可
  *   const replayResult = replayLog(log); // 同じ result が再現される
  */
-export function recordMatch(opts: MatchOpts): { result: MatchResult; log: ReplayLog } {
+export function recordMatch(opts: MatchOpts): { result: MatchResult; log: ReplayLogV2 } {
   const recordedMoves: ReplayMove[] = [];
+  const initialState = structuredClone(opts.initialState);
+  let runWithoutCapture = <T>(run: () => T): T => run();
 
   const wrappedOpts: MatchOpts = {
     ...opts,
+    selfPolicy: isolatePolicyNondeterminism(
+      opts.selfPolicy,
+      (run) => runWithoutCapture(run),
+    ),
+    oppPolicy: isolatePolicyNondeterminism(
+      opts.oppPolicy,
+      (run) => runWithoutCapture(run),
+    ),
     onTurn: (turnNo, player, turnMoves) => {
       for (const m of turnMoves) {
-        recordedMoves.push({ turn: turnNo, player, move: m });
+        recordedMoves.push({
+          turn: turnNo,
+          player,
+          move: structuredClone(m),
+        });
       }
       // caller の onTurn も呼ぶ (記録と debug 監視が両立)
-      opts.onTurn?.(turnNo, player, turnMoves);
+      // Defer observers so their clock/RNG reads do not enter the engine trace.
+      runWithoutCapture(() => opts.onTurn?.(turnNo, player, turnMoves));
     },
   };
 
-  const result = runMatch(wrappedOpts);
+  const { value: result, trace } = captureNondeterminism((scope) => {
+    runWithoutCapture = scope.withoutCapture;
+    return runMatch(wrappedOpts);
+  });
 
-  const log: ReplayLog = {
-    schemaVersion: 1,
-    initialState: opts.initialState,
+  const log: ReplayLogV2 = {
+    schemaVersion: 2,
+    initialState,
     moves: recordedMoves,
+    nondeterminism: trace,
     result: {
       winner: result.winner,
       reason: result.reason,
       turns: result.turns,
+      ...(result.error !== undefined ? { error: result.error } : {}),
     },
   };
 

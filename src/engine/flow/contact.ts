@@ -9,7 +9,7 @@
 //   - judge                    (AP判定。同値もリムーブ。攻撃側はリムーブされない)
 //   - computeOrder             (低AP先、同値→防御側先)
 
-import type { GameState, ActionContext, JudgeResult, AbilityDef, EffectCtx, SceneCharacter } from '../types/index.js';
+import type { GameState, ActionContext, JudgeResult, RemoveResult, AbilityDef, EffectCtx, SceneCharacter } from '../types/index.js';
 import { mutate } from '../mutate/index.js';
 import { event } from '../event/index.js';
 import { def as readDef } from '../read/def.js';
@@ -19,6 +19,7 @@ import { effectiveCutinAbilities } from '../read/hand-cutin.js';
 import { evalCond } from '../cond/eval.js';
 import { matchOneFilter } from '../target/candidates.js'; // engine A3 wave (2026-07-11): B05007 filtered action-scoped cutin ban
 import { computeOrder as _computeOrder } from './action/order.js';
+import { contextForState } from './action/context-registry.js';
 
 type Player = 'self' | 'opp';
 
@@ -86,6 +87,7 @@ export function buildContactBindings(ax: ActionContext, p: Player): Record<strin
  * - 色制限なし (rules/09)
  */
 export function canCutIn(state: GameState, ax: ActionContext, p: Player, cardId: string): boolean {
+  ax = contextForState(state, ax);
   if (!state.players[p].hand.includes(cardId)) return false;
   if (!isCutInCard(state, p, cardId)) return false;
   if (ax.cutInUsed?.[p]) return false;
@@ -150,6 +152,7 @@ function sideHasActionCutinBan(state: GameState, side: Player): boolean {
  * engine.resolve.runAllUntilEmpty() を駆動すること。
  */
 export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: string, cutinAbilityId?: string): void {
+  ax = contextForState(state, ax);
   if (!canCutIn(state, ax, p, cardId)) {
     throw new Error(`flow.contact.cutIn: cannot cut in cardId=${cardId} for ${p}`);
   }
@@ -202,6 +205,7 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
  *   ⚠ 条件未達なら「そもそも変装を持っていない扱い」(rules/17 §条件アイコン Point) → 変装不可
  */
 export function canDisguise(state: GameState, ax: ActionContext, p: Player, cardId: string): boolean {
+  ax = contextForState(state, ax);
   if (!state.players[p].hand.includes(cardId)) return false;
   // engine additive wave-10 (2026-07-02): turn-scoped disguise ban (B07002 a2)。canCutIn の
   // cutinBanned gate と mirror (setDisguiseBan verb 書込 / resetTurnFlags 清掃 / side-level)。
@@ -238,6 +242,7 @@ export function canDisguise(state: GameState, ax: ActionContext, p: Player, card
  * - disguise:into emit (spec: { uid, fromCardId, newCardId })
  */
 export function disguise(state: GameState, ax: ActionContext, p: Player, cardId: string): void {
+  ax = contextForState(state, ax);
   if (!canDisguise(state, ax, p, cardId)) {
     throw new Error(`flow.contact.disguise: cannot disguise cardId=${cardId} for ${p}`);
   }
@@ -333,7 +338,12 @@ export function pass(state: GameState, _ax: ActionContext, p: Player): void {
  * - attacker は決してリムーブされない
  * - contact:judge emit (spec: { winner, loser })
  */
-export function judge(state: GameState, ax: ActionContext): JudgeResult {
+export function judge(
+  state: GameState,
+  ax: ActionContext,
+  resolvedRemoval?: RemoveResult,
+): JudgeResult {
+  ax = contextForState(state, ax);
   if (!ax.apSnapshot) {
     throw new Error('flow.contact.judge: apSnapshot is missing — call snapshotAP first');
   }
@@ -351,7 +361,7 @@ export function judge(state: GameState, ax: ActionContext): JudgeResult {
     // W6 step10 (row9): leave:intercept (B01092/B01039) が成立した場合 prevented=true —
     // defender は現場を離れていない (kept-in-scene) or 手札へ redirect。contact:judge の
     // winner/loser 導出は defenderRemoved を見るため、ここで反転を反映する。
-    const rr = mutate.scene.removeToRemove(state, bUid, 'contact-ap', aUid);
+    const rr = resolvedRemoval ?? mutate.scene.removeToRemove(state, bUid, 'contact-ap', aUid);
     if (rr.deferred) {
       return {
         attackerAP: aAP, defenderAP: bAP, defenderRemoved: false, attackerRemoved: false,

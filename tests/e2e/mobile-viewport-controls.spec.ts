@@ -48,14 +48,20 @@ test.describe('mobile viewport controls', () => {
 
     await page.evaluate(() => {
       const w = window as unknown as GameWindow;
+      const initialState = w.__game.createSampleGameState() as {
+        pendingEffects: unknown[];
+        players: { opp: { deck: unknown[]; remove: unknown[] } };
+      };
+      initialState.pendingEffects = [];
+      initialState.players.opp.deck = [];
+      initialState.players.opp.remove = [];
       const log = {
         schemaVersion: 1,
-        initialState: w.__game.createSampleGameState(),
+        initialState,
         moves: [
-          { turn: 1, player: 'self', move: { kind: 'endTurn' } },
-          { turn: 1, player: 'opp', move: { kind: 'endTurn' } },
+          { turn: 4, player: 'self', move: { kind: 'endTurn' } },
         ],
-        result: { winner: 'self', reason: 'turn-cap', turns: 1 },
+        result: { winner: 'self', reason: 'deck-out', turns: 5 },
       };
       const input = document.querySelector(
         '[data-testid="game-setup-replay-file"]',

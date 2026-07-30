@@ -14,15 +14,34 @@ import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { useContactModalStore } from '@/ui/hooks/useContactModalStore';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { produce } from '@/engine/produce';
 import * as flow from '@/engine/flow/index.js';
 import { char as readChar } from '@/engine/read/char';
 import { register as registerCardDef } from '@/engine/read/def';
 import { D08017 } from '@/cards/ct-d08/D08017';
 import { B05047 } from '@/cards/ct-p05/B05047';
 import type { GameState, SceneCharacter } from '@/engine/types/game-state';
+import type { ActionContext } from '@/engine/types/results';
 import { makeChar as baseChar } from '../../helpers/fixtures';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+
+function getActionContext(id: string) {
+  const state = useGameStateStore.getState().gameState;
+  return state ? flow.action._getContext(state, id) : undefined;
+}
+
+function updateActionContext(id: string, update: (context: ActionContext) => void): ActionContext {
+  const state = useGameStateStore.getState().gameState;
+  if (!state) throw new Error('missing game state');
+  const next = produce(state, (draft) => {
+    const context = flow.action._getContext(draft, id);
+    if (!context) throw new Error(`missing ActionContext: ${id}`);
+    update(context);
+  });
+  useGameStateStore.setState({ gameState: next });
+  return getActionContext(id)!;
+}
 
 function ContactDriverProbe(): null {
   useContactFlowDriver();
@@ -70,7 +89,7 @@ describe('useContactFlowDriver — _runDriverStep', () => {
     useGameStateStore.setState({ gameState: s });
     dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'o1', targetUid: 's1' });
     const axId = useGameStateStore.getState().activeActionId!;
-    const ax = flow.action._getContext(axId)!;
+    const ax = getActionContext(axId)!;
 
     _runDriverStep(useGameStateStore.getState().gameState!, ax);
 
@@ -84,14 +103,14 @@ describe('useContactFlowDriver — _runDriverStep', () => {
     useGameStateStore.setState({ gameState: makeBattle() });
     dispatchEngineAction({ type: 'actionDeclareChar', byUid: 's1', targetUid: 't1' });
     const axId = useGameStateStore.getState().activeActionId!;
-    const ax = flow.action._getContext(axId)!;
+    const ax = getActionContext(axId)!;
     expect(ax.phase).toBe('guard-window');
 
     const state = useGameStateStore.getState().gameState!;
     _runDriverStep(state, ax);
 
     // AI 経由で guard dispatch 済 → phase 'leave-resolution'
-    expect(flow.action._getContext(axId)?.phase).toBe('leave-resolution');
+    expect(getActionContext(axId)?.phase).toBe('leave-resolution');
     // モーダルは open されていない
     expect(useContactModalStore.getState().guardPicker).toBeNull();
   });
@@ -105,7 +124,7 @@ describe('useContactFlowDriver — _runDriverStep', () => {
     useGameStateStore.setState({ gameState: s });
     dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'o1', targetUid: 's1' });
     const axId = useGameStateStore.getState().activeActionId!;
-    const ax = flow.action._getContext(axId)!;
+    const ax = getActionContext(axId)!;
     expect(ax.phase).toBe('guard-window');
 
     const state = useGameStateStore.getState().gameState!;
@@ -115,7 +134,7 @@ describe('useContactFlowDriver — _runDriverStep', () => {
     expect(useContactModalStore.getState().guardPicker).not.toBeNull();
     expect(useContactModalStore.getState().guardPicker?.actionId).toBe(axId);
     // dispatch はまだ走っていない → phase そのまま
-    expect(flow.action._getContext(axId)?.phase).toBe('guard-window');
+    expect(getActionContext(axId)?.phase).toBe('guard-window');
   });
 
   it('auto-advance phase (leave-resolution) → driver dispatches actionAdvance', () => {
@@ -124,14 +143,14 @@ describe('useContactFlowDriver — _runDriverStep', () => {
     const axId = useGameStateStore.getState().activeActionId!;
     // 手動で guard pass → leave-resolution
     dispatchEngineAction({ type: 'actionGuard', actionId: axId, guarderUid: null });
-    const ax = flow.action._getContext(axId)!;
+    const ax = getActionContext(axId)!;
     expect(ax.phase).toBe('leave-resolution');
 
     const state = useGameStateStore.getState().gameState!;
     _runDriverStep(state, ax);
 
     // advance → contact-pending
-    expect(flow.action._getContext(axId)?.phase).toBe('contact-pending');
+    expect(getActionContext(axId)?.phase).toBe('contact-pending');
   });
 
   it('pauses contact phase while a human deck reorder decision is pending', () => {
@@ -139,7 +158,7 @@ describe('useContactFlowDriver — _runDriverStep', () => {
     dispatchEngineAction({ type: 'actionDeclareChar', byUid: 's1', targetUid: 't1' });
     const axId = useGameStateStore.getState().activeActionId!;
     dispatchEngineAction({ type: 'actionGuard', actionId: axId, guarderUid: null });
-    expect(flow.action._getContext(axId)?.phase).toBe('leave-resolution');
+    expect(getActionContext(axId)?.phase).toBe('leave-resolution');
 
     useGameStateStore.setState({
       pendingDeckReorder: { player: 'self', cardIds: ['B04028', 'D08003'] },
@@ -149,7 +168,7 @@ describe('useContactFlowDriver — _runDriverStep', () => {
 
     act(() => root.render(createElement(ContactDriverProbe)));
 
-    expect(flow.action._getContext(axId)?.phase).toBe('leave-resolution');
+    expect(getActionContext(axId)?.phase).toBe('leave-resolution');
     act(() => root.unmount());
   });
 
@@ -176,10 +195,11 @@ describe('useContactFlowDriver — _runDriverStep', () => {
     useGameStateStore.setState({ gameState: s });
     dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'o1', targetUid: 's1' });
     const axId = useGameStateStore.getState().activeActionId!;
-    const ax = flow.action._getContext(axId)!;
-    ax.phase = 'action-1';
-    ax.firstUid = 's1';
-    ax.secondUid = 'o1';
+    updateActionContext(axId, (ax) => {
+      ax.phase = 'action-1';
+      ax.firstUid = 's1';
+      ax.secondUid = 'o1';
+    });
 
     expect(dispatchEngineAction({
       type: 'actionContact',
@@ -192,14 +212,15 @@ describe('useContactFlowDriver — _runDriverStep', () => {
       ownerPlayer: 'self',
       cardIds: ['D08003', 'D08007'],
     });
-    dispatchEngineAction({ type: 'actionAdvance', actionId: axId });
-    expect(flow.action._getContext(axId)?.phase).toBe('action-2');
+    expect(dispatchEngineAction({ type: 'actionAdvance', actionId: axId }))
+      .toEqual({ ok: false, reason: 'not-allowed' });
+    expect(getActionContext(axId)?.phase).toBe('action-1');
 
     const container = document.createElement('div');
     const root = createRoot(container);
     act(() => root.render(createElement(ContactDriverProbe)));
 
-    expect(flow.action._getContext(axId)?.phase).toBe('action-2');
+    expect(getActionContext(axId)?.phase).toBe('action-1');
     act(() => root.unmount());
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   });
@@ -214,12 +235,13 @@ describe('useContactFlowDriver — _runDriverStep', () => {
     // 実際の ax を生成
     dispatchEngineAction({ type: 'actionDeclareChar', byUid: 's1', targetUid: 't1' });
     const axId = useGameStateStore.getState().activeActionId!;
-    const ax = flow.action._getContext(axId)!;
     // 強制的に phase を action-end へ
-    ax.phase = 'action-end';
+    const updatedAx = updateActionContext(axId, (context) => {
+      context.phase = 'action-end';
+    });
 
     const state = useGameStateStore.getState().gameState!;
-    _runDriverStep(state, ax);
+    _runDriverStep(state, updatedAx);
 
     expect(useGameStateStore.getState().activeActionId).toBeNull();
   });
@@ -233,9 +255,10 @@ describe('useContactFlowDriver — _runDriverStep', () => {
     useGameStateStore.setState({ gameState: s });
     dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'o1', targetUid: 's1' });
     const axId = useGameStateStore.getState().activeActionId!;
-    const ax = flow.action._getContext(axId)!;
-    ax.phase = 'action-1';
-    ax.firstUid = 's1';
+    const ax = updateActionContext(axId, (context) => {
+      context.phase = 'action-1';
+      context.firstUid = 's1';
+    });
 
     _runDriverStep(useGameStateStore.getState().gameState!, ax);
 
@@ -244,7 +267,7 @@ describe('useContactFlowDriver — _runDriverStep', () => {
       player: 'self',
       candidates: [],
     });
-    expect(flow.action._getContext(axId)?.phase).toBe('action-1');
+    expect(getActionContext(axId)?.phase).toBe('action-1');
   });
 
   it('keeps duplicate hand occurrences distinct in a contact decision', () => {
@@ -257,9 +280,10 @@ describe('useContactFlowDriver — _runDriverStep', () => {
     useGameStateStore.setState({ gameState: s });
     dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'o1', targetUid: 's1' });
     const axId = useGameStateStore.getState().activeActionId!;
-    const ax = flow.action._getContext(axId)!;
-    ax.phase = 'action-1';
-    ax.firstUid = 's1';
+    const ax = updateActionContext(axId, (context) => {
+      context.phase = 'action-1';
+      context.firstUid = 's1';
+    });
 
     _runDriverStep(useGameStateStore.getState().gameState!, ax);
 
@@ -279,16 +303,17 @@ describe('useContactFlowDriver — _runDriverStep', () => {
     useGameStateStore.setState({ gameState: s });
     dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'o1', targetUid: 's1' });
     const axId = useGameStateStore.getState().activeActionId!;
-    const ax = flow.action._getContext(axId)!;
-    ax.firstUid = 's1';
-    ax.secondUid = 'o1';
-    ax.firstActed = false;
-    ax.secondActed = true;
-    ax.phase = 'action-2';
+    updateActionContext(axId, (ax) => {
+      ax.firstUid = 's1';
+      ax.secondUid = 'o1';
+      ax.firstActed = false;
+      ax.secondActed = true;
+      ax.phase = 'action-2';
+    });
 
     dispatchEngineAction({ type: 'actionAdvance', actionId: axId });
-    expect(flow.action._getContext(axId)?.phase).toBe('action-1-redo');
-    _runDriverStep(useGameStateStore.getState().gameState!, ax);
+    expect(getActionContext(axId)?.phase).toBe('action-1-redo');
+    _runDriverStep(useGameStateStore.getState().gameState!, getActionContext(axId)!);
 
     expect(useContactModalStore.getState().cutInDisguise).toMatchObject({
       actionId: axId,

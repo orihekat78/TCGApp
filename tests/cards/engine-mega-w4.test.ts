@@ -38,6 +38,7 @@ import { B07096 } from '@/cards/ct-p07/B07096';
 import { B05041 } from '@/cards/ct-p05/B05041';
 import { B05041P } from '@/cards/ct-p05/B05041P';
 import type { CardDef, Effect, EffectCtx, GameState } from '@/engine/types';
+import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
 
 type G = { __humanPlayerSide?: 'self' | 'opp' | null };
 const setHuman = (s: 'self' | 'opp' | null) => { (globalThis as G).__humanPlayerSide = s; };
@@ -110,7 +111,7 @@ describe('W4 step1 r82: bindPick atom (pick-only bind → 排他 conditional)', 
     const pend = useGameStateStore.getState().pendingEffectPick;
     expect(pend, 'bindPick pending pick surface').not.toBeNull();
     expect(pend!.atomVerb).toBe('bindPick');
-    const r = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'victim#1' });
+    const r = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'victim#1' });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene[0]!.state, 'sleep → stun (印字通り)').toBe('stun');
@@ -118,7 +119,7 @@ describe('W4 step1 r82: bindPick atom (pick-only bind → 排他 conditional)', 
 
   it('happy-active: アクティブ対象を pick → スリープになる', () => {
     runPickBranch(stageStep1('active'));
-    const r = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'victim#1' });
+    const r = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'victim#1' });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene[0]!.state, 'active → sleep').toBe('sleep');
@@ -126,7 +127,7 @@ describe('W4 step1 r82: bindPick atom (pick-only bind → 排他 conditional)', 
 
   it('edge-stun: スタン対象を pick → 両分岐 false で状態不変 (rules/03)', () => {
     runPickBranch(stageStep1('stun'));
-    const r = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'victim#1' });
+    const r = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'victim#1' });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene[0]!.state, 'stun のまま (印字は stun 分岐に触れない)').toBe('stun');
@@ -134,7 +135,7 @@ describe('W4 step1 r82: bindPick atom (pick-only bind → 排他 conditional)', 
 
   it('edge-decline: pick を辞退 → bind 無し → 状態不変・crash なし', () => {
     runPickBranch(stageStep1('sleep'));
-    const r = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    const r = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene[0]!.state, 'decline で不変').toBe('sleep');
@@ -216,7 +217,7 @@ describe('W4 step1 B08035 怪盗キッド (shape + behavioral)', () => {
     surfacePendingSideChannels();
     const pend = useGameStateStore.getState().pendingEffectPick;
     expect(pend, 'a1 発火 → bindPick surface').not.toBeNull();
-    const r = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'victim#1' });
+    const r = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'victim#1' });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene[0]!.state, '解決編 sleep → stun').toBe('stun');
@@ -264,7 +265,7 @@ describe('W4 step1 B08035 怪盗キッド (shape + behavioral)', () => {
     const uids = pend!.candidates.map(c => c.uid);
     expect(uids, '裏向きセット持ちは候補').toContain('fd#1');
     expect(uids, '表向きのみのキャラは候補外 (hasFaceDownSetCards)').not.toContain('fu#1');
-    const r = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'fd#1' });
+    const r = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'fd#1' });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     const host = after.players.opp.scene.find(c => c.uid === 'fd#1')!;
@@ -346,7 +347,7 @@ describe('W4 step2 r83: enter:group + fromGroup (group-scoped 1-of-N)', () => {
     expect(uids.length, '母集合 = 同時登場2枚のみ (既存 decoy 除外)').toBe(2);
     expect(uids, 'decoy は fromGroup 外').not.toContain('decoy#1');
     const target = pend!.candidates.find(c => c.cardId === 'SB_LV3')!;
-    const r = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: target.uid });
+    const r = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: target.uid });
     expect(JSON.stringify(r)).toBe('{"ok":true}');
     const after = useGameStateStore.getState().gameState!;
     const pickedChar = after.players.self.scene.find(c => c.uid === target.uid)!;
@@ -416,7 +417,7 @@ describe('W4 step2 r83: enter:group + fromGroup (group-scoped 1-of-N)', () => {
     const pend = useGameStateStore.getState().pendingEffectPick;
     expect(pend, 'B01012 a1 発火').not.toBeNull();
     const target = pend!.candidates[0]!;
-    const r = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: target.uid });
+    const r = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: target.uid });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     const sb = after.players.self.scene.find(c => c.cardId === 'SB_LV3')!;
@@ -496,7 +497,7 @@ describe('W4 step3 r5: charStackCard fromSelf (scene→stack、非リムーブ�
     expect(pend, 'host pick surface').not.toBeNull();
     const uids = pend!.candidates.map(c => c.uid);
     expect(uids, '仮面ヤイバー (自分) は候補外').not.toContain('ky#1');
-    const r = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'host#1' });
+    const r = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'host#1' });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.some(c => c.uid === 'ky#1'), 'self は scene から離場').toBe(false);
@@ -528,7 +529,7 @@ describe('W4 step3 r5: charStackCard fromSelf (scene→stack、非リムーブ�
     // cascade; exact deck exhaustion and refresh are covered separately.
     s.players.self.deck = ['SB_LV3', 'SB_LV3B'];
     runChain(s, kyCtx());
-    const r = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'host#1' });
+    const r = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'host#1' });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.remove, 'set card リムーブ').toContain('SETX');
@@ -576,7 +577,7 @@ describe('W4 step3 r5: charStackCard fromSelf (scene→stack、非リムーブ�
     surfacePendingSideChannels();
     const pend = useGameStateStore.getState().pendingEffectPick;
     expect(pend, 'a2 発火 → host pick').not.toBeNull();
-    const r = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'host#1' });
+    const r = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'host#1' });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.some(c => c.uid === 'kyb#1'), 'B06008 は host の下へ').toBe(false);
@@ -590,7 +591,7 @@ describe('W4 step3 r5: charStackCard fromSelf (scene→stack、非リムーブ�
     s.players.self.scene = [sceneChar('KY_MR', 'kymr#1'), sceneChar('HOSTX', 'host#1')];
     s.players.self.deck = ['SB_LV3'];
     runChain(s, kyCtx('kymr#1', 'KY_MR'));
-    const r = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'host#1' });
+    const r = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'host#1' });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     { const stacked = after.players.self.scene.find(c => c.uid === 'host#1')!.stackedCards; expect(Array.isArray(stacked) ? stacked.length : stacked, 'MR も重なる').toBe(1); }
@@ -794,7 +795,7 @@ describe('W4 step7 r1: on-set-host protection rider (opponentRestrict remove/sle
     surfacePendingSideChannels();
     const pend = useGameStateStore.getState().pendingEffectPick;
     expect(pend?.atomVerb).toBe('charRemoveSetCard');
-    const r = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    const r = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene.find(c => c.uid === 'fdh#1')!.setCards.length, 'セット card は残る').toBe(1);
@@ -841,7 +842,7 @@ describe('W4 step7 r1: on-set-host protection rider (opponentRestrict remove/sle
     surfacePendingSideChannels();
     const pend = useGameStateStore.getState().pendingEffectPick;
     expect(pend, 'host pick surface').not.toBeNull();
-    const r = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'gh#2' });
+    const r = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'gh#2' });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     const host = after.players.self.scene.find(c => c.uid === 'gh#2')!;
