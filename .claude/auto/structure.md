@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 263
-- **ファイル数**: 5573
+- **ファイル数**: 5574
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -2000,6 +2000,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-06-03-lensf-fix-batch1-design.md` — 設計: Lens F 監査 高確度修正バッチ1 (A/B/G) (2026-06-03)
       - `2026-06-03-triggered-limit-and-d11016-guard-design.md` — 設計: triggered ability の limit enforcement + D11016 a1 ガード自己判定 (2026-06-03)
       - `2026-07-13-deck-builder-design.md` — Deck builder and launcher design
+      - `2026-08-03-private-hosted-release-design.md` — Private Hosted Release Design
 - **`meta-app/`**
   - **`src/`**
     - **`data/`**
