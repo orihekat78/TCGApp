@@ -8,7 +8,9 @@ import { useGameStateStore } from '@/ui/state/store';
 import { SAMPLE_DECK, SAMPLE_DECK_OPP } from '../../meta-app/src/data/sampleDeck';
 import { SetupScreen } from '../../meta-app/src/screens/SetupScreen';
 import { TutorialScreen } from '../../meta-app/src/screens/TutorialScreen';
+import { App } from '../../meta-app/src/App';
 import { useDecksStore } from '../../meta-app/src/state/decksStore';
+import { useMetaStore } from '../../meta-app/src/state/metaStore';
 import { endMatchSession } from '@/ui/services/matchSession';
 
 const { startMock } = vi.hoisted(() => ({ startMock: vi.fn() }));
@@ -51,8 +53,12 @@ describe('SetupScreen match-session lifecycle', () => {
     useConfirmation().reject();
     useTargetPickerStore.getState()._reset();
     useConfirmationStore.getState()._reset();
-    useDecksStore.setState({ decks: [SAMPLE_DECK, SAMPLE_DECK_OPP] });
+    useDecksStore.setState({
+      decks: [SAMPLE_DECK, SAMPLE_DECK_OPP],
+      activeDeckId: SAMPLE_DECK.id,
+    });
     useGameStateStore.setState({ gameState: null, activeActionId: null });
+    useMetaStore.setState({ _setupStartError: null });
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
     for (const key of pendingStoreKeys) useGameStateStore.setState({ [key]: null });
     const never = deferred<ReturnType<typeof createEmptyGameState>>();
@@ -65,6 +71,7 @@ describe('SetupScreen match-session lifecycle', () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    window.location.hash = '';
     const globals = globalThis as Record<string, unknown>;
     globals.__pendingEffectPickQueue = [];
     globals.__pendingEffectPickSide = null;
@@ -77,6 +84,49 @@ describe('SetupScreen match-session lifecycle', () => {
     expect(ready).not.toBeNull();
     act(() => ready!.click());
   }
+
+  it('HOMEで確定したデッキをプレイヤー1の初期選択にする', () => {
+    useDecksStore.setState({ activeDeckId: SAMPLE_DECK_OPP.id });
+    act(() => root.render(<SetupScreen onNav={() => undefined} />));
+
+    expect(container.querySelector('.setup-player-panel--self')?.getAttribute('data-deck-id'))
+      .toBe(SAMPLE_DECK_OPP.id);
+  });
+
+  it('共通ヘッダーと対戦準備に必要な実動操作を一画面へまとめる', () => {
+    act(() => root.render(<SetupScreen onNav={() => undefined} />));
+
+    const nav = container.querySelector('nav[aria-label="メインナビゲーション"]');
+    expect(Array.from(nav!.querySelectorAll('button')).map((button) => button.textContent?.trim())).toEqual([
+      'ホーム', 'デッキ', 'カード', 'ゲーム開始', 'チュートリアル', '履歴', '設定',
+    ]);
+    expect(nav!.querySelector('[aria-current="page"]')?.textContent?.trim()).toBe('ゲーム開始');
+    expect(container.querySelectorAll('.setup-player-panel')).toHaveLength(2);
+    expect(container.textContent).toContain('少年探偵団・標準');
+    expect(container.textContent).toContain('江戸川コナン');
+    expect(container.textContent).toContain('青の古城探索事件');
+    expect(container.textContent).toContain('警察・標準');
+    expect(container.textContent).toContain('萩原千速');
+    expect(container.textContent).toContain('千速と重悟の婚活パーティー');
+    expect(container.querySelectorAll('button[aria-label^="使用デッキを変更"]')).toHaveLength(2);
+    for (const label of ['CPU対戦', '観戦', '先攻', 'CPU難易度', 'ノーマル（固定）', 'デッキを入れ替え', 'ランダムに選択', '戻る', '対戦を開始']) {
+      expect(container.textContent).toContain(label);
+    }
+  });
+
+  it('デッキ変更は確認まで保留し、確定後に該当側だけ反映する', () => {
+    act(() => root.render(<SetupScreen onNav={() => undefined} />));
+    const selfChange = container.querySelector<HTMLButtonElement>('button[aria-label="使用デッキを変更（あなた）"]')!;
+    act(() => selfChange.click());
+    const choices = container.querySelectorAll<HTMLInputElement>('input[name="home-active-deck"]');
+    act(() => choices[1]!.click());
+    expect(container.querySelector('.setup-player-panel--self')?.getAttribute('data-deck-id')).toBe(SAMPLE_DECK.id);
+    const confirm = Array.from(container.querySelectorAll<HTMLButtonElement>('button'))
+      .find((button) => button.textContent?.trim() === 'このデッキを使用')!;
+    act(() => confirm.click());
+    expect(container.querySelector('.setup-player-panel--self')?.getAttribute('data-deck-id')).toBe(SAMPLE_DECK_OPP.id);
+    expect(container.querySelector('.setup-player-panel--opp')?.getAttribute('data-deck-id')).toBe(SAMPLE_DECK_OPP.id);
+  });
 
   it('新規開始はtarget/confirmation PromiseをcancelしUI action/pendingを全消去する', async () => {
     const targetDone = vi.fn();
@@ -119,13 +169,7 @@ describe('SetupScreen match-session lifecycle', () => {
     const ready = container.querySelector<HTMLButtonElement>('.meta-btn-ready')!;
     act(() => ready.click());
 
-    const selects = container.querySelectorAll<HTMLSelectElement>('select');
-    act(() => {
-      selects[0]!.value = SAMPLE_DECK_OPP.id;
-      selects[0]!.dispatchEvent(new Event('change', { bubbles: true }));
-      selects[1]!.value = SAMPLE_DECK.id;
-      selects[1]!.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+    act(() => container.querySelector<HTMLButtonElement>('button[aria-label="デッキを入れ替え"]')!.click());
     act(() => ready.click());
 
     expect(startMock.mock.calls[0]![0].id).toBe(SAMPLE_DECK.id);
@@ -153,6 +197,132 @@ describe('SetupScreen match-session lifecycle', () => {
     expect(observed).toBe('self');
   });
 
+  it('先攻のあなた・CPU・ランダムをengine optionへ正確に対応付ける', () => {
+    act(() => root.render(<SetupScreen onNav={() => undefined} />));
+    const button = (name: string) => Array.from(container.querySelectorAll<HTMLButtonElement>('button'))
+      .find((candidate) => candidate.textContent?.trim() === name)!;
+    const ready = container.querySelector<HTMLButtonElement>('.meta-btn-ready')!;
+
+    act(() => button('あなた').click());
+    act(() => ready.click());
+    act(() => button('CPU').click());
+    act(() => ready.click());
+    act(() => button('ランダム').click());
+    act(() => ready.click());
+
+    expect(startMock.mock.calls.map((call) => call[2]?.firstPlayer)).toEqual(['self', 'opp', undefined]);
+  });
+
+  it('観戦開始はownership・spectator store・engine option・履歴metadataを同時に設定する', () => {
+    act(() => root.render(<SetupScreen onNav={() => undefined} />));
+    const observe = Array.from(container.querySelectorAll<HTMLButtonElement>('button'))
+      .find((button) => button.textContent?.trim() === '観戦')!;
+    act(() => observe.click());
+    act(() => container.querySelector<HTMLButtonElement>('.meta-btn-ready')!.click());
+
+    expect((globalThis as { __humanPlayerSide?: unknown }).__humanPlayerSide).toBeNull();
+    expect(useGameStateStore.getState().spectatorMode).toBe(true);
+    expect(startMock.mock.calls[0]?.[2]?.spectator).toBe(true);
+    expect(useMetaStore.getState()._matchMeta).toEqual({
+      mode: 'observe',
+      selfDeckName: SAMPLE_DECK.name,
+      oppDeckName: SAMPLE_DECK_OPP.name,
+    });
+  });
+
+  it('ランダム選択は保存済みデッキだけを独立抽選し、モードと先攻を変えない', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.99);
+    act(() => root.render(<SetupScreen onNav={() => undefined} />));
+    const button = (name: string) => Array.from(container.querySelectorAll<HTMLButtonElement>('button'))
+      .find((candidate) => candidate.textContent?.trim() === name)!;
+    act(() => button('観戦').click());
+    act(() => button('あなた').click());
+    act(() => button('ランダムに選択').click());
+
+    expect(container.querySelector('.setup-player-panel--self')?.getAttribute('data-deck-id')).toBe(SAMPLE_DECK_OPP.id);
+    expect(container.querySelector('.setup-player-panel--opp')?.getAttribute('data-deck-id')).toBe(SAMPLE_DECK_OPP.id);
+    expect(button('観戦').getAttribute('aria-pressed')).toBe('true');
+    expect(button('あなた').getAttribute('aria-pressed')).toBe('true');
+    expect(container.querySelector('[data-deck-id="test-bug-274-public"]')).toBeNull();
+    vi.restoreAllMocks();
+  });
+
+  it('現在sessionの開始失敗だけを通知してSETUPへ戻し再試行可能にする', async () => {
+    const pending = deferred<ReturnType<typeof createEmptyGameState>>();
+    const nav = vi.fn();
+    startMock.mockReturnValue(pending.promise);
+    act(() => root.render(<SetupScreen onNav={nav} />));
+    const ready = container.querySelector<HTMLButtonElement>('.meta-btn-ready')!;
+    act(() => ready.click());
+    await act(async () => {
+      pending.reject(new Error('start failed'));
+      try { await pending.promise; } catch { /* expected */ }
+      await Promise.resolve();
+    });
+
+    expect(nav.mock.calls).toEqual([['match'], ['setup']]);
+    expect(container.querySelector('#setup-status')?.textContent).toContain('start failed');
+    expect(ready.disabled).toBe(false);
+    expect(ready.getAttribute('aria-busy')).toBe('false');
+  });
+
+  it('MATCH遷移でunmountされた後の開始失敗を、新しいSETUPへ引き継ぐ', async () => {
+    const pending = deferred<ReturnType<typeof createEmptyGameState>>();
+    startMock.mockReturnValue(pending.promise);
+    act(() => root.render(<SetupScreen onNav={() => undefined} />));
+    act(() => container.querySelector<HTMLButtonElement>('.meta-btn-ready')!.click());
+    act(() => root.render(<div>match route</div>));
+    await act(async () => {
+      pending.reject(new Error('route-crossing failure'));
+      try { await pending.promise; } catch { /* expected */ }
+      await Promise.resolve();
+    });
+    act(() => root.render(<SetupScreen onNav={() => undefined} />));
+
+    expect(container.querySelector('#setup-status')?.textContent).toContain('route-crossing failure');
+    expect(useMetaStore.getState()._setupStartError).toContain('route-crossing failure');
+  });
+
+  it('ends the actual App match session before returning to SETUP after start failure', async () => {
+    const pending = deferred<ReturnType<typeof createEmptyGameState>>();
+    startMock.mockReturnValue(pending.promise);
+    window.location.hash = '#setup';
+    act(() => root.render(<App />));
+
+    act(() => container.querySelectorAll<HTMLButtonElement>('button[aria-pressed]')[1]!.click());
+    act(() => container.querySelector<HTMLButtonElement>('.meta-btn-ready')!.click());
+    expect(window.location.hash).toBe('#match');
+    await act(async () => {
+      await new Promise<void>((resolve) => {
+        window.addEventListener('hashchange', () => resolve(), { once: true });
+      });
+    });
+    act(() => useGameStateStore.setState({ pendingEffectOptional: {} as never }));
+    expect(useGameStateStore.getState().spectatorMode).toBe(true);
+
+    const setupHashChange = new Promise<void>((resolve) => {
+      window.addEventListener('hashchange', () => resolve(), { once: true });
+    });
+    await act(async () => {
+      pending.reject(new Error('actual-app failure'));
+      try { await pending.promise; } catch { /* expected */ }
+      await Promise.resolve();
+    });
+    await act(async () => {
+      await setupHashChange;
+    });
+    await act(async () => {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    });
+
+    expect(window.location.hash).toBe('#setup');
+    expect(container.querySelector('#setup-status')?.textContent).toContain('actual-app failure');
+    expect(document.activeElement).toBe(container.querySelector('.meta-btn-ready'));
+    expect(useGameStateStore.getState().pendingEffectOptional).toBeNull();
+    expect(useGameStateStore.getState().spectatorMode).toBe(false);
+    expect((globalThis as { __humanPlayerSide?: unknown }).__humanPlayerSide).toBeNull();
+  });
+
   it('human to observe clears ownership before start-time optional processing', () => {
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
     let observed: unknown;
@@ -162,9 +332,9 @@ describe('SetupScreen match-session lifecycle', () => {
       return deferred<ReturnType<typeof createEmptyGameState>>().promise;
     });
     act(() => root.render(<SetupScreen onNav={() => undefined} />));
-    const modeTiles = container.querySelectorAll<HTMLButtonElement>('button[style*="width: 420px"]');
-    expect(modeTiles).toHaveLength(2);
-    act(() => modeTiles[1]!.click());
+    const observe = Array.from(container.querySelectorAll<HTMLButtonElement>('button'))
+      .find((button) => button.textContent?.trim() === '観戦')!;
+    act(() => observe.click());
     act(() => container.querySelector<HTMLButtonElement>('.meta-btn-ready')!.click());
     expect(observed).toBeNull();
     expect(useGameStateStore.getState().pendingEffectOptional).toBeNull();

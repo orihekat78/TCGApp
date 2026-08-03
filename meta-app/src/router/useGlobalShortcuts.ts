@@ -35,10 +35,15 @@ export function useGlobalShortcuts({ route, onNav }: Options): {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      // input/textarea にフォーカス中は無効
-      const t = e.target as HTMLElement | null;
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) {
-        return;
+      // フォームや操作要素の標準キーボード操作をグローバル遷移より優先する。
+      const t = e.target;
+      if (t instanceof Element) {
+        const textEntry =
+          (t instanceof HTMLElement && t.isContentEditable) ||
+          t.closest('input, textarea');
+        if (textEntry) return;
+        const interactive = t.closest('button, a[href], [role="button"], [role="link"]');
+        if (interactive && (e.key === 'Enter' || e.key === ' ')) return;
       }
       if (e.altKey || e.ctrlKey || e.metaKey) return;
 

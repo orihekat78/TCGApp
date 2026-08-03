@@ -9,8 +9,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 ## サマリ
 
 - **対象ルート**: `.`
-- **ディレクトリ数**: 263
-- **ファイル数**: 5573
+- **ディレクトリ数**: 265
+- **ファイル数**: 5589
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1991,6 +1991,11 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-07-26-ctp10-card-wave.md` — CT-P10 Card Wave Implementation Plan
       - `2026-07-26-hand-occurrence-rebase.md` — Hand occurrence rebase Implementation Plan
       - `2026-07-26-rule-manual-ver2-5.md` — Rule Manual Ver.2.5 Implementation Plan
+      - `2026-08-02-game-start-premium-treatment.md` — Game Start Premium Treatment Implementation Plan
+      - `2026-08-02-home-screen-only.md` — HOME Screen Only Implementation Plan
+      - `2026-08-03-home-deck-selector.md` — HOME Deck Selector Implementation Plan
+      - `2026-08-03-home-landscape-20-80.md` — HOME Landscape 20/80 Implementation Plan
+      - `2026-08-03-setup-screen-refresh.md` — SETUP Screen Refresh Plan
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
@@ -2000,6 +2005,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-06-03-lensf-fix-batch1-design.md` — 設計: Lens F 監査 高確度修正バッチ1 (A/B/G) (2026-06-03)
       - `2026-06-03-triggered-limit-and-d11016-guard-design.md` — 設計: triggered ability の limit enforcement + D11016 a1 ガード自己判定 (2026-06-03)
       - `2026-07-13-deck-builder-design.md` — Deck builder and launcher design
+      - `2026-08-02-game-start-premium-treatment-design.md` — ゲーム開始ボタン高級感調整 Design
+      - `2026-08-03-home-deck-selector-design.md` — HOME使用デッキ選択モーダル設計
+      - `2026-08-03-setup-screen-refresh-design.md` — SETUP Screen Refresh Design
 - **`meta-app/`**
   - **`src/`**
     - **`data/`**
@@ -2008,6 +2016,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `cardPool.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md + 11-cards-rebuild.md
       - `sampleDeck.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md
       - `types.ts` — spec: .claude/specs/meta-ui/02-design-system.md + 05-engine-stub.md
+    - **`hooks/`**
+      - `useOfficialNews.ts` — Aborted requests are intentionally ignored during route changes.
     - **`router/`**
       - `routes.ts` — spec: .claude/specs/meta-ui/03-routing.md
       - `useGlobalShortcuts.ts` — spec: .claude/specs/meta-ui/03-routing.md
@@ -2023,14 +2033,17 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `CardsScreen.tsx` — spec: .claude/specs/meta-ui/07-screens-library.md + 11-cards-rebuild.md
       - `DeckEditor.tsx` — spec: .claude/specs/meta-ui/07-screens-library.md + 12-screens-rebuild.…
       - `HistoryScreen.tsx` — spec: .claude/specs/meta-ui/08-screens-reference.md + 12-screens-rebuild.md
-      - `HomeScreen.tsx` — spec: .claude/specs/meta-ui/06-screens-play-flow.md + 12-screens-rebuild.md
+      - `HomeDeckSelectorDialog.tsx`
+      - `HomeScreen.tsx`
       - `PlaceholderScreen.tsx` — spec: .claude/specs/meta-ui/03-routing.md
       - `RealMatchView.tsx` — spec: .claude/specs/meta-ui/10-integration-with-src.md
       - `ReplayScreen.tsx` — spec: .claude/specs/meta-ui/08-screens-reference.md + 12-screens-rebuild.md
       - `ResultScreen.tsx` — spec: .claude/specs/meta-ui/06-screens-play-flow.md + 10-integration-with-src.…
       - `SettingsScreen.tsx` — spec: .claude/specs/meta-ui/08-screens-reference.md + 12-screens-rebuild.md
-      - `SetupScreen.tsx` — spec: .claude/specs/meta-ui/06-screens-play-flow.md + 10-integration-with-src.…
+      - `SetupScreen.tsx`
       - `TutorialScreen.tsx` — spec: .claude/specs/meta-ui/14-tutorial-complete.md + 15-tutorial-lesson-viewer.…
+    - **`services/`**
+      - `officialNews.ts` — Storage can be unavailable in private browsing; network data still renders.
     - **`shared/`**
       - `AppTopBar.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 03-routing.md
       - `Button.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
@@ -2042,8 +2055,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `LoadingDots.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
       - `MetaBg.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
       - `MetaCard.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 13-implementations.md
-      - `NavHUD.tsx` — spec: .claude/specs/meta-ui/03-routing.md
       - `NetworkStatus.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
+      - `PrimaryHeader.tsx`
       - `WarningBanner.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 07-screens-library.md
       - `index.ts` — spec: .claude/specs/meta-ui/02-design-system.md
       - `interactionStyles.ts` — spec: .claude/specs/meta-ui/02-design-system.md
@@ -2076,7 +2089,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `engine-stub.spec.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md + 10-integration-with-src.md
       - `filter-decoy.spec.ts` — spec: card-addition-checklist.md §7 「画面処理 = テキスト文言」の deck-builder 適用。
       - `golden-path.spec.ts` — spec: .claude/specs/meta-ui/09-phasing-and-verification.…
+      - `home.spec.ts`
       - `setup-p2-custom-binding.spec.ts` — Keep the shipped legal D08 recipe shape, but replace one unique print so
+      - `setup-refresh.spec.ts`
       - `smoke.spec.ts` — spec: .claude/specs/meta-ui/09-phasing-and-verification.md
       - `tutorial.spec.ts` — spec: .claude/specs/meta-ui/14-tutorial-complete.md + 15-tutorial-lesson-viewer.…
   - `index.html`
@@ -5680,13 +5695,16 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `misread-e2e.test.ts` — tests/integration/misread-e2e.test.ts — Phase 5 advance Misread E2E 結合検証
     - `phase5-smoke.test.ts` — tests/integration/phase5-smoke — Phase 5 Group F: registerAll + 簡単なゲーム進行
   - **`meta/`**
+    - `HomeScreen.test.tsx`
     - `RealMatchView.initializing.test.tsx`
     - `ResultScreen.mvp.test.tsx`
     - `SetupScreen.lifecycle.test.tsx`
     - `cardDisplayResolvers.test.ts`
     - `customGameStart.side-mapping.test.ts`
+    - `decksStore.test.ts`
     - `engineStub.deck-limit.test.ts` — rules: 02-deck-construction.md
     - `matchSession.race.test.ts` — Leaving match for the result route must clear transient ownership while
+    - `officialNews.test.ts`
     - `playwright-config.test.ts`
   - **`scripts/`**
     - `build-tcg-runtime-packet.test.ts`

@@ -68,7 +68,7 @@ async function installDecks(page: Page): Promise<void> {
 }
 
 async function startAndRead(page: Page): Promise<BindingSnapshot> {
-  await page.getByRole('button', { name: 'P1', exact: true }).click();
+  await page.getByRole('button', { name: 'あなた', exact: true }).click();
   await page.locator('.meta-btn-ready').click();
   await page.waitForURL(/#match/);
   await page.locator('button.mulligan-skip').click();
@@ -106,14 +106,20 @@ async function startAndRead(page: Page): Promise<BindingSnapshot> {
   return result;
 }
 
+async function chooseDeck(page: Page, side: 'あなた' | 'CPU', deckName: string): Promise<void> {
+  await page.getByRole('button', { name: `使用デッキを変更（${side}）` }).click();
+  const dialog = page.getByRole('dialog', { name: '使用デッキを選択' });
+  await dialog.locator('.home-deck-choice').filter({ hasText: deckName }).click();
+  await dialog.getByRole('button', { name: 'このデッキを使用' }).click();
+}
+
 test('BUG-215: P2 custom selection binds to CPU and remains correct after reverse-order new session', async ({ page }) => {
   await installDecks(page);
   await page.goto('/#setup');
-  await expect(page.getByText('MATCH SETUP')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'ゲームセッティング' })).toBeVisible();
 
-  const selects = page.locator('select');
-  await selects.nth(0).selectOption('sample-d08');
-  await selects.nth(1).selectOption('custom-p2');
+  await chooseDeck(page, 'あなた', '少年探偵団・標準');
+  await chooseDeck(page, 'CPU', 'TEST-P2-専用');
   const first = await startAndRead(page);
   expect(first.self).toEqual({ partner: 'D08001', caseId: 'D08026', cards: expanded(D08_CARDS) });
   expect(first.opp).toEqual({ partner: 'PR220', caseId: 'B06043', cards: expanded(CUSTOM_CARDS) });
@@ -122,9 +128,9 @@ test('BUG-215: P2 custom selection binds to CPU and remains correct after revers
   // exercises the reverse binding without a reload masking stale state.
   await page.evaluate(() => { location.hash = '#setup'; });
   await page.waitForURL(/#setup/);
-  await expect(page.getByText('MATCH SETUP')).toBeVisible();
-  await page.locator('select').nth(0).selectOption('custom-p2');
-  await page.locator('select').nth(1).selectOption('sample-d08');
+  await expect(page.getByRole('heading', { name: 'ゲームセッティング' })).toBeVisible();
+  await chooseDeck(page, 'あなた', 'TEST-P2-専用');
+  await chooseDeck(page, 'CPU', '少年探偵団・標準');
   const second = await startAndRead(page);
   expect(second.self).toEqual({ partner: 'PR220', caseId: 'B06043', cards: expanded(CUSTOM_CARDS) });
   expect(second.opp).toEqual({ partner: 'D08001', caseId: 'D08026', cards: expanded(D08_CARDS) });

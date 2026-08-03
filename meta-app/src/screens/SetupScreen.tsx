@@ -1,410 +1,259 @@
-// spec: .claude/specs/meta-ui/06-screens-play-flow.md + 10-integration-with-src.md + 12-screens-rebuild.md
-// 原典: design-mockups_v2/08-setup.jsx
-// Phase 11-C ロジック (performGameStart async + setGameState + setSpectatorMode + toDeckId + nav('match') 先実行) は保持
-// Phase 13-B: UI rebuild (ModeTile + PlayerConfigPanel + ConfigRow + MiniMetric + SwapButton + SetupMatchOptions)
-
-import { useState } from 'react';
-import { T, shade } from '../shared/tokens';
-import { AppTopBar } from '../shared/AppTopBar';
-import { SetupButton, SetupReadyButton } from '../shared/Button';
-import { MetaCard } from '../shared/MetaCard';
-import { useDecksStore } from '../state/decksStore';
-import { useMetaStore } from '../state/metaStore';
-import { CARD_POOL, cardIdOf } from '../data/cardPool';
-import type { Route } from '../router/routes';
-import type { DeckRecord } from '../data/types';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactNode, RefObject } from 'react';
+import { CardArt } from '@/ui/components/CardArt';
+import { useGameStateStore } from '@/ui/state/store';
+import { useTutorialStore } from '@/ui/state/tutorialStore';
+import {
+  beginMatchSession,
+  commitMatchSession,
+  endMatchSession,
+  isCurrentMatchSession,
+} from '@/ui/services/matchSession';
+import { CARD_POOL } from '../data/cardPool';
 import {
   BUG_274_PARTNER_CARD,
   BUG_274_PUBLIC_DECK,
   BUG_274_PUBLIC_DECK_ID,
 } from '../data/bug274ValidationDeck';
-import { useGameStateStore } from '@/ui/state/store';
+import type { DeckRecord } from '../data/types';
+import type { Route } from '../router/routes';
+import { PrimaryHeader } from '../shared/PrimaryHeader';
+import { useDecksStore } from '../state/decksStore';
+import { useMetaStore } from '../state/metaStore';
 import { isPlayable } from '../util/deckBridge';
 import { customGameStart } from '../util/customGameStart';
-import { useTutorialStore } from '@/ui/state/tutorialStore';
-import { beginMatchSession, commitMatchSession, isCurrentMatchSession } from '@/ui/services/matchSession';
+import { HomeDeckSelectorDialog } from './HomeDeckSelectorDialog';
 
 interface Props {
-  onNav: (r: Route) => void;
+  onNav: (route: Route) => void;
 }
 
 type Mode = 'solo' | 'observe';
 type FirstChoice = 'random' | 'p1' | 'p2';
+type DeckSide = 'self' | 'opp';
 
 export function SetupScreen({ onNav }: Props) {
-  const decks = useDecksStore((s) => s.decks);
+  const decks = useDecksStore((state) => state.decks);
+  const activeDeckId = useDecksStore((state) => state.activeDeckId);
+  const initialSelfDeckId = decks.some((deck) => deck.id === activeDeckId && isPlayable(deck))
+    ? activeDeckId
+    : decks.find((deck) => isPlayable(deck))?.id ?? '';
   const [mode, setMode] = useState<Mode>('solo');
   const [firstChoice, setFirstChoice] = useState<FirstChoice>('random');
-  const [selfDeckId, setSelfDeckId] = useState<string>(decks[0]?.id ?? '');
-  const [oppDeckId, setOppDeckId] = useState<string>(decks[1]?.id ?? decks[0]?.id ?? '');
-  const [error, setError] = useState<string | null>(null);
+  const [selfDeckId, setSelfDeckId] = useState(initialSelfDeckId);
+  const [oppDeckId, setOppDeckId] = useState(decks[1]?.id ?? decks[0]?.id ?? '');
+  const [deckDialogSide, setDeckDialogSide] = useState<DeckSide | null>(null);
+  const [isStarting, setIsStarting] = useState(false);
+  const setupStartError = useMetaStore((state) => state._setupStartError);
+  const setSetupStartError = useMetaStore((state) => state.setSetupStartError);
+  const selfChangeRef = useRef<HTMLButtonElement>(null);
+  const oppChangeRef = useRef<HTMLButtonElement>(null);
+  const readyRef = useRef<HTMLButtonElement>(null);
   const selectableDecks = decks.some((deck) => deck.id === BUG_274_PUBLIC_DECK_ID)
     ? decks
     : [...decks, BUG_274_PUBLIC_DECK];
-
-  const selfDeck = selectableDecks.find((d) => d.id === selfDeckId);
-  const oppDeck = selectableDecks.find((d) => d.id === oppDeckId);
+  const selfDeck = selectableDecks.find((deck) => deck.id === selfDeckId);
+  const oppDeck = selectableDecks.find((deck) => deck.id === oppDeckId);
   const ready = isPlayable(selfDeck) && isPlayable(oppDeck);
 
+  useEffect(() => {
+    if (!setupStartError) return;
+    requestAnimationFrame(() => readyRef.current?.focus());
+  }, [setupStartError]);
+
+  const closeDeckDialog = () => {
+    const trigger = deckDialogSide === 'self' ? selfChangeRef.current : oppChangeRef.current;
+    setDeckDialogSide(null);
+    trigger?.focus();
+    requestAnimationFrame(() => trigger?.focus());
+  };
+
   const handleReady = () => {
-    if (!selfDeck || !oppDeck) return;
-    if (!isPlayable(selfDeck) || !isPlayable(oppDeck)) {
-      setError('デッキ検証エラー: 40 枚ちょうど + 同 ID ≤ 3 + パートナー1 + 事件1 を満たす必要があります');
+    if (!selfDeck || !oppDeck || !isPlayable(selfDeck) || !isPlayable(oppDeck)) {
+      setSetupStartError('デッキ検証エラー: 対戦可能なデッキを選択してください');
+      readyRef.current?.focus();
       return;
     }
-    setError(null);
+    setSetupStartError(null);
+    setIsStarting(true);
     const session = beginMatchSession(mode === 'observe' ? null : 'self');
     useGameStateStore.getState().setSpectatorMode(mode === 'observe');
-    // Phase 18: 対戦種別・デッキ名を ResultScreen の履歴記録用に控える
     useMetaStore.getState().setMatchMeta({ mode, selfDeckName: selfDeck.name, oppDeckName: oppDeck.name });
-    useTutorialStore.getState().exit(); // 通常対戦はガイド overlay を出さない (Phase 17-D)
+    useTutorialStore.getState().exit();
     onNav('match');
-    // Phase 14-A: customGameStart で任意 DeckRecord ペアから実機対戦を開始
-    // 観戦モード (両者 AI) では人間マリガンを出さない。先攻は先攻トグルに従う。
     const firstPlayer = firstChoice === 'p1' ? 'self' : firstChoice === 'p2' ? 'opp' : undefined;
     customGameStart(selfDeck, oppDeck, {
       spectator: mode === 'observe',
       firstPlayer,
       isSessionCurrent: () => isCurrentMatchSession(session),
     })
-      .then((gs) => { commitMatchSession(session, gs); })
-      .catch((err: unknown) => {
+      .then((gameState) => { commitMatchSession(session, gameState); })
+      .catch((reason: unknown) => {
         if (!isCurrentMatchSession(session)) return;
-        console.error('[Phase 14] customGameStart failed:', err);
-        setError(String(err));
+        console.error('[Phase 14] customGameStart failed:', reason);
+        setSetupStartError(String(reason));
+        setIsStarting(false);
+        endMatchSession();
         onNav('setup');
+        requestAnimationFrame(() => readyRef.current?.focus());
       });
   };
 
   const handleSwap = () => {
-    const tmp = selfDeckId;
     setSelfDeckId(oppDeckId);
-    setOppDeckId(tmp);
+    setOppDeckId(selfDeckId);
   };
 
   const handleRandomize = () => {
-    if (decks.length < 1) return;
-    const self = decks[Math.floor(Math.random() * decks.length)]!;
-    const opp = decks[Math.floor(Math.random() * decks.length)]!;
-    setSelfDeckId(self.id);
-    setOppDeckId(opp.id);
+    const playableDecks = decks.filter((deck) => isPlayable(deck));
+    if (!playableDecks.length) return;
+    setSelfDeckId(playableDecks[Math.floor(Math.random() * playableDecks.length)]!.id);
+    setOppDeckId(playableDecks[Math.floor(Math.random() * playableDecks.length)]!.id);
   };
 
   return (
-    <div style={{ position: 'absolute', inset: 0, fontFamily: T.fontJp, color: T.textPrimary }}>
-      <AppTopBar page="setup" onNav={(r) => onNav(r as Route)} />
+    <div className="setup-screen">
+      <PrimaryHeader current="setup" onNav={onNav} />
+      <main className="setup-main" aria-labelledby="setup-title">
+        <header className="setup-heading">
+          <p>対戦準備</p>
+          <h1 id="setup-title">ゲームセッティング</h1>
+        </header>
 
-      <div style={{ position: 'absolute', left: 0, right: 0, top: 84, textAlign: 'center' }}>
-        <div style={{ fontFamily: T.fontMono, fontSize: 11, color: T.gold, letterSpacing: '0.4em' }}>
-          MATCH SETUP
-        </div>
-        <div style={{ fontFamily: T.fontSerif, fontSize: 22, fontWeight: 800, letterSpacing: '0.18em', marginTop: 4 }}>
-          対 戦 準 備
-        </div>
-      </div>
+        <section className="setup-stage" aria-label="対戦設定">
+          <SetupPlayerPanel
+            side="self"
+            label="あなた"
+            deck={selfDeck}
+            triggerRef={selfChangeRef}
+            onChangeDeck={() => setDeckDialogSide('self')}
+          />
 
-      <div style={{ position: 'absolute', left: '50%', top: 156, transform: 'translateX(-50%)', display: 'flex', gap: 22 }}>
-        <ModeTile active={mode === 'solo'} title="単独捜査" sub="SOLO INVESTIGATION"
-          tag="あなたが探偵側" desc="あなたが操作。相手は AI。標準のプレイモード。"
-          iconLeft="YOU" iconRight="AI" accentLeft={T.green} accentRight={T.purple}
-          onClick={() => setMode('solo')} />
-        <ModeTile active={mode === 'observe'} title="観察ルーム" sub="OBSERVE MODE"
-          tag="AI 同士の検証" desc="両プレイヤーを AI が操作。デッキ検証や AI 挙動の観察に。"
-          iconLeft="AI" iconRight="AI" accentLeft={T.neonBlue} accentRight={T.purple}
-          onClick={() => setMode('observe')} />
-      </div>
-
-      <div style={{
-        position: 'absolute', left: 60, right: 60, top: 440,
-        display: 'flex', gap: 18, justifyContent: 'center', alignItems: 'flex-start',
-      }}>
-        <PlayerConfigPanel slot="P1" label="プレイヤー 1" mode={mode === 'observe' ? 'cpu' : 'human'}
-        deck={selfDeck} decks={selectableDecks} onSelectDeck={(id) => {
-          setSelfDeckId(id);
-          if (id === BUG_274_PUBLIC_DECK_ID) setFirstChoice('p1');
-        }} />
-        <SwapButton onClick={handleSwap} />
-        <PlayerConfigPanel slot="P2" label="プレイヤー 2" mode="cpu"
-        deck={oppDeck} decks={selectableDecks} onSelectDeck={setOppDeckId} />
-      </div>
-
-      <SetupMatchOptions firstChoice={firstChoice} onFirstChoice={setFirstChoice} />
-
-      <div style={{
-        position: 'absolute', left: 0, right: 0, bottom: 48,
-        display: 'flex', justifyContent: 'center', gap: 14, alignItems: 'center',
-      }}>
-        <SetupButton label="戻る" sub="BACK" onClick={() => onNav('home')} />
-        <SetupButton label="ランダム" sub="RANDOMIZE" onClick={handleRandomize} />
-        {ready ? (
-          <SetupReadyButton onClick={handleReady} />
-        ) : (
-          <div style={{
-            padding: '8px 14px', color: T.red,
-            background: 'rgba(200,64,64,0.12)',
-            border: `1px solid ${T.red}66`, borderRadius: 3,
-            fontFamily: T.fontMono, fontSize: 11, letterSpacing: '0.12em',
-          }}>
-            検証 NG · 40 枚 + ID ≤ 3 + パートナー1 + 事件1
+          <div className="setup-controls">
+            <span className="setup-vs" aria-hidden="true">VS</span>
+            <ControlGroup label="プレイモード">
+              <ChoiceButton selected={mode === 'solo'} onClick={() => setMode('solo')}>CPU対戦</ChoiceButton>
+              <ChoiceButton selected={mode === 'observe'} onClick={() => setMode('observe')}>観戦</ChoiceButton>
+            </ControlGroup>
+            <ControlGroup label="先攻">
+              <ChoiceButton selected={firstChoice === 'p1'} onClick={() => setFirstChoice('p1')}>あなた</ChoiceButton>
+              <ChoiceButton selected={firstChoice === 'p2'} onClick={() => setFirstChoice('p2')}>CPU</ChoiceButton>
+              <ChoiceButton selected={firstChoice === 'random'} onClick={() => setFirstChoice('random')}>ランダム</ChoiceButton>
+            </ControlGroup>
+            <div className="setup-fixed-option" aria-label="CPU難易度 ノーマル 固定">
+              <span>CPU難易度</span>
+              <strong>ノーマル（固定）</strong>
+            </div>
+            <div className="setup-deck-tools">
+              <button type="button" aria-label="デッキを入れ替え" onClick={handleSwap}>⇄ <span>デッキを入れ替え</span></button>
+              <button type="button" onClick={handleRandomize}>ランダムに選択</button>
+            </div>
           </div>
-        )}
-      </div>
 
-      {error && (
-        <div style={{
-          position: 'absolute', left: '50%', bottom: 16, transform: 'translateX(-50%)',
-          padding: '6px 12px', color: T.red, maxWidth: 600, textAlign: 'center',
-          background: 'rgba(200,64,64,0.12)', border: `1px solid ${T.red}66`, borderRadius: 3,
-          fontFamily: T.fontMono, fontSize: 11,
-        }}>{error}</div>
+          <SetupPlayerPanel
+            side="opp"
+            label="CPU"
+            deck={oppDeck}
+            triggerRef={oppChangeRef}
+            onChangeDeck={() => setDeckDialogSide('opp')}
+          />
+        </section>
+
+        <footer className="setup-actions">
+          <button className="setup-back" type="button" onClick={() => onNav('home')}>‹ <span>戻る</span></button>
+          <button
+            ref={readyRef}
+            className="meta-btn-ready setup-start"
+            type="button"
+            disabled={!ready}
+            aria-busy={isStarting}
+            aria-describedby="setup-status"
+            onClick={handleReady}
+          >
+            <span aria-hidden="true">▶</span>
+            {isStarting ? '対戦を準備中' : '対戦を開始'}
+          </button>
+        </footer>
+        <p id="setup-status" className={`setup-status${setupStartError ? ' is-error' : ''}`} aria-live="polite">
+          {setupStartError ?? (!ready ? '対戦可能なデッキを両方に選択してください' : isStarting ? '対戦を準備しています' : '')}
+        </p>
+      </main>
+
+      {deckDialogSide && (
+        <HomeDeckSelectorDialog
+          decks={selectableDecks}
+          selectedId={deckDialogSide === 'self' ? selfDeckId : oppDeckId}
+          onClose={closeDeckDialog}
+          onConfirm={(id) => {
+            if (deckDialogSide === 'self') {
+              setSelfDeckId(id);
+              if (id === BUG_274_PUBLIC_DECK_ID) setFirstChoice('p1');
+            } else {
+              setOppDeckId(id);
+            }
+            closeDeckDialog();
+          }}
+        />
       )}
     </div>
   );
 }
 
-// ---- ModeTile ----
-
-function ModeTile({ active, title, sub, tag, desc, iconLeft, iconRight, accentLeft, accentRight, onClick }: {
-  active: boolean; title: string; sub: string; tag: string; desc: string;
-  iconLeft: string; iconRight: string; accentLeft: string; accentRight: string;
-  onClick: () => void;
-}) {
-  return (
-    <button onClick={onClick} style={{
-      width: 420, height: 252, padding: '22px 24px',
-      background: active
-        ? `linear-gradient(180deg, rgba(255,215,0,0.12), rgba(13,38,64,0.95))`
-        : 'linear-gradient(180deg, rgba(13,38,64,0.85), rgba(13,38,64,0.55))',
-      border: active ? `2px solid ${T.gold}` : `1px solid rgba(78,195,255,0.25)`,
-      borderRadius: 4,
-      boxShadow: active
-        ? `0 0 28px ${T.gold}33, 0 12px 24px rgba(0,0,0,0.6)`
-        : `0 8px 18px rgba(0,0,0,0.5)`,
-      cursor: 'pointer', position: 'relative', textAlign: 'left',
-      color: T.textPrimary,
-      transition: 'all 150ms',
-    }}>
-      {active && (
-        <div style={{
-          position: 'absolute', right: 14, top: 14,
-          padding: '2px 8px', background: T.gold, color: '#1a1208',
-          fontFamily: T.fontMono, fontSize: 10, fontWeight: 800,
-          letterSpacing: '0.18em', borderRadius: 2,
-        }}>SELECTED</div>
-      )}
-      <div style={{ fontFamily: T.fontMono, fontSize: 11, color: active ? T.gold : T.textMuted, letterSpacing: '0.3em' }}>{sub}</div>
-      <div style={{ fontFamily: T.fontSerif, fontSize: 28, fontWeight: 800, letterSpacing: '0.06em', marginTop: 2 }}>{title}</div>
-      <div style={{
-        display: 'inline-block', marginTop: 6, padding: '2px 10px',
-        fontSize: 11, color: T.neonBlue,
-        background: 'rgba(78,195,255,0.12)',
-        border: `1px solid ${T.neonBlue}55`, borderRadius: 2,
-      }}>{tag}</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 18, marginBottom: 10 }}>
-        <ModeAvatar label={iconLeft} accent={accentLeft} />
-        <div style={{ fontFamily: T.fontSerif, fontSize: 26, fontWeight: 800, color: T.gold, letterSpacing: '0.1em' }}>vs</div>
-        <ModeAvatar label={iconRight} accent={accentRight} />
-      </div>
-      <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>{desc}</div>
-    </button>
-  );
-}
-
-function ModeAvatar({ label, accent }: { label: string; accent: string }) {
-  return (
-    <div style={{
-      width: 60, height: 60, borderRadius: 4,
-      background: `linear-gradient(135deg, ${accent}aa, ${shade(accent, -0.4)})`,
-      border: `2px solid ${shade(accent, 0.2)}`,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: T.fontMono, fontSize: 20, fontWeight: 800, color: '#fff',
-      letterSpacing: '0.05em',
-      boxShadow: `0 0 12px ${accent}55, inset 0 1px 0 rgba(255,255,255,0.3)`,
-    }}>
-      {label}
-    </div>
-  );
-}
-
-// ---- Player config panel ----
-
-function PlayerConfigPanel({ slot, label, mode, deck, decks, onSelectDeck }: {
-  slot: string; label: string; mode: 'human' | 'cpu';
-  deck: DeckRecord | undefined; decks: DeckRecord[]; onSelectDeck: (id: string) => void;
+function SetupPlayerPanel({ side, label, deck, triggerRef, onChangeDeck }: {
+  side: DeckSide;
+  label: string;
+  deck: DeckRecord | undefined;
+  triggerRef: RefObject<HTMLButtonElement | null>;
+  onChangeDeck: () => void;
 }) {
   const partner = deck?.id === BUG_274_PUBLIC_DECK_ID
     ? BUG_274_PARTNER_CARD
-    : deck ? CARD_POOL.find((c) => c.num === deck.partner) : undefined;
-  const isHuman = mode === 'human';
-  const accent = isHuman ? T.green : T.purple;
+    : deck ? CARD_POOL.find((card) => card.num === deck.partner) : undefined;
+  const incident = deck ? CARD_POOL.find((card) => card.num === deck.case) : undefined;
   return (
-    <div style={{
-      width: 480, padding: '16px 18px',
-      background: 'linear-gradient(180deg, rgba(13,38,64,0.92), rgba(13,38,64,0.65))',
-      border: `1.5px solid ${accent}66`, borderRadius: 4,
-      boxShadow: `0 0 18px ${accent}22, 0 8px 18px rgba(0,0,0,0.5)`,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 12 }}>
-        <span style={{
-          fontFamily: T.fontMono, fontSize: 13, fontWeight: 800,
-          color: accent, letterSpacing: '0.2em',
-          padding: '4px 10px', background: `${accent}22`, borderRadius: 2,
-        }}>{slot}</span>
-        <span style={{ fontSize: 15, fontWeight: 700, color: T.textPrimary }}>{label}</span>
-        <span style={{
-          marginLeft: 'auto', padding: '3px 10px',
-          background: `${accent}22`, border: `1px solid ${accent}66`, borderRadius: 2,
-          fontFamily: T.fontMono, fontSize: 10, fontWeight: 800,
-          color: accent, letterSpacing: '0.2em',
-        }}>
-          {isHuman ? 'DETECTIVE' : 'AI'}
-        </span>
-      </div>
-
-      <div style={{ display: 'flex', gap: 14 }}>
-        {partner && (
-          <div style={{ filter: `drop-shadow(0 0 10px ${accent}55)` }}>
-            <MetaCard card={partner} w={110} badge="partner" hoverable={false} />
-          </div>
-        )}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <ConfigSelect label="デッキ" value={deck?.id ?? ''} accent={T.neonBlue}
-            options={decks.map((d) => ({ id: d.id, label: d.name }))}
-            onChange={onSelectDeck} />
-          <ConfigRow label="パートナー" value={partner?.name ?? '—'} accent={T.gold} />
-          {!isHuman ? (
-            <>
-              <ConfigRow label="AI 難易度" value="標準" accent={T.purple} />
-              <ConfigRow label="戦略" value="サンプルプリセット" accent={T.purple} />
-            </>
-          ) : (
-            <ConfigRow label="プレイヤー" value="TANTEI_01 · 探偵 II" accent={T.green} />
-          )}
+    <article className={`setup-player-panel setup-player-panel--${side}`} data-deck-id={deck?.id ?? ''}>
+      <h2>{label}</h2>
+      <div className="setup-player-identity">
+        <div className="setup-partner-art">
+          {partner && <CardArt cardId={partner.num} alt="" />}
+        </div>
+        <div className="setup-player-copy">
+          <strong title={deck?.name}>{deck?.name ?? 'デッキ未選択'}</strong>
+          <span title={partner?.name}>{partner?.name ?? 'パートナー未設定'}</span>
+          <span title={incident?.name}>{incident?.name ?? '事件未設定'}</span>
+        </div>
+        <div className="setup-incident-art">
+          {incident && <CardArt cardId={incident.num} alt="" />}
         </div>
       </div>
-
-      <div style={{
-        marginTop: 12, padding: '10px 12px',
-        background: 'rgba(0,0,0,0.4)',
-        border: `1px solid ${accent}33`, borderRadius: 3,
-        display: 'flex', gap: 18,
-      }}>
-        <MiniMetric label="枚数" value={`${deck?.cards.reduce((s, e) => s + e.count, 0) ?? 0}`} accent={T.neonBlue} />
-        <MiniMetric label="種類" value={`${deck ? new Set(deck.cards.map((e) => cardIdOf(e.num))).size : 0}`} accent={T.gold} />
-        <MiniMetric label="モード" value={isHuman ? 'HUMAN' : 'CPU'} accent={accent} />
-      </div>
-    </div>
+      <button
+        ref={triggerRef}
+        className="setup-change-deck"
+        type="button"
+        aria-label={`使用デッキを変更（${label}）`}
+        onClick={onChangeDeck}
+      >
+        使用デッキを変更
+      </button>
+    </article>
   );
 }
 
-function ConfigRow({ label, value, accent }: { label: string; value: string; accent: string }) {
+function ControlGroup({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 10,
-      padding: '6px 10px', background: 'rgba(0,0,0,0.3)',
-      border: `1px solid ${accent}33`, borderRadius: 2,
-    }}>
-      <div style={{
-        width: 80, flexShrink: 0, fontFamily: T.fontMono, fontSize: 10, fontWeight: 700,
-        color: T.textMuted, letterSpacing: '0.15em',
-      }}>{label}</div>
-      <div style={{ flex: 1, fontSize: 12, color: T.textPrimary, fontWeight: 600 }}>{value}</div>
-    </div>
+    <fieldset className="setup-control-group">
+      <legend>{label}</legend>
+      <div>{children}</div>
+    </fieldset>
   );
 }
 
-function ConfigSelect({ label, value, accent, options, onChange }: {
-  label: string; value: string; accent: string;
-  options: { id: string; label: string }[]; onChange: (id: string) => void;
+function ChoiceButton({ selected, onClick, children }: {
+  selected: boolean;
+  onClick: () => void;
+  children: ReactNode;
 }) {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 10,
-      padding: '6px 10px', background: 'rgba(0,0,0,0.3)',
-      border: `1px solid ${accent}33`, borderRadius: 2,
-    }}>
-      <div style={{
-        width: 80, flexShrink: 0, fontFamily: T.fontMono, fontSize: 10, fontWeight: 700,
-        color: T.textMuted, letterSpacing: '0.15em',
-      }}>{label}</div>
-      <select value={value} onChange={(e) => onChange(e.target.value)} style={{
-        flex: 1, padding: '3px 8px',
-        background: 'rgba(0,0,0,0.6)', color: T.textPrimary,
-        border: `1px solid ${accent}55`, borderRadius: 2,
-        fontFamily: T.fontJp, fontSize: 12, cursor: 'pointer',
-      }}>
-        {options.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-      </select>
-    </div>
-  );
-}
-
-function MiniMetric({ label, value, accent }: { label: string; value: string; accent: string }) {
-  return (
-    <div style={{ lineHeight: 1.2 }}>
-      <div style={{ fontFamily: T.fontMono, fontSize: 9, color: T.textMuted, letterSpacing: '0.18em' }}>{label}</div>
-      <div style={{ fontFamily: T.fontMono, fontSize: 14, fontWeight: 800, color: accent, marginTop: 1 }}>{value}</div>
-    </div>
-  );
-}
-
-function SwapButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button onClick={onClick} style={{
-      width: 46, alignSelf: 'center', padding: '18px 0',
-      background: 'rgba(0,0,0,0.5)', border: `1px solid ${T.gold}66`,
-      borderRadius: 4, cursor: 'pointer', textAlign: 'center',
-    }}>
-      <svg width="20" height="20" viewBox="0 0 22 22" style={{ margin: '0 auto', display: 'block' }} aria-hidden="true">
-        <path d="M3 8 L17 8 L13 4 M19 14 L5 14 L9 18" stroke={T.gold} strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-      <div style={{ fontFamily: T.fontMono, fontSize: 8, color: T.gold, letterSpacing: '0.2em', marginTop: 4 }}>SWAP</div>
-    </button>
-  );
-}
-
-// ---- Match options ----
-
-function SetupMatchOptions({ firstChoice, onFirstChoice }: {
-  firstChoice: FirstChoice; onFirstChoice: (c: FirstChoice) => void;
-}) {
-  // 先攻のみ実機に反映 (customGameStart の firstPlayer)。他は将来カスタム options で対応する視覚要素。
-  const firstIdx = firstChoice === 'p1' ? 0 : firstChoice === 'p2' ? 1 : 2;
-  return (
-    <div style={{
-      position: 'absolute', left: '50%', bottom: 110, transform: 'translateX(-50%)',
-      display: 'flex', gap: 22,
-      padding: '12px 22px', background: 'rgba(0,0,0,0.5)',
-      border: `1px solid rgba(78,195,255,0.25)`, borderRadius: 4,
-    }}>
-      <OptionToggle label="先攻" options={['P1', 'P2', 'ランダム']} active={firstIdx}
-        onSelect={(i) => onFirstChoice(i === 0 ? 'p1' : i === 1 ? 'p2' : 'random')} />
-      <OptionToggle label="演出速度" options={['0.5×', '1.0×', '1.5×', '2.0×']} active={1} />
-      <OptionToggle label="自動進行" options={['ON', 'OFF']} active={0} />
-      <OptionToggle label="効果ログ" options={['簡易', '詳細', '非表示']} active={1} />
-    </div>
-  );
-}
-
-function OptionToggle({ label, options, active, onSelect }: {
-  label: string; options: string[]; active: number; onSelect?: (i: number) => void;
-}) {
-  return (
-    <div>
-      <div style={{ fontFamily: T.fontMono, fontSize: 9, color: T.textMuted, letterSpacing: '0.2em', marginBottom: 4 }}>{label}</div>
-      <div style={{ display: 'flex', borderRadius: 2, overflow: 'hidden', border: `1px solid rgba(78,195,255,0.3)` }}>
-        {options.map((o, i) => (
-          <button key={i} onClick={onSelect ? () => onSelect(i) : undefined} disabled={!onSelect} style={{
-            padding: '4px 10px',
-            background: i === active ? T.gold : 'rgba(0,0,0,0.3)',
-            color: i === active ? '#1a1208' : T.textSecondary,
-            fontFamily: T.fontJp, fontSize: 11, fontWeight: 700,
-            border: 'none',
-            borderRight: i < options.length - 1 ? `1px solid rgba(78,195,255,0.2)` : 'none',
-            cursor: onSelect ? 'pointer' : 'default',
-          }}>{o}</button>
-        ))}
-      </div>
-    </div>
+    <button type="button" aria-pressed={selected} onClick={onClick}>{children}</button>
   );
 }

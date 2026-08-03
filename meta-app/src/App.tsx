@@ -7,7 +7,6 @@ import { useGlobalShortcuts } from './router/useGlobalShortcuts';
 import type { Route } from './router/routes';
 import { MetaShell } from './MetaShell';
 import { HelpOverlay } from './shared/HelpOverlay';
-import { NavHUD } from './shared/NavHUD';
 import { HomeScreen } from './screens/HomeScreen';
 import { SetupScreen } from './screens/SetupScreen';
 import { RealMatchView } from './screens/RealMatchView';
@@ -26,16 +25,18 @@ export function App() {
   // で完結するため、matchId の受け渡しは不要 (ResultScreen は useGameStateStore 直読)
   const [selectedReplayId, setSelectedReplayId] = useState<string | undefined>(undefined);
   const previousRoute = useRef(route);
+  const currentRoute = useRef(route);
+  currentRoute.current = route;
 
   const nav = useCallback((next: Route) => {
     // Settle mulligan/picker promises before the route owner unmounts. The
     // passive effect below remains a backstop for browser/hash navigation.
-    if (route === 'match' && next !== 'match') {
+    if (currentRoute.current === 'match' && next !== 'match') {
       endMatchSession({ preserveGameState: next === 'result' });
     }
     previousRoute.current = next;
     rawNav(next);
-  }, [rawNav, route]);
+  }, [rawNav]);
   const { helpOpen, setHelpOpen } = useGlobalShortcuts({ route, onNav: nav });
 
   useEffect(() => {
@@ -58,7 +59,6 @@ export function App() {
       <MetaShell route={route}>
         {renderScreen(route, nav, selectedReplayId, onReplay)}
       </MetaShell>
-      <NavHUD route={route} onNav={nav} visible={import.meta.env.DEV && route !== 'match'} />
       <HelpOverlay open={helpOpen} onClose={() => setHelpOpen(false)} />
     </>
   );

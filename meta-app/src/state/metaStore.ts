@@ -39,8 +39,11 @@ interface MetaState {
   _pendingPracticeChapter: number | null;
   // Phase 18: 対戦開始時 (SetupScreen) にセット、ResultScreen が MatchRecord 構築時に consume (transient)
   _matchMeta: MatchMeta | null;
+  // SETUPからMATCHへ遷移した後の非同期開始失敗を、再生成されたSETUPへ引き継ぐtransient state。
+  _setupStartError: string | null;
   setMatchMeta: (m: MatchMeta) => void;
   consumeMatchMeta: () => MatchMeta | null;
+  setSetupStartError: (message: string | null) => void;
   setSettings: (patch: Partial<Settings>) => void;
   toggleFavorite: (cardNum: string) => void;
   isFavorited: (cardNum: string) => boolean;
@@ -72,12 +75,14 @@ export const useMetaStore = create<MetaState>()(
       _hasHydrated: false,
       _pendingPracticeChapter: null,
       _matchMeta: null,
+      _setupStartError: null,
       setMatchMeta: (m) => set({ _matchMeta: m }),
       consumeMatchMeta: () => {
         const v = get()._matchMeta;
         if (v !== null) set({ _matchMeta: null });
         return v;
       },
+      setSetupStartError: (message) => set({ _setupStartError: message }),
       setSettings: (patch) =>
         set((s) => ({ settings: { ...s.settings, ...patch } })),
       toggleFavorite: (cardNum) =>
@@ -125,7 +130,7 @@ export const useMetaStore = create<MetaState>()(
     {
       name: 'conan.meta.v1.settings',
       version: 1,
-      // 永続化するのは settings のみ。_matchMeta / _pendingPracticeChapter は
+      // 永続化するのは settings のみ。_matchMeta / _setupStartError / _pendingPracticeChapter は
       // セッション内 transient なので localStorage に書かない (古い値の読み込みを防ぐ)。
       partialize: (s) => ({ settings: s.settings }),
       onRehydrateStorage: () => (state) => {

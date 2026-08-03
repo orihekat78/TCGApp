@@ -2,9 +2,11 @@ import { test, expect } from '@playwright/test';
 
 test('BUG-274: public fixture exposes multiple partner abilities and Escape cancels the choice', async ({ page }) => {
   await page.goto('/#setup');
-  const decks = page.locator('select');
-  await decks.nth(0).selectOption('test-bug-274-public');
-  await page.getByRole('button', { name: 'P1', exact: true }).click();
+  await page.getByRole('button', { name: '使用デッキを変更（あなた）' }).click();
+  const dialog = page.getByRole('dialog', { name: '使用デッキを選択' });
+  await dialog.locator('.home-deck-choice').filter({ hasText: 'BUG-274' }).click();
+  await dialog.getByRole('button', { name: 'このデッキを使用' }).click();
+  await page.getByRole('button', { name: 'あなた', exact: true }).click();
   await page.locator('.meta-btn-ready').click();
   await page.waitForURL(/#match/);
   await page.locator('button.mulligan-skip').click();

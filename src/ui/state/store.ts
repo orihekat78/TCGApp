@@ -407,6 +407,7 @@ export const MATCH_SESSION_RESET_STATE = {
   activeCardUid: null,
   activeCardLabel: null,
   oppMoveTick: 0,
+  spectatorMode: false,
   isAiPaused: false,
   aiStepCounter: 0,
   pendingEffectPick: null,

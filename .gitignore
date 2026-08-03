@@ -15,6 +15,7 @@ coverage/
 .tmp-*
 *.mp4
 *.png
+!meta-app/src/assets/detective-conan-logo.png
 
 # IDE
 .vscode/

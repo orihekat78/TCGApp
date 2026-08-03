@@ -8,7 +8,7 @@
 //   - Playmat + 14+ modals/overlays
 //   - 終局検知 → onMatchEnd (5174 側で nav('result'))
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Playmat } from '@/ui/components/Playmat';
 import { MulliganModal } from '@/ui/components/MulliganModal';
 import { OppTurnOverlay } from '@/ui/components/OppTurnOverlay';
@@ -56,9 +56,11 @@ export function RealMatchView({ onMatchEnd }: Props) {
   useGameStateStore((s) => s.aiStepCounter);
 
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
+  const initialHumanPlayerSide = useRef<'self' | null>(spectatorMode ? null : 'self');
   useEffect(() => {
-    _setHumanPlayerSide(spectatorMode ? null : 'self');
-  }, [spectatorMode]);
+    _setHumanPlayerSide(initialHumanPlayerSide.current);
+    return () => _setHumanPlayerSide(null);
+  }, []);
 
   // 4 driver hooks (src/App.tsx と同じ)
   const replayDriver = useReplayDriver();
