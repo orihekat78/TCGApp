@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 264
-- **ファイル数**: 5577
+- **ファイル数**: 5578
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5836,6 +5836,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 - **`user_request/`** — ユーザーからの要望テキスト (triage 元データ)
   - `20260521_01.txt`
   - `20260522_01.txt`
+- `.gitattributes`
 - `.gitignore` — Git 除外パターン
 - `.mcp.json`
 - `AGENTS.md` — AGENTS.md - Conan TCG Codex Router
