@@ -38,6 +38,10 @@ describe('engine.cards.* registry namespace', () => {
     expect(got?.names).toEqual(['江戸川コナン']);
   });
 
+  it('does not expose the Node-only TSV loader in the browser registry', () => {
+    expect(cards).not.toHaveProperty('load');
+  });
+
   it('all() returns the registered count', () => {
     cards.register(makeChar('A1', ['Alpha']));
     cards.register(makeChar('A2', ['Beta']));

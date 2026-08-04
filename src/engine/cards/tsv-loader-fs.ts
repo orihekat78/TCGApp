@@ -5,9 +5,8 @@
 // 設計メモ:
 //   - tsv-loader.ts (pure parseTsv) から node:fs 依存を分離した Node 経路 API。
 //   - cards/index.ts / engine/index.ts からは **意図的に re-export しない**。
-//     ブラウザバンドルに node:fs externalized proxy が混入するのを避けるため、
-//     registry.ts の async `load()` から `await import()` で動的にロードする。
-//   - tests / scripts は直接 `from '@/engine/cards/tsv-loader-fs'` で import 可能。
+//     ブラウザバンドルに node:fs externalized proxy が混入するのを避ける。
+//   - Node専用のtests / scriptsだけがこのモジュールを直接importする。
 
 import { readFileSync } from 'node:fs';
 import { resolve as resolvePath, dirname } from 'node:path';
@@ -28,14 +27,17 @@ const CARDS_DATA_DIR = resolvePath(PROJECT_ROOT, '.claude', 'specs', 'cards-data
  * セット内の全 TSV (partner/character/event/case) を読みこみ CardDef[] にする。
  * abilities は空配列 (Phase 5 Group B-E で共通クラス側から merge する)。
  */
-export function loadSet(setCode: 'CT-D08' | 'CT-D11'): CardDef[] {
+export function loadSet(
+  setCode: 'CT-D08' | 'CT-D11',
+  readText: (file: string) => string = file => readFileSync(file, 'utf8'),
+): CardDef[] {
   const setDir = setCode.toLowerCase();
   const dir = resolvePath(CARDS_DATA_DIR, setDir);
   const out: CardDef[] = [];
   const kinds: CardDef['kind'][] = ['partner', 'character', 'event', 'case'];
   for (const k of kinds) {
     const file = resolvePath(dir, `${k}.tsv`);
-    const text = readFileSync(file, 'utf8');
+    const text = readText(file);
     out.push(...parseTsv(text, k));
   }
   return out;

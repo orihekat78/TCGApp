@@ -31,18 +31,21 @@
 
 `start.bat` が自動で以下を行います（[scripts/setup-and-run.ps1](scripts/setup-and-run.ps1)）：
 
-- Node.js のチェック（未導入なら `winget` で LTS を自動インストール）
-- 依存関係のインストール（`npm ci`。初回のみ、最新ならスキップ）
+- Node.js 24.x のチェック（未導入なら `winget` で LTS を導入、24以外は停止）
+- npm 11.12.1 のチェック（異なる場合は導入コマンドを表示して停止）
+- 依存関係のインストール（`npm ci`。起動ごとに実行し、不完全な状態を再利用しない）
 - 開発サーバー起動（別ウィンドウ）＋ 既定ブラウザで **`http://localhost:5173`** を自動オープン
 
 → ブラウザで「対戦開始」を押せばプレイ開始。**終了はサーバーウィンドウを閉じる**だけ。
 
-> winget が無い環境では、案内に従い [nodejs.org](https://nodejs.org/ja) から Node LTS を入れて再実行してください。
+> winget が無い環境では、[nodejs.org](https://nodejs.org/ja) から Node.js 24.x を入れて再実行してください。
 
 ## 起動（手動 / 開発者向け）
 
+Node.js 24.x と npm 11.12.1 を使用します。
+
 ```sh
-npm install      # または npm ci（package-lock.json から確実に再現）
+npm ci           # package-lock.json から固定依存を再現
 npm run dev      # http://localhost:5173/ — 人間 vs CPU を end-to-end でプレイ
 npm test         # Vitest (unit + integration)
 npm run test:e2e # Playwright (headed default)
