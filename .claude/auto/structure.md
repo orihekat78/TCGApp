@@ -9,8 +9,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 ## サマリ
 
 - **対象ルート**: `.`
-- **ディレクトリ数**: 264
-- **ファイル数**: 5578
+- **ディレクトリ数**: 265
+- **ファイル数**: 5585
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -2152,6 +2152,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - **`hybrid/`**
     - `finish.cjs`
     - `prepare.cjs`
+  - **`private-hosted/`**
+    - `manifest.ts`
+    - `prepare-internal.ts`
+    - `prepare.ps1`
+    - `prepare.ts`
+    - `types.ts`
   - **`smoke/`**
     - `aggregate.ts` — scripts/smoke/aggregate — Phase 9-A smoke aggregation (pure)
     - `format-md.ts` — scripts/smoke/format-md — Phase 9-A smoke Markdown formatter (pure)
@@ -5693,6 +5699,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `playwright-config.test.ts`
   - **`release/`**
     - `private-hosted-headers.test.ts`
+    - `private-hosted-manifest.test.ts`
+    - `private-hosted-prepare.test.ts` — @ts-expect-error Public release preparation cannot replace the build.
   - **`scripts/`**
     - `build-tcg-runtime-packet.test.ts`
     - `check-codex-quality.test.ts`

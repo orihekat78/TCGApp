@@ -41,7 +41,7 @@
 ## 2026-08-04: Private hosted Phase 1 static boundary
 
 - Scope is static-release preparation only. No Cloudflare resource or public
-  endpoint was created; Phase 2 owns account, Access policy, and deployment.
+  endpoint was created; later release phases own Access policy and deployment.
 - The browser registry no longer exposes the unused dynamic Node loader.
   Direct Node-only `loadSet` remains supported and has an always-running test.
 - Existing card-image behavior is unchanged: official remote URLs at runtime
@@ -62,3 +62,17 @@
   then dependency-install fail-open plus stale README guidance. Final
   adversarial review is OK with no P0-P3; horizontal audit is OK with no
   P0-P2 and only a non-blocking source-string-test maintenance note.
+
+## 2026-08-04: Private hosted Phase 2 payload authority
+
+- Scope is inspected payload creation only. No Cloudflare resource, upload, or
+  public endpoint was created.
+- Preparation requires the canonical clean HEAD, reviewed raw Vite config,
+  pinned toolchain, two identical builds, and post-build ignored-input audits.
+- The fixed PowerShell launcher clears ambient authority, pins its CWD and TSX
+  config/cache/temp, and leaves dependency trust to Phase 3's preceding npm ci.
+- Staging and evidence are separate, deterministic, and atomically published.
+- Focused release tests pass 140/140 with one platform skip. Final adversarial
+  review is OK with no P0-P3; no engine, UI, or product caller changed.
+- Final gates pass: typecheck, production build, 889 Vitest files / 7,168
+  tests, full lint, generated-doc check, diff check, and dependency audit.
