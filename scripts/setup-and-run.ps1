@@ -4,9 +4,11 @@
 #       開発サーバー起動 → 既定ブラウザでロビー(http://localhost:5173)を開く。
 # 通常は repo 直下の start.bat から呼ばれる（ダブルクリック起動）。
 #
-# 方針: 既存環境を壊さない。Node 未導入時のみ winget で LTS 導入を試みる。
+# 方針: Node 24.x / npm 11.12.1 を必須とし、既存環境の自動更新はしない。
 
 $ErrorActionPreference = 'Stop'
+$RequiredNodeMajor = 24
+$RequiredNpmVersion = '11.12.1'
 # スクリプトは scripts/ 配下 → 一つ上が repo ルート
 Set-Location (Join-Path $PSScriptRoot '..')
 $repo = (Get-Location).Path
@@ -64,48 +66,38 @@ if (-not $node) {
     }
   } else {
     Write-Warning 'winget が利用できません。'
-    Write-Host    'https://nodejs.org/ja から Node.js LTS をインストール後、start.bat を再実行してください。'
+    Write-Host    'https://nodejs.org/ja から Node.js 24.x をインストール後、start.bat を再実行してください。'
     Pause-And-Exit 1
   }
 }
 
-# バージョン下限チェック（Vite 8 は Node 20.19+ / 22.12+ を要求）
+# 固定toolchain契約。異なる版ではlockfileを再現できないため起動しない。
 $major = 0
 if ($node -match 'v(\d+)\.') { $major = [int]$Matches[1] }
-if ($major -gt 0 -and $major -lt 20) {
-  Write-Warning ('Node {0} は古い可能性があります（推奨: 20 以上）。動作しない場合は Node LTS に更新してください。' -f $node)
+if ($major -ne $RequiredNodeMajor) {
+  Write-Warning ('Node {0} は対象外です。Node 24.x が必要です。' -f $node)
+  Write-Host 'https://nodejs.org/ja から Node.js 24.x を導入して再実行してください。'
+  Pause-And-Exit 1
 }
-Write-Host ('[1/3] Node {0} / npm {1} OK' -f $node, (& npm -v)) -ForegroundColor Green
+$npmVersion = (& npm -v)
+if ($npmVersion -ne $RequiredNpmVersion) {
+  Write-Warning ('npm {0} は対象外です。npm {1} が必要です。' -f $npmVersion, $RequiredNpmVersion)
+  Write-Host ('導入コマンド: npm install --global npm@{0}' -f $RequiredNpmVersion)
+  Pause-And-Exit 1
+}
+Write-Host ('[1/3] Node {0} / npm {1} OK' -f $node, $npmVersion) -ForegroundColor Green
 Write-Host ''
 
-# ---- 2. 依存インストール（fresh clone のみ。最新なら skip） ----
-$needInstall = $true
-if (Test-Path 'node_modules') {
-  if (Test-Path 'package-lock.json') {
-    $lock = (Get-Item 'package-lock.json').LastWriteTime
-    $nm   = (Get-Item 'node_modules').LastWriteTime
-    if ($nm -ge $lock) { $needInstall = $false }
-  } else { $needInstall = $false }
+# ---- 2. 依存インストール（毎回lockfileからクリーン再現） ----
+Write-Host '[2/3] 依存関係を確認中（少し時間がかかります）...' -ForegroundColor Yellow
+if (-not (Test-Path 'package-lock.json')) {
+  Write-Warning 'package-lock.json がありません。固定依存を確認できないため起動を中止します。'
+  Pause-And-Exit 1
 }
-
-if ($needInstall) {
-  Write-Host '[2/3] 依存関係をインストール中（少し時間がかかります）...' -ForegroundColor Yellow
-  if (Test-Path 'package-lock.json') {
-    & npm ci
-    if ($LASTEXITCODE -ne 0) {
-      Write-Warning 'npm ci に失敗。npm install で再試行します...'
-      & npm install
-    }
-  } else {
-    & npm install
-  }
-  if ($LASTEXITCODE -ne 0) {
-    Write-Warning '依存インストールに失敗しました。ネットワーク接続を確認して再実行してください。'
-    Pause-And-Exit 1
-  }
-} else {
-  Write-Host '[2/3] 依存関係は最新です（インストールをスキップ）。' -ForegroundColor Green
-  Write-Host '      ※ 強制再インストールは node_modules フォルダを削除して再実行してください。'
+& npm ci
+if ($LASTEXITCODE -ne 0) {
+  Write-Warning 'npm ci に失敗しました。lockfileとネットワーク接続を確認してください。'
+  Pause-And-Exit 1
 }
 Write-Host ''
 

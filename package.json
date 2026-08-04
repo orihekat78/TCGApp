@@ -69,6 +69,10 @@
   "author": "",
   "license": "ISC",
   "type": "module",
+  "packageManager": "npm@11.12.1",
+  "engines": {
+    "node": "24.x"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.60.0",
@@ -90,7 +94,8 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.60.0",
     "vite": "^8.0.11",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.5",
+    "wrangler": "4.118.0"
   },
   "simple-git-hooks": {
     "pre-commit": "npm run docs:check && npm run lint:bugs && npm run lint:listener && npm run lint:card-addition && npm run lint:side-channel && npm run lint:component-testid && npm run lint:ok-false-pattern && npm run lint:test-pair && npm run lint:icon-abilities"

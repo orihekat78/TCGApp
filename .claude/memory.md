@@ -37,3 +37,28 @@
   private deck/reveal surface exposed to spectator consumers.
 - The separate UI-quality worktree continued independently from 63 to 69
   changed paths during this task. It remains unmerged and untouched here.
+
+## 2026-08-04: Private hosted Phase 1 static boundary
+
+- Scope is static-release preparation only. No Cloudflare resource or public
+  endpoint was created; Phase 2 owns account, Access policy, and deployment.
+- The browser registry no longer exposes the unused dynamic Node loader.
+  Direct Node-only `loadSet` remains supported and has an always-running test.
+- Existing card-image behavior is unchanged: official remote URLs at runtime
+  with the deterministic local SVG placeholder on error. No card art is built
+  into `dist` or stored by a browser image helper.
+- Release tests pin one exact `_headers`, Node/npm/Wrangler versions, and reject
+  source maps, server/runtime files, Node browser chunks, and known card-image
+  payloads. Unrelated UI raster assets remain permitted.
+- Setup, README, and both CI workflows enforce Node 24.x and npm 11.12.1.
+  Local setup runs `npm ci` on every launch and fails closed instead of reusing
+  a potentially partial dependency installation.
+- Horizontal search found no product caller of removed `cards.load`, image
+  fetch/cache helpers, or other browser import of the Node TSV loader.
+- Final gates pass: typecheck, production build, 887 Vitest files / 7,028
+  tests, 1,000-game smoke with zero timeout/exception, full lint and commit
+  lints, generated-doc check, diff check, and production dependency audit.
+- Review iterations closed two P2 findings: incomplete toolchain propagation,
+  then dependency-install fail-open plus stale README guidance. Final
+  adversarial review is OK with no P0-P3; horizontal audit is OK with no
+  P0-P2 and only a non-blocking source-string-test maintenance note.

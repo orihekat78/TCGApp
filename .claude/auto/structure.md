@@ -9,8 +9,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 ## サマリ
 
 - **対象ルート**: `.`
-- **ディレクトリ数**: 263
-- **ファイル数**: 5574
+- **ディレクトリ数**: 264
+- **ファイル数**: 5577
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -2086,6 +2086,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - `tsconfig.node.json`
   - `vite.config.meta.ts` — spec: .claude/specs/meta-ui/01-project-setup.md
 - **`public/`**
+  - `_headers`
   - `favicon.svg`
 - **`scripts/`** — ビルド・メンテナンスツール
   - **`_archive/`**
@@ -4750,7 +4751,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useTopBar.ts` — Phase 7 Task 7.12: TopBar selector hook
     - **`services/`**
       - `actionLabel.ts` — Phase 8.10b: LogEntry の action 文字列 を人間可読な日本語に変換
-      - `cardImage.ts` — Phase 7 Task 7.15: カード画像実行時 fetch + 二段キャッシュ + フォールバック
+      - `cardImage.ts` — data: URI SVG — モックの .silhouette 相当 (60×84px 想定)
       - `cardResolvers.ts` — Phase 7 demo wiring: cardId → 表示用メタ解決
       - `deckBuilder.ts` — Task 8.4b: MVP DeckPair builder
       - `gameStarter.ts` — Task 8.4b: 正規 turn-1 GameState 構築
@@ -5445,6 +5446,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `state-owned-runtime.test.ts`
     - **`cards/`**
       - `registry.test.ts` — engine.cards.* — registry namespace tests
+      - `tsv-loader-fs.test.ts` — Node-only loadSet retention test with deterministic, non-private fixture data.
       - `tsv-loader.test.ts` — engine.cards.* — TSV loader tests
     - **`cond/`**
       - `binding-keys-read.test.ts`
@@ -5689,6 +5691,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `engineStub.deck-limit.test.ts` — rules: 02-deck-construction.md
     - `matchSession.race.test.ts` — Leaving match for the result route must clear transient ownership while
     - `playwright-config.test.ts`
+  - **`release/`**
+    - `private-hosted-headers.test.ts`
   - **`scripts/`**
     - `build-tcg-runtime-packet.test.ts`
     - `check-codex-quality.test.ts`
@@ -5813,7 +5817,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useGlobalShortcuts.test.tsx`
     - **`services/`**
       - `actionLabel.test.ts` — Phase 8.10b: actionLabel pure 関数テスト
-      - `cardImage.test.ts` — Phase 7 Task 7.15: cardImage service tests
+      - `cardImage.test.ts`
       - `cardResolvers.test.ts` — Demo wiring: cardResolvers tests
       - `deckBuilder.test.ts` — Task 8.4b: deckBuilder unit tests
       - `gameStarter.test.ts` — Task 8.4b: performGameStart integration test

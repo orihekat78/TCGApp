@@ -16,7 +16,6 @@
 - `byName`
 - `byTrait`
 - `get`
-- `load`
 - `register`
 - `unload`
 - `validate`

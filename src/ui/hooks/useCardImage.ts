@@ -1,13 +1,11 @@
 // useCardImage — cardId から公式 CDN 画像 URL を構築する React フック (Phase 9-C)
 //
-// 法務スタンス (CLAUDE.md):
-//   - 完全ローカル限定運用
-//   - 画像はリポジトリ非同梱、実行時都度フェッチ
+// 配信方針 (AGENTS.md):
+//   - 固定・記名済みの少人数だけが認証後に利用
+//   - 画像はリポジトリにも配信物にも同梱しない
 //   - CDN URL は公式 takaratomy ホストを参照、binary は <img> が直接読込
 //
 // 設計メモ (CORS 制約への対応):
-//   - 公式 CDN は `Access-Control-Allow-Origin` を返さないため、`fetch HEAD` で
-//     到達性検証する旧設計 (cardImage.ts) はブラウザでブロックされる。
 //   - 一方 `<img src="...">` は CORS の影響を受けない (canvas でない限り)。
 //   - 本フックは URL 文字列を同期的に返すだけ。失敗時は CardArt 側で
 //     `<img onError>` を捕まえて placeholder にフォールバックする。

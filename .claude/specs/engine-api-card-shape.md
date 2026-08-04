@@ -56,11 +56,10 @@ type CharacterDef = CardDef & {
 };
 ```
 
-## 登録 / ロード
+## 登録 / 参照
 
 ```typescript
 engine.cards.register(def: CardDef): void
-engine.cards.load(setCode: string): Promise<void>   // 例: 'CT-D08'
 engine.cards.get(id): CardDef|undefined
 engine.cards.all(): CardDef[]
 engine.cards.byTrait(trait): CardDef[]
