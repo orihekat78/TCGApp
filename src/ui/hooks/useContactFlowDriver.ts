@@ -34,6 +34,7 @@ import type { GameState, ActionContext } from '@/engine/types/index.js';
 import type { GuardPickerCandidate } from '../components/GuardPickerModal.js';
 import type { CutInDisguiseCandidate } from '../components/CutInDisguisePickerModal.js';
 import { pendingOwnerOrderGroup } from '@/engine/resolve/index.js';
+import { cardOccurrenceUid } from '@/engine/target/card-occurrence.js';
 
 type Player = 'self' | 'opp';
 
@@ -82,7 +83,7 @@ function buildCutInDisguiseCandidates(
   const hand = state.players[p].hand;
   const result: CutInDisguiseCandidate[] = [];
   for (const [index, cardId] of hand.entries()) {
-    const uid = `${cardId}#${index}`;
+    const uid = cardOccurrenceUid(p, 'hand', cardId, index);
     const def = readDef.card(cardId);
     const name = def?.names?.[0] ??cardId;
     if (flow.contact.canCutIn(state, ax, p, cardId)) {

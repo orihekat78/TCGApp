@@ -1875,6 +1875,14 @@ describe("private hosted release preparation", () => {
             .digest("hex"),
           verifyWrangler: async () => "4.118.0",
           runBuild: item.runBuild,
+          runCommand: async (command) => {
+            if (command.args.at(-1) === "--version") {
+              return { stdout: "11.12.1\n", stderr: "" };
+            }
+            throw new Error(
+              `unexpected command: ${command.file} ${command.args.join(" ")}`,
+            );
+          },
         },
       ),
     ).resolves.toMatchObject({ manifests: expect.any(Object) });

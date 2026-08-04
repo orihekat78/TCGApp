@@ -96,6 +96,24 @@ function applyB07048AlternativeFixture(state: GameStateLike): void {
   game.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
 }
 
+async function syntheticallyRemoveLastSourceSetCard(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    type State = { players: { self: { scene: Array<{ uid: string; setCards: unknown[] }> } } };
+    const game = (window as unknown as {
+      __game: {
+        getState: () => { gameState: State };
+        store: { setState: (partial: { gameState: State }) => void };
+      };
+    }).__game;
+    const next = structuredClone(game.getState().gameState);
+    next.players.self.scene.find((entry) => entry.uid === 'source')!.setCards.pop();
+    // Defensive stale-runtime harness, not a public UI transition. Raw Zustand
+    // replacement deliberately keeps the picker open so identity validation is
+    // exercised; the public setGameState path clears pending UI surfaces.
+    game.store.setState({ gameState: next });
+  });
+}
+
 async function openB02023CostPicker(page: Page): Promise<void> {
   await page.locator('[data-action-id="declared-ability"]').click();
   await page.locator('[data-uid="kazuha"]').click();
@@ -202,7 +220,7 @@ test('BUG-248: n=2 cost requires two selections and pays both exact cards for B0
   expectNoConsoleErrors(errors);
 });
 
-test('BUG-248: a stale printed B07048 selection never falls back to B05033, while explicit alternative does', async ({ page }, testInfo) => {
+test('BUG-248 defensive harness: a synthetic stale printed selection never falls back to B05033', async ({ page }, testInfo) => {
   if (testInfo.project.name === 'chromium') await page.setViewportSize({ width: 1280, height: 720 });
   const { errors } = await setupGamePage(page);
   await setHumanSelf(page);
@@ -212,10 +230,7 @@ test('BUG-248: a stale printed B07048 selection never falls back to B05033, whil
   await page.locator('.confirm-ok').click();
   await page.getByTestId('cp-opt-0').click();
   await expect(page.getByTestId('set-card-choice-modal')).toBeVisible();
-  await page.evaluate(() => {
-    const game = (window as unknown as { __game: { getState: () => { gameState: { players: { self: { scene: Array<{ uid: string; setCards: unknown[] }> } } } } } }).__game.getState().gameState;
-    game.players.self.scene.find((entry) => entry.uid === 'source')!.setCards.pop();
-  });
+  await syntheticallyRemoveLastSourceSetCard(page);
   await page.getByTestId('set-card-choice-1').click();
   await page.getByTestId('set-card-choice-2').click();
   await page.getByTestId('set-card-cost-confirm').click();
@@ -243,10 +258,7 @@ test('BUG-248: B07048 exposes explicit B05033 alternative when its printed n=2 c
   const { errors } = await setupGamePage(page);
   await setHumanSelf(page);
   await buildGameState(page, applyB07048AlternativeFixture);
-  await page.evaluate(() => {
-    const game = (window as unknown as { __game: { getState: () => { gameState: { players: { self: { scene: Array<{ uid: string; setCards: unknown[] }> } } } } } }).__game.getState().gameState;
-    game.players.self.scene.find((entry) => entry.uid === 'source')!.setCards.pop();
-  });
+  await syntheticallyRemoveLastSourceSetCard(page);
   await page.locator('[data-action-id="declared-ability"]').click();
   await page.locator('[data-uid="source"]').click();
   await page.locator('.confirm-ok').click();

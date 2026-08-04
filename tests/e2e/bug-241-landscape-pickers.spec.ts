@@ -185,43 +185,45 @@ test('BUG-241 Pixel 5 landscape: shared Choice hosts keep footer controls fixed'
       store.setState({ [field]: value });
     }, { field, value });
   };
+  // Every raw pending below is a layout carrier. Real resolver flows have their
+  // own E2E coverage, so this test clears each carrier without claiming it can
+  // resolve a synthetic runtime context.
   await setPending('pendingChooseIntercept', { player: 'self', protector: { uid: 'protector', cardId: 'B01001', abilityId: 'a1' }, targetUid: 'target' });
   const chooseIntercept = page.getByTestId('choose-intercept-modal');
   await expectFixedFooter(page, chooseIntercept, page.getByTestId('choose-intercept-decline'));
-  await page.getByTestId('choose-intercept-decline').click();
+  await setPending('pendingChooseIntercept', null);
   await expect(chooseIntercept).toBeHidden();
 
   await setPending('pendingSetCardReplacement', { player: 'self', fromUid: 'from', setCardInstanceId: 'set-1', candidates: Array.from({ length: 8 }, (_, index) => ({ uid: `replacement-${index}`, cardId: 'B01001' })), source: { uid: 'from' } });
   const setReplacement = page.getByTestId('set-card-replacement-modal');
   await expectFixedFooter(page, setReplacement, page.getByTestId('set-card-replacement-decline'));
-  await page.getByTestId('set-card-replacement-decline').click();
+  await setPending('pendingSetCardReplacement', null);
   await expect(setReplacement).toBeHidden();
 
   await setPending('pendingLeaveIntercept', { player: 'self', interceptorUid: 'interceptor', targetUid: 'target', source: { cardId: 'B01092', abilityId: 'a1' } });
   const leaveIntercept = page.getByTestId('leave-intercept-modal');
   await expectFixedFooter(page, leaveIntercept, page.getByTestId('leave-intercept-no'));
-  await page.getByTestId('leave-intercept-no').click();
+  await setPending('pendingLeaveIntercept', null);
   await expect(leaveIntercept).toBeHidden();
 
   await setPending('pendingEffectOptional', { player: 'self', source: { cardId: 'D08025', abilityId: 'a1' } });
   const optional = page.getByTestId('optional-picker-modal');
   await expectFixedFooter(page, optional, page.getByTestId('opt-run-no'));
-  await page.getByTestId('opt-run-no').click();
+  await setPending('pendingEffectOptional', null);
   await expect(optional).toBeHidden();
 
   await setPending('pendingEffectRepeatOptional', { player: 'self', remaining: 2, source: { cardId: 'D08025', abilityId: 'a1' } });
   const repeatOptional = page.getByTestId('repeat-optional-picker-modal');
   await expectFixedFooter(page, repeatOptional, page.getByTestId('repeat-opt-run-no'));
-  await page.getByTestId('repeat-opt-run-no').click();
+  await setPending('pendingEffectRepeatOptional', null);
   await expect(repeatOptional).toBeHidden();
 
   await setPending('pendingRps', { player: 'self', ownerPlayer: 'opp', aiHand: 'paper' });
   const rps = page.getByTestId('rps-modal');
   await expectFixedFooter(page, rps, page.getByTestId('rps-rock'));
-  await page.getByTestId('rps-rock').click();
+  await setPending('pendingRps', null);
   await expect(rps).toBeHidden();
 
-  // Layout carrier only. Exact opaque-instance resolution remains in the real B02039 E2E.
   await setPending('pendingSetCardChoice', { player: 'self', hostUid: 'host', entries: Array.from({ length: 8 }, (_, index) => ({ instanceId: `set-${index}`, ordinal: index + 1 })), source: { uid: 'host', cardId: 'B02039', abilityId: 'a1' } });
   const setCardModal = page.getByTestId('set-card-choice-modal');
   const setCardBody = setCardModal.locator('.cp-body');
@@ -229,7 +231,7 @@ test('BUG-241 Pixel 5 landscape: shared Choice hosts keep footer controls fixed'
   await setCardBody.evaluate((element) => { element.scrollTop = element.scrollHeight; });
   expect(await setCardBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   await expect(setCardModal.getByTestId('set-card-choice-8')).toBeVisible();
-  await setCardModal.getByTestId('set-card-choice-8').click();
+  await setPending('pendingSetCardChoice', null);
   await expect(setCardModal).toBeHidden();
   expectNoConsoleErrors(errors);
 });

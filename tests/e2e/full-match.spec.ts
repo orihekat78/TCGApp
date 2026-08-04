@@ -87,13 +87,13 @@ test.describe('BUG-045: 1 試合通し E2E (観戦モード)', () => {
     expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
   });
 
-  test('GameSetupModal: デッキ選択 UI が両 select で 2 options を持つ (BUG-042 回帰防止)', async ({ page }) => {
+  test('GameSetupModal: デッキ選択 UI が両 select で現在の 3 options を持つ (BUG-042 回帰防止)', async ({ page }) => {
     await setupGamePage(page);
 
     const selfDeckOptions = await page.locator('[data-testid="game-setup-self-deck"] option').count();
     const oppDeckOptions = await page.locator('[data-testid="game-setup-opp-deck"] option').count();
 
-    expect(selfDeckOptions, 'self deck 選択肢数').toBe(2);
-    expect(oppDeckOptions, 'opp deck 選択肢数').toBe(2);
+    expect(selfDeckOptions, 'self deck 選択肢数').toBe(3);
+    expect(oppDeckOptions, 'opp deck 選択肢数').toBe(3);
   });
 });

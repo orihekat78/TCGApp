@@ -40,39 +40,39 @@
 
 ## 2026-08-04: Private hosted Phase 1 static boundary
 
-- Scope is static-release preparation only. No Cloudflare resource or public
-  endpoint was created; later release phases own Access policy and deployment.
-- The browser registry no longer exposes the unused dynamic Node loader.
-  Direct Node-only `loadSet` remains supported and has an always-running test.
-- Existing card-image behavior is unchanged: official remote URLs at runtime
-  with the deterministic local SVG placeholder on error. No card art is built
-  into `dist` or stored by a browser image helper.
-- Release tests pin one exact `_headers`, Node/npm/Wrangler versions, and reject
-  source maps, server/runtime files, Node browser chunks, and known card-image
-  payloads. Unrelated UI raster assets remain permitted.
-- Setup, README, and both CI workflows enforce Node 24.x and npm 11.12.1.
-  Local setup runs `npm ci` on every launch and fails closed instead of reusing
-  a potentially partial dependency installation.
-- Horizontal search found no product caller of removed `cards.load`, image
-  fetch/cache helpers, or other browser import of the Node TSV loader.
-- Final gates pass: typecheck, production build, 887 Vitest files / 7,028
-  tests, 1,000-game smoke with zero timeout/exception, full lint and commit
-  lints, generated-doc check, diff check, and production dependency audit.
-- Review iterations closed two P2 findings: incomplete toolchain propagation,
-  then dependency-install fail-open plus stale README guidance. Final
-  adversarial review is OK with no P0-P3; horizontal audit is OK with no
-  P0-P2 and only a non-blocking source-string-test maintenance note.
+- Static-only scope; no Cloudflare resource or endpoint was created.
+- Browser registry no longer exposes its unused dynamic Node loader; direct
+  Node-only `loadSet` remains tested.
+- Official remote card images and local SVG failure placeholder are unchanged;
+  card art is absent from `dist` and browser storage.
+- Exact headers/toolchain and release tests reject server files, source maps,
+  Node chunks, and card payloads. Full gates and both reviews passed.
 
 ## 2026-08-04: Private hosted Phase 2 payload authority
 
-- Scope is inspected payload creation only. No Cloudflare resource, upload, or
-  public endpoint was created.
-- Preparation requires the canonical clean HEAD, reviewed raw Vite config,
-  pinned toolchain, two identical builds, and post-build ignored-input audits.
-- The fixed PowerShell launcher clears ambient authority, pins its CWD and TSX
-  config/cache/temp, and leaves dependency trust to Phase 3's preceding npm ci.
-- Staging and evidence are separate, deterministic, and atomically published.
-- Focused release tests pass 140/140 with one platform skip. Final adversarial
-  review is OK with no P0-P3; no engine, UI, or product caller changed.
-- Final gates pass: typecheck, production build, 889 Vitest files / 7,168
-  tests, full lint, generated-doc check, diff check, and dependency audit.
+- Inspected-payload scope; no Cloudflare resource, upload, or endpoint exists.
+- A clean canonical HEAD, pinned toolchain, two identical builds, and ignored-input
+  audit precede atomic staging and repo-external evidence publication.
+- The fixed launcher clears ambient authority and pins CWD/cache/temp. Full gates
+  and final adversarial review passed; no engine, UI, or caller changed.
+
+## 2026-08-04: Private hosted Phase 3 and Phase 4 Tasks 1-2
+
+- The current Vite app is qualified unchanged for static hosting; this work adds
+  no PvP, backend, account, persistence, Cloudflare resource, or upload.
+- Runtime graph, CSP, bug, manifest-rebind, full-suite, and public-control static
+  browser gates fail closed and write final evidence outside the repository.
+- Strict external operator JSON caps the named audience at 12 including the
+  operator and rejects unsafe ACLs, links, hard links, swaps, and repo paths.
+- The read-only Access auditor validates a dedicated account, sole Cloudflare IdP,
+  root/wildcard apps, exact audiences, session limits, and Block Everyone containment.
+- User-operated account and dashboard setup begins at Phase 4 Task 3; stop before it.
+- Final browser qualification caught a UI-only decision ID rejecting a valid
+  set-card choice and legacy contact occurrence IDs; both now use exact engine
+  payload validation and stable area-qualified card occurrence identities.
+- Pending runtime hydration now rejects inherited facade names before lookup;
+  headless/replay isolation preserves exact own-property ownership.
+- The boundary gate enumerates every output and tracks control flow, callable
+  constructors, logical writers, replay sinks, React targets, and remote origins.
+- Access pagination requires complete metadata; Windows config ACLs permit writes
+  only by the current operator, SYSTEM, and built-in Administrators.

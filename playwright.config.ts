@@ -15,10 +15,11 @@ export function resolveE2EPort(value = process.env.PLAYWRIGHT_PORT): number {
 }
 
 export function createPlaywrightConfig(e2ePort = resolveE2EPort()) {
-  const e2eBaseUrl = `http://localhost:${e2ePort}`;
+  const e2eBaseUrl = `http://127.0.0.1:${e2ePort}`;
 
   return defineConfig({
   testDir: './tests/e2e',
+  testIgnore: 'private-hosted-static.spec.ts',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: 0,
@@ -31,9 +32,9 @@ export function createPlaywrightConfig(e2ePort = resolveE2EPort()) {
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: `npm run dev -- --port ${e2ePort} --strictPort`,
+    command: `npm run dev -- --host 127.0.0.1 --port ${e2ePort} --strictPort`,
     url: e2eBaseUrl,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 60_000,
   },
   projects: [

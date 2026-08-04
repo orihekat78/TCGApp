@@ -4,6 +4,11 @@ import { resolve } from "path";
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    modulePreload: {
+      polyfill: false,
+    },
+  },
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"),

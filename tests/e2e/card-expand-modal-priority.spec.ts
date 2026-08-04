@@ -162,11 +162,15 @@ test.describe('BUG-236 card detail modal priority', () => {
   test('the detail close button is clickable above the CPU control HUD and returns control to the HUD', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await buildGameState(page, (gs) => {
-      gs.log = [{ ts: 1, player: 'self', turn: 1, action: 'handUseCard', target: 'D08015' }];
+      gs.players.self.scene = [{
+        cardId: 'D08015', uid: 'priority-card', state: 'active', isNamed: false, enterOrder: 1,
+        setCards: [], stackedCards: 0, keywordOverrides: { granted: [], disabledOriginal: false },
+        apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+        declaredUseCount: {},
+      }];
     });
 
-    await page.locator('.panel-log-btn').click();
-    await page.locator('button[aria-label*="D08015"]').click();
+    await page.getByTestId('scene-card-detail-priority-card').click();
 
     const modal = page.locator('.card-expand-modal-backdrop');
     const close = page.locator('.card-expand-close');
@@ -194,17 +198,22 @@ test.describe('BUG-236 card detail modal priority', () => {
   test('detail modal still closes by backdrop and Escape', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await buildGameState(page, (gs) => {
-      gs.log = [{ ts: 1, player: 'self', turn: 1, action: 'handUseCard', target: 'D08015' }];
+      gs.players.self.scene = [{
+        cardId: 'D08015', uid: 'priority-card', state: 'active', isNamed: false, enterOrder: 1,
+        setCards: [], stackedCards: 0, keywordOverrides: { granted: [], disabledOriginal: false },
+        apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+        declaredUseCount: {},
+      }];
     });
 
-    await page.locator('.panel-log-btn').click();
-    await page.locator('button[aria-label*="D08015"]').click();
+    const detail = page.getByTestId('scene-card-detail-priority-card');
+    await detail.click();
     const modal = page.locator('.card-expand-modal-backdrop');
     await expect(modal).toBeVisible();
     await modal.click({ position: { x: 4, y: 4 } });
     await expect(modal).toHaveCount(0);
 
-    await page.locator('button[aria-label*="D08015"]').click();
+    await detail.click();
     await expect(modal).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(modal).toHaveCount(0);

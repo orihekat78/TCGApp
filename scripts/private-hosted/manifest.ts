@@ -469,4 +469,17 @@ export async function stageBuild(
   await entriesForDirectory(stagingReal, expected.upload);
 }
 
+export async function verifyStagedBuild(
+  stagingDir: string,
+  expected: BuildManifests,
+): Promise<void> {
+  validateExpected(expected);
+  const stagingReal = await resolveDistRoot(stagingDir);
+  await assertOnlyAllowedDirectories(
+    stagingReal,
+    new Set(expected.upload.map((entry) => entry.path.slice(1))),
+  );
+  await entriesForDirectory(stagingReal, expected.upload);
+}
+
 export type { BuildManifests, ManifestEntry } from "./types.ts";

@@ -290,7 +290,10 @@ describe('useContactFlowDriver — _runDriverStep', () => {
     const cutins = useContactModalStore.getState().cutInDisguise?.candidates
       .filter((candidate) => candidate.kind === 'cutin')
       .map((candidate) => candidate.uid);
-    expect(cutins).toEqual(['D08017#0', 'D08017#1']);
+    expect(cutins).toEqual([
+      'card:self:hand:D08017#0',
+      'card:self:hand:D08017#1',
+    ]);
   });
 
   it('opens the real action-1-redo decision for the first human actor', () => {
@@ -319,7 +322,7 @@ describe('useContactFlowDriver — _runDriverStep', () => {
       actionId: axId,
       player: 'self',
       actorLabel: '1番目 (再行動)',
-      candidates: [{ uid: 'D08017#0', cardId: 'D08017', kind: 'cutin' }],
+      candidates: [{ uid: 'card:self:hand:D08017#0', cardId: 'D08017', kind: 'cutin' }],
     });
   });
 });

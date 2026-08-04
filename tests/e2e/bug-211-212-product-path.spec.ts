@@ -89,16 +89,15 @@ function applyContactFixture(gs: AnyState): void {
 }
 
 test.describe('BUG-211/212 actual UI product paths', () => {
-  test('BUG-211: zero-target source aborts before target picker and leaves no state across a CPU cycle', async ({ page }) => {
+  test('BUG-211: zero-target sources are filtered before either picker and leave no state across a CPU cycle', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await primeHumanVsCpu(page, false);
     await buildGameState(page, applyZeroTargetFixture);
 
     await page.locator('[data-action-id="action"]').click();
-    await expect(page.locator('.scene-area.side-self .card[data-uid="charge-source"]')).toHaveClass(/candidate/);
-    await page.locator('.scene-area.side-self .card[data-uid="charge-source"]').click();
+    await expect(page.locator('.scene-area.side-self .card[data-uid="charge-source"]')).not.toHaveClass(/candidate/);
 
-    // The zero-target gate must run before target-picker creation.
+    // The source prefilter must reject zero-target actors before either picker exists.
     await expect.poll(() => readTargetPickerPhase(page)).toBe('idle');
     await expect(page.locator('[data-action-id="action"]')).not.toHaveClass(/active/);
     await expect(page.getByText('アクション対象 の対象を選択してください。')).toHaveCount(0);

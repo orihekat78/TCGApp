@@ -5,9 +5,11 @@ async function humanMode(page: Page): Promise<void> {
   await page.evaluate(() => {
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
     const w = window as unknown as {
-      __game: { store: { getState: () => { setSpectatorMode: (v: boolean) => void } } };
+      __game: { store: { getState: () => { setSpectatorMode: (v: boolean) => void; setAiPaused: (v: boolean) => void } } };
     };
-    w.__game.store.getState().setSpectatorMode(false);
+    const store = w.__game.store.getState();
+    store.setSpectatorMode(false);
+    store.setAiPaused(true);
   });
 }
 
@@ -50,7 +52,7 @@ async function closeCardDetails(page: Page): Promise<void> {
   await expect(page.locator('.card-expand-modal')).toHaveCount(0);
 }
 
-test('BUG-231 log card ID opens the card modal and Escape preserves the log', async ({ page }) => {
+test('log card references remain readable text and do not expose a superseded detail action', async ({ page }) => {
   const { errors } = await setupGamePage(page);
   await humanMode(page);
   await buildGameState(page, (gs) => {
@@ -63,13 +65,10 @@ test('BUG-231 log card ID opens the card modal and Escape preserves the log', as
   const logDialog = page.getByRole('dialog', { name: 'ゲームログ' });
   await expect(logDialog).toBeVisible();
 
-  await page.getByRole('button', { name: '萩原千速 (D11013) を拡大表示' }).click();
-  const cardDialog = page.getByRole('dialog', { name: 'カード拡大表示: 萩原千速' });
-  await expect(cardDialog).toBeVisible();
-
-  await page.keyboard.press('Escape');
-  await expect(cardDialog).toBeHidden();
-  await expect(logDialog).toBeVisible();
+  await expect(logDialog).toContainText('D11013');
+  await expect(logDialog.locator('button[aria-label*="D11013"]')).toHaveCount(0);
+  await logDialog.locator('.log-panel-close').click();
+  await expect(logDialog).toBeHidden();
   expect(errors).toEqual([]);
 });
 
@@ -86,7 +85,7 @@ test('self evidence/remove browsing persists and remove cards can be enlarged', 
   await page.locator('.remove-area.side-self').click();
   const removeModal = page.locator('.card-list-modal');
   await expect(removeModal).toBeVisible();
-  await page.getByTestId('card-list-item-D08003-0').click();
+  await page.getByTestId('card-list-detail-D08003-0').click();
   await expect(page.locator('.card-expand-modal')).toBeVisible();
   await page.locator('.card-expand-modal-backdrop').click({ position: { x: 5, y: 5 } });
   await expect(removeModal).toBeVisible();
@@ -129,8 +128,9 @@ test('BUG-240 landscape HUD leaves the card-list close hit target reachable', as
 
   const pause = page.getByTestId('spectator-pause-toggle');
   await expect(pause).toBeVisible();
-  await pause.click();
   await expect(pause).toHaveAttribute('aria-pressed', 'true');
+  await pause.click();
+  await expect(pause).toHaveAttribute('aria-pressed', 'false');
   expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
 });
 
@@ -422,17 +422,13 @@ test('B06029 enter picker keeps public evidence inspectable and hidden evidence 
   await closeCardDetails(page);
   await expect(publicEvidencePrimary).toBeVisible();
 
-  await publicEvidencePrimary.click({ button: 'right' });
-  await closeCardDetails(page);
-  await expect(publicEvidencePrimary).toBeVisible();
-
   await publicEvidencePrimary.focus();
   await page.keyboard.press('Enter');
 
-  const handPrimary = page.getByTestId('effect-pick-cand-D08011#0');
+  const handPrimary = page.getByTestId('effect-pick-cand-card:self:hand:D08011#0');
   await expect(handPrimary).toBeVisible();
   await expectActualCardImage(handPrimary, '1743743093474254.jpg');
-  const handDetail = page.getByTestId('effect-pick-detail-D08011#0');
+  const handDetail = page.getByTestId('effect-pick-detail-card:self:hand:D08011#0');
   await expectTouchTarget(handDetail);
   await handDetail.click();
   await closeCardDetails(page);
@@ -488,9 +484,6 @@ test('B04026 preserves public detail access and the chosen reordered card order'
   await revealDetail.click();
   await closeCardDetails(page);
   await expect(reveal).toBeVisible();
-  await eligible.click({ button: 'right' });
-  await closeCardDetails(page);
-  await expect(reveal).toBeVisible();
   await expect(eligible).toBeVisible();
 
   const skip = page.getByTestId('card-list-pick-skip');
@@ -513,8 +506,6 @@ test('B04026 preserves public detail access and the chosen reordered card order'
   const reorderDetail = rows.nth(1).getByTestId('selectable-card-tile-detail');
   await expectTouchTarget(reorderDetail);
   await reorderDetail.click();
-  await closeCardDetails(page);
-  await rows.nth(1).locator('.selectable-card-tile__select').click({ button: 'right' });
   await closeCardDetails(page);
   await expect(rows).toHaveCount(3);
 
@@ -581,8 +572,6 @@ test('B04026 keeps duplicate reveal and reorder occurrences independently addres
   await expectTouchTarget(firstDetail);
   await expectTouchTarget(secondDetail);
   await firstDetail.click();
-  await closeCardDetails(page);
-  await secondDuplicate.click({ button: 'right' });
   await closeCardDetails(page);
   await expect(firstDuplicate).toBeVisible();
   await expect(secondDuplicate).toBeVisible();

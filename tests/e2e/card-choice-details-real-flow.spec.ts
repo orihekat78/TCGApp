@@ -185,29 +185,41 @@ test.describe('real mounted card-choice details', () => {
       };
       w.__game.store.getState().setPendingDeckReveal({
         player: 'self',
-        revealed: ['D11020'],
-        matched: 'D11020',
+        visibility: 'public',
+        viewer: 'all',
+        revealed: ['D11020', 'D08003'],
+        matched: 'D08003',
       });
     });
     const primary = page.getByTestId('deck-reveal-card-0');
     await expect(primary).toBeVisible();
-    await expectPublicCardArt(primary, 'D11020', '1775608977402003.jpg');
-    // Reveal animation ends after 500ms for the first public card. Use an ordinary
-    // interaction only after that real UI transition has settled.
-    await page.waitForTimeout(600);
     const detail = page.getByTestId('deck-reveal-detail-0');
-    await assertDetailClick(page, detail);
-
+    // The first of two cards becomes stable while the reveal phase still has
+    // one second left. A normal click must remain actionable on a real phone.
+    await primary.evaluate(async (element) => {
+      await Promise.all(element.getAnimations().map((animation) => animation.finished));
+    });
+    await page.waitForTimeout(250);
+    await expect(page.getByTestId('deck-reveal-list')).toHaveClass(/phase-reveal/);
+    await expect(detail).toBeVisible();
+    await expect(detail).toBeInViewport();
+    const detailBox = await detail.boundingBox();
+    expect(detailBox, 'detail control has a box').not.toBeNull();
+    expect(detailBox!.width, 'detail width').toBeGreaterThanOrEqual(44);
+    expect(detailBox!.height, 'detail height').toBeGreaterThanOrEqual(44);
     await detail.click();
     await expect(page.locator('.card-expand-modal-backdrop')).toBeVisible();
-    // The original 3100ms reveal timeline has elapsed, but the overlay remains
+    // The expanded view pauses the reveal timer, so a slow official-CDN image
+    // cannot make the source card disappear while its public art is verified.
+    await expectPublicCardArt(primary, 'D11020', '1775608977402003.jpg');
+    // More than the remaining timeline elapses, but the overlay remains
     // while the user reads the expanded card.
-    await page.waitForTimeout(3300);
+    await page.waitForTimeout(3500);
     await expect(page.getByTestId('deck-reveal-overlay')).toBeVisible();
     await page.locator('.card-expand-close').click();
     await expect(page.getByTestId('deck-reveal-overlay')).toBeVisible();
-    // Continuation uses the <2500ms remainder. A reset would still be visible.
-    await page.getByTestId('deck-reveal-overlay').waitFor({ state: 'detached', timeout: 2700 });
+    // Continuation uses the saved remainder; a fresh 3600ms timeline would fail.
+    await page.getByTestId('deck-reveal-overlay').waitFor({ state: 'detached', timeout: 3250 });
     expectNoConsoleErrors(errors);
   });
 
@@ -220,7 +232,9 @@ test.describe('real mounted card-choice details', () => {
       const players = g.players as { self: AnyState; opp: AnyState };
       players.self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
       players.self.scene = [mk('B05080', 'hyd#1')];
-      players.self.hand = ['D08005'];
+      // This case exercises Misread only. With no hand, B05080's independent
+      // optional discard chain has no candidate and resolves automatically.
+      players.self.hand = [];
       players.self.deck = ['D08006'];
       players.self.evidence = [];
       players.self.remove = [];
@@ -244,10 +258,12 @@ test.describe('real mounted card-choice details', () => {
     await assertDetailClick(page, page.getByTestId('misread-detail-hyd#1'));
     await page.getByTestId('misread-cand-hyd#1').check();
     await page.getByTestId('misread-confirm-btn').click();
-    await page.waitForFunction(() => {
-      const w = window as unknown as { __game: { getState: () => { pendingEffectPick: { atomVerb: string } | null } } };
-      return w.__game.getState().pendingEffectPick?.atomVerb === 'discard';
-    });
+    await expect(page.getByTestId('misread-picker-modal')).toBeHidden();
+    expect((await getGameState(page)).players.self.scene.find((character) => character.uid === 'hyd#1')?.state).toBe('sleep');
+    expect(await page.evaluate(() => {
+      const state = (window as unknown as { __game: { getState: () => { pendingMisread: unknown; pendingEffectPick: unknown } } }).__game.getState();
+      return { pendingMisread: state.pendingMisread, pendingEffectPick: state.pendingEffectPick };
+    })).toEqual({ pendingMisread: null, pendingEffectPick: null });
     expectNoConsoleErrors(errors);
   });
 
@@ -272,10 +288,10 @@ test.describe('real mounted card-choice details', () => {
     });
 
     await dispatchAction(page, { type: 'actionDeclareChar', byUid: 's1', targetUid: 'o1' });
-    const primary = page.getByTestId('cid-disg-B03129#0');
+    const primary = page.getByTestId('cid-disg-card:self:hand:B03129#0');
     await expect(primary).toBeVisible();
     await expectPublicCardArt(primary, 'B03129', '1729133510413412.jpg');
-    await assertDetailClick(page, page.getByTestId('cid-disg-detail-B03129#0'));
+    await assertDetailClick(page, page.getByTestId('cid-disg-detail-card:self:hand:B03129#0'));
     await primary.click();
     await waitForActionEnd(page);
     const state = await getGameState(page);

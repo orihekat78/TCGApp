@@ -98,11 +98,11 @@ test.describe('BUG-244 special picker landscape containment', () => {
     }
     const candidateOrder = await testIdOrder(modal.locator('.cid-cand[data-testid^="cid-disg-"]'));
     const actionBeforeDetail = await page.evaluate(() => (window as unknown as { __game: { getState: () => { activeActionId: string | null } } }).__game.getState().activeActionId);
-    await page.getByTestId('cid-disg-detail-B03129#0').click();
+    await page.getByTestId('cid-disg-detail-card:self:hand:B03129#0').click();
     await page.locator('.card-expand-close').click();
     expect(await testIdOrder(modal.locator('.cid-cand[data-testid^="cid-disg-"]'))).toEqual(candidateOrder);
     expect(await page.evaluate(() => (window as unknown as { __game: { getState: () => { activeActionId: string | null } } }).__game.getState().activeActionId)).toBe(actionBeforeDetail);
-    await page.getByTestId('cid-disg-detail-B03129#11').click();
+    await page.getByTestId('cid-disg-detail-card:self:hand:B03129#11').click();
     await page.locator('.card-expand-close').click();
     await expect(modal).toBeVisible();
     expect(await testIdOrder(modal.locator('.cid-cand[data-testid^="cid-disg-"]'))).toEqual(candidateOrder);
@@ -131,7 +131,7 @@ test.describe('BUG-244 special picker landscape containment', () => {
     });
 
     await dispatchAction(page, { type: 'actionDeclareChar', byUid: 'self-1', targetUid: 'opp-1' });
-    const selected = page.getByTestId('cid-disg-B03129#11');
+    const selected = page.getByTestId('cid-disg-card:self:hand:B03129#11');
     await expect(selected).toBeVisible();
     await selected.click();
     await waitForActionEnd(page);
@@ -139,7 +139,7 @@ test.describe('BUG-244 special picker landscape containment', () => {
     expectNoConsoleErrors(errors);
   });
 
-  test('Misread: long candidate list keeps header/decline fixed and confirm resolves pending engine state', async ({ page }, testInfo) => {
+  test('Misread: maximum legal candidate list keeps header/decline fixed and confirm resolves pending engine state', async ({ page }, testInfo) => {
     const { errors } = await setupGamePage(page);
     await primeHuman(page);
     await buildGameState(page, (gs: GameStateLike) => {
@@ -147,8 +147,10 @@ test.describe('BUG-244 special picker landscape containment', () => {
       const players = g.players as { self: AnyState; opp: AnyState };
       const makeCharacter = (cardId: string, uid: string, state = 'active') => ({ cardId, uid, state, isNamed: false, enterOrder: 1, setCards: [], stackedCards: 0, keywordOverrides: { granted: [], disabledOriginal: false }, apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {} });
       players.self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
-      players.self.scene = Array.from({ length: 10 }, (_, index) => makeCharacter('B05080', `misread-${index}`));
-      players.self.hand = ['D08005'];
+      // Five is the legal scene cap. D01010 contributes Misread on-scene with
+      // no unrelated on-scene trigger, keeping this a legal public-flow case.
+      players.self.scene = Array.from({ length: 5 }, (_, index) => makeCharacter('D01010', `misread-${index}`));
+      players.self.hand = [];
       players.self.deck = ['D08006'];
       players.self.evidence = [];
       players.self.remove = [];
@@ -180,15 +182,19 @@ test.describe('BUG-244 special picker landscape containment', () => {
     await page.locator('.card-expand-close').click();
     expect(await testIdOrder(modal.locator('.misread-picker-row'))).toEqual(candidateOrder);
     expect(await page.evaluate(() => JSON.stringify((window as unknown as { __game: { getState: () => { pendingMisread: unknown } } }).__game.getState().pendingMisread))).toBe(pendingBeforeDetail);
-    await page.getByTestId('misread-detail-misread-9').click();
+    await page.getByTestId('misread-detail-misread-4').click();
     await page.locator('.card-expand-close').click();
     await expect(modal).toBeVisible();
     expect(await testIdOrder(modal.locator('.misread-picker-row'))).toEqual(candidateOrder);
     expect(await page.evaluate(() => JSON.stringify((window as unknown as { __game: { getState: () => { pendingMisread: unknown } } }).__game.getState().pendingMisread))).toBe(pendingBeforeDetail);
     await page.getByTestId('misread-cand-misread-0').check();
     await page.getByTestId('misread-confirm-btn').click();
-    await page.waitForFunction(() => (window as unknown as { __game: { getState: () => { pendingEffectPick: { atomVerb: string } | null } } }).__game.getState().pendingEffectPick?.atomVerb === 'discard');
+    await expect(modal).toBeHidden();
     expect((await getGameState(page)).players.self.scene.find((character) => character.uid === 'misread-0')?.state).toBe('sleep');
+    expect(await page.evaluate(() => {
+      const state = (window as unknown as { __game: { getState: () => { pendingMisread: unknown; pendingEffectPick: unknown } } }).__game.getState();
+      return { pendingMisread: state.pendingMisread, pendingEffectPick: state.pendingEffectPick };
+    })).toEqual({ pendingMisread: null, pendingEffectPick: null });
     expectNoConsoleErrors(errors);
   });
 

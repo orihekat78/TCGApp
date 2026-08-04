@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 265
-- **ファイル数**: 5585
+- **ファイル数**: 5602
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -2153,11 +2153,19 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `finish.cjs`
     - `prepare.cjs`
   - **`private-hosted/`**
+    - `audit-runtime-boundary.ts`
+    - `check-release-bugs.ts`
+    - `cloudflare-api.ts`
+    - `init-config.ts`
     - `manifest.ts`
+    - `operator-config.ts`
     - `prepare-internal.ts`
     - `prepare.ps1`
     - `prepare.ts`
+    - `run-final-qualification.ts`
+    - `run-local-qualification.ts`
     - `types.ts`
+    - `verify-access.ts`
   - **`smoke/`**
     - `aggregate.ts` — scripts/smoke/aggregate — Phase 9-A smoke aggregation (pure)
     - `format-md.ts` — scripts/smoke/format-md — Phase 9-A smoke Markdown formatter (pure)
@@ -2223,7 +2231,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `.gitkeep`
     - `ability-ctx.ts` — ai.ability-ctx — Phase 8.8d: EffectCtx 構築ヘルパ
     - `action-resolution.ts` — ai.action-resolution — Phase 8.7c: アクション宣言の共通解決ヘルパ
-    - `headless-decision-context.ts`
+    - `headless-decision-context.ts` — AI simulation and replay are headless authorities. They must not inherit
     - `index.ts` — ai namespace barrel — Phase 6 Group A
     - `match.ts` — ai.match — AI vs AI single-match driver (Phase 6 Group C Task 6.5)
     - `move-enumerator.ts` — ai.move-enumerator — 合法手の全列挙 (Phase 6 Group A Task 6.1)
@@ -4795,6 +4803,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `recorder.test.ts` — ai.replay — Phase 9-G.1 unit tests (recorder + player)
     - `.gitkeep`
     - `bug-246-on-hand-declared-ability.test.ts` — Existing callers may still identify a hand source by cardId.
+    - `headless-decision-context.test.ts`
     - `match.test.ts` — tests/ai/match.test.ts — Phase 6 Group C Task 6.5 tests
     - `move-enumerator.pa-mr.test.ts` — M3 PA batch (2026-07-10): AI 側 declaredAbility 列挙に partnerAreaMR source を追加
     - `move-enumerator.test.ts` — tests/ai/move-enumerator.test.ts — Phase 6 Group A Task 6.1 tests
@@ -5400,14 +5409,14 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `bug-211-212-product-path.spec.ts` — Active characters are not ordinary action targets. Evidence 0 also makes
     - `bug-237-recent-action-toast-pointer.spec.ts` — 長い target により toast-target の中心を実際の自己リムーブ領域へ置く。
     - `bug-239-landscape-deck-modal.spec.ts`
-    - `bug-241-landscape-pickers.spec.ts` — Layout carrier only. Exact opaque-instance resolution remains in the real B02039…
+    - `bug-241-landscape-pickers.spec.ts` — Every raw pending below is a layout carrier. Real resolver flows have their
     - `bug-243-public-duplicate-a11y.spec.ts`
-    - `bug-244-landscape-special-pickers.spec.ts`
-    - `bug-248-remove-set-card-cost.spec.ts`
+    - `bug-244-landscape-special-pickers.spec.ts` — Five is the legal scene cap. D01010 contributes Misread on-scene with
+    - `bug-248-remove-set-card-cost.spec.ts` — Defensive stale-runtime harness, not a public UI transition. Raw Zustand
     - `bug-249-effect-order.spec.ts` — Keep reserve cards: both real effects consume a card, and normal engine
     - `bug-252-reveal-visibility-order.spec.ts` — setupGamePage already waited for the Vite dev bridge. Hash-only routing avoids
     - `bug-260-b04030-switch-overlay.spec.ts`
-    - `card-choice-details-real-flow.spec.ts` — Reveal animation ends after 500ms for the first public card. Use an ordinary
+    - `card-choice-details-real-flow.spec.ts` — The first of two cards becomes stable while the reveal phase still has
     - `card-expand-modal-priority.spec.ts`
     - `charge-keyword-badge.spec.ts` — E2E: 突撃バッジ (user 指摘, 2026-06-01)
     - `choice-picker.spec.ts` — BUG-108 E2E: ChoicePickerModal の実ブラウザ render + option click → picker resolve を検証…
@@ -5430,6 +5439,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `night-w0-cost-choice-multipick.spec.ts` — E2E: 夜間 W0 (2026-07-11) — cost kind:'choice' human branch 選択 (B09027 初 consumer)…
     - `opp-turn-contact.spec.ts` — user_request 20260521_01 #3: 相手ターン中の contact 処理
     - `optional-decision-2026-06-06.spec.ts` — E2E: optional-decision (「〜してもよい」= pendingEffectOptional) の実機 text-faithfulness 検…
+    - `private-hosted-static.spec.ts`
     - `public-hand-reveal-window.spec.ts` — The reveal stays usable above its linked effect picker. Card detail is
     - `reasoning-hook-2026-06-06.spec.ts` — E2E: engine-extension reasoning-hook (2026-06-06 タスクC) の実機 text-faithfulness 検証。
     - `reasoning-hook-batch3-2026-06-06.spec.ts` — E2E: engine-extension reasoning-hook batch #3 (2026-06-06 タスクC) 実機 text-faithful…
@@ -5698,9 +5708,15 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `matchSession.race.test.ts` — Leaving match for the result route must clear transient ownership while
     - `playwright-config.test.ts`
   - **`release/`**
+    - `private-hosted-access-audit.test.ts`
+    - `private-hosted-bug-gate.test.ts`
     - `private-hosted-headers.test.ts`
+    - `private-hosted-local-qualification.test.ts`
     - `private-hosted-manifest.test.ts`
+    - `private-hosted-operator-config.test.ts`
     - `private-hosted-prepare.test.ts` — @ts-expect-error Public release preparation cannot replace the build.
+    - `private-hosted-qualification-report.test.ts`
+    - `private-hosted-runtime-boundary.test.ts`
   - **`scripts/`**
     - `build-tcg-runtime-packet.test.ts`
     - `check-codex-quality.test.ts`
@@ -5859,6 +5875,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 - `package-lock.json` — npm 依存ロック
 - `package.json` — Node.js 依存・npm scripts
 - `playwright.config.ts` — Playwright E2E 設定
+- `playwright.private-hosted.config.ts`
 - `start-apps.bat`
 - `start.bat`
 - `tsconfig.json` — TypeScript 設定

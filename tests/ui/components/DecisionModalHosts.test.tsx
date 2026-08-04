@@ -166,6 +166,7 @@ describe('decision modal hosts', () => {
         },
       } as never,
       pendingSetCardChoice: {
+        decisionId: 'decision:1',
         player: 'self', hostUid: 'host-1',
         entries: [{ instanceId: 'set-instance-1', ordinal: 1 }, { instanceId: 'set-instance-2', ordinal: 2 }],
         source: { uid: 'source-1', cardId: 'SET-SECRET-ID' } as never,
@@ -189,7 +190,11 @@ describe('decision modal hosts', () => {
     expect(container.textContent).toContain('1');
     expect(container.textContent).toContain('2');
     act(() => (container.querySelector('[data-instance-id="set-instance-2"]') as HTMLButtonElement).click());
-    expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'setCardChoiceResolve', instanceId: 'set-instance-2' });
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'setCardChoiceResolve',
+      instanceId: 'set-instance-2',
+      decisionId: 'decision:1',
+    });
     unmount(root, container);
   });
 

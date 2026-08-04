@@ -4,6 +4,9 @@ import { setupGamePage, buildGameState, dispatchAction, getGameState, type GameS
 async function setHumanSelf(page: Page): Promise<void> {
   await page.evaluate(() => {
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    const store = (window as unknown as { __game: { store: { getState: () => { setSpectatorMode: (v: boolean) => void; setAiPaused: (v: boolean) => void } } } }).__game.store.getState();
+    store.setSpectatorMode(false);
+    store.setAiPaused(true);
   });
 }
 

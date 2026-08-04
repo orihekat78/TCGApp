@@ -16,8 +16,10 @@ import { setupGamePage, buildGameState, getGameState, dispatchAction } from './h
 async function prime(page: Page): Promise<void> {
   await page.evaluate(() => {
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
-    const w = window as unknown as { __game: { store: { getState: () => { setSpectatorMode: (v: boolean) => void } } } };
-    w.__game.store.getState().setSpectatorMode(false);
+    const w = window as unknown as { __game: { store: { getState: () => { setSpectatorMode: (v: boolean) => void; setAiPaused: (v: boolean) => void } } } };
+    const store = w.__game.store.getState();
+    store.setSpectatorMode(false);
+    store.setAiPaused(true);
   });
 }
 
@@ -48,7 +50,7 @@ test('S2: B01022 — 公開6枚 window から filter 一致 2 枚を multi-pick 
   await prime(page);
   await buildGameState(page, fx);
 
-  await dispatchAction(page, { type: 'handUseCard', player: 'self', cardId: 'B01022' });
+  expect(await dispatchAction(page, { type: 'handUseCard', player: 'self', cardId: 'B01022' })).toEqual({ ok: true });
 
   // DeckRevealOverlay (公開演出) が hold — CardListModal 'deck' が自動 open
   // Deck window decision is owned by CardListModal; the reveal overlay must not cover it.
@@ -56,14 +58,14 @@ test('S2: B01022 — 公開6枚 window から filter 一致 2 枚を multi-pick 
   await expect(page.locator('.card-list-modal')).toBeVisible({ timeout: 6000 });
 
   // 候補: B04009 (deck idx0) と B09017 (deck idx4) のみ click 可能
-  const pickA = page.getByTestId('card-list-pick-B04009#0');
-  const pickB = page.getByTestId('card-list-pick-B09017#4');
+  const pickA = page.getByTestId('card-list-pick-card:self:deck:B04009#0');
+  const pickB = page.getByTestId('card-list-pick-card:self:deck:B09017#4');
   await expect(pickA).toBeVisible({ timeout: 6000 });
   await expect(pickB).toBeVisible();
   // 候補外 (lv5/lv6/lv8/window 外) は pick cell が存在しない
-  await expect(page.getByTestId('card-list-pick-D08009#1')).toHaveCount(0);
-  await expect(page.getByTestId('card-list-pick-D08011#2')).toHaveCount(0);
-  await expect(page.getByTestId('card-list-pick-B05018#6')).toHaveCount(0);
+  await expect(page.getByTestId('card-list-pick-card:self:deck:D08009#1')).toHaveCount(0);
+  await expect(page.getByTestId('card-list-pick-card:self:deck:D08011#2')).toHaveCount(0);
+  await expect(page.getByTestId('card-list-pick-card:self:deck:B05018#6')).toHaveCount(0);
 
   // 2 枚選択 → 完了
   await pickA.click();

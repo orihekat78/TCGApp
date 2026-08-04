@@ -21,17 +21,24 @@ describe('mobile-chromium Playwright project', () => {
 });
 
 describe('Playwright port configuration', () => {
-  it('defaults to port 5173 and starts Vite with strictPort', () => {
+  it('defaults to loopback port 5173 and refuses a server from another checkout', () => {
     vi.stubEnv('PLAYWRIGHT_PORT', undefined);
     try {
       const defaultConfig = createPlaywrightConfig(resolveE2EPort());
-      const webServer = defaultConfig.webServer as { command: string; url: string };
+      const webServer = defaultConfig.webServer as {
+        command: string;
+        reuseExistingServer: boolean;
+        url: string;
+      };
 
       expect(resolveE2EPort()).toBe(5173);
-      expect(defaultConfig.use?.baseURL).toBe('http://localhost:5173');
-      expect(webServer.url).toBe('http://localhost:5173');
+      expect(defaultConfig.use?.baseURL).toBe('http://127.0.0.1:5173');
+      expect(defaultConfig.testIgnore).toBe('private-hosted-static.spec.ts');
+      expect(webServer.url).toBe('http://127.0.0.1:5173');
       expect(webServer.command).toContain('--port 5173');
+      expect(webServer.command).toContain('--host 127.0.0.1');
       expect(webServer.command).toContain('--strictPort');
+      expect(webServer.reuseExistingServer).toBe(false);
     } finally {
       vi.unstubAllEnvs();
     }
@@ -41,9 +48,10 @@ describe('Playwright port configuration', () => {
     const override = createPlaywrightConfig(resolveE2EPort('5198'));
     const webServer = override.webServer as { command: string; url: string };
 
-    expect(override.use?.baseURL).toBe('http://localhost:5198');
-    expect(webServer.url).toBe('http://localhost:5198');
+    expect(override.use?.baseURL).toBe('http://127.0.0.1:5198');
+    expect(webServer.url).toBe('http://127.0.0.1:5198');
     expect(webServer.command).toContain('--port 5198');
+    expect(webServer.command).toContain('--host 127.0.0.1');
     expect(webServer.command).toContain('--strictPort');
   });
 

@@ -217,7 +217,9 @@ export function applySetCardChoiceAndContinuation(state: GameState, pending: Pen
 
 /** UI state is untrusted after serialization; only the resolver snapshot can authorize an instance. */
 function matchesSetCardChoiceGuard(guard: PendingSetCardChoiceSide | undefined, pending: PendingSetCardChoiceSide): boolean {
-  return !guard || JSON.stringify(guard) === JSON.stringify(pending);
+  if (!guard) return true;
+  const { decisionId: _uiDecisionId, ...enginePending } = pending as PendingSetCardChoiceSide & { decisionId?: string };
+  return JSON.stringify(guard) === JSON.stringify(enginePending);
 }
 
 /** Consume a validated-but-stale decision, preserving normal sequence/chain gates. */

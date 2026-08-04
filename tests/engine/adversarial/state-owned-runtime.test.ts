@@ -224,6 +224,50 @@ describe('adversarial: runtime identity is owned by GameState', () => {
     expect(resumed.pendingRuntimeState).toBeUndefined();
   });
 
+  it('rejects forged runtime snapshot keys before touching another global', () => {
+    const globals = globalThis as Record<string, unknown>;
+    const forgedKey = '__forgedPendingRuntimeKey';
+    globals[forgedKey] = 'original';
+    const forged = [{
+      key: forgedKey,
+      present: true,
+      value: 'changed',
+    }] as unknown as ReturnType<typeof snapshotPendingRuntimeState>;
+
+    try {
+      expect(() => restorePendingRuntimeState(forged)).toThrow(
+        'unknown pending runtime key',
+      );
+      expect(globals[forgedKey]).toBe('original');
+    } finally {
+      delete globals[forgedKey];
+    }
+  });
+
+  it.each(['__proto__', 'constructor', 'toString'])(
+    'rejects inherited runtime snapshot key %s before prototype mutation',
+    (forgedKey) => {
+      const prototype = Object.prototype as Record<string, unknown>;
+      const previousValue = Object.getOwnPropertyDescriptor(prototype, 'value');
+      const forged = [{
+        key: forgedKey,
+        present: true,
+        value: 'polluted',
+      }] as unknown as ReturnType<typeof snapshotPendingRuntimeState>;
+
+      try {
+        expect(() => restorePendingRuntimeState(forged)).toThrow(
+          'unknown pending runtime key',
+        );
+        expect(Object.getOwnPropertyDescriptor(prototype, 'value')).toEqual(previousValue);
+        expect(({} as Record<string, unknown>).value).toBeUndefined();
+      } finally {
+        if (previousValue) Object.defineProperty(prototype, 'value', previousValue);
+        else delete prototype.value;
+      }
+    },
+  );
+
   it('continues reserved-effect IDs after JSON restore without a module counter', () => {
     const restored = createEmptyGameState();
     restored.reservedEffects.push({

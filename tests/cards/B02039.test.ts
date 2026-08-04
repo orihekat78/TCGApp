@@ -30,7 +30,8 @@ describe('B02039 set-card evidence transfer', () => {
     const setPick = _drainPendingSetCardChoiceSide();
     expect(setPick?.entries).toHaveLength(2);
     expect(JSON.stringify(setPick)).not.toContain('SECRET_A');
-    applySetCardChoiceAndContinuation(s, setPick!, setPick!.entries[1]!.instanceId);
+    const uiPending = { ...setPick!, decisionId: 'decision:1' };
+    applySetCardChoiceAndContinuation(s, uiPending, setPick!.entries[1]!.instanceId);
     expect(s.players.opp.evidence).toEqual([{ cardId: 'SECRET_B', faceUp: true, origin: { turn: 0, via: 'effect', sourceCardId: 'B02039' } }]);
     expect(s.players.opp.scene.find((c) => c.uid === 'host')?.setCards).toHaveLength(1);
     const removePick = _drainPendingEffectPickSide();
