@@ -607,6 +607,34 @@ describe("private hosted runtime boundary", () => {
       name: "local return wrapper",
       wrapper: "function wrap(value){return {value}}consume(wrap(replay(queued)))",
     },
+    {
+      name: "arrow callback",
+      wrapper: "consume(()=>replay(queued))",
+    },
+    {
+      name: "getter callback",
+      wrapper: "consume({get value(){return replay(queued)}})",
+    },
+    {
+      name: "method callback",
+      wrapper: "consume({value(){return replay(queued)}})",
+    },
+    {
+      name: "async callback",
+      wrapper: "consume(async()=>replay(queued))",
+    },
+    {
+      name: "generator callback",
+      wrapper: "consume(function*(){yield replay(queued)})",
+    },
+    {
+      name: "Proxy getter",
+      wrapper: "consume(new Proxy({}, {get(){return replay(queued)}}))",
+    },
+    {
+      name: "microtask callback",
+      wrapper: "queueMicrotask(()=>replay(queued))",
+    },
   ])("rejects a tainted replay object hidden in a $name", async ({ wrapper }) => {
     const root = await fixture();
     await writeFile(
@@ -971,6 +999,70 @@ describe("private hosted runtime boundary", () => {
       name: "Reflect construct constructor",
       source: "Reflect.construct((()=>0).constructor,[\"return fetch('/state')\"])()",
     },
+    {
+      name: "runtime decoded constructor key",
+      source: "const key=atob('Y29uc3RydWN0b3I=');(()=>0)[key](\"return fetch('/state')\")()",
+    },
+    {
+      name: "runtime String constructor key",
+      source: "const key=String('constructor');(()=>0)[key](\"return fetch('/state')\")()",
+    },
+    {
+      name: "runtime character-code constructor key",
+      source: "const key=String.fromCharCode(...[99,111,110,115,116,114,117,99,116,111,114]);(()=>0)[key](\"return fetch('/state')\")()",
+    },
+    {
+      name: "runtime local-return constructor key",
+      source: "function key(){return 'constructor'}(()=>0)[key()](\"return fetch('/state')\")()",
+    },
+    {
+      name: "runtime array constructor key",
+      source: "const keys=['constructor'];const i=Number(location.hash);(()=>0)[keys[i]](\"return fetch('/state')\")()",
+    },
+    {
+      name: "runtime reversed constructor key",
+      source: "const key='rotcurtsnoc'.split('').reverse().join('');(()=>0)[key](\"return fetch('/state')\")()",
+    },
+    {
+      name: "parameter destructured constructor",
+      source: "function run({constructor:C}){return C(\"return fetch('/state')\")()}run(()=>0)",
+    },
+    {
+      name: "nested destructured constructor",
+      source: "const {x:{constructor:C}}={x:()=>0};C(\"return fetch('/state')\")()",
+    },
+    {
+      name: "nested property write",
+      source: "const outer={inner:{}};outer.inner.C=(()=>0).constructor;outer.inner.C(\"return fetch('/state')\")()",
+    },
+    {
+      name: "destructure into property",
+      source: "const box={};({constructor:box.C}=()=>0);box.C(\"return fetch('/state')\")()",
+    },
+    {
+      name: "Reflect.get alias",
+      source: "const get=Reflect.get;get(()=>0,'constructor')(\"return fetch('/state')\")()",
+    },
+    {
+      name: "Reflect namespace alias",
+      source: "const R=Reflect;R.get(()=>0,'constructor')(\"return fetch('/state')\")()",
+    },
+    {
+      name: "Reflect.get call forwarding",
+      source: "Reflect.get.call(null,()=>0,'constructor')(\"return fetch('/state')\")()",
+    },
+    {
+      name: "Reflect.apply alias",
+      source: "const invoke=Reflect.apply;invoke((()=>0).constructor,null,[\"return fetch('/state')\"])()",
+    },
+    {
+      name: "bound Reflect.apply",
+      source: "Reflect.apply.bind(Reflect)((()=>0).constructor,null,[\"return fetch('/state')\"])()",
+    },
+    {
+      name: "constructor descriptor value",
+      source: "Object.getOwnPropertyDescriptor(Object.getPrototypeOf(()=>0),'constructor').value(\"return fetch('/state')\")()",
+    },
   ])("rejects dynamic constructor recovery through $name", async ({ source }) => {
     const root = await fixture(`${source};export default function App(){}`);
     await writeFile(resolve(root, "dist/assets/index.js"), `${source};`);
@@ -1005,6 +1097,82 @@ describe("private hosted runtime boundary", () => {
       detail: "dynamic code execution",
     });
   });
+
+  it("rejects a spoofed React replay constructor in source and bundle", async () => {
+    const source = "function payload(){}payload.type='x';payload.toString=()=>\"return fetch('/state')\";function replay(e){void e.blockedOn;void e.targetContainers;const n=e.nativeEvent;return new n.constructor(n.type,n)}replay({blockedOn:null,targetContainers:[],nativeEvent:payload})()";
+    const root = await fixture(`${source};export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), `${source};`);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "dynamic-code-execution",
+      detail: "eval/Function",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
+  });
+
+  it("accepts a primitive constructor call that cannot create executable code", async () => {
+    const source = "void Math.PI.constructor('123')";
+    const root = await fixture(`${source};export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), `${source};`);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.filter(({ file }) => file === "src/App.tsx")).toEqual([]);
+    expect(findings.filter(({ file }) => file === "dist/assets/index.js")).toEqual([]);
+  });
+
+  it("finds a dynamic constructor reached through a cyclic alias graph", async () => {
+    const source = `
+      let first;
+      let second = first;
+      first = second;
+      const choose = Math.random() < 0;
+      first = choose ? second : (() => 0).constructor;
+      second("return fetch('/state')")();
+    `;
+    const root = await fixture(`${source}export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "dynamic-code-execution",
+      detail: "eval/Function",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
+  });
+
+  it("finishes a benign branching alias graph within a bounded time", async () => {
+    const declarations = [
+      "const choose = Math.random() < 0;",
+      "const alias0 = {};",
+    ];
+    for (let index = 1; index <= 28; index += 1) {
+      declarations.push(
+        `const alias${index} = choose ? alias${index - 1} : alias${index - 1};`,
+      );
+    }
+    declarations.push("void alias28.run();");
+    const source = declarations.join("\n");
+    const root = await fixture(`${source}\nexport default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const startedAt = performance.now();
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    const elapsedMs = performance.now() - startedAt;
+
+    expect(findings).toEqual([]);
+    expect(elapsedMs).toBeLessThan(5_000);
+  }, 10_000);
 
   it("rejects a browser global hidden behind an event-like property name", async () => {
     const root = await fixture();

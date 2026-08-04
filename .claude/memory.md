@@ -72,7 +72,7 @@
   payload validation and stable area-qualified card occurrence identities.
 - Pending runtime hydration now rejects inherited facade names before lookup;
   headless/replay isolation preserves exact own-property ownership.
-- The boundary gate enumerates every output and tracks control flow, callable
-  constructors, logical writers, replay sinks, React targets, and remote origins.
+- The boundary gate fail-closes computed/reflected Function recovery, nested writes,
+  deferred replay escapes, React spoofing, and cyclic/branching alias graphs.
 - Access pagination requires complete metadata; Windows config ACLs permit writes
   only by the current operator, SYSTEM, and built-in Administrators.

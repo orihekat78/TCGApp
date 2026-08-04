@@ -2153,7 +2153,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `finish.cjs`
     - `prepare.cjs`
   - **`private-hosted/`**
-    - `audit-runtime-boundary.ts`
+    - `audit-runtime-boundary.ts` — This audit is a release boundary, so unresolved runtime property keys and
     - `check-release-bugs.ts`
     - `cloudflare-api.ts`
     - `init-config.ts`
