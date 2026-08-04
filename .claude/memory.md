@@ -58,10 +58,10 @@
 
 ## 2026-08-04: Private hosted Phase 3 and Phase 4 Tasks 1-2
 
-- The current Vite app is qualified unchanged for static hosting; this work adds
-  no PvP, backend, account, persistence, Cloudflare resource, or upload.
-- Runtime graph, CSP, bug, manifest-rebind, full-suite, and public-control static
-  browser gates fail closed and write final evidence outside the repository.
+- The current Vite app is prepared unchanged for static-host qualification; this
+  work adds no PvP, backend, account, persistence, Cloudflare resource, or upload.
+- Qualification exists only when the repo-external final report names the exact
+  clean commit and records every ordered gate; absence of that report means unqualified.
 - Strict external operator JSON caps the named audience at 12 including the
   operator and rejects unsafe ACLs, links, hard links, swaps, and repo paths.
 - The read-only Access auditor validates a dedicated account, sole Cloudflare IdP,

@@ -635,6 +635,38 @@ describe("private hosted runtime boundary", () => {
       name: "microtask callback",
       wrapper: "queueMicrotask(()=>replay(queued))",
     },
+    {
+      name: "stored property callback",
+      wrapper: "const box={cb:()=>replay(queued)};consume(box.cb)",
+    },
+    {
+      name: "stored array callback",
+      wrapper: "const list=[()=>replay(queued)];consume(list[0])",
+    },
+    {
+      name: "later property callback",
+      wrapper: "const box={};box.cb=()=>replay(queued);consume(box.cb)",
+    },
+    {
+      name: "computed property callback",
+      wrapper: "const box={};const key=()=>Math.random()?'cb':'cb';box[key()]=()=>replay(queued);consume(box[key()])",
+    },
+    {
+      name: "local callback return",
+      wrapper: "function make(){return ()=>replay(queued)}consume(make())",
+    },
+    {
+      name: "local object callback return",
+      wrapper: "function make(){return {cb:()=>replay(queued)}}consume(make().cb)",
+    },
+    {
+      name: "stored getter callback",
+      wrapper: "const box={get cb(){return ()=>replay(queued)}};consume(box.cb)",
+    },
+    {
+      name: "conditional stored callback",
+      wrapper: "const box={cb:()=>replay(queued)};consume(Math.random()?box.cb:()=>0)",
+    },
   ])("rejects a tainted replay object hidden in a $name", async ({ wrapper }) => {
     const root = await fixture();
     await writeFile(
@@ -649,6 +681,61 @@ describe("private hosted runtime boundary", () => {
       detail: "browser global escape",
     });
   });
+
+  it("finds a deferred replay callback through a cyclic alias graph", async () => {
+    const root = await fixture();
+    await writeFile(
+      resolve(root, "dist/assets/index.js"),
+      "function target(e){return e.target||window}function replay(e){void e.nativeEvent;void e.targetContainers;e.blockedOn=target(e);return e}const queued={blockedOn:null,nativeEvent:{},targetContainers:[],target:null};let first;let second=first;first=second;const choose=Math.random()<0;first=choose?second:()=>replay(queued);consume(second);",
+    );
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "browser global escape",
+    });
+  });
+
+  it("rechecks a deferred callback shared by multiple consumers", async () => {
+    const root = await fixture();
+    await writeFile(
+      resolve(root, "dist/assets/index.js"),
+      "function target(e){return e.target||window}function replay(e){void e.nativeEvent;void e.targetContainers;e.blockedOn=target(e);return e}const queued={blockedOn:null,nativeEvent:{},targetContainers:[],target:null};const box={};consume(box.cb);box.cb=()=>replay(queued);consume(box.cb);",
+    );
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "browser global escape",
+    });
+  });
+
+  it("finishes a benign deferred alias graph within a bounded time", async () => {
+    const declarations = [
+      "function target(e){return e.target||window}",
+      "function replay(e){void e.nativeEvent;void e.targetContainers;e.blockedOn=target(e);return e}",
+      "const queued={blockedOn:null,nativeEvent:{},targetContainers:[],target:null};",
+      "const choose = Math.random() < 0;",
+      "const alias0 = {};",
+    ];
+    for (let index = 1; index <= 28; index += 1) {
+      declarations.push(
+        `const alias${index} = choose ? alias${index - 1} : alias${index - 1};`,
+      );
+    }
+    declarations.push("consume(alias28);");
+    const root = await fixture();
+    await writeFile(resolve(root, "dist/assets/index.js"), declarations.join("\n"));
+
+    const startedAt = performance.now();
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    const elapsedMs = performance.now() - startedAt;
+
+    expect(findings).toEqual([]);
+    expect(elapsedMs).toBeLessThan(5_000);
+  }, 10_000);
 
   it("rejects a privileged logical assignment through a local writer", async () => {
     const root = await fixture();
@@ -1062,6 +1149,50 @@ describe("private hosted runtime boundary", () => {
     {
       name: "constructor descriptor value",
       source: "Object.getOwnPropertyDescriptor(Object.getPrototypeOf(()=>0),'constructor').value(\"return fetch('/state')\")()",
+    },
+    {
+      name: "constructor on a returned object",
+      source: "function make(){return {C:(()=>0).constructor}}make().C(\"return fetch('/state')\")()",
+    },
+    {
+      name: "constructor on a nested returned object",
+      source: "function make(){return {inner:{C:(()=>0).constructor}}}make().inner.C(\"return fetch('/state')\")()",
+    },
+    {
+      name: "constructor write through a returned object",
+      source: "const box={};function get(){return box}get().C=(()=>0).constructor;get().C(\"return fetch('/state')\")()",
+    },
+    {
+      name: "computed constructor write through a returned object",
+      source: "const box={};function get(){return box}const key=()=>Math.random()?'C':'C';get()[key()]=(()=>0).constructor;get()[key()](\"return fetch('/state')\")()",
+    },
+    {
+      name: "Reflect.get apply forwarding",
+      source: "Reflect.get.apply(null,[()=>0,'constructor'])(\"return fetch('/state')\")()",
+    },
+    {
+      name: "Reflect.apply apply forwarding",
+      source: "Reflect.apply.apply(null,[(()=>0).constructor,null,[\"return fetch('/state')\"]])()",
+    },
+    {
+      name: "destructured Reflect.get",
+      source: "const {get}=Reflect;get(()=>0,'constructor')(\"return fetch('/state')\")()",
+    },
+    {
+      name: "renamed destructured Reflect.apply",
+      source: "const {apply:invoke}=Reflect;invoke((()=>0).constructor,null,[\"return fetch('/state')\"])()",
+    },
+    {
+      name: "defaulted destructured Reflect.get forwarding",
+      source: "const {get:read=Reflect.get}=Reflect;read.call(null,()=>0,'constructor')(\"return fetch('/state')\")()",
+    },
+    {
+      name: "nested destructured Reflect.get apply forwarding",
+      source: "const {api:{get:read}}={api:Reflect};read.apply(null,[()=>0,'constructor'])(\"return fetch('/state')\")()",
+    },
+    {
+      name: "destructured bound Reflect.apply",
+      source: "const {apply:invoke}=Reflect;invoke.bind(Reflect)((()=>0).constructor,null,[\"return fetch('/state')\"])()",
     },
   ])("rejects dynamic constructor recovery through $name", async ({ source }) => {
     const root = await fixture(`${source};export default function App(){}`);
