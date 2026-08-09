@@ -71,5 +71,5 @@
 - Boundary follows callable timer provenance, typed iframes, and cyclic browser aliases.
 - Access pagination must be complete; config writes are limited to operator/system/admin.
 - Invocation flow tracks qualified `Reflect.apply` and hoisted local-callable identity.
-- React trust rejects exposed factories and opaque, projected, or sibling mutations.
+- React trust keys factories by module/export identity and follows `.default` sibling mutation.
 - Computed iframe keys use access-point values; local browser-named models stay plain.
