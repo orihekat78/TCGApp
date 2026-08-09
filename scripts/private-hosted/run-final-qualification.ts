@@ -16,21 +16,23 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { RuntimeBoundaryFinding } from "./audit-runtime-boundary.js";
+import type { ReleaseBasicFinding } from "./audit-release-basics.js";
 
 export const QUALIFICATION_COMMAND_IDS = [
   "npm-ci",
-  "boundary",
+  "build",
+  "dependency-audit",
   "bug-gate",
   "typecheck",
   "lint",
   "unit",
   "smoke",
   "dev-e2e",
-  "audit",
   "docs",
   "docs-check",
   "prepare-release",
+  "secret-scan",
+  "destination-scan",
   "prepared-private-e2e",
   "clean-tree-check",
 ] as const;
@@ -56,7 +58,7 @@ export type QualificationCommandRecord = {
 };
 
 export type QualificationReport = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   releaseCommit: string;
   packageLockSha256: string;
   uploadManifestSha256: string;
@@ -64,7 +66,8 @@ export type QualificationReport = {
   startedAt: string;
   completedAt: string;
   commands: QualificationCommandRecord[];
-  boundaryFindings: RuntimeBoundaryFinding[];
+  secretFindings: ReleaseBasicFinding[];
+  destinationFindings: ReleaseBasicFinding[];
   bugGateSha256: string;
 };
 
@@ -119,14 +122,15 @@ const MODULE_REPOSITORY_ROOT = resolve(
 const HASH = /^[0-9a-f]{64}$/;
 const COMMIT = /^[0-9a-f]{40}$/;
 const REPORT_KEYS = [
-  "boundaryFindings",
   "bugGateSha256",
   "commands",
   "completedAt",
+  "destinationFindings",
   "packageLockSha256",
   "releaseCommit",
   "responseManifestSha256",
   "schemaVersion",
+  "secretFindings",
   "startedAt",
   "uploadManifestSha256",
 ] as const;
@@ -225,7 +229,7 @@ export function validateQualificationReport(
 ): QualificationReport {
   const value = record(candidate);
   exactKeys(value, REPORT_KEYS, "qualification report");
-  if (value.schemaVersion !== 1) fail("schemaVersion must be 1");
+  if (value.schemaVersion !== 2) fail("schemaVersion must be 2");
   if (typeof value.releaseCommit !== "string" || !COMMIT.test(value.releaseCommit)) {
     fail("releaseCommit must be a 40-character lowercase Git hash");
   }
@@ -236,8 +240,11 @@ export function validateQualificationReport(
   const reportStarted = Date.parse(utc(value.startedAt, "startedAt"));
   const reportCompleted = Date.parse(utc(value.completedAt, "completedAt"));
   if (reportCompleted < reportStarted) fail("report timestamp order is invalid");
-  if (!Array.isArray(value.boundaryFindings) || value.boundaryFindings.length !== 0) {
-    fail("boundary findings must be empty");
+  if (!Array.isArray(value.secretFindings) || value.secretFindings.length !== 0) {
+    fail("secret findings must be empty");
+  }
+  if (!Array.isArray(value.destinationFindings) || value.destinationFindings.length !== 0) {
+    fail("destination findings must be empty");
   }
   if (!Array.isArray(value.commands)) fail("commands must be an array");
   const ids = value.commands.map((item) => record(item).id);
@@ -452,11 +459,15 @@ function isolatedE2EPort(runDir: string): string {
 }
 
 function commandInputs(paths: QualificationPaths): Array<Omit<QualificationCommandInput, "logPath">> {
-  const npmRun = (id: QualificationCommandId, script: string) =>
-    npmInput(id, ["run", "--silent", script], paths);
+  const npmRun = (
+    id: QualificationCommandId,
+    script: string,
+    extraEnvironment: NodeJS.ProcessEnv = {},
+  ) => npmInput(id, ["run", "--silent", script], paths, extraEnvironment);
   return [
     npmInput("npm-ci", ["ci"], paths),
-    npmRun("boundary", "private-hosted:boundary"),
+    npmRun("build", "build"),
+    npmInput("dependency-audit", ["audit", "--audit-level=high"], paths),
     npmRun("bug-gate", "private-hosted:bug-gate"),
     npmRun("typecheck", "typecheck"),
     npmRun("lint", "lint"),
@@ -468,7 +479,6 @@ function commandInputs(paths: QualificationPaths): Array<Omit<QualificationComma
       paths,
       { PLAYWRIGHT_PORT: isolatedE2EPort(paths.runDir) },
     ),
-    npmInput("audit", ["audit", "--audit-level=high"], paths),
     npmRun("docs", "docs"),
     npmRun("docs-check", "docs:check"),
     {
@@ -489,6 +499,12 @@ function commandInputs(paths: QualificationPaths): Array<Omit<QualificationComma
       cwd: paths.repoRoot,
       env: childEnvironment(),
     },
+    npmRun("secret-scan", "private-hosted:scan-secrets", {
+      PRIVATE_HOSTED_ARTIFACT_DIR: paths.stagingDir,
+    }),
+    npmRun("destination-scan", "private-hosted:scan-destinations", {
+      PRIVATE_HOSTED_ARTIFACT_DIR: paths.stagingDir,
+    }),
     npmInput(
       "prepared-private-e2e",
       ["run", "--silent", "test:e2e:private-hosted:prepared"],
@@ -561,7 +577,8 @@ export async function runFinalQualification(
   let uploadManifestSha256: string | undefined;
   let responseManifestSha256: string | undefined;
   let bugGateSha256: string | undefined;
-  let boundaryFindings: RuntimeBoundaryFinding[] | undefined;
+  let secretFindings: ReleaseBasicFinding[] | undefined;
+  let destinationFindings: ReleaseBasicFinding[] | undefined;
 
   const inputs = commandInputs(paths);
   for (let index = 0; index < inputs.length; index += 1) {
@@ -589,13 +606,15 @@ export async function runFinalQualification(
         sha256: await sha256File(input.logPath),
       },
     };
-    if (base.id === "boundary") {
-      const result = await parseJsonLog(input.logPath, "boundary");
+    if (base.id === "secret-scan" || base.id === "destination-scan") {
+      const result = await parseJsonLog(input.logPath, base.id);
       if (result.ok !== true || !Array.isArray(result.findings)) {
-        fail("boundary result is invalid");
+        fail(`${base.id} result is invalid`);
       }
-      boundaryFindings = result.findings as RuntimeBoundaryFinding[];
-      if (boundaryFindings.length > 0) fail("boundary findings are not empty");
+      const findings = result.findings as ReleaseBasicFinding[];
+      if (findings.length > 0) fail(`${base.id} findings are not empty`);
+      if (base.id === "secret-scan") secretFindings = findings;
+      else destinationFindings = findings;
     }
     if (base.id === "bug-gate") {
       const result = await parseJsonLog(input.logPath, "bug-gate");
@@ -643,9 +662,10 @@ export async function runFinalQualification(
   if (!uploadManifestSha256 || !responseManifestSha256 || !bugGateSha256) {
     fail("qualification evidence is incomplete");
   }
-  if (!boundaryFindings) fail("boundary evidence is missing");
+  if (!secretFindings) fail("secret scan evidence is missing");
+  if (!destinationFindings) fail("destination scan evidence is missing");
   const report: QualificationReport = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     releaseCommit: initial.releaseCommit,
     packageLockSha256: initial.packageLockSha256,
     uploadManifestSha256,
@@ -653,7 +673,8 @@ export async function runFinalQualification(
     startedAt,
     completedAt: controls.now().toISOString(),
     commands,
-    boundaryFindings,
+    secretFindings,
+    destinationFindings,
     bugGateSha256,
   };
   validateQualificationReport(report);

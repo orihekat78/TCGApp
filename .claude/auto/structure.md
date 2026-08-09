@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 265
-- **ファイル数**: 5624
+- **ファイル数**: 5627
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -787,6 +787,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-26-01-phase-3-5-official-qa.md`
     - `2026-07-26-02-rule-manual-ver2.5.md`
     - `2026-07-26-03-ct-p10-wave.md`
+    - `2026-08-09-01-private-hosted-basic-release-gates.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -2175,6 +2176,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `finish.cjs`
     - `prepare.cjs`
   - **`private-hosted/`**
+    - `audit-release-basics.ts` — Deliberately bounded: final text artifacts and literal destinations only.
     - `audit-runtime-boundary.ts` — Updated only after npm-ci rebuild, full qualification, and adversarial review.
     - `check-release-bugs.ts`
     - `cloudflare-api.ts`
@@ -5738,6 +5740,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `private-hosted-operator-config.test.ts`
     - `private-hosted-prepare.test.ts` — @ts-expect-error Public release preparation cannot replace the build.
     - `private-hosted-qualification-report.test.ts`
+    - `private-hosted-release-basics.test.ts`
     - `private-hosted-runtime-boundary.test.ts`
   - **`scripts/`**
     - `build-tcg-runtime-packet.test.ts`

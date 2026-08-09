@@ -28,14 +28,14 @@ Date: 2026-08-04 — Existing-app direction approved; Cloudflare setup not perfo
   browser persistence, or development bridge is shipped.
 - Match, tutorial, and imported replay state remain in memory and clear on reload.
 
-## Static payload and runtime boundary
+## Static payload and release inspection
 
 - Phase 1 defines the browser-only build and response headers. Phase 2 creates
   only an inspected, reproducible staging payload plus repo-external evidence.
-- The vendor chunk requires its qualified SHA-256; first-party output is deeply inspected.
-- The graph audit rejects network, navigation, cross-context export, string-code
-  execution, service workers, persistent storage, server modules, Vite runtime
-  variables, unapproved origins, dynamic chunks, and unsafe routing overrides.
+- The required release inspection is bounded to build success, dependencies,
+  embedded-secret markers, and literal external destinations.
+- Secret and destination scans run against the exact staged upload payload; evidence reports labels or origins only, never URL paths or queries.
+- Dynamic alias/runtime-flow analysis is optional and not a required release gate.
 - Runtime CSP is `connect-src 'none'`; scripts/styles/fonts are same-origin,
   workers and forms are disabled, and images are limited to self, data, and the
   existing official image host.
@@ -72,9 +72,9 @@ Date: 2026-08-04 — Existing-app direction approved; Cloudflare setup not perfo
 
 ## Qualification and release gates
 
-- Phase 3 must pass the runtime boundary, bug gate, typecheck, lint, full unit
-  suite, 1,000-game smoke, development E2E, dependency audit, docs checks,
-  payload preparation, and production-static Playwright suite.
+- Phase 3 must pass build, high-severity dependency audit, staged secret and
+  destination scans, bug gate, typecheck, lint, full unit suite, 1,000-game smoke,
+  development E2E, docs checks, payload preparation, and static Playwright.
 - Static Playwright uses public controls and covers desktop/mobile setup, gameplay,
   tutorial, replay, reset, image fallback, staged bytes/headers, and runtime errors.
 - The final qualification producer starts and ends on the same clean commit and

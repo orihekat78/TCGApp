@@ -73,3 +73,8 @@
 - Invocation flow tracks comma/qualified `Reflect.apply` and hoisted local-callable identity.
 - React trust follows `.default` aliases through binding and assignment projections.
 - Computed iframe keys use access-point values; local browser-named models stay plain.
+
+## 2026-08-09: Private hosted release gate scope
+- Final qualification requires build, high-severity dependency audit, secret scan, and approved destination scan.
+- Advanced runtime-boundary analysis remains optional and is not a deployment blocker.
+- After this branch, user Cloudflare setup precedes our Access audit, upload, and phone verification.

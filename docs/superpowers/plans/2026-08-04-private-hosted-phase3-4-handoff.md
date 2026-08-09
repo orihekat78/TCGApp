@@ -10,11 +10,8 @@ Status: Phase 4 Task 3 boundary; no Cloudflare account or resource configured
 - Retained product deltas are limited to restoring existing flows: strip UI-only
   decision IDs at one resolver guard, use area-qualified hand occurrence IDs, and
   enforce 44px smartphone tap targets. No rules, CPU, or match outcome changes.
-- Static global accessors may be rewritten without changing their known-key behavior
-  so the production boundary can be inspected deterministically.
-- Lockfile dependencies build into one vendor chunk. Only its qualified SHA-256
-  bypasses deep alias analysis; mismatch fails and the chunk is fully scanned.
-- Changing that pin requires a clean rebuild, full qualification, and adversarial review.
+- Required inspection is limited to build, dependencies, embedded secrets, and
+  literal external destinations. Advanced runtime-flow analysis is optional.
 - Never upload bundled card images. Never enable public signup or public paths.
 - Audience is a fixed named list, maximum 12 people including the operator.
 
@@ -24,23 +21,26 @@ Run `npm run private-hosted:qualify-final` from one clean release commit. The
 producer must execute these IDs exactly once and in this order:
 
 1. `npm-ci`
-2. `boundary`
-3. `bug-gate`
-4. `typecheck`
-5. `lint`
-6. `unit`
-7. `smoke`
-8. `dev-e2e`
-9. `audit`
+2. `build`
+3. `dependency-audit`
+4. `bug-gate`
+5. `typecheck`
+6. `lint`
+7. `unit`
+8. `smoke`
+9. `dev-e2e`
 10. `docs`
 11. `docs-check`
 12. `prepare-release`
-13. `prepared-private-e2e`
-14. `clean-tree-check`
+13. `secret-scan`
+14. `destination-scan`
+15. `prepared-private-e2e`
+16. `clean-tree-check`
 
-Acceptance requires exit code 0 for every command, no boundary findings, stable
-commit/lockfile/manifests, an atomically published repository-external report,
-and a clean tree. This does not authorize Cloudflare setup or deployment.
+Secret and destination scans inspect the exact staged upload payload. Acceptance
+requires exit code 0 for every command, empty findings, stable commit/lockfile/
+manifests, an atomically published repository-external report, and a clean tree.
+This does not authorize Cloudflare setup or deployment.
 
 ## Phase 4 Task 1: operator config implementation
 

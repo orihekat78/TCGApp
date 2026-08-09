@@ -72,7 +72,7 @@ describe("private hosted final qualification", () => {
       tick += 1_000;
       let output = `${input.id}\n`;
       if (input.id === "lint") output = "lint complete: ✓\r\nall bytes included\n";
-      if (input.id === "boundary") {
+      if (input.id === "secret-scan" || input.id === "destination-scan") {
         output = `${JSON.stringify({ schemaVersion: 1, ok: true, findings: [] }, null, 2)}\n`;
       }
       if (input.id === "bug-gate") {
@@ -103,14 +103,16 @@ describe("private hosted final qualification", () => {
     expect(seen).toEqual(QUALIFICATION_COMMAND_IDS);
     const expectedNpmArgs: Partial<Record<(typeof QUALIFICATION_COMMAND_IDS)[number], string[]>> = {
       "npm-ci": ["ci"],
-      boundary: ["run", "--silent", "private-hosted:boundary"],
+      build: ["run", "--silent", "build"],
+      "dependency-audit": ["audit", "--audit-level=high"],
+      "secret-scan": ["run", "--silent", "private-hosted:scan-secrets"],
+      "destination-scan": ["run", "--silent", "private-hosted:scan-destinations"],
       "bug-gate": ["run", "--silent", "private-hosted:bug-gate"],
       typecheck: ["run", "--silent", "typecheck"],
       lint: ["run", "--silent", "lint"],
       unit: ["run", "--silent", "test"],
       smoke: ["run", "--silent", "smoke:1000"],
       "dev-e2e": ["run", "--silent", "test:e2e"],
-      audit: ["audit", "--audit-level=high"],
       docs: ["run", "--silent", "docs"],
       "docs-check": ["run", "--silent", "docs:check"],
       "prepared-private-e2e": [
@@ -136,6 +138,11 @@ describe("private hosted final qualification", () => {
       expect(input.env.CI, input.id).toBe("1");
       expect(input.env.NODE_OPTIONS, input.id).toBeUndefined();
       expect(input.env.CLOUDFLARE_API_TOKEN, input.id).toBeUndefined();
+      expect(input.env.PRIVATE_HOSTED_ARTIFACT_DIR, input.id).toBe(
+        input.id === "secret-scan" || input.id === "destination-scan"
+          ? resolve(f.runDir, "staging")
+          : undefined,
+      );
     }
     const devE2EPort = seenInputs.find(({ id }) => id === "dev-e2e")?.env
       .PLAYWRIGHT_PORT;
@@ -219,7 +226,9 @@ describe("private hosted final qualification", () => {
         const startedAt = new Date(tick).toISOString();
         tick += 1_000;
         let output = `${input.id}\n`;
-        if (input.id === "boundary") output = '{"schemaVersion":1,"ok":true,"findings":[]}\n';
+        if (input.id === "secret-scan" || input.id === "destination-scan") {
+          output = '{"schemaVersion":1,"ok":true,"findings":[]}\n';
+        }
         if (input.id === "bug-gate") output = '{"schemaVersion":1,"ok":true,"blockers":[],"knownLimitations":[]}\n';
         if (input.id === "prepare-release") {
           await mkdir(resolve(f.runDir, "evidence"));
@@ -263,7 +272,7 @@ describe("private hosted final qualification", () => {
     }
   });
 
-  it("rejects reordered commands, missing logs, non-UTC times, or non-empty boundary findings", () => {
+  it("rejects reordered commands, missing logs, non-UTC times, or non-empty release findings", () => {
     const command = (id: (typeof QUALIFICATION_COMMAND_IDS)[number], index: number) => ({
       id,
       argv: ["node", id],
@@ -288,7 +297,7 @@ describe("private hosted final qualification", () => {
         : {}),
     });
     const base = {
-      schemaVersion: 1 as const,
+      schemaVersion: 2 as const,
       releaseCommit: "1".repeat(40),
       packageLockSha256: HASH,
       uploadManifestSha256: HASH,
@@ -296,15 +305,18 @@ describe("private hosted final qualification", () => {
       startedAt: "2026-08-04T00:00:00.000Z",
       completedAt: "2026-08-04T00:01:00.000Z",
       commands: QUALIFICATION_COMMAND_IDS.map(command),
-      boundaryFindings: [],
+      secretFindings: [],
+      destinationFindings: [],
       bugGateSha256: HASH,
     };
     expect(() => validateQualificationReport({ ...base, commands: [...base.commands].reverse() }))
       .toThrow(/command order/);
     expect(() => validateQualificationReport({ ...base, commands: base.commands.slice(0, -1) }))
       .toThrow(/command order/);
-    expect(() => validateQualificationReport({ ...base, boundaryFindings: [{ code: "x" }] }))
-      .toThrow(/boundary/);
+    expect(() => validateQualificationReport({ ...base, secretFindings: [{ code: "x" }] }))
+      .toThrow(/secret/);
+    expect(() => validateQualificationReport({ ...base, destinationFindings: [{ code: "x" }] }))
+      .toThrow(/destination/);
     expect(() => validateQualificationReport({ ...base, startedAt: "2026-08-04 00:00:00" }))
       .toThrow(/UTC/);
     const badLog = structuredClone(base);
