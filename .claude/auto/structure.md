@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 265
-- **ファイル数**: 5616
+- **ファイル数**: 5620
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -468,6 +468,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-287.md` — Projected timer invocation alias
     - `BUG-288.md` — Opaque React namespace mutation
     - `BUG-289.md` — Iframe property flow classification
+    - `BUG-290.md` — Qualified Reflect.apply timer invocation
+    - `BUG-291.md` — Declared callable timer overwrite
+    - `BUG-292.md` — Indirect React namespace mutation
+    - `BUG-293.md` — Exposed vendor factory result
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)

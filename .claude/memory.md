@@ -58,29 +58,18 @@
 
 ## 2026-08-04: Private hosted Phase 3 and Phase 4 Tasks 1-2
 
-- The existing feature/rule scope is preserved. Qualification retained only set-card
-  decision-ID, hand-occurrence-ID, and 44px smartphone tap-target corrections; it
-  adds no PvP, backend, account, persistence, Cloudflare resource, or upload.
-- Qualification exists only when the repo-external final report names the exact
-  clean commit and records every ordered gate; absence of that report means unqualified.
-- Strict external operator JSON caps the named audience at 12 including the
-  operator and rejects unsafe ACLs, links, hard links, swaps, and repo paths.
+- Existing scope is preserved. Only set-card decision IDs, hand occurrence IDs, and
+  44px tap targets changed; no PvP, backend, account, persistence, resource, or upload.
+- Qualification requires a repo-external report naming the exact clean commit and gates.
+- External operator JSON caps the named audience at 12 and rejects unsafe paths or ACLs.
 - Lockfile vendor code is split and SHA-256 pinned; pin changes require requalification.
-- The read-only Access auditor validates a dedicated account, sole Cloudflare IdP,
-  root/wildcard apps, exact audiences, session limits, and Block Everyone containment.
+- Access audit requires a dedicated account, sole Cloudflare IdP, root/wildcard apps,
+  exact audiences, session limits, and Block Everyone containment.
 - User-operated account and dashboard setup begins at Phase 4 Task 3; stop before it.
-- Final browser qualification caught a UI-only decision ID rejecting a valid
-  set-card choice and legacy contact occurrence IDs; both now use exact engine
-  payload validation and stable area-qualified card occurrence identities.
-- Pending runtime and headless contexts use own descriptors only; inherited
-  accessors cannot suppress hydration or leak interactive player identity.
-- The boundary requires provenance-backed callable timer handlers across wrappers,
-  and follows bare or typed iframe contexts plus cyclic browser aliases.
-- Access pagination requires complete metadata; Windows config ACLs permit writes
-  only by the current operator, SYSTEM, and built-in Administrators.
-- Invocation flow records exact timer, `Reflect.apply`, and local-callable identity;
-  definite overwrites do not inherit historical privilege.
-- React bundle trust requires exact pinned interop shape and is revoked by opaque
-  computed or bulk mutation.
-- Computed iframe keys use access-point values; typed iframes remain fail-closed,
-  while locally constructed browser-named models retain plain-object identity.
+- Browser qualification fixed set-card payload validation and stable area-qualified IDs.
+- Pending/headless runtime uses own descriptors; inherited accessors cannot alter identity.
+- Boundary follows callable timer provenance, typed iframes, and cyclic browser aliases.
+- Access pagination must be complete; config writes are limited to operator/system/admin.
+- Invocation flow tracks qualified `Reflect.apply` and hoisted local-callable identity.
+- React trust rejects exposed factories and opaque, projected, or sibling mutations.
+- Computed iframe keys use access-point values; local browser-named models stay plain.
