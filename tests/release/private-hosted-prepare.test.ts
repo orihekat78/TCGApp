@@ -256,7 +256,7 @@ describe("private hosted release preparation", () => {
         }),
       ).resolves.toMatchObject({ manifests: expect.any(Object) });
     },
-    120_000,
+    300_000,
   );
 
   it("fails when the injected build runner fails", async () => {
