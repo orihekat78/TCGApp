@@ -73,6 +73,7 @@ function trustedVendorBundle(source: string): boolean {
 const PRIVILEGED_BROWSER_GLOBALS = new Set([
   "document",
   "globalThis",
+  "navigation",
   "navigator",
   "self",
   "window",
@@ -120,6 +121,8 @@ const browserObjectProperty = (
     return DOM_NODE_BROWSER_OBJECT;
   }
   if (owner === DOM_NODE_BROWSER_OBJECT) {
+    if (property === "contentWindow") return "window";
+    if (property === "contentDocument") return "document";
     if (property === "ownerDocument") return "document";
     if (property === "defaultView") return "window";
     return DOM_NODE_BROWSER_OBJECT;
@@ -130,7 +133,10 @@ const browserObjectProperty = (
       .includes(property ?? "")) {
       return "window";
     }
-    if (["document", "ownerDocument"].includes(property ?? "")) return "document";
+    if (["document", "ownerDocument", "contentDocument"].includes(property ?? "")) {
+      return "document";
+    }
+    if (property === "contentWindow") return "window";
     if (property === "navigator") return "navigator";
     return BROWSER_DERIVED_OBJECT;
   }
@@ -142,16 +148,21 @@ const PERSISTENT_BROWSER_PROPERTIES = new Set([
   "cookie",
   "cookieStore",
   "credentials",
+  "execCommand",
   "history",
   "indexedDB",
   "localStorage",
   "name",
+  "navigate",
+  "navigation",
   "openDatabase",
   "sessionStorage",
   "showDirectoryPicker",
   "showOpenFilePicker",
   "showSaveFilePicker",
   "storage",
+  "reload",
+  "updateCurrentEntry",
 ]);
 const NETWORK_BROWSER_PROPERTIES = new Set([
   "BroadcastChannel",
@@ -683,10 +694,9 @@ function isDynamicCodeExecution(
 ): boolean {
   if (
     ts.isCallExpression(node) &&
-    node.arguments[0] &&
     staticStrings &&
     analysis.isBrowserTimer(node.expression) &&
-    scopedStaticString(node.arguments[0], staticStrings) !== undefined
+    (!node.arguments[0] || !staticallyCallable(node.arguments[0], staticStrings))
   ) {
     return true;
   }
@@ -8140,16 +8150,76 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
 
 type ScopedStaticStrings = {
   constants: ReadonlyMap<AliasBinding, ts.Expression>;
+  callableSources: ReadonlyMap<AliasBinding, readonly ts.Expression[]>;
+  functionBindings: ReadonlySet<AliasBinding>;
+  reactCallbackBindings: ReadonlySet<AliasBinding>;
+  reactNamespaceBindings: ReadonlySet<AliasBinding>;
+  allowBundledReactHooks: boolean;
   resolveBinding(node: ts.Node, name: string): AliasBinding | undefined;
 };
 
 function collectScopedStaticStrings(
   root: ts.Node,
   bindings: BrowserAliasAnalysis,
+  allowBundledReactHooks = false,
 ): ScopedStaticStrings {
   const constants = new Map<AliasBinding, ts.Expression>();
   const ambiguous = new Set<AliasBinding>();
+  const callableSources = new Map<AliasBinding, ts.Expression[]>();
+  const functionBindings = new Set<AliasBinding>();
+  const reactCallbackBindings = new Set<AliasBinding>();
+  const reactNamespaceBindings = new Set<AliasBinding>();
+  const addCallableSource = (node: ts.Identifier, source: ts.Expression): void => {
+    const binding = bindings.resolveBinding(node, node.text);
+    if (!binding) return;
+    const sources = callableSources.get(binding) ?? [];
+    sources.push(source);
+    callableSources.set(binding, sources);
+  };
   function collect(node: ts.Node): void {
+    if (ts.isFunctionDeclaration(node) && node.name) {
+      const binding = bindings.resolveBinding(node.name, node.name.text);
+      if (binding) functionBindings.add(binding);
+    }
+    if (
+      ts.isImportDeclaration(node) &&
+      ts.isStringLiteral(node.moduleSpecifier) &&
+      node.moduleSpecifier.text === "react" &&
+      node.importClause
+    ) {
+      if (node.importClause.name) {
+        const binding = bindings.resolveBinding(
+          node.importClause.name,
+          node.importClause.name.text,
+        );
+        if (binding) reactNamespaceBindings.add(binding);
+      }
+      const named = node.importClause.namedBindings;
+      if (named && ts.isNamespaceImport(named)) {
+        const binding = bindings.resolveBinding(named.name, named.name.text);
+        if (binding) reactNamespaceBindings.add(binding);
+      } else if (named && ts.isNamedImports(named)) {
+        for (const element of named.elements) {
+          if ((element.propertyName ?? element.name).text !== "useCallback") continue;
+          const binding = bindings.resolveBinding(element.name, element.name.text);
+          if (binding) reactCallbackBindings.add(binding);
+        }
+      }
+    }
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.initializer
+    ) {
+      addCallableSource(node.name, node.initializer);
+    }
+    if (
+      ts.isBinaryExpression(node) &&
+      node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+      ts.isIdentifier(node.left)
+    ) {
+      addCallableSource(node.left, node.right);
+    }
     if (
       ts.isVariableDeclaration(node) &&
       ts.isIdentifier(node.name) &&
@@ -8170,7 +8240,92 @@ function collectScopedStaticStrings(
     ts.forEachChild(node, collect);
   }
   collect(root);
-  return { constants, resolveBinding: bindings.resolveBinding };
+  return {
+    constants,
+    callableSources,
+    functionBindings,
+    reactCallbackBindings,
+    reactNamespaceBindings,
+    allowBundledReactHooks,
+    resolveBinding: bindings.resolveBinding,
+  };
+}
+
+function staticallyCallable(
+  node: ts.Expression,
+  analysis: ScopedStaticStrings,
+  resolving: ReadonlySet<AliasBinding> = new Set(),
+): boolean {
+  if (
+    ts.isParenthesizedExpression(node) ||
+    ts.isAsExpression(node) ||
+    ts.isTypeAssertionExpression(node) ||
+    ts.isNonNullExpression(node) ||
+    ts.isSatisfiesExpression(node)
+  ) {
+    return staticallyCallable(node.expression, analysis, resolving);
+  }
+  if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) return true;
+  if (ts.isConditionalExpression(node)) {
+    return staticallyCallable(node.whenTrue, analysis, resolving) &&
+      staticallyCallable(node.whenFalse, analysis, resolving);
+  }
+  if (
+    ts.isBinaryExpression(node) &&
+    (node.operatorToken.kind === ts.SyntaxKind.CommaToken ||
+      node.operatorToken.kind === ts.SyntaxKind.EqualsToken)
+  ) {
+    return staticallyCallable(node.right, analysis, resolving);
+  }
+  if (ts.isIdentifier(node)) {
+    const binding = analysis.resolveBinding(node, node.text);
+    if (!binding || resolving.has(binding)) return false;
+    if (analysis.functionBindings.has(binding)) return true;
+    const sources = analysis.callableSources.get(binding);
+    if (!sources || sources.length === 0) return false;
+    const next = new Set(resolving).add(binding);
+    return sources.every((source) => staticallyCallable(source, analysis, next));
+  }
+  if (!ts.isCallExpression(node)) return false;
+  let callee: ts.Expression = node.expression;
+  while (ts.isParenthesizedExpression(callee)) callee = callee.expression;
+  if (
+    ts.isBinaryExpression(callee) &&
+    callee.operatorToken.kind === ts.SyntaxKind.CommaToken
+  ) {
+    callee = callee.right;
+  }
+  if (
+    (ts.isPropertyAccessExpression(callee) || ts.isElementAccessExpression(callee)) &&
+    (ts.isPropertyAccessExpression(callee)
+      ? callee.name.text
+      : callee.argumentExpression
+        ? staticString(callee.argumentExpression)
+        : undefined) === "bind"
+  ) {
+    return staticallyCallable(callee.expression, analysis, resolving);
+  }
+  const first = node.arguments[0];
+  if (!first) return false;
+  if (ts.isIdentifier(callee)) {
+    const binding = analysis.resolveBinding(callee, callee.text);
+    return Boolean(
+      binding &&
+      analysis.reactCallbackBindings.has(binding) &&
+      staticallyCallable(first, analysis, resolving),
+    );
+  }
+  if (ts.isPropertyAccessExpression(callee) && callee.name.text === "useCallback") {
+    const owner = ts.isIdentifier(callee.expression)
+      ? analysis.resolveBinding(callee.expression, callee.expression.text)
+      : undefined;
+    return Boolean(
+      (analysis.allowBundledReactHooks ||
+        (owner && analysis.reactNamespaceBindings.has(owner))) &&
+      staticallyCallable(first, analysis, resolving),
+    );
+  }
+  return false;
 }
 
 function scopedStaticString(
@@ -8948,7 +9103,7 @@ function scanScriptOrigins(
   if (privilegedAliases.limitations.has("dynamic property candidate shared budget exceeded")) {
     return findings;
   }
-  const staticStrings = collectScopedStaticStrings(parsed, privilegedAliases);
+  const staticStrings = collectScopedStaticStrings(parsed, privilegedAliases, true);
   const navigationElements = collectNavigationElements(
     parsed,
     privilegedAliases,
@@ -9516,6 +9671,7 @@ function scanSource(
         "indexedDB",
         "caches",
         "history",
+        "navigation",
         "cookieStore",
         "openDatabase",
         "showOpenFilePicker",

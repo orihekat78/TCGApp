@@ -401,6 +401,69 @@ describe("private hosted runtime boundary", () => {
     });
   });
 
+  it("rejects persistence and messaging through an iframe browsing context", async () => {
+    const source = `
+      declare const state: any;
+      const frame = document.createElement('iframe');
+      const child = frame.contentWindow;
+      child?.localStorage.setItem('state', state);
+      frame.contentWindow?.postMessage(state, '*');
+      export default function App() {}
+    `;
+    const root = await fixture(source);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toEqual(expect.arrayContaining([
+      { file: "src/App.tsx", code: "persistent-storage", detail: "localStorage" },
+      { file: "src/App.tsx", code: "network-api", detail: "window.postMessage" },
+      {
+        file: "dist/assets/index.js",
+        code: "forbidden-bundle-marker",
+        detail: "persistent storage",
+      },
+      {
+        file: "dist/assets/index.js",
+        code: "forbidden-bundle-marker",
+        detail: "network API",
+      },
+    ]));
+  });
+
+  it.each([
+    {
+      name: "Navigation API state",
+      operation: "navigation.updateCurrentEntry({state})",
+      detail: "navigation",
+    },
+    {
+      name: "legacy clipboard copy",
+      operation: "document.execCommand('copy')",
+      detail: "execCommand",
+    },
+    {
+      name: "dynamic legacy clipboard command",
+      operation: "document.execCommand(command)",
+      detail: "execCommand",
+    },
+  ])("rejects $name", async ({ operation, detail }) => {
+    const source = `declare const state:any;declare const command:string;${operation};`;
+    const root = await fixture(`${source}export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), operation);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "persistent-storage",
+      detail,
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "persistent storage",
+    });
+  });
+
   it("traverses imported JSON and rejects embedded external origins", async () => {
     const root = await fixture(
       "import data from './runtime.json'; export default function App() { void data; }",
@@ -1453,6 +1516,70 @@ describe("private hosted runtime boundary", () => {
     const source = "function setTimeout(value:string){void value}setTimeout('safe');";
     const root = await fixture(`${source}export default function App(){}`);
     await writeFile(resolve(root, "dist/assets/index.js"), "function setTimeout(value){void value}setTimeout('safe');");
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.filter(({ file }) => ["src/App.tsx", "dist/assets/index.js"].includes(file)))
+      .toEqual([]);
+  });
+
+  it.each([
+    {
+      name: "typed string parameter",
+      source: "function schedule(code:string){setTimeout(code,0)}schedule('void 0')",
+      bundle: "function schedule(code){setTimeout(code,0)}schedule('void 0')",
+    },
+    {
+      name: "string-or-callback parameter",
+      source: "function schedule(code:string|(()=>void)){setInterval(code,0)}",
+      bundle: "function schedule(code){setInterval(code,0)}",
+    },
+    {
+      name: "any parameter",
+      source: "function schedule(code:any){setTimeout(code,0)}",
+      bundle: "function schedule(code){setTimeout(code,0)}",
+    },
+    {
+      name: "imported unknown callback",
+      source: "import { callback } from './callback';setTimeout(callback,0)",
+      bundle: "setTimeout(importedCallback,0)",
+    },
+  ])("rejects an unresolved $name passed to a browser timer", async ({ source, bundle }) => {
+    const root = await fixture(`${source};export default function App(){}`);
+    if (source.includes("./callback")) {
+      await writeFile(resolve(root, "src/callback.ts"), "export const callback:any=()=>{};");
+    }
+    await writeFile(resolve(root, "dist/assets/index.js"), bundle);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "dynamic-code-execution",
+      detail: "eval/Function",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
+  });
+
+  it("accepts statically proven browser timer callbacks", async () => {
+    const source = `
+      import { useCallback } from 'react';
+      function declared() {}
+      const inline = () => {};
+      const memoized = useCallback(() => {}, []);
+      setTimeout(declared, 0);
+      setTimeout(inline, 0);
+      setTimeout(memoized, 0);
+      setInterval(() => {}, 0);
+      export default function App() {}
+    `;
+    const root = await fixture(source);
+    await writeFile(
+      resolve(root, "dist/assets/index.js"),
+      "function declared(){}const inline=()=>{},memoized=React.useCallback(()=>{},[]);setTimeout(declared,0);setTimeout(inline,0);setTimeout(memoized,0);setInterval(()=>{},0);",
+    );
 
     const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
     expect(findings.filter(({ file }) => ["src/App.tsx", "dist/assets/index.js"].includes(file)))

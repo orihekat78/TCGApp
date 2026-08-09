@@ -74,7 +74,7 @@
   payload validation and stable area-qualified card occurrence identities.
 - Pending runtime and headless contexts use own descriptors only; inherited
   accessors cannot suppress hydration or leak interactive player identity.
-- The boundary gate fail-closes computed/reflected Function recovery, nested writes,
-  deferred replay escapes, React spoofing, and cyclic/branching alias graphs.
+- The boundary fail-closes dynamic execution unless timer callbacks are proven callable,
+  and follows iframe/navigation/export surfaces plus cyclic browser aliases.
 - Access pagination requires complete metadata; Windows config ACLs permit writes
   only by the current operator, SYSTEM, and built-in Administrators.

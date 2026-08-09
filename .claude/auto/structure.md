@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 265
-- **ファイル数**: 5610
+- **ファイル数**: 5613
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -462,6 +462,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-281.md` — Atomic qualification report publication
     - `BUG-282.md` — Bounded Cloudflare audit requests
     - `BUG-283.md` — Browser persistence and cross-context export
+    - `BUG-284.md` — Browser timer handler type confusion
+    - `BUG-285.md` — Iframe browsing-context alias escape
+    - `BUG-286.md` — Navigation and legacy clipboard export
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
