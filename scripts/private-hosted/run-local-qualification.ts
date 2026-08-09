@@ -24,6 +24,7 @@ import { inspectBuild, stageBuild, verifyStagedBuild } from "./manifest.js";
 
 const HOST = "127.0.0.1";
 const PORT = 5196;
+const WRANGLER_COMPATIBILITY_DATE = "2026-08-06";
 const MODULE_REPOSITORY_ROOT = resolve(
   dirname(fileURLToPath(import.meta.url)),
   "..",
@@ -457,6 +458,8 @@ async function runPreparedLocalQualification(
       HOST,
       "--port",
       String(PORT),
+      "--compatibility-date",
+      WRANGLER_COMPATIBILITY_DATE,
       "--persist-to",
       persistDir,
     ],

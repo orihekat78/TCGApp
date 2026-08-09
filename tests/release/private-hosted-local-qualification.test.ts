@@ -150,6 +150,9 @@ describe("private hosted local qualification", () => {
         expect(input.args[cwdFlag + 1]).toBe(resolve(f.runDir, "wrangler-control"));
         expect(input.args[cwdFlag + 1]!.startsWith(f.stagingDir)).toBe(false);
         expect(input.args).toContain("--persist-to");
+        const compatibilityDateFlag = input.args.indexOf("--compatibility-date");
+        expect(compatibilityDateFlag).toBeGreaterThan(-1);
+        expect(input.args[compatibilityDateFlag + 1]).toBe("2026-08-06");
         expect(input.persistDir.startsWith(f.runDir)).toBe(true);
         expect(input.persistDir.startsWith(f.stagingDir)).toBe(false);
         return { stop: async () => events.push("stop") };
