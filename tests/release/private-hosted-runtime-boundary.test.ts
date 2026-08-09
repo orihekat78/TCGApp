@@ -1644,6 +1644,14 @@ describe("private hosted runtime boundary", () => {
       source: "window['Reflect']['apply'](setTimeout,undefined,[\"fetch('/state')\",0])",
     },
     {
+      name: "comma Reflect.apply",
+      source: "(0,Reflect.apply)(setTimeout,undefined,[\"fetch('/state')\",0])",
+    },
+    {
+      name: "comma qualified Reflect.apply",
+      source: "(0,globalThis.Reflect.apply)(setTimeout,undefined,[\"fetch('/state')\",0])",
+    },
+    {
       name: "Reflect.apply alias",
       source: "const invoke=Reflect.apply;invoke(setTimeout,undefined,[\"fetch('/state')\",0])",
     },
@@ -2017,6 +2025,26 @@ describe("private hosted runtime boundary", () => {
     {
       name: "mutation through a sibling default projection",
       body: "const First=interop(factory(),1);First.default.useCallback=()=>\"void 0\";const React=interop(factory(),1);const cb=React.useCallback(()=>{})",
+    },
+    {
+      name: "mutation through a sibling default alias",
+      body: "const First=interop(factory(),1);const Core=First.default;Core.useCallback=()=>\"void 0\";const React=interop(factory(),1);const cb=React.useCallback(()=>{})",
+    },
+    {
+      name: "mutation through a destructured sibling default",
+      body: "const First=interop(factory(),1);const {default:Core}=First;Core.useCallback=()=>\"void 0\";const React=interop(factory(),1);const cb=React.useCallback(()=>{})",
+    },
+    {
+      name: "opaque mutation through a sibling default alias",
+      body: "const First=interop(factory(),1);const Core=First.default;const mutate=value=>{value.useCallback=()=>\"void 0\"};mutate(Core);const React=interop(factory(),1);const cb=React.useCallback(()=>{})",
+    },
+    {
+      name: "mutation through an assigned destructured sibling default",
+      body: "const First=interop(factory(),1);let Core;({default:Core}=First);Core.useCallback=()=>\"void 0\";const React=interop(factory(),1);const cb=React.useCallback(()=>{})",
+    },
+    {
+      name: "mutation through an assigned projected sibling default",
+      body: "const First=interop(factory(),1);let Core;[Core]=[First.default];Core.useCallback=()=>\"void 0\";const React=interop(factory(),1);const cb=React.useCallback(()=>{})",
     },
     {
       name: "duplicate named import exposure",

@@ -814,6 +814,12 @@ function browserTimerInvocation(
     resolving: ReadonlySet<AliasBinding>,
   ): Array<ts.Expression | undefined> => {
     while (ts.isParenthesizedExpression(callee)) callee = callee.expression;
+    if (
+      ts.isBinaryExpression(callee) &&
+      callee.operatorToken.kind === ts.SyntaxKind.CommaToken
+    ) {
+      return invoke(callee.right, args, resolving);
+    }
     if (analysis.isBrowserTimer(callee)) return [plainArgument(args[0])];
     if (reflectApply(callee, resolving)) {
       const target = plainArgument(args[0]);
@@ -8667,6 +8673,98 @@ function collectScopedStaticStrings(
     sources.push(source);
     callableSources.set(binding, sources);
   };
+  const addProjectedCallableSources = (
+    target: ts.BindingName,
+    source: ts.Expression,
+  ): void => {
+    if (ts.isIdentifier(target)) {
+      addCallableSource(target, source);
+      return;
+    }
+    if (ts.isObjectBindingPattern(target)) {
+      for (const element of target.elements) {
+        if (element.dotDotDotToken) continue;
+        const name = element.propertyName;
+        const property = !name && ts.isIdentifier(element.name)
+          ? element.name.text
+          : name && ts.isComputedPropertyName(name)
+            ? bindings.staticString(name.expression)
+            : name && (ts.isIdentifier(name) || ts.isStringLiteralLike(name) ||
+                ts.isNumericLiteral(name))
+              ? name.text
+              : undefined;
+        if (property !== "default") continue;
+        addProjectedCallableSources(
+          element.name,
+          ts.factory.createElementAccessExpression(
+            source,
+            ts.factory.createStringLiteral("default"),
+          ),
+        );
+      }
+      return;
+    }
+    if (!ts.isArrayLiteralExpression(source)) return;
+    for (const [index, element] of target.elements.entries()) {
+      if (ts.isOmittedExpression(element)) continue;
+      const projected = source.elements[index];
+      if (!projected || ts.isOmittedExpression(projected)) continue;
+      addProjectedCallableSources(
+        element.name,
+        ts.isSpreadElement(projected) ? projected.expression : projected,
+      );
+    }
+  };
+  const addAssignedCallableSources = (
+    target: ts.Expression,
+    source: ts.Expression,
+  ): void => {
+    while (
+      ts.isParenthesizedExpression(target) ||
+      ts.isAsExpression(target) ||
+      ts.isTypeAssertionExpression(target) ||
+      ts.isNonNullExpression(target) ||
+      ts.isSatisfiesExpression(target)
+    ) {
+      target = target.expression;
+    }
+    if (ts.isIdentifier(target)) {
+      addCallableSource(target, source);
+      return;
+    }
+    if (ts.isObjectLiteralExpression(target)) {
+      for (const property of target.properties) {
+        if (!ts.isPropertyAssignment(property) && !ts.isShorthandPropertyAssignment(property)) {
+          continue;
+        }
+        const name = property.name;
+        const propertyName = ts.isComputedPropertyName(name)
+          ? bindings.staticString(name.expression)
+          : ts.isIdentifier(name) || ts.isStringLiteralLike(name) || ts.isNumericLiteral(name)
+            ? name.text
+            : undefined;
+        if (propertyName !== "default") continue;
+        addAssignedCallableSources(
+          ts.isPropertyAssignment(property) ? property.initializer : property.name,
+          ts.factory.createElementAccessExpression(
+            source,
+            ts.factory.createStringLiteral("default"),
+          ),
+        );
+      }
+      return;
+    }
+    if (!ts.isArrayLiteralExpression(target) || !ts.isArrayLiteralExpression(source)) return;
+    for (const [index, element] of target.elements.entries()) {
+      if (ts.isOmittedExpression(element)) continue;
+      const projected = source.elements[index];
+      if (!projected || ts.isOmittedExpression(projected)) continue;
+      addAssignedCallableSources(
+        ts.isSpreadElement(element) ? element.expression : element,
+        ts.isSpreadElement(projected) ? projected.expression : projected,
+      );
+    }
+  };
   const markUncertainTarget = (node: ts.Node): void => {
     if (
       ts.isParenthesizedExpression(node) ||
@@ -8771,14 +8869,10 @@ function collectScopedStaticStrings(
         }
       }
     }
-    if (
-      ts.isVariableDeclaration(node) &&
-      ts.isIdentifier(node.name) &&
-      node.initializer
-    ) {
-      addCallableSource(node.name, node.initializer);
+    if (ts.isVariableDeclaration(node) && node.initializer) {
+      addProjectedCallableSources(node.name, node.initializer);
       const factoryBinding = bundledReactFactory(node.initializer);
-      if (factoryBinding) {
+      if (factoryBinding && ts.isIdentifier(node.name)) {
         const binding = bindings.resolveBinding(node.name, node.name.text);
         if (binding) {
           reactNamespaceBindings.add(binding);
@@ -8787,13 +8881,14 @@ function collectScopedStaticStrings(
       }
     }
     if (ts.isBinaryExpression(node) && ASSIGNMENT_OPERATORS.has(node.operatorToken.kind)) {
-      if (
-        node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
-        ts.isIdentifier(node.left)
-      ) {
-        addCallableSource(node.left, node.right);
-        const binding = bindings.resolveBinding(node.left, node.left.text);
-        if (binding) mutatedReactNamespaceBindings.add(binding);
+      if (node.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+        addAssignedCallableSources(node.left, node.right);
+        if (ts.isIdentifier(node.left)) {
+          const binding = bindings.resolveBinding(node.left, node.left.text);
+          if (binding) mutatedReactNamespaceBindings.add(binding);
+        } else {
+          markUncertainTarget(node.left);
+        }
       } else {
         markUncertainTarget(node.left);
       }
@@ -8921,6 +9016,14 @@ function collectScopedStaticStrings(
       ts.isSatisfiesExpression(source)
     ) {
       source = source.expression;
+    }
+    if (ts.isPropertyAccessExpression(source) || ts.isElementAccessExpression(source)) {
+      const property = ts.isPropertyAccessExpression(source)
+        ? source.name.text
+        : source.argumentExpression
+          ? bindings.staticString(source.argumentExpression)
+          : undefined;
+      return property === "default" ? identifierBinding(source.expression) : undefined;
     }
     return ts.isIdentifier(source)
       ? bindings.resolveBinding(source, source.text)
