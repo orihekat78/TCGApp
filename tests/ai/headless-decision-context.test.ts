@@ -58,4 +58,31 @@ describe('withHeadlessDecisionContext', () => {
       else delete prototype.__humanPlayerSide;
     }
   });
+
+  it('shadows an inherited accessor without invoking its setter', () => {
+    const prototype = Object.prototype as Record<string, unknown>;
+    const previous = Object.getOwnPropertyDescriptor(prototype, '__humanPlayerSide');
+    const assigned: unknown[] = [];
+    Object.defineProperty(prototype, '__humanPlayerSide', {
+      configurable: true,
+      get: () => 'opp',
+      set: (value) => assigned.push(value),
+    });
+
+    try {
+      const observed = withHeadlessDecisionContext(() => ({
+        own: Object.prototype.hasOwnProperty.call(globalThis, '__humanPlayerSide'),
+        value: globalThis.__humanPlayerSide,
+      }));
+
+      expect(observed).toEqual({ own: true, value: null });
+      expect(assigned).toEqual([]);
+      expect(Object.prototype.hasOwnProperty.call(globalThis, '__humanPlayerSide')).toBe(false);
+      expect(globalThis.__humanPlayerSide).toBe('opp');
+    } finally {
+      delete globalThis.__humanPlayerSide;
+      if (previous) Object.defineProperty(prototype, '__humanPlayerSide', previous);
+      else delete prototype.__humanPlayerSide;
+    }
+  });
 });

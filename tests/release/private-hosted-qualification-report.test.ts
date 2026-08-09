@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 import {
   QUALIFICATION_COMMAND_IDS,
+  publishQualificationReport,
   runFinalQualification,
   validateQualificationReport,
   type QualificationCommandInput,
@@ -28,6 +29,33 @@ function manifest(files: unknown[]): string {
 }
 
 describe("private hosted final qualification", () => {
+  it("never publishes or retains a partial qualification report", async () => {
+    for (const failure of ["write", "publish"] as const) {
+      const f = await fixture();
+      const reportPath = resolve(f.runDir, "qualification-report.json");
+      await expect(
+        publishQualificationReport(
+          reportPath,
+          '{"complete":true}\n',
+          failure === "write"
+            ? {
+                writeTemp: async (tempPath) => {
+                  await writeFile(tempPath, "partial", { flag: "wx" });
+                  throw new Error("injected interrupted write");
+                },
+              }
+            : {
+                publishTemp: async () => {
+                  throw new Error("injected publish failure");
+                },
+              },
+        ),
+      ).rejects.toThrow(/injected/);
+      await expect(readFile(reportPath, "utf8")).rejects.toThrow();
+      expect((await readdir(f.runDir)).filter((name) => name.includes(".tmp-"))).toEqual([]);
+    }
+  });
+
   it("runs every required command once in exact order and writes a validated report only after success", async () => {
     const f = await fixture();
     let tick = Date.parse("2026-08-04T00:00:00.000Z");

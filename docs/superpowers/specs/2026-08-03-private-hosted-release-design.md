@@ -17,8 +17,9 @@ Date: 2026-08-04 — Existing-app direction approved; Cloudflare setup not perfo
 
 ## Product shipped
 
-- Deploy the current production Vite build with its engine, cards, setup, tutorial,
-  replay import, and YOU-vs-CPU behavior unchanged.
+- Deploy the same Vite product scope (engine, cards, setup, tutorial, replay, and
+  YOU-vs-CPU); do not change rules, CPU policy, or match outcomes.
+- Retain only UI decision-ID, hand-occurrence-ID, and 44px tap-target corrections.
 - No human-vs-human play, accounts, shared state, backend, matchmaking, chat, or
   cross-device persistence is added.
 - Card-image bytes are not bundled, staged, uploaded, or server-hosted. The browser
@@ -31,10 +32,10 @@ Date: 2026-08-04 — Existing-app direction approved; Cloudflare setup not perfo
 
 - Phase 1 defines the browser-only build and response headers. Phase 2 creates
   only an inspected, reproducible staging payload plus repo-external evidence.
-- The production graph audit follows static, re-exported, dynamic, and CSS
-  imports. It rejects network APIs, service workers, persistent storage,
-  server-only modules, Vite runtime variables, unapproved external origins,
-  dynamic production chunks, meta builds, and unsafe routing overrides.
+- The vendor chunk requires its qualified SHA-256; first-party output is deeply inspected.
+- The graph audit rejects network, navigation, cross-context export, string-code
+  execution, service workers, persistent storage, server modules, Vite runtime
+  variables, unapproved origins, dynamic chunks, and unsafe routing overrides.
 - Runtime CSP is `connect-src 'none'`; scripts/styles/fonts are same-origin,
   workers and forms are disabled, and images are limited to self, data, and the
   existing official image host.
@@ -77,8 +78,8 @@ Date: 2026-08-04 — Existing-app direction approved; Cloudflare setup not perfo
 - Static Playwright uses public controls and covers desktop/mobile setup, gameplay,
   tutorial, replay, reset, image fallback, staged bytes/headers, and runtime errors.
 - The final qualification producer starts and ends on the same clean commit and
-  lockfile, rehashes manifests after E2E, and writes a report only after every
-  command passes once in the required order.
+  lockfile, rehashes manifests after E2E, and atomically publishes a complete
+  report only after every command passes once in the required order.
 - No Pages project, Access application, external endpoint, or upload is created
   by Phases 3 or Phase 4 Tasks 1-2.
 - Release stays blocked until Task 3, preflight audit, deployment gates, and user
@@ -96,5 +97,4 @@ Date: 2026-08-04 — Existing-app direction approved; Cloudflare setup not perfo
 ## Current sources
 - [Project legal recommendation](../../../.claude/research/legal/04-recommendation.md)
 - [Cloudflare Access policies](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/)
-- [Cloudflare common Access policies](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/common-policies/)
 - [Cloudflare Pages known issues](https://developers.cloudflare.com/pages/platform/known-issues/)

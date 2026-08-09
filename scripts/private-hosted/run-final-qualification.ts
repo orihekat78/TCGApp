@@ -1,12 +1,15 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { createWriteStream } from "node:fs";
 import { spawn } from "node:child_process";
 import {
   lstat,
+  link,
   mkdir,
   mkdtemp,
+  open,
   readFile,
   realpath,
+  rm,
   stat,
   writeFile,
 } from "node:fs/promises";
@@ -103,6 +106,11 @@ type QualificationPaths = {
   reportPath: string;
 };
 
+type ReportPublicationControls = {
+  writeTemp: (path: string, content: string) => Promise<void>;
+  publishTemp: (tempPath: string, reportPath: string) => Promise<void>;
+};
+
 const MODULE_REPOSITORY_ROOT = resolve(
   dirname(fileURLToPath(import.meta.url)),
   "..",
@@ -133,6 +141,36 @@ const COMMAND_KEYS = [
 
 function fail(message: string): never {
   throw new Error(`private hosted final qualification rejected: ${message}`);
+}
+
+const DEFAULT_REPORT_PUBLICATION: ReportPublicationControls = {
+  async writeTemp(path, content) {
+    const handle = await open(path, "wx", 0o600);
+    try {
+      await handle.writeFile(content, "utf8");
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+  },
+  async publishTemp(tempPath, reportPath) {
+    await link(tempPath, reportPath);
+  },
+};
+
+export async function publishQualificationReport(
+  reportPath: string,
+  content: string,
+  overrides: Partial<ReportPublicationControls> = {},
+): Promise<void> {
+  const controls = { ...DEFAULT_REPORT_PUBLICATION, ...overrides };
+  const tempPath = `${reportPath}.tmp-${process.pid}-${randomUUID()}`;
+  try {
+    await controls.writeTemp(tempPath, content);
+    await controls.publishTemp(tempPath, reportPath);
+  } finally {
+    await rm(tempPath, { force: true });
+  }
 }
 
 function within(root: string, candidate: string): boolean {
@@ -619,9 +657,7 @@ export async function runFinalQualification(
     bugGateSha256,
   };
   validateQualificationReport(report);
-  await writeFile(paths.reportPath, `${JSON.stringify(report, null, 2)}\n`, {
-    flag: "wx",
-  });
+  await publishQualificationReport(paths.reportPath, `${JSON.stringify(report, null, 2)}\n`);
   return report;
 }
 

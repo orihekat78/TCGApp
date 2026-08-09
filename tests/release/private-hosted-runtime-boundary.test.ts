@@ -18,6 +18,13 @@ export default defineConfig({
     modulePreload: {
       polyfill: false,
     },
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("/node_modules/")) return "vendor";
+        },
+      },
+    },
   },
   resolve: {
     alias: {
@@ -112,6 +119,177 @@ describe("private hosted runtime boundary", () => {
     });
   });
 
+  it("rejects browser navigation sinks with runtime destinations", async () => {
+    const root = await fixture(`
+      const destination = '/outside';
+      window.open(destination);
+      location.assign(destination);
+      export default function App() {}
+    `);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({
+      stdout: "",
+      stderr: "",
+    }));
+
+    expect(findings).toEqual(
+      expect.arrayContaining([
+        {
+          file: "src/App.tsx",
+          code: "network-api",
+          detail: "window.open",
+        },
+        {
+          file: "src/App.tsx",
+          code: "network-api",
+          detail: "location",
+        },
+      ]),
+    );
+  });
+
+  it("rejects dynamic anchor and form navigation in source and bundle", async () => {
+    const source = `
+      const destination = '/outside';
+      const anchor = document.createElement('a');
+      anchor.href = destination;
+      anchor.setAttribute('href', destination);
+      const form = document.createElement('form');
+      form.action = destination;
+      form.requestSubmit();
+      export default function App() { return <a href={destination}>leave</a>; }
+    `;
+    const root = await fixture(source);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+    expect(findings).toEqual(
+      expect.arrayContaining([
+        { file: "src/App.tsx", code: "network-api", detail: "navigation href" },
+        { file: "src/App.tsx", code: "network-api", detail: "navigation action" },
+        { file: "src/App.tsx", code: "network-api", detail: "navigation requestSubmit" },
+        {
+          file: "dist/assets/index.js",
+          code: "forbidden-bundle-marker",
+          detail: "navigation href",
+        },
+        {
+          file: "dist/assets/index.js",
+          code: "forbidden-bundle-marker",
+          detail: "navigation action",
+        },
+        {
+          file: "dist/assets/index.js",
+          code: "forbidden-bundle-marker",
+          detail: "navigation requestSubmit",
+        },
+      ]),
+    );
+  });
+
+  it("rejects spread, factory, reflected, and namespaced navigation bypasses", async () => {
+    const source = `
+      const destination = '/outside';
+      const props = { href: destination };
+      const anchor = document.createElement('a');
+      Object.assign(anchor, props);
+      Object.defineProperty(anchor, 'href', { value: destination });
+      Reflect.set(anchor, 'href', destination);
+      anchor.setAttributeNS(null, 'href', destination);
+      anchor.click();
+      React.createElement('a', props);
+      export default function App() { return <a {...props}>leave</a>; }
+    `;
+    const bundle = `
+      const destination='/outside',props={href:destination},anchor=document.createElement('a');
+      Object.assign(anchor,props);Object.defineProperty(anchor,'href',{value:destination});
+      Reflect.set(anchor,'href',destination);anchor.setAttributeNS(null,'href',destination);
+      anchor.click();j('a',props);
+    `;
+    const root = await fixture(source);
+    await writeFile(resolve(root, "dist/assets/index.js"), bundle);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+    for (const file of ["src/App.tsx", "dist/assets/index.js"]) {
+      const code = file.startsWith("src/") ? "network-api" : "forbidden-bundle-marker";
+      expect(findings).toContainEqual({ file, code, detail: "navigation href" });
+      expect(findings).toContainEqual({ file, code, detail: "navigation click" });
+      expect(findings).toContainEqual({ file, code, detail: "navigation a element props" });
+    }
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "network-api",
+      detail: "navigation a spread",
+    });
+  });
+
+  it.each([
+    {
+      name: "Object.assign props",
+      operation: "Object.assign(anchor, externalProps)",
+      detail: "navigation dynamic properties",
+    },
+    {
+      name: "Object.defineProperties descriptors",
+      operation: "Object.defineProperties(anchor, externalDescriptors)",
+      detail: "navigation dynamic properties",
+    },
+    {
+      name: "dynamic setAttribute",
+      operation: "anchor.setAttribute(dynamicKey, destination)",
+      detail: "navigation dynamic attribute",
+    },
+    {
+      name: "dynamic Reflect.set",
+      operation: "Reflect.set(anchor, dynamicKey, destination)",
+      detail: "navigation dynamic property",
+    },
+    {
+      name: "dynamic Object.defineProperty",
+      operation: "Object.defineProperty(anchor, dynamicKey, { value: destination })",
+      detail: "navigation dynamic property",
+    },
+  ])("rejects $name on a known navigation element", async ({ operation, detail }) => {
+    const source = `
+      declare const externalProps: object;
+      declare const externalDescriptors: PropertyDescriptorMap;
+      declare const dynamicKey: string;
+      const destination = '/outside';
+      const anchor = document.createElement('a');
+      ${operation};
+      export default function App() {}
+    `;
+    const bundle = `
+      const destination='/outside',anchor=document.createElement('a');
+      ${operation};
+    `;
+    const root = await fixture(source);
+    await writeFile(resolve(root, "dist/assets/index.js"), bundle);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({ file: "src/App.tsx", code: "network-api", detail });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail,
+    });
+  });
+
+  it("accepts non-navigation action data and JSX boolean attributes", async () => {
+    const source = `
+      const log = { action: 'game action' };
+      export default function App() { return <dialog open>{log.action}</dialog>; }
+    `;
+    const root = await fixture(source);
+    await writeFile(resolve(root, "dist/assets/index.js"), "const log={action:'game action'};void log;");
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.filter(({ file }) => ["src/App.tsx", "dist/assets/index.js"].includes(file)))
+      .toEqual([]);
+  });
+
   it("rejects every remote runtime channel, persistent storage, and VITE variables", async () => {
     const root = await fixture(`
       const xhr = new XMLHttpRequest();
@@ -154,6 +332,73 @@ describe("private hosted runtime boundary", () => {
         "vite-variable:VITE_SERVER_URL",
       ]),
     );
+  });
+
+  it.each([
+    { name: "bare history", operation: "history.replaceState(state,'')", detail: "history" },
+    {
+      name: "window history",
+      operation: "window.history.pushState(state,'','/')",
+      detail: "history",
+    },
+    { name: "window name", operation: "window.name=JSON.stringify(state)", detail: "name" },
+    {
+      name: "credential storage",
+      operation: "navigator.credentials.store(credential)",
+      detail: "credentials",
+    },
+    {
+      name: "clipboard export",
+      operation: "navigator.clipboard.writeText(state)",
+      detail: "clipboard",
+    },
+  ])("rejects $name as a state persistence or export channel", async ({ operation, detail }) => {
+    const source = `declare const state: any;declare const credential: any;${operation};`;
+    const root = await fixture(`${source}export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), operation);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "persistent-storage",
+      detail,
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "persistent storage",
+    });
+  });
+
+  it.each([
+    {
+      name: "opener messaging",
+      operation: "window.opener?.postMessage(state,'*')",
+      detail: "window.postMessage",
+      bundleDetail: "network API",
+    },
+    {
+      name: "broadcast messaging",
+      operation: "new BroadcastChannel('state')",
+      detail: "BroadcastChannel",
+      bundleDetail: "network constructor",
+    },
+  ])("rejects $name as a cross-context export channel", async ({ operation, detail, bundleDetail }) => {
+    const source = `declare const state: any;${operation};`;
+    const root = await fixture(`${source}export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), operation);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "network-api",
+      detail,
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: bundleDetail,
+    });
   });
 
   it("traverses imported JSON and rejects embedded external origins", async () => {
@@ -352,6 +597,62 @@ describe("private hosted runtime boundary", () => {
     expect(findings.filter(({ file }) => file === "dist/assets/index.js")).toEqual([]);
   });
 
+  it("converges on React-style loop-carried object properties", async () => {
+    const root = await fixture();
+    await writeFile(
+      resolve(root, "dist/assets/index.js"),
+      [
+        "function reconcile(track){",
+        "return function h(parent,current,items,lane){",
+        "for(var first=null,last=null,node=current,index=current=0,next=null;node!==null&&index<items.length;index++){",
+        "node.index>index?(next=node,node=null):next=node.sibling;",
+        "var child=update(parent,node,items[index],lane);",
+        "if(child===null){node===null&&(node=next);break}",
+        "track&&node&&child.alternate===null&&remove(parent,node);",
+        "current=place(child,current,index);",
+        "last===null?first=child:last.sibling=child;last=child;node=next",
+        "}",
+        "return first",
+        "}",
+        "}",
+        "reconcile(window);",
+      ].join(""),
+    );
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.filter(({ file }) => file === "dist/assets/index.js")).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "browser global escape",
+    });
+  }, 5_000);
+
+  it("finishes taint reachability through a dense cyclic object graph", async () => {
+    const declarations = Array.from({ length: 9 }, (_, index) => `const node${index}={};`);
+    const edges = Array.from({ length: 9 }, (_, owner) =>
+      Array.from({ length: 9 }, (_, target) => `node${owner}.p${target}=node${target};`).join("")
+    );
+    const root = await fixture();
+    await writeFile(
+      resolve(root, "dist/assets/index.js"),
+      [
+        "function target(e){return e.target||window}",
+        "function replay(e){void e.nativeEvent;void e.targetContainers;e.blockedOn=target(e);return e}",
+        "const queued={blockedOn:null,nativeEvent:{},targetContainers:[],target:null};",
+        ...declarations,
+        ...edges,
+        "node0.value=replay(queued);consume(node8);",
+      ].join(""),
+    );
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.filter(({ file }) => file === "dist/assets/index.js")).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "browser global escape",
+    });
+  }, 5_000);
+
   it.each([
     {
       name: "for-of loop-carried alias",
@@ -461,6 +762,40 @@ describe("private hosted runtime boundary", () => {
       file: "src/App.tsx",
       code: "browser-global-escape",
       detail: "privileged browser global",
+    });
+  });
+
+  it("accepts ordinary values read from a statically named internal runtime slot", async () => {
+    const source = `
+      globalThis.__pendingLocalState = { items: [1, 2] };
+      function render(value) { return value.items.map(String).join(','); }
+      void Array.isArray(globalThis.__pendingLocalState);
+      void Object.keys(globalThis.__pendingLocalState);
+      void render(globalThis.__pendingLocalState);
+    `;
+    const root = await fixture(`${source}export default function App() {}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.filter(({ file }) => file === "src/App.tsx")).toEqual([]);
+    expect(findings.filter(({ file }) => file === "dist/assets/index.js")).toEqual([]);
+  });
+
+  it("rejects a privileged value recovered from a statically named internal runtime slot", async () => {
+    const source = "globalThis.__pendingLocalState=window;consume(globalThis.__pendingLocalState);";
+    const root = await fixture(`${source}export default function App() {}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "browser-global-escape",
+      detail: "privileged browser global",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "browser global escape",
     });
   });
 
@@ -667,6 +1002,10 @@ describe("private hosted runtime boundary", () => {
       name: "conditional stored callback",
       wrapper: "const box={cb:()=>replay(queued)};consume(Math.random()?box.cb:()=>0)",
     },
+    {
+      name: "unknown computed nested callback",
+      wrapper: "const box={};box.slot={cb:()=>replay(queued)};const key=()=>Math.random()?'slot':'slot';consume(box[key()].cb)",
+    },
   ])("rejects a tainted replay object hidden in a $name", async ({ wrapper }) => {
     const root = await fixture();
     await writeFile(
@@ -680,6 +1019,121 @@ describe("private hosted runtime boundary", () => {
       code: "forbidden-bundle-marker",
       detail: "browser global escape",
     });
+  });
+
+  it("accepts a deferred callback consumed entirely by an analyzed local function", async () => {
+    const root = await fixture();
+    await writeFile(
+      resolve(root, "dist/assets/index.js"),
+      "function target(e){return e.target||window}function replay(e){void e.nativeEvent;void e.targetContainers;e.blockedOn=target(e);return e}const queued={blockedOn:null,nativeEvent:{},targetContainers:[],target:null};function ignore(_callback){return 0}ignore(()=>replay(queued));",
+    );
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.filter(({ file }) => file === "dist/assets/index.js")).toEqual([]);
+  });
+
+  it("terminates local-call discovery across a recursive object spread", async () => {
+    const source = "let api;api={...api,run(){return 0}};api.run()";
+    const root = await fixture(`${source};export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), `${source};`);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.filter(({ file }) => file === "src/App.tsx")).toEqual([]);
+    expect(findings.filter(({ file }) => file === "dist/assets/index.js")).toEqual([]);
+  });
+
+  it("accepts recursive ordinary-value flow without browser-global seeds", async () => {
+    const source = `
+      function visit(value) {
+        if (Array.isArray(value)) return value.map(visit);
+        if (value && typeof value === 'object') {
+          return Object.keys(value).flatMap((key) => visit(value[key]));
+        }
+        return [String(value)];
+      }
+      function run(state, callback) { return callback(state); }
+      void run({ items: [1, { nested: 2 }] }, visit);
+    `;
+    const root = await fixture(`${source}export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.filter(({ file }) => file === "src/App.tsx")).toEqual([]);
+    expect(findings.filter(({ file }) => file === "dist/assets/index.js")).toEqual([]);
+  });
+
+  it("rejects when deferred traversal reaches its depth limit", async () => {
+    const nested = Array.from({ length: 80 }).reduce<string>(
+      (value, _, index) => `{p${index}:${value}}`,
+      "0",
+    );
+    const source = [
+      `consume(${nested});`,
+      "function target(e){return e.target||window}",
+      "function replay(e){void e.nativeEvent;void e.targetContainers;e.blockedOn=target(e);return e}",
+      "const queued={blockedOn:null,nativeEvent:{},targetContainers:[],target:null};",
+      "const callback=()=>replay(queued);",
+      "consume(callback);",
+    ].join("\n");
+    const root = await fixture(source);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "analysis-limit",
+      detail: "deferred analysis work budget exceeded",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "browser global escape",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "deferred analysis work budget exceeded",
+    });
+  });
+
+  it("rejects when deferred traversal exhausts its total work budget", async () => {
+    const previousBudget = process.env.PRIVATE_HOSTED_DEFERRED_BUDGET;
+    process.env.PRIVATE_HOSTED_DEFERRED_BUDGET = "1";
+    try {
+      const source = [
+        "consume([0,0]);",
+        "function target(e){return e.target||window}",
+        "function replay(e){void e.nativeEvent;void e.targetContainers;e.blockedOn=target(e);return e}",
+        "const queued={blockedOn:null,nativeEvent:{},targetContainers:[],target:null};",
+        "const callback=()=>replay(queued);",
+        "consume(callback);",
+      ].join("\n");
+      const root = await fixture(source);
+      await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+      const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+      expect(findings).toContainEqual({
+        file: "src/App.tsx",
+        code: "analysis-limit",
+        detail: "deferred analysis work budget exceeded",
+      });
+      expect(findings).toContainEqual({
+        file: "dist/assets/index.js",
+        code: "forbidden-bundle-marker",
+        detail: "browser global escape",
+      });
+      expect(findings).toContainEqual({
+        file: "dist/assets/index.js",
+        code: "forbidden-bundle-marker",
+        detail: "deferred analysis work budget exceeded",
+      });
+    } finally {
+      if (previousBudget === undefined) {
+        delete process.env.PRIVATE_HOSTED_DEFERRED_BUDGET;
+      } else {
+        process.env.PRIVATE_HOSTED_DEFERRED_BUDGET = previousBudget;
+      }
+    }
   });
 
   it("finds a deferred replay callback through a cyclic alias graph", async () => {
@@ -971,6 +1425,40 @@ describe("private hosted runtime boundary", () => {
     });
   });
 
+  it.each([
+    { name: "bare timer", source: "setTimeout(\"localStorage.x='1'\",0)" },
+    {
+      name: "aliased timer",
+      source: "const timer=setInterval;timer(\"fetch('/state')\",0)",
+    },
+    { name: "window timer", source: "window.setTimeout(\"fetch('/state')\",0)" },
+  ])("rejects string execution through a $name", async ({ source }) => {
+    const root = await fixture(`${source};export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), `${source};`);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "dynamic-code-execution",
+      detail: "eval/Function",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
+  });
+
+  it("accepts a shadowed local timer receiving a string", async () => {
+    const source = "function setTimeout(value:string){void value}setTimeout('safe');";
+    const root = await fixture(`${source}export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), "function setTimeout(value){void value}setTimeout('safe');");
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.filter(({ file }) => ["src/App.tsx", "dist/assets/index.js"].includes(file)))
+      .toEqual([]);
+  });
+
   it("accepts Function source introspection without executing generated code", async () => {
     const root = await fixture();
     await writeFile(
@@ -1194,6 +1682,38 @@ describe("private hosted runtime boundary", () => {
       name: "destructured bound Reflect.apply",
       source: "const {apply:invoke}=Reflect;invoke.bind(Reflect)((()=>0).constructor,null,[\"return fetch('/state')\"])()",
     },
+    {
+      name: "ordinary parameter constructor flow",
+      source: "function run(C){return C(\"return fetch('/state')\")()}run((()=>0).constructor)",
+    },
+    {
+      name: "Object.defineProperty constructor write",
+      source: "const box={};Object.defineProperty(box,'C',{value:(()=>0).constructor});box.C(\"return fetch('/state')\")()",
+    },
+    {
+      name: "aliased Object.defineProperty descriptor write",
+      source: "const box={};const descriptor={value:(()=>0).constructor};const O=Object;O.defineProperty(box,'C',descriptor);box.C(\"return fetch('/state')\")()",
+    },
+    {
+      name: "Reflect.defineProperty constructor write",
+      source: "const box={};Reflect.defineProperty(box,'C',{value:(()=>0).constructor});box.C(\"return fetch('/state')\")()",
+    },
+    {
+      name: "aliased constructor descriptor read",
+      source: "const descriptor=Object.getOwnPropertyDescriptor(Object.getPrototypeOf(()=>0),'constructor');descriptor.value(\"return fetch('/state')\")()",
+    },
+    {
+      name: "array projected Reflect namespace",
+      source: "const [R]=[Reflect];R.apply((()=>0).constructor,null,[\"return fetch('/state')\"])()",
+    },
+    {
+      name: "object projected Reflect namespace",
+      source: "const {api:R}={api:Reflect};R.get(()=>0,'constructor')(\"return fetch('/state')\")()",
+    },
+    {
+      name: "returned Reflect namespace",
+      source: "function getR(){return Reflect}getR().apply((()=>0).constructor,null,[\"return fetch('/state')\"])()",
+    },
   ])("rejects dynamic constructor recovery through $name", async ({ source }) => {
     const root = await fixture(`${source};export default function App(){}`);
     await writeFile(resolve(root, "dist/assets/index.js"), `${source};`);
@@ -1247,6 +1767,24 @@ describe("private hosted runtime boundary", () => {
     });
   });
 
+  it("rejects replay-like constructor bookkeeping hidden in unreachable code", async () => {
+    const source = "function replay(e){const n=e.nativeEvent;if(false){e.blockedOn=null;e.targetContainers.shift();window.dispatchEvent(n)}return new n.constructor(n.type,n)}replay({blockedOn:null,targetContainers:[],nativeEvent:()=>0})()";
+    const root = await fixture(`${source};export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), `${source};`);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "dynamic-code-execution",
+      detail: "eval/Function",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
+  });
+
   it("accepts a primitive constructor call that cannot create executable code", async () => {
     const source = "void Math.PI.constructor('123')";
     const root = await fixture(`${source};export default function App(){}`);
@@ -1255,6 +1793,41 @@ describe("private hosted runtime boundary", () => {
     const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
     expect(findings.filter(({ file }) => file === "src/App.tsx")).toEqual([]);
     expect(findings.filter(({ file }) => file === "dist/assets/index.js")).toEqual([]);
+  });
+
+  it.each([
+    "const value=Math.PI;void value.constructor('123')",
+    "const {constructor:C}=Math.PI;void C('123')",
+  ])("accepts a non-executable primitive constructor alias", async (source) => {
+    const root = await fixture(`${source};export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), `${source};`);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.filter(({ file }) => file === "src/App.tsx")).toEqual([]);
+    expect(findings.filter(({ file }) => file === "dist/assets/index.js")).toEqual([]);
+  });
+
+  it("rejects when dynamic projection reaches its depth limit", async () => {
+    const properties = Array.from({ length: 70 }, (_, index) => `p${index}`);
+    const nested = properties.reduceRight(
+      (value, property) => `{${property}:${value}}`,
+      "{}",
+    );
+    const source = `const box=${nested};void box.${properties.join(".")}.C()`;
+    const root = await fixture(`${source};export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), `${source};`);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "dynamic-code-execution",
+      detail: "eval/Function",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
   });
 
   it("finds a dynamic constructor reached through a cyclic alias graph", async () => {
@@ -1304,6 +1877,406 @@ describe("private hosted runtime boundary", () => {
     expect(findings).toEqual([]);
     expect(elapsedMs).toBeLessThan(5_000);
   }, 10_000);
+
+  it("accepts benign value, type, and displayName propagation", async () => {
+    const source = [
+      "const component={};",
+      "const wrapper={value:component};",
+      "const metadata={type:wrapper.value};",
+      "const registry={displayName:metadata.type};",
+      "registry.displayName();",
+    ].join("\n");
+    const root = await fixture(`${source}\nexport default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const startedAt = performance.now();
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+    expect(findings).toEqual([]);
+    expect(performance.now() - startedAt).toBeLessThan(5_000);
+  }, 10_000);
+
+  it("keeps an unknown property copy scoped to its owner", async () => {
+    const source = [
+      "function copy(target, source){for(const key in source)target[key]=source[key];return target}",
+      "const component={};",
+      "const props={value:component,type:component,displayName:'Card'};",
+      "const result=copy({},props);",
+      "void result.value;void result.type;void result.displayName;",
+    ].join("\n");
+    const root = await fixture(`${source}\nexport default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const startedAt = performance.now();
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+    expect(findings).toEqual([]);
+    expect(performance.now() - startedAt).toBeLessThan(5_000);
+  }, 10_000);
+
+  it("does not turn a generic props copy into dynamic code when another call is callable", async () => {
+    const previousBudget = process.env.PRIVATE_HOSTED_CANDIDATE_BUDGET;
+    process.env.PRIVATE_HOSTED_CANDIDATE_BUDGET = "0";
+    const source = [
+      "function select(value,copy){",
+      "  if(!copy)return value;",
+      "  const result={};",
+      "  for(const key in value)result[key]=value[key];",
+      "  return result;",
+      "}",
+      "void select(()=>1,false);",
+      "const props={render(){return 1},label:'Card'};",
+      "const copied=select(props,true);",
+      "void copied.render();",
+    ].join("\n");
+    const root = await fixture(`${source}\nexport default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+    try {
+      const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+      expect(findings).toEqual([]);
+    } finally {
+      if (previousBudget === undefined) {
+        delete process.env.PRIVATE_HOSTED_CANDIDATE_BUDGET;
+      } else {
+        process.env.PRIVATE_HOSTED_CANDIDATE_BUDGET = previousBudget;
+      }
+    }
+  });
+
+  it("uses the latest definite value when a minified local is reused before a props copy", async () => {
+    const source = [
+      "function copy(type,props){",
+      "  const result={};",
+      "  for(const key in props)result[key]=props[key];",
+      "  return result;",
+      "}",
+      "function render(type,pendingProps){",
+      "  let props=type;",
+      "  props=pendingProps;",
+      "  return copy(type,props);",
+      "}",
+      "const component=()=>1;",
+      "const copied=render(component,{render(){return 1},label:'Card'});",
+      "void copied.render();",
+    ].join("\n");
+    const root = await fixture(`${source}\nexport default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+    expect(findings).toEqual([]);
+  });
+
+  it("does not confuse an aliased Symbol.iterator lookup with constructor recovery", async () => {
+    const source = [
+      "const iteratorKey=Symbol.iterator;",
+      "function iteratorOf(value){return value[iteratorKey]||value['@@iterator']}",
+      "const callable=()=>1;",
+      "const iterator=iteratorOf(callable);",
+      "if(iterator)iterator.call(callable);",
+    ].join("\n");
+    const root = await fixture(`${source}\nexport default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+    expect(findings).toEqual([]);
+  });
+
+  it("keeps a dynamic constructor property scoped away from an unrelated owner", async () => {
+    const declarations = [
+      "const dangerousOwner={};",
+      "dangerousOwner.ref=(()=>0).constructor;",
+      "const safe0={ref(){return 1}};",
+    ];
+    for (let index = 1; index <= 160; index += 1) {
+      declarations.push(`const safe${index}=safe${index - 1};`);
+    }
+    declarations.push("void safe160.ref();");
+    const source = declarations.join("\n");
+    const root = await fixture(`${source}\nexport default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const startedAt = performance.now();
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+    expect(findings).toEqual([]);
+    expect(performance.now() - startedAt).toBeLessThan(5_000);
+  }, 10_000);
+
+  it("rejects a dynamic constructor property reached through a nested owner alias", async () => {
+    const source = [
+      "const owner={child:{}};",
+      "const alias=owner.child;",
+      "alias.ref=(()=>0).constructor;",
+      "owner.child.ref(\"return fetch('/state')\")();",
+    ].join("\n");
+    const root = await fixture(`${source}\nexport default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "dynamic-code-execution",
+      detail: "eval/Function",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
+  });
+
+  it("abstracts converging cyclic owner paths within the shared candidate budget", async () => {
+    const source = [
+      "let choose=false;",
+      "let owner={left:{},right:{}};",
+      "owner=choose?owner.left:owner.right;",
+      "owner.ref=(()=>0).constructor;",
+      "owner.ref(\"return fetch('/state')\")();",
+    ].join("\n");
+    const root = await fixture(`${source}\nexport default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+    const previousBudget = process.env.PRIVATE_HOSTED_CANDIDATE_BUDGET;
+    process.env.PRIVATE_HOSTED_CANDIDATE_BUDGET = "50000";
+
+    try {
+      const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+      expect(findings).not.toContainEqual({
+        file: "dist/assets/index.js",
+        code: "forbidden-bundle-marker",
+        detail: "dynamic property candidate shared budget exceeded",
+      });
+      expect(findings).toContainEqual({
+        file: "src/App.tsx",
+        code: "dynamic-code-execution",
+        detail: "eval/Function",
+      });
+      expect(findings).toContainEqual({
+        file: "dist/assets/index.js",
+        code: "forbidden-bundle-marker",
+        detail: "dynamic code execution",
+      });
+    } finally {
+      if (previousBudget === undefined) {
+        delete process.env.PRIVATE_HOSTED_CANDIDATE_BUDGET;
+      } else {
+        process.env.PRIVATE_HOSTED_CANDIDATE_BUDGET = previousBudget;
+      }
+    }
+  });
+
+  it("rejects a dynamic constructor property written through a pass-through call", async () => {
+    const source = [
+      "function identity(value){return value}",
+      "const owner={};",
+      "identity(owner).ref=(()=>0).constructor;",
+      "owner.ref(\"return fetch('/state')\")();",
+    ].join("\n");
+    const root = await fixture(`${source}\nexport default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "dynamic-code-execution",
+      detail: "eval/Function",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
+  });
+
+  it("does not treat a reassigned parameter as a returned argument", async () => {
+    const source = [
+      "function allocate(value,lane){return value={},value.lanes=lane,value}",
+      "allocate((()=>0).constructor,1)(\"return fetch('/state')\")();",
+    ].join("\n");
+    const root = await fixture(`${source}\nexport default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+    expect(findings.filter(({ file }) => file === "src/App.tsx")).toEqual([]);
+    expect(findings.filter(({ file }) => file === "dist/assets/index.js")).toEqual([]);
+  });
+
+  it("keeps pass-through taint when reassignment may preserve the original", async () => {
+    const variants = [
+      [
+        "let opaque;",
+        "function wrap(value){return value=opaque(value),value}",
+      ],
+      [
+        "function identity(value){return value}",
+        "function wrap(value){return value=identity(value),value}",
+      ],
+      [
+        "function wrap(value){const original=value;return value={},value=original,value}",
+      ],
+    ];
+    for (const declarations of variants) {
+      const source = [
+        ...declarations,
+        "wrap((()=>0).constructor)(\"return fetch('/state')\")();",
+      ].join("\n");
+      const root = await fixture(`${source}\nexport default function App(){}`);
+      await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+      const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+      expect(findings).toContainEqual({
+        file: "src/App.tsx",
+        code: "dynamic-code-execution",
+        detail: "eval/Function",
+      });
+      expect(findings).toContainEqual({
+        file: "dist/assets/index.js",
+        code: "forbidden-bundle-marker",
+        detail: "dynamic code execution",
+      });
+    }
+  });
+
+  it("accepts only definite fresh parameter overwrites", async () => {
+    const variants = [
+      "function wrap(value){value={};return value}",
+      "function wrap(value,choose){if(choose)value={};else value=[];return value}",
+      "function fresh(){return {}}function wrap(value){value=fresh();return value}",
+    ];
+    for (const declaration of variants) {
+      const source = [
+        declaration,
+        "wrap((()=>0).constructor,true)(\"return fetch('/state')\")();",
+      ].join("\n");
+      const root = await fixture(`${source}\nexport default function App(){}`);
+      await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+      const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+      expect(findings, declaration).toEqual([]);
+    }
+  });
+
+  it("preserves parameter taint on conditional, logical, constructor, and early returns", async () => {
+    const variants = [
+      "function wrap(value,choose){if(choose)value={};return value}",
+      "function wrap(value){value||={};return value}",
+      "function Box(value){return value}function wrap(value){return new Box(value)}",
+      "function wrap(value,choose){if(choose)return value;value={};return value}",
+      "function wrap(value){value.flag=true;return value}",
+    ];
+    for (const declaration of variants) {
+      const source = [
+        declaration,
+        "wrap((()=>0).constructor,false)(\"return fetch('/state')\")();",
+      ].join("\n");
+      const root = await fixture(`${source}\nexport default function App(){}`);
+      await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+      const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+      expect(findings).toContainEqual({
+        file: "src/App.tsx",
+        code: "dynamic-code-execution",
+        detail: "eval/Function",
+      });
+      expect(findings).toContainEqual({
+        file: "dist/assets/index.js",
+        code: "forbidden-bundle-marker",
+        detail: "dynamic code execution",
+      });
+    }
+  });
+
+  it("fails closed when a dynamic constructor owner comes from an opaque call", async () => {
+    const source = [
+      "let factory;",
+      "factory().ref=(()=>0).constructor;",
+      "const safe={ref(){return 1}};",
+      "safe.ref();",
+    ].join("\n");
+    const root = await fixture(`${source}\nexport default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "dynamic-code-execution",
+      detail: "eval/Function",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
+  });
+
+  it("fails closed when the shared dynamic candidate budget is exhausted", async () => {
+    const previousBudget = process.env.PRIVATE_HOSTED_CANDIDATE_BUDGET;
+    process.env.PRIVATE_HOSTED_CANDIDATE_BUDGET = "1";
+    try {
+      const source = "const owner={};owner.ref=(()=>0).constructor;void owner.ref;";
+      const root = await fixture(`${source}\nexport default function App(){}`);
+      await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+      const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+      expect(findings).toContainEqual({
+        file: "src/App.tsx",
+        code: "analysis-limit",
+        detail: "dynamic property candidate shared budget exceeded",
+      });
+      expect(findings).toContainEqual({
+        file: "dist/assets/index.js",
+        code: "forbidden-bundle-marker",
+        detail: "dynamic property candidate shared budget exceeded",
+      });
+      expect(findings.some(({ detail }) => detail.includes("deferred analysis"))).toBe(false);
+      expect(findings.some(({ detail }) => detail === "browser global escape")).toBe(false);
+      expect(findings.some(({ detail }) => detail === "dynamic browser property")).toBe(false);
+      expect(findings.some(({ detail }) => detail === "dynamic code execution")).toBe(false);
+      expect(findings.some(({ detail }) => detail === "eval/Function")).toBe(false);
+    } finally {
+      if (previousBudget === undefined) {
+        delete process.env.PRIVATE_HOSTED_CANDIDATE_BUDGET;
+      } else {
+        process.env.PRIVATE_HOSTED_CANDIDATE_BUDGET = previousBudget;
+      }
+    }
+  });
+
+  it("rejects a dynamic constructor seed reached after a cyclic candidate branch", async () => {
+    const source = [
+      "let first;",
+      "let second=first;",
+      "first=second;",
+      "const choose=Math.random()<0;",
+      "first=choose?second:(()=>0).constructor;",
+      "first(\"return fetch('/state')\")();",
+    ].join("\n");
+    const root = await fixture(`${source}\nexport default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "dynamic-code-execution",
+      detail: "eval/Function",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
+  });
 
   it("rejects a browser global hidden behind an event-like property name", async () => {
     const root = await fixture();
@@ -1552,6 +2525,37 @@ describe("private hosted runtime boundary", () => {
       code: "forbidden-bundle-marker",
       detail: "browser global reflection",
     });
+  });
+
+  it("accepts own descriptors for the fixed internal runtime globals", async () => {
+    const source = `
+      const previous = Object.getOwnPropertyDescriptor(globalThis, '__humanPlayerSide');
+      Object.defineProperty(globalThis, '__humanPlayerSide', {
+        configurable: true, enumerable: true, value: null, writable: true,
+      });
+      if (previous) Object.defineProperty(globalThis, '__humanPlayerSide', previous);
+      export default function App() {}
+    `;
+    const root = await fixture(source);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.filter(({ file }) => ["src/App.tsx", "dist/assets/index.js"].includes(file)))
+      .toEqual([]);
+  });
+
+  it("rejects descriptor access to a non-fixed browser-global key", async () => {
+    const source = `
+      const key = 'runtimeKey';
+      Object.defineProperty(globalThis, key, { configurable: true, value: null });
+      export default function App() {}
+    `;
+    const root = await fixture(source);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.some(({ file }) => file === "src/App.tsx")).toBe(true);
+    expect(findings.some(({ file }) => file === "dist/assets/index.js")).toBe(true);
   });
 
   it("fails closed on Vite glob and query imports", async () => {
@@ -1806,6 +2810,42 @@ describe("private hosted runtime boundary", () => {
       file: "dist/assets/index.js",
       code: "forbidden-bundle-marker",
       detail: "persistent storage",
+    });
+  });
+
+  it("rejects a vendor chunk that does not match the qualified SHA-256", async () => {
+    const root = await fixture();
+    await writeFile(
+      resolve(root, "dist/.vite/manifest.json"),
+      JSON.stringify({
+        "_vendor-tampered.js": {
+          file: "assets/vendor-tampered.js",
+          isEntry: false,
+        },
+        "index.html": {
+          file: "assets/index.js",
+          isEntry: true,
+          imports: ["_vendor-tampered.js"],
+          dynamicImports: [],
+        },
+      }),
+    );
+    await writeFile(
+      resolve(root, "dist/assets/vendor-tampered.js"),
+      "globalThis.fetch('/tampered-vendor');",
+    );
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+    expect(findings).toContainEqual({
+      file: "dist/assets/vendor-tampered.js",
+      code: "vendor-integrity",
+      detail: "trusted vendor bundle SHA-256 mismatch",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/vendor-tampered.js",
+      code: "forbidden-bundle-marker",
+      detail: "network API",
     });
   });
 

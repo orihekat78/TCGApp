@@ -663,6 +663,36 @@ describe("Cloudflare API pagination", () => {
 });
 
 describe("Cloudflare API authorization boundary", () => {
+  it("times out a fetch that never settles and aborts its transport", async () => {
+    let transportSignal: AbortSignal | undefined;
+    const baseFetch = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      transportSignal = init?.signal ?? undefined;
+      return await new Promise<Response>(() => undefined);
+    }) as CloudflareFetch;
+    const safeFetch = createCloudflareApiFetch("test-token", baseFetch, 10);
+
+    await expect(
+      safeFetch("https://api.cloudflare.com/client/v4/accounts/id/access/apps"),
+    ).rejects.toThrow(/request timed out/);
+    expect(transportSignal?.aborted).toBe(true);
+  });
+
+  it("composes caller cancellation with the audit timeout", async () => {
+    const caller = new AbortController();
+    const baseFetch = vi.fn(
+      async () => await new Promise<Response>(() => undefined),
+    ) as CloudflareFetch;
+    const safeFetch = createCloudflareApiFetch("test-token", baseFetch, 1_000);
+    const request = safeFetch(
+      "https://api.cloudflare.com/client/v4/accounts/id/access/apps",
+      { signal: caller.signal },
+    );
+
+    caller.abort();
+
+    await expect(request).rejects.toThrow(/request aborted/);
+  });
+
   it("adds the token only to Cloudflare API requests and strips ambient credentials", async () => {
     const seen: { url: string; headers: Headers; credentials?: RequestCredentials }[] = [];
     const baseFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {

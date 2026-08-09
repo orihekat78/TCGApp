@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 265
-- **ファイル数**: 5602
+- **ファイル数**: 5610
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -455,6 +455,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-274.md` — 複数パートナー能力の選択が盤面で停止する
     - `BUG-275.md` — favicon 未定義による 404
     - `BUG-276.md` — 5174二重待受による検証先の分裂
+    - `BUG-277.md` — Pending runtime inherited-global isolation
+    - `BUG-278.md` — Headless inherited-accessor isolation
+    - `BUG-279.md` — Browser navigation sink detection
+    - `BUG-280.md` — String timer dynamic execution
+    - `BUG-281.md` — Atomic qualification report publication
+    - `BUG-282.md` — Bounded Cloudflare audit requests
+    - `BUG-283.md` — Browser persistence and cross-context export
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1991,6 +1998,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-07-26-ctp10-card-wave.md` — CT-P10 Card Wave Implementation Plan
       - `2026-07-26-hand-occurrence-rebase.md` — Hand occurrence rebase Implementation Plan
       - `2026-07-26-rule-manual-ver2-5.md` — Rule Manual Ver.2.5 Implementation Plan
+      - `2026-08-04-private-hosted-phase3-4-handoff.md` — Private Hosted Phase 3-4 Handoff
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
@@ -2153,7 +2161,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `finish.cjs`
     - `prepare.cjs`
   - **`private-hosted/`**
-    - `audit-runtime-boundary.ts` — This audit is a release boundary, so unresolved runtime property keys and
+    - `audit-runtime-boundary.ts` — Updated only after npm-ci rebuild, full qualification, and adversarial review.
     - `check-release-bugs.ts`
     - `cloudflare-api.ts`
     - `init-config.ts`

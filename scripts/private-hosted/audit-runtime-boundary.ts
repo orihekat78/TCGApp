@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import { createHash } from "node:crypto";
 import { lstat, readFile, readdir, stat } from "node:fs/promises";
 import { delimiter, dirname, extname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -35,6 +36,13 @@ export default defineConfig({
     modulePreload: {
       polyfill: false,
     },
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("/node_modules/")) return "vendor";
+        },
+      },
+    },
   },
   resolve: {
     alias: {
@@ -53,6 +61,15 @@ const BUNDLE_MARKERS: Array<[RegExp, string]> = [
   [/tsv-loader-fs/i, "tsv-loader-fs"],
   [/\.claude(?:\/|\\)specs(?:\/|\\)cards-data/i, "card specification path"],
 ];
+const TRUSTED_VENDOR_BUNDLE = /^assets\/vendor-[A-Za-z0-9_-]+\.js$/;
+// Updated only after npm-ci rebuild, full qualification, and adversarial review.
+const TRUSTED_VENDOR_SHA256 =
+  "25da2220d5174f5d4c4379e62a39df46e2787227fabfed24970ba3047bbe80a6";
+
+function trustedVendorBundle(source: string): boolean {
+  return createHash("sha256").update(source, "utf8").digest("hex") ===
+    TRUSTED_VENDOR_SHA256;
+}
 const PRIVILEGED_BROWSER_GLOBALS = new Set([
   "document",
   "globalThis",
@@ -121,10 +138,14 @@ const browserObjectProperty = (
 };
 const PERSISTENT_BROWSER_PROPERTIES = new Set([
   "caches",
+  "clipboard",
   "cookie",
   "cookieStore",
+  "credentials",
+  "history",
   "indexedDB",
   "localStorage",
+  "name",
   "openDatabase",
   "sessionStorage",
   "showDirectoryPicker",
@@ -133,8 +154,12 @@ const PERSISTENT_BROWSER_PROPERTIES = new Set([
   "storage",
 ]);
 const NETWORK_BROWSER_PROPERTIES = new Set([
+  "BroadcastChannel",
   "EventSource",
   "fetch",
+  "location",
+  "open",
+  "postMessage",
   "RTCPeerConnection",
   "sendBeacon",
   "SharedWorker",
@@ -452,6 +477,7 @@ type BrowserGlobalSet = ReadonlySet<string>;
 type BrowserAliasState = ReadonlyMap<AliasBinding, BrowserGlobalSet>;
 
 type BrowserAliasAnalysis = {
+  limitations: ReadonlySet<string>;
   valuesBefore: ReadonlyMap<ts.Identifier, BrowserGlobalSet>;
   propertyValuesBefore: ReadonlyMap<
     ts.PropertyAccessExpression | ts.ElementAccessExpression,
@@ -461,6 +487,7 @@ type BrowserAliasAnalysis = {
   analyzedLocalCalls: ReadonlySet<ts.CallExpression | ts.NewExpression>;
   localFunctionReturns: ReadonlySet<ts.ReturnStatement | ts.ArrowFunction>;
   resolveBinding(node: ts.Node, name: string): AliasBinding | undefined;
+  isBrowserTimer(node: ts.Expression): boolean;
   isDynamicFunctionConstructor(node: ts.Expression): boolean;
   containsTrackedBrowserObject(node: ts.Expression): boolean;
   containsDeferredTrackedBrowserObject(node: ts.Expression): boolean;
@@ -471,6 +498,7 @@ type BrowserAliasAnalysis = {
 
 function isRuntimeValueIdentifier(node: ts.Identifier): boolean {
   const parent = node.parent;
+  if (ts.isJsxAttribute(parent) && parent.name === node) return false;
   if (ts.isPropertyAccessExpression(parent) && parent.name === node) return false;
   if (ts.isPropertyAssignment(parent) && parent.name === node) return false;
   if (ts.isBindingElement(parent) && parent.propertyName === node) return false;
@@ -538,7 +566,7 @@ function privilegedBrowserGlobal(
     if (ts.isPropertyAccessExpression(expression) || ts.isElementAccessExpression(expression)) {
       const tracked = analysis.propertyValuesBefore.get(expression);
       const trackedGlobal = tracked
-        ? [...tracked].find(isBrowserObjectValue)
+        ? [...tracked].find((value) => PRIVILEGED_BROWSER_GLOBALS.has(value))
         : undefined;
       if (trackedGlobal) return trackedGlobal;
       const property = ts.isPropertyAccessExpression(expression)
@@ -651,7 +679,17 @@ function isDynamicCodeExecution(
   node: ts.Node,
   analysis: BrowserAliasAnalysis,
   allowInertReplayEventConstructor = false,
+  staticStrings?: ScopedStaticStrings,
 ): boolean {
+  if (
+    ts.isCallExpression(node) &&
+    node.arguments[0] &&
+    staticStrings &&
+    analysis.isBrowserTimer(node.expression) &&
+    scopedStaticString(node.arguments[0], staticStrings) !== undefined
+  ) {
+    return true;
+  }
   if (
     (ts.isCallExpression(node) || ts.isNewExpression(node)) &&
     analysis.isDynamicFunctionConstructor(node.expression) &&
@@ -719,6 +757,7 @@ function isLexicalScope(node: ts.Node): boolean {
 }
 
 function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
+  const limitations = new Set<string>();
   const scopes = new Map<ts.Node, Map<string, AliasBinding>>();
   let nextBindingId = 1;
   const nearestScope = (node: ts.Node | undefined): ts.Node => {
@@ -1019,6 +1058,15 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     const direct = staticString(expression);
     if (direct !== undefined) return direct;
     if (
+      ts.isPropertyAccessExpression(expression) &&
+      ts.isIdentifier(expression.expression) &&
+      expression.expression.text === "Symbol" &&
+      resolveBinding(expression.expression, expression.expression.text) === undefined &&
+      ["asyncIterator", "iterator"].includes(expression.name.text)
+    ) {
+      return `@@${expression.name.text}`;
+    }
+    if (
       ts.isParenthesizedExpression(expression) ||
       ts.isAsExpression(expression) ||
       ts.isTypeAssertionExpression(expression) ||
@@ -1231,8 +1279,68 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     let dispatchesClonedEvent = false;
     let shiftsTargetContainer = false;
     let writesBlockedOn = false;
+    const staticBoolean = (expression: ts.Expression): boolean | undefined => {
+      if (expression.kind === ts.SyntaxKind.TrueKeyword) return true;
+      if (expression.kind === ts.SyntaxKind.FalseKeyword) return false;
+      if (ts.isParenthesizedExpression(expression)) return staticBoolean(expression.expression);
+      if (
+        ts.isPrefixUnaryExpression(expression) &&
+        expression.operator === ts.SyntaxKind.ExclamationToken
+      ) {
+        const value = staticBoolean(expression.operand);
+        return value === undefined ? undefined : !value;
+      }
+      return undefined;
+    };
+    const isWithinStaticallyDeadBranch = (node: ts.Node): boolean => {
+      let current: ts.Node | undefined = node;
+      while (current && current !== implementation!.body) {
+        const parentNode: ts.Node | undefined = current.parent;
+        if (!parentNode) return false;
+        if (ts.isIfStatement(parentNode)) {
+          const condition = staticBoolean(parentNode.expression);
+          if (
+            (current === parentNode.thenStatement && condition === false) ||
+            (current === parentNode.elseStatement && condition === true)
+          ) {
+            return true;
+          }
+        }
+        if (ts.isConditionalExpression(parentNode)) {
+          const condition = staticBoolean(parentNode.condition);
+          if (
+            (current === parentNode.whenTrue && condition === false) ||
+            (current === parentNode.whenFalse && condition === true)
+          ) {
+            return true;
+          }
+        }
+        if (
+          ts.isWhileStatement(parentNode) &&
+          current === parentNode.statement &&
+          staticBoolean(parentNode.expression) === false
+        ) {
+          return true;
+        }
+        if (
+          ts.isForStatement(parentNode) &&
+          current === parentNode.statement &&
+          parentNode.condition &&
+          staticBoolean(parentNode.condition) === false
+        ) {
+          return true;
+        }
+        current = parentNode;
+      }
+      return false;
+    };
     const inspectReplayImplementation = (child: ts.Node): void => {
-      if (child !== implementation!.body && ts.isFunctionLike(child)) return;
+      if (
+        isWithinStaticallyDeadBranch(child) ||
+        (child !== implementation!.body && ts.isFunctionLike(child))
+      ) {
+        return;
+      }
       if (ts.isCallExpression(child)) {
         const calleeProperty = assignedPropertyName(child.expression);
         dispatchesClonedEvent ||= calleeProperty === "dispatchEvent";
@@ -1303,11 +1411,10 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
   };
   const possibleAliases = new Map<AliasBinding, BrowserGlobalSet>();
   const possibleFunctionReturns = new Map<ts.FunctionLikeDeclaration, BrowserGlobalSet>();
-  const returnedArgumentIndexes = new Map<ts.FunctionLikeDeclaration, ReadonlySet<number>>();
-  const returnedParameters = (
-    implementation: ts.FunctionLikeDeclaration,
+  const latestDefiniteAssignmentValue = (
     expression: ts.Expression,
-  ): ReadonlySet<number> => {
+    binding: AliasBinding,
+  ): ts.Expression | undefined => {
     if (
       ts.isParenthesizedExpression(expression) ||
       ts.isAsExpression(expression) ||
@@ -1316,55 +1423,493 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       ts.isSatisfiesExpression(expression) ||
       ts.isAwaitExpression(expression)
     ) {
-      return returnedParameters(implementation, expression.expression);
+      return latestDefiniteAssignmentValue(expression.expression, binding);
     }
-    if (ts.isConditionalExpression(expression)) {
-      return new Set([
-        ...returnedParameters(implementation, expression.whenTrue),
-        ...returnedParameters(implementation, expression.whenFalse),
-      ]);
+    if (!ts.isBinaryExpression(expression)) return undefined;
+    if (expression.operatorToken.kind === ts.SyntaxKind.CommaToken) {
+      return latestDefiniteAssignmentValue(expression.right, binding) ??
+        latestDefiniteAssignmentValue(expression.left, binding);
+    }
+    return expression.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+        ts.isIdentifier(expression.left) &&
+        resolveBinding(expression.left, expression.left.text) === binding
+      ? expression.right
+      : undefined;
+  };
+  function sequentialValueExpression(expression: ts.Expression): ts.Expression {
+    if (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isTypeAssertionExpression(expression) ||
+      ts.isNonNullExpression(expression) ||
+      ts.isSatisfiesExpression(expression) ||
+      ts.isAwaitExpression(expression)
+    ) {
+      return sequentialValueExpression(expression.expression);
+    }
+    if (!ts.isBinaryExpression(expression)) return expression;
+    if (expression.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+      return sequentialValueExpression(expression.right);
+    }
+    if (expression.operatorToken.kind !== ts.SyntaxKind.CommaToken) return expression;
+    const result = sequentialValueExpression(expression.right);
+    if (!ts.isIdentifier(result)) return result;
+    const binding = resolveBinding(result, result.text);
+    const assigned = binding
+      ? latestDefiniteAssignmentValue(expression.left, binding)
+      : undefined;
+    return assigned && expressionDefinitelyBreaksPriorValue(assigned)
+      ? sequentialValueExpression(assigned)
+      : result;
+  }
+  function expressionDefinitelyBreaksPriorValue(
+    expression: ts.Expression,
+    resolvingFunctions: ReadonlySet<ts.FunctionLikeDeclaration> = new Set(),
+  ): boolean {
+    if (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isTypeAssertionExpression(expression) ||
+      ts.isNonNullExpression(expression) ||
+      ts.isSatisfiesExpression(expression) ||
+      ts.isAwaitExpression(expression)
+    ) {
+      return expressionDefinitelyBreaksPriorValue(expression.expression, resolvingFunctions);
     }
     if (
-      ts.isBinaryExpression(expression) &&
-      [
+      ts.isObjectLiteralExpression(expression) ||
+      ts.isArrayLiteralExpression(expression) ||
+      ts.isFunctionExpression(expression) ||
+      ts.isArrowFunction(expression) ||
+      ts.isClassExpression(expression) ||
+      ts.isLiteralExpression(expression) ||
+      expression.kind === ts.SyntaxKind.TrueKeyword ||
+      expression.kind === ts.SyntaxKind.FalseKeyword ||
+      expression.kind === ts.SyntaxKind.NullKeyword
+    ) {
+      return true;
+    }
+    if (ts.isConditionalExpression(expression)) {
+      return expressionDefinitelyBreaksPriorValue(expression.whenTrue, resolvingFunctions) &&
+        expressionDefinitelyBreaksPriorValue(expression.whenFalse, resolvingFunctions);
+    }
+    if (ts.isBinaryExpression(expression)) {
+      if (
+        expression.operatorToken.kind === ts.SyntaxKind.CommaToken ||
+        expression.operatorToken.kind === ts.SyntaxKind.EqualsToken
+      ) {
+        return expressionDefinitelyBreaksPriorValue(
+          sequentialValueExpression(expression),
+          resolvingFunctions,
+        );
+      }
+      return ![
         ts.SyntaxKind.AmpersandAmpersandToken,
         ts.SyntaxKind.BarBarToken,
         ts.SyntaxKind.QuestionQuestionToken,
-      ].includes(expression.operatorToken.kind)
+      ].includes(expression.operatorToken.kind);
+    }
+    if (!ts.isCallExpression(expression)) return false;
+    if (!ts.isIdentifier(expression.expression)) return false;
+    const binding = resolveBinding(expression.expression, expression.expression.text);
+    const implementations = binding
+      ? localFunctions.get(binding) ?? new Set<ts.FunctionLikeDeclaration>()
+      : new Set<ts.FunctionLikeDeclaration>();
+    if (implementations.size === 0) return false;
+    return [...implementations].every((implementation) => {
+      if (resolvingFunctions.has(implementation)) return false;
+      collectFunctionReturns(implementation);
+      const returned = returnsByFunction.get(implementation) ?? [];
+      const nextFunctions = new Set(resolvingFunctions).add(implementation);
+      return returned.every((value) =>
+        expressionDefinitelyBreaksPriorValue(
+          sequentialValueExpression(value),
+          nextFunctions,
+        )
+      );
+    });
+  }
+  const returnedArgumentIndexes = new Map<ts.FunctionLikeDeclaration, ReadonlySet<number>>();
+  const returnedArgumentIndexesInProgress = new Set<ts.FunctionLikeDeclaration>();
+  type ParameterEnvironment = Map<AliasBinding, Set<number>>;
+  const unionParameterIndexes = (
+    ...values: ReadonlySet<number>[]
+  ): Set<number> => new Set(values.flatMap((value) => [...value]));
+  const cloneParameterEnvironment = (
+    environment: ParameterEnvironment,
+  ): ParameterEnvironment => new Map(
+    [...environment].map(([binding, indexes]) => [binding, new Set(indexes)]),
+  );
+  const mergeParameterEnvironments = (
+    ...environments: ParameterEnvironment[]
+  ): ParameterEnvironment => {
+    const merged: ParameterEnvironment = new Map();
+    for (const environment of environments) {
+      for (const [binding, indexes] of environment) {
+        merged.set(binding, unionParameterIndexes(merged.get(binding) ?? new Set(), indexes));
+      }
+    }
+    return merged;
+  };
+  const replaceParameterEnvironment = (
+    target: ParameterEnvironment,
+    source: ParameterEnvironment,
+  ): void => {
+    target.clear();
+    for (const [binding, indexes] of source) target.set(binding, new Set(indexes));
+  };
+  const localCalleeImplementations = (
+    expression: ts.Expression,
+  ): Set<ts.FunctionLikeDeclaration> => {
+    if (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isTypeAssertionExpression(expression) ||
+      ts.isNonNullExpression(expression) ||
+      ts.isSatisfiesExpression(expression) ||
+      ts.isAwaitExpression(expression)
     ) {
+      return localCalleeImplementations(expression.expression);
+    }
+    if (ts.isFunctionExpression(expression) || ts.isArrowFunction(expression)) {
+      collectFunctionReturns(expression);
+      return new Set([expression]);
+    }
+    if (ts.isConditionalExpression(expression)) {
       return new Set([
-        ...returnedParameters(implementation, expression.left),
-        ...returnedParameters(implementation, expression.right),
+        ...localCalleeImplementations(expression.whenTrue),
+        ...localCalleeImplementations(expression.whenFalse),
       ]);
     }
     if (
       ts.isBinaryExpression(expression) &&
       (expression.operatorToken.kind === ts.SyntaxKind.CommaToken ||
-        expression.operatorToken.kind === ts.SyntaxKind.EqualsToken)
+        isValuePropagatingAssignment(expression.operatorToken.kind))
     ) {
-      return returnedParameters(implementation, expression.right);
+      return localCalleeImplementations(expression.right);
     }
     if (!ts.isIdentifier(expression)) return new Set();
-    const returned = resolveBinding(expression, expression.text);
-    const index = implementation.parameters.findIndex((parameter) =>
-      ts.isIdentifier(parameter.name) &&
-      resolveBinding(parameter.name, parameter.name.text) === returned
-    );
-    return index >= 0 ? new Set([index]) : new Set();
+    const binding = resolveBinding(expression, expression.text);
+    return new Set(binding ? localFunctions.get(binding) ?? [] : []);
   };
-  const ensureReturnedArgumentIndexes = (
+  const parameterOrigins = (
+    expression: ts.Expression,
+    environment: ParameterEnvironment,
+  ): Set<number> => {
+    if (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isTypeAssertionExpression(expression) ||
+      ts.isNonNullExpression(expression) ||
+      ts.isSatisfiesExpression(expression) ||
+      ts.isAwaitExpression(expression)
+    ) {
+      return parameterOrigins(expression.expression, environment);
+    }
+    if (ts.isConditionalExpression(expression)) {
+      parameterOrigins(expression.condition, environment);
+      const whenTrueEnvironment = cloneParameterEnvironment(environment);
+      const whenFalseEnvironment = cloneParameterEnvironment(environment);
+      const whenTrue = parameterOrigins(expression.whenTrue, whenTrueEnvironment);
+      const whenFalse = parameterOrigins(expression.whenFalse, whenFalseEnvironment);
+      replaceParameterEnvironment(
+        environment,
+        mergeParameterEnvironments(whenTrueEnvironment, whenFalseEnvironment),
+      );
+      return unionParameterIndexes(whenTrue, whenFalse);
+    }
+    if (ts.isBinaryExpression(expression)) {
+      const operator = expression.operatorToken.kind;
+      if (operator === ts.SyntaxKind.CommaToken) {
+        parameterOrigins(expression.left, environment);
+        return parameterOrigins(expression.right, environment);
+      }
+      if (operator === ts.SyntaxKind.EqualsToken) {
+        const value = parameterOrigins(expression.right, environment);
+        if (ts.isIdentifier(expression.left)) {
+          const binding = resolveBinding(expression.left, expression.left.text);
+          if (binding) environment.set(binding, new Set(value));
+        }
+        return value;
+      }
+      if ([
+        ts.SyntaxKind.AmpersandAmpersandEqualsToken,
+        ts.SyntaxKind.BarBarEqualsToken,
+        ts.SyntaxKind.QuestionQuestionEqualsToken,
+      ].includes(operator)) {
+        const binding = ts.isIdentifier(expression.left)
+          ? resolveBinding(expression.left, expression.left.text)
+          : undefined;
+        const previous = binding
+          ? new Set(environment.get(binding) ?? [])
+          : parameterOrigins(expression.left, environment);
+        const assignedEnvironment = cloneParameterEnvironment(environment);
+        const assigned = parameterOrigins(expression.right, assignedEnvironment);
+        replaceParameterEnvironment(
+          environment,
+          mergeParameterEnvironments(environment, assignedEnvironment),
+        );
+        const result = unionParameterIndexes(previous, assigned);
+        if (binding) environment.set(binding, result);
+        return result;
+      }
+      if ([
+        ts.SyntaxKind.AmpersandAmpersandToken,
+        ts.SyntaxKind.BarBarToken,
+        ts.SyntaxKind.QuestionQuestionToken,
+      ].includes(operator)) {
+        const left = parameterOrigins(expression.left, environment);
+        const rightEnvironment = cloneParameterEnvironment(environment);
+        const right = parameterOrigins(expression.right, rightEnvironment);
+        replaceParameterEnvironment(
+          environment,
+          mergeParameterEnvironments(environment, rightEnvironment),
+        );
+        return unionParameterIndexes(left, right);
+      }
+      parameterOrigins(expression.left, environment);
+      parameterOrigins(expression.right, environment);
+      return new Set();
+    }
+    if (ts.isIdentifier(expression)) {
+      const binding = resolveBinding(expression, expression.text);
+      return new Set(binding ? environment.get(binding) ?? [] : []);
+    }
+    if (ts.isCallExpression(expression) || ts.isNewExpression(expression)) {
+      parameterOrigins(expression.expression, environment);
+      const argumentsOrigins = (expression.arguments ?? []).map((argument) =>
+        parameterOrigins(
+          ts.isSpreadElement(argument) ? argument.expression : argument,
+          environment,
+        )
+      );
+      const implementations = localCalleeImplementations(expression.expression);
+      if (implementations.size === 0 || expression.arguments?.some(ts.isSpreadElement)) {
+        return unionParameterIndexes(...argumentsOrigins);
+      }
+      const result = new Set<number>();
+      for (const implementation of implementations) {
+        for (const index of ensureReturnedArgumentIndexes(implementation)) {
+          for (const origin of argumentsOrigins[index] ?? []) result.add(origin);
+        }
+      }
+      return result;
+    }
+    if (ts.isYieldExpression(expression) && expression.expression) {
+      return parameterOrigins(expression.expression, environment);
+    }
+    if (ts.isArrayLiteralExpression(expression)) {
+      for (const element of expression.elements) {
+        parameterOrigins(ts.isSpreadElement(element) ? element.expression : element, environment);
+      }
+      return new Set();
+    }
+    if (ts.isObjectLiteralExpression(expression)) {
+      for (const property of expression.properties) {
+        if (ts.isSpreadAssignment(property)) {
+          parameterOrigins(property.expression, environment);
+        } else if (ts.isPropertyAssignment(property)) {
+          parameterOrigins(property.initializer, environment);
+        } else if (ts.isShorthandPropertyAssignment(property) && property.objectAssignmentInitializer) {
+          parameterOrigins(property.objectAssignmentInitializer, environment);
+        }
+      }
+      return new Set();
+    }
+    return new Set();
+  };
+  const assignParameterDeclaration = (
+    declaration: ts.VariableDeclaration,
+    environment: ParameterEnvironment,
+  ): void => {
+    const value = declaration.initializer
+      ? parameterOrigins(declaration.initializer, environment)
+      : new Set<number>();
+    if (!ts.isIdentifier(declaration.name)) return;
+    const binding = resolveBinding(declaration.name, declaration.name.text);
+    if (binding) environment.set(binding, value);
+  };
+  const analyzeParameterStatement = (
+    statement: ts.Statement,
+    environment: ParameterEnvironment,
+    returned: Set<number>,
+  ): ParameterEnvironment | undefined => {
+    if (ts.isBlock(statement)) {
+      let current: ParameterEnvironment | undefined = environment;
+      for (const child of statement.statements) {
+        if (!current) break;
+        current = analyzeParameterStatement(child, current, returned);
+      }
+      return current;
+    }
+    if (ts.isVariableStatement(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        assignParameterDeclaration(declaration, environment);
+      }
+      return environment;
+    }
+    if (ts.isExpressionStatement(statement)) {
+      parameterOrigins(statement.expression, environment);
+      return environment;
+    }
+    if (ts.isReturnStatement(statement)) {
+      if (statement.expression) {
+        for (const index of parameterOrigins(statement.expression, environment)) {
+          returned.add(index);
+        }
+      }
+      return undefined;
+    }
+    if (ts.isThrowStatement(statement)) {
+      parameterOrigins(statement.expression, environment);
+      return undefined;
+    }
+    if (ts.isIfStatement(statement)) {
+      parameterOrigins(statement.expression, environment);
+      const whenTrue = analyzeParameterStatement(
+        statement.thenStatement,
+        cloneParameterEnvironment(environment),
+        returned,
+      );
+      const whenFalse = statement.elseStatement
+        ? analyzeParameterStatement(
+            statement.elseStatement,
+            cloneParameterEnvironment(environment),
+            returned,
+          )
+        : cloneParameterEnvironment(environment);
+      if (!whenTrue) return whenFalse;
+      if (!whenFalse) return whenTrue;
+      return mergeParameterEnvironments(whenTrue, whenFalse);
+    }
+    if (ts.isSwitchStatement(statement)) {
+      parameterOrigins(statement.expression, environment);
+      const exits: ParameterEnvironment[] = [];
+      let hasDefault = false;
+      for (const clause of statement.caseBlock.clauses) {
+        hasDefault ||= ts.isDefaultClause(clause);
+        const block = ts.factory.createBlock([...clause.statements], true);
+        const exit = analyzeParameterStatement(
+          block,
+          cloneParameterEnvironment(environment),
+          returned,
+        );
+        if (exit) exits.push(exit);
+      }
+      if (!hasDefault) exits.push(cloneParameterEnvironment(environment));
+      return exits.length > 0 ? mergeParameterEnvironments(...exits) : undefined;
+    }
+    if (ts.isWhileStatement(statement) || ts.isDoStatement(statement)) {
+      parameterOrigins(statement.expression, environment);
+      const body = analyzeParameterStatement(
+        statement.statement,
+        cloneParameterEnvironment(environment),
+        returned,
+      );
+      if (ts.isDoStatement(statement)) return body;
+      return body
+        ? mergeParameterEnvironments(environment, body)
+        : cloneParameterEnvironment(environment);
+    }
+    if (ts.isForStatement(statement)) {
+      if (statement.initializer) {
+        if (ts.isVariableDeclarationList(statement.initializer)) {
+          for (const declaration of statement.initializer.declarations) {
+            assignParameterDeclaration(declaration, environment);
+          }
+        } else {
+          parameterOrigins(statement.initializer, environment);
+        }
+      }
+      if (statement.condition) parameterOrigins(statement.condition, environment);
+      const body = analyzeParameterStatement(
+        statement.statement,
+        cloneParameterEnvironment(environment),
+        returned,
+      );
+      if (body && statement.incrementor) parameterOrigins(statement.incrementor, body);
+      return body
+        ? mergeParameterEnvironments(environment, body)
+        : cloneParameterEnvironment(environment);
+    }
+    if (ts.isForInStatement(statement) || ts.isForOfStatement(statement)) {
+      parameterOrigins(statement.expression, environment);
+      const bodyEnvironment = cloneParameterEnvironment(environment);
+      if (ts.isVariableDeclarationList(statement.initializer)) {
+        for (const declaration of statement.initializer.declarations) {
+          assignParameterDeclaration(declaration, bodyEnvironment);
+        }
+      } else {
+        parameterOrigins(statement.initializer, bodyEnvironment);
+      }
+      const body = analyzeParameterStatement(statement.statement, bodyEnvironment, returned);
+      return body
+        ? mergeParameterEnvironments(environment, body)
+        : cloneParameterEnvironment(environment);
+    }
+    if (ts.isTryStatement(statement)) {
+      const exits: ParameterEnvironment[] = [];
+      const tryExit = analyzeParameterStatement(
+        statement.tryBlock,
+        cloneParameterEnvironment(environment),
+        returned,
+      );
+      if (tryExit) exits.push(tryExit);
+      if (statement.catchClause) {
+        const catchExit = analyzeParameterStatement(
+          statement.catchClause.block,
+          cloneParameterEnvironment(environment),
+          returned,
+        );
+        if (catchExit) exits.push(catchExit);
+      } else {
+        exits.push(cloneParameterEnvironment(environment));
+      }
+      if (exits.length === 0) return undefined;
+      const combined = mergeParameterEnvironments(...exits);
+      return statement.finallyBlock
+        ? analyzeParameterStatement(statement.finallyBlock, combined, returned)
+        : combined;
+    }
+    if (ts.isLabeledStatement(statement) || ts.isWithStatement(statement)) {
+      return analyzeParameterStatement(statement.statement, environment, returned);
+    }
+    return environment;
+  };
+  function ensureReturnedArgumentIndexes(
     implementation: ts.FunctionLikeDeclaration,
-  ): ReadonlySet<number> => {
+  ): ReadonlySet<number> {
     collectFunctionReturns(implementation);
     const existing = returnedArgumentIndexes.get(implementation);
     if (existing) return existing;
-    const indexes = new Set(
-      (returnsByFunction.get(implementation) ?? [])
-        .flatMap((returned) => [...returnedParameters(implementation, returned)]),
-    );
+    if (returnedArgumentIndexesInProgress.has(implementation)) {
+      return new Set(
+        implementation.parameters.flatMap((parameter, index) =>
+          ts.isIdentifier(parameter.name) ? [index] : []
+        ),
+      );
+    }
+    returnedArgumentIndexesInProgress.add(implementation);
+    const environment: ParameterEnvironment = new Map();
+    implementation.parameters.forEach((parameter, index) => {
+      if (!ts.isIdentifier(parameter.name)) return;
+      const binding = resolveBinding(parameter.name, parameter.name.text);
+      if (binding) environment.set(binding, new Set([index]));
+    });
+    const indexes = new Set<number>();
+    if (implementation.body) {
+      if (ts.isBlock(implementation.body)) {
+        analyzeParameterStatement(implementation.body, environment, indexes);
+      } else {
+        for (const index of parameterOrigins(implementation.body, environment)) {
+          indexes.add(index);
+        }
+      }
+    }
+    returnedArgumentIndexesInProgress.delete(implementation);
     returnedArgumentIndexes.set(implementation, indexes);
     return indexes;
-  };
+  }
   for (const implementation of returnsByFunction.keys()) {
     ensureReturnedArgumentIndexes(implementation);
   }
@@ -1374,7 +1919,16 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     }
     return ts.isComputedPropertyName(name) ? scopedStaticString(name.expression) : undefined;
   };
-  const callImplementations = (
+  let callFlowStable = false;
+  let unstableCallImplementationCache = new WeakMap<
+    ts.Expression,
+    Set<ts.FunctionLikeDeclaration>
+  >();
+  const stableCallImplementationCache = new WeakMap<
+    ts.Expression,
+    Set<ts.FunctionLikeDeclaration>
+  >();
+  const callImplementationsUncached = (
     expression: ts.Expression,
     resolvingBindings: ReadonlySet<AliasBinding> = new Set(),
     resolvingNodes: ReadonlySet<ts.Node> = new Set(),
@@ -1424,6 +1978,7 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     if (ts.isIdentifier(expression)) {
       const binding = resolveBinding(expression, expression.text);
       if (!binding || resolvingBindings.has(binding)) return new Set();
+      if (!callFlowStable) return new Set(localFunctions.get(binding) ?? []);
       const nextBindings = new Set(resolvingBindings).add(binding);
       const implementations = new Set(localFunctions.get(binding) ?? []);
       for (const relation of relationsByTarget.get(binding) ?? []) {
@@ -1512,11 +2067,12 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     for (const object of objectSources(expression.expression, resolvingBindings, nextNodes)) {
       for (const member of object.properties) {
         if (ts.isSpreadAssignment(member)) {
+          if (nextNodes.has(member)) continue;
           const spreadAccess = ts.factory.createPropertyAccessExpression(member.expression, property);
           for (const implementation of callImplementations(
             spreadAccess,
             resolvingBindings,
-            nextNodes,
+            new Set(nextNodes).add(member),
           )) {
             implementations.add(implementation);
           }
@@ -1558,6 +2114,129 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     }
     return implementations;
   };
+  const callImplementations = (
+    expression: ts.Expression,
+    resolvingBindings: ReadonlySet<AliasBinding> = new Set(),
+    resolvingNodes: ReadonlySet<ts.Node> = new Set(),
+  ): Set<ts.FunctionLikeDeclaration> => {
+    const cacheable = callFlowStable && resolvingBindings.size === 0 && resolvingNodes.size === 0;
+    const iterationCacheable = !callFlowStable &&
+      resolvingBindings.size === 0 &&
+      resolvingNodes.size === 0;
+    if (!cacheable && !iterationCacheable) {
+      return callImplementationsUncached(expression, resolvingBindings, resolvingNodes);
+    }
+    if (iterationCacheable) {
+      const cached = unstableCallImplementationCache.get(expression);
+      if (cached) return cached;
+      const implementations = callImplementationsUncached(
+        expression,
+        resolvingBindings,
+        resolvingNodes,
+      );
+      unstableCallImplementationCache.set(expression, implementations);
+      return implementations;
+    }
+    const cached = stableCallImplementationCache.get(expression);
+    if (cached) return cached;
+    const implementations = callImplementationsUncached(
+      expression,
+      resolvingBindings,
+      resolvingNodes,
+    );
+    stableCallImplementationCache.set(expression, implementations);
+    return implementations;
+  };
+  const localCallExpressions: Array<ts.CallExpression | ts.NewExpression> = [];
+  const collectLocalCallExpressions = (node: ts.Node): void => {
+    if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
+      localCallExpressions.push(node);
+    }
+    ts.forEachChild(node, collectLocalCallExpressions);
+  };
+  collectLocalCallExpressions(root);
+  const callArgumentsByImplementation = new Map<
+    ts.FunctionLikeDeclaration,
+    Set<ts.CallExpression | ts.NewExpression>
+  >();
+  const relationSourcesByTarget = new Map<AliasBinding, Set<ts.Expression>>();
+  for (const { target, source } of relations) {
+    const sources = relationSourcesByTarget.get(target) ?? new Set<ts.Expression>();
+    sources.add(source);
+    relationSourcesByTarget.set(target, sources);
+  }
+  const addCallRelation = (target: AliasBinding, source: ts.Expression): boolean => {
+    const sources = relationSourcesByTarget.get(target) ?? new Set<ts.Expression>();
+    if (sources.has(source)) return false;
+    sources.add(source);
+    relationSourcesByTarget.set(target, sources);
+    const relation = { target, source };
+    relations.push(relation);
+    const entries = relationsByTarget.get(target) ?? [];
+    entries.push(relation);
+    relationsByTarget.set(target, entries);
+    return true;
+  };
+  let callFlowIteration = 0;
+  let callFlowWork = 0;
+  for (;;) {
+    unstableCallImplementationCache = new WeakMap<
+      ts.Expression,
+      Set<ts.FunctionLikeDeclaration>
+    >();
+    callFlowIteration += 1;
+    callFlowWork += localCallExpressions.length;
+    if (callFlowIteration > 64 || callFlowWork > 200_000) {
+      limitations.add("call-flow propagation budget exceeded");
+      break;
+    }
+    let changed = false;
+    for (const relation of relations) {
+      for (const implementation of callableValue(relation.source)) {
+        changed = addLocalFunction(relation.target, implementation) || changed;
+      }
+    }
+    for (const call of localCallExpressions) {
+      for (const implementation of callImplementations(call.expression)) {
+        const calls = callArgumentsByImplementation.get(implementation) ?? new Set();
+        const previousSize = calls.size;
+        calls.add(call);
+        callArgumentsByImplementation.set(implementation, calls);
+        changed ||= calls.size !== previousSize;
+        for (const [index, parameter] of implementation.parameters.entries()) {
+          if (!ts.isIdentifier(parameter.name)) continue;
+          const target = resolveBinding(parameter.name, parameter.name.text);
+          if (!target) continue;
+          if (parameter.dotDotDotToken) {
+            for (let argumentIndex = index; argumentIndex < (call.arguments?.length ?? 0); argumentIndex += 1) {
+              const source = argumentExpression(call.arguments?.[argumentIndex]);
+              if (source) {
+                const added = addCallRelation(target, source);
+                changed = added || changed;
+              }
+            }
+            continue;
+          }
+          const source = argumentExpression(call.arguments?.[index]);
+          if (source) {
+            const added = addCallRelation(target, source);
+            changed = added || changed;
+          }
+        }
+      }
+    }
+    if (!changed) break;
+  }
+  callFlowStable = true;
+  const directlyResolvedLocalCalls = new Set(
+    localCallExpressions.filter((call) => {
+      if (!ts.isIdentifier(call.expression)) return false;
+      const binding = resolveBinding(call.expression, call.expression.text);
+      return binding !== undefined &&
+        (localFunctions.get(binding)?.size ?? 0) > 0 &&
+        (relationsByTarget.get(binding)?.length ?? 0) === 0;
+    }),
+  );
   type DynamicConstructorSelection = {
     container: ts.Expression;
     property: string | undefined;
@@ -1568,6 +2247,7 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
   >();
   const directDynamicConstructorBindings = new Set<AliasBinding>();
   const dynamicPropertyWrites = new Map<string, ts.Expression[]>();
+  const dynamicPropertyWritesByBinding = new Map<AliasBinding, ts.Expression[]>();
   const dynamicExpressionWrites: Array<{
     target: ts.PropertyAccessExpression | ts.ElementAccessExpression;
     source?: ts.Expression;
@@ -1576,6 +2256,37 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
   }> = [];
   const dynamicPropertyKey = (binding: AliasBinding, property: string | undefined): string =>
     `${binding.id}:${property ?? "*"}`;
+  const recordDynamicPropertyWrite = (
+    binding: AliasBinding,
+    property: string | undefined,
+    source: ts.Expression,
+  ): void => {
+    const key = dynamicPropertyKey(binding, property);
+    const sources = dynamicPropertyWrites.get(key) ?? [];
+    sources.push(source);
+    dynamicPropertyWrites.set(key, sources);
+    const allSources = dynamicPropertyWritesByBinding.get(binding) ?? [];
+    allSources.push(source);
+    dynamicPropertyWritesByBinding.set(binding, allSources);
+  };
+  const unknownPropertyExpression = (): ts.Expression =>
+    ts.factory.createIdentifier("__privateHostedUnknownProperty");
+  const recordMutatorWrite = (
+    target: ts.Expression,
+    propertyExpression: ts.Expression | undefined,
+    source: ts.Expression,
+  ): void => {
+    const property = propertyExpression ? scopedStaticString(propertyExpression) : undefined;
+    const access = ts.factory.createElementAccessExpression(
+      target,
+      propertyExpression ?? unknownPropertyExpression(),
+    );
+    dynamicExpressionWrites.push({ target: access, source, direct: false });
+    if (ts.isIdentifier(target)) {
+      const binding = resolveBinding(target, target.text);
+      if (binding) recordDynamicPropertyWrite(binding, property, source);
+    }
+  };
   const bindingIdentifiers = (name: ts.BindingName): ts.Identifier[] => {
     if (ts.isIdentifier(name)) return [name];
     return name.elements.flatMap((element) =>
@@ -1672,7 +2383,7 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
           addDynamicAssignmentSelection(
             destination,
             { container: initializer, property },
-            property === "constructor",
+            false,
           );
         }
       }
@@ -1770,11 +2481,194 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       if (!ts.isOmittedExpression(element)) markConstructorBindingsInPattern(element.name);
     }
   };
+  function isProjectedGlobalNamespace(
+    owner: ts.Expression,
+    properties: Array<string | undefined>,
+    name: "Object" | "Reflect",
+    resolvingBindings: ReadonlySet<AliasBinding>,
+    resolvingNodes: ReadonlySet<ts.Node>,
+  ): boolean {
+    if (properties.length === 0) {
+      return isGlobalNamespaceAlias(owner, name, resolvingBindings, resolvingNodes);
+    }
+    if (resolvingNodes.has(owner) || properties.length > 64) return false;
+    const nextNodes = new Set(resolvingNodes).add(owner);
+    if (
+      ts.isParenthesizedExpression(owner) ||
+      ts.isAsExpression(owner) ||
+      ts.isTypeAssertionExpression(owner) ||
+      ts.isNonNullExpression(owner) ||
+      ts.isSatisfiesExpression(owner) ||
+      ts.isAwaitExpression(owner)
+    ) {
+      return isProjectedGlobalNamespace(
+        owner.expression,
+        properties,
+        name,
+        resolvingBindings,
+        nextNodes,
+      );
+    }
+    if (ts.isConditionalExpression(owner)) {
+      return isProjectedGlobalNamespace(
+        owner.whenTrue,
+        properties,
+        name,
+        resolvingBindings,
+        nextNodes,
+      ) || isProjectedGlobalNamespace(
+        owner.whenFalse,
+        properties,
+        name,
+        resolvingBindings,
+        nextNodes,
+      );
+    }
+    const [selected, ...remaining] = properties;
+    if (ts.isArrayLiteralExpression(owner)) {
+      const index = selected !== undefined && /^(?:0|[1-9]\d*)$/.test(selected)
+        ? Number(selected)
+        : undefined;
+      return owner.elements.some((element, currentIndex) =>
+        !ts.isOmittedExpression(element) &&
+        (index === undefined || index === currentIndex) &&
+        isProjectedGlobalNamespace(
+          ts.isSpreadElement(element) ? element.expression : element,
+          remaining,
+          name,
+          resolvingBindings,
+          nextNodes,
+        )
+      );
+    }
+    if (ts.isObjectLiteralExpression(owner)) {
+      return owner.properties.some((member) => {
+        if (ts.isSpreadAssignment(member)) {
+          return isProjectedGlobalNamespace(
+            member.expression,
+            properties,
+            name,
+            resolvingBindings,
+            nextNodes,
+          );
+        }
+        if (selected !== undefined && scopedPropertyName(member.name) !== selected) return false;
+        const value = ts.isPropertyAssignment(member)
+          ? member.initializer
+          : ts.isShorthandPropertyAssignment(member)
+            ? member.name
+            : undefined;
+        return value !== undefined && isProjectedGlobalNamespace(
+          value,
+          remaining,
+          name,
+          resolvingBindings,
+          nextNodes,
+        );
+      });
+    }
+    if (ts.isPropertyAccessExpression(owner) || ts.isElementAccessExpression(owner)) {
+      return isProjectedGlobalNamespace(
+        owner.expression,
+        [assignedPropertyName(owner), ...properties],
+        name,
+        resolvingBindings,
+        nextNodes,
+      );
+    }
+    if (ts.isCallExpression(owner)) {
+      return [...callImplementations(owner.expression)].some((implementation) =>
+        (returnsByFunction.get(implementation) ?? []).some((returned) =>
+          isProjectedGlobalNamespace(
+            returned,
+            properties,
+            name,
+            resolvingBindings,
+            nextNodes,
+          )
+        )
+      );
+    }
+    if (!ts.isIdentifier(owner)) return false;
+    const binding = resolveBinding(owner, owner.text);
+    if (!binding || resolvingBindings.has(binding)) return false;
+    const nextBindings = new Set(resolvingBindings).add(binding);
+    return (relationsByTarget.get(binding) ?? []).some(({ source }) =>
+      isProjectedGlobalNamespace(source, properties, name, nextBindings, nextNodes)
+    ) || (bindingProjectionsByBinding.get(binding) ?? []).some((projection) =>
+      isProjectedGlobalNamespace(
+        projection.container,
+        [...projection.properties, ...properties],
+        name,
+        nextBindings,
+        nextNodes,
+      )
+    );
+  }
+  function isGlobalNamespaceAlias(
+    expression: ts.Expression,
+    name: "Object" | "Reflect",
+    resolvingBindings: ReadonlySet<AliasBinding> = new Set(),
+    resolvingNodes: ReadonlySet<ts.Node> = new Set(),
+  ): boolean {
+    if (resolvingNodes.has(expression)) return false;
+    const nextNodes = new Set(resolvingNodes).add(expression);
+    if (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isTypeAssertionExpression(expression) ||
+      ts.isNonNullExpression(expression) ||
+      ts.isSatisfiesExpression(expression) ||
+      ts.isAwaitExpression(expression)
+    ) {
+      return isGlobalNamespaceAlias(
+        expression.expression,
+        name,
+        resolvingBindings,
+        nextNodes,
+      );
+    }
+    if (ts.isConditionalExpression(expression)) {
+      return isGlobalNamespaceAlias(
+        expression.whenTrue,
+        name,
+        resolvingBindings,
+        nextNodes,
+      ) || isGlobalNamespaceAlias(
+        expression.whenFalse,
+        name,
+        resolvingBindings,
+        nextNodes,
+      );
+    }
+    if (ts.isCallExpression(expression)) {
+      return [...callImplementations(expression.expression)].some((implementation) =>
+        (returnsByFunction.get(implementation) ?? []).some((returned) =>
+          isGlobalNamespaceAlias(returned, name, resolvingBindings, nextNodes)
+        )
+      );
+    }
+    if (!ts.isIdentifier(expression)) return false;
+    const binding = resolveBinding(expression, expression.text);
+    if (!binding) return expression.text === name;
+    if (resolvingBindings.has(binding)) return false;
+    const nextBindings = new Set(resolvingBindings).add(binding);
+    return (relationsByTarget.get(binding) ?? []).some(({ source }) =>
+      isGlobalNamespaceAlias(source, name, nextBindings, nextNodes)
+    ) || (bindingProjectionsByBinding.get(binding) ?? []).some((projection) =>
+      isProjectedGlobalNamespace(
+        projection.container,
+        projection.properties,
+        name,
+        nextBindings,
+        nextNodes,
+      )
+    );
+  }
   const collectDynamicBindingSelections = (
     name: ts.BindingName,
     initializer: ts.Expression,
   ): void => {
-    markConstructorBindingsInPattern(name);
     if (ts.isIdentifier(name)) return;
     collectBindingProjections(name, initializer);
     if (ts.isObjectBindingPattern(name)) {
@@ -1786,17 +2680,34 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
             ? scopedStaticString(propertyNode.expression)
             : scopedPropertyName(propertyNode)
           : undefined;
-        if (property === "constructor") markDynamicBindingName(element.name);
-        else addDynamicSelection(element.name, { container: initializer, property });
+        if (!ts.isIdentifier(element.name) && property !== undefined) {
+          collectDynamicBindingSelections(
+            element.name,
+            ts.factory.createElementAccessExpression(
+              initializer,
+              ts.factory.createStringLiteral(property),
+            ),
+          );
+        } else {
+          addDynamicSelection(element.name, { container: initializer, property });
+        }
       }
       return;
     }
     for (const [index, element] of name.elements.entries()) {
       if (!ts.isOmittedExpression(element)) {
-        addDynamicSelection(element.name, {
-          container: initializer,
-          property: element.dotDotDotToken ? undefined : String(index),
-        });
+        const property = element.dotDotDotToken ? undefined : String(index);
+        if (!ts.isIdentifier(element.name) && property !== undefined) {
+          collectDynamicBindingSelections(
+            element.name,
+            ts.factory.createElementAccessExpression(
+              initializer,
+              ts.factory.createStringLiteral(property),
+            ),
+          );
+        } else {
+          addDynamicSelection(element.name, { container: initializer, property });
+        }
       }
     }
   };
@@ -1804,7 +2715,18 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     if (ts.isVariableDeclaration(node) && node.initializer) {
       collectDynamicBindingSelections(node.name, node.initializer);
     }
-    if (ts.isParameter(node)) markConstructorBindingsInPattern(node.name);
+    if (ts.isParameter(node)) {
+      const implementation = node.parent as ts.FunctionLikeDeclaration;
+      const parameterIndex = implementation.parameters.indexOf(node);
+      let projected = false;
+      for (const call of callArgumentsByImplementation.get(implementation) ?? []) {
+        const argument = argumentExpression(call.arguments?.[parameterIndex]);
+        if (!argument) continue;
+        collectDynamicBindingSelections(node.name, argument);
+        projected = true;
+      }
+      if (!projected) markConstructorBindingsInPattern(node.name);
+    }
     if (
       ts.isBinaryExpression(node) &&
       node.operatorToken.kind === ts.SyntaxKind.EqualsToken
@@ -1825,16 +2747,357 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       if (ts.isIdentifier(node.left.expression)) {
         const owner = resolveBinding(node.left.expression, node.left.expression.text);
         if (owner) {
-          const key = dynamicPropertyKey(owner, assignedPropertyName(node.left));
-          const sources = dynamicPropertyWrites.get(key) ?? [];
-          sources.push(node.right);
-          dynamicPropertyWrites.set(key, sources);
+          recordDynamicPropertyWrite(owner, assignedPropertyName(node.left), node.right);
+        }
+      }
+    }
+    if (
+      ts.isCallExpression(node) &&
+      (ts.isPropertyAccessExpression(node.expression) ||
+        ts.isElementAccessExpression(node.expression))
+    ) {
+      const method = assignedPropertyName(node.expression);
+      const namespace = node.expression.expression;
+      const target = argumentExpression(node.arguments[0]);
+      if (
+        target &&
+        method === "defineProperty" &&
+        (isGlobalNamespaceAlias(namespace, "Object") ||
+          isGlobalNamespaceAlias(namespace, "Reflect"))
+      ) {
+        const property = argumentExpression(node.arguments[1]);
+        const descriptor = argumentExpression(node.arguments[2]);
+        if (descriptor) {
+          recordMutatorWrite(
+            target,
+            property,
+            ts.factory.createPropertyAccessExpression(descriptor, "value"),
+          );
+        }
+      }
+      if (
+        target &&
+        method === "defineProperties" &&
+        isGlobalNamespaceAlias(namespace, "Object")
+      ) {
+        const descriptors = argumentExpression(node.arguments[1]);
+        if (descriptors && ts.isObjectLiteralExpression(descriptors)) {
+          for (const member of descriptors.properties) {
+            if (!ts.isPropertyAssignment(member) && !ts.isShorthandPropertyAssignment(member)) {
+              continue;
+            }
+            const descriptor = ts.isPropertyAssignment(member) ? member.initializer : member.name;
+            const property = member.name && !ts.isComputedPropertyName(member.name)
+              ? ts.factory.createStringLiteral(scopedPropertyName(member.name) ?? "")
+              : ts.isComputedPropertyName(member.name)
+                ? member.name.expression
+                : undefined;
+            recordMutatorWrite(
+              target,
+              property,
+              ts.factory.createPropertyAccessExpression(descriptor, "value"),
+            );
+          }
+        } else if (descriptors) {
+          const descriptor = ts.factory.createElementAccessExpression(
+            descriptors,
+            unknownPropertyExpression(),
+          );
+          recordMutatorWrite(
+            target,
+            undefined,
+            ts.factory.createPropertyAccessExpression(descriptor, "value"),
+          );
+        }
+      }
+      if (
+        target &&
+        method === "assign" &&
+        isGlobalNamespaceAlias(namespace, "Object")
+      ) {
+        for (const argument of node.arguments.slice(1)) {
+          const sourceObject = argumentExpression(argument);
+          if (!sourceObject) continue;
+          if (ts.isObjectLiteralExpression(sourceObject)) {
+            for (const member of sourceObject.properties) {
+              if (ts.isPropertyAssignment(member)) {
+                const property = ts.isComputedPropertyName(member.name)
+                  ? member.name.expression
+                  : ts.factory.createStringLiteral(scopedPropertyName(member.name) ?? "");
+                recordMutatorWrite(target, property, member.initializer);
+              } else if (ts.isShorthandPropertyAssignment(member)) {
+                recordMutatorWrite(
+                  target,
+                  ts.factory.createStringLiteral(member.name.text),
+                  member.name,
+                );
+              }
+            }
+          } else {
+            recordMutatorWrite(
+              target,
+              undefined,
+              ts.factory.createElementAccessExpression(
+                sourceObject,
+                unknownPropertyExpression(),
+              ),
+            );
+          }
         }
       }
     }
     ts.forEachChild(node, collectDynamicConstructorFlows);
   };
   collectDynamicConstructorFlows(root);
+  type PropertyValueTransfer = {
+    property: string | undefined;
+    propertyExpression?: ts.Expression;
+    owner?: ts.Expression;
+    value?: ts.Expression | ts.FunctionLikeDeclaration;
+    selection?: DynamicConstructorSelection;
+    direct?: boolean;
+    spread?: boolean;
+    literal?: boolean;
+  };
+  const propertyValueTransfers: PropertyValueTransfer[] = dynamicExpressionWrites.map(
+    ({ target, source, selection, direct }) => ({
+      property: assignedPropertyName(target),
+      propertyExpression: ts.isElementAccessExpression(target)
+        ? target.argumentExpression
+        : undefined,
+      owner: target.expression,
+      value: source,
+      selection,
+      direct,
+    }),
+  );
+  const collectLiteralPropertyTransfers = (node: ts.Node): void => {
+    if (ts.isObjectLiteralExpression(node)) {
+      for (const member of node.properties) {
+        if (ts.isSpreadAssignment(member)) {
+          propertyValueTransfers.push({
+            property: undefined,
+            owner: node,
+            value: member.expression,
+            spread: true,
+            literal: true,
+          });
+          continue;
+        }
+        const property = ts.isComputedPropertyName(member.name)
+          ? scopedStaticString(member.name.expression)
+          : scopedPropertyName(member.name);
+        const value = ts.isPropertyAssignment(member)
+          ? member.initializer
+          : ts.isShorthandPropertyAssignment(member)
+            ? member.name
+            : ts.isMethodDeclaration(member) ||
+                ts.isGetAccessorDeclaration(member) ||
+                ts.isSetAccessorDeclaration(member)
+              ? member
+              : undefined;
+        if (value !== undefined) {
+          propertyValueTransfers.push({
+            property,
+            owner: node,
+            value,
+            literal: true,
+          });
+        }
+      }
+    } else if (ts.isArrayLiteralExpression(node)) {
+      for (const [index, element] of node.elements.entries()) {
+        if (ts.isOmittedExpression(element)) continue;
+        propertyValueTransfers.push({
+          property: ts.isSpreadElement(element) ? undefined : String(index),
+          owner: node,
+          value: ts.isSpreadElement(element) ? element.expression : element,
+          spread: ts.isSpreadElement(element),
+          literal: true,
+        });
+      }
+    }
+    ts.forEachChild(node, collectLiteralPropertyTransfers);
+  };
+  collectLiteralPropertyTransfers(root);
+  const sameDynamicPropertyExpression = (
+    left: ts.Expression,
+    right: ts.Expression,
+  ): boolean => {
+    if (left === right) return true;
+    const leftStatic = scopedStaticString(left);
+    const rightStatic = scopedStaticString(right);
+    if (leftStatic !== undefined || rightStatic !== undefined) {
+      return leftStatic !== undefined && leftStatic === rightStatic;
+    }
+    if (!ts.isIdentifier(left) || !ts.isIdentifier(right)) return false;
+    const leftBinding = resolveBinding(left, left.text);
+    return leftBinding !== undefined && leftBinding === resolveBinding(right, right.text);
+  };
+  const conditionProvesNonCallable = (
+    condition: ts.Expression,
+    value: ts.Expression,
+  ): boolean => {
+    if (ts.isParenthesizedExpression(condition)) {
+      return conditionProvesNonCallable(condition.expression, value);
+    }
+    if (
+      ts.isBinaryExpression(condition) &&
+      condition.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken
+    ) {
+      return conditionProvesNonCallable(condition.left, value) ||
+        conditionProvesNonCallable(condition.right, value);
+    }
+    if (
+      !ts.isBinaryExpression(condition) ||
+      ![
+        ts.SyntaxKind.ExclamationEqualsToken,
+        ts.SyntaxKind.ExclamationEqualsEqualsToken,
+      ].includes(condition.operatorToken.kind)
+    ) {
+      return false;
+    }
+    const isGuardedTypeof = (left: ts.Expression, right: ts.Expression): boolean =>
+      ts.isTypeOfExpression(left) &&
+      sameDynamicPropertyExpression(left.expression, value) &&
+      scopedStaticString(right) === "function";
+    return isGuardedTypeof(condition.left, condition.right) ||
+      isGuardedTypeof(condition.right, condition.left);
+  };
+  const isGuardedByNonCallableCheck = (value: ts.Expression): boolean => {
+    let current: ts.Node = value;
+    while (current.parent && !ts.isFunctionLike(current.parent)) {
+      const parent = current.parent;
+      if (
+        ts.isBinaryExpression(parent) &&
+        parent.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken &&
+        current === parent.right &&
+        conditionProvesNonCallable(parent.left, value)
+      ) {
+        return true;
+      }
+      if (
+        ts.isConditionalExpression(parent) &&
+        current === parent.whenTrue &&
+        conditionProvesNonCallable(parent.condition, value)
+      ) {
+        return true;
+      }
+      if (
+        ts.isIfStatement(parent) &&
+        current === parent.thenStatement &&
+        conditionProvesNonCallable(parent.expression, value)
+      ) {
+        return true;
+      }
+      current = parent;
+    }
+    return false;
+  };
+  const latestDefiniteAssignmentBefore = (
+    value: ts.Identifier,
+    binding: AliasBinding,
+  ): ts.Expression | undefined => {
+    let current: ts.Node = value;
+    while (current.parent && !ts.isFunctionLike(current.parent)) {
+      const parent = current.parent;
+      if (
+        ts.isBinaryExpression(parent) &&
+        parent.operatorToken.kind === ts.SyntaxKind.CommaToken &&
+        current === parent.right
+      ) {
+        const assigned = latestDefiniteAssignmentValue(parent.left, binding);
+        if (assigned) return assigned;
+      }
+      current = parent;
+    }
+    return undefined;
+  };
+  const isDefinitelyNonCallableExpression = (
+    expression: ts.Expression,
+    resolving: ReadonlySet<AliasBinding> = new Set(),
+  ): boolean => {
+    if (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isTypeAssertionExpression(expression) ||
+      ts.isNonNullExpression(expression) ||
+      ts.isSatisfiesExpression(expression) ||
+      ts.isAwaitExpression(expression)
+    ) {
+      return isDefinitelyNonCallableExpression(expression.expression, resolving);
+    }
+    if (
+      ts.isNumericLiteral(expression) ||
+      ts.isStringLiteralLike(expression) ||
+      ts.isTemplateExpression(expression) ||
+      expression.kind === ts.SyntaxKind.TrueKeyword ||
+      expression.kind === ts.SyntaxKind.FalseKeyword ||
+      expression.kind === ts.SyntaxKind.NullKeyword ||
+      ts.isTypeOfExpression(expression) ||
+      ts.isPrefixUnaryExpression(expression)
+    ) {
+      return true;
+    }
+    if (ts.isConditionalExpression(expression)) {
+      return isDefinitelyNonCallableExpression(expression.whenTrue, resolving) &&
+        isDefinitelyNonCallableExpression(expression.whenFalse, resolving);
+    }
+    if (ts.isBinaryExpression(expression)) {
+      if (
+        expression.operatorToken.kind === ts.SyntaxKind.CommaToken ||
+        isValuePropagatingAssignment(expression.operatorToken.kind)
+      ) {
+        return isDefinitelyNonCallableExpression(expression.right, resolving);
+      }
+      if (expression.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken) {
+        return isDefinitelyNonCallableExpression(expression.right, resolving);
+      }
+      if (
+        [
+          ts.SyntaxKind.BarBarToken,
+          ts.SyntaxKind.QuestionQuestionToken,
+        ].includes(expression.operatorToken.kind)
+      ) {
+        return isDefinitelyNonCallableExpression(expression.left, resolving) &&
+          isDefinitelyNonCallableExpression(expression.right, resolving);
+      }
+      return true;
+    }
+    if (!ts.isIdentifier(expression)) return false;
+    const binding = resolveBinding(expression, expression.text);
+    if (!binding || resolving.has(binding)) return false;
+    const assigned = latestDefiniteAssignmentBefore(expression, binding);
+    return assigned !== undefined && isDefinitelyNonCallableExpression(
+      assigned,
+      new Set(resolving).add(binding),
+    );
+  };
+  const dynamicCandidateProperties = new Set<string>();
+  const dynamicCandidatePropertyNames = new Set<string>();
+  const dynamicCandidatePropertiesByBinding = new Map<AliasBinding, Set<string>>();
+  const dynamicCandidatePropertiesByExpression = new WeakMap<ts.Expression, Set<string>>();
+  let dynamicCandidateWildcard = false;
+  const dynamicCandidateWildcardBindings = new Set<AliasBinding>();
+  const dynamicCandidateWildcardExpressions = new WeakSet<ts.Expression>();
+  let hasScopedDynamicCandidateProperty = false;
+  const defaultCandidateAnalysisBudget = 2_000_000;
+  const requestedCandidateAnalysisBudget = Number(
+    process.env.PRIVATE_HOSTED_CANDIDATE_BUDGET,
+  );
+  let candidateAnalysisBudget = Number.isSafeInteger(requestedCandidateAnalysisBudget) &&
+      requestedCandidateAnalysisBudget >= 0
+    ? Math.min(requestedCandidateAnalysisBudget, defaultCandidateAnalysisBudget)
+    : defaultCandidateAnalysisBudget;
+  let candidateAnalysisBudgetExceeded = false;
+  const spendCandidateAnalysisBudget = (units = 1): boolean => {
+    if (candidateAnalysisBudgetExceeded) return false;
+    candidateAnalysisBudget -= units;
+    if (candidateAnalysisBudget >= 0) return true;
+    candidateAnalysisBudgetExceeded = true;
+    limitations.add("dynamic property candidate shared budget exceeded");
+    return false;
+  };
   const isImmediateDynamicConstructorUse = (node: ts.Expression): boolean => {
     let current: ts.Expression = node;
     while (
@@ -2013,6 +3276,249 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
   let dynamicExpressionWriteIndex: Map<string, IndexedDynamicExpressionWrite[]> | undefined;
   const dynamicExpressionPathBucket = (path: DynamicExpressionPath): string =>
     `${path.root.id}:${path.properties.length}`;
+  type CandidateAliasState = ts.Expression | AliasBinding;
+  type CandidateAliasClosure = {
+    roots: Set<AliasBinding>;
+    transitions: Array<{
+      property: string | undefined;
+      target: ts.Expression;
+    }>;
+    unknown: boolean;
+  };
+  type CandidateAliasScope = "hit" | "miss" | "unknown";
+  const candidateAliasClosureMemo = new Map<CandidateAliasState, CandidateAliasClosure>();
+  const isCandidateAliasExpression = (
+    state: CandidateAliasState,
+  ): state is ts.Expression => typeof (state as ts.Node).kind === "number";
+  const candidateAliasClosure = (start: CandidateAliasState): CandidateAliasClosure => {
+    const cached = candidateAliasClosureMemo.get(start);
+    if (cached) return cached;
+    const roots = new Set<AliasBinding>();
+    const transitions: CandidateAliasClosure["transitions"] = [];
+    const pending: CandidateAliasState[] = [start];
+    const visited = new Set<CandidateAliasState>();
+    let unknown = false;
+    for (let cursor = 0; cursor < pending.length; cursor += 1) {
+      const state = pending[cursor];
+      if (!state || visited.has(state)) continue;
+      visited.add(state);
+      if (!spendCandidateAnalysisBudget()) {
+        unknown = true;
+        break;
+      }
+      if (!isCandidateAliasExpression(state)) {
+        roots.add(canonicalObjectBinding(state));
+        for (const relation of relationsByTarget.get(state) ?? []) {
+          pending.push(relation.source);
+        }
+        continue;
+      }
+      if (
+        ts.isParenthesizedExpression(state) ||
+        ts.isAsExpression(state) ||
+        ts.isTypeAssertionExpression(state) ||
+        ts.isNonNullExpression(state) ||
+        ts.isSatisfiesExpression(state) ||
+        ts.isAwaitExpression(state)
+      ) {
+        pending.push(state.expression);
+        continue;
+      }
+      if (ts.isConditionalExpression(state)) {
+        pending.push(state.whenTrue, state.whenFalse);
+        continue;
+      }
+      if (ts.isBinaryExpression(state)) {
+        if (
+          state.operatorToken.kind === ts.SyntaxKind.CommaToken ||
+          isValuePropagatingAssignment(state.operatorToken.kind)
+        ) {
+          pending.push(state.right);
+        } else if (
+          [
+            ts.SyntaxKind.AmpersandAmpersandToken,
+            ts.SyntaxKind.BarBarToken,
+            ts.SyntaxKind.QuestionQuestionToken,
+          ].includes(state.operatorToken.kind)
+        ) {
+          pending.push(state.left, state.right);
+        } else {
+          unknown = true;
+        }
+        continue;
+      }
+      if (ts.isPropertyAccessExpression(state) || ts.isElementAccessExpression(state)) {
+        transitions.push({
+          property: assignedPropertyName(state),
+          target: state.expression,
+        });
+        continue;
+      }
+      if (ts.isIdentifier(state)) {
+        const binding = resolveBinding(state, state.text);
+        if (binding) pending.push(binding);
+        else unknown = true;
+        continue;
+      }
+      if (ts.isCallExpression(state)) {
+        const implementations = callImplementations(state.expression);
+        let emitted = false;
+        for (const implementation of implementations) {
+          for (const returned of returnsByFunction.get(implementation) ?? []) {
+            pending.push(returned);
+            emitted = true;
+          }
+          for (const index of ensureReturnedArgumentIndexes(implementation)) {
+            const argument = argumentExpression(state.arguments[index]);
+            if (!argument) continue;
+            pending.push(argument);
+            emitted = true;
+          }
+        }
+        if (!emitted) unknown = true;
+        continue;
+      }
+      if (ts.isNewExpression(state)) {
+        unknown = true;
+        continue;
+      }
+      if (
+        !ts.isObjectLiteralExpression(state) &&
+        !ts.isArrayLiteralExpression(state) &&
+        !ts.isFunctionExpression(state) &&
+        !ts.isArrowFunction(state) &&
+        !ts.isClassExpression(state) &&
+        !ts.isNumericLiteral(state) &&
+        !ts.isStringLiteralLike(state) &&
+        state.kind !== ts.SyntaxKind.TrueKeyword &&
+        state.kind !== ts.SyntaxKind.FalseKeyword &&
+        state.kind !== ts.SyntaxKind.NullKeyword
+      ) {
+        unknown = true;
+      }
+    }
+    const result = { roots, transitions, unknown };
+    if (!candidateAnalysisBudgetExceeded) candidateAliasClosureMemo.set(start, result);
+    return result;
+  };
+  const candidateAliasScopeMemo = new WeakMap<
+    ts.Expression,
+    WeakMap<ts.Expression, CandidateAliasScope>
+  >();
+  const candidateOwnersMayAlias = (
+    left: ts.Expression,
+    right: ts.Expression,
+  ): CandidateAliasScope => {
+    const cached = candidateAliasScopeMemo.get(left)?.get(right);
+    if (cached) return cached;
+    const pending: Array<[ts.Expression, ts.Expression]> = [[left, right]];
+    const visited = new Map<ts.Expression, Set<ts.Expression>>();
+    let unknown = false;
+    for (let cursor = 0; cursor < pending.length; cursor += 1) {
+      const pair = pending[cursor];
+      if (!pair) continue;
+      const [leftState, rightState] = pair;
+      const rightStates = visited.get(leftState) ?? new Set<ts.Expression>();
+      if (rightStates.has(rightState)) continue;
+      rightStates.add(rightState);
+      visited.set(leftState, rightStates);
+      if (!spendCandidateAnalysisBudget()) {
+        unknown = true;
+        break;
+      }
+      const leftClosure = candidateAliasClosure(leftState);
+      const rightClosure = candidateAliasClosure(rightState);
+      if ([...leftClosure.roots].some((root) => rightClosure.roots.has(root))) {
+        const result: CandidateAliasScope = "hit";
+        const rightMemo = candidateAliasScopeMemo.get(left) ?? new WeakMap();
+        rightMemo.set(right, result);
+        candidateAliasScopeMemo.set(left, rightMemo);
+        return result;
+      }
+      unknown ||= leftClosure.unknown || rightClosure.unknown;
+      for (const leftTransition of leftClosure.transitions) {
+        for (const rightTransition of rightClosure.transitions) {
+          if (
+            leftTransition.property === undefined ||
+            rightTransition.property === undefined ||
+            leftTransition.property === rightTransition.property
+          ) {
+            pending.push([leftTransition.target, rightTransition.target]);
+          }
+        }
+      }
+    }
+    const result: CandidateAliasScope = unknown ? "unknown" : "miss";
+    if (!candidateAnalysisBudgetExceeded) {
+      const rightMemo = candidateAliasScopeMemo.get(left) ?? new WeakMap();
+      rightMemo.set(right, result);
+      candidateAliasScopeMemo.set(left, rightMemo);
+    }
+    return result;
+  };
+  const candidateTaintOwnersByProperty = new Map<string, Set<ts.Expression>>();
+  const candidateWildcardTaintOwners = new Set<ts.Expression>();
+  const unscopedCandidateProperties = new Set<string>();
+  let hasUnscopedCandidateWildcard = false;
+  const registerCandidateOwnerTaint = (
+    owner: ts.Expression | undefined,
+    property: string | undefined,
+  ): boolean => {
+    if (!owner) {
+      if (property === undefined) {
+        const changed = !hasUnscopedCandidateWildcard;
+        hasUnscopedCandidateWildcard = true;
+        return changed;
+      }
+      const previousSize = unscopedCandidateProperties.size;
+      unscopedCandidateProperties.add(property);
+      return unscopedCandidateProperties.size !== previousSize;
+    }
+    const closure = candidateAliasClosure(owner);
+    if (candidateAnalysisBudgetExceeded) return false;
+    if (closure.roots.size === 0 && closure.transitions.length === 0) {
+      if (property === undefined) {
+        const changed = !hasUnscopedCandidateWildcard;
+        hasUnscopedCandidateWildcard = true;
+        return changed;
+      }
+      const previousSize = unscopedCandidateProperties.size;
+      unscopedCandidateProperties.add(property);
+      return unscopedCandidateProperties.size !== previousSize;
+    }
+    const owners = property === undefined
+      ? candidateWildcardTaintOwners
+      : candidateTaintOwnersByProperty.get(property) ?? new Set<ts.Expression>();
+    const previousSize = owners.size;
+    owners.add(owner);
+    if (property !== undefined) candidateTaintOwnersByProperty.set(property, owners);
+    return owners.size !== previousSize;
+  };
+  type CandidateOwnerScope = "hit" | "miss" | "unknown";
+  const candidateOwnerMayHaveProperty = (
+    owner: ts.Expression,
+    property: string,
+  ): CandidateOwnerScope => {
+    if (
+      dynamicCandidateWildcard ||
+      hasUnscopedCandidateWildcard ||
+      unscopedCandidateProperties.has(property)
+    ) {
+      return "hit";
+    }
+    const candidates = [
+      ...(candidateTaintOwnersByProperty.get(property) ?? []),
+      ...candidateWildcardTaintOwners,
+    ];
+    if (candidates.length === 0) return "unknown";
+    let unknown = false;
+    for (const candidate of candidates) {
+      const scope = candidateOwnersMayAlias(candidate, owner);
+      if (scope === "hit") return "hit";
+      unknown ||= scope === "unknown";
+    }
+    return unknown ? "unknown" : "miss";
+  };
   const ensureDynamicExpressionWriteIndex = (): Map<
     string,
     IndexedDynamicExpressionWrite[]
@@ -2048,30 +3554,6 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     }
     return [...sources];
   };
-  const isGlobalNamespaceAlias = (
-    expression: ts.Expression,
-    name: "Object" | "Reflect",
-    resolving: ReadonlySet<AliasBinding> = new Set(),
-  ): boolean => {
-    if (
-      ts.isParenthesizedExpression(expression) ||
-      ts.isAsExpression(expression) ||
-      ts.isTypeAssertionExpression(expression) ||
-      ts.isNonNullExpression(expression) ||
-      ts.isSatisfiesExpression(expression) ||
-      ts.isAwaitExpression(expression)
-    ) {
-      return isGlobalNamespaceAlias(expression.expression, name, resolving);
-    }
-    if (!ts.isIdentifier(expression)) return false;
-    const binding = resolveBinding(expression, expression.text);
-    if (!binding) return expression.text === name;
-    if (resolving.has(binding)) return false;
-    const next = new Set(resolving).add(binding);
-    return (relationsByTarget.get(binding) ?? []).some((relation) =>
-      isGlobalNamespaceAlias(relation.source, name, next)
-    );
-  };
   type ProjectedValueSources = {
     expressions: Set<ts.Expression>;
     functions: Set<ts.FunctionLikeDeclaration>;
@@ -2084,44 +3566,82 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
   const projectedValueSources = (
     owner: ts.Expression,
     property: string | undefined,
+    chargeCandidateBudget = false,
   ): ProjectedValueSources => {
     const rootKey = JSON.stringify([property ?? null]);
     const cached = projectedValueMemo.get(owner)?.get(rootKey);
-    if (cached) return cached;
+    if (cached) {
+      return cached;
+    }
     const expressions = new Set<ts.Expression>();
     const functions = new Set<ts.FunctionLikeDeclaration>();
     let uncertain = false;
+    let candidateBudgetAborted = false;
     type ProjectionWork = {
       expression: ts.Expression;
       properties: Array<string | undefined>;
     };
-    const pending: ProjectionWork[] = [{
-      expression: owner,
-      properties: [property],
-    }];
-    const visitedExpressions = new Map<ts.Expression, Set<string>>();
-    const visitedBindings = new Map<AliasBinding, Set<string>>();
+    const pending: ProjectionWork[] = [];
+    type ProjectionSummary = {
+      properties: Array<string | undefined>;
+      updates: number;
+    };
+    const visitedExpressions = new Map<
+      ts.Expression,
+      Map<number, ProjectionSummary>
+    >();
+    const visitedBindings = new Map<
+      AliasBinding,
+      Map<number, ProjectionSummary>
+    >();
     const maxProjectionDepth = 64;
     const maxProjectionStates = 20_000;
-    const pathKey = (properties: Array<string | undefined>): string =>
-      JSON.stringify(properties.map((part) => part ?? null));
-    const alreadyVisited = <T>(visited: Map<T, Set<string>>, value: T, key: string): boolean => {
-      const keys = visited.get(value) ?? new Set<string>();
-      if (keys.has(key)) return true;
-      keys.add(key);
-      visited.set(value, keys);
-      return false;
+    const updateProjectionSummary = <T>(
+      visited: Map<T, Map<number, ProjectionSummary>>,
+      value: T,
+      properties: Array<string | undefined>,
+    ): Array<string | undefined> | undefined => {
+      const byLength = visited.get(value) ?? new Map<number, ProjectionSummary>();
+      const existing = byLength.get(properties.length);
+      if (!existing) {
+        byLength.set(properties.length, { properties, updates: 0 });
+        visited.set(value, byLength);
+        return properties;
+      }
+      const merged = existing.properties.map((part, index) =>
+        part === properties[index] ? part : undefined
+      );
+      if (merged.every((part, index) => part === existing.properties[index])) {
+        return undefined;
+      }
+      const updates = existing.updates + 1;
+      const widened = updates >= 2 ? merged.map(() => undefined) : merged;
+      byLength.set(properties.length, { properties: widened, updates });
+      visited.set(value, byLength);
+      return widened;
     };
     const enqueue = (
       expression: ts.Expression,
       properties: Array<string | undefined>,
     ): void => {
-      if (properties.length > maxProjectionDepth || pending.length >= maxProjectionStates) {
+      const summarized = updateProjectionSummary(
+        visitedExpressions,
+        expression,
+        properties,
+      );
+      if (!summarized) return;
+      if (
+        (chargeCandidateBudget && !spendCandidateAnalysisBudget()) ||
+        summarized.length > maxProjectionDepth ||
+        pending.length >= maxProjectionStates
+      ) {
+        candidateBudgetAborted ||= chargeCandidateBudget && candidateAnalysisBudgetExceeded;
         uncertain = true;
         return;
       }
-      pending.push({ expression, properties });
+      pending.push({ expression, properties: summarized });
     };
+    enqueue(owner, [property]);
 
     for (let cursor = 0; cursor < pending.length; cursor += 1) {
       const current = pending[cursor];
@@ -2134,8 +3654,6 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
         expressions.add(expression);
         continue;
       }
-      const key = pathKey(properties);
-      if (alreadyVisited(visitedExpressions, expression, key)) continue;
       const project = (source: ts.Expression): void => {
         enqueue(source, properties);
       };
@@ -2220,6 +3738,39 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
         continue;
       }
       if (ts.isCallExpression(expression)) {
+        if (
+          (ts.isPropertyAccessExpression(expression.expression) ||
+            ts.isElementAccessExpression(expression.expression)) &&
+          isGlobalNamespaceAlias(expression.expression.expression, "Object")
+        ) {
+          const method = assignedPropertyName(expression.expression);
+          const target = argumentExpression(expression.arguments[0]);
+          if (method === "getOwnPropertyDescriptor" && selectedProperty === "value" && target) {
+            const descriptorProperty = argumentExpression(expression.arguments[1]);
+            emit(
+              ts.factory.createElementAccessExpression(
+                target,
+                descriptorProperty ?? unknownPropertyExpression(),
+              ),
+              remaining,
+            );
+          }
+          if (
+            method === "getOwnPropertyDescriptors" &&
+            remaining[0] === "value" &&
+            target
+          ) {
+            emit(
+              ts.factory.createElementAccessExpression(
+                target,
+                selectedProperty === undefined
+                  ? unknownPropertyExpression()
+                  : ts.factory.createStringLiteral(selectedProperty),
+              ),
+              remaining.slice(1),
+            );
+          }
+        }
         for (const implementation of callImplementations(expression.expression)) {
           for (const returned of returnsByFunction.get(implementation) ?? []) project(returned);
           for (const index of ensureReturnedArgumentIndexes(implementation)) {
@@ -2231,25 +3782,37 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       }
       if (!ts.isIdentifier(expression)) continue;
       const binding = resolveBinding(expression, expression.text);
-      if (!binding || alreadyVisited(visitedBindings, binding, key)) {
+      if (!binding) {
         continue;
       }
+      const bindingProperties = updateProjectionSummary(
+        visitedBindings,
+        binding,
+        properties,
+      );
+      if (!bindingProperties) continue;
+      const [bindingProperty, ...bindingRemaining] = bindingProperties;
       const writeSources = new Set([
-        ...(dynamicPropertyWrites.get(dynamicPropertyKey(binding, selectedProperty)) ?? []),
+        ...(dynamicPropertyWrites.get(dynamicPropertyKey(binding, bindingProperty)) ?? []),
         ...(dynamicPropertyWrites.get(dynamicPropertyKey(binding, undefined)) ?? []),
+        ...(bindingProperty === undefined
+          ? dynamicPropertyWritesByBinding.get(binding) ?? []
+          : []),
       ]);
       for (const source of writeSources) {
-        if (remaining.length === 0) expressions.add(source);
-        else enqueue(source, remaining);
+        if (bindingRemaining.length === 0) expressions.add(source);
+        else enqueue(source, bindingRemaining);
       }
       for (const relation of relationsByTarget.get(binding) ?? []) {
-        enqueue(relation.source, properties);
+        enqueue(relation.source, bindingProperties);
       }
     }
     const result = { expressions, functions, uncertain };
-    const ownerMemo = projectedValueMemo.get(owner) ?? new Map<string, ProjectedValueSources>();
-    ownerMemo.set(rootKey, result);
-    projectedValueMemo.set(owner, ownerMemo);
+    if (!candidateBudgetAborted) {
+      const ownerMemo = projectedValueMemo.get(owner) ?? new Map<string, ProjectedValueSources>();
+      ownerMemo.set(rootKey, result);
+      projectedValueMemo.set(owner, ownerMemo);
+    }
     return result;
   };
   const projectionMethod = (
@@ -2489,7 +4052,10 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     }
     return false;
   };
-  const isDefinitelyNonExecutableConstructorOwner = (expression: ts.Expression): boolean => {
+  const isDefinitelyNonExecutableConstructorOwner = (
+    expression: ts.Expression,
+    resolving: ReadonlySet<AliasBinding> = new Set(),
+  ): boolean => {
     if (
       ts.isParenthesizedExpression(expression) ||
       ts.isAsExpression(expression) ||
@@ -2498,7 +4064,7 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       ts.isSatisfiesExpression(expression) ||
       ts.isAwaitExpression(expression)
     ) {
-      return isDefinitelyNonExecutableConstructorOwner(expression.expression);
+      return isDefinitelyNonExecutableConstructorOwner(expression.expression, resolving);
     }
     if (
       ts.isNumericLiteral(expression) ||
@@ -2509,6 +4075,15 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       ts.isArrayLiteralExpression(expression)
     ) {
       return true;
+    }
+    if (ts.isIdentifier(expression)) {
+      const binding = resolveBinding(expression, expression.text);
+      if (!binding || resolving.has(binding)) return false;
+      const sources = relationsByTarget.get(binding) ?? [];
+      const next = new Set(resolving).add(binding);
+      return sources.length > 0 && sources.every(({ source }) =>
+        isDefinitelyNonExecutableConstructorOwner(source, next)
+      );
     }
     return (ts.isPropertyAccessExpression(expression) || ts.isElementAccessExpression(expression)) &&
       isGlobalNamespaceAlias(expression.expression, "Object") === false &&
@@ -2553,18 +4128,19 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     }
     return false;
   }
-  let dynamicTruthGeneration = 0;
+  type DynamicQueryState = { cycleVersion: number };
+  let activeDynamicQuery: DynamicQueryState | undefined;
   const dynamicExpressionTrue = new Set<ts.Expression>();
-  const dynamicExpressionFalse = new WeakMap<ts.Expression, number>();
+  let dynamicExpressionFalse = new WeakSet<ts.Expression>();
   const dynamicExpressionInProgress = new Set<ts.Expression>();
   const dynamicBindingTrue = new Set<AliasBinding>();
-  const dynamicBindingFalse = new Map<AliasBinding, number>();
+  let dynamicBindingFalse = new Set<AliasBinding>();
   const dynamicBindingInProgress = new Set<AliasBinding>();
   const dynamicPropertyTrue = new WeakMap<ts.Expression, Set<string>>();
-  const dynamicPropertyFalse = new WeakMap<ts.Expression, Map<string, number>>();
+  let dynamicPropertyFalse = new WeakMap<ts.Expression, Set<string>>();
   const dynamicPropertyInProgress = new WeakMap<ts.Expression, Set<string>>();
   const dynamicBindingPropertyTrue = new Map<AliasBinding, Set<string>>();
-  const dynamicBindingPropertyFalse = new Map<AliasBinding, Map<string, number>>();
+  let dynamicBindingPropertyFalse = new Map<AliasBinding, Set<string>>();
   const dynamicBindingPropertyInProgress = new Map<AliasBinding, Set<string>>();
   const dynamicPropertyMemoKey = (property: string | undefined): string =>
     property === undefined ? "\u0000dynamic" : property;
@@ -2611,35 +4187,6 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
   ): void => {
     if (binding) memo.get(binding)?.delete(key);
   };
-  const memoGenerationHas = (
-    memo: WeakMap<ts.Expression, Map<string, number>>,
-    owner: ts.Expression,
-    key: string,
-  ): boolean => memo.get(owner)?.get(key) === dynamicTruthGeneration;
-  const memoGenerationSet = (
-    memo: WeakMap<ts.Expression, Map<string, number>>,
-    owner: ts.Expression,
-    key: string,
-  ): void => {
-    const values = memo.get(owner) ?? new Map<string, number>();
-    values.set(key, dynamicTruthGeneration);
-    memo.set(owner, values);
-  };
-  const bindingMemoGenerationHas = (
-    memo: Map<AliasBinding, Map<string, number>>,
-    binding: AliasBinding | undefined,
-    key: string,
-  ): boolean => binding !== undefined && memo.get(binding)?.get(key) === dynamicTruthGeneration;
-  const bindingMemoGenerationSet = (
-    memo: Map<AliasBinding, Map<string, number>>,
-    binding: AliasBinding | undefined,
-    key: string,
-  ): void => {
-    if (!binding) return;
-    const values = memo.get(binding) ?? new Map<string, number>();
-    values.set(key, dynamicTruthGeneration);
-    memo.set(binding, values);
-  };
   function isDynamicConstructorProperty(
     owner: ts.Expression,
     property: string | undefined,
@@ -2657,20 +4204,27 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       return true;
     }
     if (
-      memoGenerationHas(dynamicPropertyFalse, owner, key) ||
-      bindingMemoGenerationHas(dynamicBindingPropertyFalse, ownerBinding, key)
+      memoSetHas(dynamicPropertyFalse, owner, key) ||
+      bindingMemoSetHas(dynamicBindingPropertyFalse, ownerBinding, key)
     ) {
       return false;
     }
+    const ownsQuery = activeDynamicQuery === undefined;
+    const query = activeDynamicQuery ?? { cycleVersion: 0 };
+    activeDynamicQuery = query;
     if (
       resolvingNodes.has(owner) ||
+      (ownerBinding !== undefined && resolvingBindings.has(ownerBinding)) ||
       memoSetHas(dynamicPropertyInProgress, owner, key) ||
       bindingMemoSetHas(dynamicBindingPropertyInProgress, ownerBinding, key)
     ) {
+      query.cycleVersion += 1;
+      if (ownsQuery) activeDynamicQuery = undefined;
       return false;
     }
     memoSetAdd(dynamicPropertyInProgress, owner, key);
     bindingMemoSetAdd(dynamicBindingPropertyInProgress, ownerBinding, key);
+    const cycleVersion = query.cycleVersion;
     try {
       const result = computeDynamicConstructorProperty(
         owner,
@@ -2681,15 +4235,15 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       if (result) {
         memoSetAdd(dynamicPropertyTrue, owner, key);
         bindingMemoSetAdd(dynamicBindingPropertyTrue, ownerBinding, key);
-        dynamicTruthGeneration++;
-      } else {
-        memoGenerationSet(dynamicPropertyFalse, owner, key);
-        bindingMemoGenerationSet(dynamicBindingPropertyFalse, ownerBinding, key);
+      } else if (query.cycleVersion === cycleVersion) {
+        memoSetAdd(dynamicPropertyFalse, owner, key);
+        bindingMemoSetAdd(dynamicBindingPropertyFalse, ownerBinding, key);
       }
       return result;
     } finally {
       memoSetDelete(dynamicPropertyInProgress, owner, key);
       bindingMemoSetDelete(dynamicBindingPropertyInProgress, ownerBinding, key);
+      if (ownsQuery) activeDynamicQuery = undefined;
     }
   }
   function computeDynamicConstructorProperty(
@@ -2699,7 +4253,41 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     resolvingNodes: ReadonlySet<ts.Node>,
   ): boolean {
     const nextNodes = new Set(resolvingNodes).add(owner);
+    let nestedPropertyDepth = 0;
+    let propertyRoot = owner;
+    while (
+      ts.isPropertyAccessExpression(propertyRoot) ||
+      ts.isElementAccessExpression(propertyRoot)
+    ) {
+      nestedPropertyDepth += 1;
+      propertyRoot = propertyRoot.expression;
+    }
+    if (nestedPropertyDepth >= 64) return true;
+    if (candidateOwnerHasWildcard(owner)) return true;
     if (property === undefined && isKnownCallableValue(owner)) return true;
+    if (
+      property === "constructor" &&
+      !isDefinitelyNonExecutableConstructorOwner(owner)
+    ) {
+      return true;
+    }
+    if (
+      !candidateAnalysisBudgetExceeded &&
+      property === undefined &&
+      candidateContainerHasDynamicProperty(owner)
+    ) return true;
+    if (
+      property !== undefined &&
+      property !== "value"
+    ) {
+      if (!candidateAnalysisBudgetExceeded && candidateOwnerHasProperty(owner, property)) {
+        return true;
+      }
+      if (
+        !dynamicCandidateWildcard &&
+        (candidateAnalysisBudgetExceeded || !candidateOwnerHasWildcard(owner))
+      ) return false;
+    }
     if (
       ts.isParenthesizedExpression(owner) ||
       ts.isAsExpression(owner) ||
@@ -2741,13 +4329,6 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
         );
       }
       return false;
-    }
-    const projected = projectedValueSources(owner, property);
-    if (projected.uncertain) return true;
-    for (const source of projected.expressions) {
-      if (isDynamicFunctionConstructor(source, resolvingBindings, nextNodes)) {
-        return true;
-      }
     }
     if (ts.isArrayLiteralExpression(owner)) {
       const index = property !== undefined && /^(?:0|[1-9]\d*)$/.test(property)
@@ -2794,6 +4375,22 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       });
     }
     if (ts.isCallExpression(owner)) {
+      if (
+        (ts.isPropertyAccessExpression(owner.expression) ||
+          ts.isElementAccessExpression(owner.expression)) &&
+        ["getOwnPropertyDescriptor", "getOwnPropertyDescriptors"].includes(
+          assignedPropertyName(owner.expression) ?? "",
+        ) &&
+        isGlobalNamespaceAlias(owner.expression.expression, "Object")
+      ) {
+        const projected = projectedValueSources(owner, property);
+        if (projected.uncertain) return true;
+        for (const source of projected.expressions) {
+          if (isDynamicFunctionConstructor(source, resolvingBindings, nextNodes)) {
+            return true;
+          }
+        }
+      }
       for (const implementation of callImplementations(owner.expression)) {
         for (const returned of returnsByFunction.get(implementation) ?? []) {
           if (isDynamicConstructorProperty(
@@ -2819,13 +4416,28 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       }
       return false;
     }
-    if (!ts.isIdentifier(owner)) return false;
+    if (!ts.isIdentifier(owner)) {
+      if (!ts.isPropertyAccessExpression(owner) && !ts.isElementAccessExpression(owner)) {
+        return false;
+      }
+      const projected = projectedValueSources(owner, property);
+      if (projected.uncertain) return true;
+      for (const source of projected.expressions) {
+        if (isDynamicFunctionConstructor(source, resolvingBindings, nextNodes)) {
+          return true;
+        }
+      }
+      return false;
+    }
     const binding = resolveBinding(owner, owner.text);
     if (!binding || resolvingBindings.has(binding)) return false;
     const nextBindings = new Set(resolvingBindings).add(binding);
     const writeSources = [
       ...(dynamicPropertyWrites.get(dynamicPropertyKey(binding, property)) ?? []),
       ...(dynamicPropertyWrites.get(dynamicPropertyKey(binding, undefined)) ?? []),
+      ...(property === undefined
+        ? dynamicPropertyWritesByBinding.get(binding) ?? []
+        : []),
     ];
     if (writeSources.some((source) =>
       isDynamicFunctionConstructor(source, nextBindings, nextNodes)
@@ -2856,21 +4468,27 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       return true;
     }
     if (
-      dynamicExpressionFalse.get(expression) === dynamicTruthGeneration ||
-      (expressionBinding !== undefined &&
-        dynamicBindingFalse.get(expressionBinding) === dynamicTruthGeneration)
+      dynamicExpressionFalse.has(expression) ||
+      (expressionBinding !== undefined && dynamicBindingFalse.has(expressionBinding))
     ) {
       return false;
     }
+    const ownsQuery = activeDynamicQuery === undefined;
+    const query = activeDynamicQuery ?? { cycleVersion: 0 };
+    activeDynamicQuery = query;
     if (
       resolvingNodes.has(expression) ||
+      (expressionBinding !== undefined && resolvingBindings.has(expressionBinding)) ||
       dynamicExpressionInProgress.has(expression) ||
       (expressionBinding !== undefined && dynamicBindingInProgress.has(expressionBinding))
     ) {
+      query.cycleVersion += 1;
+      if (ownsQuery) activeDynamicQuery = undefined;
       return false;
     }
     dynamicExpressionInProgress.add(expression);
     if (expressionBinding) dynamicBindingInProgress.add(expressionBinding);
+    const cycleVersion = query.cycleVersion;
     try {
       const result = computeDynamicFunctionConstructor(
         expression,
@@ -2880,17 +4498,133 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       if (result) {
         dynamicExpressionTrue.add(expression);
         if (expressionBinding) dynamicBindingTrue.add(expressionBinding);
-        dynamicTruthGeneration++;
-      } else {
-        dynamicExpressionFalse.set(expression, dynamicTruthGeneration);
-        if (expressionBinding) {
-          dynamicBindingFalse.set(expressionBinding, dynamicTruthGeneration);
-        }
+      } else if (query.cycleVersion === cycleVersion) {
+        dynamicExpressionFalse.add(expression);
+        if (expressionBinding) dynamicBindingFalse.add(expressionBinding);
       }
       return result;
     } finally {
       dynamicExpressionInProgress.delete(expression);
       if (expressionBinding) dynamicBindingInProgress.delete(expressionBinding);
+      if (ownsQuery) activeDynamicQuery = undefined;
+    }
+  }
+  const implementationDynamicReturnTrue = new WeakSet<ts.FunctionLikeDeclaration>();
+  const implementationDynamicReturnFalse = new WeakSet<ts.FunctionLikeDeclaration>();
+  const implementationDynamicReturnInProgress = new WeakSet<ts.FunctionLikeDeclaration>();
+  const bindingDeclaredInImplementation = (
+    binding: AliasBinding,
+    implementation: ts.FunctionLikeDeclaration,
+  ): boolean => {
+    let current: ts.Node | undefined = binding.scope;
+    while (current) {
+      if (ts.isFunctionLike(current)) return current === implementation;
+      if (ts.isSourceFile(current)) return false;
+      current = current.parent;
+    }
+    return false;
+  };
+  const implementationReturnValueIsDynamic = (
+    implementation: ts.FunctionLikeDeclaration,
+    expression: ts.Expression,
+    parameterBindings: ReadonlySet<AliasBinding>,
+  ): boolean => {
+    if (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isTypeAssertionExpression(expression) ||
+      ts.isNonNullExpression(expression) ||
+      ts.isSatisfiesExpression(expression) ||
+      ts.isAwaitExpression(expression)
+    ) {
+      return implementationReturnValueIsDynamic(
+        implementation,
+        expression.expression,
+        parameterBindings,
+      );
+    }
+    if (ts.isConditionalExpression(expression)) {
+      return implementationReturnValueIsDynamic(
+        implementation,
+        expression.whenTrue,
+        parameterBindings,
+      ) || implementationReturnValueIsDynamic(
+        implementation,
+        expression.whenFalse,
+        parameterBindings,
+      );
+    }
+    if (ts.isBinaryExpression(expression)) {
+      if (expression.operatorToken.kind === ts.SyntaxKind.CommaToken) {
+        return implementationReturnValueIsDynamic(
+          implementation,
+          sequentialValueExpression(expression),
+          parameterBindings,
+        );
+      }
+      if (isValuePropagatingAssignment(expression.operatorToken.kind)) {
+        return implementationReturnValueIsDynamic(
+          implementation,
+          expression.right,
+          parameterBindings,
+        );
+      }
+      if ([
+        ts.SyntaxKind.AmpersandAmpersandToken,
+        ts.SyntaxKind.BarBarToken,
+        ts.SyntaxKind.QuestionQuestionToken,
+      ].includes(expression.operatorToken.kind)) {
+        return implementationReturnValueIsDynamic(
+          implementation,
+          expression.left,
+          parameterBindings,
+        ) || implementationReturnValueIsDynamic(
+          implementation,
+          expression.right,
+          parameterBindings,
+        );
+      }
+    }
+    if (!ts.isIdentifier(expression)) {
+      return isDynamicFunctionConstructor(expression, parameterBindings);
+    }
+    const binding = resolveBinding(expression, expression.text);
+    if (!binding) return expression.text === "Function";
+    if (!bindingDeclaredInImplementation(binding, implementation)) {
+      return isDynamicFunctionConstructor(expression, parameterBindings);
+    }
+    const resolving = new Set(parameterBindings).add(binding);
+    return (relationsByTarget.get(binding) ?? []).some(({ source }) =>
+      nearestFunctionScope(source) === implementation &&
+      isDynamicFunctionConstructor(source, resolving)
+    );
+  };
+  function implementationReturnsDynamicConstructor(
+    implementation: ts.FunctionLikeDeclaration,
+  ): boolean {
+    if (implementationDynamicReturnTrue.has(implementation)) return true;
+    if (implementationDynamicReturnFalse.has(implementation)) return false;
+    if (implementationDynamicReturnInProgress.has(implementation)) return false;
+    implementationDynamicReturnInProgress.add(implementation);
+    try {
+      const parameterBindings = new Set<AliasBinding>();
+      for (const parameter of implementation.parameters) {
+        if (!ts.isIdentifier(parameter.name)) continue;
+        const binding = resolveBinding(parameter.name, parameter.name.text);
+        if (binding) parameterBindings.add(binding);
+      }
+      const result = (returnsByFunction.get(implementation) ?? []).some((returned) =>
+        implementationReturnValueIsDynamic(
+          implementation,
+          returned,
+          parameterBindings,
+        )
+      );
+      if (result) implementationDynamicReturnTrue.add(implementation);
+      else implementationDynamicReturnFalse.add(implementation);
+      return result;
+    } finally {
+      implementationDynamicReturnInProgress.delete(implementation);
     }
   }
   function computeDynamicFunctionConstructor(
@@ -2915,9 +4649,15 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     }
     if (ts.isBinaryExpression(expression)) {
       if (
-        expression.operatorToken.kind === ts.SyntaxKind.CommaToken ||
-        isValuePropagatingAssignment(expression.operatorToken.kind)
+        expression.operatorToken.kind === ts.SyntaxKind.CommaToken
       ) {
+        return isDynamicFunctionConstructor(
+          sequentialValueExpression(expression),
+          resolvingBindings,
+          nextNodes,
+        );
+      }
+      if (isValuePropagatingAssignment(expression.operatorToken.kind)) {
         return isDynamicFunctionConstructor(expression.right, resolvingBindings, nextNodes);
       }
       if (
@@ -3003,9 +4743,7 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       }
       if (!needsDynamicConstructorFlowAnalysis) return false;
       for (const implementation of callImplementations(expression.expression)) {
-        if ((returnsByFunction.get(implementation) ?? []).some((returned) =>
-          isDynamicFunctionConstructor(returned, resolvingBindings, nextNodes)
-        )) {
+        if (implementationReturnsDynamicConstructor(implementation)) {
           return true;
         }
         if ([...ensureReturnedArgumentIndexes(implementation)].some((index) => {
@@ -3091,6 +4829,985 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       resolvingBindings,
       nextNodes,
     );
+  }
+  const candidateDynamicBindings = new Set(directDynamicConstructorBindings);
+  function candidateOwnerHasWildcard(
+    expression: ts.Expression,
+    resolving: ReadonlySet<AliasBinding> = new Set(),
+  ): boolean {
+    if (candidateAnalysisBudgetExceeded) return false;
+    if (dynamicCandidateWildcardExpressions.has(expression)) return true;
+    if (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isTypeAssertionExpression(expression) ||
+      ts.isNonNullExpression(expression) ||
+      ts.isSatisfiesExpression(expression) ||
+      ts.isAwaitExpression(expression)
+    ) {
+      return candidateOwnerHasWildcard(expression.expression, resolving);
+    }
+    if (ts.isConditionalExpression(expression)) {
+      return candidateOwnerHasWildcard(expression.whenTrue, resolving) ||
+        candidateOwnerHasWildcard(expression.whenFalse, resolving);
+    }
+    if (ts.isBinaryExpression(expression)) {
+      if (
+        expression.operatorToken.kind === ts.SyntaxKind.CommaToken ||
+        isValuePropagatingAssignment(expression.operatorToken.kind)
+      ) {
+        return candidateOwnerHasWildcard(expression.right, resolving);
+      }
+      if (
+        [
+          ts.SyntaxKind.AmpersandAmpersandToken,
+          ts.SyntaxKind.BarBarToken,
+          ts.SyntaxKind.QuestionQuestionToken,
+        ].includes(expression.operatorToken.kind)
+      ) {
+        return candidateOwnerHasWildcard(expression.left, resolving) ||
+          candidateOwnerHasWildcard(expression.right, resolving);
+      }
+      return false;
+    }
+    if (!ts.isIdentifier(expression)) return false;
+    const binding = resolveBinding(expression, expression.text);
+    return binding !== undefined && !resolving.has(binding) &&
+      dynamicCandidateWildcardBindings.has(binding);
+  }
+  const invalidateDynamicCandidateNegativeMemos = (): void => {
+    dynamicExpressionFalse = new WeakSet<ts.Expression>();
+    dynamicBindingFalse = new Set<AliasBinding>();
+    dynamicPropertyFalse = new WeakMap<ts.Expression, Set<string>>();
+    dynamicBindingPropertyFalse = new Map<AliasBinding, Set<string>>();
+  };
+  let candidateContainerExpressionMemo = new WeakMap<ts.Expression, boolean>();
+  let candidateContainerBindingMemo = new Map<AliasBinding, boolean>();
+  let candidateOwnerPropertyExpressionMemo = new WeakMap<
+    ts.Expression,
+    Map<string, boolean>
+  >();
+  let candidateOwnerPropertyBindingMemo = new Map<AliasBinding, Map<string, boolean>>();
+  function candidateContainerHasDynamicProperty(
+    expression: ts.Expression,
+    resolvingBindings: ReadonlySet<AliasBinding> = new Set(),
+    resolvingNodes: ReadonlySet<ts.Node> = new Set(),
+  ): boolean {
+    if (candidateAnalysisBudgetExceeded) return false;
+    if (
+      dynamicCandidateWildcard ||
+      hasUnscopedCandidateWildcard ||
+      unscopedCandidateProperties.size > 0 ||
+      dynamicCandidateProperties.size > 0
+    ) {
+      return true;
+    }
+    if (
+      dynamicCandidateWildcardExpressions.has(expression) ||
+      (dynamicCandidatePropertiesByExpression.get(expression)?.size ?? 0) > 0
+    ) {
+      return true;
+    }
+    if (!dynamicCandidateWildcard && !hasScopedDynamicCandidateProperty) {
+      if (!ts.isIdentifier(expression)) return false;
+      const binding = resolveBinding(expression, expression.text);
+      return binding !== undefined && candidateDynamicBindings.has(binding);
+    }
+    const expressionMemo = candidateContainerExpressionMemo.get(expression);
+    if (expressionMemo !== undefined) return expressionMemo;
+    if (resolvingNodes.has(expression)) return false;
+    const nextNodes = new Set(resolvingNodes).add(expression);
+    let result = false;
+    if (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isTypeAssertionExpression(expression) ||
+      ts.isNonNullExpression(expression) ||
+      ts.isSatisfiesExpression(expression) ||
+      ts.isAwaitExpression(expression)
+    ) {
+      result = candidateContainerHasDynamicProperty(
+        expression.expression,
+        resolvingBindings,
+        nextNodes,
+      );
+    } else if (ts.isConditionalExpression(expression)) {
+      result = candidateContainerHasDynamicProperty(
+        expression.whenTrue,
+        resolvingBindings,
+        nextNodes,
+      ) || candidateContainerHasDynamicProperty(
+        expression.whenFalse,
+        resolvingBindings,
+        nextNodes,
+      );
+    } else if (ts.isBinaryExpression(expression)) {
+      if (
+        expression.operatorToken.kind === ts.SyntaxKind.CommaToken ||
+        isValuePropagatingAssignment(expression.operatorToken.kind)
+      ) {
+        result = candidateContainerHasDynamicProperty(
+          expression.right,
+          resolvingBindings,
+          nextNodes,
+        );
+      } else if (
+        [
+          ts.SyntaxKind.AmpersandAmpersandToken,
+          ts.SyntaxKind.BarBarToken,
+          ts.SyntaxKind.QuestionQuestionToken,
+        ].includes(expression.operatorToken.kind)
+      ) {
+        result = candidateContainerHasDynamicProperty(
+          expression.left,
+          resolvingBindings,
+          nextNodes,
+        ) || candidateContainerHasDynamicProperty(
+          expression.right,
+          resolvingBindings,
+          nextNodes,
+        );
+      }
+    } else if (ts.isObjectLiteralExpression(expression)) {
+      result = expression.properties.some((member) => {
+        if (ts.isSpreadAssignment(member)) {
+          return candidateContainerHasDynamicProperty(
+            member.expression,
+            resolvingBindings,
+            nextNodes,
+          );
+        }
+        const value = ts.isPropertyAssignment(member)
+          ? member.initializer
+          : ts.isShorthandPropertyAssignment(member)
+            ? member.name
+            : member;
+        return candidateExpressionIsDynamic(value, nextNodes);
+      });
+    } else if (ts.isArrayLiteralExpression(expression)) {
+      result = expression.elements.some((element) =>
+        !ts.isOmittedExpression(element) &&
+        candidateExpressionIsDynamic(
+          ts.isSpreadElement(element) ? element.expression : element,
+          nextNodes,
+        )
+      );
+    } else if (ts.isCallExpression(expression) || ts.isNewExpression(expression)) {
+      result = [...callImplementations(expression.expression)].some((implementation) =>
+        (returnsByFunction.get(implementation) ?? []).some((returned) =>
+          candidateContainerHasDynamicProperty(
+            returned,
+            resolvingBindings,
+            nextNodes,
+          )
+        ) || [...ensureReturnedArgumentIndexes(implementation)].some((index) => {
+          const argument = argumentExpression(expression.arguments?.[index]);
+          return argument !== undefined && candidateContainerHasDynamicProperty(
+            argument,
+            resolvingBindings,
+            nextNodes,
+          );
+        })
+      );
+    } else if (
+      ts.isPropertyAccessExpression(expression) ||
+      ts.isElementAccessExpression(expression)
+    ) {
+      const projected = projectedValueSources(expression, undefined, true);
+      result = projected.uncertain || [...projected.expressions].some((source) =>
+        candidateExpressionIsDynamic(source, nextNodes)
+      );
+    } else if (ts.isIdentifier(expression)) {
+      const binding = resolveBinding(expression, expression.text);
+      if (binding) {
+        const bindingMemo = candidateContainerBindingMemo.get(binding);
+        if (bindingMemo !== undefined) {
+          result = bindingMemo;
+        } else if (!resolvingBindings.has(binding)) {
+          const nextBindings = new Set(resolvingBindings).add(binding);
+          result = candidateDynamicBindings.has(binding) ||
+            dynamicCandidateWildcardBindings.has(binding) ||
+            (dynamicCandidatePropertiesByBinding.get(binding)?.size ?? 0) > 0 ||
+            (dynamicPropertyWritesByBinding.get(binding) ?? []).some((source) =>
+              candidateExpressionIsDynamic(source, nextNodes)
+            ) || (relationsByTarget.get(binding) ?? []).some(({ source }) =>
+              candidateContainerHasDynamicProperty(source, nextBindings, nextNodes)
+            );
+          candidateContainerBindingMemo.set(binding, result);
+        }
+      }
+    }
+    candidateContainerExpressionMemo.set(expression, result);
+    return result;
+  }
+  function candidateOwnerHasProperty(
+    expression: ts.Expression,
+    property: string,
+    resolvingBindings: ReadonlySet<AliasBinding> = new Set(),
+    resolvingNodes: ReadonlySet<ts.Node> = new Set(),
+  ): boolean {
+    if (candidateAnalysisBudgetExceeded) return false;
+    if (
+      dynamicCandidateWildcard ||
+      hasUnscopedCandidateWildcard ||
+      unscopedCandidateProperties.has(property) ||
+      dynamicCandidateProperties.has(property) ||
+      candidateOwnerHasWildcard(expression) ||
+      dynamicCandidatePropertiesByExpression.get(expression)?.has(property)
+    ) {
+      return true;
+    }
+    if (!dynamicCandidatePropertyNames.has(property)) return false;
+    const candidateScope = candidateOwnerMayHaveProperty(expression, property);
+    if (candidateScope === "hit") return true;
+    if (candidateScope === "miss") return false;
+    const expressionMemo = candidateOwnerPropertyExpressionMemo.get(expression)?.get(property);
+    if (expressionMemo !== undefined) return expressionMemo;
+    if (resolvingNodes.has(expression)) return false;
+    const nextNodes = new Set(resolvingNodes).add(expression);
+    let result = false;
+    if (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isTypeAssertionExpression(expression) ||
+      ts.isNonNullExpression(expression) ||
+      ts.isSatisfiesExpression(expression) ||
+      ts.isAwaitExpression(expression)
+    ) {
+      result = candidateOwnerHasProperty(
+        expression.expression,
+        property,
+        resolvingBindings,
+        nextNodes,
+      );
+    } else if (ts.isConditionalExpression(expression)) {
+      result = candidateOwnerHasProperty(
+        expression.whenTrue,
+        property,
+        resolvingBindings,
+        nextNodes,
+      ) || candidateOwnerHasProperty(
+        expression.whenFalse,
+        property,
+        resolvingBindings,
+        nextNodes,
+      );
+    } else if (ts.isBinaryExpression(expression)) {
+      if (
+        expression.operatorToken.kind === ts.SyntaxKind.CommaToken ||
+        isValuePropagatingAssignment(expression.operatorToken.kind)
+      ) {
+        result = candidateOwnerHasProperty(
+          expression.right,
+          property,
+          resolvingBindings,
+          nextNodes,
+        );
+      } else if (
+        [
+          ts.SyntaxKind.AmpersandAmpersandToken,
+          ts.SyntaxKind.BarBarToken,
+          ts.SyntaxKind.QuestionQuestionToken,
+        ].includes(expression.operatorToken.kind)
+      ) {
+        result = candidateOwnerHasProperty(
+          expression.left,
+          property,
+          resolvingBindings,
+          nextNodes,
+        ) || candidateOwnerHasProperty(
+          expression.right,
+          property,
+          resolvingBindings,
+          nextNodes,
+        );
+      }
+    } else if (ts.isObjectLiteralExpression(expression)) {
+      result = expression.properties.some((member) => {
+        if (ts.isSpreadAssignment(member)) {
+          return candidateOwnerHasProperty(
+            member.expression,
+            property,
+            resolvingBindings,
+            nextNodes,
+          );
+        }
+        if (scopedPropertyName(member.name) !== property) return false;
+        const value = ts.isPropertyAssignment(member)
+          ? member.initializer
+          : ts.isShorthandPropertyAssignment(member)
+            ? member.name
+            : member;
+        return candidateExpressionIsDynamic(value, nextNodes);
+      });
+    } else if (ts.isArrayLiteralExpression(expression)) {
+      const index = /^(?:0|[1-9]\d*)$/.test(property) ? Number(property) : undefined;
+      result = index !== undefined && index < expression.elements.length &&
+        !ts.isOmittedExpression(expression.elements[index]!) &&
+        candidateExpressionIsDynamic(
+          ts.isSpreadElement(expression.elements[index]!)
+            ? expression.elements[index]!.expression
+            : expression.elements[index]! as ts.Expression,
+          nextNodes,
+        );
+    } else if (ts.isCallExpression(expression) || ts.isNewExpression(expression)) {
+      result = [...callImplementations(expression.expression)].some((implementation) =>
+        (returnsByFunction.get(implementation) ?? []).some((returned) =>
+          candidateOwnerHasProperty(
+            returned,
+            property,
+            resolvingBindings,
+            nextNodes,
+          )
+        ) || [...ensureReturnedArgumentIndexes(implementation)].some((index) => {
+          const argument = argumentExpression(expression.arguments?.[index]);
+          return argument !== undefined && candidateOwnerHasProperty(
+            argument,
+            property,
+            resolvingBindings,
+            nextNodes,
+          );
+        })
+      );
+    } else if (
+      ts.isPropertyAccessExpression(expression) ||
+      ts.isElementAccessExpression(expression)
+    ) {
+      const projected = projectedValueSources(expression, property, true);
+      result = projected.uncertain || [...projected.expressions].some((source) =>
+        candidateExpressionIsDynamic(source, nextNodes)
+      );
+    } else if (ts.isIdentifier(expression)) {
+      const binding = resolveBinding(expression, expression.text);
+      if (binding) {
+        const bindingMemo = candidateOwnerPropertyBindingMemo.get(binding)?.get(property);
+        if (bindingMemo !== undefined) {
+          result = bindingMemo;
+        } else if (!resolvingBindings.has(binding)) {
+          const nextBindings = new Set(resolvingBindings).add(binding);
+          result = dynamicCandidatePropertiesByBinding.get(binding)?.has(property) === true ||
+            (relationsByTarget.get(binding) ?? []).some(({ source }) =>
+              candidateOwnerHasProperty(source, property, nextBindings, nextNodes)
+            );
+          const values = candidateOwnerPropertyBindingMemo.get(binding) ?? new Map();
+          values.set(property, result);
+          candidateOwnerPropertyBindingMemo.set(binding, values);
+        }
+      }
+    }
+    const values = candidateOwnerPropertyExpressionMemo.get(expression) ?? new Map();
+    values.set(property, result);
+    candidateOwnerPropertyExpressionMemo.set(expression, values);
+    return result;
+  }
+  const candidateSelectionIsDynamic = (
+    selection: DynamicConstructorSelection,
+  ): boolean =>
+    selection.property === "constructor" ||
+    (selection.property === undefined &&
+      candidateContainerHasDynamicProperty(selection.container)) ||
+    (selection.property !== undefined &&
+      candidateOwnerHasProperty(selection.container, selection.property));
+  type CandidateDynamicQuery = { cycleVersion: number };
+  let activeCandidateDynamicQuery: CandidateDynamicQuery | undefined;
+  const candidateExpressionTrue = new WeakSet<ts.Node>();
+  let candidateExpressionFalse = new WeakSet<ts.Node>();
+  const candidateExpressionInProgress = new WeakSet<ts.Node>();
+  const computeCandidateExpressionIsDynamic = (
+    node: ts.Expression | ts.FunctionLikeDeclaration,
+    resolvingNodes: ReadonlySet<ts.Node>,
+  ): boolean => {
+    const nextNodes = new Set(resolvingNodes).add(node);
+    if (ts.isFunctionLike(node)) return false;
+    if (
+      ts.isParenthesizedExpression(node) ||
+      ts.isAsExpression(node) ||
+      ts.isTypeAssertionExpression(node) ||
+      ts.isNonNullExpression(node) ||
+      ts.isSatisfiesExpression(node) ||
+      ts.isAwaitExpression(node)
+    ) {
+      return candidateExpressionIsDynamic(node.expression, nextNodes);
+    }
+    if (ts.isConditionalExpression(node)) {
+      return candidateExpressionIsDynamic(node.whenTrue, nextNodes) ||
+        candidateExpressionIsDynamic(node.whenFalse, nextNodes);
+    }
+    if (ts.isBinaryExpression(node)) {
+      if (
+        node.operatorToken.kind === ts.SyntaxKind.CommaToken
+      ) {
+        return candidateExpressionIsDynamic(sequentialValueExpression(node), nextNodes);
+      }
+      if (isValuePropagatingAssignment(node.operatorToken.kind)) {
+        return candidateExpressionIsDynamic(node.right, nextNodes);
+      }
+      if (
+        [
+          ts.SyntaxKind.AmpersandAmpersandToken,
+          ts.SyntaxKind.BarBarToken,
+          ts.SyntaxKind.QuestionQuestionToken,
+        ].includes(node.operatorToken.kind)
+      ) {
+        return candidateExpressionIsDynamic(node.left, nextNodes) ||
+          candidateExpressionIsDynamic(node.right, nextNodes);
+      }
+      return false;
+    }
+    if (ts.isIdentifier(node)) {
+      const binding = resolveBinding(node, node.text);
+      return binding ? candidateDynamicBindings.has(binding) : node.text === "Function";
+    }
+    if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
+      if (candidateExpressionIsDynamic(node.expression, nextNodes)) return true;
+      if (ts.isCallExpression(node)) {
+        const reflection = reflectInvocation(node);
+        const reflectionArguments = reflection?.arguments;
+        if (reflection?.method === "get") {
+          const target = reflectionArguments?.[0];
+          const key = reflectionArguments?.[1];
+          if (
+            target &&
+            (key === undefined || scopedStaticString(key) === "constructor") &&
+            isKnownCallableValue(target)
+          ) {
+            return true;
+          }
+        }
+        if (
+          reflection &&
+          ["apply", "construct"].includes(reflection.method) &&
+          reflectionArguments?.[0] &&
+          candidateExpressionIsDynamic(reflectionArguments[0], nextNodes)
+        ) {
+          return true;
+        }
+      }
+      for (const implementation of callImplementations(node.expression)) {
+        if (candidateImplementationReturnsDynamic(implementation)) {
+          return true;
+        }
+        for (const index of ensureReturnedArgumentIndexes(implementation)) {
+          const argument = argumentExpression(node.arguments?.[index]);
+          if (argument && candidateExpressionIsDynamic(argument, nextNodes)) return true;
+        }
+      }
+      return false;
+    }
+    if (!ts.isPropertyAccessExpression(node) && !ts.isElementAccessExpression(node)) {
+      return false;
+    }
+    const property = assignedPropertyName(node);
+    if (
+      property === "value" &&
+      ts.isCallExpression(node.expression) &&
+      (ts.isPropertyAccessExpression(node.expression.expression) ||
+        ts.isElementAccessExpression(node.expression.expression)) &&
+      assignedPropertyName(node.expression.expression) === "getOwnPropertyDescriptor" &&
+      isGlobalNamespaceAlias(node.expression.expression.expression, "Object")
+    ) {
+      const descriptorTarget = argumentExpression(node.expression.arguments[0]);
+      const descriptorKey = argumentExpression(node.expression.arguments[1]);
+      const descriptorProperty = descriptorKey ? scopedStaticString(descriptorKey) : undefined;
+      if (
+        descriptorTarget &&
+        (descriptorProperty === "constructor" || descriptorProperty === undefined) &&
+        (isKnownCallableValue(descriptorTarget) ||
+          (ts.isCallExpression(descriptorTarget) &&
+            (ts.isPropertyAccessExpression(descriptorTarget.expression) ||
+              ts.isElementAccessExpression(descriptorTarget.expression)) &&
+            assignedPropertyName(descriptorTarget.expression) === "getPrototypeOf" &&
+            isGlobalNamespaceAlias(descriptorTarget.expression.expression, "Object") &&
+            argumentExpression(descriptorTarget.arguments[0]) !== undefined &&
+            isKnownCallableValue(argumentExpression(descriptorTarget.arguments[0])!)))
+      ) {
+        return true;
+      }
+    }
+    if (property === "constructor" && !isDefinitelyNonExecutableConstructorOwner(node.expression)) {
+      return true;
+    }
+    if (property === undefined && isKnownCallableValue(node.expression)) return true;
+    if (
+      ["apply", "bind", "call"].includes(property ?? "") &&
+      candidateExpressionIsDynamic(node.expression, nextNodes)
+    ) {
+      return true;
+    }
+    if (candidateOwnerHasWildcard(node.expression)) return true;
+    if (property === undefined) {
+      return candidateContainerHasDynamicProperty(node.expression, new Set(), nextNodes);
+    }
+    return candidateOwnerHasProperty(node.expression, property, new Set(), nextNodes);
+  };
+  const candidateExpressionIsDynamic = (
+    node: ts.Expression | ts.FunctionLikeDeclaration,
+    resolvingNodes: ReadonlySet<ts.Node> = new Set(),
+  ): boolean => {
+    if (candidateAnalysisBudgetExceeded) return false;
+    if (candidateExpressionTrue.has(node)) {
+      return true;
+    }
+    if (candidateExpressionFalse.has(node)) {
+      return false;
+    }
+    const ownsQuery = activeCandidateDynamicQuery === undefined;
+    const query = activeCandidateDynamicQuery ?? { cycleVersion: 0 };
+    activeCandidateDynamicQuery = query;
+    if (resolvingNodes.has(node) || candidateExpressionInProgress.has(node)) {
+      query.cycleVersion += 1;
+      if (ownsQuery) activeCandidateDynamicQuery = undefined;
+      return false;
+    }
+    candidateExpressionInProgress.add(node);
+    const cycleVersion = query.cycleVersion;
+    try {
+      const result = computeCandidateExpressionIsDynamic(node, resolvingNodes);
+      if (candidateAnalysisBudgetExceeded) {
+        return false;
+      }
+      if (result) {
+        candidateExpressionTrue.add(node);
+      } else if (query.cycleVersion === cycleVersion) {
+        candidateExpressionFalse.add(node);
+      }
+      return result;
+    } finally {
+      candidateExpressionInProgress.delete(node);
+      if (ownsQuery) activeCandidateDynamicQuery = undefined;
+    }
+  };
+  type CandidateEnvironment = Map<AliasBinding, boolean>;
+  const candidateImplementationTrue = new WeakSet<ts.FunctionLikeDeclaration>();
+  let candidateImplementationFalse = new WeakSet<ts.FunctionLikeDeclaration>();
+  const candidateImplementationInProgress = new WeakSet<ts.FunctionLikeDeclaration>();
+  const cloneCandidateEnvironment = (
+    environment: CandidateEnvironment,
+  ): CandidateEnvironment => new Map(environment);
+  const mergeCandidateEnvironments = (
+    ...environments: CandidateEnvironment[]
+  ): CandidateEnvironment => {
+    const merged: CandidateEnvironment = new Map();
+    for (const environment of environments) {
+      for (const [binding, dynamic] of environment) {
+        merged.set(binding, (merged.get(binding) ?? false) || dynamic);
+      }
+    }
+    return merged;
+  };
+  const replaceCandidateEnvironment = (
+    target: CandidateEnvironment,
+    source: CandidateEnvironment,
+  ): void => {
+    target.clear();
+    for (const [binding, dynamic] of source) target.set(binding, dynamic);
+  };
+  const candidateValueIsDynamic = (
+    expression: ts.Expression,
+    environment: CandidateEnvironment,
+  ): boolean => {
+    if (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isTypeAssertionExpression(expression) ||
+      ts.isNonNullExpression(expression) ||
+      ts.isSatisfiesExpression(expression) ||
+      ts.isAwaitExpression(expression)
+    ) {
+      return candidateValueIsDynamic(expression.expression, environment);
+    }
+    if (ts.isConditionalExpression(expression)) {
+      candidateValueIsDynamic(expression.condition, environment);
+      const whenTrueEnvironment = cloneCandidateEnvironment(environment);
+      const whenFalseEnvironment = cloneCandidateEnvironment(environment);
+      const whenTrue = candidateValueIsDynamic(expression.whenTrue, whenTrueEnvironment);
+      const whenFalse = candidateValueIsDynamic(expression.whenFalse, whenFalseEnvironment);
+      replaceCandidateEnvironment(
+        environment,
+        mergeCandidateEnvironments(whenTrueEnvironment, whenFalseEnvironment),
+      );
+      return whenTrue || whenFalse;
+    }
+    if (ts.isBinaryExpression(expression)) {
+      const operator = expression.operatorToken.kind;
+      if (operator === ts.SyntaxKind.CommaToken) {
+        candidateValueIsDynamic(expression.left, environment);
+        return candidateValueIsDynamic(expression.right, environment);
+      }
+      if (operator === ts.SyntaxKind.EqualsToken) {
+        const dynamic = candidateValueIsDynamic(expression.right, environment);
+        if (ts.isIdentifier(expression.left)) {
+          const binding = resolveBinding(expression.left, expression.left.text);
+          if (binding) environment.set(binding, dynamic);
+        }
+        return dynamic;
+      }
+      if ([
+        ts.SyntaxKind.AmpersandAmpersandEqualsToken,
+        ts.SyntaxKind.BarBarEqualsToken,
+        ts.SyntaxKind.QuestionQuestionEqualsToken,
+      ].includes(operator)) {
+        const binding = ts.isIdentifier(expression.left)
+          ? resolveBinding(expression.left, expression.left.text)
+          : undefined;
+        const previous = binding
+          ? environment.get(binding) ?? false
+          : candidateValueIsDynamic(expression.left, environment);
+        const assignedEnvironment = cloneCandidateEnvironment(environment);
+        const assigned = candidateValueIsDynamic(expression.right, assignedEnvironment);
+        replaceCandidateEnvironment(
+          environment,
+          mergeCandidateEnvironments(environment, assignedEnvironment),
+        );
+        const dynamic = previous || assigned;
+        if (binding) environment.set(binding, dynamic);
+        return dynamic;
+      }
+      if ([
+        ts.SyntaxKind.AmpersandAmpersandToken,
+        ts.SyntaxKind.BarBarToken,
+        ts.SyntaxKind.QuestionQuestionToken,
+      ].includes(operator)) {
+        const left = candidateValueIsDynamic(expression.left, environment);
+        const rightEnvironment = cloneCandidateEnvironment(environment);
+        const right = candidateValueIsDynamic(expression.right, rightEnvironment);
+        replaceCandidateEnvironment(
+          environment,
+          mergeCandidateEnvironments(environment, rightEnvironment),
+        );
+        return left || right;
+      }
+      candidateValueIsDynamic(expression.left, environment);
+      candidateValueIsDynamic(expression.right, environment);
+      return false;
+    }
+    if (ts.isIdentifier(expression)) {
+      const binding = resolveBinding(expression, expression.text);
+      if (binding && environment.has(binding)) return environment.get(binding) ?? false;
+      return candidateExpressionIsDynamic(expression);
+    }
+    if (ts.isCallExpression(expression) || ts.isNewExpression(expression)) {
+      if (candidateValueIsDynamic(expression.expression, environment)) return true;
+      const argumentValues = (expression.arguments ?? []).map((argument) =>
+        candidateValueIsDynamic(
+          ts.isSpreadElement(argument) ? argument.expression : argument,
+          environment,
+        )
+      );
+      const implementations = callImplementations(expression.expression);
+      if (implementations.size === 0 || expression.arguments?.some(ts.isSpreadElement)) {
+        return argumentValues.some(Boolean);
+      }
+      return [...implementations].some((implementation) =>
+        candidateImplementationReturnsDynamic(implementation) ||
+        [...ensureReturnedArgumentIndexes(implementation)].some((index) =>
+          argumentValues[index] === true
+        )
+      );
+    }
+    if (
+      ts.isObjectLiteralExpression(expression) ||
+      ts.isArrayLiteralExpression(expression) ||
+      ts.isFunctionExpression(expression) ||
+      ts.isArrowFunction(expression) ||
+      ts.isClassExpression(expression)
+    ) {
+      return false;
+    }
+    return candidateExpressionIsDynamic(expression);
+  };
+  const analyzeCandidateStatement = (
+    statement: ts.Statement,
+    environment: CandidateEnvironment,
+    returned: { dynamic: boolean },
+  ): CandidateEnvironment | undefined => {
+    if (ts.isBlock(statement)) {
+      let current: CandidateEnvironment | undefined = environment;
+      for (const child of statement.statements) {
+        if (!current) break;
+        current = analyzeCandidateStatement(child, current, returned);
+      }
+      return current;
+    }
+    if (ts.isVariableStatement(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        const dynamic = declaration.initializer
+          ? candidateValueIsDynamic(declaration.initializer, environment)
+          : false;
+        if (!ts.isIdentifier(declaration.name)) continue;
+        const binding = resolveBinding(declaration.name, declaration.name.text);
+        if (binding) environment.set(binding, dynamic);
+      }
+      return environment;
+    }
+    if (ts.isExpressionStatement(statement)) {
+      candidateValueIsDynamic(statement.expression, environment);
+      return environment;
+    }
+    if (ts.isReturnStatement(statement)) {
+      returned.dynamic ||= statement.expression !== undefined &&
+        candidateValueIsDynamic(statement.expression, environment);
+      return undefined;
+    }
+    if (ts.isThrowStatement(statement)) {
+      candidateValueIsDynamic(statement.expression, environment);
+      return undefined;
+    }
+    if (ts.isIfStatement(statement)) {
+      candidateValueIsDynamic(statement.expression, environment);
+      const whenTrue = analyzeCandidateStatement(
+        statement.thenStatement,
+        cloneCandidateEnvironment(environment),
+        returned,
+      );
+      const whenFalse = statement.elseStatement
+        ? analyzeCandidateStatement(
+            statement.elseStatement,
+            cloneCandidateEnvironment(environment),
+            returned,
+          )
+        : cloneCandidateEnvironment(environment);
+      if (!whenTrue) return whenFalse;
+      if (!whenFalse) return whenTrue;
+      return mergeCandidateEnvironments(whenTrue, whenFalse);
+    }
+    if (ts.isWhileStatement(statement) || ts.isDoStatement(statement)) {
+      candidateValueIsDynamic(statement.expression, environment);
+      const body = analyzeCandidateStatement(
+        statement.statement,
+        cloneCandidateEnvironment(environment),
+        returned,
+      );
+      if (ts.isDoStatement(statement)) return body;
+      return body
+        ? mergeCandidateEnvironments(environment, body)
+        : cloneCandidateEnvironment(environment);
+    }
+    if (ts.isForStatement(statement)) {
+      if (statement.initializer && !ts.isVariableDeclarationList(statement.initializer)) {
+        candidateValueIsDynamic(statement.initializer, environment);
+      }
+      if (statement.condition) candidateValueIsDynamic(statement.condition, environment);
+      const body = analyzeCandidateStatement(
+        statement.statement,
+        cloneCandidateEnvironment(environment),
+        returned,
+      );
+      if (body && statement.incrementor) candidateValueIsDynamic(statement.incrementor, body);
+      return body
+        ? mergeCandidateEnvironments(environment, body)
+        : cloneCandidateEnvironment(environment);
+    }
+    if (ts.isLabeledStatement(statement) || ts.isWithStatement(statement)) {
+      return analyzeCandidateStatement(statement.statement, environment, returned);
+    }
+    return environment;
+  };
+  function candidateImplementationReturnsDynamic(
+    implementation: ts.FunctionLikeDeclaration,
+  ): boolean {
+    if (candidateAnalysisBudgetExceeded) return false;
+    if (candidateImplementationTrue.has(implementation)) return true;
+    if (candidateImplementationFalse.has(implementation)) return false;
+    if (candidateImplementationInProgress.has(implementation)) return false;
+    candidateImplementationInProgress.add(implementation);
+    try {
+      const environment: CandidateEnvironment = new Map();
+      for (const parameter of implementation.parameters) {
+        if (!ts.isIdentifier(parameter.name)) continue;
+        const binding = resolveBinding(parameter.name, parameter.name.text);
+        if (binding) environment.set(binding, false);
+      }
+      const returned = { dynamic: false };
+      if (implementation.body) {
+        if (ts.isBlock(implementation.body)) {
+          analyzeCandidateStatement(implementation.body, environment, returned);
+        } else {
+          returned.dynamic = candidateValueIsDynamic(implementation.body, environment);
+        }
+      }
+      if (candidateAnalysisBudgetExceeded) return false;
+      if (returned.dynamic) candidateImplementationTrue.add(implementation);
+      else candidateImplementationFalse.add(implementation);
+      return returned.dynamic;
+    } finally {
+      candidateImplementationInProgress.delete(implementation);
+    }
+  }
+  let dynamicCandidateIteration = 0;
+  let dynamicCandidateWork = 0;
+  const recordDirectCandidateOwnerProperty = (
+    owner: ts.Expression | undefined,
+    property: string,
+  ): boolean => {
+    const previousNameCount = dynamicCandidatePropertyNames.size;
+    dynamicCandidatePropertyNames.add(property);
+    hasScopedDynamicCandidateProperty = true;
+    if (!owner) {
+      const previousCount = dynamicCandidateProperties.size;
+      dynamicCandidateProperties.add(property);
+      return dynamicCandidateProperties.size !== previousCount ||
+        dynamicCandidatePropertyNames.size !== previousNameCount;
+    }
+    const binding = ts.isIdentifier(owner) ? resolveBinding(owner, owner.text) : undefined;
+    if (binding) {
+      const properties = dynamicCandidatePropertiesByBinding.get(binding) ?? new Set<string>();
+      const previousCount = properties.size;
+      properties.add(property);
+      dynamicCandidatePropertiesByBinding.set(binding, properties);
+      return properties.size !== previousCount ||
+        dynamicCandidatePropertyNames.size !== previousNameCount;
+    }
+    const properties = dynamicCandidatePropertiesByExpression.get(owner) ?? new Set<string>();
+    const previousCount = properties.size;
+    properties.add(property);
+    dynamicCandidatePropertiesByExpression.set(owner, properties);
+    return properties.size !== previousCount ||
+      dynamicCandidatePropertyNames.size !== previousNameCount;
+  };
+  for (;;) {
+    if (candidateAnalysisBudgetExceeded) break;
+    dynamicCandidateIteration += 1;
+    dynamicCandidateWork += relations.length + propertyValueTransfers.length;
+    if (dynamicCandidateIteration > 64 || dynamicCandidateWork > 2_000_000) {
+      limitations.add("dynamic property candidate budget exceeded");
+      break;
+    }
+    let changed = false;
+    for (const { target, source } of relations) {
+      if (!candidateDynamicBindings.has(target) && candidateExpressionIsDynamic(source)) {
+        candidateDynamicBindings.add(target);
+        changed = true;
+      }
+      if (
+        !dynamicCandidateWildcardBindings.has(target) &&
+        candidateOwnerHasWildcard(source)
+      ) {
+        dynamicCandidateWildcardBindings.add(target);
+        changed = true;
+      }
+    }
+    if (candidateAnalysisBudgetExceeded) break;
+    for (const transfer of propertyValueTransfers) {
+      if (
+        transfer.literal &&
+        (transfer.value === undefined ||
+          ts.isFunctionLike(transfer.value) ||
+          ts.isObjectLiteralExpression(transfer.value) ||
+          ts.isArrayLiteralExpression(transfer.value))
+      ) {
+        continue;
+      }
+      if (
+        transfer.value &&
+        !ts.isFunctionLike(transfer.value) &&
+        (isGuardedByNonCallableCheck(transfer.value) ||
+          isDefinitelyNonCallableExpression(transfer.value))
+      ) {
+        continue;
+      }
+      const copiedAccess = transfer.value &&
+          (ts.isPropertyAccessExpression(transfer.value) ||
+            ts.isElementAccessExpression(transfer.value))
+        ? transfer.value
+        : undefined;
+      const copiedPropertyExpression = copiedAccess && ts.isElementAccessExpression(copiedAccess)
+        ? copiedAccess.argumentExpression
+        : undefined;
+      if (
+        transfer.property === undefined &&
+        transfer.propertyExpression &&
+        copiedAccess &&
+        copiedPropertyExpression &&
+        sameDynamicPropertyExpression(
+          transfer.propertyExpression,
+          copiedPropertyExpression,
+        ) &&
+        !candidateOwnerHasWildcard(copiedAccess.expression)
+      ) {
+        const correlatedProperties = new Set<string>();
+        if (isKnownCallableValue(copiedAccess.expression)) {
+          correlatedProperties.add("constructor");
+        }
+        for (const property of dynamicCandidatePropertyNames) {
+          if (property === "constructor") continue;
+          if (candidateOwnerHasProperty(copiedAccess.expression, property)) {
+            correlatedProperties.add(property);
+          }
+        }
+        for (const property of correlatedProperties) {
+          changed = recordDirectCandidateOwnerProperty(transfer.owner, property) || changed;
+        }
+        continue;
+      }
+      const dynamic = transfer.direct ||
+        (transfer.selection !== undefined && candidateSelectionIsDynamic(transfer.selection)) ||
+        (transfer.value !== undefined && candidateExpressionIsDynamic(transfer.value));
+      if (!dynamic) continue;
+      if (transfer.property === undefined) {
+        if (transfer.spread) continue;
+        changed = registerCandidateOwnerTaint(transfer.owner, undefined) || changed;
+        const ownerBinding = transfer.owner && ts.isIdentifier(transfer.owner)
+          ? resolveBinding(transfer.owner, transfer.owner.text)
+          : undefined;
+        if (ownerBinding && !dynamicCandidateWildcardBindings.has(ownerBinding)) {
+          dynamicCandidateWildcardBindings.add(ownerBinding);
+          hasScopedDynamicCandidateProperty = true;
+          changed = true;
+        } else if (
+          transfer.owner &&
+          !ownerBinding &&
+          !dynamicCandidateWildcardExpressions.has(transfer.owner)
+        ) {
+          dynamicCandidateWildcardExpressions.add(transfer.owner);
+          hasScopedDynamicCandidateProperty = true;
+          changed = true;
+        } else if (!transfer.owner && !dynamicCandidateWildcard) {
+          dynamicCandidateWildcard = true;
+          hasScopedDynamicCandidateProperty = true;
+          changed = true;
+        }
+      } else {
+        dynamicCandidatePropertyNames.add(transfer.property);
+        changed = registerCandidateOwnerTaint(transfer.owner, transfer.property) || changed;
+        hasScopedDynamicCandidateProperty = true;
+        const ownerBinding = transfer.owner && ts.isIdentifier(transfer.owner)
+          ? resolveBinding(transfer.owner, transfer.owner.text)
+          : undefined;
+        if (ownerBinding) {
+          const properties = dynamicCandidatePropertiesByBinding.get(ownerBinding) ?? new Set();
+          if (!properties.has(transfer.property)) {
+            properties.add(transfer.property);
+            dynamicCandidatePropertiesByBinding.set(ownerBinding, properties);
+            changed = true;
+          }
+        } else if (transfer.owner) {
+          const properties = dynamicCandidatePropertiesByExpression.get(transfer.owner) ?? new Set();
+          if (!properties.has(transfer.property)) {
+            properties.add(transfer.property);
+            dynamicCandidatePropertiesByExpression.set(transfer.owner, properties);
+            changed = true;
+          }
+        } else if (!dynamicCandidateProperties.has(transfer.property)) {
+          dynamicCandidateProperties.add(transfer.property);
+          changed = true;
+        }
+      }
+    }
+    if (candidateAnalysisBudgetExceeded) break;
+    if (changed) {
+      invalidateDynamicCandidateNegativeMemos();
+      candidateExpressionFalse = new WeakSet<ts.Node>();
+      candidateImplementationFalse = new WeakSet<ts.FunctionLikeDeclaration>();
+      candidateContainerExpressionMemo = new WeakMap<ts.Expression, boolean>();
+      candidateContainerBindingMemo = new Map<AliasBinding, boolean>();
+      candidateOwnerPropertyExpressionMemo = new WeakMap<
+        ts.Expression,
+        Map<string, boolean>
+      >();
+      candidateOwnerPropertyBindingMemo = new Map<AliasBinding, Map<string, boolean>>();
+    }
+    if (!changed) break;
   }
   const possibleValue = (node: ts.Expression): BrowserGlobalSet => {
     if (
@@ -3179,11 +5896,13 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     objectFlowGraph.set(a, leftEdges);
     objectFlowGraph.set(b, rightEdges);
   };
-  const argumentExpression = (
+  function argumentExpression(
     argument: ts.Expression | ts.SpreadElement | undefined,
-  ): ts.Expression | undefined => argument
-    ? ts.isSpreadElement(argument) ? argument.expression : argument
-    : undefined;
+  ): ts.Expression | undefined {
+    return argument
+      ? ts.isSpreadElement(argument) ? argument.expression : argument
+      : undefined;
+  }
   const expressionObjectBindings = (
     expression: ts.Expression,
     resolvingFunctions: ReadonlySet<ts.FunctionLikeDeclaration> = new Set(),
@@ -3622,7 +6341,9 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     BrowserGlobalSet
   >();
   const callValues = new Map<ts.CallExpression | ts.NewExpression, BrowserGlobalSet>();
-  const analyzedLocalCalls = new Set<ts.CallExpression | ts.NewExpression>();
+  const analyzedLocalCalls = new Set<ts.CallExpression | ts.NewExpression>(
+    directlyResolvedLocalCalls,
+  );
   const localFunctionReturns = new Set<ts.ReturnStatement | ts.ArrowFunction>();
   const trackedBrowserObjectExpressions = new Set<ts.Expression>();
   const taintedReplayObjectValues = new Set<string>();
@@ -3736,12 +6457,10 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     values: BrowserGlobalSet,
     state: BrowserAliasState,
   ): boolean => {
-    const taintedReplayValueContainsBrowser = (
-      value: string,
-      seen: ReadonlySet<string>,
-    ): boolean => {
-      if (!value.startsWith(OBJECT_VALUE_PREFIX) || seen.has(value)) return false;
-      const nextSeen = new Set([...seen, value]);
+    const visited = new Set<string>();
+    const taintedReplayValueContainsBrowser = (value: string): boolean => {
+      if (!value.startsWith(OBJECT_VALUE_PREFIX) || visited.has(value)) return false;
+      visited.add(value);
       const properties = trackedPropertiesByOwner.get(value) ?? [];
       if (
         taintedReplayObjectValues.has(value) &&
@@ -3753,14 +6472,12 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       }
       for (const property of properties) {
         for (const nested of state.get(property) ?? []) {
-          if (taintedReplayValueContainsBrowser(nested, nextSeen)) return true;
+          if (taintedReplayValueContainsBrowser(nested)) return true;
         }
       }
       return false;
     };
-    return [...values].some((value) =>
-      taintedReplayValueContainsBrowser(value, new Set())
-    );
+    return [...values].some(taintedReplayValueContainsBrowser);
   };
   const updateBoundNames = (
     name: ts.BindingName,
@@ -4340,6 +7057,16 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     target.returns.push(...source.returns);
     target.throws.push(...source.throws);
   };
+  const widenLoopState = (state: BrowserAliasState): MutableAliasState => {
+    const widened = cloneState(state);
+    for (const [binding, values] of state) {
+      const possible = possibleAliases.get(binding);
+      if (possible && [...possible].some((value) => !values.has(value))) {
+        updateBinding(widened, binding, unionGlobals(values, possible));
+      }
+    }
+    return widened;
+  };
   function evaluateStatement(
     node: ts.Statement,
     state: BrowserAliasState,
@@ -4383,7 +7110,9 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       if (incrementor) back = evaluateExpression(incrementor, back).state;
       const nextHead = joinStates(incoming, back);
       if (statesEqual(head, nextHead)) break;
-      head = nextHead;
+      const widened = widenLoopState(nextHead);
+      if (statesEqual(head, widened)) break;
+      head = widened;
     }
     const finalBody = bodyResult!;
     const finalCondition = conditionState!;
@@ -4514,7 +7243,9 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
         const back = joinStates(body.normal, ...continued);
         const nextHead = joinStates(expression.state, back);
         if (statesEqual(head, nextHead)) break;
-        head = nextHead;
+        const widened = widenLoopState(nextHead);
+        if (statesEqual(head, widened)) break;
+        head = widened;
       }
       const finalBody = body!;
       const consumedBreaks = finalBody.breaks
@@ -4769,10 +7500,31 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     }
     return current ?? root;
   };
+  const capturedSeedBindings = new WeakMap<ts.Node, Set<AliasBinding>>();
   const seedFor = (scope: ts.Node): MutableAliasState => {
+    let captured = capturedSeedBindings.get(scope);
+    if (!captured) {
+      captured = new Set<AliasBinding>();
+      const collectCaptured = (node: ts.Node): void => {
+        if (node !== scope && ts.isFunctionLike(node)) return;
+        if (ts.isIdentifier(node)) {
+          const binding = resolveBinding(node, node.text);
+          if (
+            binding &&
+            !bindingInside(binding, scope) &&
+            (possibleAliases.get(binding)?.size ?? 0) > 0
+          ) {
+            captured!.add(binding);
+          }
+        }
+        ts.forEachChild(node, collectCaptured);
+      };
+      collectCaptured(scope);
+      capturedSeedBindings.set(scope, captured);
+    }
     const seed = new Map<AliasBinding, BrowserGlobalSet>();
-    for (const [binding, values] of possibleAliases) {
-      if (values.size > 0 && !bindingInside(binding, scope)) seed.set(binding, values);
+    for (const binding of captured) {
+      seed.set(binding, possibleAliases.get(binding)!);
     }
     return seed;
   };
@@ -4848,7 +7600,8 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     });
     return found;
   };
-  const replayFunctionReturnsTaintedObject = (
+  const replayTaintedReturnMemo = new Map<ts.FunctionLikeDeclaration, boolean>();
+  const computeReplayFunctionReturnsTaintedObject = (
     implementation: ts.FunctionLikeDeclaration,
   ): boolean => {
     const replayParameters = new Set(
@@ -4888,23 +7641,261 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     inspect(implementation.body);
     return writesPrivilegedProperty;
   };
-  const callReturnsTaintedReplayObject = (expression: ts.Expression): boolean =>
-    (ts.isCallExpression(expression) || ts.isNewExpression(expression)) &&
-    [...callImplementations(expression.expression)].some(replayFunctionReturnsTaintedObject);
-  let deferredTruthGeneration = 0;
+  const replayFunctionReturnsTaintedObject = (
+    implementation: ts.FunctionLikeDeclaration,
+  ): boolean => {
+    const cached = replayTaintedReturnMemo.get(implementation);
+    if (cached !== undefined) return cached;
+    const result = computeReplayFunctionReturnsTaintedObject(implementation);
+    replayTaintedReturnMemo.set(implementation, result);
+    return result;
+  };
+  const taintedReplayCallMemo = new WeakMap<ts.Expression, boolean>();
+  const callReturnsTaintedReplayObject = (expression: ts.Expression): boolean => {
+    if (trackedBrowserObjectExpressions.size === 0) return false;
+    if (!ts.isCallExpression(expression) && !ts.isNewExpression(expression)) return false;
+    const cached = taintedReplayCallMemo.get(expression);
+    if (cached !== undefined) return cached;
+    const result = [...callImplementations(expression.expression)].some(
+      replayFunctionReturnsTaintedObject,
+    );
+    taintedReplayCallMemo.set(expression, result);
+    return result;
+  };
+  const deferredSeedFunctions = new Set<ts.FunctionLikeDeclaration>();
+  for (const expression of trackedBrowserObjectExpressions) {
+    let current: ts.Node | undefined = expression;
+    while (current) {
+      if (ts.isFunctionLike(current)) {
+        deferredSeedFunctions.add(current as ts.FunctionLikeDeclaration);
+      }
+      current = current.parent;
+    }
+  }
+  const deferredFunctionSeedMemo = new Map<ts.FunctionLikeDeclaration, boolean>();
+  const functionContainsDeferredSeed = (
+    implementation: ts.FunctionLikeDeclaration,
+  ): boolean => {
+    if (deferredSeedFunctions.has(implementation)) return true;
+    const cached = deferredFunctionSeedMemo.get(implementation);
+    if (cached !== undefined) return cached;
+    deferredFunctionSeedMemo.set(implementation, false);
+    let found = false;
+    const inspect = (node: ts.Node): void => {
+      if (found) return;
+      if (
+        ts.isExpression(node) &&
+        (trackedBrowserObjectExpressions.has(node) || callReturnsTaintedReplayObject(node))
+      ) {
+        found = true;
+        return;
+      }
+      ts.forEachChild(node, inspect);
+    };
+    if (implementation.body) inspect(implementation.body);
+    deferredFunctionSeedMemo.set(implementation, found);
+    if (found) deferredSeedFunctions.add(implementation);
+    return found;
+  };
+  const deferredCandidateBindings = new Set<AliasBinding>();
+  const deferredCandidateProperties = new Set<string>();
+  let deferredCandidateWildcard = false;
+  const candidateExpressionContainsDeferred = (
+    node: ts.Expression | ts.FunctionLikeDeclaration,
+    resolvingNodes: ReadonlySet<ts.Node> = new Set(),
+  ): boolean => {
+    if (resolvingNodes.has(node)) return false;
+    if (ts.isExpression(node) && trackedBrowserObjectExpressions.has(node)) return true;
+    if (ts.isFunctionLike(node)) {
+      return functionContainsDeferredSeed(node as ts.FunctionLikeDeclaration);
+    }
+    const nextNodes = new Set(resolvingNodes).add(node);
+    if (
+      ts.isParenthesizedExpression(node) ||
+      ts.isAsExpression(node) ||
+      ts.isTypeAssertionExpression(node) ||
+      ts.isNonNullExpression(node) ||
+      ts.isSatisfiesExpression(node) ||
+      ts.isAwaitExpression(node)
+    ) {
+      return candidateExpressionContainsDeferred(node.expression, nextNodes);
+    }
+    if (ts.isConditionalExpression(node)) {
+      return candidateExpressionContainsDeferred(node.whenTrue, nextNodes) ||
+        candidateExpressionContainsDeferred(node.whenFalse, nextNodes);
+    }
+    if (ts.isBinaryExpression(node)) {
+      if (
+        node.operatorToken.kind === ts.SyntaxKind.CommaToken ||
+        isValuePropagatingAssignment(node.operatorToken.kind)
+      ) {
+        return candidateExpressionContainsDeferred(node.right, nextNodes);
+      }
+      if (
+        [
+          ts.SyntaxKind.AmpersandAmpersandToken,
+          ts.SyntaxKind.BarBarToken,
+          ts.SyntaxKind.QuestionQuestionToken,
+        ].includes(node.operatorToken.kind)
+      ) {
+        return candidateExpressionContainsDeferred(node.left, nextNodes) ||
+          candidateExpressionContainsDeferred(node.right, nextNodes);
+      }
+      return false;
+    }
+    if (ts.isObjectLiteralExpression(node)) {
+      return node.properties.some((member) => {
+        if (ts.isSpreadAssignment(member)) {
+          return candidateExpressionContainsDeferred(member.expression, nextNodes);
+        }
+        if (ts.isPropertyAssignment(member)) {
+          return candidateExpressionContainsDeferred(member.initializer, nextNodes);
+        }
+        if (ts.isShorthandPropertyAssignment(member)) {
+          return candidateExpressionContainsDeferred(member.name, nextNodes);
+        }
+        return (
+          ts.isMethodDeclaration(member) ||
+          ts.isGetAccessorDeclaration(member) ||
+          ts.isSetAccessorDeclaration(member)
+        ) && functionContainsDeferredSeed(member);
+      });
+    }
+    if (ts.isArrayLiteralExpression(node)) {
+      return node.elements.some((element) =>
+        !ts.isOmittedExpression(element) && candidateExpressionContainsDeferred(
+          ts.isSpreadElement(element) ? element.expression : element,
+          nextNodes,
+        )
+      );
+    }
+    if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
+      if (callReturnsTaintedReplayObject(node)) return true;
+      for (const implementation of callImplementations(node.expression)) {
+        if ((returnsByFunction.get(implementation) ?? []).some((returned) =>
+          candidateExpressionContainsDeferred(returned, nextNodes)
+        )) {
+          return true;
+        }
+        for (const index of ensureReturnedArgumentIndexes(implementation)) {
+          const argument = argumentExpression(node.arguments?.[index]);
+          if (argument && candidateExpressionContainsDeferred(argument, nextNodes)) return true;
+        }
+      }
+      return false;
+    }
+    if (ts.isIdentifier(node)) {
+      const binding = resolveBinding(node, node.text);
+      return binding !== undefined && deferredCandidateBindings.has(binding);
+    }
+    if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
+      const property = assignedPropertyName(node);
+      return deferredCandidateWildcard ||
+        property === undefined ||
+        deferredCandidateProperties.has(property);
+    }
+    return false;
+  };
+  let deferredCandidateIteration = 0;
+  let deferredCandidateWork = 0;
+  while (trackedBrowserObjectExpressions.size > 0) {
+    deferredCandidateIteration += 1;
+    deferredCandidateWork += relations.length + propertyValueTransfers.length;
+    if (deferredCandidateIteration > 64 || deferredCandidateWork > 500_000) {
+      limitations.add("deferred property candidate budget exceeded");
+      break;
+    }
+    let changed = false;
+    for (const { target, source } of relations) {
+      if (
+        !deferredCandidateBindings.has(target) &&
+        candidateExpressionContainsDeferred(source)
+      ) {
+        deferredCandidateBindings.add(target);
+        changed = true;
+      }
+    }
+    for (const transfer of propertyValueTransfers) {
+      if (
+        transfer.value === undefined ||
+        !candidateExpressionContainsDeferred(transfer.value)
+      ) {
+        continue;
+      }
+      if (transfer.property === undefined) {
+        if (!deferredCandidateWildcard) {
+          deferredCandidateWildcard = true;
+          changed = true;
+        }
+      } else if (!deferredCandidateProperties.has(transfer.property)) {
+        deferredCandidateProperties.add(transfer.property);
+        changed = true;
+      }
+    }
+    if (!changed) break;
+  }
   const deferredTrackedTrue = new WeakSet<ts.Expression>();
-  const deferredTrackedFalse = new WeakMap<ts.Expression, number>();
+  const deferredTrackedFalse = new WeakSet<ts.Expression>();
   const deferredTrackedInProgress = new WeakSet<ts.Expression>();
+  const defaultDeferredAnalysisBudget = 20_000;
+  const requestedDeferredAnalysisBudget = Number(
+    process.env.PRIVATE_HOSTED_DEFERRED_BUDGET,
+  );
+  const deferredAnalysisBudget = Number.isSafeInteger(requestedDeferredAnalysisBudget) &&
+      requestedDeferredAnalysisBudget >= 0
+    ? Math.min(requestedDeferredAnalysisBudget, defaultDeferredAnalysisBudget)
+    : defaultDeferredAnalysisBudget;
+  type DeferredTraversalBudget = {
+    remaining: number;
+    depth: number;
+    visited: number;
+    cycleVersion: number;
+    exhausted: boolean;
+  };
+  let activeDeferredTraversalBudget: DeferredTraversalBudget | undefined;
   const containsDeferredTrackedBrowserObject = (
     expression: ts.Expression,
     resolvingBindings: ReadonlySet<AliasBinding> = new Set(),
     resolvingNodes: ReadonlySet<ts.Node> = new Set(),
   ): boolean => {
+    if (trackedBrowserObjectExpressions.size === 0) return false;
+    const expressionBinding = ts.isIdentifier(expression)
+      ? resolveBinding(expression, expression.text)
+      : undefined;
     if (deferredTrackedTrue.has(expression)) return true;
-    if (deferredTrackedFalse.get(expression) === deferredTruthGeneration) return false;
-    if (resolvingNodes.has(expression) || deferredTrackedInProgress.has(expression)) return false;
+    if (deferredTrackedFalse.has(expression)) return false;
+    const ownsBudget = activeDeferredTraversalBudget === undefined;
+    const budget = activeDeferredTraversalBudget ?? {
+      remaining: deferredAnalysisBudget,
+      depth: 0,
+      visited: 0,
+      cycleVersion: 0,
+      exhausted: false,
+    };
+    activeDeferredTraversalBudget = budget;
+    if (
+      resolvingNodes.has(expression) ||
+      (expressionBinding !== undefined && resolvingBindings.has(expressionBinding)) ||
+      deferredTrackedInProgress.has(expression)
+    ) {
+      budget.cycleVersion += 1;
+      if (ownsBudget) activeDeferredTraversalBudget = undefined;
+      return false;
+    }
     deferredTrackedInProgress.add(expression);
-    const nextNodes = new Set(resolvingNodes).add(expression);
+    const cycleVersion = budget.cycleVersion;
+    if (budget.remaining <= 0 || budget.depth >= 64) {
+      budget.exhausted = true;
+      limitations.add("deferred analysis work budget exceeded");
+      deferredTrackedInProgress.delete(expression);
+      if (ownsBudget) activeDeferredTraversalBudget = undefined;
+      return true;
+    }
+    budget.remaining -= 1;
+    budget.visited += 1;
+    budget.depth += 1;
+    try {
+      const nextNodes = new Set(resolvingNodes).add(expression);
     const containsReturnedTrackedValue = (implementation: ts.FunctionLikeDeclaration): boolean => {
       if (!implementation.body) return false;
       if (!ts.isBlock(implementation.body)) {
@@ -5031,12 +8022,20 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
         ts.isElementAccessExpression(expression)
       ) {
         const property = assignedPropertyName(expression);
-        const projected = projectedValueSources(expression.expression, property);
-        result = projected.uncertain || expressionWriteSources(expression).some((source) =>
+        result = expressionWriteSources(expression).some((source) =>
           containsDeferredTrackedBrowserObject(source, resolvingBindings, nextNodes)
-        ) || [...projected.expressions].some((source) =>
-          containsDeferredTrackedBrowserObject(source, resolvingBindings, nextNodes)
-        ) || [...projected.functions].some(containsReturnedTrackedValue);
+        );
+        if (
+          !result &&
+          (property === undefined ||
+            deferredCandidateWildcard ||
+            deferredCandidateProperties.has(property))
+        ) {
+          const projected = projectedValueSources(expression.expression, property);
+          result = projected.uncertain || [...projected.expressions].some((source) =>
+            containsDeferredTrackedBrowserObject(source, resolvingBindings, nextNodes)
+          ) || [...projected.functions].some(containsReturnedTrackedValue);
+        }
       } else if (ts.isCallExpression(expression) || ts.isNewExpression(expression)) {
         result = (expression.arguments ?? []).some((argument) =>
           containsDeferredTrackedBrowserObject(
@@ -5075,22 +8074,60 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
         }
       }
     }
-    if (result) {
-      deferredTrackedTrue.add(expression);
-      deferredTruthGeneration++;
-    } else {
-      deferredTrackedFalse.set(expression, deferredTruthGeneration);
+      if (result) {
+        deferredTrackedTrue.add(expression);
+      } else if (budget.cycleVersion === cycleVersion && !budget.exhausted) {
+        deferredTrackedFalse.add(expression);
+      }
+      return result;
+    } finally {
+      budget.depth -= 1;
+      deferredTrackedInProgress.delete(expression);
+      if (ownsBudget) activeDeferredTraversalBudget = undefined;
     }
-    deferredTrackedInProgress.delete(expression);
-    return result;
   };
-  return {
+  const isBrowserTimer = (
+    expression: ts.Expression,
+    resolving: ReadonlySet<AliasBinding> = new Set(),
+  ): boolean => {
+    if (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isTypeAssertionExpression(expression) ||
+      ts.isNonNullExpression(expression) ||
+      ts.isSatisfiesExpression(expression)
+    ) {
+      return isBrowserTimer(expression.expression, resolving);
+    }
+    if (ts.isIdentifier(expression)) {
+      const binding = resolveBinding(expression, expression.text);
+      if (!binding) return ["setInterval", "setTimeout"].includes(expression.text);
+      if (resolving.has(binding)) return false;
+      const next = new Set(resolving).add(binding);
+      return (relationsByTarget.get(binding) ?? []).some(({ source }) =>
+        isBrowserTimer(source, next)
+      );
+    }
+    if (!ts.isPropertyAccessExpression(expression) && !ts.isElementAccessExpression(expression)) {
+      return false;
+    }
+    const property = ts.isPropertyAccessExpression(expression)
+      ? expression.name.text
+      : expression.argumentExpression
+        ? staticString(expression.argumentExpression)
+        : undefined;
+    return ["setInterval", "setTimeout"].includes(property ?? "") &&
+      privilegedBrowserGlobal(expression.expression, result) !== undefined;
+  };
+  const result: BrowserAliasAnalysis = {
+    limitations,
     valuesBefore,
     propertyValuesBefore,
     callValues,
     analyzedLocalCalls,
     localFunctionReturns,
     resolveBinding,
+    isBrowserTimer,
     isDynamicFunctionConstructor,
     containsTrackedBrowserObject: (node) => trackedBrowserObjectExpressions.has(node),
     containsDeferredTrackedBrowserObject,
@@ -5098,6 +8135,7 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     isInertReplayEventConstructor,
     isInertEventTargetAssignment,
   };
+  return result;
 }
 
 type ScopedStaticStrings = {
@@ -5201,6 +8239,205 @@ function scopedStaticString(
   return undefined;
 }
 
+const NAVIGATION_PROPERTIES = new Set(["action", "formAction", "href"]);
+
+type NavigationElementAnalysis = {
+  isNavigationElement(node: ts.Expression): boolean;
+};
+
+function collectNavigationElements(
+  root: ts.Node,
+  aliases: BrowserAliasAnalysis,
+  staticStrings: ScopedStaticStrings,
+): NavigationElementAnalysis {
+  const elements = new Set<AliasBinding>();
+  const relations: Array<[AliasBinding, AliasBinding]> = [];
+  const createdNavigationElement = (expression: ts.Expression): boolean => {
+    while (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isTypeAssertionExpression(expression) ||
+      ts.isNonNullExpression(expression) ||
+      ts.isSatisfiesExpression(expression)
+    ) {
+      expression = expression.expression;
+    }
+    if (
+      !ts.isCallExpression(expression) ||
+      (!ts.isPropertyAccessExpression(expression.expression) &&
+        !ts.isElementAccessExpression(expression.expression))
+    ) {
+      return false;
+    }
+    const callee = expression.expression;
+    const method = ts.isPropertyAccessExpression(callee)
+      ? callee.name.text
+      : callee.argumentExpression
+        ? scopedStaticString(callee.argumentExpression, staticStrings)
+        : undefined;
+    const owner = privilegedBrowserGlobal(callee.expression, aliases);
+    const tagIndex = method === "createElement" ? 0 : method === "createElementNS" ? 1 : -1;
+    const tag = tagIndex >= 0 && expression.arguments[tagIndex]
+      ? scopedStaticString(expression.arguments[tagIndex], staticStrings)?.toLowerCase()
+      : undefined;
+    return owner === "document" && ["a", "form"].includes(tag ?? "");
+  };
+  const inspect = (node: ts.Node): void => {
+    let target: ts.Identifier | undefined;
+    let source: ts.Expression | undefined;
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
+      target = node.name;
+      source = node.initializer;
+    } else if (
+      ts.isBinaryExpression(node) &&
+      node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+      ts.isIdentifier(node.left)
+    ) {
+      target = node.left;
+      source = node.right;
+    }
+    if (target && source) {
+      const targetBinding = aliases.resolveBinding(target, target.text);
+      if (targetBinding) {
+        if (createdNavigationElement(source)) elements.add(targetBinding);
+        if (ts.isIdentifier(source)) {
+          const sourceBinding = aliases.resolveBinding(source, source.text);
+          if (sourceBinding) relations.push([targetBinding, sourceBinding]);
+        }
+      }
+    }
+    ts.forEachChild(node, inspect);
+  };
+  inspect(root);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const [target, source] of relations) {
+      if (elements.has(source) && !elements.has(target)) {
+        elements.add(target);
+        changed = true;
+      }
+    }
+  }
+  return {
+    isNavigationElement(node) {
+      if (createdNavigationElement(node)) return true;
+      if (!ts.isIdentifier(node)) return false;
+      const binding = aliases.resolveBinding(node, node.text);
+      return binding !== undefined && elements.has(binding);
+    },
+  };
+}
+
+function runtimeNavigationSink(
+  node: ts.Node,
+  staticStrings: ScopedStaticStrings,
+  navigationElements: NavigationElementAnalysis,
+): string | undefined {
+  const propertyName = (name: ts.PropertyName): string | undefined => {
+    if (ts.isIdentifier(name) || ts.isStringLiteralLike(name)) return name.text;
+    return ts.isComputedPropertyName(name)
+      ? scopedStaticString(name.expression, staticStrings)
+      : undefined;
+  };
+  if (ts.isPropertyAssignment(node)) {
+    const property = propertyName(node.name);
+    if (["formAction", "href"].includes(property ?? "")) return `navigation ${property}`;
+  }
+  if (
+    ts.isShorthandPropertyAssignment(node) &&
+    ["formAction", "href"].includes(node.name.text)
+  ) {
+    return `navigation ${node.name.text}`;
+  }
+  if (
+    ts.isBinaryExpression(node) &&
+    isValuePropagatingAssignment(node.operatorToken.kind) &&
+    (ts.isPropertyAccessExpression(node.left) || ts.isElementAccessExpression(node.left))
+  ) {
+    const property = ts.isPropertyAccessExpression(node.left)
+      ? node.left.name.text
+      : node.left.argumentExpression
+        ? scopedStaticString(node.left.argumentExpression, staticStrings)
+        : undefined;
+    if (NAVIGATION_PROPERTIES.has(property ?? "")) return `navigation ${property}`;
+  }
+  if (
+    ts.isCallExpression(node) &&
+    (ts.isPropertyAccessExpression(node.expression) ||
+      ts.isElementAccessExpression(node.expression))
+  ) {
+    const method = ts.isPropertyAccessExpression(node.expression)
+      ? node.expression.name.text
+      : node.expression.argumentExpression
+        ? scopedStaticString(node.expression.argumentExpression, staticStrings)
+        : undefined;
+    const target = node.expression.expression;
+    const knownNavigationTarget = navigationElements.isNavigationElement(target);
+    if (["click", "requestSubmit", "submit"].includes(method ?? "")) {
+      return `navigation ${method}`;
+    }
+    if (method === "setAttribute" && node.arguments[0]) {
+      const property = scopedStaticString(node.arguments[0], staticStrings);
+      if (NAVIGATION_PROPERTIES.has(property ?? "")) return `navigation ${property}`;
+      if (knownNavigationTarget && property === undefined) return "navigation dynamic attribute";
+    }
+    if (method === "setAttributeNS" && node.arguments[1]) {
+      const property = scopedStaticString(node.arguments[1], staticStrings);
+      if (NAVIGATION_PROPERTIES.has(property ?? "")) return `navigation ${property}`;
+      if (knownNavigationTarget && property === undefined) return "navigation dynamic attribute";
+    }
+  }
+  if (ts.isCallExpression(node)) {
+    const first = node.arguments[0]
+      ? scopedStaticString(node.arguments[0], staticStrings)
+      : undefined;
+    if (["a", "form"].includes(first ?? "") && node.arguments[1]) {
+      return `navigation ${first} element props`;
+    }
+    const callee = ts.isPropertyAccessExpression(node.expression)
+      ? node.expression.name.text
+      : ts.isElementAccessExpression(node.expression) && node.expression.argumentExpression
+        ? scopedStaticString(node.expression.argumentExpression, staticStrings)
+        : undefined;
+    const target = node.arguments[0];
+    if (
+      target &&
+      navigationElements.isNavigationElement(target) &&
+      ["assign", "defineProperties"].includes(callee ?? "")
+    ) {
+      return "navigation dynamic properties";
+    }
+    const keyIndex = callee === "defineProperty" || callee === "set" ? 1 : -1;
+    if (keyIndex >= 0 && node.arguments[keyIndex]) {
+      const property = scopedStaticString(node.arguments[keyIndex], staticStrings);
+      if (NAVIGATION_PROPERTIES.has(property ?? "")) return `navigation ${property}`;
+      if (
+        target &&
+        navigationElements.isNavigationElement(target) &&
+        property === undefined
+      ) {
+        return "navigation dynamic property";
+      }
+    }
+  }
+  if (ts.isJsxAttribute(node) && ts.isIdentifier(node.name)) {
+    const property = node.name.text;
+    if (NAVIGATION_PROPERTIES.has(property)) return `navigation ${property}`;
+  }
+  if (ts.isJsxSpreadAttribute(node)) {
+    const owner = node.parent.parent;
+    if (
+      (ts.isJsxOpeningElement(owner) || ts.isJsxSelfClosingElement(owner)) &&
+      ts.isIdentifier(owner.tagName) &&
+      ["a", "form"].includes(owner.tagName.text)
+    ) {
+      return `navigation ${owner.tagName.text} spread`;
+    }
+  }
+  return undefined;
+}
+
 function containsPrivilegedBrowserGlobal(
   node: ts.Expression,
   analysis: BrowserAliasAnalysis,
@@ -5235,6 +8472,7 @@ function browserGlobalEscapes(
   analysis: BrowserAliasAnalysis,
   directOnly = false,
   allowAnalyzedLocalFlows = false,
+  staticStrings?: ScopedStaticStrings,
 ): boolean {
   const browserGlobal = directOnly ? directBrowserGlobal : privilegedBrowserGlobal;
   const contains = (expression: ts.Expression): boolean =>
@@ -5255,12 +8493,12 @@ function browserGlobalEscapes(
     return ts.isIdentifier(expression);
   };
   if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
-    if ((node.arguments ?? []).some((argument) =>
-      analysis.containsDeferredTrackedBrowserObject(
-        ts.isSpreadElement(argument) ? argument.expression : argument,
-      )
-    )) {
-      return true;
+    if (
+      ts.isCallExpression(node) &&
+      staticStrings &&
+      isSafeInternalGlobalDescriptorCall(node, analysis, staticStrings)
+    ) {
+      return false;
     }
     if (
       ts.isCallExpression(node) &&
@@ -5286,6 +8524,13 @@ function browserGlobalEscapes(
           true,
         )
       );
+    }
+    if ((node.arguments ?? []).some((argument) =>
+      analysis.containsDeferredTrackedBrowserObject(
+        ts.isSpreadElement(argument) ? argument.expression : argument,
+      )
+    )) {
+      return true;
     }
     return (node.arguments ?? []).some((argument) =>
       ts.isSpreadElement(argument)
@@ -5360,6 +8605,75 @@ function browserGlobalEscapes(
       : direct === undefined && contains(node.right);
   }
   return false;
+}
+
+const INTERNAL_RUNTIME_GLOBAL_KEYS = new Set<string>([
+  "__humanPlayerSide",
+  "__pendingActionExpansion",
+  "__pendingChainContinuation",
+  "__pendingChooseInterceptResume",
+  "__pendingChooseInterceptSide",
+  "__pendingContactStartAxId",
+  "__pendingDeckPlaceSide",
+  "__pendingDeckReorderSide",
+  "__pendingDeckRevealSide",
+  "__pendingEffectChoiceResume",
+  "__pendingEffectChoiceSide",
+  "__pendingEffectOptionalBindings",
+  "__pendingEffectOptionalContinuation",
+  "__pendingEffectOptionalCostPaid",
+  "__pendingEffectOptionalResume",
+  "__pendingEffectOptionalSide",
+  "__pendingEffectPickQueue",
+  "__pendingEffectPickSide",
+  "__pendingEffectRepeatOptionalResume",
+  "__pendingEffectRepeatOptionalSide",
+  "__pendingHirameki",
+  "__pendingMisread",
+  "__pendingPublicHandRevealSide",
+  "__pendingRpsBindings",
+  "__pendingRpsContinuation",
+  "__pendingRpsResume",
+  "__pendingRpsSide",
+  "__pendingRuntimeStateMarker",
+  "__pendingSetCardChoiceBindings",
+  "__pendingSetCardChoiceContinuation",
+  "__pendingSetCardChoiceGuard",
+  "__pendingSetCardChoiceResume",
+  "__pendingSetCardChoiceSide",
+  "__pendingSetCardReplacementSide",
+]);
+
+function isSafeInternalGlobalDescriptorCall(
+  node: ts.CallExpression,
+  analysis: BrowserAliasAnalysis,
+  staticStrings: ScopedStaticStrings,
+): boolean {
+  if (!ts.isPropertyAccessExpression(node.expression)) return false;
+  const owner = node.expression.expression;
+  if (
+    !ts.isIdentifier(owner) ||
+    owner.text !== "Object" ||
+    analysis.resolveBinding(owner, owner.text)
+  ) {
+    return false;
+  }
+  const method = node.expression.name.text;
+  if (!["defineProperty", "getOwnPropertyDescriptor"].includes(method)) return false;
+  const target = node.arguments[0];
+  const property = node.arguments[1];
+  if (
+    !target ||
+    !property ||
+    privilegedBrowserGlobal(target, analysis) === undefined ||
+    !INTERNAL_RUNTIME_GLOBAL_KEYS.has(scopedStaticString(property, staticStrings) ?? "")
+  ) {
+    return false;
+  }
+  if (method === "getOwnPropertyDescriptor") return node.arguments.length === 2;
+  const descriptor = node.arguments[2];
+  return node.arguments.length === 3 && descriptor !== undefined &&
+    !containsPrivilegedBrowserGlobal(descriptor, analysis);
 }
 
 function reflectBrowserGlobalCall(
@@ -5628,15 +8942,36 @@ function scanScriptOrigins(
     ts.ScriptKind.JS,
   );
   const privilegedAliases = collectPrivilegedBrowserAliases(parsed);
+  for (const limitation of privilegedAliases.limitations) {
+    addFinding(findings, file, "forbidden-bundle-marker", limitation);
+  }
+  if (privilegedAliases.limitations.has("dynamic property candidate shared budget exceeded")) {
+    return findings;
+  }
   const staticStrings = collectScopedStaticStrings(parsed, privilegedAliases);
+  const navigationElements = collectNavigationElements(
+    parsed,
+    privilegedAliases,
+    staticStrings,
+  );
   function visit(node: ts.Node): void {
-    if (isDynamicCodeExecution(node, privilegedAliases, true)) {
+    const dynamicCode = isDynamicCodeExecution(
+      node,
+      privilegedAliases,
+      true,
+      staticStrings,
+    );
+    if (dynamicCode) {
       addFinding(
         findings,
         file,
         "forbidden-bundle-marker",
         "dynamic code execution",
       );
+    }
+    const navigation = runtimeNavigationSink(node, staticStrings, navigationElements);
+    if (navigation) {
+      addFinding(findings, file, "forbidden-bundle-marker", navigation);
     }
     const reflection = reflectBrowserGlobalCall(node, privilegedAliases);
     if (reflection) {
@@ -5646,8 +8981,17 @@ function scanScriptOrigins(
         "forbidden-bundle-marker",
         "browser global reflection",
       );
-    } else if (browserGlobalEscapes(node, privilegedAliases, false, true)) {
-      addFinding(findings, file, "forbidden-bundle-marker", "browser global escape");
+    } else {
+      const escapes = browserGlobalEscapes(
+        node,
+        privilegedAliases,
+        false,
+        true,
+        staticStrings,
+      );
+      if (escapes) {
+        addFinding(findings, file, "forbidden-bundle-marker", "browser global escape");
+      }
     }
     if (
       ts.isElementAccessExpression(node) &&
@@ -5746,6 +9090,9 @@ function scanScriptOrigins(
     ts.forEachChild(node, visit);
   }
   visit(parsed);
+  for (const limitation of privilegedAliases.limitations) {
+    addFinding(findings, file, "forbidden-bundle-marker", limitation);
+  }
   return findings;
 }
 
@@ -5806,7 +9153,18 @@ function scanSource(
     }
   }
   const privilegedAliases = collectPrivilegedBrowserAliases(sourceFile);
+  for (const limitation of privilegedAliases.limitations) {
+    addFinding(findings, file, "analysis-limit", limitation);
+  }
+  if (privilegedAliases.limitations.has("dynamic property candidate shared budget exceeded")) {
+    return findings;
+  }
   const staticStrings = collectScopedStaticStrings(sourceFile, privilegedAliases);
+  const navigationElements = collectNavigationElements(
+    sourceFile,
+    privilegedAliases,
+    staticStrings,
+  );
   const elementProperty = (node: ts.ElementAccessExpression): string | undefined =>
     scopedStaticString(node.argumentExpression, staticStrings);
   const safeDynamicStyleProperties = new Set([
@@ -5965,13 +9323,15 @@ function scanSource(
     (ts.isPropertyAccessExpression(node) && node.name.text === "style") ||
     (ts.isElementAccessExpression(node) && elementProperty(node) === "style");
   function visit(node: ts.Node): void {
-    if (isDynamicCodeExecution(node, privilegedAliases)) {
+    if (isDynamicCodeExecution(node, privilegedAliases, false, staticStrings)) {
       addFinding(findings, file, "dynamic-code-execution", "eval/Function");
     }
+    const navigation = runtimeNavigationSink(node, staticStrings, navigationElements);
+    if (navigation) addFinding(findings, file, "network-api", navigation);
     const reflection = reflectBrowserGlobalCall(node, privilegedAliases);
     if (reflection) {
       addFinding(findings, file, "browser-global-reflection", reflection);
-    } else if (browserGlobalEscapes(node, privilegedAliases)) {
+    } else if (browserGlobalEscapes(node, privilegedAliases, false, false, staticStrings)) {
       addFinding(
         findings,
         file,
@@ -6024,6 +9384,8 @@ function scanSource(
       isUnboundRuntimeIdentifier(node, privilegedAliases) &&
       [
         "fetch",
+        "location",
+        "open",
         "sendBeacon",
         "XMLHttpRequest",
         "WebSocket",
@@ -6066,6 +9428,7 @@ function scanSource(
       ts.isIdentifier(node.expression) &&
       isUnboundRuntimeIdentifier(node.expression, privilegedAliases) &&
       [
+        "BroadcastChannel",
         "XMLHttpRequest",
         "WebSocket",
         "EventSource",
@@ -6091,6 +9454,7 @@ function scanSource(
       if (
         constructor &&
         [
+          "BroadcastChannel",
           "XMLHttpRequest",
           "WebSocket",
           "EventSource",
@@ -6151,6 +9515,7 @@ function scanSource(
         "sessionStorage",
         "indexedDB",
         "caches",
+        "history",
         "cookieStore",
         "openDatabase",
         "showOpenFilePicker",
@@ -6170,6 +9535,7 @@ function scanSource(
         "sessionStorage",
         "indexedDB",
         "caches",
+        "history",
         "cookieStore",
         "openDatabase",
         "showOpenFilePicker",
@@ -6284,6 +9650,9 @@ function scanSource(
     ts.forEachChild(node, visit);
   }
   visit(sourceFile);
+  for (const limitation of privilegedAliases.limitations) {
+    addFinding(findings, file, "analysis-limit", limitation);
+  }
   return findings;
 }
 
@@ -6405,7 +9774,19 @@ async function inspectBuild(
       continue;
     }
     if ([".js", ".mjs"].includes(extension)) {
-      findings.push(...scanScriptOrigins(root, absolute, source));
+      const vendorOutput = TRUSTED_VENDOR_BUNDLE.test(outputPath);
+      const trustedVendor = vendorOutput && trustedVendorBundle(source);
+      if (vendorOutput && !trustedVendor) {
+        addFinding(
+          findings,
+          file,
+          "vendor-integrity",
+          "trusted vendor bundle SHA-256 mismatch",
+        );
+      }
+      if (!trustedVendor) {
+        findings.push(...scanScriptOrigins(root, absolute, source));
+      }
       for (const [marker, detail] of BUNDLE_MARKERS) {
         if (marker.test(source)) {
           addFinding(findings, file, "forbidden-bundle-marker", detail);
@@ -6480,7 +9861,7 @@ async function inspectViteConfig(root: string): Promise<RuntimeBoundaryFinding[]
         if (["root", "publicDir", "appType"].includes(name)) {
           addFinding(findings, "vite.config.ts", "vite-root", name);
         }
-        if (["input", "rollupOptions", "lib"].includes(name)) {
+        if (["input", "lib"].includes(name)) {
           addFinding(findings, "vite.config.ts", "vite-input", name);
         }
         if (["outDir", "emptyOutDir", "write"].includes(name)) {
@@ -6538,7 +9919,9 @@ export async function auditRuntimeBoundary(
   const buildOutput = runBuild ? await runBuild() : await runCanonicalBoundaryBuild(root);
   const graph = await productionFiles(root);
   const findings = [...(await inspectEntrypoints(root, graph))];
-  for (const [path, source] of graph.scripts) findings.push(...scanSource(root, path, source));
+  for (const [path, source] of graph.scripts) {
+    findings.push(...scanSource(root, path, source));
+  }
   for (const [path, source] of graph.styles) findings.push(...scanStyle(root, path, source));
   for (const [path, source] of graph.data) findings.push(...scanData(root, path, source));
   findings.push(...(await inspectBuild(root, buildOutput)));

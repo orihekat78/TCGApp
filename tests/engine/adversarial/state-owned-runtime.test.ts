@@ -224,6 +224,51 @@ describe('adversarial: runtime identity is owned by GameState', () => {
     expect(resumed.pendingRuntimeState).toBeUndefined();
   });
 
+  it('does not read an inherited pending-runtime getter while snapshotting', () => {
+    const prototype = Object.prototype as Record<string, unknown>;
+    const key = '__pendingEffectPickSide';
+    const previous = Object.getOwnPropertyDescriptor(prototype, key);
+    delete (globalThis as Record<string, unknown>)[key];
+    Object.defineProperty(prototype, key, {
+      configurable: true,
+      get: () => { throw new Error('inherited pending getter executed'); },
+    });
+
+    try {
+      const snapshot = snapshotPendingRuntimeState();
+      expect(snapshot.find((entry) => entry.key === key)).toEqual({
+        key,
+        present: false,
+        value: undefined,
+      });
+    } finally {
+      if (previous) Object.defineProperty(prototype, key, previous);
+      else delete prototype[key];
+    }
+  });
+
+  it('ignores an inherited marker when hydrating a restored authority', () => {
+    const prototype = Object.prototype as Record<string, unknown>;
+    const key = '__pendingRuntimeStateMarker';
+    const previous = Object.getOwnPropertyDescriptor(prototype, key);
+    const restored = createEmptyGameState();
+    restored.pendingRuntimeState = { token: 1, snapshot: [] };
+    restored.pendingRuntimeSeq = 1;
+    Object.defineProperty(prototype, key, {
+      configurable: true,
+      get: () => ({ token: 1, owner: restored.pendingRuntimeState }),
+    });
+
+    try {
+      expect(hydratePendingRuntimeState(restored)).toBe(true);
+      expect(Object.prototype.hasOwnProperty.call(globalThis, key)).toBe(true);
+    } finally {
+      delete (globalThis as Record<string, unknown>)[key];
+      if (previous) Object.defineProperty(prototype, key, previous);
+      else delete prototype[key];
+    }
+  });
+
   it('rejects forged runtime snapshot keys before touching another global', () => {
     const globals = globalThis as Record<string, unknown>;
     const forgedKey = '__forgedPendingRuntimeKey';

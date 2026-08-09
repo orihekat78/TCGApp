@@ -76,7 +76,7 @@ export type HandZoneProps = {
   /** Owner of cards rendered in pick mode. Defaults to the local player's hand. */
   pickPlayer?: 'self' | 'opp';
   pickableCardIds?: ReadonlySet<string>;
-  /** occurrence 単位の候補。重複 cardId の一部だけが候補のときに使う。 */
+  /** Area-qualified occurrence UIDs used to distinguish duplicate card IDs. */
   pickableCardUids?: ReadonlySet<string>;
   pickSkipLabel?: string;
   /**

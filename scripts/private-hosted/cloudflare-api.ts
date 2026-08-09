@@ -8,6 +8,8 @@ const API_PREFIX = "/client/v4/";
 const PAGE_SIZE = 1_000;
 const MAX_PAGES = 100;
 const MAX_RESPONSE_BYTES = 10 * 1024 * 1024;
+const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
+const MAX_REQUEST_TIMEOUT_MS = 120_000;
 const ACCOUNT_ID = /^[0-9a-f]{32}$/;
 
 function fail(message: string): never {
@@ -49,6 +51,7 @@ function inputUrl(input: string | URL | Request): URL {
 export function createCloudflareApiFetch(
   token: string,
   baseFetch: CloudflareFetch = fetch,
+  requestTimeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
 ): CloudflareFetch {
   if (
     token.length === 0 ||
@@ -57,6 +60,13 @@ export function createCloudflareApiFetch(
     hasAsciiWhitespaceOrControl(token)
   ) {
     fail("API token is missing or malformed");
+  }
+  if (
+    !Number.isSafeInteger(requestTimeoutMs) ||
+    requestTimeoutMs < 1 ||
+    requestTimeoutMs > MAX_REQUEST_TIMEOUT_MS
+  ) {
+    fail("request timeout is invalid");
   }
   return async (input, init) => {
     const url = inputUrl(input);
@@ -81,14 +91,39 @@ export function createCloudflareApiFetch(
     } else {
       headers.set("accept", "text/html");
     }
-    return baseFetch(url, {
-      method,
-      headers,
-      credentials: "omit",
-      redirect,
-      cache: "no-store",
-      signal: init?.signal,
+    const controller = new AbortController();
+    const callerSignal = init?.signal;
+    let rejectGuard: ((reason: Error) => void) | undefined;
+    const guard = new Promise<never>((_resolve, reject) => {
+      rejectGuard = reject;
     });
+    const abortFromCaller = () => {
+      controller.abort();
+      rejectGuard?.(new Error("Cloudflare read-only API rejected: request aborted"));
+    };
+    if (callerSignal?.aborted) abortFromCaller();
+    else callerSignal?.addEventListener("abort", abortFromCaller, { once: true });
+    const timeout = setTimeout(() => {
+      controller.abort();
+      rejectGuard?.(new Error("Cloudflare read-only API rejected: request timed out"));
+    }, requestTimeoutMs);
+    timeout.unref?.();
+    try {
+      return await Promise.race([
+        baseFetch(url, {
+          method,
+          headers,
+          credentials: "omit",
+          redirect,
+          cache: "no-store",
+          signal: controller.signal,
+        }),
+        guard,
+      ]);
+    } finally {
+      clearTimeout(timeout);
+      callerSignal?.removeEventListener("abort", abortFromCaller);
+    }
   };
 }
 
