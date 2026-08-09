@@ -451,6 +451,31 @@ describe("private hosted runtime boundary", () => {
     ]));
   });
 
+  it("rejects a computed browsing context reached through an unresolved typed iframe", async () => {
+    const source = `
+      function leak(frame: HTMLIFrameElement) {
+        const key = 'contentWindow';
+        frame[key]?.localStorage.setItem('state', 'leak');
+      }
+      export default function App() { return null; }
+    `;
+    const bundle = "function leak(frame){const key='contentWindow';frame[key]?.localStorage.setItem('state','leak')}";
+    const root = await fixture(source);
+    await writeFile(resolve(root, "dist/assets/index.js"), bundle);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "persistent-storage",
+      detail: "localStorage",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "persistent storage",
+    });
+  });
+
   it.each([
     { name: "bare parent", operation: "parent.postMessage(state, '*')", code: "network-api", detail: "parent.postMessage", bundleDetail: "network API" },
     { name: "bare top", operation: "top?.postMessage(state, '*')", code: "network-api", detail: "top.postMessage", bundleDetail: "network API" },
@@ -1569,6 +1594,38 @@ describe("private hosted runtime boundary", () => {
       name: "Reflect.apply",
       source: "Reflect.apply(setTimeout,undefined,[\"fetch('/state')\",0])",
     },
+    {
+      name: "Reflect namespace alias",
+      source: "const R=Reflect;R.apply(setTimeout,undefined,[\"fetch('/state')\",0])",
+    },
+    {
+      name: "Reflect.apply alias",
+      source: "const invoke=Reflect.apply;invoke(setTimeout,undefined,[\"fetch('/state')\",0])",
+    },
+    {
+      name: "Reflect.apply.call",
+      source: "Reflect.apply.call(Reflect,setTimeout,undefined,[\"fetch('/state')\",0])",
+    },
+    {
+      name: "Reflect.apply.bind",
+      source: "Reflect.apply.bind(Reflect)(setTimeout,undefined,[\"fetch('/state')\",0])",
+    },
+    {
+      name: "computed Function.call",
+      source: "const method='call';setTimeout[method](undefined,\"fetch('/state')\",0)",
+    },
+    {
+      name: "Function.call alias",
+      source: "const invoke=setTimeout.call;invoke(setTimeout,undefined,\"fetch('/state')\",0)",
+    },
+    {
+      name: "Function.call.call",
+      source: "setTimeout.call.call(setTimeout,undefined,\"fetch('/state')\",0)",
+    },
+    {
+      name: "Function.apply.call",
+      source: "setTimeout.apply.call(setTimeout,undefined,[\"fetch('/state')\",0])",
+    },
   ])("rejects string execution through timer $name", async ({ source }) => {
     const root = await fixture(`${source};export default function App(){}`);
     await writeFile(resolve(root, "dist/assets/index.js"), `${source};`);
@@ -1592,6 +1649,20 @@ describe("private hosted runtime boundary", () => {
     await writeFile(resolve(root, "dist/assets/index.js"), "function setTimeout(value){void value}setTimeout('safe');");
 
     const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.filter(({ file }) => ["src/App.tsx", "dist/assets/index.js"].includes(file)))
+      .toEqual([]);
+  });
+
+  it("accepts Reflect.apply for a non-timer callable with an opaque argument array", async () => {
+    const source = "function invoke(value:(...args:unknown[])=>unknown,args:unknown[]){return Reflect.apply(value,null,args)}";
+    const root = await fixture(`${source};export default function App(){}`);
+    await writeFile(
+      resolve(root, "dist/assets/index.js"),
+      "function invoke(value,args){return Reflect.apply(value,null,args)}",
+    );
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
     expect(findings.filter(({ file }) => ["src/App.tsx", "dist/assets/index.js"].includes(file)))
       .toEqual([]);
   });
@@ -1652,7 +1723,7 @@ describe("private hosted runtime boundary", () => {
     const root = await fixture(source);
     await writeFile(
       resolve(root, "dist/assets/index.js"),
-      "import{a as factory}from'./vendor-AAAA.js';import{interop}from'./rolldown-runtime-BBBB.js';const React=interop(factory(),1);function declared(){}const inline=()=>{},memoized=React.useCallback(()=>{},[]);setTimeout(declared,0);setTimeout(inline,0);setTimeout(memoized,0);setInterval(()=>{},0);",
+      "function declared(){}const inline=()=>{};setTimeout(declared,0);setTimeout(inline,0);setInterval(()=>{},0);",
     );
 
     const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
@@ -1667,6 +1738,39 @@ describe("private hosted runtime boundary", () => {
       resolve(root, "dist/assets/index.js"),
       "function handler(){};handler='void 0';setTimeout(handler,0);",
     );
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "dynamic-code-execution",
+      detail: "eval/Function",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
+  });
+
+  it.each([
+    {
+      name: "compound assignment",
+      source: "function handler(){};handler&&=('void 0' as unknown as typeof handler);setTimeout(handler,0)",
+      bundle: "function handler(){};handler&&='void 0';setTimeout(handler,0)",
+    },
+    {
+      name: "destructuring assignment",
+      source: "let handler=()=>{};[handler]=(['void 0'] as unknown as [typeof handler]);setTimeout(handler,0)",
+      bundle: "let handler=()=>{};[handler]=['void 0'];setTimeout(handler,0)",
+    },
+    {
+      name: "for-of assignment",
+      source: "let handler:any=()=>{};for(handler of ['void 0']){}setTimeout(handler,0)",
+      bundle: "let handler=()=>{};for(handler of ['void 0']){}setTimeout(handler,0)",
+    },
+  ])("rejects a callable changed through $name", async ({ source, bundle }) => {
+    const root = await fixture(`${source};export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), bundle);
 
     const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
     expect(findings).toContainEqual({
@@ -1696,6 +1800,79 @@ describe("private hosted runtime boundary", () => {
       file: "dist/assets/index.js",
       code: "forbidden-bundle-marker",
       detail: "dynamic code execution",
+    });
+  });
+
+  it("rejects vendor-shaped but untrusted bundle hook provenance", async () => {
+    const source = "const cb='void 0';setTimeout(cb,0)";
+    const bundle = "import{a as factory}from'./vendor-FAKE.js';const interop=()=>({useCallback(){return 'void 0'}}),Fake=interop(factory());const cb=Fake.useCallback(()=>{});setTimeout(cb,0)";
+    const root = await fixture(`${source};export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), bundle);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
+  });
+
+  it("rejects mutation of a trusted React hook namespace", async () => {
+    const source = `
+      import React from 'react';
+      (React as any).useCallback = () => 'void 0';
+      const cb = React.useCallback(() => {}, []);
+      setTimeout(cb, 0);
+      export default function App() {}
+    `;
+    const bundle = "import{a as factory}from'./vendor-AAAA.js';import{interop}from'./rolldown-runtime-BBBB.js';const React=interop(factory(),1);React.useCallback=()=>\"void 0\";const cb=React.useCallback(()=>{},[]);setTimeout(cb,0)";
+    const root = await fixture(source);
+    await writeFile(resolve(root, "dist/assets/index.js"), bundle);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "dynamic-code-execution",
+      detail: "eval/Function",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
+  });
+
+  it.each([
+    {
+      name: "namespace alias reassignment",
+      mutation: "let Hooks:any=React;Hooks={useCallback:()=>\"void 0\"};const cb=Hooks.useCallback(()=>{},[])",
+    },
+    {
+      name: "Object.assign",
+      mutation: "Object.assign(React as any,{useCallback:()=>\"void 0\"});const cb=React.useCallback(()=>{},[])",
+    },
+    {
+      name: "Object.defineProperty",
+      mutation: "Object.defineProperty(React as any,'useCallback',{value:()=>\"void 0\"});const cb=React.useCallback(()=>{},[])",
+    },
+    {
+      name: "Reflect.set",
+      mutation: "Reflect.set(React as any,'useCallback',()=>\"void 0\");const cb=React.useCallback(()=>{},[])",
+    },
+    {
+      name: "prototype replacement",
+      mutation: "Object.setPrototypeOf(React as any,{useCallback:()=>\"void 0\"});const cb=React.useCallback(()=>{},[])",
+    },
+  ])("rejects React hook trust after $name", async ({ mutation }) => {
+    const source = `import React from 'react';${mutation};setTimeout(cb,0);export default function App(){}`;
+    const root = await fixture(source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "dynamic-code-execution",
+      detail: "eval/Function",
     });
   });
 
@@ -3084,6 +3261,42 @@ describe("private hosted runtime boundary", () => {
     });
     expect(findings).toContainEqual({
       file: "dist/assets/vendor-tampered.js",
+      code: "forbidden-bundle-marker",
+      detail: "network API",
+    });
+  });
+
+  it("rejects a runtime chunk that does not match the qualified SHA-256", async () => {
+    const root = await fixture();
+    await writeFile(
+      resolve(root, "dist/.vite/manifest.json"),
+      JSON.stringify({
+        "_runtime-tampered.js": {
+          file: "assets/rolldown-runtime-tampered.js",
+          isEntry: false,
+        },
+        "index.html": {
+          file: "assets/index.js",
+          isEntry: true,
+          imports: ["_runtime-tampered.js"],
+          dynamicImports: [],
+        },
+      }),
+    );
+    await writeFile(
+      resolve(root, "dist/assets/rolldown-runtime-tampered.js"),
+      "globalThis.fetch('/tampered-runtime');",
+    );
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+
+    expect(findings).toContainEqual({
+      file: "dist/assets/rolldown-runtime-tampered.js",
+      code: "runtime-integrity",
+      detail: "trusted runtime bundle SHA-256 mismatch",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/rolldown-runtime-tampered.js",
       code: "forbidden-bundle-marker",
       detail: "network API",
     });

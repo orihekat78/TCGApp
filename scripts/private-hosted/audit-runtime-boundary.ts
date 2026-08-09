@@ -62,14 +62,15 @@ const BUNDLE_MARKERS: Array<[RegExp, string]> = [
   [/\.claude(?:\/|\\)specs(?:\/|\\)cards-data/i, "card specification path"],
 ];
 const TRUSTED_VENDOR_BUNDLE = /^assets\/vendor-[A-Za-z0-9_-]+\.js$/;
+const TRUSTED_RUNTIME_BUNDLE = /^assets\/rolldown-runtime-[A-Za-z0-9_-]+\.js$/;
 // Updated only after npm-ci rebuild, full qualification, and adversarial review.
 const TRUSTED_VENDOR_SHA256 =
   "25da2220d5174f5d4c4379e62a39df46e2787227fabfed24970ba3047bbe80a6";
+const TRUSTED_RUNTIME_SHA256 =
+  "5db5ba82eef00d1dee7e86e663098c9427d01183a88d357437daff295aec3e75";
 
-function trustedVendorBundle(source: string): boolean {
-  return createHash("sha256").update(source, "utf8").digest("hex") ===
-    TRUSTED_VENDOR_SHA256;
-}
+const trustedBundle = (source: string, expectedSha256: string): boolean =>
+  createHash("sha256").update(source, "utf8").digest("hex") === expectedSha256;
 const PRIVILEGED_BROWSER_GLOBALS = new Set([
   "document",
   "frames",
@@ -84,6 +85,24 @@ const PRIVILEGED_BROWSER_GLOBALS = new Set([
 ]);
 const VALUE_PROPAGATING_ASSIGNMENT_OPERATORS = new Set<ts.SyntaxKind>([
   ts.SyntaxKind.EqualsToken,
+  ts.SyntaxKind.AmpersandAmpersandEqualsToken,
+  ts.SyntaxKind.BarBarEqualsToken,
+  ts.SyntaxKind.QuestionQuestionEqualsToken,
+]);
+const ASSIGNMENT_OPERATORS = new Set<ts.SyntaxKind>([
+  ts.SyntaxKind.EqualsToken,
+  ts.SyntaxKind.PlusEqualsToken,
+  ts.SyntaxKind.MinusEqualsToken,
+  ts.SyntaxKind.AsteriskEqualsToken,
+  ts.SyntaxKind.AsteriskAsteriskEqualsToken,
+  ts.SyntaxKind.SlashEqualsToken,
+  ts.SyntaxKind.PercentEqualsToken,
+  ts.SyntaxKind.LessThanLessThanEqualsToken,
+  ts.SyntaxKind.GreaterThanGreaterThanEqualsToken,
+  ts.SyntaxKind.GreaterThanGreaterThanGreaterThanEqualsToken,
+  ts.SyntaxKind.AmpersandEqualsToken,
+  ts.SyntaxKind.BarEqualsToken,
+  ts.SyntaxKind.CaretEqualsToken,
   ts.SyntaxKind.AmpersandAmpersandEqualsToken,
   ts.SyntaxKind.BarBarEqualsToken,
   ts.SyntaxKind.QuestionQuestionEqualsToken,
@@ -501,6 +520,8 @@ type BrowserAliasAnalysis = {
   analyzedLocalCalls: ReadonlySet<ts.CallExpression | ts.NewExpression>;
   localFunctionReturns: ReadonlySet<ts.ReturnStatement | ts.ArrowFunction>;
   resolveBinding(node: ts.Node, name: string): AliasBinding | undefined;
+  callableSources(node: ts.Identifier): readonly ts.Expression[];
+  staticString(node: ts.Expression): string | undefined;
   isBrowserTimer(node: ts.Expression): boolean;
   isDynamicFunctionConstructor(node: ts.Expression): boolean;
   containsTrackedBrowserObject(node: ts.Expression): boolean;
@@ -586,7 +607,7 @@ function privilegedBrowserGlobal(
       const property = ts.isPropertyAccessExpression(expression)
         ? expression.name.text
         : expression.argumentExpression
-          ? staticString(expression.argumentExpression)
+          ? analysis.staticString(expression.argumentExpression)
           : undefined;
       return browserObjectProperty(browserObject(expression.expression), property);
     }
@@ -658,7 +679,7 @@ function directBrowserGlobal(
       const property = ts.isPropertyAccessExpression(expression)
         ? expression.name.text
         : expression.argumentExpression
-          ? staticString(expression.argumentExpression)
+          ? analysis.staticString(expression.argumentExpression)
           : undefined;
       return browserObjectProperty(browserObject(expression.expression), property);
     }
@@ -692,21 +713,111 @@ function directBrowserGlobal(
 function browserTimerInvocation(
   node: ts.CallExpression,
   analysis: BrowserAliasAnalysis,
-): { handler?: ts.Expression } | undefined {
-  const arrayHandler = (args: ts.Expression | undefined): { handler?: ts.Expression } => {
-    if (!args || !ts.isArrayLiteralExpression(args)) return {};
-    const handler = args.elements[0];
+): { handlers: readonly (ts.Expression | undefined)[] } | undefined {
+  type CallArgument = ts.Expression | ts.SpreadElement;
+  const unknownArgument = ts.factory.createIdentifier("undefined");
+  const plainArgument = (argument: CallArgument | undefined): ts.Expression | undefined =>
+    argument && !ts.isSpreadElement(argument) ? argument : undefined;
+  const arrayArguments = (argument: CallArgument | undefined): CallArgument[] | undefined => {
+    const expression = plainArgument(argument);
+    if (!expression || !ts.isArrayLiteralExpression(expression)) return undefined;
+    return expression.elements.map((element) =>
+      ts.isOmittedExpression(element) ? unknownArgument : element
+    );
+  };
+  const member = (
+    expression: ts.Expression,
+  ): { owner: ts.Expression; property: string | undefined } | undefined => {
+    while (ts.isParenthesizedExpression(expression)) expression = expression.expression;
+    if (!ts.isPropertyAccessExpression(expression) && !ts.isElementAccessExpression(expression)) {
+      return undefined;
+    }
     return {
-      handler: handler && !ts.isOmittedExpression(handler)
-        ? ts.isSpreadElement(handler)
-          ? handler.expression
-          : handler
-        : undefined,
+      owner: expression.expression,
+      property: ts.isPropertyAccessExpression(expression)
+        ? expression.name.text
+        : expression.argumentExpression
+          ? analysis.staticString(expression.argumentExpression)
+          : undefined,
     };
   };
-  if (analysis.isBrowserTimer(node.expression)) {
-    return { handler: node.arguments[0] };
-  }
+  const reflectNamespace = (
+    expression: ts.Expression,
+    resolving: ReadonlySet<AliasBinding>,
+  ): boolean => {
+    while (ts.isParenthesizedExpression(expression)) expression = expression.expression;
+    if (!ts.isIdentifier(expression)) return false;
+    const binding = analysis.resolveBinding(expression, expression.text);
+    if (!binding) return expression.text === "Reflect";
+    if (resolving.has(binding)) return false;
+    const next = new Set(resolving).add(binding);
+    return analysis.callableSources(expression).some((source) =>
+      reflectNamespace(source, next)
+    );
+  };
+  const reflectApply = (
+    expression: ts.Expression,
+    resolving: ReadonlySet<AliasBinding>,
+  ): boolean => {
+    while (ts.isParenthesizedExpression(expression)) expression = expression.expression;
+    if (ts.isIdentifier(expression)) {
+      const binding = analysis.resolveBinding(expression, expression.text);
+      if (!binding || resolving.has(binding)) return false;
+      const next = new Set(resolving).add(binding);
+      return analysis.callableSources(expression).some((source) =>
+        reflectApply(source, next)
+      );
+    }
+    const property = member(expression);
+    return property?.property === "apply" && reflectNamespace(property.owner, resolving);
+  };
+  const invoke = (
+    callee: ts.Expression,
+    args: readonly CallArgument[],
+    resolving: ReadonlySet<AliasBinding>,
+  ): Array<ts.Expression | undefined> => {
+    while (ts.isParenthesizedExpression(callee)) callee = callee.expression;
+    if (analysis.isBrowserTimer(callee)) return [plainArgument(args[0])];
+    if (ts.isIdentifier(callee)) {
+      const binding = analysis.resolveBinding(callee, callee.text);
+      if (!binding || resolving.has(binding)) return [];
+      const next = new Set(resolving).add(binding);
+      return analysis.callableSources(callee).flatMap((source) =>
+        invoke(source, args, next)
+      );
+    }
+    if (ts.isCallExpression(callee)) {
+      const binding = member(callee.expression);
+      if (binding?.property === "bind") {
+        return invoke(binding.owner, [...callee.arguments.slice(1), ...args], resolving);
+      }
+      return [];
+    }
+    if (reflectApply(callee, resolving)) {
+      const target = plainArgument(args[0]);
+      if (!target) return [];
+      const applied = arrayArguments(args[2]);
+      return invoke(target, applied ?? [unknownArgument], resolving);
+    }
+    const binding = member(callee);
+    if (!binding) return [];
+    if (binding.property === "call") {
+      return invoke(binding.owner, args.slice(1), resolving);
+    }
+    if (binding.property === "apply") {
+      const applied = arrayArguments(args[1]);
+      return invoke(binding.owner, applied ?? [unknownArgument], resolving);
+    }
+    return [];
+  };
+  const handlers = invoke(node.expression, node.arguments, new Set());
+  return handlers.length > 0 ? { handlers } : undefined;
+}
+
+function browserTimerBindHandler(
+  node: ts.CallExpression,
+  analysis: BrowserAliasAnalysis,
+): ts.Expression | null | undefined {
   const callee = node.expression;
   if (!ts.isPropertyAccessExpression(callee) && !ts.isElementAccessExpression(callee)) {
     return undefined;
@@ -714,26 +825,11 @@ function browserTimerInvocation(
   const property = ts.isPropertyAccessExpression(callee)
     ? callee.name.text
     : callee.argumentExpression
-      ? staticString(callee.argumentExpression)
+      ? analysis.staticString(callee.argumentExpression)
       : undefined;
-  if (
-    property === "apply" &&
-    ts.isIdentifier(callee.expression) &&
-    callee.expression.text === "Reflect" &&
-    isUnboundRuntimeIdentifier(callee.expression, analysis)
-  ) {
-    const target = node.arguments[0];
-    if (!target || ts.isSpreadElement(target) || !analysis.isBrowserTimer(target)) {
-      return undefined;
-    }
-    const args = node.arguments[2];
-    return arrayHandler(args && !ts.isSpreadElement(args) ? args : undefined);
-  }
-  if (!analysis.isBrowserTimer(callee.expression)) return undefined;
-  if (property === "call") return { handler: node.arguments[1] };
-  if (property !== "apply") return undefined;
-  const args = node.arguments[1];
-  return arrayHandler(args && !ts.isSpreadElement(args) ? args : undefined);
+  if (property !== "bind" || !analysis.isBrowserTimer(callee.expression)) return undefined;
+  const handler = node.arguments[1];
+  return handler && !ts.isSpreadElement(handler) ? handler : null;
 }
 
 function isDynamicCodeExecution(
@@ -745,10 +841,22 @@ function isDynamicCodeExecution(
   const timer = ts.isCallExpression(node)
     ? browserTimerInvocation(node, analysis)
     : undefined;
+  const timerBind = ts.isCallExpression(node)
+    ? browserTimerBindHandler(node, analysis)
+    : undefined;
   if (
     timer &&
     staticStrings &&
-    (!timer.handler || !staticallyCallable(timer.handler, staticStrings))
+    timer.handlers.some((handler) =>
+      !handler || !staticallyCallable(handler, staticStrings)
+    )
+  ) {
+    return true;
+  }
+  if (
+    timerBind &&
+    staticStrings &&
+    !staticallyCallable(timerBind, staticStrings)
   ) {
     return true;
   }
@@ -928,6 +1036,49 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     entries.push(relation);
     relationsByTarget.set(relation.target, entries);
   }
+  const scopedAliasStaticString = (
+    expression: ts.Expression,
+    resolving: ReadonlySet<AliasBinding> = new Set(),
+  ): string | undefined => {
+    if (ts.isStringLiteralLike(expression)) return expression.text;
+    if (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isTypeAssertionExpression(expression) ||
+      ts.isNonNullExpression(expression) ||
+      ts.isSatisfiesExpression(expression)
+    ) {
+      return scopedAliasStaticString(expression.expression, resolving);
+    }
+    if (ts.isIdentifier(expression)) {
+      const binding = resolveBinding(expression, expression.text);
+      if (!binding || resolving.has(binding)) return undefined;
+      const sources = relationsByTarget.get(binding) ?? [];
+      if (sources.length !== 1) return undefined;
+      return scopedAliasStaticString(
+        sources[0]!.source,
+        new Set([...resolving, binding]),
+      );
+    }
+    if (
+      ts.isBinaryExpression(expression) &&
+      expression.operatorToken.kind === ts.SyntaxKind.PlusToken
+    ) {
+      const left = scopedAliasStaticString(expression.left, resolving);
+      const right = scopedAliasStaticString(expression.right, resolving);
+      return left === undefined || right === undefined ? undefined : `${left}${right}`;
+    }
+    if (ts.isTemplateExpression(expression)) {
+      let value = expression.head.text;
+      for (const span of expression.templateSpans) {
+        const item = scopedAliasStaticString(span.expression, resolving);
+        if (item === undefined) return undefined;
+        value += item + span.literal.text;
+      }
+      return value;
+    }
+    return undefined;
+  };
 
   const localFunctions = new Map<AliasBinding, Set<ts.FunctionLikeDeclaration>>();
   const addLocalFunction = (
@@ -8190,7 +8341,7 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     const property = ts.isPropertyAccessExpression(expression)
       ? expression.name.text
       : expression.argumentExpression
-        ? staticString(expression.argumentExpression)
+        ? scopedAliasStaticString(expression.argumentExpression)
         : undefined;
     return ["setInterval", "setTimeout"].includes(property ?? "") &&
       privilegedBrowserGlobal(expression.expression, result) !== undefined;
@@ -8203,6 +8354,13 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     analyzedLocalCalls,
     localFunctionReturns,
     resolveBinding,
+    callableSources: (node) => {
+      const binding = resolveBinding(node, node.text);
+      return binding
+        ? (relationsByTarget.get(binding) ?? []).map(({ source }) => source)
+        : [];
+    },
+    staticString: scopedAliasStaticString,
     isBrowserTimer,
     isDynamicFunctionConstructor,
     containsTrackedBrowserObject: (node) => trackedBrowserObjectExpressions.has(node),
@@ -8218,52 +8376,70 @@ type ScopedStaticStrings = {
   constants: ReadonlyMap<AliasBinding, ts.Expression>;
   callableSources: ReadonlyMap<AliasBinding, readonly ts.Expression[]>;
   functionBindings: ReadonlySet<AliasBinding>;
+  uncertainCallableBindings: ReadonlySet<AliasBinding>;
   reactCallbackBindings: ReadonlySet<AliasBinding>;
   reactNamespaceBindings: ReadonlySet<AliasBinding>;
+  mutatedReactNamespaceBindings: ReadonlySet<AliasBinding>;
   resolveBinding(node: ts.Node, name: string): AliasBinding | undefined;
 };
 
 function collectScopedStaticStrings(
   root: ts.Node,
   bindings: BrowserAliasAnalysis,
-  allowBundledReactHooks = false,
+  trustedBundleImports?: {
+    vendor: ReadonlySet<string>;
+    runtime: ReadonlySet<string>;
+  },
 ): ScopedStaticStrings {
   const constants = new Map<AliasBinding, ts.Expression>();
   const ambiguous = new Set<AliasBinding>();
   const callableSources = new Map<AliasBinding, ts.Expression[]>();
   const functionBindings = new Set<AliasBinding>();
+  const uncertainCallableBindings = new Set<AliasBinding>();
   const reactCallbackBindings = new Set<AliasBinding>();
   const reactNamespaceBindings = new Set<AliasBinding>();
+  const mutatedReactNamespaceBindings = new Set<AliasBinding>();
   const bundledVendorBindings = new Set<AliasBinding>();
-  if (allowBundledReactHooks) {
-    const collectVendorImports = (node: ts.Node): void => {
+  const bundledRuntimeBindings = new Set<AliasBinding>();
+  if (trustedBundleImports) {
+    const collectBundleImports = (node: ts.Node): void => {
       if (
         ts.isImportDeclaration(node) &&
         ts.isStringLiteral(node.moduleSpecifier) &&
-        /^\.\/vendor-[A-Za-z0-9_-]+\.js$/.test(node.moduleSpecifier.text) &&
         node.importClause
       ) {
-        if (node.importClause.name) {
-          const binding = bindings.resolveBinding(node.importClause.name, node.importClause.name.text);
-          if (binding) bundledVendorBindings.add(binding);
-        }
         const named = node.importClause.namedBindings;
-        if (named && ts.isNamespaceImport(named)) {
-          const binding = bindings.resolveBinding(named.name, named.name.text);
-          if (binding) bundledVendorBindings.add(binding);
-        } else if (named && ts.isNamedImports(named)) {
+        if (named && ts.isNamedImports(named)) {
           for (const element of named.elements) {
+            const exported = (element.propertyName ?? element.name).text;
             const binding = bindings.resolveBinding(element.name, element.name.text);
-            if (binding) bundledVendorBindings.add(binding);
+            if (!binding) continue;
+            if (
+              trustedBundleImports.vendor.has(node.moduleSpecifier.text) &&
+              exported === "l"
+            ) {
+              bundledVendorBindings.add(binding);
+            }
+            if (
+              trustedBundleImports.runtime.has(node.moduleSpecifier.text) &&
+              exported === "r"
+            ) {
+              bundledRuntimeBindings.add(binding);
+            }
           }
         }
       }
-      ts.forEachChild(node, collectVendorImports);
+      ts.forEachChild(node, collectBundleImports);
     };
-    collectVendorImports(root);
+    collectBundleImports(root);
   }
   const isBundledReactNamespace = (initializer: ts.Expression): boolean => {
-    if (!allowBundledReactHooks || !ts.isCallExpression(initializer)) return false;
+    if (!trustedBundleImports || !ts.isCallExpression(initializer)) return false;
+    let callee: ts.Expression = initializer.expression;
+    while (ts.isParenthesizedExpression(callee)) callee = callee.expression;
+    if (!ts.isIdentifier(callee)) return false;
+    const runtimeBinding = bindings.resolveBinding(callee, callee.text);
+    if (!runtimeBinding || !bundledRuntimeBindings.has(runtimeBinding)) return false;
     return initializer.arguments.some((argument) => {
       const value = ts.isSpreadElement(argument) ? argument.expression : argument;
       if (!ts.isCallExpression(value) || !ts.isIdentifier(value.expression)) return false;
@@ -8277,6 +8453,72 @@ function collectScopedStaticStrings(
     const sources = callableSources.get(binding) ?? [];
     sources.push(source);
     callableSources.set(binding, sources);
+  };
+  const markUncertainTarget = (node: ts.Node): void => {
+    if (
+      ts.isParenthesizedExpression(node) ||
+      ts.isAsExpression(node) ||
+      ts.isTypeAssertionExpression(node) ||
+      ts.isNonNullExpression(node) ||
+      ts.isSatisfiesExpression(node)
+    ) {
+      markUncertainTarget(node.expression);
+      return;
+    }
+    if (ts.isIdentifier(node)) {
+      const binding = bindings.resolveBinding(node, node.text);
+      if (binding) uncertainCallableBindings.add(binding);
+      return;
+    }
+    if (ts.isArrayLiteralExpression(node) || ts.isArrayBindingPattern(node)) {
+      for (const element of node.elements) {
+        if (ts.isOmittedExpression(element)) continue;
+        if (ts.isBindingElement(element)) markUncertainTarget(element.name);
+        else markUncertainTarget(ts.isSpreadElement(element) ? element.expression : element);
+      }
+      return;
+    }
+    if (ts.isObjectLiteralExpression(node) || ts.isObjectBindingPattern(node)) {
+      const elements = ts.isObjectLiteralExpression(node) ? node.properties : node.elements;
+      for (const element of elements) {
+        if (ts.isBindingElement(element)) markUncertainTarget(element.name);
+        else if (ts.isShorthandPropertyAssignment(element)) markUncertainTarget(element.name);
+        else if (ts.isPropertyAssignment(element)) markUncertainTarget(element.initializer);
+        else if (ts.isSpreadAssignment(element)) markUncertainTarget(element.expression);
+      }
+    }
+  };
+  const namespaceOwnerBinding = (node: ts.Expression): AliasBinding | undefined => {
+    while (
+      ts.isParenthesizedExpression(node) ||
+      ts.isAsExpression(node) ||
+      ts.isTypeAssertionExpression(node) ||
+      ts.isNonNullExpression(node) ||
+      ts.isSatisfiesExpression(node)
+    ) {
+      node = node.expression;
+    }
+    return ts.isIdentifier(node) ? bindings.resolveBinding(node, node.text) : undefined;
+  };
+  const markReactNamespaceMutation = (node: ts.Expression): void => {
+    while (
+      ts.isParenthesizedExpression(node) ||
+      ts.isAsExpression(node) ||
+      ts.isTypeAssertionExpression(node) ||
+      ts.isNonNullExpression(node) ||
+      ts.isSatisfiesExpression(node)
+    ) {
+      node = node.expression;
+    }
+    if (!ts.isPropertyAccessExpression(node) && !ts.isElementAccessExpression(node)) return;
+    const property = ts.isPropertyAccessExpression(node)
+      ? node.name.text
+      : node.argumentExpression
+        ? bindings.staticString(node.argumentExpression)
+        : undefined;
+    if (property !== "useCallback") return;
+    const owner = namespaceOwnerBinding(node.expression);
+    if (owner) mutatedReactNamespaceBindings.add(owner);
   };
   function collect(node: ts.Node): void {
     if (ts.isFunctionDeclaration(node) && node.name) {
@@ -8319,12 +8561,101 @@ function collectScopedStaticStrings(
         if (binding) reactNamespaceBindings.add(binding);
       }
     }
+    if (ts.isBinaryExpression(node) && ASSIGNMENT_OPERATORS.has(node.operatorToken.kind)) {
+      if (
+        node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+        ts.isIdentifier(node.left)
+      ) {
+        addCallableSource(node.left, node.right);
+        const binding = bindings.resolveBinding(node.left, node.left.text);
+        if (binding) mutatedReactNamespaceBindings.add(binding);
+      } else {
+        markUncertainTarget(node.left);
+      }
+      markReactNamespaceMutation(node.left);
+    }
     if (
-      ts.isBinaryExpression(node) &&
-      node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
-      ts.isIdentifier(node.left)
+      ts.isCallExpression(node) &&
+      (ts.isPropertyAccessExpression(node.expression) ||
+        ts.isElementAccessExpression(node.expression))
     ) {
-      addCallableSource(node.left, node.right);
+      const callee = node.expression;
+      const method = ts.isPropertyAccessExpression(callee)
+        ? callee.name.text
+        : callee.argumentExpression
+          ? bindings.staticString(callee.argumentExpression)
+          : undefined;
+      const owner = callee.expression;
+      const unboundOwner = ts.isIdentifier(owner) &&
+        !bindings.resolveBinding(owner, owner.text)
+        ? owner.text
+        : undefined;
+      const target = node.arguments[0];
+      const targetBinding = target && !ts.isSpreadElement(target)
+        ? namespaceOwnerBinding(target)
+        : undefined;
+      let mutatesHook = false;
+      if (
+        targetBinding &&
+        ((unboundOwner === "Object" && method === "defineProperty") ||
+          (unboundOwner === "Reflect" && method === "set"))
+      ) {
+        const property = node.arguments[1];
+        mutatesHook = Boolean(
+          property &&
+          !ts.isSpreadElement(property) &&
+          bindings.staticString(property) === "useCallback",
+        );
+      } else if (
+        targetBinding &&
+        unboundOwner === "Object" &&
+        ["assign", "defineProperties"].includes(method ?? "")
+      ) {
+        mutatesHook = node.arguments.slice(1).some((argument) => {
+          if (ts.isSpreadElement(argument) || !ts.isObjectLiteralExpression(argument)) {
+            return false;
+          }
+          return argument.properties.some((property) => {
+            const name = property.name;
+            return Boolean(
+              name &&
+              (ts.isIdentifier(name) || ts.isStringLiteralLike(name)) &&
+              name.text === "useCallback",
+            );
+          });
+        });
+      } else if (
+        targetBinding &&
+        method === "setPrototypeOf" &&
+        ["Object", "Reflect"].includes(unboundOwner ?? "")
+      ) {
+        mutatesHook = true;
+      }
+      if (targetBinding && mutatesHook) {
+        mutatedReactNamespaceBindings.add(targetBinding);
+      }
+    }
+    if (ts.isForOfStatement(node) || ts.isForInStatement(node)) {
+      if (ts.isVariableDeclarationList(node.initializer)) {
+        for (const declaration of node.initializer.declarations) {
+          markUncertainTarget(declaration.name);
+        }
+      } else {
+        markUncertainTarget(node.initializer);
+      }
+    }
+    if (
+      (ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node)) &&
+      [ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken].includes(node.operator)
+    ) {
+      markUncertainTarget(node.operand);
+    }
+    if (
+      ts.isDeleteExpression(node) &&
+      (ts.isPropertyAccessExpression(node.expression) ||
+        ts.isElementAccessExpression(node.expression))
+    ) {
+      markReactNamespaceMutation(node.expression);
     }
     if (
       ts.isVariableDeclaration(node) &&
@@ -8346,12 +8677,62 @@ function collectScopedStaticStrings(
     ts.forEachChild(node, collect);
   }
   collect(root);
+  const identifierBinding = (source: ts.Expression): AliasBinding | undefined => {
+    while (
+      ts.isParenthesizedExpression(source) ||
+      ts.isAsExpression(source) ||
+      ts.isTypeAssertionExpression(source) ||
+      ts.isNonNullExpression(source) ||
+      ts.isSatisfiesExpression(source)
+    ) {
+      source = source.expression;
+    }
+    return ts.isIdentifier(source)
+      ? bindings.resolveBinding(source, source.text)
+      : undefined;
+  };
+  const namespaceAliases = new Map<AliasBinding, Set<AliasBinding>>();
+  for (const [target, sources] of callableSources) {
+    for (const source of sources) {
+      const sourceBinding = identifierBinding(source);
+      if (!sourceBinding) continue;
+      const targetAliases = namespaceAliases.get(target) ?? new Set<AliasBinding>();
+      targetAliases.add(sourceBinding);
+      namespaceAliases.set(target, targetAliases);
+      const sourceAliases = namespaceAliases.get(sourceBinding) ?? new Set<AliasBinding>();
+      sourceAliases.add(target);
+      namespaceAliases.set(sourceBinding, sourceAliases);
+    }
+  }
+  const pendingNamespaces = [...reactNamespaceBindings];
+  while (pendingNamespaces.length > 0) {
+    const binding = pendingNamespaces.pop()!;
+    for (const alias of namespaceAliases.get(binding) ?? []) {
+      if (reactNamespaceBindings.has(alias)) continue;
+      reactNamespaceBindings.add(alias);
+      pendingNamespaces.push(alias);
+    }
+  }
+  const invalidNamespaces = [...mutatedReactNamespaceBindings]
+    .filter((binding) => reactNamespaceBindings.has(binding));
+  while (invalidNamespaces.length > 0) {
+    const binding = invalidNamespaces.pop()!;
+    for (const alias of namespaceAliases.get(binding) ?? []) {
+      if (!reactNamespaceBindings.has(alias) || mutatedReactNamespaceBindings.has(alias)) {
+        continue;
+      }
+      mutatedReactNamespaceBindings.add(alias);
+      invalidNamespaces.push(alias);
+    }
+  }
   return {
     constants,
     callableSources,
     functionBindings,
+    uncertainCallableBindings,
     reactCallbackBindings,
     reactNamespaceBindings,
+    mutatedReactNamespaceBindings,
     resolveBinding: bindings.resolveBinding,
   };
 }
@@ -8385,6 +8766,7 @@ function staticallyCallable(
   if (ts.isIdentifier(node)) {
     const binding = analysis.resolveBinding(node, node.text);
     if (!binding || resolving.has(binding)) return false;
+    if (analysis.uncertainCallableBindings.has(binding)) return false;
     const sources = analysis.callableSources.get(binding);
     if (analysis.functionBindings.has(binding) && (!sources || sources.length === 0)) {
       return true;
@@ -8419,6 +8801,7 @@ function staticallyCallable(
     return Boolean(
       binding &&
       analysis.reactCallbackBindings.has(binding) &&
+      !analysis.uncertainCallableBindings.has(binding) &&
       staticallyCallable(first, analysis, resolving),
     );
   }
@@ -8429,6 +8812,7 @@ function staticallyCallable(
     return Boolean(
       owner &&
       analysis.reactNamespaceBindings.has(owner) &&
+      !analysis.mutatedReactNamespaceBindings.has(owner) &&
       staticallyCallable(first, analysis, resolving),
     );
   }
@@ -8571,14 +8955,19 @@ function collectNavigationElements(
     ts.forEachChild(node, inspect);
   };
   inspect(root);
-  let changed = true;
-  while (changed) {
-    changed = false;
-    for (const [target, source] of relations) {
-      if (elements.has(source) && !elements.has(target)) {
-        elements.add(target);
-        changed = true;
-      }
+  const targetsBySource = new Map<AliasBinding, AliasBinding[]>();
+  for (const [target, source] of relations) {
+    const targets = targetsBySource.get(source) ?? [];
+    targets.push(target);
+    targetsBySource.set(source, targets);
+  }
+  const pending = [...elements];
+  while (pending.length > 0) {
+    const source = pending.pop()!;
+    for (const target of targetsBySource.get(source) ?? []) {
+      if (elements.has(target)) continue;
+      elements.add(target);
+      pending.push(target);
     }
   }
   return {
@@ -9193,6 +9582,10 @@ function scanScriptOrigins(
   root: string,
   absolute: string,
   source: string,
+  trustedBundleImports?: {
+    vendor: ReadonlySet<string>;
+    runtime: ReadonlySet<string>;
+  },
 ): RuntimeBoundaryFinding[] {
   const findings: RuntimeBoundaryFinding[] = [];
   const file = relative(root, absolute).replace(/\\/g, "/");
@@ -9210,7 +9603,11 @@ function scanScriptOrigins(
   if (privilegedAliases.limitations.has("dynamic property candidate shared budget exceeded")) {
     return findings;
   }
-  const staticStrings = collectScopedStaticStrings(parsed, privilegedAliases, true);
+  const staticStrings = collectScopedStaticStrings(
+    parsed,
+    privilegedAliases,
+    trustedBundleImports,
+  );
   const navigationElements = collectNavigationElements(
     parsed,
     privilegedAliases,
@@ -10020,6 +10417,35 @@ async function inspectBuild(
       addFinding(findings, `dist/${required}`, "production-manifest", "expected output missing");
     }
   }
+  const trustedVendorOutputs = new Set<string>();
+  const trustedRuntimeOutputs = new Set<string>();
+  for (const outputPath of inventory.files) {
+    const expectedHash = TRUSTED_VENDOR_BUNDLE.test(outputPath)
+      ? TRUSTED_VENDOR_SHA256
+      : TRUSTED_RUNTIME_BUNDLE.test(outputPath)
+        ? TRUSTED_RUNTIME_SHA256
+        : undefined;
+    if (!expectedHash) continue;
+    const source = await readFile(resolve(root, "dist", outputPath), "utf8").catch(
+      () => undefined,
+    );
+    if (!source || !trustedBundle(source, expectedHash)) continue;
+    if (TRUSTED_VENDOR_BUNDLE.test(outputPath)) trustedVendorOutputs.add(outputPath);
+    else trustedRuntimeOutputs.add(outputPath);
+  }
+  const trustedImportsFor = (
+    importer: string,
+    outputs: ReadonlySet<string>,
+  ): ReadonlySet<string> => {
+    const imports = new Set<string>();
+    for (const outputPath of outputs) {
+      let specifier = relative(dirname(importer), resolve(root, "dist", outputPath))
+        .replace(/\\/g, "/");
+      if (!specifier.startsWith(".")) specifier = `./${specifier}`;
+      imports.add(specifier);
+    }
+    return imports;
+  };
   for (const outputPath of inventory.files) {
     const file = `dist/${outputPath}`;
     if (!expectedFiles.has(outputPath)) {
@@ -10038,7 +10464,9 @@ async function inspectBuild(
     }
     if ([".js", ".mjs"].includes(extension)) {
       const vendorOutput = TRUSTED_VENDOR_BUNDLE.test(outputPath);
-      const trustedVendor = vendorOutput && trustedVendorBundle(source);
+      const runtimeOutput = TRUSTED_RUNTIME_BUNDLE.test(outputPath);
+      const trustedVendor = vendorOutput && trustedVendorOutputs.has(outputPath);
+      const trustedRuntime = runtimeOutput && trustedRuntimeOutputs.has(outputPath);
       if (vendorOutput && !trustedVendor) {
         addFinding(
           findings,
@@ -10047,8 +10475,19 @@ async function inspectBuild(
           "trusted vendor bundle SHA-256 mismatch",
         );
       }
-      if (!trustedVendor) {
-        findings.push(...scanScriptOrigins(root, absolute, source));
+      if (runtimeOutput && !trustedRuntime) {
+        addFinding(
+          findings,
+          file,
+          "runtime-integrity",
+          "trusted runtime bundle SHA-256 mismatch",
+        );
+      }
+      if (!trustedVendor && !trustedRuntime) {
+        findings.push(...scanScriptOrigins(root, absolute, source, {
+          vendor: trustedImportsFor(absolute, trustedVendorOutputs),
+          runtime: trustedImportsFor(absolute, trustedRuntimeOutputs),
+        }));
       }
       for (const [marker, detail] of BUNDLE_MARKERS) {
         if (marker.test(source)) {
