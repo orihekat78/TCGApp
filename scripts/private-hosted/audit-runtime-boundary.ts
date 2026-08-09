@@ -122,14 +122,35 @@ const isBrowserObjectValue = (value: string): boolean =>
   PRIVILEGED_BROWSER_GLOBALS.has(value) ||
   value === DOM_NODE_BROWSER_OBJECT ||
   value === BROWSER_DERIVED_OBJECT;
+const BROWSER_TIMER_TIMEOUT = "[[browser-timer:setTimeout]]";
+const BROWSER_TIMER_INTERVAL = "[[browser-timer:setInterval]]";
+const REFLECT_NAMESPACE_VALUE = "[[intrinsic:Reflect]]";
+const REFLECT_APPLY_VALUE = "[[intrinsic:Reflect.apply]]";
+const LOCAL_CALLABLE_VALUE = "[[local-callable]]";
+const isProjectionTrackedValue = (value: string): boolean =>
+  isObjectValue(value) ||
+  [
+    BROWSER_TIMER_TIMEOUT,
+    BROWSER_TIMER_INTERVAL,
+    REFLECT_NAMESPACE_VALUE,
+    REFLECT_APPLY_VALUE,
+  ].includes(value);
+const STATIC_STRING_PREFIX = "[[static-string:";
+const staticStringValue = (value: string): string => `${STATIC_STRING_PREFIX}${value}]]`;
+const valueStaticString = (value: string): string | undefined => {
+  if (!value.startsWith(STATIC_STRING_PREFIX)) return undefined;
+  if (!value.endsWith("]]")) return undefined;
+  return value.slice(STATIC_STRING_PREFIX.length, -2);
+};
 const browserObjectProperty = (
   owner: string | undefined,
   property: string | undefined,
 ): string | undefined => {
-  if (property === "contentWindow") return "window";
-  if (property === "contentDocument") return "document";
   if (!owner) return undefined;
+  if (owner === REFLECT_NAMESPACE_VALUE && property === "apply") return REFLECT_APPLY_VALUE;
   if (["globalThis", "self", "window"].includes(owner)) {
+    if (property === "setTimeout") return BROWSER_TIMER_TIMEOUT;
+    if (property === "setInterval") return BROWSER_TIMER_INTERVAL;
     if (["globalThis", "self", "window", "parent", "top", "frames", "opener"].includes(
       property ?? "",
     )) {
@@ -146,6 +167,8 @@ const browserObjectProperty = (
     return DOM_NODE_BROWSER_OBJECT;
   }
   if (owner === DOM_NODE_BROWSER_OBJECT) {
+    if (property === "contentWindow") return "window";
+    if (property === "contentDocument") return "document";
     if (property === "ownerDocument") return "document";
     if (property === "defaultView") return "window";
     return DOM_NODE_BROWSER_OBJECT;
@@ -609,7 +632,10 @@ function privilegedBrowserGlobal(
         : expression.argumentExpression
           ? analysis.staticString(expression.argumentExpression)
           : undefined;
-      return browserObjectProperty(browserObject(expression.expression), property);
+      const owner = browserObject(expression.expression);
+      if (owner === undefined && property === "contentWindow") return "window";
+      if (owner === undefined && property === "contentDocument") return "document";
+      return browserObjectProperty(owner, property);
     }
     if (ts.isConditionalExpression(expression)) {
       return browserObject(expression.whenTrue) ?? browserObject(expression.whenFalse);
@@ -635,8 +661,8 @@ function privilegedBrowserGlobal(
     if (!ts.isIdentifier(expression)) return undefined;
     const binding = analysis.resolveBinding(expression, expression.text);
     if (binding) {
-      return [...(analysis.valuesBefore.get(expression) ?? [])]
-        .find((value) => PRIVILEGED_BROWSER_GLOBALS.has(value));
+      const values = [...(analysis.valuesBefore.get(expression) ?? [])];
+      return values.find(isBrowserObjectValue) ?? values.find(isObjectValue);
     }
     return PRIVILEGED_BROWSER_GLOBALS.has(expression.text) ? expression.text : undefined;
   };
@@ -749,6 +775,7 @@ function browserTimerInvocation(
     if (!ts.isIdentifier(expression)) return false;
     const binding = analysis.resolveBinding(expression, expression.text);
     if (!binding) return expression.text === "Reflect";
+    if (analysis.valuesBefore.get(expression)?.has(REFLECT_NAMESPACE_VALUE)) return true;
     if (resolving.has(binding)) return false;
     const next = new Set(resolving).add(binding);
     return analysis.callableSources(expression).some((source) =>
@@ -763,6 +790,7 @@ function browserTimerInvocation(
     if (ts.isIdentifier(expression)) {
       const binding = analysis.resolveBinding(expression, expression.text);
       if (!binding || resolving.has(binding)) return false;
+      if (analysis.valuesBefore.get(expression)?.has(REFLECT_APPLY_VALUE)) return true;
       const next = new Set(resolving).add(binding);
       return analysis.callableSources(expression).some((source) =>
         reflectApply(source, next)
@@ -778,9 +806,17 @@ function browserTimerInvocation(
   ): Array<ts.Expression | undefined> => {
     while (ts.isParenthesizedExpression(callee)) callee = callee.expression;
     if (analysis.isBrowserTimer(callee)) return [plainArgument(args[0])];
+    if (reflectApply(callee, resolving)) {
+      const target = plainArgument(args[0]);
+      if (!target) return [];
+      const applied = arrayArguments(args[2]);
+      return invoke(target, applied ?? [unknownArgument], resolving);
+    }
     if (ts.isIdentifier(callee)) {
       const binding = analysis.resolveBinding(callee, callee.text);
       if (!binding || resolving.has(binding)) return [];
+      const current = analysis.valuesBefore.get(callee);
+      if (current?.has(LOCAL_CALLABLE_VALUE)) return [];
       const next = new Set(resolving).add(binding);
       return analysis.callableSources(callee).flatMap((source) =>
         invoke(source, args, next)
@@ -792,12 +828,6 @@ function browserTimerInvocation(
         return invoke(binding.owner, [...callee.arguments.slice(1), ...args], resolving);
       }
       return [];
-    }
-    if (reflectApply(callee, resolving)) {
-      const target = plainArgument(args[0]);
-      if (!target) return [];
-      const applied = arrayArguments(args[2]);
-      return invoke(target, applied ?? [unknownArgument], resolving);
     }
     const binding = member(callee);
     if (!binding) return [];
@@ -6069,12 +6099,15 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
         ),
       );
     }
+    if (ts.isStringLiteralLike(node)) return new Set([staticStringValue(node.text)]);
     if (!ts.isIdentifier(node)) return emptyGlobals;
     const binding = resolveBinding(node, node.text);
     if (binding) return possibleAliases.get(binding) ?? emptyGlobals;
-    return PRIVILEGED_BROWSER_GLOBALS.has(node.text)
-      ? new Set([node.text])
-      : emptyGlobals;
+    if (PRIVILEGED_BROWSER_GLOBALS.has(node.text)) return new Set([node.text]);
+    if (node.text === "setTimeout") return new Set([BROWSER_TIMER_TIMEOUT]);
+    if (node.text === "setInterval") return new Set([BROWSER_TIMER_INTERVAL]);
+    if (node.text === "Reflect") return new Set([REFLECT_NAMESPACE_VALUE]);
+    return emptyGlobals;
   };
   for (;;) {
     let changed = false;
@@ -6275,7 +6308,7 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     return expressionObjectBindings(expression);
   };
   const containsPotentialPrivilege = (expression: ts.Expression): boolean => {
-    if (possibleValue(expression).size > 0) return true;
+    if ([...possibleValue(expression)].some(isBrowserObjectValue)) return true;
     let found = false;
     const visit = (node: ts.Node): void => {
       if (found || (node !== expression && (ts.isFunctionLike(node) || ts.isClassLike(node)))) {
@@ -6624,9 +6657,10 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     state: BrowserAliasState,
   ): BrowserGlobalSet => {
     const values: BrowserGlobalSet[] = [];
-    for (const owner of trackableOwners(owners)) {
+    for (const owner of owners) {
       const browserValue = browserObjectProperty(owner, property);
       if (browserValue) values.push(new Set([browserValue]));
+      if (!isObjectValue(owner) && !PRIVILEGED_BROWSER_GLOBALS.has(owner)) continue;
       const bindings = trackedPropertiesByOwner.get(owner) ?? new Set<AliasBinding>();
       if (property === undefined) {
         values.push(...[...bindings].map((binding) => state.get(binding) ?? emptyGlobals));
@@ -6847,9 +6881,8 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     const binding = resolveBinding(node, node.text);
     if (!binding) return;
     const current = state.get(binding) ?? emptyGlobals;
-    if (current.size === 0) return;
-    const previous = valuesBefore.get(node) ?? emptyGlobals;
-    valuesBefore.set(node, unionGlobals(previous, current));
+    const previous = valuesBefore.get(node);
+    valuesBefore.set(node, previous ? unionGlobals(previous, current) : new Set(current));
   };
   const bindingInside = (binding: AliasBinding, scope: ts.Node): boolean => {
     let current: ts.Node | undefined = binding.scope;
@@ -6870,7 +6903,7 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
         ts.isBinaryExpression(node) &&
         isValuePropagatingAssignment(node.operatorToken.kind) &&
         ts.isIdentifier(node.left) &&
-        possibleValue(node.right).size > 0
+        [...possibleValue(node.right)].some(isBrowserObjectValue)
       ) {
         const binding = resolveBinding(node.left, node.left.text);
         if (binding && !bindingInside(binding, implementation)) found = true;
@@ -6912,6 +6945,7 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     ) {
       return directValue(node.right, state);
     }
+    if (ts.isStringLiteralLike(node)) return new Set([staticStringValue(node.text)]);
     if (!ts.isIdentifier(node)) return emptyGlobals;
     const binding = resolveBinding(node, node.text);
     if (binding) {
@@ -6922,9 +6956,11 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
         ? unionGlobals(values, new Set([owner]))
         : values;
     }
-    return PRIVILEGED_BROWSER_GLOBALS.has(node.text)
-      ? new Set([node.text])
-      : emptyGlobals;
+    if (PRIVILEGED_BROWSER_GLOBALS.has(node.text)) return new Set([node.text]);
+    if (node.text === "setTimeout") return new Set([BROWSER_TIMER_TIMEOUT]);
+    if (node.text === "setInterval") return new Set([BROWSER_TIMER_INTERVAL]);
+    if (node.text === "Reflect") return new Set([REFLECT_NAMESPACE_VALUE]);
+    return emptyGlobals;
   };
   type ExpressionResult = { state: MutableAliasState; value: BrowserGlobalSet };
   function evaluateExpression(
@@ -7078,20 +7114,31 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       const expression = evaluateExpression(node.expression, input);
       recordState(node.name, expression.state);
       const value = readPropertyValues(expression.value, node.name.text, expression.state);
-      if (value.size > 0) propertyValuesBefore.set(node, new Set(value));
+      propertyValuesBefore.set(node, new Set(value));
       return { state: expression.state, value };
     }
     if (ts.isElementAccessExpression(node)) {
       const expression = evaluateExpression(node.expression, input);
-      const state = node.argumentExpression
-        ? evaluateExpression(node.argumentExpression, expression.state).state
-        : expression.state;
+      const argument = node.argumentExpression
+        ? evaluateExpression(node.argumentExpression, expression.state)
+        : undefined;
+      const state = argument?.state ?? expression.state;
+      const trackedPropertyNames = new Set(
+        [...(argument?.value ?? [])]
+          .map(valueStaticString)
+          .filter((value): value is string => value !== undefined),
+      );
+      const property = trackedPropertyNames.size === 1
+        ? [...trackedPropertyNames][0]
+        : node.argumentExpression
+          ? scopedStaticString(node.argumentExpression)
+          : undefined;
       const value = readPropertyValues(
         expression.value,
-        node.argumentExpression ? scopedStaticString(node.argumentExpression) : undefined,
+        property,
         state,
       );
-      if (value.size > 0) propertyValuesBefore.set(node, new Set(value));
+      propertyValuesBefore.set(node, new Set(value));
       return { state, value };
     }
     if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
@@ -7177,7 +7224,7 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
         }
       }
       const container = candidateAllocations.has(node) ||
-          entries.some((entry) => entry.values.size > 0)
+          entries.some((entry) => [...entry.values].some(isProjectionTrackedValue))
         ? new Set([objectValue(node)])
         : emptyGlobals;
       for (const entry of entries) {
@@ -7220,8 +7267,12 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
           entries.push({ property: property.name.text, values: evaluated.value });
         }
       }
+      const locallyDeclaredBrowserNamedField = entries.some(({ property }) =>
+        property === "contentWindow" || property === "contentDocument"
+      );
       const container = candidateAllocations.has(node) ||
-          entries.some((entry) => entry.values.size > 0)
+          locallyDeclaredBrowserNamedField ||
+          entries.some((entry) => [...entry.values].some(isProjectionTrackedValue))
         ? new Set([objectValue(node)])
         : emptyGlobals;
       for (const entry of entries) {
@@ -7246,7 +7297,7 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       return { state: evaluateClassExecutable(node, input), value: emptyGlobals };
     }
     if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
-      return { state: cloneState(input), value: emptyGlobals };
+      return { state: cloneState(input), value: new Set([LOCAL_CALLABLE_VALUE]) };
     }
     let state = cloneState(input);
     ts.forEachChild(node, (child) => {
@@ -7640,6 +7691,21 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     Map<string, ExpressionResult>
   >();
   let evaluateLocalCalls = true;
+  const declaredBrowserValues = (type: ts.TypeNode | undefined): BrowserGlobalSet => {
+    if (!type) return emptyGlobals;
+    const values = new Set<string>();
+    const visit = (node: ts.Node): void => {
+      if (ts.isIdentifier(node)) {
+        if (node.text === "HTMLIFrameElement") values.add(DOM_NODE_BROWSER_OBJECT);
+        else if (["Window", "WindowProxy"].includes(node.text)) values.add("window");
+        else if (node.text === "Document") values.add("document");
+        else if (node.text === "Navigator") values.add("navigator");
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(type);
+    return values;
+  };
   function evaluateLocalFunctionCall(
     implementation: ts.FunctionLikeDeclaration,
     callerState: BrowserAliasState,
@@ -7663,7 +7729,10 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     try {
       let state = cloneState(callerState);
       for (const [index, parameter] of implementation.parameters.entries()) {
-        let value = argumentValues[index] ?? emptyGlobals;
+        let value = unionGlobals(
+          argumentValues[index] ?? emptyGlobals,
+          declaredBrowserValues(parameter.type),
+        );
         if (parameter.initializer) {
           const initialized = evaluateExpression(parameter.initializer, state);
           state = initialized.state;
@@ -7764,9 +7833,13 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
         if (parameter.initializer) {
           const initialized = evaluateExpression(parameter.initializer, state);
           state = initialized.state;
-          bindDeclarationPattern(parameter.name, initialized.value, state);
+          bindDeclarationPattern(
+            parameter.name,
+            unionGlobals(initialized.value, declaredBrowserValues(parameter.type)),
+            state,
+          );
         } else {
-          bindDeclarationPattern(parameter.name, emptyGlobals, state);
+          bindDeclarationPattern(parameter.name, declaredBrowserValues(parameter.type), state);
         }
       }
       if (ts.isBlock(body)) evaluateStatements(body.statements, state);
@@ -8329,6 +8402,10 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     if (ts.isIdentifier(expression)) {
       const binding = resolveBinding(expression, expression.text);
       if (!binding) return ["setInterval", "setTimeout"].includes(expression.text);
+      const flowValues = valuesBefore.get(expression);
+      if (flowValues) {
+        return flowValues.has(BROWSER_TIMER_TIMEOUT) || flowValues.has(BROWSER_TIMER_INTERVAL);
+      }
       if (resolving.has(binding)) return false;
       const next = new Set(resolving).add(binding);
       return (relationsByTarget.get(binding) ?? []).some(({ source }) =>
@@ -8343,8 +8420,36 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
       : expression.argumentExpression
         ? scopedAliasStaticString(expression.argumentExpression)
         : undefined;
+    const flowValues = propertyValuesBefore.get(expression);
+    if (flowValues) {
+      return flowValues.has(BROWSER_TIMER_TIMEOUT) || flowValues.has(BROWSER_TIMER_INTERVAL);
+    }
     return ["setInterval", "setTimeout"].includes(property ?? "") &&
       privilegedBrowserGlobal(expression.expression, result) !== undefined;
+  };
+  const flowStaticString = (expression: ts.Expression): string | undefined => {
+    const direct = staticString(expression);
+    if (direct !== undefined) return direct;
+    let current = expression;
+    while (
+      ts.isParenthesizedExpression(current) ||
+      ts.isAsExpression(current) ||
+      ts.isTypeAssertionExpression(current) ||
+      ts.isNonNullExpression(current) ||
+      ts.isSatisfiesExpression(current) ||
+      ts.isAwaitExpression(current)
+    ) {
+      current = current.expression;
+    }
+    if (ts.isIdentifier(current)) {
+      const values = new Set(
+        [...(valuesBefore.get(current) ?? [])]
+          .map(valueStaticString)
+          .filter((value): value is string => value !== undefined),
+      );
+      if (values.size === 1) return [...values][0];
+    }
+    return scopedAliasStaticString(expression);
   };
   const result: BrowserAliasAnalysis = {
     limitations,
@@ -8360,7 +8465,7 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
         ? (relationsByTarget.get(binding) ?? []).map(({ source }) => source)
         : [];
     },
-    staticString: scopedAliasStaticString,
+    staticString: flowStaticString,
     isBrowserTimer,
     isDynamicFunctionConstructor,
     containsTrackedBrowserObject: (node) => trackedBrowserObjectExpressions.has(node),
@@ -8440,12 +8545,23 @@ function collectScopedStaticStrings(
     if (!ts.isIdentifier(callee)) return false;
     const runtimeBinding = bindings.resolveBinding(callee, callee.text);
     if (!runtimeBinding || !bundledRuntimeBindings.has(runtimeBinding)) return false;
-    return initializer.arguments.some((argument) => {
-      const value = ts.isSpreadElement(argument) ? argument.expression : argument;
-      if (!ts.isCallExpression(value) || !ts.isIdentifier(value.expression)) return false;
-      const binding = bindings.resolveBinding(value.expression, value.expression.text);
-      return Boolean(binding && bundledVendorBindings.has(binding));
-    });
+    if (initializer.arguments.length !== 2) return false;
+    const [factoryCall, interopMode] = initializer.arguments;
+    if (
+      !factoryCall ||
+      ts.isSpreadElement(factoryCall) ||
+      !ts.isCallExpression(factoryCall) ||
+      factoryCall.arguments.length !== 0 ||
+      !ts.isIdentifier(factoryCall.expression) ||
+      !interopMode ||
+      ts.isSpreadElement(interopMode) ||
+      !ts.isNumericLiteral(interopMode) ||
+      interopMode.text !== "1"
+    ) {
+      return false;
+    }
+    const binding = bindings.resolveBinding(factoryCall.expression, factoryCall.expression.text);
+    return Boolean(binding && bundledVendorBindings.has(binding));
   };
   const addCallableSource = (node: ts.Identifier, source: ts.Expression): void => {
     const binding = bindings.resolveBinding(node, node.text);
@@ -8516,7 +8632,7 @@ function collectScopedStaticStrings(
       : node.argumentExpression
         ? bindings.staticString(node.argumentExpression)
         : undefined;
-    if (property !== "useCallback") return;
+    if (property !== undefined && property !== "useCallback") return;
     const owner = namespaceOwnerBinding(node.expression);
     if (owner) mutatedReactNamespaceBindings.add(owner);
   };
@@ -8601,11 +8717,8 @@ function collectScopedStaticStrings(
           (unboundOwner === "Reflect" && method === "set"))
       ) {
         const property = node.arguments[1];
-        mutatesHook = Boolean(
-          property &&
-          !ts.isSpreadElement(property) &&
-          bindings.staticString(property) === "useCallback",
-        );
+        mutatesHook = !property || ts.isSpreadElement(property) ||
+          [undefined, "useCallback"].includes(bindings.staticString(property));
       } else if (
         targetBinding &&
         unboundOwner === "Object" &&
@@ -8613,15 +8726,18 @@ function collectScopedStaticStrings(
       ) {
         mutatesHook = node.arguments.slice(1).some((argument) => {
           if (ts.isSpreadElement(argument) || !ts.isObjectLiteralExpression(argument)) {
-            return false;
+            return true;
           }
           return argument.properties.some((property) => {
+            if (ts.isSpreadAssignment(property)) return true;
             const name = property.name;
-            return Boolean(
-              name &&
-              (ts.isIdentifier(name) || ts.isStringLiteralLike(name)) &&
-              name.text === "useCallback",
-            );
+            if (!name) return true;
+            const propertyName = ts.isComputedPropertyName(name)
+              ? bindings.staticString(name.expression)
+              : ts.isIdentifier(name) || ts.isStringLiteralLike(name) || ts.isNumericLiteral(name)
+                ? name.text
+                : undefined;
+            return propertyName === undefined || propertyName === "useCallback";
           });
         });
       } else if (
@@ -10525,6 +10641,22 @@ async function inspectBuild(
     }
   }
   return findings;
+}
+
+export function scanScriptOriginsWithTrustedImportsForTest(
+  source: string,
+  trustedBundleImports: {
+    vendor: ReadonlySet<string>;
+    runtime: ReadonlySet<string>;
+  },
+): RuntimeBoundaryFinding[] {
+  const root = resolve("runtime-boundary-test-root");
+  return scanScriptOrigins(
+    root,
+    resolve(root, "dist/assets/index.js"),
+    source,
+    trustedBundleImports,
+  );
 }
 
 async function inspectViteConfig(root: string): Promise<RuntimeBoundaryFinding[]> {

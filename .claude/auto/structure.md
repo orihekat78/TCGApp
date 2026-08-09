@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 265
-- **ファイル数**: 5613
+- **ファイル数**: 5616
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -465,6 +465,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-284.md` — Browser timer handler type confusion
     - `BUG-285.md` — Iframe browsing-context alias escape
     - `BUG-286.md` — Navigation and legacy clipboard export
+    - `BUG-287.md` — Projected timer invocation alias
+    - `BUG-288.md` — Opaque React namespace mutation
+    - `BUG-289.md` — Iframe property flow classification
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)

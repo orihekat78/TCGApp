@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   auditRuntimeBoundary,
   runCanonicalBoundaryBuild,
+  scanScriptOriginsWithTrustedImportsForTest,
 } from "../../scripts/private-hosted/audit-runtime-boundary.js";
 
 const roots: string[] = [];
@@ -474,6 +475,42 @@ describe("private hosted runtime boundary", () => {
       code: "forbidden-bundle-marker",
       detail: "persistent storage",
     });
+  });
+
+  it("uses the computed iframe key value at the access point", async () => {
+    const source = `
+      function leak(frame: HTMLIFrameElement) {
+        let key = 'contentWindow';
+        frame[key]?.localStorage.setItem('state', 'leak');
+        key = 'safe';
+      }
+      export default function App() { return null; }
+    `;
+    const bundle = "function leak(frame){let key='contentWindow';frame[key]?.localStorage.setItem('state','leak');key='safe'}";
+    const root = await fixture(source);
+    await writeFile(resolve(root, "dist/assets/index.js"), bundle);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "persistent-storage",
+      detail: "localStorage",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "persistent storage",
+    });
+  });
+
+  it("accepts contentWindow fields on a locally constructed plain model", async () => {
+    const source = "const model={contentWindow:{localStorage:{setItem(){}}}};model.contentWindow.localStorage.setItem();export default function App(){}";
+    const root = await fixture(source);
+    await writeFile(resolve(root, "dist/assets/index.js"), source);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.filter(({ file }) => ["src/App.tsx", "dist/assets/index.js"].includes(file)))
+      .toEqual([]);
   });
 
   it.each([
@@ -1603,6 +1640,14 @@ describe("private hosted runtime boundary", () => {
       source: "const invoke=Reflect.apply;invoke(setTimeout,undefined,[\"fetch('/state')\",0])",
     },
     {
+      name: "destructured Reflect.apply alias",
+      source: "const {apply:invoke}=Reflect;invoke(setTimeout,undefined,[\"fetch('/state')\",0])",
+    },
+    {
+      name: "projected Reflect.apply alias",
+      source: "const [invoke]=[Reflect.apply];invoke(setTimeout,undefined,[\"fetch('/state')\",0])",
+    },
+    {
       name: "Reflect.apply.call",
       source: "Reflect.apply.call(Reflect,setTimeout,undefined,[\"fetch('/state')\",0])",
     },
@@ -1647,6 +1692,17 @@ describe("private hosted runtime boundary", () => {
     const source = "function setTimeout(value:string){void value}setTimeout('safe');";
     const root = await fixture(`${source}export default function App(){}`);
     await writeFile(resolve(root, "dist/assets/index.js"), "function setTimeout(value){void value}setTimeout('safe');");
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.filter(({ file }) => ["src/App.tsx", "dist/assets/index.js"].includes(file)))
+      .toEqual([]);
+  });
+
+  it("accepts a timer alias overwritten by a local callable before invocation", async () => {
+    const source = "let timer=setTimeout;timer=(value:string)=>void value;timer('safe');";
+    const bundle = "let timer=setTimeout;timer=value=>void value;timer('safe');";
+    const root = await fixture(`${source}export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), bundle);
 
     const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
     expect(findings.filter(({ file }) => ["src/App.tsx", "dist/assets/index.js"].includes(file)))
@@ -1863,6 +1919,22 @@ describe("private hosted runtime boundary", () => {
       name: "prototype replacement",
       mutation: "Object.setPrototypeOf(React as any,{useCallback:()=>\"void 0\"});const cb=React.useCallback(()=>{},[])",
     },
+    {
+      name: "opaque computed write",
+      mutation: "declare const key:string;(React as any)[key]=()=>\"void 0\";const cb=React.useCallback(()=>{},[])",
+    },
+    {
+      name: "Object.assign nonliteral payload",
+      mutation: "const patch:any={useCallback:()=>\"void 0\"};Object.assign(React as any,patch);const cb=React.useCallback(()=>{},[])",
+    },
+    {
+      name: "Object.assign spread payload",
+      mutation: "const patch:any={useCallback:()=>\"void 0\"};Object.assign(React as any,{...patch});const cb=React.useCallback(()=>{},[])",
+    },
+    {
+      name: "Object.defineProperties nonliteral payload",
+      mutation: "const patch:any={useCallback:{value:()=>\"void 0\"}};Object.defineProperties(React as any,patch);const cb=React.useCallback(()=>{},[])",
+    },
   ])("rejects React hook trust after $name", async ({ mutation }) => {
     const source = `import React from 'react';${mutation};setTimeout(cb,0);export default function App(){}`;
     const root = await fixture(source);
@@ -1873,6 +1945,22 @@ describe("private hosted runtime boundary", () => {
       file: "src/App.tsx",
       code: "dynamic-code-execution",
       detail: "eval/Function",
+    });
+  });
+
+  it("requires the exact qualified bundle React interop argument shape", () => {
+    const trusted = {
+      vendor: new Set(["./vendor-qualified.js"]),
+      runtime: new Set(["./rolldown-runtime-qualified.js"]),
+    };
+    const valid = "import{r as interop}from'./rolldown-runtime-qualified.js';import{l as factory}from'./vendor-qualified.js';const React=interop(factory(),1);const cb=React.useCallback(()=>{});setTimeout(cb,0)";
+    const spoofed = "import{r as interop}from'./rolldown-runtime-qualified.js';import{l as factory}from'./vendor-qualified.js';const fake={useCallback(){return'void 0'}};const React=interop(fake,factory());const cb=React.useCallback(()=>{});setTimeout(cb,0)";
+
+    expect(scanScriptOriginsWithTrustedImportsForTest(valid, trusted)).toEqual([]);
+    expect(scanScriptOriginsWithTrustedImportsForTest(spoofed, trusted)).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
     });
   });
 

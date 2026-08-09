@@ -78,3 +78,9 @@
   and follows bare or typed iframe contexts plus cyclic browser aliases.
 - Access pagination requires complete metadata; Windows config ACLs permit writes
   only by the current operator, SYSTEM, and built-in Administrators.
+- Invocation flow records exact timer, `Reflect.apply`, and local-callable identity;
+  definite overwrites do not inherit historical privilege.
+- React bundle trust requires exact pinned interop shape and is revoked by opaque
+  computed or bulk mutation.
+- Computed iframe keys use access-point values; typed iframes remain fail-closed,
+  while locally constructed browser-named models retain plain-object identity.
