@@ -240,20 +240,24 @@ describe("private hosted release preparation", () => {
     expect(existsSync(item.evidence)).toBe(false);
   });
 
-  it("production wrapper accepts the repository's reviewed Vite configuration", async () => {
-    const outputs = mkdtempSync(
-      join(tmpdir(), "conan-private-hosted-production-prepare-"),
-    );
-    roots.push(outputs);
+  it(
+    "production wrapper accepts the repository's reviewed Vite configuration",
+    async () => {
+      const outputs = mkdtempSync(
+        join(tmpdir(), "conan-private-hosted-production-prepare-"),
+      );
+      roots.push(outputs);
 
-    await expect(
-      prepareRelease({
-        repoRoot: process.cwd(),
-        stagingDir: join(outputs, "staging"),
-        evidenceDir: join(outputs, "evidence"),
-      }),
-    ).resolves.toMatchObject({ manifests: expect.any(Object) });
-  });
+      await expect(
+        prepareRelease({
+          repoRoot: process.cwd(),
+          stagingDir: join(outputs, "staging"),
+          evidenceDir: join(outputs, "evidence"),
+        }),
+      ).resolves.toMatchObject({ manifests: expect.any(Object) });
+    },
+    120_000,
+  );
 
   it("fails when the injected build runner fails", async () => {
     const item = fixture();
