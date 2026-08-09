@@ -1636,6 +1636,14 @@ describe("private hosted runtime boundary", () => {
       source: "const R=Reflect;R.apply(setTimeout,undefined,[\"fetch('/state')\",0])",
     },
     {
+      name: "globalThis.Reflect.apply",
+      source: "globalThis.Reflect.apply(setTimeout,undefined,[\"fetch('/state')\",0])",
+    },
+    {
+      name: "window computed Reflect.apply",
+      source: "window['Reflect']['apply'](setTimeout,undefined,[\"fetch('/state')\",0])",
+    },
+    {
       name: "Reflect.apply alias",
       source: "const invoke=Reflect.apply;invoke(setTimeout,undefined,[\"fetch('/state')\",0])",
     },
@@ -1701,6 +1709,17 @@ describe("private hosted runtime boundary", () => {
   it("accepts a timer alias overwritten by a local callable before invocation", async () => {
     const source = "let timer=setTimeout;timer=(value:string)=>void value;timer('safe');";
     const bundle = "let timer=setTimeout;timer=value=>void value;timer('safe');";
+    const root = await fixture(`${source}export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), bundle);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings.filter(({ file }) => ["src/App.tsx", "dist/assets/index.js"].includes(file)))
+      .toEqual([]);
+  });
+
+  it("accepts a timer alias overwritten by a hoisted function declaration", async () => {
+    const source = "let timer=setTimeout;timer=safe;timer('safe');function safe(value:string){void value}";
+    const bundle = "let timer=setTimeout;timer=safe;timer('safe');function safe(value){void value}";
     const root = await fixture(`${source}export default function App(){}`);
     await writeFile(resolve(root, "dist/assets/index.js"), bundle);
 
@@ -1912,6 +1931,22 @@ describe("private hosted runtime boundary", () => {
       mutation: "Object.defineProperty(React as any,'useCallback',{value:()=>\"void 0\"});const cb=React.useCallback(()=>{},[])",
     },
     {
+      name: "Reflect.defineProperty",
+      mutation: "Reflect.defineProperty(React as any,'useCallback',{value:()=>\"void 0\"});const cb=React.useCallback(()=>{},[])",
+    },
+    {
+      name: "aliased Object.defineProperty",
+      mutation: "const mutate=Object.defineProperty;mutate(React as any,'useCallback',{value:()=>\"void 0\"});const cb=React.useCallback(()=>{},[])",
+    },
+    {
+      name: "destructured Reflect.defineProperty",
+      mutation: "const {defineProperty:mutate}=Reflect;mutate(React as any,'useCallback',{value:()=>\"void 0\"});const cb=React.useCallback(()=>{},[])",
+    },
+    {
+      name: "projected Object.assign",
+      mutation: "const [mutate]=[Object.assign];mutate(React as any,{useCallback:()=>\"void 0\"});const cb=React.useCallback(()=>{},[])",
+    },
+    {
       name: "Reflect.set",
       mutation: "Reflect.set(React as any,'useCallback',()=>\"void 0\");const cb=React.useCallback(()=>{},[])",
     },
@@ -1958,6 +1993,33 @@ describe("private hosted runtime boundary", () => {
 
     expect(scanScriptOriginsWithTrustedImportsForTest(valid, trusted)).toEqual([]);
     expect(scanScriptOriginsWithTrustedImportsForTest(spoofed, trusted)).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
+  });
+
+  it.each([
+    {
+      name: "cached vendor result mutation",
+      body: "const core=factory();core.useCallback=()=>\"void 0\";const React=interop(factory(),1);const cb=React.useCallback(()=>{})",
+    },
+    {
+      name: "indirect vendor factory exposure",
+      body: "const invoke=factory;const React=interop(factory(),1);const cb=React.useCallback(()=>{})",
+    },
+    {
+      name: "mutation through a sibling interop namespace",
+      body: "const First=interop(factory(),1);First.useCallback=()=>\"void 0\";const React=interop(factory(),1);const cb=React.useCallback(()=>{})",
+    },
+  ])("rejects trusted React hook provenance after $name", ({ body }) => {
+    const trusted = {
+      vendor: new Set(["./vendor-qualified.js"]),
+      runtime: new Set(["./rolldown-runtime-qualified.js"]),
+    };
+    const bundle = `import{r as interop}from'./rolldown-runtime-qualified.js';import{l as factory}from'./vendor-qualified.js';${body};setTimeout(cb,0)`;
+
+    expect(scanScriptOriginsWithTrustedImportsForTest(bundle, trusted)).toContainEqual({
       file: "dist/assets/index.js",
       code: "forbidden-bundle-marker",
       detail: "dynamic code execution",

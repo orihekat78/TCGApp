@@ -149,6 +149,7 @@ const browserObjectProperty = (
   if (!owner) return undefined;
   if (owner === REFLECT_NAMESPACE_VALUE && property === "apply") return REFLECT_APPLY_VALUE;
   if (["globalThis", "self", "window"].includes(owner)) {
+    if (property === "Reflect") return REFLECT_NAMESPACE_VALUE;
     if (property === "setTimeout") return BROWSER_TIMER_TIMEOUT;
     if (property === "setInterval") return BROWSER_TIMER_INTERVAL;
     if (["globalThis", "self", "window", "parent", "top", "frames", "opener"].includes(
@@ -772,6 +773,14 @@ function browserTimerInvocation(
     resolving: ReadonlySet<AliasBinding>,
   ): boolean => {
     while (ts.isParenthesizedExpression(expression)) expression = expression.expression;
+    if (ts.isPropertyAccessExpression(expression) || ts.isElementAccessExpression(expression)) {
+      if (analysis.propertyValuesBefore.get(expression)?.has(REFLECT_NAMESPACE_VALUE)) return true;
+      const property = member(expression);
+      return property?.property === "Reflect" &&
+        ["globalThis", "self", "window"].includes(
+          privilegedBrowserGlobal(property.owner, analysis) ?? "",
+        );
+    }
     if (!ts.isIdentifier(expression)) return false;
     const binding = analysis.resolveBinding(expression, expression.text);
     if (!binding) return expression.text === "Reflect";
@@ -7342,7 +7351,13 @@ function collectPrivilegedBrowserAliases(root: ts.Node): BrowserAliasAnalysis {
     nodes: readonly ts.Statement[],
     input: BrowserAliasState,
   ): FlowResult => {
-    const result = emptyFlow(cloneState(input));
+    const entry = cloneState(input);
+    for (const node of nodes) {
+      if (!ts.isFunctionDeclaration(node) || !node.name) continue;
+      const binding = resolveBinding(node.name, node.name.text);
+      if (binding) updateBinding(entry, binding, new Set([LOCAL_CALLABLE_VALUE]));
+    }
+    const result = emptyFlow(entry);
     for (const node of nodes) {
       if (!result.normal) break;
       const next = evaluateStatement(node, result.normal);
@@ -8504,6 +8519,8 @@ function collectScopedStaticStrings(
   const reactCallbackBindings = new Set<AliasBinding>();
   const reactNamespaceBindings = new Set<AliasBinding>();
   const mutatedReactNamespaceBindings = new Set<AliasBinding>();
+  const opaqueReactNamespaceCallArguments = new Set<AliasBinding>();
+  const reactNamespaceFactoryBindings = new Map<AliasBinding, AliasBinding>();
   const bundledVendorBindings = new Set<AliasBinding>();
   const bundledRuntimeBindings = new Set<AliasBinding>();
   if (trustedBundleImports) {
@@ -8538,14 +8555,14 @@ function collectScopedStaticStrings(
     };
     collectBundleImports(root);
   }
-  const isBundledReactNamespace = (initializer: ts.Expression): boolean => {
-    if (!trustedBundleImports || !ts.isCallExpression(initializer)) return false;
+  const exactBundledReactFactory = (initializer: ts.Node): AliasBinding | undefined => {
+    if (!trustedBundleImports || !ts.isCallExpression(initializer)) return undefined;
     let callee: ts.Expression = initializer.expression;
     while (ts.isParenthesizedExpression(callee)) callee = callee.expression;
-    if (!ts.isIdentifier(callee)) return false;
+    if (!ts.isIdentifier(callee)) return undefined;
     const runtimeBinding = bindings.resolveBinding(callee, callee.text);
-    if (!runtimeBinding || !bundledRuntimeBindings.has(runtimeBinding)) return false;
-    if (initializer.arguments.length !== 2) return false;
+    if (!runtimeBinding || !bundledRuntimeBindings.has(runtimeBinding)) return undefined;
+    if (initializer.arguments.length !== 2) return undefined;
     const [factoryCall, interopMode] = initializer.arguments;
     if (
       !factoryCall ||
@@ -8558,10 +8575,35 @@ function collectScopedStaticStrings(
       !ts.isNumericLiteral(interopMode) ||
       interopMode.text !== "1"
     ) {
-      return false;
+      return undefined;
     }
     const binding = bindings.resolveBinding(factoryCall.expression, factoryCall.expression.text);
-    return Boolean(binding && bundledVendorBindings.has(binding));
+    return binding && bundledVendorBindings.has(binding) ? binding : undefined;
+  };
+  const exposedBundledVendorBindings = new Set<AliasBinding>();
+  if (trustedBundleImports) {
+    const collectExposedVendorReferences = (node: ts.Node): void => {
+      if (ts.isIdentifier(node)) {
+        const vendorBinding = bindings.resolveBinding(node, node.text);
+        if (vendorBinding && bundledVendorBindings.has(vendorBinding)) {
+          const declaration = ts.isImportSpecifier(node.parent) ||
+            ts.isImportClause(node.parent) ||
+            ts.isNamespaceImport(node.parent);
+          const factoryCall = ts.isCallExpression(node.parent) &&
+            node.parent.expression === node &&
+            exactBundledReactFactory(node.parent.parent) === vendorBinding;
+          if (!declaration && !factoryCall) exposedBundledVendorBindings.add(vendorBinding);
+        }
+      }
+      ts.forEachChild(node, collectExposedVendorReferences);
+    };
+    collectExposedVendorReferences(root);
+  }
+  const bundledReactFactory = (initializer: ts.Expression): AliasBinding | undefined => {
+    const factoryBinding = exactBundledReactFactory(initializer);
+    return factoryBinding && !exposedBundledVendorBindings.has(factoryBinding)
+      ? factoryBinding
+      : undefined;
   };
   const addCallableSource = (node: ts.Identifier, source: ts.Expression): void => {
     const binding = bindings.resolveBinding(node, node.text);
@@ -8672,9 +8714,13 @@ function collectScopedStaticStrings(
       node.initializer
     ) {
       addCallableSource(node.name, node.initializer);
-      if (isBundledReactNamespace(node.initializer)) {
+      const factoryBinding = bundledReactFactory(node.initializer);
+      if (factoryBinding) {
         const binding = bindings.resolveBinding(node.name, node.name.text);
-        if (binding) reactNamespaceBindings.add(binding);
+        if (binding) {
+          reactNamespaceBindings.add(binding);
+          reactNamespaceFactoryBindings.set(binding, factoryBinding);
+        }
       }
     }
     if (ts.isBinaryExpression(node) && ASSIGNMENT_OPERATORS.has(node.operatorToken.kind)) {
@@ -8690,30 +8736,33 @@ function collectScopedStaticStrings(
       }
       markReactNamespaceMutation(node.left);
     }
-    if (
-      ts.isCallExpression(node) &&
-      (ts.isPropertyAccessExpression(node.expression) ||
-        ts.isElementAccessExpression(node.expression))
-    ) {
+    if (ts.isCallExpression(node)) {
       const callee = node.expression;
       const method = ts.isPropertyAccessExpression(callee)
         ? callee.name.text
-        : callee.argumentExpression
+        : ts.isElementAccessExpression(callee) && callee.argumentExpression
           ? bindings.staticString(callee.argumentExpression)
           : undefined;
-      const owner = callee.expression;
-      const unboundOwner = ts.isIdentifier(owner) &&
-        !bindings.resolveBinding(owner, owner.text)
-        ? owner.text
+      const calleeOwner = ts.isPropertyAccessExpression(callee) || ts.isElementAccessExpression(callee)
+        ? callee.expression
+        : undefined;
+      const unboundOwner = calleeOwner && ts.isIdentifier(calleeOwner) &&
+        !bindings.resolveBinding(calleeOwner, calleeOwner.text)
+        ? calleeOwner.text
         : undefined;
       const target = node.arguments[0];
       const targetBinding = target && !ts.isSpreadElement(target)
         ? namespaceOwnerBinding(target)
         : undefined;
+      const knownMutation =
+        (method === "defineProperty" && ["Object", "Reflect"].includes(unboundOwner ?? "")) ||
+        (unboundOwner === "Reflect" && method === "set") ||
+        (unboundOwner === "Object" && ["assign", "defineProperties"].includes(method ?? "")) ||
+        (method === "setPrototypeOf" && ["Object", "Reflect"].includes(unboundOwner ?? ""));
       let mutatesHook = false;
       if (
         targetBinding &&
-        ((unboundOwner === "Object" && method === "defineProperty") ||
+        ((["Object", "Reflect"].includes(unboundOwner ?? "") && method === "defineProperty") ||
           (unboundOwner === "Reflect" && method === "set"))
       ) {
         const property = node.arguments[1];
@@ -8749,6 +8798,13 @@ function collectScopedStaticStrings(
       }
       if (targetBinding && mutatesHook) {
         mutatedReactNamespaceBindings.add(targetBinding);
+      }
+      if (!knownMutation) {
+        for (const argument of node.arguments) {
+          if (ts.isSpreadElement(argument)) continue;
+          const argumentBinding = namespaceOwnerBinding(argument);
+          if (argumentBinding) opaqueReactNamespaceCallArguments.add(argumentBinding);
+        }
       }
     }
     if (ts.isForOfStatement(node) || ts.isForInStatement(node)) {
@@ -8829,18 +8885,33 @@ function collectScopedStaticStrings(
       pendingNamespaces.push(alias);
     }
   }
-  const invalidNamespaces = [...mutatedReactNamespaceBindings]
-    .filter((binding) => reactNamespaceBindings.has(binding));
-  while (invalidNamespaces.length > 0) {
-    const binding = invalidNamespaces.pop()!;
-    for (const alias of namespaceAliases.get(binding) ?? []) {
-      if (!reactNamespaceBindings.has(alias) || mutatedReactNamespaceBindings.has(alias)) {
-        continue;
-      }
-      mutatedReactNamespaceBindings.add(alias);
-      invalidNamespaces.push(alias);
-    }
+  for (const binding of opaqueReactNamespaceCallArguments) {
+    if (reactNamespaceBindings.has(binding)) mutatedReactNamespaceBindings.add(binding);
   }
+  const propagateInvalidNamespaces = (): void => {
+    const invalidNamespaces = [...mutatedReactNamespaceBindings]
+      .filter((binding) => reactNamespaceBindings.has(binding));
+    while (invalidNamespaces.length > 0) {
+      const binding = invalidNamespaces.pop()!;
+      for (const alias of namespaceAliases.get(binding) ?? []) {
+        if (!reactNamespaceBindings.has(alias) || mutatedReactNamespaceBindings.has(alias)) {
+          continue;
+        }
+        mutatedReactNamespaceBindings.add(alias);
+        invalidNamespaces.push(alias);
+      }
+    }
+  };
+  propagateInvalidNamespaces();
+  const taintedFactories = new Set(
+    [...reactNamespaceFactoryBindings]
+      .filter(([namespace]) => mutatedReactNamespaceBindings.has(namespace))
+      .map(([, factory]) => factory),
+  );
+  for (const [namespace, factory] of reactNamespaceFactoryBindings) {
+    if (taintedFactories.has(factory)) mutatedReactNamespaceBindings.add(namespace);
+  }
+  propagateInvalidNamespaces();
   return {
     constants,
     callableSources,
