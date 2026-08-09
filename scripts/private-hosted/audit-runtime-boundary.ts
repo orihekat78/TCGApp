@@ -8520,8 +8520,9 @@ function collectScopedStaticStrings(
   const reactNamespaceBindings = new Set<AliasBinding>();
   const mutatedReactNamespaceBindings = new Set<AliasBinding>();
   const opaqueReactNamespaceCallArguments = new Set<AliasBinding>();
-  const reactNamespaceFactoryBindings = new Map<AliasBinding, AliasBinding>();
-  const bundledVendorBindings = new Set<AliasBinding>();
+  const reactNamespaceFactoryBindings = new Map<AliasBinding, string>();
+  const bundledVendorIdentities = new Map<AliasBinding, string>();
+  const bundledVendorNamespaceIdentities = new Map<AliasBinding, string>();
   const bundledRuntimeBindings = new Set<AliasBinding>();
   if (trustedBundleImports) {
     const collectBundleImports = (node: ts.Node): void => {
@@ -8540,7 +8541,10 @@ function collectScopedStaticStrings(
               trustedBundleImports.vendor.has(node.moduleSpecifier.text) &&
               exported === "l"
             ) {
-              bundledVendorBindings.add(binding);
+              bundledVendorIdentities.set(
+                binding,
+                `${node.moduleSpecifier.text}\0${exported}`,
+              );
             }
             if (
               trustedBundleImports.runtime.has(node.moduleSpecifier.text) &&
@@ -8549,13 +8553,46 @@ function collectScopedStaticStrings(
               bundledRuntimeBindings.add(binding);
             }
           }
+        } else if (
+          named &&
+          ts.isNamespaceImport(named) &&
+          trustedBundleImports.vendor.has(node.moduleSpecifier.text)
+        ) {
+          const binding = bindings.resolveBinding(named.name, named.name.text);
+          if (binding) {
+            bundledVendorNamespaceIdentities.set(binding, node.moduleSpecifier.text);
+          }
         }
       }
       ts.forEachChild(node, collectBundleImports);
     };
     collectBundleImports(root);
   }
-  const exactBundledReactFactory = (initializer: ts.Node): AliasBinding | undefined => {
+  const vendorFactoryIdentity = (expression: ts.Expression): string | undefined => {
+    while (ts.isParenthesizedExpression(expression)) expression = expression.expression;
+    if (ts.isIdentifier(expression)) {
+      const binding = bindings.resolveBinding(expression, expression.text);
+      return binding ? bundledVendorIdentities.get(binding) : undefined;
+    }
+    if (ts.isPropertyAccessExpression(expression) || ts.isElementAccessExpression(expression)) {
+      const owner = expression.expression;
+      if (!ts.isIdentifier(owner)) return undefined;
+      const binding = bindings.resolveBinding(owner, owner.text);
+      const moduleSpecifier = binding
+        ? bundledVendorNamespaceIdentities.get(binding)
+        : undefined;
+      const property = ts.isPropertyAccessExpression(expression)
+        ? expression.name.text
+        : expression.argumentExpression
+          ? bindings.staticString(expression.argumentExpression)
+          : undefined;
+      return moduleSpecifier && property === "l"
+        ? `${moduleSpecifier}\0${property}`
+        : undefined;
+    }
+    return undefined;
+  };
+  const exactBundledReactFactory = (initializer: ts.Node): string | undefined => {
     if (!trustedBundleImports || !ts.isCallExpression(initializer)) return undefined;
     let callee: ts.Expression = initializer.expression;
     while (ts.isParenthesizedExpression(callee)) callee = callee.expression;
@@ -8569,7 +8606,6 @@ function collectScopedStaticStrings(
       ts.isSpreadElement(factoryCall) ||
       !ts.isCallExpression(factoryCall) ||
       factoryCall.arguments.length !== 0 ||
-      !ts.isIdentifier(factoryCall.expression) ||
       !interopMode ||
       ts.isSpreadElement(interopMode) ||
       !ts.isNumericLiteral(interopMode) ||
@@ -8577,32 +8613,51 @@ function collectScopedStaticStrings(
     ) {
       return undefined;
     }
-    const binding = bindings.resolveBinding(factoryCall.expression, factoryCall.expression.text);
-    return binding && bundledVendorBindings.has(binding) ? binding : undefined;
+    return vendorFactoryIdentity(factoryCall.expression);
   };
-  const exposedBundledVendorBindings = new Set<AliasBinding>();
+  const exposedBundledVendorIdentities = new Set<string>();
   if (trustedBundleImports) {
     const collectExposedVendorReferences = (node: ts.Node): void => {
       if (ts.isIdentifier(node)) {
         const vendorBinding = bindings.resolveBinding(node, node.text);
-        if (vendorBinding && bundledVendorBindings.has(vendorBinding)) {
+        const directIdentity = vendorBinding
+          ? bundledVendorIdentities.get(vendorBinding)
+          : undefined;
+        const namespaceIdentity = vendorBinding
+          ? bundledVendorNamespaceIdentities.get(vendorBinding)
+          : undefined;
+        if (directIdentity) {
           const declaration = ts.isImportSpecifier(node.parent) ||
             ts.isImportClause(node.parent) ||
             ts.isNamespaceImport(node.parent);
           const factoryCall = ts.isCallExpression(node.parent) &&
             node.parent.expression === node &&
-            exactBundledReactFactory(node.parent.parent) === vendorBinding;
-          if (!declaration && !factoryCall) exposedBundledVendorBindings.add(vendorBinding);
+            exactBundledReactFactory(node.parent.parent) === directIdentity;
+          if (!declaration && !factoryCall) exposedBundledVendorIdentities.add(directIdentity);
+        } else if (namespaceIdentity) {
+          const declaration = ts.isNamespaceImport(node.parent);
+          const member = (ts.isPropertyAccessExpression(node.parent) ||
+              ts.isElementAccessExpression(node.parent)) &&
+              node.parent.expression === node
+            ? node.parent
+            : undefined;
+          const identity = member ? vendorFactoryIdentity(member) : undefined;
+          const factoryCall = identity && ts.isCallExpression(member!.parent) &&
+            member!.parent.expression === member &&
+            exactBundledReactFactory(member!.parent.parent) === identity;
+          if (!declaration && !factoryCall) {
+            exposedBundledVendorIdentities.add(`${namespaceIdentity}\0l`);
+          }
         }
       }
       ts.forEachChild(node, collectExposedVendorReferences);
     };
     collectExposedVendorReferences(root);
   }
-  const bundledReactFactory = (initializer: ts.Expression): AliasBinding | undefined => {
-    const factoryBinding = exactBundledReactFactory(initializer);
-    return factoryBinding && !exposedBundledVendorBindings.has(factoryBinding)
-      ? factoryBinding
+  const bundledReactFactory = (initializer: ts.Expression): string | undefined => {
+    const factoryIdentity = exactBundledReactFactory(initializer);
+    return factoryIdentity && !exposedBundledVendorIdentities.has(factoryIdentity)
+      ? factoryIdentity
       : undefined;
   };
   const addCallableSource = (node: ts.Identifier, source: ts.Expression): void => {
@@ -8655,6 +8710,14 @@ function collectScopedStaticStrings(
       ts.isSatisfiesExpression(node)
     ) {
       node = node.expression;
+    }
+    if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
+      const property = ts.isPropertyAccessExpression(node)
+        ? node.name.text
+        : node.argumentExpression
+          ? bindings.staticString(node.argumentExpression)
+          : undefined;
+      return property === "default" ? namespaceOwnerBinding(node.expression) : undefined;
     }
     return ts.isIdentifier(node) ? bindings.resolveBinding(node, node.text) : undefined;
   };

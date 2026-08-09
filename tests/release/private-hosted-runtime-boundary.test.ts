@@ -1989,9 +1989,11 @@ describe("private hosted runtime boundary", () => {
       runtime: new Set(["./rolldown-runtime-qualified.js"]),
     };
     const valid = "import{r as interop}from'./rolldown-runtime-qualified.js';import{l as factory}from'./vendor-qualified.js';const React=interop(factory(),1);const cb=React.useCallback(()=>{});setTimeout(cb,0)";
+    const validNamespace = "import{r as interop}from'./rolldown-runtime-qualified.js';import*as Vendor from'./vendor-qualified.js';const React=interop(Vendor.l(),1);const cb=React.useCallback(()=>{});setTimeout(cb,0)";
     const spoofed = "import{r as interop}from'./rolldown-runtime-qualified.js';import{l as factory}from'./vendor-qualified.js';const fake={useCallback(){return'void 0'}};const React=interop(fake,factory());const cb=React.useCallback(()=>{});setTimeout(cb,0)";
 
     expect(scanScriptOriginsWithTrustedImportsForTest(valid, trusted)).toEqual([]);
+    expect(scanScriptOriginsWithTrustedImportsForTest(validNamespace, trusted)).toEqual([]);
     expect(scanScriptOriginsWithTrustedImportsForTest(spoofed, trusted)).toContainEqual({
       file: "dist/assets/index.js",
       code: "forbidden-bundle-marker",
@@ -2012,12 +2014,27 @@ describe("private hosted runtime boundary", () => {
       name: "mutation through a sibling interop namespace",
       body: "const First=interop(factory(),1);First.useCallback=()=>\"void 0\";const React=interop(factory(),1);const cb=React.useCallback(()=>{})",
     },
-  ])("rejects trusted React hook provenance after $name", ({ body }) => {
+    {
+      name: "mutation through a sibling default projection",
+      body: "const First=interop(factory(),1);First.default.useCallback=()=>\"void 0\";const React=interop(factory(),1);const cb=React.useCallback(()=>{})",
+    },
+    {
+      name: "duplicate named import exposure",
+      imports: "import{r as interop}from'./rolldown-runtime-qualified.js';import{l as factory}from'./vendor-qualified.js';import{l as expose}from'./vendor-qualified.js';",
+      body: "const core=expose();core.useCallback=()=>\"void 0\";const React=interop(factory(),1);const cb=React.useCallback(()=>{})",
+    },
+    {
+      name: "namespace import exposure",
+      imports: "import{r as interop}from'./rolldown-runtime-qualified.js';import*as Vendor from'./vendor-qualified.js';",
+      body: "const core=Vendor.l();core.useCallback=()=>\"void 0\";const React=interop(Vendor.l(),1);const cb=React.useCallback(()=>{})",
+    },
+  ])("rejects trusted React hook provenance after $name", ({ body, imports }) => {
     const trusted = {
       vendor: new Set(["./vendor-qualified.js"]),
       runtime: new Set(["./rolldown-runtime-qualified.js"]),
     };
-    const bundle = `import{r as interop}from'./rolldown-runtime-qualified.js';import{l as factory}from'./vendor-qualified.js';${body};setTimeout(cb,0)`;
+    const defaultImports = "import{r as interop}from'./rolldown-runtime-qualified.js';import{l as factory}from'./vendor-qualified.js';";
+    const bundle = `${imports ?? defaultImports}${body};setTimeout(cb,0)`;
 
     expect(scanScriptOriginsWithTrustedImportsForTest(bundle, trusted)).toContainEqual({
       file: "dist/assets/index.js",
