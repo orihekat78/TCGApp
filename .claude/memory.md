@@ -74,7 +74,7 @@
   payload validation and stable area-qualified card occurrence identities.
 - Pending runtime and headless contexts use own descriptors only; inherited
   accessors cannot suppress hydration or leak interactive player identity.
-- The boundary fail-closes dynamic execution unless timer callbacks are proven callable,
-  and follows iframe/navigation/export surfaces plus cyclic browser aliases.
+- The boundary requires provenance-backed callable timer handlers across wrappers,
+  and follows bare or typed iframe contexts plus cyclic browser aliases.
 - Access pagination requires complete metadata; Windows config ACLs permit writes
   only by the current operator, SYSTEM, and built-in Administrators.

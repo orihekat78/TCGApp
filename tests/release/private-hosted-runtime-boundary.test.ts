@@ -430,6 +430,46 @@ describe("private hosted runtime boundary", () => {
     ]));
   });
 
+  it("rejects a browsing context reached through an unresolved typed iframe", async () => {
+    const source = `
+      function leak(frame: HTMLIFrameElement, state: unknown) {
+        frame.contentWindow?.localStorage.setItem('state', String(state));
+        frame.contentDocument?.defaultView?.postMessage(state, '*');
+      }
+      export default function App() { return null; }
+    `;
+    const bundle = "function leak(frame,state){frame.contentWindow?.localStorage.setItem('state',String(state));frame.contentDocument?.defaultView?.postMessage(state,'*')}";
+    const root = await fixture(source);
+    await writeFile(resolve(root, "dist/assets/index.js"), bundle);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toEqual(expect.arrayContaining([
+      { file: "src/App.tsx", code: "persistent-storage", detail: "localStorage" },
+      { file: "src/App.tsx", code: "network-api", detail: "window.postMessage" },
+      { file: "dist/assets/index.js", code: "forbidden-bundle-marker", detail: "persistent storage" },
+      { file: "dist/assets/index.js", code: "forbidden-bundle-marker", detail: "network API" },
+    ]));
+  });
+
+  it.each([
+    { name: "bare parent", operation: "parent.postMessage(state, '*')", code: "network-api", detail: "parent.postMessage", bundleDetail: "network API" },
+    { name: "bare top", operation: "top?.postMessage(state, '*')", code: "network-api", detail: "top.postMessage", bundleDetail: "network API" },
+    { name: "bare opener", operation: "opener?.postMessage(state, '*')", code: "network-api", detail: "opener.postMessage", bundleDetail: "network API" },
+    { name: "bare frames", operation: "frames[0].localStorage.setItem('state', state)", code: "dynamic-browser-property", detail: "frames[dynamic]", bundleDetail: "dynamic browser property" },
+  ])("rejects export through $name browsing-context globals", async ({ operation, code, detail, bundleDetail }) => {
+    const source = `declare const state:any;${operation};export default function App(){}`;
+    const root = await fixture(source);
+    await writeFile(resolve(root, "dist/assets/index.js"), operation);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({ file: "src/App.tsx", code, detail });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: bundleDetail,
+    });
+  });
+
   it.each([
     {
       name: "Navigation API state",
@@ -1512,6 +1552,40 @@ describe("private hosted runtime boundary", () => {
     });
   });
 
+  it.each([
+    {
+      name: "Function.call",
+      source: "window.setTimeout.call(window,\"fetch('/state')\",0)",
+    },
+    {
+      name: "Function.apply",
+      source: "setInterval.apply(window,[\"fetch('/state')\",0])",
+    },
+    {
+      name: "Function.bind alias",
+      source: "const timer=setTimeout.bind(window);timer(\"fetch('/state')\",0)",
+    },
+    {
+      name: "Reflect.apply",
+      source: "Reflect.apply(setTimeout,undefined,[\"fetch('/state')\",0])",
+    },
+  ])("rejects string execution through timer $name", async ({ source }) => {
+    const root = await fixture(`${source};export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), `${source};`);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "dynamic-code-execution",
+      detail: "eval/Function",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
+  });
+
   it("accepts a shadowed local timer receiving a string", async () => {
     const source = "function setTimeout(value:string){void value}setTimeout('safe');";
     const root = await fixture(`${source}export default function App(){}`);
@@ -1578,12 +1652,51 @@ describe("private hosted runtime boundary", () => {
     const root = await fixture(source);
     await writeFile(
       resolve(root, "dist/assets/index.js"),
-      "function declared(){}const inline=()=>{},memoized=React.useCallback(()=>{},[]);setTimeout(declared,0);setTimeout(inline,0);setTimeout(memoized,0);setInterval(()=>{},0);",
+      "import{a as factory}from'./vendor-AAAA.js';import{interop}from'./rolldown-runtime-BBBB.js';const React=interop(factory(),1);function declared(){}const inline=()=>{},memoized=React.useCallback(()=>{},[]);setTimeout(declared,0);setTimeout(inline,0);setTimeout(memoized,0);setInterval(()=>{},0);",
     );
 
     const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
     expect(findings.filter(({ file }) => ["src/App.tsx", "dist/assets/index.js"].includes(file)))
       .toEqual([]);
+  });
+
+  it("rejects a reassigned function declaration used as a timer handler", async () => {
+    const source = "function handler(){};handler='void 0' as unknown as typeof handler;setTimeout(handler,0)";
+    const root = await fixture(`${source};export default function App(){}`);
+    await writeFile(
+      resolve(root, "dist/assets/index.js"),
+      "function handler(){};handler='void 0';setTimeout(handler,0);",
+    );
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "dynamic-code-execution",
+      detail: "eval/Function",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
+  });
+
+  it("rejects a spoofed bundle useCallback result used as a timer handler", async () => {
+    const source = "const Fake={useCallback(){return 'void 0'}};const cb=Fake.useCallback(()=>{});setTimeout(cb,0)";
+    const root = await fixture(`${source};export default function App(){}`);
+    await writeFile(resolve(root, "dist/assets/index.js"), `${source};`);
+
+    const findings = await auditRuntimeBoundary(root, async () => ({ stdout: "", stderr: "" }));
+    expect(findings).toContainEqual({
+      file: "src/App.tsx",
+      code: "dynamic-code-execution",
+      detail: "eval/Function",
+    });
+    expect(findings).toContainEqual({
+      file: "dist/assets/index.js",
+      code: "forbidden-bundle-marker",
+      detail: "dynamic code execution",
+    });
   });
 
   it("accepts Function source introspection without executing generated code", async () => {
