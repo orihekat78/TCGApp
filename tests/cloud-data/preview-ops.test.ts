@@ -73,6 +73,7 @@ describe("preview cloud-data operations", () => {
     expect(sql).not.toContain("@");
     expect(sql).not.toContain(secrets.previewEmailKeySecret);
     expect(sql).not.toContain(secrets.productionEmailKeySecret);
+    expect(sql).not.toMatch(/\b(?:BEGIN|COMMIT|SAVEPOINT|TRANSACTION)\b/iu);
   });
 
   it("rejects an operator outside the existing approved-email set", async () => {

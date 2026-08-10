@@ -147,13 +147,11 @@ export async function renderPreviewEnrollmentSql(
   );
   if (!EMAIL_KEY.test(emailKey)) throw new Error("EMAIL_KEY_INVALID");
   return [
-    "BEGIN IMMEDIATE;",
     "INSERT INTO sync_enrollments (email_key, enabled, created_at, updated_at)",
     `VALUES ('${emailKey}', 1, ${now}, ${now})`,
     "ON CONFLICT(email_key) DO UPDATE SET",
     "  enabled = 1,",
     "  updated_at = excluded.updated_at;",
-    "COMMIT;",
     "",
   ].join("\n");
 }
