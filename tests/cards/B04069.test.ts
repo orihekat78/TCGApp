@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { AbilityDef } from '@/engine/types';
 import { B04069 } from '@/cards/ct-p04/B04069';
 import { B04069P } from '@/cards/ct-p04/B04069P';
@@ -21,9 +21,14 @@ const LOW8 = removable('LOW8', 8);
 const HIGH9 = removable('HIGH9', 9);
 
 beforeEach(() => {
+  (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   event._resetRegistry(); _resetTriggeredRegistered(); _resetRegistry();
   [B04069, B04069P, TAKAGI, DECOY, police('POLICE_1'), police('POLICE_2'), police('POLICE_3'), LOW8, HIGH9].forEach(register);
   registerTriggeredListener();
+});
+
+afterEach(() => {
+  (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
 });
 
 describe('B04069 佐藤美和子', () => {
@@ -106,6 +111,7 @@ describe('B04069 佐藤美和子', () => {
     state.players.opp.remove = ['POLICE_1', 'POLICE_2', 'POLICE_3'];
     state.players.opp.scene = [sceneChar('B04069', 'opp-host')];
     state.players.self.scene = [sceneChar('LOW8', 'self-low')];
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'opp';
     event.emit(state, 'enter', { uid: 'opp-host', viaEffect: true, enterOrder: 1, enterOrderThisTurn: 1 }, { player: 'opp', uid: 'opp-host', cardId: 'B04069' });
     runAllUntilEmpty(state);
     const pick = _drainPendingEffectPickSide();

@@ -26,7 +26,7 @@ const skipMulligan = async (): Promise<ReadonlyArray<string>> => [];
 
 describe('performGameStart', () => {
   it('returns turn-1 state: 先攻は手札 6 (5+auto draw)、後攻は手札 5', async () => {
-    const s = await performGameStart(skipMulligan);
+    const s = await performGameStart(skipMulligan, undefined, { sessionId: 'starter-turn-1' });
     expect(s.turn.number).toBe(1);
     expect(['self', 'opp']).toContain(s.turn.player);
     const first = s.turn.player;
@@ -36,7 +36,7 @@ describe('performGameStart', () => {
   });
 
   it('先攻プレイヤーの FILE は 1 枚 (rules/04 例外、通常は 2 枚)', async () => {
-    const s = await performGameStart(skipMulligan);
+    const s = await performGameStart(skipMulligan, undefined, { sessionId: 'starter-file' });
     const first = s.turn.player;
     expect(s.players[first].file.length).toBe(1);
   });
@@ -47,7 +47,7 @@ describe('performGameStart', () => {
       _player: 'self' | 'opp',
       _hand: ReadonlyArray<string>,
     ): Promise<ReadonlyArray<string>> => [];
-    const s = await performGameStart(provider);
+    const s = await performGameStart(provider, undefined, { sessionId: 'starter-mulligan' });
     // mulliganUsed フラグが両プレイヤー true (rules/04 §5 — 0枚返却も権利消費)
     expect(s.players.self.mulliganUsed).toBe(true);
     expect(s.players.opp.mulliganUsed).toBe(true);
@@ -57,8 +57,24 @@ describe('performGameStart', () => {
     const s = await performGameStart(skipMulligan, {
       selfDeckId: 'TEST-BUG-274',
       oppDeckId: 'CT-D11',
-    });
+    }, { sessionId: 'starter-bug-274' });
 
     expect(s.players.self.partner.cardId).toBe('TEST-BUG-274-PARTNER');
+  });
+
+  it('initializes the caller-owned causal session before setup runs', async () => {
+    const s = await performGameStart(skipMulligan, undefined, {
+      sessionId: 'standalone-session-42',
+    });
+
+    expect(s.causalLog).toEqual({
+      schemaVersion: 1,
+      sessionId: 'standalone-session-42',
+      nextSequence: 3,
+    });
+    expect(s.log.slice(0, 2)).toEqual([
+      expect.objectContaining({ eventId: 'standalone-session-42:1', sequence: 1 }),
+      expect.objectContaining({ eventId: 'standalone-session-42:2', sequence: 2 }),
+    ]);
   });
 });

@@ -68,6 +68,7 @@ import { B03031 } from '@/cards/ct-p03/B03031';
 import { B03059 } from '@/cards/ct-p03/B03059';
 import type { CardDef, GameState } from '@/engine/types';
 import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
+import { openCaseHirameki } from '../../helpers/open-case-hirameki';
 
 type G = {
   __pendingEffectPickQueue?: PendingEffectPickSide[];
@@ -159,18 +160,11 @@ function a2State(remove: string[]): GameState {
 
 // ヒラメキ fire/skip ドライブ (B02025.test.ts / bug-140-hirameki-batch.test.ts と同一ハーネス)。
 function emitHirameki(s: GameState, choice: 'fire' | 'skip'): GameState {
-  engine.event.emit(
-    s,
-    'evidence:remove-by-action',
-    { player: 'self', ev: { cardId: 'B03031' } },
-    { player: 'opp', uid: 'opp-attacker' },
-  );
-  const pending = _drainPendingHirameki();
+  const { pending } = openCaseHirameki(s, 'B03031', { humanPlayer: null });
   expect(pending, 'ヒラメキ pending が side-channel に set される').not.toBeNull();
-  expect(pending!.cardId).toBe('B03031');
-  expect(pending!.abilityId).toBe('a2');
-  expect(pending!.player, 'pending.player = self (証拠を失った側)').toBe('self');
-  useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
+  expect(pending.cardId).toBe('B03031');
+  expect(pending.abilityId).toBe('a2');
+  expect(pending.player, 'pending.player = self (証拠を失った側)').toBe('self');
   const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice });
   expect(r.ok, `hiramekiResolve ${choice} ok`).toBe(true);
   expect(useGameStateStore.getState().pendingHirameki, 'pending クリア').toBeNull();
@@ -387,7 +381,7 @@ describe('B03031 大岡紅葉 — gate5 runtime behavior', () => {
     const after = emitHirameki(s0, 'skip');
     expect(after.players.self.hand.length, 'skip → 手札 増えない').toBe(0);
     expect([...after.players.self.remove].sort(), 'skip → remove pile 不変')
-      .toEqual([HEIJI_L8, OTHER_L8].sort());
+      .toEqual([HEIJI_L8, OTHER_L8, 'B03031'].sort());
   });
 
   // ===== descriptor 構造 sanity =====

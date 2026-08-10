@@ -2,11 +2,11 @@
 //
 // 役割:
 //   - useReplayDriver hook の state を表示し、play/pause/step/seek/speed を操作
-//   - 配置: SpectatorHUD と類似のスタイルで画面上部固定 (z-index 9100)
+//   - 配置: 画面上部固定 (z-index 9100)
 //   - log === null なら非表示
 
 import type { JSX } from 'react';
-import type { ReplayDriverApi } from '@/ui/hooks/useReplayDriver.js';
+import { replayTotalSteps, type ReplayDriverApi } from '@/ui/hooks/useReplayDriver.js';
 import './ReplayPanel.css';
 
 const SPEED_PRESETS = [
@@ -20,9 +20,11 @@ export function ReplayPanel({ driver }: { driver: ReplayDriverApi }): JSX.Elemen
   const { state, play, pause, step, seek, setSpeed, unloadLog } = driver;
   if (!state.log) return null;
 
-  const total = state.log.moves.length;
+  const total = replayTotalSteps(state.log);
   const cur = state.currentMoveIndex;
-  const currentMove = cur > 0 && cur <= total ? state.log.moves[cur - 1] : null;
+  const currentMove = state.log.schemaVersion !== 3 && cur > 0 && cur <= total
+    ? state.log.moves[cur - 1]
+    : null;
 
   return (
     <div className="replay-panel" role="toolbar" aria-label="リプレイ制御" data-testid="replay-panel">

@@ -30,7 +30,6 @@ import {
   registerTriggeredListener,
   _resetTriggeredRegistered,
 } from '@/engine/listeners/triggered';
-import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { event } from '@/engine/event/index';
@@ -39,6 +38,7 @@ import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _resetTargetExpanders } from '@/engine/flow/action/target-expander';
 import type { GameState } from '@/engine/types/game-state';
 import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
+import { openCaseHirameki } from '../helpers/open-case-hirameki';
 
 function fullReset(): void {
   engine.cards._resetRegistry();
@@ -82,21 +82,11 @@ describe('Hirameki E2E 結合検証 (Phase 5 advance)', () => {
   it('Test 1: D08013 (hiramekiDraw a2) evidence remove → side-channel set → fire dispatch → hand+1', () => {
     const s = makeStateWithEvidence('self', 'D08013');
     const startHand = s.players.self.hand.length;
-    // action[case] 相当の emit
-    engine.event.emit(
-      s,
-      'evidence:remove-by-action',
-      { player: 'self', ev: { cardId: 'D08013' } },
-      { player: 'opp', uid: 'opp-attacker' },
-    );
-    const pending = _drainPendingHirameki();
+    const { pending } = openCaseHirameki(s, 'D08013');
     expect(pending).not.toBeNull();
-    expect(pending!.player).toBe('self');
-    expect(pending!.cardId).toBe('D08013');
-    expect(pending!.abilityId).toBe('a2');
-
-    // store に書き込み (dispatchEngineAction で drain される想定だが、ここは直接 set)
-    useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
+    expect(pending.player).toBe('self');
+    expect(pending.cardId).toBe('D08013');
+    expect(pending.abilityId).toBe('a2');
 
     // fire dispatch → ability effect queue + resolve
     const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' });
@@ -111,14 +101,7 @@ describe('Hirameki E2E 結合検証 (Phase 5 advance)', () => {
   it('Test 2: skip dispatch → no-op、pending クリア、ability は実行されない', () => {
     const s = makeStateWithEvidence('self', 'D08013');
     const startHand = s.players.self.hand.length;
-    engine.event.emit(
-      s,
-      'evidence:remove-by-action',
-      { player: 'self', ev: { cardId: 'D08013' } },
-      { player: 'opp', uid: 'opp-attacker' },
-    );
-    const pending = _drainPendingHirameki();
-    useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
+    openCaseHirameki(s, 'D08013');
 
     const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'skip' });
     expect(r.ok).toBe(true);
@@ -161,18 +144,11 @@ describe('Hirameki E2E 結合検証 (Phase 5 advance)', () => {
 
   it('Test 5: D08019 (hiramekiCharStun a2) → fire で sceneSetState 効果が queue される', () => {
     const s = makeStateWithEvidence('self', 'D08019');
-    engine.event.emit(
-      s,
-      'evidence:remove-by-action',
-      { player: 'self', ev: { cardId: 'D08019' } },
-      { player: 'opp', uid: 'opp-attacker' },
-    );
-    const pending = _drainPendingHirameki();
+    const { pending } = openCaseHirameki(s, 'D08019');
     expect(pending).not.toBeNull();
-    expect(pending!.cardId).toBe('D08019');
-    expect(pending!.abilityId).toBe('a2');
+    expect(pending.cardId).toBe('D08019');
+    expect(pending.abilityId).toBe('a2');
 
-    useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
     const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' });
     // sceneSetState は対象 0 で no-op、dispatch は ok を返す
     expect(r.ok).toBe(true);

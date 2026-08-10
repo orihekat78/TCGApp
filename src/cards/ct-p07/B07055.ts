@@ -18,9 +18,7 @@
 //   - clause2 「合わせて2枚リムーブしてもよい。そうした場合、AP6000以下1枚までリムーブ」
 //     = optional{ chain[ charRemoveSetCard{self, side:'self', n:2, filter:{hasSetCards}}, sceneRemove{AP6000以下} ] }
 //     · 「してもよい」= optional wrapper (clause 全体を辞退可)。
-//     · 「合わせて2枚」= charRemoveSetCard n:2 (number = 強制ちょうど2枚。buildShortFormPick: n number→nMin=nMax=2)。
-//        own scene の set card を per-char pick で計2枚除去 (apply-pick.ts:66 pickedUids 複数→各 uid per-char 適用)。
-//        ※ n:{min,max} object は hasNorMax (number 判定) を通らず pick 未生成になる (本 family の test で実証)。
+//     · 「合わせて2枚」= charRemoveSetCard n:2 + minimumPolicy:'exact'。裏向きの物理set-card occurrenceを2件選ぶ。
 //     · 「そうした場合」= chain (2枚除去後のみ bonus sceneRemove へ)。bonus = AP6000以下1枚まで either。
 
 import type { AbilityDef, CardDef, GameState } from '@/engine/types';
@@ -53,7 +51,7 @@ const a1: AbilityDef = {
         effect: {
           kind: 'chain',
           steps: [
-            { kind: 'atom', verb: 'charRemoveSetCard', args: { player: 'self', side: 'self', n: 2, filter: { hasSetCards: true } } },
+            { kind: 'atom', verb: 'charRemoveSetCard', args: { player: 'self', side: 'self', n: 2, minimumPolicy: 'exact', faceDownOnly: true, filter: { hasSetCards: true } } },
             { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', filter: { apMax: 6000 } } },
           ],
         },

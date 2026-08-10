@@ -2,6 +2,7 @@ import type { JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
+import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
 import './ChoicePickerModal.css';
 
 const hands = [
@@ -13,7 +14,8 @@ const hands = [
 /** Dedicated player-vs-AI rock-paper-scissors decision. */
 export function RpsModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingRps);
-  if (!pending || pending.player !== 'self') return null;
+  const spectatorMode = useGameStateStore((s) => s.spectatorMode);
+  if (!pending || !isHumanDecisionOwner(pending.player, spectatorMode)) return null;
   return (
     <div className="cp-overlay" role="dialog" aria-modal="true" aria-labelledby="rps-title" data-testid="rps-modal">
       <div className="cp-modal">

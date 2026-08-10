@@ -3,7 +3,7 @@ import { produce } from '@/engine/produce';
 import { runAtom } from '@/engine/effect/atom-handlers';
 import { resolveEffectPicks, tryRePickFromAtom } from '@/engine/effect/resolve-picks';
 import { applyPickAndContinuation } from '@/engine/effect/apply-pick';
-import { _clearPendingEffectPickQueue, _drainPendingEffectPickSide } from '@/engine/effect/pending-state';
+import { _clearPendingEffectPickQueue, _drainPendingEffectPickSide, _peekPendingEffectPickQueueLength } from '@/engine/effect/pending-state';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { makeCtx } from '../../helpers/fixtures';
 
@@ -215,6 +215,24 @@ describe('exact occurrence transfer', () => {
       { uid: 'card:self:remove:DUP#0', cardId: 'DUP', player: 'self', kind: 'card', area: 'remove', index: 0 },
       { uid: 'card:self:partner-area:DUP#0', cardId: 'DUP', player: 'self', kind: 'card', area: 'partner-area', index: 0 },
     ]);
+  });
+
+  it('resolves a direct explicit AI re-pick synchronously without surfacing a human modal', () => {
+    const ctx = makeCtx();
+    const state = createEmptyGameState();
+    state.players.self.remove = ['DUP'];
+    _clearPendingEffectPickQueue();
+
+    tryRePickFromAtom(state, {
+      kind: 'atom', verb: 'handAddFromRemove', args: {
+        player: 'self', cardIds: '$pick.cardIds',
+        target: { kind: 'pick', query: { area: 'remove', side: 'self' }, n: { min: 0, max: 1 } },
+      },
+    }, ctx, { byPlayer: 'self', humanChooser: false });
+
+    expect(_peekPendingEffectPickQueueLength()).toBe(0);
+    expect(state.players.self.remove).toEqual([]);
+    expect(state.players.self.hand).toEqual(['DUP']);
   });
 
   it('moves the human-selected union occurrence, even when the same card ID and index exist in remove', () => {

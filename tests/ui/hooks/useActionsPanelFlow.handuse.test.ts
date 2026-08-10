@@ -15,13 +15,54 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { runHandUseFlow } from '@/ui/hooks/useActionsPanelFlow';
 import { useGameStateStore } from '@/ui/state/store';
 import { useConfirmationStore } from '@/ui/hooks/useConfirmation';
+import { useSceneSwitchPickerStore } from '@/ui/hooks/useSceneSwitchPickerStore';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { register as registerCardDef } from '@/engine/read/def';
 import type { GameState } from '@/engine/types/game-state';
 
 function setupForHandUse(): GameState {
   const s = createEmptyGameState();
   s.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
   s.players.self.hand = ['CARD-A'];
+  return s;
+}
+
+function setupForHandUseSwitch(): GameState {
+  registerCardDef({
+    id: 'CH1',
+    no: 'CH1',
+    kind: 'character',
+    names: ['CH1'],
+    colors: ['赤'],
+    level: 1,
+    traits: [],
+    rarity: 'C',
+    imageUrl: '',
+    abilities: [],
+    ruleRefs: [],
+  });
+  const s = createEmptyGameState();
+  s.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+  s.players.self.case.colors = ['赤'];
+  s.players.self.case.cardId = 'CASE-SELF';
+  s.players.self.file.push({ type: 'card-back' });
+  s.players.self.hand = ['CH1'];
+  for (let i = 0; i < 5; i++) {
+    s.players.self.scene.push({
+      cardId: `SC${i}`,
+      uid: `self-uid-${i}`,
+      state: 'active',
+      isNamed: false,
+      enterOrder: i,
+      setCards: [],
+      stackedCards: 0,
+      keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null,
+      lpOverride: null,
+      turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+      declaredUseCount: {},
+    });
+  }
   return s;
 }
 
@@ -43,9 +84,23 @@ async function rejectConfirmation(): Promise<void> {
 
 describe('runHandUseFlow', () => {
   beforeEach(() => {
-    useGameStateStore.setState({ gameState: null });
+    useGameStateStore.setState({
+      gameState: null,
+      pendingPublicHandReveal: null,
+    });
     useConfirmationStore.getState()._reset();
+    useSceneSwitchPickerStore.getState()._close();
   });
+
+  const effectHandReveal = {
+    owner: 'self',
+    audience: 'all',
+    cardIds: ['CARD-A'],
+    handSnapshot: ['CARD-A'],
+    lifetime: 'effect',
+    resolutionToken: 'public-hand-reveal:hand-use-lock',
+    source: {},
+  } as const;
 
   it('shows standard kind modal then dispatches handUseCard on accept', async () => {
     useGameStateStore.setState({ gameState: setupForHandUse() });
@@ -101,5 +156,58 @@ describe('runHandUseFlow', () => {
     const result = await runHandUseFlow({ player: 'self', cardId: 'CARD-A' });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toBe('not-allowed');
+  });
+
+  it('does not open confirmation while an exclusive decision owns interaction', async () => {
+    useGameStateStore.setState({
+      gameState: setupForHandUse(),
+      pendingPublicHandReveal: effectHandReveal,
+    });
+
+    const promise = runHandUseFlow({ player: 'self', cardId: 'CARD-A' });
+    const openedConfirmation = useConfirmationStore.getState().current !== null;
+    if (openedConfirmation) await rejectConfirmation();
+    const result = await promise;
+
+    expect(openedConfirmation).toBe(false);
+    expect(result).toEqual({ ok: false, reason: 'not-allowed' });
+  });
+
+  it('revalidates interaction ownership after confirmation', async () => {
+    useGameStateStore.setState({ gameState: setupForHandUse() });
+    const promise = runHandUseFlow({ player: 'self', cardId: 'CARD-A' });
+    expect(useConfirmationStore.getState().current).not.toBeNull();
+
+    useGameStateStore.setState({ pendingPublicHandReveal: effectHandReveal });
+    await acceptConfirmation();
+    const result = await promise;
+
+    expect(result).toEqual({ ok: false, reason: 'not-allowed' });
+    expect(useGameStateStore.getState().gameState?.turnState.self.handUseUsed).toBe(false);
+  });
+
+  it('revalidates interaction ownership after the switch victim is selected', async () => {
+    useGameStateStore.setState({ gameState: setupForHandUseSwitch() });
+    const promise = runHandUseFlow({ player: 'self', cardId: 'CH1' });
+
+    await acceptConfirmation();
+    const picker = useSceneSwitchPickerStore.getState().current;
+    expect(picker).not.toBeNull();
+
+    useGameStateStore.setState({
+      pendingPublicHandReveal: {
+        ...effectHandReveal,
+        cardIds: ['CH1'],
+        handSnapshot: ['CH1'],
+      },
+    });
+    useSceneSwitchPickerStore.getState()._close();
+    picker?.resolve(picker.candidates[0].uid);
+
+    const result = await promise;
+    expect(result).toEqual({ ok: false, reason: 'not-allowed' });
+    expect(useGameStateStore.getState().gameState?.players.self.hand).toContain('CH1');
+    expect(useGameStateStore.getState().gameState?.players.self.scene).toHaveLength(5);
+    expect(useGameStateStore.getState().gameState?.turnState.self.handUseUsed).toBe(false);
   });
 });

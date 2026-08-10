@@ -6,6 +6,7 @@
 import type { LogEntry } from '@/engine/types/game-state';
 
 const LABELS: Record<string, string> = {
+  'causal.case-status-change': '事件カードが解決編へ移行',
   reasoning:         '推理',
   handUseCard:       '手札の使用',
   partnerAbility:    'パートナー能力',
@@ -24,8 +25,31 @@ const LABELS: Record<string, string> = {
   'contact-judge':   '判定',
   'auto-phase':      'オートフェイズ',
   refresh:           'リフレッシュ',
+  'causal.use': 'カードを使用',
+  'causal.declare': '能力を宣言',
+  'causal.select': '対象を選択',
+  'causal.draw': 'カードを引く',
+  'causal.discard': 'カードを捨てる',
+  'causal.zone-move': 'カードを移動',
+  'causal.enter': 'カードが登場',
+  'causal.sleep': 'スリープ',
+  'causal.stun': 'スタン',
+  'causal.activate': 'アクティブにする',
+  'causal.face-change': 'カードの向きを変更',
+  'causal.value-change': '数値が変化',
+  'causal.evidence': '証拠が変化',
+  'causal.case-resolve': '事件を解決',
+  'causal.negate': '効果を無効',
+  'causal.fizzle': '効果が不発',
+  'causal.cancel': '処理をキャンセル',
+  'causal.game-result': '勝敗確定',
+  'causal.summary': '処理結果',
 };
 
 export function actionLabel(entry: LogEntry): string {
-  return LABELS[entry.action] ?? entry.action;
+  return actionLabelForAction(entry.action);
+}
+
+export function actionLabelForAction(action: string): string {
+  return LABELS[action] ?? action;
 }

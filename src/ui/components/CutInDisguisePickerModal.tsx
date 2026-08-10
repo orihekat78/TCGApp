@@ -11,6 +11,7 @@
 
 import type { JSX } from 'react';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import { CardArt } from './CardArt.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import './CutInDisguisePickerModal.css';
@@ -48,6 +49,10 @@ export type CutInDisguisePickerModalProps = {
 export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): JSX.Element | null {
   const { open, actorLabel, actorName, candidates, handCards, onPickCutIn, onPickDisguise, onPass } = props;
   const expandModal = useCardExpandModal();
+  const dialogRef = useModalFocusTrap({
+    active: open,
+    initialFocusSelector: '[data-cid-primary-action="true"]',
+  });
   if (!open) return null;
 
   const cutins = candidates.filter((c) => c.kind === 'cutin');
@@ -58,10 +63,12 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
 
   return (
     <div
+      ref={dialogRef}
       className="cid-overlay"
       role="dialog"
       aria-labelledby="cid-title"
       aria-modal="true"
+      tabIndex={-1}
       data-testid="cid-picker-modal"
     >
       <div className="cid-modal">
@@ -124,6 +131,7 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
                     <button
                       type="button"
                       className="cid-cand cid-cand-cutin"
+                      data-cid-primary-action="true"
                       onClick={() => onPickCutIn(c.cardId)}
                       onContextMenu={(event) => {
                         event.preventDefault();
@@ -163,6 +171,7 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
                     <button
                       type="button"
                       className="cid-cand cid-cand-disg"
+                      data-cid-primary-action="true"
                       onClick={() => onPickDisguise(c.cardId)}
                       onContextMenu={(event) => {
                         event.preventDefault();
@@ -195,6 +204,7 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
           <button
             type="button"
             className="cid-pass"
+            data-cid-primary-action="true"
             onClick={onPass}
             data-testid="cid-pass"
           >

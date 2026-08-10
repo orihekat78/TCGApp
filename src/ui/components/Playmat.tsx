@@ -13,6 +13,7 @@
 
 import { useEffect, useRef, useState, type JSX } from 'react';
 import type { GameState } from '@/engine/types/game-state.js';
+import type { ReplayViewerMode } from '@/ai/replay/state-frame.js';
 import { SceneArea, type ResolvedCardMeta } from './SceneArea.js';
 import { isSceneDirectPick } from '@/ui/services/scenePick.js';
 import { PartnerArea } from './PartnerArea.js';
@@ -25,12 +26,13 @@ import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { CaseArea, type CaseInfo, type CaseColor } from './CaseArea.js';
 import { FileArea } from './FileArea.js';
 import { EvidenceArea } from './EvidenceArea.js';
-import { HandZone, type HandCardMeta } from './HandZone.js';
+import { HandZone, type HandCardMeta, type HandZoneProps } from './HandZone.js';
+import { CardArt } from './CardArt.js';
 import { TopBar } from './TopBar.js';
 import { EffectStackPanel } from './EffectStackPanel.js';
 import { pendingOwnerOrderGroup } from '@/engine/resolve/stack.js';
 import { cardIdFromOccurrenceUid, cardOccurrenceUid } from '@/engine/target/card-occurrence.js';
-import { ActionsPanel, type ActionItemId } from './ActionsPanel.js';
+import { ActionsPanel, type ActionItemId, type ActionsPanelProps } from './ActionsPanel.js';
 import { ConfirmModal } from './ConfirmModal.js';
 import {
   runEndTurnFlow,
@@ -57,7 +59,7 @@ import { useTargetPicker, useTargetPickerStore } from '../hooks/useTargetPicker.
 import { useOppTurnDriver } from '../hooks/useOppTurnDriver.js';
 import { useSpectatorTurnDriver } from '../hooks/useSpectatorTurnDriver.js';
 import { useContactFlowDriver } from '../hooks/useContactFlowDriver.js';
-import { useStageScale } from '../hooks/useStageScale.js';
+import { usePlaymatViewportLayout } from '../hooks/useStageScale.js';
 import { useFlipAnimation } from '../hooks/useFlipAnimation.js';
 import { useContactModalStore } from '../hooks/useContactModalStore.js';
 import { useHiramekiFlowDriver } from '../hooks/useHiramekiFlowDriver.js';
@@ -78,7 +80,8 @@ import { useStackedCardCostPickerStore, useStackedCardCostPicker } from '../hook
 import { dispatchEngineAction } from '../hooks/useEngineDispatch.js';
 import { bindPendingDecision } from '../hooks/useEngineDispatch/types.js';
 import { useGameStateStore } from '../state/store.js';
-import { selectInteractionLocked } from '../state/interactionLock.js';
+import { selectInteractionLocked, selectSwitchVictimBlocked } from '../state/interactionLock.js';
+import { getHumanDecisionSide } from '@/ui/services/humanDecisionOwner.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { char as readChar } from '@/engine/read/char.js';
 import { sceneCap } from '@/engine/read/scene-cap.js'; // engine E3 P11 (2026-07-02): 現場登場上限 (既定5、case override 可)
@@ -96,6 +99,8 @@ const JP_COLOR_TO_EN: Record<string, CaseColor> = {
 export type PlaymatProps = {
   gameState: GameState | null;
   resolveCard: (cardId: string) => ResolvedCardMeta;
+  replayReadOnly?: boolean;
+  replayViewer?: ReplayViewerMode;
   /**
    * 事件 cardId → 表示用メタ解決 (任意)。
    * 指定なしの場合は cardId をタイトルにフォールバックする placeholder ロジック。
@@ -143,6 +148,53 @@ type PlayerMatProps = CandidateProps & {
 
 // UI picker Direct Manipulation 化: switch 中の opp 現場 pick prop に渡す不変の空集合。
 const EMPTY_UID_SET: ReadonlySet<string> = new Set<string>();
+
+function ReplayHandStrip({
+  cards,
+  count,
+  revealCards,
+}: {
+  cards: HandCardMeta[];
+  count: number;
+  revealCards: boolean;
+}): JSX.Element {
+  return (
+    <div
+      className="hand-zone hand-zone--collapsed replay-hand-strip"
+      aria-label={`自分の手札 ${count}枚${revealCards ? '' : '（非公開）'}`}
+      data-testid="replay-hand-strip"
+    >
+      <div className="hand-mini-strip">
+        {revealCards
+          ? cards.map((card, index) => (
+              <div
+                key={`${card.cardId}:${index}`}
+                className={`hand-mini-card replay-hand-card color-${card.color} ${card.type === 'イベント' ? 'is-event' : 'is-character'}`}
+                aria-label={card.name}
+              >
+                <span className="hand-mini-cost" aria-hidden="true">{card.cost}</span>
+                <span className="hand-mini-type-badge" aria-hidden="true">
+                  {card.type === 'イベント' ? 'EV' : 'CH'}
+                </span>
+                <span className="hand-mini-art" aria-hidden="true">
+                  <CardArt cardId={card.cardId} alt="" />
+                </span>
+                <span className="hand-mini-name">{card.name}</span>
+              </div>
+            ))
+          : Array.from({ length: count }, (_, index) => (
+              <div key={index} className="replay-hand-card-back" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                  <circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
+                  <line x1="14.5" y1="14.5" x2="19" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </div>
+            ))}
+      </div>
+      <span className="replay-hand-count">{count}枚</span>
+    </div>
+  );
+}
 
 // scene 直接 pick の skip-overlay banner を verb 別に生成 (画面処理=カードテキスト文言、設計 v2)。
 // 新規5verb は全て nMin=0 のため overlay が常時表示される → 「リムーブ」固定文言だと語義不一致になる。
@@ -280,17 +332,24 @@ function PlayerMat({
   );
 }
 
-export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }: PlaymatProps): JSX.Element {
+export function Playmat({
+  gameState,
+  resolveCard,
+  resolveCase,
+  resolveHandCard,
+  replayReadOnly = false,
+  replayViewer,
+}: PlaymatProps): JSX.Element {
   // Phase 8.7b: opp ターンを自動進行 (HeuristicPolicy + flow.endTurn で self へ戻す)
-  useOppTurnDriver();
+  useOppTurnDriver(!replayReadOnly);
   // Round 4l (B5 観戦モード): spectatorMode=true なら self ターンも AI 自動進行
-  useSpectatorTurnDriver();
+  useSpectatorTurnDriver(!replayReadOnly);
   // Phase 8 完全クローズ Commit 2: contact フロー (declare→ガード→コンタクト→AP判定) 駆動。
-  useContactFlowDriver();
+  useContactFlowDriver(!replayReadOnly);
   // Phase 8 完全クローズ Commit 3a: ヒラメキ判定駆動 (opp owner なら AI 自動 / self owner はモーダル待ち)。
-  useHiramekiFlowDriver();
+  useHiramekiFlowDriver(!replayReadOnly);
   // Phase 5 advance UI: Misread driver (reasoningPlayer='self' なら AI 自動解決、'opp' なら modal 待ち)
-  useMisreadFlowDriver();
+  useMisreadFlowDriver(!replayReadOnly);
   // Phase 8.5: 手札は default で collapsed (小さいストリップ)、クリックで expanded (実寸 + ×)
   const [handExpanded, setHandExpanded] = useState(false);
   // Round 4l (BUG-001): カード拡大 modal の state
@@ -330,7 +389,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   const pickerPhase = useTargetPickerStore((s) => s.phase);
   const { pick: pickTarget, confirm: confirmTarget, cancel: cancelTarget } = useTargetPicker();
   useEffect(() => {
-    if (pickerPhase.phase === 'idle') return;
+    if (replayReadOnly || pickerPhase.phase === 'idle') return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       event.preventDefault();
@@ -338,10 +397,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [pickerPhase.phase, cancelTarget]);
+  }, [replayReadOnly, pickerPhase.phase, cancelTarget]);
   // 効果解決中ロック (rules/05 割り込み禁止): 効果スタック非空 or 人間の未解決 decision 待ち中は
   // ActionsPanel の全メインアクションを塞ぐ。decision modal / 盤面 pick はロック対象外。
-  const interactionLocked = useGameStateStore(selectInteractionLocked);
+  const storeInteractionLocked = useGameStateStore(selectInteractionLocked);
+  const interactionLocked = replayReadOnly || storeInteractionLocked;
   const canEndTurn = useCanEndTurnForUi('self');
   // Task2/4: アクティブカード (該当カードをその場でぴこんポップ。中央全画面ポップは不採用)。
   // - CPU 手番中は useOppTurnDriver が store.activeCardUid を 1 手ごとに set (登場/推理/アクション等)。
@@ -553,7 +613,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   // 直接クリックの任意 effect pick は TargetPicker を経由しないため、Escape も画面上の
   // 「選ばない」と同じ effectPickResolve(null) に接続する。必須選択と forced 選択は取消不可。
   useEffect(() => {
-    if (!isScenePick || !pendingPickForArea || pendingPickForArea.nMin !== 0 || scenePickForced.length > 0) return;
+    if (replayReadOnly || !isScenePick || !pendingPickForArea || pendingPickForArea.nMin !== 0 || scenePickForced.length > 0) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       event.preventDefault();
@@ -564,7 +624,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isScenePick, pendingPickForArea, scenePickForced.length]);
+  }, [replayReadOnly, isScenePick, pendingPickForArea, scenePickForced.length]);
   const scenePickUidsSelf = new Set<string>();
   const scenePickUidsOpp = new Set<string>();
   if (isScenePick && pendingPickForArea) {
@@ -581,15 +641,16 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
       { type: 'effectPickResolve', pickedUid: uid },
     ));
   } : undefined;
-
   // rules/20 §スイッチ: switch victim (常に self 現場) も現場直接クリックで収集 (旧 SceneSwitchPickerModal 廃止)。
   // useSceneSwitchPickerStore.current が active な間、self 現場の候補を effect-pickable 化し
   // click で resolve+close。辞退 (キャンセル) = resolve(null)。effect-pick とは構造的に排他
   // (switch 中は pending=null or sceneEnter で isScenePick=false)。
   const switchPicker = useSceneSwitchPickerStore((s) => s.current);
   const switchActive = switchPicker !== null;
+  const switchVictimBlocked = useGameStateStore(selectSwitchVictimBlocked);
   const switchVictimUidsSelf = new Set<string>(switchPicker?.candidates.map((c) => c.uid) ?? []);
   const handleSwitchVictim = (uid: string): void => {
+    if (selectSwitchVictimBlocked(useGameStateStore.getState())) return;
     const c = useSceneSwitchPickerStore.getState().current;
     if (!c) return;
     useSceneSwitchPickerStore.getState()._close();
@@ -601,10 +662,24 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
     useSceneSwitchPickerStore.getState()._close();
     c.resolve(null);
   };
+  useEffect(() => {
+    if (replayReadOnly || !switchActive) return;
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      const current = useSceneSwitchPickerStore.getState().current;
+      if (!current) return;
+      useSceneSwitchPickerStore.getState()._close();
+      current.resolve(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [replayReadOnly, switchActive]);
   // MUX (設計 v2): self/opp 現場の pick prop は switch 中なら switch victim を優先 (victim は常に self)。
-  const selfScenePickUids = switchActive ? switchVictimUidsSelf : scenePickUidsSelf;
+  const switchPickEnabled = switchActive && !switchVictimBlocked;
+  const selfScenePickUids = switchPickEnabled ? switchVictimUidsSelf : switchActive ? EMPTY_UID_SET : scenePickUidsSelf;
   const oppScenePickUids = switchActive ? EMPTY_UID_SET : scenePickUidsOpp;
-  const selfOnPickChar = switchActive ? handleSwitchVictim : handleScenePick;
+  const selfOnPickChar = switchPickEnabled ? handleSwitchVictim : switchActive ? undefined : handleScenePick;
   const oppOnPickChar = switchActive ? undefined : handleScenePick;
 
   // switch-on-effect-enter (rules/20 §スイッチ): リムーブ等からの効果登場 (sceneEnter) で現場が満杯
@@ -710,7 +785,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         : pickerPhase.phase === 'confirming'
           ? '確認モーダルで実行/キャンセルを選んでください。'
           : '⑥ アクション を選択すると、攻撃元キャラ指定 → 相手のスリープ/スタン状態キャラに対しアクション対象を選べます。';
-  const handCards: HandCardMeta[] = resolveHandCard
+  const replayMayRevealSelfHand = replayReadOnly && replayViewer === 'solo-self';
+  const handCards: HandCardMeta[] = resolveHandCard && (!replayReadOnly || replayMayRevealSelfHand)
     ? (gameState?.players.self.hand ?? []).map(resolveHandCard)
     : [];
   // 2026-05-28: ネクストヒント step2 pick 用の表示カード群。
@@ -723,20 +799,169 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
     isNextHintPick && resolveHandCard
       ? [...handCards, resolveHandCard(nextHintPick!.fileTopCardId)]
       : handCards;
-  // Cleanup #6: viewport に合わせて stage を縮小 (1920×1080 fixed → fit)
-  const stageScale = useStageScale();
+  const handPickMode = isDiscardPick || isNextHintPick || isCutinPick || isHandSceneEnterPick;
+  const handPickableCardIds = isCutinPick
+    ? cutinPickableIds
+    : isNextHintPick
+      ? nextHintPickableIds
+      : undefined;
+  const handPickableCardUids = isDiscardPick || isHandSceneEnterPick
+    ? new Set(pendingPickForArea?.candidates.map((candidate) => candidate.uid))
+    : undefined;
+  const handCanUse: NonNullable<HandZoneProps['canUse']> = (card) =>
+    !interactionLocked && gameState !== null && (
+      engineFlow.canHandUseCard(gameState, 'self', card.cardId) ||
+      engineFlow.canHandUseCardSwitch(gameState, 'self', card.cardId)
+    );
+  const handDisabledReason: NonNullable<HandZoneProps['disabledReason']> = (card) =>
+    gameState !== null
+      ? getHandUseDisabledReason(gameState, 'self', card.cardId) ?? '使用不可'
+      : '未開始';
+  const handleHandUse = (cardId: string): void => {
+    if (interactionLocked) return;
+    void runHandUseFlow({ player: 'self', cardId });
+  };
+  const handleHandPickCard: HandZoneProps['onPickCard'] = isCutinPick
+    ? handleCutinPick
+    : isHandSceneEnterPick
+      ? (uid) => { void resolveSceneEnterPick(uid); }
+      : isNextHintPick
+        ? (uid) => {
+            const cardId = cardIdFromOccurrenceUid(uid);
+            if (cardId) useNextHintPicker().acceptUse(cardId);
+          }
+        : isDiscardPick
+          ? (uid) => {
+              if (pendingPickForArea) {
+                dispatchEngineAction(bindPendingDecision(
+                  pendingPickForArea,
+                  { type: 'effectPickResolve', pickedUid: uid },
+                ));
+              }
+            }
+          : undefined;
+  const handPickCanSkip = isCutinPick
+    ? true
+    : isHandSceneEnterPick
+      ? (pendingPickForArea?.nMin ?? 1) === 0
+      : isNextHintPick
+        ? true
+        : isDiscardPick && (pendingPickForArea?.nMin ?? 1) === 0;
+  const handleHandPickSkip: HandZoneProps['onPickSkip'] = isCutinPick
+    ? handleCutinPass
+    : isHandSceneEnterPick || isDiscardPick
+      ? () => {
+          if (pendingPickForArea) {
+            dispatchEngineAction(bindPendingDecision(
+              pendingPickForArea,
+              { type: 'effectPickResolve', pickedUid: null },
+            ));
+          }
+        }
+      : isNextHintPick
+        ? () => useNextHintPicker().acceptSkip()
+        : undefined;
+  const handleHandPickMulti: HandZoneProps['onPickMulti'] = isDiscardPick
+    ? (uids) => {
+        if (!pendingPickForArea) return;
+        const first = uids[0];
+        dispatchEngineAction(bindPendingDecision(
+          pendingPickForArea,
+          first === undefined
+            ? { type: 'effectPickResolve', pickedUid: null }
+            : { type: 'effectPickResolve', pickedUid: first, pickedUids: uids },
+        ));
+      }
+    : undefined;
+
+  const handleEndTurn = (): void => {
+    if (replayReadOnly) return;
+    void runEndTurnFlow({ player: 'self' });
+  };
+  const handleActionItemClick = (id: ActionItemId): void => {
+    if (interactionLocked || pickerPhase.phase !== 'idle') return;
+    cancelTarget();
+    if (id === 'reasoning') void runReasoningFlow({ player: 'self' });
+    else if (id === 'next-hint') void runNextHintFlow({ player: 'self' });
+    else if (id === 'assist') void runAssistFlow({ player: 'self' });
+    else if (id === 'solve-case') void runSolveCaseFlow({ player: 'self' });
+    else if (id === 'hand-use') setHandExpanded(true);
+    else if (id === 'action') void runActionFlow({ player: 'self' });
+    else if (id === 'partner-ability') void runPartnerAbilityFlow({ player: 'self' });
+    else if (id === 'declared-ability') void runDeclaredAbilityFlow({ player: 'self' });
+    else console.warn(`[Playmat] unknown action item: ${id}`);
+  };
+  const actionPanelProps: ActionsPanelProps = {
+    handCount: handCards.length,
+    handUseRemaining:
+      gameState?.turnState.self.handUseUsed || gameState?.turnState.self.nextHintUsed ? 0 : 1,
+    handUseUsed: gameState?.turnState.self.handUseUsed ?? false,
+    nextHintFileCount: gameState?.players.self.file.length ?? 0,
+    nextHintUsed: gameState?.turnState.self.nextHintUsed ?? false,
+    canNextHint: gameState ? engineFlow.canStartNextHint(gameState, 'self') : false,
+    partnerActive: gameState?.players.self.partner.state === 'active',
+    partnerAbilityCount: gameState ? enumPartnerAbilityIds(gameState, 'self').length : 0,
+    declaredTargetCount: gameState ? enumDeclaredAbilitySources(gameState, 'self').length : 0,
+    reasoningTotalLP: gameState ? enumReasoningCandidates(gameState, 'self').length : 0,
+    canAssist: gameState ? canAssistForUi(gameState, 'self') : false,
+    canSolveCase: gameState ? canSolveCaseForUi(gameState, 'self') : false,
+    interactionLocked: interactionLocked || pickerPhase.phase !== 'idle',
+    actionMode:
+      pickerPhase.phase !== 'idle' &&
+      typeof pickerPhase.purpose === 'string' &&
+      pickerPhase.purpose.startsWith('action:')
+        ? 'selecting-target'
+        : 'idle',
+    currentPhase: gameState?.turn.phase ?? 'main',
+    canEndTurn: !replayReadOnly && canEndTurn,
+    onEndTurn: handleEndTurn,
+    onActionItemClick: handleActionItemClick,
+    narratorMessage,
+    logEntryCount: gameState?.log.length ?? 0,
+    logOpen,
+    onLogToggle: () => setLogOpen((value) => !value),
+  };
+  // Desktop は現行 zoom を維持。短い横画面でも 1920×1080 の同じ盤面 DOM を
+  // reflow せず等比縮小し、既存の操作・対象選択をそのまま使う。
+  const scalerRef = useRef<HTMLDivElement>(null);
+  const viewportLayout = usePlaymatViewportLayout({ containerRef: scalerRef });
   // Task5 FLIP: 現場カードの reflow (追加/除去/スイッチ/ゴースト消滅) を移動トゥイーンする。
   // board-content 配下の [data-flip-id] の構造変化を MutationObserver で監視し位置差分をスライド。
   const boardRef = useRef<HTMLDivElement>(null);
   useFlipAnimation(boardRef);
+  const boardStyle = viewportLayout.containedLandscape
+    ? {
+        position: 'absolute' as const,
+        width: `${viewportLayout.logicalWidth}px`,
+        height: `${viewportLayout.logicalHeight}px`,
+        left: `${viewportLayout.left}px`,
+        top: `${viewportLayout.top}px`,
+        transform: `scale(${viewportLayout.scale})`,
+        transformOrigin: 'top left',
+        zoom: 1,
+      }
+    : { zoom: viewportLayout.scale };
   const effectOrderEntries = gameState ? pendingOwnerOrderGroup(gameState, 'self') : [];
   return (
-    <div className="scaler" id="scaler" data-stage-scale={stageScale}>
+    <div
+      className="scaler"
+      id="scaler"
+      ref={scalerRef}
+      data-stage-scale={viewportLayout.scale}
+      data-playmat-layout="desktop"
+      data-playmat-fit={viewportLayout.containedLandscape ? 'contained-landscape' : 'fluid-desktop'}
+      data-playmat-logical-width={viewportLayout.logicalWidth}
+      data-playmat-logical-height={viewportLayout.logicalHeight}
+    >
       <div className="stage">
         {/* BUG-150: board-content を zoom + width=100/scale% で stage 全面に充填し、
             内部のカード/chrome を比率維持スケール (旧 .scaler transform:scale を撤去)。
             以降の modal/overlay は board-content の外 (=.stage 直下) に置き非 zoom で viewport 基準。 */}
-        <div className="board-content" ref={boardRef} style={{ zoom: stageScale }}>
+        <div
+          className="board-content"
+          ref={boardRef}
+          style={boardStyle}
+        >
           <div className="bg" />
         <div className="vignette" />
 
@@ -787,15 +1012,15 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             state={gameState}
             resolveCard={resolveCard}
             resolveCase={resolveCase}
-            candidateUids={candidateUidsOpp}
-            onUnitClick={(uid) => pickAndConfirm(uid)}
-            isCaseCandidate={isOppCaseCandidate}
-            onCaseClick={() => pickAndConfirm(ACTION_CASE_TARGET_OPP)}
-            onAreaClick={handleAreaClick}
-            onExpand={expandModal.open}
-            onSetInspect={inspectSetCards}
-            pickCharUids={oppScenePickUids}
-            onPickChar={oppOnPickChar}
+            candidateUids={replayReadOnly ? EMPTY_UID_SET : candidateUidsOpp}
+            onUnitClick={replayReadOnly ? undefined : (uid) => pickAndConfirm(uid)}
+            isCaseCandidate={replayReadOnly ? false : isOppCaseCandidate}
+            onCaseClick={replayReadOnly ? undefined : () => pickAndConfirm(ACTION_CASE_TARGET_OPP)}
+            onAreaClick={replayReadOnly ? undefined : handleAreaClick}
+            onExpand={replayReadOnly ? undefined : expandModal.open}
+            onSetInspect={replayReadOnly ? undefined : inspectSetCards}
+            pickCharUids={replayReadOnly ? EMPTY_UID_SET : oppScenePickUids}
+            onPickChar={replayReadOnly ? undefined : oppOnPickChar}
             activeCardUid={activeCardUid}
             activeCardLabel={activeCardLabel}
           />
@@ -807,23 +1032,23 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             state={gameState}
             resolveCard={resolveCard}
             resolveCase={resolveCase}
-            candidateUids={candidateUidsSelf}
-            onUnitClick={(uid) => pickAndConfirm(uid)}
-            isPartnerCandidate={isSelfPartnerCandidate}
-            onPartnerClick={() => pickAndConfirm('partner:self')}
+            candidateUids={replayReadOnly ? EMPTY_UID_SET : candidateUidsSelf}
+            onUnitClick={replayReadOnly ? undefined : (uid) => pickAndConfirm(uid)}
+            isPartnerCandidate={replayReadOnly ? false : isSelfPartnerCandidate}
+            onPartnerClick={replayReadOnly ? undefined : () => pickAndConfirm('partner:self')}
             // M3 PA batch (rules/18): PA 常駐 MR が宣言能力 source 候補のとき黄色強調 + クリック選択
-            isPartnerMRCandidate={isSelfPartnerMRCandidate}
-            onPartnerMRClick={() => pickAndConfirm(selfPartnerMRCandidateUid ?? 'partnerMR:self')}
+            isPartnerMRCandidate={replayReadOnly ? false : isSelfPartnerMRCandidate}
+            onPartnerMRClick={replayReadOnly ? undefined : () => pickAndConfirm(selfPartnerMRCandidateUid ?? 'partnerMR:self')}
             // 2026-05-30: 宣言能力 source として自分の事件が候補のとき黄色強調 + クリックで選択
-            isCaseCandidate={isSelfCaseCandidate}
-            onCaseClick={() => pickAndConfirm('case:self')}
-            onAreaClick={handleAreaClick}
-            onExpand={expandModal.open}
-            onSetInspect={inspectSetCards}
-            pickCharUids={selfScenePickUids}
-            onPickChar={selfOnPickChar}
+            isCaseCandidate={replayReadOnly ? false : isSelfCaseCandidate}
+            onCaseClick={replayReadOnly ? undefined : () => pickAndConfirm('case:self')}
+            onAreaClick={replayReadOnly ? undefined : handleAreaClick}
+            onExpand={replayReadOnly ? undefined : expandModal.open}
+            onSetInspect={replayReadOnly ? undefined : inspectSetCards}
+            pickCharUids={replayReadOnly ? EMPTY_UID_SET : selfScenePickUids}
+            onPickChar={replayReadOnly ? undefined : selfOnPickChar}
             // 2026-05-30: ネクストヒント中は FILE 表示を引いた後の枚数 (-1) にして誤解を防ぐ
-            nextHintDrawPreview={isNextHintPick}
+            nextHintDrawPreview={replayReadOnly ? false : isNextHintPick}
             activeCardUid={activeCardUid}
             activeCardLabel={activeCardLabel}
           />
@@ -832,36 +1057,27 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         {/* HandZone (Task 7.11) — Phase 8.6: onCardClick → runHandUseFlow
             Round 2: collapsed/expanded 両方で disabled 状態を可視化 + tooltip で理由表示。
             ユーザ指摘「コスト 8 のカードが出てる」(FILE 不足で使えないのに見た目が同じ) を解消。 */}
-        <HandZone
+        {replayReadOnly ? (
+          <ReplayHandStrip
+            cards={handCards}
+            count={gameState?.players.self.hand.length ?? 0}
+            revealCards={replayMayRevealSelfHand}
+          />
+        ) : <HandZone
           cards={isNextHintPick ? handCardsForZone : handCards}
           expanded={handExpanded}
           onExpand={() => setHandExpanded(true)}
           onCollapse={isDiscardPick || isNextHintPick || isCutinPick || isHandSceneEnterPick ? undefined : () => setHandExpanded(false)}
-          onCardClick={(cardId) => {
-            void runHandUseFlow({ player: 'self', cardId });
-          }}
+          onCardClick={replayReadOnly ? undefined : handleHandUse}
           onCardExpand={expandModal.open}
-          canUse={(c) =>
-            gameState !== null && (
-              engineFlow.canHandUseCard(gameState, 'self', c.cardId) ||
-              engineFlow.canHandUseCardSwitch(gameState, 'self', c.cardId)
-            )
-          }
-          disabledReason={(c) =>
-            gameState !== null
-              ? getHandUseDisabledReason(gameState, 'self', c.cardId) ?? '使用不可'
-              : '未開始'
-          }
-          pickMode={isDiscardPick || isNextHintPick || isCutinPick || isHandSceneEnterPick}
+          canUse={handCanUse}
+          disabledReason={handDisabledReason}
+          pickMode={handPickMode}
           // cutin / ネクストヒント / discard を HandZone pick mode で流用 (黄色枠 pickableCardIds)。
           // cutin: 候補 cardId を黄色枠化、click で cutin / skip で パス。
-          pickableCardIds={isCutinPick ? cutinPickableIds : isNextHintPick ? nextHintPickableIds : undefined}
+          pickableCardIds={handPickableCardIds}
           pickPlayer="self"
-          pickableCardUids={
-            isDiscardPick || isHandSceneEnterPick
-              ? new Set(pendingPickForArea?.candidates.map((c) => c.uid))
-              : undefined
-          }
+          pickableCardUids={handPickableCardUids}
           pickHideBanner={isNextHintPick}
           pickBannerText={
             isCutinPick
@@ -877,214 +1093,72 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           pickSkipLabel={isCutinPick ? 'パス' : isHandSceneEnterPick ? '登場しない' : isNextHintPick ? '使用しない' : undefined}
           onPickCancel={isNextHintPick ? () => useNextHintPicker().acceptCancel() : undefined}
           pickCancelLabel={isNextHintPick ? 'キャンセル' : undefined}
-          onPickCard={
-            isCutinPick
-              ? handleCutinPick
-              : isHandSceneEnterPick
-              ? (uid) => { void resolveSceneEnterPick(uid); }
-              : isNextHintPick
-              ? (uid) => {
-                const cardId = cardIdFromOccurrenceUid(uid);
-                if (cardId) useNextHintPicker().acceptUse(cardId);
-              }
-              : isDiscardPick
-              ? (uid) => {
-                if (pendingPickForArea) {
-                  dispatchEngineAction(bindPendingDecision(
-                    pendingPickForArea,
-                    { type: 'effectPickResolve', pickedUid: uid },
-                  ));
-                }
-              }
-              : undefined
-          }
-          pickCanSkip={
-            isCutinPick ? true : isHandSceneEnterPick ? (pendingPickForArea?.nMin ?? 1) === 0 : isNextHintPick ? true : isDiscardPick && (pendingPickForArea?.nMin ?? 1) === 0
-          }
-          onPickSkip={
-            isCutinPick
-              ? handleCutinPass
-              : isHandSceneEnterPick
-              ? () => {
-                if (pendingPickForArea) {
-                  dispatchEngineAction(bindPendingDecision(
-                    pendingPickForArea,
-                    { type: 'effectPickResolve', pickedUid: null },
-                  ));
-                }
-              }
-              : isNextHintPick
-              ? () => useNextHintPicker().acceptSkip()
-              : isDiscardPick
-              ? () => {
-                if (pendingPickForArea) {
-                  dispatchEngineAction(bindPendingDecision(
-                    pendingPickForArea,
-                    { type: 'effectPickResolve', pickedUid: null },
-                  ));
-                }
-              }
-              : undefined
-          }
+          onPickCard={handleHandPickCard}
+          pickCanSkip={handPickCanSkip}
+          onPickSkip={handleHandPickSkip}
           // BUG-165 UI 側 (wave-10 2026-07-02): nMax>1 の discard pick (B04005/B07002
           // 「手札を2枚リムーブする」) は multi-select で収集し pickedUids を dispatch。
           // 旧実装は単発 pickedUid 即 dispatch → engine 側 (旧 collapse) と合わせ 1枚しか
           // リムーブされなかった。nMax<=1 は onPickCard 経路 byte 不変 (HandZone 側で gate)。
           pickNMin={isDiscardPick ? pendingPickForArea?.nMin : undefined}
           pickNMax={isDiscardPick ? pendingPickForArea?.nMax : undefined}
-          onPickMulti={isDiscardPick ? (uids) => {
-            if (!pendingPickForArea) return;
-            const first = uids[0];
-            if (first === undefined) {
-              dispatchEngineAction(bindPendingDecision(
-                pendingPickForArea,
-                { type: 'effectPickResolve', pickedUid: null },
-              ));
-              return;
-            }
-            dispatchEngineAction(bindPendingDecision(
-              pendingPickForArea,
-              { type: 'effectPickResolve', pickedUid: first, pickedUids: uids },
-            ));
-          } : undefined}
-        />
+          onPickMulti={handleHandPickMulti}
+        />}
 
         {/* ActionsPanel (Phase 8.5 で endTurn 配線開始、他は 8.6+) */}
-        <ActionsPanel
-          handCount={handCards.length}
-          handUseRemaining={
-            // 2026-05-28: NH したターンは通常「手札の使用」不可 (rules/05、engine gate と一致)。
-            // handUseUsed (1ターン1回) に加え nextHintUsed でも 0 にして button を disable。
-            (gameState?.turnState.self.handUseUsed || gameState?.turnState.self.nextHintUsed) ? 0 : 1
-          }
-          handUseUsed={gameState?.turnState.self.handUseUsed ?? false}
-          nextHintFileCount={gameState?.players.self.file.length ?? 0}
-          nextHintUsed={gameState?.turnState.self.nextHintUsed ?? false}
-          canNextHint={gameState ? engineFlow.canStartNextHint(gameState, 'self') : false}
-          partnerActive={gameState?.players.self.partner.state === 'active'}
-          partnerAbilityCount={gameState ? enumPartnerAbilityIds(gameState, 'self').length : 0}
-          declaredTargetCount={
-            gameState ? enumDeclaredAbilitySources(gameState, 'self').length : 0
-          }
-          reasoningTotalLP={
-            gameState ? enumReasoningCandidates(gameState, 'self').length : 0
-          }
-          canAssist={gameState ? canAssistForUi(gameState, 'self') : false}
-          canSolveCase={gameState ? canSolveCaseForUi(gameState, 'self') : false}
-          // A source picker is a live, unresolved player decision.  Starting a
-          // second action here used to cancel/restart the picker asynchronously,
-          // leaving a source with no longer-visible candidates and no way to end
-          // the turn (BUG-272).
-          interactionLocked={interactionLocked || pickerPhase.phase !== 'idle'}
-          actionMode={
-            pickerPhase.phase !== 'idle' &&
-            typeof pickerPhase.purpose === 'string' &&
-            pickerPhase.purpose.startsWith('action:')
-              ? 'selecting-target'
-              : 'idle'
-          }
-          currentPhase={gameState?.turn.phase ?? 'main'}
-          canEndTurn={canEndTurn}
-          onEndTurn={() => { void runEndTurnFlow({ player: 'self' }); }}
-          onActionItemClick={(id: ActionItemId) => {
-            // 効果解決中ロック (rules/05 割り込み禁止): 念のためハンドラ側でも弾く
-            // (ActionsPanel 側で disabled 済だが、プログラム経由の呼び出しを保険でブロック)。
-            if (interactionLocked || pickerPhase.phase !== 'idle') return;
-            // Round 2: picker stack 整理 — 別 ACTIONS item を選んだら現在の picker は
-            // キャンセル (ガイドラベル + outline glow 消す)。flow 内で再度 start() するなら
-            // そこで再開始される (useTargetPicker.start は "既に picking 中" の自動 cancel
-            // ルートを持つので二重 cancel しても安全)。
-            cancelTarget();
-            if (id === 'reasoning') {
-              void runReasoningFlow({ player: 'self' });
-              return;
-            }
-            if (id === 'next-hint') {
-              void runNextHintFlow({ player: 'self' });
-              return;
-            }
-            if (id === 'assist') {
-              void runAssistFlow({ player: 'self' });
-              return;
-            }
-            if (id === 'solve-case') {
-              void runSolveCaseFlow({ player: 'self' });
-              return;
-            }
-            if (id === 'hand-use') {
-              // 手札を展開するだけ。個別カード選択は HandZone.onCardClick → runHandUseFlow。
-              setHandExpanded(true);
-              return;
-            }
-            if (id === 'action') {
-              void runActionFlow({ player: 'self' });
-              return;
-            }
-            if (id === 'partner-ability') {
-              void runPartnerAbilityFlow({ player: 'self' });
-              return;
-            }
-            if (id === 'declared-ability') {
-              void runDeclaredAbilityFlow({ player: 'self' });
-              return;
-            }
-            // 残作業はなし — 全 ActionsPanel item が配線済 (Phase 8.6〜8.8b 完了)
-
-            console.warn(`[Playmat] unknown action item: ${id}`);
-          }}
-          narratorMessage={narratorMessage}
-          logEntryCount={gameState?.log.length ?? 0}
-          logOpen={logOpen}
-          onLogToggle={() => setLogOpen((v) => !v)}
-        />
+        {!replayReadOnly && <ActionsPanel {...actionPanelProps} />}
         </div>
         {/* /board-content (BUG-150): 以降の modal/overlay は非 zoom で viewport 基準を保つ */}
 
         {/* ConfirmModal — useConfirmation の state を全画面オーバーレイで描画 */}
-        <PlaymatConfirmModal />
+        {!replayReadOnly && (
+          <>
+            <PlaymatConfirmModal />
 
         {/* Phase 8 完全クローズ Commit 2: コンタクトフロー用モーダル */}
-        <PlaymatGuardPickerModal />
-        <PlaymatCutInDisguisePickerModal />
+            <PlaymatGuardPickerModal />
+            <PlaymatCutInDisguisePickerModal />
 
         {/* Phase 8 完全クローズ Commit 3a: ヒラメキモーダル */}
-        <PlaymatHiramekiPickerModal />
+            <PlaymatHiramekiPickerModal />
 
         {/* 2026-05-28: ネクストヒント step2 picker は HandZone pick mode に統合 (別 modal 廃止) */}
 
         {/* Phase 5 advance UI: ミスリードモーダル (相手推理時、自分の現場 misread 持ち候補から複数選択) */}
-        <PlaymatMisreadPickerModal />
+            <PlaymatMisreadPickerModal />
 
         {/* rules/20 §スイッチ: switch victim 選択は現場直接クリック (selfScenePickUids/handleSwitchVictim) +
             下部の switch-victim overlay に統合 (旧 SceneSwitchPickerModal は撤去) */}
 
         {/* BUG-108: 複数 option choice effect (D11012 a1 LP＋1/AP＋2000) の択一 modal */}
-        <PlaymatChoicePickerModal />
+            <PlaymatChoicePickerModal />
 
         {/* CARD PHASE step12 batch2: declareName atom (「カード名を1つ指定し」B09108/B09003/PR105) の
             宣言名入力 modal (runDeclaredAbilityFlow 3.8 が ask() した間だけ open) */}
-        <PlaymatDeclareNameModal />
+            <PlaymatDeclareNameModal />
 
         {/* BUG-085: 宣言能力コスト〚裏向きの証拠を表向きにする〛の証拠選択 picker
             (証拠エリア拡大表示 CardListModal を pick mode で流用) */}
-        <PlaymatEvidenceFlipPickerModal />
-        <PlaymatHandCostPickerModal />
-        <PlaymatStackedCardCostPickerModal />
+            <PlaymatEvidenceFlipPickerModal />
+            <PlaymatHandCostPickerModal />
+            <PlaymatStackedCardCostPickerModal />
 
         {/* Phase 8.5: narrator-msg と log-btn は ActionsPanel に集約。
             LogPanel は open=true のときのみオーバーレイで描画。 */}
-        <LogPanel
-          entries={gameState?.log ?? []}
-          open={logOpen}
-          onClose={() => setLogOpen(false)}
-          gameState={gameState}
-          onCardExpand={expandModal.open}
-        />
+            <LogPanel
+              entries={gameState?.log ?? []}
+              open={logOpen}
+              onClose={() => setLogOpen(false)}
+              gameState={gameState}
+              onCardExpand={expandModal.open}
+            />
+          </>
+        )}
 
         {/* Round 2: FILE/証拠/リムーブ クリック → 内容確認モーダル
             証拠 / FILE は engine 上裏向きなので faceDownCount で枚数のみ表示。
             リムーブは表向きなので cards (cardId[]) で実カード表示。 */}
-        {areaModal && gameState && pendingDeckReorder === null && (() => {
+        {!replayReadOnly && areaModal && gameState && pendingDeckReorder === null && (() => {
           const player = gameState.players[areaModal.side];
           // Round 3: FILE 内アシスト中パートナーのみ表向き表示 (ユーザ指示)
           //   - file の中身を 「assisted-partner cards (表向き)」 と 「card-back count (裏向き)」 に分割
@@ -1307,10 +1381,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           );
         })()}
         {/* Round 4l (BUG-001): カード拡大表示 modal */}
-        <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
+        {!replayReadOnly && <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />}
         {/* User vision (拡張 5 chain): SceneArea pick mode で skip 可能 (max:N) の場合
             scene キャラを click せず「リムーブしない」できるよう overlay ボタン表示 */}
-        {isScenePick && (
+        {!replayReadOnly && isScenePick && (
           <div className="scene-pick-skip-overlay" role="status">
             {/* banner は verb 別 (画面処理=カードテキスト文言、設計 v2)。新規5verb は全て nMin=0 → 常時表示 */}
             <span className="scene-pick-skip-banner">
@@ -1336,7 +1410,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           </div>
         )}
         {/* rules/20 §スイッチ: switch victim 選択 overlay (self 現場直接クリック + 辞退キャンセル、設計 v2 Part C) */}
-        {switchActive && (
+        {!replayReadOnly && switchActive && (
           <div className="scene-pick-skip-overlay" role="status" data-testid="switch-victim-overlay">
             <span className="scene-pick-skip-banner">
               {`${switchPicker?.newCardName ?? ''} — 退場キャラを現場から選んでください`}
@@ -1352,13 +1426,15 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           </div>
         )}
       </div>
-      <EffectStackPanel
-        entries={effectOrderEntries}
-        open={effectOrderEntries.length >= 2}
-        reorderPlayer="self"
-        onReorder={(entryId, order) => { dispatchEngineAction({ type: 'setEffectOrder', entryId, order, player: 'self' }); }}
-        onConfirmOrder={(entryIds) => { dispatchEngineAction({ type: 'resolveEffectOrder', entryIds, player: 'self' }); }}
-      />
+      {!replayReadOnly && (
+        <EffectStackPanel
+          entries={effectOrderEntries}
+          open={effectOrderEntries.length >= 2}
+          reorderPlayer="self"
+          onReorder={(entryId, order) => { dispatchEngineAction({ type: 'setEffectOrder', entryId, order, player: 'self' }); }}
+          onConfirmOrder={(entryIds) => { dispatchEngineAction({ type: 'resolveEffectOrder', entryIds, player: 'self' }); }}
+        />
+      )}
     </div>
   );
 }
@@ -1407,7 +1483,9 @@ function PlaymatGuardPickerModal(): JSX.Element | null {
  */
 function PlaymatHiramekiPickerModal(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingHirameki);
-  if (!pending || pending.player !== 'self') {
+  const spectatorMode = useGameStateStore((s) => s.spectatorMode);
+  const humanPlayer = getHumanDecisionSide(spectatorMode);
+  if (!pending || pending.player !== humanPlayer) {
     return (
       <HiramekiPickerModal
         open={false}
@@ -1453,9 +1531,7 @@ function PlaymatMisreadPickerModal(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingMisread);
   const gameState = useGameStateStore((s) => s.gameState);
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
-  const humanPlayer = spectatorMode
-    ? null
-    : (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+  const humanPlayer = getHumanDecisionSide(spectatorMode);
   if (!pending || pending.player !== humanPlayer || !gameState) {
     return (
       <MisreadPickerModal

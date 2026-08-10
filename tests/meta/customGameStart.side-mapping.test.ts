@@ -30,7 +30,9 @@ describe('customGameStart P1/P2 binding', () => {
   });
 
   it('固有partner/case/40枚をside別に保ち、反転した2回目開始でも前回sideを引き継がない', async () => {
-    const first = await customGameStart(SAMPLE_DECK, SAMPLE_DECK_OPP, { spectator: true, firstPlayer: 'self' });
+    const first = await customGameStart(SAMPLE_DECK, SAMPLE_DECK_OPP, {
+      sessionId: 'side-mapping-first', spectator: true, firstPlayer: 'self',
+    });
     expect(first.players.self.partner.cardId).toBe(SAMPLE_DECK.partner);
     expect(first.players.self.case.cardId).toBe(SAMPLE_DECK.case);
     expect(mainZoneCards(first.players.self)).toEqual(expanded(SAMPLE_DECK));
@@ -38,12 +40,32 @@ describe('customGameStart P1/P2 binding', () => {
     expect(first.players.opp.case.cardId).toBe(SAMPLE_DECK_OPP.case);
     expect(mainZoneCards(first.players.opp)).toEqual(expanded(SAMPLE_DECK_OPP));
 
-    const second = await customGameStart(SAMPLE_DECK_OPP, SAMPLE_DECK, { spectator: true, firstPlayer: 'opp' });
+    const second = await customGameStart(SAMPLE_DECK_OPP, SAMPLE_DECK, {
+      sessionId: 'side-mapping-second', spectator: true, firstPlayer: 'opp',
+    });
     expect(second.players.self.partner.cardId).toBe(SAMPLE_DECK_OPP.partner);
     expect(second.players.self.case.cardId).toBe(SAMPLE_DECK_OPP.case);
     expect(mainZoneCards(second.players.self)).toEqual(expanded(SAMPLE_DECK_OPP));
     expect(second.players.opp.partner.cardId).toBe(SAMPLE_DECK.partner);
     expect(second.players.opp.case.cardId).toBe(SAMPLE_DECK.case);
     expect(mainZoneCards(second.players.opp)).toEqual(expanded(SAMPLE_DECK));
+  });
+
+  it('uses the route-owned session ID for the causal graph allocator', async () => {
+    const state = await customGameStart(SAMPLE_DECK, SAMPLE_DECK_OPP, {
+      spectator: true,
+      firstPlayer: 'self',
+      sessionId: 'meta-session-42',
+    });
+
+    expect(state.causalLog).toEqual({
+      schemaVersion: 1,
+      sessionId: 'meta-session-42',
+      nextSequence: 3,
+    });
+    expect(state.log.slice(0, 2)).toEqual([
+      expect.objectContaining({ eventId: 'meta-session-42:1', sequence: 1 }),
+      expect.objectContaining({ eventId: 'meta-session-42:2', sequence: 2 }),
+    ]);
   });
 });

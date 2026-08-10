@@ -9,6 +9,12 @@
 import type { GameState } from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
+import {
+  completeEffectCausalTrace,
+  currentEffectCausalCorrelationEventId,
+  startStandaloneCausalTrace,
+  withEffectCausalCorrelation,
+} from '../../log/effect-causal.js';
 
 type Player = 'self' | 'opp';
 
@@ -43,17 +49,44 @@ export function usePartnerAbility(
   if (!canPartnerAbility(state, p, abilId)) {
     throw new Error(`usePartnerAbility: not allowed for ${p} abilId=${abilId}`);
   }
-  mutate.log.append(state, {
-    ts: Date.now(),
-    player: p,
-    turn: state.turn.number,
-    action: 'partnerAbility',
-    target: abilId,
-  });
-  event.emit(
-    state,
-    'effect:declared',
-    { kind: 'partnerAbility', abilId },
-    { player: p, cardId: state.players[p].partner.cardId },
-  );
+  const inheritedRootId = currentEffectCausalCorrelationEventId(state);
+  const ownTrace = inheritedRootId === undefined
+    ? startStandaloneCausalTrace(state, {
+        actor: p,
+        kind: 'declare',
+        source: { kind: 'partner-card', side: p },
+        targets: [],
+        outcome: { type: 'state', state: 'active' },
+      })
+    : undefined;
+  const rootEventId = inheritedRootId ?? ownTrace?.rootEventId;
+  try {
+    withEffectCausalCorrelation(state, rootEventId, () => {
+      if (rootEventId === undefined) {
+        mutate.log.append(state, {
+          ts: Date.now(),
+          player: p,
+          turn: state.turn.number,
+          action: 'partnerAbility',
+          target: abilId,
+        });
+      }
+      event.emit(
+        state,
+        'effect:declared',
+        { kind: 'partnerAbility', abilId },
+        { player: p, cardId: state.players[p].partner.cardId },
+      );
+    });
+    completeEffectCausalTrace(state, ownTrace, p);
+  } catch (error) {
+    completeEffectCausalTrace(
+      state,
+      ownTrace,
+      p,
+      'cancel',
+      { type: 'state', state: 'cancelled' },
+    );
+    throw error;
+  }
 }

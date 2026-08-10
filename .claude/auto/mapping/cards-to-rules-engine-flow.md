@@ -2,13 +2,13 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `bcfec3f2d6cb`
+> Source hash: `9c35e304d02c`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **145** ファイル（[全体 index](./index.md)）
+このグループ: **166** ファイル（[全体 index](./index.md)）
 
-## engine/effect (21)
+## engine/effect (23)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -27,19 +27,23 @@
 | [`src/engine/effect/index.ts`](../../../src/engine/effect/index.ts) | _(参照なし)_ |
 | [`src/engine/effect/invoke-hirameki.ts`](../../../src/engine/effect/invoke-hirameki.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/engine/effect/invoke-leave-to-remove.ts`](../../../src/engine/effect/invoke-leave-to-remove.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
+| [`src/engine/effect/pending-runtime-schema.ts`](../../../src/engine/effect/pending-runtime-schema.ts) | _(参照なし)_ |
 | [`src/engine/effect/pending-state.ts`](../../../src/engine/effect/pending-state.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
+| [`src/engine/effect/pick-selection.ts`](../../../src/engine/effect/pick-selection.ts) | _(参照なし)_ |
 | [`src/engine/effect/resolve-picks.ts`](../../../src/engine/effect/resolve-picks.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/effect/resolver.ts`](../../../src/engine/effect/resolver.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
 | [`src/engine/effect/runtime-state.ts`](../../../src/engine/effect/runtime-state.ts) | _(参照なし)_ |
 | [`src/engine/effect/validate-spec-files.ts`](../../../src/engine/effect/validate-spec-files.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/effect/validate.ts`](../../../src/engine/effect/validate.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 
-## engine/flow (20)
+## engine/flow (22)
 
 | ソース | 参照ルール |
 | ------ | --------- |
 | [`src/engine/flow/action-case.ts`](../../../src/engine/flow/action-case.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`10-action-event.md`](../../rules/10-action-event.md) |
+| [`src/engine/flow/action/causal.ts`](../../../src/engine/flow/action/causal.ts) | _(参照なし)_ |
 | [`src/engine/flow/action/context-registry.ts`](../../../src/engine/flow/action/context-registry.ts) | _(参照なし)_ |
+| [`src/engine/flow/action/legacy-replay-compat.ts`](../../../src/engine/flow/action/legacy-replay-compat.ts) | _(参照なし)_ |
 | [`src/engine/flow/action/order.ts`](../../../src/engine/flow/action/order.ts) | [`08-contact.md`](../../rules/08-contact.md) |
 | [`src/engine/flow/action/state-machine.ts`](../../../src/engine/flow/action/state-machine.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
 | [`src/engine/flow/action/target-expander.ts`](../../../src/engine/flow/action/target-expander.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) |
@@ -73,7 +77,7 @@
 | [`src/engine/invariant/scratchTraceMonotonic.ts`](../../../src/engine/invariant/scratchTraceMonotonic.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/engine/invariant/stunSemantics.ts`](../../../src/engine/invariant/stunSemantics.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) |
 
-## engine (他) (32)
+## engine (他) (34)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -99,6 +103,8 @@
 | [`src/engine/listeners/misread.ts`](../../../src/engine/listeners/misread.ts) | _(参照なし)_ |
 | [`src/engine/listeners/reserved-effects.ts`](../../../src/engine/listeners/reserved-effects.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/listeners/triggered.ts`](../../../src/engine/listeners/triggered.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
+| [`src/engine/log/causal.ts`](../../../src/engine/log/causal.ts) | _(参照なし)_ |
+| [`src/engine/log/effect-causal.ts`](../../../src/engine/log/effect-causal.ts) | _(参照なし)_ |
 | [`src/engine/produce.ts`](../../../src/engine/produce.ts) | _(参照なし)_ |
 | [`src/engine/resolve/index.ts`](../../../src/engine/resolve/index.ts) | _(参照なし)_ |
 | [`src/engine/resolve/stack.ts`](../../../src/engine/resolve/stack.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
@@ -110,7 +116,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (63)
+## その他 (78)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -139,16 +145,18 @@
 | [`src/ui/hooks/useEffectStack.ts`](../../../src/ui/hooks/useEffectStack.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useEngineDispatch.ts`](../../../src/ui/hooks/useEngineDispatch.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`11-reasoning.md`](../../rules/11-reasoning.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/ui/hooks/useEngineDispatch/can-check.ts`](../../../src/ui/hooks/useEngineDispatch/can-check.ts) | _(参照なし)_ |
+| [`src/ui/hooks/useEngineDispatch/set-card-boundary.ts`](../../../src/ui/hooks/useEngineDispatch/set-card-boundary.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useEngineDispatch/types.ts`](../../../src/ui/hooks/useEngineDispatch/types.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useEvidence.ts`](../../../src/ui/hooks/useEvidence.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useEvidenceFlipPicker.ts`](../../../src/ui/hooks/useEvidenceFlipPicker.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/ui/hooks/useFile.ts`](../../../src/ui/hooks/useFile.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useFlipAnimation.ts`](../../../src/ui/hooks/useFlipAnimation.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useHandCostPicker.ts`](../../../src/ui/hooks/useHandCostPicker.ts) | _(参照なし)_ |
-| [`src/ui/hooks/useHiramekiDemoDriver.ts`](../../../src/ui/hooks/useHiramekiDemoDriver.ts) | [`10-action-event.md`](../../rules/10-action-event.md) |
+| [`src/ui/hooks/useHiramekiDemoDriver.ts`](../../../src/ui/hooks/useHiramekiDemoDriver.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useHiramekiFlowDriver.ts`](../../../src/ui/hooks/useHiramekiFlowDriver.ts) | [`10-action-event.md`](../../rules/10-action-event.md) |
 | [`src/ui/hooks/useLogEntries.ts`](../../../src/ui/hooks/useLogEntries.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useMisreadFlowDriver.ts`](../../../src/ui/hooks/useMisreadFlowDriver.ts) | [`13-keywords.md`](../../rules/13-keywords.md) |
+| [`src/ui/hooks/useModalFocusTrap.ts`](../../../src/ui/hooks/useModalFocusTrap.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useMulligan.ts`](../../../src/ui/hooks/useMulligan.ts) | [`26-05-11-ui-game-setup-flows.md`](../../rules/26-05-11-ui-game-setup-flows.md) |
 | [`src/ui/hooks/useNextHintPicker.ts`](../../../src/ui/hooks/useNextHintPicker.ts) | [`12-next-hint.md`](../../rules/12-next-hint.md) |
 | [`src/ui/hooks/useOppTurnDriver.ts`](../../../src/ui/hooks/useOppTurnDriver.ts) | [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) |
@@ -163,16 +171,29 @@
 | [`src/ui/hooks/useStageScale.ts`](../../../src/ui/hooks/useStageScale.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useTargetPicker.ts`](../../../src/ui/hooks/useTargetPicker.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`11-reasoning.md`](../../rules/11-reasoning.md) / [`17-icons.md`](../../rules/17-icons.md) / [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) |
 | [`src/ui/hooks/useTopBar.ts`](../../../src/ui/hooks/useTopBar.ts) | _(参照なし)_ |
+| [`src/ui/presentation/coordinator.ts`](../../../src/ui/presentation/coordinator.ts) | _(参照なし)_ |
+| [`src/ui/presentation/normalizedLog.ts`](../../../src/ui/presentation/normalizedLog.ts) | _(参照なし)_ |
+| [`src/ui/presentation/PresentationQueue.ts`](../../../src/ui/presentation/PresentationQueue.ts) | _(参照なし)_ |
+| [`src/ui/presentation/store.ts`](../../../src/ui/presentation/store.ts) | _(参照なし)_ |
+| [`src/ui/presentation/usePresentationQueue.ts`](../../../src/ui/presentation/usePresentationQueue.ts) | _(参照なし)_ |
 | [`src/ui/services/actionLabel.ts`](../../../src/ui/services/actionLabel.ts) | _(参照なし)_ |
 | [`src/ui/services/cardImage.ts`](../../../src/ui/services/cardImage.ts) | _(参照なし)_ |
 | [`src/ui/services/cardResolvers.ts`](../../../src/ui/services/cardResolvers.ts) | _(参照なし)_ |
 | [`src/ui/services/deckBuilder.ts`](../../../src/ui/services/deckBuilder.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) |
+| [`src/ui/services/effectPickerVisibility.ts`](../../../src/ui/services/effectPickerVisibility.ts) | _(参照なし)_ |
 | [`src/ui/services/gameStarter.ts`](../../../src/ui/services/gameStarter.ts) | [`04-game-setup.md`](../../rules/04-game-setup.md) |
 | [`src/ui/services/handUseReason.ts`](../../../src/ui/services/handUseReason.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
+| [`src/ui/services/hiramekiDemoSession.ts`](../../../src/ui/services/hiramekiDemoSession.ts) | _(参照なし)_ |
+| [`src/ui/services/humanDecisionOwner.ts`](../../../src/ui/services/humanDecisionOwner.ts) | _(参照なし)_ |
+| [`src/ui/services/liveReplayRecorder.ts`](../../../src/ui/services/liveReplayRecorder.ts) | _(参照なし)_ |
 | [`src/ui/services/matchSession.ts`](../../../src/ui/services/matchSession.ts) | _(参照なし)_ |
+| [`src/ui/services/replayOwnership.ts`](../../../src/ui/services/replayOwnership.ts) | _(参照なし)_ |
+| [`src/ui/services/replayStateBoundary.ts`](../../../src/ui/services/replayStateBoundary.ts) | _(参照なし)_ |
+| [`src/ui/services/replayViewerProjection.ts`](../../../src/ui/services/replayViewerProjection.ts) | _(参照なし)_ |
 | [`src/ui/services/scenePick.ts`](../../../src/ui/services/scenePick.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
 | [`src/ui/services/tutorialSteps.ts`](../../../src/ui/services/tutorialSteps.ts) | [`01-curriculum-design.md`](../../rules/01-curriculum-design.md) |
 | [`src/ui/services/uidNames.ts`](../../../src/ui/services/uidNames.ts) | _(参照なし)_ |
+| [`src/ui/state/autonomousDecisionGate.ts`](../../../src/ui/state/autonomousDecisionGate.ts) | _(参照なし)_ |
 | [`src/ui/state/interactionLock.ts`](../../../src/ui/state/interactionLock.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/ui/state/store.ts`](../../../src/ui/state/store.ts) | _(参照なし)_ |
 | [`src/ui/state/surface-pending.ts`](../../../src/ui/state/surface-pending.ts) | _(参照なし)_ |

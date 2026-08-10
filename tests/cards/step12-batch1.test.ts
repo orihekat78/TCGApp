@@ -286,7 +286,7 @@ describe('step12 B09090 風の女神', () => {
     s.players.self.case.status = '解決編';
     expect(evalCond(s, a2.condition!, ctx), '解決編 = 成立').toBe(true);
     s = produce(s, (d) => { runEffect(d, a2.effect as Effect, ctx); runAllUntilEmpty(d); });
-    expect(s.turnState.self.shippuWaiveArmed).toBe(true);
+    expect(s.turnState.self.shippuWaiveArmed, 'B09090 a2 arms the next-entry Shippu waiver').toBe(true);
   });
 });
 

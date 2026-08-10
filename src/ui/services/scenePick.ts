@@ -28,6 +28,7 @@ export function isSceneDirectPick(
 ): boolean {
   if (!pending || !gameState) return false;
   if (pending.player !== 'self') return false;
+  if (pending.publicHandRevealToken) return false;
   if (pending.nMax !== 1) return false;
   if (pending.candidates.length === 0) return false;
   const sceneUids = new Set<string>();

@@ -68,6 +68,7 @@ import { sceneChar } from '../../helpers/fixtures';
 import { B04051 } from '@/cards/ct-p04/B04051';
 import type { CardDef, GameState } from '@/engine/types';
 import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
+import { openCaseHirameki } from '../../helpers/open-case-hirameki';
 
 type G = {
   __pendingEffectPickQueue?: PendingEffectPickSide[];
@@ -135,17 +136,10 @@ function a2State(deck: string[]): GameState {
 
 // ヒラメキ fire/skip ドライブ (B02025.test.ts emitHirameki と同一ハーネス)。
 function emitHirameki(s: GameState, choice: 'fire' | 'skip'): GameState {
-  engine.event.emit(
-    s,
-    'evidence:remove-by-action',
-    { player: 'self', ev: { cardId: 'B04051' } },
-    { player: 'opp', uid: 'opp-attacker' },
-  );
-  const pending = _drainPendingHirameki();
+  const { pending } = openCaseHirameki(s, 'B04051');
   expect(pending, 'ヒラメキ pending が side-channel に set される').not.toBeNull();
-  expect(pending!.cardId).toBe('B04051');
-  expect(pending!.abilityId).toBe('a2');
-  useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
+  expect(pending.cardId).toBe('B04051');
+  expect(pending.abilityId).toBe('a2');
   const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice });
   expect(r.ok, `hiramekiResolve ${choice} ok`).toBe(true);
   expect(useGameStateStore.getState().pendingHirameki, 'pending クリア').toBeNull();

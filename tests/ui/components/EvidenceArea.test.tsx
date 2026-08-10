@@ -1,6 +1,8 @@
 // Phase 7 Task 7.9: EvidenceArea tests
 
-import { describe, it, expect } from 'vitest';
+import { act } from 'react';
+import { createRoot } from 'react-dom/client';
+import { beforeAll, describe, it, expect, vi } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import { EvidenceArea } from '@/ui/components/EvidenceArea';
 
@@ -9,15 +11,43 @@ function strip(html: string): string {
 }
 
 describe('EvidenceArea', () => {
+  beforeAll(() => { globalThis.IS_REACT_ACT_ENVIRONMENT = true; });
   it('renders zone shell with side class', () => {
     const html = strip(renderToString(
       <EvidenceArea count={0} requiredEvidence={7} side="self" />,
     ));
     expect(html).toMatch(/evidence-area side-self/);
     expect(html).toMatch(/<span>証拠<\/span>/);
-    expect(html).toMatch(/role="button"/);
+    expect(html).not.toMatch(/role="button"/);
     // Round 2: aria-label に「自分の/相手の」prefix を追加 (B-9 modal 改修)
     expect(html).toMatch(/aria-label="自分の証拠 0 \/ 7 枚/);
+  });
+
+  it('exposes button semantics only when the evidence zone is interactive', () => {
+    const html = strip(renderToString(
+      <EvidenceArea count={2} requiredEvidence={7} side="self" onClick={() => undefined} />,
+    ));
+    expect(html).toMatch(/role="button"/);
+    expect(html).toMatch(/tabindex="0"/);
+    expect(html).toMatch(/クリックで内容表示/);
+  });
+
+  it('activates an interactive evidence zone with Enter and Space', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const onClick = vi.fn();
+    act(() => root.render(
+      <EvidenceArea count={2} requiredEvidence={7} side="self" onClick={onClick} />,
+    ));
+    const zone = container.querySelector<HTMLElement>('[role="button"]')!;
+
+    act(() => zone.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })));
+    act(() => zone.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true })));
+
+    expect(onClick).toHaveBeenCalledTimes(2);
+    act(() => root.unmount());
+    container.remove();
   });
 
   it('shows 0/7 + no stack when empty', () => {

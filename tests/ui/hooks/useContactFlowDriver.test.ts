@@ -16,6 +16,7 @@ import { useContactModalStore } from '@/ui/hooks/useContactModalStore';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { produce } from '@/engine/produce';
 import * as flow from '@/engine/flow/index.js';
+import { mutate } from '@/engine/mutate/index.js';
 import { char as readChar } from '@/engine/read/char';
 import { register as registerCardDef } from '@/engine/read/def';
 import { D08017 } from '@/cards/ct-d08/D08017';
@@ -137,6 +138,26 @@ describe('useContactFlowDriver — _runDriverStep', () => {
     expect(getActionContext(axId)?.phase).toBe('guard-window');
   });
 
+  it('aborts before showing the guard picker when the declared target left the scene', () => {
+    const s = createEmptyGameState();
+    s.turn = { number: 2, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.opp.scene = [makeChar('o1', 'active')];
+    s.players.self.scene = [makeChar('s1', 'sleep'), makeChar('s2', 'active')];
+    useGameStateStore.setState({ gameState: s });
+    dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'o1', targetUid: 's1' });
+    const axId = useGameStateStore.getState().activeActionId!;
+    const missingTargetState = produce(useGameStateStore.getState().gameState!, (draft) => {
+      mutate.scene.removeToRemove(draft, 's1', 'effect');
+    });
+    useGameStateStore.setState({ gameState: missingTargetState });
+    const ax = flow.action._getContext(missingTargetState, axId)!;
+
+    _runDriverStep(missingTargetState, ax);
+
+    expect(getActionContext(axId)).toBeUndefined();
+    expect(useContactModalStore.getState().guardPicker).toBeNull();
+  });
+
   it('auto-advance phase (leave-resolution) → driver dispatches actionAdvance', () => {
     useGameStateStore.setState({ gameState: makeBattle() });
     dispatchEngineAction({ type: 'actionDeclareChar', byUid: 's1', targetUid: 't1' });
@@ -169,6 +190,35 @@ describe('useContactFlowDriver — _runDriverStep', () => {
     act(() => root.render(createElement(ContactDriverProbe)));
 
     expect(getActionContext(axId)?.phase).toBe('leave-resolution');
+    act(() => root.unmount());
+  });
+
+  it('resumes contact flow when a deck reveal decision is dismissed', () => {
+    useGameStateStore.setState({ gameState: makeBattle() });
+    dispatchEngineAction({ type: 'actionDeclareChar', byUid: 's1', targetUid: 't1' });
+    const axId = useGameStateStore.getState().activeActionId!;
+    dispatchEngineAction({ type: 'actionGuard', actionId: axId, guarderUid: null });
+    expect(getActionContext(axId)?.phase).toBe('leave-resolution');
+
+    useGameStateStore.setState({
+      pendingDeckReveal: {
+        player: 'self',
+        visibility: 'public',
+        viewer: 'all',
+        revealed: ['D08003'],
+        matched: null,
+      },
+    });
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    act(() => root.render(createElement(ContactDriverProbe)));
+    expect(getActionContext(axId)?.phase).toBe('leave-resolution');
+
+    act(() => useGameStateStore.getState().setPendingDeckReveal(null));
+    expect(getActionContext(axId)?.phase).toBe('action-2');
+    expect(useContactModalStore.getState().cutInDisguise?.actionId).toBe(axId);
+
     act(() => root.unmount());
   });
 

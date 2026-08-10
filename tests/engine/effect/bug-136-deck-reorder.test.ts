@@ -8,7 +8,8 @@ import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { produce } from 'immer';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { runAtom, _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
-import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import { persistPendingRuntimeState, resetPendingRuntimeState } from '@/engine/effect/runtime-state';
+import { dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/useEngineDispatch';
 import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types';
 import { useGameStateStore } from '@/ui/state/store';
 import type { EffectCtx, GameState } from '@/engine/types';
@@ -23,7 +24,15 @@ function ctxWithRest(cardIds: string[]): EffectCtx {
   } as unknown as EffectCtx;
 }
 
+function surfaceDeckReorder(state: GameState) {
+  persistPendingRuntimeState(state);
+  expect(useGameStateStore.getState().setGameState(state, { preserveRuntime: true })).toBe(true);
+  surfacePendingSideChannels();
+  return useGameStateStore.getState().pendingDeckReorder!;
+}
+
 beforeEach(() => {
+  resetPendingRuntimeState();
   g.__pendingDeckReorderSide = null;
   useGameStateStore.getState().setGameState(null);
   useGameStateStore.getState().setPendingDeckReorder(null);
@@ -96,14 +105,12 @@ describe('BUG-136 — deckToBottomBound 順序選択 side-channel', () => {
 
 describe('BUG-136 — deckReorderResolve dispatch', () => {
   it('底ブロックを order で並べ替える (E,D,C 順)', () => {
-    const s0 = produce(createEmptyGameState(), (d) => {
-      d.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
-      d.players.self.deck = ['A', 'B', 'C', 'D', 'E'];
-    });
-    useGameStateStore.getState().setGameState(s0);
-    useGameStateStore.getState().setPendingDeckReorder({ player: 'self', cardIds: ['C', 'D', 'E'] });
-
-    const pending = useGameStateStore.getState().pendingDeckReorder!;
+    setHuman('self');
+    const state = createEmptyGameState();
+    state.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
+    state.players.self.deck = ['A', 'B', 'C', 'D', 'E'];
+    runAtom(state, 'deckToBottomBound', { player: 'self', bindKey: '$rest' }, ctxWithRest(['C', 'D', 'E']));
+    const pending = surfaceDeckReorder(state);
     const r = dispatchEngineAction(bindPendingDecision(pending, { type: 'deckReorderResolve', order: ['E', 'D', 'C'] }));
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState();
@@ -112,16 +119,15 @@ describe('BUG-136 — deckReorderResolve dispatch', () => {
   });
 
   it('order が底ブロックの permutation でない場合は何もしない (防御)', () => {
-    const s0 = produce(createEmptyGameState(), (d) => {
-      d.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
-      d.players.self.deck = ['A', 'B', 'C', 'D', 'E'];
-    });
-    useGameStateStore.getState().setGameState(s0);
-    useGameStateStore.getState().setPendingDeckReorder({ player: 'self', cardIds: ['C', 'D', 'E'] });
-
-    const pending = useGameStateStore.getState().pendingDeckReorder!;
-    dispatchEngineAction(bindPendingDecision(pending, { type: 'deckReorderResolve', order: ['X', 'Y', 'Z'] })); // 不正
+    setHuman('self');
+    const state = createEmptyGameState();
+    state.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
+    state.players.self.deck = ['A', 'B', 'C', 'D', 'E'];
+    runAtom(state, 'deckToBottomBound', { player: 'self', bindKey: '$rest' }, ctxWithRest(['C', 'D', 'E']));
+    const pending = surfaceDeckReorder(state);
+    const result = dispatchEngineAction(bindPendingDecision(pending, { type: 'deckReorderResolve', order: ['X', 'Y', 'Z'] })); // 不正
     const after = useGameStateStore.getState();
+    expect(result.ok).toBe(false);
     expect(after.gameState!.players.self.deck).toEqual(['A', 'B', 'C', 'D', 'E']); // 不変
   });
 });

@@ -55,3 +55,34 @@
   were accepted on PC and smartphone.
 - Operational changes use the production runbook: qualify exact staging, probe both
   domains, add/remove exact emails on both apps, contain before rollback or rights work.
+
+## 2026-08-10: UI quality and causal presentation
+
+- Worktree: `.claude/worktrees/home-screen-only`; branch: `codex/home-screen-only`.
+- Preserve the existing playmat. Landscape mobile uses the desktop composition
+  at a responsive scale; do not introduce a separate mobile board or side buttons.
+- HOME, SETUP, CARDS, DECK, HISTORY, REPLAY, RESULT, TUTORIAL, SETTINGS, and
+  MATCH are implemented under one header and one standard appearance.
+- Shared causal presentation explains source, target, order, and result. Its
+  pause, step, and skip controls never dispatch engine actions or AI steps.
+- Replay artifacts are read-only projections. Loading or seeking Replay must not
+  hydrate live resolver continuations or start match drivers.
+- Human decision ownership and autonomous progression use shared selectors.
+  Preserve the parent effect pick/choice exception for scene-switch children.
+- Public full-match validation starts at `#setup`, uses rendered decisions only,
+  and derives the 30-turn cap from the public first/second-player chapter tag.
+
+## UI quality final evidence
+
+- Vitest: 944 files / 7797 tests passed; 5 files / 197 tests skipped; 0 failed.
+- Typecheck, lint, production build, and meta build passed.
+- Root Playwright: 403 passed / 17 skipped; Meta Playwright: 178 passed.
+- Final UI/UX adversarial review: Critical / Important 0.
+
+## UI quality closeout
+
+- UI defect records from the older branch were renumbered to `BUG-298` through
+  `BUG-302` during main integration because main already owned `BUG-277` through
+  `BUG-281`.
+- The real eight-person formative study is external and remains unexecuted.
+- Full session record: `.claude/sessions/2026-08-09-ui-quality-causal-public-match.md`.

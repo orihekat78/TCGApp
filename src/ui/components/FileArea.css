@@ -141,6 +141,19 @@
 .file-area .file-card-faceup-name { font-size: 10px; font-weight: 700; }
 .file-area .file-card-faceup-id { margin-top: 4px; font-size: 8px; color: var(--file-text-second); }
 
+.file-area .stack-display .file-card-faceup.assisted-partner {
+  padding: 0;
+  transform: rotate(-90deg);
+  border-color: color-mix(in oklch, var(--file-accent) 65%, white 15%);
+  box-shadow: 0 0 8px color-mix(in oklch, var(--file-accent) 45%, transparent);
+}
+.file-area .file-card-faceup.assisted-partner .assisted-partner-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* monogram / magnifier は SVG ::before で代替するので非表示 */
 .file-area .stack-display .card-back .monogram,
 .file-area .stack-display .card-back .magnifier {
@@ -301,7 +314,22 @@
   from { opacity: 0; transform: translateY(-6px) scale(0.92); }
   to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
+@keyframes file-assisted-partner-enter {
+  from { opacity: 0; transform: translateY(-6px) scale(0.92) rotate(-90deg); }
+  to   { opacity: 1; transform: rotate(-90deg); }
+}
 .file-area .card-back.assisted-partner,
-.file-area .stack-display .card-back:not(.empty) {
+.file-area .file-card-faceup.assisted-partner {
+  animation: file-assisted-partner-enter 220ms ease-out both;
+}
+.file-area .stack-display .card-back:not(.empty):not(.assisted-partner) {
   animation: file-card-enter 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-area .card-back.assisted-partner,
+  .file-area .file-card-faceup.assisted-partner,
+  .file-area .stack-display .card-back:not(.empty) {
+    animation: none;
+  }
 }

@@ -25,7 +25,8 @@ import {
   applyOptionalAndContinuation,
   applyPickAndContinuation,
 } from '@/engine/effect/apply-pick';
-import { _drainPendingChooseInterceptSide, resetPendingEffectSession } from '@/engine/effect/pending-state';
+import { _drainPendingChooseInterceptSide, _pushPendingEffectPickSideForTest, resetPendingEffectSession } from '@/engine/effect/pending-state';
+import { persistPendingRuntimeState, readPendingEffectPickAuthority } from '@/engine/effect/runtime-state';
 import { dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { sceneChar } from '../../helpers/fixtures';
@@ -253,16 +254,17 @@ describe('public hand reveal window', () => {
   it('rejects a stale linked selection by exact hand multiset without applying it', () => {
     const state = createEmptyGameState();
     state.players.opp.hand = ['A', 'B'];
+    _pushPendingEffectPickSideForTest({
+      player: 'self', ownerPlayer: 'self', atomVerb: 'discard', atomArgs: { player: 'opp' }, nMin: 0, nMax: 1,
+      source: { cardId: 'SOURCE', abilityId: 'a1' }, publicHandRevealToken: 'public-hand-reveal:stale',
+      candidates: [{ uid: 'hand:opp:0:A', cardId: 'A', player: 'opp', kind: 'card', area: 'hand' }],
+    });
+    persistPendingRuntimeState(state);
+    expect(useGameStateStore.getState().setGameState(state)).toBe(true);
     useGameStateStore.setState({
-      gameState: state,
       pendingPublicHandReveal: {
         owner: 'opp', audience: 'all', cardIds: ['A', 'A'], handSnapshot: ['A', 'A'],
         lifetime: 'effect', resolutionToken: 'public-hand-reveal:stale', source: {},
-      },
-      pendingEffectPick: {
-        player: 'self', ownerPlayer: 'self', atomVerb: 'discard', atomArgs: {}, nMin: 0, nMax: 1,
-        source: { cardId: 'SOURCE', abilityId: 'a1' }, publicHandRevealToken: 'public-hand-reveal:stale',
-        candidates: [{ uid: 'hand:opp:0:A', cardId: 'A', player: 'opp', kind: 'card', area: 'hand' }],
       },
     });
 
@@ -270,6 +272,43 @@ describe('public hand reveal window', () => {
     expect(useGameStateStore.getState().gameState!.players.opp.hand).toEqual(['A', 'B']);
     expect(useGameStateStore.getState().pendingPublicHandReveal).toBeNull();
     expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
+
+    const rejectedState = useGameStateStore.getState().gameState!;
+    expect(readPendingEffectPickAuthority(rejectedState)).toBeNull();
+    expect(useGameStateStore.getState().setGameState(rejectedState)).toBe(true);
+    expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
+  });
+
+  it('resolves the FIFO sibling once after cancelling a stale linked head', () => {
+    const state = createEmptyGameState();
+    state.players.opp.hand = ['A', 'B'];
+    _pushPendingEffectPickSideForTest({
+      player: 'self', ownerPlayer: 'self', atomVerb: 'discard', atomArgs: {}, nMin: 0, nMax: 1,
+      source: { cardId: 'SOURCE', abilityId: 'a1' }, publicHandRevealToken: 'public-hand-reveal:stale-head',
+      candidates: [{ uid: 'hand:opp:0:A', cardId: 'A', player: 'opp', kind: 'card', area: 'hand', index: 0 }],
+    });
+    _pushPendingEffectPickSideForTest({
+      player: 'self', ownerPlayer: 'self', atomVerb: 'discard', atomArgs: { player: 'opp' }, nMin: 1, nMax: 1,
+      source: { cardId: 'TAIL', abilityId: 'a1' },
+      candidates: [{ uid: 'hand:opp:1:B', cardId: 'B', player: 'opp', kind: 'card', area: 'hand', index: 1 }],
+    });
+    persistPendingRuntimeState(state);
+    expect(useGameStateStore.getState().setGameState(state)).toBe(true);
+    useGameStateStore.setState({
+      pendingPublicHandReveal: {
+        owner: 'opp', audience: 'all', cardIds: ['A', 'A'], handSnapshot: ['A', 'A'],
+        lifetime: 'effect', resolutionToken: 'public-hand-reveal:stale-head', source: {},
+      },
+    });
+
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'hand:opp:0:A' })).toMatchObject({ ok: false });
+    expect(useGameStateStore.getState().pendingEffectPick).toMatchObject({ source: { cardId: 'TAIL' } });
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'hand:opp:1:B' })).toEqual({ ok: true });
+
+    const resolved = useGameStateStore.getState();
+    expect(resolved.gameState!.players.opp.hand).toEqual(['A']);
+    expect(resolved.pendingEffectPick).toBeNull();
+    expect(readPendingEffectPickAuthority(resolved.gameState!)).toBeNull();
   });
 
   it('closes an effect window with no legal target without blocking a later driver tick', () => {
@@ -468,16 +507,17 @@ describe('public hand reveal window', () => {
 
   it('closes an effect-lifetime window when its linked pick is skipped', () => {
     const state = createEmptyGameState();
+    _pushPendingEffectPickSideForTest({
+      player: 'self', ownerPlayer: 'self', candidates: [], atomVerb: 'discard', atomArgs: {},
+      nMin: 0, nMax: 1, source: { cardId: 'SOURCE', abilityId: 'a1' },
+      publicHandRevealToken: 'public-hand-reveal:skip',
+    });
+    persistPendingRuntimeState(state);
+    expect(useGameStateStore.getState().setGameState(state)).toBe(true);
     useGameStateStore.setState({
-      gameState: state,
       pendingPublicHandReveal: {
         owner: 'opp', audience: 'all', cardIds: [], handSnapshot: [],
         lifetime: 'effect', resolutionToken: 'public-hand-reveal:skip', source: {},
-      },
-      pendingEffectPick: {
-        player: 'self', ownerPlayer: 'self', candidates: [], atomVerb: 'discard', atomArgs: {},
-        nMin: 0, nMax: 1, source: { cardId: 'SOURCE', abilityId: 'a1' },
-        publicHandRevealToken: 'public-hand-reveal:skip',
       },
     });
     expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null })).toMatchObject({ ok: true });

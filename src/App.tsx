@@ -5,12 +5,8 @@
 import { Playmat } from '@/ui/components/Playmat';
 import { GameSetupModal } from '@/ui/components/GameSetupModal';
 import { MulliganModal } from '@/ui/components/MulliganModal';
-import { OppTurnOverlay } from '@/ui/components/OppTurnOverlay';
-import { SpectatorHUD } from '@/ui/components/SpectatorHUD';
 import { ReplayPanel } from '@/ui/components/ReplayPanel';
-import { useReplayDriver } from '@/ui/hooks/useReplayDriver';
-import type { ReplayLog } from '@/ai/replay';
-import { RecentActionToast } from '@/ui/components/RecentActionToast';
+import { replayViewerModeForLog, useReplayDriver } from '@/ui/hooks/useReplayDriver';
 import { _setHumanPlayerSide } from '@/engine/listeners/triggered';
 import { useEffect } from 'react';
 import { useEffectPickFlowDriver } from '@/ui/hooks/useEffectPickFlowDriver';
@@ -19,7 +15,7 @@ import { EffectDecisionModalHosts } from '@/ui/components/EffectDecisionModalHos
 import { HiramekiDemoPickerModal } from '@/ui/components/HiramekiDemoPickerModal';
 import { HiramekiDemoBanner } from '@/ui/components/HiramekiDemoBanner';
 import { useHiramekiDemoDriver } from '@/ui/hooks/useHiramekiDemoDriver';
-import { createHiramekiDemoState, HIRAMEKI_DEMO_OPP_ATTACKER_UID } from '@/ui/fixtures/hiramekiDemoState';
+import { startHiramekiDemoSession } from '@/ui/services/hiramekiDemoSession';
 import { CutinDemoPickerModal } from '@/ui/components/CutinDemoPickerModal';
 import { CutinDemoBanner } from '@/ui/components/CutinDemoBanner';
 import { useCutinDemoDriver } from '@/ui/hooks/useCutinDemoDriver';
@@ -27,8 +23,7 @@ import { createCutinDemoState, CUTIN_DEMO_OPP_ATTACKER_UID, CUTIN_DEMO_SELF_DEFE
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { DeckRevealOverlay } from '@/ui/components/DeckRevealOverlay';
 import { PublicHandRevealWindow } from '@/ui/components/PublicHandRevealWindow';
-import { ContactFlash } from '@/ui/components/ContactFlash';
-import { RefreshOverlay } from '@/ui/components/RefreshOverlay';
+import { PresentationCoordinatorHost } from '@/ui/presentation/PresentationCoordinatorHost';
 import { VictoryOverlay } from '@/ui/components/VictoryOverlay';
 import { TutorialOverlay } from '@/ui/components/TutorialOverlay';
 import { registerAll } from '@/cards/index';
@@ -58,13 +53,6 @@ registerAll();
 export default function App() {
   // Store から購読: dispatch が走ったときに再描画される。
   const gameState = useGameStateStore((s) => s.gameState);
-  // user_request 20260521_01 #12: SpectatorHUD が getState() ベースで描画される
-  // ため、spectatorMode / aiSpeedMs / isAiPaused / aiStepCounter 変化を親で
-  // subscribe して再描画を伝搬する。
-  useGameStateStore((s) => s.spectatorMode);
-  useGameStateStore((s) => s.aiSpeedMs);
-  useGameStateStore((s) => s.isAiPaused);
-  useGameStateStore((s) => s.aiStepCounter);
   // user_request 20260522_01 #6/#2: spectator mode に応じて humanPlayerSide
   // を engine 側 globalThis 側チャネルに反映。triggered listener が「human
   // 所有 effect は auto-pick せず」に判定する材料。
@@ -75,7 +63,7 @@ export default function App() {
   // Phase 9-G.2: リプレイ playback driver
   const replayDriver = useReplayDriver();
   // BUG-054 (user_request 20260522_01 #2/#6): human effect pick driver
-  useEffectPickFlowDriver();
+  useEffectPickFlowDriver(replayDriver.state.log === null);
   // 2026-05-26: ヒラメキ効果検証 demo の完了検知 driver。
   // hiramekiDemoMode='playing' 中、pendingHirameki が non-null → null になったら
   // mode='completed' へ。HiramekiDemoBanner が表示される。
@@ -93,24 +81,14 @@ export default function App() {
         resolveCard={resolveCard}
         resolveCase={resolveCase}
         resolveHandCard={resolveHandCard}
+        replayReadOnly={replayDriver.state.log !== null}
+        replayViewer={replayViewerModeForLog(replayDriver.state.log)}
       />
-      <GameSetupModal onLoadReplay={(log) => replayDriver.loadLog(log as ReplayLog)} />
+      <GameSetupModal onLoadReplay={replayDriver.loadLog} />
       {hiramekiDemoMode === 'picking' && (
         <HiramekiDemoPickerModal
           onPick={(cardId) => {
-            // 1. 選択 cardId を記録 (banner 表示用)
-            useGameStateStore.getState().setHiramekiDemoSelectedCardId(cardId);
-            // 2. demo 初期 gameState を構築 (self.evidence top に cardId 配置)
-            useGameStateStore.getState().setGameState(createHiramekiDemoState(cardId));
-            // 3. mode を 'playing' に遷移
-            useGameStateStore.getState().setHiramekiDemoMode('playing');
-            // 4. opp 現場 #1 が self の case を攻撃 → self.evidence top リムーブ → hirameki 発火
-            //    Zustand store は sync 更新なので setGameState 直後でも dispatch が読める
-            dispatchEngineAction({
-              type: 'actionAgainstCase',
-              byUid: HIRAMEKI_DEMO_OPP_ATTACKER_UID,
-              targetPlayer: 'self',
-            });
+            startHiramekiDemoSession(cardId);
           }}
           onClose={() => useGameStateStore.getState().setHiramekiDemoMode('idle')}
         />
@@ -139,16 +117,17 @@ export default function App() {
       <CutinDemoBanner />
       <ReplayPanel driver={replayDriver} />
       <MulliganModal />
-      <OppTurnOverlay />
       {/* BUG-088: replay 再生中は CPU 制御 HUD を出さない (ReplayPanel と top で重なり close を遮るため) */}
-      {replayDriver.state.log === null && <SpectatorHUD />}
       <EffectPickerModal />
       <EffectDecisionModalHosts />
       <DeckRevealOverlay />
       <PublicHandRevealWindow />
-      <RecentActionToast />
-      <ContactFlash />
-      <RefreshOverlay />
+      {gameState !== null && (
+        <PresentationCoordinatorHost
+          speed="standard"
+          suppressed={replayDriver.state.log !== null}
+        />
+      )}
       <VictoryOverlay />
       <TutorialOverlay />
     </>

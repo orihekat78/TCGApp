@@ -11,9 +11,15 @@
 // 設計:
 //   - state は Immer draft (caller が produce() 内で呼ぶ)
 //   - defenderPolicy.chooseGuard? を呼んでガード判定。未実装 / null 返却なら passGuard
-//   - actionAgainstCase は contact 省略 (rules/10: 証拠リムーブ + 自証拠獲得のみ)
+//   - actionAgainstCase はガード不成立時のみ contact 省略
+//     (rules/10: 証拠リムーブ + 自証拠獲得)
 
-import { engine } from '@/engine';
+import {
+  _drainPendingHirameki,
+  _markPendingHiramekiGainDeferred,
+  _peekPendingHirameki,
+  engine,
+} from '@/engine';
 import { drainAiEffectPicks } from '@/engine/effect/apply-pick.js';
 import type { GameState, ActionContext } from '@/engine/types';
 import type { AIPolicy } from './policy.js';
@@ -24,11 +30,36 @@ type Player = 'self' | 'opp';
 // 公式裁定「ガード判定より前に発動・解決される」(rules/22 + TSV qAndA B08048/B01036/B02068)。
 // CPU 経路は従来 chooseGuard の後にしか drain しておらず、B01036 (ガード候補をスリープで奪う) 等が
 // 逆順で機能しなかった。declare 直後に stack + AI pick を drain してガード判定前に解決を完了させる。
-function drainDeclareTriggers(state: GameState, policy?: AIPolicy): void {
+type EffectPickPolicy = { chooseAtomTarget?: NonNullable<AIPolicy['chooseAtomTarget']> };
+
+function drainQueuedEffects(state: GameState, policy?: EffectPickPolicy): void {
   engine.resolve.runAllUntilEmpty(state);
   drainAiEffectPicks(state, policy);
   // pick 解決後に continuation (chain/sequence の後続) が積まれる場合があるため再度 stack を流す。
   engine.resolve.runAllUntilEmpty(state);
+}
+
+function actionEffectPickPolicy(
+  ax: ActionContext,
+  attackerPolicy?: AIPolicy,
+  defenderPolicy?: AIPolicy,
+): EffectPickPolicy | undefined {
+  if (!attackerPolicy?.chooseAtomTarget && !defenderPolicy?.chooseAtomTarget) return undefined;
+  return {
+    chooseAtomTarget: (state, verb, args, candidates, byPlayer) => {
+      const policy = byPlayer === ax.byPlayer ? attackerPolicy : defenderPolicy;
+      return policy?.chooseAtomTarget?.(state, verb, args, candidates, byPlayer) ?? null;
+    },
+  };
+}
+
+function drainActionEffects(
+  state: GameState,
+  ax: ActionContext,
+  attackerPolicy?: AIPolicy,
+  defenderPolicy?: AIPolicy,
+): void {
+  drainQueuedEffects(state, actionEffectPickPolicy(ax, attackerPolicy, defenderPolicy));
 }
 
 /**
@@ -55,8 +86,8 @@ function ownerOfUid(s: GameState, uid: string): Player | null {
 function resolveCutInForPhase(
   state: GameState,
   ax: ActionContext,
-  attackerPolicy: AIPolicy,
-  defenderPolicy: AIPolicy,
+  attackerPolicy: AIPolicy | undefined,
+  defenderPolicy: AIPolicy | undefined,
   which: 'firstUid' | 'secondUid',
 ): void {
   const flagKey: 'firstActed' | 'secondActed' = which === 'firstUid' ? 'firstActed' : 'secondActed';
@@ -73,28 +104,28 @@ function resolveCutInForPhase(
   const policy = uid === ax.byUid ? attackerPolicy : defenderPolicy;
 
   // 1) cutin を試す (Phase 8.7d)
-  if (policy.chooseCutIn) {
+  if (policy?.chooseCutIn) {
     const cutinCands = state.players[player].hand.filter((c) =>
       engine.flow.contact.canCutIn(state, ax, player, c),
     );
     const cutinChoice = policy.chooseCutIn(state, ax, player, cutinCands);
     if (cutinChoice !== null) {
       engine.flow.contact.cutIn(state, ax, player, cutinChoice);
-      engine.resolve.runAllUntilEmpty(state);
+      drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
       ax[flagKey] = true;
       return;
     }
   }
 
   // 2) cutin が選ばれなければ disguise を試す (Phase 8.7e)
-  if (policy.chooseDisguise) {
+  if (policy?.chooseDisguise) {
     const disgCands = state.players[player].hand.filter((c) =>
       engine.flow.contact.canDisguise(state, ax, player, c),
     );
     const disgChoice = policy.chooseDisguise(state, ax, player, disgCands);
     if (disgChoice !== null) {
       engine.flow.contact.disguise(state, ax, player, disgChoice);
-      engine.resolve.runAllUntilEmpty(state);
+      drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
       ax[flagKey] = true;
       return;
     }
@@ -103,6 +134,35 @@ function resolveCutInForPhase(
   // 3) どちらも選ばれなければ pass
   engine.flow.contact.pass(state, ax, player);
   ax[flagKey] = false;
+}
+
+/** Drive every contact phase shared by character targets and guarded cases. */
+function resolveContactSequence(
+  state: GameState,
+  ax: ActionContext,
+  attackerPolicy?: AIPolicy,
+  defenderPolicy?: AIPolicy,
+): void {
+  engine.flow.action.advance(state, ax); // leave-resolution → contact-pending
+  engine.flow.action.advance(state, ax); // contact-pending → action-1
+  drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
+
+  resolveCutInForPhase(state, ax, attackerPolicy, defenderPolicy, 'firstUid');
+  engine.flow.action.advance(state, ax); // action-1 → action-2
+
+  resolveCutInForPhase(state, ax, attackerPolicy, defenderPolicy, 'secondUid');
+  engine.flow.action.advance(state, ax); // action-2 → judge (or action-1-redo)
+
+  if (ax.phase === 'action-1-redo') {
+    resolveCutInForPhase(state, ax, attackerPolicy, defenderPolicy, 'firstUid');
+    engine.flow.action.advance(state, ax); // action-1-redo → judge
+  }
+
+  engine.flow.action.snapshotAP(state, ax);
+  engine.flow.contact.judge(state, ax);
+  drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
+  engine.flow.action.advance(state, ax); // judge → contact-end
+  engine.flow.action.advance(state, ax); // contact-end → action-end
 }
 
 /**
@@ -122,7 +182,9 @@ export function resolveActionAgainstChar(
 
   // BUG-141 (cluster3): 宣言時 trigger の効果をガード判定前に解決 (rules/22 R1)。
   // attackerPolicy で drain (発火源は攻撃側カード。AI-vs-AI は humanSide null で全 pick が drain される)。
-  drainDeclareTriggers(state, attackerPolicy);
+  drainQueuedEffects(state, attackerPolicy);
+
+  if (engine.flow.action.abortIfMissing(state, ax)) return;
 
   // ガード判定 (Phase 8.7c)
   // Task D E4: アクション対象自身はガード候補から除外 (B09028/B09054 Q&A)
@@ -147,31 +209,9 @@ export function resolveActionAgainstChar(
   // Task D E4 (2026-06-12): action:guarded / action:unguarded で queue された triggered effect
   // (例: B09041 a2 がガードキャラへ contactImmune_action を grant) を judge 前に解決する。
   // 従来 drain は cutin/disguise 成立時のみで、CPU 経路では judge 後まで未解決だった。
-  engine.resolve.runAllUntilEmpty(state);
+  drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
 
-  // FSM 進行 + カットイン判定 (Phase 8.7d)
-  engine.flow.action.advance(state, ax); // leave-resolution → contact-pending
-  engine.flow.action.advance(state, ax); // contact-pending → action-1
-
-  // 1番目 のカットイン判定
-  resolveCutInForPhase(state, ax, attackerPolicy, defenderPolicy, 'firstUid');
-  engine.flow.action.advance(state, ax); // action-1 → action-2
-
-  // 2番目 のカットイン判定
-  resolveCutInForPhase(state, ax, attackerPolicy, defenderPolicy, 'secondUid');
-  engine.flow.action.advance(state, ax); // action-2 → judge (or action-1-redo)
-
-  // action-1-redo: 1番目 pass + 2番目 行動 のとき発生 → 1番目 にもう一度チャンス
-  // (Phase 8.7d は redo パスでも同じヒューリスティック判定を使う)
-  if (ax.phase === 'action-1-redo') {
-    resolveCutInForPhase(state, ax, attackerPolicy, defenderPolicy, 'firstUid');
-    engine.flow.action.advance(state, ax); // action-1-redo → judge
-  }
-
-  engine.flow.action.snapshotAP(state, ax);
-  engine.flow.contact.judge(state, ax);
-  engine.flow.action.advance(state, ax); // judge → contact-end
-  engine.flow.action.advance(state, ax); // contact-end → action-end
+  resolveContactSequence(state, ax, attackerPolicy, defenderPolicy);
 }
 
 /**
@@ -181,12 +221,10 @@ export function resolveActionAgainstChar(
  * 委譲し、ガード成立時は contact AP 判定 (攻撃 vs ガード) のみ・証拠変動なし、不成立時のみ rules/10
  * の証拠リムーブ + 自証拠獲得を行う。これは human 経路 useEngineDispatch actionJudge の分岐
  * (`case && !guardUid` → 証拠操作 / else → snapshotAP+judge、user_request 20260522_01 #8 で確定) と同型。
- * 注: FSM contact-pending は case のため cutin フェーズを省略し judge へ直行する (既存挙動、parity 維持)。
- *
- * - declare → drainDeclareTriggers (宣言時 trigger をガード判定前に解決、BUG-141)
+ * - declare → drainQueuedEffects (宣言時 trigger をガード判定前に解決、BUG-141)
  * - defenderPolicy?.chooseGuard で guard 判定 (候補は scene の active キャラ、partner 不可)
- * - guard 成立: snapshotAP → judge → advance × 2 (証拠変動なし)
- * - guard 不成立: removeOpponentEvidenceTop → gainSelfEvidence → advance × 2
+ * - guard 成立: full contact (cutin / disguise を含む、証拠変動なし)
+ * - guard 不成立: evidence remove → exact Hirameki checkpoint → deferred gain → advance × 2
  */
 export function resolveActionAgainstCase(
   state: GameState,
@@ -198,7 +236,9 @@ export function resolveActionAgainstCase(
   const ax = engine.flow.action.declare(state, byUid, { kind: 'case', player: targetPlayer });
   // BUG-141 (cluster3, F3-i): case アクションの宣言時 trigger (B01068/B02068 のブレット付与等) も
   // ガード判定前に解決する。drain 経路は従来挙動を維持 (attackerPolicy 未指定なら全 pick drain)。
-  drainDeclareTriggers(state, attackerPolicy);
+  drainQueuedEffects(state, attackerPolicy);
+
+  if (engine.flow.action.abortIfMissing(state, ax)) return;
 
   // BUG-144: ガード判定 (rules/07-08)。case target は対象自身の除外なし (guardExclude=undefined)。
   const cands = engine.flow.guard.candidates(state, ax.byUid, undefined);
@@ -218,21 +258,60 @@ export function resolveActionAgainstCase(
   }
   // action:guarded / action:unguarded で queue された triggered effect を judge/証拠操作の前に解決
   // (resolveActionAgainstChar と同型)。
-  engine.resolve.runAllUntilEmpty(state);
+  drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
 
   if (ax.guardUid) {
-    // ガード成立 → 証拠変動なし、攻撃キャラ vs ガードキャラの AP 判定のみ (rules/07)。
-    engine.flow.action.advance(state, ax); // leave-resolution → contact-pending
-    engine.flow.action.advance(state, ax); // contact-pending → judge (case は contact 省略)
-    engine.flow.action.snapshotAP(state, ax);
-    engine.flow.contact.judge(state, ax);
-    engine.flow.action.advance(state, ax); // judge → contact-end
-    engine.flow.action.advance(state, ax); // contact-end → action-end
+    // ガード成立 → 攻撃キャラ vs ガードキャラの full contact。証拠変動なし。
+    resolveContactSequence(
+      state,
+      ax,
+      attackerPolicy ?? defenderPolicy,
+      defenderPolicy,
+    );
   } else {
     // ガード不成立 → rules/10: 相手証拠 -1 + 自証拠 +1 (passGuard は phase を judge に設定済)。
     engine.flow.actionCase.removeOpponentEvidenceTop(state, ax);
-    engine.flow.actionCase.gainSelfEvidence(state, ax);
+    const pendingHirameki = _peekPendingHirameki();
+    if (pendingHirameki !== null) {
+      if (!engine.flow.actionCase.matchesHiramekiCheckpoint(state, ax, pendingHirameki)) {
+        throw new Error('resolveActionAgainstCase: Hirameki checkpoint does not match active action');
+      }
+      _markPendingHiramekiGainDeferred();
+      const decision = _drainPendingHirameki();
+      if (
+        decision === null
+        || decision.gainDeferred !== true
+        || !engine.flow.actionCase.matchesHiramekiCheckpoint(state, ax, decision)
+      ) {
+        throw new Error('resolveActionAgainstCase: failed to claim Hirameki checkpoint');
+      }
+      ax.deferredCaseEvidenceGain = true;
+      ax.judgeResolved = true;
+      const ownerPolicy = decision.player === ax.byPlayer ? attackerPolicy : defenderPolicy;
+      const fire = ownerPolicy?.chooseHiramekiTrigger?.(state, {
+        cardId: decision.cardId,
+        abilityId: decision.abilityId,
+      }) ?? true;
+      engine.flow.actionCase.resolveHiramekiDecision(
+        state,
+        ax,
+        decision,
+        fire ? 'fire' : 'skip',
+        {
+          chooseAtomTarget: actionEffectPickPolicy(ax, attackerPolicy, defenderPolicy)?.chooseAtomTarget,
+          humanChooser: false,
+        },
+      );
+      drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
+    } else {
+      drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
+      engine.flow.actionCase.gainSelfEvidence(state, ax);
+      drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
+      ax.judgeResolved = true;
+    }
     engine.flow.action.advance(state, ax); // judge → contact-end
+    drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
     engine.flow.action.advance(state, ax); // contact-end → action-end
+    drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
   }
 }

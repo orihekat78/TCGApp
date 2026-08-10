@@ -119,6 +119,23 @@ describe('HandZone', () => {
     expect(html).not.toMatch(/data-card-id="B"[^>]*disabled/);
   });
 
+  it('keeps the magnifier enabled when the card action is unavailable', () => {
+    const html = strip(renderToString(
+      <HandZone
+        cards={[card({ cardId: 'A', color: 'blue' })]}
+        expanded={true}
+        canUse={() => false}
+        disabledReason={() => 'color mismatch'}
+        onCardExpand={() => undefined}
+      />,
+    ));
+
+    const cardRoot = html.match(/<div class="hand-card[^>]*data-card-id="A"[^>]*>/)?.[0] ?? '';
+    expect(cardRoot).toContain('data-action-disabled="true"');
+    expect(cardRoot).not.toContain('aria-disabled');
+    expect(html).toContain('data-testid="hand-card-magnifier-A"');
+  });
+
   it('all enabled by default when canUse not provided', () => {
     const cards: HandCardMeta[] = [
       card({ cardId: 'A' }),

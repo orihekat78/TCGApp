@@ -3,7 +3,7 @@ import { def as readDef } from '../read/def.js';
 import { char as readChar } from '../read/char.js';
 import { mutate } from '../mutate/index.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
-import type { GameState } from '../types/index.js';
+import type { CausalEffectTrace, GameState } from '../types/index.js';
 
 export type MisreadCandidate = { uid: string; x: number };
 
@@ -13,6 +13,8 @@ export type PendingMisreadSide = {
   reasoningUid: string;
   reasoningPlayer: 'self' | 'opp';
   candidates: MisreadCandidate[];
+  /** Causal graph paused while the human resolves this decision. */
+  causalTrace?: CausalEffectTrace;
 };
 
 declare global {

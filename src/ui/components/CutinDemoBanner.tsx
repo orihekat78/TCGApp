@@ -2,6 +2,7 @@
 
 import type { JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
+import { endMatchSession } from '@/ui/services/matchSession';
 import { cardIdToDisplayName } from '@/ui/services/uidNames.js';
 // CSS は hirameki banner と共有 (色だけ追加クラスで上書き)
 import './HiramekiDemoBanner.css';
@@ -12,14 +13,11 @@ export function CutinDemoBanner(): JSX.Element | null {
   if (mode !== 'completed') return null;
 
   const handleReset = (): void => {
-    useGameStateStore.getState().setGameState(null as never);
+    endMatchSession();
     useGameStateStore.getState().setCutinDemoMode('picking');
-    useGameStateStore.getState().setCutinDemoSelectedCardId(null);
   };
   const handleExit = (): void => {
-    useGameStateStore.getState().setGameState(null as never);
-    useGameStateStore.getState().setCutinDemoMode('idle');
-    useGameStateStore.getState().setCutinDemoSelectedCardId(null);
+    endMatchSession();
   };
 
   return (

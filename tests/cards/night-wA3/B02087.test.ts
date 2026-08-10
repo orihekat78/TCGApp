@@ -15,7 +15,7 @@ import { event } from '@/engine/event/index';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _drainPendingEffectPickSide, _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
-import { applyPickAndContinuation } from '@/engine/effect/apply-pick';
+import { applyPickAndContinuation, applyPickSkipAndContinuation } from '@/engine/effect/apply-pick';
 import { handUseColorIgnoreAllowed, nextHintColorIgnoreAllowed } from '@/engine/flow/main/hand-use-card';
 import { char as charRead } from '@/engine/read/char';
 import { B02087 } from '@/cards/ct-p02/B02087';
@@ -97,10 +97,14 @@ describe('B02087 a2 — 【登場時】相手セットカード除去 → 突撃
     const meUid = emitEnter(s);
     const pick = _drainPendingEffectPickSide();
     expect(pick, 'charRemoveSetCard の pick が surface').toBeTruthy();
-    const cands = pick!.candidates as Array<{ uid: string }>;
-    expect(cands.map((c) => c.uid), 'セット持ちの OPPCH のみ候補 (bare は除外)').toContain(setUid);
-    expect(cands.map((c) => c.uid)).not.toContain(bareUid);
-    applyPickAndContinuation(s, pick!, setUid, [setUid]);
+    const setCardOccurrence = pick!.candidates.find(candidate => candidate.hostUid === setUid);
+    expect(setCardOccurrence, 'セット持ちの OPPCH の occurrence のみ候補').toMatchObject({
+      kind: 'card',
+      area: 'set-card',
+      hidden: true,
+    });
+    expect(pick!.candidates.some(candidate => candidate.hostUid === bareUid), 'bare は候補外').toBe(false);
+    applyPickAndContinuation(s, pick!, setCardOccurrence!.uid, [setCardOccurrence!.uid]);
     runAllUntilEmpty(s);
     expect(s.players.opp.scene.find((c) => c.uid === setUid)?.setCards.length, 'セットカード除去済').toBe(0);
     expect(s.players.opp.remove, 'セットカードはリムーブへ').toContain(SET);
@@ -112,7 +116,7 @@ describe('B02087 a2 — 【登場時】相手セットカード除去 → 突撃
     const meUid = emitEnter(s);
     const pick = _drainPendingEffectPickSide();
     expect(pick!.nMin, '「1枚まで」= 0枚可').toBe(0);
-    applyPickAndContinuation(s, pick!, undefined as never, []); // 0枚 skip
+    applyPickSkipAndContinuation(s, pick!, false); // 0枚 skip
     runAllUntilEmpty(s);
     expect(charRead.keywords(s, meUid), '除去しなければ突撃なし').not.toContain('突撃[キャラ]');
   });

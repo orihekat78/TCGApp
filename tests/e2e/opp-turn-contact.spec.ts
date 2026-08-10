@@ -12,8 +12,8 @@ import { setupGamePage } from './helpers/setup.js';
 //   1. opp action declare → GuardPickerModal 表示 (defender=self, !spectator)
 //   2. guard skip → CutInDisguisePickerModal 表示 (decider=self, !spectator)
 //   3. CID pass → action 完了 (activeActionId=null) → turn 戻る
-//   4. OppTurnOverlay が attacker/target/phase を具体表示 (Phase 3-C UX)
-//   5. case ターゲットでは target="事件" 表示
+//   4. 盤面を隠す旧 OppTurnOverlay は出ず、既存 ActionsPanel narrator が状態を伝える
+//   5. case ターゲットでも事件エリアを隠さない
 //
 // 注: scene char の手動構築は SceneCharacter 型 (turnEffects / keywordOverrides
 //     などのフルフィールド) が必要なので makeChar ヘルパを用意する。
@@ -84,10 +84,8 @@ test.describe('user_request #3: opp ターン中 contact UI', () => {
 
     // GuardPickerModal が出るのを待つ
     await expect(page.locator('[data-testid="guard-picker-modal"]')).toBeVisible({ timeout: 3000 });
-    // OppTurnOverlay の status text が「attacker → target (ガード判定中)」
-    const labelText = await page.locator('[data-testid="opp-turn-label"]').textContent();
-    expect(labelText).toContain('→');
-    expect(labelText).toMatch(/ガード判定中|コンタクト/);
+    await expect(page.locator('[data-testid="opp-turn-overlay"]')).toHaveCount(0);
+    await expect(page.getByTestId('match-narrator-status')).toContainText('相手のターン処理中');
     // 候補が表示されている (s2 が active なので 1 件以上)
     const candCount = await page.locator('[data-testid^="guard-cand-"]').count();
     expect(candCount).toBeGreaterThanOrEqual(1);
@@ -181,7 +179,7 @@ test.describe('user_request #3: opp ターン中 contact UI', () => {
     expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
   });
 
-  test('action[case]: OppTurnOverlay status に "事件" が表示される', async ({ page }) => {
+  test('action[case]: 旧overlayなしで事件エリアと既存narratorを維持する', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await page.evaluate((makeCharSrc) => {
       eval(makeCharSrc);
@@ -206,19 +204,9 @@ test.describe('user_request #3: opp ターン中 contact UI', () => {
       w.__game.dispatch({ type: 'actionDeclareCase', byUid: 'o1', targetPlayer: 'self' });
     }, MAKE_CHAR_FN);
 
-    // 何らかの phase で overlay が表示される (guard-window で modal あり or auto-pass で短時間)
-    await expect(page.locator('[data-testid="opp-turn-overlay"]')).toBeVisible({ timeout: 3000 });
-    // overlay 内に "事件" が含まれる (target.kind==='case' で nameOfUid='事件' のため)
-    // 注: action が auto-pass で進行中の場合 phase 遷移が速いため、複数回 polling
-    const seenJiken = await page.waitForFunction(
-      () => {
-        const el = document.querySelector('[data-testid="opp-turn-label"]');
-        return el?.textContent?.includes('事件') ?? false;
-      },
-      null,
-      { timeout: 3000 },
-    ).then(() => true).catch(() => false);
-    expect(seenJiken, 'overlay label に "事件" が含まれることを期待').toBe(true);
+    await expect(page.locator('[data-testid="opp-turn-overlay"]')).toHaveCount(0);
+    await expect(page.locator('.case-area.side-self')).toBeVisible();
+    await expect(page.getByTestId('match-narrator-status')).toContainText('相手のターン処理中');
 
     expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
   });

@@ -11,7 +11,8 @@ import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/l
 import { _resetRegistry as resetCardDefRegistry, register as registerCardDef } from '@/engine/read/def';
 import { doReasoning } from '@/engine/flow/main/reasoning';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
-import { drainAiEffectPicks } from '@/engine/effect/apply-pick';
+import { applyPickAndContinuation, drainAiEffectPicks } from '@/engine/effect/apply-pick';
+import { _drainPendingEffectPickSide } from '@/engine/effect/pending-state';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { registerAll } from '@/cards/index';
 import { char as readChar } from '@/engine/read/char';
@@ -38,7 +39,7 @@ describe('engine-extension reasoning-hook batch #3 (2026-06-06)', () => {
     registerAll();
     registerTriggeredListener();
     (globalThis as { __pendingEffectPickQueue?: unknown[] }).__pendingEffectPickQueue = [];
-    (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation = [];
+    delete (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation;
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   });
 
@@ -77,6 +78,31 @@ describe('engine-extension reasoning-hook batch #3 (2026-06-06)', () => {
     expect(readChar.ap(s, 'l7'), 'Lv7 に AP+1000').toBe(8000);
     expect(readChar.ap(s, 'l4'), 'Lv4 decoy は不変').toBe(4000);
     expect(readChar.ap(s, 'l6'), 'Lv6 decoy は不変').toBe(6000);
+  });
+
+  it('B05039: the same Lv5 occurrence cannot be selected twice for AP+2000', () => {
+    registerCardDef(synthChar('ONLY_L5', 5, 5000));
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+
+    let s: GameState = createEmptyGameState();
+    s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.self.scene = [sceneChar('B05039', 'mat#1'), sceneChar('ONLY_L5', 'only-l5')];
+    s.players.self.deck = ['D08005', 'D08009'];
+    s = produce(s, (d) => {
+      doReasoning(d, 'mat#1');
+      runAllUntilEmpty(d);
+    });
+
+    const pick = _drainPendingEffectPickSide();
+    expect(pick?.requestedNMax).toBe(2);
+    expect(pick?.nMax).toBe(1);
+    expect(pick?.candidates.map(candidate => candidate.uid), 'one occurrence appears exactly once').toEqual(['only-l5']);
+    s = produce(s, (d) => {
+      applyPickAndContinuation(d, pick!, 'only-l5', ['only-l5']);
+      runAllUntilEmpty(d);
+    });
+
+    expect(readChar.ap(s, 'only-l5'), 'one selection grants AP+1000 only once').toBe(6000);
   });
 
   // ---- B03096: 捜査1 (deckRevealUntil opp) + レベル8発見で自分1ドロー ----

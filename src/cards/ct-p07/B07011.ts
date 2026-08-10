@@ -25,6 +25,6 @@ const a2: AbilityDef = {
 
 export const B07011: CardDef = {
   id: 'B07011', no: '0743/B07011', kind: 'character', names: ['\u798f\u4e95\u67da\u5b09'], colors: ['\u9752'], level: 3, ap: 1000, lp: 1,
-  traits: ['\u30d0\u30fc\u30c6\u30f3\u30c0\u30fc'], keywords: [], rarity: 'C', imageUrl: '1768203421251666.jpg', abilities: [a1, a2],
+  traits: ['\u30d0\u30fc\u30c6\u30f3\u30c0\u30fc'], keywords: [], rarity: 'C', imageUrl: '1762413976102325.jpg', abilities: [a1, a2],
   ruleRefs: ['rules/10-action-event.md', 'rules/14-refresh.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/19-special-rules.md'],
 };

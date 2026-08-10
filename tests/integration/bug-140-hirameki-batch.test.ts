@@ -17,7 +17,6 @@ import { registerAll } from '@/cards';
 import { produce } from '@/engine/produce';
 import {
   registerHiramekiListener,
-  _drainPendingHirameki,
   _resetPendingHirameki,
   _resetHiramekiRegistered,
 } from '@/engine/listeners/hirameki';
@@ -34,6 +33,7 @@ import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _resetTargetExpanders } from '@/engine/flow/action/target-expander';
 import type { GameState } from '@/engine/types/game-state';
 import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
+import { openCaseHirameki } from '../helpers/open-case-hirameki';
 
 function fullReset(): void {
   engine.cards._resetRegistry();
@@ -63,18 +63,9 @@ function makeStateWithEvidence(cardId: string): GameState {
 }
 
 function emitAndFire(s: GameState, cardId: string): GameState {
-  const emitted = produce(s, (d) => {
-    engine.event.emit(
-      d,
-      'evidence:remove-by-action',
-      { player: 'self', ev: { cardId } },
-      { player: 'opp', uid: 'opp-attacker' },
-    );
-  });
-  const pending = _drainPendingHirameki();
+  const { pending } = openCaseHirameki(s, cardId);
   expect(pending).not.toBeNull();
-  expect(pending!.cardId).toBe(cardId);
-  useGameStateStore.setState({ gameState: emitted, pendingHirameki: pending });
+  expect(pending.cardId).toBe(cardId);
   const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' });
   expect(r.ok).toBe(true);
   expect(useGameStateStore.getState().pendingHirameki).toBeNull();
@@ -107,7 +98,9 @@ describe('BUG-140 補修 hirameki 挙動 (テンプレ代表 4 枚)', () => {
       uid = c.uid;
     });
     expect(s.players.self.scene.find((c) => c.uid === uid)!.state).not.toBe('sleep');
-    const after = emitAndFire(s, 'B08042');
+    emitAndFire(s, 'B08042');
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: uid }).ok).toBe(true);
+    const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.find((c) => c.uid === uid)!.state).toBe('sleep');
   });
 
@@ -116,7 +109,7 @@ describe('BUG-140 補修 hirameki 挙動 (テンプレ代表 4 枚)', () => {
     const startEv = s.players.self.evidence.length;
     const startDeck = s.players.self.deck.length;
     const after = emitAndFire(s, 'B04015');
-    expect(after.players.self.evidence.length).toBe(startEv + 1);
+    expect(after.players.self.evidence.length).toBe(startEv);
     expect(after.players.self.deck.length).toBe(startDeck - 1);
   });
 
@@ -125,11 +118,15 @@ describe('BUG-140 補修 hirameki 挙動 (テンプレ代表 4 枚)', () => {
     // D11003 = 黄 character (対象) / D08015 = 青 character (色 decoy) / B01094P = 黄 event (種別 decoy)
     s.players.self.remove = ['D11003', 'D08015', 'B01094P'];
     const startHand = s.players.self.hand.length;
-    const after = emitAndFire(s, 'B01094');
+    emitAndFire(s, 'B01094');
+    const pick = useGameStateStore.getState().pendingEffectPick;
+    expect(pick?.candidates).toHaveLength(1);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pick!.candidates[0]!.uid }).ok).toBe(true);
+    const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.hand.length).toBe(startHand + 1);
     expect(after.players.self.hand).toContain('D11003');
     expect(after.players.self.hand).not.toContain('D08015');
     expect(after.players.self.hand).not.toContain('B01094P');
-    expect(after.players.self.remove).toEqual(['D08015', 'B01094P']);
+    expect(after.players.self.remove).toEqual(['D08015', 'B01094P', 'B01094']);
   });
 });

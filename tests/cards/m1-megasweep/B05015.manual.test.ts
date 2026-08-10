@@ -39,7 +39,6 @@ import {
 } from '@/engine/listeners/misread';
 import {
   registerHiramekiListener,
-  _drainPendingHirameki,
   _resetPendingHirameki,
   _resetHiramekiRegistered,
 } from '@/engine/listeners/hirameki';
@@ -56,6 +55,7 @@ import { sceneChar as baseScene } from '../../helpers/fixtures';
 import type { GameState, SceneCharacter, CardDef, AbilityDef } from '@/engine/types';
 import { B05015 } from '@/cards/ct-p05/B05015';
 import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
+import { openCaseHirameki } from '../../helpers/open-case-hirameki';
 
 type Player = 'self' | 'opp';
 const sc = (cardId: string, uid: string, state: 'active' | 'sleep' | 'stun' = 'active'): SceneCharacter =>
@@ -163,9 +163,9 @@ describe('B05015 a1 — 相手がミスリードしたとき ターン終了時�
 // a2 — 【ヒラメキ】リムーブの レベル6以下 小嶋元太 を1枚まで登場 (evidence:remove-by-action)
 // ─────────────────────────────────────────────────────────────
 describe('B05015 a2 — 【ヒラメキ】リムーブの レベル6以下[小嶋元太]を1枚まで登場', () => {
-  const KOJI6 = 'KOJIMOTA_L6';   // 小嶋元太 Lv6 → 対象
-  const KOJI7 = 'KOJIMOTA_L7';   // 小嶋元太 Lv7 → levelMax6 で除外 (level decoy)
-  const OTHER = 'OTHER_L3';      // 非小嶋元太 Lv3 → cardName 不一致で除外 (name decoy)
+  const KOJI6 = 'KOJIMOTA-L6';   // 小嶋元太 Lv6 → 対象
+  const KOJI7 = 'KOJIMOTA-L7';   // 小嶋元太 Lv7 → levelMax6 で除外 (level decoy)
+  const OTHER = 'OTHER-L3';      // 非小嶋元太 Lv3 → cardName 不一致で除外 (name decoy)
 
   beforeEach(() => {
     event._resetRegistry();
@@ -194,11 +194,9 @@ describe('B05015 a2 — 【ヒラメキ】リムーブの レベル6以下[小�
   // 実 UI 発火経路: emit → pendingHirameki → hiramekiResolve(fire) → sceneEnter pick が
   // pendingEffectPick(EffectPickerModal) に surface → effectPickResolve で pick/decline。
   function fireHirameki(s: GameState): void {
-    event.emit(s, 'evidence:remove-by-action', { player: 'self', ev: { cardId: 'B05015' } }, { player: 'opp', uid: 'atk' });
-    const pending = _drainPendingHirameki();
+    const { pending } = openCaseHirameki(s, 'B05015', { actorCardId: B05015.id });
     expect(pending, 'ヒラメキ optional hook 検出 → pending push').not.toBeNull();
-    expect(pending!.cardId).toBe('B05015');
-    useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
+    expect(pending.cardId).toBe('B05015');
     const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' });
     expect(r.ok, 'hiramekiResolve fire ok').toBe(true);
   }
@@ -210,7 +208,7 @@ describe('B05015 a2 — 【ヒラメキ】リムーブの レベル6以下[小�
     expect(pick, 'sceneEnter pick が surface').not.toBeNull();
     expect(pick.candidates.map((c) => c.cardId), 'filter 実評価: 候補は Lv6 小嶋元太 のみ (Lv7/非小嶋元太 除外)').toEqual([KOJI6]);
     const r2 = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pick.candidates[0].uid });
-    expect(r2.ok).toBe(true);
+    expect(r2.ok, JSON.stringify(r2)).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.some((c) => c.cardId === KOJI6), 'Lv6 小嶋元太 が登場').toBe(true);
     expect(after.players.self.remove, 'KOJI6 は remove から抜けた').not.toContain(KOJI6);
@@ -227,6 +225,6 @@ describe('B05015 a2 — 【ヒラメキ】リムーブの レベル6以下[小�
     expect(r2.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.length, '0 選択 → 誰も登場しない').toBe(0);
-    expect([...after.players.self.remove].sort(), 'remove は全て残存').toEqual([KOJI6, KOJI7, OTHER].sort());
+    expect([...after.players.self.remove].sort(), 'remove は全て残存').toEqual([KOJI6, KOJI7, OTHER, 'B05015'].sort());
   });
 });

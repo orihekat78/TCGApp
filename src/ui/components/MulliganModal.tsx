@@ -12,7 +12,7 @@
 //
 // アクセシビリティ: dialog role / aria-modal / aria-labelledby
 
-import { useState, useMemo, type JSX } from 'react';
+import { useEffect, useMemo, useRef, useState, type JSX } from 'react';
 import { useMulliganStore, resolveMulligan } from '@/ui/hooks/useMulligan.js';
 import { cardIdToDisplayName, cardIdToPrintedNumber } from '@/ui/services/uidNames.js';
 import { CardArt } from './CardArt.js';
@@ -28,6 +28,14 @@ export function MulliganModal(): JSX.Element | null {
   const [selectedIdx, setSelectedIdx] = useState<ReadonlySet<number>>(new Set());
   // Round 2: ユーザ追加要望 — クリック中のカードを拡大表示するための idx
   const [zoomIdx, setZoomIdx] = useState<number | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const zoomDialogRef = useRef<HTMLDivElement | null>(null);
+  const zoomCloseRef = useRef<HTMLButtonElement | null>(null);
+  const skipRef = useRef<HTMLButtonElement | null>(null);
+  const zoomTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const zoomIdxRef = useRef<number | null>(null);
+  zoomIdxRef.current = zoomIdx;
 
   const handIds = current?.hand ?? null;
   const playerLabel = current ? PLAYER_LABEL[current.player] : '';
@@ -48,6 +56,63 @@ export function MulliganModal(): JSX.Element | null {
     return arr;
   }, [handIds, selectedIdx]);
 
+  useEffect(() => {
+    if (current === null) return undefined;
+    returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    skipRef.current?.focus();
+    return () => {
+      const target = returnFocusRef.current;
+      if (target?.isConnected) target.focus();
+    };
+  }, [current]);
+
+  useEffect(() => {
+    if (zoomIdx !== null) zoomCloseRef.current?.focus();
+  }, [zoomIdx]);
+
+  useEffect(() => {
+    if (current === null) return undefined;
+
+    const focusables = (scope: HTMLElement | null): HTMLElement[] => [
+      ...(scope?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ) ?? []),
+    ];
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (zoomIdxRef.current !== null) {
+          setZoomIdx(null);
+          zoomTriggerRef.current?.focus();
+        } else {
+          setSelectedIdx(new Set());
+          resolveMulligan([]);
+        }
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const scope = zoomIdxRef.current !== null ? zoomDialogRef.current : dialogRef.current;
+      const controls = focusables(scope);
+      if (controls.length === 0) {
+        event.preventDefault();
+        scope?.focus();
+        return;
+      }
+      const first = controls[0]!;
+      const last = controls[controls.length - 1]!;
+      if (event.shiftKey && (document.activeElement === first || !scope?.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !scope?.contains(document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', onKeyDown, { capture: true });
+  }, [current]);
+
   if (current === null || handIds === null) return null;
 
   const toggle = (idx: number): void => {
@@ -57,12 +122,14 @@ export function MulliganModal(): JSX.Element | null {
     setSelectedIdx(next);
   };
 
-  const openZoom = (idx: number): void => {
+  const openZoom = (idx: number, trigger: HTMLButtonElement): void => {
+    zoomTriggerRef.current = trigger;
     setZoomIdx(idx);
   };
 
   const closeZoom = (): void => {
     setZoomIdx(null);
+    zoomTriggerRef.current?.focus();
   };
 
   const handleConfirm = (): void => {
@@ -81,20 +148,21 @@ export function MulliganModal(): JSX.Element | null {
 
   return (
     <div
+      ref={dialogRef}
       className="mulligan-modal-backdrop"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="mulligan-modal-title"
+      role={zoomIdx === null ? 'dialog' : undefined}
+      aria-modal={zoomIdx === null ? 'true' : undefined}
+      aria-labelledby={zoomIdx === null ? 'mulligan-modal-title' : undefined}
     >
       <div className="mulligan-modal">
-        <header className="mulligan-modal-header">
+        <header className="mulligan-modal-header" aria-hidden={zoomIdx !== null ? 'true' : undefined}>
           <h2 id="mulligan-modal-title">引き直し ({playerLabel}手番)</h2>
           <p className="mulligan-modal-subtitle">
             戻すカードを選んでデッキに戻し、同じ枚数を引き直せます (1ゲーム 1回まで)。
           </p>
         </header>
 
-        <div className="mulligan-cards-row">
+        <div className="mulligan-cards-row" aria-hidden={zoomIdx !== null ? 'true' : undefined}>
           {handIds.map((cardId, idx) => {
             const isSelected = selectedIdx.has(idx);
             const name = cardIdToDisplayName(cardId);
@@ -122,15 +190,18 @@ export function MulliganModal(): JSX.Element | null {
                   <div className="mulligan-card-id">No.{printedNumber}</div>
                   {isSelected && <div className="mulligan-card-mark">戻す</div>}
                 </button>
-                <button
-                  type="button"
-                  className="mulligan-card-zoom"
-                  aria-label={`${name} を拡大表示`}
-                  onClick={() => openZoom(idx)}
-                  title="拡大"
-                >
-                  🔍
-                </button>
+                <div className="mulligan-card-actions">
+                  <button
+                    type="button"
+                    className="mulligan-card-zoom"
+                    aria-label={`${name} を拡大表示`}
+                    onClick={(event) => openZoom(idx, event.currentTarget)}
+                    title="拡大"
+                  >
+                    <span aria-hidden="true">🔍</span>
+                    <span>詳細</span>
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -139,8 +210,11 @@ export function MulliganModal(): JSX.Element | null {
         {/* 拡大表示オーバーレイ — Round 2 ユーザ追加要望 */}
         {zoomIdx !== null && handIds[zoomIdx] !== undefined && (
           <div
+            ref={zoomDialogRef}
             className="mulligan-zoom-overlay"
             role="dialog"
+            aria-modal="true"
+            tabIndex={-1}
             aria-label="カード拡大表示"
             onClick={closeZoom}
           >
@@ -162,6 +236,7 @@ export function MulliganModal(): JSX.Element | null {
                 </div>
               </div>
               <button
+                ref={zoomCloseRef}
                 type="button"
                 className="mulligan-zoom-close"
                 onClick={closeZoom}
@@ -172,8 +247,9 @@ export function MulliganModal(): JSX.Element | null {
           </div>
         )}
 
-        <footer className="mulligan-modal-footer">
+        <footer className="mulligan-modal-footer" aria-hidden={zoomIdx !== null ? 'true' : undefined}>
           <button
+            ref={skipRef}
             type="button"
             className="mulligan-skip"
             onClick={handleSkip}

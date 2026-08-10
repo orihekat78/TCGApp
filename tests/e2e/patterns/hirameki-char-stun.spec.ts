@@ -1,5 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
-import { setupGamePage, buildGameState, dispatchAction, expectNoConsoleErrors } from '../helpers';
+import {
+  setupGamePage,
+  buildCausalGameState,
+  dispatchAction,
+  dispatchUnguardedCaseAction,
+  expectNoConsoleErrors,
+} from '../helpers';
 import type { GameStateLike } from '../helpers';
 
 // Round 4k: hiramekiCharStun パターン (アクション[事件] 経由のヒラメキ → キャラを1枚 sleep) を
@@ -195,7 +201,7 @@ function applyFixture(gs: GameStateLike, arg: FixtureArg): void {
 }
 
 async function dispatchActionCase(page: Page): Promise<void> {
-  await dispatchAction(page, { type: 'actionAgainstCase', byUid: 'partner:opp', targetPlayer: 'self' });
+  await dispatchUnguardedCaseAction(page, 'partner:opp', 'self');
 }
 
 const CARDS = [
@@ -207,7 +213,7 @@ test.describe('hiramekiCharStun — shape + fire/skip path (2 カード集約, B
   for (const { cardId, abilityId, kind } of CARDS) {
     test(`${cardId} ${abilityId} (${kind}): shape (icon-flash / on-evidence / choice → atom sceneSetState sleep)`, async ({ page }) => {
       const { errors } = await setupGamePage(page);
-      await buildGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
+      await buildCausalGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
 
       const probe = await probeCharStunAbility(page, cardId, abilityId);
 
@@ -229,7 +235,7 @@ test.describe('hiramekiCharStun — shape + fire/skip path (2 カード集約, B
 
     test(`${cardId} ${abilityId} (${kind}): fire path → 敵 scene state sleep (Phase 7-3 chooseAtomTarget)`, async ({ page }) => {
       const { errors } = await setupGamePage(page);
-      await buildGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
+      await buildCausalGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
 
       await dispatchActionCase(page);
 
@@ -270,7 +276,7 @@ test.describe('hiramekiCharStun — shape + fire/skip path (2 カード集約, B
 
     test(`${cardId} ${abilityId} (${kind}): skip path → scene state 不変`, async ({ page }) => {
       const { errors } = await setupGamePage(page);
-      await buildGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
+      await buildCausalGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
 
       await dispatchActionCase(page);
 
@@ -291,7 +297,7 @@ test.describe('hiramekiCharStun — shape + fire/skip path (2 カード集約, B
   // negative: D08015 (icon-flash 非持ち) → pendingHirameki null
   test('non-hirameki card (D08015): abilities に icon-flash 非含有 + dispatch しても pendingHirameki null', async ({ page }) => {
     const { errors } = await setupGamePage(page);
-    await buildGameState<FixtureArg>(page, applyFixture, { evidenceCardId: 'D08015' });
+    await buildCausalGameState<FixtureArg>(page, applyFixture, { evidenceCardId: 'D08015' });
 
     expect(await hasIconFlashAbility(page, 'D08015'), 'D08015 は icon-flash 非持ち').toBe(false);
     expect(await hasIconFlashAbility(page, 'D08019'), 'D08019 (control) は icon-flash 持ち').toBe(true);

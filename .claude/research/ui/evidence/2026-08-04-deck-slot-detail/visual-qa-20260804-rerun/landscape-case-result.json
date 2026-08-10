@@ -1,0 +1,30 @@
+{
+  "metric": {
+    "drawer": {
+      "x": 2.173661708831787,
+      "y": 110,
+      "w": 280,
+      "h": 275,
+      "within": true
+    },
+    "change": {
+      "w": 267,
+      "h": 44,
+      "visible": true
+    },
+    "overflow": {
+      "x": false,
+      "y": false
+    }
+  },
+  "focus": true,
+  "picker": true,
+  "pm": {
+    "within": true,
+    "overflow": {
+      "x": false,
+      "y": false
+    }
+  },
+  "errors": []
+}

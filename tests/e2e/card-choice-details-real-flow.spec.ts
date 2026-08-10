@@ -81,7 +81,7 @@ async function assertDetailClick(page: Page, detail: Locator): Promise<void> {
 }
 
 test.describe('real mounted card-choice details', () => {
-  test('EffectPicker: B08019 preserves multi-pick resolution while public details expand', async ({ page }) => {
+  test('EffectPicker: B08019 keeps face-down set-card occurrences private during multi-pick', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await primeHuman(page);
     await buildGameState(page, (gs: GameStateLike) => {
@@ -109,22 +109,36 @@ test.describe('real mounted card-choice details', () => {
     await page.locator('.confirm-ok').click();
     await page.getByTestId('opt-run-yes').click();
 
-    const primary = page.getByTestId('effect-pick-cand-D08011#0');
-    await expectPublicCardArt(primary, 'D08011', '1743743093474254.jpg');
-    const detail = page.getByTestId('effect-pick-detail-D08011#0');
+    const candidates = await page.evaluate(() => {
+      const w = window as unknown as {
+        __game: { getState: () => { pendingEffectPick: { candidates: unknown[] } | null } };
+      };
+      return w.__game.getState().pendingEffectPick?.candidates as {
+        uid: string;
+        hostUid?: string;
+        setCardInstanceId?: string;
+        hidden?: boolean;
+      }[] | undefined;
+    });
+    expect(candidates).toHaveLength(3);
+    const selfCandidates = candidates!.filter((candidate) => candidate.hostUid === 'D08011#0');
+    const oppCandidate = candidates!.find((candidate) => candidate.hostUid === 'opp-1');
+    expect(selfCandidates).toHaveLength(2);
+    expect(new Set(selfCandidates.map((candidate) => candidate.setCardInstanceId)).size).toBe(2);
+    expect(oppCandidate).toBeDefined();
+    expect(candidates!.every((candidate) => candidate.hidden === true)).toBe(true);
+    const selfCandidate = selfCandidates[0]!;
+    const primary = page.getByTestId(`effect-pick-cand-${selfCandidate.uid}`);
+    await expectHiddenCardBack(primary);
     await expectWithinViewport(page, page.getByTestId('effect-picker-modal'));
-    await expectWithinViewport(page, detail);
-    await expect(detail).toHaveAccessibleName(/円谷光彦.*詳細を表示/);
-    await expect(page.getByTestId('effect-pick-detail-opp-1')).toHaveAccessibleName(/吉田歩美.*詳細を表示/);
-    const detailNames = await page.locator('.effect-picker-detail').evaluateAll((buttons) =>
-      buttons.map((button) => button.getAttribute('aria-label')),
-    );
-    expect(new Set(detailNames).size).toBe(detailNames.length);
-    await assertDetailClick(page, detail);
-    await expect(page.getByTestId('effect-picker-modal')).toBeVisible();
+    await expectWithinViewport(page, primary);
+    await expect(primary).not.toContainText('D08003');
+    await expect(primary).not.toContainText('D08011');
+    await expect(page.getByTestId(`effect-pick-detail-${selfCandidate.uid}`)).toHaveCount(0);
+    await expect(page.getByTestId(`effect-pick-detail-${oppCandidate!.uid}`)).toHaveCount(0);
 
     await primary.click();
-    await page.getByTestId('effect-pick-cand-opp-1').click();
+    await page.getByTestId(`effect-pick-cand-${oppCandidate!.uid}`).click();
     await page.getByTestId('effect-picker-confirm').click();
     await page.waitForFunction(() => {
       const w = window as unknown as { __game: { getState: () => { gameState: { players: { self: { hand: string[] } } } } } };

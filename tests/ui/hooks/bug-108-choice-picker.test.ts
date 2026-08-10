@@ -59,7 +59,7 @@ beforeEach(() => {
   useConfirmationStore.getState()._reset();
   useChoicePickerStore.getState()._reset();
   _clearPendingEffectPickQueue();
-  (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation = [];
+  delete (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation;
   (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
 });
 

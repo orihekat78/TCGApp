@@ -7,6 +7,7 @@ import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { runAtom } from '@/engine/effect/atom-handlers';
 import { event } from '@/engine/event/index';
+import { startCausalSession } from '@/engine/log/causal';
 import type { GameState, SceneCharacter, Candidate } from '@/engine/types';
 import { makeChar, makeCtx } from '../../helpers/fixtures';
 
@@ -33,6 +34,19 @@ describe('engine.effect.runAtom', () => {
       expect(result.players.self.hand).toEqual(['A', 'B']);
       expect(result.players.self.deck).toEqual(['C']);
     });
+
+    it('logs the actual draw count when deck exhaustion stops a larger request', () => {
+      const state = createEmptyGameState();
+      state.players.self.deck = ['ONLY'];
+
+      const result = produce(state, draft => {
+        runAtom(draft, 'draw', { player: 'self', n: 3 }, makeCtx());
+      });
+
+      expect(result.players.self.hand).toEqual(['ONLY']);
+      expect(result.gameResult).toMatchObject({ winner: 'opp', reason: 'deck-out' });
+      expect(result.log.find(entry => entry.action === 'effect:draw')).toMatchObject({ result: '1' });
+    });
   });
 
   describe('discard', () => {
@@ -57,6 +71,19 @@ describe('engine.effect.runAtom', () => {
       expect(result.players.self.remove).toEqual(['A', 'B']);
       expect(result.players.self.deck).toEqual(['C']);
     });
+
+    it('logs the actual mill count when fewer cards exist than requested', () => {
+      const state = createEmptyGameState();
+      state.players.self.deck = ['ONLY'];
+      const ctx = makeCtx();
+
+      const result = produce(state, draft => {
+        runAtom(draft, 'mill', { player: 'self', n: 3, bind: 'milled' }, ctx);
+      });
+
+      expect((ctx.bindings.milled as unknown[])).toHaveLength(1);
+      expect(result.log.find(entry => entry.action === 'effect:mill')).toMatchObject({ result: '1' });
+    });
   });
 
   describe('fileAdd', () => {
@@ -68,6 +95,19 @@ describe('engine.effect.runAtom', () => {
       });
       expect(result.players.self.file).toHaveLength(2);
       expect(result.players.self.deck).toEqual(['C']);
+    });
+
+    it('logs the actual FILE addition count when deck exhaustion stops a larger request', () => {
+      const state = createEmptyGameState();
+      state.players.self.deck = ['ONLY'];
+
+      const result = produce(state, draft => {
+        runAtom(draft, 'fileAdd', { player: 'self', n: 3 }, makeCtx());
+      });
+
+      expect(result.players.self.file).toHaveLength(1);
+      expect(result.gameResult).toMatchObject({ winner: 'opp', reason: 'deck-out' });
+      expect(result.log.find(entry => entry.action === 'effect:fileAdd')).toMatchObject({ result: '1' });
     });
   });
 
@@ -105,6 +145,7 @@ describe('engine.effect.runAtom', () => {
         runAtom(draft, 'filePopToHand', { player: 'self' }, ctx);
       });
       expect(result.players.self.hand).toHaveLength(0);
+      // PR100: a FILE without a removable card stops the remaining chain.
       expect(result.players.self.file, 'アシストパートナーは pop されない (rules/12)').toHaveLength(1);
       expect(ctx.dyn?.chainStepNoApply, 'chain break 信号 (Phase 3c: ctx.dyn)').toBe(true);
     });
@@ -393,6 +434,19 @@ describe('engine.effect.runAtom', () => {
         runAtom(draft, 'sceneDisguise', { uid: 'dg-uid', newCardId: 'NEW' }, makeCtx());
       });
       expect(result.players.self.scene[0].cardId).toBe('NEW');
+      expect(result.log.at(-1)).toMatchObject({
+        action: 'effect:sceneDisguise', target: 'dg-uid', result: 'changed',
+      });
+    });
+
+    it('does not log a new identity when the scene target is missing', () => {
+      const s = createEmptyGameState();
+      const result = produce(s, draft => {
+        runAtom(draft, 'sceneDisguise', { uid: 'missing', newCardId: 'PRIVATE-NEW' }, makeCtx());
+      });
+
+      expect(result.players.self.scene).toEqual([]);
+      expect(JSON.stringify(result.log)).not.toContain('PRIVATE-NEW');
     });
   });
 
@@ -692,6 +746,20 @@ describe('engine.effect.runAtom', () => {
         runAtom(draft, 'partnerSolveCase', { player: 'self' }, makeCtx());
       });
       expect(result.gameResult).toEqual({ winner: 'self', reason: 'evidence' });
+    });
+
+    it('records the effect summary before the terminal causal event', () => {
+      const state = createEmptyGameState();
+      startCausalSession(state, 'solve-case-order');
+
+      const result = produce(state, draft => {
+        runAtom(draft, 'partnerSolveCase', { player: 'self' }, makeCtx());
+      });
+
+      expect(result.log.map((entry) => ('kind' in entry ? entry.kind : 'legacy'))).toEqual([
+        'summary',
+        'game-result',
+      ]);
     });
   });
 

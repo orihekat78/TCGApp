@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { B10098 } from '@/cards/ct-p10/B10098';
 import { B10098P } from '@/cards/ct-p10/B10098P';
 import { registerAll } from '@/cards';
@@ -126,6 +126,11 @@ beforeEach(() => {
   registerAll();
   [CONTACT_CARD, TARGET_CARD, OPPONENT_CARD].forEach(register);
   registerTriggeredListener();
+  (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+});
+
+afterEach(() => {
+  delete (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide;
 });
 
 describe('B10098/P', () => {

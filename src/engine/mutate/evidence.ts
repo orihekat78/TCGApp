@@ -9,6 +9,7 @@ import { deck as deckMut } from './deck.js';
 import type { GameState, EvidenceCard, EvidenceOrigin, CardId } from '@/engine/types';
 
 type Player = 'self' | 'opp';
+export type DeckToEvidenceStep = { kind: 'move' | 'refresh'; count: number };
 
 /**
  * デッキ上から n 枚を証拠エリアに追加 (rules/11 推理, rules/10 アクション[事件])
@@ -22,17 +23,19 @@ function addFromDeck(
   faceUp: boolean,
   origin: EvidenceOrigin,
   resolvingCardId?: CardId,
+  onStep?: (step: DeckToEvidenceStep) => void,
 ): number {
   let added = 0;
   for (let i = 0; i < n; i++) {
     const d = s.players[p].deck;
     // Existing callers historically guarded only before each take. Keep the
     // initial/cross-refresh behavior here so every evidence path has one owner.
-    if (d.length === 0 && !deckMut.refreshAfterTake(s, p, resolvingCardId)) break;
+    if (d.length === 0 && !deckMut.refreshAfterTake(s, p, resolvingCardId, (count) => onStep?.({ kind: 'refresh', count }))) break;
     const cardId = d.shift()!;
     s.players[p].evidence.push({ cardId, faceUp, origin });
     added++;
-    if (!deckMut.refreshAfterTake(s, p, resolvingCardId)) break;
+    onStep?.({ kind: 'move', count: 1 });
+    if (!deckMut.refreshAfterTake(s, p, resolvingCardId, (count) => onStep?.({ kind: 'refresh', count }))) break;
   }
   return added;
 }

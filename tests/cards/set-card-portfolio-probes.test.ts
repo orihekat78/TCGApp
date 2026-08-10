@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { B06064 } from '@/cards/ct-p06/B06064';
 import { B06064P } from '@/cards/ct-p06/B06064P';
 import { B07033 } from '@/cards/ct-p07/B07033';
@@ -42,6 +42,10 @@ beforeEach(() => {
   registerTriggeredListener();
 });
 
+afterEach(() => {
+  (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
+});
+
 describe('deferred set-card portfolio — CI probes', () => {
   it('B06064/P preserve face-up host grant and opponent-turn leave reanimate contracts', () => {
     expect(serializedAbilities(B06064P)).toBe(serializedAbilities(B06064));
@@ -51,6 +55,7 @@ describe('deferred set-card portfolio — CI probes', () => {
   });
 
   it('B06064 production setcard:leave path reanimates asleep only for a face-up opponent-turn leave', () => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
     const after = produce(createEmptyGameState(), draft => {
       draft.turn.player = 'opp';
       const host = mutate.scene.enter(draft, 'self', 'HOST', {});

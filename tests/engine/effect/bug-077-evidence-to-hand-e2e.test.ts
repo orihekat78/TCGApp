@@ -8,6 +8,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { runAtom } from '@/engine/effect/atom-handlers';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
+import { register as registerCardDef, _resetRegistry } from '@/engine/read/def';
+import { D08013, D08015, D08018 } from '@/cards/ct-d08';
+import { D11003, D11007 } from '@/cards/ct-d11';
 import type { EffectCtx } from '@/engine/types';
 
 function ctxSelf(): EffectCtx {
@@ -17,6 +20,8 @@ function ctxSelf(): EffectCtx {
 describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
   beforeEach(() => {
     _clearPendingEffectPickQueue();
+    _resetRegistry();
+    [D08013, D08015, D08018, D11003, D11007].forEach(registerCardDef);
   });
 
   it('Phase A: atom-handler の awaiting-pick → tryRePickFromAtom で side-channel set', () => {
@@ -299,8 +304,6 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
   // D08003 driver: 拡張 1 (filter) — discard 短縮形に filter 追加で候補を絞り込める
   it('Phase I: discard 短縮形 + filter で候補が絞り込まれる', async () => {
     const { resolveEffectPicks } = await import('@/engine/effect/resolve-picks');
-    const { registerAll } = await import('@/cards/index');
-    registerAll();
 
     const s = createEmptyGameState();
     // 手札に [少年探偵団] 2 枚 + 別 trait 1 枚
@@ -348,8 +351,6 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
   // D08003 driver: filter + max 組合せ (a1 step 1 と同じ shape の sanity check)
   it('Phase K: 短縮形 {player, max, filter} 組合せ動作', async () => {
     const { resolveEffectPicks, _drainPendingEffectPickSide } = await import('@/engine/effect/resolve-picks');
-    const { registerAll } = await import('@/cards/index');
-    registerAll();
 
     const s = createEmptyGameState();
     // D08013 = [少年探偵団]、D11003 = [警察] (少年探偵団 でない)
@@ -377,8 +378,6 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
   // PA pick が awaiting-pick になり scene 候補が side-channel に push される
   it('Phase L: sceneRemove 短縮形 PA で scene 候補が side-channel set', async () => {
     const { _drainPendingEffectPickSide } = await import('@/engine/effect/resolve-picks');
-    const { registerAll } = await import('@/cards/index');
-    registerAll();
 
     const s = createEmptyGameState();
     // 両 side の scene に char 配置 (D11003 = 警察 AP6000、D08018 = 少年探偵団 AP1000)
@@ -400,8 +399,6 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
   // 拡張 5 chain: step 1 が no-candidate (no-op) なら step 2 が skip される
   it('Phase M: chain で step 1 no-candidate なら step 2 が skip', async () => {
     const { run: runEffect } = await import('@/engine/effect/resolver');
-    const { registerAll } = await import('@/cards/index');
-    registerAll();
 
     const s = createEmptyGameState();
     // 手札に [少年探偵団] 無し (D11003 = 警察)
@@ -427,8 +424,6 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
   // 拡張 5 chain: step 1 が applied なら step 2 が実行される
   it('Phase N: chain で step 1 applied なら step 2 が実行される', async () => {
     const { run: runEffect } = await import('@/engine/effect/resolver');
-    const { registerAll } = await import('@/cards/index');
-    registerAll();
 
     const s = createEmptyGameState();
     // deck に 1 枚 (step 2 draw 用)、step 1 は pure draw (no pick) なので即 applied
@@ -451,8 +446,6 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
   // (D11020 a1 step 1「レベル7以下のスリープ状態のキャラを1枚まで」)
   it('Phase O: sceneRemove 短縮形で state:[sleep] + filter:levelMax が pick query に展開', async () => {
     const { _drainPendingEffectPickSide } = await import('@/engine/effect/resolve-picks');
-    const { registerAll } = await import('@/cards/index');
-    registerAll();
 
     const s = createEmptyGameState();
     // self scene: D11003 level=8 active (除外: levelMax=7 で hit せず)、D11007 level=6 sleep (hit)

@@ -1,5 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { buildGameState, setupGamePage } from './helpers';
+import {
+  buildGameState,
+  setupGamePage,
+  surfaceDeckPlaceDecision,
+  surfaceDeckReorderDecision,
+} from './helpers';
 
 test.describe('BUG-236 card detail modal priority', () => {
   test('deck reorder detail is explicitly above its decision and preserves the chosen order', async ({ page }) => {
@@ -7,12 +12,7 @@ test.describe('BUG-236 card detail modal priority', () => {
     await buildGameState(page, (gs) => {
       gs.players.self.deck = ['D08001', 'D08003', 'D08007', 'D08013'];
     });
-    await page.evaluate(() => {
-      const game = (window as unknown as {
-        __game: { getState: () => { setPendingDeckReorder: (pending: unknown) => void } };
-      }).__game;
-      game.getState().setPendingDeckReorder({ player: 'self', cardIds: ['D08003', 'D08007', 'D08013'] });
-    });
+    await surfaceDeckReorderDecision(page, ['D08003', 'D08007', 'D08013']);
 
     const decision = page.getByTestId('deck-reorder-modal');
     await expect(decision).toBeVisible();
@@ -39,15 +39,10 @@ test.describe('BUG-236 card detail modal priority', () => {
 
   test('deck place detail is explicitly above its decision and preserves bucket and row state', async ({ page }) => {
     const { errors } = await setupGamePage(page);
-    await buildGameState(page, () => {});
-    await page.evaluate(() => {
-      const game = (window as unknown as {
-        __game: { getState: () => { setPendingDeckPlace: (pending: unknown) => void } };
-      }).__game;
-      game.getState().setPendingDeckPlace({
-        player: 'self', ownerPlayer: 'self', cardIds: ['D08003', 'D08007', 'D08013'],
-      });
+    await buildGameState(page, (gs) => {
+      gs.players.self.deck = ['D08020', 'D08003', 'D08007', 'D08013'];
     });
+    await surfaceDeckPlaceDecision(page, ['D08003', 'D08007', 'D08013']);
 
     const decision = page.getByTestId('deck-place-modal');
     await expect(decision).toBeVisible();
@@ -75,7 +70,7 @@ test.describe('BUG-236 card detail modal priority', () => {
     expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
   });
 
-  test('a detail opened inside choose-intercept escapes its overlay and closes normally above the HUD', async ({ page }) => {
+  test('a detail opened inside choose-intercept escapes its overlay after the fixed HUD removal', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await buildGameState(page, (gs) => {
       gs.players.self.hand = ['D08015'];
@@ -94,27 +89,18 @@ test.describe('BUG-236 card detail modal priority', () => {
     const intercept = page.getByTestId('choose-intercept-modal');
     const hud = page.getByTestId('spectator-hud');
     await expect(intercept).toBeVisible();
-    await expect(hud).toBeVisible();
+    await expect(hud).toHaveCount(0);
     await intercept.getByTestId('selectable-card-tile-detail').click();
 
     const detail = page.locator('.card-expand-modal-backdrop');
     await expect(detail).toBeVisible();
     expect(await detail.evaluate((element) => element.closest('.cp-overlay') === null)).toBe(true);
-    const layers = await page.evaluate(() => ({
-      cardDetail: Number.parseInt(getComputedStyle(document.querySelector('.card-expand-modal-backdrop')!).zIndex, 10),
-      cpuHud: Number.parseInt(getComputedStyle(document.querySelector('[data-testid="spectator-hud"]')!).zIndex, 10),
-    }));
-    expect(layers.cardDetail).toBeGreaterThan(layers.cpuHud);
 
     await page.locator('.card-expand-close').click();
     await expect(detail).toHaveCount(0);
     await expect(intercept).toBeVisible();
     await intercept.getByTestId('choose-intercept-decline').click();
     await expect(intercept).toHaveCount(0);
-
-    const pause = page.getByTestId('spectator-pause-toggle');
-    await pause.click();
-    await expect(pause).toHaveAttribute('aria-pressed', 'true');
     expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
   });
 
@@ -159,61 +145,45 @@ test.describe('BUG-236 card detail modal priority', () => {
     expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
   });
 
-  test('the detail close button is clickable above the CPU control HUD and returns control to the HUD', async ({ page }) => {
+  test('the detail close button stays clickable after the fixed CPU HUD is removed', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await buildGameState(page, (gs) => {
-      gs.players.self.scene = [{
-        cardId: 'D08015', uid: 'priority-card', state: 'active', isNamed: false, enterOrder: 1,
-        setCards: [], stackedCards: 0, keywordOverrides: { granted: [], disabledOriginal: false },
-        apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-        declaredUseCount: {},
-      }];
+      gs.players.self.hand = ['D08015'];
     });
 
-    await page.getByTestId('scene-card-detail-priority-card').click();
+    await page.locator('.hand-mini-card[data-card-id="D08015"]').click();
+    await page.getByTestId('hand-card-magnifier-D08015').click();
 
     const modal = page.locator('.card-expand-modal-backdrop');
     const close = page.locator('.card-expand-close');
     const hud = page.getByTestId('spectator-hud');
     await expect(modal).toBeVisible();
     await expect(close).toBeVisible();
-    await expect(hud).toBeVisible();
-
-    const layers = await page.evaluate(() => ({
-      cardDetail: Number.parseInt(getComputedStyle(document.querySelector('.card-expand-modal-backdrop')!).zIndex, 10),
-      cpuHud: Number.parseInt(getComputedStyle(document.querySelector('[data-testid="spectator-hud"]')!).zIndex, 10),
-    }));
-    expect(layers.cardDetail, 'card detail must be above the CPU control HUD').toBeGreaterThan(layers.cpuHud);
+    await expect(hud).toHaveCount(0);
 
     await close.click();
     await expect(modal).toHaveCount(0);
-
-    const pause = page.getByTestId('spectator-pause-toggle');
-    await expect(pause).toBeEnabled();
-    await pause.click();
-    await expect(pause).toHaveAttribute('aria-pressed', 'true');
     expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
   });
 
   test('detail modal still closes by backdrop and Escape', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await buildGameState(page, (gs) => {
-      gs.players.self.scene = [{
-        cardId: 'D08015', uid: 'priority-card', state: 'active', isNamed: false, enterOrder: 1,
-        setCards: [], stackedCards: 0, keywordOverrides: { granted: [], disabledOriginal: false },
-        apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-        declaredUseCount: {},
-      }];
+      gs.players.self.hand = ['D08015'];
     });
 
-    const detail = page.getByTestId('scene-card-detail-priority-card');
-    await detail.click();
+    await page.locator('.hand-mini-card[data-card-id="D08015"]').click();
+    const magnifier = page.getByTestId('hand-card-magnifier-D08015');
+    await expect(magnifier).toBeEnabled();
+    await magnifier.focus();
+    await expect(magnifier).toBeFocused();
+    await page.keyboard.press('Enter');
     const modal = page.locator('.card-expand-modal-backdrop');
     await expect(modal).toBeVisible();
     await modal.click({ position: { x: 4, y: 4 } });
     await expect(modal).toHaveCount(0);
 
-    await detail.click();
+    await magnifier.click();
     await expect(modal).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(modal).toHaveCount(0);

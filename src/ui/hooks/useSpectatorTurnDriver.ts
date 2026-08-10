@@ -16,9 +16,18 @@ import type { Move } from '@/ai/move-enumerator.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import * as flow from '@/engine/flow/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
+import {
+  restorePendingRuntimeState,
+  snapshotPendingRuntimeState,
+} from '@/engine/effect/runtime-state.js';
 import { dispatchEngineAction, surfacePendingSideChannels } from './useEngineDispatch.js';
 import { movePresentationDelay } from './movePresentationDelay.js';
 import { primaryActiveCard } from './useOppTurnDriver.js';
+import {
+  hasOutstandingPresentation,
+  usePresentationOutstandingCount,
+} from '@/ui/presentation/usePresentationQueue.js';
+import { selectAutonomousDecisionBlocked } from '@/ui/state/autonomousDecisionGate.js';
 
 let isDriving = false;
 let previousMoveKind: Move['kind'] | null = null;
@@ -37,16 +46,23 @@ function driveSelfTurn(): void {
   if (current.turn.player !== 'self') return;
   if (current.gameResult) return;
   if (store.activeActionId) return;
-  if (store.pendingDeckReveal || store.pendingPublicHandReveal?.lifetime === 'effect') return;
+  if (selectAutonomousDecisionBlocked(store)) return;
+  // In-flight action continuation is owned by its flow driver. Presentation
+  // blocks only the next autonomous spectator step.
+  if (hasOutstandingPresentation()) return;
   if (isDriving) return;
   isDriving = true;
   try {
+    const pendingRuntimeBefore = snapshotPendingRuntimeState();
     const result = stepTurn(current, new HeuristicPolicy(), 'self', { pauseOnAction: true });
+    if (!store.setGameState(result.nextState, { preserveRuntime: true })) {
+      restorePendingRuntimeState(pendingRuntimeBefore);
+      return;
+    }
     previousMoveKind = result.paused?.move?.kind ?? result.move?.kind ?? null;
-    store.setGameState(result.nextState, { preserveRuntime: true });
     surfacePendingSideChannels();
     const surfaced = useGameStateStore.getState();
-    if (surfaced.pendingDeckReveal || surfaced.pendingPublicHandReveal?.lifetime === 'effect') return;
+    if (selectAutonomousDecisionBlocked(surfaced)) return;
 
     if (result.paused) {
       // BUG-138 (X8): 観戦モードは __humanPlayerSide=null のため humanPick pause は発生しない
@@ -98,7 +114,7 @@ export function _setSpectatorDriverDelay(ms: number): void {
 // Phase 12-B: step button で消費済みの counter 値を tracker
 let _lastConsumedStep = 0;
 
-export function useSpectatorTurnDriver(): void {
+export function useSpectatorTurnDriver(enabled = true): void {
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const turnPlayer = useGameStateStore((s) => s.gameState?.turn.player ?? null);
   const activeActionId = useGameStateStore((s) => s.activeActionId);
@@ -106,10 +122,12 @@ export function useSpectatorTurnDriver(): void {
   const isAiPaused = useGameStateStore((s) => s.isAiPaused);
   const aiStepCounter = useGameStateStore((s) => s.aiStepCounter);
   const aiMoveTick = useGameStateStore((s) => s.oppMoveTick);
-  const pendingDeckReveal = useGameStateStore((s) => s.pendingDeckReveal);
-  const pendingPublicHandReveal = useGameStateStore((s) => s.pendingPublicHandReveal);
+  const pendingDecisionBlocked = useGameStateStore(selectAutonomousDecisionBlocked);
+  const presentationOutstanding = usePresentationOutstandingCount();
   useEffect(() => {
-    if (!spectatorMode || turnPlayer !== 'self' || activeActionId !== null || pendingDeckReveal || pendingPublicHandReveal?.lifetime === 'effect') return undefined;
+    if (!enabled) return undefined;
+    if (!spectatorMode || turnPlayer !== 'self' || activeActionId !== null || pendingDecisionBlocked) return undefined;
+    if (presentationOutstanding > 0) return undefined;
     // Phase 12-B: paused なら step 要求があった時だけ進む
     if (isAiPaused) {
       if (aiStepCounter <= _lastConsumedStep) return undefined;
@@ -118,5 +136,5 @@ export function useSpectatorTurnDriver(): void {
     const delay = isAiPaused ? 0 : movePresentationDelay(previousMoveKind, aiSpeedMs);
     const id = setTimeout(driveSelfTurn, delay);
     return () => clearTimeout(id);
-  }, [spectatorMode, turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, aiMoveTick, pendingDeckReveal, pendingPublicHandReveal]);
+  }, [enabled, spectatorMode, turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, aiMoveTick, pendingDecisionBlocked, presentationOutstanding]);
 }

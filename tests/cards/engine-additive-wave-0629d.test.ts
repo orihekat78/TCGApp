@@ -167,11 +167,12 @@ describe('engine-additive-0629d #3 charSetCard fromSelf', () => {
     mutateChar.setCard(s, 'h1', 'EVT', false);
     expect(read.char.ap(s, 'h1')).toBe(3000); // 裏向き ⇒ rider 不適用 (rules/16)
   });
-  it('EVT が remove に無くても host へセットされる (idx<0、複製なし)', () => {
+  it('EVT が remove に無い fromSelf は no-op（複製も適用もなし）', () => {
     const s = setup();
     s.players.self.remove = [];
     runAtom(s, 'charSetCard', { uid: 'h1', fromSelf: true, player: 'self' }, ctxEvt());
-    expect(s.players.self.scene[0].setCards).toEqual([{ cardId: 'EVT', faceUp: true, instanceId: 'set:1' }]);
+    expect(s.players.self.scene[0].setCards).toEqual([]);
+    expect(s.players.self.remove).toEqual([]);
   });
   it('短縮形 fromSelf (uid未指定+n/max): 即セットせず host pick を await する', () => {
     const s = setup();

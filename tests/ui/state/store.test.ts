@@ -9,6 +9,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useGameStateStore } from '@/ui/state/store';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { snapshotPendingRuntimeState } from '@/engine/effect/runtime-state';
 import type { GameState } from '@/engine/types/game-state';
 
 describe('useGameStateStore', () => {
@@ -32,6 +33,35 @@ describe('useGameStateStore', () => {
     useGameStateStore.getState().setGameState(replacement);
     expect(useGameStateStore.getState().gameState).toBe(replacement);
     expect(useGameStateStore.getState().gameState).not.toBe(initial);
+  });
+
+  it('sets replay projection without hydrating pending runtime or live surfaces', () => {
+    const replayState = createEmptyGameState();
+    replayState.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{ key: '__privateReplayDecision', present: true, value: 'secret' }],
+    };
+    useGameStateStore.setState({ activeActionId: 'live-action', spectatorMode: true });
+
+    expect(() => useGameStateStore.getState().setReplayGameState(replayState)).not.toThrow();
+    expect(useGameStateStore.getState().gameState).toBe(replayState);
+    expect(useGameStateStore.getState().activeActionId).toBeNull();
+    expect(useGameStateStore.getState().spectatorMode).toBe(false);
+    expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
+  });
+
+  it('never mutates ambient pending runtime while projecting replay frames', () => {
+    const ambientRuntime = globalThis as { __pendingContactStartAxId?: string };
+    ambientRuntime.__pendingContactStartAxId = 'ambient-live-action';
+    try {
+      const before = snapshotPendingRuntimeState();
+      useGameStateStore.getState().setReplayGameState(createEmptyGameState());
+      expect(snapshotPendingRuntimeState()).toEqual(before);
+      useGameStateStore.getState().setReplayGameState(null);
+      expect(snapshotPendingRuntimeState()).toEqual(before);
+    } finally {
+      delete ambientRuntime.__pendingContactStartAxId;
+    }
   });
 
   it('dispatch(mutator) applies the mutator and stores its return value', () => {

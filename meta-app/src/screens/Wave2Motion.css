@@ -1,0 +1,19 @@
+@media (prefers-reduced-motion: reduce) {
+  .meta-fade,
+  .history-screen,
+  .settings-screen,
+  .result-screen,
+  .replay-screen,
+  .tutorial-screen,
+  .history-screen *,
+  .settings-screen *,
+  .result-screen *,
+  .replay-screen *,
+  .tutorial-screen * {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+  }
+}

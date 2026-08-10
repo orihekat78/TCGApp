@@ -9,7 +9,8 @@
 //   - useChoicePicker store の current を Playmat が subscribe し、open=true で表示。
 //   - option クリック → onPick(index) → ctx.dyn.choiceIndex に積まれ resolveEffectPicks が unwrap。
 
-import { useEffect, type JSX } from 'react';
+import type { JSX, ReactNode } from 'react';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import './ChoicePickerModal.css';
 
 export type ChoiceOptionView = { index: number; label: string };
@@ -22,28 +23,21 @@ export type ChoicePickerModalProps = {
   options: readonly ChoiceOptionView[];
   onPick: (index: number) => void;
   onCancel: () => void;
+  contentBeforeOptions?: ReactNode;
 };
 
 export function ChoicePickerModal(props: ChoicePickerModalProps): JSX.Element | null {
-  const { open, sourceName, options, onPick, onCancel } = props;
-  useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (event: KeyboardEvent): void => {
-      if (event.key !== 'Escape') return;
-      event.preventDefault();
-      event.stopPropagation();
-      onCancel();
-    };
-    window.addEventListener('keydown', onKeyDown, { capture: true });
-    return () => window.removeEventListener('keydown', onKeyDown, { capture: true });
-  }, [open, onCancel]);
+  const { open, sourceName, options, onPick, onCancel, contentBeforeOptions } = props;
+  const dialogRef = useModalFocusTrap({ active: open, onEscape: onCancel });
   if (!open) return null;
   return (
     <div
+      ref={dialogRef}
       className="cp-overlay"
       role="dialog"
       aria-labelledby="cp-title"
       aria-modal="true"
+      tabIndex={-1}
       data-testid="choice-picker-modal"
     >
       <div className="cp-modal">
@@ -52,6 +46,7 @@ export function ChoicePickerModal(props: ChoicePickerModalProps): JSX.Element | 
           <p className="cp-sub">{`${sourceName}: いずれかの効果を選んでください`}</p>
         </div>
         <div className="cp-body">
+          {contentBeforeOptions}
           <ul className="cp-list">
             {options.map((o) => (
               <li key={o.index}>

@@ -12,7 +12,7 @@
 // resolver 由来のサブ効果) を許容するため string で受ける。
 
 import type { Effect, Condition } from './effect.js';
-import type { EffectResolutionKind } from './effect-ctx.js';
+import type { CausalEffectTrace, EffectResolutionKind } from './effect-ctx.js';
 
 export type EffectStackEntrySource = {
   uid?: string;
@@ -104,6 +104,10 @@ export type EffectStackEntry = {
   dyn?: Record<string, unknown>;
   /** Scoped hand-reveal cause restored only for this resumed entry. */
   publicHandRevealToken?: string;
+  /** Public causal lineage restored when a paused decision resumes. */
+  causalTrace?: CausalEffectTrace;
+  /** Immediate parent effect root captured for a newly triggered effect. */
+  causalCorrelationEventId?: string;
   /**
    * BUG-132 GAP-2 (2026-06-12): effect:declared の emit 1 回ごとの batch 連番。
    * 同一 emit で queue された entry 群 (イベント自効果 + 第三者反応) を結ぶ。

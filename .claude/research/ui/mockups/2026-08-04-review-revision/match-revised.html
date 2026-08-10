@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MATCH mobile expanded design mock</title>
+  <style>
+    :root { color-scheme: dark; font-family: "Yu Gothic UI", "Noto Sans JP", system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #020912; }
+    .stage { position: relative; width: 100%; height: 100%; overflow: hidden; background: #020912; }
+    .desktop-reference { display: block; width: 100%; height: 100%; object-fit: fill; }
+    .compact { display: none; }
+
+    @media (max-width: 900px), (max-height: 560px) {
+      .desktop-reference { display: none; }
+      .compact { position: absolute; inset: 0; display: grid; grid-template-columns: 699px 152px; width: 851px; height: 393px; }
+      .board {
+        position: relative; min-width: 0; min-height: 0; overflow: hidden;
+        border-right: 1px solid rgba(66, 178, 226, .42); background: #04101c;
+      }
+      .board-image {
+        position: absolute; inset: 0; width: 699px; height: 393px;
+        background: url("match-desktop-1440x900-design-mock.png") 0 0 / 796px 393px no-repeat;
+      }
+      .actions {
+        position: relative; min-width: 0; min-height: 0; overflow: hidden;
+        background: #020912;
+      }
+      .actions-image {
+        position: absolute; inset: 0; width: 152px; height: 393px;
+        background: url("match-desktop-1440x900-design-mock.png") -1199px 0 / 1351px 393px no-repeat;
+      }
+      .actions-readable {
+        position: absolute; inset: 0; padding: 6px; display: flex; flex-direction: column; gap: 4px;
+        background: linear-gradient(180deg, rgba(2, 10, 19, .28), rgba(2, 10, 19, .08));
+      }
+      .actions-title {
+        height: 18px; display: flex; align-items: center; justify-content: space-between;
+        border-bottom: 1px solid rgba(84, 184, 222, .28); color: #8fb5ca;
+        font: 800 9px/1 Consolas, monospace; letter-spacing: .14em;
+      }
+      .actions-title b { color: #f3ce13; font-size: 9px; letter-spacing: .04em; }
+      .action-list {
+        min-height: 0; overflow-y: auto; display: grid; gap: 3px;
+        scrollbar-width: thin; scrollbar-color: rgba(121, 212, 236, .55) transparent;
+      }
+      .action-list::-webkit-scrollbar { width: 4px; }
+      .action-list::-webkit-scrollbar-track { background: transparent; }
+      .action-list::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(121, 212, 236, .55); }
+      .action {
+        min-height: 44px; padding: 5px 6px; border: 1px solid rgba(67, 153, 195, .38); border-radius: 3px;
+        background: rgba(3, 18, 31, .91); color: #e4f3fb; text-align: left;
+      }
+      .action strong { display: block; font-size: 12px; line-height: 15px; }
+      .action small { display: block; margin-top: 2px; color: #8dacbf; font-size: 11px; line-height: 13px; }
+      .action.disabled { color: #7890a0; opacity: .67; }
+      .context {
+        min-height: 42px; padding: 5px 6px; border-left: 2px solid #43d1f5;
+        background: rgba(5, 25, 42, .94); color: #dff7ff; font-size: 11px; line-height: 15px;
+      }
+      .context b { display: block; color: #60daf7; font-size: 12px; }
+      .actions-foot { margin-top: auto; display: grid; gap: 4px; }
+      .phase { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
+      .phase span {
+        min-height: 44px; display: grid; place-items: center; border: 1px solid #274963; border-radius: 3px;
+        color: #96adbd; background: rgba(5, 18, 31, .9); font-size: 10px; font-weight: 800;
+      }
+      .phase .active { border-color: #4ed1ff; color: #e9fbff; background: #11456b; }
+      .end-turn {
+        min-height: 44px; display: grid; place-items: center; border: 1px solid #5be5b7; border-radius: 4px;
+        color: #fff; background: linear-gradient(180deg, #2cab7f, #1c755b); font-size: 12px; font-weight: 900;
+      }
+      .causal, .selection { position: absolute; inset: 0; pointer-events: none; }
+      .causal-line {
+        position: absolute; left: 293px; top: 150px; width: 133px; border-top: 1px dashed rgba(77, 213, 255, .9);
+        transform: rotate(14deg); transform-origin: left center;
+      }
+      .causal-line::after {
+        content: ""; position: absolute; right: -2px; top: -4px; width: 7px; height: 7px;
+        border-top: 1px solid #5fe1ff; border-right: 1px solid #5fe1ff; transform: rotate(45deg);
+      }
+      .causal-copy {
+        position: absolute; left: 346px; top: 162px; color: #a9eeff; font-size: 12px; font-weight: 900;
+        letter-spacing: .06em; text-shadow: 0 0 9px #063751;
+      }
+      .selection { display: none; }
+      .stage.target .causal { display: none; }
+      .stage.target .selection { display: block; }
+      .selection-copy {
+        position: absolute; left: 270px; top: 45px; padding: 5px 8px; border-left: 2px solid #4ed1ff;
+        background: rgba(3, 16, 29, .88); color: #e1f8ff; font-size: 12px; font-weight: 900;
+      }
+      .candidate {
+        position: absolute; left: 204px; top: 38px; width: 48px; height: 52px;
+        border: 2px solid #58dcff; border-radius: 3px;
+        box-shadow: 0 0 0 2px rgba(2, 23, 38, .92), 0 0 16px rgba(51, 202, 255, .66);
+      }
+      .candidate::after {
+        content: "選択可能"; position: absolute; left: 50%; top: -21px; transform: translateX(-50%);
+        padding: 2px 5px; border: 1px solid rgba(88, 220, 255, .7); border-radius: 2px;
+        background: #051727; color: #dff9ff; font-size: 9px; font-weight: 900; white-space: nowrap;
+      }
+      .stage.target .context b { color: #ffe16b; }
+      .stage.target .selection-copy { display: none; }
+      .stage.target .end-turn {
+        border-color: #334c5e; color: #718796; background: #0a1723; box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage" id="stage" aria-label="MATCH モバイルデザインモック">
+    <img class="desktop-reference" src="match-desktop-1440x900-design-mock.png" alt="MATCHプレイマット">
+    <div class="compact">
+      <section class="board" aria-label="拡大した既存プレイマット">
+        <div class="board-image"></div>
+        <div class="causal"><span class="causal-line"></span><span class="causal-copy">デッキ → 手札 +1</span></div>
+        <div class="selection"><span class="selection-copy">対象選択</span><span class="candidate"></span></div>
+      </section>
+      <aside class="actions" aria-label="既存のACTIONS領域">
+        <div class="actions-image"></div>
+        <div class="actions-readable">
+          <div class="actions-title"><span>ACTIONS</span><b>5枚</b></div>
+          <div class="action-list">
+            <button class="action"><strong>手札を確認</strong><small>6枚 / 使用可能</small></button>
+            <button class="action"><strong>ネクストヒント</strong><small>FILE 1枚</small></button>
+            <button class="action disabled"><strong>パートナー能力</strong><small>条件を満たしていません</small></button>
+            <button class="action"><strong>推理</strong><small>LPを1増やす</small></button>
+          </div>
+          <div class="context" id="context"><b>処理結果</b>CPUがカードを1枚引いた</div>
+          <div class="actions-foot">
+            <div class="phase"><span>AUTO</span><span class="active">MAIN</span><span>END</span></div>
+            <div class="end-turn" id="end-turn">ターン終了</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+  <script>
+    if (new URLSearchParams(location.search).get('state') === 'target') {
+      document.getElementById('stage').classList.add('target');
+      document.getElementById('context').innerHTML = '<b>必須対象を選択</b>対象カードを1枚選択';
+      document.getElementById('end-turn').textContent = '選択中は使用不可';
+    }
+  </script>
+</body>
+</html>

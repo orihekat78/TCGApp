@@ -25,15 +25,17 @@ import {
   _resetPendingMisread,
 } from '@/engine/listeners/misread';
 import {
-  bindPendingDecision,
-  dispatchEngineAction,
-} from '@/ui/hooks/useEngineDispatch';
+  _resetTriggeredRegistered,
+  registerTriggeredListener,
+} from '@/engine/listeners/triggered';
+import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { driveOppTurn, _resetIsDriving } from '@/ui/hooks/useOppTurnDriver';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { produce } from 'immer';
 import type { GameState, SceneCharacter } from '@/engine/types/game-state';
 import { makeChar as baseChar } from '../helpers/fixtures';
+import { openCaseHirameki } from '../helpers/open-case-hirameki';
 
 function makeChar(uid: string, cardId: string, state: 'active' | 'sleep' | 'stun' = 'active'): SceneCharacter {
   return baseChar({ cardId, uid, state, enterOrder: 0 });
@@ -46,11 +48,13 @@ function fullReset(): void {
   _resetTargetExpanders();
   _resetUidCounter();
   _resetPendingMisread();
+  _resetTriggeredRegistered();
   _drainPendingHirameki(); // 念のため drain
   _resetIsDriving();
   registerAll();
   registerHiramekiListener();
   registerMisreadListener();
+  registerTriggeredListener();
   useGameStateStore.setState({
     gameState: null,
     activeActionId: null,
@@ -146,22 +150,14 @@ describe('human vs CPU integration E2E (Commit 6)', () => {
   it('Test 4 — Hirameki end-to-end: pendingHirameki セット後 fire で hand +1', () => {
     const s = setupMidGame();
     s.players.self.hand = [];
-    useGameStateStore.setState({ gameState: s });
-
-    // dispatchEngineAction の Side channel 経路は単体テストでカバー済。E2E ではより
-    // 直接的に pendingHirameki をセットして fire 解決を観察 (Phase 5 で実カードが
-    // action[case] によって evidence を消費する経路を統合した時に完全 E2E 化)。
-    useGameStateStore.getState().setPendingHirameki({
-      player: 'self',
-      cardId: 'D08013',
-      abilityId: 'a2',
-    });
+    openCaseHirameki(s, 'D08013', { actorUid: 'o1' });
 
     const pending = useGameStateStore.getState().pendingHirameki!;
-    const r = dispatchEngineAction(bindPendingDecision(
-      pending,
-      { type: 'hiramekiResolve', choice: 'fire' },
-    ));
+    const r = dispatchEngineAction({
+      type: 'hiramekiResolve',
+      choice: 'fire',
+      decisionId: pending.decisionId,
+    });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.hand.length).toBe(1);

@@ -17,11 +17,17 @@ import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import { def as readDef } from '@/engine/read/def.js';
+import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
+import { LinkedPublicHandReveal } from './PublicHandRevealWindow.js';
 import './ChoicePickerModal.css';
 
 export function EffectOptionalModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingEffectOptional);
-  if (!pending || pending.player !== 'self') return null;
+  const spectatorMode = useGameStateStore((s) => s.spectatorMode);
+  const isOpen = Boolean(pending && isHumanDecisionOwner(pending.player, spectatorMode));
+  const dialogRef = useModalFocusTrap({ active: isOpen });
+  if (!pending || !isOpen) return null;
 
   const def = pending.source.cardId ? readDef.card(pending.source.cardId) : undefined;
   const sourceName = def?.names?.[0] ?? pending.source.cardId ?? '効果';
@@ -33,10 +39,12 @@ export function EffectOptionalModalHost(): JSX.Element | null {
 
   return (
     <div
+      ref={dialogRef}
       className="cp-overlay"
       role="dialog"
       aria-labelledby="opt-title"
       aria-modal="true"
+      tabIndex={-1}
       data-testid="optional-picker-modal"
     >
       <div className="cp-modal">
@@ -44,7 +52,10 @@ export function EffectOptionalModalHost(): JSX.Element | null {
           <h2 id="opt-title">任意効果</h2>
           <p className="cp-sub">{desc ? `${sourceName}: ${desc}` : `${sourceName}: 効果を使いますか?`}</p>
         </div>
-        <div className="cp-body"><p className="cp-sub">Choose whether to continue.</p></div>
+        <div className="cp-body">
+          <LinkedPublicHandReveal resolutionToken={pending.publicHandRevealToken} />
+          <p className="cp-sub">Choose whether to continue.</p>
+        </div>
         <div className="cp-actions">
           <ul className="cp-list">
             <li>

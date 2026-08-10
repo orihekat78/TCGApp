@@ -7,11 +7,16 @@ import { SetCardChoiceModalHost } from '@/ui/components/SetCardChoiceModalHost';
 import { EffectOptionalModalHost } from '@/ui/components/EffectOptionalModalHost';
 import { EffectRepeatOptionalModalHost } from '@/ui/components/EffectRepeatOptionalModalHost';
 import { RpsModalHost } from '@/ui/components/RpsModalHost';
+import { EffectChoiceModalHost } from '@/ui/components/EffectChoiceModalHost';
+import { PublicHandRevealWindow } from '@/ui/components/PublicHandRevealWindow';
 import { useGameStateStore } from '@/ui/state/store';
 
 const { dispatchEngineActionMock } = vi.hoisted(() => ({ dispatchEngineActionMock: vi.fn() }));
 
-vi.mock('@/ui/hooks/useEngineDispatch.js', () => ({ dispatchEngineAction: dispatchEngineActionMock }));
+vi.mock('@/ui/hooks/useEngineDispatch.js', () => ({
+  dispatchEngineAction: dispatchEngineActionMock,
+  surfacePendingSideChannels: vi.fn(),
+}));
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -20,7 +25,8 @@ type DecisionHost = typeof ChooseInterceptModalHost
   | typeof SetCardChoiceModalHost
   | typeof EffectOptionalModalHost
   | typeof EffectRepeatOptionalModalHost
-  | typeof RpsModalHost;
+  | typeof RpsModalHost
+  | typeof EffectChoiceModalHost;
 
 function gameState(hand: string[] = []) {
   return {
@@ -46,11 +52,18 @@ function unmount(root: Root, container: HTMLDivElement): void {
 
 describe('decision modal hosts', () => {
   beforeEach(() => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
     useGameStateStore.setState({
       gameState: gameState(),
       pendingChooseIntercept: null,
       pendingSetCardReplacement: null,
       pendingSetCardChoice: null,
+      pendingEffectChoice: null,
+      pendingEffectOptional: null,
+      pendingEffectRepeatOptional: null,
+      pendingRps: null,
+      pendingPublicHandReveal: null,
+      spectatorMode: false,
     });
     dispatchEngineActionMock.mockClear();
   });
@@ -60,7 +73,13 @@ describe('decision modal hosts', () => {
       pendingChooseIntercept: null,
       pendingSetCardReplacement: null,
       pendingSetCardChoice: null,
+      pendingEffectChoice: null,
+      pendingEffectOptional: null,
+      pendingEffectRepeatOptional: null,
+      pendingRps: null,
+      pendingPublicHandReveal: null,
     });
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   });
 
   it('keeps duplicate hand cards index-distinct and resolves the chosen discard index after details close', () => {
@@ -82,9 +101,14 @@ describe('decision modal hosts', () => {
     expect(details).toHaveLength(2);
     const primaryNames = tiles.map((tile) => tile.getAttribute('aria-label'));
     const detailNames = [...details].map((detail) => detail.getAttribute('aria-label'));
-    expect(primaryNames).toEqual(['DUPLICATE-CARD 1枚目を選択', 'DUPLICATE-CARD 2枚目を選択']);
+    expect(primaryNames).toEqual([
+      'DUPLICATE-CARD 1枚目をリムーブし、効果を続行',
+      'DUPLICATE-CARD 2枚目をリムーブし、効果を続行',
+    ]);
     expect(detailNames).toEqual(['DUPLICATE-CARD 1枚目の詳細を表示', 'DUPLICATE-CARD 2枚目の詳細を表示']);
     expect([...primaryNames, ...detailNames].join(' ')).not.toContain('hand:self:');
+    expect(container.textContent).toContain('手札を1枚リムーブして、選んだ効果を続行しますか？');
+    expect(container.textContent).toContain('リムーブしない（効果を無効にする）');
     act(() => details[1]!.click());
     expect(container.querySelector('.card-expand-close')).not.toBeNull();
     act(() => (container.querySelector('.card-expand-close') as HTMLButtonElement).click());
@@ -106,6 +130,7 @@ describe('decision modal hosts', () => {
     const { container, root } = renderHost(ChooseInterceptModalHost);
 
     expect(container.querySelectorAll('[data-instance-id]')).toHaveLength(0);
+    expect(container.textContent).toContain('リムーブできないため、効果は無効になります');
     act(() => (container.querySelector('[data-testid="choose-intercept-decline"]') as HTMLButtonElement).click());
     expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'chooseInterceptResolve', discardIndex: null });
     unmount(root, container);
@@ -262,5 +287,187 @@ describe('decision modal hosts', () => {
     act(() => (container.querySelector('[data-testid="rps-rock"]') as HTMLButtonElement).click());
     expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'rpsResolve', hand: 'rock' });
     unmount(root, container);
+  });
+
+  it.each([
+    {
+      label: 'effect choice',
+      Host: EffectChoiceModalHost,
+      testId: 'choice-picker-modal',
+      state: { pendingEffectChoice: { player: 'opp', source: {}, options: [{ index: 0, label: 'A' }] } },
+    },
+    {
+      label: 'optional effect',
+      Host: EffectOptionalModalHost,
+      testId: 'optional-picker-modal',
+      state: { pendingEffectOptional: { player: 'opp', source: {} } },
+    },
+    {
+      label: 'repeat optional effect',
+      Host: EffectRepeatOptionalModalHost,
+      testId: 'repeat-optional-picker-modal',
+      state: { pendingEffectRepeatOptional: { player: 'opp', remaining: 1, source: {} } },
+    },
+    {
+      label: 'rock-paper-scissors',
+      Host: RpsModalHost,
+      testId: 'rps-modal',
+      state: { pendingRps: { player: 'opp', ownerPlayer: 'self', aiHand: 'paper' } },
+    },
+    {
+      label: 'set-card choice',
+      Host: SetCardChoiceModalHost,
+      testId: 'set-card-choice-modal',
+      state: {
+        pendingSetCardChoice: {
+          player: 'opp', hostUid: 'opp-host',
+          entries: [{ instanceId: 'opp-set-1', ordinal: 1 }], source: {},
+        },
+      },
+    },
+    {
+      label: 'set-card replacement',
+      Host: SetCardReplacementModalHost,
+      testId: 'set-card-replacement-modal',
+      state: {
+        pendingSetCardReplacement: {
+          player: 'opp', fromUid: 'from-1', setCardInstanceId: 'set-1',
+          candidates: [{ uid: 'opp-target', cardId: 'D08015' }], source: {},
+        },
+      },
+    },
+  ])('renders $label for the actual human on the opponent side', ({ Host, testId, state }) => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'opp';
+    useGameStateStore.setState(state as never);
+
+    const { container, root } = renderHost(Host);
+
+    expect(container.querySelector(`[data-testid="${testId}"]`)).not.toBeNull();
+    unmount(root, container);
+  });
+
+  it('uses the actual opponent-side human hand for choose-intercept', () => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'opp';
+    useGameStateStore.setState({
+      gameState: {
+        players: {
+          self: { hand: [], scene: [] },
+          opp: { hand: ['D08015'], scene: [] },
+        },
+      } as never,
+      pendingChooseIntercept: {
+        player: 'opp',
+        protector: { uid: 'protector-1', cardId: 'B01001', abilityId: 'a1' },
+        targetUid: 'target-1',
+      },
+    });
+
+    const { container, root } = renderHost(ChooseInterceptModalHost);
+
+    expect(container.querySelector('[data-testid="choose-intercept-modal"]')).not.toBeNull();
+    expect(container.querySelector('[data-instance-id="hand:opp:0"]')).not.toBeNull();
+    unmount(root, container);
+  });
+
+  it.each([
+    {
+      label: 'effect choice',
+      Host: EffectChoiceModalHost,
+      dialogTestId: 'choice-picker-modal',
+      state: {
+        pendingEffectChoice: {
+          player: 'self',
+          source: { uid: 'source-1' },
+          options: [{ index: 0, label: 'A' }],
+          publicHandRevealToken: 'public-hand-reveal:decision',
+        },
+      },
+    },
+    {
+      label: 'optional effect',
+      Host: EffectOptionalModalHost,
+      dialogTestId: 'optional-picker-modal',
+      state: {
+        pendingEffectOptional: {
+          player: 'self',
+          source: { uid: 'source-1' },
+          publicHandRevealToken: 'public-hand-reveal:decision',
+        },
+      },
+    },
+    {
+      label: 'choose intercept',
+      Host: ChooseInterceptModalHost,
+      dialogTestId: 'choose-intercept-modal',
+      state: {
+        gameState: gameState(['D08015']),
+        pendingChooseIntercept: {
+          player: 'self',
+          protector: { uid: 'protector-1', cardId: 'B01001', abilityId: 'a1' },
+          targetUid: 'target-1',
+          publicHandRevealToken: 'public-hand-reveal:decision',
+        },
+      },
+    },
+  ])('keeps a $label linked public reveal inside its keyboard-modal boundary', async ({ Host, dialogTestId, state }) => {
+    const origin = document.createElement('button');
+    document.body.appendChild(origin);
+    origin.focus();
+    useGameStateStore.setState({
+      ...state,
+      pendingPublicHandReveal: {
+        owner: 'self',
+        audience: 'all',
+        cardIds: ['D08015'],
+        handSnapshot: ['D08015'],
+        lifetime: 'effect',
+        resolutionToken: 'public-hand-reveal:decision',
+        source: { cardId: 'SOURCE', abilityId: 'a1' },
+      },
+    } as never);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    act(() => root.render(<><Host /><PublicHandRevealWindow /></>));
+
+    const dialog = container.querySelector<HTMLElement>(`[data-testid="${dialogTestId}"]`)!;
+    expect(dialog).not.toBeNull();
+    expect(dialog.querySelector('[data-testid="public-hand-reveal-window"]')).not.toBeNull();
+    expect(container.querySelectorAll('[data-testid="public-hand-reveal-window"]')).toHaveLength(1);
+
+    const detail = dialog.querySelector<HTMLButtonElement>('[data-testid="public-hand-reveal-detail-0"]')!;
+    const controls = Array.from(dialog.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
+    const last = controls.at(-1)!;
+    expect(document.activeElement).toBe(detail);
+
+    last.focus();
+    const forwardTab = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+    act(() => document.dispatchEvent(forwardTab));
+    expect(forwardTab.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(detail);
+
+    detail.focus();
+    const backwardTab = new KeyboardEvent('keydown', {
+      key: 'Tab', shiftKey: true, bubbles: true, cancelable: true,
+    });
+    act(() => document.dispatchEvent(backwardTab));
+    expect(backwardTab.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(last);
+
+    detail.focus();
+    act(() => detail.click());
+    expect(document.querySelector('.card-expand-modal-backdrop')).not.toBeNull();
+    act(() => document.querySelector<HTMLButtonElement>('.card-expand-close')!.click());
+    await act(async () => new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve())));
+    expect(document.activeElement).toBe(detail);
+
+    const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    act(() => document.dispatchEvent(escape));
+    expect(escape.defaultPrevented).toBe(true);
+    expect(container.querySelector(`[data-testid="${dialogTestId}"]`)).not.toBeNull();
+
+    unmount(root, container);
+    expect(document.activeElement).toBe(origin);
+    origin.remove();
   });
 });

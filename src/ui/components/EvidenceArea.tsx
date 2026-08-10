@@ -42,12 +42,17 @@ export function EvidenceArea(props: EvidenceAreaProps): JSX.Element {
       className={`zone evidence-zone evidence-area side-${side}${
         isComplete ? ' complete' : ''
       }`}
-      role="button"
-      tabIndex={0}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
       aria-label={`${side === 'self' ? '自分の' : '相手の'}証拠 ${safeCount} / ${requiredEvidence} 枚${onClick ? ' (クリックで内容表示)' : ''}`}
       data-side={side}
       data-count={safeCount}
       onClick={onClick}
+      onKeyDown={onClick ? (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        onClick();
+      } : undefined}
       style={onClick ? { cursor: 'pointer' } : undefined}
     >
       <div className="zone-label">

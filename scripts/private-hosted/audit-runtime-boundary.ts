@@ -39,7 +39,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes("/node_modules/")) return "vendor";
+          if (/\\/node_modules\\//.test(id)) return "vendor";
         },
       },
     },
@@ -9645,6 +9645,7 @@ const INTERNAL_RUNTIME_GLOBAL_KEYS = new Set<string>([
   "__pendingSetCardChoiceGuard",
   "__pendingSetCardChoiceResume",
   "__pendingSetCardChoiceSide",
+  "__pendingSetCardReplacementGuard",
   "__pendingSetCardReplacementSide",
 ]);
 

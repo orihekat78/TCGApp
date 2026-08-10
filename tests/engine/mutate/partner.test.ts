@@ -111,6 +111,19 @@ describe('engine.mutate.partner', () => {
       });
       expect(result.gameResult!.winner).toBe('opp');
     });
+
+    it('終局後は通常事件解決で盤面を一切変更しない', () => {
+      const terminal = produce(
+        makeState({ partner: { cardId: 'P001', state: 'active', location: 'partner-area' } }),
+        draft => { draft.gameResult = { winner: 'opp', reason: 'deck-out' }; },
+      );
+
+      const result = produce(terminal, draft => {
+        partner.solveCase(draft, 'self');
+      });
+
+      expect(result).toBe(terminal);
+    });
   });
 
   // MR能力①② は real partner singleton を破壊しない別 slot 設計 (partnerAreaMR) へ再実装された

@@ -15,21 +15,39 @@ import { produce } from 'immer';
 import * as flow from '@/engine/flow/index.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { pendingOwnerOrderGroup, runAllUntilEmpty } from '@/engine/resolve/index.js';
-import { applyChooseInterceptResponse, applyDeckReorderAndContinuation, applyPickAndContinuation, applyPickSkipAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation, applyRepeatOptionalAndContinuation, applyRpsAndContinuation, applySetCardChoiceAndContinuation, applySetCardReplacement } from '@/engine/effect/apply-pick.js';
-import { resolveEffectPicks } from '@/engine/effect/resolve-picks.js';
+import { applyChooseInterceptResponse, applyDeckPlaceAndContinuation, applyDeckReorderAndContinuation, applyPickAndContinuation, applyPickSkipAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation, applyRepeatOptionalAndContinuation, applyRpsAndContinuation, applySetCardChoiceAndContinuation, applySetCardReplacement } from '@/engine/effect/apply-pick.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import type { GameState } from '@/engine/types/game-state.js';
-import type { EffectCtx } from '@/engine/types';
 import { resolveActionAgainstChar, resolveActionAgainstCase } from '@/ai/action-resolution.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
-import { event as engineEvent } from '@/engine/event/index.js';
-import { def as readDef } from '@/engine/read/def.js';
 // Round 4j-fix (BUG-034): `@/engine` 経由で取得し vite dev mode の module duplication 回避
 import { _drainPendingHirameki, _drainPendingMisread, _peekPendingHirameki, _markPendingHiramekiGainDeferred } from '@/engine';
 import { _drainPendingEffectPickSide, _drainPendingEffectChoiceSide, _drainPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
 import { _drainPendingChooseInterceptSide, _drainPendingEffectRepeatOptionalSide, _drainPendingRpsSide, _drainPendingSetCardChoiceSide, _drainPendingSetCardReplacementSide } from '@/engine/effect/pending-state.js';
 import { _drainPendingDeckRevealSide, _drainPendingPublicHandRevealSide, _drainPendingDeckReorderSide, _drainPendingDeckPlaceSide, _drainPendingContactStartAxId } from '@/engine/effect/atom-handlers';
-import { restorePendingRuntimeState, snapshotPendingRuntimeState } from '@/engine/effect/runtime-state.js';
+import {
+  cancelPendingEffectPickByPublicRevealToken,
+  readPendingDeckPlaceAuthority,
+  readPendingDeckReorderAuthority,
+  readPendingEffectChoiceAuthority,
+  readPendingEffectOptionalAuthority,
+  readPendingEffectPickAuthority,
+  readPendingRpsAuthority,
+  rebindPendingRuntimeStateOwner,
+  restorePendingRuntimeState,
+  snapshotPendingRuntimeState,
+} from '@/engine/effect/runtime-state.js';
+import type {
+  PendingEffectChoiceSide,
+  PendingEffectOptionalSide,
+  PendingEffectPickSide,
+  PendingRpsSide,
+} from '@/engine/effect/pending-state.js';
+import type {
+  PendingDeckPlaceSide,
+  PendingDeckReorderSide,
+} from '@/engine/effect/atom-handlers/_shared.js';
+import { effectivePendingPickRange } from '@/engine/effect/pick-selection.js';
 import {
   hasLinkedPublicHandRevealDecision as hasLinkedPublicHandRevealDecisionFromStore,
   surfacePendingSideChannels as surfacePendingSideChannelsFromStore,
@@ -38,10 +56,17 @@ import {
 import { isAllowed } from './useEngineDispatch/can-check.js';
 import { _resumeDeferredReasoning } from '@/engine/flow/main/reasoning.js';
 import { _resolveMisreadPicks } from '@/engine/listeners/misread.js';
-import type { EngineAction, DispatchResult, Player } from './useEngineDispatch/types.js';
+import type { EngineAction, DispatchResult } from './useEngineDispatch/types.js';
+import { isReplayOwnedState } from '@/ui/services/replayOwnership';
+import {
+  toPendingSetCardChoiceSide,
+  toPendingSetCardReplacementSide,
+} from './useEngineDispatch/set-card-boundary.js';
 // Phase 3d: public 型 (ContactChoice/EngineAction/DispatchResult) は types.ts を barrel 再 export し importer 不変。
 export type { ContactChoice, EngineAction, DispatchResult } from './useEngineDispatch/types.js';
 export { bindPendingDecision } from './useEngineDispatch/types.js';
+
+class RejectedDecisionError extends Error {}
 
 /**
  * Phase 8 完全クローズ Commit 2: actionDeclareChar/Case 直後に
@@ -83,7 +108,18 @@ function surfacePublicHandReveal(
 
 // ---- engine 呼出 (draft 上で in-place mutation) ----
 
-function runEngineAction(draft: GameState, action: EngineAction): void {
+function runEngineAction(
+  draft: GameState,
+  action: EngineAction,
+  authorities: {
+    effectPick: PendingEffectPickSide | null;
+    effectChoice: PendingEffectChoiceSide | null;
+    effectOptional: PendingEffectOptionalSide | null;
+    rps: PendingRpsSide | null;
+    deckReorder: PendingDeckReorderSide | null;
+    deckPlace: PendingDeckPlaceSide | null;
+  },
+): void {
   switch (action.type) {
     case 'reasoning':
       flow.doReasoning(draft, action.uid);
@@ -190,6 +226,7 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
         // ヒラメキ無しの fast path は従来通り即時 gain (挙動不変)。
         if (_peekPendingHirameki()) {
           _markPendingHiramekiGainDeferred();
+          ax.deferredCaseEvidenceGain = true;
         } else {
           flow.actionCase.gainSelfEvidence(draft, ax);
         }
@@ -229,79 +266,26 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
     case 'hiramekiResolve': {
       const pending = useGameStateStore.getState().pendingHirameki;
       if (!pending) return;
-      if (action.choice === 'fire') {
-        // ability の effect を pendingEffects に queue → runAllUntilEmpty で解決
-        const def = readDef.card(pending.cardId);
-        const ability = def?.abilities.find(
-          (a: unknown) => a !== null && typeof a === 'object' && (a as { id?: string }).id === pending.abilityId,
-        ) as { effect?: unknown } | undefined;
-        // Ver.2.5 p.21: a Hirameki whose condition icon is invalid is still
-        // activatable, but its text does not resolve. Do not re-evaluate here:
-        // a valid effect remains queued even if it later becomes invalid.
-        mutate.log.append(draft, {
-          ts: Date.now(),
-          player: pending.player,
-          turn: draft.turn.number,
-          action: 'hirameki:fire',
-          target: pending.cardId,
-        });
-        if (ability?.effect && pending.effectValid !== false) {
-          // 2026-05-29 user_request: ヒラメキ発動をフロントログ + トーストに明示。
-          // RecentActionToast は log 末尾を拾うため、この 1 行で「【ヒラメキ】発動」演出も出る。
-          // Phase 7-1 + 7-2 (BUG-035): hirameki effect 内の $pick atom を recursive utility で
-          // substitute。Phase 7-1 の局所版 resolveHiramekiPick を resolveEffectPicks に retrofit。
-          // Phase 7-3: chooseAtomTarget callback で verb 別ヒューリスティック選択
-          // (D11009 sceneSetState stun → 敵 active 最高 AP 等)。
-          // Human/AI 共通で適用 — UI 側 modal が出るときはこの dispatch 経路を通らないため実害なし。
-          const ctx: EffectCtx = {
-            // Human Pattern-A picks pause during this pre-walk, before the queued entry can
-            // restore its source metadata. Keep the resolving-card lifecycle on the shared
-            // continuation ctx so exact-exhaustion refresh still excludes this hirameki.
-            source: { player: pending.player, cardId: pending.cardId, area: 'evidence', resolutionKind: 'hirameki' },
-            bindings: pending.occurrence ? { occurrence: [{ kind: 'card' as const, cardId: pending.occurrence.cardId, area: 'remove', player: pending.occurrence.player, index: pending.occurrence.removeIndex }] } : {},
-            // wave-11: pick 解決段でも $trigger.<field> を参照可能に (queue payload と同内容。
-            // atom 実行時は entryToCtx の triggerPayload が使われるため両段で一致させる)
-            triggerPayload: { player: pending.player, ev: { cardId: pending.cardId }, byUid: pending.actorUid, occurrence: pending.occurrence },
-          };
-          const aiPolicy = new HeuristicPolicy();
-          // night-wC (2026-07-11, B06032/B09081): ヒラメキ所有者が human のとき humanChooser:true を渡し、
-          // effect 内 top-level optional (「手札を1枚リムーブしてもよい。そうした場合〜」) を
-          // pendingEffectOptional として surface する (EffectOptionalModalHost + optionalResolve が resume)。
-          // 従来は humanChooser 不在で optional が常に AI-skip → 再生/スタン効果が無音 collapse していた
-          // (declared-ability.ts の isHumanEffect パターンと対称)。owner が AI (or spectator=null) は従来どおり
-          // heuristic 自動解決 (byte 不変)。
-          const hiramekiHumanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
-          const isHumanHirameki = hiramekiHumanSide !== null && pending.player === hiramekiHumanSide;
-          const resolved = resolveEffectPicks(draft, ability.effect as never, ctx, {
-            chooseAtomTarget: isHumanHirameki ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
-            runtimeAtomTargetPolicyKey: isHumanHirameki ? undefined : 'heuristic',
-            byPlayer: pending.player,
-            humanChooser: isHumanHirameki,
-            source: { cardId: pending.cardId, abilityId: pending.abilityId },
-          });
-          // engine wave-11 (2026-07-02): byUid = pendingHirameki.actorUid を trigger payload に
-          // 復元 — 効果内 '$trigger.byUid' (「アクション中のキャラ」= アクション[事件] actor、公式Q&A B05111)
-          // が atom 実行時 (entryToCtx の triggerPayload) に解決される。
-          engineEvent.queue(
-            draft,
-            resolved as never,
-            { player: pending.player, cardId: pending.cardId, resolutionKind: 'hirameki' },
-            'evidence:remove-by-action',
-            { player: pending.player, ev: { cardId: pending.cardId }, byUid: pending.actorUid, occurrence: pending.occurrence },
-            ctx.bindings,
-          );
-        }
-      }
-      // mega-wave W6 step7 (2026-07-04, row70): actionJudge が defer した gain をここで実行。
-      // fire の場合は queue 済のヒラメキ効果を先に解決する (runAllUntilEmpty) —
-      // setEvidenceGainSuppress が gain より先に着地しないと抑止が効かない。
-      // gainDeferred guard は load-bearing: bundled 経路 (actionAgainstCase → eager gain) 由来の
-      // pendingHirameki では立たない → double-gain しない (row70 risks(2))。
-      if ((pending as { gainDeferred?: boolean }).gainDeferred && pending.actorUid) {
-        runAllUntilEmpty(draft);
-        const gainSide: Player = pending.player === 'self' ? 'opp' : 'self';
-        flow.actionCase.gainSelfEvidence(draft, { byPlayer: gainSide, byUid: pending.actorUid });
-      }
+      const actionContext = pending.actionId
+        ? flow.action._getContext(draft, pending.actionId)
+        : undefined;
+      const aiPolicy = new HeuristicPolicy();
+      const hiramekiHumanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+      const isHumanHirameki = hiramekiHumanSide !== null && pending.player === hiramekiHumanSide;
+      flow.actionCase.resolveHiramekiDecision(
+        draft,
+        actionContext,
+        pending,
+        action.choice,
+        {
+          chooseAtomTarget: isHumanHirameki ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+          runtimeAtomTargetPolicyKey: isHumanHirameki ? undefined : 'heuristic',
+          humanChooser: isHumanHirameki,
+        },
+      );
+      // The ActionContext remains open while the queued Hirameki effect resolves.
+      // Its contact-end transition performs any deferred case evidence gain, so a
+      // suppression effect lands before the gain and the causal trace closes once.
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }
@@ -309,7 +293,12 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       const pending = useGameStateStore.getState().pendingMisread;
       if (!pending) return;
       _resolveMisreadPicks(draft, pending, action.picks);
-      _resumeDeferredReasoning(draft, pending.reasoningUid, pending.reasoningPlayer);
+      _resumeDeferredReasoning(
+        draft,
+        pending.reasoningUid,
+        pending.reasoningPlayer,
+        pending.causalTrace,
+      );
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }
@@ -340,11 +329,11 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       // pendingEffectPick の atomArgs を pattern により置換して queue + run
       //   Pattern A (uid='$pick'): uid → picked、target → drop
       //   Pattern B (uid 不在):    target → [cardId of picked candidate]
-      const pending = useGameStateStore.getState().pendingEffectPick;
+      const pending = authorities.effectPick;
       if (!pending) return;
       if (action.pickedUid === null) {
-        if (pending.atomVerb === 'stackedCardPick' && pending.nMin > 0) {
-          throw new Error('stackedCardPick: below-minimum selection');
+        if (effectivePendingPickRange(pending).min > 0) {
+          throw new Error(`${pending.atomVerb}: below-minimum selection`);
         }
         // BUG-132 GAP-1: skipResolvesAtom 付き pending (deckRevealUntil chooseMatch) の decline は
         // 「0枚選択」を atom 解決として実行し、remainder (デッキ下移動等の必須 step) を続行する
@@ -389,7 +378,7 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       // BUG-121: pendingEffectChoice を choiceIndex で解決。元 effect を readDef から復元し
       // choiceIndex 付きで再 walk → 選択 option 内の $pick (option2 sceneToHand 等) は
       // __pendingEffectPickQueue へ再 push され既存 effectPickResolve 経路で連鎖消化される。
-      const pendingC = useGameStateStore.getState().pendingEffectChoice;
+      const pendingC = authorities.effectChoice;
       if (!pendingC) return;
       applyChoiceAndContinuation(draft, pendingC, action.choiceIndex, 'switchRemoveUid' in action ? action.switchRemoveUid : undefined);
       // クリアは produce 後に dispatchEngineAction が行う
@@ -398,14 +387,14 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
     case 'optionalResolve': {
       // 2026-06-06 タスクC: pendingEffectOptional を run(boolean) で解決。run=true なら内部 effect を
       // 再 walk して実行 (内部 $pick は __pendingEffectPickQueue へ再 push)、run=false なら skip。
-      const pendingO = useGameStateStore.getState().pendingEffectOptional;
+      const pendingO = authorities.effectOptional;
       if (!pendingO) return;
       applyOptionalAndContinuation(draft, pendingO, action.run);
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }
     case 'rpsResolve': {
-      const pending = useGameStateStore.getState().pendingRps;
+      const pending = authorities.rps;
       if (!pending) return;
       applyRpsAndContinuation(draft, pending, action.hand);
       return;
@@ -413,13 +402,17 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
     case 'setCardChoiceResolve': {
       const pending = useGameStateStore.getState().pendingSetCardChoice;
       if (!pending) return;
-      applySetCardChoiceAndContinuation(draft, pending, action.instanceId);
+      if (!applySetCardChoiceAndContinuation(draft, toPendingSetCardChoiceSide(pending), action.instanceId)) {
+        throw new RejectedDecisionError();
+      }
       return;
     }
     case 'setCardReplacementResolve': {
       const pending = useGameStateStore.getState().pendingSetCardReplacement;
       if (!pending) return;
-      applySetCardReplacement(draft, pending, action.targetUid);
+      if (!applySetCardReplacement(draft, toPendingSetCardReplacementSide(pending), action.targetUid)) {
+        throw new RejectedDecisionError();
+      }
       return;
     }
     case 'chooseInterceptResolve': {
@@ -435,46 +428,19 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       return;
     }
     case 'deckReorderResolve': {
-      const pendingR = useGameStateStore.getState().pendingDeckReorder;
+      const pendingR = authorities.deckReorder;
       if (!pendingR) return;
       applyDeckReorderAndContinuation(draft, pendingR, action.order);
       return;
     }
     case 'deckPlaceResolve': {
-      // mini-wave #5 P2: deckPlaceSplitBound (B05047「見た各カードを上か下へ」) の human 振り分け適用。
-      // pending.cardIds はまだ deck 元位置に居る (atom は await のみ)。top∪bottom が pending.cardIds と
-      // multiset 一致することを検証してから splice → mutate.deck.toTop/toBottom を各 1 回 bulk 適用
-      // (「好きな順番で」= 各バケツ内の相対順も human 指定、bulk API なので順序保持)。不一致なら何もしない。
-      const pendingP = useGameStateStore.getState().pendingDeckPlace;
+      // The engine-owned helper validates the decision and exact occurrences
+      // before mutation, then resumes the saved effect authority.
+      const pendingP = authorities.deckPlace;
       if (!pendingP) return;
-      const deckP = draft.players[pendingP.player].deck;
-      const combined = [...action.top, ...action.bottom];
-      const tallyP = (xs: string[]): Map<string, number> => {
-        const m = new Map<string, number>();
-        for (const x of xs) m.set(x, (m.get(x) ?? 0) + 1);
-        return m;
-      };
-      if (combined.length !== pendingP.cardIds.length) return;
-      const te = tallyP(pendingP.cardIds);
-      const tc = tallyP(combined);
-      if (te.size !== tc.size) return;
-      for (const [k, v] of te) if (tc.get(k) !== v) return;
-      // 検証 OK → deck から対象を splice (deckToBottomBound と同じ窓侵食防御: 実在分のみ) して振り分け
-      const splicedP: string[] = [];
-      for (const id of pendingP.cardIds) {
-        const idx = deckP.indexOf(id);
-        if (idx !== -1) { deckP.splice(idx, 1); splicedP.push(id); }
+      if (!applyDeckPlaceAndContinuation(draft, pendingP, action.top, action.bottom)) {
+        throw new RejectedDecisionError();
       }
-      const inSpliced = tallyP(splicedP);
-      const takeIf = (ids: string[]): string[] => ids.filter(id => {
-        const c = inSpliced.get(id) ?? 0;
-        if (c <= 0) return false;
-        inSpliced.set(id, c - 1);
-        return true;
-      });
-      mutate.deck.toTop(draft, pendingP.player, takeIf(action.top));
-      mutate.deck.toBottom(draft, pendingP.player, takeIf(action.bottom));
-      // クリアは produce 後に dispatchEngineAction が行う
       return;
     }
     case 'endTurn': {
@@ -539,30 +505,68 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     : action.type === 'chooseInterceptResolve' ? store.pendingChooseIntercept?.publicHandRevealToken
     : undefined;
   if (current === null) return { ok: false, reason: 'no-state' };
-  if (!isAllowed(current, action)) return { ok: false, reason: 'not-allowed' };
+  if (isReplayOwnedState(current)) return { ok: false, reason: 'not-allowed' };
+  const authorities = {
+    effectPick: action.type === 'effectPickResolve'
+      ? readPendingEffectPickAuthority(current)
+      : null,
+    effectChoice: action.type === 'choiceResolve'
+      ? readPendingEffectChoiceAuthority(current)
+      : null,
+    effectOptional: action.type === 'optionalResolve'
+      ? readPendingEffectOptionalAuthority(current)
+      : null,
+    rps: action.type === 'rpsResolve'
+      ? readPendingRpsAuthority(current)
+      : null,
+    deckReorder: action.type === 'deckReorderResolve'
+      ? readPendingDeckReorderAuthority(current)
+      : null,
+    deckPlace: action.type === 'deckPlaceResolve'
+      ? readPendingDeckPlaceAuthority(current)
+      : null,
+  };
   if (action.type === 'effectPickResolve'
     && publicHandRevealBefore?.lifetime === 'effect'
     && pendingPickBefore?.publicHandRevealToken === publicHandRevealBefore.resolutionToken
     && !sameCardMultiset(current.players[publicHandRevealBefore.owner].hand, publicHandRevealBefore.handSnapshot)) {
     // Serialized/stale UI may not apply a selection against a different hand.
-    // Drop the exact linked window and decision without exposing any replacement IDs.
+    // Drop the exact resolver-owned decision by its stable token, then commit
+    // that cancellation before clearing the public projections.
+    let cancelled = false;
+    const committed = store.dispatch((state) => produce(state, (draft) => {
+      cancelled = cancelPendingEffectPickByPublicRevealToken(
+        draft,
+        publicHandRevealBefore.resolutionToken,
+      );
+    }));
+    if (!committed || !cancelled) return { ok: false, reason: 'not-allowed' };
+    const committedState = useGameStateStore.getState().gameState;
+    if (committedState) rebindPendingRuntimeStateOwner(committedState);
     store.setPendingPublicHandReveal(null);
     store.setPendingEffectPick(null);
     surfacePendingSideChannels();
     return { ok: false, reason: 'not-allowed' };
   }
+  if (action.type === 'effectPickResolve' && authorities.effectPick === null) {
+    return { ok: false, reason: 'not-allowed' };
+  }
+  if (!isAllowed(current, action)) return { ok: false, reason: 'not-allowed' };
 
   _justDeclaredAxId = null;
   const pendingRuntimeBefore = snapshotPendingRuntimeState();
   try {
-    store.dispatch((state) =>
+    const committed = store.dispatch((state) =>
       produce(state, (draft) => {
-        runEngineAction(draft, action);
+        runEngineAction(draft, action, authorities);
         // Phase 5 listener が pendingEffects に積んだ effect を解決する。
         // AI orchestrator (src/ai/policy.ts) と同じ運用パターン。
         runAllUntilEmpty(draft);
       }),
     );
+    if (!committed) {
+      throw new Error('presentation commit rejected');
+    }
     // Commit 2: declareChar/Case 直後は ActionContext.id を store.activeActionId にセット
     // BUG-249: owner ordering is stored inside GameState, but the opponent-turn
     // driver subscribes to its explicit wake-up tick and side channels. Wake it
@@ -705,6 +709,9 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     _justDeclaredAxId = null;
     restorePendingRuntimeState(pendingRuntimeBefore);
     useGameStateStore.setState(store, true);
+    if (e instanceof RejectedDecisionError) {
+      return { ok: false, reason: 'not-allowed' };
+    }
     const detail = e instanceof Error ? e.message : String(e);
     return { ok: false, reason: 'engine-error', detail };
   }

@@ -39,6 +39,7 @@
 }
 
 .action-item {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -48,6 +49,10 @@
   border-radius: 4px;
   cursor: not-allowed; /* Phase 8 で pointer に */
   transition: background 0.15s, border-color 0.15s;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .action-item .action-icon {
@@ -113,6 +118,7 @@
 
 /* disabled — グレー化 */
 .action-item.disabled {
+  cursor: not-allowed;
   opacity: 0.4;
   background: rgba(0, 0, 0, 0.3);
   border-color: color-mix(in oklch, var(--text-disabled) 40%, transparent);
@@ -278,4 +284,13 @@
   opacity: 0.5;
   pointer-events: none;
   filter: grayscale(0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .actions-panel *,
+  .actions-panel *::before,
+  .actions-panel *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

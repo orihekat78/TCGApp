@@ -14,7 +14,7 @@ import { event } from '@/engine/event/index';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _drainPendingEffectPickSide, _clearPendingEffectPickQueue } from '@/engine/effect/pending-state';
-import { applyPickAndContinuation } from '@/engine/effect/apply-pick';
+import { applyPickAndContinuation, applyPickSkipAndContinuation } from '@/engine/effect/apply-pick';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks';
 import { _resetPendingHirameki } from '@/engine/listeners/hirameki';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
@@ -181,7 +181,7 @@ describe('B01077 a1 — 相手手札ランダムリムーブ + ブレット付�
     useEvent(s, 'self');
     const pick = _drainPendingEffectPickSide();
     expect(pick).toBeTruthy();
-    applyPickAndContinuation(s, pick!, undefined as never, []); // 0枚選択
+    applyPickSkipAndContinuation(s, pick!, false); // 0枚選択
     runAllUntilEmpty(s);
     expect(charRead.hasKeyword(s, tgt.uid, 'ブレット'), '0枚 → 付与なし').toBe(false);
   });

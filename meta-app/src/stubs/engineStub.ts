@@ -7,6 +7,7 @@ import { CARD_POOL } from '../data/cardPool';
 import { ALL_CARDS } from '@/cards/index';
 import { useDecksStore } from '../state/decksStore';
 import { useHistoryStore } from '../state/historyStore';
+import { captureMatchDeckSnapshot } from '../data/matchDeckSnapshot';
 import { useMetaStore, type Settings } from '../state/metaStore';
 
 // ── cards ───────────────────────────────────────────────────────────
@@ -202,6 +203,8 @@ const flow = {
       mode,
       deckName: p1Deck.name,
       oppDeckName: p2Deck.name,
+      selfDeckSnapshot: captureMatchDeckSnapshot(p1Deck),
+      oppDeckSnapshot: captureMatchDeckSnapshot(p2Deck),
       turns,
       duration: durationSec * 1000,
       contacts,

@@ -11,7 +11,7 @@
       "evidence": [
         "rules:.claude/rules/11-reasoning.md:28",
         "src:src/cards/ct-p01/B01009.ts:63",
-        "src:src/engine/flow/main/reasoning.ts:83"
+        "src:src/engine/flow/main/reasoning.ts:91"
       ],
       "noteCodes": [
         "MISLEAD-EXPIRY-B01009-INTEGRATION-TEST-MISSING"
@@ -537,7 +537,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:16",
         "src:src/cards/ct-p05/B05011.ts:17",
-        "src:src/engine/event/registry.ts:181",
+        "src:src/engine/event/registry.ts:235",
         "src:src/engine/resolve/stack.ts:207"
       ],
       "noteCodes": [
@@ -1287,11 +1287,14 @@
     {
       "qaId": "card:B09061:d9bfaf3a925d8157e5fc6280d206adcd5eebd3dab52f75af4f67a35f6ddd2349",
       "answerHash": "a56042693ac0fe3170061ccf6b57f122c58bf969dec6b1919100eec25f8d274d",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09061.ts:1"
+        "src:src/cards/ct-p09/B09061.ts:53",
+        "tests:tests/cards/ct-p09/B09061.test.ts:117",
+        "tests:tests/e2e/public-hand-reveal-window.spec.ts:105",
+        "tests:tests/e2e/public-hand-reveal-window.spec.ts:117"
       ]
     },
     {

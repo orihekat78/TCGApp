@@ -26,7 +26,10 @@
       "evidence": [
         "rules:.claude/rules/26-qa-deck-refresh.md:70",
         "src:src/cards/ct-p01/B01018.ts:53",
-        "tests:tests/cards/triage-greens-2026-06-15/B01018.test.ts:123"
+        "tests:tests/cards/triage-greens-2026-06-15/B01018.test.ts:126",
+        "tests:tests/cards/triage-greens-2026-06-15/B01018.test.ts:128",
+        "tests:tests/cards/triage-greens-2026-06-15/B01018.test.ts:129",
+        "tests:tests/cards/triage-greens-2026-06-15/B01018.test.ts:130"
       ],
       "noteCodes": [
         "RAW-READ"
@@ -205,8 +208,9 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02067.ts:12",
-        "tests:tests/cards/choose-intercept.test.ts:53"
+        "src:src/cards/ct-p02/B02067.ts:4",
+        "src:src/cards/ct-p02/B02067.ts:6",
+        "tests:tests/cards/choose-intercept.test.ts:121"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -622,8 +626,12 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04069.ts:50",
-        "tests:tests/cards/B04069.test.ts:33"
+        "src:src/cards/ct-p04/B04069.ts:11",
+        "src:src/cards/ct-p04/B04069.ts:16",
+        "src:src/cards/ct-p04/B04069.ts:26",
+        "tests:tests/cards/B04069.test.ts:78",
+        "tests:tests/cards/B04069.test.ts:79",
+        "tests:tests/cards/B04069.test.ts:81"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -852,8 +860,15 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05042.ts:74",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:239"
+        "src:src/cards/ct-p05/B05042.ts:49",
+        "src:src/cards/ct-p05/B05042.ts:54",
+        "tests:tests/cards/engine-additive-wave-0629d.test.ts:161",
+        "tests:tests/cards/engine-additive-wave-0629d.test.ts:162",
+        "tests:tests/cards/engine-mega-w6.test.ts:379",
+        "tests:tests/cards/engine-mega-w6.test.ts:380",
+        "tests:tests/cards/engine-mega-w6.test.ts:382",
+        "tests:tests/cards/step12-batch1.test.ts:544",
+        "tests:tests/cards/step12-batch1.test.ts:545"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -866,8 +881,16 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05042.ts:74",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:239"
+        "src:src/cards/ct-p05/B05042.ts:49",
+        "src:src/cards/ct-p05/B05042.ts:54",
+        "tests:tests/cards/step12-batch1.test.ts:544",
+        "tests:tests/cards/step12-batch1.test.ts:545",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:154",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:155",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:156",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:162",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:163",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:164"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -1145,8 +1168,11 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06064.ts:25",
-        "tests:tests/cards/set-card-portfolio-probes.test.ts:47"
+        "src:src/cards/ct-p06/B06064.ts:19",
+        "src:src/cards/ct-p06/B06064.ts:20",
+        "tests:tests/cards/set-card-portfolio-probes.test.ts:54",
+        "tests:tests/cards/set-card-portfolio-probes.test.ts:72",
+        "tests:tests/cards/set-card-portfolio-probes.test.ts:85"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -1413,8 +1439,10 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08006.ts:55",
-        "tests:tests/cards/engine-mega-w4.test.ts:972"
+        "src:src/cards/ct-p08/B08006.ts:49",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:221",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:228",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:231"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -1492,8 +1520,11 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08063.ts:47",
-        "tests:tests/cards/B08063.test.ts:64"
+        "src:src/cards/ct-p08/B08063.ts:5",
+        "src:src/cards/ct-p08/B08063.ts:7",
+        "tests:tests/cards/B08063.test.ts:151",
+        "tests:tests/cards/B08063.test.ts:152",
+        "tests:tests/cards/B08063.test.ts:153"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -1614,8 +1645,10 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09048.ts:80",
-        "tests:tests/cards/engine-mega-w4.test.ts:952"
+        "src:src/cards/ct-p09/B09048.ts:64",
+        "tests:tests/cards/engine-mega-w4.test.ts:1120",
+        "tests:tests/cards/engine-mega-w4.test.ts:1121",
+        "tests:tests/cards/engine-mega-w4.test.ts:1122"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -1680,8 +1713,12 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09081.ts:84",
-        "tests:tests/cards/night-wC/hirameki-optional.test.ts:62"
+        "src:src/cards/ct-p09/B09081.ts:24",
+        "src:src/cards/ct-p09/B09081.ts:35",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:100",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:101",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:102",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:97"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -2485,8 +2522,12 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR237.ts:77",
-        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:165"
+        "src:src/cards/pr-01/PR237.ts:53",
+        "src:src/cards/pr-01/PR237.ts:61",
+        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:284",
+        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:285",
+        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:290",
+        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:291"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"

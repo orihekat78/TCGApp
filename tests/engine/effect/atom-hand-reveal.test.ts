@@ -21,6 +21,7 @@ import { run as runEffect } from '@/engine/effect/resolver';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { _drainAllEffectPicksForTest } from '@/engine/effect/apply-pick';
+import { _drainPendingEffectPickSide } from '@/engine/effect/pending-state';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import type { CardDef, GameState, EffectCtx, Effect } from '@/engine/types';
 
@@ -211,7 +212,11 @@ describe('handReveal §10 — exact-N gate (n:N all-or-nothing, B09061)', () => 
   const chainN = (n: number): Effect => ({
     kind: 'chain',
     steps: [
-      { kind: 'atom', verb: 'handReveal' as never, args: { player: 'self', n, filter: { trait: 'FBI' } } },
+      {
+        kind: 'atom',
+        verb: 'handReveal' as never,
+        args: { player: 'self', n, minimumPolicy: 'exact', filter: { trait: 'FBI' } },
+      },
       { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
     ],
   } as Effect);
@@ -243,7 +248,7 @@ describe('handReveal §10 — exact-N gate (n:N all-or-nothing, B09061)', () => 
     expect(after.players.self.deck).toEqual(['DK2']);
   });
 
-  it('§10c 候補2 < n:3 → 短縮形 entry で chainStepNoApply 即立て + pick enqueue せず', () => {
+  it('§10c 単独の必須効果は候補2 < n:3でも可能な2枚を選択する', () => {
     const g = globalThis as { __pendingEffectPickQueue?: unknown[] };
     g.__pendingEffectPickQueue = [];
     registerCardDef(fbi('FBI1')); registerCardDef(fbi('FBI2'));
@@ -251,8 +256,9 @@ describe('handReveal §10 — exact-N gate (n:N all-or-nothing, B09061)', () => 
     s.players.self.hand = ['FBI1', 'FBI2', 'RED1'];
     const ctx = ctxBare();
     runEffect(s, { kind: 'atom', verb: 'handReveal' as never, args: { player: 'self', n: 3, filter: { trait: 'FBI' } } }, ctx);
-    expect(ctx.dyn?.chainStepNoApply).toBe(true);
-    expect(g.__pendingEffectPickQueue!.length).toBe(0); // 公開不可 = pick 不要
+    const pending = _drainPendingEffectPickSide();
+    expect(ctx.dyn?.chainStepNoApply).not.toBe(true);
+    expect(pending).toMatchObject({ nMin: 2, nMax: 2, requestedNMin: 3, minimumPolicy: 'best-effort' });
     expect(s.players.self.hand).toEqual(['FBI1', 'FBI2', 'RED1']); // zone 変化なし
     g.__pendingEffectPickQueue = [];
   });
@@ -285,14 +291,17 @@ describe('handReveal §10 — exact-N gate (n:N all-or-nothing, B09061)', () => 
     g.__pendingEffectPickQueue = [];
   });
 
-  it('§10g player:opp — gate は opp 手札を数え self decoy を誤算しない (side 解決)', () => {
+  it('§10g player:opp — best-effort はopp手札だけを数えself decoyを誤算しない', () => {
     registerCardDef(fbi('FBI1')); registerCardDef(fbi('FBI2')); registerCardDef(fbi('FBI3'));
     const s: GameState = createEmptyGameState();
     s.players.opp.hand = ['FBI1', 'FBI2', 'RED1'];     // opp FBI 2枚 (< n:3)
     s.players.self.hand = ['FBI1', 'FBI2', 'FBI3'];    // self FBI 3枚 (decoy、数えてはいけない)
     const ctx = ctxBare();
     runEffect(s, { kind: 'atom', verb: 'handReveal' as never, args: { player: 'opp', n: 3, filter: { trait: 'FBI' } } }, ctx);
-    expect(ctx.dyn?.chainStepNoApply).toBe(true); // opp 側 2<3 → gate (self decoy 非カウント)
+    const pending = _drainPendingEffectPickSide();
+    expect(ctx.dyn?.chainStepNoApply).not.toBe(true);
+    expect(pending).toMatchObject({ player: 'opp', nMin: 2, nMax: 2, requestedNMin: 3 });
+    expect(pending?.candidates.every(candidate => candidate.player === 'opp')).toBe(true);
   });
 
   it('§10d 回帰: max:5 (「まで」) は候補<5 でも gate されず (候補2を公開 → draw 実行)', () => {

@@ -84,6 +84,11 @@ describe('BUG-132 GAP-1 — deckRevealUntil chooseMatch decline channel', () => 
     const pending = pickQueue()[0];
     expect(pending?.atomVerb).toBe('deckRevealUntil');
     expect(pending?.nMin, '「まで」=0枚可').toBe(0);
+    expect(pending).toMatchObject({
+      requestedNMin: 0,
+      requestedNMax: 1,
+      minimumPolicy: 'best-effort',
+    });
     expect(pending?.skipResolvesAtom, 'decline は破棄でなく atom 解決').toBe(true);
     expect(pending?.candidates.map((c) => c.cardId)).toEqual(['D08013']);
     expect(g.__pendingDeckRevealSide?.awaitingPick, 'overlay は hold mode').toBe(true);

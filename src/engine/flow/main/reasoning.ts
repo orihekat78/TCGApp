@@ -18,11 +18,20 @@
 //   - mislead 等は Phase 5 で reasoning:before-add listener として実装される
 //     → Phase 4 は emit のみ、解決待機状態を作らない (呼出元が runAllUntilEmpty を回す)
 
-import type { GameState, SceneCharacter, PartnerOnBoard, ReasoningContinuation } from '../../types/index.js';
+import type { CausalEffectTrace, GameState, SceneCharacter, PartnerOnBoard, ReasoningContinuation } from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { char as readChar } from '../../read/char.js';
 import { _peekPendingMisread } from '../../listeners/misread.js';
+import {
+  cloneCausalEffectTrace,
+  completeEffectCausalTrace,
+  markEffectCausalAwaitingResume,
+  recordCausalTraceOperation,
+  startStandaloneCausalTrace,
+  withEffectCausalCorrelation,
+  withStructuredCausalResolution,
+} from '../../log/effect-causal.js';
 
 /**
  * uid から対象を探す。パートナーは "partner:self" / "partner:opp" の形式で扱う。
@@ -105,9 +114,20 @@ export function doReasoning(state: GameState, uid: string): void {
   }
   const t = findTarget(state, uid)!;
   const player = t.player;
+  const causalTrace = startStandaloneCausalTrace(state, {
+    actor: player,
+    kind: 'declare',
+    source: t.kind === 'char'
+      ? { kind: 'scene-card', side: player, uid }
+      : { kind: 'partner-card', side: player },
+    targets: [{ kind: 'zone', side: player, zone: 'evidence' }],
+    outcome: { type: 'state', state: 'active' },
+  });
 
   // reasoning:declare — spec: { uid, byPlayer }
-  event.emit(state, 'reasoning:declare', { uid, byPlayer: player }, { player, uid });
+  withEffectCausalCorrelation(state, causalTrace?.rootEventId, () => {
+    event.emit(state, 'reasoning:declare', { uid, byPlayer: player }, { player, uid });
+  });
 
   // スリープ化
   if (t.kind === 'char') {
@@ -115,10 +135,21 @@ export function doReasoning(state: GameState, uid: string): void {
   } else {
     mutate.partner.setState(state, player, 'sleep');
   }
+  recordCausalTraceOperation(state, causalTrace, {
+    actor: player,
+    kind: 'sleep',
+    source: { kind: 'player', side: player },
+    targets: t.kind === 'char'
+      ? [{ kind: 'scene-card', side: player, uid }]
+      : [{ kind: 'partner-card', side: player }],
+    outcome: { type: 'state', state: 'sleep' },
+  });
 
   // This window is before both mislead and evidence. Its continuation waits
   // for every card reaction (including a human optional discard) to finish.
-  event.emit(state, 'reasoning:after-sleep', { uid, player }, { player, uid });
+  withEffectCausalCorrelation(state, causalTrace?.rootEventId, () => {
+    event.emit(state, 'reasoning:after-sleep', { uid, player }, { player, uid });
+  });
   const token = (state.reasoningContinuationSeq ?? 0) + 1;
   state.reasoningContinuationSeq = token;
   const continuation: ReasoningContinuation = { token, uid, player };
@@ -130,7 +161,12 @@ export function doReasoning(state: GameState, uid: string): void {
     'reasoning:after-sleep:continue',
     { uid, player },
     undefined,
-    { reasoningContinuation: continuation },
+    {
+      reasoningContinuation: continuation,
+      ...(causalTrace
+        ? { causalTrace: cloneCausalEffectTrace(causalTrace), resumesCurrentEffect: true }
+        : {}),
+    },
   );
 }
 
@@ -138,6 +174,7 @@ export function doReasoning(state: GameState, uid: string): void {
 export function _resolveReasoningContinuation(
   state: GameState,
   continuation: ReasoningContinuation,
+  causalTrace?: CausalEffectTrace,
 ): void {
   const pending = state.pendingReasoningContinuation;
   if (
@@ -152,7 +189,7 @@ export function _resolveReasoningContinuation(
     throw new Error('reasoning continuation: target is not the sleeping reasoner');
   }
   delete state.pendingReasoningContinuation;
-  _continueReasoningAfterSleep(state, continuation.uid, continuation.player);
+  _continueReasoningAfterSleep(state, continuation.uid, continuation.player, causalTrace);
 }
 
 /** Runs only after all reasoning:after-sleep reactions have settled. */
@@ -160,6 +197,7 @@ export function _continueReasoningAfterSleep(
   state: GameState,
   uid: string,
   player: 'self' | 'opp',
+  causalTrace?: CausalEffectTrace,
 ): void {
   // reasoning:before-add — spec: { uid, lpUsed } (lpUsed は pre-clamp 生値 — mislead listener が参照)
   const lpRaw = readChar.lp(state, uid);
@@ -172,10 +210,12 @@ export function _continueReasoningAfterSleep(
     pendingMisread?.reasoningUid === uid &&
     pendingMisread.reasoningPlayer === player
   ) {
+    pendingMisread.causalTrace = cloneCausalEffectTrace(causalTrace);
+    markEffectCausalAwaitingResume(causalTrace);
     return;
   }
 
-  completeReasoning(state, uid, player);
+  completeReasoning(state, uid, player, causalTrace);
 }
 
 /** Human のミスリード決定後に、保留した推理後半を実行する。 */
@@ -183,14 +223,17 @@ export function _resumeDeferredReasoning(
   state: GameState,
   uid: string,
   player: 'self' | 'opp',
+  causalTrace?: CausalEffectTrace,
 ): void {
-  completeReasoning(state, uid, player);
+  completeReasoning(state, uid, player, causalTrace);
+  completeEffectCausalTrace(state, causalTrace, player);
 }
 
 function completeReasoning(
   state: GameState,
   uid: string,
   player: 'self' | 'opp',
+  causalTrace?: CausalEffectTrace,
 ): void {
   const t = findTarget(state, uid);
   if (!t || t.player !== player) {
@@ -205,24 +248,40 @@ function completeReasoning(
       && t.char.turnEffects['suppressReasoningEvidence'] === true;
     // LP クランプ → max(0, lpFinal) 枚を証拠に追加 (rules/11)
     const lpToUse = evidenceSuppressed ? 0 : Math.max(0, lpFinal);
-    if (lpToUse > 0) {
-      mutate.evidence.addFromDeck(state, player, lpToUse, false, {
-        turn: state.turn.number,
-        via: 'reasoning',
-        sourceCardId: t.kind === 'char' ? t.char.cardId : t.partner.cardId,
-      });
-    }
+    const gainEvidence = (): number => mutate.evidence.addFromDeck(state, player, lpToUse, false, {
+      turn: state.turn.number,
+      via: 'reasoning',
+      sourceCardId: t.kind === 'char' ? t.char.cardId : t.partner.cardId,
+    });
+    const evidenceGained = lpToUse <= 0
+      ? 0
+      : causalTrace === undefined
+        ? gainEvidence()
+        : withStructuredCausalResolution(state, gainEvidence, causalTrace);
 
     // ログ + reasoning:end
-    mutate.log.append(state, {
-      ts: Date.now(),
-      player,
-      turn: state.turn.number,
-      action: 'reasoning',
-      target: uid,
-      result: `evidence+${lpToUse}`,
+    recordCausalTraceOperation(state, causalTrace, {
+      actor: player,
+      kind: 'evidence',
+      source: t.kind === 'char'
+        ? { kind: 'scene-card', side: player, uid }
+        : { kind: 'partner-card', side: player },
+      targets: [{ kind: 'zone', side: player, zone: 'evidence' }],
+      outcome: { type: 'count', amount: evidenceGained, unit: 'evidence' },
     });
-    event.emit(state, 'reasoning:end', { uid, player, gained: lpToUse }, { player, uid });
+    if (causalTrace === undefined) {
+      mutate.log.append(state, {
+        ts: Date.now(),
+        player,
+        turn: state.turn.number,
+        action: 'reasoning',
+        target: uid,
+        result: `evidence+${evidenceGained}`,
+      });
+    }
+    withEffectCausalCorrelation(state, causalTrace?.rootEventId, () => {
+      event.emit(state, 'reasoning:end', { uid, player, gained: evidenceGained }, { player, uid });
+    });
   } finally {
     if (t.kind === 'char') delete t.char.turnEffects['suppressReasoningEvidence'];
     clearReasoningLpModifier(t);

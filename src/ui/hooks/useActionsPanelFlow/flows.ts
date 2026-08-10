@@ -36,6 +36,7 @@ import {
   canSolveCaseForUi,
 } from './enumerators.js';
 import { canEndTurnForUi, subscribeEndTurnContract } from './end-turn-contract.js';
+import { selectInteractionLocked } from '@/ui/state/interactionLock.js';
 
 /** runEndTurnFlow / その他フローの返り値 */
 export type FlowResult =
@@ -831,8 +832,10 @@ export async function runHandUseFlow(opts: {
   player: Player;
   cardId: string;
 }): Promise<FlowResult> {
-  const state = useGameStateStore.getState().gameState;
+  const initialStore = useGameStateStore.getState();
+  const state = initialStore.gameState;
   if (state === null) return { ok: false, reason: 'no-state' };
+  if (selectInteractionLocked(initialStore)) return { ok: false, reason: 'not-allowed' };
 
   // rules/20 §スイッチ: scene=5 でキャラ使用したい場合は switch 経路。
   const canNormal = flow.canHandUseCard(state, opts.player, opts.cardId);
@@ -851,6 +854,9 @@ export async function runHandUseFlow(opts: {
     cancelLabel: 'キャンセル',
   });
   if (!accepted) return { ok: false, reason: 'cancelled' };
+  if (selectInteractionLocked(useGameStateStore.getState())) {
+    return { ok: false, reason: 'not-allowed' };
+  }
 
   if (canNormal) {
     return dispatchEngineAction({
@@ -879,6 +885,9 @@ export async function runHandUseFlow(opts: {
     });
   });
   if (removeUid === null) return { ok: false, reason: 'cancelled' };
+  if (selectInteractionLocked(useGameStateStore.getState())) {
+    return { ok: false, reason: 'not-allowed' };
+  }
   return dispatchEngineAction({
     type: 'handUseCardSwitch',
     player: opts.player,

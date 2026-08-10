@@ -7,23 +7,25 @@
 //   - ソート 番号/コスト/AP/LP/名前 (昇降) + ★お気に入り/採用中フィルタ
 //   - 表示 グリッド大/小 + リスト行 + パラレルまとめトグル + キーボード操作 (MetaCard)
 
-import { useMemo, useState } from 'react';
+import {
+  useEffect, useMemo, useRef, useState,
+  type KeyboardEvent as ReactKeyboardEvent, type RefObject,
+} from 'react';
 import { T, COLOR_TOKEN } from '../shared/tokens';
-import { AppTopBar } from '../shared/AppTopBar';
+import { PrimaryHeader } from '../shared/PrimaryHeader';
 import { MetaCard } from '../shared/MetaCard';
 import { CardExpandModal } from '@/ui/components/CardExpandModal';
 import { FilterRail } from '../shared/FilterRail';
 import {
-  CARD_POOL, DISTINCT_CARDS, DISTINCT_CARD_COUNT, cardIdOf, variantsOfId,
+  CARD_POOL, DISTINCT_CARDS, cardIdOf, variantsOfId,
 } from '../data/cardPool';
-import { useDecksStore } from '../state/decksStore';
-import { useHistoryStore } from '../state/historyStore';
 import { useMetaStore } from '../state/metaStore';
 import { useFiltersStore } from '../state/filtersStore';
 import {
-  matchesFilter, sortCards, ALL_RARITIES, COLOR_META, rarityHex, type SortKey, type SortDir,
+  activeFilterCount, matchesFilter, sortCards, rarityHex,
+  type CardFilterState, type SortKey, type SortDir,
 } from '../data/cardFilter';
-import type { CardColor, CardDef, CardKind } from '../data/types';
+import type { CardDef, CardKind } from '../data/types';
 import type { Route } from '../router/routes';
 
 interface Props {
@@ -40,9 +42,6 @@ const SORTS: { k: SortKey; label: string }[] = [
   { k: 'name', label: '名前' },
 ];
 
-const TOTAL_PRINTS = CARD_POOL.length;
-const PARALLEL_GROUPS = TOTAL_PRINTS - DISTINCT_CARD_COUNT;
-
 export function CardsScreen({ onNav }: Props) {
   const filter = useFiltersStore((s) => s.cards);
   const setFilter = useFiltersStore((s) => s.setCards);
@@ -54,237 +53,272 @@ export function CardsScreen({ onNav }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [foldParallels, setFoldParallels] = useState(true);
   const [onlyFav, setOnlyFav] = useState(false);
-  const [onlyAdopted, setOnlyAdopted] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
   const [selectedNum, setSelectedNum] = useState<string>(DISTINCT_CARDS[0]?.num ?? '');
+  const filterTriggerRef = useRef<HTMLButtonElement>(null);
+  const filterCloseRef = useRef<HTMLButtonElement>(null);
+  const selectedPrintRef = useRef<HTMLButtonElement>(null);
 
   const favorites = useMetaStore((s) => s.settings.favorites ?? []);
   const toggleFavorite = useMetaStore((s) => s.toggleFavorite);
-  const decks = useDecksStore((s) => s.decks);
-  const history = useHistoryStore((s) => s.history);
 
   const favSet = useMemo(() => new Set(favorites), [favorites]);
-  // cardId が採用されているデッキ数 (パラレルを合算)。
-  const adoptions = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const d of decks) {
-      const ids = new Set(d.cards.map((e) => cardIdOf(e.num)));
-      for (const id of ids) m.set(id, (m.get(id) ?? 0) + 1);
-    }
-    return m;
-  }, [decks]);
 
   const isFav = (c: CardDef) => variantsOfId(c.id).some((v) => favSet.has(v.num));
 
   const filtered = useMemo(() => {
-    const base = foldParallels ? DISTINCT_CARDS : CARD_POOL;
-    let arr = base.filter((c) => matchesFilter(c, filter));
+    let arr = foldParallels
+      ? DISTINCT_CARDS.flatMap((card) => {
+        const matchingPrint = variantsOfId(card.id).find((variant) => matchesFilter(variant, filter));
+        return matchingPrint ? [matchingPrint] : [];
+      })
+      : CARD_POOL.filter((card) => matchesFilter(card, filter));
     if (onlyFav) arr = arr.filter(isFav);
-    if (onlyAdopted) arr = arr.filter((c) => (adoptions.get(c.id) ?? 0) > 0);
     return sortCards(arr, sortKey, sortDir);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, sortKey, sortDir, foldParallels, onlyFav, onlyAdopted, adoptions, favSet]);
+  }, [filter, sortKey, sortDir, foldParallels, onlyFav, favSet]);
+
+  useEffect(() => {
+    if (filtered.length === 0) return;
+    setSelectedNum((currentNum) => {
+      const selectedCard = CARD_POOL.find((card) => card.num === currentNum);
+      const selectionIsVisible = filtered.some((card) => (
+        foldParallels
+          ? cardIdOf(card.num) === cardIdOf(currentNum)
+          : card.num === currentNum
+      ));
+      const selectedPrintMatches = selectedCard ? matchesFilter(selectedCard, filter) : false;
+      if (selectionIsVisible && (!foldParallels || selectedPrintMatches)) return currentNum;
+      const sameCard = filtered.find((card) => cardIdOf(card.num) === cardIdOf(currentNum));
+      return (sameCard ?? filtered[0]!).num;
+    });
+  }, [filter, filtered, foldParallels]);
 
   const selected = CARD_POOL.find((c) => c.num === selectedNum) ?? DISTINCT_CARDS[0]!;
+  const drawerFilterCount = activeFilterCount({ ...filter, q: '' }) + (onlyFav ? 1 : 0) + (!foldParallels ? 1 : 0);
 
-  const usage = useMemo(() => {
-    const inDecks = decks.filter((d) => d.cards.some((e) => cardIdOf(e.num) === selected.id));
-    const deckNames = new Set(inDecks.map((d) => d.name));
-    const related = history.filter((m) => deckNames.has(m.deckName));
-    const wins = related.filter((m) => m.won).length;
-    const rate = related.length > 0 ? Math.round((wins / related.length) * 100) : 0;
-    const mvpCount = history.filter((m) => m.mvp && cardIdOf(m.mvp) === selected.id).length;
-    return { inDecks: inDecks.length, totalDecks: decks.length, winRate: rate, mvp: mvpCount };
-  }, [selected.id, decks, history]);
+  const closeFilters = () => {
+    setFilterOpen(false);
+    filterTriggerRef.current?.focus();
+    requestAnimationFrame(() => filterTriggerRef.current?.focus());
+  };
 
-  const catalog = useMemo(() => computeCatalog(), []);
+  useEffect(() => {
+    if (!filterOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        setFilterOpen(false);
+        filterTriggerRef.current?.focus();
+        requestAnimationFrame(() => filterTriggerRef.current?.focus());
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    requestAnimationFrame(() => filterCloseRef.current?.focus());
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [filterOpen]);
 
   return (
-    <div style={{ position: 'absolute', inset: 0, fontFamily: T.fontJp, color: T.textPrimary }}>
-      <AppTopBar page="cards" onNav={(r) => onNav(r as Route)} />
+    <div className="home-screen cards-screen">
+      <PrimaryHeader current="cards" onNav={onNav} />
 
-      <SubToolbar
-        q={filter.q} setQ={(q) => setFilter({ q })}
-        matched={filtered.length}
-        distinct={DISTINCT_CARD_COUNT} total={TOTAL_PRINTS}
-      />
+      <main className="cards-main">
+        <CardsToolbar
+          q={filter.q}
+          setQ={(q) => setFilter({ q })}
+          filterCount={drawerFilterCount}
+          filterOpen={filterOpen}
+          filterTriggerRef={filterTriggerRef}
+          onOpenFilters={() => setFilterOpen(true)}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onSort={setSort}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+        />
 
-      <div style={{
-        position: 'absolute', left: 24, right: 24, top: 134, bottom: 16,
-        display: 'grid', gridTemplateColumns: '260px 1fr 360px', gap: 14,
-      }}>
-        {/* LEFT: CATALOG + FILTERS */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, overflow: 'auto', minHeight: 0 }}>
-          <CatalogPanel catalog={catalog} />
-          <FilterRail filter={filter} onChange={setFilter} onReset={resetFilter}
-            pool={foldParallels ? DISTINCT_CARDS : CARD_POOL} />
-        </div>
-
-        {/* CENTER: grid */}
+        <div className="cards-workspace">
         <CardGrid
           cards={filtered}
           selectedNum={selectedNum}
           onSelect={setSelectedNum}
-          isFav={isFav}
-          adoptions={adoptions}
-          viewMode={viewMode} setViewMode={setViewMode}
-          sortKey={sortKey} sortDir={sortDir} onSort={setSort}
-          foldParallels={foldParallels} setFoldParallels={setFoldParallels}
-          onlyFav={onlyFav} setOnlyFav={setOnlyFav}
-          onlyAdopted={onlyAdopted} setOnlyAdopted={setOnlyAdopted}
-        />
-
-        {/* RIGHT: detail */}
-        <SelectedDetail
-          card={selected}
-          usage={usage}
-          isFavorited={isFav(selected)}
-          onToggleFavorite={() => {
-            // ★ は cardId 単位 (グリッド表示と一致)。解除時は登録済みの全印刷を外す。
-            const nums = variantsOfId(selected.id).map((v) => v.num);
-            if (isFav(selected)) nums.filter((n) => favSet.has(n)).forEach((n) => toggleFavorite(n));
-            else toggleFavorite(nums[0]!);
+          onKeyboardSelect={() => {
+            requestAnimationFrame(() => selectedPrintRef.current?.focus());
           }}
-          onSelectVariant={setSelectedNum}
-          onAddToDeck={() => onNav('deck')}
+          isFav={isFav}
+          viewMode={viewMode}
+          foldParallels={foldParallels}
         />
-      </div>
-    </div>
-  );
-}
 
-// ---- SubToolbar (title + search) ----
+          <aside className="cards-detail-panel" aria-label="選択中のカード">
+            <SelectedDetail
+              card={selected}
+              isFavorited={isFav(selected)}
+              onToggleFavorite={() => {
+                // ★ は cardId 単位 (グリッド表示と一致)。解除時は登録済みの全印刷を外す。
+                const nums = variantsOfId(selected.id).map((v) => v.num);
+                if (isFav(selected)) nums.filter((n) => favSet.has(n)).forEach((n) => toggleFavorite(n));
+                else toggleFavorite(nums[0]!);
+              }}
+              onSelectVariant={setSelectedNum}
+              activePrintRef={selectedPrintRef}
+            />
+          </aside>
+        </div>
+      </main>
 
-function SubToolbar({ q, setQ, matched, distinct, total }: {
-  q: string; setQ: (s: string) => void; matched: number; distinct: number; total: number;
-}) {
-  return (
-    <div style={{
-      position: 'absolute', left: 0, right: 0, top: 64, height: 60,
-      display: 'flex', alignItems: 'center', padding: '0 32px',
-      background: 'linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.25))',
-      borderBottom: `1px solid rgba(78,195,255,0.15)`, zIndex: 8,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
-        <span style={{ fontFamily: T.fontMono, fontSize: 11, color: T.textMuted, letterSpacing: '0.18em' }}>COLLECTION</span>
-        <span style={{ fontFamily: T.fontSerif, fontSize: 22, fontWeight: 800, color: T.textPrimary, letterSpacing: '0.06em' }}>証拠ファイル</span>
-        <span style={{
-          padding: '3px 10px',
-          background: 'rgba(255,215,0,0.15)', border: `1px solid ${T.gold}66`, borderRadius: 2,
-          fontFamily: T.fontMono, fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: '0.1em',
-        }}>
-          {distinct} 種類 · 全 {total} 種
-        </span>
-      </div>
-
-      <div style={{
-        marginLeft: 36, flex: 1, maxWidth: 420,
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '8px 12px', background: 'rgba(0,0,0,0.45)',
-        border: `1px solid ${T.gold}44`, borderRadius: 3,
-      }}>
-        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-          <circle cx="6" cy="6" r="4" stroke={T.gold} strokeWidth="1.4" fill="none" />
-          <line x1="9" y1="9" x2="13" y2="13" stroke={T.gold} strokeWidth="1.6" strokeLinecap="round" />
-        </svg>
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="名前 / 効果 / 番号 / 特徴 で検索"
-          style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none',
-            color: T.textPrimary, fontFamily: T.fontJp, fontSize: 13 }}
+      {filterOpen && (
+        <FilterDrawer
+          closeRef={filterCloseRef}
+          filterCount={drawerFilterCount}
+          filter={filter}
+          onChange={setFilter}
+          onReset={() => {
+            resetFilter();
+            setOnlyFav(false);
+            setFoldParallels(true);
+          }}
+          pool={CARD_POOL}
+          foldParallels={foldParallels}
+          setFoldParallels={setFoldParallels}
+          onlyFav={onlyFav}
+          setOnlyFav={setOnlyFav}
+          onClose={closeFilters}
         />
-        {q && (
-          <button onClick={() => setQ('')} aria-label="検索クリア" style={{
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: T.textMuted, fontFamily: T.fontMono, fontSize: 14, lineHeight: 1,
-          }}>×</button>
-        )}
-      </div>
-      <span style={{ marginLeft: 14, fontFamily: T.fontMono, fontSize: 11, color: T.gold, letterSpacing: '0.12em' }}>
-        {matched} 件
-      </span>
-    </div>
-  );
-}
-
-// ---- CATALOG panel (replaces fake 100% COVERAGE) ----
-
-interface Catalog {
-  byColor: Map<CardColor, number>;
-  byType: Map<CardKind, number>;
-  byRarity: Map<string, number>;
-}
-function computeCatalog(): Catalog {
-  const byColor = new Map<CardColor, number>();
-  const byType = new Map<CardKind, number>();
-  const byRarity = new Map<string, number>();
-  const inc = <K,>(m: Map<K, number>, k: K) => m.set(k, (m.get(k) ?? 0) + 1);
-  for (const c of DISTINCT_CARDS) {
-    for (const col of c.colors ?? [c.color]) inc(byColor, col); // 混色は各色に計上
-    inc(byType, c.type);
-    if (c.rarity) inc(byRarity, c.rarity);
-  }
-  return { byColor, byType, byRarity };
-}
-
-function CatalogPanel({ catalog }: { catalog: Catalog }) {
-  return (
-    <div style={{
-      padding: '14px 16px',
-      background: 'linear-gradient(180deg, rgba(13,38,64,0.92), rgba(13,38,64,0.65))',
-      border: `1px solid ${T.gold}55`, borderRadius: 4,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: 10 }}>
-        <Label gold>CATALOG</Label>
-        <span style={{ marginLeft: 'auto', fontSize: 11, color: T.textMuted }}>カタログ</span>
-      </div>
-      <div style={{ textAlign: 'center', marginBottom: 14 }}>
-        <div style={{ fontFamily: T.fontSerif, fontSize: 50, fontWeight: 900, color: T.gold, lineHeight: 1 }}>
-          {DISTINCT_CARD_COUNT}<span style={{ fontSize: 22, marginLeft: 4 }}>種類</span>
-        </div>
-        <div style={{ fontFamily: T.fontMono, fontSize: 10, color: T.textMuted, letterSpacing: '0.14em', marginTop: 4 }}>
-          全 {TOTAL_PRINTS} 種 (パラレル {PARALLEL_GROUPS} 組を含む)
-        </div>
-      </div>
-      <div style={{ marginBottom: 12 }}>
-        <Label muted>BY COLOR</Label>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 6 }}>
-          {COLOR_META.map((x) => (
-            <BreakdownRow key={x.c} color={x.hex} label={x.label}
-              value={catalog.byColor.get(x.c) ?? 0} total={DISTINCT_CARD_COUNT} />
-          ))}
-        </div>
-      </div>
-      {ALL_RARITIES.length > 0 && (
-        <div>
-          <Label muted>BY RARITY</Label>
-          <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
-            {ALL_RARITIES.map((r) => (
-              <div key={r} style={{
-                flex: 1, padding: '6px 4px', textAlign: 'center',
-                background: 'rgba(0,0,0,0.4)', border: `1px solid ${rarityHex(r)}44`, borderRadius: 2,
-              }}>
-                <div style={{ fontFamily: T.fontMono, fontSize: 11, fontWeight: 800, color: rarityHex(r), letterSpacing: '0.15em' }}>{r}</div>
-                <div style={{ fontFamily: T.fontMono, fontSize: 11, color: T.textPrimary, marginTop: 1 }}>{catalog.byRarity.get(r) ?? 0}</div>
-              </div>
-            ))}
-          </div>
-        </div>
       )}
     </div>
   );
 }
 
-function BreakdownRow({ color, label, value, total }: { color: string; label: string; value: number; total: number }) {
-  const pct = total > 0 ? (value / total) * 100 : 0;
+function CardsToolbar({
+  q, setQ, filterCount, filterOpen, filterTriggerRef, onOpenFilters,
+  sortKey, sortDir, onSort, viewMode, setViewMode,
+}: {
+  q: string;
+  setQ: (value: string) => void;
+  filterCount: number;
+  filterOpen: boolean;
+  filterTriggerRef: RefObject<HTMLButtonElement | null>;
+  onOpenFilters: () => void;
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onSort: (key: SortKey, dir?: SortDir) => void;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
+}) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{ width: 14, height: 14, background: color, borderRadius: 2 }} />
-      <div style={{ width: 28, fontFamily: T.fontJp, fontSize: 12, color: T.textPrimary, fontWeight: 700 }}>{label}</div>
-      <div style={{ flex: 1, height: 5, background: 'rgba(0,0,0,0.5)', borderRadius: 2, overflow: 'hidden' }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: color }} />
-      </div>
-      <div style={{ fontFamily: T.fontMono, fontSize: 11, color: T.textMuted, minWidth: 20, textAlign: 'right' }}>{value}</div>
+    <header className="cards-toolbar" aria-label="カード一覧の操作">
+      <label className="cards-search">
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+          <circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.4" fill="none" />
+          <line x1="9" y1="9" x2="13" y2="13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+        <input
+          aria-label="カードを検索"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="カード名・番号・効果で検索"
+        />
+        {q && (
+          <button type="button" onClick={() => setQ('')} aria-label="検索をクリア">×</button>
+        )}
+      </label>
+
+      <button
+        ref={filterTriggerRef}
+        type="button"
+        className="cards-filter-trigger"
+        aria-haspopup="dialog"
+        aria-expanded={filterOpen}
+        onClick={onOpenFilters}
+      >
+        <span aria-hidden="true">▽</span>
+        絞り込み
+        {filterCount > 0 && <strong aria-label={`${filterCount}件の絞り込み`}>{filterCount}</strong>}
+      </button>
+
+      <SortControl sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+      <ViewSelector value={viewMode} onChange={setViewMode} />
+    </header>
+  );
+}
+
+function FilterDrawer({
+  closeRef, filterCount, filter, onChange, onReset, pool,
+  foldParallels, setFoldParallels, onlyFav, setOnlyFav, onClose,
+}: {
+  closeRef: RefObject<HTMLButtonElement | null>;
+  filterCount: number;
+  filter: CardFilterState;
+  onChange: (patch: Partial<CardFilterState>) => void;
+  onReset: () => void;
+  pool: readonly CardDef[];
+  foldParallels: boolean;
+  setFoldParallels: (value: boolean) => void;
+  onlyFav: boolean;
+  setOnlyFav: (value: boolean) => void;
+  onClose: () => void;
+}) {
+  const trapFocus = (event: ReactKeyboardEvent<HTMLElement>) => {
+    if (event.key !== 'Tab') return;
+    const focusable = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ));
+    if (focusable.length === 0) return;
+    const first = focusable[0]!;
+    const last = focusable[focusable.length - 1]!;
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
+  return (
+    <div className="cards-filter-layer">
+      <div className="cards-filter-backdrop" aria-hidden="true" onMouseDown={onClose} />
+      <aside
+        className="cards-filter-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="カードを絞り込む"
+        onKeyDown={trapFocus}
+      >
+        <header>
+          <div>
+            <span>FILTER</span>
+            <h2>絞り込み</h2>
+          </div>
+          {filterCount > 0 && <strong>{filterCount}</strong>}
+          <button ref={closeRef} type="button" onClick={onClose} aria-label="絞り込みを閉じる">×</button>
+        </header>
+
+        <div className="cards-filter-options" aria-label="表示条件">
+          <Toggle label="別イラストをまとめる" active={foldParallels}
+            onClick={() => setFoldParallels(!foldParallels)} accent={T.neonBlue} />
+          <Toggle label="★ お気に入りのみ" active={onlyFav}
+            onClick={() => setOnlyFav(!onlyFav)} accent={T.gold} />
+        </div>
+
+        <div className="cards-filter-scroll">
+          <FilterRail
+            filter={filter}
+            onChange={onChange}
+            onReset={onReset}
+            pool={pool}
+            showCounts={false}
+            showMatchModes={false}
+          />
+        </div>
+
+        <footer>
+          <button type="button" className="cards-filter-reset" onClick={onReset}>条件をリセット</button>
+          <button type="button" className="cards-filter-apply" onClick={onClose}>一覧を見る</button>
+        </footer>
+      </aside>
     </div>
   );
 }
@@ -292,80 +326,94 @@ function BreakdownRow({ color, label, value, total }: { color: string; label: st
 // ---- Card grid (center) ----
 
 function CardGrid({
-  cards, selectedNum, onSelect, isFav, adoptions,
-  viewMode, setViewMode, sortKey, sortDir, onSort,
-  foldParallels, setFoldParallels, onlyFav, setOnlyFav, onlyAdopted, setOnlyAdopted,
+  cards, selectedNum, onSelect, onKeyboardSelect, isFav, viewMode, foldParallels,
 }: {
   cards: CardDef[]; selectedNum: string; onSelect: (n: string) => void;
-  isFav: (c: CardDef) => boolean; adoptions: Map<string, number>;
-  viewMode: ViewMode; setViewMode: (m: ViewMode) => void;
-  sortKey: SortKey; sortDir: SortDir; onSort: (k: SortKey, d?: SortDir) => void;
-  foldParallels: boolean; setFoldParallels: (b: boolean) => void;
-  onlyFav: boolean; setOnlyFav: (b: boolean) => void;
-  onlyAdopted: boolean; setOnlyAdopted: (b: boolean) => void;
+  onKeyboardSelect: () => void;
+  isFav: (c: CardDef) => boolean;
+  viewMode: ViewMode;
+  foldParallels: boolean;
 }) {
   const cardWidth = viewMode === 'large' ? 150 : viewMode === 'grid' ? 104 : 0;
   // 折り畳み時は選択中印刷がグリッドに無い (別イラスト選択) ことがあるので cardId 一致で判定。
   const isSel = (c: CardDef) => foldParallels ? cardIdOf(c.num) === cardIdOf(selectedNum) : c.num === selectedNum;
   return (
-    <div style={{
-      width: '100%', height: '100%', padding: '12px 16px 16px',
-      background: 'linear-gradient(180deg, rgba(13,38,64,0.85), rgba(13,38,64,0.55))',
-      border: `1px solid rgba(78,195,255,0.25)`, borderRadius: 4,
-      display: 'flex', flexDirection: 'column', overflow: 'hidden',
-    }}>
-      {/* header row 1: count + view + sort */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <Label gold>CARDS · {cards.length} 件 一致</Label>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontFamily: T.fontMono, fontSize: 9, color: T.textMuted, letterSpacing: '0.15em' }}>並び</span>
-          <SortControl sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-          <span style={{ width: 1, height: 20, background: 'rgba(78,195,255,0.2)' }} />
-          <ViewSelector value={viewMode} onChange={setViewMode} />
-        </div>
-      </div>
-      {/* header row 2: toggles */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-        <Toggle label="パラレルまとめ" active={foldParallels} onClick={() => setFoldParallels(!foldParallels)} accent={T.neonBlue} />
-        <Toggle label="★ お気に入りのみ" active={onlyFav} onClick={() => setOnlyFav(!onlyFav)} accent={T.gold} />
-        <Toggle label="採用中のみ" active={onlyAdopted} onClick={() => setOnlyAdopted(!onlyAdopted)} accent={T.green} />
-      </div>
-
+    <section className="cards-grid-panel" aria-label="カード一覧">
+      <span className="home-sr-only" role="status" aria-live="polite">{cards.length}件のカード</span>
       {cards.length === 0 ? (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textMuted, fontFamily: T.fontMono, fontSize: 12 }}>
+        <div className="cards-empty">
           条件に一致するカードがありません
         </div>
       ) : viewMode === 'list' ? (
-        <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div className="cards-list-scroll">
           {cards.map((c) => (
             <CardListRow key={c.num} card={c} selected={isSel(c)}
-              fav={isFav(c)} adopt={adoptions.get(c.id) ?? 0} onClick={() => onSelect(c.num)} />
+              fav={isFav(c)} onClick={() => onSelect(c.num)}
+              onKeyboardSelect={onKeyboardSelect} />
           ))}
         </div>
       ) : (
-        <div style={{
-          flex: 1, overflow: 'auto',
-          display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${cardWidth + 8}px, 1fr))`,
-          gap: 12, alignContent: 'start',
-        }}>
-          {cards.map((c) => (
-            <div key={c.num} style={{ display: 'flex', justifyContent: 'center' }}>
-              <MetaCard card={c} w={cardWidth} selected={isSel(c)}
-                count={adoptions.get(c.id) || undefined} isFavorited={isFav(c)}
-                onClick={() => onSelect(c.num)} hoverable />
-            </div>
-          ))}
+        <div className="cards-grid-scroll" data-view={viewMode}>
+          <div className="cards-card-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${cardWidth + 8}px, 1fr))` }}>
+            {cards.map((c) => (
+              <div
+                className="cards-grid-item"
+                data-card-num={c.num}
+                key={c.num}
+                onKeyDownCapture={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    requestAnimationFrame(onKeyboardSelect);
+                  }
+                }}
+              >
+                <MetaCard card={c} w={cardWidth} selected={isSel(c)}
+                  isFavorited={isFav(c)}
+                  onClick={() => onSelect(c.num)} hoverable />
+              </div>
+            ))}
+          </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }
 
-function CardListRow({ card, selected, fav, adopt, onClick }: {
-  card: CardDef; selected: boolean; fav: boolean; adopt: number; onClick: () => void;
+function visibleStatsFor(card: CardDef) {
+  if (card.type === 'character') {
+    return [
+      { label: 'C', value: card.cost ?? '-', accent: T.neonBlue },
+      { label: 'AP', value: card.ap != null ? card.ap.toLocaleString() : '-', accent: T.apColor },
+      { label: 'LP', value: card.lp ?? '-', accent: T.lpColor },
+    ];
+  }
+  if (card.type === 'event') {
+    return [{ label: 'C', value: card.cost ?? '-', accent: T.neonBlue }];
+  }
+  if (card.type === 'partner') {
+    return [{ label: 'LP', value: card.lp ?? '-', accent: T.lpColor }];
+  }
+  return [
+    { label: '先攻', value: card.difficultyFirst != null ? `${card.difficultyFirst}枚` : '-', accent: T.neonBlue },
+    { label: '後攻', value: card.difficultySecond != null ? `${card.difficultySecond}枚` : '-', accent: T.apColor },
+  ];
+}
+
+function CardListRow({ card, selected, fav, onClick, onKeyboardSelect }: {
+  card: CardDef; selected: boolean; fav: boolean; onClick: () => void;
+  onKeyboardSelect: () => void;
 }) {
   return (
-    <button onClick={onClick} className="meta-row" style={{
+    <button
+      onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onClick();
+          requestAnimationFrame(onKeyboardSelect);
+        }
+      }}
+      className="meta-row"
+      style={{
       display: 'flex', alignItems: 'center', gap: 10, padding: '4px 8px',
       background: selected ? `${T.gold}11` : 'transparent',
       border: selected ? `1px solid ${T.gold}55` : '1px solid transparent',
@@ -383,19 +431,16 @@ function CardListRow({ card, selected, fav, adopt, onClick }: {
           {card.num} · {typeLabel(card.type)}{(card.features ?? []).length ? ' · ' + (card.features ?? []).join('/') : ''}
         </div>
       </div>
-      <StatChip label="C" value={card.cost ?? '—'} hex={T.neonBlue} />
-      <StatChip label="AP" value={card.ap != null ? card.ap.toLocaleString() : '—'} hex={T.apColor} />
-      <StatChip label="LP" value={card.lp ?? '—'} hex={T.lpColor} />
-      <div style={{ width: 50, textAlign: 'right', fontFamily: T.fontMono, fontSize: 9, color: adopt > 0 ? T.green : T.textDisabled }}>
-        {adopt > 0 ? `採用 ${adopt}` : '未採用'}
-      </div>
+      {visibleStatsFor(card).map((stat) => (
+        <StatChip key={stat.label} label={stat.label} value={stat.value} hex={stat.accent} />
+      ))}
     </button>
   );
 }
 
 function StatChip({ label, value, hex }: { label: string; value: string | number; hex: string }) {
   return (
-    <div style={{ width: 46, textAlign: 'center' }}>
+    <div role="group" aria-label={`${label} ${value}`} style={{ width: 46, textAlign: 'center' }}>
       <span style={{ fontFamily: T.fontMono, fontSize: 8, color: T.textMuted }}>{label} </span>
       <span style={{ fontFamily: T.fontMono, fontSize: 12, fontWeight: 700, color: hex }}>{value}</span>
     </div>
@@ -406,44 +451,56 @@ function SortControl({ sortKey, sortDir, onSort }: {
   sortKey: SortKey; sortDir: SortDir; onSort: (k: SortKey, d?: SortDir) => void;
 }) {
   return (
-    <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-      {SORTS.map((s) => {
-        const active = sortKey === s.k;
-        return (
-          <button key={s.k} onClick={() => onSort(s.k, active ? (sortDir === 'asc' ? 'desc' : 'asc') : 'asc')} style={{
-            padding: '4px 8px', borderRadius: 2, cursor: 'pointer',
-            background: active ? `${T.gold}22` : 'rgba(0,0,0,0.35)',
-            border: `1px solid ${active ? T.gold : T.neonBlue + '44'}`,
-            color: active ? T.gold : T.neonBlue,
-            fontFamily: T.fontJp, fontSize: 11, fontWeight: 700,
-            display: 'flex', alignItems: 'center', gap: 3,
-          }}>
-            {s.label}{active && <span style={{ fontFamily: T.fontMono, fontSize: 9 }}>{sortDir === 'asc' ? '▲' : '▼'}</span>}
-          </button>
-        );
-      })}
+    <div className="cards-sort-control">
+      <select value={sortKey} aria-label="カードの並び順"
+        onChange={(event) => onSort(event.target.value as SortKey, sortDir)}>
+        {SORTS.map((sort) => <option key={sort.k} value={sort.k}>{sort.label}順</option>)}
+      </select>
+      <button type="button"
+        aria-label={sortDir === 'asc' ? '昇順。降順へ切り替える' : '降順。昇順へ切り替える'}
+        onClick={() => onSort(sortKey, sortDir === 'asc' ? 'desc' : 'asc')}>
+        {sortDir === 'asc' ? '↑' : '↓'}
+      </button>
     </div>
   );
 }
 
 function ViewSelector({ value, onChange }: { value: ViewMode; onChange: (m: ViewMode) => void }) {
-  const modes: { v: ViewMode; icon: string; title: string }[] = [
-    { v: 'large', icon: '▢', title: '大きいタイル' },
-    { v: 'grid',  icon: '▦', title: '小さいタイル' },
-    { v: 'list',  icon: '☰', title: 'リスト' },
+  const modes: { v: ViewMode; title: string }[] = [
+    { v: 'large', title: '大きいタイル' },
+    { v: 'grid',  title: '小さいタイル' },
+    { v: 'list',  title: 'リスト' },
   ];
   return (
-    <div style={{ display: 'flex', border: `1px solid rgba(78,195,255,0.3)`, borderRadius: 2, overflow: 'hidden' }}>
+    <div className="cards-view-selector" role="group" aria-label="カードの表示形式">
       {modes.map((m, i) => (
-        <button key={m.v} onClick={() => onChange(m.v)} title={m.title} aria-label={m.title} style={{
-          padding: '5px 9px',
-          background: value === m.v ? T.gold : 'rgba(0,0,0,0.3)',
-          color: value === m.v ? '#1a1208' : T.textSecondary,
-          fontFamily: T.fontMono, fontSize: 12, fontWeight: 800, cursor: 'pointer',
-          borderRight: i < modes.length - 1 ? `1px solid rgba(78,195,255,0.2)` : 'none',
-        }}>{m.icon}</button>
+        <button key={m.v} type="button" onClick={() => onChange(m.v)} title={m.title}
+          aria-label={m.title} aria-pressed={value === m.v}
+          data-last={i === modes.length - 1 ? 'true' : undefined}>
+          <ViewModeIcon mode={m.v} />
+        </button>
       ))}
     </div>
+  );
+}
+
+function ViewModeIcon({ mode }: { mode: ViewMode }) {
+  if (mode === 'list') {
+    return (
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <path d="M3 5h3M8 5h9M3 10h3M8 10h9M3 15h3M8 15h9" />
+      </svg>
+    );
+  }
+  const cells = mode === 'large'
+    ? [[3, 3, 6, 6], [11, 3, 6, 6], [3, 11, 6, 6], [11, 11, 6, 6]]
+    : Array.from({ length: 9 }, (_, index) => [3 + (index % 3) * 5.5, 3 + Math.floor(index / 3) * 5.5, 3, 3]);
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      {cells.map(([x, y, width, height], index) => (
+        <rect key={index} x={x} y={y} width={width} height={height} rx="0.6" />
+      ))}
+    </svg>
   );
 }
 
@@ -461,32 +518,64 @@ function Toggle({ label, active, onClick, accent }: { label: string; active: boo
 
 // ---- Selected card detail ----
 
-function SelectedDetail({ card, usage, isFavorited, onToggleFavorite, onSelectVariant, onAddToDeck }: {
+function SelectedDetail({
+  card,
+  isFavorited,
+  onToggleFavorite,
+  onSelectVariant,
+  activePrintRef,
+}: {
   card: CardDef;
-  usage: { inDecks: number; totalDecks: number; winRate: number; mvp: number };
   isFavorited: boolean;
   onToggleFavorite: () => void;
   onSelectVariant: (num: string) => void;
-  onAddToDeck: () => void;
+  activePrintRef: RefObject<HTMLButtonElement | null>;
 }) {
   const color = COLOR_TOKEN[card.color];
   const variants = variantsOfId(card.id);
+  const stats = visibleStatsFor(card);
   // クリックで拡大表示 (対戦画面と同じ CardExpandModal を流用)。
   const [expanded, setExpanded] = useState(false);
+  const moveVariantFocus = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    currentIndex: number,
+  ) => {
+    let nextIndex: number | null = null;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      nextIndex = (currentIndex + 1) % variants.length;
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      nextIndex = (currentIndex - 1 + variants.length) % variants.length;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = variants.length - 1;
+    }
+    if (nextIndex == null) return;
+
+    event.preventDefault();
+    const buttons = event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
+      '.cards-print-chip',
+    );
+    onSelectVariant(variants[nextIndex]!.num);
+    buttons?.[nextIndex]?.focus();
+  };
   return (
     <>
-    <div style={{
+    <div className="cards-selected-detail" style={{
       width: '100%', height: '100%', padding: '18px 20px 20px',
       background: 'linear-gradient(180deg, rgba(13,38,64,0.95), rgba(13,38,64,0.75))',
       border: `1px solid ${color}66`, borderRadius: 4,
       boxShadow: `inset 0 0 40px ${color}15`,
-      display: 'flex', flexDirection: 'column', overflow: 'auto', gap: 10,
+      display: 'flex', flexDirection: 'column', overflow: 'hidden', gap: 0,
     }}>
+      <div className="cards-selected-scroll">
       <button
+        ref={variants.length === 1 ? activePrintRef : undefined}
         type="button"
         onClick={() => setExpanded(true)}
         title="クリックで拡大表示"
         aria-label={`${card.name} を拡大表示`}
+        className="cards-selected-art"
         style={{
           alignSelf: 'center', padding: 0, border: 'none', background: 'transparent', cursor: 'zoom-in',
           filter: `drop-shadow(0 0 24px ${color}66) drop-shadow(0 8px 16px rgba(0,0,0,0.7))`,
@@ -496,21 +585,39 @@ function SelectedDetail({ card, usage, isFavorited, onToggleFavorite, onSelectVa
       </button>
 
       {variants.length > 1 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
-          <span style={{ fontFamily: T.fontMono, fontSize: 9, color: T.textMuted, letterSpacing: '0.12em' }}>別イラスト</span>
-          {variants.map((v) => (
-            <button key={v.num} onClick={() => onSelectVariant(v.num)} style={{
-              padding: '2px 7px', cursor: 'pointer', borderRadius: 2,
-              background: v.num === card.num ? `${T.gold}22` : 'rgba(0,0,0,0.4)',
-              border: `1px solid ${v.num === card.num ? T.gold : T.textMuted + '55'}`,
-              color: v.num === card.num ? T.gold : T.textMuted,
-              fontFamily: T.fontMono, fontSize: 10, fontWeight: 700,
-            }}>{v.num}</button>
-          ))}
+        <div className="cards-print-selector cards-print-variants" role="radiogroup" aria-label="別イラスト">
+          <div className="cards-print-summary">
+            <span>{card.name} · {card.num}</span>
+            <span className="cards-print-label">別イラスト ({variants.length})</span>
+          </div>
+          <div className="cards-print-strip">
+            {variants.map((variant, index) => {
+              const selected = variant.num === card.num;
+              return (
+              <button
+                key={variant.num}
+                className="cards-print-chip"
+                type="button"
+                role="radio"
+                aria-label={`印刷番号 ${variant.num}`}
+                aria-checked={selected}
+                tabIndex={selected ? 0 : -1}
+                ref={selected ? activePrintRef : undefined}
+                onClick={(event) => {
+                  onSelectVariant(variant.num);
+                  if (event.detail > 0) event.currentTarget.blur();
+                }}
+                onKeyDown={(event) => moveVariantFocus(event, index)}
+              >
+                <span className="cards-print-chip-inner">{variant.num}</span>
+              </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
-      <div>
+      <div className="cards-selected-identity">
         <div style={{ display: 'flex', gap: 8, marginBottom: 4, alignItems: 'baseline' }}>
           <span style={{ fontFamily: T.fontMono, fontSize: 11, color: T.textMuted, letterSpacing: '0.16em' }}>{card.num}</span>
           <span style={{ fontFamily: T.fontMono, fontSize: 9, color: T.textDisabled }}>ID {card.id}</span>
@@ -520,9 +627,6 @@ function SelectedDetail({ card, usage, isFavorited, onToggleFavorite, onSelectVa
             </span>
           )}
           <ColorPills card={card} />
-          <span style={{ marginLeft: 'auto', fontFamily: T.fontMono, fontSize: 10, color: usage.inDecks > 0 ? T.green : T.textMuted, letterSpacing: '0.12em' }}>
-            {usage.inDecks > 0 ? `採用 ${usage.inDecks}` : '未採用'}
-          </span>
         </div>
         <div style={{ fontSize: 20, fontWeight: 800, color: T.textPrimary, letterSpacing: '0.04em' }}>{card.name}</div>
         <div style={{ fontFamily: T.fontMono, fontSize: 11, color: T.textMuted, letterSpacing: '0.1em', marginTop: 2 }}>
@@ -530,16 +634,15 @@ function SelectedDetail({ card, usage, isFavorited, onToggleFavorite, onSelectVa
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 6 }}>
-        <SmallStat label="C"  value={card.cost ?? '-'} accent={T.neonBlue} />
-        <SmallStat label="AP" value={card.ap != null ? card.ap.toLocaleString() : '-'} accent={T.apColor} />
-        <SmallStat label="LP" value={card.lp ?? '-'} accent={T.lpColor} />
+      <div className="cards-selected-stats" role="group" aria-label="カードの能力値" style={{ display: 'flex', gap: 6 }}>
+        {stats.map((stat) => (
+          <SmallStat key={stat.label} {...stat} />
+        ))}
       </div>
 
       {card.effectShort && (
         <div style={{ padding: '10px 12px', background: 'rgba(0,0,0,0.45)', border: `1px solid ${color}33`, borderRadius: 3 }}>
-          <Label gold small>EFFECT · 効果</Label>
-          <div style={{ fontSize: 12, lineHeight: 1.55, color: T.textPrimary, marginTop: 4, whiteSpace: 'pre-wrap' }}>
+          <div style={{ fontSize: 12, lineHeight: 1.55, color: T.textPrimary, whiteSpace: 'pre-wrap' }}>
             {card.effectShort}
           </div>
         </div>
@@ -556,30 +659,15 @@ function SelectedDetail({ card, usage, isFavorited, onToggleFavorite, onSelectVa
         </div>
       )}
 
-      <div>
-        <Label muted>USAGE · このカードでの戦績</Label>
-        <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-          <UsageStat label="採用デッキ" value={`${usage.inDecks} / ${usage.totalDecks}`} />
-          <UsageStat label="勝率(採用時)" value={`${usage.winRate}%`} highlight />
-          <UsageStat label="MVP 数" value={String(usage.mvp)} highlight />
-        </div>
       </div>
-
-      <div style={{ marginTop: 'auto', display: 'flex', gap: 6 }}>
-        <button onClick={onToggleFavorite} style={{
+      <div className="cards-selected-footer">
+        <button className="cards-favorite-action" type="button" onClick={onToggleFavorite} aria-pressed={isFavorited} style={{
           flex: 1, padding: '8px', textAlign: 'center', cursor: 'pointer',
           background: isFavorited ? `${T.gold}33` : 'rgba(0,0,0,0.4)',
           border: `1px solid ${T.gold}${isFavorited ? 'cc' : '66'}`, borderRadius: 2,
           fontFamily: T.fontMono, fontSize: 11, fontWeight: 800, color: T.gold, letterSpacing: '0.18em',
         }}>
           {isFavorited ? '★ お気に入り 解除' : '★ お気に入り'}
-        </button>
-        <button onClick={onAddToDeck} style={{
-          flex: 1, padding: '8px', textAlign: 'center', cursor: 'pointer',
-          background: T.neonBlue, color: '#0a1a28', borderRadius: 2,
-          fontFamily: T.fontMono, fontSize: 11, fontWeight: 800, letterSpacing: '0.18em',
-        }}>
-          + デッキへ追加
         </button>
       </div>
     </div>
@@ -606,30 +694,11 @@ function ColorPills({ card, compact = false }: { card: CardDef; compact?: boolea
 
 // ---- Helpers ----
 
-function Label({ children, gold, muted, small }: { children: React.ReactNode; gold?: boolean; muted?: boolean; small?: boolean }) {
-  return (
-    <span style={{
-      fontFamily: T.fontMono, fontSize: small ? 9 : 11, fontWeight: 800,
-      color: gold ? T.gold : muted ? T.textMuted : T.textPrimary,
-      letterSpacing: small ? '0.2em' : '0.28em',
-    }}>{children}</span>
-  );
-}
-
 function SmallStat({ label, value, accent }: { label: string; value: string | number; accent: string }) {
   return (
-    <div style={{ flex: 1, padding: '6px 8px', textAlign: 'center', background: `${accent}15`, border: `1px solid ${accent}55`, borderRadius: 2 }}>
+    <div role="group" aria-label={`${label} ${value}`} style={{ flex: 1, padding: '6px 8px', textAlign: 'center', background: `${accent}15`, border: `1px solid ${accent}55`, borderRadius: 2 }}>
       <div style={{ fontFamily: T.fontMono, fontSize: 9, color: T.textMuted, letterSpacing: '0.18em' }}>{label}</div>
       <div style={{ fontFamily: T.fontMono, fontSize: 18, fontWeight: 800, color: accent, lineHeight: 1 }}>{value}</div>
-    </div>
-  );
-}
-
-function UsageStat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-  return (
-    <div style={{ flex: 1, padding: '7px 9px', background: 'rgba(0,0,0,0.4)', border: `1px solid rgba(78,195,255,0.2)`, borderRadius: 2, lineHeight: 1.2 }}>
-      <div style={{ fontFamily: T.fontMono, fontSize: 9, color: T.textMuted, letterSpacing: '0.15em' }}>{label}</div>
-      <div style={{ fontFamily: T.fontMono, fontSize: 14, fontWeight: 800, color: highlight ? T.gold : T.textPrimary, marginTop: 1 }}>{value}</div>
     </div>
   );
 }

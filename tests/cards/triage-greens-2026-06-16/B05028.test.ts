@@ -168,11 +168,11 @@ describe('B05028 服部平蔵 — gate5 runtime behavior', () => {
     expect(pending.atomVerb, 'step1 = charRemoveSetCard').toBe('charRemoveSetCard');
     expect(pending.nMin, '「リムーブしてもよい」=0枚可 (decline channel)').toBe(0);
     expect(pending.nMax, '1枚リムーブ').toBe(1);
-    const uids = pending.candidates.map((c) => c.uid).sort();
-    expect(uids, 'SET_SELF (自陣 set-card) は候補').toContain('setself#0');
-    expect(uids, 'SET_OPP (相手陣 set-card) は候補 — side:either honor').toContain('setopp#0');
-    expect(uids, 'NOSET (自陣 非保持) は候補外 — hasSetCards honor').not.toContain('noset#0');
-    expect(uids, 'NOSET (相手陣 非保持) は候補外').not.toContain('noset#1');
+    const hostUids = pending.candidates.map((c) => c.hostUid).sort();
+    expect(hostUids, 'SET_SELF (自陣 set-card occurrence) は候補').toContain('setself#0');
+    expect(hostUids, 'SET_OPP (相手陣 set-card occurrence) は候補 — side:either honor').toContain('setopp#0');
+    expect(hostUids, 'NOSET (自陣 非保持) は候補外 — hasSetCards honor').not.toContain('noset#0');
+    expect(hostUids, 'NOSET (相手陣 非保持) は候補外').not.toContain('noset#1');
     expect(pending.candidates.length, '有効候補は set-card 保持 2 件のみ').toBe(2);
   });
 
@@ -204,7 +204,8 @@ describe('B05028 服部平蔵 — gate5 runtime behavior', () => {
     fireA1ViaDispatch(a1Base());
     const pending = useGameStateStore.getState().pendingEffectPick!;
     // step1: SET_SELF を pick (set-card を実除去)
-    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'setself#0' });
+    const selfSetOccurrence = pending.candidates.find(candidate => candidate.hostUid === 'setself#0')!;
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: selfSetOccurrence.uid });
 
     const mid = useGameStateStore.getState();
     // step1 の効果: SET_SELF の set-card が 1枚リムーブ (host は現場に残る — charRemoveSetCard セマンティクス)
@@ -239,7 +240,9 @@ describe('B05028 服部平蔵 — gate5 runtime behavior', () => {
   // ===== a1 step2 境界: AP8000 は候補 / AP9000 は候補外 (apMax boundary) — pick せず候補集合のみ厳密確認 =====
   it('a1 step2 apMax 境界: AP8000=候補内 / AP9000=候補外 (apMax は ≤ 比較)', () => {
     fireA1ViaDispatch(a1Base());
-    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'setopp#0' }); // step1 resolve (相手 set-card)
+    const pending1 = useGameStateStore.getState().pendingEffectPick!;
+    const oppSetOccurrence = pending1.candidates.find(candidate => candidate.hostUid === 'setopp#0')!;
+    dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: oppSetOccurrence.uid }); // step1 resolve (相手 set-card)
     const pending2 = useGameStateStore.getState().pendingEffectPick!;
     expect(pending2.atomVerb).toBe('sceneRemove');
     const apUids = pending2.candidates.map((c) => c.uid);

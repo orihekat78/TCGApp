@@ -5,6 +5,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { startCausalSession } from '@/engine/log/causal';
 import { event } from '@/engine/event';
 import { runAtom } from '@/engine/effect/atom-handlers';
 import { run as runEffect } from '@/engine/effect/resolver';
@@ -17,8 +18,10 @@ import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/l
 import { _drainPendingHirameki, _resetPendingHirameki } from '@/engine/listeners/hirameki';
 import { _resetRegistry, register } from '@/engine/read/def';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import { resetPresentationQueue } from '@/ui/presentation/coordinator';
 import { useGameStateStore } from '@/ui/state/store';
 import type { AbilityDef, ActionContext, CardDef, Condition, EffectCtx } from '@/engine/types';
+import { sceneChar } from '../helpers/fixtures';
 import { B02032 } from '@/cards/ct-p02/B02032';
 import { B03134 } from '@/cards/ct-p03/B03134';
 import { B04027 } from '@/cards/ct-p04/B04027';
@@ -78,6 +81,11 @@ const bondProbe: CardDef = {
 };
 const sleepProbe: CardDef = {
   id: 'SLEEP_PROBE', no: 'TEST/SLEEP_PROBE', kind: 'character', names: [b07056TargetName], colors: [], level: 1,
+  traits: [], rarity: 'C', imageUrl: '', ruleRefs: [], abilities: [],
+};
+
+const actionProbe: CardDef = {
+  id: 'ACTION-PROBE', no: 'TEST/ACTION-PROBE', kind: 'character', names: ['action probe'], colors: [], level: 1,
   traits: [], rarity: 'C', imageUrl: '', ruleRefs: [], abilities: [],
 };
 
@@ -448,6 +456,7 @@ describe('BUG-254 action-case Hirameki visibility', () => {
     _resetTriggeredRegistered();
     _resetPendingHirameki();
     register(B04028);
+    register(actionProbe);
     register({ id: 'NO_HIRAMEKI', no: 'TEST/NO_HIRAMEKI', kind: 'event', names: ['none'], colors: [], level: 1, traits: [], rarity: 'C', imageUrl: '', ruleRefs: [], abilities: [] });
     registerTriggeredListener();
     useGameStateStore.setState({ gameState: null, pendingHirameki: null });
@@ -460,17 +469,32 @@ describe('BUG-254 action-case Hirameki visibility', () => {
     };
   }
 
+  function driveUnguardedCaseAction(state: ReturnType<typeof createEmptyGameState>): string {
+    state.turn = { number: 1, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    state.players.opp.scene = [sceneChar(actionProbe.id, 'attacker')];
+    state.players.opp.deck = ['ACTION-GAIN'];
+    state.players.self.case.cardId = 'CASE-PROBE';
+    const sessionId = `bug-254-${state.players.self.evidence[0]?.cardId ?? 'none'}`;
+    startCausalSession(state, sessionId);
+    resetPresentationQueue(sessionId);
+    expect(useGameStateStore.getState().setGameState(state)).toBe(true);
+
+    expect(dispatchEngineAction({ type: 'actionDeclareCase', byUid: 'attacker', targetPlayer: 'self' })).toEqual({ ok: true });
+    const actionId = useGameStateStore.getState().activeActionId;
+    expect(actionId).toBeTruthy();
+    expect(dispatchEngineAction({ type: 'actionGuard', actionId: actionId!, guarderUid: null }).ok).toBe(true);
+    expect(dispatchEngineAction({ type: 'actionJudge', actionId: actionId! }).ok).toBe(true);
+    return actionId!;
+  }
+
   it.each([true, false])('both face states open the optional Hirameki from the real action path (%s)', (faceUp) => {
     const state = createEmptyGameState();
     state.players.self.evidence = [{ cardId: 'B04028', faceUp, origin: { turn: 0, via: 'opening' } }];
     state.players.self.deck = ['DRAWN'];
-    const afterAction = produce(state, draft => {
-      removeOpponentEvidenceTop(draft, actionContext());
-    });
+    driveUnguardedCaseAction(state);
 
-    const pending = _drainPendingHirameki();
+    const pending = useGameStateStore.getState().pendingHirameki;
     expect(pending).toMatchObject({ player: 'self', cardId: 'B04028', abilityId: 'a2' });
-    useGameStateStore.setState({ gameState: afterAction, pendingHirameki: pending });
     expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
     expect(useGameStateStore.getState().gameState!.players.self.evidence).toEqual([
       expect.objectContaining({ cardId: 'DRAWN', faceUp: false }),
@@ -481,11 +505,7 @@ describe('BUG-254 action-case Hirameki visibility', () => {
     const state = createEmptyGameState();
     state.players.self.evidence = [{ cardId: 'B04028', faceUp: false, origin: { turn: 0, via: 'opening' } }];
     state.players.self.deck = ['SKIPPED'];
-    const afterAction = produce(state, draft => {
-      removeOpponentEvidenceTop(draft, actionContext());
-    });
-    const pending = _drainPendingHirameki();
-    useGameStateStore.setState({ gameState: afterAction, pendingHirameki: pending });
+    driveUnguardedCaseAction(state);
     expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'skip' }).ok).toBe(true);
     expect(useGameStateStore.getState().gameState!.players.self.deck).toEqual(['SKIPPED']);
 
@@ -503,5 +523,66 @@ describe('BUG-254 action-case Hirameki visibility', () => {
       removeOpponentEvidenceTop(draft, actionContext());
     });
     expect(_drainPendingHirameki()).toBeNull();
+  });
+});
+
+describe('B07056 event-use resolution', () => {
+  it('selects only a level-8-or-lower Kaito or Aoko and turns stun into sleep', async () => {
+    const [{ runAllUntilEmpty }, { applyPickAndContinuation }] = await Promise.all([
+      import('@/engine/resolve'),
+      import('@/engine/effect/apply-pick'),
+    ]);
+    const target: CardDef = {
+      id: 'B07056_TARGET', no: 'TEST/B07056_TARGET', kind: 'character', names: ['黒羽快斗'], colors: ['白'], level: 8,
+      traits: [], rarity: 'C', imageUrl: '', ruleRefs: [], abilities: [],
+    };
+    const wrongName: CardDef = {
+      id: 'B07056_WRONG_NAME', no: 'TEST/B07056_WRONG_NAME', kind: 'character', names: ['怪盗キッド'], colors: ['白'], level: 8,
+      traits: [], rarity: 'C', imageUrl: '', ruleRefs: [], abilities: [],
+    };
+    const tooHigh: CardDef = {
+      id: 'B07056_TOO_HIGH', no: 'TEST/B07056_TOO_HIGH', kind: 'character', names: ['中森青子'], colors: ['白'], level: 9,
+      traits: [], rarity: 'C', imageUrl: '', ruleRefs: [], abilities: [],
+    };
+
+    event._resetRegistry();
+    _clearPendingEffectPickQueue();
+    _resetRegistry();
+    _resetTriggeredRegistered();
+    for (const card of [B07056, sleepProbe, target, wrongName, tooHigh]) register(card);
+    registerTriggeredListener();
+
+    const state = createEmptyGameState();
+    state.players.self.hand = ['B07056'];
+    state.players.self.case.colors = ['白'];
+    state.players.self.file = Array.from({ length: 6 }, () => ({ type: 'card-back' as const }));
+    state.players.self.scene = [
+      { ...sceneChar('SLEEP_PROBE', 'witness'), state: 'sleep' },
+      { ...sceneChar(target.id, 'target'), state: 'stun' },
+      { ...sceneChar(wrongName.id, 'wrong-name'), state: 'stun' },
+      { ...sceneChar(tooHigh.id, 'too-high'), state: 'stun' },
+    ];
+    const runtime = globalThis as { __humanPlayerSide?: 'self' | 'opp' | null };
+    const previousHuman = runtime.__humanPlayerSide;
+    runtime.__humanPlayerSide = 'self';
+
+    try {
+      handUseCard(state, 'self', 'B07056');
+      runAllUntilEmpty(state);
+      const pending = _drainPendingEffectPickSide();
+      expect(pending?.candidates.map(candidate => candidate.uid)).toEqual(['target']);
+      applyPickAndContinuation(state, pending!, 'target');
+      runAllUntilEmpty(state);
+
+      expect({
+        eventRemoved: state.players.self.remove.includes('B07056'),
+        target: state.players.self.scene.find(card => card.uid === 'target')?.state,
+        witness: state.players.self.scene.find(card => card.uid === 'witness')?.state,
+        wrongName: state.players.self.scene.find(card => card.uid === 'wrong-name')?.state,
+        tooHigh: state.players.self.scene.find(card => card.uid === 'too-high')?.state,
+      }).toEqual({ eventRemoved: true, target: 'sleep', witness: 'sleep', wrongName: 'stun', tooHigh: 'stun' });
+    } finally {
+      runtime.__humanPlayerSide = previousHuman;
+    }
   });
 });

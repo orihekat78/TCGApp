@@ -34,7 +34,7 @@ describe('B03039 長島茂雄 — カットイン (AP+1000 / 相手セット除�
     s.players.opp.scene = [sceneChar('D11013', 'def')];  // 相手キャラ (setCards 無し)
     // contact binding は ctx.bindings['contact'] = [{byUid,...}] の array 形 (BUG-091, atom-handlers:168-174)
     const ctx: EffectCtx = {
-      source: { player: 'self', cardId: 'B03039', abilityId: 'a1' },
+      source: { player: 'self', cardId: 'B03039', abilityId: 'a1', area: 'remove' },
       bindings: { contact: [{ byUid: 'atk', targetUid: 'def', attackerSide: 'self' }] },
     } as unknown as EffectCtx;
     runEffect(s, B03039.abilities[0]!.effect!, ctx);
@@ -51,7 +51,7 @@ describe('B03039 長島茂雄 — カットイン (AP+1000 / 相手セット除�
     // 相手キャラに裏向きセットカード 1 枚
     s.players.opp.scene = [sceneChar('D11013', 'def', { setCards: [{ cardId: 'SET1', faceUp: false }] })];
     const ctx: EffectCtx = {
-      source: { player: 'self', cardId: 'B03039', abilityId: 'a1' },
+      source: { player: 'self', cardId: 'B03039', abilityId: 'a1', area: 'remove' },
       bindings: { contact: [{ byUid: 'atk', targetUid: 'def', attackerSide: 'self' }] },
     } as unknown as EffectCtx;
 
@@ -60,7 +60,9 @@ describe('B03039 長島茂雄 — カットイン (AP+1000 / 相手セット除�
     // step2 で charRemoveSetCard の pick が enqueue される → 自分が相手 'def' のセットを選んで除去
     const pending = _drainPendingEffectPickSide();
     expect(pending?.atomVerb).toBe('charRemoveSetCard');
-    applyPickAndContinuation(s, pending!, 'def');
+    const setCardOccurrence = pending!.candidates.find(candidate => candidate.hostUid === 'def');
+    expect(setCardOccurrence).toMatchObject({ kind: 'card', area: 'set-card', hidden: true });
+    applyPickAndContinuation(s, pending!, setCardOccurrence!.uid);
 
     // 除去された → continuation(step3 AP+2000) 実行 → 計 +3000、セットカードも除去
     expect(charRead.ap(s, 'atk')).toBe(7000); // 4000 + 1000 + 2000

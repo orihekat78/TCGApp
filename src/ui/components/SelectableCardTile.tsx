@@ -9,6 +9,7 @@ export type SelectableCardTileProps = {
   hidden?: boolean;
   hiddenLabel?: string;
   occurrenceLabel?: string;
+  selectLabelSuffix?: string;
   selectTestId?: string;
   onSelect: (instanceId: string) => void;
   onExpand?: (cardId: string) => void;
@@ -19,6 +20,7 @@ export function SelectableCardTile({
   cardId,
   instanceId,
   occurrenceLabel,
+  selectLabelSuffix,
   hidden = false,
   hiddenLabel = '伏せられたカード',
   selectTestId,
@@ -30,6 +32,8 @@ export function SelectableCardTile({
   const name = card?.names[0] ?? cardId;
   const accessibleName = occurrenceLabel ? `${name} ${occurrenceLabel}` : name;
   const canExpand = !hidden && onExpand !== undefined;
+  const visibleSelectSuffix = selectLabelSuffix ?? 'を選択';
+  const hiddenSelectSuffix = selectLabelSuffix ?? ' を選択';
 
   const select = (): void => onSelect(instanceId);
   const expand = (): void => onExpand?.(cardId);
@@ -44,7 +48,7 @@ export function SelectableCardTile({
         data-testid={selectTestId}
         data-instance-id={instanceId}
         data-card-id={hidden ? undefined : cardId}
-        aria-label={hidden ? `${hiddenLabel} を選択` : `${accessibleName}を選択`}
+        aria-label={hidden ? `${hiddenLabel}${hiddenSelectSuffix}` : `${accessibleName}${visibleSelectSuffix}`}
         aria-pressed={selected}
         onClick={select}
       >

@@ -49,10 +49,11 @@ async function expectBrowseIconInArt(card: ReturnType<Page['locator']>): Promise
   const [artBox, iconBox] = await Promise.all([art.boundingBox(), icon.boundingBox()]);
   expect(artBox).not.toBeNull();
   expect(iconBox).not.toBeNull();
-  expect(iconBox!.x).toBeGreaterThanOrEqual(artBox!.x);
-  expect(iconBox!.y).toBeGreaterThanOrEqual(artBox!.y);
-  expect(iconBox!.x + iconBox!.width).toBeLessThanOrEqual(artBox!.x + artBox!.width);
-  expect(iconBox!.y + iconBox!.height).toBeLessThanOrEqual(artBox!.y + artBox!.height);
+  const rasterTolerance = 0.5;
+  expect(iconBox!.x + rasterTolerance).toBeGreaterThanOrEqual(artBox!.x);
+  expect(iconBox!.y + rasterTolerance).toBeGreaterThanOrEqual(artBox!.y);
+  expect(iconBox!.x + iconBox!.width).toBeLessThanOrEqual(artBox!.x + artBox!.width + rasterTolerance);
+  expect(iconBox!.y + iconBox!.height).toBeLessThanOrEqual(artBox!.y + artBox!.height + rasterTolerance);
 }
 
 test.describe('set cards beneath a scene character', () => {

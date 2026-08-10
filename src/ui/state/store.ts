@@ -11,13 +11,27 @@ import { create } from 'zustand';
 import { produce } from '@/engine/produce';
 import { mutate } from '@/engine/mutate';
 import type { GameState } from '@/engine/types/game-state';
-import type { EffectCtx } from '@/engine/types';
+import type { CausalEffectTrace, EffectCtx } from '@/engine/types';
 import type { ContinuationFrame, PendingEffectSource } from '@/engine/effect/pending-state';
+import { isCausalLogEntry } from '@/engine/log/causal.js';
 import {
   hydratePendingRuntimeState,
   resetPendingRuntimeState,
+  restorePendingRuntimeState,
+  snapshotPendingRuntimeState,
+  withIsolatedPendingRuntimeState,
 } from '@/engine/effect/runtime-state.js';
-import { surfacePendingSideChannels } from './surface-pending.js';
+import {
+  collectPendingSideChannels,
+  type PendingSurfaceState,
+} from './surface-pending.js';
+import {
+  admitPresentationFromState,
+  currentPresentationSessionId,
+  getPresentationQueue,
+  validatePresentationAtCurrentState,
+} from '@/ui/presentation/coordinator.js';
+import { usePresentationStore } from '@/ui/presentation/store.js';
 
 export type GameStateMutator = (state: GameState) => GameState;
 export type PendingDecisionIdentity = { decisionId: string };
@@ -31,14 +45,18 @@ export type GameStateStore = {
   /** 現在のゲーム状態。未ロード時は null。 */
   gameState: GameState | null;
   /** state を全置換する（ゲーム開始 / リセット / リプレイ読み込み用） */
-  setGameState: (state: GameState | null, options?: SetGameStateOptions) => void;
+  /** `true` only when presentation validation passed and the replacement was committed. */
+  setGameState: (state: GameState | null, options?: SetGameStateOptions) => boolean;
+  /** Replay projection only. Never hydrates resolver continuations or decision surfaces. */
+  setReplayGameState: (state: GameState | null) => void;
   /** 新規対戦開始前に GameState と UI 上の対戦一時状態を一括破棄する。 */
   resetMatchSessionState: () => void;
   /**
    * 現在の gameState に mutator を適用し、その戻り値で置き換える。
    * gameState が null の場合は何もしない（mutator も呼ばれない）。
    */
-  dispatch: (mutator: GameStateMutator) => void;
+  /** `true` only when the produced state passed validation and was committed. */
+  dispatch: (mutator: GameStateMutator) => boolean;
   /**
    * Phase 8 完全クローズ Commit 2: 進行中の ActionContext.id を保持。
    * - actionDeclareChar/Case dispatch 直後にセット
@@ -94,7 +112,7 @@ export type GameStateStore = {
   /**
    * user_request 20260521_01 #12: AI ターン進行の遅延 (ms)。
    * - useOppTurnDriver / useSpectatorTurnDriver が重要手の表示間隔として参照
-   * - SpectatorHUD の slider で変更可能
+   * - AI 進行設定から変更可能
    * - default 400ms (既存 oppTurnDelayMs / spectatorDelayMs と一致)
    * - preset: 200 (高速) / 400 (標準) / 800 (普通) / 1500 (ゆっくり) / 3000 (最遅)
    */
@@ -103,7 +121,7 @@ export type GameStateStore = {
   /**
    * user_request 20260521_01 #12: AI 自動進行の一時停止フラグ。
    * - true なら driver の setTimeout は走らない (= AI 進行停止)
-   * - SpectatorHUD の pause / resume ボタンで切替
+   * - 対戦画面の専用操作で切替
    * - step button は paused でも 1 回駆動 (aiStepCounter で gate)
    */
   isAiPaused: boolean;
@@ -179,7 +197,7 @@ export type GameStateStore = {
    * 2026-05-26 ヒラメキ効果検証 demo モード。
    * 'idle'      … 未使用 (通常ゲーム)
    * 'picking'   … HiramekiDemoPickerModal 表示中、ユーザが icon-flash カード選択待ち
-   * 'playing'   … setGameState 完了、actionAgainstCase dispatch 済み、
+   * 'playing'   … state-owned actionDeclareCase → guard → judge 完了、
    *               hirameki resolve 待ち。useHiramekiDemoDriver が pendingHirameki 監視。
    * 'completed' … hirameki resolve 完了、HiramekiDemoBanner 表示。Reset で 'idle' に戻る。
    */
@@ -195,6 +213,8 @@ export type GameStateStore = {
    */
   cutinDemoMode: 'idle' | 'picking' | 'playing' | 'completed';
   setCutinDemoMode: (m: 'idle' | 'picking' | 'playing' | 'completed') => void;
+  /** Monotonic identity for one cut-in demo run. Deliberately survives session reset. */
+  cutinDemoRunToken: number;
   cutinDemoSelectedCardId: string | null;
   setCutinDemoSelectedCardId: (id: string | null) => void;
 };
@@ -238,15 +258,32 @@ export type PendingDeckPlace = {
   cardIds: string[];
   /** S2 B01093: 選択者 = ability owner (絶対座標)。modal 表示 gate はこちらで判定 (engine 型と同 shape) */
   ownerPlayer: 'self' | 'opp';
+  deckSnapshot: string[];
+  occurrences: Array<{ cardId: string; index: number }>;
+  ctx: EffectCtx;
+  continuation?: ContinuationFrame;
 };
 
 export type PendingEffectPick = {
   player: 'self' | 'opp';
-  candidates: { uid: string; cardId: string; player: 'self' | 'opp'; kind?: 'char' | 'card' | 'evidence'; area?: string }[];
+  candidates: {
+    uid: string;
+    cardId: string;
+    player: 'self' | 'opp';
+    kind?: 'char' | 'card' | 'evidence';
+    area?: string;
+    index?: number;
+    hostUid?: string;
+    setCardInstanceId?: string;
+    hidden?: boolean;
+  }[];
   atomVerb: string;
   atomArgs: Record<string, unknown>;
   nMin: number;
   nMax: number;
+  requestedNMin?: number;
+  requestedNMax?: number;
+  minimumPolicy?: 'best-effort' | 'exact';
   source: PendingEffectSource;
   publicHandRevealToken?: string;
   /**
@@ -370,6 +407,12 @@ export type PendingHirameki = {
   actorUid?: string;
   /** Exact remove-area occurrence created by the action evidence removal. */
   occurrence?: { player: 'self' | 'opp'; cardId: string; removeIndex: number };
+  /** State-owned action that must still be awaiting this decision. */
+  actionId?: string;
+  /** Exact public evidence-removal event that opened this decision. */
+  causalCorrelationEventId?: string;
+  /** The action state machine owes its evidence gain after this decision. */
+  gainDeferred?: boolean;
 };
 
 /** ミスリード保留 (Commit 3b) */
@@ -382,6 +425,8 @@ export type PendingMisread = {
   reasoningPlayer: 'self' | 'opp';
   /** 発動候補 (反対側 active misread 持ち) */
   candidates: { uid: string; x: number }[];
+  /** Causal graph paused while this decision is surfaced. */
+  causalTrace?: CausalEffectTrace;
 };
 
 function setPendingDecision<T extends object>(
@@ -407,6 +452,7 @@ export const MATCH_SESSION_RESET_STATE = {
   activeCardUid: null,
   activeCardLabel: null,
   oppMoveTick: 0,
+  spectatorMode: false,
   isAiPaused: false,
   aiStepCounter: 0,
   pendingEffectPick: null,
@@ -470,47 +516,139 @@ function latestOpenActionContext(
   })[0];
 }
 
+function assertPendingLeaveIntercept(
+  context: NonNullable<GameState['actionContexts']>[string] | undefined,
+): void {
+  const pending = context?.pendingLeaveIntercept as unknown;
+  if (pending === undefined) return;
+  if (pending === null || typeof pending !== 'object' || Array.isArray(pending)) {
+    throw new Error('Invalid pendingLeaveIntercept: expected an object');
+  }
+
+  const value = pending as Record<string, unknown>;
+  if (value.player !== 'self' && value.player !== 'opp') {
+    throw new Error('Invalid pendingLeaveIntercept.player');
+  }
+  for (const field of ['targetUid', 'interceptorUid'] as const) {
+    if (typeof value[field] !== 'string' || value[field].trim().length === 0) {
+      throw new Error(`Invalid pendingLeaveIntercept.${field}`);
+    }
+  }
+  if (typeof context?.id !== 'string' || context.id.trim().length === 0) {
+    throw new Error('Invalid pendingLeaveIntercept.actionId');
+  }
+}
+
+export function prepareGameStateForStore(state: GameState): {
+  gameState: GameState;
+  openAction: ReturnType<typeof latestOpenActionContext>;
+} {
+  const gameState = produce(state, (draft) => mutate.char.ensureSetCardInstanceIds(draft));
+  const openAction = latestOpenActionContext(gameState);
+  assertPendingLeaveIntercept(openAction);
+  const humanSideGlobal = globalThis as {
+    __humanPlayerSide?: 'self' | 'opp' | null;
+  };
+  const hadHumanSide = Object.prototype.hasOwnProperty.call(globalThis, '__humanPlayerSide');
+  const previousHumanSide = humanSideGlobal.__humanPlayerSide;
+  try {
+    humanSideGlobal.__humanPlayerSide = null;
+    withIsolatedPendingRuntimeState(gameState, () => {
+      collectPendingSideChannels({
+        ...PENDING_SURFACE_RESET_STATE,
+        pendingDecisionSeq: 0,
+      });
+    });
+  } finally {
+    if (hadHumanSide) humanSideGlobal.__humanPlayerSide = previousHumanSide;
+    else delete humanSideGlobal.__humanPlayerSide;
+  }
+  return { gameState, openAction };
+}
+
+function admitCommittedPresentation(state: GameState): void {
+  try {
+    const admission = admitPresentationFromState(state);
+    usePresentationStore.getState().setPresentationError(
+      admission.rejected ? `presentation admission rejected: ${admission.rejected}` : null,
+    );
+  } catch (error) {
+    usePresentationStore.getState().setPresentationError(
+      error instanceof Error ? error.message : String(error),
+    );
+  }
+}
+
+function validatePresentationCommit(state: GameState): boolean {
+  try {
+    validatePresentationAtCurrentState(state);
+    const causalSessionId = state.causalLog?.sessionId
+      ?? state.log.find(isCausalLogEntry)?.sessionId;
+    if (causalSessionId && causalSessionId !== currentPresentationSessionId()) {
+      throw new Error('presentation admission rejected: session');
+    }
+    return true;
+  } catch (error) {
+    usePresentationStore.getState().setPresentationError(
+      error instanceof Error ? error.message : String(error),
+    );
+    return false;
+  }
+}
+
 export const useGameStateStore = create<GameStateStore>((set, get) => ({
   gameState: null,
   setGameState: (state, options) => {
-    const gameState = state === null
-      ? null
-      : produce(state, (draft) => mutate.char.ensureSetCardInstanceIds(draft));
-    if (options?.preserveRuntime !== true) resetPendingRuntimeState();
-    if (gameState !== null) hydratePendingRuntimeState(gameState);
-    const openAction = gameState === null
-      ? undefined
-      : latestOpenActionContext(gameState);
-    set((store) => {
-      const surfaceReset = options?.preserveRuntime === true
+    if (state !== null && !validatePresentationCommit(state)) return false;
+    const prepared = state === null ? null : prepareGameStateForStore(state);
+    const gameState = prepared?.gameState ?? null;
+    const openAction = prepared?.openAction;
+    const store = get();
+    const pending = openAction?.pendingLeaveIntercept;
+    const leaveDecisionSeq = store.pendingDecisionSeq + (pending ? 1 : 0);
+    const surfaceSeed: PendingSurfaceState = {
+      ...PENDING_SURFACE_RESET_STATE,
+      pendingDecisionSeq: leaveDecisionSeq,
+      pendingLeaveIntercept: pending && openAction
         ? {
-            ...PENDING_SURFACE_RESET_STATE,
+            ...pending,
+            actionId: openAction.id,
+            decisionId: `decision:${leaveDecisionSeq}`,
+          }
+        : null,
+      ...(options?.preserveRuntime === true
+        ? {
             pendingDeckReveal: store.pendingDeckReveal,
             pendingPublicHandReveal: store.pendingPublicHandReveal,
           }
-        : PENDING_SURFACE_RESET_STATE;
-      const pending = openAction?.pendingLeaveIntercept;
-      if (!pending) {
-        return {
-          ...surfaceReset,
-          gameState,
-          activeActionId: openAction?.id ?? null,
-        };
+        : {}),
+    };
+    const previousRuntime = snapshotPendingRuntimeState();
+    let pendingSurface = surfaceSeed;
+    try {
+      if (options?.preserveRuntime !== true) resetPendingRuntimeState();
+      if (gameState !== null) {
+        hydratePendingRuntimeState(gameState);
+        pendingSurface = collectPendingSideChannels(surfaceSeed);
       }
-      const nextDecision = store.pendingDecisionSeq + 1;
-      return {
-        ...surfaceReset,
-        gameState,
-        activeActionId: openAction.id,
-        pendingLeaveIntercept: {
-          ...pending,
-          actionId: openAction.id,
-          decisionId: `decision:${nextDecision}`,
-        },
-        pendingDecisionSeq: nextDecision,
-      };
+    } catch (error) {
+      restorePendingRuntimeState(previousRuntime);
+      throw error;
+    }
+    set({
+      ...pendingSurface,
+      gameState,
+      activeActionId: openAction?.id ?? null,
     });
-    if (gameState !== null) surfacePendingSideChannels(get);
+    if (gameState !== null) admitCommittedPresentation(gameState);
+    return true;
+  },
+  setReplayGameState: (state) => {
+    if (state !== null && !validatePresentationCommit(state)) return;
+    set({
+      ...MATCH_SESSION_RESET_STATE,
+      gameState: state,
+    });
   },
   resetMatchSessionState: () => {
     resetPendingRuntimeState();
@@ -518,14 +656,17 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   },
   dispatch: (mutator) => {
     const current = get().gameState;
-    if (current === null) return;
+    if (current === null) return false;
     const next = mutator(current);
     // BUG-006: state-machine の advance() は module-level ax.phase のみ変えて
     // GameState を mutate しないケースがあり、Immer produce が同一参照を返す。
     // 同一参照だと Zustand subscribers が起きず、ContactFlowDriver の useEffect が
     // 再 run しないため judge phase で stuck する。常に新参照を保証して driver を起動する。
     const nextRef = Object.is(next, current) ? { ...current } : next;
+    if (!validatePresentationCommit(nextRef)) return false;
     set({ gameState: nextRef });
+    admitCommittedPresentation(nextRef);
+    return true;
   },
   activeActionId: null,
   setActiveActionId: (id) => set({ activeActionId: id }),
@@ -578,7 +719,20 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   hiramekiDemoSelectedCardId: null,
   setHiramekiDemoSelectedCardId: (id) => set({ hiramekiDemoSelectedCardId: id }),
   cutinDemoMode: 'idle',
-  setCutinDemoMode: (m) => set({ cutinDemoMode: m }),
+  setCutinDemoMode: (m) => set((state) => ({
+    cutinDemoMode: m,
+    ...(m === 'playing' && state.cutinDemoMode !== 'playing'
+      ? { cutinDemoRunToken: state.cutinDemoRunToken + 1 }
+      : {}),
+  })),
+  cutinDemoRunToken: 0,
   cutinDemoSelectedCardId: null,
   setCutinDemoSelectedCardId: (id) => set({ cutinDemoSelectedCardId: id }),
 }));
+
+// Capacity is temporary backpressure. Re-admit the canonical suffix as soon as
+// presentation removes one full-queue item; never dispatch an engine action.
+getPresentationQueue().onCapacityAvailable(() => {
+  const state = useGameStateStore.getState().gameState;
+  if (state !== null) admitCommittedPresentation(state);
+});

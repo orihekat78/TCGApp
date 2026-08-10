@@ -133,14 +133,33 @@ test.describe('夜間 W0 — cost choice + multi-pick (実機クリック)', () 
     await expect(page.getByTestId('optional-picker-modal')).toBeVisible();
     await page.getByTestId('opt-run-yes').click();
 
-    // multi EffectPickerModal: 候補 = facedown set card を持つ host (self-2 / opp-1)
+    // multi EffectPickerModal: 候補 = face-down set card の物理 occurrence。
+    // perSideMax=1 は host 数ではなく、各 side から最大1枚を意味する。
     const picker = page.getByTestId('effect-picker-modal');
     await expect(picker).toBeVisible();
+    const candidates = await page.evaluate(() => {
+      const w = window as unknown as {
+        __game: { getState: () => { pendingEffectPick: { candidates: unknown[] } | null } };
+      };
+      return w.__game.getState().pendingEffectPick?.candidates as {
+        uid: string;
+        hostUid?: string;
+        setCardInstanceId?: string;
+        hidden?: boolean;
+      }[] | undefined;
+    });
+    expect(candidates).toHaveLength(3);
+    const selfCandidates = candidates!.filter((candidate) => candidate.hostUid === 'self-2');
+    const oppCandidate = candidates!.find((candidate) => candidate.hostUid === 'opp-1');
+    expect(selfCandidates).toHaveLength(2);
+    expect(new Set(selfCandidates.map((candidate) => candidate.setCardInstanceId)).size).toBe(2);
+    expect(oppCandidate).toBeDefined();
+    expect(candidates!.every((candidate) => candidate.hidden === true)).toBe(true);
     const confirmBtn = page.getByTestId('effect-picker-confirm');
     await expect(confirmBtn).toBeDisabled(); // 0 選択 (nMin=2 clamp 後も 2 必要)
-    await page.getByTestId('effect-pick-cand-self-2').click();
+    await page.getByTestId(`effect-pick-cand-${selfCandidates[0]!.uid}`).click();
     await expect(confirmBtn).toBeDisabled(); // 1/2
-    await page.getByTestId('effect-pick-cand-opp-1').click();
+    await page.getByTestId(`effect-pick-cand-${oppCandidate!.uid}`).click();
     await expect(confirmBtn).toBeEnabled(); // 2/2 (各陣営 1)
     await confirmBtn.click();
 

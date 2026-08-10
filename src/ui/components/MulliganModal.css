@@ -64,6 +64,7 @@
 }
 
 .mulligan-card-toggle {
+  min-height: 44px;
   background: #243854;
   border: 2px solid #406384;
   border-radius: 6px;
@@ -121,30 +122,33 @@
   text-shadow: 0 0 6px rgba(200, 64, 64, 0.5);
 }
 
-/* 拡大ボタン (各カード右上に重ねる) */
+/* カード画像を覆わない独立した詳細操作レーン */
+.mulligan-card-actions {
+  display: grid;
+  margin-top: 4px;
+}
+
 .mulligan-card-zoom {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(20, 32, 52, 0.85);
+  width: 100%;
+  min-height: 44px;
+  border-radius: 4px;
+  background: rgba(20, 32, 52, 0.72);
   border: 1px solid rgba(150, 175, 210, 0.5);
   color: #c8d6ec;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 11px;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  transition: background 120ms ease-out, transform 120ms ease-out;
+  gap: 6px;
+  padding: 0 8px;
+  transition: background 120ms ease-out, border-color 120ms ease-out;
 }
 
 .mulligan-card-zoom:hover {
   background: rgba(50, 80, 120, 0.95);
-  transform: scale(1.1);
+  border-color: rgba(190, 215, 245, 0.8);
 }
 
 /* 拡大表示オーバーレイ */
@@ -200,6 +204,7 @@
 }
 
 .mulligan-zoom-close {
+  min-height: 44px;
   padding: 8px 20px;
   border-radius: 6px;
   background: transparent;
@@ -262,11 +267,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mulligan-card,
+  .mulligan-card-toggle,
+  .mulligan-card-zoom,
   .mulligan-modal-footer button {
     transition: none;
   }
-  .mulligan-card:hover {
+  .mulligan-card-toggle:hover,
+  .mulligan-card-zoom:hover {
     transform: none;
   }
 }

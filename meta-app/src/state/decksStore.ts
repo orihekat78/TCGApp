@@ -7,15 +7,25 @@ import { persist } from 'zustand/middleware';
 import type { DeckRecord } from '../data/types';
 import { SAMPLE_DECK, SAMPLE_DECK_OPP } from '../data/sampleDeck';
 import { defaultCaseForPartner, CARD_POOL } from '../data/cardPool';
+import { isPlayable } from '../util/deckBridge';
 
 interface DecksState {
   decks: DeckRecord[];
+  activeDeckId: string;
   _hasHydrated: boolean;
   add: (d: Omit<DeckRecord, 'modified'>) => void;
   update: (id: string, patch: Partial<DeckRecord>) => void;
   remove: (id: string) => void;
+  setActiveDeck: (id: string) => void;
   byId: (id: string) => DeckRecord | undefined;
   _setHydrated: (v: boolean) => void;
+}
+
+function normalizeActiveDeckId(decks: DeckRecord[], activeDeckId: string | undefined): string {
+  const active = decks.find((deck) => deck.id === activeDeckId);
+  return active && isPlayable(active)
+    ? active.id
+    : decks.find((deck) => isPlayable(deck))?.id ?? '';
 }
 
 export const useDecksStore = create<DecksState>()(
@@ -25,32 +35,42 @@ export const useDecksStore = create<DecksState>()(
         { ...SAMPLE_DECK, modified: Date.now() },
         { ...SAMPLE_DECK_OPP, modified: Date.now() },
       ],
+      activeDeckId: SAMPLE_DECK.id,
       _hasHydrated: false,
       add: (d) =>
-        set((s) => ({
-          decks: [...s.decks, { ...d, modified: Date.now() }],
-        })),
+        set((s) => {
+          const decks = [...s.decks, { ...d, modified: Date.now() }];
+          return { decks, activeDeckId: normalizeActiveDeckId(decks, s.activeDeckId) };
+        }),
       update: (id, patch) =>
-        set((s) => ({
-          decks: s.decks.map((d) =>
+        set((s) => {
+          const decks = s.decks.map((d) =>
             d.id === id ? { ...d, ...patch, modified: Date.now() } : d
-          ),
-        })),
+          );
+          return { decks, activeDeckId: normalizeActiveDeckId(decks, s.activeDeckId) };
+        }),
       remove: (id) =>
-        set((s) => ({ decks: s.decks.filter((d) => d.id !== id) })),
+        set((s) => {
+          const decks = s.decks.filter((d) => d.id !== id);
+          return { decks, activeDeckId: normalizeActiveDeckId(decks, s.activeDeckId) };
+        }),
+      setActiveDeck: (id) =>
+        set((s) => s.decks.some((deck) => deck.id === id && isPlayable(deck))
+          ? { activeDeckId: id }
+          : {}),
       byId: (id) => get().decks.find((d) => d.id === id),
       _setHydrated: (v) => set({ _hasHydrated: v }),
     }),
     {
       name: 'conan.meta.v1.decks',
-      version: 3,
+      version: 4,
       // v1 → v2: DeckRecord に事件スロット (case) を追加 (rules/02)。
       // 旧デッキはパートナーから既定の事件を補填する。さらに v1 のサンプルデッキは
       // 事件カードがデッキ内に混入していた (BUG-126) ため、正データで上書きして修復する。
       // カスタムデッキはパートナー/事件カードがデッキ内にあれば除去する (rules/02)。
       // v2 → v3: 標準デッキだけを公式構築済みレシピへ更新し、ユーザーデッキは保持する。
       migrate: (persisted, fromVersion) => {
-        const s = persisted as { decks?: DeckRecord[] } | undefined;
+        const s = persisted as { decks?: DeckRecord[]; activeDeckId?: string } | undefined;
         if (fromVersion < 3 && s?.decks) {
           for (const d of s.decks) {
             if (fromVersion < 2 && !d.case) d.case = defaultCaseForPartner(d.partner);
@@ -70,6 +90,7 @@ export const useDecksStore = create<DecksState>()(
             }
           }
         }
+        if (s?.decks) s.activeDeckId = normalizeActiveDeckId(s.decks, s.activeDeckId);
         return s as DecksState;
       },
       onRehydrateStorage: () => (state) => {

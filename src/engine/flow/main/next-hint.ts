@@ -17,6 +17,11 @@ import type { GameState } from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js';
+import {
+  completeEffectCausalTrace,
+  recordCausalTraceOperation,
+  startStandaloneCausalTrace,
+} from '../../log/effect-causal.js';
 import { eventUseAllowed, handUseCharRestrictAllows, nextHintColorIgnoreAllowed, effectiveHandLevel } from './hand-use-card.js';
 
 type Player = 'self' | 'opp';
@@ -130,6 +135,14 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
     }
   }
 
+  const causalTrace = startStandaloneCausalTrace(state, {
+    actor: p,
+    kind: 'declare',
+    source: { kind: 'player', side: p },
+    targets: [{ kind: 'zone', side: p, zone: 'file' }],
+    outcome: { type: 'state', state: 'active' },
+  });
+
   const popped = mutate.file.popTop(state, p);
   if (popped && popped.type === 'card-back') {
     mutate.hand.add(state, p, [popped.cardId]);
@@ -138,7 +151,21 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
     mutate.hand.add(state, p, [popped.cardId]);
   }
 
-  event.emit(state, 'file:pop', { player: p, popped }, { player: p });
+  const fileMove = popped === undefined ? undefined : recordCausalTraceOperation(state, causalTrace, {
+    actor: p,
+    kind: 'zone-move',
+    source: { kind: 'zone', side: p, zone: 'file' },
+    targets: [{ kind: 'zone', side: p, zone: 'hand' }],
+    outcome: { type: 'move', from: 'file', to: 'hand', count: 1 },
+  });
+
+  event.emit(
+    state,
+    'file:pop',
+    { player: p, popped },
+    { player: p },
+    { causalCorrelationEventId: fileMove?.eventId },
+  );
 
   // 2. (任意) 1 枚使用
   if (optionalCardId !== undefined) {
@@ -147,6 +174,13 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
     // レベル ≤ 現在 FILE 枚数 (rules/12 — 1 で取った分は既に減算済)
     // mini-wave #4: 手札内 continuous level modifier (B01009/B09095) を effectiveHandLevel で反映
     const d = optionalDef;
+    const useOperation = recordCausalTraceOperation(state, causalTrace, {
+      actor: p,
+      kind: 'use',
+      source: { kind: 'player', side: p },
+      targets: [{ kind: 'zone', side: p, zone: 'hand' }],
+      outcome: { type: 'state', state: 'active' },
+    });
     // イベント使用不可 (B09034 §M3): ネクストヒントの step2 でも event 使用は不可 (rules/25 公式 Q&A:
     //   「ネクストヒントでイベントカードを使用することができ(ない)」)。step1 の FILE→手札は阻害しない
     //   (本ガードは optionalCardId ブロック内 = step2 のみ)。UI 側 toCandidate でも事前除外する。
@@ -165,6 +199,7 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
       // B05005) を通常の手札の使用と判別する additive field (既存 matcher は未読で挙動不変)。
       { kind: d?.kind === 'event' ? 'event-use' : 'character-use', cardId: optionalCardId, player: p, viaNextHint: true },
       { player: p, cardId: optionalCardId, ...(d?.kind === 'event' ? { resolutionKind: 'normal-event' as const } : {}) },
+      { causalCorrelationEventId: useOperation?.eventId },
     );
     // キャラの場合: 現場へ登場 (rules/12 §3 — アクティブ・名乗り状態で登場)。
     // 手札の使用とは異なり、ネクストヒントによる登場は **手動プレイ** = viaEffect:false。
@@ -177,27 +212,53 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
         named: true,
         viaEffect: false,
       });
+      recordCausalTraceOperation(state, causalTrace, {
+        actor: p,
+        kind: 'zone-move',
+        source: { kind: 'zone', side: p, zone: 'hand' },
+        targets: [{ kind: 'zone', side: p, zone: 'scene' }],
+        outcome: { type: 'move', from: 'hand', to: 'scene', count: 1 },
+      });
+      const enterOperation = recordCausalTraceOperation(state, causalTrace, {
+        actor: p,
+        kind: 'enter',
+        source: { kind: 'player', side: p },
+        targets: [{ kind: 'scene-card', side: p, uid: newChar.uid }],
+        outcome: { type: 'state', state: 'success' },
+      });
       event.emit(state, 'enter', {
         uid: newChar.uid,
         viaEffect: false,
         enterOrder: newChar.enterOrder,
         enterOrderThisTurn: newChar.enterOrderThisTurn,
-      }, { player: p, cardId: optionalCardId, uid: newChar.uid });
+      }, { player: p, cardId: optionalCardId, uid: newChar.uid }, {
+        causalCorrelationEventId: enterOperation?.eventId,
+      });
     } else if (d && d.kind === 'event') {
       // Round 4a (バグ D 水平展開): ネクストヒント経由でイベントカード使用時も
       // 手札除去 + リムーブ移動を保証 (rules/06 §使い切り)。hand-use-card.ts と同じ修正。
       mutate.hand.remove(state, p, [optionalCardId]); // refactor 1a: mutate 層経由
       mutate.remove.add(state, p, [optionalCardId]);
+      recordCausalTraceOperation(state, causalTrace, {
+        actor: p,
+        kind: 'zone-move',
+        source: { kind: 'zone', side: p, zone: 'hand' },
+        targets: [{ kind: 'zone', side: p, zone: 'remove' }],
+        outcome: { type: 'move', from: 'hand', to: 'remove', count: 1 },
+      });
     }
   }
 
   // 3. フラグセット
   mutate.flag.setNextHintUsed(state, p, true);
-  mutate.log.append(state, {
-    ts: Date.now(),
-    player: p,
-    turn: state.turn.number,
-    action: 'nextHint',
-    target: optionalCardId,
-  });
+  if (causalTrace === undefined) {
+    mutate.log.append(state, {
+      ts: Date.now(),
+      player: p,
+      turn: state.turn.number,
+      action: 'nextHint',
+      target: optionalCardId,
+    });
+  }
+  completeEffectCausalTrace(state, causalTrace, p);
 }

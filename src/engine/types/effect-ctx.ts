@@ -19,6 +19,14 @@ export type ContactCtx = {
   attackerSide: 'self' | 'opp';
 };
 
+/** Public-only causal lineage for one resolving effect branch. */
+export type CausalEffectTrace = {
+  rootEventId: string;
+  tailEventId: string;
+  awaitingResume?: true;
+  completed?: true;
+};
+
 export type EffectCtx = {
   source: {
     cardId?: string;
@@ -48,6 +56,11 @@ export type EffectCtx = {
   /** Scoped causal metadata for the currently resolving effect branch. */
   causal?: {
     publicHandRevealToken?: string;
+    trace?: CausalEffectTrace;
+    /** Immediate parent effect root for a newly triggered effect. */
+    correlationEventId?: string;
+    /** Identity-free autonomous selection, emitted only when the chosen atom commits. */
+    pendingDecisionActor?: 'self' | 'opp';
   };
   dyn?: Record<string, unknown>;
   rng?: () => number;

@@ -15,10 +15,16 @@ import type { GameState, AbilityDef, EffectCtx } from '../../types/index.js';
 import { cost as engineCost } from '../../cost/index.js';
 import { def as readDef } from '../../read/def.js';
 import { canActivateDeclaredAbility, findCardOnBoard, useDeclaredAbility, findDeclaredAbility, resolveDeclaredPaymentPlan } from './declared-ability.js';
-import { usePartnerAbility } from './partner-ability.js';
+import { canPartnerAbility, usePartnerAbility } from './partner-ability.js';
 import { mutate } from '../../mutate/index.js';
 import { declaredCostParamsToDyn } from './declared-cost-params.js';
 import { _clearPendingSetCardReplacementSide } from '../../effect/pending-state.js';
+import {
+  completeEffectCausalTrace,
+  currentEffectCausalCorrelationEventId,
+  startStandaloneCausalTrace,
+  withEffectCausalCorrelation,
+} from '../../log/effect-causal.js';
 
 type Player = 'self' | 'opp';
 
@@ -104,27 +110,47 @@ export function activateDeclaredAbility(
   };
   // W6 step11 (row999 item4): rider declared (on-set-host) の cost も解決できるよう共有 helper 経由
   const ability = findDeclaredAbility(state, uid, found.cardId, found.area, abilId);
-  if (ability?.cost) {
-    const plan = resolveDeclaredPaymentPlan(state, ability, ctx, costParams, { allowLegacyInvalidAlternativeFallback: true });
-    if (!plan) {
-      _clearPendingSetCardReplacementSide();
-      return;
-    }
-    if (plan.kind === 'alternative') {
-      const removed = mutate.scene.removeToRemove(state, plan.providerUid, 'cost');
-      if (removed.deferred || removed.prevented || removed.removed.uid !== plan.providerUid || !removed.removed.cardId) {
-        _clearPendingSetCardReplacementSide();
-        throw new Error('declared ability: alternative cost provider was replaced or deferred');
-      }
-      ctx.costPaid = { alternativeCost: { providerUid: plan.providerUid } };
-    } else {
-      engineCost.pay(state, ability.cost, ctx);
-      ctx.costPaid ??= {};
-    }
+  const plan = ability?.cost
+    ? resolveDeclaredPaymentPlan(state, ability, ctx, costParams, { allowLegacyInvalidAlternativeFallback: true })
+    : undefined;
+  if (ability?.cost && !plan) {
+    _clearPendingSetCardReplacementSide();
+    return;
   }
+  const inheritedRootId = currentEffectCausalCorrelationEventId(state);
+  const causalTrace = inheritedRootId === undefined
+    ? startStandaloneCausalTrace(state, {
+        actor: found.player,
+        kind: 'declare',
+        source: { kind: 'player', side: found.player },
+        targets: [],
+        outcome: { type: 'state', state: 'active' },
+      })
+    : undefined;
+  const rootEventId = inheritedRootId ?? causalTrace?.rootEventId;
   try {
-    useDeclaredAbility(state, uid, abilId, ctx);
+    withEffectCausalCorrelation(state, rootEventId, () => {
+      if (plan?.kind === 'alternative') {
+        const removed = mutate.scene.removeToRemove(state, plan.providerUid, 'cost');
+        if (removed.deferred || removed.prevented || removed.removed.uid !== plan.providerUid || !removed.removed.cardId) {
+          throw new Error('declared ability: alternative cost provider was replaced or deferred');
+        }
+        ctx.costPaid = { alternativeCost: { providerUid: plan.providerUid } };
+      } else if (plan?.kind === 'printed' && ability?.cost) {
+        engineCost.pay(state, ability.cost, ctx);
+        ctx.costPaid ??= {};
+      }
+      useDeclaredAbility(state, uid, abilId, ctx);
+    });
+    completeEffectCausalTrace(state, causalTrace, found.player);
   } catch (error) {
+    completeEffectCausalTrace(
+      state,
+      causalTrace,
+      found.player,
+      'cancel',
+      { type: 'state', state: 'cancelled' },
+    );
     _clearPendingSetCardReplacementSide();
     throw error;
   }
@@ -142,23 +168,48 @@ export function activatePartnerAbility(
   costParams?: AbilityCostParams,
 ): void {
   const cardId = state.players[player].partner.cardId;
-  if (cardId) {
-    const ability = findAbility(cardId, abilId);
-    if (ability?.cost) {
-      const dyn = declaredCostParamsToDyn(costParams);
-      const ctx: EffectCtx = {
-        source: {
-          cardId,
-          uid: `partner:${player}`,
-          abilityId: abilId,
-          player,
-          area: 'partner-area',
-        },
-        bindings: {},
-        ...(dyn ? { dyn } : {}),
-      };
-      engineCost.pay(state, ability.cost, ctx);
-    }
+  if (!cardId || !canPartnerAbility(state, player, abilId)) {
+    usePartnerAbility(state, player, abilId);
+    return;
   }
-  usePartnerAbility(state, player, abilId);
+  const ability = findAbility(cardId, abilId);
+  const dyn = declaredCostParamsToDyn(costParams);
+  const ctx: EffectCtx = {
+    source: {
+      cardId,
+      uid: `partner:${player}`,
+      abilityId: abilId,
+      player,
+      area: 'partner-area',
+    },
+    bindings: {},
+    ...(dyn ? { dyn } : {}),
+  };
+  const inheritedRootId = currentEffectCausalCorrelationEventId(state);
+  const causalTrace = inheritedRootId === undefined
+    ? startStandaloneCausalTrace(state, {
+        actor: player,
+        kind: 'declare',
+        source: { kind: 'partner-card', side: player },
+        targets: [],
+        outcome: { type: 'state', state: 'active' },
+      })
+    : undefined;
+  const rootEventId = inheritedRootId ?? causalTrace?.rootEventId;
+  try {
+    withEffectCausalCorrelation(state, rootEventId, () => {
+      if (ability?.cost) engineCost.pay(state, ability.cost, ctx);
+      usePartnerAbility(state, player, abilId, ctx);
+    });
+    completeEffectCausalTrace(state, causalTrace, player);
+  } catch (error) {
+    completeEffectCausalTrace(
+      state,
+      causalTrace,
+      player,
+      'cancel',
+      { type: 'state', state: 'cancelled' },
+    );
+    throw error;
+  }
 }

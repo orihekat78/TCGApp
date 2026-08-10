@@ -20,13 +20,13 @@ import { useGameStateStore } from '@/ui/state/store';
 import { _clearPendingEffectChoiceSide, _peekPendingEffectChoiceSide, pushPendingEffectChoiceSide, type PendingEffectChoiceSide } from '@/engine/effect/pending-state';
 import { _clearPendingEffectPickQueue, _peekPendingEffectPickSide, _pushPendingEffectPickSideForTest, type PendingEffectPickSide } from '@/engine/effect/resolve-picks';
 import { registerAll } from '@/cards';
+import type { PendingDeckPlaceSide } from '@/engine/effect/atom-handlers/_shared';
 
 type HumanSide = 'self' | 'opp' | null;
-type DeckPlaceSide = { player: 'self' | 'opp'; ownerPlayer: 'self' | 'opp'; cardIds: string[] };
 const g = globalThis as {
   __humanPlayerSide?: HumanSide;
   __pendingDeckReorderSide?: unknown;
-  __pendingDeckPlaceSide?: DeckPlaceSide | null;
+  __pendingDeckPlaceSide?: PendingDeckPlaceSide | null;
 };
 
 class DeclaredOnly implements AIPolicy {
@@ -280,14 +280,26 @@ describe('CPU pause for human-owned deck decisions', () => {
   });
 
   it('uses deckPlace ownerPlayer, not the target deck player, for the human pause gate', () => {
-    g.__pendingDeckPlaceSide = { player: 'opp', ownerPlayer: 'self', cardIds: ['X', 'Y'] };
+    const state = reorderState();
+    state.players.opp.deck = ['X', 'Y'];
+    g.__pendingDeckPlaceSide = {
+      player: 'opp',
+      ownerPlayer: 'self',
+      cardIds: ['X', 'Y'],
+      deckSnapshot: ['X', 'Y'],
+      occurrences: [{ cardId: 'X', index: 0 }, { cardId: 'Y', index: 1 }],
+      ctx: {
+        source: { player: 'self', area: 'scene', cardId: 'TEST', abilityId: 'a1' },
+        bindings: {},
+      },
+    };
     let chooseCalls = 0;
     const policy: AIPolicy = {
       name: 'must-not-choose',
       choose: () => { chooseCalls += 1; return null; },
     };
 
-    const step = stepTurn(reorderState(), policy, 'opp');
+    const step = stepTurn(state, policy, 'opp');
 
     expect(step).toMatchObject({ move: null, paused: { humanPick: true } });
     expect(chooseCalls).toBe(0);

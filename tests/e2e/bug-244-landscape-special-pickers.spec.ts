@@ -1,7 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import {
   buildGameState,
+  buildCausalGameState,
   dispatchAction,
+  dispatchUnguardedCaseAction,
   expectNoConsoleErrors,
   getGameState,
   setupGamePage,
@@ -92,14 +94,25 @@ test.describe('BUG-244 special picker landscape containment', () => {
 
     await dispatchAction(page, { type: 'actionDeclareChar', byUid: 'self-1', targetUid: 'opp-1' });
     const modal = page.getByTestId('cid-picker-modal');
+    const firstCandidate = page.getByTestId('cid-cutin-card:self:hand:B03129#0');
+    const firstFocusable = page.getByTestId('cid-hand-expand-card:self:hand:B03129#0');
+    const pass = page.getByTestId('cid-pass');
     await expect(modal).toBeVisible();
+    await expect(firstCandidate).toBeFocused();
+    await pass.focus();
+    await page.keyboard.press('Tab');
+    await expect(firstFocusable).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(pass).toBeFocused();
     if (testInfo.project.name === 'mobile-chromium') {
-      await expectFixedScrollableBody(page, modal.locator('.cid-modal'), modal.locator('.cid-header'), modal.locator('.cid-body'), page.getByTestId('cid-pass'));
+      await expectFixedScrollableBody(page, modal.locator('.cid-modal'), modal.locator('.cid-header'), modal.locator('.cid-body'), pass);
     }
     const candidateOrder = await testIdOrder(modal.locator('.cid-cand[data-testid^="cid-disg-"]'));
     const actionBeforeDetail = await page.evaluate(() => (window as unknown as { __game: { getState: () => { activeActionId: string | null } } }).__game.getState().activeActionId);
-    await page.getByTestId('cid-disg-detail-card:self:hand:B03129#0').click();
+    const firstDetail = page.getByTestId('cid-disg-detail-card:self:hand:B03129#0');
+    await firstDetail.click();
     await page.locator('.card-expand-close').click();
+    await expect(firstDetail).toBeFocused();
     expect(await testIdOrder(modal.locator('.cid-cand[data-testid^="cid-disg-"]'))).toEqual(candidateOrder);
     expect(await page.evaluate(() => (window as unknown as { __game: { getState: () => { activeActionId: string | null } } }).__game.getState().activeActionId)).toBe(actionBeforeDetail);
     await page.getByTestId('cid-disg-detail-card:self:hand:B03129#11').click();
@@ -107,7 +120,8 @@ test.describe('BUG-244 special picker landscape containment', () => {
     await expect(modal).toBeVisible();
     expect(await testIdOrder(modal.locator('.cid-cand[data-testid^="cid-disg-"]'))).toEqual(candidateOrder);
     expect(await page.evaluate(() => (window as unknown as { __game: { getState: () => { activeActionId: string | null } } }).__game.getState().activeActionId)).toBe(actionBeforeDetail);
-    await page.getByTestId('cid-pass').click();
+    await pass.focus();
+    await page.keyboard.press('Enter');
     await waitForActionEnd(page);
     expectNoConsoleErrors(errors);
   });
@@ -133,7 +147,8 @@ test.describe('BUG-244 special picker landscape containment', () => {
     await dispatchAction(page, { type: 'actionDeclareChar', byUid: 'self-1', targetUid: 'opp-1' });
     const selected = page.getByTestId('cid-disg-card:self:hand:B03129#11');
     await expect(selected).toBeVisible();
-    await selected.click();
+    await selected.focus();
+    await page.keyboard.press('Enter');
     await waitForActionEnd(page);
     expect((await getGameState(page)).players.self.scene.find((character) => character.uid === 'self-1')?.cardId).toBe('B03129');
     expectNoConsoleErrors(errors);
@@ -201,7 +216,7 @@ test.describe('BUG-244 special picker landscape containment', () => {
   test('Hirameki: B06032 real long ability body scrolls while header/skip stay fixed, then skip clears listener pending', async ({ page }, testInfo) => {
     const { errors } = await setupGamePage(page);
     await primeHuman(page);
-    await buildGameState(page, (gs: GameStateLike) => {
+    await buildCausalGameState(page, (gs: GameStateLike) => {
       const g = gs as unknown as AnyState;
       const players = g.players as { self: AnyState; opp: AnyState };
       players.opp.partner = { cardId: 'D11001', state: 'active', location: 'partner-area' };
@@ -212,7 +227,7 @@ test.describe('BUG-244 special picker landscape containment', () => {
       g.pendingEffects = [];
     });
 
-    await dispatchAction(page, { type: 'actionAgainstCase', byUid: 'partner:opp', targetPlayer: 'self' });
+    await dispatchUnguardedCaseAction(page, 'partner:opp', 'self');
     const modal = page.getByTestId('hirameki-picker-modal');
     await expect(modal).toBeVisible();
     if (testInfo.project.name === 'mobile-chromium') {

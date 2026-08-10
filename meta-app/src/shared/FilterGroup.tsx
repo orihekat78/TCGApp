@@ -18,20 +18,25 @@ interface Props {
   label: string;
   items: FilterItem[];
   small?: boolean;
+  showCounts?: boolean;
+  hideDisabled?: boolean;
 }
 
-export function FilterGroup({ label, items, small = false }: Props) {
+export function FilterGroup({ label, items, small = false, showCounts = true, hideDisabled = false }: Props) {
   ensureInteractionStyles();
+  const visibleItems = hideDisabled ? items.filter((item) => !item.disabled || item.active) : items;
+  if (visibleItems.length === 0) return null;
   return (
     <div>
       <div style={{ fontFamily: T.fontMono, fontSize: 9, color: T.textMuted, letterSpacing: '0.2em', marginBottom: 5 }}>
         {label}
       </div>
       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-        {items.map((it, i) => (
+        {visibleItems.map((it, i) => (
           <button key={i}
             onClick={it.disabled ? undefined : it.onClick}
             disabled={it.disabled}
+            aria-pressed={it.active === undefined ? undefined : it.active}
             className="meta-chip"
             style={{
               padding: small ? '3px 7px' : '4px 8px',
@@ -49,7 +54,7 @@ export function FilterGroup({ label, items, small = false }: Props) {
             }}>
               {it.label}
             </div>
-            {it.n != null && (
+            {showCounts && it.n != null && (
               <div style={{ fontFamily: T.fontMono, fontSize: 9, color: it.active ? it.c : T.textDisabled, opacity: 0.7 }}>
                 {it.n}
               </div>

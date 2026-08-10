@@ -11,6 +11,7 @@ import type { JSX } from 'react';
 // engine の FileCard 型をそのまま使用 (内部表現と完全一致)
 import type { FileCard } from '@/engine/types/game-state.js';
 import type { ResolvedCardMeta } from './SceneArea.js';
+import { CardArt } from './CardArt.js';
 import './FileArea.css';
 
 export type { FileCard };
@@ -62,17 +63,18 @@ function FileCardItem({ card, resolveCard }: FileCardItemProps): JSX.Element {
     );
   }
 
-  // Round 3: アシスト中パートナーも裏向き原則に従い名前/識別表示を削除。
-  // 通常 card-back と同じ虫眼鏡デザインで統一 (rules/12 FILE は基本裏向き)。
-  // data-card-id は engine 状態追跡のため残すが、視覚は完全に card-back と同一。
+  const meta = resolveCard?.(card.cardId);
   return (
     <div
-      className="card-back assisted-partner"
+      className={`file-card-faceup assisted-partner color-${meta?.color ?? 'blue'}`}
       data-card-id={card.cardId}
-      aria-label="FILE card (face-down)"
+      aria-label={`FILE partner ${meta?.name ?? card.cardId}`}
     >
-      <div className="monogram" aria-hidden="true">DC</div>
-      <div className="magnifier" aria-hidden="true" />
+      <CardArt
+        cardId={card.cardId}
+        alt={meta?.name ?? card.cardId}
+        className="assisted-partner-art"
+      />
     </div>
   );
 }
@@ -82,8 +84,6 @@ function FileCardItem({ card, resolveCard }: FileCardItemProps): JSX.Element {
 // ------------------------------------------------------------------
 
 export function FileArea(props: FileAreaProps): JSX.Element {
-  // Round 3: resolveCard はもう使用しない (アシスト中パートナーも裏向き表示に統一) が、
-  // 呼出側 (Playmat) との互換性のため prop 型は残す。
   const { cards, side, threshold = 7, onClick, pendingDrawn = 0, resolveCard } = props;
 
   // 2026-05-30: ネクストヒントで引く予定の分を先取りして表示 (実効枚数)。
@@ -109,7 +109,7 @@ export function FileArea(props: FileAreaProps): JSX.Element {
     (c): c is { type: 'card-back'; cardId: string } =>
       c.type === 'card-back',
   );
-  const topCard: FileCard = lastFaceUp ?? lastAssisted ?? lastCardBack ?? { type: 'card-back', cardId: '' };
+  const topCard: FileCard = lastAssisted ?? lastFaceUp ?? lastCardBack ?? { type: 'card-back', cardId: '' };
 
   // 7マス進捗 (上端)
   const cells = Array.from({ length: threshold }, (_, i) => i < progress);

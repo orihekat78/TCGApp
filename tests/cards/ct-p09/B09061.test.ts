@@ -7,10 +7,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { produce } from '@/engine/produce';
 import { run as runEffect } from '@/engine/effect/resolver';
+import { resolveEffectPicks } from '@/engine/effect/resolve-picks';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { createEmptyGameState } from '@/engine/state-factory';
-import { _drainAllEffectPicksForTest, applyPickAndContinuation, applyPickSkipAndContinuation } from '@/engine/effect/apply-pick';
-import { _drainPendingEffectPickSide, _clearPendingEffectPickQueue } from '@/engine/effect/pending-state';
+import { _drainAllEffectPicksForTest, applyOptionalAndContinuation, applyPickAndContinuation, applyPickSkipAndContinuation } from '@/engine/effect/apply-pick';
+import { _clearPendingEffectOptionalSide, _drainPendingEffectOptionalSide, _drainPendingEffectPickSide, _clearPendingEffectPickQueue } from '@/engine/effect/pending-state';
+import { _drainPendingPublicHandRevealSide, resetPendingAtomSession } from '@/engine/effect/atom-handlers';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import type { CardDef, GameState, EffectCtx, Effect } from '@/engine/types';
 import { B09061 } from '@/cards/ct-p09/B09061';
@@ -27,10 +29,27 @@ const ctxBare = (): EffectCtx => ({ source: { cardId: 'B09061', uid: 'u-jb', abi
 const a1Effect = B09061.abilities[0].effect as Effect;
 const a2Effect = B09061.abilities[1].effect as Effect;
 
+function surfaceA1Optional(state: GameState) {
+  const effectCtx = ctxBare();
+  const resolved = resolveEffectPicks(state, a1Effect, effectCtx, {
+    byPlayer: 'self', humanChooser: true, humanPlayer: 'self',
+    source: { cardId: 'B09061', abilityId: 'a1' },
+  });
+  runEffect(state, resolved, effectCtx);
+  return _drainPendingEffectOptionalSide();
+}
+
+function acceptA1(state: GameState) {
+  applyOptionalAndContinuation(state, surfaceA1Optional(state)!, true);
+  return _drainPendingEffectPickSide();
+}
+
 beforeEach(() => {
   resetDefRegistry();
   _resetUidCounter();
+  _clearPendingEffectOptionalSide();
   _clearPendingEffectPickQueue();
+  resetPendingAtomSession();
   registerCardDef(B09061);
   registerCardDef(mk('FBIC1', 'character', ['FBI']));
   registerCardDef(mk('FBIC2', 'character', ['FBI']));
@@ -56,8 +75,24 @@ describe('B09061 構造 (authoring 1対1)', () => {
     const a1 = B09061.abilities[0];
     expect(a1.type).toBe('triggered');
     expect(a1.trigger).toMatchObject({ hook: 'enter', selfOnly: true });
-    const steps = (a1.effect as { steps: Array<{ verb: string; args: Record<string, unknown> }> }).steps;
-    expect(steps[0]).toMatchObject({ verb: 'handReveal', args: { player: 'self', n: 3, filter: { trait: 'FBI', kind: 'character' } } });
+    const optional = a1.effect as {
+      kind: string;
+      effect: { kind: string; steps: Array<{ verb: string; args: Record<string, unknown> }> };
+    };
+    expect(optional.kind).toBe('optional');
+    expect(optional.effect.kind).toBe('chain');
+    const steps = optional.effect.steps;
+    expect(steps[0]).toMatchObject({
+      verb: 'handReveal',
+      args: {
+        player: 'self',
+        audience: 'all',
+        lifetime: 'presentation',
+        n: 3,
+        minimumPolicy: 'exact',
+        filter: { trait: 'FBI', kind: 'character' },
+      },
+    });
     expect(steps[1]).toMatchObject({ verb: 'draw', args: { player: 'self', n: 1 } });
   });
   it('a2 = hirameki chain[handAddFromRemove max:1 FBI char, discard 1]', () => {
@@ -75,28 +110,53 @@ describe('B09061 a1 — handReveal exact-N gate (実 engine)', () => {
     const s: GameState = createEmptyGameState();
     s.players.self.hand = ['FBIC1', 'FBIC2', 'FBIC3'];
     s.players.self.deck = ['DK1', 'DK2'];
-    const after = produce(s, (d) => { runEffect(d, a1Effect, ctxBare()); _drainAllEffectPicksForTest(d); });
-    expect(after.players.self.hand).toContain('DK1');           // draw された
-    expect(after.players.self.hand).toContain('FBIC1');          // 公開=zone 不変で手札残存
-    expect(after.players.self.deck).toEqual(['DK2']);
+    const pending = acceptA1(s);
+    expect(pending).toMatchObject({ atomVerb: 'handReveal', nMin: 3, nMax: 3, minimumPolicy: 'exact' });
+    const pickedUids = pending!.candidates.map(candidate => candidate.uid);
+    applyPickAndContinuation(s, pending!, pickedUids[0]!, pickedUids);
+    expect(_drainPendingPublicHandRevealSide()).toMatchObject({
+      owner: 'self',
+      audience: 'all',
+      cardIds: ['FBIC1', 'FBIC2', 'FBIC3'],
+      handSnapshot: ['FBIC1', 'FBIC2', 'FBIC3'],
+      lifetime: 'presentation',
+      source: { cardId: 'B09061', uid: 'u-jb' },
+    });
+    expect(s.players.self.hand).toContain('DK1');
+    expect(s.players.self.hand).toContain('FBIC1');
+    expect(s.players.self.deck).toEqual(['DK2']);
   });
 
   it('FBIキャラ2 + FBIイベント1 (kind decoy) → FBI char 候補2<3 → gate → draw skip', () => {
     const s: GameState = createEmptyGameState();
     s.players.self.hand = ['FBIC1', 'FBIC2', 'FBIEV', 'NONFBI']; // char FBI=2 (FBIEV は event で除外)
     s.players.self.deck = ['DK1', 'DK2'];
-    const after = produce(s, (d) => { runEffect(d, a1Effect, ctxBare()); _drainAllEffectPicksForTest(d); });
-    expect(after.players.self.hand).not.toContain('DK1');        // draw されない (kind decoy で候補2)
-    expect(after.players.self.deck).toEqual(['DK1', 'DK2']);
+    expect(acceptA1(s)).toBeNull();
+    expect(s.players.self.hand).not.toContain('DK1');
+    expect(s.players.self.deck).toEqual(['DK1', 'DK2']);
   });
 
   it('FBIキャラ4枚 (>3) → 公開成立 → draw 実行', () => {
     const s: GameState = createEmptyGameState();
     s.players.self.hand = ['FBIC1', 'FBIC2', 'FBIC3', 'FBIC4'];
     s.players.self.deck = ['DK1', 'DK2'];
-    const after = produce(s, (d) => { runEffect(d, a1Effect, ctxBare()); _drainAllEffectPicksForTest(d); });
-    expect(after.players.self.hand).toContain('DK1');
-    expect(after.players.self.deck).toEqual(['DK2']);
+    const pending = acceptA1(s);
+    const pickedUids = pending!.candidates.slice(0, 3).map(candidate => candidate.uid);
+    applyPickAndContinuation(s, pending!, pickedUids[0]!, pickedUids);
+    expect(s.players.self.hand).toContain('DK1');
+    expect(s.players.self.deck).toEqual(['DK2']);
+  });
+
+  it('任意効果を辞退 → 公開せず draw も実行しない', () => {
+    const s: GameState = createEmptyGameState();
+    s.players.self.hand = ['FBIC1', 'FBIC2', 'FBIC3'];
+    s.players.self.deck = ['DK1', 'DK2'];
+    const optional = surfaceA1Optional(s);
+    expect(optional).not.toBeNull();
+    applyOptionalAndContinuation(s, optional!, false);
+    expect(_drainPendingEffectPickSide()).toBeNull();
+    expect(s.players.self.hand).toEqual(['FBIC1', 'FBIC2', 'FBIC3']);
+    expect(s.players.self.deck).toEqual(['DK1', 'DK2']);
   });
 });
 
@@ -138,15 +198,15 @@ describe('B09061 a2 — hirameki handAddFromRemove → 加えた場合 discard (
 // 実 UI dispatch が呼ぶ apply-pick の human 経路 (applyPickAndContinuation / applyPickSkipAndContinuation false)
 // を直接踏み、handReveal が初の handReveal 採用カードである human pick surfacing を empirical に固定する。
 describe('B09061 — human pick 経路 (apply-pick、AI-drain ではない)', () => {
-  it('a1 human: FBIキャラ3 → handReveal pick surface → human が1枚解決 → reveal(zone不変) + draw', () => {
+  it('a1 human: FBIキャラ3 → exact-Nで3枚公開 → reveal(zone不変) + draw', () => {
     const s: GameState = createEmptyGameState();
     s.players.self.hand = ['FBIC1', 'FBIC2', 'FBIC3'];
     s.players.self.deck = ['DK1', 'DK2'];
-    runEffect(s, a1Effect, ctxBare());                 // handReveal 短縮形 → side-channel に pick enqueue
-    const pending = _drainPendingEffectPickSide();
+    const pending = acceptA1(s);
     expect(pending?.atomVerb).toBe('handReveal');       // human に surface されるのは handReveal pick
     expect(pending?.nMin).toBe(3);                       // exact-N (min:3)
-    applyPickAndContinuation(s, pending!, pending!.candidates[0]!.uid); // human が1枚クリック相当
+    const pickedUids = pending!.candidates.map(candidate => candidate.uid);
+    applyPickAndContinuation(s, pending!, pickedUids[0]!, pickedUids);
     expect(s.players.self.hand).toContain('DK1');        // continuation の draw が発火 (human 経路)
     expect(s.players.self.hand).toContain('FBIC1');      // 公開=zone 不変で手札残存
     expect(s.players.self.deck).toEqual(['DK2']);

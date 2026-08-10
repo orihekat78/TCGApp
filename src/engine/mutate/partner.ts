@@ -86,6 +86,7 @@ function returnFromFile(s: GameState, p: Player): void {
  * 全 caller (UI dispatch / AI policy / effect atomPartnerSolveCase) が引数不変ゆえ自動で分岐に乗る。
  */
 function solveCase(s: GameState, p: Player): void {
+  if (s.gameResult !== undefined) return;
   s.players[p].partner.state = 'sleep';
   if (readGame.partnerSolveOverride(s, p)) {
     // 【証拠隠滅】: 証拠を事件レベル(=requiredEvidence)数だけ最上部から順にリムーブ (rules/10/21)。
@@ -96,7 +97,7 @@ function solveCase(s: GameState, p: Player): void {
     gameResultMut.set(s, p, 'alt-lose'); // 相手はゲームに敗北する (winner = 効果所有者 p、旧 evidence 直代入と同じ無条件 set)
     return;
   }
-  s.gameResult = { winner: p, reason: 'evidence' };
+  gameResultMut.set(s, p, 'evidence');
 }
 
 /**

@@ -19,8 +19,18 @@ import { def as readDef } from '../../read/def.js';
 import { canActionAgainstChar, canActionAgainstCase } from '../main/action.js';
 import { canGuard, mustGuardCandidates } from '../guard.js';
 import { buildContactBindings } from '../contact.js';
+import { gainSelfEvidence } from '../action-case.js';
 import { computeOrder } from './order.js';
 import { contextForState } from './context-registry.js';
+import { withStructuredCausalResolution } from '../../log/effect-causal.js';
+import {
+  actionCorrelationEventId,
+  completeActionCausalOperation,
+  otherPlayer,
+  publicUidLocator,
+  recordActionCausalOperation,
+  startActionCausalTrace,
+} from './causal.js';
 import {
   candidates as targetCandidates,
   consumeMustTargetSelfOnce,
@@ -171,9 +181,6 @@ export function declare(state: GameState, byUid: string, target: Target): Action
   // B02022: pre-target preview では消費せず、合法性と強制指定が確定した宣言時にだけ消費する。
   consumeMustTargetSelfOnce(state, byUid);
 
-  // byUid スリープ化
-  sleepActor(state, byUid);
-
   // ActionContext 生成
   const id = nextId(state);
   const ax: ActionContext = {
@@ -187,6 +194,17 @@ export function declare(state: GameState, byUid: string, target: Target): Action
   };
   contexts(state)[id] = ax;
 
+  startActionCausalTrace(state, ax);
+  // byUid スリープ化
+  sleepActor(state, byUid);
+  recordActionCausalOperation(state, ax, {
+    actor: byPlayer,
+    kind: 'sleep',
+    source: { kind: 'player', side: byPlayer },
+    targets: [publicUidLocator(state, byUid, byPlayer)],
+    outcome: { type: 'state', state: 'sleep' },
+  });
+
   // action:declare emit (spec: { byUid, target })
   // 2026-06-06 タスクC: triggerCharMatches が payload.uid/player を読めるよう uid/player を併記
   // (multi-hook trigger で「自分の現場の[X]がアクションしたとき」を gate するため、reasoning:end と統一)。
@@ -198,7 +216,9 @@ export function declare(state: GameState, byUid: string, target: Target): Action
   event.emit(state, 'action:declare', {
     byUid, target, uid: byUid, player: byPlayer,
     targetUid: target.kind === 'char' ? target.uid : undefined,
-  }, { player: byPlayer, uid: byUid });
+  }, { player: byPlayer, uid: byUid }, {
+    causalCorrelationEventId: ax.causalTrace?.rootEventId,
+  });
 
   // engine additive wave-7 (2026-07-02, P17): アクション[キャラ]宣言時、actor へ「今ターン アクション[キャラ]
   // した」flag を立てる (rules/22: 宣言=ガード判定前に確定、ガード有無・成否に依らず「アクションした」)。
@@ -211,7 +231,9 @@ export function declare(state: GameState, byUid: string, target: Target): Action
 
   // 即座に guard-window へ遷移
   ax.phase = 'guard-window';
-  event.emit(state, 'action:guard-window', { byUid, target }, { player: byPlayer, uid: byUid });
+  event.emit(state, 'action:guard-window', { byUid, target }, { player: byPlayer, uid: byUid }, {
+    causalCorrelationEventId: ax.causalTrace?.rootEventId,
+  });
 
   return ax;
 }
@@ -256,6 +278,8 @@ export function startFromEffect(state: GameState, byUid: string, targetUid: stri
     generatedByEffect: true,
   };
   contexts(state)[id] = ax;
+  startActionCausalTrace(state, ax, ['contact']);
+  ax.contactCausalEventId = ax.causalTrace?.rootEventId;
   // contact-pending → action-1 (contact:start emit + order 計算は既存分岐を再利用)
   advance(state, ax);
   return ax;
@@ -271,6 +295,7 @@ export function startFromEffect(state: GameState, byUid: string, targetUid: stri
  */
 export function tryGuard(state: GameState, ax: ActionContext, guardUid: string): void {
   ax = contextForState(state, ax);
+  if (abortIfMissing(state, ax)) return;
   // Task D E4: アクション対象キャラ自身はガード不可 (B09028/B09054 Q&A、sleepGuard 重複領域)
   const guardExclude = ax.target.kind === 'char' ? ax.target.uid : undefined;
   if (!canGuard(state, ax.byUid, guardUid, guardExclude)) {
@@ -290,8 +315,23 @@ export function tryGuard(state: GameState, ax: ActionContext, guardUid: string):
 
   ax.guardUid = guardUid;
   ax.guarded = { guardUid };
+  const guardPlayer = otherPlayer(ax.byPlayer);
+  const guardDecisionEventId = recordActionCausalOperation(state, ax, {
+    actor: guardPlayer,
+    kind: 'select',
+    source: { kind: 'player', side: guardPlayer },
+    targets: [publicUidLocator(state, guardUid, guardPlayer)],
+    outcome: { type: 'state', state: 'success' },
+  });
   // guardUid スリープ化
   mutate.scene.setState(state, guardUid, 'sleep');
+  recordActionCausalOperation(state, ax, {
+    actor: guardPlayer,
+    kind: 'sleep',
+    source: { kind: 'player', side: guardPlayer },
+    targets: [publicUidLocator(state, guardUid, guardPlayer)],
+    outcome: { type: 'state', state: 'sleep' },
+  });
 
   // engine additive A2 (2026-07-11, B04073 千葉和伸): action:guarded payload に targetUid を同梱。
   // 「アクションで指定されていたのが〚カード名［三池苗子］〛だった場合」= ガード成立後に元の
@@ -303,6 +343,7 @@ export function tryGuard(state: GameState, ax: ActionContext, guardUid: string):
     'action:guarded',
     { byUid: ax.byUid, guardUid, targetUid: ax.target.kind === 'char' ? ax.target.uid : undefined },
     { player: ax.byPlayer, uid: ax.byUid },
+    { causalCorrelationEventId: guardDecisionEventId },
   );
 
   ax.phase = 'leave-resolution';
@@ -316,6 +357,7 @@ export function tryGuard(state: GameState, ax: ActionContext, guardUid: string):
  */
 export function passGuard(state: GameState, ax: ActionContext): void {
   ax = contextForState(state, ax);
+  if (abortIfMissing(state, ax)) return;
   // W2b (2026-07-03, r28): mustGuard 義務 (B09040 a2)。ガード可能な義務 char が居る限り
   // pass 不可 (公式Q&A)。スリープ/ブレット/対象自身は candidates() 除外で義務から自動免除。
   // AI (action-resolution) / UI (useContactFlowDriver) は事前に義務 char へ誘導するため、
@@ -328,11 +370,20 @@ export function passGuard(state: GameState, ax: ActionContext): void {
       `flow.action.passGuard: must guard with one of [${uids}] (mustGuard enforced)`,
     );
   }
+  const guardPlayer = otherPlayer(ax.byPlayer);
+  const guardDecisionEventId = recordActionCausalOperation(state, ax, {
+    actor: guardPlayer,
+    kind: 'select',
+    source: { kind: 'player', side: guardPlayer },
+    targets: [],
+    outcome: { type: 'none' },
+  });
   event.emit(
     state,
     'action:unguarded',
     { byUid: ax.byUid, target: ax.target },
     { player: ax.byPlayer, uid: ax.byUid },
+    { causalCorrelationEventId: guardDecisionEventId },
   );
 
   if (ax.target.kind === 'char') {
@@ -383,6 +434,7 @@ export function snapshotAP(state: GameState, ax: ActionContext): void {
     'contact:before-judge',
     { aUid, bUid, aAP, bAP },
     { player: ax.byPlayer, uid: ax.byUid },
+    { causalCorrelationEventId: actionCorrelationEventId(ax) },
   );
 }
 
@@ -391,7 +443,7 @@ export function snapshotAP(state: GameState, ax: ActionContext): void {
  *
  * rules/07: ガードまでに攻撃キャラ or 対象が現場を離れた場合、アクションはその時点で終了
  */
-export function abortIfMissing(state: GameState, ax: ActionContext): void {
+export function isMissingBeforeGuard(state: GameState, ax: ActionContext): boolean {
   ax = contextForState(state, ax);
   const byMissing =
     ax.byUid !== 'partner:self' &&
@@ -411,24 +463,55 @@ export function abortIfMissing(state: GameState, ax: ActionContext): void {
     targetMissing = !found;
   }
 
-  if (byMissing || targetMissing) {
-    ax.phase = 'action-end';
-    // Task D E4 (2026-06-12): 中断経路でも '_action' scope の効果を清掃 (rules/08 §6-7)
-    for (const p of ['self', 'opp'] as const) {
-      for (const c of state.players[p].scene) {
-        mutate.char.clearTurnEffects(state, c.uid, 'action');
-      }
-      mutate.char.clearTurnEffects(state, `partner:${p}`, 'action');
+  return byMissing || targetMissing;
+}
+
+function clearActionScopedState(state: GameState): void {
+  for (const p of ['self', 'opp'] as const) {
+    for (const c of state.players[p].scene) {
+      mutate.char.clearTurnEffects(state, c.uid, 'action');
     }
-    event.emit(
+    mutate.char.clearTurnEffects(state, `partner:${p}`, 'action');
+  }
+  state.turnState.self.hiramekiSuppressed = false;
+  state.turnState.opp.hiramekiSuppressed = false;
+}
+
+function clearContactScopedState(state: GameState): void {
+  for (const p of ['self', 'opp'] as const) {
+    for (const c of state.players[p].scene) {
+      mutate.char.clearTurnEffects(state, c.uid, 'contact');
+    }
+    mutate.char.clearTurnEffects(state, `partner:${p}`, 'contact');
+  }
+}
+
+export function abortIfMissing(state: GameState, ax: ActionContext): boolean {
+  ax = contextForState(state, ax);
+  if (isMissingBeforeGuard(state, ax)) {
+    ax.phase = 'action-end';
+    const cancelEventId = completeActionCausalOperation(
       state,
-      'action:end',
-      { byUid: ax.byUid, result: 'aborted' },
-      { player: ax.byPlayer, uid: ax.byUid },
+      ax,
+      'cancel',
+      { type: 'state', state: 'cancelled' },
     );
+    // Task D E4 (2026-06-12): 中断経路でも '_action' scope の効果を清掃 (rules/08 §6-7)
+    clearActionScopedState(state);
+    if (!ax.generatedByEffect && state.gameResult === undefined) {
+      event.emit(
+        state,
+        'action:end',
+        { byUid: ax.byUid, result: 'aborted' },
+        { player: ax.byPlayer, uid: ax.byUid },
+        { causalCorrelationEventId: cancelEventId },
+      );
+    }
     // メモリ管理: 中断時も Context を削除
     _deleteContext(state, ax.id);
+    return true;
   }
+  return false;
 }
 
 /**
@@ -458,23 +541,34 @@ export function advance(state: GameState, ax: ActionContext): void {
   }
 
   if (phase === 'contact-pending') {
-    // case target は判定スキップして judge へ
-    if (ax.target.kind === 'case') {
+    // ガード不成立の case だけはコンタクトせず、証拠判定へ進む。
+    if (ax.target.kind === 'case' && !ax.guardUid) {
       ax.phase = 'judge';
       return;
     }
-    // char target: コンタクト開始
+    // char target またはガード成立 case: コンタクト開始
     const aUid = ax.byUid;
     const bUid = ax.guardUid ?? (ax.target as { kind: 'char'; uid: string }).uid;
 
     // User request: コンタクト詳細を log に出力 (「レベルXキャラ名(ID):APXXXX VS 〜」)
-    const contactDetail = formatContactDetail(state, aUid, bUid);
-    mutate.log.append(state, {
-      ts: Date.now(),
-      player: ax.byPlayer,
-      turn: state.turn.number,
-      action: 'contact:detail',
-      result: contactDetail,
+    if (ax.causalTrace === undefined) {
+      const contactDetail = formatContactDetail(state, aUid, bUid);
+      mutate.log.append(state, {
+        ts: Date.now(),
+        player: ax.byPlayer,
+        turn: state.turn.number,
+        action: 'contact:detail',
+        result: contactDetail,
+      });
+    }
+
+    ax.contactCausalEventId ??= recordActionCausalOperation(state, ax, {
+      actor: ax.byPlayer,
+      kind: 'declare',
+      tags: ['contact'],
+      source: publicUidLocator(state, aUid, ax.byPlayer),
+      targets: [publicUidLocator(state, bUid, otherPlayer(ax.byPlayer))],
+      outcome: { type: 'state', state: 'active' },
     });
 
     // engine additive wave-18 (2026-07-03): source に contact bindings (byUid=aUid/targetUid=bUid の客観 contact)。
@@ -483,6 +577,8 @@ export function advance(state: GameState, ax: ActionContext): void {
     // 別途判定。既存 contact:start consumer (B02079/D07018 等 payloadKey 系) は bindings を読まない → 挙動不変。
     event.emit(state, 'contact:start', { aUid, bUid }, {
       player: ax.byPlayer, uid: ax.byUid, bindings: buildContactBindings(ax, ax.byPlayer),
+    }, {
+      causalCorrelationEventId: ax.contactCausalEventId,
     });
 
     // 行動順 (AP は snapshot 後だが、ここでは未スナップショットでも先に order を計算)
@@ -498,6 +594,7 @@ export function advance(state: GameState, ax: ActionContext): void {
       'contact:order-set',
       { firstUid: order.firstUid, secondUid: order.secondUid },
       { player: ax.byPlayer, uid: ax.byUid },
+      { causalCorrelationEventId: ax.contactCausalEventId },
     );
 
     ax.phase = 'action-1';
@@ -527,39 +624,39 @@ export function advance(state: GameState, ax: ActionContext): void {
 
   if (phase === 'judge') {
     ax.phase = 'contact-end';
-    event.emit(state, 'contact:end', {}, { player: ax.byPlayer, uid: ax.byUid });
+    event.emit(state, 'contact:end', {}, { player: ax.byPlayer, uid: ax.byUid }, {
+      causalCorrelationEventId: actionCorrelationEventId(ax),
+    });
     return;
   }
 
   if (phase === 'contact-end') {
+    if (ax.deferredCaseEvidenceGain) {
+      withStructuredCausalResolution(state, () => gainSelfEvidence(state, ax), ax.causalTrace);
+      delete ax.deferredCaseEvidenceGain;
+    }
     ax.phase = 'action-end';
+    if (ax.causalTrace !== undefined && ax.causalTrace.completed !== true) {
+      completeActionCausalOperation(state, ax, 'summary', { type: 'state', state: 'success' });
+    }
     // Task D E4 (2026-06-12): rules/08 §6-7 — アクション終了時に「アクション終了時まで」の
     // 効果 ('_action' suffix turnEffects、例: B09041 contactImmune_action) が切れる。
     // BUG-143: rules/08 §6 — コンタクト終了時にカットイン由来の修正 (apMod_contact 等、'contact' scope)
     // も切れる。判定 (judge) と contact:end emit は既に済んでいるためこの時点で清掃して安全。
     // 両プレイヤーの scene を清掃 (同ターン 2 回目のアクション/コンタクトへの stale 持ち越し防止)。
-    for (const p of ['self', 'opp'] as const) {
-      for (const c of state.players[p].scene) {
-        mutate.char.clearTurnEffects(state, c.uid, 'action');
-        mutate.char.clearTurnEffects(state, c.uid, 'contact');
-      }
-      mutate.char.clearTurnEffects(state, `partner:${p}`, 'action');
-      mutate.char.clearTurnEffects(state, `partner:${p}`, 'contact');
-    }
-    // B06049 cluster8 (2026-06-15): action-scoped ヒラメキ抑止 (turnState、player-level) を
-    // アクション終了で清掃。scene loop の外で両プレイヤー分を明示クリア (rules/10 「アクション終了時まで」)。
-    state.turnState.self.hiramekiSuppressed = false;
-    state.turnState.opp.hiramekiSuppressed = false;
+    clearActionScopedState(state);
+    clearContactScopedState(state);
     // mega-wave W6 step9 (row65): 効果生成コンタクト (startFromEffect) は「アクションではない」—
     // action:end を emit しない (公式Q&A「アクションによって発動する能力や『アクション終了時』の
     // 能力は発動しません」を実現する唯一の分岐点)。turnEffects clear (上) と _deleteContext (下) は
     // 無条件維持 — effect-contact 経路では 'action' scope turnEffect が立たないので clear は no-op で安全。
-    if (!ax.generatedByEffect) {
+    if (!ax.generatedByEffect && state.gameResult === undefined) {
       event.emit(
         state,
         'action:end',
         { byUid: ax.byUid, result: 'completed' },
         { player: ax.byPlayer, uid: ax.byUid },
+        { causalCorrelationEventId: actionCorrelationEventId(ax) },
       );
     }
     // メモリ管理: action-end に到達した Context は不要なので削除 (長いゲーム対策)
@@ -578,6 +675,7 @@ export const action = {
   passGuard,
   advance,
   abortIfMissing,
+  isMissingBeforeGuard,
   snapshotAP,
   computeOrder,
   candidates: targetCandidates,

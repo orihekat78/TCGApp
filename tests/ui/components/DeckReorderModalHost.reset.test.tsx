@@ -17,6 +17,7 @@ describe('DeckReorderModalHost consecutive decisions', () => {
   let root: Root;
 
   beforeEach(() => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -31,6 +32,7 @@ describe('DeckReorderModalHost consecutive decisions', () => {
     container.remove();
     useGameStateStore.getState().setPendingDeckReorder(null);
     engine.cards._resetRegistry();
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   });
 
   it('resets local order when a new pending decision has the same multiset', () => {
@@ -112,5 +114,15 @@ describe('DeckReorderModalHost consecutive decisions', () => {
     expect(image.src).toContain('broken-image.jpg');
     act(() => image.dispatchEvent(new Event('error', { bubbles: true })));
     expect(image.src).toBe(getCardImagePlaceholder());
+  });
+
+  it('renders when the opponent side is the actual human decision owner', () => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'opp';
+    act(() => {
+      useGameStateStore.getState().setPendingDeckReorder({ player: 'opp', cardIds: ['D08015'] });
+      root.render(<DeckReorderModalHost />);
+    });
+
+    expect(container.querySelector('[data-testid="deck-reorder-modal"]')).not.toBeNull();
   });
 });

@@ -37,7 +37,7 @@ const a1: AbilityDef = {
         {
           kind: 'atom',
           verb: 'partnerAreaRemove',
-          args: { player: 'self', n: 2, filter: { trait: 'ビッグジュエル' } },
+          args: { player: 'self', n: 2, minimumPolicy: 'exact', filter: { trait: 'ビッグジュエル' } },
         },
         // そうした場合、リムーブエリアのレベル6以下の[中森青子]を1枚までスリープ状態で登場
         {

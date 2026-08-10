@@ -6,7 +6,7 @@
 //   - 呼び出し元の stacking context を避けるため React root 直下へ portal
 //   - CardArt を full-size 表示 + 名前 caption
 
-import { useCallback, useEffect, useState, type JSX } from 'react';
+import { useCallback, useEffect, useRef, useState, type JSX } from 'react';
 import { createPortal } from 'react-dom';
 import type { CardId } from '@/engine/types';
 import { CardArt } from './CardArt.js';
@@ -20,6 +20,11 @@ export type CardExpandModalProps = {
 
 export function CardExpandModal({ cardId, onClose }: CardExpandModalProps): JSX.Element | null {
   const [portalHost, setPortalHost] = useState<HTMLElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const closeRef = useRef<HTMLButtonElement | null>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
   const portalAnchorRef = useCallback((anchor: HTMLSpanElement | null): void => {
     if (!anchor || typeof document === 'undefined') return;
     let host = anchor.parentElement;
@@ -29,20 +34,49 @@ export function CardExpandModal({ cardId, onClose }: CardExpandModalProps): JSX.
     setPortalHost(host ?? document.body);
   }, []);
 
-  // ESC キーで close
+  // ESC / Tab / focus return を最前面の拡大モーダルだけで処理する。
   useEffect(() => {
     if (!cardId) return undefined;
+    returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusFrame = window.requestAnimationFrame(() => closeRef.current?.focus());
     function onKey(e: KeyboardEvent): void {
-      if (e.key !== 'Escape') return;
-      // BUG-231: window capture phase で最前面modalがEscapeを消費する。
-      // 下層LogPanel/global shortcutのlistenerへ伝播させず、このmodalだけ閉じる。
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      onClose();
+      if (e.key === 'Escape') {
+        // BUG-231: window capture phase で最前面modalがEscapeを消費する。
+        // 下層LogPanel/global shortcutのlistenerへ伝播させず、このmodalだけ閉じる。
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        onCloseRef.current();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const focusable = [...(dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ) ?? [])].filter((element) => element.getClientRects().length > 0);
+      if (focusable.length === 0) {
+        e.preventDefault();
+        dialogRef.current?.focus();
+        return;
+      }
+      const first = focusable[0]!;
+      const last = focusable[focusable.length - 1]!;
+      if (e.shiftKey && (document.activeElement === first || !dialogRef.current?.contains(document.activeElement))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (document.activeElement === last || !dialogRef.current?.contains(document.activeElement))) {
+        e.preventDefault();
+        first.focus();
+      }
     }
     window.addEventListener('keydown', onKey, { capture: true });
-    return () => window.removeEventListener('keydown', onKey, { capture: true });
-  }, [cardId, onClose]);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      window.removeEventListener('keydown', onKey, { capture: true });
+      const target = returnFocusRef.current;
+      window.requestAnimationFrame(() => {
+        if (target?.isConnected) target.focus();
+      });
+    };
+  }, [cardId]);
 
   if (!cardId) return null;
 
@@ -50,14 +84,17 @@ export function CardExpandModal({ cardId, onClose }: CardExpandModalProps): JSX.
 
   const modal = (
     <div
+      ref={dialogRef}
       className="card-expand-modal-backdrop"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label={`カード拡大表示: ${name}`}
+      tabIndex={-1}
     >
       <div className="card-expand-modal" onClick={(e) => e.stopPropagation()}>
         <button
+          ref={closeRef}
           type="button"
           className="card-expand-close"
           aria-label="閉じる"

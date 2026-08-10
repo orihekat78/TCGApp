@@ -9,6 +9,7 @@ import { def } from '../read/def.js'; // MR partner-area (rules/18): isMR 判定
 import { sceneCap } from '../read/scene-cap.js'; // engine E3 P11 (2026-07-02): 現場登場上限 (既定5、case override 可)
 import { consultLeaveIntercept } from '../effect/consult-leave-intercept.js'; // W6 step10 (row9): pre-splice consult (純関数 leaf、循環なし)
 import { char as charMutator } from './char.js';
+import { log as logMutator } from './log.js';
 
 type Player = 'self' | 'opp';
 type CharState = 'active' | 'sleep' | 'stun';
@@ -246,7 +247,7 @@ function switchEnter(
  */
 // W6 step10 (row9): leave:intercept 成立の log note (UI RecentActionToast / LogPanel 用)
 function mutate_logInterceptNote(s: GameState, player: Player, dest: 'hand' | 'kept-in-scene', uid: string): void {
-  s.log.push({
+  logMutator.append(s, {
     ts: Date.now(),
     player,
     turn: s.turn.number,

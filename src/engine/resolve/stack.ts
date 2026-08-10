@@ -30,6 +30,7 @@ import {
   clearPersistedPendingRuntimeState,
   hydratePendingRuntimeState,
   persistPendingRuntimeState,
+  resetPendingRuntimeStateAfterGameEnd,
 } from '../effect/runtime-state.js';
 import { _peekPendingDeckPlaceSide, _peekPendingDeckReorderSide } from '../effect/atom-handlers/_shared.js';
 import {
@@ -44,15 +45,32 @@ import {
 } from '../effect/pending-state.js';
 import { _peekPendingHirameki } from '../listeners/hirameki.js';
 import { _peekPendingMisread } from '../listeners/misread.js';
+import {
+  cloneCausalEffectTrace,
+  completeEffectCausalTrace,
+  ensureEffectCausalTrace,
+  withStructuredCausalResolution,
+} from '../log/effect-causal.js';
 
 const SAFETY_CAP = 1000;
+// A resolver continuation may invoke runAllUntilEmpty more than once on the same
+// Immer draft. Remember that this exact live authority already reached terminal
+// state so a second entry cannot erase the completed presentation FIFO. A loaded
+// or cloned terminal GameState has a different identity and still hard-clears.
+const ACTIVE_TERMINAL_PRESENTATION_STATES = new WeakSet<object>();
 
-function cancelPendingAfterGameEnd(state: GameState): void {
+function cancelPendingAfterGameEnd(
+  state: GameState,
+  options: { preserveCompletedPresentations: boolean },
+): void {
   for (const entry of state.pendingEffects) {
     if (entry.state === 'pending') entry.state = 'cancelled';
   }
   delete state.pendingTurnTransition;
   clearPersistedPendingRuntimeState(state);
+  resetPendingRuntimeStateAfterGameEnd(options);
+  if (options.preserveCompletedPresentations) ACTIVE_TERMINAL_PRESENTATION_STATES.add(state);
+  else ACTIVE_TERMINAL_PRESENTATION_STATES.delete(state);
 }
 
 function hasPendingDecisionExceptPick(): boolean {
@@ -75,7 +93,7 @@ function hasPendingDecisionExceptPick(): boolean {
 // resolver。実体は listener 層 (listeners/triggered.ts resolveDeferredEntryPicks) が
 // _setDeferredEntryPickResolver で注入する — stack コアから @/ai への依存を作らないため
 // (敵対レビュー impl/regression lens 反映)。未注入時は raw effect をそのまま実行 (従来挙動)。
-type DeferredEntryPickResolver = (state: GameState, entry: EffectStackEntry) => Effect;
+type DeferredEntryPickResolver = (state: GameState, entry: EffectStackEntry, ctx: EffectCtx) => Effect;
 let _deferredEntryPickResolver: DeferredEntryPickResolver | null = null;
 
 export function _setDeferredEntryPickResolver(fn: DeferredEntryPickResolver | null): void {
@@ -88,6 +106,9 @@ export function _setDeferredEntryPickResolver(fn: DeferredEntryPickResolver | nu
  * EffectCtx via direct engine.effect.run calls.
  */
 export function effectCtxFromStackEntry(entry: EffectStackEntry): EffectCtx {
+  if (entry.causalTrace !== undefined && entry.causalCorrelationEventId !== undefined) {
+    throw new Error('causal trace and child correlation are mutually exclusive');
+  }
   // BUG-104: cutin の contact binding を ctx.contact に展開する。D11013 custom check は
   // ctx.contact.targetUid (コンタクト相手) を読んで「警察か」を判定するが、従来 ctx.contact 未設定で
   // 永久 false (1ドロー不発) だった。bindings.contact は cutIn (flow/contact.ts) が詰める。
@@ -125,8 +146,14 @@ export function effectCtxFromStackEntry(entry: EffectStackEntry): EffectCtx {
     // (atomDeclareName / resolveBindRef '$dyn.*') の queue-boundary 喪失修正。entry は Immer 凍結 =
     // runtime の (ctx.dyn ??= {}) 書込 (chainStepNoApply 等) が落ちないよう shallow-copy (bindings 同 posture)。
     ...(entry.dyn ? { dyn: { ...entry.dyn } } : {}),
-    ...(entry.publicHandRevealToken
-      ? { causal: { publicHandRevealToken: entry.publicHandRevealToken } }
+    ...(entry.publicHandRevealToken || entry.causalTrace || entry.causalCorrelationEventId
+      ? {
+          causal: {
+            ...(entry.publicHandRevealToken ? { publicHandRevealToken: entry.publicHandRevealToken } : {}),
+            ...(entry.causalTrace ? { trace: cloneCausalEffectTrace(entry.causalTrace) } : {}),
+            ...(entry.causalCorrelationEventId ? { correlationEventId: entry.causalCorrelationEventId } : {}),
+          },
+        }
       : {}),
     ...(cb
       ? { contact: { byUid: cb.byUid ?? '', targetUid: cb.targetUid, guardUid: cb.guardUid, attackerSide: cb.attackerSide ?? 'self' } }
@@ -259,7 +286,9 @@ export function pendingOwnerOrderGroup(
  */
 export function runOne(state: GameState, entry: EffectStackEntry): void {
   if (state.gameResult !== undefined) {
-    cancelPendingAfterGameEnd(state);
+    cancelPendingAfterGameEnd(state, {
+      preserveCompletedPresentations: ACTIVE_TERMINAL_PRESENTATION_STATES.has(state),
+    });
     return;
   }
   const parentBatch = state.effectTriggerBatchContext;
@@ -267,27 +296,44 @@ export function runOne(state: GameState, entry: EffectStackEntry): void {
   state.effectTriggerBatchContext = entry.triggerBatch;
   state.effectTriggerBatchConfirmedContext = entry.ownerOrderConfirmed;
   try {
-    entry.state = 'resolving';
-    event.emit(state, 'effect:resolve:start', { effectId: entry.id }, entry.source);
     const ctx = effectCtxFromStackEntry(entry);
-    if (entry.resolveGuard !== undefined) {
-      const ok = evalCond(state, entry.resolveGuard, ctx);
-      if (!ok) {
-        entry.state = 'cancelled';
-        return;
+    const trace = ensureEffectCausalTrace(state, ctx);
+    if (trace) entry.causalTrace = cloneCausalEffectTrace(trace);
+    let guardRejected = false;
+    withStructuredCausalResolution(state, () => {
+      entry.state = 'resolving';
+      event.emit(state, 'effect:resolve:start', { effectId: entry.id }, entry.source);
+      if (entry.resolveGuard !== undefined) {
+        const ok = evalCond(state, entry.resolveGuard, ctx);
+        if (!ok) {
+          entry.state = 'cancelled';
+          guardRejected = true;
+          return;
+        }
       }
-    }
-    if (entry.reasoningContinuation !== undefined) {
-      _resolveReasoningContinuation(state, entry.reasoningContinuation);
-    } else {
-      // Candidate substitution happens only when this entry is actually reached.
-      const effectToRun = (entry.declaredReaction !== undefined || entry.deferredPicks === true) && _deferredEntryPickResolver !== null
-        ? _deferredEntryPickResolver(state, entry)
-        : entry.effect;
-      runEffect(state, effectToRun, ctx);
-    }
-    entry.state = 'resolved';
-    event.emit(state, 'effect:resolve:end', { effectId: entry.id }, entry.source);
+      if (entry.reasoningContinuation !== undefined) {
+        _resolveReasoningContinuation(state, entry.reasoningContinuation, trace);
+      } else {
+        // Candidate substitution happens only when this entry is actually reached.
+        const effectToRun = (entry.declaredReaction !== undefined || entry.deferredPicks === true) && _deferredEntryPickResolver !== null
+          ? _deferredEntryPickResolver(state, entry, ctx)
+          : entry.effect;
+        runEffect(state, effectToRun, ctx);
+      }
+      entry.state = 'resolved';
+      event.emit(state, 'effect:resolve:end', { effectId: entry.id }, entry.source);
+    }, trace);
+    if (trace) entry.causalTrace = cloneCausalEffectTrace(trace);
+    completeEffectCausalTrace(
+      state,
+      trace,
+      entry.source.player,
+      guardRejected ? 'cancel' : 'summary',
+      guardRejected
+        ? { type: 'state', state: 'cancelled' }
+        : { type: 'state', state: 'success' },
+    );
+    if (trace) entry.causalTrace = cloneCausalEffectTrace(trace);
   } finally {
     if (parentBatch === undefined) delete state.effectTriggerBatchContext;
     else state.effectTriggerBatchContext = parentBatch;
@@ -301,11 +347,21 @@ export function runOne(state: GameState, entry: EffectStackEntry): void {
  * during resolution are picked up automatically (rules/15 "未解決").
  * Safety cap: 1000 iterations.
  */
-export function runAllUntilEmpty(state: GameState): void {
+export function runAllUntilEmpty(
+  state: GameState,
+  options: { preserveCompletedPresentationsOnTerminalEntry?: boolean } = {},
+): void {
+  if (state.gameResult !== undefined) {
+    cancelPendingAfterGameEnd(state, {
+      preserveCompletedPresentations: options.preserveCompletedPresentationsOnTerminalEntry === true
+        || ACTIVE_TERMINAL_PRESENTATION_STATES.has(state),
+    });
+    return;
+  }
   hydratePendingRuntimeState(state);
   for (let i = 0; i < SAFETY_CAP; i++) {
     if (state.gameResult !== undefined) {
-      cancelPendingAfterGameEnd(state);
+      cancelPendingAfterGameEnd(state, { preserveCompletedPresentations: true });
       return;
     }
     const e = next(state);

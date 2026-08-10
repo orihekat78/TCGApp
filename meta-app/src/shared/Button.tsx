@@ -11,6 +11,8 @@ interface BaseButtonProps {
   sub?: string;
   onClick?: () => void;
   children?: ReactNode;
+  disabled?: boolean;
+  ariaBusy?: boolean;
 }
 
 // ── Primary (gold solid CTA) ──────────────────────────────────────────
@@ -127,17 +129,18 @@ export function SmallButton({ label, sub, accent = T.neonBlue, solid = false, ac
 
 // ── Setup (BACK / EXPORT) ─────────────────────────────────────────────
 type SetupProps = BaseButtonProps;
-export function SetupButton({ label, sub, onClick }: SetupProps) {
+export function SetupButton({ label, sub, onClick, disabled = false, ariaBusy = false }: SetupProps) {
   ensureInteractionStyles();
   return (
-    <button onClick={onClick} className="meta-btn-setup" style={{
+    <button onClick={onClick} disabled={disabled} aria-busy={ariaBusy} className="meta-btn-setup" style={{
       padding: '12px 30px',
       background: 'rgba(0,0,0,0.5)',
       border: `1px solid ${T.neonBlue}55`,
       borderRadius: 3,
       fontFamily: T.fontJp, fontWeight: 700, fontSize: 14,
       color: T.neonBlue, letterSpacing: '0.1em',
-      cursor: 'pointer',
+      cursor: disabled ? 'wait' : 'pointer',
+      opacity: disabled ? 0.6 : 1,
       display: 'flex', alignItems: 'center', gap: 10,
     }}>
       <span>{label}</span>

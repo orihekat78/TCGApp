@@ -144,9 +144,12 @@ describe('B08019 a2 — 両陣営 facedown set card 合わせて2枚 (perSideMax
     expect(pick!.nMin, '「合わせて2枚」').toBe(2);
     expect(pick!.nMax).toBe(2);
     expect((pick! as { perSideMax?: number }).perSideMax, 'perSideMax=1 が UI へ伝播').toBe(1);
-    const cands = pick!.candidates as Array<{ uid: string }>;
-    expect(cands.map((c) => c.uid).sort(), '候補 = facedown set card を持つ両陣営 host').toEqual([hostA, hostB].sort());
-    applyPickAndContinuation(s, pick!, hostA, [hostA, hostB]);
+    const cands = pick!.candidates as Array<{ uid: string; hostUid?: string; setCardInstanceId?: string }>;
+    expect(cands.map((c) => c.hostUid).sort(), '候補は両陣営host上の物理set-card occurrence').toEqual([hostA, hostB].sort());
+    expect(cands.every((candidate) => candidate.setCardInstanceId)).toBe(true);
+    const selfSet = cands.find((candidate) => candidate.hostUid === hostA)!;
+    const oppSet = cands.find((candidate) => candidate.hostUid === hostB)!;
+    applyPickAndContinuation(s, pick!, selfSet.uid, [selfSet.uid, oppSet.uid]);
     runAllUntilEmpty(s);
     expect(s.players.self.scene.find((c) => c.uid === hostA)!.setCards.length, 'self host のセット除去').toBe(0);
     expect(s.players.opp.scene.find((c) => c.uid === hostB)!.setCards.length, 'opp host のセット除去').toBe(0);

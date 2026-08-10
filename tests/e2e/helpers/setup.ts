@@ -4,7 +4,10 @@
 import type { Page } from '@playwright/test';
 import type { GameWindow } from './types';
 
-export async function setupGamePage(page: Page): Promise<{ errors: string[] }> {
+export async function setupGamePage(
+  page: Page,
+  path = '/',
+): Promise<{ errors: string[] }> {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   page.on('console', (msg) => {
@@ -15,7 +18,7 @@ export async function setupGamePage(page: Page): Promise<{ errors: string[] }> {
     if (/favicon\.ico|robots\.txt/.test(url)) return;
     errors.push(`console.error: ${text}`);
   });
-  await page.goto('/');
+  await page.goto(path);
   await page.waitForFunction(() => typeof (window as unknown as GameWindow).__game !== 'undefined');
   return { errors };
 }

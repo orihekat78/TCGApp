@@ -16,7 +16,7 @@ test('Phase 11 integration: HOME → SETUP → READY → MulliganModal → Playm
   // 2. Enter で SETUP へ
   await page.keyboard.press('Enter');
   await page.waitForURL(/#setup/);
-  await expect(page.getByText('MATCH SETUP').first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: '対戦準備' })).toBeVisible();
 
   // 3. READY 押下 → MATCH ルートへ遷移 + performGameStart 開始
   const readyBtn = page.locator('.meta-btn-ready').first();

@@ -22,14 +22,8 @@ for (const route of ROUTES) {
     // ページが描画されていること (meta-root に何かしらの DOM がある)
     const root = await page.locator('#meta-root');
     await expect(root).toBeVisible();
+    await expect(page.getByText('OFFLINE', { exact: true })).toHaveCount(0);
 
     expect(errors, `console errors on /#${route}`).toEqual([]);
   });
 }
-
-test('route #match hides the development navigation HUD', async ({ page }) => {
-  await page.goto('/#match');
-
-  await expect(page.getByText('OFFLINE', { exact: true })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /BACK/ })).toHaveCount(0);
-});

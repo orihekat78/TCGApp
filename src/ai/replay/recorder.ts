@@ -11,6 +11,7 @@ import type { AIPolicy } from '../policy.js';
 import type { Move } from '../move-enumerator.js';
 import type { GameState } from '@/engine/types';
 import { captureNondeterminism, type ReplayNondeterminism } from './nondeterminism.js';
+import type { ReplayLogV3 } from './state-frame.js';
 
 type Player = 'self' | 'opp';
 
@@ -42,7 +43,8 @@ export type ReplayLogV2 = {
   nondeterminism: ReplayNondeterminism;
 };
 
-export type ReplayLog = ReplayLogV1 | ReplayLogV2;
+export type LegacyReplayLog = ReplayLogV1 | ReplayLogV2;
+export type ReplayLog = LegacyReplayLog | ReplayLogV3;
 
 function isolatePolicyNondeterminism(
   policy: AIPolicy,

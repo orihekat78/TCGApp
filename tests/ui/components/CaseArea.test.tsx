@@ -61,6 +61,23 @@ describe('CaseArea', () => {
     expect(html).not.toMatch(/case-card portrait/);
   });
 
+  it.each(['portrait', 'landscape'] as const)(
+    'keeps the %s card detail control in a dedicated sibling lane',
+    (orientation) => {
+      const html = strip(renderToString(
+        <CaseArea
+          caseInfo={makeCase({ orientation })}
+          turnOrder="first"
+          side="self"
+          onExpand={() => undefined}
+        />,
+      ));
+
+      expect(html).toMatch(/class="case-card-shell"/);
+      expect(html).toMatch(/<\/div><button[^>]*class="case-card-detail"/);
+    },
+  );
+
   it('defaults to portrait orientation when caseInfo.orientation is undefined', () => {
     const html = strip(renderToString(
       <CaseArea caseInfo={makeCase()} turnOrder="first" side="self" />,

@@ -28,6 +28,12 @@ import { parseRemoveSetCardWitness } from '../../cost/remove-set-card-witness.js
 import { _getResolutionLock } from '../../event/registry.js';
 import { hasPendingHumanPick } from '../../effect/apply-pick.js';
 import { _hasOpenActionContext } from '../action/state-machine.js';
+import {
+  completeEffectCausalTrace,
+  currentEffectCausalCorrelationEventId,
+  startStandaloneCausalTrace,
+  withEffectCausalCorrelation,
+} from '../../log/effect-causal.js';
 
 function getHumanPlayerSide(): 'self' | 'opp' | null {
   return (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
@@ -381,16 +387,31 @@ export function useDeclaredAbility(
     if (printed?.type === 'declared'
       && !findDeclaredAbility(state, uid, found.cardId, found.area, abilId)) return;
   }
+  const inheritedRootId = currentEffectCausalCorrelationEventId(state);
+  const ownTrace = inheritedRootId === undefined
+    ? startStandaloneCausalTrace(state, {
+        actor: found.player,
+        kind: 'declare',
+        source: { kind: 'player', side: found.player },
+        targets: [],
+        outcome: { type: 'state', state: 'active' },
+      })
+    : undefined;
+  const rootEventId = inheritedRootId ?? ownTrace?.rootEventId;
+  try {
+    withEffectCausalCorrelation(state, rootEventId, () => {
   // BUG-112: found.player を渡すことで、selfToDeckBottom 等で source が場外へ出ている場合も
   // player 単位 turnState fallback に【ターン①】カウントが記録される (off-board silent no-op 解消)。
   mutate.flag.incrDeclaredUseCount(state, uid, abilId, found.player);
-  mutate.log.append(state, {
-    ts: Date.now(),
-    player: found.player,
-    turn: state.turn.number,
-    action: 'declaredAbility',
-    target: `${uid}:${abilId}`,
-  });
+  if (rootEventId === undefined) {
+    mutate.log.append(state, {
+      ts: Date.now(),
+      player: found.player,
+      turn: state.turn.number,
+      action: 'declaredAbility',
+      target: `${uid}:${abilId}`,
+    });
+  }
   event.emit(
     state,
     'effect:declared',
@@ -413,7 +434,7 @@ export function useDeclaredAbility(
   // される (effect だけ走る) latent バグへの早期検出。
   // 既存挙動は変えず、warning log のみ append (rules 上はカードルール違反だが engine 層では
   // throw せず caller (UI/AI) の責務として扱う、教訓 1 と同じ pattern)。
-  if (ability.cost && !ctx?.costPaid) {
+  if (ability.cost && !ctx?.costPaid && rootEventId === undefined) {
     mutate.log.append(state, {
       ts: Date.now(),
       player: found.player,
@@ -492,4 +513,16 @@ export function useDeclaredAbility(
     { uid, cardId: found.cardId, abilityId: abilId, player: found.player, declaredBatch },
     { player: found.player, uid, cardId: found.cardId },
   );
+    });
+    completeEffectCausalTrace(state, ownTrace, found.player);
+  } catch (error) {
+    completeEffectCausalTrace(
+      state,
+      ownTrace,
+      found.player,
+      'cancel',
+      { type: 'state', state: 'cancelled' },
+    );
+    throw error;
+  }
 }

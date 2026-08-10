@@ -18,7 +18,7 @@ Effect Stack（queue/next/runOne + cancel/replace/lock）
 | `pendingOwnerOrderGroup` | `(state: GameState, human: 'self' \| 'opp' \| null): EffectStackEntry[]` | All currently eligible unresolved effects owned by the priority human. */ |
 | `queue` | `(state: GameState, entry: EffectStackEntry): void` | Push an entry into pendingEffects. Callers (event.queue / event.emit / card listeners) already provide a fully built entry. / |
 | `replace` | `(state: GameState, entryId: string, newEffect: Effect): void` | Replace the Effect on a pending entry (id-keyed). Used by "代わりに〜" effects (rules/15 即時例外). @see Effect.… |
-| `runAllUntilEmpty` | `(state: GameState): void` | Drain the stack until no pending entries remain. New entries queued during resolution are picked up automatically (rules/15 "未解決"). Safety cap: 1000 iterations. / |
+| `runAllUntilEmpty` | `(state: GameState, options: { preserveCompletedPresentationsOnTerminalEntry?: boolean } = {}): void` | Drain the stack until no pending entries remain. New entries queued during resolution are picked up automatically (rules/15 "未解決"). Safety cap: 1000 iterations. / |
 | `runOne` | `(state: GameState, entry: EffectStackEntry): void` | Resolve one entry: 1. state -> 'resolving' + emit effect:resolve:start 2. resolveGuard が false なら 'cancelled' して return (cancel した場合は effect:resolve:end は emit しない) 3. ctx を作って engine.effect.… |
 | `unlock` | `(_state: GameState): void` |  |
 

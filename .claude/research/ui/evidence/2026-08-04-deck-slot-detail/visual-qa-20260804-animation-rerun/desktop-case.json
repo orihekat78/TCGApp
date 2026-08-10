@@ -1,0 +1,39 @@
+{
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "slot": "事件",
+  "initial": {
+    "left": 10.296581268310547,
+    "top": 136,
+    "width": 319.9999885559082,
+    "height": 750,
+    "right": 330.29656982421875,
+    "bottom": 886,
+    "fit": true
+  },
+  "frame16ms": {
+    "left": 16,
+    "top": 136,
+    "width": 320,
+    "height": 750,
+    "right": 336,
+    "bottom": 886,
+    "fit": true
+  },
+  "settled": {
+    "left": 16,
+    "top": 136,
+    "width": 320,
+    "height": 750,
+    "right": 336,
+    "bottom": 886,
+    "fit": true
+  },
+  "documentOverflow": {
+    "x": false,
+    "y": false
+  },
+  "errors": []
+}

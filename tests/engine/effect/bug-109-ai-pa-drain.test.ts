@@ -29,7 +29,7 @@ describe('BUG-109: AI 経路の PA 短縮形 pick drain (drainAiEffectPicks)', (
   beforeAll(() => registerAll());
   beforeEach(() => {
     _clearPendingEffectPickQueue();
-    (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation = [];
+    delete (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation;
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null; // CPU vs CPU
   });
 
@@ -80,5 +80,45 @@ describe('BUG-109: AI 経路の PA 短縮形 pick drain (drainAiEffectPicks)', (
     // step2 charModifyAP+2000 が登場キャラ (post-step1 盤面) を対象に適用される
     expect(readChar.ap(s, entered!.uid), 'AP 4000 + 2000 (cross-step)').toBe(6000);
     expect(_peekPendingEffectPickQueueLength(), 'drain 後 queue 空').toBe(0);
+  });
+
+  it('既知のAI所有者でも Pattern A の2枚選択を queue し、両対象と continuation を1回解決する', () => {
+    const s = createEmptyGameState();
+    s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.opp.scene = [sceneChar('D11015', 'enemy1'), sceneChar('D11015', 'enemy2')];
+    s.players.self.deck = ['D08001'];
+    const apBefore = readChar.ap(s, 'enemy1');
+    const ctx = aiCtx();
+    const policy = new HeuristicPolicy();
+    const effect = {
+      kind: 'sequence',
+      steps: [
+        {
+          kind: 'atom', verb: 'charModifyAP',
+          args: { player: 'self', side: 'opp', max: 2, delta: -1000, scope: 'turn' },
+        },
+        { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+      ],
+    } as const;
+    const resolved = resolveEffectPicks(s, effect as never, ctx, {
+      chooseAtomTarget: policy.chooseAtomTarget?.bind(policy),
+      byPlayer: 'self',
+      humanChooser: false,
+      source: { cardId: 'D11014', abilityId: 'a1' },
+    });
+
+    runEffect(s, resolved as never, ctx);
+
+    expect(_peekPendingEffectPickQueueLength(), 'multi-pick は canonical queue に積む').toBe(1);
+    expect(readChar.ap(s, 'enemy1'), 'drain 前は1枚目も未処理').toBe(apBefore);
+    expect(readChar.ap(s, 'enemy2'), 'drain 前は2枚目も未処理').toBe(apBefore);
+    expect(s.players.self.hand, 'continuation も未処理').toEqual([]);
+
+    drainAiEffectPicks(s, policy);
+
+    expect(_peekPendingEffectPickQueueLength()).toBe(0);
+    expect(readChar.ap(s, 'enemy1')).toBe(apBefore - 1000);
+    expect(readChar.ap(s, 'enemy2')).toBe(apBefore - 1000);
+    expect(s.players.self.hand, 'continuation は1回だけ実行').toEqual(['D08001']);
   });
 });

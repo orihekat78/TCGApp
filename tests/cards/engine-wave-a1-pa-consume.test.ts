@@ -27,7 +27,7 @@ import { registerAll } from '@/cards/index';
 import { runAtom } from '@/engine/effect/atom-handlers';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { _drainAllEffectPicksForTest, applyOptionalAndContinuation } from '@/engine/effect/apply-pick';
-import { _peekPendingEffectOptionalSide, _clearPendingEffectOptionalSide, _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
+import { _peekPendingEffectOptionalSide, _clearPendingEffectOptionalSide, _clearPendingEffectPickQueue, _drainPendingEffectPickSide } from '@/engine/effect/resolve-picks';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _drainPendingHirameki } from '@/engine/listeners/hirameki';
@@ -58,7 +58,17 @@ beforeEach(() => {
   // ビッグジュエル カード (PA 常駐)・中森青子 (revive 対象)・decoy
   registerCardDef(ch('JEWEL1', { names: ['ビッグジュエル1'], traits: ['ビッグジュエル'], kind: 'character', level: 3 }));
   registerCardDef(ch('JEWEL2', { names: ['ビッグジュエル2'], traits: ['ビッグジュエル'], kind: 'character', level: 3 }));
-  registerCardDef(ch('AOKO', { names: ['中森青子'], colors: ['白'], level: 4 }));
+  registerCardDef(ch('AOKO', {
+    names: ['中森青子'], colors: ['白'], level: 4,
+    abilities: [{
+      id: 'enter-proof', type: 'triggered', scope: 'on-scene',
+      trigger: { hook: 'enter', selfOnly: true },
+      condition: { kind: 'enterSource', viaEffect: true, sourceFilter: { kind: 'character' }, side: 'self' },
+      effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+      description: 'QA proof: an enter ability fires after effect-driven entry.',
+      ruleRefs: ['rules/15-abilities-effects.md'],
+    }],
+  }));
   registerCardDef(ch('AOKO9', { names: ['中森青子'], colors: ['白'], level: 9 })); // Lv9 = filter 外 decoy
   registerCardDef(ch('OTHER', { names: ['他'], colors: ['緑'] }));
   registerCardDef({ ...ch('PW'), kind: 'partner', names: ['白パートナー'], colors: ['白'], lp: 2, ap: undefined });
@@ -122,8 +132,9 @@ describe('§B mutate.partner.removeAreaCardsToRemove — 直接', () => {
   });
 });
 
-describe('§C exact-N gate — 短縮形 n:2', () => {
-  it('C1 PA jewel 1枚 (< n:2) → chainStepNoApply、除去せず', () => {
+describe('§C explicit minimum policy — 短縮形 n:2', () => {
+  it('C1 defaults a mandatory shortage to best-effort and surfaces the one feasible card', () => {
+    setHuman('self');
     const s0 = produce(createEmptyGameState(), (d) => {
       d.players.self.partnerAreaCards = ['JEWEL1', 'OTHER']; // jewel は 1枚のみ
     });
@@ -131,20 +142,54 @@ describe('§C exact-N gate — 短縮形 n:2', () => {
     const after = produce(s0, (d) => {
       runAtom(d, 'partnerAreaRemove', { player: 'self', n: 2, filter: { trait: 'ビッグジュエル' } }, ctx);
     });
-    expect(ctx.dyn?.chainStepNoApply).toBe(true); // gate 発火
-    expect(after.players.self.partnerAreaCards).toEqual(['JEWEL1', 'OTHER']); // 不変
+    expect(ctx.dyn?.chainStepNoApply).toBeFalsy();
+    expect(_drainPendingEffectPickSide()).toMatchObject({
+      nMin: 1,
+      nMax: 1,
+      requestedNMin: 2,
+      requestedNMax: 2,
+      minimumPolicy: 'best-effort',
+    });
+    expect(after.players.self.partnerAreaCards).toEqual(['JEWEL1', 'OTHER']);
     expect(after.players.self.remove).toEqual([]);
   });
 
-  it('C2 PA jewel 2枚 (= n:2) → gate せず (pick へ = chainStepNoApply false)', () => {
+  it('C2 rejects an explicit exact shortage before surfacing a partial pick', () => {
+    setHuman('self');
+    const s0 = produce(createEmptyGameState(), (d) => {
+      d.players.self.partnerAreaCards = ['JEWEL1', 'OTHER'];
+    });
+    const ctx = ectx();
+    const after = produce(s0, (d) => {
+      runAtom(d, 'partnerAreaRemove', {
+        player: 'self', n: 2, minimumPolicy: 'exact', filter: { trait: 'ビッグジュエル' },
+      }, ctx);
+    });
+    expect(ctx.dyn?.chainStepNoApply).toBe(true);
+    expect(_drainPendingEffectPickSide()).toBeNull();
+    expect(after.players.self.partnerAreaCards).toEqual(['JEWEL1', 'OTHER']);
+    expect(after.players.self.remove).toEqual([]);
+  });
+
+  it('C3 surfaces the full exact selection when enough cards exist', () => {
+    setHuman('self');
     const s0 = produce(createEmptyGameState(), (d) => {
       d.players.self.partnerAreaCards = ['JEWEL1', 'JEWEL2'];
     });
     const ctx = ectx();
     produce(s0, (d) => {
-      runAtom(d, 'partnerAreaRemove', { player: 'self', n: 2, filter: { trait: 'ビッグジュエル' } }, ctx);
+      runAtom(d, 'partnerAreaRemove', {
+        player: 'self', n: 2, minimumPolicy: 'exact', filter: { trait: 'ビッグジュエル' },
+      }, ctx);
     });
-    expect(ctx.dyn?.chainStepNoApply).toBeFalsy(); // 候補足りる → gate せず pick await
+    expect(ctx.dyn?.chainStepNoApply).toBeFalsy();
+    expect(_drainPendingEffectPickSide()).toMatchObject({
+      nMin: 2,
+      nMax: 2,
+      requestedNMin: 2,
+      requestedNMax: 2,
+      minimumPolicy: 'exact',
+    });
   });
 });
 
@@ -172,8 +217,9 @@ describe('§E B07037 e2e — 【登場時】optional run → 2枚除去 → revi
     s.players.self.scene = [sceneChar('B07037', 'kk0', { state: 'active' })];
     s.players.self.partnerAreaCards = paCards;
     s.players.self.remove = removeCards;
+    s.players.self.deck = ['OTHER', 'OTHER'];
     s = produce(s, (d) => {
-      event.emit(d, 'enter', { uid: 'kk0', viaEffect: false, enterOrder: 0 }, { player: 'self', cardId: 'B07037', uid: 'kk0' });
+      event.emit(d, 'enter', { uid: 'kk0', viaEffect: true, enterOrder: 0 }, { player: 'self', cardId: 'B07037', uid: 'kk0' });
       runAllUntilEmpty(d);
       const p = _peekPendingEffectOptionalSide();
       expect(p, 'optional surface').not.toBeNull();
@@ -183,7 +229,7 @@ describe('§E B07037 e2e — 【登場時】optional run → 2枚除去 → revi
     return s;
   }
 
-  it('E1 jewel 2枚 + remove に中森青子: 2枚除去 → 中森青子が sleep 登場', () => {
+  it('E1 B07037 jewel 2枚 + remove に中森青子: 2枚除去 → 中森青子が sleep 登場', () => {
     const s = fire(['JEWEL1', 'JEWEL2'], ['AOKO']);
     expect(s.players.self.partnerAreaCards, 'PA jewel 2枚除去').toEqual([]);
     expect(s.players.self.remove).toContain('JEWEL1');
@@ -192,6 +238,7 @@ describe('§E B07037 e2e — 【登場時】optional run → 2枚除去 → revi
     expect(aoko, '中森青子が登場').toBeTruthy();
     expect(aoko!.state, 'スリープ状態で登場').toBe('sleep');
     expect(s.players.self.remove, 'AOKO は remove から出た').not.toContain('AOKO');
+    expect(s.players.self.hand, '効果登場した AOKO の登場時能力が発動').toContain('OTHER');
   });
 
   it('E3 PA jewel 3枚 (> n:2) → 正確に2枚のみ除去 (BUG-165 collapse なし)、1枚残る', () => {

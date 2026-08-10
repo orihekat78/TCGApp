@@ -7,8 +7,11 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { resolveEffectPicks, _clearPendingEffectPickQueue, _drainPendingEffectPickSide, _peekPendingEffectOptionalSide, _clearPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
+import { run as runEffect } from '@/engine/effect/resolver';
+import { withStructuredCausalResolution } from '@/engine/log/effect-causal';
 import { createEmptyGameState } from '@/engine/state-factory';
-import type { Effect, EffectCtx, GameState } from '@/engine/types';
+import { startCausalSession, validateCausalLog } from '@/engine/log/causal';
+import type { CausalLogEntryV1, Effect, EffectCtx, GameState } from '@/engine/types';
 
 function ctxSelf(): EffectCtx {
   return { source: { player: 'self', area: 'scene' }, bindings: {} };
@@ -319,5 +322,33 @@ describe('engine.effect.resolveEffectPicks — pattern B (BUG-065)', () => {
       byPlayer: 'self',
     }) as { args: { target: string[] } };
     expect(resolved.args.target).toEqual(['D08001']);
+  });
+
+  it('records one public decision for an autonomous Pattern B pick', () => {
+    const privateFirst = 'PRIVATE-HAND-FIRST';
+    const privateSecond = 'PRIVATE-HAND-SECOND';
+    const s = stateWithSelfHand(privateFirst, privateSecond);
+    startCausalSession(s, 'pattern-b-autonomous');
+    const ctx = ctxSelf();
+
+    const resolved = resolveEffectPicks(s, DISCARD_PICK_ATOM, ctx) as { args: { target: string[] } };
+
+    expect(resolved.args.target).toEqual([privateFirst]);
+    expect(validateCausalLog(s.log as CausalLogEntryV1[])).toEqual([]);
+
+    withStructuredCausalResolution(s, () => runEffect(s, resolved as Effect, ctx));
+    const graph = validateCausalLog(s.log as CausalLogEntryV1[]);
+    expect(graph.map((node) => [node.kind, node.parentEventId])).toEqual([
+      ['use', undefined],
+      ['select', 'pattern-b-autonomous:1'],
+      ['discard', 'pattern-b-autonomous:2'],
+    ]);
+    expect(graph[1]).toMatchObject({
+      source: { kind: 'player', side: 'self' },
+      targets: [],
+      outcome: { type: 'state', state: 'success' },
+    });
+    expect(JSON.stringify(graph)).not.toContain(privateFirst);
+    expect(JSON.stringify(graph)).not.toContain(privateSecond);
   });
 });

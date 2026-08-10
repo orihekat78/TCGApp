@@ -180,6 +180,40 @@ describe('B07055 紅の盟約', () => {
     expect(setLeft, 'n:{2,2} 単独で set card 計2枚リムーブ').toBe(0);
   });
 
+  it('ISOLATION: charRemoveSetCard n:2 removes two physical set-card occurrences from one host', () => {
+    const s = createEmptyGameState();
+    s.players.self.scene = [
+      makeChar({
+        cardId: 'mine1',
+        uid: 'm#1',
+        state: 'active',
+        setCards: [
+          { cardId: 'sc-a', faceUp: false, instanceId: 'set:mine1:a' },
+          { cardId: 'sc-b', faceUp: false, instanceId: 'set:mine1:b' },
+        ] as never,
+      }),
+    ];
+    registerCardDef(pchar('mine1'));
+
+    const after = produce(s, (d) => {
+      runEffect(d, {
+        kind: 'atom',
+        verb: 'charRemoveSetCard',
+        args: {
+          player: 'self',
+          side: 'self',
+          n: 2,
+          minimumPolicy: 'exact',
+          filter: { hasSetCards: true },
+        },
+      } as never, ctxFor('X', 'u'));
+      _drainAllEffectPicksForTest(d, new HeuristicPolicy());
+    });
+
+    expect(after.players.self.scene[0]!.setCards).toEqual([]);
+    expect(after.players.self.remove).toEqual(expect.arrayContaining(['sc-a', 'sc-b']));
+  });
+
   it('挙動: 自場の2キャラの set card を計2枚リムーブ → そうした場合 AP6000以下を追加リムーブ', () => {
     const s = createEmptyGameState();
     // 自分の現場: set card を持つキャラ2枚 (+ set なし decoy)
@@ -216,9 +250,7 @@ describe('B07055 紅の盟約', () => {
   });
 
   it('挙動: 自場に set card が0枚なら clause2 は何も起きず bonus も発火しない (chain break)', () => {
-    // 注: 「1枚しか無い」場合 (候補<2 で opt-in) の挙動 (clamp して1枚除去+bonus か / 全不発か) は
-    //   公式 Q&A 未裁定の edge。engine は n:2 を候補数に clamp する (known-gap、本 family メモ参照)。
-    //   ここでは決定論的な 0枚ケース (候補ゼロ→pick 不成立→chain break→bonus skip) を検証する。
+    // exact 2枚のため候補不足では部分除去せず、chain後段も実行しない。
     const s = createEmptyGameState();
     s.players.self.scene = [makeChar({ cardId: 'mine1', uid: 'm#1', state: 'active' })]; // set なし
     s.players.opp.scene = [

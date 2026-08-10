@@ -1,0 +1,39 @@
+{
+  "viewport": {
+    "width": 851,
+    "height": 393
+  },
+  "slot": "パートナー",
+  "initial": {
+    "left": 4.293575286865234,
+    "top": 110,
+    "width": 280.00000381469727,
+    "height": 275,
+    "right": 284.2935791015625,
+    "bottom": 385,
+    "fit": true
+  },
+  "frame16ms": {
+    "left": 9.643441200256348,
+    "top": 110,
+    "width": 279.99999141693115,
+    "height": 275,
+    "right": 289.6434326171875,
+    "bottom": 385,
+    "fit": true
+  },
+  "settled": {
+    "left": 10,
+    "top": 110,
+    "width": 280,
+    "height": 275,
+    "right": 290,
+    "bottom": 385,
+    "fit": true
+  },
+  "documentOverflow": {
+    "x": false,
+    "y": false
+  },
+  "errors": []
+}

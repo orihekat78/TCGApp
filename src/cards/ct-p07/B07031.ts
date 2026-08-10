@@ -21,12 +21,11 @@
 //     · clause2「合わせて2枚リムーブしてもよい。そうした場合、reanimate」=
 //       optional{ chain[ charRemoveSetCard{self, side:self, n:2, filter:hasSetCards}, sceneEnter-reanimate ] }
 //       (B07055 a1 の charRemoveSetCard n:2 + B07058 a1 の reanimate を合成)。
-//       · 「してもよい」= optional / 「合わせて2枚」= n:2 (number=強制ちょうど2枚。n:{min,max} object は無音0枚の既知挙動)。
+//       · 「してもよい」= optional / 「合わせて2枚」= n:2 + minimumPolicy:'exact' (2枚未満なら全不発)。
 //       · 「そうした場合」= chain (2枚除去後のみ reanimate へ進む)。
 //       · reanimate = sceneEnter{from:remove, filter{色白, levelMax3, character}, n:0-1} (「1枚まで」=0OK)。
 //         登場した「そのキャラ」の【登場時】も発動 (rules/15、本カードを reanimate すれば a1 が再 set)。
-//   - known-gap (family 共通・非本カード起因): charRemoveSetCard n:2 は AI 経路で候補<2 のとき clamp し
-//     1枚のみ除去でも chain が reanimate へ進みうる (B07055 と同一構造、DEFERRED-INDEX 記録済)。HUMAN 経路は per-uid で計2枚正。
+//   - 「裏向きでセット」限定は faceDownOnly:true。候補は物理 set-card occurrence 単位。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 
@@ -67,7 +66,7 @@ const a2: AbilityDef = {
         effect: {
           kind: 'chain',
           steps: [
-            { kind: 'atom', verb: 'charRemoveSetCard', args: { player: 'self', side: 'self', n: 2, filter: { hasSetCards: true } } },
+            { kind: 'atom', verb: 'charRemoveSetCard', args: { player: 'self', side: 'self', n: 2, minimumPolicy: 'exact', faceDownOnly: true, filter: { hasSetCards: true } } },
             {
               kind: 'atom',
               verb: 'sceneEnter',

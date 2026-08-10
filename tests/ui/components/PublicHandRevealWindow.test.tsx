@@ -1,8 +1,14 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PublicHandRevealWindow } from '@/ui/components/PublicHandRevealWindow';
 import { useGameStateStore } from '@/ui/state/store';
+import {
+  queuePendingPublicHandRevealSide,
+  resetPendingAtomSession,
+} from '@/engine/effect/atom-handlers/_shared';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -11,6 +17,7 @@ describe('PublicHandRevealWindow', () => {
   let root: Root;
 
   beforeEach(() => {
+    resetPendingAtomSession();
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -26,7 +33,12 @@ describe('PublicHandRevealWindow', () => {
     vi.useRealTimers();
     act(() => root.unmount());
     container.remove();
-    useGameStateStore.setState({ pendingPublicHandReveal: null });
+    useGameStateStore.setState({
+      gameState: null,
+      pendingEffectPick: null,
+      pendingPublicHandReveal: null,
+    });
+    resetPendingAtomSession();
   });
 
   it('gives duplicate detail controls distinct accessible names with their occurrence and card name', () => {
@@ -42,7 +54,7 @@ describe('PublicHandRevealWindow', () => {
     expect(first?.getAttribute('aria-label')).not.toBe(second?.getAttribute('aria-label'));
   });
 
-  it('dismisses a presentation window on its timer', () => {
+  it('keeps a presentation window until the user explicitly closes it', () => {
     vi.useFakeTimers();
     useGameStateStore.setState((state) => ({
       pendingPublicHandReveal: state.pendingPublicHandReveal
@@ -50,9 +62,49 @@ describe('PublicHandRevealWindow', () => {
         : null,
     }));
     act(() => root.render(<PublicHandRevealWindow />));
-    act(() => vi.advanceTimersByTime(1600));
+    act(() => vi.advanceTimersByTime(60_000));
+
+    expect(useGameStateStore.getState().pendingPublicHandReveal).not.toBeNull();
+    expect(container.querySelector('[data-testid="public-hand-reveal-window"]')).not.toBeNull();
+
+    const close = container.querySelector<HTMLButtonElement>('[data-testid="public-hand-reveal-close"]');
+    expect(close?.getAttribute('aria-label')).toBe('公開カードを閉じる');
+    act(() => close?.click());
 
     expect(useGameStateStore.getState().pendingPublicHandReveal).toBeNull();
     expect(container.querySelector('[data-testid="public-hand-reveal-window"]')).toBeNull();
+  });
+
+  it('keeps each card detail action at the landscape touch target minimum', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/ui/components/PublicHandRevealWindow.css'), 'utf8');
+    expect(css).toMatch(/\.public-hand-reveal-card button\s*\{[\s\S]*min-width:\s*44px;[\s\S]*min-height:\s*44px;/);
+    expect(css).toMatch(/\.public-hand-reveal-close\s*\{[^}]*min-width:\s*44px;[^}]*min-height:\s*44px;/);
+  });
+
+  it('surfaces the next queued presentation after an explicit close', () => {
+    useGameStateStore.setState((state) => ({
+      pendingPublicHandReveal: state.pendingPublicHandReveal
+        ? { ...state.pendingPublicHandReveal, lifetime: 'presentation' }
+        : null,
+    }));
+    queuePendingPublicHandRevealSide({
+      owner: 'self',
+      audience: 'all',
+      cardIds: ['D08003'],
+      handSnapshot: ['D08003'],
+      lifetime: 'presentation',
+      resolutionToken: 'public-hand-reveal:next',
+      source: { cardId: 'B09061', abilityId: 'a1' },
+    });
+    act(() => root.render(<PublicHandRevealWindow />));
+
+    const close = container.querySelector<HTMLButtonElement>('[data-testid="public-hand-reveal-close"]')!;
+    act(() => close.click());
+
+    expect(useGameStateStore.getState().pendingPublicHandReveal).toMatchObject({
+      resolutionToken: 'public-hand-reveal:next',
+      cardIds: ['D08003'],
+    });
+    expect(container.querySelector('[data-testid="public-hand-reveal-window"]')).not.toBeNull();
   });
 });

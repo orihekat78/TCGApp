@@ -7,7 +7,7 @@
 //   getter/setter/drain/peek/clear/take。walk (resolve-picks) と continuation (apply-pick) の共有状態。
 //   本ファイルは leaf (resolve-picks/apply-pick/resolver を import しない)。
 
-import type { Effect, EffectCtx, EffectResolutionKind } from '../types/index.js';
+import type { CausalEffectTrace, Effect, EffectCtx, EffectResolutionKind } from '../types/index.js';
 
 type Player = 'self' | 'opp';
 
@@ -22,6 +22,8 @@ export type PendingEffectSource = {
   ownerChosenOrder?: number;
   ownerOrderConfirmed?: boolean;
   declaredBatch?: number | string;
+  /** Public-only causal lineage for the suspended effect branch. */
+  causalTrace?: CausalEffectTrace;
 };
 
 // Phase 3c (2026-06-22): choice 再開 holder。旧 2 channel (Resume=Effect / 旧 ChoiceBindings=bindings) を
@@ -85,7 +87,7 @@ declare global {
 
   var __pendingRpsContinuation: ContinuationFrame | null | undefined;
   // Dedicated discard-or-negate response. It deliberately does not share optional/choice state:
-  // accepting discards a hand occurrence and cancels a different effect; declining resumes it.
+  // accepting discards one exact hand occurrence and resumes the selected effect; declining negates it.
 
   var __pendingChooseInterceptSide: PendingChooseInterceptSide | null | undefined;
 
@@ -116,6 +118,8 @@ export function setPendingEffectRepeatOptionalRemainder(remainder: Effect[]): vo
 export function setPendingEffectRepeatOptionalContinuation(continuation: ContinuationFrame): void { if (globalThis.__pendingEffectRepeatOptionalResume) globalThis.__pendingEffectRepeatOptionalResume.continuation = continuation; }
 export function _clearPendingEffectRepeatOptionalSide(): void { globalThis.__pendingEffectRepeatOptionalSide = null; globalThis.__pendingEffectRepeatOptionalResume = null; }
 
+export type PendingPickMinimumPolicy = 'best-effort' | 'exact';
+
 export type PendingEffectPickSide = {
   player: Player;
   /**
@@ -126,7 +130,17 @@ export type PendingEffectPickSide = {
    */
   ownerPlayer?: Player;
   /** 候補 uid 配列 (Candidate.kind === 'char' のみ抽出) */
-  candidates: { uid: string; cardId: string; player: Player; kind?: 'char' | 'card' | 'evidence'; area?: string; index?: number }[];
+  candidates: {
+    uid: string;
+    cardId: string;
+    player: Player;
+    kind?: 'char' | 'card' | 'evidence';
+    area?: string;
+    index?: number;
+    hostUid?: string;
+    setCardInstanceId?: string;
+    hidden?: boolean;
+  }[];
   /** 元 atom の verb (例: 'sceneRemove') */
   atomVerb: string;
   /** atom args (uid='$pick' 含む、resolve 後に上書きされる) */
@@ -134,6 +148,15 @@ export type PendingEffectPickSide = {
   /** 任意効果の min/max (n.min === 0 なら skip 可) */
   nMin: number;
   nMax: number;
+  /**
+   * Printed/requested bounds survive runtime feasibility normalization.  A
+   * mandatory effect uses best-effort; an optional/exact prerequisite must
+   * satisfy the requested minimum before it can surface or resolve.
+   * Optional for legacy persisted fixtures; new producers always populate it.
+   */
+  requestedNMin?: number;
+  requestedNMax?: number;
+  minimumPolicy?: PendingPickMinimumPolicy;
   /** ability source (UI 表示・log 用) */
   source: PendingEffectSource;
   /** Links a public opponent-hand window to this exact target resolution. */
@@ -198,17 +221,18 @@ export type PendingChooseInterceptSide = {
   targetUid: string;
 };
 
-type ChooseInterceptResume = {
+export type ChooseInterceptResume = {
   pending: PendingEffectPickSide;
   pickedUid: string;
   pickedUids?: string[];
   switchRemoveUid?: string;
   switchRemoveUids?: string[];
+  guard?: PendingChooseInterceptSide;
 };
 
 export function pushPendingChooseInterceptSide(v: PendingChooseInterceptSide, resume: ChooseInterceptResume): void {
   globalThis.__pendingChooseInterceptSide = v;
-  globalThis.__pendingChooseInterceptResume = resume;
+  globalThis.__pendingChooseInterceptResume = { ...resume, guard: { ...v, protector: { ...v.protector } } };
 }
 
 export function _drainPendingChooseInterceptSide(): PendingChooseInterceptSide | null {
@@ -221,6 +245,10 @@ export function _takePendingChooseInterceptResume(): ChooseInterceptResume | nul
   const v = globalThis.__pendingChooseInterceptResume ?? null;
   globalThis.__pendingChooseInterceptResume = null;
   return v;
+}
+
+export function _peekPendingChooseInterceptResume(): ChooseInterceptResume | null {
+  return globalThis.__pendingChooseInterceptResume ?? null;
 }
 
 export function _peekPendingChooseInterceptSide(): PendingChooseInterceptSide | null {
@@ -247,6 +275,29 @@ function syncLegacyPickProperty(): void {
 export function pushPendingEffectPickSide(v: PendingEffectPickSide): void {
   getPendingQueue().push(v);
   syncLegacyPickProperty();
+}
+
+/** Replace one exact queued decision while preserving FIFO ownership. */
+export function replacePendingEffectPickSide(
+  current: PendingEffectPickSide,
+  replacement: PendingEffectPickSide,
+): boolean {
+  const q = getPendingQueue();
+  const index = q.indexOf(current);
+  if (index < 0) return false;
+  q[index] = replacement;
+  syncLegacyPickProperty();
+  return true;
+}
+
+/** Remove one exact queued decision without consuming an unrelated sibling. */
+export function removePendingEffectPickSide(current: PendingEffectPickSide): boolean {
+  const q = getPendingQueue();
+  const index = q.indexOf(current);
+  if (index < 0) return false;
+  q.splice(index, 1);
+  syncLegacyPickProperty();
+  return true;
 }
 
 /** test fixture / 内部 caller 用: queue に直接 push する公開ヘルパ */
@@ -276,7 +327,14 @@ export function toPlainDeep<T>(v: T): T {
   if (v !== null && typeof v === 'object') {
     const out: Record<string, unknown> = {};
     for (const k of Object.keys(v as object)) {
-      out[k] = toPlainDeep((v as Record<string, unknown>)[k]);
+      // `__proto__` is a setter on Object.prototype. Define an own data
+      // property so cloning can never change the output object's prototype.
+      Object.defineProperty(out, k, {
+        value: toPlainDeep((v as Record<string, unknown>)[k]),
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
     }
     return out as T;
   }
@@ -430,7 +488,12 @@ export type PendingSetCardReplacementSide = {
     | { kind: 'scene-to-stack'; hostUid: string };
 };
 export function pushPendingSetCardReplacementSide(v: PendingSetCardReplacementSide): void {
-  (globalThis as { __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null }).__pendingSetCardReplacementSide = v;
+  const g = globalThis as {
+    __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null;
+    __pendingSetCardReplacementGuard?: PendingSetCardReplacementSide | null;
+  };
+  g.__pendingSetCardReplacementSide = v;
+  g.__pendingSetCardReplacementGuard = toPlainDeep(v) as PendingSetCardReplacementSide;
 }
 export function _drainPendingSetCardReplacementSide(): PendingSetCardReplacementSide | null {
   const g = globalThis as { __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null };
@@ -439,13 +502,43 @@ export function _drainPendingSetCardReplacementSide(): PendingSetCardReplacement
 export function _peekPendingSetCardReplacementSide(): PendingSetCardReplacementSide | null {
   return (globalThis as { __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null }).__pendingSetCardReplacementSide ?? null;
 }
+/** Resolver-owned authorization snapshot. The UI projection is never authoritative. */
+export function _peekPendingSetCardReplacementGuard(): PendingSetCardReplacementSide | null {
+  return (globalThis as { __pendingSetCardReplacementGuard?: PendingSetCardReplacementSide | null }).__pendingSetCardReplacementGuard ?? null;
+}
+/** Consume the exact trusted replacement and its presentation side together. */
+export function _takePendingSetCardReplacementGuard(): PendingSetCardReplacementSide | null {
+  const g = globalThis as {
+    __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null;
+    __pendingSetCardReplacementGuard?: PendingSetCardReplacementSide | null;
+  };
+  const value = g.__pendingSetCardReplacementGuard ?? null;
+  g.__pendingSetCardReplacementSide = null;
+  g.__pendingSetCardReplacementGuard = null;
+  return value;
+}
 /** Preserve a pre-existing replacement prompt across rejected transactions. */
-export function _restorePendingSetCardReplacementSide(v: PendingSetCardReplacementSide | null): void {
-  (globalThis as { __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null }).__pendingSetCardReplacementSide = v;
+export function _restorePendingSetCardReplacementSide(
+  v: PendingSetCardReplacementSide | null,
+  guard: PendingSetCardReplacementSide | null = v,
+): void {
+  const g = globalThis as {
+    __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null;
+    __pendingSetCardReplacementGuard?: PendingSetCardReplacementSide | null;
+  };
+  g.__pendingSetCardReplacementSide = v;
+  g.__pendingSetCardReplacementGuard = guard === null
+    ? null
+    : toPlainDeep(guard) as PendingSetCardReplacementSide;
 }
 /** Drop a replacement created by a payment that subsequently failed atomically. */
 export function _clearPendingSetCardReplacementSide(): void {
-  (globalThis as { __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null }).__pendingSetCardReplacementSide = null;
+  const g = globalThis as {
+    __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null;
+    __pendingSetCardReplacementGuard?: PendingSetCardReplacementSide | null;
+  };
+  g.__pendingSetCardReplacementSide = null;
+  g.__pendingSetCardReplacementGuard = null;
 }
 export type PendingSetCardChoiceSide = {
   player: Player;
@@ -589,15 +682,21 @@ export function appendPendingRpsContinuation(continuation: ContinuationFrame): v
   while (tail.outer) tail = tail.outer;
   tail.outer = continuation;
 }
-export function _takePendingRpsResume(): { effect: Effect; bindings: Record<string, unknown>; continuation?: ContinuationFrame } | null {
+export function _peekPendingRpsResume(): { effect: Effect; bindings: Record<string, unknown>; continuation?: ContinuationFrame } | null {
   const g = globalThis as { __pendingRpsResume?: Effect | null; __pendingRpsBindings?: Record<string, unknown> | null; __pendingRpsContinuation?: ContinuationFrame | null };
   const effect = g.__pendingRpsResume ?? null;
   const bindings = g.__pendingRpsBindings ?? null;
-  const continuation = g.__pendingRpsContinuation ?? undefined;
+  return effect && bindings
+    ? { effect, bindings, continuation: g.__pendingRpsContinuation ?? undefined }
+    : null;
+}
+export function _takePendingRpsResume(): { effect: Effect; bindings: Record<string, unknown>; continuation?: ContinuationFrame } | null {
+  const value = _peekPendingRpsResume();
+  const g = globalThis as { __pendingRpsResume?: Effect | null; __pendingRpsBindings?: Record<string, unknown> | null; __pendingRpsContinuation?: ContinuationFrame | null };
   g.__pendingRpsResume = null;
   g.__pendingRpsBindings = null;
   g.__pendingRpsContinuation = null;
-  return effect && bindings ? { effect, bindings, continuation } : null;
+  return value;
 }
 
 export function pushPendingEffectOptionalSide(v: PendingEffectOptionalSide): void {
@@ -675,6 +774,7 @@ export function resetPendingEffectSession(): void {
     __pendingSetCardChoiceGuard?: PendingSetCardChoiceSide | null;
     __pendingSetCardChoiceContinuation?: ContinuationFrame | null;
     __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null;
+    __pendingSetCardReplacementGuard?: PendingSetCardReplacementSide | null;
   };
   g.__pendingEffectOptionalCostPaid = null;
   g.__pendingSetCardChoiceSide = null;
@@ -683,6 +783,7 @@ export function resetPendingEffectSession(): void {
   g.__pendingSetCardChoiceGuard = null;
   g.__pendingSetCardChoiceContinuation = null;
   g.__pendingSetCardReplacementSide = null;
+  g.__pendingSetCardReplacementGuard = null;
   delete (globalThis as { __pendingRuntimeStateMarker?: unknown }).__pendingRuntimeStateMarker;
 }
 

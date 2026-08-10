@@ -13,17 +13,33 @@ import { char as readChar } from '../read/char.js';
 type Player = 'self' | 'opp';
 type OrderMode = 'given' | 'reverse';
 
+export type DeckDrawStep =
+  | { kind: 'draw'; count: number }
+  | { kind: 'refresh'; count: number };
+
 /** デッキ上から n 枚を手札へ。各取得後のexact exhaustionでもリフレッシュ自動発火 (rules/14) */
-function draw(s: GameState, p: Player, n: number, resolvingCardId?: CardId): CardId[] {
+function draw(
+  s: GameState,
+  p: Player,
+  n: number,
+  resolvingCardId?: CardId,
+  onStep?: (step: DeckDrawStep) => void,
+): CardId[] {
   const drawn: CardId[] = [];
   let remaining = n;
+
+  const refreshAndTrace = (): boolean => {
+    return refreshAfterTake(s, p, resolvingCardId, (count) => {
+      onStep?.({ kind: 'refresh', count });
+    });
+  };
 
   while (remaining > 0) {
     const d = s.players[p].deck;
     if (d.length === 0) {
       // Initial/cross-operation empty state uses the same refresh/deck-out
       // writer as the completed-take checkpoint below.
-      if (!refreshAfterTake(s, p, resolvingCardId)) break;
+      if (!refreshAndTrace()) break;
       // リフレッシュ後再試行
       if (s.players[p].deck.length === 0) break;
     }
@@ -31,10 +47,11 @@ function draw(s: GameState, p: Player, n: number, resolvingCardId?: CardId): Car
     const card = s.players[p].deck.shift()!;
     s.players[p].hand.push(card);
     drawn.push(card);
+    onStep?.({ kind: 'draw', count: 1 });
     remaining--;
     // Exact exhaustion has no next loop iteration to run the pre-take guard.
     // Refresh at the completed take boundary even when this was the final draw.
-    if (!refreshAfterTake(s, p, resolvingCardId)) break;
+    if (!refreshAndTrace()) break;
   }
 
   return drawn;
@@ -173,11 +190,19 @@ function refresh(s: GameState, p: Player, resolvingCardId?: CardId): RefreshResu
  * ended), allowing multi-take callers to stop without duplicating deck-out
  * winner assignment.
  */
-function refreshAfterTake(s: GameState, p: Player, resolvingCardId?: CardId): boolean {
+function refreshAfterTake(
+  s: GameState,
+  p: Player,
+  resolvingCardId?: CardId,
+  onRefresh?: (count: number) => void,
+): boolean {
   if (s.players[p].deck.length > 0) return true;
   if (s.gameResult !== undefined) return false;
   const result = refresh(s, p, resolvingCardId);
-  if (result.ok) return true;
+  if (result.ok) {
+    onRefresh?.(result.reshuffled);
+    return true;
+  }
   const winner: Player = p === 'self' ? 'opp' : 'self';
   gameResultMut.set(s, winner, 'deck-out');
   return false;

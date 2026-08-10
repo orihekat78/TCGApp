@@ -7,15 +7,17 @@
 //   - n.min === 0 (任意効果) なら「スキップ」button 表示
 
 import type { JSX } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import { def as readDef } from '@/engine/read/def.js';
-import { isSceneDirectPick } from '@/ui/services/scenePick.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { CardArt } from './CardArt.js';
 import { CardExpandModal } from './CardExpandModal.js';
+import { PublicHandRevealCards } from './PublicHandRevealWindow.js';
+import { shouldRenderEffectPicker } from '@/ui/services/effectPickerVisibility.js';
+import { effectivePendingPickRange, pendingPickSelectionViolation } from '@/engine/effect/pick-selection.js';
 import './EffectPickerModal.css';
 
 /**
@@ -27,55 +29,104 @@ import './EffectPickerModal.css';
  */
 // D11014 driver 2026-05-26: charModifyAP は scene pick (D08003 sceneRemove と同 UI 流用)、
 // sceneEnter は CardListModal pick (D08013 evidenceToHand と同 UI 流用、area: remove)
-const AREA_PICK_VERBS = new Set(['evidenceToHand', 'handAddFromRemove', 'deckRevealUntil', 'discard', 'sceneRemove', 'charModifyAP', 'sceneEnter', 'charStackCard']);
-
 export function EffectPickerModal(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingEffectPick);
+  const publicHandReveal = useGameStateStore((s) => s.pendingPublicHandReveal);
   const gameState = useGameStateStore((s) => s.gameState);
+  const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   // 夜間 W0 (2026-07-11, B08019 a2): multi-select mode (nMax>1) の選択集合。
   // pending が入れ替わったら選択をリセット (hook は early-return より前に置く — rules of hooks)。
   const [multiSelected, setMultiSelected] = useState<string[]>([]);
   const expandModal = useCardExpandModal();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     setMultiSelected([]);
   }, [pending]);
-  if (!pending || pending.player !== 'self') return null;
+
   // area pick は CardListModal に譲る (Playmat.tsx が auto-open する)
   // A discard of another player's revealed hand cannot use the self HandZone.
   // Keep the finite public candidate list in this modal; it never enumerates
   // any unrevealed opponent-hand cards.
-  const isPublicOpponentHandDiscard = pending.atomVerb === 'discard'
-    && pending.candidates.some((candidate) => candidate.player === 'opp');
-  if (AREA_PICK_VERBS.has(pending.atomVerb) && !isPublicOpponentHandDiscard) return null;
-  // UI picker Direct Manipulation 化: scene-char を 1 枚選ぶ pick は Playmat が
-  // 現場カード直接クリックで処理する (本 modal は出さない)。Playmat の isScenePick と
-  // **同一述語** を共有して二重 UI / soft-lock を防ぐ (設計 v2 BLOCKER)。
-  // 本 modal は n.max>1 や非scene混在の画像付きフォールバックとして残る。
-  if (isSceneDirectPick(pending, gameState)) return null;
+  const shouldRender = shouldRenderEffectPicker(pending, gameState, spectatorMode);
+
+  // Required choices must be a complete keyboard dialog. Escape intentionally
+  // does not resolve or dismiss: only the engine-approved actions may do that.
+  useEffect(() => {
+    if (!shouldRender) {
+      const returnFocus = returnFocusRef.current;
+      returnFocusRef.current = null;
+      if (returnFocus?.isConnected) returnFocus.focus();
+      return;
+    }
+    if (!returnFocusRef.current && document.activeElement instanceof HTMLElement) {
+      returnFocusRef.current = document.activeElement;
+    }
+    return () => {
+      const returnFocus = returnFocusRef.current;
+      returnFocusRef.current = null;
+      if (returnFocus?.isConnected) returnFocus.focus();
+    };
+  }, [shouldRender]);
+
+  useEffect(() => {
+    if (!shouldRender || expandModal.expandedCard) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const getFocusable = (): HTMLButtonElement[] => Array.from(
+      dialog.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'),
+    );
+    const focusable = getFocusable();
+    focusable[0]?.focus();
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const controls = getFocusable();
+      if (controls.length === 0) return;
+      const activeIndex = controls.indexOf(document.activeElement as HTMLButtonElement);
+      if (event.shiftKey) {
+        if (activeIndex <= 0) {
+          event.preventDefault();
+          controls.at(-1)?.focus();
+        }
+        return;
+      }
+      if (activeIndex === -1 || activeIndex === controls.length - 1) {
+        event.preventDefault();
+        controls[0]?.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [expandModal.expandedCard, pending?.decisionId, shouldRender]);
+
+  if (!pending || !shouldRender) return null;
+
+  const linkedPublicHandReveal = publicHandReveal?.lifetime === 'effect'
+    && pending.publicHandRevealToken === publicHandReveal.resolutionToken
+    ? publicHandReveal
+    : null;
 
   const sourceName = pending.source.cardId
     ? readDef.card(pending.source.cardId)?.names?.[0] ?? pending.source.cardId
     : '効果';
   // W2b (P50/r27): mustBeSelectedByOppEvent forced 集合 — forced 以外は click 不可、skip 封じ。
   const forced = (pending.forcedUids ?? []).filter((u) => pending.candidates.some((c) => c.uid === u));
-  const canSkip = pending.nMin === 0 && forced.length === 0;
+  const effectiveRange = effectivePendingPickRange(pending);
+  const canSkip = effectiveRange.min === 0 && forced.length === 0;
 
   // 夜間 W0 (2026-07-11, B08019 a2「合わせて2枚 (自分と相手で1枚ずつ)」): nMax>1 = multi-select mode。
   //   - perSideMax: side 別選択数 quota — 到達 side の未選択候補を click 不可化 (engine greedy は AI 経路
   //     のみのため human enforce は本 modal が唯一の層、forcedUids と同 posture)。
   //   - nMin は engine 側で候補数に clamp されない (resolve-picks は printed n をそのまま運ぶ) —
   //     quota 下の実選択可能数 effAvail に clamp して soft-lock を防ぐ (「可能な限り行う」rules/15)。
-  const isMulti = pending.nMax > 1;
-  const quotaCappedAvail = (() => {
-    if (typeof pending.perSideMax !== 'number') return pending.candidates.length;
-    const bySide: Record<string, number> = {};
-    for (const c of pending.candidates) bySide[c.player] = (bySide[c.player] ?? 0) + 1;
-    return Object.values(bySide).reduce((acc, n) => acc + Math.min(n, pending.perSideMax!), 0);
-  })();
-  const effMin = Math.min(pending.nMin, quotaCappedAvail, pending.nMax);
-  const effMax = Math.min(pending.nMax, quotaCappedAvail);
-  const sideCount = (side: 'self' | 'opp'): number =>
-    multiSelected.filter((u) => pending.candidates.find((c) => c.uid === u)?.player === side).length;
+  const isMulti = effectiveRange.max > 1;
+  const effMin = effectiveRange.min;
+  const effMax = effectiveRange.max;
   const selectedLevel = multiSelected.reduce(
     (sum, uid) => sum + (readDef.card(pending.candidates.find((c) => c.uid === uid)?.cardId ?? '')?.level ?? 0),
     0,
@@ -86,12 +137,11 @@ export function EffectPickerModal(): JSX.Element | null {
   const multiBlocked = (c: { uid: string; cardId: string; player: 'self' | 'opp' }): boolean => {
     if (multiSelected.includes(c.uid)) return false; // 解除は常に可
     if (multiSelected.length >= effMax) return true;
-    if (typeof pending.perSideMax === 'number' && sideCount(c.player) >= pending.perSideMax) return true;
-    const level = readDef.card(c.cardId)?.level ?? 0;
-    if (typeof pending.aggregateLevelMax === 'number' && selectedLevel + level > pending.aggregateLevelMax) return true;
-    return false;
+    return pendingPickSelectionViolation(pending, [...multiSelected, c.uid], false) !== null;
   };
-  const multiConfirmOk = multiSelected.length >= effMin && multiSelected.length <= effMax;
+  const multiConfirmOk = multiSelected.length >= effMin
+    && multiSelected.length <= effMax
+    && pendingPickSelectionViolation(pending, multiSelected) === null;
   const handleMultiConfirm = (): void => {
     const first = multiSelected[0];
     if (first === undefined) {
@@ -116,7 +166,8 @@ export function EffectPickerModal(): JSX.Element | null {
    * 見えてしまう問題。証拠 candidate (uid='evidence:<side>:<idx>') について
    * gameState から faceUp を確認し、裏向きなら「(非公開)」表示にする。
    */
-  const candDisplayName = (c: { uid: string; cardId: string }): string => {
+  const candDisplayName = (c: { uid: string; cardId: string; hidden?: boolean }): string => {
+    if (c.hidden === true) return '(非公開)';
     const evMatch = c.uid.match(/^evidence:(self|opp):(\d+)$/);
     if (evMatch && gameState) {
       const evPlayer = evMatch[1] as 'self' | 'opp';
@@ -130,6 +181,7 @@ export function EffectPickerModal(): JSX.Element | null {
   return (
     <>
     <div
+      ref={dialogRef}
       className="effect-picker-overlay"
       role="dialog"
       aria-labelledby="effect-picker-title"
@@ -145,6 +197,13 @@ export function EffectPickerModal(): JSX.Element | null {
               : `${sourceName}: 対象を選んでください`}
           </p>
         </div>
+        {linkedPublicHandReveal && (
+          <PublicHandRevealCards
+            pending={linkedPublicHandReveal}
+            onOpenCard={expandModal.open}
+            embedded
+          />
+        )}
         <ul className="effect-picker-list">
           {pending.candidates.map((c, index) => {
             const name = candDisplayName(c);

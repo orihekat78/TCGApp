@@ -10,7 +10,8 @@ import { mutate } from '@/engine/mutate/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { runAllUntilEmpty } from '@/engine/resolve';
-import type { CardDef, GameState } from '@/engine/types';
+import { startCausalSession, validateCausalLog } from '@/engine/log/causal';
+import type { CardDef, CausalLogEntryV1, GameState } from '@/engine/types';
 
 function makeCard(id: string, opts: Partial<CardDef> = {}): CardDef {
   return {
@@ -226,5 +227,70 @@ describe('engine.flow.main.doReasoning', () => {
     });
     expect(after.players.self.partner.state).toBe('sleep');
     expect(after.players.self.evidence).toHaveLength(4);
+  });
+
+  it('causal reasoning spans sleep, settled evidence, and completion', () => {
+    const { s, uid } = makeStateWithChar({ lp: 3, deckSize: 10 });
+    const state = produce(s, (draft) => {
+      startCausalSession(draft, 'reasoning-graph');
+    });
+
+    const after = produce(state, (draft) => {
+      doReasoning(draft, uid);
+      runAllUntilEmpty(draft);
+    });
+    const entries = validateCausalLog(after.log as CausalLogEntryV1[]);
+    expect(entries.map((entry) => [entry.kind, entry.parentEventId, entry.outcome])).toEqual([
+      ['declare', undefined, { type: 'state', state: 'active' }],
+      ['sleep', 'reasoning-graph:1', { type: 'state', state: 'sleep' }],
+      ['evidence', 'reasoning-graph:2', { type: 'count', amount: 3, unit: 'evidence' }],
+      ['summary', 'reasoning-graph:3', { type: 'state', state: 'success' }],
+    ]);
+    expect(entries[0].source).toMatchObject({ kind: 'card', side: 'self', zone: 'scene' });
+    expect(entries[2].targets).toEqual([
+      expect.objectContaining({ kind: 'zone', side: 'self', zone: 'evidence' }),
+    ]);
+  });
+
+  it('reports the actual causal evidence gain when the deck exhausts below LP', () => {
+    const { s, uid } = makeStateWithChar({ lp: 3, deckSize: 1 });
+    let endPayload: unknown;
+    event.on('reasoning:end', (_state, payload) => {
+      endPayload = payload;
+    });
+    const state = produce(s, (draft) => {
+      startCausalSession(draft, 'reasoning-short-deck');
+    });
+
+    const after = produce(state, (draft) => {
+      doReasoning(draft, uid);
+      runAllUntilEmpty(draft);
+    });
+
+    expect(after.players.self.evidence).toHaveLength(1);
+    expect(after.gameResult).toMatchObject({ winner: 'opp', reason: 'deck-out' });
+    expect(endPayload).toMatchObject({ uid, player: 'self', gained: 1 });
+    const causal = validateCausalLog(after.log.filter(
+      (entry): entry is CausalLogEntryV1 => 'schemaVersion' in entry && entry.schemaVersion === 1,
+    ));
+    const evidence = causal.find((entry) => entry.kind === 'evidence');
+    expect(evidence?.outcome).toEqual({ type: 'count', amount: 1, unit: 'evidence' });
+    expect(causal.map((entry) => entry.kind)).toEqual([
+      'declare', 'sleep', 'evidence', 'game-result',
+    ]);
+  });
+
+  it('reports the actual legacy evidence gain when the deck exhausts below LP', () => {
+    const { s, uid } = makeStateWithChar({ lp: 3, deckSize: 1 });
+    const after = produce(s, (draft) => {
+      doReasoning(draft, uid);
+      runAllUntilEmpty(draft);
+    });
+
+    expect(after.players.self.evidence).toHaveLength(1);
+    expect(after.gameResult).toMatchObject({ winner: 'opp', reason: 'deck-out' });
+    expect(after.log.find((entry) => entry.action === 'reasoning')).toMatchObject({
+      result: 'evidence+1',
+    });
   });
 });

@@ -12,24 +12,30 @@ test.beforeEach(async ({ page }) => {
 
 test('CARDS §7: 色 facet が decoy を除外し、条件内の漏れも無い', async ({ page }) => {
   await page.goto('/#cards');
-  await expect(page.getByText(/\d+ 種類/).first()).toBeVisible({ timeout: 6000 });
+  await expect(page.getByRole('textbox', { name: 'カードを検索' })).toBeVisible({ timeout: 6000 });
   // 名前が出るリスト表示へ
   await page.getByRole('button', { name: 'リスト' }).click();
+  const list = page.locator('.cards-list-scroll');
 
   // フィルタ無し: 青の灰原哀・黄の萩原千速 ともに候補に出る
-  await expect(page.getByText('灰原哀').first()).toBeVisible();
-  await expect(page.getByText('萩原千速').first()).toBeVisible();
+  await expect(list.getByText('灰原哀').first()).toBeVisible();
+  await expect(list.getByText('萩原千速').first()).toBeVisible();
 
   // 色=青 → 黄の萩原千速(decoy)は混入せず、青の灰原哀は残る
-  await page.locator('button.meta-chip', { hasText: '青' }).first().click();
-  await expect(page.getByText('灰原哀').first()).toBeVisible();
-  await expect(page.getByText('萩原千速')).toHaveCount(0);
+  await page.getByRole('button', { name: '絞り込み' }).click();
+  const dialog = page.getByRole('dialog', { name: 'カードを絞り込む' });
+  await dialog.locator('button.meta-chip', { hasText: '青' }).first().click();
+  await dialog.getByRole('button', { name: '一覧を見る' }).click();
+  await expect(list.getByText('灰原哀').first()).toBeVisible();
+  await expect(list.getByText('萩原千速')).toHaveCount(0);
 
   // 青オフ → 黄 → 逆に灰原哀が消え萩原千速が残る (条件内の漏れも無い)
-  await page.locator('button.meta-chip', { hasText: '青' }).first().click();
-  await page.locator('button.meta-chip', { hasText: '黄' }).first().click();
-  await expect(page.getByText('萩原千速').first()).toBeVisible();
-  await expect(page.getByText('灰原哀')).toHaveCount(0);
+  await page.getByRole('button', { name: '絞り込み' }).click();
+  await dialog.locator('button.meta-chip', { hasText: '青' }).first().click();
+  await dialog.locator('button.meta-chip', { hasText: '黄' }).first().click();
+  await dialog.getByRole('button', { name: '一覧を見る' }).click();
+  await expect(list.getByText('萩原千速').first()).toBeVisible();
+  await expect(list.getByText('灰原哀')).toHaveCount(0);
 });
 
 test('DECK §7: プールの色 facet が decoy を除外 (キャラ/イベントのみ)', async ({ page }) => {

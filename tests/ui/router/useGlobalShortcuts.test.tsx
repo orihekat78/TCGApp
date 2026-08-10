@@ -1,6 +1,6 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CardListModal } from '@/ui/components/CardListModal';
 import { LogPanel } from '@/ui/components/LogPanel';
 import { useGlobalShortcuts } from '../../../meta-app/src/router/useGlobalShortcuts';
@@ -14,6 +14,10 @@ function ShortcutHarness({ onNav, route = 'match' }: { onNav: (route: Route) => 
 describe('useGlobalShortcuts modal priority', () => {
   let container: HTMLDivElement;
   let root: Root;
+
+  beforeAll(() => {
+    globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  });
 
   beforeEach(() => {
     container = document.createElement('div');
@@ -116,5 +120,68 @@ describe('useGlobalShortcuts modal priority', () => {
     });
 
     expect(onNav).not.toHaveBeenCalled();
+  });
+
+  it('HOMEの操作要素をEnterで実行するときはグローバル遷移を割り込ませない', () => {
+    const onNav = vi.fn();
+    act(() => {
+      root.render(
+        <>
+          <ShortcutHarness route="home" onNav={onNav} />
+          <button type="button">メニュー</button>
+        </>,
+      );
+    });
+
+    const button = container.querySelector('button')!;
+    act(() => {
+      button.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    });
+
+    expect(onNav).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['Escape', 'home'],
+    ['d', 'deck'],
+  ] as const)('操作要素にフォーカス中も既存ショートカット %s を維持する', (key, expectedRoute) => {
+    const onNav = vi.fn();
+    act(() => {
+      root.render(
+        <>
+          <ShortcutHarness route="setup" onNav={onNav} />
+          <button type="button">設定項目</button>
+        </>,
+      );
+    });
+
+    const button = container.querySelector('button')!;
+    act(() => {
+      button.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+    });
+
+    expect(onNav).toHaveBeenCalledWith(expectedRoute);
+  });
+
+  it.each([
+    ['Escape', 'home'],
+    ['d', 'deck'],
+  ] as const)('選択欄にフォーカス中も既存ショートカット %s を維持する', (key, expectedRoute) => {
+    const onNav = vi.fn();
+    act(() => {
+      root.render(
+        <>
+          <ShortcutHarness route="setup" onNav={onNav} />
+          <select aria-label="デッキ選択"><option>標準</option></select>
+        </>,
+      );
+    });
+
+    const select = container.querySelector('select')!;
+    act(() => {
+      select.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+    });
+
+    expect(onNav).toHaveBeenCalledWith(expectedRoute);
   });
 });

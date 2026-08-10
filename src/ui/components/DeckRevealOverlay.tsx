@@ -16,6 +16,7 @@ import { useGameStateStore } from '@/ui/state/store.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { surfacePendingSideChannels } from '@/ui/hooks/useEngineDispatch.js';
+import { getHumanDecisionSide } from '@/ui/services/humanDecisionOwner.js';
 import { CardArt } from './CardArt.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import './DeckRevealOverlay.css';
@@ -25,6 +26,7 @@ type Phase = 'reveal' | 'return' | 'toBottom' | 'shuffle';
 export function DeckRevealOverlay(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingDeckReveal);
   const setPending = useGameStateStore((s) => s.setPendingDeckReveal);
+  const terminal = useGameStateStore((s) => s.gameState?.gameResult !== undefined);
   const expandModal = useCardExpandModal();
   // S2 B01022 (2026-07-10): deck-window pick (sceneEnter query.area='deck') の未解決中も hold。
   // chooseMatch (awaitingPick) と違い pendingDeckReveal 自体は完了形で set されるため、
@@ -47,11 +49,12 @@ export function DeckRevealOverlay(): JSX.Element | null {
   const [phase, setPhase] = useState<Phase>('reveal');
   const timelineRef = useRef<{
     pending: NonNullable<typeof pending>;
+    terminal: boolean;
     remainingMs: number;
     startedAt: number | null;
   } | null>(null);
   const detailOpen = expandModal.expandedCard !== null;
-  const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? 'self';
+  const humanSide = getHumanDecisionSide(false);
   const viewerAllowed = pending === null
     || pending.visibility === 'public'
     || pending.viewer === 'all'
@@ -87,17 +90,19 @@ export function DeckRevealOverlay(): JSX.Element | null {
     const revealMs = pending.revealed.length * 500 + 500;
     const toBottomMs = pending.presentation === 'reveal-return' ? 700 : 1100;
     const shuffleMs = pending.presentation === 'reveal-return' ? 0 : 1000;
-    const totalMs = revealMs + toBottomMs + shuffleMs;
+    const totalMs = terminal
+      ? Math.min(3_000, revealMs + toBottomMs + shuffleMs)
+      : revealMs + toBottomMs + shuffleMs;
     let timeline = timelineRef.current;
-    if (!timeline || timeline.pending !== pending) {
-      timeline = { pending, remainingMs: totalMs, startedAt: null };
+    if (!timeline || timeline.pending !== pending || timeline.terminal !== terminal) {
+      timeline = { pending, terminal, remainingMs: totalMs, startedAt: null };
       timelineRef.current = timeline;
       setPhase('reveal');
     }
 
     // Inspecting a card pauses the live reveal remainder; it must not resolve
     // behind the expanded-card modal on a short landscape viewport.
-    if (pending.awaitingPick === true || deckWindowPickActive || detailOpen) {
+    if (pending.awaitingPick === true || deckWindowPickActive || (!terminal && detailOpen)) {
       return;
     }
     // reveal: 1 枚 0.5 秒 + 余韻 / toBottom: 1.1 秒 / shuffle: 1.0 秒
@@ -107,17 +112,17 @@ export function DeckRevealOverlay(): JSX.Element | null {
       return;
     }
     timeline.startedAt = Date.now();
-    const toBottomDelay = remainingMs - toBottomMs - shuffleMs;
-    const shuffleDelay = remainingMs - shuffleMs;
+    const toBottomDelay = terminal ? -1 : remainingMs - toBottomMs - shuffleMs;
+    const shuffleDelay = terminal ? -1 : remainingMs - shuffleMs;
     const t1 = toBottomDelay > 0
       ? setTimeout(() => setPhase(pending.presentation === 'reveal-return' ? 'return' : 'toBottom'), toBottomDelay)
       : undefined;
     const t2 = shuffleDelay > 0
       ? setTimeout(() => setPhase('shuffle'), shuffleDelay)
       : undefined;
-    if (toBottomDelay <= 0 && shuffleDelay > 0) setPhase(pending.presentation === 'reveal-return' ? 'return' : 'toBottom');
-    if (pending.presentation === 'reveal-return' && toBottomDelay <= 0) setPhase('return');
-    if (shuffleDelay <= 0 && pending.presentation !== 'reveal-return') setPhase('shuffle');
+    if (!terminal && toBottomDelay <= 0 && shuffleDelay > 0) setPhase(pending.presentation === 'reveal-return' ? 'return' : 'toBottom');
+    if (!terminal && pending.presentation === 'reveal-return' && toBottomDelay <= 0) setPhase('return');
+    if (!terminal && shuffleDelay <= 0 && pending.presentation !== 'reveal-return') setPhase('shuffle');
     const t3 = setTimeout(dismiss, remainingMs);
     return () => {
       if (t1 !== undefined) clearTimeout(t1);
@@ -128,14 +133,16 @@ export function DeckRevealOverlay(): JSX.Element | null {
         timeline.startedAt = null;
       }
     };
-  }, [pending, deckWindowPickActive, detailOpen, downstreamDecisionActive, dismiss]);
+  }, [pending, deckWindowPickActive, detailOpen, downstreamDecisionActive, dismiss, terminal]);
 
   if (!pending || !viewerAllowed) return null;
   // 公開選択は CardListModal へ統合。後続の並べ替え/手札登場の操作も遮らない。
   if (pending.awaitingPick === true || deckWindowPickActive || downstreamDecisionActive) return null;
 
   const playerLabel = pending.player === 'self' ? '自分' : '相手';
-  const headerText = phase === 'reveal'
+  const headerText = terminal
+    ? `${playerLabel}の処理結果を確認`
+    : phase === 'reveal'
     ? `${playerLabel}のデッキを公開中…`
     : phase === 'return'
       ? '公開したカードを元のデッキへ戻しています…'
@@ -145,7 +152,7 @@ export function DeckRevealOverlay(): JSX.Element | null {
 
   return (
     <>
-    <div className="deck-reveal-overlay" role="status" data-testid="deck-reveal-overlay">
+    <div className={`deck-reveal-overlay${terminal ? ' is-terminal' : ''}`} role="status" data-testid="deck-reveal-overlay">
       <div className="deck-reveal-box">
         <div className="deck-reveal-header" data-testid="deck-reveal-header">
           {headerText}

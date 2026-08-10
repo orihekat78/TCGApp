@@ -8,7 +8,7 @@
 //   4. console error 0
 
 import { test, expect, type Page } from '@playwright/test';
-import { setupGamePage, buildGameState, getGameState, dispatchAction } from './helpers';
+import { setupGamePage, buildCausalGameState, getGameState, dispatchAction } from './helpers';
 
 async function prime(page: Page): Promise<void> {
   await page.evaluate(() => {
@@ -40,7 +40,7 @@ function fx(gs: AnyState): void {
 test('mini-wave #5: B05047 登場時 → DeckPlaceModal で上/下振り分けが deck に反映される', async ({ page }) => {
   const { errors } = await setupGamePage(page);
   await prime(page);
-  await buildGameState(page, fx);
+  await buildCausalGameState(page, fx);
 
   await dispatchAction(page, { type: 'handUseCard', player: 'self', cardId: 'B05047' });
 
@@ -52,6 +52,25 @@ test('mini-wave #5: B05047 登場時 → DeckPlaceModal で上/下振り分け�
   await expect(page.getByTestId('deck-place-row-0')).toBeVisible();
   await expect(page.getByTestId('deck-place-row-1')).toBeVisible();
   await expect(page.getByTestId('deck-place-row-2')).toHaveCount(0);
+
+  const pending = await page.evaluate(() => {
+    const w = window as unknown as { __game: { store: { getState: () => {
+      pendingDeckPlace: Record<string, unknown> | null;
+    } } } };
+    return w.__game.store.getState().pendingDeckPlace;
+  });
+  expect(pending).toMatchObject({
+    player: 'self',
+    ownerPlayer: 'self',
+    cardIds: ['D11020', 'D11013'],
+    deckSnapshot: ['D11020', 'D11013', 'D11017'],
+    occurrences: [
+      { cardId: 'D11020', index: 0 },
+      { cardId: 'D11013', index: 1 },
+    ],
+  });
+  expect(pending?.decisionId).toMatch(/^decision:\d+$/);
+  expect(pending?.ctx).toBeDefined();
 
   // row0 (D11020) を「下」へ、row1 (D11013) は既定「上」のまま → 確定
   await page.getByTestId('deck-place-bottom-0').click();
@@ -70,6 +89,9 @@ test('mini-wave #5: B05047 登場時 → DeckPlaceModal で上/下振り分け�
   // B05047 は現場に居る (登場自体の確認)
   const gs = await getGameState(page);
   expect((gs.players.self as { scene: { cardId: string }[] }).scene.map(c => c.cardId)).toContain('B05047');
+  const causal = (gs.log as Array<{ kind?: string; actor?: string }>);
+  expect(causal.some(entry => entry.kind === 'select' && entry.actor === 'self')).toBe(true);
+  expect(causal.at(-1)?.kind).toBe('summary');
 
   expect(errors, 'console error 0').toEqual([]);
 });

@@ -2,11 +2,10 @@
 // Official rule manual Ver.2.5: pp.21, 25.
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
-import { removeOpponentEvidenceTop } from '@/engine/flow/action-case';
+import { startCausalSession } from '@/engine/log/causal';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
-import { _drainPendingHirameki, _resetPendingHirameki } from '@/engine/listeners/hirameki';
+import { _resetPendingHirameki } from '@/engine/listeners/hirameki';
 import { _resetRegistry, register } from '@/engine/read/def';
 import { candidates } from '@/engine/target/candidates';
 import { targetFilterToPredicateWithCtx } from '@/engine/effect/atom-handlers/_shared';
@@ -17,12 +16,14 @@ import { D10003 } from '@/cards/ct-d10/D10003';
 import { D11013 } from '@/cards/ct-d11/D11013';
 import { B08059 } from '@/cards/ct-p08/B08059';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import { resetPresentationQueue } from '@/ui/presentation/coordinator';
 import { useGameStateStore } from '@/ui/state/store';
-import type { AbilityDef, ActionContext, CardDef, EffectCtx } from '@/engine/types';
+import type { AbilityDef, CardDef, EffectCtx } from '@/engine/types';
+import { sceneChar } from '../helpers/fixtures';
 import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
 
 const invalidHirameki: CardDef = {
-  id: 'VER25_HIRAMEKI', no: 'TEST/VER25_HIRAMEKI', kind: 'event', names: ['Ver.2.5 ヒラメキ'], colors: [], level: 1,
+  id: 'VER25-HIRAMEKI', no: 'TEST/VER25-HIRAMEKI', kind: 'event', names: ['Ver.2.5 ヒラメキ'], colors: [], level: 1,
   traits: [], rarity: 'C', imageUrl: '', ruleRefs: [],
   abilities: [{
     id: 'a1', type: 'triggered', scope: 'on-evidence',
@@ -44,7 +45,7 @@ const greenPartner: CardDef = {
 };
 
 const caseTraitCase: CardDef = {
-  id: 'VER25_CASE_TRAIT', no: 'TEST/VER25_CASE_TRAIT', kind: 'case', names: ['事件特徴'], colors: [], traits: [], caseTraits: ['シャッフルロマンス'],
+  id: 'VER25-CASE-TRAIT', no: 'TEST/VER25-CASE-TRAIT', kind: 'case', names: ['事件特徴'], colors: [], traits: [], caseTraits: ['シャッフルロマンス'],
   rarity: 'C', imageUrl: '', ruleRefs: [], abilities: [],
 };
 
@@ -71,11 +72,6 @@ const printedCutin: CardDef = {
     effect: { kind: 'atom', verb: 'noop', args: {} }, description: '【カットイン】AP＋1000', ruleRefs: [],
   } as AbilityDef],
 };
-
-const actionContext = (): ActionContext => ({
-  id: 'ver25-action', byUid: 'opp-attacker', byPlayer: 'opp', target: { kind: 'case', player: 'self' },
-  phase: 'judge', startedAt: { turn: 0, nano: 0 },
-});
 
 const targetCtx: EffectCtx = { source: { player: 'self', area: 'scene', cardId: 'SOURCE', abilityId: 'a1' }, bindings: {} };
 
@@ -104,16 +100,26 @@ describe('official rule manual Ver.2.5', () => {
     const state = createEmptyGameState();
     state.players.self.evidence = [{ cardId: invalidHirameki.id, faceUp: true, origin: { turn: 0, via: 'opening' } }];
     state.players.self.deck = ['DRAWN'];
+    state.turn = { number: 1, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    state.players.opp.scene = [sceneChar(D11013.id, 'opp-attacker')];
+    state.players.opp.deck = ['ACTION-GAIN'];
+    state.players.self.case.cardId = caseTraitCase.id;
+    const sessionId = 'rule-manual-ver25-hirameki';
+    startCausalSession(state, sessionId);
+    resetPresentationQueue(sessionId);
+    expect(useGameStateStore.getState().setGameState(state)).toBe(true);
+    expect(dispatchEngineAction({ type: 'actionDeclareCase', byUid: 'opp-attacker', targetPlayer: 'self' })).toEqual({ ok: true });
+    const actionId = useGameStateStore.getState().activeActionId;
+    expect(actionId).toBeTruthy();
+    expect(dispatchEngineAction({ type: 'actionGuard', actionId: actionId!, guarderUid: null }).ok).toBe(true);
+    expect(dispatchEngineAction({ type: 'actionJudge', actionId: actionId! }).ok).toBe(true);
 
-    const afterAction = produce(state, draft => { removeOpponentEvidenceTop(draft, actionContext()); });
-    const pending = _drainPendingHirameki();
+    const pending = useGameStateStore.getState().pendingHirameki;
     expect(pending).toMatchObject({ player: 'self', cardId: invalidHirameki.id, abilityId: 'a1', effectValid: false });
-
-    useGameStateStore.setState({ gameState: afterAction, pendingHirameki: pending });
     expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
     expect(useGameStateStore.getState().gameState!.players.self.deck).toEqual(['DRAWN']);
     expect(useGameStateStore.getState().gameState!.log).toEqual(expect.arrayContaining([
-      expect.objectContaining({ action: 'hirameki:fire', target: invalidHirameki.id }),
+      expect.objectContaining({ kind: 'activate', tags: expect.arrayContaining(['hirameki']) }),
     ]));
   });
 

@@ -6,8 +6,9 @@ import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { canStartNextHint, runNextHint } from '@/engine/flow/main/next-hint';
 import { event } from '@/engine/event/index';
+import { startCausalSession, validateCausalLog } from '@/engine/log/causal';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
-import type { CardDef, GameState } from '@/engine/types';
+import type { CardDef, CausalLogEntryV1, GameState } from '@/engine/types';
 
 function makeCard(id: string, opts: Partial<CardDef> = {}): CardDef {
   return {
@@ -66,6 +67,23 @@ describe('engine.flow.main.runNextHint', () => {
     expect(after.turnState.self.nextHintUsed).toBe(true);
   });
 
+  it('公開因果列に FILE→手札だけを記録し、裏向きカードIDは公開しない', () => {
+    const s = makeStateWithFile(2);
+
+    const after = produce(s, draft => {
+      startCausalSession(draft, 'next-hint-file-only');
+      runNextHint(draft, 'self');
+    });
+    const graph = validateCausalLog(after.log as CausalLogEntryV1[]);
+
+    expect(graph.map(node => [node.kind, node.parentEventId, node.outcome])).toEqual([
+      ['declare', undefined, { type: 'state', state: 'active' }],
+      ['zone-move', 'next-hint-file-only:1', { type: 'move', from: 'file', to: 'hand', count: 1 }],
+      ['summary', 'next-hint-file-only:2', { type: 'state', state: 'success' }],
+    ]);
+    expect(JSON.stringify(graph)).not.toContain('FILE_1');
+  });
+
   it('canStartNextHint=false で runNextHint → throw', () => {
     const s = makeStateWithFile(0);
     expect(() =>
@@ -110,6 +128,31 @@ describe('engine.flow.main.runNextHint', () => {
     expect(entered).toBeDefined();
     expect(entered!.viaEffect).toBe(false);
     expect(entered!.uid).toMatch(/^CH1#\d+$/);
+  });
+
+  it('任意キャラ使用を FILE→手札→使用→手札→現場→登場の因果列として記録する', () => {
+    registerCardDef(makeCard('CH1', { kind: 'character', colors: ['赤'], level: 1 }));
+    const s = makeStateWithFile(2, { hand: ['CH1'] });
+
+    const after = produce(s, draft => {
+      startCausalSession(draft, 'next-hint-character');
+      runNextHint(draft, 'self', 'CH1');
+    });
+    const graph = validateCausalLog(after.log as CausalLogEntryV1[]);
+
+    expect(graph.map(node => [node.kind, node.parentEventId, node.outcome])).toEqual([
+      ['declare', undefined, { type: 'state', state: 'active' }],
+      ['zone-move', 'next-hint-character:1', { type: 'move', from: 'file', to: 'hand', count: 1 }],
+      ['use', 'next-hint-character:2', { type: 'state', state: 'active' }],
+      ['zone-move', 'next-hint-character:3', { type: 'move', from: 'hand', to: 'scene', count: 1 }],
+      ['enter', 'next-hint-character:4', { type: 'state', state: 'success' }],
+      ['summary', 'next-hint-character:5', { type: 'state', state: 'success' }],
+    ]);
+    expect(graph[4]).toMatchObject({
+      source: { kind: 'player', side: 'self' },
+      targets: [{ kind: 'card', side: 'self', zone: 'scene', cardNumber: 'CH1' }],
+    });
+    expect(JSON.stringify(graph)).not.toContain('FILE_1');
   });
 
   it('イベントを optionalCardId で使用しても enter Hook は emit しない', () => {

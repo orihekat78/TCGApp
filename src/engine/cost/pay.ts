@@ -19,7 +19,7 @@ import { def as readDef } from '@/engine/read/def.js';
 import { readRemoveSetCardWitness } from './remove-set-card-witness.js';
 import { eligibleRemoveSetCards } from './remove-set-card-eligible.js';
 import { char as readChar } from '@/engine/read/char.js';
-import { _clearPendingSetCardReplacementSide, _peekPendingSetCardReplacementSide, _restorePendingSetCardReplacementSide } from '@/engine/effect/pending-state.js';
+import { _clearPendingSetCardReplacementSide, _peekPendingSetCardReplacementGuard, _peekPendingSetCardReplacementSide, _restorePendingSetCardReplacementSide } from '@/engine/effect/pending-state.js';
 import { _abortEventJournal, _beginEventJournal, _commitEventJournal, _withEventsSuppressed } from '@/engine/event/registry.js';
 import { produce } from '@/engine/produce.js';
 
@@ -39,6 +39,7 @@ export function pay(state: GameState, cost: Cost, ctx: EffectCtx): PayResult {
   const stateBefore = cloneForAuthorization(state);
   const ctxBefore = cloneForAuthorization(ctx);
   const replacementBefore = _peekPendingSetCardReplacementSide();
+  const replacementGuardBefore = _peekPendingSetCardReplacementGuard();
   let journal: ReturnType<typeof _beginEventJournal> | null = null;
   ctx.viaCost = true;
 
@@ -53,7 +54,7 @@ export function pay(state: GameState, cost: Cost, ctx: EffectCtx): PayResult {
         _withEventsSuppressed(() => payInner(draft, cost, preparedCtx, { paidItems: [], releasedTriggers: [] }));
       });
     } finally {
-      _restorePendingSetCardReplacementSide(replacementBefore);
+      _restorePendingSetCardReplacementSide(replacementBefore, replacementGuardBefore);
     }
     journal = _beginEventJournal();
     const result: PayResult = { paidItems: [], releasedTriggers: [] };
@@ -65,7 +66,7 @@ export function pay(state: GameState, cost: Cost, ctx: EffectCtx): PayResult {
     if (journal !== null) _abortEventJournal(journal);
     restoreMutable(state, stateBefore);
     restoreMutable(ctx, ctxBefore);
-    _restorePendingSetCardReplacementSide(replacementBefore);
+    _restorePendingSetCardReplacementSide(replacementBefore, replacementGuardBefore);
     throw error;
   } finally {
     ctx.viaCost = prevViaCost;
@@ -103,6 +104,7 @@ export function canPayAtomically(state: GameState, cost: Cost, ctx: EffectCtx): 
 export function canPayWithPreflight(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
   if (!canPayAtomically(state, cost, ctx)) return false;
   const replacementBefore = _peekPendingSetCardReplacementSide();
+  const replacementGuardBefore = _peekPendingSetCardReplacementGuard();
   try {
     const preparedState = cloneForAuthorization(state);
     const preparedCtx = cloneForAuthorization(ctx);
@@ -113,7 +115,7 @@ export function canPayWithPreflight(state: GameState, cost: Cost, ctx: EffectCtx
   } catch {
     return false;
   } finally {
-    _restorePendingSetCardReplacementSide(replacementBefore);
+    _restorePendingSetCardReplacementSide(replacementBefore, replacementGuardBefore);
   }
 }
 
@@ -477,7 +479,7 @@ function recordCostPaid(ctx: EffectCtx, key: string, value: unknown): void {
 function simulateRefreshAfterTake(state: GameState, player: 'self' | 'opp'): void {
   if (state.players[player].deck.length > 0 || state.gameResult !== undefined) return;
   if (state.players[player].remove.length === 0) {
-    state.gameResult = { winner: player === 'self' ? 'opp' : 'self', reason: 'deck-out' };
+    mutate.gameResult.set(state, player === 'self' ? 'opp' : 'self', 'deck-out');
     return;
   }
   state.players[player].deck.push(...state.players[player].remove);

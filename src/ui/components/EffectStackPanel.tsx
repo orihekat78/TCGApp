@@ -30,6 +30,11 @@ const STATE_LABEL: Record<EffectStackEntry['state'], string> = {
 };
 
 export function EffectStackPanel({ entries, open, onReorder, reorderPlayer, onConfirmOrder }: EffectStackPanelProps): JSX.Element {
+  // The compact badge used to sit over the upper-right edge of the playmat even
+  // when there was no ordering decision. Keep the surface completely absent in
+  // that state; the full panel still opens when the engine requests ordering.
+  if (!open) return <></>;
+
   const pendingEntries = entries.filter((entry) =>
     entry.state === 'pending'
     && (reorderPlayer === undefined || entry.source.player === reorderPlayer),
@@ -47,7 +52,7 @@ export function EffectStackPanel({ entries, open, onReorder, reorderPlayer, onCo
   const showReorder = !!onReorder;
 
   return (
-    <div className={`effect-stack-panel${open ? ' open' : ''}`} aria-expanded={open}>
+    <div className="effect-stack-panel open" aria-expanded="true">
       <div className="effect-stack-badge" aria-live="polite">
         <span className="effect-stack-label">効果解決</span>
         {showBadge && <span className="effect-stack-count">{count}</span>}

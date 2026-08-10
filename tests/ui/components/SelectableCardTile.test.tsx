@@ -265,7 +265,7 @@ describe('SelectableCardTile', () => {
 
   it('keeps the detail button at the mobile touch target minimum', () => {
     expect(CSS_SOURCE).toMatch(
-      /\.selectable-card-tile__detail\s*\{[\s\S]*min-inline-size:\s*44px;[\s\S]*min-block-size:\s*44px;/,
+      /\.selectable-card-tile__detail\s*\{[^}]*position:\s*static;[^}]*min-inline-size:\s*44px;[^}]*min-block-size:\s*44px;/,
     );
   });
 });

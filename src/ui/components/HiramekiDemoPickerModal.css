@@ -94,16 +94,16 @@
   text-align: center;
 }
 .hirameki-demo-picker-card-row {
-  position: relative;
   min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  align-items: start;
+  gap: 6px;
 }
 .hirameki-demo-picker-card-detail {
-  position: absolute;
-  top: 8px;
-  left: 38px;
-  z-index: 1;
-  width: 22px;
-  height: 22px;
+  position: static;
+  min-width: 44px;
+  min-height: 44px;
   padding: 0;
   border: 1px solid #4b5563;
   border-radius: 50%;
@@ -111,6 +111,8 @@
   color: inherit;
   cursor: pointer;
   font-size: 12px;
+  display: grid;
+  place-items: center;
 }
 .hirameki-demo-picker-card-detail:hover,
 .hirameki-demo-picker-card-detail:focus-visible {

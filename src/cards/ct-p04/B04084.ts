@@ -33,7 +33,7 @@ const a1: AbilityDef = {
     effect: {
       kind: 'chain',
       steps: [
-        { kind: 'atom', verb: 'discard', args: { player: 'self', n: 2 } },
+        { kind: 'atom', verb: 'discard', args: { player: 'self', n: 2, minimumPolicy: 'exact' } },
         {
           kind: 'sequence',
           steps: [

@@ -1,0 +1,127 @@
+{
+  "generatedAt": "2026-08-04T02:05:08.554Z",
+  "entries": [
+    {
+      "filename": "match-desktop-1440x900-runtime.png",
+      "routeState": "#setup live match after mulligan",
+      "viewport": "1440x900",
+      "provenance": "runtime",
+      "source": "http://127.0.0.1:5217/#setup",
+      "captureMethod": "Playwright screenshot from fresh loopback server; asserted removed CPU HUD text and SpectatorHUD-equivalent selectors absent",
+      "generatedAt": "2026-08-04T02:05:08.554Z",
+      "cpuHudRemoved": true
+    },
+    {
+      "filename": "match-mobile-851x393-resolution-design-mock.png",
+      "routeState": "#setup live match resolution static composition",
+      "viewport": "851x393",
+      "provenance": "design-mock",
+      "source": "fresh runtime base http://127.0.0.1:5217/#setup after mulligan + static composition",
+      "captureMethod": "Playwright screenshot of static composition over a fresh HUD-asserted runtime base",
+      "generatedAt": "2026-08-04T02:05:08.554Z",
+      "cpuHudRemoved": true,
+      "baseDomCpuHudRemoved": true
+    },
+    {
+      "filename": "match-mobile-851x393-target-selection-design-mock.png",
+      "routeState": "#setup live match target-selection static composition",
+      "viewport": "851x393",
+      "provenance": "design-mock",
+      "source": "fresh runtime base http://127.0.0.1:5217/#setup after mulligan + static composition",
+      "captureMethod": "Playwright screenshot of static composition over a fresh HUD-asserted runtime base",
+      "generatedAt": "2026-08-04T02:05:08.554Z",
+      "cpuHudRemoved": true,
+      "baseDomCpuHudRemoved": true
+    },
+    {
+      "filename": "history-desktop-1440x900-runtime.png",
+      "routeState": "#history",
+      "viewport": "1440x900",
+      "provenance": "runtime",
+      "source": "http://127.0.0.1:5217/#history",
+      "captureMethod": "Playwright screenshot from fresh loopback server",
+      "generatedAt": "2026-08-04T02:05:08.554Z"
+    },
+    {
+      "filename": "history-mobile-851x393-runtime.png",
+      "routeState": "#history",
+      "viewport": "851x393",
+      "provenance": "runtime",
+      "source": "http://127.0.0.1:5217/#history",
+      "captureMethod": "Playwright screenshot from fresh loopback server",
+      "generatedAt": "2026-08-04T02:05:08.554Z"
+    },
+    {
+      "filename": "result-desktop-1440x900-runtime.png",
+      "routeState": "#result fixture: evidence win",
+      "viewport": "1440x900",
+      "provenance": "runtime",
+      "source": "http://127.0.0.1:5217/#home",
+      "captureMethod": "Playwright screenshot from fresh loopback server with in-page fixture",
+      "generatedAt": "2026-08-04T02:05:08.554Z"
+    },
+    {
+      "filename": "result-mobile-851x393-runtime.png",
+      "routeState": "#result fixture: evidence win",
+      "viewport": "851x393",
+      "provenance": "runtime",
+      "source": "http://127.0.0.1:5217/#home",
+      "captureMethod": "Playwright screenshot from fresh loopback server with in-page fixture",
+      "generatedAt": "2026-08-04T02:05:08.554Z"
+    },
+    {
+      "filename": "replay-desktop-1440x900-design-mock.png",
+      "routeState": "#replay reviewed direction",
+      "viewport": "1440x900",
+      "provenance": "design-mock",
+      "source": ".claude\\research\\ui\\mockups\\2026-08-03-ui-refresh\\replay-reviewed.html",
+      "captureMethod": "Playwright screenshot of named reviewed design-mock HTML",
+      "generatedAt": "2026-08-04T02:05:08.554Z"
+    },
+    {
+      "filename": "replay-mobile-851x393-design-mock.png",
+      "routeState": "#replay reviewed direction",
+      "viewport": "851x393",
+      "provenance": "design-mock",
+      "source": ".claude\\research\\ui\\mockups\\2026-08-03-ui-refresh\\replay-reviewed.html",
+      "captureMethod": "Playwright screenshot of named reviewed design-mock HTML",
+      "generatedAt": "2026-08-04T02:05:08.554Z"
+    },
+    {
+      "filename": "tutorial-desktop-1440x900-design-mock.png",
+      "routeState": "#tutorial reviewed direction",
+      "viewport": "1440x900",
+      "provenance": "design-mock",
+      "source": ".claude\\research\\ui\\mockups\\2026-08-03-ui-refresh\\tutorial-reviewed.html",
+      "captureMethod": "Playwright screenshot of named reviewed design-mock HTML",
+      "generatedAt": "2026-08-04T02:05:08.554Z"
+    },
+    {
+      "filename": "tutorial-mobile-851x393-design-mock.png",
+      "routeState": "#tutorial reviewed direction",
+      "viewport": "851x393",
+      "provenance": "design-mock",
+      "source": ".claude\\research\\ui\\mockups\\2026-08-03-ui-refresh\\tutorial-reviewed.html",
+      "captureMethod": "Playwright screenshot of named reviewed design-mock HTML",
+      "generatedAt": "2026-08-04T02:05:08.554Z"
+    },
+    {
+      "filename": "settings-desktop-1440x900-runtime.png",
+      "routeState": "#settings unsaved save/reset controls",
+      "viewport": "1440x900",
+      "provenance": "runtime",
+      "source": "http://127.0.0.1:5217/#settings",
+      "captureMethod": "Playwright screenshot from fresh loopback server with unsaved indicator and persistent save/reset footer",
+      "generatedAt": "2026-08-04T02:05:08.554Z"
+    },
+    {
+      "filename": "settings-mobile-851x393-runtime.png",
+      "routeState": "#settings unsaved save/reset controls",
+      "viewport": "851x393",
+      "provenance": "runtime",
+      "source": "http://127.0.0.1:5217/#settings",
+      "captureMethod": "Playwright screenshot from fresh loopback server with unsaved indicator and persistent save/reset footer",
+      "generatedAt": "2026-08-04T02:05:08.554Z"
+    }
+  ]
+}

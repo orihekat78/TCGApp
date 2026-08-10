@@ -15,7 +15,7 @@ describe('resolver decision identity', () => {
     useGameStateStore.setState({ pendingDecisionSeq: 0 });
   });
 
-  it('rejects a stale callback and accepts only the currently rendered decision', () => {
+  it('rejects optional callbacks when no resolver-owned decision exists', () => {
     const store = useGameStateStore.getState();
     store.setPendingEffectOptional(optionalDecision);
     const first = useGameStateStore.getState().pendingEffectOptional!;
@@ -26,7 +26,7 @@ describe('resolver decision identity', () => {
     expect(first.decisionId).toBe('decision:1');
     expect(second.decisionId).toBe('decision:2');
     expect(isAllowed(state, bindPendingDecision(first, { type: 'optionalResolve', run: false }))).toBe(false);
-    expect(isAllowed(state, bindPendingDecision(second, { type: 'optionalResolve', run: false }))).toBe(true);
+    expect(isAllowed(state, bindPendingDecision(second, { type: 'optionalResolve', run: false }))).toBe(false);
   });
 
   it('does not reuse decision IDs across a match-session reset', () => {

@@ -60,6 +60,27 @@ describe('B04042/B04042P aggregate level pick', () => {
 });
 
 describe('B04084 aggregate pick and split deployment', () => {
+  it('does not partially discard an exact two-card prerequisite', () => {
+    runCardScenario(B04084, [POL6, COST1], {
+      name: 'B04084 exact discard prerequisite is unavailable',
+      setup: {
+        hand: ['B04084', COST1.id],
+        remove: [POL6.id],
+        caseColors: ['黄'],
+        partnerColors: ['黄'],
+        caseStatus: '解決編',
+        fileCount: 8,
+      },
+      drive: { kind: 'event-use', cardId: 'B04084' },
+      script: ['optional:take'],
+      expect: [
+        { kind: 'zone', side: 'self', zone: 'hand', cardId: COST1.id, present: true },
+        { kind: 'zone', side: 'self', zone: 'remove', cardId: COST1.id, present: false },
+        { kind: 'zone', side: 'self', zone: 'remove', cardId: POL6.id, present: true },
+      ],
+    });
+  });
+
   it('discards exactly two, then enters one active and the remaining selected card asleep', () => {
     const state = runCardScenario(B04084, [POL6, POL5, POL4, COST1, COST2], {
       name: 'B04084 aggregate select then split enter',

@@ -2,12 +2,14 @@
 import { mutate } from '../../mutate/index.js';
 import { pushPendingPickFromAtom, toPlainDeep, resolveFilterDynObj, tryRePickFromAtom } from '../resolve-picks.js';
 import { pushPendingEffectPickSide } from '../pending-state.js';
+import { preparePendingPickRange } from '../pick-selection.js';
 import { candidates as targetCandidates } from '../../target/candidates.js';
 import { removeExcludedSourceCardId } from '../../read/effect-source.js';
 import { targetFilterToPredicateWithCtx, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait, resolveDeltaToNumber, queuePendingDeckRevealSide } from './_shared.js';
-import type { PendingDeckReorderSide } from './_shared.js';
+import type { PendingDeckPlaceSide, PendingDeckReorderSide } from './_shared.js';
 import type { GameState, EffectCtx, Candidate, AtomVerb, TargetingRef } from '../../types/index.js';
 import type { TargetFilter } from '../../types/effect.js';
+import { ensureEffectCausalTrace, markEffectCausalAwaitingResume, recordEffectCausalOperation } from '../../log/effect-causal.js';
 
 type DeckRevealVisibility = 'public' | 'private';
 type DeckRevealViewer = 'self' | 'opp' | 'all';
@@ -60,12 +62,18 @@ export function atomStackedCardPick(s: GameState, a: Record<string, unknown>, ct
   }
   const owner = (['self', 'opp'] as const).find(player => s.players[player].scene.some(c => c.uid === hostUid));
   if (!owner) return;
-  pushPendingEffectPickSide({
+  const pending = preparePendingPickRange({
     player: resolvePlayer(a.player, ctx), ownerPlayer: ctx.source.player,
     candidates: mutate.char.stackedCardEntries(s, hostUid).map(entry => ({ uid: entry.instanceId, cardId: entry.cardId, player: owner })),
     atomVerb: 'stackedCardPick', atomArgs: toPlainDeep(a), nMin: min, nMax: max,
     source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '', uid: ctx.source.uid },
   });
+  if (pending === null) {
+    (ctx.dyn ??= {}).chainStepNoApply = true;
+    return;
+  }
+  pending.atomArgs = { ...pending.atomArgs, min: pending.nMin, max: pending.nMax };
+  pushPendingEffectPickSide(pending);
 }
 
 export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
@@ -202,7 +210,7 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
           const matchCands = revealed
             .map((cardId, i) => ({ cardId, i }))
             .filter(({ cardId }) => filter(cardId));
-          pushPendingPickFromAtom({
+          const pendingPick = preparePendingPickRange({
             player: owner,
             ownerPlayer: owner, // BUG-175: 座標系明示 (本 site は chooser==owner ゆえ挙動不変)
             candidates: matchCands.map(({ cardId, i }) => ({ uid: `${cardId}#${i}`, cardId, player: p })),
@@ -219,6 +227,7 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
             },
             skipResolvesAtom: true,
           });
+          if (pendingPick) pushPendingPickFromAtom(pendingPick);
           // overlay は hold mode — pick 解決まで公開リストを表示し続ける (自動進行しない)
           if (revealAccess.humanCanSee) {
             queuePendingDeckRevealSide({
@@ -338,6 +347,8 @@ export function atomDeckToBottomBound(s: GameState, a: Record<string, unknown>, 
       const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
       const order = a.order === 'preserve' ? 'preserve' : 'arbitrary';
       if (order === 'arbitrary' && occurrences.length >= 2 && p === humanSide) {
+        const trace = ensureEffectCausalTrace(s, ctx);
+        markEffectCausalAwaitingResume(trace);
         (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = {
           player: p,
           cardIds: occurrences.map(entry => entry.cardId),
@@ -373,6 +384,20 @@ export function atomDeckPlaceSplitBound(s: GameState, a: Record<string, unknown>
         return cAny.cardId ?? '';
       }).filter(id => id !== '');
       if (ids.length === 0) return;
+      const deck = s.players[p].deck;
+      const used = new Set<number>();
+      const occurrences: Array<{ cardId: string; index: number }> = [];
+      for (const [position, id] of ids.entries()) {
+        const candidate = bound[position] as unknown as { index?: number };
+        const hinted = candidate.index;
+        const index = typeof hinted === 'number' && !used.has(hinted) && deck[hinted] === id
+          ? hinted
+          : deck.findIndex((cardId, i) => cardId === id && !used.has(i));
+        if (index === -1) continue;
+        used.add(index);
+        occurrences.push({ cardId: id, index });
+      }
+      if (occurrences.length !== ids.length) return;
       const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
       // S2 B01093 (2026-07-10): 選択者 = ability owner (印字「自分が上か下かを選ぶ」)。gate を
       // 対象デッキ所有者 (p) から owner 絶対座標に是正 — B01093 は p='opp' (相手デッキ) でも
@@ -380,10 +405,15 @@ export function atomDeckPlaceSplitBound(s: GameState, a: Record<string, unknown>
       // B05047 (唯一の既存消費者) は player:'self' で p===owner のため挙動不変 (byte 互換)。
       const ownerAbs = ctx.source.player;
       if (ownerAbs === humanSide) {
-        (globalThis as { __pendingDeckPlaceSide?: import('./_shared.js').PendingDeckPlaceSide | null }).__pendingDeckPlaceSide = {
+        const trace = ensureEffectCausalTrace(s, ctx);
+        markEffectCausalAwaitingResume(trace);
+        (globalThis as { __pendingDeckPlaceSide?: PendingDeckPlaceSide | null }).__pendingDeckPlaceSide = {
           player: p,
-          cardIds: [...ids],
+          cardIds: occurrences.map(entry => entry.cardId),
           ownerPlayer: ownerAbs,
+          deckSnapshot: [...deck],
+          occurrences,
+          ctx: toPlainDeep(ctx),
         };
         mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckPlaceSplitBound', result: `await ${ids.length}` });
         return;
@@ -409,6 +439,8 @@ export function atomDeckBottomReorderBound(s: GameState, a: Record<string, unkno
         .filter(id => id !== '');
       const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
       if (ids.length >= 2 && p === humanSide) {
+        const trace = ensureEffectCausalTrace(s, ctx);
+        markEffectCausalAwaitingResume(trace);
         (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = {
           player: p,
           cardIds: [...ids],
@@ -446,9 +478,30 @@ export function atomBoundToRemove(s: GameState, a: Record<string, unknown>, ctx:
           splicedIds.push(id);
         }
       }
+      const removeBeforeRefresh = s.players[p].remove.length;
+      const refreshesBefore = s.refreshCount[p] ?? 0;
       mutate.remove.add(s, p, splicedIds);
       if (splicedIds.length > 0) {
+        recordEffectCausalOperation(s, ctx, {
+          actor: ctx.source.player,
+          kind: 'zone-move',
+          source: { kind: 'zone', side: p, zone: 'deck' },
+          targets: [{ kind: 'zone', side: p, zone: 'remove' }],
+          outcome: { type: 'move', from: 'deck', to: 'remove', count: splicedIds.length },
+        });
         mutate.deck.refreshAfterTake(s, p, removeExcludedSourceCardId(ctx, p));
+        const refreshed = (s.refreshCount[p] ?? 0) > refreshesBefore;
+        const returnedFromRemove = removeBeforeRefresh + splicedIds.length - s.players[p].remove.length;
+        if (refreshed && returnedFromRemove > 0) {
+          recordEffectCausalOperation(s, ctx, {
+            actor: ctx.source.player,
+            kind: 'zone-move',
+            tags: ['refresh'],
+            source: { kind: 'zone', side: p, zone: 'remove' },
+            targets: [{ kind: 'zone', side: p, zone: 'deck' }],
+            outcome: { type: 'move', from: 'remove', to: 'deck', count: returnedFromRemove },
+          });
+        }
       }
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:boundToRemove', result: String(splicedIds.length) });
       return;
@@ -500,9 +553,12 @@ export function atomSouza(s: GameState, a: Record<string, unknown>, ctx: EffectC
       // deckToBottomBound と同じく defender が human & 2 枚以上のとき順序選択 modal を surface。
       const humanSideS = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
       if (count >= 2 && player === humanSideS) {
+        const trace = ensureEffectCausalTrace(s, ctx);
+        markEffectCausalAwaitingResume(trace);
         (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = {
           player,
           cardIds: [...top],
+          ...(trace ? { ctx: toPlainDeep(ctx) } : {}),
         };
       }
       return;

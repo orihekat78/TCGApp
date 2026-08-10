@@ -4,6 +4,7 @@
 export {
   recordMatch,
   type ReplayLog,
+  type LegacyReplayLog,
   type ReplayLogV1,
   type ReplayLogV2,
   type ReplayMove,
@@ -14,3 +15,16 @@ export {
   replayNondeterminism,
   type ReplayNondeterminism,
 } from './nondeterminism.js';
+export {
+  applyReplayPatches,
+  assertReplayLogV3,
+  buildReplayLogV3,
+  canonicalReplayJson,
+  replayStateAt,
+  replayStates,
+  replayStepCount,
+  type ReplayFrameV1,
+  type ReplayLogV3,
+  type ReplayPatchV1,
+  type ReplayViewerMode,
+} from './state-frame.js';

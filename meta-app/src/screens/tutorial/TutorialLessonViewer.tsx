@@ -2,14 +2,13 @@
 // Phase 17-A: ワイド2ペイン lesson viewer。
 //   左ペイン = 実カード(拡大+region強調) / 実盤面スナップショット / 概念図解 を step ごとに出し分け
 //   右ペイン = STEP 解説(拡大) + パーツ/ゾーン一覧(hover で左の該当箇所を pulse 強調) + ナビ
-//   フッタ = 進捗ドット + 前/次へ + (ch3+) 「▶ この章を実戦で試す」
+//   フッタ = 進捗ドット + 前/次へ + 対象stepの「▶ このステップを実戦で試す」
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { T, shade } from '../../shared/tokens';
-import { STEP_ILLUSTRATIONS } from './illustrations';
-import { AnnotatedCard, STEP_CARD_ANNOTATIONS } from './AnnotatedCard';
+import { AnnotatedCard, type CardAnnotation } from './AnnotatedCard';
 import { TutorialBoardSnapshot } from './TutorialBoardSnapshot';
-import { STEP_BOARD_ZONES } from './boardHints';
+import { resolveCanonicalTutorialVisual } from './canonicalVisuals';
 import type { TutorialChapter } from './types';
 
 interface Props {
@@ -18,11 +17,12 @@ interface Props {
   onStepChange: (index: number) => void;
   onStepComplete: (stepId: string) => void;
   onClose: () => void;
-  /** ch3+ で「この章を実戦で試す」CTA を押したとき (guided live match を起動) */
-  onStartGuided?: (chapterNum: number) => void;
+  /** 選択中の正本stepからguided live matchを起動する。 */
+  onStartGuided?: (stepId: string) => void;
+  isStarting?: boolean;
 }
 
-export function TutorialLessonViewer({ chapter, stepIndex, onStepChange, onStepComplete, onClose, onStartGuided }: Props) {
+export function TutorialLessonViewer({ chapter, stepIndex, onStepChange, onStepComplete, onClose, onStartGuided, isStarting = false }: Props) {
   const total = chapter.steps.length;
   const idx = Math.max(0, Math.min(stepIndex, total - 1));
   const step = chapter.steps[idx]!;
@@ -31,11 +31,14 @@ export function TutorialLessonViewer({ chapter, stepIndex, onStepChange, onStepC
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const leftRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
   const [leftW, setLeftW] = useState(0);
 
-  const cardData = STEP_CARD_ANNOTATIONS[step.id];
-  const zones = STEP_BOARD_ZONES[step.id];
-  const canGuided = chapter.num >= 3 && !!onStartGuided;
+  const visual = resolveCanonicalTutorialVisual(step.id);
+  const cardData: CardAnnotation | undefined = undefined;
+  const zones = visual?.zones;
+  const canGuided = Boolean(step.target && onStartGuided);
 
   // step 変更で hover 強調リセット
   useEffect(() => { setActiveKey(null); }, [step.id]);
@@ -50,6 +53,8 @@ export function TutorialLessonViewer({ chapter, stepIndex, onStepChange, onStepC
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  useLayoutEffect(() => { closeRef.current?.focus(); }, []);
 
   // キーボード操作
   useEffect(() => {
@@ -72,6 +77,21 @@ export function TutorialLessonViewer({ chapter, stepIndex, onStepChange, onStepC
     else onStepChange(idx + 1);
   };
 
+  const trapFocus = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Tab') return;
+    const focusable = dialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+    if (!focusable?.length) return;
+    const first = focusable[0]!;
+    const last = focusable[focusable.length - 1]!;
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
   // 右ペインの「パーツ/ゾーン一覧」項目
   const listItems = cardData
     ? cardData.regions.map((r) => ({ key: r.key, num: r.num, label: r.label }))
@@ -89,6 +109,7 @@ export function TutorialLessonViewer({ chapter, stepIndex, onStepChange, onStepC
       aria-modal="true"
       aria-label="チュートリアル解説"
       onClick={onClose}
+      onKeyDownCapture={trapFocus}
       style={{
         position: 'fixed', inset: 0, zIndex: 300,
         background: 'rgba(0,0,0,0.84)', backdropFilter: 'blur(6px)',
@@ -97,6 +118,7 @@ export function TutorialLessonViewer({ chapter, stepIndex, onStepChange, onStepC
       }}
     >
       <div
+        ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
         className="meta-fade"
         style={{
@@ -115,7 +137,7 @@ export function TutorialLessonViewer({ chapter, stepIndex, onStepChange, onStepC
           borderBottom: `1px solid rgba(78,195,255,0.2)`, background: 'rgba(0,0,0,0.4)',
         }}>
           <span style={{ fontFamily: T.fontMono, fontSize: 11, color: T.gold, letterSpacing: '0.28em' }}>
-            CHAPTER {String(chapter.num).padStart(2, '0')}
+            LESSON {chapter.id}
           </span>
           <span style={{ fontFamily: T.fontJp, fontSize: 13, fontWeight: 700, color: T.textSecondary }}>
             {chapter.title}
@@ -123,8 +145,8 @@ export function TutorialLessonViewer({ chapter, stepIndex, onStepChange, onStepC
           <span style={{ marginLeft: 'auto', fontFamily: T.fontMono, fontSize: 12, fontWeight: 800, color: T.gold, letterSpacing: '0.1em' }}>
             ステップ {idx + 1} / {total}
           </span>
-          <button onClick={onClose} aria-label="閉じる" style={{
-            width: 30, height: 30, marginLeft: 8,
+          <button ref={closeRef} onClick={onClose} aria-label="閉じる" style={{
+            width: 44, height: 44, marginLeft: 8,
             background: 'rgba(0,0,0,0.5)', border: `1px solid ${T.textMuted}66`, borderRadius: 4,
             color: T.textSecondary, fontSize: 16, cursor: 'pointer', lineHeight: 1,
           }}>×</button>
@@ -147,7 +169,7 @@ export function TutorialLessonViewer({ chapter, stepIndex, onStepChange, onStepC
             ) : zones && leftW > 0 ? (
               <TutorialBoardSnapshot zones={zones} activeKey={activeKey} paneWidth={Math.max(200, leftW - 44)} />
             ) : (
-              <div style={{ width: '100%' }}>{STEP_ILLUSTRATIONS[step.id] ?? <div style={{ color: T.textMuted, fontSize: 12 }}>(図解準備中)</div>}</div>
+              <div style={{ width: '100%' }}>{visual?.illustration}</div>
             )}
           </div>
 
@@ -178,15 +200,19 @@ export function TutorialLessonViewer({ chapter, stepIndex, onStepChange, onStepC
                   {listItems.map((it) => {
                     const active = it.key === activeKey;
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={it.key}
                         onMouseEnter={() => setActiveKey(it.key)}
                         onMouseLeave={() => setActiveKey(null)}
+                        onFocus={() => setActiveKey(it.key)}
+                        onBlur={() => setActiveKey(null)}
                         style={{
-                          display: 'flex', alignItems: 'center', gap: 9,
-                          padding: '6px 9px', borderRadius: 4, cursor: 'pointer',
+                          width: '100%', display: 'flex', alignItems: 'center', gap: 9,
+                          minHeight: 44, padding: '8px 9px', borderRadius: 4, cursor: 'pointer',
                           background: active ? `${T.gold}1f` : 'rgba(0,0,0,0.3)',
                           border: `1px solid ${active ? T.gold : 'rgba(78,195,255,0.18)'}`,
+                          color: 'inherit', textAlign: 'left', font: 'inherit',
                           transition: 'background 140ms, border-color 140ms',
                         }}
                       >
@@ -198,7 +224,7 @@ export function TutorialLessonViewer({ chapter, stepIndex, onStepChange, onStepC
                           display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
                         }}>{it.num}</span>
                         <span style={{ fontSize: 12.5, color: active ? T.textPrimary : T.textSecondary, lineHeight: 1.4 }}>{it.label}</span>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -215,29 +241,37 @@ export function TutorialLessonViewer({ chapter, stepIndex, onStepChange, onStepC
         }}>
           <div style={{ display: 'flex', gap: 7 }}>
             {chapter.steps.map((s, i) => (
-              <button key={s.id} onClick={() => onStepChange(i)} aria-label={`ステップ ${i + 1}`} style={{
-                width: i === idx ? 22 : 10, height: 10, borderRadius: 5,
+              <button
+                key={s.id}
+                onClick={() => onStepChange(i)}
+                aria-label={`ステップ ${i + 1}`}
+                aria-current={i === idx ? 'step' : undefined}
+                style={{
+                width: 44, height: 44, borderRadius: 5,
                 background: i === idx ? T.gold : 'rgba(255,255,255,0.25)',
                 border: 'none', cursor: 'pointer', padding: 0,
-                transition: 'width 160ms, background 160ms',
-              }} />
+                transition: 'background 160ms',
+                }}
+              />
             ))}
           </div>
 
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
             {canGuided && (
               <button
-                onClick={() => onStartGuided!(chapter.num)}
+                onClick={() => onStartGuided!(step.id)}
+                disabled={isStarting}
+                aria-busy={isStarting}
                 style={{
-                  padding: '9px 16px',
+                  minHeight: 44, padding: '9px 16px',
                   background: 'rgba(58,166,122,0.18)', border: `1px solid ${T.green}`,
                   color: T.green, fontFamily: T.fontJp, fontSize: 13, fontWeight: 800, letterSpacing: '0.06em',
                   borderRadius: 4, cursor: 'pointer',
                 }}
-              >▶ この章を実戦で試す</button>
+              >▶ このステップを実戦で試す</button>
             )}
             <button onClick={() => onStepChange(idx - 1)} disabled={isFirst} style={{
-              padding: '9px 18px',
+              minHeight: 44, padding: '9px 18px',
               background: isFirst ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.5)',
               border: `1px solid ${isFirst ? T.textDisabled : T.neonBlue}55`,
               color: isFirst ? T.textDisabled : T.neonBlue,
@@ -245,7 +279,7 @@ export function TutorialLessonViewer({ chapter, stepIndex, onStepChange, onStepC
               borderRadius: 4, cursor: isFirst ? 'not-allowed' : 'pointer',
             }}>← 前</button>
             <button onClick={handleNext} style={{
-              padding: '9px 22px',
+              minHeight: 44, padding: '9px 22px',
               background: `linear-gradient(180deg, ${T.gold}, ${shade(T.gold, -0.35)})`,
               border: `1px solid ${shade(T.gold, -0.5)}`, color: '#1a1208',
               fontFamily: T.fontJp, fontSize: 13, fontWeight: 800, letterSpacing: '0.1em',

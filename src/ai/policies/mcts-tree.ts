@@ -32,6 +32,7 @@ import { runMatch } from '../match.js';
 import { HeuristicPolicy, type HeuristicPolicyOptions } from './heuristic.js';
 import { defaultStateEvaluator, type StateEvaluator } from './state-evaluator.js';
 import { withHeadlessDecisionContext } from '../headless-decision-context.js';
+import { withIsolatedPendingRuntimeState } from '@/engine/effect/runtime-state.js';
 
 type Player = 'self' | 'opp';
 
@@ -117,9 +118,11 @@ export class MCTSTreePolicy implements AIPolicy {
   }
 
   choose(state: GameState, candidates: Move[], byPlayer: Player): Move | null {
-    return withHeadlessDecisionContext(
-      () => this.chooseHeadless(state, candidates, byPlayer),
-    );
+    return withHeadlessDecisionContext(() =>
+      withIsolatedPendingRuntimeState(
+        state,
+        () => this.chooseHeadless(state, candidates, byPlayer),
+      ));
   }
 
   private chooseHeadless(state: GameState, candidates: Move[], byPlayer: Player): Move | null {
@@ -133,7 +136,7 @@ export class MCTSTreePolicy implements AIPolicy {
     root.untriedMoves = candidates.slice();
 
     for (let i = 0; i < this.iterations; i++) {
-      this.runIteration(root, byPlayer, i);
+      withIsolatedPendingRuntimeState(root.state, () => this.runIteration(root, byPlayer, i));
     }
 
     // 最も visits 多い child を採用 (robust child)
@@ -161,10 +164,11 @@ export class MCTSTreePolicy implements AIPolicy {
       const moveIdx = Math.floor(idx % node.untriedMoves.length);
       const move = node.untriedMoves.splice(moveIdx, 1)[0];
       try {
-        const childState = produce(node.state, (draft) => {
-          applyMove(draft, move, node.toMove);
-          runAllUntilEmpty(draft);
-        });
+        const childState = withIsolatedPendingRuntimeState(node.state, () =>
+          produce(node.state, (draft) => {
+            applyMove(draft, move, node.toMove);
+            runAllUntilEmpty(draft);
+          }));
         const childToMove: Player = move.kind === 'endTurn'
           ? (node.toMove === 'self' ? 'opp' : 'self')
           : node.toMove;

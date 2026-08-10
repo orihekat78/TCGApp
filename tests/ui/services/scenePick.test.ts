@@ -86,6 +86,11 @@ describe('isSceneDirectPick', () => {
     expect(isSceneDirectPick(pick({ player: 'opp', candidates: [{ uid: 'o1', cardId: 'D08003', player: 'opp' }] }), gs)).toBe(false);
   });
 
+  it('linked public hand reveal stays in the required picker instead of direct scene UI', () => {
+    const gs = gsWith(['s1'], []);
+    expect(isSceneDirectPick(pick({ publicHandRevealToken: 'public-hand-reveal:linked' }), gs)).toBe(false);
+  });
+
   it('候補0件 → false', () => {
     const gs = gsWith(['s1'], []);
     expect(isSceneDirectPick(pick({ candidates: [] }), gs)).toBe(false);

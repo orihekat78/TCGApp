@@ -90,8 +90,8 @@ describe('CutInDisguisePickerModal', () => {
     const onPickDisguise = vi.fn();
     const onPass = vi.fn();
     const mixed = [
-      { uid: 'CUT#0', cardId: 'CUT', name: 'Cut in', kind: 'cutin' as const },
-      { uid: 'DIS#1', cardId: 'DIS', name: 'Disguise', kind: 'disguise' as const },
+      { uid: 'card:self:hand:CUT#0', cardId: 'CUT', name: 'Cut in', kind: 'cutin' as const },
+      { uid: 'card:self:hand:DIS#1', cardId: 'DIS', name: 'Disguise', kind: 'disguise' as const },
     ];
     act(() => {
       root.render(
@@ -100,9 +100,9 @@ describe('CutInDisguisePickerModal', () => {
           actorLabel="1番目"
           candidates={mixed}
           handCards={[
-            { uid: 'CUT#0', cardId: 'CUT', name: 'Cut in' },
-            { uid: 'DIS#1', cardId: 'DIS', name: 'Disguise' },
-            { uid: 'NO#2', cardId: 'NO', name: 'Not eligible' },
+            { uid: 'card:self:hand:CUT#0', cardId: 'CUT', name: 'Cut in' },
+            { uid: 'card:self:hand:DIS#1', cardId: 'DIS', name: 'Disguise' },
+            { uid: 'card:self:hand:NO#2', cardId: 'NO', name: 'Not eligible' },
           ]}
           onPickCutIn={onPickCutIn}
           onPickDisguise={onPickDisguise}
@@ -112,18 +112,18 @@ describe('CutInDisguisePickerModal', () => {
     });
 
     expect(container.querySelectorAll('[data-testid^="cid-hand-card-"]')).toHaveLength(3);
-    expect(container.querySelector('[data-testid="cid-hand-card-CUT#0"]')?.classList).toContain('is-eligible');
-    expect(container.querySelector('[data-testid="cid-hand-card-DIS#1"]')?.classList).toContain('is-eligible');
-    expect(container.querySelector('[data-testid="cid-hand-card-NO#2"]')?.classList).not.toContain('is-eligible');
-    expect(container.querySelector('[data-testid="cid-hand-expand-NO#2"]')?.getAttribute('aria-label')).toBe('Not eligible（3枚目）の詳細を表示');
+    expect(container.querySelector('[data-testid="cid-hand-card-card:self:hand:CUT#0"]')?.classList).toContain('is-eligible');
+    expect(container.querySelector('[data-testid="cid-hand-card-card:self:hand:DIS#1"]')?.classList).toContain('is-eligible');
+    expect(container.querySelector('[data-testid="cid-hand-card-card:self:hand:NO#2"]')?.classList).not.toContain('is-eligible');
+    expect(container.querySelector('[data-testid="cid-hand-expand-card:self:hand:NO#2"]')?.getAttribute('aria-label')).toBe('Not eligible（3枚目）の詳細を表示');
 
     act(() => {
-      (container.querySelector('[data-testid="cid-hand-expand-NO#2"]') as HTMLButtonElement).click();
+      (container.querySelector('[data-testid="cid-hand-expand-card:self:hand:NO#2"]') as HTMLButtonElement).click();
     });
     expect(container.querySelector('.card-expand-modal-backdrop')).not.toBeNull();
     act(() => {
-      (container.querySelector('[data-testid="cid-cutin-CUT#0"]') as HTMLButtonElement).click();
-      (container.querySelector('[data-testid="cid-disg-DIS#1"]') as HTMLButtonElement).click();
+      (container.querySelector('[data-testid="cid-cutin-card:self:hand:CUT#0"]') as HTMLButtonElement).click();
+      (container.querySelector('[data-testid="cid-disg-card:self:hand:DIS#1"]') as HTMLButtonElement).click();
       (container.querySelector('[data-testid="cid-pass"]') as HTMLButtonElement).click();
     });
     expect(onPickCutIn).toHaveBeenCalledWith('CUT');
@@ -139,20 +139,20 @@ describe('CutInDisguisePickerModal', () => {
       <CutInDisguisePickerModal
         open
         actorLabel="1番目"
-        candidates={[{ uid: 'SAME#1', cardId: 'SAME', name: 'Same', kind: 'cutin' }]}
+        candidates={[{ uid: 'card:self:hand:SAME#1', cardId: 'SAME', name: 'Same', kind: 'cutin' }]}
         handCards={[
-          { uid: 'SAME#0', cardId: 'SAME', name: 'Same' },
-          { uid: 'SAME#1', cardId: 'SAME', name: 'Same' },
-          { uid: 'BANNED#2', cardId: 'BANNED', name: 'Banned' },
+          { uid: 'card:self:hand:SAME#0', cardId: 'SAME', name: 'Same' },
+          { uid: 'card:self:hand:SAME#1', cardId: 'SAME', name: 'Same' },
+          { uid: 'card:self:hand:BANNED#2', cardId: 'BANNED', name: 'Banned' },
         ]}
         onPickCutIn={vi.fn()}
         onPickDisguise={vi.fn()}
         onPass={vi.fn()}
       />,
     );
-    expect(html).toContain('class="cid-hand-card" data-testid="cid-hand-card-SAME#0"');
-    expect(html).toContain('class="cid-hand-card is-eligible" data-testid="cid-hand-card-SAME#1"');
-    expect(html).toContain('cid-hand-card-BANNED#2');
+    expect(html).toContain('class="cid-hand-card" data-testid="cid-hand-card-card:self:hand:SAME#0"');
+    expect(html).toContain('class="cid-hand-card is-eligible" data-testid="cid-hand-card-card:self:hand:SAME#1"');
+    expect(html).toContain('cid-hand-card-card:self:hand:BANNED#2');
     expect(html).toContain('data-testid="cid-pass"');
   });
 
@@ -176,6 +176,50 @@ describe('CutInDisguisePickerModal', () => {
     expect(html).toContain('aria-label="Same（2枚目）の詳細を表示"');
     expect(html).not.toContain('data-testid="cid-cutin-SAME"');
   });
+
+  it('owns keyboard focus, wraps Tab in both directions, and returns focus when closed', () => {
+    const opener = document.createElement('button');
+    const container = document.createElement('div');
+    document.body.append(opener, container);
+    opener.focus();
+    const root = createRoot(container);
+    const renderModal = (open: boolean): void => {
+      root.render(
+        <CutInDisguisePickerModal
+          open={open}
+          actorLabel="1逡ｪ逶ｮ"
+          candidates={cands}
+          onPickCutIn={vi.fn()}
+          onPickDisguise={vi.fn()}
+          onPass={vi.fn()}
+        />,
+      );
+    };
+
+    act(() => renderModal(true));
+    const first = container.querySelector<HTMLButtonElement>('[data-testid="cid-cutin-EV1#0"]')!;
+    const pass = container.querySelector<HTMLButtonElement>('[data-testid="cid-pass"]')!;
+    expect(document.activeElement).toBe(first);
+
+    pass.focus();
+    act(() => document.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Tab', bubbles: true, cancelable: true,
+    })));
+    expect(document.activeElement).toBe(first);
+
+    first.focus();
+    act(() => document.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Tab', shiftKey: true, bubbles: true, cancelable: true,
+    })));
+    expect(document.activeElement).toBe(pass);
+
+    act(() => renderModal(false));
+    expect(document.activeElement).toBe(opener);
+    act(() => root.unmount());
+    opener.remove();
+    container.remove();
+  });
+
   it('renders public action candidates with independent details and preserves the action payload', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -208,8 +252,9 @@ describe('CutInDisguisePickerModal', () => {
     act(() => root.unmount());
     container.remove();
   });
-  it('keeps public candidate details at the mobile touch target minimum', () => {
+  it('keeps public candidate details beside the art at the mobile touch target minimum', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/ui/components/CutInDisguisePickerModal.css'), 'utf8');
-    expect(css).toMatch(/\.cid-cand-detail\s*\{[\s\S]*min-width:\s*48px;[\s\S]*min-height:\s*48px;/);
+    expect(css).toMatch(/\.cid-list li\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+48px;/);
+    expect(css).toMatch(/\.cid-cand-detail\s*\{[^}]*position:\s*static;[^}]*min-width:\s*48px;[^}]*min-height:\s*48px;/);
   });
 });

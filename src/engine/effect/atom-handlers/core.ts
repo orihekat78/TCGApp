@@ -9,19 +9,116 @@ import { tryRePickFromAtom } from '../resolve-picks.js';
 // WC2b (2026-07-11): invokeHiramekiOfCard atom-level optional prompt 用 (pending-state は leaf — cycle 無し)。
 import { pushPendingEffectOptionalSide, setPendingOptionalResume, setPendingOptionalBindings, setPendingOptionalCostPaid } from '../pending-state.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from '../atom-pick-spec.js';
-import { candidates as targetCandidates } from '../../target/candidates.js';
 import { requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax, resolveDeltaToNumber, publicHandRevealToken, queuePendingPublicHandRevealSide } from './_shared.js';
 import { isDynObject, resolveDynNumber } from '../../dyn/eval.js';
 import type { Player } from './_shared.js';
-import type { GameState, AtomVerb, EffectCtx, FileCard, TargetingRef } from '../../types/index.js';
+import type { GameState, AtomVerb, EffectCtx, FileCard, PublicCausalZone } from '../../types/index.js';
 import { removeExcludedSourceCardId } from '../../read/effect-source.js';
+import { recordEffectCausalOperation } from '../../log/effect-causal.js';
 
 function resolvingEventCardId(ctx: EffectCtx, player: Player): string | undefined {
   return removeExcludedSourceCardId(ctx, player);
 }
 
 function refreshDeckForEffect(s: GameState, player: Player, ctx: EffectCtx): boolean {
-  return mutate.deck.refreshAfterTake(s, player, resolvingEventCardId(ctx, player));
+  return mutate.deck.refreshAfterTake(
+    s,
+    player,
+    resolvingEventCardId(ctx, player),
+    (count) => recordDeckRefresh(s, ctx, player, count),
+  );
+}
+
+function recordEvidenceFaceChange(
+  s: GameState,
+  ctx: EffectCtx,
+  owner: Player,
+  from: 'face-down' | 'face-up',
+  to: 'face-down' | 'face-up',
+  count: number,
+): void {
+  if (count < 1) return;
+  recordEffectCausalOperation(s, ctx, {
+    actor: ctx.source.player,
+    kind: 'evidence',
+    source: { kind: 'zone', side: owner, zone: 'evidence' },
+    targets: [{ kind: 'zone', side: owner, zone: 'evidence' }],
+    outcome: { type: 'face-change', from, to, count },
+  });
+}
+
+function recordPublicZoneMove(
+  s: GameState,
+  ctx: EffectCtx,
+  side: Player,
+  from: PublicCausalZone,
+  to: PublicCausalZone,
+  count: number,
+  kind: 'zone-move' | 'evidence' = 'zone-move',
+): void {
+  if (count < 1) return;
+  recordEffectCausalOperation(s, ctx, {
+    actor: ctx.source.player,
+    kind,
+    source: { kind: 'zone', side, zone: from },
+    targets: [{ kind: 'zone', side, zone: to }],
+    outcome: { type: 'move', from, to, count },
+  });
+}
+
+function recordDeckRefresh(s: GameState, ctx: EffectCtx, player: Player, count: number): void {
+  if (count < 1) return;
+  recordEffectCausalOperation(s, ctx, {
+    actor: ctx.source.player,
+    kind: 'zone-move',
+    tags: ['refresh'],
+    source: { kind: 'zone', side: player, zone: 'remove' },
+    targets: [{ kind: 'zone', side: player, zone: 'deck' }],
+    outcome: { type: 'move', from: 'remove', to: 'deck', count },
+  });
+}
+
+type DeckDrawCausalStep = { kind: 'draw' | 'refresh'; count: number };
+
+function appendDeckDrawCausalStep(steps: DeckDrawCausalStep[], step: DeckDrawCausalStep): void {
+  const previous = steps[steps.length - 1];
+  if (previous?.kind === step.kind) {
+    previous.count += step.count;
+    return;
+  }
+  steps.push({ ...step });
+}
+
+function recordDeckDrawCausalSteps(
+  s: GameState,
+  ctx: EffectCtx,
+  player: Player,
+  steps: DeckDrawCausalStep[],
+): void {
+  for (const step of steps) {
+    if (step.kind === 'draw') {
+      recordEffectCausalOperation(s, ctx, {
+        actor: ctx.source.player,
+        kind: 'draw',
+        source: { kind: 'zone', side: player, zone: 'deck' },
+        targets: [{ kind: 'zone', side: player, zone: 'hand' }],
+        outcome: { type: 'move', from: 'deck', to: 'hand', count: step.count },
+      });
+      continue;
+    }
+    recordDeckRefresh(s, ctx, player, step.count);
+  }
+}
+
+type DeckTransferCausalStep = { kind: 'move' | 'refresh'; count: number };
+
+function appendDeckTransferCausalStep(steps: DeckTransferCausalStep[], step: DeckTransferCausalStep): void {
+  const previous = steps[steps.length - 1];
+  if (previous?.kind === step.kind) {
+    previous.count += step.count;
+    return;
+  }
+  steps.push({ ...step });
 }
 
 function setCardMoveBinding(
@@ -87,13 +184,21 @@ export function atomDraw(s: GameState, a: Record<string, unknown>, ctx: EffectCt
       // mini-wave #3 (2026-07-10): n は number | {dyn} (B05092「移した枚数と同じ数のカードを引く」
       // = {dyn:'$bound.$moved.count'})。number は従来 byte 互換 (resolveDeltaToNumber は number passthrough)。
       const drawN = typeof a.n === 'number' ? a.n : resolveDeltaToNumber(a.n, s, ctx);
-      mutate.deck.draw(s, drawPlayer, drawN, resolvingEventCardId(ctx, drawPlayer));
+      const causalSteps: DeckDrawCausalStep[] = [];
+      const drawn = mutate.deck.draw(
+        s,
+        drawPlayer,
+        drawN,
+        resolvingEventCardId(ctx, drawPlayer),
+        (step) => appendDeckDrawCausalStep(causalSteps, step),
+      );
+      recordDeckDrawCausalSteps(s, ctx, drawPlayer, causalSteps);
       mutate.log.append(s, {
         ts: Date.now(),
         player: drawPlayer,
         turn: s.turn.number,
         action: 'effect:draw',
-        result: String(drawN),
+        result: String(drawn.length),
       });
       return;
     }
@@ -109,10 +214,20 @@ export function atomDrawUpToHandSize(s: GameState, a: Record<string, unknown>, c
       const need = Math.max(0, target - s.players[drawPlayer].hand.length);
       // M2後半 (2026-07-10, B04048): 引いた cardId 群を bind (「引いた枚数と同じ数」を後段
       // handToDeckBottom n:{dyn:'$bound.<key>.count'} が読む)。mill/discard と同 idiom (0枚は書かない)。
-      const drawn = need > 0 ? mutate.deck.draw(s, drawPlayer, need, resolvingEventCardId(ctx, drawPlayer)) : [];
+      const causalSteps: DeckDrawCausalStep[] = [];
+      const drawn = need > 0
+        ? mutate.deck.draw(
+          s,
+          drawPlayer,
+          need,
+          resolvingEventCardId(ctx, drawPlayer),
+          (step) => appendDeckDrawCausalStep(causalSteps, step),
+        )
+        : [];
       if (typeof a.bind === 'string' && drawn.length > 0) {
         (ctx.bindings as Record<string, unknown>)[a.bind] = drawn.map((cardId) => ({ cardId }));
       }
+      recordDeckDrawCausalSteps(s, ctx, drawPlayer, causalSteps);
       mutate.log.append(s, {
         ts: Date.now(),
         player: drawPlayer,
@@ -131,6 +246,13 @@ export function atomDiscardDownTo(s: GameState, a: Record<string, unknown>, ctx:
   const ids = hand.slice(0, Math.max(0, hand.length - n));
   if (ids.length > 0) {
     mutate.hand.discardToRemove(s, player, ids, { byPlayer: ctx.source.player });
+    recordEffectCausalOperation(s, ctx, {
+      actor: ctx.source.player,
+      kind: 'discard',
+      source: { kind: 'zone', side: player, zone: 'hand' },
+      targets: [{ kind: 'zone', side: player, zone: 'remove' }],
+      outcome: { type: 'move', from: 'hand', to: 'remove', count: ids.length },
+    });
   }
   if (typeof a.bind === 'string') {
     (ctx.bindings as Record<string, unknown>)[a.bind] = ids.map((cardId) => ({ cardId }));
@@ -171,7 +293,18 @@ export function atomDiscard(s: GameState, a: Record<string, unknown>, ctx: Effec
       }
       const target = dcArgs.target as string[];
       // W3 (r17): byPlayer = 効果起動側 (相対 player と乖離しうる — 「相手の効果によって」判定用)
-      mutate.hand.discardToRemove(s, resolvePlayer(a.player, ctx), target, { byPlayer: ctx.source.player });
+      const dcBefore = s.players[dcP].hand.length;
+      mutate.hand.discardToRemove(s, dcP, target, { byPlayer: ctx.source.player });
+      const dcDiscarded = dcBefore - s.players[dcP].hand.length;
+      if (dcDiscarded > 0) {
+        recordEffectCausalOperation(s, ctx, {
+          actor: ctx.source.player,
+          kind: 'discard',
+          source: { kind: 'zone', side: dcP, zone: 'hand' },
+          targets: [{ kind: 'zone', side: dcP, zone: 'remove' }],
+          outcome: { type: 'move', from: 'hand', to: 'remove', count: dcDiscarded },
+        });
+      }
       // BUG-114: discard したカードを bind (リムーブしたカードの level/AP を $discarded dyn で参照)。
       // 続く chain step (charModifyAP delta:{dyn:'$discarded.level*1000'}) が同一 ctx で読む (BUG-107)。
       if (typeof a.bind === 'string' && target.length > 0) {
@@ -180,10 +313,10 @@ export function atomDiscard(s: GameState, a: Record<string, unknown>, ctx: Effec
       // BUG-072: effect 経由の discard 成功も log に残す
       mutate.log.append(s, {
         ts: Date.now(),
-        player: resolvePlayer(a.player, ctx),
+        player: dcP,
         turn: s.turn.number,
         action: 'effect:discard',
-        result: String(target.length),
+        result: String(dcDiscarded),
       });
       return;
     }
@@ -250,6 +383,7 @@ function hdMove(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, hdP: '
       if (typeof a.bind === 'string' && movedIds.length > 0) {
         (ctx.bindings as Record<string, unknown>)[a.bind] = movedIds.map((cardId) => ({ cardId }));
       }
+      recordPublicZoneMove(s, ctx, hdP, 'hand', 'deck', movedIds.length);
       // shuffleThenDrawMoved (B05092「…デッキの下に移し、デッキをシャッフルする。移した枚数と同じ数の
       // カードを引く」): atom 内蔵で move → shuffle → 同数 draw を印字順に実行。別 step の
       // draw n:{dyn:'$bound...count'} は初期 walk が bind 前に 0 へ literalize するため不可
@@ -257,7 +391,15 @@ function hdMove(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, hdP: '
       if ((a as { shuffleThenDrawMoved?: unknown }).shuffleThenDrawMoved === true) {
         mutate.deck.shuffle(s, hdP);
         if (movedIds.length > 0) {
-          mutate.deck.draw(s, hdP, movedIds.length, resolvingEventCardId(ctx, hdP));
+          const causalSteps: DeckDrawCausalStep[] = [];
+          mutate.deck.draw(
+            s,
+            hdP,
+            movedIds.length,
+            resolvingEventCardId(ctx, hdP),
+            (step) => appendDeckDrawCausalStep(causalSteps, step),
+          );
+          recordDeckDrawCausalSteps(s, ctx, hdP, causalSteps);
         }
       }
       mutate.log.append(s, { ts: Date.now(), player: hdP, turn: s.turn.number, action: 'effect:handToDeckBottom', result: String(movedIds.length) });
@@ -289,6 +431,13 @@ export function atomDiscardRandom(s: GameState, a: Record<string, unknown>, ctx:
   }
   const picked = pool.slice(0, k);
   mutate.hand.discardToRemove(s, drP, picked, { byPlayer: ctx.source.player }); // W3 (r17)
+  recordEffectCausalOperation(s, ctx, {
+    actor: ctx.source.player,
+    kind: 'discard',
+    source: { kind: 'zone', side: drP, zone: 'hand' },
+    targets: [{ kind: 'zone', side: drP, zone: 'remove' }],
+    outcome: { type: 'move', from: 'hand', to: 'remove', count: picked.length },
+  });
   // BUG-114 同型: リムーブした cardId を bind ($discarded dyn で後続 chain step が参照可能)。
   if (typeof a.bind === 'string' && picked.length > 0) {
     (ctx.bindings as Record<string, unknown>)[a.bind] = picked.map((cardId) => ({ cardId }));
@@ -311,28 +460,10 @@ export function atomHandReveal(s: GameState, a: Record<string, unknown>, ctx: Ef
         : (a.target === undefined && hasNorMax(a))
         ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handReveal.defaultArea, a, hrP, a.player as Player) }
         : a;
-      // exact-N gate (2026-06-28, B09061 a1): 短縮形 n:N (= pick {min:N,max:N}) は「N枚公開する」=
-      // 固定数 (rules/15「N枚」、「まで」なし) = all-or-nothing。手札の filter 一致が N 枚未満なら
-      // 公開不可 → chainStepNoApply で「そうした場合」を gate。max:N (a.n 不在、n.min=0「N枚まで」) は
-      // 0..N 可ゆえ gate しない (従来の resolved 0枚 gate-on-0 のみ)。
-      // 判定は **短縮形 entry の候補数** で行う: drain 経路 (apply-pick generic Pattern B) は resolved
-      // target を単一に collapse するため resolved length では「<N」を検出できない。reveal は zone 不変
-      // ゆえ availability さえ満たせば後段は単一 collapse でも mechanical に等価 (bind は n:1 のみ load-bearing)。
-      // ★未対応 (B09061=trait filter 単独ゆえ無害、将来カードで注意): (1) distinctNames:true + n:N は
-      //   候補列挙が distinct を無視するため availN を過大計数する (列挙時 distinct enforce 無し)。(2) 明示
-      //   target 配列 + n:N は a.target!==undefined ゆえ本 gate を素通り (resolved gate-on-0 のみ)。(3) [解消済
-      //   BUG-165 wave-10 2026-07-02: n≥2 の generic Pattern B collapse を apply-pick/resolve-picks で修正、
-      //   bind に全選択が入る]。(4) filter 内 {dyn} (levelMax:{dyn} 等) + n:N は本 gate が
-      //   resolveTargetFilterDyn を通さず raw filter で count するため availN が誤算 (実 pick 経路は dyn 解決済)。
-      //   これら 4 組合せのカードは authoring 前に本 gate 拡張が必要。
-      if (a.target === undefined && typeof a.n === 'number') {
-        const availN = targetCandidates(s, hrArgs.target as TargetingRef, ctx).length;
-        if (availN < (a.n as number)) {
-          (ctx.dyn ??= {}).chainStepNoApply = true;
-          mutate.log.append(s, { ts: Date.now(), player: hrP, turn: s.turn.number, action: 'effect:handReveal', result: 'gate-skip' });
-          return;
-        }
-      }
+      // Rules/15: a mandatory fixed count resolves as much as possible.  Exact
+      // prerequisites such as 「そうした場合」 are owned by the surrounding
+      // chain/optional resolver, not by this atom; the shared pending-pick
+      // policy therefore remains the single feasibility authority.
       if (!Array.isArray(hrArgs.target)) {
         tryRePickFromAtom(s, { kind: 'atom', verb, args: hrArgs }, ctx, { byPlayer: hrP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
         mutate.log.append(s, { ts: Date.now(), player: hrP, turn: s.turn.number, action: 'effect:handReveal:awaiting-pick' });
@@ -376,22 +507,13 @@ export function atomHandReveal(s: GameState, a: Record<string, unknown>, ctx: Ef
 // (短縮形 pick + exact-N gate + gate-on-0 + bind) に **実 zone 変化** (mutate.partner.removeAreaCardsToRemove)
 // を足したもの。defaultArea='partner-area' (candidates case 'partner-area' が partnerAreaCards を列挙、
 // wave-12)。「N枚リムーブしてもよい」の optional/「そうした場合」はカード側 (optional{chain[…]}) が担い、
-// 本 verb は exact-N (n:N) all-or-nothing: PA 候補 < N なら chainStepNoApply で chain break (B07055/B03094 同型)。
+// 固定数の不足は既定で best-effort。all-or-nothing の「そうした場合」はカード側が
+// minimumPolicy:'exact' を明示し、共通 pick producer が判定する。
 export function atomPartnerAreaRemove(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
       const paP = resolvePlayer(a.player, ctx);
       const paArgs = (a.target === undefined && hasNorMax(a))
         ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.partnerAreaRemove.defaultArea, a, paP, a.player as Player) }
         : a;
-      // exact-N gate (handReveal 同型): 短縮形 n:N は「N枚リムーブ」= 固定数 (rules/15「N枚」、「まで」なし)。
-      // PA の filter 一致が N 枚未満なら実行不可 → chainStepNoApply で「そうした場合」を gate。
-      if (a.target === undefined && typeof a.n === 'number') {
-        const availN = targetCandidates(s, paArgs.target as TargetingRef, ctx).length;
-        if (availN < (a.n as number)) {
-          (ctx.dyn ??= {}).chainStepNoApply = true;
-          mutate.log.append(s, { ts: Date.now(), player: paP, turn: s.turn.number, action: 'effect:partnerAreaRemove', result: 'gate-skip' });
-          return;
-        }
-      }
       const resolvedTarget = Array.isArray(paArgs.target)
         ? paArgs.target
         : Array.isArray((paArgs as { cardIds?: unknown }).cardIds)
@@ -467,6 +589,7 @@ export function atomMill(s: GameState, a: Record<string, unknown>, ctx: EffectCt
         return;
       }
       const millRemoved = mutate.deck.removeFromTop(s, millP, millN);
+      recordPublicZoneMove(s, ctx, millP, 'deck', 'remove', millRemoved.length);
       // engine defer-unlock mini-wave (2026-07-09): 「これによって〜がリムーブされた場合」(PR132/PR201) 用に
       // リムーブした cardId を bind (discard/handReveal/partnerAreaRemove と同型)。refresh より前に確定 —
       // binding は cardId snapshot なので refresh でデッキへ戻っても boundAnyMatchesFilter (印字値評価) は不変。
@@ -479,9 +602,9 @@ export function atomMill(s: GameState, a: Record<string, unknown>, ctx: EffectCt
       // n=0 is not a deck take. For n>0, also resolve an already-empty
       // adversarial state (removed=0) as the pre-existing BUG-137 contract.
       if (millN > 0) {
-        mutate.deck.refreshAfterTake(s, millP, resolvingEventCardId(ctx, millP));
+        refreshDeckForEffect(s, millP, ctx);
       }
-      mutate.log.append(s, { ts: Date.now(), player: millP, turn: s.turn.number, action: 'effect:mill', result: String(millN) });
+      mutate.log.append(s, { ts: Date.now(), player: millP, turn: s.turn.number, action: 'effect:mill', result: String(millRemoved.length) });
       return;
     }
 
@@ -489,11 +612,22 @@ export function atomFileAdd(s: GameState, a: Record<string, unknown>, ctx: Effec
       // BUG-073: effect log
       const faP = resolvePlayer(a.player, ctx);
       const faN = a.n as number;
+      const causalSteps: DeckTransferCausalStep[] = [];
       // BUG-180: the mutator owns both between-card and exact-final refresh.
       // Preserve a normal event/hirameki source that is only eagerly represented
       // in remove while its effect is still resolving (rules/14, rules/26).
-      mutate.file.addFromDeckTop(s, faP, faN, resolvingEventCardId(ctx, faP));
-      mutate.log.append(s, { ts: Date.now(), player: faP, turn: s.turn.number, action: 'effect:fileAdd', result: String(faN) });
+      const fileAdded = mutate.file.addFromDeckTop(
+        s,
+        faP,
+        faN,
+        resolvingEventCardId(ctx, faP),
+        (step) => appendDeckTransferCausalStep(causalSteps, step),
+      );
+      for (const step of causalSteps) {
+        if (step.kind === 'refresh') recordDeckRefresh(s, ctx, faP, step.count);
+        else recordPublicZoneMove(s, ctx, faP, 'deck', 'file', step.count);
+      }
+      mutate.log.append(s, { ts: Date.now(), player: faP, turn: s.turn.number, action: 'effect:fileAdd', result: String(fileAdded) });
       return;
     }
 
@@ -519,6 +653,7 @@ export function atomFilePopToHand(s: GameState, a: Record<string, unknown>, ctx:
           fpMoved++;
         }
         if (fpMoved === 0) (ctx.dyn ??= {}).chainStepNoApply = true;
+        recordPublicZoneMove(s, ctx, p, 'file', 'hand', fpMoved);
         mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:filePopToHand', result: `n=${fpN} moved=${fpMoved}` });
         return;
       }
@@ -534,6 +669,7 @@ export function atomFilePopToHand(s: GameState, a: Record<string, unknown>, ctx:
       } else {
         (ctx.dyn ??= {}).chainStepNoApply = true; // Phase 3c: chain break 信号を ctx.dyn へ (resolver chain case が読む)
       }
+      recordPublicZoneMove(s, ctx, p, 'file', 'hand', popped ? 1 : 0);
       // BUG-073: effect log (popped が無い場合も log には残す)
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:filePopToHand', result: popped ? 'moved=1' : 'none' });
       return;
@@ -569,6 +705,7 @@ export function atomFileRemoveTop(s: GameState, a: Record<string, unknown>, ctx:
         (ctx.bindings as Record<string, unknown[]>)[a.bind] =
           removedIds.map(cardId => ({ kind: 'card', cardId, area: 'remove', player: frP }));
       }
+      recordPublicZoneMove(s, ctx, frP, 'file', 'remove', removedIds.length);
       mutate.log.append(s, { ts: Date.now(), player: frP, turn: s.turn.number, action: 'effect:fileRemoveTop', result: removedIds.join(',') || 'none' });
       return;
     }
@@ -578,7 +715,23 @@ export function atomFileFlipTop(s: GameState, a: Record<string, unknown>, ctx: E
       // 既に表向き / FILE 空は no-op。⚠ flip 不発でも chain break しない
       // (B09021 Q&A: 表向きにできなくても後続の AP+1000 は実行可 — fileRemoveTop と非対称)。
       const ffP = resolvePlayer(a.player, ctx);
+      let ffIndex = -1;
+      for (let index = s.players[ffP].file.length - 1; index >= 0; index -= 1) {
+        if (s.players[ffP].file[index]?.type !== 'assisted-partner') {
+          ffIndex = index;
+          break;
+        }
+      }
       const ffResult = mutate.file.flipTop(s, ffP);
+      if (ffResult === 'flipped' && ffIndex >= 0) {
+        recordEffectCausalOperation(s, ctx, {
+          actor: ctx.source.player,
+          kind: 'face-change',
+          source: { kind: 'zone', side: ffP, zone: 'file' },
+          targets: [{ kind: 'file-card', side: ffP, index: ffIndex }],
+          outcome: { type: 'face-change', from: 'face-down', to: 'face-up', count: 1 },
+        });
+      }
       mutate.log.append(s, { ts: Date.now(), player: ffP, turn: s.turn.number, action: 'effect:fileFlipTop', result: ffResult });
       return;
     }
@@ -586,6 +739,7 @@ export function atomFileFlipTop(s: GameState, a: Record<string, unknown>, ctx: E
 export function atomEvidenceGain(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       const p = resolvePlayer(a.player, ctx);
       const n = a.n as number;
+      const causalSteps: DeckTransferCausalStep[] = [];
       // BUG-180: one mutator call owns all refresh checkpoints, including exact
       // final exhaustion. faceUp remains a direct argument (B06085).
       const egGained = mutate.evidence.addFromDeck(
@@ -595,7 +749,21 @@ export function atomEvidenceGain(s: GameState, a: Record<string, unknown>, ctx: 
         a.faceUp === true,
         { turn: s.turn.number, via: 'effect' },
         resolvingEventCardId(ctx, p),
+        (step) => appendDeckTransferCausalStep(causalSteps, step),
       );
+      for (const step of causalSteps) {
+        if (step.kind === 'refresh') {
+          recordDeckRefresh(s, ctx, p, step.count);
+        } else {
+          recordEffectCausalOperation(s, ctx, {
+            actor: ctx.source.player,
+            kind: 'evidence',
+            source: { kind: 'zone', side: p, zone: 'deck' },
+            targets: [{ kind: 'zone', side: p, zone: 'evidence' }],
+            outcome: { type: 'move', from: 'deck', to: 'evidence', count: step.count },
+          });
+        }
+      }
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceGain', result: String(egGained) });
       return;
@@ -609,9 +777,19 @@ export function atomSelfToEvidence(s: GameState, a: Record<string, unknown>, ctx
       const steCardId = ctx.source.cardId;
       if (typeof steCardId !== 'string' || steCardId.length === 0) return;
       const steFaceUp = a.faceUp === undefined ? true : a.faceUp === true;
+      const steEvidenceBefore = s.players[steP].evidence.length;
       mutate.evidence.gainCard(s, steP, steCardId, steFaceUp, {
         turn: s.turn.number, via: 'effect', sourceCardId: steCardId,
       });
+      recordPublicZoneMove(
+        s,
+        ctx,
+        steP,
+        'remove',
+        'evidence',
+        s.players[steP].evidence.length === steEvidenceBefore + 1 ? 1 : 0,
+        'evidence',
+      );
       mutate.log.append(s, { ts: Date.now(), player: steP, turn: s.turn.number, action: 'effect:selfToEvidence', target: steCardId, result: steFaceUp ? '表向き' : '裏向き' });
       return;
     }
@@ -651,6 +829,7 @@ export function atomToPartnerArea(s: GameState, a: Record<string, unknown>, ctx:
         setCardMoveBinding(ctx, tpaArgs.bind, tpaPicked
           ? [{ cardId: tpaTarget, area: 'partner-area', player: tpaP, index: partnerIndex }]
           : []);
+        recordPublicZoneMove(s, ctx, tpaP, 'remove', 'partner', tpaPicked ? 1 : 0);
         // 0枚 (skip/不在) → chain gate (removeAreaToDeckTop と同型、「してもよい。そうした場合」対応)。
         if (!tpaPicked) (ctx.dyn ??= {}).chainStepNoApply = true;
         mutate.log.append(s, { ts: Date.now(), player: tpaP, turn: s.turn.number, action: 'effect:toPartnerArea', target: tpaTarget, result: tpaPicked ? 'ok' : 'not-found' });
@@ -663,6 +842,7 @@ export function atomToPartnerArea(s: GameState, a: Record<string, unknown>, ctx:
       setCardMoveBinding(ctx, a.bind, moved
         ? [{ cardId: tpaCardId, area: 'partner-area', player: tpaP, index: partnerIndex }]
         : []);
+      recordPublicZoneMove(s, ctx, tpaP, 'remove', 'partner', moved ? 1 : 0);
       if (moved) {
         mutate.log.append(s, { ts: Date.now(), player: tpaP, turn: s.turn.number, action: 'effect:toPartnerArea', target: tpaCardId });
       }
@@ -678,6 +858,7 @@ export function atomEvidenceLose(s: GameState, a: Record<string, unknown>, ctx: 
         if (!removed) break;
         lost++;
       }
+      recordPublicZoneMove(s, ctx, p, 'evidence', 'remove', lost, 'evidence');
       // BUG-073: effect log (実際にロストした枚数を記録)
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceLose', result: String(lost) });
       return;
@@ -691,6 +872,7 @@ export function atomEvidenceToDeck(s: GameState, a: Record<string, unknown>, ctx
       const nRaw = resolveBindRef(a.n, ctx);
       const etdN = typeof nRaw === 'number' ? nRaw : 0;
       const moved = mutate.evidence.toDeckTop(s, etdP, etdN);
+      recordPublicZoneMove(s, ctx, etdP, 'evidence', 'deck', moved, 'evidence');
       mutate.log.append(s, { ts: Date.now(), player: etdP, turn: s.turn.number, action: 'effect:evidenceToDeck', result: String(moved) });
       return;
     }
@@ -699,7 +881,9 @@ export function atomEvidenceFlip(s: GameState, a: Record<string, unknown>, ctx: 
       // ① 旧 idx 固定形 (後方互換): { player, idx } を直接 flip。
       if (typeof a.idx === 'number') {
         const efP = resolvePlayer(a.player, ctx);
+        const changed = s.players[efP].evidence[a.idx]?.faceUp === false;
         mutate.evidence.flipFaceUp(s, efP, a.idx);
+        recordEvidenceFaceChange(s, ctx, efP, 'face-down', 'face-up', changed ? 1 : 0);
         // BUG-073: effect log
         mutate.log.append(s, { ts: Date.now(), player: efP, turn: s.turn.number, action: 'effect:evidenceFlip', target: String(a.idx) });
         return;
@@ -711,7 +895,9 @@ export function atomEvidenceFlip(s: GameState, a: Record<string, unknown>, ctx: 
       // 順序不変 (flipFaceUp は faceUp フラグのみ true 化)。証拠 0 枚は no-op。
       if (a.all === true) {
         const evList = s.players[flipP].evidence;
+        const changed = evList.filter((evidence) => !evidence.faceUp).length;
         for (let i = 0; i < evList.length; i++) mutate.evidence.flipFaceUp(s, flipP, i);
+        recordEvidenceFaceChange(s, ctx, flipP, 'face-down', 'face-up', changed);
         mutate.log.append(s, { ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlip', target: 'all', result: evList.length === 0 ? 'none' : 'ok' });
         return;
       }
@@ -723,7 +909,9 @@ export function atomEvidenceFlip(s: GameState, a: Record<string, unknown>, ctx: 
           return;
         }
         const topIdx = evList.length - 1;
+        const changed = evList[topIdx]?.faceUp === false;
         mutate.evidence.flipFaceUp(s, flipP, topIdx);
+        recordEvidenceFaceChange(s, ctx, flipP, 'face-down', 'face-up', changed ? 1 : 0);
         mutate.log.append(s, { ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlip', target: String(topIdx), result: 'ok' });
         return;
       }
@@ -778,6 +966,7 @@ export function atomEvidenceFlip(s: GameState, a: Record<string, unknown>, ctx: 
         if (typeof aResolved.bind === 'string') {
           (ctx.bindings as Record<string, unknown>)[aResolved.bind] = flippedIds.map(cardId => ({ cardId }));
         }
+        recordEvidenceFaceChange(s, ctx, flipP, 'face-down', 'face-up', flippedIds.length);
         mutate.log.append(s, {
           ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlip',
           target: flippedIds.join(','), result: rawCardIds.length === 0 ? '0' : (flippedIds.length ? 'ok' : 'not-found'),
@@ -800,6 +989,7 @@ export function atomEvidenceFlip(s: GameState, a: Record<string, unknown>, ctx: 
       const idx = list.findIndex(e => e.cardId === target && !e.faceUp);
       let flipped = false;
       if (idx !== -1) { mutate.evidence.flipFaceUp(s, flipP, idx); flipped = true; }
+      recordEvidenceFaceChange(s, ctx, flipP, 'face-down', 'face-up', flipped ? 1 : 0);
       mutate.log.append(s, { ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlip', target, result: flipped ? 'ok' : 'not-found' });
       return;
     }
@@ -855,6 +1045,7 @@ export function atomEvidenceFlipDown(s: GameState, a: Record<string, unknown>, c
           const i = list.findIndex(e => e.cardId === cid && e.faceUp);
           if (i !== -1) { mutate.evidence.flipFaceDown(s, flipP, i); flippedIds.push(cid); }
         }
+        recordEvidenceFaceChange(s, ctx, flipP, 'face-up', 'face-down', flippedIds.length);
         mutate.log.append(s, {
           ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlipDown',
           target: flippedIds.join(','), result: rawCardIds.length === 0 ? '0' : (flippedIds.length ? 'ok' : 'not-found'),
@@ -875,6 +1066,7 @@ export function atomEvidenceFlipDown(s: GameState, a: Record<string, unknown>, c
       const idx = list.findIndex(e => e.cardId === target && e.faceUp);
       let flipped = false;
       if (idx !== -1) { mutate.evidence.flipFaceDown(s, flipP, idx); flipped = true; }
+      recordEvidenceFaceChange(s, ctx, flipP, 'face-up', 'face-down', flipped ? 1 : 0);
       mutate.log.append(s, { ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlipDown', target, result: flipped ? 'ok' : 'not-found' });
       return;
     }
@@ -903,6 +1095,13 @@ export function atomEvidenceToHand(s: GameState, a: Record<string, unknown>, ctx
         const topId = top.cardId;
         evList.pop();
         mutate.hand.add(s, p, [topId]);
+        recordEffectCausalOperation(s, ctx, {
+          actor: ctx.source.player,
+          kind: 'evidence',
+          source: { kind: 'zone', side: p, zone: 'evidence' },
+          targets: [{ kind: 'zone', side: p, zone: 'hand' }],
+          outcome: { type: 'move', from: 'evidence', to: 'hand', count: 1 },
+        });
         mutate.log.append(s, {
           ts: Date.now(), player: p, turn: s.turn.number,
           action: 'effect:evidenceToHand', target: topId,
@@ -928,6 +1127,15 @@ export function atomEvidenceToHand(s: GameState, a: Record<string, unknown>, ctx
         list.splice(idx, 1);
         mutate.hand.add(s, p, [target]);
         moved = true;
+      }
+      if (moved) {
+        recordEffectCausalOperation(s, ctx, {
+          actor: ctx.source.player,
+          kind: 'evidence',
+          source: { kind: 'zone', side: p, zone: 'evidence' },
+          targets: [{ kind: 'zone', side: p, zone: 'hand' }],
+          outcome: { type: 'move', from: 'evidence', to: 'hand', count: 1 },
+        });
       }
       // BUG-073: effect log
       mutate.log.append(s, {
@@ -963,6 +1171,7 @@ export function atomHandToEvidence(s: GameState, a: Record<string, unknown>, ctx
         mutate.evidence.gainCard(s, hteP, cardId, hteFaceUp, { turn: s.turn.number, via: 'effect' }, 'none');
         hteMoved++;
       }
+      recordPublicZoneMove(s, ctx, hteP, 'hand', 'evidence', hteMoved, 'evidence');
       mutate.log.append(s, { ts: Date.now(), player: hteP, turn: s.turn.number, action: 'effect:handToEvidence', result: String(hteMoved) });
       return;
     }
@@ -991,6 +1200,7 @@ export function atomHandToFileBottom(s: GameState, a: Record<string, unknown>, c
         mutate.file.insertBottomFaceUp(s, hfbP, cardId);
         hfbMoved++;
       }
+      recordPublicZoneMove(s, ctx, hfbP, 'hand', 'file', hfbMoved);
       mutate.log.append(s, { ts: Date.now(), player: hfbP, turn: s.turn.number, action: 'effect:handToFileBottom', result: String(hfbMoved) });
       return;
     }
@@ -1045,6 +1255,13 @@ export function atomUseEventFromHand(s: GameState, a: Record<string, unknown>, c
       }
       const staleAuthorization = [...selectedCounts].some(([cardId]) => !eventUseAllowed(s, uefP, cardId));
       if (staleAuthorization) return;
+      recordEffectCausalOperation(s, ctx, {
+        actor: uefP,
+        kind: 'use',
+        source: { kind: 'zone', side: uefP, zone: 'hand' },
+        targets: [],
+        outcome: { type: 'state', state: 'active' },
+      });
       for (const cardId of uefIds) {
         // 手札に実在する場合のみ使用 (無い cardId は no-op)
         // 混成 review NIT 対応 (2026-07-04): イベント以外は使用しない (author が filter:{kind:'event'}
@@ -1058,6 +1275,7 @@ export function atomUseEventFromHand(s: GameState, a: Record<string, unknown>, c
         mutate.hand.remove(s, uefP, [cardId]);
         mutate.remove.add(s, uefP, [cardId]);
       }
+      recordPublicZoneMove(s, ctx, uefP, 'hand', 'remove', uefIds.length);
         // 0枚 (辞退/候補なし) → 「そうした場合」gate (handReveal gate-on-0 と同型)
       mutate.log.append(s, { ts: Date.now(), player: uefP, turn: s.turn.number, action: 'effect:useEventFromHand', result: String(uefIds.length) });
       return;
@@ -1090,6 +1308,7 @@ export function atomEvidenceToDeckBottom(s: GameState, a: Record<string, unknown
         mutate.deck.toBottom(s, edbP, [cardId]); // 持ち主のデッキの下 (裏向き)
         edbMoved++;
       }
+      recordPublicZoneMove(s, ctx, edbP, 'evidence', 'deck', edbMoved, 'evidence');
       mutate.log.append(s, { ts: Date.now(), player: edbP, turn: s.turn.number, action: 'effect:evidenceToDeckBottom', result: String(edbMoved) });
       return;
     }
@@ -1239,6 +1458,7 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
           }
         }
         setCardMoveBinding(ctx, a.bind, moved);
+        recordPublicZoneMove(s, ctx, hadP, 'deck', 'hand', moved.length);
         if (moved.length > 0) refreshDeckForEffect(s, hadP, ctx);
         mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', result: moved.length ? `moved=${moved.length}` : 'none' });
         return;
@@ -1279,6 +1499,7 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
         moved = true;
       }
       setCardMoveBinding(ctx, a.bind, moved ? [{ cardId: hadCardId, area: 'hand', player: hadP, index: handIndex }] : []);
+      recordPublicZoneMove(s, ctx, hadP, 'deck', 'hand', moved ? 1 : 0);
       if (moved) refreshDeckForEffect(s, hadP, ctx);
       mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', result: moved ? 'moved=1' : 'not-found' });
       return;
@@ -1292,7 +1513,7 @@ export function atomHandAddFromDeckBottom(s: GameState, a: Record<string, unknow
       const hadbP = resolvePlayer(a.player, ctx);
       // 事前0 (chain で先行効果が空にした等): take の前に refresh (atomEvidenceGain と同流儀)。
       if (s.players[hadbP].deck.length === 0) {
-        if (!mutate.deck.refreshAfterTake(s, hadbP, resolvingEventCardId(ctx, hadbP))) {
+        if (!refreshDeckForEffect(s, hadbP, ctx)) {
           mutate.log.append(s, { ts: Date.now(), player: hadbP, turn: s.turn.number, action: 'effect:handAddFromDeckBottom', result: 'empty-deck-refresh-fail' });
           return;
         }
@@ -1305,8 +1526,9 @@ export function atomHandAddFromDeckBottom(s: GameState, a: Record<string, unknow
       }
       deck.pop();
       mutate.hand.add(s, hadbP, [bottomId]);
+      recordPublicZoneMove(s, ctx, hadbP, 'deck', 'hand', 1);
       // take でデッキが空になったら即リフレッシュ (rules/14 即座 / B03051 Q&A: 残1枚→手札→リフレッシュ)。
-      mutate.deck.refreshAfterTake(s, hadbP, resolvingEventCardId(ctx, hadbP));
+      refreshDeckForEffect(s, hadbP, ctx);
       mutate.log.append(s, { ts: Date.now(), player: hadbP, turn: s.turn.number, action: 'effect:handAddFromDeckBottom', result: 'moved=1' });
       return;
     }
@@ -1338,6 +1560,7 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
         const handIndex = s.players[p].hand.length;
         mutate.hand.add(s, p, [selfCid]);
         setCardMoveBinding(ctx, a.bind, [{ cardId: selfCid, area: 'hand', player: p, index: handIndex }]);
+        recordPublicZoneMove(s, ctx, p, 'remove', 'hand', 1);
         mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', target: selfCid, result: 'ok' });
         return;
       }
@@ -1417,6 +1640,22 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
             moved.push({ cardId: occurrence.cardId, area: 'hand', player: p, index: handIndex });
           }
           setCardMoveBinding(ctx, a.bind, moved);
+          recordPublicZoneMove(
+            s,
+            ctx,
+            p,
+            'remove',
+            'hand',
+            selectedOccurrences.filter((occurrence) => occurrence.area === 'remove').length,
+          );
+          recordPublicZoneMove(
+            s,
+            ctx,
+            p,
+            'partner',
+            'hand',
+            selectedOccurrences.filter((occurrence) => occurrence.area === 'partner-area').length,
+          );
           mutate.log.append(s, {
             ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove',
             target: moved.map(({ cardId }) => cardId).join(','), result: cardIds.length === 0 ? '0' : (moved.length ? 'ok' : 'not-found'),
@@ -1441,6 +1680,8 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
           return;
         }
         const moved: Array<{ cardId: string; area: 'hand'; player: Player; index: number }> = [];
+        let movedFromRemove = 0;
+        let movedFromPartner = 0;
         for (const [position, cid] of cardIds.entries()) {
           for (const ar of hafrAreas) {
             if (ar === 'remove') {
@@ -1455,6 +1696,7 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
                 const handIndex = s.players[p].hand.length;
                 mutate.hand.add(s, p, [cid]);
                 moved.push({ cardId: cid, area: 'hand', player: p, index: handIndex });
+                movedFromRemove += 1;
                 break;
               }
             } else {
@@ -1465,12 +1707,15 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
                 const handIndex = s.players[p].hand.length;
                 mutate.hand.add(s, p, [cid]);
                 moved.push({ cardId: cid, area: 'hand', player: p, index: handIndex });
+                movedFromPartner += 1;
                 break;
               }
             }
           }
         }
         setCardMoveBinding(ctx, a.bind, moved);
+        recordPublicZoneMove(s, ctx, p, 'remove', 'hand', movedFromRemove);
+        recordPublicZoneMove(s, ctx, p, 'partner', 'hand', movedFromPartner);
         mutate.log.append(s, {
           ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove',
           target: moved.map(({ cardId }) => cardId).join(','), result: cardIds.length === 0 ? '0' : (moved.length ? 'ok' : 'not-found'),
@@ -1512,6 +1757,7 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
         moved = true;
       }
       setCardMoveBinding(ctx, hafrArgs.bind, moved ? [{ cardId: target, area: 'hand', player: p, index: handIndex }] : []);
+      recordPublicZoneMove(s, ctx, p, 'remove', 'hand', moved ? 1 : 0);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', target, result: moved ? 'ok' : 'not-found' });
       return;
@@ -1556,6 +1802,7 @@ export function atomRemoveAreaToDeckTop(s: GameState, a: Record<string, unknown>
           mutate.deck.toTop(s, rtdP, [rtdTarget]);
         }
         rtdMoved = true;
+        recordPublicZoneMove(s, ctx, rtdP, 'remove', 'deck', 1);
         // S2 deck cluster (2026-07-10, B08057): bindKey — 移動成功分を bound へ accumulate。
         // 「カードを合わせて3枚移した場合」(boundCountCompare) の材料 + deckBottomReorderBound の
         // block 特定に使う。未指定は従来挙動 (既存 consumer B07014/B02076 は byte 不変)。
@@ -1599,11 +1846,13 @@ export function atomRemoveAreaAllToDeckBottom(s: GameState, a: Record<string, un
         : ([resolvePlayer(a.player, ctx)] as const);
       for (const pp of raSlots) {
         const rem = s.players[pp].remove;
+        const movedCount = rem.length;
         if (rem.length > 0) {
           const ids = rem.splice(0, rem.length); // ALL — remove を drain
           mutate.deck.toBottom(s, pp, ids);       // 各自のデッキ下へ
           for (const cid of ids) mutate.remove.emitExit(s, pp, cid); // wave-4: remove→deck下 離脱 emit
         }
+        recordPublicZoneMove(s, ctx, pp, 'remove', 'deck', movedCount);
         mutate.deck.shuffle(s, pp, ctx.rng);
       }
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:removeAreaAllToDeckBottom' });

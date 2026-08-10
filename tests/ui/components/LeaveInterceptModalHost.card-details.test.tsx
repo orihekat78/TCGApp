@@ -54,6 +54,7 @@ describe('LeaveInterceptModalHost card details', () => {
     act(() => root.unmount());
     container.remove();
     useGameStateStore.setState({ pendingLeaveIntercept: null });
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   });
 
   it('derives B01092 leave intercept from a legal opponent contact removal and dispatches accept', () => {
@@ -89,5 +90,30 @@ describe('LeaveInterceptModalHost card details', () => {
     act(() => root.render(<LeaveInterceptModalHost />));
     act(() => (container.querySelector<HTMLButtonElement>('[data-testid="leave-intercept-no"]')!).click());
     expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'leaveInterceptResolve', accept: false });
+  });
+
+  it('renders cards from the opponent side when that side is the actual human owner', () => {
+    const state = createEmptyGameState();
+    state.players.opp.scene = [
+      sceneChar('B01092', 'opp-interceptor'),
+      sceneChar('D08003', 'opp-target', { state: 'sleep' }),
+    ];
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'opp';
+    act(() => {
+      useGameStateStore.setState({
+        gameState: state,
+        spectatorMode: false,
+        pendingLeaveIntercept: {
+          player: 'opp',
+          interceptorUid: 'opp-interceptor',
+          targetUid: 'opp-target',
+          actionId: 'opp-contact',
+        },
+      });
+      root.render(<LeaveInterceptModalHost />);
+    });
+
+    expect(container.querySelector('[data-testid="leave-intercept-modal"]')).not.toBeNull();
+    expect(container.querySelectorAll('.leave-intercept-card img.card-art')).toHaveLength(2);
   });
 });

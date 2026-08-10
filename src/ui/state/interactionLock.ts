@@ -8,22 +8,12 @@
 // (それは「割り込み」でなく必要入力)。本 flag は ActionsPanel の main action 起点のみを塞ぐ。
 
 import type { GameStateStore } from './store';
+import { selectAutonomousDecisionBlocked } from './autonomousDecisionGate';
 
-type LockSlice = Pick<
-  GameStateStore,
-  | 'gameState'
-  | 'pendingEffectPick'
-  | 'pendingEffectChoice'
-  | 'pendingEffectOptional'
-  | 'pendingChooseIntercept'
-  | 'pendingLeaveIntercept'
-  | 'pendingSetCardChoice'
-  | 'pendingSetCardReplacement'
-  | 'pendingEffectRepeatOptional'
-  | 'pendingHirameki'
-  | 'pendingMisread'
-  | 'pendingDeckReveal'
->;
+type LockSlice = Pick<GameStateStore, 'gameState'>
+  & Parameters<typeof selectAutonomousDecisionBlocked>[0];
+
+type AutonomousDecisionSlice = Parameters<typeof selectAutonomousDecisionBlocked>[0];
 
 export function selectInteractionLocked(s: LockSlice): boolean {
   // BUG-173 (2026-07-04, step12 batch2 playwright 検出): pendingEffects は resolved/cancelled entry を
@@ -31,17 +21,20 @@ export function selectInteractionLocked(s: LockSlice): boolean {
   // パネルが永久ロックされる (B01058 手札使用→以降 main action 不可を実機で踏んだ)。
   // TopBar の効果スタック表示と同じ state フィルタ (pending|resolving のみ) で判定する。
   return (
-    (s.gameState?.pendingEffects.some((e) => e.state === 'pending' || e.state === 'resolving') ?? false) ||
-    s.pendingEffectPick != null ||
-    s.pendingEffectChoice != null ||
-    s.pendingEffectOptional != null ||
-    s.pendingChooseIntercept != null ||
-    s.pendingLeaveIntercept != null ||
-    s.pendingSetCardChoice != null ||
-    s.pendingSetCardReplacement != null ||
-    s.pendingEffectRepeatOptional != null ||
-    s.pendingHirameki != null ||
-    s.pendingMisread != null ||
-    s.pendingDeckReveal != null
+    (s.gameState?.pendingEffects.some((e) => e.state === 'pending' || e.state === 'resolving') ?? false)
+    || selectAutonomousDecisionBlocked(s)
   );
+}
+
+/**
+ * Scene switch is a child decision of an effect pick/choice, so those two
+ * parent nodes may remain present while its board picker is active. Any other
+ * decision that appears concurrently owns interaction and suspends the picker.
+ */
+export function selectSwitchVictimBlocked(s: AutonomousDecisionSlice): boolean {
+  return selectAutonomousDecisionBlocked({
+    ...s,
+    pendingEffectPick: null,
+    pendingEffectChoice: null,
+  });
 }

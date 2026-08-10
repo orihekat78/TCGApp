@@ -174,7 +174,11 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
   ];
 
   return (
-    <aside className={`actions-panel${interactionLocked ? ' locked' : ''}`} aria-label="操作パネル" aria-busy={interactionLocked || undefined}>
+    <aside
+      className={`actions-panel${interactionLocked ? ' locked' : ''}`}
+      aria-label="操作パネル"
+      aria-busy={interactionLocked || undefined}
+    >
       <div className="actions-header">ACTIONS</div>
 
       <ul className="actions-list" role="list">
@@ -189,24 +193,29 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
           ]
             .filter(Boolean)
             .join(' ');
-          return (
-            <li
-              key={item.id}
-              className={classes}
-              data-action-id={item.id}
-              aria-disabled={disabled || undefined}
-              onClick={
-                disabled || !onActionItemClick
-                  ? undefined
-                  : () => onActionItemClick(item.id as ActionItemId)
-              }
-              style={disabled ? undefined : { cursor: 'pointer' }}
-            >
+          const content = (
+            <>
               <span className="action-icon" aria-hidden="true" />
               <span className="action-body">
                 <span className="action-label">{item.label}</span>
                 <span className="action-subtitle">{item.subtitle}</span>
               </span>
+            </>
+          );
+          const activate = () => onActionItemClick?.(item.id as ActionItemId);
+
+          return (
+            <li key={item.id}>
+              <button
+                type="button"
+                className={classes}
+                data-action-id={item.id}
+                aria-disabled={disabled || undefined}
+                disabled={disabled}
+                onClick={!onActionItemClick ? undefined : activate}
+              >
+                {content}
+              </button>
             </li>
           );
         })}
@@ -215,7 +224,7 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
       {/* Phase 8.5: actions-list と phase-toggles の間に narrator + log セクションを集約 */}
       <div className="panel-narrator-log">
         {narratorMessage !== undefined && (
-          <div className="panel-narrator-text" role="status">
+          <div className="panel-narrator-text" role="status" data-testid="match-narrator-status">
             {narratorMessage}
           </div>
         )}

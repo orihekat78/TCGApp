@@ -1,6 +1,8 @@
 // Phase 7 Task 7.8: FileArea tests
 
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { renderToString } from 'react-dom/server';
 import type { FileCard } from '@/engine/types/game-state.js';
 import { FileArea } from '@/ui/components/FileArea';
@@ -74,24 +76,22 @@ describe('FileArea', () => {
       <FileArea cards={cards} side="self" resolveCard={resolveCard} />,
     ));
     expect(html).toMatch(/data-count="6"/);
-    // Round 3: assisted-partner も card-back と同じ虫眼鏡 + monogram で表示 (名前/識別非表示)
-    expect(html).toMatch(/assisted-partner/);
+    expect(html).toMatch(/file-card-faceup assisted-partner/);
     expect(html).toMatch(/data-card-id="P-Conan"/);
-    expect(html).not.toMatch(/partner-mark/);
-    expect(html).not.toMatch(/partner-name/);
+    expect(html).toMatch(/assisted-partner-art/);
+    expect(html).not.toMatch(/FILE card \(face-down\)/);
     // count バッジは 6 (FILE 全体)
     expect(html).toMatch(/class="count-overlay">6</);
   });
 
-  it('Round 3: assisted-partner も裏向き表示 (partner-name / partner-mark 描画されない)', () => {
+  it('renders an assisted partner face-up and sideways in FILE', () => {
     const cards: FileCard[] = [cardBack, assisted('P-???')];
     const html = strip(renderToString(
       <FileArea cards={cards} side="self" />,
     ));
-    // Round 3: assisted-partner 表示は card-back と統一 (虫眼鏡 + monogram)
-    expect(html).toMatch(/assisted-partner/);
-    expect(html).not.toMatch(/partner-name/);
-    expect(html).not.toMatch(/partner-mark/);
+    expect(html).toMatch(/file-card-faceup assisted-partner/);
+    expect(html).toMatch(/data-card-id="P-\?\?\?"/);
+    expect(html).not.toMatch(/FILE card \(face-down\)/);
   });
 
   it('renders the top face-up FILE card face-up instead of a card back', () => {
@@ -102,6 +102,20 @@ describe('FileArea', () => {
     expect(html).toMatch(/data-card-id="P-Conan"/);
     expect(html).toMatch(/探偵パートナー/);
     expect(html).not.toMatch(/FILE card \(face-down\)/);
+  });
+
+  it('gives an assisted partner top-card priority over face-up FILE cards', () => {
+    const html = strip(renderToString(
+      <FileArea cards={[faceUp('C-FACEUP'), assisted('P-Conan')]} side="self" resolveCard={resolveCard} />,
+    ));
+    expect(html).toMatch(/data-card-id="P-Conan"/);
+    expect(html).not.toMatch(/data-card-id="C-FACEUP"/);
+  });
+
+  it('keeps assisted-partner animation sideways and disables it for reduced motion', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/ui/components/FileArea.css'), 'utf8');
+    expect(css).toMatch(/@keyframes file-assisted-partner-enter[\s\S]*to\s*\{\s*opacity:\s*1;\s*transform:\s*rotate\(-90deg\);\s*\}/);
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*\.file-area \.file-card-faceup\.assisted-partner[\s\S]*animation:\s*none;/);
   });
 
   it('respects custom threshold (e.g. 5)', () => {

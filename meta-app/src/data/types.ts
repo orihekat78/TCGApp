@@ -10,6 +10,8 @@ export interface CardDef {
   /** 正規カードID (cardId, 例 0489)。パラレルは同一 id を共有 = ゲーム上「同じカード」。
    *  rules/02-deck-construction.md「絵柄が違っても ID が同じであれば同じカード」。 */
   id: string;
+  /** この印刷カードが属する公式商品・収録弾 (例 CT-P10 / CT-D08 / PR)。 */
+  setCode?: string;
   name: string;
   /** 表示用の代表色 (= colors[0])。色フィルタ/集計は colors を使う。 */
   color: CardColor;
@@ -20,6 +22,10 @@ export interface CardDef {
   ap?: number;
   lp?: number;
   level?: number;
+  /** 事件カードの先攻時の必要証拠枚数。公式カードリスト由来。 */
+  difficultyFirst?: number;
+  /** 事件カードの後攻時の必要証拠枚数。公式カードリスト由来。 */
+  difficultySecond?: number;
   rarity?: string;
   features?: string[];
   keywords?: string[];
@@ -39,12 +45,47 @@ export interface DeckRecord {
   modified: number;
 }
 
+export interface MatchDeckCardEntry {
+  num: string;
+  count: number;
+}
+
+/**
+ * The public deck list captured before a match starts.
+ * It intentionally excludes card order, draw state, and every in-match hidden zone.
+ */
+export interface MatchDeckSnapshotV1 {
+  schemaVersion: 1;
+  deckId?: string;
+  name: string;
+  partner: string;
+  case: string;
+  cards: MatchDeckCardEntry[];
+}
+
+/** Opaque pointer to the exact replay artifact stored outside the history projection. */
+export interface HistoryReplayRefV1 {
+  storageSchemaVersion: 1;
+  replaySchemaVersion: 3;
+  artifactId: string;
+  digest: `sha256-${string}`;
+  byteLength: number;
+}
+
 export interface MatchRecord {
   id: string;
+  /** Stable identity issued when the match session begins. */
+  sessionId?: string;
   recorded: number;
   won: boolean;
   deckName: string;
   oppDeckName?: string;
+  /** Exact public deck list used for this match. Missing on legacy history rows. */
+  selfDeckSnapshot?: MatchDeckSnapshotV1;
+  /** Exact public opponent deck list used for this match. Missing on legacy history rows. */
+  oppDeckSnapshot?: MatchDeckSnapshotV1;
+  /** No private card or frame data is permitted in this history row. */
+  replayRef?: HistoryReplayRefV1;
   mode?: 'solo' | 'observe';
   turns: number;
   duration: number;

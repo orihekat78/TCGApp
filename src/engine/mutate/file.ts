@@ -9,6 +9,7 @@ import { deck as deckMut } from './deck.js';
 import type { CardId } from '@/engine/types';
 
 type Player = 'self' | 'opp';
+export type DeckToFileStep = { kind: 'move' | 'refresh'; count: number };
 
 /**
  * デッキ上から n 枚を裏向きで FILE に push (rules/05)
@@ -16,18 +17,25 @@ type Player = 'self' | 'opp';
  * カードには順番がある: もっとも新しく置かれたカードが1番上 (push=末尾が先頭扱い)
  * 各取得後にデッキ0なら即時リフレッシュ。公開中カードには使用しない (rules/14, 26)。
  */
-function addFromDeckTop(s: GameState, p: Player, n: number, resolvingCardId?: CardId): number {
+function addFromDeckTop(
+  s: GameState,
+  p: Player,
+  n: number,
+  resolvingCardId?: CardId,
+  onStep?: (step: DeckToFileStep) => void,
+): number {
   let added = 0;
   for (let i = 0; i < n; i++) {
     const d = s.players[p].deck;
-    if (d.length === 0 && !deckMut.refreshAfterTake(s, p, resolvingCardId)) break;
+    if (d.length === 0 && !deckMut.refreshAfterTake(s, p, resolvingCardId, (count) => onStep?.({ kind: 'refresh', count }))) break;
     // Round 3: ネクストヒント時に表向きで手札に渡せるよう cardId を保持
     const cardId = d.shift();
     if (cardId === undefined) break;
     const card: FileCard = { type: 'card-back', cardId };
     s.players[p].file.push(card);
     added++;
-    if (!deckMut.refreshAfterTake(s, p, resolvingCardId)) break;
+    onStep?.({ kind: 'move', count: 1 });
+    if (!deckMut.refreshAfterTake(s, p, resolvingCardId, (count) => onStep?.({ kind: 'refresh', count }))) break;
   }
   // user_request 20260522_01 #4/#16 fix: FILE 7 枚以上で事件編→解決編 自動遷移
   // (rules/01 + rules/13 + rules/25)。assist() に同等 check があるが、

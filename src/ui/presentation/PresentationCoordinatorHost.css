@@ -1,0 +1,260 @@
+.presentation-causal-host,
+.presentation-skip-feedback,
+.presentation-error {
+  position: fixed;
+  z-index: 9600;
+  box-sizing: border-box;
+  color: #edf8fd;
+  pointer-events: none;
+}
+
+.presentation-skip-feedback,
+.presentation-error {
+  min-height: 44px;
+  padding: 12px 16px;
+  border-block: 1px solid rgb(99 190 219 / 72%);
+  background: rgb(4 20 35 / 96%);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.presentation-error {
+  border-color: rgb(240 139 118 / 76%);
+  color: #fff2ee;
+  background: rgb(29 13 19 / 96%);
+}
+
+.presentation-causal-card {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  min-height: 52px;
+  border-block: 1px solid rgb(101 190 218 / 72%);
+  background: rgb(4 20 35 / 96%);
+  animation: presentation-strip-enter 160ms ease-out both;
+}
+
+.presentation-causal-copy {
+  display: grid;
+  align-content: center;
+  min-width: 0;
+  padding: 7px 12px;
+}
+
+.presentation-causal-heading,
+.presentation-causal-chain {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+  gap: 7px;
+}
+
+.presentation-causal-heading {
+  line-height: 1.35;
+}
+
+.presentation-causal-order {
+  flex: 0 0 auto;
+  color: #7edcf3;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.presentation-causal-kicker {
+  flex: 0 0 auto;
+  color: #b5d8e5;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.presentation-causal-title {
+  min-width: 0;
+  overflow: hidden;
+  color: #f7fbfd;
+  font-size: 14px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.presentation-causal-chain {
+  margin-top: 2px;
+  overflow: hidden;
+  color: #cad9e3;
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.presentation-causal-node,
+.presentation-causal-result {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.presentation-causal-result {
+  color: #ffe891;
+  font-weight: 700;
+}
+
+.presentation-causal-arrow {
+  flex: 0 0 auto;
+  color: #69c7df;
+}
+
+.presentation-causal-controls {
+  display: flex;
+  align-items: stretch;
+  pointer-events: auto;
+}
+
+.presentation-causal-controls button {
+  min-width: 76px;
+  min-height: 44px;
+  padding: 6px 9px;
+  border: 0;
+  border-left: 1px solid rgb(112 174 201 / 45%);
+  border-radius: 0;
+  color: #e3f0f5;
+  background: rgb(6 31 48 / 92%);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.presentation-causal-controls button:hover,
+.presentation-causal-controls button:focus-visible {
+  color: #fff;
+  background: rgb(9 55 75 / 96%);
+  outline: 2px solid #7edcf3;
+  outline-offset: -3px;
+}
+
+.presentation-causal-controls button:disabled {
+  opacity: .42;
+  cursor: default;
+}
+
+.presentation-causal-host.is-contact .presentation-causal-card {
+  border-color: rgb(229 189 92 / 84%);
+}
+
+.presentation-causal-host.is-refresh .presentation-causal-card {
+  border-color: rgb(117 205 239 / 84%);
+}
+
+.presentation-anchor-layer,
+.presentation-anchor-connectors {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.presentation-anchor-connectors line {
+  stroke: rgb(112 220 244 / 88%);
+  stroke-width: 2;
+  stroke-dasharray: 8 6;
+  vector-effect: non-scaling-stroke;
+  animation: presentation-connector-draw 180ms ease-out both;
+}
+
+.presentation-anchor-box {
+  position: fixed;
+  box-sizing: border-box;
+  border: 2px solid rgb(112 220 244 / 92%);
+  background: rgb(112 220 244 / 6%);
+  pointer-events: none;
+  animation: presentation-anchor-enter 120ms ease-out both;
+}
+
+.presentation-anchor-box.is-target {
+  border-color: rgb(255 225 122 / 94%);
+  background: rgb(255 225 122 / 7%);
+}
+
+.presentation-anchor-box.is-result {
+  border-style: double;
+  border-width: 3px;
+}
+
+.presentation-anchor-box > span {
+  position: absolute;
+  top: -13px;
+  right: -2px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border: 1px solid rgb(255 225 122 / 92%);
+  background: #071827;
+  color: #ffe17a;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+}
+
+@keyframes presentation-strip-enter {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes presentation-anchor-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes presentation-connector-draw {
+  from { opacity: 0; stroke-dashoffset: 28; }
+  to { opacity: 1; stroke-dashoffset: 0; }
+}
+
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
+  .presentation-causal-card {
+    min-height: 48px;
+  }
+
+  .presentation-causal-copy {
+    padding: 5px 8px;
+  }
+
+  .presentation-causal-heading,
+  .presentation-causal-chain {
+    gap: 5px;
+  }
+
+  .presentation-causal-title {
+    font-size: 12px;
+  }
+
+  .presentation-causal-controls button {
+    min-width: 68px;
+    padding-inline: 6px;
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .presentation-causal-host *,
+  .presentation-causal-host *::before,
+  .presentation-causal-host *::after,
+  .presentation-anchor-layer *,
+  .presentation-skip-feedback,
+  .presentation-error {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .presentation-anchor-connectors {
+    display: none;
+  }
+}

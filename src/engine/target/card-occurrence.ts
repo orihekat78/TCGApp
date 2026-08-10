@@ -10,6 +10,15 @@ export function cardOccurrenceUid(
   return `card:${player}:${area}:${cardId}#${index}`;
 }
 
+/** Opaque identity for one physical set-card occurrence without card identity. */
+export function setCardOccurrenceUid(
+  player: Player,
+  hostUid: string,
+  instanceId: string,
+): string {
+  return `set-card:${player}:${encodeURIComponent(hostUid)}:${encodeURIComponent(instanceId)}`;
+}
+
 /** Extract a card ID from either a stable occurrence UID or legacy `cardId#index`. */
 export function cardIdFromOccurrenceUid(uid: string): string | undefined {
   const stable = /^card:(?:self|opp):[^:]+:(.+)#\d+$/.exec(uid);

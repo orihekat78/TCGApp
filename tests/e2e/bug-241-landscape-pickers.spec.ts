@@ -43,6 +43,26 @@ async function openAndCloseDetail(modal: Locator, detail: Locator, order: () => 
   expect(await order()).toEqual(before);
 }
 
+async function expectDetailOutsideCardArt(
+  page: Page,
+  art: Locator,
+  detail: Locator,
+  minimumArtWidth: number,
+): Promise<void> {
+  const viewport = page.viewportSize()!;
+  const [artBox, detailBox] = await Promise.all([
+    art.boundingBox(),
+    detail.boundingBox(),
+  ]);
+  expect(artBox).not.toBeNull();
+  expect(detailBox).not.toBeNull();
+  expect(artBox!.width).toBeGreaterThanOrEqual(minimumArtWidth);
+  expect(detailBox!.width).toBeGreaterThanOrEqual(44);
+  expect(detailBox!.height).toBeGreaterThanOrEqual(44);
+  expect(detailBox!.x).toBeGreaterThanOrEqual(artBox!.x + artBox!.width);
+  expect(detailBox!.x + detailBox!.width).toBeLessThanOrEqual(viewport.width);
+}
+
 async function expectFixedFooter(page: Page, modal: Locator, action: Locator): Promise<void> {
   const shell = modal.locator('.cp-modal');
   const body = shell.locator('.cp-body');
@@ -100,7 +120,15 @@ test('BUG-241 Pixel 5 landscape: real stacked-card effect keeps header and confi
   await modal.getByTestId('effect-pick-cand-stack:agasa:0').click();
   await expectFixedDecisionShell(page, shell, list, shell.locator('.effect-picker-header'), confirm);
   const details = modal.getByTestId(/effect-pick-detail-stack:agasa:/);
+  await expectDetailOutsideCardArt(
+    page,
+    modal.getByTestId('effect-pick-cand-stack:agasa:0').locator('.cand-art'),
+    details.first(),
+    36,
+  );
   const order = () => modal.getByTestId(/effect-pick-cand-stack:agasa:/).evaluateAll((items) => items.map((item) => item.getAttribute('data-testid')!));
+  await list.evaluate((element) => { element.scrollTop = 0; });
+  await expect(details.first()).toBeInViewport();
   await openAndCloseDetail(modal, details.first(), order);
   await list.evaluate((element) => { element.scrollTop = element.scrollHeight; });
   await openAndCloseDetail(modal, details.last(), order);
@@ -142,6 +170,13 @@ test('BUG-241 Pixel 5 landscape: real guard window keeps skip fixed while candid
   const body = shell.locator('.guard-picker-body');
   const skip = modal.getByTestId('guard-picker-skip');
   await expectFixedDecisionShell(page, shell, body, shell.locator('.guard-picker-header'), skip);
+  const guardCandidate = modal.getByTestId('guard-cand-guard-1');
+  await expectDetailOutsideCardArt(
+    page,
+    guardCandidate.locator('.selectable-card-tile__art'),
+    guardCandidate.locator('xpath=..').getByTestId('selectable-card-tile-detail'),
+    42,
+  );
   const details = modal.getByTestId('selectable-card-tile-detail');
   const order = () => modal.getByTestId(/guard-cand-/).evaluateAll((items) => items.map((item) => item.getAttribute('data-testid')!));
   await openAndCloseDetail(modal, details.first(), order);
@@ -197,30 +232,36 @@ test('BUG-241 Pixel 5 landscape: shared Choice hosts keep footer controls fixed'
   await setPending('pendingSetCardReplacement', { player: 'self', fromUid: 'from', setCardInstanceId: 'set-1', candidates: Array.from({ length: 8 }, (_, index) => ({ uid: `replacement-${index}`, cardId: 'B01001' })), source: { uid: 'from' } });
   const setReplacement = page.getByTestId('set-card-replacement-modal');
   await expectFixedFooter(page, setReplacement, page.getByTestId('set-card-replacement-decline'));
+  // Layout carrier only. Resolution requires the engine-owned replacement guard.
   await setPending('pendingSetCardReplacement', null);
   await expect(setReplacement).toBeHidden();
 
   await setPending('pendingLeaveIntercept', { player: 'self', interceptorUid: 'interceptor', targetUid: 'target', source: { cardId: 'B01092', abilityId: 'a1' } });
   const leaveIntercept = page.getByTestId('leave-intercept-modal');
   await expectFixedFooter(page, leaveIntercept, page.getByTestId('leave-intercept-no'));
+  // This test injects surface-only state to verify layout. A real leave-intercept
+  // decision is bound to an engine-owned ActionContext and is covered separately.
   await setPending('pendingLeaveIntercept', null);
   await expect(leaveIntercept).toBeHidden();
 
   await setPending('pendingEffectOptional', { player: 'self', source: { cardId: 'D08025', abilityId: 'a1' } });
   const optional = page.getByTestId('optional-picker-modal');
   await expectFixedFooter(page, optional, page.getByTestId('opt-run-no'));
+  // Layout carrier only. Resolution requires the engine-owned optional resume.
   await setPending('pendingEffectOptional', null);
   await expect(optional).toBeHidden();
 
   await setPending('pendingEffectRepeatOptional', { player: 'self', remaining: 2, source: { cardId: 'D08025', abilityId: 'a1' } });
   const repeatOptional = page.getByTestId('repeat-optional-picker-modal');
   await expectFixedFooter(page, repeatOptional, page.getByTestId('repeat-opt-run-no'));
+  // Layout carrier only. Resolution requires the engine-owned repeat continuation.
   await setPending('pendingEffectRepeatOptional', null);
   await expect(repeatOptional).toBeHidden();
 
   await setPending('pendingRps', { player: 'self', ownerPlayer: 'opp', aiHand: 'paper' });
   const rps = page.getByTestId('rps-modal');
   await expectFixedFooter(page, rps, page.getByTestId('rps-rock'));
+  // Layout carrier only. Resolution requires the engine-owned RPS resume.
   await setPending('pendingRps', null);
   await expect(rps).toBeHidden();
 

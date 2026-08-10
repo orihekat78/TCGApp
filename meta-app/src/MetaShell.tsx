@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { MetaBg, type SceneName } from './shared/MetaBg';
 import { ensureInteractionStyles } from './shared/interactionStyles';
 import type { Route } from './router/routes';
+import { useMetaStore } from './state/metaStore';
 
 interface Props {
   route: Route;
@@ -30,8 +31,9 @@ function sceneFor(route: Route): SceneName {
 
 export function MetaShell({ route, children }: Props) {
   ensureInteractionStyles();
+  const density = useMetaStore((state) => state.settings.density);
   return (
-    <div style={{
+    <div className={`meta-shell meta-shell--${density}`} data-density={density} style={{
       position: 'fixed', inset: 0,
       overflow: 'hidden',
       color: '#e0ecf8',

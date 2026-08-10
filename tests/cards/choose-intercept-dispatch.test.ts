@@ -36,6 +36,36 @@ beforeEach(() => {
 });
 
 describe('choose-intercept shipped cards — production dispatch probes', () => {
+  const interceptEffect = {
+    kind: 'sequence' as const,
+    steps: [
+      { kind: 'atom' as const, verb: 'sceneSetState' as never, args: {
+        uid: '$pick', state: 'sleep',
+        target: { kind: 'pick', query: { area: 'scene', side: 'opp', filter: { cardName: '毛利蘭' } }, n: { min: 1, max: 1 } },
+      } },
+      { kind: 'atom' as const, verb: 'draw' as never, args: { player: 'self', n: 1 } },
+    ],
+  };
+
+  const runProductionIntercept = (protector: CardDef, responderHand: string[]) => {
+    const state = produce(createEmptyGameState(), (d) => {
+      d.turn.player = 'opp';
+      d.players.self.scene.push(sceneChar('DISPATCH_RAN', 'ran'), sceneChar(protector.id, 'protector'));
+      d.players.opp.scene.push(sceneChar('DISPATCH_OPP_SOURCE', 'opp-source'));
+      d.players.opp.hand = [...responderHand];
+      d.players.opp.deck = ['drawn', 'still-in-deck'];
+    });
+    const ctx: EffectCtx = {
+      source: { cardId: 'DISPATCH_OPP_SOURCE', uid: 'opp-source', abilityId: 'a1', player: 'opp', area: 'scene' },
+      bindings: {},
+    };
+    return produce(state, (d) => {
+      const resolved = resolveEffectPicks(d, interceptEffect as never, ctx, { byPlayer: 'opp' });
+      runEffect(d, resolved, ctx);
+      runAllUntilEmpty(d);
+    });
+  };
+
   it('B02067P cancels the selected atom and its continuation through the direct resolver path', () => {
     const state = produce(createEmptyGameState(), (d) => {
       d.turn.number = 3;
@@ -70,6 +100,28 @@ describe('choose-intercept shipped cards — production dispatch probes', () => 
     expect(after.players.opp.hand).toEqual([]);
     expect(after.players.opp.deck).toEqual(['drawn']);
   });
+
+  it.each([B04003, B04003P, B08081, B08081P])(
+    '%s.id production intercept removes one response card and continues the selected effect',
+    (card) => {
+      const after = runProductionIntercept(card, ['DISPATCH_DISCARD']);
+      expect(after.players.self.scene.find((character) => character.uid === 'ran')?.state).toBe('sleep');
+      expect(after.players.opp.remove).toEqual(['DISPATCH_DISCARD']);
+      expect(after.players.opp.hand).toEqual(['drawn']);
+      expect(after.players.opp.deck).toEqual(['still-in-deck']);
+    },
+  );
+
+  it.each([B04003, B04003P, B08081, B08081P])(
+    '%s.id production intercept negates the selected effect when the response cannot be paid',
+    (card) => {
+      const after = runProductionIntercept(card, []);
+      expect(after.players.self.scene.find((character) => character.uid === 'ran')?.state).toBe('active');
+      expect(after.players.opp.remove).toEqual([]);
+      expect(after.players.opp.hand).toEqual([]);
+      expect(after.players.opp.deck).toEqual(['drawn', 'still-in-deck']);
+    },
+  );
 
   it.each([B04003, B04003P])('%s.id a2 production declared dispatch pays sleep/reveal, then decks only AP <= 8000 at bottom', (card) => {
     const state = runCardScenario(card, [RAN, LOW, HIGH], {

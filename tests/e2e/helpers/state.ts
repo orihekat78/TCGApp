@@ -33,6 +33,102 @@ export async function buildGameState<T = void>(
   );
 }
 
+/** Causal checkpoint を検証する E2E 用に、presentation と同じ session で state を開始する。 */
+export async function buildCausalGameState<T = void>(
+  page: Page,
+  modifier: (gs: GameStateLike, arg: T) => void,
+  arg?: T,
+): Promise<void> {
+  const fnStr = modifier.toString();
+  await page.evaluate(
+    async ({ src, a }) => {
+      const fn = new Function('return (' + src + ')')() as (gs: unknown, a: unknown) => void;
+      const loadCausal = new Function('return import("/src/engine/log/causal.ts")') as () => Promise<{
+        startCausalSession: (state: unknown, sessionId: string) => void;
+      }>;
+      const loadPresentation = new Function('return import("/src/ui/presentation/coordinator.ts")') as () => Promise<{
+        resetPresentationQueue: (sessionId: string) => void;
+      }>;
+      const [{ startCausalSession }, { resetPresentationQueue }] = await Promise.all([
+        loadCausal(),
+        loadPresentation(),
+      ]);
+      const w = window as unknown as GameWindow;
+      const gs = w.__game.createSampleGameState();
+      fn(gs, a);
+      const sessionId = `e2e-causal-${crypto.randomUUID()}`;
+      resetPresentationQueue(sessionId);
+      startCausalSession(gs, sessionId);
+      w.__game.setGameState(gs);
+    },
+    { src: fnStr, a: arg as unknown },
+  );
+}
+
+async function surfaceDeckDecision(
+  page: Page,
+  atomVerb: 'deckToBottomBound' | 'deckPlaceSplitBound',
+  cardIds: string[],
+): Promise<void> {
+  await page.evaluate(async ({ verb, ids }) => {
+    const loadAtom = new Function('return import("/src/engine/effect/atom-handlers.ts")') as () => Promise<{
+      runAtom: (state: unknown, verb: string, args: unknown, ctx: unknown) => void;
+    }>;
+    const loadProduce = new Function('return import("/src/engine/produce.ts")') as () => Promise<{
+      produce: (state: unknown, recipe: (draft: unknown) => void) => unknown;
+    }>;
+    const loadRuntime = new Function('return import("/src/engine/effect/runtime-state.ts")') as () => Promise<{
+      persistPendingRuntimeState: (state: unknown) => void;
+      resetPendingRuntimeState: () => void;
+    }>;
+    const [{ runAtom }, { produce }, { persistPendingRuntimeState, resetPendingRuntimeState }] = await Promise.all([
+      loadAtom(),
+      loadProduce(),
+      loadRuntime(),
+    ]);
+    const w = window as unknown as GameWindow;
+    const current = w.__game.getState().gameState as {
+      players: { self: { deck: string[] } };
+    };
+    const used = new Set<number>();
+    const occurrences = ids.map((cardId) => {
+      const index = current.players.self.deck.findIndex((deckCardId, deckIndex) => (
+        deckCardId === cardId && !used.has(deckIndex)
+      ));
+      if (index < 0) throw new Error(`deck decision fixture card is absent: ${cardId}`);
+      used.add(index);
+      return { kind: 'card', cardId, area: 'deck', player: 'self', index };
+    });
+    const ctx = {
+      source: {
+        player: 'self',
+        cardId: 'D08020',
+        uid: 'e2e-deck-decision-source',
+        abilityId: 'fixture',
+        area: 'scene',
+      },
+      bindings: { '$e2eDeckCards': occurrences },
+    };
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    resetPendingRuntimeState();
+    const next = produce(current, (draft) => {
+      runAtom(draft, verb, { player: 'self', bindKey: '$e2eDeckCards' }, ctx);
+      persistPendingRuntimeState(draft);
+    });
+    w.__game.setGameState(next);
+  }, { verb: atomVerb, ids: cardIds });
+}
+
+/** Open a real engine-owned deck reorder decision for modal E2E coverage. */
+export async function surfaceDeckReorderDecision(page: Page, cardIds: string[]): Promise<void> {
+  await surfaceDeckDecision(page, 'deckToBottomBound', cardIds);
+}
+
+/** Open a real engine-owned deck placement decision for modal E2E coverage. */
+export async function surfaceDeckPlaceDecision(page: Page, cardIds: string[]): Promise<void> {
+  await surfaceDeckDecision(page, 'deckPlaceSplitBound', cardIds);
+}
+
 export async function getGameState(page: Page): Promise<GameStateLike> {
   return (await page.evaluate(() => {
     const w = window as unknown as GameWindow;
@@ -70,6 +166,42 @@ export async function dispatchAction<T = { ok: boolean; reason?: string }>(page:
     }
     return w.__game.dispatch(bound) as unknown;
   }, action)) as T;
+}
+
+/**
+ * Production case-action FSM を guard なしで judge まで同期的に進める。
+ * 3 dispatch を同じ browser task 内で行い、React driver との競合を避ける。
+ */
+export async function dispatchUnguardedCaseAction(
+  page: Page,
+  byUid: string,
+  targetPlayer: 'self' | 'opp',
+): Promise<string> {
+  return page.evaluate(({ attackerUid, target }) => {
+    const w = window as unknown as GameWindow;
+    const declared = w.__game.dispatch({
+      type: 'actionDeclareCase',
+      byUid: attackerUid,
+      targetPlayer: target,
+    }) as { ok: boolean; reason?: string };
+    if (!declared.ok) throw new Error(`actionDeclareCase failed: ${declared.reason ?? 'unknown'}`);
+
+    const actionId = w.__game.getState().activeActionId;
+    if (!actionId) throw new Error('activeActionId not set after actionDeclareCase');
+
+    const guarded = w.__game.dispatch({ type: 'actionGuard', actionId, guarderUid: null }) as {
+      ok: boolean;
+      reason?: string;
+    };
+    if (!guarded.ok) throw new Error(`actionGuard failed: ${guarded.reason ?? 'unknown'}`);
+
+    const judged = w.__game.dispatch({ type: 'actionJudge', actionId }) as {
+      ok: boolean;
+      reason?: string;
+    };
+    if (!judged.ok) throw new Error(`actionJudge failed: ${judged.reason ?? 'unknown'}`);
+    return actionId;
+  }, { attackerUid: byUid, target: targetPlayer });
 }
 
 export async function getActionContext(
