@@ -13,6 +13,7 @@ import type { DeckRecord } from '../data/types';
 import { defaultCaseForPartner } from '../data/cardPool';
 import { BUG_274_PARTNER } from '@/ui/fixtures/bug274PartnerFixture.js';
 import { BUG_274_PARTNER_ID } from '../data/bug274ValidationDeck';
+import { startCausalSession } from '@/engine/log/causal';
 
 /** meta DeckRecord → engine Deck 変換 (mainCards を count 分展開) */
 export function toEngineDeck(deck: DeckRecord) {
@@ -35,11 +36,12 @@ export async function customGameStart(
   selfDeck: DeckRecord,
   oppDeck: DeckRecord,
   opts: {
+    sessionId: string;
     spectator?: boolean;
     firstPlayer?: 'self' | 'opp';
     /** False when the route/session owner has cancelled this start. */
     isSessionCurrent?: () => boolean;
-  } = {},
+  },
 ): Promise<GameState> {
   const assertSessionCurrent = (): void => {
     if (opts.isSessionCurrent?.() === false) {
@@ -58,6 +60,7 @@ export async function customGameStart(
 
   // Phase A: init / decideFirstPlayer / dealOpeningHand × 2
   let state = produce(createEmptyGameState(), (draft) => {
+    startCausalSession(draft, opts.sessionId);
     engine.flow.setup.init(draft, decks);
     if (opts.firstPlayer) engine.flow.setup.decideFirstPlayer(draft, 'manual', opts.firstPlayer);
     else engine.flow.setup.decideFirstPlayer(draft, 'random');

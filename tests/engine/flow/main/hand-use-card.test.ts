@@ -8,7 +8,9 @@ import { canHandUseCard, canHandUseCardSwitch, handUseCard } from '@/engine/flow
 import { event } from '@/engine/event/index';
 import { mutate } from '@/engine/mutate/index';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
-import type { CardDef, GameState } from '@/engine/types';
+import { runAllUntilEmpty } from '@/engine/resolve';
+import { startCausalSession, validateCausalLog } from '@/engine/log/causal';
+import type { CardDef, CausalLogEntryV1, GameState } from '@/engine/types';
 
 function makeCard(id: string, opts: Partial<CardDef> = {}): CardDef {
   return {
@@ -219,6 +221,61 @@ describe('engine.flow.main.handUseCard', () => {
     });
     expect(emitted).not.toBeNull();
     expect(emitted!.viaEffect).toBe(false);
+  });
+
+  it('causal event use records a public ordered graph and correlates its queued effect', () => {
+    registerCardDef(makeCard('PRIVATE-EVENT', { kind: 'event', colors: ['襍､'], level: 1 }));
+    event.on('effect:declared', (state, payload) => {
+      const declared = payload as { cardId?: string };
+      if (declared.cardId !== 'PRIVATE-EVENT') return;
+      event.queue(
+        state,
+        { kind: 'atom', verb: 'noop', args: {} },
+        { player: 'self', cardId: 'PRIVATE-EVENT', area: 'hand' },
+        'test:hand-use-child',
+      );
+    });
+    const state = produce(makeState({ caseColors: ['襍､'], hand: ['PRIVATE-EVENT'] }), (draft) => {
+      startCausalSession(draft, 'hand-event');
+    });
+
+    const after = produce(state, (draft) => {
+      handUseCard(draft, 'self', 'PRIVATE-EVENT');
+      runAllUntilEmpty(draft);
+    });
+    const entries = validateCausalLog(after.log as CausalLogEntryV1[]);
+    expect(entries.slice(0, 3).map((entry) => [entry.kind, entry.parentEventId, entry.outcome])).toEqual([
+      ['use', undefined, { type: 'state', state: 'active' }],
+      ['zone-move', 'hand-event:1', { type: 'move', from: 'hand', to: 'remove', count: 1 }],
+      ['summary', 'hand-event:2', { type: 'state', state: 'success' }],
+    ]);
+    expect(entries[0].source).toMatchObject({ kind: 'player', side: 'self' });
+    expect(entries[1].targets).toEqual([
+      expect.objectContaining({ kind: 'zone', side: 'self', zone: 'remove' }),
+    ]);
+    expect(entries[3]).toMatchObject({ kind: 'use', correlationEventId: 'hand-event:1' });
+    expect(JSON.stringify(entries.slice(0, 3))).not.toContain('PRIVATE-EVENT');
+  });
+
+  it('causal character use records the public entering card after the hand move', () => {
+    registerCardDef(makeCard('PUBLIC-CHAR', { kind: 'character', colors: ['襍､'], level: 1 }));
+    const state = produce(makeState({ caseColors: ['襍､'], hand: ['PUBLIC-CHAR'] }), (draft) => {
+      startCausalSession(draft, 'hand-character');
+    });
+
+    const after = produce(state, (draft) => {
+      handUseCard(draft, 'self', 'PUBLIC-CHAR');
+    });
+    const entries = validateCausalLog(after.log as CausalLogEntryV1[]);
+    expect(entries.map((entry) => [entry.kind, entry.parentEventId])).toEqual([
+      ['use', undefined],
+      ['zone-move', 'hand-character:1'],
+      ['enter', 'hand-character:2'],
+      ['summary', 'hand-character:3'],
+    ]);
+    expect(entries[2].targets).toEqual([
+      expect.objectContaining({ kind: 'card', side: 'self', zone: 'scene', cardNumber: 'PUBLIC-CHAR' }),
+    ]);
   });
 
   // void unused

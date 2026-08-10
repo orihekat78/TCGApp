@@ -6,13 +6,15 @@ import { cancelSetCardCostChoice, confirmSetCardCostChoice, toggleSetCardCostCho
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { SelectableCardTile } from './SelectableCardTile.js';
+import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
 import './ChoicePickerModal.css';
 
 /** Chooses a physical set-card without revealing its identity before selection. */
 export function SetCardChoiceModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingSetCardChoice);
+  const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const expandModal = useCardExpandModal();
-  if (!pending || pending.player !== 'self') return null;
+  if (!pending || !isHumanDecisionOwner(pending.player, spectatorMode)) return null;
   const isCost = pending.purpose === 'cost';
   const selected = new Set(pending.selectedInstanceIds ?? []);
   const canConfirm = selected.size >= (pending.nMin ?? 0) && selected.size <= (pending.nMax ?? 0);

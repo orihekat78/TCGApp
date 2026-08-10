@@ -23,7 +23,7 @@
 //        17-icons.md (§【パートナー(色)】/条件不成立=能力を持たない扱い), 20-color-and-switch.md,
 //        26-qa-deck-refresh.md (§出るまで公開)
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { afterEach, describe, it, expect, beforeEach } from 'vitest';
 import { produce } from 'immer';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
@@ -62,6 +62,7 @@ const ch = (id: string, over: Partial<CardDef> = {}): CardDef => ({
 const FB = { type: 'card-back' as const, cardId: 'D08017' };
 
 beforeEach(() => {
+  (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   event._resetRegistry();
   _resetTriggeredRegistered();
   _resetUidCounter();
@@ -79,6 +80,10 @@ beforeEach(() => {
   registerCardDef(ch('OTHER', { colors: ['緑'] }));
   registerTriggeredListener();
   _drainPendingHirameki();
+});
+
+afterEach(() => {
+  (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
 });
 
 function baseState(partnerId: string = 'PW'): GameState {
@@ -179,6 +184,7 @@ describe('§B B07059 赤い涙 — event-use e2e', () => {
 
   it('B2 ★human 0-skip★: sceneRemove を 0枚辞退しても sequence remainder の toPartnerArea が発火 (公式Q&A)', () => {
     let s = baseState();
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
     s = produce(s, (d) => {
       d.players.self.hand = ['B07059'];
       d.players.opp.scene = [sceneChar('TGT8000', 'o1', { state: 'sleep' })]; // 候補は居るが辞退する

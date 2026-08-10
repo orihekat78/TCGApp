@@ -11,7 +11,14 @@ import { event } from '@/engine/event/index';
 import { mutate } from '@/engine/mutate/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
-import type { GameState, CardDef } from '@/engine/types';
+import { runAllUntilEmpty } from '@/engine/resolve';
+import { startCausalSession, validateCausalLog } from '@/engine/log/causal';
+import {
+  completeEffectCausalTrace,
+  startStandaloneCausalTrace,
+  withEffectCausalCorrelation,
+} from '@/engine/log/effect-causal';
+import type { GameState, CardDef, CausalLogEntryV1 } from '@/engine/types';
 
 function makeStateWithChar(opts: { named?: boolean; state?: 'active' | 'sleep' | 'stun' } = {}): { s: GameState; uid: string } {
   _resetUidCounter();
@@ -402,6 +409,239 @@ describe('engine.flow.main.useDeclaredAbility', () => {
 
       const hasWarning = after.log.some((e) => e.action === 'declaredAbility:cost-not-paid');
       expect(hasWarning, 'cost 未定義 ability は warning なし').toBe(false);
+    });
+  });
+
+  describe('declared ability causal graph', () => {
+    function makeCausalState(
+      sessionId: string,
+      options: {
+        cost?: { kind: 'discardEvidence'; n: number } | { kind: 'sleepSelf' };
+        evidenceCardId?: string;
+        noEffect?: boolean;
+      } = {},
+    ): { state: GameState; uid: string } {
+      const cardId = `CAUSAL-DECLARED-${sessionId}`;
+      registerCardDef({
+        id: cardId,
+        no: cardId,
+        kind: 'character',
+        names: ['Causal declared'],
+        colors: ['青'],
+        level: 1,
+        ap: 1000,
+        lp: 1,
+        traits: [],
+        keywords: [],
+        rarity: 'C',
+        imageUrl: '',
+        ruleRefs: [],
+        abilities: [{
+          id: 'causal',
+          type: 'declared',
+          scope: 'on-scene',
+          ...(options.cost ? { cost: options.cost } : {}),
+          ...(options.noEffect ? {} : { effect: { kind: 'atom', verb: 'noop', args: {} } }),
+          description: 'causal test',
+          ruleRefs: [],
+        }],
+      } as CardDef);
+      let uid = '';
+      const state = produce(createEmptyGameState(), (draft) => {
+        draft.turn = { number: 2, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+        uid = mutate.scene.enter(draft, 'self', cardId, {}).uid;
+        if (options.evidenceCardId) {
+          draft.players.self.evidence.push({
+            cardId: options.evidenceCardId,
+            faceUp: false,
+            origin: { turn: 1, via: 'reasoning' },
+          });
+        }
+        startCausalSession(draft, sessionId);
+      });
+      return { state, uid };
+    }
+
+    function graphOf(state: GameState): CausalLogEntryV1[] {
+      return validateCausalLog(state.log as CausalLogEntryV1[]);
+    }
+
+    it('activation owns one declaration root and correlates the declared and observer effects', () => {
+      event.on('ability:declared', () => ({ kind: 'atom', verb: 'noop', args: {} }));
+      const { state, uid } = makeCausalState('declared-activation');
+
+      const after = produce(state, (draft) => {
+        activateDeclaredAbility(draft, uid, 'causal');
+        runAllUntilEmpty(draft);
+      });
+      const graph = graphOf(after);
+      const independentRoots = graph.filter((entry) =>
+        entry.parentEventId === undefined && entry.correlationEventId === undefined);
+
+      expect(independentRoots, JSON.stringify(graph.map((entry) => ({
+        id: entry.eventId,
+        kind: entry.kind,
+        parent: entry.parentEventId,
+        correlation: entry.correlationEventId,
+      })))).toHaveLength(1);
+      expect(independentRoots[0]).toMatchObject({
+        kind: 'declare',
+        source: { kind: 'player', side: 'self' },
+      });
+      expect(graph.filter((entry) =>
+        entry.parentEventId === undefined
+        && entry.correlationEventId === independentRoots[0].eventId)).toHaveLength(2);
+    });
+
+    it('direct use creates one fallback declaration root without duplicating the effect root', () => {
+      const { state, uid } = makeCausalState('declared-direct');
+
+      const after = produce(state, (draft) => {
+        useDeclaredAbility(draft, uid, 'causal');
+        runAllUntilEmpty(draft);
+      });
+      const graph = graphOf(after);
+      const independentRoots = graph.filter((entry) =>
+        entry.parentEventId === undefined && entry.correlationEventId === undefined);
+
+      expect(independentRoots).toHaveLength(1);
+      expect(graph.filter((entry) =>
+        entry.parentEventId === undefined
+        && entry.correlationEventId === independentRoots[0].eventId)).toHaveLength(1);
+    });
+
+    it('activation inherits an ambient parent instead of creating a second independent root', () => {
+      const { state, uid } = makeCausalState('declared-ambient');
+
+      const after = produce(state, (draft) => {
+        const parent = startStandaloneCausalTrace(draft, {
+          actor: 'self',
+          kind: 'declare',
+          source: { kind: 'player', side: 'self' },
+          targets: [],
+          outcome: { type: 'state', state: 'active' },
+        });
+        withEffectCausalCorrelation(draft, parent?.rootEventId, () => {
+          activateDeclaredAbility(draft, uid, 'causal');
+        });
+        completeEffectCausalTrace(draft, parent, 'self');
+        runAllUntilEmpty(draft);
+      });
+      const graph = graphOf(after);
+      const independentRoots = graph.filter((entry) =>
+        entry.parentEventId === undefined && entry.correlationEventId === undefined);
+
+      expect(independentRoots).toHaveLength(1);
+      expect(graph.filter((entry) =>
+        entry.parentEventId === undefined
+        && entry.correlationEventId === independentRoots[0].eventId)).toHaveLength(1);
+    });
+
+    it('correlates cost observers while keeping a face-down evidence card private', () => {
+      event.on('evidence:removed', () => ({ kind: 'atom', verb: 'noop', args: {} }));
+      const { state, uid } = makeCausalState('declared-cost', {
+        cost: { kind: 'discardEvidence', n: 1 },
+        evidenceCardId: 'PRIVATE-EVIDENCE-ID',
+      });
+
+      const after = produce(state, (draft) => {
+        activateDeclaredAbility(draft, uid, 'causal');
+        runAllUntilEmpty(draft);
+      });
+      const graph = graphOf(after);
+      const independentRoots = graph.filter((entry) =>
+        entry.parentEventId === undefined && entry.correlationEventId === undefined);
+
+      expect(independentRoots).toHaveLength(1);
+      expect(graph.filter((entry) =>
+        entry.parentEventId === undefined
+        && entry.correlationEventId === independentRoots[0].eventId)).toHaveLength(2);
+      expect(JSON.stringify(graph)).not.toContain('PRIVATE-EVIDENCE-ID');
+    });
+
+    it('correlates alternative-cost removal observers with the declared effect', () => {
+      const providerCardId = 'CAUSAL-ALT-PROVIDER';
+      registerCardDef({
+        id: providerCardId,
+        no: providerCardId,
+        kind: 'character',
+        names: ['Causal alternative provider'],
+        colors: ['青'],
+        level: 1,
+        ap: 1000,
+        lp: 1,
+        traits: [],
+        keywords: [],
+        rarity: 'C',
+        imageUrl: '',
+        ruleRefs: [],
+        abilities: [{
+          id: 'alternative',
+          type: 'continuous',
+          scope: 'on-scene',
+          continuousModifier: { alternativeCostProvider: { targetFilter: {} } },
+          description: 'replace declared cost',
+          ruleRefs: [],
+        }],
+      } as CardDef);
+      event.on('leave:to-remove', () => ({ kind: 'atom', verb: 'noop', args: {} }));
+
+      const { state, uid } = makeCausalState('declared-alternative', {
+        cost: { kind: 'sleepSelf' },
+      });
+      let providerUid = '';
+      const withProvider = produce(state, (draft) => {
+        providerUid = mutate.scene.enter(draft, 'self', providerCardId, {}).uid;
+      });
+      const after = produce(withProvider, (draft) => {
+        activateDeclaredAbility(draft, uid, 'causal', {
+          paymentMode: 'alternative',
+          alternativeCostProviderUid: providerUid,
+        });
+        runAllUntilEmpty(draft);
+      });
+
+      expect(after.players.self.scene.some((entry) => entry.uid === providerUid)).toBe(false);
+      expect(after.players.self.scene.find((entry) => entry.uid === uid)?.state).toBe('active');
+
+      const graph = graphOf(after);
+      const independentRoots = graph.filter((entry) =>
+        entry.parentEventId === undefined && entry.correlationEventId === undefined);
+      expect(independentRoots).toHaveLength(1);
+
+      const root = independentRoots[0]!;
+      const correlatedRoots = graph.filter((entry) =>
+        entry.parentEventId === undefined
+        && entry.correlationEventId === root.eventId);
+      expect(correlatedRoots).toHaveLength(2);
+      expect(graph.some((entry) =>
+        entry.kind === 'summary'
+        && entry.parentEventId === root.eventId
+        && entry.outcome.type === 'state'
+        && entry.outcome.state === 'success')).toBe(true);
+    });
+
+    it('completes its declaration trace when the declared ability has no effect', () => {
+      const { state, uid } = makeCausalState('declared-no-effect', { noEffect: true });
+
+      const after = produce(state, (draft) => {
+        activateDeclaredAbility(draft, uid, 'causal');
+        runAllUntilEmpty(draft);
+      });
+
+      const graph = graphOf(after);
+      const independentRoots = graph.filter((entry) =>
+        entry.parentEventId === undefined && entry.correlationEventId === undefined);
+
+      expect(independentRoots).toHaveLength(1);
+      const root = independentRoots[0]!;
+      expect(graph).toHaveLength(2);
+      expect(graph.filter((entry) => entry.parentEventId === root.eventId)).toEqual([
+        expect.objectContaining({
+          kind: 'summary',
+          outcome: { type: 'state', state: 'success' },
+        }),
+      ]);
     });
   });
 });

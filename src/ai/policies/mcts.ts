@@ -28,6 +28,7 @@ import { HeuristicPolicy, type HeuristicPolicyOptions } from './heuristic.js';
 import { RandomPolicy } from './random.js';
 import { defaultStateEvaluator, type StateEvaluator } from './state-evaluator.js';
 import { withHeadlessDecisionContext } from '../headless-decision-context.js';
+import { withIsolatedPendingRuntimeState } from '@/engine/effect/runtime-state.js';
 
 type Player = 'self' | 'opp';
 
@@ -66,9 +67,11 @@ export class MCTSPolicy implements AIPolicy {
   }
 
   choose(state: GameState, candidates: Move[], byPlayer: Player): Move | null {
-    return withHeadlessDecisionContext(
-      () => this.chooseHeadless(state, candidates, byPlayer),
-    );
+    return withHeadlessDecisionContext(() =>
+      withIsolatedPendingRuntimeState(
+        state,
+        () => this.chooseHeadless(state, candidates, byPlayer),
+      ));
   }
 
   private chooseHeadless(state: GameState, candidates: Move[], byPlayer: Player): Move | null {
@@ -107,11 +110,12 @@ export class MCTSPolicy implements AIPolicy {
    * Phase 9-F.2 では各 rollout で seed を変えて統計安定化する想定 (現状 fixed seed)。
    */
   private simulate(state: GameState, move: Move, byPlayer: Player, rolloutIdx: number): number {
-    try {
-      const afterMove = produce(state, (draft) => {
-        applyMove(draft, move, byPlayer);
-        runAllUntilEmpty(draft);
-      });
+    return withIsolatedPendingRuntimeState(state, () => {
+      try {
+        const afterMove = produce(state, (draft) => {
+          applyMove(draft, move, byPlayer);
+          runAllUntilEmpty(draft);
+        });
       // gameResult が即時に決まった場合 (例: solveCase 勝利)
       if (afterMove.gameResult) {
         return scoreFor(afterMove.gameResult.winner, byPlayer);
@@ -137,11 +141,12 @@ export class MCTSPolicy implements AIPolicy {
         }
         return 0;
       }
-      return scoreFor(result.winner, byPlayer);
-    } catch {
-      // applyMove 中の例外 → 保守的に敗北扱い
-      return -1;
-    }
+        return scoreFor(result.winner, byPlayer);
+      } catch {
+        // applyMove 中の例外 → 保守的に敗北扱い
+        return -1;
+      }
+    });
   }
 
   // Optional methods は HeuristicPolicy へ delegate (method 形式で this.heuristic を runtime 参照)

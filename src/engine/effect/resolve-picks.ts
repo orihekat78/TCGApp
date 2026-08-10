@@ -32,9 +32,18 @@ import { findChooseIntercept } from './consult-choose-intercept.js';
 import { hand } from '../mutate/hand.js';
 import { run as runEffect } from './resolver.js';
 import { eventUseAllowed } from '../flow/main/hand-use-card.js';
-import { cardOccurrenceUid } from '../target/card-occurrence.js';
+import { cardOccurrenceUid, setCardOccurrenceUid } from '../target/card-occurrence.js';
+import { char as charMutator } from '../mutate/char.js';
 import { peekPublicHandRevealToken, takePublicHandRevealToken } from './atom-handlers/_shared.js';
 import { chooseHeuristicAtomTarget } from './heuristic-atom-target.js';
+import {
+  cloneCausalEffectTrace,
+  completeEffectCausalTrace,
+  ensureEffectCausalTrace,
+  markEffectCausalAwaitingResume,
+  recordEffectCausalDecision,
+  recordEffectCausalOperation,
+} from '../log/effect-causal.js';
 
 type Player = 'self' | 'opp';
 
@@ -46,7 +55,9 @@ function containsSceneEnter(effect: Effect): boolean {
   return false;
 }
 
-function pendingSource<T extends { cardId: string; abilityId: string }>(ctx: EffectCtx, source: T) {
+function pendingSource<T extends { cardId: string; abilityId: string }>(state: GameState, ctx: EffectCtx, source: T) {
+  const trace = ensureEffectCausalTrace(state, ctx);
+  markEffectCausalAwaitingResume(trace);
   return {
     ...source,
     ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}),
@@ -54,6 +65,7 @@ function pendingSource<T extends { cardId: string; abilityId: string }>(ctx: Eff
     ...(ctx.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: ctx.source.ownerChosenOrder } : {}),
     ...(ctx.source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: ctx.source.ownerOrderConfirmed } : {}),
     ...(ctx.source.declaredBatch !== undefined ? { declaredBatch: ctx.source.declaredBatch } : {}),
+    ...(trace ? { causalTrace: cloneCausalEffectTrace(trace) } : {}),
   };
 }
 
@@ -335,8 +347,16 @@ function runtimeHumanDecisionPlayer(ctx: EffectCtx, opts: ResolveEffectPicksOpts
     const remembered = dyn['runtimeHumanPlayer'];
     return remembered === 'self' || remembered === 'opp' ? remembered : null;
   }
-  const direct = humanDecisionPlayer(opts);
-  if (direct !== null) return direct;
+  // A direct atom-handler caller can explicitly identify an AI/spectator
+  // decision without first passing through resolveEffectPicks. Preserve that
+  // `false`/`null` ownership instead of falling through to the legacy human
+  // queue behavior.
+  if (opts.humanChooser !== undefined || opts.humanPlayer !== undefined) {
+    return humanDecisionPlayer(opts);
+  }
+  // No ownership marker means this is a legacy direct runtime handler.  Its
+  // pending decision belongs to the atom's chooser, even when a process-wide
+  // human side happens to be configured for an unrelated match flow.
   return opts.byPlayer ?? ctx.source.player;
 }
 
@@ -346,7 +366,9 @@ import {
   pushPendingEffectOptionalSide, setPendingOptionalResume, setPendingOptionalBindings,
   setPendingOptionalCostPaid,
   type ContinuationFrame,
+  type PendingEffectPickSide,
 } from './pending-state.js';
+import { normalizePendingPickRange, preparePendingPickRange } from './pick-selection.js';
 // Phase 3b: pending管理は pending-state.ts へ分離。旧 public API は barrel 再export で不変 (importer 改変0)。
 export {
   _pushPendingEffectPickSideForTest, pushPendingPickFromAtom, toPlainDeep,
@@ -445,17 +467,27 @@ export function tryRePickFromAtom(
   // atom も全て push する (UI が先頭から消化、effectPickResolve のたびに次が drain される)。
   // BUG-077: _fromAtomHandler=true で substituteAtomPick を呼ぶことで、
   // Pattern B でも side-channel set を許可 (初期 walk からの呼出と区別)。
-  // Runtime re-picks are not implicitly human decisions.  Atom handlers run
-  // for both the UI owner and AI/spectator resolution; forcing humanChooser
-  // here used to enqueue a modal for an AI continuation and stop its tail.
+  // Runtime re-picks are not implicitly human decisions. Atom handlers run
+  // for both the UI owner and AI/spectator resolution. Preserve a known
+  // tri-state owner, but do not manufacture one for legacy direct handlers:
+  // the atom's target may make the chooser `opp-of-owner`, so source ownership
+  // cannot identify the actual decision player before target resolution.
+  const runtimeDyn = ctx.dyn as Record<string, unknown> | undefined;
+  const runtimeOwnerKnown = runtimeDyn?.['runtimePickOwnerKnown'] === true
+    || opts.humanChooser !== undefined
+    || opts.humanPlayer !== undefined;
   const human = runtimeHumanDecisionPlayer(ctx, opts);
   const chooseAtomTarget = opts.chooseAtomTarget ?? rememberedRuntimeAtomTargetPolicy(ctx);
   const queueBefore = (globalThis as { __pendingEffectPickQueue?: unknown[] }).__pendingEffectPickQueue?.length ?? 0;
   const resolved = substituteAtomPick(state, atom, ctx, {
     ...opts,
     chooseAtomTarget,
-    humanChooser: human !== null && human === opts.byPlayer,
-    humanPlayer: human,
+    ...(runtimeOwnerKnown
+      ? {
+          humanChooser: human !== null && human === opts.byPlayer,
+          humanPlayer: human,
+        }
+      : {}),
     _fromAtomHandler: true,
   });
   // A runtime atom-handler has already consumed the original atom.  For an
@@ -565,7 +597,7 @@ function substituteAtomPick(
     const zeroArea = (resolvedTarget as { query?: { area?: unknown } }).query?.area;
     if (verbStr === 'sceneEnter' && zeroArea === 'hand' && zeroN?.min === 0) {
       if (zeroHuman) {
-        pushPendingEffectPickSide({
+        pushPendingEffectPickSide(normalizePendingPickRange({
           player: zeroChooser,
           ownerPlayer: ctx.source.player,
           candidates: [],
@@ -573,9 +605,9 @@ function substituteAtomPick(
           atomArgs: toPlainDeep({ ...args }),
           nMin: 0,
           nMax: zeroN.max ?? 1,
-          source: pendingSource(ctx, opts.source ?? { cardId: '', abilityId: '' }),
+          source: pendingSource(state, ctx, opts.source ?? { cardId: '', abilityId: '' }),
           skipResolvesAtom: true,
-        });
+        }));
         return atom as Effect;
       }
       const initialHuman = opts._fromAtomHandler !== true
@@ -638,11 +670,24 @@ function substituteAtomPick(
   // Runtime atom handlers stop resolution by pushing a pending queue entry.
   // Unlike the initial pre-walk, that pause signal is required even when the
   // atom's chooser is not the configured human side.
-    const runtimeDyn = ctx.dyn as Record<string, unknown> | undefined;
+  const runtimeDyn = ctx.dyn as Record<string, unknown> | undefined;
   // Runtime owner tri-state: known human and marker-absent legacy handlers
-  // pause for a pending choice; only explicit known-nonhuman executes inline.
+  // pause for a pending choice. Multi-target Pattern A also uses the canonical
+  // queue even for a known non-human owner: apply-pick owns set selection,
+  // forced/distinct constraints, per-target application, bindings, intercepts,
+  // causal decisions, and continuation re-entry. Single-target Pattern A and
+  // Pattern B keep the existing inline non-human path.
+  const explicitRuntimeOwner = opts.humanChooser !== undefined || opts.humanPlayer !== undefined;
+  const runtimePatternAMulti = opts._fromAtomHandler === true
+    && isPatternA
+    && ((target as { n?: { max?: number } }).n?.max ?? 1) > 1;
+  const runtimePatternASetCardOccurrence = opts._fromAtomHandler === true
+    && isPatternA
+    && verb === 'charRemoveSetCard';
   const runtimeQueues = opts._fromAtomHandler === true
-    && (runtimeDyn?.['runtimePickOwnerKnown'] !== true
+    && (runtimePatternAMulti
+      || runtimePatternASetCardOccurrence
+      || runtimeDyn?.['runtimePickOwnerKnown'] !== true && !explicitRuntimeOwner
       || runtimeHumanDecisionPlayer(ctx, opts) === byPlayer);
   const hasExplicitHumanIdentity = opts.humanChooser === true || opts.humanPlayer !== undefined;
   if (runtimeQueues || (hasExplicitHumanIdentity && humanDecisionPlayer(opts) === byPlayer)) {
@@ -658,11 +703,40 @@ function substituteAtomPick(
       return atom as Effect;
     }
     const publicHandRevealToken = takePublicHandRevealToken(ctx);
-    type CardLike = { uid: string; cardId: string; player: Player; kind?: 'char' | 'card' | 'evidence'; area?: string; index?: number };
+    type CardLike = {
+      uid: string;
+      cardId: string;
+      player: Player;
+      kind?: 'char' | 'card' | 'evidence';
+      area?: string;
+      index?: number;
+      hostUid?: string;
+      setCardInstanceId?: string;
+      hidden?: boolean;
+    };
     const cardLikeCands: CardLike[] = [];
+    if (verb === 'charRemoveSetCard') charMutator.ensureSetCardInstanceIds(state);
     for (const c of cands) {
       if (c.kind === 'char') {
-        cardLikeCands.push({ uid: c.uid, cardId: c.cardId, player: c.player, kind: 'char' });
+        if (verb === 'charRemoveSetCard') {
+          const host = state.players[c.player].scene.find(candidate => candidate.uid === c.uid);
+          for (const entry of host?.setCards ?? []) {
+            if (!entry.instanceId) continue;
+            if (args.faceDownOnly === true && entry.faceUp) continue;
+            cardLikeCands.push({
+              uid: setCardOccurrenceUid(c.player, c.uid, entry.instanceId),
+              cardId: entry.faceUp ? entry.cardId : c.cardId,
+              player: c.player,
+              kind: 'card',
+              area: 'set-card',
+              hostUid: c.uid,
+              setCardInstanceId: entry.instanceId,
+              ...(entry.faceUp ? {} : { hidden: true }),
+            });
+          }
+        } else {
+          cardLikeCands.push({ uid: c.uid, cardId: c.cardId, player: c.player, kind: 'char' });
+        }
       } else if (c.kind === 'card') {
         // Card candidates have no native uid.  The occurrence identity must include
         // player + area + index: a union query can contain the same cardId at index 0
@@ -696,7 +770,7 @@ function substituteAtomPick(
       : targetRef.query?.aggregateLevelMax && typeof targetRef.query.aggregateLevelMax === 'object'
         ? evalDyn(state, targetRef.query.aggregateLevelMax.dyn, ctx)
         : undefined;
-    pushPendingEffectPickSide({
+    const pendingPick = preparePendingPickRange({
       player: byPlayer,
       // BUG-175: 能力所有者を同梱 — chooser≠owner の cross-side pick で解決後 ctx の座標系を保つ
       ownerPlayer: ctx.source.player,
@@ -709,7 +783,7 @@ function substituteAtomPick(
       atomArgs: toPlainDeep(resolveDynArgs(state, { ...args }, ctx)),
       nMin: targetRef.n?.min ?? 1,
       nMax: targetRef.n?.max ?? 1,
-      source: pendingSource(ctx, opts.source ?? { cardId: '', abilityId: '' }),
+      source: pendingSource(state, ctx, opts.source ?? { cardId: '', abilityId: '' }),
       ...(publicHandRevealToken ? { publicHandRevealToken } : {}),
       // D08021 driver 2026-05-26: target.query.distinctNames を UI に伝える。
       // CardListModal multi-select で同 name component 衝突候補を click 不可化する。
@@ -726,7 +800,13 @@ function substituteAtomPick(
       // W2b (P50/r27): mustBeSelectedByOppEvent forced 集合。UI (auto-select+lock/restrict) と
       // chooseAiPick が honor。空なら undefined (従来 pending と byte 等価)。
       ...(forcedUids.length > 0 ? { forcedUids } : {}),
-    });
+    } satisfies PendingEffectPickSide);
+    if (pendingPick === null) {
+      takePublicHandRevealToken(ctx);
+      (ctx.dyn ??= {}).chainStepNoApply = true;
+      return atom as Effect;
+    }
+    pushPendingEffectPickSide(pendingPick);
     // A pre-walk already materialized the human decision. Return a no-op
     // carrier so the runtime atom handler cannot enqueue the same pick again.
     // Runtime handlers still receive the original atom: their caller observes
@@ -751,19 +831,53 @@ function substituteAtomPick(
     : undefined;
   const picked = forcedFirst ?? heuristicPick ?? cands[0];
   if (!picked) return atom as Effect;
+  const markAutonomousPick = (resolvedArgs: Record<string, unknown>): Record<string, unknown> => ({
+    ...resolvedArgs,
+    __causalDecisionActor: byPlayer,
+  });
 
   if (isPatternA) {
     if (picked.kind !== 'char') return atom as Effect;
     const intercept = findChooseIntercept(state, picked.uid, ctx);
+    const decisionTrace = intercept.kind === 'none' ? undefined : ensureEffectCausalTrace(state, ctx);
+    if (decisionTrace !== undefined) recordEffectCausalDecision(state, decisionTrace, byPlayer);
     if (intercept.kind === 'cancel') {
       (ctx.dyn ??= {}).chooseIntercepted = true;
+      completeEffectCausalTrace(
+        state,
+        decisionTrace,
+        ctx.source.player,
+        'cancel',
+        { type: 'state', state: 'negated' },
+      );
       return { kind: 'parallel', steps: [] };
     }
     if (intercept.kind === 'discard-or-cancel') {
+      recordEffectCausalDecision(state, decisionTrace, intercept.responder);
       const card = state.players[intercept.responder].hand[0];
-      if (card) hand.discardToRemove(state, intercept.responder, [card], { byPlayer: intercept.responder });
-      (ctx.dyn ??= {}).chooseIntercepted = true;
-      return { kind: 'parallel', steps: [] };
+      if (card) {
+        // Paying the printed cost protects the selected effect: remove one
+        // hand occurrence, then continue resolving the original atom.
+        hand.discardToRemove(state, intercept.responder, [card], { byPlayer: intercept.responder });
+        recordEffectCausalOperation(state, ctx, {
+          actor: intercept.responder,
+          kind: 'discard',
+          source: { kind: 'zone', side: intercept.responder, zone: 'hand' },
+          targets: [{ kind: 'zone', side: intercept.responder, zone: 'remove' }],
+          outcome: { type: 'move', from: 'hand', to: 'remove', count: 1 },
+        });
+      } else {
+        // Only declining (or being unable to pay) negates the selected effect.
+        (ctx.dyn ??= {}).chooseIntercepted = true;
+        completeEffectCausalTrace(
+          state,
+          decisionTrace,
+          ctx.source.player,
+          'cancel',
+          { type: 'state', state: 'negated' },
+        );
+        return { kind: 'parallel', steps: [] };
+      }
     }
     const { target: _omit, ...restArgs } = args;
     void _omit;
@@ -771,7 +885,9 @@ function substituteAtomPick(
       kind: 'atom',
       verb: atom.verb as never,
       // BUG-085: AI / heuristic 経路 (human-pick 境界なし) でも { dyn } を literal 化する。
-      args: w6TagMr(resolveDynArgs(state, { ...restArgs, uid: picked.uid }, ctx) as Record<string, unknown>, [picked.uid]),
+      args: intercept.kind === 'none'
+        ? markAutonomousPick(w6TagMr(resolveDynArgs(state, { ...restArgs, uid: picked.uid }, ctx) as Record<string, unknown>, [picked.uid]))
+        : w6TagMr(resolveDynArgs(state, { ...restArgs, uid: picked.uid }, ctx) as Record<string, unknown>, [picked.uid]),
     } as Effect;
   }
 
@@ -800,7 +916,7 @@ function substituteAtomPick(
     return {
       kind: 'atom',
       verb: atom.verb as never,
-      args: resolveDynArgs(state, {
+      args: markAutonomousPick(resolveDynArgs(state, {
         ...args,
         cardIds: chosenIds,
         selectedDeckIndexes: chosen.map((candidate) => candidate.kind === 'card' ? candidate.index : undefined),
@@ -808,7 +924,7 @@ function substituteAtomPick(
           && typeof candidate.index === 'number'
           ? [{ cardId: candidate.cardId, area: candidate.area, player: candidate.player, index: candidate.index }]
           : []),
-      }, ctx),
+      }, ctx)),
     } as Effect;
   }
   // BUG-106 (D11014 a2 / D11019 a1 driver): single-pick contract (cardId:'$pick.cardId')。
@@ -830,14 +946,14 @@ function substituteAtomPick(
     return {
       kind: 'atom',
       verb: atom.verb as never,
-      args: resolveDynArgs(state, {
+      args: markAutonomousPick(resolveDynArgs(state, {
         ...args,
         cardId: pickedCardId,
         ...(picked.kind === 'card' ? { selectedCardIndex: picked.index } : {}),
         ...(picked.kind === 'card' && typeof picked.index === 'number'
           ? { selectedCardOccurrences: [{ cardId: picked.cardId, area: picked.area, player: picked.player, index: picked.index }] }
           : {}),
-      }, ctx),
+      }, ctx)),
     } as Effect;
   }
   const pickValueOf = (c: (typeof cands)[number]): string | null =>
@@ -871,7 +987,7 @@ function substituteAtomPick(
     return {
       kind: 'atom',
       verb: atom.verb as never,
-      args: w6TagMr(resolveDynArgs(state, { ...args, target: pickValues }, ctx) as Record<string, unknown>, w6CharUidsG),
+      args: markAutonomousPick(w6TagMr(resolveDynArgs(state, { ...args, target: pickValues }, ctx) as Record<string, unknown>, w6CharUidsG)),
     } as Effect;
   }
   const pickValue = pickValueOf(picked);
@@ -879,10 +995,10 @@ function substituteAtomPick(
   return {
     kind: 'atom',
     verb: atom.verb as never,
-    args: w6TagMr(
+    args: markAutonomousPick(w6TagMr(
       resolveDynArgs(state, { ...args, target: [pickValue] }, ctx) as Record<string, unknown>,
       picked.kind === 'char' ? [picked.uid] : [],
-    ),
+    )),
   } as Effect;
 }
 
@@ -976,7 +1092,13 @@ export function resolveEffectPicks(
         steps: effect.steps.map((s) => resolveEffectPicks(
           state,
           s,
-          { ...ctx, causal: { ...ctx.causal } },
+          {
+            ...ctx,
+            causal: {
+              ...ctx.causal,
+              ...(ctx.causal?.trace ? { trace: cloneCausalEffectTrace(ctx.causal.trace) } : {}),
+            },
+          },
           opts,
         )),
       };
@@ -994,7 +1116,7 @@ export function resolveEffectPicks(
         pushPendingEffectChoiceSide({
           player: human,
           ...(publicHandRevealToken ? { publicHandRevealToken } : {}),
-          source: pendingSource(ctx, { cardId: opts.source?.cardId ?? '', abilityId: opts.source?.abilityId ?? '', uid: ctx.source.uid ?? '' }),
+          source: pendingSource(state, ctx, { cardId: opts.source?.cardId ?? '', abilityId: opts.source?.abilityId ?? '', uid: ctx.source.uid ?? '' }),
           options: traits.map((label, index) => ({ index, label })),
         });
         setPendingChoiceResume(effect);
@@ -1055,7 +1177,7 @@ export function resolveEffectPicks(
         pushPendingEffectChoiceSide({
           player: opts.byPlayer ?? 'self',
           ...(publicHandRevealToken ? { publicHandRevealToken } : {}),
-          source: pendingSource(ctx, {
+          source: pendingSource(state, ctx, {
             cardId: opts.source?.cardId ?? '',
             abilityId: opts.source?.abilityId ?? '',
             uid: srcUid,
@@ -1115,7 +1237,7 @@ export function resolveEffectPicks(
           player: decisionPlayer,
           ...(publicHandRevealToken ? { publicHandRevealToken } : {}),
           ownerPlayer,
-          source: pendingSource(ctx, {
+          source: pendingSource(state, ctx, {
             cardId: opts.source?.cardId ?? '',
             abilityId: opts.source?.abilityId ?? '',
             uid: srcUid,

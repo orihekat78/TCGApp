@@ -6,8 +6,7 @@
 // 役割:
 //   GameSetupModal の「ヒラメキデモ」 button から開く。icon-flash ability を持つ
 //   全カードを enumerate して grid 表示。click で `onPick(cardId)` を発火、
-//   親 (Playmat) が setGameState(createHiramekiDemoState(cardId)) + mode='playing'
-//   + dispatch actionAgainstCase を行う。
+//   親 (App / RealMatchView) が共通 demo session を開始する。
 
 import { useEffect, type JSX } from 'react';
 import type { CardDef } from '@/engine/types';

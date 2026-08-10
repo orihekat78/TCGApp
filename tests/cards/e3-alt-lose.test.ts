@@ -18,6 +18,7 @@ import { _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { registerAll } from '@/cards/index';
 import { runAtom } from '@/engine/effect/atom-handlers';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { startCausalSession } from '@/engine/log/causal';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import type { AtomVerb, EffectCtx } from '@/engine/types';
 
@@ -59,5 +60,19 @@ describe('opponentLoses verb — alt-lose 勝利ルート (runAtom 直接駆動)
     const s0 = createEmptyGameState();
     const after = produce(s0, (d) => { runAtom(d, 'partnerSolveCase', { player: 'self' }, ctx('self')); });
     expect(after.gameResult).toEqual({ winner: 'self', reason: 'evidence' });
+  });
+
+  it('effect summary precedes the terminal causal event', () => {
+    const s0 = createEmptyGameState();
+    startCausalSession(s0, 'alt-lose-order');
+
+    const after = produce(s0, (d) => {
+      runAtom(d, 'opponentLoses' as AtomVerb, { player: 'self' }, ctx('self'));
+    });
+
+    expect(after.log.map((entry) => ('kind' in entry ? entry.kind : 'legacy'))).toEqual([
+      'summary',
+      'game-result',
+    ]);
   });
 });

@@ -255,8 +255,10 @@ test('HOME approved 20/80 landscape composition matches the compact reference', 
 
   expect(geometry.stageWidth / geometry.railWidth).toBeGreaterThanOrEqual(3.8);
   expect(geometry.stageWidth / geometry.railWidth).toBeLessThanOrEqual(4.2);
-  expect(geometry.headerHeight).toBeGreaterThanOrEqual(41);
-  expect(geometry.headerHeight).toBeLessThanOrEqual(43);
+  // Shared landscape header keeps the approved 54px frame across HOME,
+  // SETUP, CARDS, and DECK while its labels/icons scale for the viewport.
+  expect(geometry.headerHeight).toBeGreaterThanOrEqual(53);
+  expect(geometry.headerHeight).toBeLessThanOrEqual(55);
   expect(geometry.newsRowHeight).toBeGreaterThanOrEqual(42);
   expect(geometry.newsRowHeight).toBeLessThanOrEqual(44.1);
   expect(geometry.matchRowHeight).toBeGreaterThanOrEqual(31);
@@ -340,6 +342,38 @@ test('HOME compact landscape scrolls only the NEWS and recent-match lists', asyn
   expect(after.matchScrollTop).toBeGreaterThan(0);
   expect(after.pageScrollTop).toBe(0);
   expect(after.documentScrollTop).toBe(0);
+  await assertNoHorizontalOverflow(page);
+});
+
+test('HOME 720x393 keeps the 20/80 rail reachable inside the viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 720, height: 393 });
+  await page.goto('/#home');
+
+  const geometry = await page.locator('.home-main').evaluate((main) => {
+    const screen = document.querySelector('.home-screen')!;
+    const rail = main.querySelector('.home-rail')!;
+    const stage = main.querySelector('.home-deck-stage')!;
+    const firstSection = main.querySelector('.home-rail-section')!;
+    const railBox = rail.getBoundingClientRect();
+    const stageBox = stage.getBoundingClientRect();
+    return {
+      layout: getComputedStyle(main).display,
+      railWidth: railBox.width,
+      railHeight: railBox.height,
+      railBottom: railBox.bottom,
+      stageWidth: stageBox.width,
+      sectionHeight: firstSection.getBoundingClientRect().height,
+      screenOverflowY: getComputedStyle(screen).overflowY,
+    };
+  });
+
+  expect(geometry.layout).toBe('grid');
+  expect(geometry.stageWidth / geometry.railWidth).toBeGreaterThanOrEqual(3.8);
+  expect(geometry.stageWidth / geometry.railWidth).toBeLessThanOrEqual(4.2);
+  expect(geometry.railHeight).toBeGreaterThan(0);
+  expect(geometry.sectionHeight).toBeGreaterThan(0);
+  expect(geometry.railBottom).toBeLessThanOrEqual(393);
+  expect(geometry.screenOverflowY).toBe('hidden');
   await assertNoHorizontalOverflow(page);
 });
 

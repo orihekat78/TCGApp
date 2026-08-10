@@ -46,7 +46,7 @@ describe('engine-extension #3: multi-target Pattern A pick', () => {
   beforeAll(() => registerAll());
   beforeEach(() => {
     (globalThis as { __pendingEffectPickQueue?: unknown[] }).__pendingEffectPickQueue = [];
-    (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation = [];
+    delete (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation;
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   });
 

@@ -16,7 +16,7 @@ import { sceneChar } from '../helpers/fixtures';
 
 function contactCtx(): EffectCtx {
   return {
-    source: { player: 'self', cardId: 'X', abilityId: 'a1' },
+    source: { player: 'self', cardId: 'X', abilityId: 'a1', area: 'remove' },
     bindings: { contact: [{ byUid: 'atk', targetUid: 'def', attackerSide: 'self' }] },
   } as unknown as EffectCtx;
 }

@@ -4,8 +4,12 @@ export type { GameWindow, GameStateLike, SceneChar, Side } from './types';
 export { setupGamePage } from './setup';
 export {
   buildGameState,
+  buildCausalGameState,
+  surfaceDeckReorderDecision,
+  surfaceDeckPlaceDecision,
   getGameState,
   dispatchAction,
+  dispatchUnguardedCaseAction,
   getActionContext,
   getActiveActionId,
   waitForPhase,

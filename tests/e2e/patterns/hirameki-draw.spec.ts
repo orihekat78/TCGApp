@@ -1,8 +1,9 @@
 import { test, expect, type Page } from '@playwright/test';
 import {
   setupGamePage,
-  buildGameState,
+  buildCausalGameState,
   dispatchAction,
+  dispatchUnguardedCaseAction,
   expectNoConsoleErrors,
 } from '../helpers';
 import type { GameStateLike } from '../helpers';
@@ -125,7 +126,7 @@ async function getHandLength(page: Page, side: 'self' | 'opp'): Promise<number> 
 async function dispatchActionCase(page: Page): Promise<void> {
   // opp が attacker → self が hirameki owner、useHiramekiFlowDriver は self owner では
   // 自動 resolve しないため、test が pending を観測可能。
-  await dispatchAction(page, { type: 'actionAgainstCase', byUid: 'partner:opp', targetPlayer: 'self' });
+  await dispatchUnguardedCaseAction(page, 'partner:opp', 'self');
 }
 
 type FixtureArg = { evidenceCardId: string };
@@ -171,7 +172,7 @@ test.describe('hiramekiDraw — shape + fire/skip path (2 カード集約)', () 
   for (const { cardId, abilityId, kind } of CARDS) {
     test(`${cardId} ${abilityId} (${kind}): shape (icon-flash / on-evidence / atom-draw n=1, args.player='self')`, async ({ page }) => {
       const { errors } = await setupGamePage(page);
-      await buildGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
+      await buildCausalGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
 
       const probe = await probeAbility(page, cardId, abilityId);
 
@@ -188,7 +189,7 @@ test.describe('hiramekiDraw — shape + fire/skip path (2 カード集約)', () 
 
     test(`${cardId} ${abilityId} (${kind}): fire path → opp.hand +1 (Round 4j-fix BUG-034 検証)`, async ({ page }) => {
       const { errors } = await setupGamePage(page);
-      await buildGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
+      await buildCausalGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
 
       await dispatchActionCase(page);
 
@@ -199,10 +200,12 @@ test.describe('hiramekiDraw — shape + fire/skip path (2 カード集約)', () 
       expect(pending?.abilityId, `pending.abilityId === ${abilityId}`).toBe(abilityId);
 
       const handBefore = await getHandLength(page, 'self');
-      await dispatchAction(page, { type: 'hiramekiResolve', choice: 'fire' });
-      const handAfter = await getHandLength(page, 'self');
+      expect(await dispatchAction(page, { type: 'hiramekiResolve', choice: 'fire' })).toEqual({ ok: true });
 
-      expect(handAfter - handBefore, 'self.hand +1 after fire').toBe(1);
+      await expect.poll(
+        () => getHandLength(page, 'self'),
+        { message: 'self.hand +1 after fire' },
+      ).toBe(handBefore + 1);
       expect(await getPendingHirameki(page), 'pendingHirameki cleared after resolve').toBeNull();
 
       expectNoConsoleErrors(errors);
@@ -210,7 +213,7 @@ test.describe('hiramekiDraw — shape + fire/skip path (2 カード集約)', () 
 
     test(`${cardId} ${abilityId} (${kind}): skip path → opp.hand 不変`, async ({ page }) => {
       const { errors } = await setupGamePage(page);
-      await buildGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
+      await buildCausalGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
 
       await dispatchActionCase(page);
 
@@ -231,7 +234,7 @@ test.describe('hiramekiDraw — shape + fire/skip path (2 カード集約)', () 
   // negative: 非 hirameki カード (D08015) は abilities に type:'icon-flash' を含まない
   test('non-hirameki card (D08015): abilities に icon-flash 非含有 + dispatch しても pendingHirameki null', async ({ page }) => {
     const { errors } = await setupGamePage(page);
-    await buildGameState<FixtureArg>(page, applyFixture, { evidenceCardId: 'D08015' });
+    await buildCausalGameState<FixtureArg>(page, applyFixture, { evidenceCardId: 'D08015' });
 
     expect(await hasIconFlashAbility(page, 'D08015'), 'D08015 は icon-flash 非持ち').toBe(false);
     expect(await hasIconFlashAbility(page, 'D08013'), 'D08013 (control) は icon-flash 持ち').toBe(true);

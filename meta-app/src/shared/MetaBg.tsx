@@ -60,7 +60,7 @@ function SceneOverlay({ scene }: { scene: SceneName }) {
   const Overlay = SCENE_OVERLAYS[scene];
   if (!Overlay) return null;
   return (
-    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+    <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
       <Overlay />
     </div>
   );

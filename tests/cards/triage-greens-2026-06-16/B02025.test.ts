@@ -47,7 +47,6 @@ import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import {
   registerHiramekiListener,
-  _drainPendingHirameki,
   _resetPendingHirameki,
   _resetHiramekiRegistered,
 } from '@/engine/listeners/hirameki';
@@ -66,6 +65,7 @@ import { sceneChar } from '../../helpers/fixtures';
 import { B02025 } from '@/cards/ct-p02/B02025';
 import type { CardDef, GameState } from '@/engine/types';
 import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
+import { openCaseHirameki } from '../../helpers/open-case-hirameki';
 
 type G = {
   __pendingEffectPickQueue?: PendingEffectPickSide[];
@@ -136,17 +136,10 @@ function a2State(): GameState {
 
 // ヒラメキ fire/skip ドライブ (bug-140-hirameki-batch.test.ts と同一ハーネス)。
 function emitHirameki(s: GameState, choice: 'fire' | 'skip'): GameState {
-  engine.event.emit(
-    s,
-    'evidence:remove-by-action',
-    { player: 'self', ev: { cardId: 'B02025' } },
-    { player: 'opp', uid: 'opp-attacker' },
-  );
-  const pending = _drainPendingHirameki();
+  const { pending } = openCaseHirameki(s, 'B02025', { humanPlayer: null });
   expect(pending, 'ヒラメキ pending が side-channel に set される').not.toBeNull();
-  expect(pending!.cardId).toBe('B02025');
-  expect(pending!.abilityId).toBe('a2');
-  useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
+  expect(pending.cardId).toBe('B02025');
+  expect(pending.abilityId).toBe('a2');
   const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice });
   expect(r.ok, `hiramekiResolve ${choice} ok`).toBe(true);
   expect(useGameStateStore.getState().pendingHirameki, 'pending クリア').toBeNull();
@@ -283,7 +276,7 @@ describe('B02025 遠山和葉 — gate5 runtime behavior', () => {
     const s0 = a2State();
     const after = emitHirameki(s0, 'skip');
     expect(after.players.self.hand.length, 'skip → 手札 増えない').toBe(0);
-    expect([...after.players.self.remove].sort(), 'skip → remove pile 不変').toEqual([...REMOVE_PILE].sort());
+    expect([...after.players.self.remove].sort(), 'skip → action で失った証拠のみ追加').toEqual([...REMOVE_PILE, 'B02025'].sort());
   });
 
   // ===== descriptor 構造 sanity (B01062.test.ts と同形) =====

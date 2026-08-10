@@ -99,11 +99,13 @@
 }
 
 .leave-intercept-card {
+  position: relative;
   min-width: 0;
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 3px;
+  min-block-size: 52px;
+  padding: 3px 51px 3px 3px;
   border: 1px solid #b9d6ec;
   border-radius: 4px;
   background: #fff;
@@ -145,11 +147,13 @@
 
 .leave-intercept-card-detail {
   position: absolute;
-  top: 3px;
-  left: 15px;
+  top: 50%;
+  right: 3px;
+  left: auto;
+  transform: translateY(-50%);
   z-index: 1;
-  width: 22px;
-  height: 22px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 0;
   border: 1px solid #b9d6ec;
   border-radius: 50%;
@@ -157,6 +161,8 @@
   color: #1d5a86;
   cursor: pointer;
   font-size: 12px;
+  display: grid;
+  place-items: center;
 }
 
 .leave-intercept-card-select:hover,

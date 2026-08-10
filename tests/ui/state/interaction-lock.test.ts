@@ -1,58 +1,115 @@
-// tests/ui/state/interaction-lock — 効果解決中の入力ロック判定 (rules/05 割り込み禁止 / rules/15 未解決効果)
-// selectInteractionLocked: 効果スタック非空 or 人間の未解決 decision (pick/choice/optional/hirameki/misread/deck-reveal)
-// が1つでもあれば true。必要な decision modal 自体はロック対象外 (この flag は ActionsPanel の main action 起点を塞ぐ用)。
-import { describe, it, expect } from 'vitest';
-import { selectInteractionLocked } from '@/ui/state/interactionLock';
+import { describe, expect, it } from 'vitest';
 import type { GameState } from '@/engine/types/game-state';
+import { selectAutonomousDecisionBlocked } from '@/ui/state/autonomousDecisionGate';
+import { selectInteractionLocked, selectSwitchVictimBlocked } from '@/ui/state/interactionLock';
 
-type Slice = Parameters<typeof selectInteractionLocked>[0];
+type Slice = Parameters<typeof selectInteractionLocked>[0]
+  & Parameters<typeof selectAutonomousDecisionBlocked>[0];
 
-function base(over: Partial<Slice> = {}): Slice {
+function base(overrides: Partial<Slice> = {}): Slice {
   return {
     gameState: { pendingEffects: [] } as unknown as GameState,
     pendingEffectPick: null,
     pendingEffectChoice: null,
     pendingEffectOptional: null,
+    pendingChooseIntercept: null,
+    pendingLeaveIntercept: null,
+    pendingSetCardChoice: null,
+    pendingSetCardReplacement: null,
     pendingEffectRepeatOptional: null,
     pendingHirameki: null,
     pendingMisread: null,
     pendingDeckReveal: null,
-    ...over,
+    pendingPublicHandReveal: null,
+    pendingDeckReorder: null,
+    pendingDeckPlace: null,
+    pendingRps: null,
+    ...overrides,
   };
 }
 
 describe('selectInteractionLocked', () => {
-  it('効果なし・decision なし → ロックしない', () => {
+  it('does not lock without an unresolved effect or decision', () => {
     expect(selectInteractionLocked(base())).toBe(false);
   });
 
-  it('gameState=null (未ロード) → ロックしない', () => {
+  it('does not lock before game state is loaded', () => {
     expect(selectInteractionLocked(base({ gameState: null }))).toBe(false);
   });
 
-  // BUG-173 (2026-07-04): pendingEffects は resolved/cancelled を prune しない累積配列 (BUG-151 規約)
-  // → 判定は pending|resolving の state フィルタ。旧 length>0 判定は効果解決後の永久ロックだった。
-  it('pending / resolving entry がある → ロック (効果解決中)', () => {
-    for (const state of ['pending', 'resolving'] as const) {
-      const gs = { pendingEffects: [{ id: 'e1', state }] } as unknown as GameState;
-      expect(selectInteractionLocked(base({ gameState: gs })), state).toBe(true);
-    }
-  });
+  it.each(['pending', 'resolving'] as const)(
+    'locks while an effect entry is %s',
+    (state) => {
+      const gameState = { pendingEffects: [{ id: 'e1', state }] } as unknown as GameState;
+      expect(selectInteractionLocked(base({ gameState }))).toBe(true);
+    },
+  );
 
-  it('resolved / cancelled 残留 entry のみ → ロックしない (BUG-173)', () => {
-    const gs = {
+  it('ignores resolved and cancelled effect entries', () => {
+    const gameState = {
       pendingEffects: [{ id: 'e1', state: 'resolved' }, { id: 'e2', state: 'cancelled' }],
     } as unknown as GameState;
-    expect(selectInteractionLocked(base({ gameState: gs }))).toBe(false);
+    expect(selectInteractionLocked(base({ gameState }))).toBe(false);
   });
 
-  it('各 decision 待ち (pick/choice/optional/hirameki/misread/deck-reveal) で個別にロック', () => {
-    const keys: (keyof Slice)[] = [
-      'pendingEffectPick', 'pendingEffectChoice', 'pendingEffectOptional', 'pendingEffectRepeatOptional',
-      'pendingHirameki', 'pendingMisread', 'pendingDeckReveal',
-    ];
-    for (const k of keys) {
-      expect(selectInteractionLocked(base({ [k]: {} as never }))).toBe(true);
-    }
+  it.each([
+    'pendingEffectPick',
+    'pendingEffectChoice',
+    'pendingEffectOptional',
+    'pendingChooseIntercept',
+    'pendingLeaveIntercept',
+    'pendingSetCardChoice',
+    'pendingSetCardReplacement',
+    'pendingEffectRepeatOptional',
+    'pendingHirameki',
+    'pendingMisread',
+    'pendingDeckReveal',
+    'pendingDeckReorder',
+    'pendingDeckPlace',
+    'pendingRps',
+  ] as const)('locks every exclusive decision surface: %s', (key) => {
+    const state = base({ [key]: {} as never } as Partial<Slice>);
+    expect(selectInteractionLocked(state)).toBe(true);
+    expect(selectAutonomousDecisionBlocked(state)).toBe(true);
+  });
+
+  it('locks effect-lifetime hand reveal but not presentation-only reveal', () => {
+    const reveal = {
+      owner: 'self',
+      audience: 'all',
+      cardIds: ['c1'],
+      handSnapshot: ['c1'],
+      resolutionToken: 'public-hand-reveal:1',
+      source: {},
+    } as const;
+    const effectState = base({
+      pendingPublicHandReveal: { ...reveal, lifetime: 'effect' },
+    });
+    const presentationState = base({
+      pendingPublicHandReveal: { ...reveal, lifetime: 'presentation' },
+    });
+
+    expect(selectInteractionLocked(effectState)).toBe(true);
+    expect(selectAutonomousDecisionBlocked(effectState)).toBe(true);
+    expect(selectInteractionLocked(presentationState)).toBe(false);
+    expect(selectAutonomousDecisionBlocked(presentationState)).toBe(false);
+  });
+
+  it('allows the effect pick or choice that owns a switch victim picker', () => {
+    expect(selectSwitchVictimBlocked(base({ pendingEffectPick: {} as never }))).toBe(false);
+    expect(selectSwitchVictimBlocked(base({ pendingEffectChoice: {} as never }))).toBe(false);
+  });
+
+  it('suspends a switch victim picker for a competing decision', () => {
+    const reveal = {
+      owner: 'self',
+      audience: 'all',
+      cardIds: ['c1'],
+      handSnapshot: ['c1'],
+      lifetime: 'effect',
+      resolutionToken: 'public-hand-reveal:switch-lock',
+      source: {},
+    } as const;
+    expect(selectSwitchVictimBlocked(base({ pendingPublicHandReveal: reveal }))).toBe(true);
   });
 });

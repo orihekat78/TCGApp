@@ -14,79 +14,66 @@
 
 import { useEffect, useRef, useState, type JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
-import { actionLabel } from '@/ui/services/actionLabel.js';
-import { cardIdToDisplayName } from '@/ui/services/uidNames.js';
-import type { LogEntry } from '@/engine/types/game-state';
-import { redactLogEntryForViewer, type LogViewer } from '@/engine/read/log.js';
+import { actionLabelForAction } from '@/ui/services/actionLabel.js';
+import { normalizedGameLogForUi } from '@/ui/presentation/normalizedLog';
+import type { NormalizedLogNode } from '@/engine/log/causal';
 import './RecentActionToast.css';
 
 const TOAST_DURATION_MS = 1500; // BUG-062: 連続 CPU move でも視認可能な短め
 
-function formatTarget(target: string | undefined): string | undefined {
-  if (!target) return undefined;
-  if (/^D\d{2}\d{3}/.test(target)) {
-    const name = cardIdToDisplayName(target);
-    return name === target ? target : name;
-  }
-  return target;
-}
-
-export function RecentActionToast(): JSX.Element | null {
+export function RecentActionToast({ suppressed = false }: { suppressed?: boolean } = {}): JSX.Element | null {
   const gameState = useGameStateStore((s) => s.gameState);
-  const [visible, setVisible] = useState<LogEntry | null>(null);
-  const queueRef = useRef<LogEntry[]>([]);
-  const lastSeenLenRef = useRef<number>(0);
+  const [visible, setVisible] = useState<NormalizedLogNode | null>(null);
+  const cursorRef = useRef<{ sessionId: string; order: number } | null>(null);
 
-  // 新規 log entry を queue に enqueue
-  const logLen = gameState?.log.length ?? 0;
   useEffect(() => {
-    if (!gameState) return;
-    if (logLen > lastSeenLenRef.current) {
-      const viewer = (globalThis as { __humanPlayerSide?: LogViewer }).__humanPlayerSide ?? null;
-      const newEntries = gameState.log
-        .slice(lastSeenLenRef.current, logLen)
-        .map((entry) => redactLogEntryForViewer(entry, viewer));
-      queueRef.current = [...queueRef.current, ...newEntries];
-      lastSeenLenRef.current = logLen;
-      // 何も表示中でなければ即時 dequeue
-      if (visible === null && queueRef.current.length > 0) {
-        const next = queueRef.current.shift()!;
-        setVisible(next);
-      }
+    if (suppressed || !gameState) {
+      cursorRef.current = null;
+      setVisible(null);
+      return;
     }
-    // log が短くなった (新規ゲーム) 場合は reset
-    if (logLen < lastSeenLenRef.current) {
-      queueRef.current = [];
-      lastSeenLenRef.current = logLen;
+    const graph = normalizedGameLogForUi(gameState);
+    const latest = graph.nodes.at(-1);
+    if (!latest) {
+      cursorRef.current = { sessionId: graph.sessionId, order: 0 };
+      setVisible(null);
+      return;
+    }
+    const cursor = cursorRef.current;
+    if (cursor?.sessionId !== graph.sessionId || latest.order > cursor.order) {
+      cursorRef.current = { sessionId: graph.sessionId, order: latest.order };
+      setVisible(latest);
+      return;
+    }
+    if (latest.order < cursor.order) {
+      cursorRef.current = { sessionId: graph.sessionId, order: latest.order };
       setVisible(null);
     }
-  }, [logLen, gameState, visible]);
+  }, [gameState, suppressed]);
 
-  // visible が set されたら TOAST_DURATION_MS 後に dequeue
+  const visibleId = visible?.id ?? null;
   useEffect(() => {
-    if (visible === null) return undefined;
-    const t = setTimeout(() => {
-      const next = queueRef.current.shift() ?? null;
-      setVisible(next);
-    }, TOAST_DURATION_MS);
+    if (visibleId === null) return undefined;
+    const t = setTimeout(() => setVisible(null), TOAST_DURATION_MS);
     return () => clearTimeout(t);
-  }, [visible]);
+  }, [visibleId]);
 
   if (!visible) return null;
-  const isOpp = visible.player === 'opp';
+  const isOpp = visible.actor === 'opp';
   const who = isOpp ? '相手' : '自分';
+  const target = visible.targets[0]?.label;
   return (
     <div
       className={`recent-action-toast ${isOpp ? 'is-opp' : 'is-self'}`}
       role="status"
       data-testid="recent-action-toast"
-      data-player={visible.player}
+      data-player={visible.actor}
       style={{ pointerEvents: 'none' }}
     >
       {isOpp && <span className="toast-cpu-badge" aria-label="CPU">🤖</span>}
       <span className="toast-who">{who}</span>
-      <span className="toast-action">{actionLabel(visible)}</span>
-      {visible.target && <span className="toast-target">[{formatTarget(visible.target)}]</span>}
+      <span className="toast-action">{actionLabelForAction(visible.label)}</span>
+      {target && <span className="toast-target">[{target}]</span>}
     </div>
   );
 }

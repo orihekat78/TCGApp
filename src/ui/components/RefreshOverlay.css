@@ -64,5 +64,5 @@
 @media (prefers-reduced-motion: reduce) {
   .refresh-overlay,
   .refresh-overlay .refresh-icon,
-  .refresh-overlay .refresh-title { animation-duration: 0.2s; }
+  .refresh-overlay .refresh-title { animation: none; }
 }

@@ -50,6 +50,43 @@ function ctxWithSource(state: GameState): EffectCtx {
   };
 }
 
+function charCandidate(cardId: string, uid: string): Candidate {
+  return { kind: 'char', cardId, uid, player: 'self', area: 'scene' } as Candidate;
+}
+
+function ctxLossEffect(pause: Effect): Effect {
+  return {
+    kind: 'sequence',
+    steps: [
+      {
+        kind: 'parallel',
+        steps: [{
+          kind: 'sequence',
+          steps: [
+            {
+              kind: 'custom',
+              fn: (_state, branchCtx) => {
+                branchCtx.bindings = {
+                  ...branchCtx.bindings,
+                  $target: [charCandidate('A', 'branch-a')],
+                };
+              },
+            },
+            pause,
+          ],
+        }],
+      },
+      {
+        kind: 'custom',
+        fn: (state, outerCtx) => {
+          const target = outerCtx.bindings.$target?.[0] as { cardId?: string } | undefined;
+          state.players.self.hand.push(target?.cardId ?? 'MISSING');
+        },
+      },
+    ],
+  };
+}
+
 beforeEach(() => {
   resetCardDefRegistry();
   for (const id of ['HOST', 'A', 'B']) registerCardDef(card(id));
@@ -149,5 +186,26 @@ describe('reorder boundary: resolver containers', () => {
     applyDeckReorderAndContinuation(state, pending2!, ['P1', 'P2']);
     expect(state.players.self.scene.find(char => char.uid === second.uid)?.turnEffects['apMod_turn']).toBe(100);
     expect(_drainPendingDeckReorderSide()).toBeNull();
+  });
+
+  it('restores the outer context after a nested parallel reorder pause', () => {
+    const state = base();
+    const ctx = ctxWithSource(state);
+    state.players.self.deck = ['TAIL', 'P1', 'P2'];
+    ctx.bindings.$target = [charCandidate('B', 'outer-b')];
+    ctx.bindings.$moved = ['P1', 'P2'].map((cardId, index) => ({
+      kind: 'card', cardId, area: 'deck', player: 'self', index,
+    } as Candidate));
+
+    runEffect(state, ctxLossEffect({
+      kind: 'atom',
+      verb: 'deckBottomReorderBound',
+      args: { player: 'self', bindKey: '$moved' },
+    }), ctx);
+    const pending = _drainPendingDeckReorderSide();
+
+    applyDeckReorderAndContinuation(state, pending!, ['P2', 'P1']);
+
+    expect(state.players.self.hand).toEqual(['B']);
   });
 });

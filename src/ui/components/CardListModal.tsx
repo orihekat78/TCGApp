@@ -495,11 +495,13 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                   return onExpand ? (
                     <div
                       key={`faceup-${idx}`}
-                      className="card-list-item"
+                      className="card-list-detail-shell"
                       data-testid={`card-list-evidence-faceup-${idx}`}
                       aria-label={`${idx + 1} 番目の証拠 ${accessibleName} (表向き) を拡大表示`}
                     >
-                      {revealedContent}
+                      <div className="card-list-item">
+                        {revealedContent}
+                      </div>
                       <button
                         type="button"
                         className="card-list-pick-detail"

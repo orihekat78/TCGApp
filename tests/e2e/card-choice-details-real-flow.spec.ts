@@ -81,7 +81,7 @@ async function assertDetailClick(page: Page, detail: Locator): Promise<void> {
 }
 
 test.describe('real mounted card-choice details', () => {
-  test('EffectPicker: B08019 preserves multi-pick resolution while public details expand', async ({ page }) => {
+  test('EffectPicker: B08019 keeps face-down set-card occurrences private during multi-pick', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await primeHuman(page);
     await buildGameState(page, (gs: GameStateLike) => {
@@ -109,22 +109,36 @@ test.describe('real mounted card-choice details', () => {
     await page.locator('.confirm-ok').click();
     await page.getByTestId('opt-run-yes').click();
 
-    const primary = page.getByTestId('effect-pick-cand-D08011#0');
-    await expectPublicCardArt(primary, 'D08011', '1743743093474254.jpg');
-    const detail = page.getByTestId('effect-pick-detail-D08011#0');
+    const candidates = await page.evaluate(() => {
+      const w = window as unknown as {
+        __game: { getState: () => { pendingEffectPick: { candidates: unknown[] } | null } };
+      };
+      return w.__game.getState().pendingEffectPick?.candidates as {
+        uid: string;
+        hostUid?: string;
+        setCardInstanceId?: string;
+        hidden?: boolean;
+      }[] | undefined;
+    });
+    expect(candidates).toHaveLength(3);
+    const selfCandidates = candidates!.filter((candidate) => candidate.hostUid === 'D08011#0');
+    const oppCandidate = candidates!.find((candidate) => candidate.hostUid === 'opp-1');
+    expect(selfCandidates).toHaveLength(2);
+    expect(new Set(selfCandidates.map((candidate) => candidate.setCardInstanceId)).size).toBe(2);
+    expect(oppCandidate).toBeDefined();
+    expect(candidates!.every((candidate) => candidate.hidden === true)).toBe(true);
+    const selfCandidate = selfCandidates[0]!;
+    const primary = page.getByTestId(`effect-pick-cand-${selfCandidate.uid}`);
+    await expectHiddenCardBack(primary);
     await expectWithinViewport(page, page.getByTestId('effect-picker-modal'));
-    await expectWithinViewport(page, detail);
-    await expect(detail).toHaveAccessibleName(/円谷光彦.*詳細を表示/);
-    await expect(page.getByTestId('effect-pick-detail-opp-1')).toHaveAccessibleName(/吉田歩美.*詳細を表示/);
-    const detailNames = await page.locator('.effect-picker-detail').evaluateAll((buttons) =>
-      buttons.map((button) => button.getAttribute('aria-label')),
-    );
-    expect(new Set(detailNames).size).toBe(detailNames.length);
-    await assertDetailClick(page, detail);
-    await expect(page.getByTestId('effect-picker-modal')).toBeVisible();
+    await expectWithinViewport(page, primary);
+    await expect(primary).not.toContainText('D08003');
+    await expect(primary).not.toContainText('D08011');
+    await expect(page.getByTestId(`effect-pick-detail-${selfCandidate.uid}`)).toHaveCount(0);
+    await expect(page.getByTestId(`effect-pick-detail-${oppCandidate!.uid}`)).toHaveCount(0);
 
     await primary.click();
-    await page.getByTestId('effect-pick-cand-opp-1').click();
+    await page.getByTestId(`effect-pick-cand-${oppCandidate!.uid}`).click();
     await page.getByTestId('effect-picker-confirm').click();
     await page.waitForFunction(() => {
       const w = window as unknown as { __game: { getState: () => { gameState: { players: { self: { hand: string[] } } } } } };
@@ -187,19 +201,20 @@ test.describe('real mounted card-choice details', () => {
         player: 'self',
         revealed: ['D11020'],
         matched: 'D11020',
+        visibility: 'public',
+        viewer: 'all',
       });
     });
     const primary = page.getByTestId('deck-reveal-card-0');
     await expect(primary).toBeVisible();
-    await expectPublicCardArt(primary, 'D11020', '1775608977402003.jpg');
-    // Reveal animation ends after 500ms for the first public card. Use an ordinary
-    // interaction only after that real UI transition has settled.
-    await page.waitForTimeout(600);
     const detail = page.getByTestId('deck-reveal-detail-0');
-    await assertDetailClick(page, detail);
-
+    // Opening detail owns the live presentation timeline. Do it as soon as the
+    // 500ms reveal motion settles, before asset-load timing can advance to the
+    // later shuffle phase and replace this control.
+    await expectTouchTarget(detail);
     await detail.click();
     await expect(page.locator('.card-expand-modal-backdrop')).toBeVisible();
+    await expectPublicCardArt(primary, 'D11020', '1775608977402003.jpg');
     // The original 3100ms reveal timeline has elapsed, but the overlay remains
     // while the user reads the expanded card.
     await page.waitForTimeout(3300);
@@ -220,7 +235,7 @@ test.describe('real mounted card-choice details', () => {
       const players = g.players as { self: AnyState; opp: AnyState };
       players.self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
       players.self.scene = [mk('B05080', 'hyd#1')];
-      players.self.hand = ['D08005'];
+      players.self.hand = [];
       players.self.deck = ['D08006'];
       players.self.evidence = [];
       players.self.remove = [];
@@ -245,9 +260,11 @@ test.describe('real mounted card-choice details', () => {
     await page.getByTestId('misread-cand-hyd#1').check();
     await page.getByTestId('misread-confirm-btn').click();
     await page.waitForFunction(() => {
-      const w = window as unknown as { __game: { getState: () => { pendingEffectPick: { atomVerb: string } | null } } };
-      return w.__game.getState().pendingEffectPick?.atomVerb === 'discard';
+      const w = window as unknown as { __game: { getState: () => { pendingMisread: unknown | null } } };
+      return w.__game.getState().pendingMisread === null;
     });
+    expect((await getGameState(page)).players.self.scene.find((character) => character.uid === 'hyd#1')?.state)
+      .toBe('sleep');
     expectNoConsoleErrors(errors);
   });
 
@@ -272,10 +289,10 @@ test.describe('real mounted card-choice details', () => {
     });
 
     await dispatchAction(page, { type: 'actionDeclareChar', byUid: 's1', targetUid: 'o1' });
-    const primary = page.getByTestId('cid-disg-B03129#0');
+    const primary = page.getByTestId('cid-disg-card:self:hand:B03129#0');
     await expect(primary).toBeVisible();
     await expectPublicCardArt(primary, 'B03129', '1729133510413412.jpg');
-    await assertDetailClick(page, page.getByTestId('cid-disg-detail-B03129#0'));
+    await assertDetailClick(page, page.getByTestId('cid-disg-detail-card:self:hand:B03129#0'));
     await primary.click();
     await waitForActionEnd(page);
     const state = await getGameState(page);

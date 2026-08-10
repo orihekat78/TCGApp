@@ -55,4 +55,24 @@ describe('runtime binding choice', () => {
 
     expect(state.players.self.hand).toEqual(['OPTION', 'TAIL']);
   });
+  it('rejects an invalid option without consuming the retryable decision', () => {
+    const state = createEmptyGameState();
+    state.players.self.deck = ['OPTION', 'TAIL'];
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    _clearPendingEffectChoiceSide();
+    const effect: Effect = {
+      kind: 'sequence',
+      steps: [choice, { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } }],
+    };
+
+    run(state, effect, ctx());
+    const pending = _drainPendingEffectChoiceSide()!;
+
+    expect(() => applyChoiceAndContinuation(state, pending, 99))
+      .toThrow(/choice index 99 out of range/);
+    expect(state.players.self.hand).toEqual([]);
+
+    applyChoiceAndContinuation(state, pending, 0);
+    expect(state.players.self.hand).toEqual(['OPTION', 'TAIL']);
+  });
 });

@@ -10,7 +10,7 @@
         "method":  "manual-semantic",
         "evidence":  [
                          "src:src/cards/ct-p01/B01018.ts:53",
-                         "tests:tests/cards/triage-greens-2026-06-15/B01018.test.ts:94"
+                         "tests:tests/cards/triage-greens-2026-06-15/B01018.test.ts:95"
                      ]
     },
     {
@@ -1152,7 +1152,8 @@
         "result":  "test-gap",
         "method":  "manual-semantic",
         "evidence":  [
-                         "src:src/ai/action-resolution.ts:128"
+                         "src:src/ai/action-resolution.ts:158",
+                         "src:src/cards/ct-p09/B09054.ts:1"
                      ]
     },
     {

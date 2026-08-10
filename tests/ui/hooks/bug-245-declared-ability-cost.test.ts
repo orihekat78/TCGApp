@@ -15,7 +15,7 @@ import { canPayAtomically, canPayWithPreflight, pay } from '@/engine/cost/pay';
 import { canPay } from '@/engine/cost/evaluate';
 import { event } from '@/engine/event';
 import { _setResolutionLock } from '@/engine/event/registry';
-import { _drainPendingSetCardReplacementSide, _peekPendingSetCardReplacementSide, pushPendingSetCardReplacementSide } from '@/engine/effect/pending-state';
+import { _clearPendingSetCardReplacementSide, _drainPendingSetCardReplacementSide, _peekPendingSetCardReplacementSide, pushPendingSetCardReplacementSide, type PendingSetCardReplacementSide } from '@/engine/effect/pending-state';
 import { mutate } from '@/engine/mutate';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { produce } from '@/engine/produce';
@@ -55,6 +55,16 @@ function declaredMoves(state: GameState) {
   return enumerateMoves(state, 'self').filter((move) => move.kind === 'declaredAbility');
 }
 
+function replacementSentinel(uid: string, cardId: string): PendingSetCardReplacementSide {
+  return {
+    player: 'self',
+    fromUid: uid,
+    setCardInstanceId: `sentinel:${cardId}`,
+    source: { uid, cardId, abilityId: 'sentinel' },
+    candidates: [],
+  };
+}
+
 beforeEach(() => {
   (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
   _resetUidCounter();
@@ -77,6 +87,7 @@ beforeEach(() => {
     pendingDeckPlace: null,
   });
   _setResolutionLock(false, null);
+  _clearPendingSetCardReplacementSide();
   flow.action._resetActionContexts();
   registerCardDef({
     id: 'BLUE-PARTNER', no: 'BLUE-PARTNER', kind: 'partner', names: ['BLUE-PARTNER'], colors: ['青'],
@@ -217,7 +228,7 @@ describe('BUG-245: declared ability cost authorization', () => {
       mutate.char.setCard(draft, draft.players.self.scene[0]!.uid, 'B02052', true);
     });
     const uid = state.players.self.scene[0]!.uid;
-    const original = { player: 'self' as const, source: { uid, cardId: 'B01007' }, candidates: [] };
+    const original = replacementSentinel(uid, 'B01007');
     pushPendingSetCardReplacementSide(original);
     const cost: Cost = { kind: 'sceneToDeckBottom', n: 1, target: { kind: 'pick', query: { area: 'scene', side: 'self' }, n: { min: 1, max: 1 }, chooser: 'self' } };
 
@@ -444,10 +455,11 @@ describe('BUG-245: declared ability cost authorization', () => {
   it('preserves an already pending set-card replacement when preflight rejects another activation', () => {
     const state = stateWith(['B01007']);
     const uid = state.players.self.scene[0]!.uid;
-    pushPendingSetCardReplacementSide({ player: 'self', source: { uid, cardId: 'B01007' }, candidates: [] });
+    const pendingReplacement = replacementSentinel(uid, 'B01007');
+    pushPendingSetCardReplacementSide(pendingReplacement);
     useGameStateStore.setState({
       gameState: state,
-      pendingSetCardReplacement: { player: 'self', source: { uid, cardId: 'B01007' }, candidates: [] },
+      pendingSetCardReplacement: pendingReplacement,
     });
 
     expect(dispatchEngineAction({ type: 'declaredAbility', uid, abilId: 'a2' })).toEqual({ ok: false, reason: 'not-allowed' });
@@ -458,7 +470,7 @@ describe('BUG-245: declared ability cost authorization', () => {
   it('blocks a new public declaration while a resolution, pending prompt, or action context owns dispatch', () => {
     const state = stateWith(['B01007'], ['payment']);
     const uid = state.players.self.scene[0]!.uid;
-    const pending = { player: 'self' as const, source: { uid, cardId: 'B01007' }, candidates: [] };
+    const pending = replacementSentinel(uid, 'B01007');
     useGameStateStore.setState({ gameState: state, pendingSetCardReplacement: pending });
 
     expect(dispatchEngineAction({ type: 'declaredAbility', uid, abilId: 'a2' })).toEqual({ ok: false, reason: 'not-allowed' });
@@ -533,7 +545,7 @@ describe('BUG-245: declared ability cost authorization', () => {
     assertUnchanged(pending);
 
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
-    pushPendingSetCardReplacementSide({ player: 'self', source: { uid: selfUid, cardId: 'NO-COST-DECLARED' }, candidates: [] });
+    pushPendingSetCardReplacementSide(replacementSentinel(selfUid, 'NO-COST-DECLARED'));
     assertUnchanged(base);
     _drainPendingSetCardReplacementSide();
 

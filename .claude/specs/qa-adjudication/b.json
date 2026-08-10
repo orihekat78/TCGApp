@@ -543,8 +543,11 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04064.ts:51",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:357"
+        "src:src/cards/ct-p04/B04064.ts:61",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:378",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:394",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:395",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:399"
       ]
     },
     {
@@ -653,8 +656,12 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05088.ts:29",
-        "tests:tests/cards/B05088.test.ts:41"
+        "src:src/cards/ct-p05/B05088.ts:11",
+        "src:src/cards/ct-p05/B05088.ts:13",
+        "src:src/cards/ct-p05/B05088.ts:15",
+        "tests:tests/cards/B05088.test.ts:101",
+        "tests:tests/cards/B05088.test.ts:102",
+        "tests:tests/cards/B05088.test.ts:103"
       ]
     },
     {
@@ -664,8 +671,11 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05088.ts:29",
-        "tests:tests/cards/B05088.test.ts:41"
+        "src:src/cards/ct-p05/B05088.ts:3",
+        "src:src/cards/ct-p05/B05088.ts:5",
+        "tests:tests/cards/B05088.test.ts:76",
+        "tests:tests/cards/B05088.test.ts:78",
+        "tests:tests/cards/B05088.test.ts:81"
       ]
     },
     {
@@ -794,8 +804,12 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06023.ts:60",
-        "tests:tests/cards/night-wC2b/invoke-hirameki.test.ts:111"
+        "src:src/cards/ct-p06/B06023.ts:36",
+        "src:src/cards/ct-p06/B06023.ts:44",
+        "src:src/cards/ct-p06/B06023.ts:48",
+        "tests:tests/cards/night-wC2b/invoke-hirameki.test.ts:112",
+        "tests:tests/cards/night-wC2b/invoke-hirameki.test.ts:114",
+        "tests:tests/cards/night-wC2b/invoke-hirameki.test.ts:115"
       ]
     },
     {
@@ -849,8 +863,13 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06032.ts:65",
-        "tests:tests/cards/night-wC/hirameki-optional.test.ts:53"
+        "src:src/cards/ct-p06/B06032.ts:36",
+        "src:src/cards/ct-p06/B06032.ts:42",
+        "src:src/cards/ct-p06/B06032.ts:45",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:147",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:151",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:152",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:153"
       ]
     },
     {
@@ -915,8 +934,10 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06064.ts:24",
-        "tests:tests/cards/set-card-portfolio-probes.test.ts:47"
+        "src:src/cards/ct-p06/B06064.ts:20",
+        "tests:tests/cards/cluster11-enter-source.test.ts:143",
+        "tests:tests/cards/cluster11-enter-source.test.ts:144",
+        "tests:tests/cards/set-card-portfolio-probes.test.ts:54"
       ]
     },
     {
@@ -1033,8 +1054,11 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07033.ts:19",
-        "tests:tests/cards/set-card-portfolio-probes.test.ts:80"
+        "src:src/cards/ct-p07/B07033.ts:7",
+        "src:src/cards/ct-p07/B07033.ts:8",
+        "tests:tests/cards/set-card-portfolio-probes.test.ts:104",
+        "tests:tests/cards/set-card-portfolio-probes.test.ts:107",
+        "tests:tests/cards/set-card-portfolio-probes.test.ts:94"
       ]
     },
     {
@@ -1099,8 +1123,11 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07059.ts:67",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:103"
+        "src:src/cards/ct-p07/B07059.ts:48",
+        "src:src/cards/ct-p07/B07059.ts:50",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:202",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:204",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:205"
       ]
     },
     {
@@ -1110,8 +1137,10 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07059.ts:67",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:103"
+        "src:src/cards/ct-p07/B07059.ts:61",
+        "src:src/cards/ct-p07/B07059.ts:62",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:303",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:304"
       ]
     },
     {
@@ -1121,8 +1150,16 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07060.ts:58",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:297"
+        "src:src/cards/ct-p07/B07060.ts:39",
+        "src:src/cards/ct-p07/B07060.ts:41",
+        "tests:tests/cards/bug-135-sequence-middle-skip.test.ts:106",
+        "tests:tests/cards/bug-135-sequence-middle-skip.test.ts:107",
+        "tests:tests/cards/bug-135-sequence-middle-skip.test.ts:110",
+        "tests:tests/cards/bug-135-sequence-middle-skip.test.ts:111",
+        "tests:tests/cards/bug-135-sequence-middle-skip.test.ts:98",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:385",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:386",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:494"
       ]
     },
     {
@@ -1132,8 +1169,10 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07060.ts:58",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:297"
+        "src:src/cards/ct-p07/B07060.ts:41",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:156",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:157",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:494"
       ]
     },
     {
@@ -1218,8 +1257,8 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07096.ts:56",
-        "tests:tests/cards/engine-mega-w4.test.ts:595"
+        "src:src/cards/ct-p07/B07096.ts:21",
+        "tests:tests/cards/engine-mega-w4.test.ts:705"
       ]
     },
     {
@@ -1251,8 +1290,8 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08006.ts:54",
-        "tests:tests/cards/engine-mega-w4.test.ts:844"
+        "src:src/cards/ct-p08/B08006.ts:27",
+        "tests:tests/cards/engine-mega-w4.test.ts:987"
       ]
     },
     {
@@ -1262,8 +1301,9 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08006.ts:54",
-        "tests:tests/cards/engine-mega-w4.test.ts:844"
+        "src:src/cards/ct-p08/B08006.ts:49",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:231",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:246"
       ]
     },
     {
@@ -1499,8 +1539,11 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09070.ts:96",
-        "tests:tests/cards/engine-mega-w6.test.ts:497"
+        "src:src/cards/ct-p09/B09070.ts:70",
+        "src:src/cards/ct-p09/B09070.ts:76",
+        "tests:tests/cards/B09070.public-flow.test.ts:56",
+        "tests:tests/cards/B09070.public-flow.test.ts:58",
+        "tests:tests/cards/B09070.public-flow.test.ts:59"
       ]
     },
     {
@@ -2112,8 +2155,12 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR196.ts:6",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:461"
+        "src:src/cards/pr-01/PR195.ts:39",
+        "src:src/cards/pr-01/PR195.ts:44",
+        "src:src/cards/pr-01/PR196.ts:7",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:410",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:411",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:484"
       ]
     },
     {
@@ -2123,8 +2170,12 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR196.ts:6",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:461"
+        "src:src/cards/pr-01/PR195.ts:39",
+        "src:src/cards/pr-01/PR195.ts:44",
+        "src:src/cards/pr-01/PR196.ts:7",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:436",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:437",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:484"
       ]
     },
     {

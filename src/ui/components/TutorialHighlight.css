@@ -1,7 +1,7 @@
 /* TutorialHighlight.css — Round 3c-A
  * 盤面 target 要素を border + outer glow pulse で囲み、矢印 (▼/▲/◀/▶) を方向に配置。
  * 視覚規約: .claude/research/tutorial/03-visual-conventions.md (矢印・吹き出し・ハイライト)
- * 踏襲パターン: OppTurnOverlay.css `@keyframes opp-turn-pulse` (box-shadow glow infinite)
+ * 操作対象の位置を示すチュートリアル専用ハイライト。
  */
 
 .tutorial-highlight {

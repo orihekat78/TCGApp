@@ -26,9 +26,13 @@ import { produce } from '@/engine/produce';
 import { def as readDef, register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { runAllUntilEmpty } from '@/engine/resolve';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { startCausalSession } from '@/engine/log/causal';
+import { startActionCausalTrace } from '@/engine/flow/action/causal';
+import { _markPendingHiramekiGainDeferred } from '@/engine/listeners/hirameki';
 import type { ActionContext, CardDef, EffectCtx, GameState } from '@/engine/types';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
+import { resetPresentationQueue } from '@/ui/presentation/coordinator';
 import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
 
 type Player = 'self' | 'opp';
@@ -49,11 +53,11 @@ function caseCard(id: string, traits: string[]): CardDef {
 }
 
 const DETECTIVE = character('DETECTIVE', ['探偵']);
-const NON_DETECTIVE = character('NON_DETECTIVE');
+const NON_DETECTIVE = character('NON-DETECTIVE');
 const DEFENDER = character('DEFENDER');
 const VICTIM = character('VICTIM');
-const CASE_YAIBA = caseCard('CASE_YAIBA', ['YAIBA']);
-const CASE_PLAIN = caseCard('CASE_PLAIN', []);
+const CASE_YAIBA = caseCard('CASE-YAIBA', ['YAIBA']);
+const CASE_PLAIN = caseCard('CASE-PLAIN', []);
 
 beforeEach(() => {
   event._resetRegistry();
@@ -95,7 +99,7 @@ function contactState(actorCardId: string, turnPlayer: Player): {
     attackerUid = turnPlayer === 'self' ? selfChar.uid : oppChar.uid;
     defenderUid = turnPlayer === 'self' ? oppChar.uid : selfChar.uid;
     draft.players.self.hand = ['B05039'];
-    draft.players.self.deck = ['NON_DETECTIVE'];
+    draft.players.self.deck = ['NON-DETECTIVE'];
   });
   const action = {
     id: 'ax', byUid: attackerUid, byPlayer: turnPlayer,
@@ -113,18 +117,18 @@ describe('B05039 cut-in', () => {
       runAllUntilEmpty(draft);
     });
     expect(after.players.self.scene.find(c => c.uid === selfContactUid)!.turnEffects.apMod_contact).toBe(1000);
-    expect(after.players.self.hand).toEqual(['NON_DETECTIVE']);
+    expect(after.players.self.hand).toEqual(['NON-DETECTIVE']);
   });
 
   it('自分ターン＋非探偵: AP+1000のみでドローしない', () => {
-    const { state, action, selfContactUid } = contactState('NON_DETECTIVE', 'self');
+    const { state, action, selfContactUid } = contactState('NON-DETECTIVE', 'self');
     const after = produce(state, draft => {
       cutIn(draft, action, 'self', 'B05039');
       runAllUntilEmpty(draft);
     });
     expect(after.players.self.scene.find(c => c.uid === selfContactUid)!.turnEffects.apMod_contact).toBe(1000);
     expect(after.players.self.hand).toEqual([]);
-    expect(after.players.self.deck).toEqual(['NON_DETECTIVE']);
+    expect(after.players.self.deck).toEqual(['NON-DETECTIVE']);
   });
 
   it('相手ターンでも使用は可能だが、AP上昇もドローもない', () => {
@@ -136,11 +140,11 @@ describe('B05039 cut-in', () => {
     expect(after.players.self.hand).toEqual([]);
     expect(after.players.self.remove).toContain('B05039');
     expect(after.players.self.scene.find(c => c.uid === selfContactUid)!.turnEffects.apMod_contact).toBeUndefined();
-    expect(after.players.self.deck).toEqual(['NON_DETECTIVE']);
+    expect(after.players.self.deck).toEqual(['NON-DETECTIVE']);
   });
 });
 
-function hiramekiBoard(caseId = 'CASE_YAIBA', status: '事件編' | '解決編' = '解決編'): {
+function hiramekiBoard(caseId = 'CASE-YAIBA', status: '事件編' | '解決編' = '解決編'): {
   state: GameState;
   attackerUid: string;
   victimUid: string;
@@ -149,14 +153,16 @@ function hiramekiBoard(caseId = 'CASE_YAIBA', status: '事件編' | '解決編' 
   let attackerUid = '';
   let victimUid = '';
   state = produce(state, draft => {
+    startCausalSession(draft, 'bug-140-b06035');
     draft.turn = { number: 4, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
     draft.players.self.case.cardId = caseId;
     draft.players.self.case.status = status;
     draft.players.self.evidence = [{ cardId: 'B06035', faceUp: false, origin: { turn: 1, via: 'reasoning' } }];
-    draft.players.self.hand = ['NON_DETECTIVE'];
+    draft.players.self.hand = ['NON-DETECTIVE'];
     attackerUid = mutate.scene.enter(draft, 'opp', 'DETECTIVE', { active: true }).uid;
     victimUid = mutate.scene.enter(draft, 'opp', 'VICTIM', { active: true }).uid;
   });
+  resetPresentationQueue('bug-140-b06035');
   return { state, attackerUid, victimUid };
 }
 
@@ -165,8 +171,14 @@ function removeEvidenceByAction(state: GameState, attackerUid: string): GameStat
     const action = {
       id: 'ax-case', byUid: attackerUid, byPlayer: 'opp',
       target: { kind: 'case', player: 'self' }, phase: 'judge', startedAt: { turn: 4, nano: 0 },
+      judgeResolved: true,
+      deferredCaseEvidenceGain: true,
     } as ActionContext;
+    draft.actionContexts ??= {};
+    draft.actionContexts[action.id] = action;
+    startActionCausalTrace(draft, action);
     removeOpponentEvidenceTop(draft, action);
+    _markPendingHiramekiGainDeferred();
   });
 }
 
@@ -186,15 +198,15 @@ describe('B06035 hirameki', () => {
     expect(useGameStateStore.getState().pendingEffectOptional).not.toBeNull();
     expect(dispatchCurrentDecision({ type: 'optionalResolve', run: true }).ok).toBe(true);
     let pick = useGameStateStore.getState().pendingEffectPick!;
-    expect(pick.candidates.map(c => c.cardId)).toEqual(['NON_DETECTIVE']);
+    expect(pick.candidates.map(c => c.cardId)).toEqual(['NON-DETECTIVE']);
     expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pick.candidates[0]!.uid }).ok).toBe(true);
     pick = useGameStateStore.getState().pendingEffectPick!;
     expect(pick.nMin).toBe(0);
     expect(pick.candidates.map(c => c.uid)).toContain(victimUid);
     expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: victimUid }).ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
-    expect(after.players.self.hand).not.toContain('NON_DETECTIVE');
-    expect(after.players.self.remove).toContain('NON_DETECTIVE');
+    expect(after.players.self.hand).not.toContain('NON-DETECTIVE');
+    expect(after.players.self.remove).toContain('NON-DETECTIVE');
     expect(after.players.opp.scene.some(c => c.uid === victimUid)).toBe(false);
     expect(after.players.opp.remove).toContain('VICTIM');
   });
@@ -209,7 +221,7 @@ describe('B06035 hirameki', () => {
     expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null }).ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene).toHaveLength(2);
-    expect(after.players.self.remove).toContain('NON_DETECTIVE');
+    expect(after.players.self.remove).toContain('NON-DETECTIVE');
   });
 
   it('human: 手札リムーブ自体を辞退でき、後続pickは出ない', () => {
@@ -218,7 +230,7 @@ describe('B06035 hirameki', () => {
     expect(dispatchCurrentDecision({ type: 'optionalResolve', run: false }).ok).toBe(true);
     const after = useGameStateStore.getState();
     expect(after.pendingEffectPick).toBeNull();
-    expect(after.gameState!.players.self.hand).toEqual(['NON_DETECTIVE']);
+    expect(after.gameState!.players.self.hand).toEqual(['NON-DETECTIVE']);
     expect(after.gameState!.players.opp.scene).toHaveLength(2);
   });
 
@@ -247,14 +259,14 @@ describe('B06035 hirameki', () => {
       _drainAllEffectPicksForTest(draft, policy);
     });
     expect(after.players.self.hand).toEqual([]);
-    expect(after.players.self.remove).toContain('NON_DETECTIVE');
+    expect(after.players.self.remove).toContain('NON-DETECTIVE');
     expect(after.players.opp.scene).toHaveLength(1);
     expect(after.players.opp.remove).toHaveLength(1);
   });
 
   it.each([
-    ['事件編は不成立', 'CASE_YAIBA', '事件編'],
-    ['YAIBA以外は不成立', 'CASE_PLAIN', '解決編'],
+    ['事件編は不成立', 'CASE-YAIBA', '事件編'],
+    ['YAIBA以外は不成立', 'CASE-PLAIN', '解決編'],
   ] as const)('%s', (_label, caseId, status) => {
     const { state, attackerUid } = hiramekiBoard(caseId, status);
     removeEvidenceByAction(state, attackerUid);

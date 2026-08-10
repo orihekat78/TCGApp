@@ -9,8 +9,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 ## サマリ
 
 - **対象ルート**: `.`
-- **ディレクトリ数**: 265
-- **ファイル数**: 5589
+- **ディレクトリ数**: 281
+- **ファイル数**: 5759
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -74,6 +74,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
         - `flow.md` — 🤖 Engine ハブ: engine.flow
         - `invariant.md` — 🤖 Engine ハブ: engine.invariant
         - `listeners.md` — 🤖 Engine ハブ: engine.listeners
+        - `log.md` — 🤖 Engine ハブ: engine.log
         - `mutate.md` — 🤖 Engine ハブ: engine.mutate
         - `read.md` — 🤖 Engine ハブ: engine.read
         - `resolve.md` — 🤖 Engine ハブ: engine.resolve
@@ -455,6 +456,11 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-274.md` — 複数パートナー能力の選択が盤面で停止する
     - `BUG-275.md` — favicon 未定義による 404
     - `BUG-276.md` — 5174二重待受による検証先の分裂
+    - `BUG-277.md` — live resolver関数によるReplay記録失敗
+    - `BUG-278.md` — 自律進行と人間decisionの所有権不一致
+    - `BUG-279.md` — Contact driverの再開dependency欠落
+    - `BUG-280.md` — 手札使用とswitch対象選択のTOCTOU
+    - `BUG-281.md` — 観戦時の非公開デッキ公開境界
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1129,6 +1135,57 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `02-step-by-step-flow.md` — 02. 公式の説明順（レッスン内部ステップ）
       - `03-visual-conventions.md` — 03. 図解・アニメ・字幕の慣例（Webアプリ UI設計指針）
     - **`ui/`** — UI 業界慣行調査
+      - **`2026-08-04-completion/`**
+        - `formative-study-package.md` — Eight-participant formative study package — planned, not completed
+        - `graph-engineering.md` — Applied property/event graph
+        - `route-state-matrix.md` — Route state matrix
+        - `visual-foundation.md` — Visual foundation: observed implementation
+      - **`evidence/`**
+        - **`2026-08-04-deck-slot-detail/`**
+          - **`visual-qa-20260804/`**
+            - `console-errors.json`
+          - **`visual-qa-20260804-animation-rerun/`**
+            - `desktop-case.json`
+            - `desktop-partner.json`
+            - `mobile-case.json`
+            - `mobile-partner.json`
+            - `summary.json`
+          - **`visual-qa-20260804-rerun/`**
+            - `debug.json`
+            - `desktop-background-header-attempt.json`
+            - `desktop-background-pool-attempt-rerun.json`
+            - `desktop-case-result.json`
+            - `desktop-partner-result-rerun.json`
+            - `landscape-case-result.json`
+            - `landscape-partner-result.json`
+      - **`mockups/`**
+        - **`2026-08-03-ui-refresh/`**
+          - `README.md` — UI refresh reviewed mock set
+          - `history-reviewed.html`
+          - `match-mobile-reviewed.html`
+          - `replay-reviewed.html`
+          - `result-reviewed.html`
+          - `settings-reviewed.html`
+          - `tutorial-reviewed.html`
+        - **`2026-08-04-fresh-review/`**
+          - `provenance.json`
+        - **`2026-08-04-review-revision/`**
+          - `capture-replay-revised-v3.mjs`
+          - `history-deck-entry-v3.html`
+          - `history-stylish.html`
+          - `match-mobile-v3.html`
+          - `match-mobile-v4.html`
+          - `match-mobile-v5.html`
+          - `match-mobile-v6.html`
+          - `match-revised.html`
+          - `provenance-v2.json`
+          - `provenance.json`
+          - `replay-revised-v3.html`
+          - `replay-revised.html`
+          - `result-revised.html`
+      - **`runtime-captures/`**
+        - **`2026-08-04-wave1/`**
+          - `README.md` — Wave 1 runtime visual acceptance
       - `02-industry-conventions.md` — 02. デジタルTCG UI慣例サーベイ
       - `playsheet-layout.md` — プレイシートUIレイアウト参照
     - **`ux/`** — UX 設計・操作リズム・確認ポイント
@@ -1390,6 +1447,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-28-you-vs-cpu-human-validation-row-055-attempt-2.md` — YOU-vs-CPU row 055 attempt 2
     - `2026-07-28-you-vs-cpu-human-validation-row-055-attempt-3.md` — YOU-vs-CPU row 055 attempt 3
     - `2026-07-29-engine-adversarial.md` — Session memory
+    - `2026-08-09-ui-quality-causal-public-match.md` — UI品質・因果表示プログラム（2026-08-02〜09）
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1993,9 +2051,14 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-07-26-rule-manual-ver2-5.md` — Rule Manual Ver.2.5 Implementation Plan
       - `2026-08-02-game-start-premium-treatment.md` — Game Start Premium Treatment Implementation Plan
       - `2026-08-02-home-screen-only.md` — HOME Screen Only Implementation Plan
+      - `2026-08-03-cards-landscape-five-column.md` — CARDS Landscape Compact-Grid Implementation Plan
+      - `2026-08-03-cards-scrollbar-and-print-selector.md` — CARDS Scrollbar and Print Selector Implementation Plan
+      - `2026-08-03-deck-editor-refresh.md` — デッキ編集画面刷新 実装計画
       - `2026-08-03-home-deck-selector.md` — HOME Deck Selector Implementation Plan
       - `2026-08-03-home-landscape-20-80.md` — HOME Landscape 20/80 Implementation Plan
+      - `2026-08-03-setup-control-row-polish.md` — SETUP Control Row Polish Implementation Plan
       - `2026-08-03-setup-screen-refresh.md` — SETUP Screen Refresh Plan
+      - `2026-08-04-remaining-ui-mock-and-rollout.md` — Remaining UI Mock and Rollout Plan
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
@@ -2006,19 +2069,27 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-06-03-triggered-limit-and-d11016-guard-design.md` — 設計: triggered ability の limit enforcement + D11016 a1 ガード自己判定 (2026-06-03)
       - `2026-07-13-deck-builder-design.md` — Deck builder and launcher design
       - `2026-08-02-game-start-premium-treatment-design.md` — ゲーム開始ボタン高級感調整 Design
+      - `2026-08-03-cards-landscape-five-column-design.md` — CARDS Landscape Compact-Grid Design
+      - `2026-08-03-cards-scrollbar-design.md` — CARDS scrollbar design
+      - `2026-08-03-deck-editor-refresh-design.md` — デッキ編集画面刷新 設計仕様
       - `2026-08-03-home-deck-selector-design.md` — HOME使用デッキ選択モーダル設計
       - `2026-08-03-setup-screen-refresh-design.md` — SETUP Screen Refresh Design
+      - `2026-08-04-wave3-causal-presentation-contract.md` — Wave 3 Causal Presentation Contract
+      - `2026-08-09-causal-presentation-migration-table.md` — Causal Presentation Migration Table
 - **`meta-app/`**
   - **`src/`**
     - **`data/`**
       - `bug274ValidationDeck.ts` — Public, deterministic regression fixture for BUG-274.
       - `cardFilter.ts` — spec: .claude/specs/meta-ui/ (Phase 18: Master Duel 風カード絞り込みの共有モジュール)
       - `cardPool.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md + 11-cards-rebuild.md
+      - `caseDifficulties.generated.ts` — Generated by scripts/cards/generate-case-difficulties.cjs. Do not edit manually.
+      - `matchDeckSnapshot.ts`
       - `sampleDeck.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md
       - `types.ts` — spec: .claude/specs/meta-ui/02-design-system.md + 05-engine-stub.md
     - **`hooks/`**
       - `useOfficialNews.ts` — Aborted requests are intentionally ignored during route changes.
     - **`router/`**
+      - `navigationBlocker.ts`
       - `routes.ts` — spec: .claude/specs/meta-ui/03-routing.md
       - `useGlobalShortcuts.ts` — spec: .claude/specs/meta-ui/03-routing.md
       - `useHashRoute.ts` — spec: .claude/specs/meta-ui/03-routing.md
@@ -2028,22 +2099,33 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
         - `TutorialBoardSnapshot.tsx` — spec: .claude/specs/meta-ui/16-tutorial-real-board.md
         - `TutorialLessonViewer.tsx` — spec: .claude/specs/meta-ui/16-tutorial-real-board.md
         - `boardHints.ts` — spec: .claude/specs/meta-ui/16-tutorial-real-board.md
+        - `canonicalVisuals.tsx`
+        - `curriculum.ts`
         - `illustrations.tsx` — spec: .claude/specs/meta-ui/14-tutorial-complete.md + 15-tutorial-lesson-viewer.…
         - `types.ts` — spec: .claude/specs/meta-ui/15-tutorial-lesson-viewer.md
       - `CardsScreen.tsx` — spec: .claude/specs/meta-ui/07-screens-library.md + 11-cards-rebuild.md
       - `DeckEditor.tsx` — spec: .claude/specs/meta-ui/07-screens-library.md + 12-screens-rebuild.…
-      - `HistoryScreen.tsx` — spec: .claude/specs/meta-ui/08-screens-reference.md + 12-screens-rebuild.md
+      - `HistoryDeckDialog.tsx`
+      - `HistoryScreen.css`
+      - `HistoryScreen.tsx`
       - `HomeDeckSelectorDialog.tsx`
       - `HomeScreen.tsx`
       - `PlaceholderScreen.tsx` — spec: .claude/specs/meta-ui/03-routing.md
       - `RealMatchView.tsx` — spec: .claude/specs/meta-ui/10-integration-with-src.md
-      - `ReplayScreen.tsx` — spec: .claude/specs/meta-ui/08-screens-reference.md + 12-screens-rebuild.md
-      - `ResultScreen.tsx` — spec: .claude/specs/meta-ui/06-screens-play-flow.md + 10-integration-with-src.…
-      - `SettingsScreen.tsx` — spec: .claude/specs/meta-ui/08-screens-reference.md + 12-screens-rebuild.md
-      - `SetupScreen.tsx`
+      - `ReplayScreen.css`
+      - `ReplayScreen.tsx`
+      - `ResultScreen.css`
+      - `ResultScreen.tsx`
+      - `SettingsScreen.css`
+      - `SettingsScreen.tsx`
+      - `SetupScreen.tsx` — `spectatorAi` is an observe-only preference. Do not leak the previous
+      - `TutorialScreen.css`
       - `TutorialScreen.tsx` — spec: .claude/specs/meta-ui/14-tutorial-complete.md + 15-tutorial-lesson-viewer.…
+      - `Wave2Motion.css`
     - **`services/`**
+      - `historyReplayRepository.ts` — Defence in depth: callers may hand this repository a valid V3 artifact
       - `officialNews.ts` — Storage can be unavailable in private browsing; network data still renders.
+      - `replayReturnFocus.ts` — Focus restoration is progressive enhancement; playback remains available.
     - **`shared/`**
       - `AppTopBar.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 03-routing.md
       - `Button.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
@@ -2065,7 +2147,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `decksStore.ts` — spec: .claude/specs/meta-ui/04-state-stores.md
       - `filtersStore.ts` — spec: .claude/specs/meta-ui/ (Phase 18: フィルタ sticky 化)
       - `historyStore.ts` — spec: .claude/specs/meta-ui/04-state-stores.md
-      - `metaStore.ts` — spec: .claude/specs/meta-ui/04-state-stores.md
+      - `metaStore.ts` — metaStore — UI settings persisted under the existing v1 storage key.
     - **`stubs/`**
       - `engineStub.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md
     - **`styles/`**
@@ -2083,17 +2165,25 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`e2e/`**
       - `bug-275-favicon.spec.ts`
       - `bug274-public-fixture.spec.ts`
+      - `cards-deck-wave1.spec.ts`
       - `cards.spec.ts` — spec: .claude/specs/meta-ui/11-cards-rebuild.md
+      - `control-density.spec.ts`
       - `deck.spec.ts` — spec: .claude/specs/meta-ui/ (Phase 18: DeckEditor リデザイン + 同 ID 3 枚上限の UI 可視化)
       - `effect-decision-hosts.spec.ts`
       - `engine-stub.spec.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md + 10-integration-with-src.md
       - `filter-decoy.spec.ts` — spec: card-addition-checklist.md §7 「画面処理 = テキスト文言」の deck-builder 適用。
       - `golden-path.spec.ts` — spec: .claude/specs/meta-ui/09-phasing-and-verification.…
-      - `home.spec.ts`
+      - `history.spec.ts`
+      - `home.spec.ts` — Shared landscape header keeps the approved 54px frame across HOME,
+      - `result-history-replay.public.spec.ts` — The terminal route may unmount the button during Playwright's actionability
+      - `settings-refresh.spec.ts`
       - `setup-p2-custom-binding.spec.ts` — Keep the shipped legal D08 recipe shape, but replace one unique print so
       - `setup-refresh.spec.ts`
       - `smoke.spec.ts` — spec: .claude/specs/meta-ui/09-phasing-and-verification.md
-      - `tutorial.spec.ts` — spec: .claude/specs/meta-ui/14-tutorial-complete.md + 15-tutorial-lesson-viewer.…
+      - `tutorial-responsive.spec.ts`
+      - `tutorial.spec.ts`
+      - `visual-gates.spec.ts` — Cross-route visual safety gate. This deliberately uses only the public hash
+      - `wave2-responsive.spec.ts`
   - `index.html`
   - `playwright.config.ts` — spec: .claude/specs/meta-ui/09-phasing-and-verification.md
   - `tsconfig.json`
@@ -2125,6 +2215,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `cards-data-status.cjs`
     - `check-official-sync.cjs`
     - `fetch-official.cjs`
+    - `generate-case-difficulties.cjs`
     - `official-api.cjs`
     - `qa-normalize.cjs`
     - `write-qa-hash-snapshot.cjs`
@@ -2169,6 +2260,19 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `aggregate.ts` — scripts/smoke/aggregate — Phase 9-A smoke aggregation (pure)
     - `format-md.ts` — scripts/smoke/format-md — Phase 9-A smoke Markdown formatter (pure)
     - `run-1000.ts` — scripts/smoke/run-1000 — Phase 9-A 1000-game AI vs AI smoke runner
+  - **`ui/`**
+    - `capture-history-deck-entry-v3.mjs`
+    - `capture-history-deck-viewer.ts` — The isolated Vite process is still starting.
+    - `capture-history-review-revision.mjs`
+    - `capture-match-mobile-v3.mjs`
+    - `capture-match-mobile-v4.mjs`
+    - `capture-match-mobile-v5.mjs`
+    - `capture-match-mobile-v6.mjs`
+    - `capture-remaining-ui-mocks.mjs`
+    - `capture-replay-match-review-revision.mjs`
+    - `capture-result-review-revision.mjs`
+    - `capture-review-revision-v2.mjs`
+    - `verify-review-revision.mjs`
   - `bug-trend.ts` — Phase 7-A (LESSONS-LEARNED 教訓 / AUDIT-2026-05-22 派生):
   - `build-exemplar-set.cjs`
   - `build-tcg-runtime-packet.mjs`
@@ -2223,10 +2327,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `random.ts` — ai.policies.random — 候補からランダムに 1 手を選ぶ AIPolicy 実装 (Phase 6 Group B Task 6.3)
       - `state-evaluator.ts` — ai.policies.state-evaluator — Phase 9-F.2 静的評価関数
     - **`replay/`**
+      - `decode.ts` — Validate the complete untrusted object, including unknown fields, before
       - `index.ts` — ai.replay — Phase 9-G.1 barrel
       - `nondeterminism.ts`
       - `player.ts` — ai.replay.player — Phase 9-G.1 (replay playback)
       - `recorder.ts` — ai.replay.recorder — Phase 9-G.1 (engine-side replay recording)
+      - `state-frame.ts`
     - `.gitkeep`
     - `ability-ctx.ts` — ai.ability-ctx — Phase 8.8d: EffectCtx 構築ヘルパ
     - `action-resolution.ts` — ai.action-resolution — Phase 8.7c: アクション宣言の共通解決ヘルパ
@@ -4502,10 +4608,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `index.ts` — engine.effect namespace barrel
       - `invoke-hirameki.ts` — engine.effect.invoke-hirameki — 別カードの【ヒラメキ】効果を明示的に発動させる (証拠リムーブ契機でない)
       - `invoke-leave-to-remove.ts` — engine.effect.invoke-leave-to-remove — リムーブエリア在中カードの【現場リムーブ時】明示発動
+      - `pending-runtime-schema.ts`
       - `pending-state.ts` — engine.effect.pending-state — pick/choice/…
+      - `pick-selection.ts`
       - `resolve-picks.ts` — engine.effect.resolveEffectPicks — Phase 7-2 (BUG-035 fix) + Phase 7-3 (AI polic…
       - `resolver.ts` — engine.effect.run — Effect Descriptor 解釈器 (resolver)
-      - `runtime-state.ts`
+      - `runtime-state.ts` — Public decision admission is fail-closed. Dedicated hydrate/import paths
       - `validate-spec-files.ts` — engine.effect.validate-spec-files — Node 専用 ruleRefs 実在チェック
       - `validate.ts` — engine.effect.validate / engine.cards.validate — static lint pass (pure)
     - **`event/`**
@@ -4514,7 +4622,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `registry.ts` — engine.event — Hook Registry 実装
     - **`flow/`**
       - **`action/`**
+        - `causal.ts`
         - `context-registry.ts`
+        - `legacy-replay-compat.ts`
         - `order.ts` — engine.flow.action.order — computeOrder (rules/08)
         - `state-machine.ts` — engine.flow.action — アクション状態機械 (Phase 4 Group B Task 4.4)
         - `target-expander.ts` — engine.flow.action target expander (G29) + mustBeTargeted (G28)
@@ -4551,6 +4661,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `misread.ts`
       - `reserved-effects.ts` — reserved-effects listener — 離場後予約効果の発火 (mega-wave W6 step8, 2026-07-04, row75)
       - `triggered.ts` — Round 4b: triggered ability の汎用 listener
+    - **`log/`**
+      - `causal.ts`
+      - `effect-causal.ts`
     - **`mutate/`**
       - `.gitkeep`
       - `case.ts` — engine.mutate.case — 事件カード操作プリミティブ
@@ -4673,8 +4786,6 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `MisreadPickerModal.tsx` — Phase 8 完全クローズ Commit 3b: MisreadPickerModal (scaffold)
       - `MulliganModal.css`
       - `MulliganModal.tsx` — Round 2 — マリガン UI モーダル
-      - `OppTurnOverlay.css`
-      - `OppTurnOverlay.tsx` — Phase 8.10a + Round 4l (BUG-010): opp ターン視覚化オーバーレイ
       - `PartnerArea.css`
       - `PartnerArea.tsx` — Phase 7 Task 7.5: PartnerArea
       - `Playmat.css`
@@ -4698,8 +4809,6 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `SetCardReplacementModalHost.tsx`
       - `SouzaReorderModal.css`
       - `SouzaReorderModal.tsx` — Phase 8 完全クローズ Commit 4: SouzaReorderModal (scaffold)
-      - `SpectatorHUD.css`
-      - `SpectatorHUD.tsx` — user_request 20260521_01 #12: 観戦モード speed slider HUD
       - `TopBar.css`
       - `TopBar.tsx` — Phase 7 Task 7.12: TopBar
       - `TutorialHighlight.css`
@@ -4721,6 +4830,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
         - `flows.ts` — useActionsPanelFlow/flows.ts — Phase 3d 分割 (run*Flow オーケストレーション, body 無改変移送, 202…
       - **`useEngineDispatch/`**
         - `can-check.ts` — useEngineDispatch/can-check.ts — Phase 3d 分割 (isAllowed 前段ガード, body 無改変移送, 2026-…
+        - `set-card-boundary.ts`
         - `types.ts` — useEngineDispatch/types.ts — Phase 3d 分割 (EngineAction / ContactChoice /…
       - `.gitkeep`
       - `movePresentationDelay.ts`
@@ -4744,10 +4854,11 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useFile.ts` — Phase 7 Task 7.8: FileArea selector hook
       - `useFlipAnimation.ts` — Task5: FLIP 移動アニメ (polish)。
       - `useHandCostPicker.ts`
-      - `useHiramekiDemoDriver.ts` — 2026-05-26 ヒラメキ効果検証 demo の完了検知 driver
+      - `useHiramekiDemoDriver.ts`
       - `useHiramekiFlowDriver.ts` — Phase 8 完全クローズ Commit 3a: Hirameki driver
       - `useLogEntries.ts` — Phase 7 Task 7.13: LogPanel selector hook
       - `useMisreadFlowDriver.ts` — Phase 5 advance UI — Misread driver
+      - `useModalFocusTrap.ts` — A nested modal (for example card detail) owns an already-handled key.
       - `useMulligan.ts` — Round 2 (Phase 5 advance) — マリガン UI Promise-based prompt
       - `useNextHintPicker.ts` — 2026-05-28: ネクストヒント step2 (カード使用) picker 用 store + Promise hook
       - `useOppTurnDriver.ts` — Phase 8.7b Task: opp ターン自動進行ドライバ
@@ -4762,19 +4873,35 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useStageScale.ts` — Cleanup Phase #6 (user_request 20260521_01 関連): Playmat のレスポンシブ対応
       - `useTargetPicker.ts` — Phase 8 Task 8.2: クリック+確認 UX (target picker)
       - `useTopBar.ts` — Phase 7 Task 7.12: TopBar selector hook
+    - **`presentation/`**
+      - `PresentationCoordinatorHost.css`
+      - `PresentationCoordinatorHost.tsx`
+      - `PresentationQueue.ts`
+      - `coordinator.ts`
+      - `normalizedLog.ts`
+      - `store.ts`
+      - `usePresentationQueue.ts`
     - **`services/`**
       - `actionLabel.ts` — Phase 8.10b: LogEntry の action 文字列 を人間可読な日本語に変換
       - `cardImage.ts` — Phase 7 Task 7.15: カード画像実行時 fetch + 二段キャッシュ + フォールバック
       - `cardResolvers.ts` — Phase 7 demo wiring: cardId → 表示用メタ解決
       - `deckBuilder.ts` — Task 8.4b: MVP DeckPair builder
+      - `effectPickerVisibility.ts`
       - `gameStarter.ts` — Task 8.4b: 正規 turn-1 GameState 構築
       - `handUseReason.ts` — Round 2 — 手札カードが「使えない理由」を人間可読文字列で返すヘルパ
+      - `hiramekiDemoSession.ts`
+      - `humanDecisionOwner.ts`
+      - `liveReplayRecorder.ts` — Freeze the committed board/log state without carrying executable live
       - `matchSession.ts` — Direct setState also upgrades a long-running Vite/HMR store instance that
+      - `replayOwnership.ts`
+      - `replayStateBoundary.ts`
+      - `replayViewerProjection.ts`
       - `scenePick.ts` — scenePick — scene-char effect pick を「現場カード直接クリック」(Direct Manipulation) で
       - `tutorialSteps.ts` — Phase 9a-1 / 9a-2 / 9b / 9c: チュートリアル L0-L13 (MVP 全カバー)
       - `uidNames.ts` — UID → 表示名解決ユーティリティ (Round 2 で新設)
     - **`state/`**
       - `.gitkeep`
+      - `autonomousDecisionGate.ts`
       - `interactionLock.ts` — src/ui/state/interactionLock — 効果解決中の入力ロック判定
       - `store.ts` — src/ui/state/store.ts — Phase 7 Task 7.1
       - `surface-pending.ts`
@@ -4799,8 +4926,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `random.test.ts` — tests/ai/policies/random.test.ts — Phase 6 Group B Task 6.3 tests
       - `state-evaluator.test.ts` — Phase 9-F.2 (Cleanup 6-A) — defaultStateEvaluator tests
     - **`replay/`**
+      - `decode.test.ts`
       - `recorder.test.ts` — ai.replay — Phase 9-G.1 unit tests (recorder + player)
+      - `state-frame.test.ts`
     - `.gitkeep`
+    - `action-resolution-queue-drain.test.ts`
+    - `action-resolution.hirameki.test.ts`
     - `bug-246-on-hand-declared-ability.test.ts` — Existing callers may still identify a hand source by cardId.
     - `match.test.ts` — tests/ai/match.test.ts — Phase 6 Group C Task 6.5 tests
     - `move-enumerator.pa-mr.test.ts` — M3 PA batch (2026-07-10): AI 側 declaredAbility 列挙に partnerAreaMR source を追加
@@ -5115,7 +5246,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B03023.test.ts` — Official Q&A: B03023 脇田兼則
       - `B04030.test.ts` — The opposing contact character has left, but Kaito remains in the scene.
       - `B04059.test.ts` — B04059 水無怜奈 — official Q&A: scene-only additional card name.
+      - `B04074.test.ts`
     - **`pr-01/`**
+      - `PR100.test.ts`
       - `PR158.test.ts` — tests/cards/pr-01/PR158 犯人 (character, cutin remove-name scaling AP)
       - `PR200-PR206.test.ts` — PR200/PR206 大滝悟郎 — scene-wide face-down set-card count unlock
     - **`s1-defer/`**
@@ -5181,6 +5314,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`wave-stale-defer-0628/`**
       - `B03088.test.ts` — gate5 RUNTIME behavior — B03088 松田陣平 (character 黄/警察|警視庁, Lv5 AP5000 LP1)
     - `.gitkeep`
+    - `B01058.reserved-order.test.ts`
     - `B01082.test.ts`
     - `B02039.test.ts`
     - `B02052.test.ts`
@@ -5202,6 +5336,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `B08003.test.ts`
     - `B08008.test.ts`
     - `B08063.test.ts` — draw1後も非terminalにし、本テストのdistinct-name→discard契約だけを観測する。
+    - `B08069.test.ts`
     - `B08074.test.ts`
     - `B08078.test.ts`
     - `B09036.test.ts`
@@ -5209,6 +5344,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `B09052.test.ts`
     - `B09056-partner-assist.test.ts` — B09056/P: 【パートナー赤】はパートナーがFILEにアシスト中でも色を参照する。
     - `B09067.test.ts`
+    - `B09070.public-flow.test.ts`
     - `B09110.test.ts`
     - `D06013.test.ts`
     - `aggregate-level-pick.test.ts`
@@ -5324,6 +5460,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `registry.test.ts` — tests/cards/registry — registerAll + cross-set registry テスト
     - `reuse-batch.test.ts` — tests/cards/reuse-batch — catalog-reuse バッチ (手書き, card-condition-catalog 流用) の構造…
     - `s3-hand-cutin-aura.test.ts` — S3 hand-zone cutin aura — B06020 / B07003(+P) production probes.
+    - `set-card-exact-occurrence-family.test.ts` — Search the remaining branches.
     - `set-card-portfolio-probes.test.ts`
     - `set-card-remove-enter.test.ts` — Hydrated legacy state has no occurrence IDs. Phase dispatch must backfill,
     - `setcard-enter.test.ts` — engine additive (2026-06-29) — setcard:enter hook + setCardMatches condition.
@@ -5405,16 +5542,16 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `bug-122-cutin-keyword-filter.spec.ts` — E2E: BUG-122 — matchOneFilter の filter.keyword がアイコン能力 (カットイン) を未検出だったバグの実機検証。
     - `bug-136-deck-reorder.spec.ts` — E2E regression: BUG-136 — deckToBottomBound「残りを好きな順番でデッキの下に移す」順序選択 modal
     - `bug-211-212-product-path.spec.ts` — Active characters are not ordinary action targets. Evidence 0 also makes
-    - `bug-237-recent-action-toast-pointer.spec.ts` — 長い target により toast-target の中心を実際の自己リムーブ領域へ置く。
+    - `bug-237-recent-action-toast-pointer.spec.ts`
     - `bug-239-landscape-deck-modal.spec.ts`
-    - `bug-241-landscape-pickers.spec.ts` — Layout carrier only. Exact opaque-instance resolution remains in the real B02039…
+    - `bug-241-landscape-pickers.spec.ts` — Layout carrier only. Resolution requires the engine-owned replacement guard.
     - `bug-243-public-duplicate-a11y.spec.ts`
     - `bug-244-landscape-special-pickers.spec.ts`
     - `bug-248-remove-set-card-cost.spec.ts`
     - `bug-249-effect-order.spec.ts` — Keep reserve cards: both real effects consume a card, and normal engine
     - `bug-252-reveal-visibility-order.spec.ts` — setupGamePage already waited for the Vite dev bridge. Hash-only routing avoids
     - `bug-260-b04030-switch-overlay.spec.ts`
-    - `card-choice-details-real-flow.spec.ts` — Reveal animation ends after 500ms for the first public card. Use an ordinary
+    - `card-choice-details-real-flow.spec.ts` — Opening detail owns the live presentation timeline. Do it as soon as the
     - `card-expand-modal-priority.spec.ts`
     - `charge-keyword-badge.spec.ts` — E2E: 突撃バッジ (user 指摘, 2026-06-01)
     - `choice-picker.spec.ts` — BUG-108 E2E: ChoicePickerModal の実ブラウザ render + option click → picker resolve を検証…
@@ -5427,10 +5564,11 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `engine-extensions-2026-06-05.spec.ts` — E2E verification for the 2026-06-05 engine-extension #1/#2 batches:
     - `event-to-evidence-2026-06-06.spec.ts` — E2E: engine-extension event→evidence batch (2026-06-06 タスクC) — text-faithfulness…
     - `evidence-suppression-2026-06-06.spec.ts` — E2E: evidence 抑制 (evidenceToDeck + optional $trigger.…
-    - `full-match-human-vs-cpu.spec.ts` — 1試合通し Playwright smoke (human vs CPU) — CLAUDE.md 6.3 compliance
-    - `full-match.spec.ts` — BUG-045 (user_request 20260521_01 #9): 1 試合通し E2E。
+    - `full-match-human-vs-cpu.spec.ts` — Area-based selection uses direct manipulation rather than a modal.
+    - `full-match.spec.ts`
     - `leave-intercept.spec.ts` — UI が guard 後を action-1 まで進める。以降のコンタクト選択と判定は公開 dispatch を通す。
     - `m3-pa-mr-declared.spec.ts` — E2E: M3 PA batch — パートナーエリア常駐 MR の宣言能力 human 経路 (実機クリック)
+    - `match-visual-gates.spec.ts` — 現行の公開入口は段階移行中。どちらも利用者が押す「対戦を開始」操作であり、
     - `miniwave5-deck-place.spec.ts` — E2E: mini-wave #5 P2 — B05047「【登場時】自分のデッキのカードを上から2枚見て、好きな順番で
     - `mobile-viewport-controls.spec.ts`
     - `multihook-shared-limit-2026-06-06.spec.ts` — E2E: multi-hook 共有【ターン1】(reasoning:end + action:declare) を実機の本物のフローで検証。
@@ -5448,7 +5586,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `set-card-choice.spec.ts`
     - `set-card-replacement.spec.ts`
     - `setcard-removal-2026-06-06.spec.ts` — E2E: set-card 除去 (charRemoveSetCard) の実機 text-faithfulness 検証。
-    - `spectator-speed.spec.ts` — user_request 20260521_01 #12: 観戦モード speed slider + pause/step E2E
+    - `spectator-speed.spec.ts`
     - `stacked-card-cost-picker.spec.ts`
     - `task-d-extensions-2026-06-12.spec.ts` — E2E verification for Task D engine拡張 wave#1 (2026-06-12):
     - `task5-flip-reflow.spec.ts` — E2E (Task5): 現場カードの reflow 移動トゥイーン (FLIP) の実機検証。
@@ -5503,6 +5641,16 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bug-190-191-b04026-flow.test.ts`
       - `bug-214-opp-owner-production.test.ts`
       - `bug-249-continuation-priority.test.ts`
+      - `causal-bound-remove.test.ts`
+      - `causal-char-mutations.test.ts`
+      - `causal-core-zone-moves.test.ts`
+      - `causal-draw-refresh.test.ts`
+      - `causal-partner-actions.test.ts`
+      - `causal-partner-area-source.test.ts`
+      - `causal-resolution.test.ts`
+      - `causal-scene-enter-refresh.test.ts`
+      - `causal-scene-switch.test.ts`
+      - `causal-set-card.test.ts`
       - `charsetcard-fromdecktop-refresh.test.ts` — tests/engine/effect/charsetcard-fromdecktop-refresh — unit B (session64)
       - `conditional-deferred-pick.test.ts` — The initial walk has no legal candidate. Rebuild the runtime context
       - `continuation-chain-gate-real-cards.test.ts` — Enter through the runtime atom handler so the first carrier is queued
@@ -5575,6 +5723,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bug-140-cutin-batch.test.ts` — tests/engine/flow/bug-140-cutin-batch — BUG-140 補修 (2026-06-13) の cutin 挙動検証
       - `bug-194-partner-ap.test.ts` — BUG-194: real partner is a contact actor and must share AP modifier/read/…
       - `bug-212-production-contact.test.ts`
+      - `contact-causal.test.ts`
       - `contact-turn-history.test.ts`
       - `contact.judge-log.test.ts` — Phase 8.10e: contact.judge log integration tests
       - `contact.test.ts` — Phase 4 Group B Task 4.5 — flow.contact (cutIn/disguise/pass/judge/computeOrder)
@@ -5657,6 +5806,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `bug-180-completed-deck-take-refresh.test.ts`
     - `bug-253-254-event-use-and-hirameki-faceup.test.ts` — rules: 06-card-types.md, 10-action-event.md, 15-abilities-effects.md
     - `bug-256-b03032-active-set-target.test.ts` — BUG-256: B03032 / B03032P active target exception for set-card hosts.
+    - `causal-log.test.ts`
     - `cost-remove-set-card.test.ts` — engine additive wave (2026-06-24) — Cost `removeSetCard`。
     - `cost-reveal-from-hand.test.ts` — engine additive wave — Cost `revealFromHand`。
     - `ctp10-bound-level-filter.test.ts` — CT-P10 B10060: a later target uses the entered character's effective level.
@@ -5685,6 +5835,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `card-probe-harness.ts` — tests/helpers/card-probe-harness.ts — 汎用 probe scenario runner ("probe compiler"…
     - `dispatch-current-decision.ts`
     - `fixtures.ts` — tests/helpers/fixtures.ts — テスト共通 fixture (refactor Phase 1c, 2026-06-12)
+    - `open-case-hirameki.ts`
   - **`integration/`** — 統合テスト (engine + UI dispatch)
     - `.gitkeep`
     - `ai-vs-ai-smoke.test.ts` — tests/integration/ai-vs-ai-smoke — Phase 6 Group C Task 6.6
@@ -5695,17 +5846,30 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `misread-e2e.test.ts` — tests/integration/misread-e2e.test.ts — Phase 5 advance Misread E2E 結合検証
     - `phase5-smoke.test.ts` — tests/integration/phase5-smoke — Phase 5 Group F: registerAll + 簡単なゲーム進行
   - **`meta/`**
+    - `CardFilter.test.ts`
+    - `CardsScreen.test.tsx`
     - `HomeScreen.test.tsx`
     - `RealMatchView.initializing.test.tsx`
+    - `RealMatchView.presentation-integration.test.tsx`
+    - `ReplayScreen.artifact-load-race.test.tsx`
     - `ResultScreen.mvp.test.tsx`
     - `SetupScreen.lifecycle.test.tsx`
+    - `TutorialScreen.accessibility.test.tsx`
+    - `TutorialScreen.canonical.test.ts`
     - `cardDisplayResolvers.test.ts`
+    - `caseDifficultyGenerator.test.ts`
     - `customGameStart.side-mapping.test.ts`
     - `decksStore.test.ts`
     - `engineStub.deck-limit.test.ts` — rules: 02-deck-construction.md
+    - `history-result-wave2.test.tsx`
+    - `historyReplayRepository.test.ts`
     - `matchSession.race.test.ts` — Leaving match for the result route must clear transient ownership while
+    - `metaStore.settings-v2.test.ts`
     - `officialNews.test.ts`
     - `playwright-config.test.ts`
+    - `replayRoute.test.ts`
+    - `settings-history-ux-wave2.test.tsx`
+    - `useHashRoute.navigation-blocker.test.tsx`
   - **`scripts/`**
     - `build-tcg-runtime-packet.test.ts`
     - `check-codex-quality.test.ts`
@@ -5738,9 +5902,11 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `CardListModal.zero-pick.test.tsx`
       - `CaseArea.stamp.test.tsx` — Phase 8.10h: CaseArea stamp-flip class application
       - `CaseArea.test.tsx` — Phase 7 Task 7.6: CaseArea tests
+      - `ConfirmModal.interaction.test.tsx` — @vitest-environment jsdom
       - `ConfirmModal.test.tsx` — Phase 8 Task 8.5: ConfirmModal 描画スナップショット
       - `ContactFlash.test.tsx` — Phase 8.10f: ContactFlash tests
       - `CutInDisguisePickerModal.test.tsx` — Phase 8.6β: CutInDisguisePickerModal tests
+      - `CutinDemoBanner.test.tsx`
       - `DecisionModalHosts.test.tsx`
       - `DeckArea.test.tsx` — Phase 7 Task 7.7: DeckArea tests
       - `DeckPlaceModalHost.test.tsx`
@@ -5756,11 +5922,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `GameSetupModal.test.tsx` — Task 8.4: GameSetupModal tests
       - `GuardPickerModal.test.tsx` — Phase 8.6α: GuardPickerModal tests
       - `HandZone.test.tsx` — Phase 7 Task 7.11: HandZone tests
+      - `HiramekiDemoBanner.test.tsx`
       - `HiramekiPickerModal.test.tsx` — Phase 8 完全クローズ Commit 3a: HiramekiPickerModal SSR test
       - `LeaveInterceptModalHost.card-details.test.tsx`
       - `LogPanel.test.tsx` — Phase 7 Task 7.13: LogPanel tests
       - `MisreadPickerModal.test.tsx` — Phase 8 完全クローズ Commit 3b: MisreadPickerModal SSR test
-      - `OppTurnOverlay.test.tsx` — Phase 8.10a: OppTurnOverlay tests
+      - `MulliganModal.accessibility.test.tsx` — @vitest-environment jsdom
       - `PartnerArea.test.tsx` — Phase 7 Task 7.5: PartnerArea tests
       - `Playmat.b10094-mixed-source.test.tsx`
       - `Playmat.test.tsx` — Phase 7 Task 7.3: Playmat layout structure tests
@@ -5775,7 +5942,6 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `SceneArea.test.tsx` — Phase 7 Task 7.4: SceneArea snapshot/behavior tests
       - `SelectableCardTile.test.tsx`
       - `SouzaReorderModal.test.tsx` — Phase 8 完全クローズ Commit 4: SouzaReorderModal SSR test
-      - `SpectatorHUD.test.tsx` — user_request 20260521_01 #12: SpectatorHUD tests
       - `TopBar.test.tsx` — Phase 7 Task 7.12: TopBar tests
       - `TutorialHighlight.test.tsx` — Round 3c-A: TutorialHighlight tests
       - `TutorialOverlay.test.tsx` — Phase 9a-1: TutorialOverlay tests
@@ -5806,18 +5972,28 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useCanEndTurnForUi.test.tsx`
       - `useConfirmation.test.ts` — Phase 8 Task 8.3: useConfirmation (Q9 厳格モード モーダル)
       - `useContactFlowDriver.test.ts` — Phase 8 完全クローズ Commit 2: ContactFlowDriver smoke tests
+      - `useCutinDemoDriver.test.tsx`
+      - `useEffectPickFlowDriver.integration.test.tsx`
+      - `useEffectPickFlowDriver.owner.test.tsx`
       - `useEngineDispatch.action-fsm.test.ts` — Phase 8 完全クローズ Commit 2: per-step action dispatch tests
+      - `useEngineDispatch.choice-rps-authority.test.ts`
       - `useEngineDispatch.decision-identity.test.ts`
       - `useEngineDispatch.effect-order.test.ts` — Phase 8 完全クローズ Commit 5: setEffectOrder dispatch tests
       - `useEngineDispatch.hirameki.test.ts` — Phase 8 完全クローズ Commit 3a: hiramekiResolve dispatch tests
+      - `useEngineDispatch.optional-authority.test.ts`
+      - `useEngineDispatch.set-card-choice.test.ts`
       - `useEngineDispatch.test.ts` — Phase 8 Task 8.1: useEngineDispatch / dispatchEngineAction
       - `useEvidenceFlipPicker.test.ts` — BUG-085: useEvidenceFlipPicker store + Promise hook の単体テスト
       - `useFlipAnimation.test.ts` — Task5 FLIP 移動アニメ: pure な FLIP 計算 (rectCenter / computeFlipMoves) の単体テスト。
       - `useHandCostPicker.test.ts`
+      - `useHiramekiDemoDriver.test.tsx`
+      - `useHiramekiFlowDriver.integration.test.tsx`
+      - `useHiramekiFlowDriver.test.tsx`
       - `useMisreadFlowDriver.test.tsx`
       - `useNextHintPicker.test.ts` — 2026-05-28: useNextHintPicker hook tests
       - `useOppTurnDriver.case-resolved-pick.test.ts` — BUG-090: human の auto-phase で 事件編→解決編 になり case card a1 (case:to-resolved →
       - `useOppTurnDriver.contact.test.ts` — Phase 8 完全クローズ Commit 2.5: useOppTurnDriver per-step contact integration
+      - `useOppTurnDriver.presentation.test.tsx` — The execution guard is the final race boundary even when a timer was
       - `useOppTurnDriver.test.ts` — Phase 8.7b: useOppTurnDriver tests
       - `useReplayDriver.test.tsx`
       - `useSceneSwitchPickerStore.test.ts` — tests/ui/hooks/useSceneSwitchPickerStore.test.…
@@ -5826,6 +6002,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useStageScale.test.ts` — Cleanup #6 (user_request 関連): Playmat scale hook tests
       - `useTargetPicker.test.ts` — Phase 8 Task 8.2: useTargetPicker
       - `useTopBar.test.ts`
+    - **`presentation/`**
+      - `PresentationCoordinatorHost.test.tsx`
+      - `PresentationQueue.test.ts`
+      - `coordinator.test.ts`
+      - `normalizedLog.test.ts`
+      - `presentationStore.test.ts`
     - **`router/`**
       - `useGlobalShortcuts.test.tsx`
     - **`services/`**
@@ -5834,14 +6016,18 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `cardResolvers.test.ts` — Demo wiring: cardResolvers tests
       - `deckBuilder.test.ts` — Task 8.4b: deckBuilder unit tests
       - `gameStarter.test.ts` — Task 8.4b: performGameStart integration test
+      - `hiramekiDemoSession.test.ts`
+      - `liveReplayRecorder.test.ts` — Bypass the production normalizer here so the test can mutate the exact
+      - `replayViewerProjection.test.ts` — Auto phase has returned the assisted partner, so its historical FILE entry
       - `scenePick.test.ts` — TDD: isSceneDirectPick 述語 (UI picker Direct Manipulation 化 設計 v2 BLOCKER)
       - `tutorialSteps.test.ts` — Phase 9a-1: tutorialSteps constants test
     - **`state/`**
-      - `interaction-lock.test.ts` — tests/ui/state/interaction-lock — 効果解決中の入力ロック判定 (rules/05 割り込み禁止 / rules/…
+      - `interaction-lock.test.ts`
       - `store.test.ts` — tests/ui/state/store.test.ts — Phase 7 Task 7.1 tests
       - `tutorialStore.test.ts` — Phase 9a-1: tutorialStore behavior tests
     - **`styles/`**
       - `tokens.test.ts` — Phase 7 Task 7.2: tokens.css smoke test
+    - `App.presentation-owner.test.tsx`
     - `bugs-207-209-218-adjudication.test.tsx` — BUG-207/209/218 adjudication regressions.
   - `AGENTS.md` — Test Instructions
   - `playwright-mobile-landscape-config.test.ts`

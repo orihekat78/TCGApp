@@ -25,8 +25,17 @@ import type { GameState } from '@/engine/types/game-state.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import * as flow from '@/engine/flow/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
+import {
+  restorePendingRuntimeState,
+  snapshotPendingRuntimeState,
+} from '@/engine/effect/runtime-state.js';
 import { dispatchEngineAction, surfacePendingSideChannels } from './useEngineDispatch.js';
 import { movePresentationDelay } from './movePresentationDelay.js';
+import {
+  hasOutstandingPresentation,
+  usePresentationOutstandingCount,
+} from '@/ui/presentation/usePresentationQueue.js';
+import { selectAutonomousDecisionBlocked } from '@/ui/state/autonomousDecisionGate.js';
 
 let isDriving = false;
 let previousMoveKind: Move['kind'] | null = null;
@@ -51,6 +60,10 @@ export function driveOppTurn(): void {
   if (current.gameResult) return; // null or undefined はどちらも「未決着」扱い
   // Commit 2.5: action 進行中 (useContactFlowDriver が駆動) → 引き継ぎ。
   if (store.activeActionId) return;
+  if (selectAutonomousDecisionBlocked(store)) return;
+  // In-flight action continuation is owned by its flow driver. Presentation
+  // blocks only the next autonomous opponent step.
+  if (hasOutstandingPresentation()) return;
   // BUG-138 (X8): humanPick pause で surface した modal が未解決の間は再入しない
   // (surface 済 = engine queue からは drain 済のため hasPendingHumanPick では検知できない)。
   // public deck-reveal overlay は含める。公開情報が表示される前に次のCPU手で状態を進めないための
@@ -60,7 +73,6 @@ export function driveOppTurn(): void {
   // BUG-136: deckToBottomBound 順序選択 modal (【相手ターン中】deckToBottomBound が human 所有で発火しうる)。
   // mini-wave #5 review B2: pendingDeckPlace も gate (相手ターン中の human 変装 (rules/09 非ターン側可) で
   // B05047 a2 が発火し modal 待ちになる — 漏れると AI driver が await 中に deck を動かし振り分けが部分無効化)。
-  if (store.pendingMisread || store.pendingEffectPick || store.pendingEffectChoice || store.pendingEffectOptional || store.pendingChooseIntercept || store.pendingLeaveIntercept || store.pendingSetCardChoice || store.pendingSetCardReplacement || store.pendingEffectRepeatOptional || store.pendingDeckReveal || store.pendingPublicHandReveal?.lifetime === 'effect' || store.pendingDeckReorder || store.pendingDeckPlace || store.pendingRps) return;
   if (isDriving) return;
   isDriving = true;
   try {
@@ -68,10 +80,14 @@ export function driveOppTurn(): void {
     // useEffect が表示間隔後に再 fire → 次の 1 手。登場・能力・アクション・アシスト・解決編だけ
     // aiSpeedMs を適用し、routine 手は 0ms yield。pauseOnAction で action 手は従来どおり
     // contact FSM (useContactFlowDriver) へ委譲する。
+    const pendingRuntimeBefore = snapshotPendingRuntimeState();
     const step = stepTurn(current, new HeuristicPolicy(), 'opp', { pauseOnAction: true });
-    previousMoveKind = step.paused?.move?.kind ?? step.move?.kind ?? null;
     // 中間 state を store にコミット (action 直前 / 通常 move 適用後 / pause 時は不変参照)
-    store.setGameState(step.nextState, { preserveRuntime: true });
+    if (!store.setGameState(step.nextState, { preserveRuntime: true })) {
+      restorePendingRuntimeState(pendingRuntimeBefore);
+      return;
+    }
+    previousMoveKind = step.paused?.move?.kind ?? step.move?.kind ?? null;
     // Public reveals must reach the UI before another CPU move. Private CPU
     // looks never enter this side channel, so they do not stall the driver.
     surfacePendingSideChannels();
@@ -177,7 +193,7 @@ export function primaryActiveCard(
  * routine 手は 0ms yield。重要手だけ movePresentationDelay 経由でこの値を使う。
  *
  * Phase 12-A (user_request #12): module-level の固定値から store.aiSpeedMs 直読に
- * 変更。SpectatorHUD slider 経由でユーザーが任意の速度を選べる。
+ * 変更。AI 進行設定からユーザーが任意の速度を選べる。
  * テスト互換のため `_setOppTurnDriverDelay` legacy 関数は残置 (store を更新)。
  */
 export function _setOppTurnDriverDelay(ms: number): void {
@@ -188,7 +204,7 @@ export function _setOppTurnDriverDelay(ms: number): void {
 // useRef だと StrictMode で 2 回 fire するので module-level に置く。
 let _lastConsumedStep = 0;
 
-export function useOppTurnDriver(): void {
+export function useOppTurnDriver(enabled = true): void {
   const turnPlayer = useGameStateStore((s) => s.gameState?.turn.player ?? null);
   // Commit 2.5: activeActionId 復帰 (action-end) で続きの move を再開するため
   // useEffect deps に追加。set 中は driveOppTurn 内で early return される。
@@ -199,26 +215,16 @@ export function useOppTurnDriver(): void {
   // BUG-138 (X8): humanPick pause の再開トリガ。surface された決定 modal (pick/choice/optional) が
   // 解決されると dispatchEngineAction が store field を null に戻す → deps 変化で再 fire →
   // driveOppTurn が続きの move から再開する (modal open 中は driveOppTurn 冒頭 guard が return)。
-  const pendingEffectPick = useGameStateStore((s) => s.pendingEffectPick);
-  const pendingMisread = useGameStateStore((s) => s.pendingMisread);
-  const pendingEffectChoice = useGameStateStore((s) => s.pendingEffectChoice);
-  const pendingEffectOptional = useGameStateStore((s) => s.pendingEffectOptional);
-  const pendingRps = useGameStateStore((s) => s.pendingRps);
-  const pendingChooseIntercept = useGameStateStore((s) => s.pendingChooseIntercept);
-  const pendingLeaveIntercept = useGameStateStore((s) => s.pendingLeaveIntercept);
-  const pendingSetCardChoice = useGameStateStore((s) => s.pendingSetCardChoice);
-  const pendingSetCardReplacement = useGameStateStore((s) => s.pendingSetCardReplacement);
-  const pendingEffectRepeatOptional = useGameStateStore((s) => s.pendingEffectRepeatOptional);
-  const pendingDeckReveal = useGameStateStore((s) => s.pendingDeckReveal);
-  const pendingPublicHandReveal = useGameStateStore((s) => s.pendingPublicHandReveal);
-  const pendingDeckReorder = useGameStateStore((s) => s.pendingDeckReorder);
-  const pendingDeckPlace = useGameStateStore((s) => s.pendingDeckPlace); // mini-wave #5 review B2
+  const pendingDecisionBlocked = useGameStateStore(selectAutonomousDecisionBlocked);
   // Task4: 1手駆動の再 fire トリガ。driveOppTurn が 1 手適用するたび bump され、turn.player が
   // 'opp' のままでも useEffect が再 fire して次の手へ進む (これが無いと 1 手で stall)。
   const oppMoveTick = useGameStateStore((s) => s.oppMoveTick);
+  const presentationOutstanding = usePresentationOutstandingCount();
   useEffect(() => {
+    if (!enabled) return undefined;
     if (turnPlayer !== 'opp' || activeActionId !== null) return undefined;
-    if (pendingMisread || pendingEffectPick || pendingEffectChoice || pendingEffectOptional || pendingChooseIntercept || pendingLeaveIntercept || pendingSetCardChoice || pendingSetCardReplacement || pendingEffectRepeatOptional || pendingDeckReveal || pendingPublicHandReveal?.lifetime === 'effect' || pendingDeckReorder || pendingDeckPlace || pendingRps) return undefined;
+    if (presentationOutstanding > 0) return undefined;
+    if (pendingDecisionBlocked) return undefined;
     // Phase 12-B: paused なら step 要求があった時だけ進む
     if (isAiPaused) {
       if (aiStepCounter <= _lastConsumedStep) return undefined;
@@ -228,5 +234,5 @@ export function useOppTurnDriver(): void {
     const delay = isAiPaused ? 0 : movePresentationDelay(previousMoveKind, aiSpeedMs);
     const id = setTimeout(driveOppTurn, delay);
     return () => clearTimeout(id);
-  }, [turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, pendingMisread, pendingEffectPick, pendingEffectChoice, pendingEffectOptional, pendingChooseIntercept, pendingLeaveIntercept, pendingSetCardChoice, pendingSetCardReplacement, pendingEffectRepeatOptional, pendingDeckReveal, pendingPublicHandReveal, pendingDeckReorder, pendingDeckPlace, pendingRps, oppMoveTick]);
+  }, [enabled, turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, pendingDecisionBlocked, oppMoveTick, presentationOutstanding]);
 }

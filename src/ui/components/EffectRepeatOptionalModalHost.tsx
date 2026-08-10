@@ -3,12 +3,14 @@ import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import { def as readDef } from '@/engine/read/def.js';
+import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
 import './ChoicePickerModal.css';
 
 /** repeatOptional の一回分。選ぶまで outer continuation を再開しない。 */
 export function EffectRepeatOptionalModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingEffectRepeatOptional);
-  if (!pending || pending.player !== 'self') return null;
+  const spectatorMode = useGameStateStore((s) => s.spectatorMode);
+  if (!pending || !isHumanDecisionOwner(pending.player, spectatorMode)) return null;
 
   const card = pending.source.cardId ? readDef.card(pending.source.cardId) : undefined;
   const sourceName = card?.names?.[0] ?? pending.source.cardId ?? '能力';

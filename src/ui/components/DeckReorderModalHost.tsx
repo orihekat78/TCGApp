@@ -22,12 +22,14 @@ import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { SelectableCardTile } from './SelectableCardTile.js';
+import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
 import './SouzaReorderModal.css';
 
 export function DeckReorderModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingDeckReorder);
+  const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   // pending.cardIds をローカルで並べ替え。pending が変わるたび key で再マウントして初期化する。
-  return pending && pending.player === 'self'
+  return pending && isHumanDecisionOwner(pending.player, spectatorMode)
     ? <DeckReorderModalInner key={`${pending.decisionId ?? 'legacy'}:${pending.cardIds.join('|')}`} pending={pending} />
     : null;
 }

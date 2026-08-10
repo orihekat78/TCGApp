@@ -22,7 +22,7 @@ import { event } from '@/engine/event/index';
 import { mutate } from '@/engine/mutate/index';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { _drainPendingHirameki, _resetPendingHirameki } from '@/engine/listeners/hirameki';
-import { advance } from '@/engine/flow/action/state-machine';
+import { advance, declare, passGuard } from '@/engine/flow/action/state-machine';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import type { CardDef, GameState, EffectCtx, ActionContext } from '@/engine/types';
 
@@ -153,5 +153,43 @@ describe('cluster8 — hirameki suppression (B06049 a2 / setHiramekiSuppress)', 
     });
     expect(out.turnState.opp.hiramekiSuppressed).toBe(false);
     expect(out.turnState.self.hiramekiSuppressed).toBe(false);
+  });
+
+  it('clears B06049 suppression when B01062 removes the acting B06049 before guard', () => {
+    registerCardDef({
+      id: 'RED-PARTNER', no: '9/RED-PARTNER', kind: 'partner', names: ['RED-PARTNER'],
+      colors: ['赤'], level: 0, ap: 0, lp: 1, traits: [], keywords: [], rarity: 'C',
+      imageUrl: '', ruleRefs: [], abilities: [],
+    } as unknown as CardDef);
+
+    const base = createEmptyGameState();
+    selfMain(base);
+    base.players.self.partner = { cardId: 'RED-PARTNER', state: 'active', location: 'partner-area' };
+    base.players.opp.evidence = [{ cardId: 'HIRAM', faceUp: false, origin: { turn: 1, via: 'action-case' } }];
+
+    const out = produce(base, draft => {
+      mutate.scene.enter(draft, 'self', 'B01062', { active: true });
+      const actor = mutate.scene.enter(draft, 'self', 'B06049', { active: true });
+      const ax = declare(draft, actor.uid, { kind: 'case', player: 'opp' });
+      engine.resolve.runAllUntilEmpty(draft);
+
+      expect(draft.turnState.opp.hiramekiSuppressed).toBe(true);
+      expect(draft.players.self.scene.some((card) => card.uid === actor.uid)).toBe(false);
+      passGuard(draft, ax);
+    });
+
+    expect(out.actionContexts).toEqual({});
+    expect(out.turnState.opp.hiramekiSuppressed).toBe(false);
+    expect(out.turnState.self.hiramekiSuppressed).toBe(false);
+
+    produce(out, draft => {
+      event.emit(
+        draft,
+        'evidence:remove-by-action',
+        { player: 'opp', ev: { cardId: 'HIRAM' } },
+        { player: 'self', uid: 'next-actor' },
+      );
+    });
+    expect(_drainPendingHirameki()).not.toBeNull();
   });
 });

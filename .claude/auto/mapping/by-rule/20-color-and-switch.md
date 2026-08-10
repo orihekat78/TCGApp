@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `21167e51368a`
+> Source hash: `9e2419c1d298`
 
 公式ルール [`20-color-and-switch.md`](../../../rules/20-color-and-switch.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

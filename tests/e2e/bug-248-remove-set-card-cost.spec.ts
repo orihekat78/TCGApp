@@ -75,7 +75,7 @@ function applyB08033Fixture(state: GameStateLike): void {
   game.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
 }
 
-function applyB07048AlternativeFixture(state: GameStateLike): void {
+function applyB07048AlternativeFixture(state: GameStateLike, unavailable = false): void {
   const makeChar = (cardId: string, uid: string, setCards: unknown[] = []) => ({
     cardId, uid, state: 'active', isNamed: false, enterOrder: 1, setCards, stackedCards: 0,
     keywordOverrides: { granted: [], disabledOriginal: false }, apOverride: null, lpOverride: null,
@@ -94,6 +94,10 @@ function applyB07048AlternativeFixture(state: GameStateLike): void {
   game.players.self.hand = ['D08003']; game.players.self.deck = ['D08007']; game.players.self.remove = [];
   game.players.opp.scene = []; game.players.opp.hand = []; game.pendingEffects = [];
   game.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+  if (unavailable) {
+    const scene = game.players.self.scene as Array<{ uid: string; setCards: unknown[] }>;
+    scene.find((entry) => entry.uid === 'source')!.setCards.pop();
+  }
 }
 
 async function openB02023CostPicker(page: Page): Promise<void> {
@@ -213,8 +217,19 @@ test('BUG-248: a stale printed B07048 selection never falls back to B05033, whil
   await page.getByTestId('cp-opt-0').click();
   await expect(page.getByTestId('set-card-choice-modal')).toBeVisible();
   await page.evaluate(() => {
-    const game = (window as unknown as { __game: { getState: () => { gameState: { players: { self: { scene: Array<{ uid: string; setCards: unknown[] }> } } } } } }).__game.getState().gameState;
-    game.players.self.scene.find((entry) => entry.uid === 'source')!.setCards.pop();
+    const store = (window as unknown as {
+      __game: {
+        store: { getState: () => { dispatch: (mutator: (state: unknown) => unknown) => boolean } };
+      };
+    }).__game.store.getState();
+    const committed = store.dispatch((current) => {
+      const next = structuredClone(current) as {
+        players: { self: { scene: Array<{ uid: string; setCards: unknown[] }> } };
+      };
+      next.players.self.scene.find((entry) => entry.uid === 'source')!.setCards.pop();
+      return next;
+    });
+    if (!committed) throw new Error('stale set-card fixture commit rejected');
   });
   await page.getByTestId('set-card-choice-1').click();
   await page.getByTestId('set-card-choice-2').click();
@@ -242,11 +257,7 @@ test('BUG-248: B07048 exposes explicit B05033 alternative when its printed n=2 c
   if (testInfo.project.name === 'chromium') await page.setViewportSize({ width: 1280, height: 720 });
   const { errors } = await setupGamePage(page);
   await setHumanSelf(page);
-  await buildGameState(page, applyB07048AlternativeFixture);
-  await page.evaluate(() => {
-    const game = (window as unknown as { __game: { getState: () => { gameState: { players: { self: { scene: Array<{ uid: string; setCards: unknown[] }> } } } } } }).__game.getState().gameState;
-    game.players.self.scene.find((entry) => entry.uid === 'source')!.setCards.pop();
-  });
+  await buildGameState(page, applyB07048AlternativeFixture, true);
   await page.locator('[data-action-id="declared-ability"]').click();
   await page.locator('[data-uid="source"]').click();
   await page.locator('.confirm-ok').click();

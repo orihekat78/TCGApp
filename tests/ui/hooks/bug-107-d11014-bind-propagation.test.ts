@@ -46,7 +46,7 @@ describe('D11014 a2 — human 経路の $entered bind 伝播 (BUG-107)', () => {
   beforeEach(() => {
     useGameStateStore.setState({ gameState: null, pendingEffectPick: null });
     _clearPendingEffectPickQueue();
-    (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation = [];
+    delete (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation;
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
   });
 

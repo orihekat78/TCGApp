@@ -20,7 +20,10 @@ async function setHumanSelf(page: Page): Promise<void> {
   });
 }
 
-async function getPendingPick(page: Page): Promise<{ candidates: { uid: string }[]; atomVerb: string } | null> {
+async function getPendingPick(page: Page): Promise<{
+  candidates: { uid: string; hostUid?: string; setCardInstanceId?: string; hidden?: boolean; cardId?: string }[];
+  atomVerb: string;
+} | null> {
   return page.evaluate(() => {
     const w = window as unknown as { __game: { getState: () => { pendingEffectPick: unknown } } };
     return w.__game.getState().pendingEffectPick as never;
@@ -33,7 +36,7 @@ function build(gs: AnyState): void {
   self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
   self.case = { cardId: 'D08026', status: '事件編', requiredEvidence: 7, colors: ['白'], declaredUseCount: {} };
   // B08034 (推理する) + holder (D08009 に setCard 1枚)
-  self.scene = [mkC('B08034', 'kudo#1'), mkC('D08009', 'holder#1', [{ cardId: 'D08003', faceUp: false }])];
+  self.scene = [mkC('B08034', 'kudo#1'), mkC('D08009', 'holder#1', [{ cardId: 'D08003', faceUp: false, instanceId: 'set:holder:one' }])];
   self.deck = ['e1', 'e2', 'draw1', 'x']; self.hand = []; self.evidence = []; self.remove = []; self.file = [];
   gs.pendingEffects = [];
   gs.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
@@ -50,9 +53,17 @@ test.describe('set-card 除去 B08034 (2026-06-06)', () => {
     const pick = await getPendingPick(page);
     expect(pick, 'charRemoveSetCard pick が surface').not.toBeNull();
     expect(pick!.atomVerb, 'atomVerb=charRemoveSetCard').toBe('charRemoveSetCard');
-    expect(pick!.candidates.map((c) => c.uid), '候補は setCard 保持キャラ (holder#1) のみ').toEqual(['holder#1']);
+    expect(pick!.candidates).toHaveLength(1);
+    const candidate = pick!.candidates[0]!;
+    expect(candidate).toMatchObject({
+      hostUid: 'holder#1',
+      setCardInstanceId: 'set:holder:one',
+      hidden: true,
+    });
+    expect(candidate.uid).toMatch(/^set-card:self:/);
+    expect(JSON.stringify(pick)).not.toContain('D08003');
 
-    await dispatchAction(page, { type: 'effectPickResolve', pickedUid: 'holder#1' });
+    await dispatchAction(page, { type: 'effectPickResolve', pickedUid: candidate.uid });
 
     const after = await getGameState(page);
     const self = after.players.self as { scene: { uid: string; setCards: unknown[] }[]; remove: string[]; hand: string[] };

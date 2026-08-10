@@ -111,12 +111,17 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
           <span>事件</span>
         </div>
 
-        <div
-          className={`case-card ${orientation} color-${color}`}
-          data-card-id={caseInfo.cardId}
-          data-orientation={orientation}
-        >
-          <CardArt cardId={caseInfo.cardId} alt="" className="case-bg" />
+        <div className="case-card-shell">
+          <div
+            className={`case-card ${orientation} color-${color}`}
+            data-card-id={caseInfo.cardId}
+            data-orientation={orientation}
+          >
+            <CardArt cardId={caseInfo.cardId} alt="" className="case-bg" />
+            <div className="case-title">{titleNodes}</div>
+            {/* Round 2: EVT-色 + Lv 表記は冗長 (タイトルとカード画像で十分判別可能) → 削除済
+                Round 3: case-stamp も削除。事件編/解決編 は Playmat 側の余白に独立 tag で表示。 */}
+          </div>
           {onExpand && (
             <button
               type="button"
@@ -130,9 +135,6 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
               <span aria-hidden="true">🔍</span>
             </button>
           )}
-          <div className="case-title">{titleNodes}</div>
-          {/* Round 2: EVT-色 + Lv 表記は冗長 (タイトルとカード画像で十分判別可能) → 削除済
-              Round 3: case-stamp も削除。事件編/解決編 は Playmat 側の余白に独立 tag で表示。 */}
         </div>
 
         <div className="evidence-required">

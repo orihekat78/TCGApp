@@ -33,11 +33,13 @@ export type PendingHiramekiSide = {
   actorUid?: string;
   /** Exact remove-area occurrence created by the action evidence removal. */
   occurrence?: { player: 'self' | 'opp'; cardId: string; removeIndex: number };
+  /** State-owned action that must still be awaiting this decision. */
+  actionId?: string;
+  /** Exact public evidence-removal event that opened this decision. */
+  causalCorrelationEventId?: string;
   /**
-   * mega-wave W6 step7 (2026-07-04, row70): actionJudge (per-step 経路) が「このヒラメキの
-   * fire/skip が決まるまで gainSelfEvidence を保留した」印。hiramekiResolve が fire/skip 決定後に
-   * deferred gain を実行する。bundled 経路 (actionAgainstCase → resolveActionAgainstCase) は eager gain
-   * のまま本フラグを立てない — これが double-gain の唯一のガード (row70 risks(2)、外すな)。
+   * actionJudge と bundled actionAgainstCase が、このヒラメキの fire/skip 完了まで
+   * gainSelfEvidence を保留した印。contact-end の FSM が deferred gain を一度だけ実行する。
    */
   gainDeferred?: boolean;
 };
@@ -91,7 +93,7 @@ export function _peekPendingHirameki(): PendingHiramekiSide | null {
 
 /**
  * mega-wave W6 step7 (row70): pending に gainDeferred=true を焼き込む。
- * actionJudge per-step 経路のみが呼ぶ (bundled 経路は eager gain のまま)。
+ * per-step UI と bundled AI の両経路が checkpoint を claim する前に呼ぶ。
  */
 export function _markPendingHiramekiGainDeferred(): void {
   const v = _readSide();

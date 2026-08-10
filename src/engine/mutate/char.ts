@@ -529,16 +529,38 @@ function replaceEligibleSetCardsBeforeHostLeaves(s: GameState, uid: string): voi
 }
 
 /** Resolve or decline an optional pre-removal set-card replacement. */
-function resolveSetCardRemovalReplacement(s: GameState, pending: PendingSetCardReplacementSide, toUid: string | null): boolean {
+function canResolveSetCardRemovalReplacement(
+  s: GameState,
+  pending: PendingSetCardReplacementSide,
+  toUid: string | null,
+): boolean {
   const found = findChar(s, pending.fromUid);
-  const entry = found?.char.setCards.find((candidate) => candidate.instanceId === pending.setCardInstanceId);
-  if (!found || !entry) return false;
-  if (toUid !== null && pending.candidates.some((candidate) => candidate.uid === toUid)) {
-    moveSetCardEntry(s, pending.fromUid, toUid, pending.setCardInstanceId, pending.source.abilityId);
-    return true;
+  if (!found
+    || found.player !== pending.player
+    || pending.source.uid !== pending.fromUid) return false;
+  const entry = found.char.setCards.find((candidate) =>
+    candidate.instanceId === pending.setCardInstanceId
+    && candidate.cardId === pending.source.cardId);
+  if (!entry) return false;
+  const eligible = eligibleSetCardReplacement(s, found.player, pending.fromUid, entry);
+  if (!eligible || eligible.ability.id !== pending.source.abilityId) return false;
+  if (eligible.candidates.length !== pending.candidates.length) return false;
+  if (eligible.candidates.some((candidate, index) => {
+    const supplied = pending.candidates[index];
+    return supplied?.uid !== candidate.uid || supplied.cardId !== candidate.cardId;
+  })) return false;
+  return toUid === null || eligible.candidates.some((candidate) => candidate.uid === toUid);
+}
+
+function resolveSetCardRemovalReplacement(s: GameState, pending: PendingSetCardReplacementSide, toUid: string | null): boolean {
+  if (!canResolveSetCardRemovalReplacement(s, pending, toUid)) return false;
+  if (toUid !== null) {
+    return moveSetCardEntry(s, pending.fromUid, toUid, pending.setCardInstanceId, pending.source.abilityId);
   }
-  removeOneSetCard(s, pending.fromUid, { setCardInstanceId: pending.setCardInstanceId, skipReplacement: true });
-  return true;
+  return removeOneSetCard(s, pending.fromUid, {
+    setCardInstanceId: pending.setCardInstanceId,
+    skipReplacement: true,
+  }) !== null;
 }
 
 /** Remove exact occurrences from one host stack, preserving duplicate card IDs. */
@@ -810,6 +832,7 @@ export const char = {
   removeOneSetCard,
   replaceEligibleSetCardsBeforeHostLeaves,
   deferSetCardReplacementForHostLeave,
+  canResolveSetCardRemovalReplacement,
   resolveSetCardRemovalReplacement,
   takeOneSetCard,
   moveOneSetCard,

@@ -54,11 +54,13 @@
 }
 
 .hirameki-source-card-row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
+  min-block-size: 52px;
   margin-bottom: 10px;
-  padding: 3px;
+  padding: 3px 51px 3px 3px;
   border: 1px solid rgba(184, 134, 11, 0.35);
   border-radius: 5px;
   background: rgba(255, 255, 255, 0.58);
@@ -99,11 +101,13 @@
 
 .hirameki-source-card-detail {
   position: absolute;
-  top: 3px;
-  left: 15px;
+  top: 50%;
+  right: 3px;
+  left: auto;
+  transform: translateY(-50%);
   z-index: 1;
-  width: 22px;
-  height: 22px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 0;
   border: 1px solid #d3b45f;
   border-radius: 50%;
@@ -111,6 +115,8 @@
   color: #775b07;
   cursor: pointer;
   font-size: 12px;
+  display: grid;
+  place-items: center;
 }
 
 .hirameki-source-card:hover,

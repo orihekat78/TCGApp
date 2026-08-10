@@ -9,6 +9,8 @@ import { Playmat } from '@/ui/components/Playmat';
 import type { ResolvedCardMeta } from '@/ui/components/SceneArea';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { useGameStateStore } from '@/ui/state/store';
+import { useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
+import { useSceneSwitchPickerStore } from '@/ui/hooks/useSceneSwitchPickerStore';
 import { registerAll } from '@/cards';
 
 const resolveCard = (_cardId: string): ResolvedCardMeta => ({
@@ -31,6 +33,113 @@ describe('Playmat', () => {
     expect(html).toMatch(/class="stage"/);
   });
 
+  it('851x393でも1920x1080の同一盤面と既存操作をそのまま縮小表示する', () => {
+    const previousWidth = window.innerWidth;
+    const previousHeight = window.innerHeight;
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 851 });
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 393 });
+
+    try {
+      const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
+      expect(html).toContain('data-playmat-layout="desktop"');
+      expect(html).toContain('data-playmat-fit="contained-landscape"');
+      expect(html).toContain('data-playmat-logical-width="1920"');
+      expect(html).toContain('data-playmat-logical-height="1080"');
+      expect(html).toContain('class="board-content"');
+      const boardTag = html.match(/<div class="board-content"[^>]*>/)?.[0];
+      expect(boardTag).toBeDefined();
+      expect(boardTag).not.toContain('aria-hidden');
+      expect(html).not.toContain('mobile-match-status-rail');
+      expect(html).not.toContain('actions-panel--mobile-rail');
+      expect(html).toContain('class="actions-panel"');
+    } finally {
+      Object.defineProperty(window, 'innerWidth', { configurable: true, value: previousWidth });
+      Object.defineProperty(window, 'innerHeight', { configurable: true, value: previousHeight });
+    }
+  });
+
+  it('keeps the desktop board visible and inert-free in compact spectator replay', () => {
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    const previousWidth = window.innerWidth;
+    const previousHeight = window.innerHeight;
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 851 });
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 393 });
+
+    const state = createEmptyGameState();
+    state.players.self.hand = ['SECRET-SELF-A', 'SECRET-SELF-B'];
+    state.players.opp.hand = ['SECRET-OPP-A'];
+    useTargetPickerStore.getState()._setPhase({
+      phase: 'picking',
+      candidates: ['secret-target'],
+      purpose: 'replay-test',
+    });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    try {
+      act(() => root.render(
+        <Playmat
+          gameState={state}
+          resolveCard={resolveCard}
+          resolveHandCard={() => { throw new Error('spectator replay resolved a private hand'); }}
+          replayReadOnly={true}
+          replayViewer="spectator"
+        />,
+      ));
+
+      const board = container.querySelector('.board-content');
+      expect(board).not.toBeNull();
+      expect(board!.hasAttribute('inert')).toBe(false);
+      expect(board!.hasAttribute('aria-hidden')).toBe(false);
+      expect(container.querySelector('.mobile-match-status-rail')).toBeNull();
+      expect(container.querySelector('.actions-panel')).toBeNull();
+      expect(container.querySelector('[data-testid="replay-hand-strip"]')).not.toBeNull();
+      expect(container.querySelectorAll('.replay-hand-card-back')).toHaveLength(2);
+      expect(container.querySelector('.hand-mini-card')).toBeNull();
+      expect(container.textContent).not.toContain('SECRET-SELF');
+      expect(container.textContent).not.toContain('secret-target');
+      expect(container.querySelector('.evidence-area[role="button"]')).toBeNull();
+
+      act(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })));
+      expect(useTargetPickerStore.getState().phase.phase).toBe('picking');
+    } finally {
+      act(() => root.unmount());
+      container.remove();
+      useTargetPickerStore.getState()._reset();
+      Object.defineProperty(window, 'innerWidth', { configurable: true, value: previousWidth });
+      Object.defineProperty(window, 'innerHeight', { configurable: true, value: previousHeight });
+    }
+  });
+
+  it('reveals the owner hand in solo replay while keeping the board read-only', () => {
+    const state = createEmptyGameState();
+    state.players.self.hand = ['SELF-HAND-A', 'SELF-HAND-B'];
+    const html = renderToString(
+      <Playmat
+        gameState={state}
+        resolveCard={resolveCard}
+        resolveHandCard={(cardId) => ({
+          cardId,
+          name: `visible:${cardId}`,
+          color: 'blue',
+          type: 'キャラ',
+          cost: 1,
+          ap: 1000,
+          lp: 1,
+          lv: 1,
+        })}
+        replayReadOnly={true}
+        replayViewer="solo-self"
+      />,
+    );
+
+    expect(html).toContain('aria-label="visible:SELF-HAND-A"');
+    expect(html).toContain('aria-label="visible:SELF-HAND-B"');
+    expect(html).not.toContain('replay-hand-card-back');
+    expect(html).not.toContain('actions-panel');
+  });
+
   it('renders background and vignette layers', () => {
     const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
     expect(html).toMatch(/class="bg"/);
@@ -49,6 +158,118 @@ describe('Playmat', () => {
     // HandZone real component (empty when no resolveHandCard)
     expect(html).toMatch(/hand-zone hand-zone--empty/);
     expect(html).toMatch(/手札なし/);
+  });
+
+  it('marks hand cards unavailable while an exclusive decision owns interaction', () => {
+    const state = createEmptyGameState();
+    state.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    state.players.self.hand = ['CARD-A'];
+    useGameStateStore.setState({
+      gameState: state,
+      pendingPublicHandReveal: {
+        owner: 'self',
+        audience: 'all',
+        cardIds: ['CARD-A'],
+        handSnapshot: ['CARD-A'],
+        lifetime: 'effect',
+        resolutionToken: 'public-hand-reveal:playmat-lock',
+        source: {},
+      },
+    });
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    try {
+      act(() => root.render(
+        <Playmat
+          gameState={state}
+          resolveCard={resolveCard}
+          resolveHandCard={() => ({
+            cardId: 'CARD-A',
+            name: 'Card A',
+            color: 'blue',
+            type: 'character',
+            cost: 1,
+            ap: 1000,
+            lp: 1,
+            lv: 1,
+          } as never)}
+        />,
+      ));
+      const handCard = container.querySelector<HTMLButtonElement>(
+        '.hand-mini-card[data-card-id="CARD-A"]',
+      );
+      expect(handCard?.dataset.usable).toBe('false');
+    } finally {
+      act(() => root.unmount());
+      container.remove();
+      useGameStateStore.setState({ gameState: null, pendingPublicHandReveal: null });
+    }
+  });
+
+  it('does not resolve a switch victim after another decision takes interaction ownership', () => {
+    const state = createEmptyGameState();
+    state.players.self.scene.push({
+      cardId: 'D08001',
+      uid: 'switch-victim-1',
+      state: 'active',
+      isNamed: false,
+      enterOrder: 0,
+      setCards: [],
+      stackedCards: 0,
+      keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null,
+      lpOverride: null,
+      turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+      declaredUseCount: {},
+    });
+    let resolved: string | null | undefined;
+    useGameStateStore.setState({ gameState: state, pendingPublicHandReveal: null });
+    useSceneSwitchPickerStore.getState()._open({
+      cardId: 'D08002',
+      newCardName: 'New card',
+      candidates: [{
+        uid: 'switch-victim-1',
+        cardId: 'D08001',
+        name: 'Victim',
+        state: 'active',
+        isNamed: false,
+      }],
+      resolve: (uid) => { resolved = uid; },
+    });
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    try {
+      act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+      act(() => useGameStateStore.setState({
+        pendingPublicHandReveal: {
+          owner: 'self',
+          audience: 'all',
+          cardIds: ['SECRET-A'],
+          handSnapshot: ['SECRET-A'],
+          lifetime: 'effect',
+          resolutionToken: 'public-hand-reveal:switch-lock',
+          source: {},
+        },
+      }));
+
+      const victim = container.querySelector<HTMLElement>('[data-uid="switch-victim-1"]');
+      expect(victim).not.toBeNull();
+      act(() => victim?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+
+      expect(resolved).toBeUndefined();
+      expect(useSceneSwitchPickerStore.getState().current).not.toBeNull();
+    } finally {
+      act(() => root.unmount());
+      container.remove();
+      useSceneSwitchPickerStore.getState()._close();
+      useGameStateStore.setState({ gameState: null, pendingPublicHandReveal: null });
+    }
   });
 
   it('does not render LogPanel when closed (Phase 8.5: LOG ボタンは ActionsPanel に集約)', () => {
@@ -232,10 +453,14 @@ describe('Playmat', () => {
 
   it('passes the pending hirameki card identity to its source-card controls', () => {
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    const humanSide = globalThis as { __humanPlayerSide?: 'self' | 'opp' | null };
+    const previousHumanSide = humanSide.__humanPlayerSide;
+    humanSide.__humanPlayerSide = 'self';
     const state = createEmptyGameState();
     useGameStateStore.setState({
       gameState: state,
       pendingHirameki: { player: 'self', cardId: 'D08013', abilityId: 'a2' },
+      spectatorMode: false,
     });
     const container = document.createElement('div');
     const root = createRoot(container);
@@ -247,7 +472,8 @@ describe('Playmat', () => {
       expect(container.querySelector('[data-testid="hirameki-source-card-detail"]')).not.toBeNull();
     } finally {
       act(() => root.unmount());
-      useGameStateStore.setState({ gameState: null, pendingHirameki: null });
+      humanSide.__humanPlayerSide = previousHumanSide;
+      useGameStateStore.setState({ gameState: null, pendingHirameki: null, spectatorMode: false });
     }
   });
 

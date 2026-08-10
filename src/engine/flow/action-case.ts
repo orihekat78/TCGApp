@@ -6,13 +6,24 @@
 //   - removeOpponentEvidenceTop: 相手証拠最上部1枚を取り出し → リムーブ
 //                                + evidence:remove-by-action emit (ヒラメキ判定窓)
 //   - flashWindow:               (Phase 4 stub、Phase 7-1/7-2 で実機構は evidence:remove-by-action
-//                                  listener (hirameki.ts) + useEngineDispatch:hiramekiResolve に
+//                                  listener (hirameki.ts) + shared resolveHiramekiDecision に
 //                                  移行済。本関数は legacy log 専用で外部呼び出しなし)
 //   - gainSelfEvidence:          自分の証拠+1 (LP無関係) — byUid 不在でも進める
 
-import type { GameState, ActionContext, EvidenceCard } from '../types/index.js';
+import type { ActionContext, CausalEffectTrace, EffectCtx, EvidenceCard, GameState } from '../types/index.js';
 import { mutate } from '../mutate/index.js';
 import { event } from '../event/index.js';
+import { resolveEffectPicks, type ChooseAtomTargetFn } from '../effect/resolve-picks.js';
+import { appendCausal, isCausalLogEntry, type AppendCausalInput } from '../log/causal.js';
+import {
+  cloneCausalEffectTrace,
+  recordCausalTraceOperation,
+  withStructuredCausalResolution,
+} from '../log/effect-causal.js';
+import type { PendingHiramekiSide } from '../listeners/hirameki.js';
+import { def as readDef } from '../read/def.js';
+import { recordActionCausalOperation } from './action/causal.js';
+import { isLegacyReplayHiramekiCompatibilityActive } from './action/legacy-replay-compat.js';
 
 type Player = 'self' | 'opp';
 
@@ -25,7 +36,7 @@ type Player = 'self' | 'opp';
  *
  * 注意: spec では「ヒラメキ判定窓」はこの Hook で発火させる設計だが、
  *       Phase 7-1/7-2 で `evidence:remove-by-action` listener (hirameki.ts) +
- *       UI dispatch (`hiramekiResolve`) の経路に移行済。flashWindow は legacy stub。
+ *       UI/AI 共通の `resolveHiramekiDecision` 経路に移行済。flashWindow は legacy stub。
  */
 export function removeOpponentEvidenceTop(
   state: GameState,
@@ -37,6 +48,13 @@ export function removeOpponentEvidenceTop(
   const player: Player = ax.target.player;
   const ev = mutate.evidence.removeTop(state, player);
   if (!ev) return undefined;
+  const causalCorrelationEventId = recordActionCausalOperation(state, ax, {
+    actor: ax.byPlayer,
+    kind: 'zone-move',
+    source: { kind: 'zone', side: player, zone: 'evidence' },
+    targets: [{ kind: 'zone', side: player, zone: 'remove' }],
+    outcome: { type: 'move', from: 'evidence', to: 'remove', count: 1 },
+  });
 
   // evidence:remove-by-action emit (spec: { player, ev })
   // engine wave-11 (2026-07-02): byUid = アクション[事件] actor の snapshot を payload に併記。
@@ -51,9 +69,12 @@ export function removeOpponentEvidenceTop(
       player,
       ev,
       byUid: ax.byUid,
+      actionId: ax.id,
+      ...(causalCorrelationEventId ? { causalCorrelationEventId } : {}),
       occurrence: { player, cardId: ev.cardId, removeIndex: state.players[player].remove.length - 1 },
     },
     { player: ax.byPlayer, uid: ax.byUid },
+    causalCorrelationEventId ? { causalCorrelationEventId } : undefined,
   );
 
   return ev;
@@ -65,7 +86,7 @@ export function removeOpponentEvidenceTop(
  * Phase 7-1/7-2 で実機構は移行済:
  *   - `evidence:remove-by-action` event を `removeOpponentEvidenceTop` が emit
  *   - `src/engine/listeners/hirameki.ts` が捕捉、pendingHirameki side-channel set
- *   - UI/AI が `hiramekiResolve` dispatch → `resolveEffectPicks` で effect 解決
+ *   - UI/AI が `resolveHiramekiDecision` → `resolveEffectPicks` で effect 解決
  *
  * 本関数は **legacy log 専用** で、外部呼び出しは無し (barrel から export はされるが unused)。
  * 削除は将来の cleanup phase で実施予定 (現状は API 互換性のため保持)。
@@ -90,14 +111,14 @@ export function flashWindow(
 
 /**
  * ActionGainCtx — gainSelfEvidence が必要とする ActionContext の構造的部分集合。
- * mega-wave W6 step7 (row70): ヒラメキ解決後の deferred gain 経路 (useEngineDispatch
- * hiramekiResolve) は元の ActionContext を _getContext で再取得できない (contact-end→action-end
- * 同期 auto-advance が _deleteContext 済) ため、pendingHirameki の snapshot から
- * { byPlayer, byUid } を構成して呼ぶ。ActionContext はこの型を満たすので既存呼び出しは無変更。
- * ⚠ ここを ActionContext に「簡約」して _getContext 依存に戻すと deferred 経路が intermittent に
- * 壊れる (row70 risks(1)) — 戻さないこと。
+ * fast path と contact-end の deferred path は同じ ActionContext を渡す。構造的部分集合に
+ * 留めることで、単体テストと因果 trace を持たない既存 caller も engine 内で再利用できる。
  */
-export type ActionGainCtx = { byPlayer: Player; byUid: string };
+export type ActionGainCtx = {
+  byPlayer: Player;
+  byUid: string;
+  causalTrace?: CausalEffectTrace;
+};
 
 /**
  * gainSelfEvidence — 自分のデッキから1枚を裏向きで証拠エリアに追加 (rules/10)
@@ -113,6 +134,18 @@ export function gainSelfEvidence(state: GameState, ax: ActionGainCtx): void {
   // refresh も起こさない — rules/14 は「証拠を得る」解決時のみ)。
   if (state.turnState[p].evidenceGainSuppressed) {
     state.turnState[p].evidenceGainSuppressed = false;
+    if (state.causalLog) {
+      const input: Omit<AppendCausalInput, 'parentEventId' | 'correlationEventId'> = {
+        actor: p,
+        kind: 'fizzle',
+        source: { kind: 'player', side: p },
+        targets: [{ kind: 'zone', side: p, zone: 'evidence' }],
+        outcome: { type: 'state', state: 'fizzled' },
+      };
+      if (ax.causalTrace) recordCausalTraceOperation(state, ax.causalTrace, input);
+      else appendCausal(state, input);
+      return;
+    }
     mutate.log.append(state, {
       ts: Date.now(),
       player: p,
@@ -133,7 +166,8 @@ export function gainSelfEvidence(state: GameState, ax: ActionGainCtx): void {
   // 実獲得時のみ emit (false-fire 防止)。本 emit が evidence:gain の唯一の emit 箇所であること
   // (推理/効果/refresh 由来では発火しない) が「アクション[事件]によって」の語義を構造的に保証する。
   // payload: uid/byUid = actor (selfOnly + triggerCharMatches{payloadKey:'byUid'} 両対応)。
-  if (state.players[p].evidence.length > before) {
+  const gained = state.players[p].evidence.length > before;
+  if (gained) {
     event.emit(state, 'evidence:gain', {
       player: p,
       byUid: ax.byUid,
@@ -141,6 +175,20 @@ export function gainSelfEvidence(state: GameState, ax: ActionGainCtx): void {
       via: 'action-case',
       gained: 1,
     }, { player: p, uid: ax.byUid });
+  }
+  if (state.causalLog) {
+    if (gained) {
+      const input: Omit<AppendCausalInput, 'parentEventId' | 'correlationEventId'> = {
+        actor: p,
+        kind: 'evidence',
+        source: { kind: 'player', side: p },
+        targets: [{ kind: 'zone', side: p, zone: 'evidence' }],
+        outcome: { type: 'count', amount: 1, unit: 'evidence' },
+      };
+      if (ax.causalTrace) recordCausalTraceOperation(state, ax.causalTrace, input);
+      else appendCausal(state, input);
+    }
+    return;
   }
   // ログ
   mutate.log.append(state, {
@@ -152,8 +200,144 @@ export function gainSelfEvidence(state: GameState, ax: ActionGainCtx): void {
   });
 }
 
+export type HiramekiDecisionOptions = {
+  chooseAtomTarget?: ChooseAtomTargetFn;
+  runtimeAtomTargetPolicyKey?: 'heuristic';
+  humanChooser: boolean;
+};
+
+/** Exact state-owned checkpoint opened by this case action's evidence removal. */
+export function matchesHiramekiCheckpoint(
+  state: GameState,
+  ax: ActionContext,
+  pending: PendingHiramekiSide,
+): boolean {
+  if (
+    ax.target.kind !== 'case'
+    || pending.actionId !== ax.id
+    || pending.actorUid !== ax.byUid
+    || pending.player !== ax.target.player
+    || pending.occurrence === undefined
+    || pending.occurrence.player !== pending.player
+    || pending.occurrence.cardId !== pending.cardId
+    || state.players[pending.player].remove[pending.occurrence.removeIndex] !== pending.cardId
+  ) return false;
+
+  const correlationEventId = pending.causalCorrelationEventId;
+  if (typeof correlationEventId === 'string' && correlationEventId.length > 0) {
+    return state.log.some((entry) =>
+      entry.schemaVersion === 1
+      && entry.eventId === correlationEventId
+      && entry.kind === 'zone-move',
+    );
+  }
+  if (correlationEventId !== undefined) return false;
+
+  return isLegacyReplayHiramekiCompatibilityActive()
+    && state.causalLog === undefined
+    && !state.log.some(isCausalLogEntry);
+}
+
+/** Queue one fire/skip decision without owning the caller's resolver or UI state. */
+export function resolveHiramekiDecision(
+  state: GameState,
+  actionContext: ActionContext | undefined,
+  pending: PendingHiramekiSide,
+  choice: 'fire' | 'skip',
+  options: HiramekiDecisionOptions,
+): void {
+  const decisionEventId = actionContext
+    ? recordActionCausalOperation(state, actionContext, choice === 'fire' ? {
+      actor: pending.player,
+      kind: 'activate',
+      tags: ['hirameki'],
+      source: { kind: 'zone', side: pending.player, zone: 'remove' },
+      targets: [{ kind: 'player', side: pending.player }],
+      outcome: { type: 'state', state: 'active' },
+    } : {
+      actor: pending.player,
+      kind: 'cancel',
+      tags: ['hirameki'],
+      source: { kind: 'zone', side: pending.player, zone: 'remove' },
+      targets: [{ kind: 'player', side: pending.player }],
+      outcome: { type: 'state', state: 'cancelled' },
+    })
+    : undefined;
+  if (decisionEventId === undefined) {
+    withStructuredCausalResolution(state, () => mutate.log.append(state, {
+      ts: Date.now(),
+      player: pending.player,
+      turn: state.turn.number,
+      action: choice === 'fire' ? 'hirameki:fire' : 'hirameki:skip',
+      target: pending.cardId,
+    }));
+  }
+  if (choice !== 'fire') return;
+
+  const card = readDef.card(pending.cardId);
+  const ability = card?.abilities.find((candidate) => candidate.id === pending.abilityId);
+  if (!ability?.effect || pending.effectValid === false) return;
+
+  const ctx: EffectCtx = {
+    source: {
+      player: pending.player,
+      cardId: pending.cardId,
+      abilityId: pending.abilityId,
+      area: 'evidence',
+      resolutionKind: 'hirameki',
+    },
+    bindings: pending.occurrence ? {
+      occurrence: [{
+        kind: 'card',
+        cardId: pending.occurrence.cardId,
+        area: 'remove',
+        player: pending.occurrence.player,
+        index: pending.occurrence.removeIndex,
+      }],
+    } : {},
+    ...((decisionEventId ?? pending.causalCorrelationEventId) ? {
+      causal: { correlationEventId: (decisionEventId ?? pending.causalCorrelationEventId)! },
+    } : {}),
+    triggerPayload: {
+      player: pending.player,
+      ev: { cardId: pending.cardId },
+      byUid: pending.actorUid,
+      occurrence: pending.occurrence,
+    },
+  };
+  const resolved = resolveEffectPicks(state, ability.effect, ctx, {
+    chooseAtomTarget: options.chooseAtomTarget,
+    runtimeAtomTargetPolicyKey: options.runtimeAtomTargetPolicyKey,
+    byPlayer: pending.player,
+    humanChooser: options.humanChooser,
+    source: { cardId: pending.cardId, abilityId: pending.abilityId },
+  });
+  event.queue(
+    state,
+    resolved,
+    { player: pending.player, cardId: pending.cardId, resolutionKind: 'hirameki' },
+    'evidence:remove-by-action',
+    {
+      player: pending.player,
+      ev: { cardId: pending.cardId },
+      byUid: pending.actorUid,
+      actionId: pending.actionId,
+      causalCorrelationEventId: decisionEventId ?? pending.causalCorrelationEventId,
+      occurrence: pending.occurrence,
+    },
+    ctx.bindings,
+    ctx.causal?.trace
+      ? { causalTrace: cloneCausalEffectTrace(ctx.causal.trace) }
+      : ctx.causal?.correlationEventId
+        ? { causalCorrelationEventId: ctx.causal.correlationEventId }
+        : undefined,
+  );
+}
+
 export const actionCase = {
   removeOpponentEvidenceTop,
   flashWindow,
   gainSelfEvidence,
+  matchesHiramekiCheckpoint,
+  resolveHiramekiDecision,
 };

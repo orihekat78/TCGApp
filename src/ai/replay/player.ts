@@ -9,8 +9,9 @@ import type { AIPolicy } from '../policy.js';
 import { runMatch, type MatchResult } from '../match.js';
 import type { Move } from '../move-enumerator.js';
 import type { GameState } from '@/engine/types';
-import type { ReplayLog } from './recorder.js';
 import { replayNondeterminism } from './nondeterminism.js';
+import { decodeReplayLog } from './decode.js';
+import { withLegacyReplayHiramekiCompatibility } from '@/engine/flow/action/legacy-replay-compat.js';
 
 type Player = 'self' | 'opp';
 
@@ -72,7 +73,9 @@ function movesEqual(a: Move, b: Move): boolean {
  * Version 2 logs replay captured Math.random and Date.now values.
  * Invalid, missing, or unconsumed decisions fail closed.
  */
-export function replayLog(log: ReplayLog): MatchResult {
+export function replayLog(input: unknown): MatchResult {
+  const log = decodeReplayLog(input);
+  if (log.schemaVersion === 3) throw new Error('Replay V3 uses state-frame playback');
   const selfMoves = log.moves.filter((m) => m.player === 'self').map((m) => m.move);
   const oppMoves = log.moves.filter((m) => m.player === 'opp').map((m) => m.move);
 
@@ -82,7 +85,7 @@ export function replayLog(log: ReplayLog): MatchResult {
     ? Math.max(0, log.result.turns - 1)
     : log.result.turns;
   let replayMoveIndex = 0;
-  const run = (): MatchResult => runMatch({
+  const run = (): MatchResult => withLegacyReplayHiramekiCompatibility(() => runMatch({
     selfPolicy,
     oppPolicy,
     initialState: log.initialState,
@@ -109,7 +112,7 @@ export function replayLog(log: ReplayLog): MatchResult {
         replayMoveIndex += 1;
       }
     },
-  });
+  }));
   const result = log.schemaVersion === 2
     ? replayNondeterminism(log.nondeterminism, run)
     : run();

@@ -18,13 +18,23 @@ import type {
   EffectStackEntry,
   EffectStackEntrySource,
 } from '../types/index.js';
+import {
+  currentEffectCausalCorrelationEventId,
+  withEffectCausalCorrelation,
+} from '../log/effect-causal.js';
 
 export type Listener = (state: GameState, payload: unknown, source: unknown) => Effect | void;
 
 const registry: Map<HookName, Listener[]> = new Map();
 
 let suppressedEventDepth = 0;
-type JournaledEmit = { state: GameState; name: HookName; payload: unknown; source?: unknown };
+type JournaledEmit = {
+  state: GameState;
+  name: HookName;
+  payload: unknown;
+  source?: unknown;
+  causalCorrelationEventId?: string;
+};
 let eventJournal: JournaledEmit[] | null = null;
 
 /** Run a preparation pass without invoking listener closures or queueing effects. */
@@ -51,7 +61,15 @@ export function _abortEventJournal(journal: JournaledEmit[]): void {
 export function _commitEventJournal(journal: JournaledEmit[]): void {
   if (eventJournal !== journal) return;
   eventJournal = null;
-  for (const entry of journal) emit(entry.state, entry.name, entry.payload, entry.source);
+  for (const entry of journal) {
+    emitNow(
+      entry.state,
+      entry.name,
+      entry.payload,
+      entry.source,
+      entry.causalCorrelationEventId,
+    );
+  }
 }
 
 function nextEntryId(state: GameState): string {
@@ -114,8 +132,14 @@ export function buildEntry(
      * 主にカットイン (`$contact.byUid` 等) で使用。entryToCtx が復元する。
      */
     bindings?: Record<string, unknown[]>;
+    /** Captured parent-effect root. `inheritCausalCorrelation=false` preserves undefined. */
+    causalCorrelationEventId?: string;
+    inheritCausalCorrelation?: boolean;
   } = {},
 ): EffectStackEntry {
+  const causalCorrelationEventId = opts.inheritCausalCorrelation === false
+    ? opts.causalCorrelationEventId
+    : opts.causalCorrelationEventId ?? currentEffectCausalCorrelationEventId(state);
   return {
     id: nextEntryId(state),
     source: normalizeSource(opts.source),
@@ -128,6 +152,7 @@ export function buildEntry(
     effect,
     state: 'pending',
     bindings: opts.bindings,
+    ...(causalCorrelationEventId ? { causalCorrelationEventId } : {}),
   };
 }
 
@@ -158,12 +183,41 @@ function on(name: HookName, listener: Listener): Unsubscribe {
  * Hook 発火: 登録されている listener を順に呼ぶ。
  * Listener が Effect を返したら state.pendingEffects に積む (queue 経由)。
  */
-function emit(state: GameState, name: HookName, payload: unknown, source?: unknown): void {
+export type EmitOptions = {
+  /** Explicit public cause. When present, it wins over ambient effect context. */
+  causalCorrelationEventId?: string;
+};
+
+function emit(
+  state: GameState,
+  name: HookName,
+  payload: unknown,
+  source?: unknown,
+  options?: EmitOptions,
+): void {
   if (suppressedEventDepth > 0) return;
+  const causalCorrelationEventId = options?.causalCorrelationEventId
+    ?? currentEffectCausalCorrelationEventId(state);
   if (eventJournal !== null) {
-    eventJournal.push({ state, name, payload, source });
+    eventJournal.push({
+      state,
+      name,
+      payload,
+      source,
+      ...(causalCorrelationEventId ? { causalCorrelationEventId } : {}),
+    });
     return;
   }
+  emitNow(state, name, payload, source, causalCorrelationEventId);
+}
+
+function emitNow(
+  state: GameState,
+  name: HookName,
+  payload: unknown,
+  source: unknown,
+  causalCorrelationEventId: string | undefined,
+): void {
   const list = registry.get(name);
   if (!list || list.length === 0) return;
   // スナップショット (listener が listener を解除しても列挙が壊れないように)
@@ -182,7 +236,11 @@ function emit(state: GameState, name: HookName, payload: unknown, source?: unkno
   delete state.effectTriggerBatchConfirmedContext;
   try {
     for (const listener of snapshot) {
-      const result = listener(state, payload, source);
+      const result = withEffectCausalCorrelation(
+        state,
+        causalCorrelationEventId,
+        () => listener(state, payload, source),
+      );
       // queue() returns its created stack entry for direct callers that need
       // declaration provenance. An expression-bodied listener may therefore
       // return that entry incidentally; it is already queued and must never be
@@ -193,6 +251,8 @@ function emit(state: GameState, name: HookName, payload: unknown, source?: unkno
         hook: name,
         payload,
         source,
+        causalCorrelationEventId,
+        inheritCausalCorrelation: false,
       });
       entry.triggerBatch = triggerBatch;
       state.pendingEffects.push(entry);
@@ -227,6 +287,8 @@ function queue(
     | 'costPaid'
     | 'dyn'
     | 'publicHandRevealToken'
+    | 'causalTrace'
+    | 'causalCorrelationEventId'
     | 'triggerBatch'
     | 'ownerChosenOrder'
     | 'ownerOrderConfirmed'
@@ -235,7 +297,11 @@ function queue(
     | 'reasoningContinuation'
   >,
 ): EffectStackEntry {
+  if (entryExtras?.causalTrace !== undefined && entryExtras.causalCorrelationEventId !== undefined) {
+    throw new Error('causal trace and child correlation are mutually exclusive');
+  }
   const entry = buildEntry(state, effect, { hook: hook ?? 'manual', payload, source, bindings });
+  if (entryExtras?.causalTrace !== undefined) delete entry.causalCorrelationEventId;
   if (entryExtras) Object.assign(entry, entryExtras);
   entry.triggerBatch ??= state.effectTriggerBatchContext;
   // Confirmation is a decision about the already-resolving effect. Only an

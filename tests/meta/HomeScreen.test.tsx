@@ -1,5 +1,6 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { readFileSync } from 'node:fs';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HomeScreen } from '../../meta-app/src/screens/HomeScreen';
 import { useDecksStore } from '../../meta-app/src/state/decksStore';
@@ -208,5 +209,31 @@ describe('HOME deck identity', () => {
 
     expect(() => act(() => root.render(<HomeScreen onNav={() => undefined} />))).not.toThrow();
     expect(container.textContent).toContain('日時不明');
+  });
+
+  it('shows observed matches as CPU-side outcomes instead of player wins or losses', () => {
+    useHistoryStore.setState({
+      history: [{
+        id: 'observe-history', recorded: Date.now(), won: false, mode: 'observe',
+        deckName: 'CPU 1 deck', oppDeckName: 'CPU 2 deck', turns: 4, duration: 0,
+        evidGot: 1, evidLost: 2, contacts: 0, hirameki: 0, misread: 0,
+        p1Target: 7, p2Target: 6,
+      }],
+      _hasHydrated: true,
+    });
+
+    act(() => root.render(<HomeScreen onNav={() => undefined} />));
+
+    const result = container.querySelector('.home-match-result');
+    expect(result?.textContent).toBe('CPU 2勝利');
+    expect(result?.classList.contains('is-win')).toBe(false);
+    expect(result?.classList.contains('is-loss')).toBe(false);
+  });
+});
+
+describe('HOME compact landscape accessibility', () => {
+  it('keeps heading actions at the 44px touch target minimum', () => {
+    const css = readFileSync('meta-app/src/styles/meta.css', 'utf8');
+    expect(css).toMatch(/@media \(max-width:\s*900px\) and \(orientation:\s*landscape\)[\s\S]*\.home-section-heading a,[\s\S]*\.home-section-heading button\s*\{[^}]*min-height:\s*44px;/);
   });
 });

@@ -34,6 +34,8 @@ import type { GameState, ActionContext } from '@/engine/types/index.js';
 import type { GuardPickerCandidate } from '../components/GuardPickerModal.js';
 import type { CutInDisguiseCandidate } from '../components/CutInDisguisePickerModal.js';
 import { pendingOwnerOrderGroup } from '@/engine/resolve/index.js';
+import { selectAutonomousDecisionBlocked } from '@/ui/state/autonomousDecisionGate.js';
+import { cardOccurrenceUid } from '@/engine/target/card-occurrence.js';
 
 type Player = 'self' | 'opp';
 
@@ -82,7 +84,7 @@ function buildCutInDisguiseCandidates(
   const hand = state.players[p].hand;
   const result: CutInDisguiseCandidate[] = [];
   for (const [index, cardId] of hand.entries()) {
-    const uid = `${cardId}#${index}`;
+    const uid = cardOccurrenceUid(p, 'hand', cardId, index);
     const def = readDef.card(cardId);
     const name = def?.names?.[0] ??cardId;
     if (flow.contact.canCutIn(state, ax, p, cardId)) {
@@ -105,31 +107,22 @@ function actorLabelFor(phase: ActionContext['phase']): '1番目' | '2番目' | '
  * Phase 8 完全クローズ Commit 2: ContactFlowDriver。
  * Playmat 等の root component で 1 度だけ呼ぶ。
  */
-export function useContactFlowDriver(): void {
+export function useContactFlowDriver(enabled = true): void {
   const activeActionId = useGameStateStore((s) => s.activeActionId);
   const gameState = useGameStateStore((s) => s.gameState);
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const guardPickerOpen = useContactModalStore((s) => s.guardPicker !== null);
   const cutInDisguiseOpen = useContactModalStore((s) => s.cutInDisguise !== null);
+  const autonomousDecisionBlocked = useGameStateStore(selectAutonomousDecisionBlocked);
   // D11007 a3 fix: 「コンタクトしたとき」効果 (rules/22) は action-1 (カットイン window) より
   // 先に解決すべき。contact:start で queue された pendingEffectPick が解決されるまで
   // contact flow を pause する。
-  const pendingEffectPick = useGameStateStore((s) => s.pendingEffectPick);
   // engine拡張 wave#2 cluster3 (2026-06-13, BUG-141): optional/choice modal も同様に pause 対象。
   // 宣言時 trigger の optional (例 B02068 granted「手札を1枚リムーブしてもよい→ブレット」) が解決される
   // 前に driver が guard へ進むと、公式裁定「効果もガード判定前に解決」(rules/22 R1) に違反する。
-  const pendingEffectOptional = useGameStateStore((s) => s.pendingEffectOptional);
-  const pendingEffectRepeatOptional = useGameStateStore((s) => s.pendingEffectRepeatOptional);
-  const pendingEffectChoice = useGameStateStore((s) => s.pendingEffectChoice);
-  const pendingDeckReorder = useGameStateStore((s) => s.pendingDeckReorder);
-  const pendingDeckPlace = useGameStateStore((s) => s.pendingDeckPlace);
-  const pendingLeaveIntercept = useGameStateStore((s) => s.pendingLeaveIntercept);
-  const pendingChooseIntercept = useGameStateStore((s) => s.pendingChooseIntercept);
-  const pendingRps = useGameStateStore((s) => s.pendingRps);
-  const pendingSetCardChoice = useGameStateStore((s) => s.pendingSetCardChoice);
-  const pendingSetCardReplacement = useGameStateStore((s) => s.pendingSetCardReplacement);
 
   useEffect(() => {
+    if (!enabled) return;
     if (!activeActionId || !gameState) return;
     if (gameState.gameResult) {
       useGameStateStore.getState().setActiveActionId(null);
@@ -143,16 +136,8 @@ export function useContactFlowDriver(): void {
     // D11007 a3 fix: effect pick modal (contact:start triggered の chain など)
     // が open 中は contact flow を進めない (rules/22 「コンタクトしたとき」が
     // 行動順確認の前に解決)
-    if (pendingEffectPick !== null) return;
+    if (autonomousDecisionBlocked) return;
     // BUG-141 (cluster3): optional/choice modal も解決待ち (宣言時 trigger の効果はガード判定前に解決)
-    if (pendingEffectOptional !== null || pendingEffectRepeatOptional !== null) return;
-    if (pendingEffectChoice !== null) return;
-    if (pendingDeckReorder !== null) return;
-    if (pendingDeckPlace !== null) return;
-    if (pendingLeaveIntercept !== null) return;
-    if (pendingChooseIntercept !== null) return;
-    if (pendingRps !== null) return;
-    if (pendingSetCardChoice !== null || pendingSetCardReplacement !== null) return;
 
     const ax = flow.action._getContext(gameState, activeActionId);
     if (!ax) {
@@ -161,7 +146,7 @@ export function useContactFlowDriver(): void {
     }
 
     runOneStep(gameState, ax, spectatorMode);
-  }, [activeActionId, gameState, spectatorMode, guardPickerOpen, cutInDisguiseOpen, pendingEffectPick, pendingEffectOptional, pendingEffectRepeatOptional, pendingEffectChoice, pendingDeckReorder, pendingDeckPlace, pendingLeaveIntercept, pendingChooseIntercept, pendingRps, pendingSetCardChoice, pendingSetCardReplacement]);
+  }, [enabled, activeActionId, gameState, spectatorMode, guardPickerOpen, cutInDisguiseOpen, autonomousDecisionBlocked]);
 }
 
 function runOneStep(state: GameState, ax: ActionContext, spectatorMode: boolean): void {
@@ -178,6 +163,10 @@ function runOneStep(state: GameState, ax: ActionContext, spectatorMode: boolean)
       return;
 
     case 'guard-window': {
+      if (flow.action.isMissingBeforeGuard(state, ax)) {
+        dispatchEngineAction({ type: 'actionGuard', actionId: ax.id, guarderUid: null });
+        return;
+      }
       const guardExclude = ax.target.kind === 'char' ? ax.target.uid : undefined;
       const cands = buildGuardCandidates(state, ax.byUid, guardExclude);
       if (cands.length === 0) {

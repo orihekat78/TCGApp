@@ -14,6 +14,7 @@ import { useTutorialStore } from '@/ui/state/tutorialStore.js';
 import { performGameStart } from '@/ui/services/gameStarter.js';
 import { createSampleGameState } from '@/ui/fixtures/sampleGameState.js';
 import { AVAILABLE_DECKS, type DeckId } from '@/ui/services/deckBuilder.js';
+import { beginMatchSession, commitMatchSession, matchSessionId } from '@/ui/services/matchSession.js';
 import './GameSetupModal.css';
 
 export type GameSetupModalProps = {
@@ -60,8 +61,9 @@ export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | n
   const handleStart = async (): Promise<void> => {
     // Round 2: performGameStart は async (マリガン UI await)
     // BUG-042: deckSelection を渡してユーザー選択のデッキで開始
-    const state = await performGameStart(undefined, deckSelection);
-    useGameStateStore.getState().setGameState(state);
+    const session = beginMatchSession('self');
+    const state = await performGameStart(undefined, deckSelection, { sessionId: matchSessionId(session) });
+    commitMatchSession(session, state);
   };
 
   const handleDemo = (): void => {
@@ -72,7 +74,7 @@ export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | n
   const handleHiramekiDemo = (): void => {
     // 2026-05-26 ヒラメキ効果検証 demo モードへ遷移。
     // Playmat 側 (HiramekiDemoPickerModal mount) が picker を表示し、
-    // ユーザがカードを選んだら createHiramekiDemoState で初期化 + actionAgainstCase dispatch。
+    // ユーザがカードを選んだら共通 demo session が production action FSM を開始する。
     useGameStateStore.getState().setHiramekiDemoMode('picking');
   };
 
@@ -85,9 +87,9 @@ export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | n
 
   const handleTutorial = async (): Promise<void> => {
     // Round 2: performGameStart は async
-    const state = await performGameStart(undefined, deckSelection);
-    useGameStateStore.getState().setGameState(state);
-    useTutorialStore.getState().start();
+    const session = beginMatchSession('self');
+    const state = await performGameStart(undefined, deckSelection, { sessionId: matchSessionId(session) });
+    if (commitMatchSession(session, state)) useTutorialStore.getState().start();
   };
 
   const handleSpectate = async (): Promise<void> => {
@@ -95,9 +97,9 @@ export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | n
     // - spectatorMode=true で useSpectatorTurnDriver が self ターンも自動進行
     // - 既存 useOppTurnDriver が opp ターンを自動進行 (変更なし)
     // - 勝敗 detect (gameResult set) で両 driver が停止
-    const state = await performGameStart(undefined, deckSelection);
-    useGameStateStore.getState().setGameState(state);
-    useGameStateStore.getState().setSpectatorMode(true);
+    const session = beginMatchSession(null);
+    const state = await performGameStart(undefined, deckSelection, { sessionId: matchSessionId(session) });
+    if (commitMatchSession(session, state)) useGameStateStore.getState().setSpectatorMode(true);
   };
 
   return (

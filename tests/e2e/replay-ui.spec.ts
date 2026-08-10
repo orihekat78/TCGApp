@@ -32,9 +32,14 @@ test.describe('Phase 9-G.2: リプレイ UI', () => {
       const w = window as unknown as GameWindow;
       const initialState = w.__game.createSampleGameState() as {
         pendingEffects: unknown[];
-        players: { opp: { deck: string[] } };
+        players: {
+          self: { hand: string[] };
+          opp: { deck: string[]; hand: string[] };
+        };
       };
       initialState.pendingEffects = [];
+      initialState.players.self.hand = ['D08003'];
+      initialState.players.opp.hand = ['D11001'];
       initialState.players.opp.deck = Array.from(
         { length: 40 },
         (_, index) => `replay-opp-deck-${index}`,
@@ -61,6 +66,10 @@ test.describe('Phase 9-G.2: リプレイ UI', () => {
     // FileReader が async 動作 → ReplayPanel 表示を polling
     await expect(page.locator('[data-testid="replay-panel"]')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('[data-testid="replay-progress"]')).toHaveText(/0 ?\/ ?1/);
+    await expect(page.locator('[data-testid="replay-hand-strip"] .hand-mini-card')).toHaveCount(1);
+    await expect(page.locator('[data-testid="replay-hand-strip"] .replay-hand-card-back')).toHaveCount(0);
+    await expect(page.locator('[data-testid="replay-hand-strip"]')).toContainText('江戸川コナン');
+    await expect(page.locator('.actions-panel')).toHaveCount(0);
 
     expect(errors).toEqual([]);
   });

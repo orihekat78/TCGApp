@@ -58,7 +58,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:12",
         "src:src/cards/ct-p01/B01018.ts:27",
-        "tests:tests/cards/triage-greens-2026-06-15/B01018.test.ts:94"
+        "tests:tests/cards/triage-greens-2026-06-15/B01018.test.ts:95"
       ],
       "noteCodes": [
         "RAW-READ"
@@ -615,7 +615,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:14",
         "src:src/cards/ct-p04/B04026.ts:31",
-        "tests:tests/e2e/user-bug-wave-ui.spec.ts:318"
+        "tests:tests/e2e/user-bug-wave-ui.spec.ts:345"
       ],
       "noteCodes": [
         "B04026-OPTIONAL-ACQUISITION-COVERED"

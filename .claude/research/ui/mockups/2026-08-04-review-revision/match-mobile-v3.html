@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MATCH mobile v3 design mock</title>
+  <style>
+    :root { color-scheme: dark; font-family: "Yu Gothic UI", "Noto Sans JP", system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #020912; }
+    .match { display: grid; grid-template-columns: 670px 181px; width: 851px; height: 393px; overflow: hidden; background: #020912; }
+    .playmat { position: relative; overflow: hidden; border-right: 1px solid rgba(76, 183, 227, .5); background: #061221; }
+    .playmat::before {
+      content: ""; position: absolute; inset: 0;
+      background: url("match-desktop-1440x900-design-mock.png") 0 -28px / 763px 477px no-repeat;
+    }
+    /* Existing playmat cue only: the causal explanation is not a new control. */
+    .causal-line { position: absolute; left: 288px; top: 152px; width: 132px; border-top: 1px dashed #4cd9ff; transform: rotate(14deg); transform-origin: left center; }
+    .causal-line::after { content: ""; position: absolute; right: -2px; top: -4px; width: 7px; height: 7px; border-top: 1px solid #6ae6ff; border-right: 1px solid #6ae6ff; transform: rotate(45deg); }
+    .causal-copy { position: absolute; left: 340px; top: 164px; color: #a6efff; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-shadow: 0 0 10px #04364e; }
+    .actions { display: flex; min-width: 0; min-height: 0; flex-direction: column; padding: 6px; gap: 4px; background: linear-gradient(180deg, #030c16 0%, #06101d 60%, #030a12 100%); }
+    .actions-head { display: flex; align-items: center; justify-content: space-between; min-height: 17px; padding: 0 2px 4px; border-bottom: 1px solid rgba(70, 172, 213, .3); color: #89b1c8; font: 800 9px/1 Consolas, monospace; letter-spacing: .15em; }
+    .actions-head b { color: #f1cf15; font-size: 9px; letter-spacing: .04em; }
+    .action-list { display: grid; gap: 3px; max-height: 184px; overflow-y: auto; padding-right: 2px; scrollbar-width: thin; scrollbar-color: #488ba8 transparent; }
+    .action-list::-webkit-scrollbar { width: 4px; }
+    .action-list::-webkit-scrollbar-track { background: transparent; }
+    .action-list::-webkit-scrollbar-thumb { border-radius: 4px; background: #488ba8; }
+    .action { min-height: 39px; padding: 4px 6px; border: 1px solid #1a4c68; border-radius: 3px; background: #061524; color: #eefaff; text-align: left; }
+    .action strong { display: block; font-size: 11px; line-height: 13px; }
+    .action small { display: block; margin-top: 1px; color: #8dabbc; font-size: 9px; line-height: 11px; }
+    .action.disabled { border-color: #173245; color: #6a8492; opacity: .72; }
+    .context { min-height: 51px; padding: 5px 6px; border-left: 2px solid #48d4fa; background: #082039; color: #dff9ff; font-size: 10px; line-height: 13px; }
+    .context b { display: block; margin-bottom: 2px; color: #57dafa; font-size: 11px; }
+    .actions-foot { display: grid; gap: 4px; margin-top: auto; }
+    .phase { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
+    .phase span { min-height: 35px; display: grid; place-items: center; border: 1px solid #1b415b; border-radius: 3px; color: #8ca8b9; background: #071625; font-size: 9px; font-weight: 800; }
+    .phase .active { border-color: #4dcdf7; color: #f1fbff; background: #0c436b; }
+    .end-turn { min-height: 46px; display: grid; place-items: center; border: 1px solid #65e5b9; border-radius: 4px; background: linear-gradient(180deg, #2eae83, #1e785e); color: #fff; font-size: 13px; font-weight: 900; letter-spacing: .03em; }
+  </style>
+</head>
+<body>
+  <main class="match" aria-label="MATCH 横画面モバイル改訂モック">
+    <section class="playmat" aria-label="既存のプレイマット">
+      <span class="causal-line" aria-hidden="true"></span>
+      <span class="causal-copy">デッキ → 手札 +1</span>
+    </section>
+    <aside class="actions" aria-label="既存の ACTIONS 操作欄">
+      <div class="actions-head"><span>ACTIONS</span><b>5 枚</b></div>
+      <div class="action-list" aria-label="実行候補">
+        <button class="action"><strong>手札の使用</strong><small>6枚 / 使用可能</small></button>
+        <button class="action"><strong>ネクストヒント</strong><small>FILE 1枚</small></button>
+        <button class="action disabled"><strong>パートナー能力</strong><small>条件を満たしていません</small></button>
+        <button class="action"><strong>推理</strong><small>LPを1増やす</small></button>
+        <button class="action"><strong>アクション</strong><small>行動中</small></button>
+        <button class="action"><strong>アシスト</strong><small>パートナー＋FILE</small></button>
+      </div>
+      <div class="context"><b>処理結果</b>CPUがカードを1枚引いた<br>デッキ → 手札 +1</div>
+      <div class="actions-foot">
+        <div class="phase" aria-label="既存フェイズ操作"><span>AUTO</span><span class="active">MAIN</span><span>END</span></div>
+        <button class="end-turn">ターン終了</button>
+      </div>
+    </aside>
+  </main>
+</body>
+</html>

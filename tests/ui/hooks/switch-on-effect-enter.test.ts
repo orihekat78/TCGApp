@@ -44,7 +44,7 @@ describe('switch-on-effect-enter — 現場満杯の reanimate を switch で登
   beforeEach(() => {
     useGameStateStore.setState({ gameState: null, pendingEffectPick: null });
     _clearPendingEffectPickQueue();
-    (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation = [];
+    delete (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation;
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
   });
   afterEach(() => {

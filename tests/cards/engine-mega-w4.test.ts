@@ -23,6 +23,7 @@ import { dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/use
 import { useGameStateStore } from '@/ui/state/store';
 import { canPay as canPayCost } from '@/engine/cost/evaluate';
 import { pay } from '@/engine/cost/pay';
+import { evalCond } from '@/engine/cond/eval';
 import { resolve as resolveTarget } from '@/engine/target/resolve';
 import { canAction, canActionAgainstChar } from '@/engine/flow/main/action';
 import { drainAiEffectPicks } from '@/engine/effect/apply-pick';
@@ -262,10 +263,15 @@ describe('W4 step1 B08035 怪盗キッド (shape + behavioral)', () => {
     surfacePendingSideChannels();
     const pend = useGameStateStore.getState().pendingEffectPick;
     expect(pend).not.toBeNull();
-    const uids = pend!.candidates.map(c => c.uid);
-    expect(uids, '裏向きセット持ちは候補').toContain('fd#1');
-    expect(uids, '表向きのみのキャラは候補外 (hasFaceDownSetCards)').not.toContain('fu#1');
-    const r = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'fd#1' });
+    const faceDownOccurrence = pend!.candidates.find(c => c.hostUid === 'fd#1');
+    expect(faceDownOccurrence, '裏向きセット occurrence は候補').toMatchObject({
+      kind: 'card',
+      area: 'set-card',
+      hostUid: 'fd#1',
+      hidden: true,
+    });
+    expect(pend!.candidates.some(c => c.hostUid === 'fu#1'), '表向きのみのキャラは候補外 (hasFaceDownSetCards)').toBe(false);
+    const r = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: faceDownOccurrence!.uid });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     const host = after.players.opp.scene.find(c => c.uid === 'fd#1')!;
@@ -687,7 +693,7 @@ describe('W4 step6 r62: filtered-突撃 (grantFilteredAssault + namedException �
     expect(a2.limit).toEqual({ kind: 'turn', n: 1 });
   });
 
-  it('B07096 実挙動: 名乗り + パートナー黒 → lv4 のみ指定可', () => {
+  it('B07096 実挙動: 名乗り中は lv4 のみ、名乗り解除後は lv5 も指定可', () => {
     registerCardDef(B07096);
     const s = stage6(true);
     const vk = sceneChar('B07096', 'vk#1');
@@ -695,6 +701,8 @@ describe('W4 step6 r62: filtered-突撃 (grantFilteredAssault + namedException �
     s.players.self.scene.push(vk);
     expect(canActionAgainstChar(s, 'vk#1', 't4#1'), 'lv4 指定可').toBe(true);
     expect(canActionAgainstChar(s, 'vk#1', 't5#1'), 'lv5 指定不可').toBe(false);
+    vk.isNamed = false;
+    expect(canActionAgainstChar(s, 'vk#1', 't5#1'), '名乗りでなければ lv5 以上も指定可').toBe(true);
   });
 });
 
@@ -919,6 +927,7 @@ describe('W4 step4 r7: handStackUnder cost (B08006 型)', () => {
 
   beforeEach(() => {
     resetDefRegistry();
+    registerCardDef(B08006);
     registerCardDef(mkChar('GENTA', { colors: ['青'], level: 7, traits: ['少年探偵団'] }));
     registerCardDef(mkChar('SB_HAND', { colors: ['青'], level: 3, traits: ['少年探偵団'] }));
     registerCardDef(mkChar('RED_HOST', { colors: ['赤'] }));
@@ -944,6 +953,38 @@ describe('W4 step4 r7: handStackUnder cost (B08006 型)', () => {
     expect(after.players.self.hand.length, '公開した1枚が手札から消える').toBe(1);
     { const stacked = after.players.self.scene.find(c => c.uid === 'gen#1')!.stackedCards; expect(Array.isArray(stacked) ? stacked.length : stacked, '青キャラ (自身可) の下に重なる').toBe(1); }
     expect(after.players.self.remove.length, 'リムーブではない').toBe(0);
+  });
+
+  it('実カード B08006 のコストが公開した手札を自身の下へ重ね、stack 条件を新たに満たす', () => {
+    const s = createEmptyGameState();
+    s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
+    s.players.self.scene = [sceneChar('B08006', 'b08006#1')];
+    s.players.self.hand = ['SB_HAND'];
+    const ctx: EffectCtx = {
+      source: { cardId: 'B08006', uid: 'b08006#1', abilityId: 'a1', player: 'self', area: 'scene' },
+      bindings: {},
+    } as EffectCtx;
+    const hasStack = { kind: 'stackedCountAtLeast', ref: { kind: 'self' }, n: 1 } as const;
+    const reveals: unknown[] = [];
+    const stopListening = event.on('hand:reveal', (_draft, payload) => {
+      reveals.push(payload);
+    });
+
+    expect(evalCond(s, hasStack, ctx), '支払い前は stack 0').toBe(false);
+    expect(canPayCost(s, B08006.abilities[0]!.cost as never, ctx)).toBe(true);
+    const after = produce(s, (d) => { pay(d, B08006.abilities[0]!.cost as never, ctx); });
+    stopListening();
+    const host = after.players.self.scene.find(c => c.uid === 'b08006#1')!;
+    expect(reveals, 'コストで手札を公開した事実をイベント境界でも固定する').toEqual([{
+      player: 'self',
+      revealed: ['SB_HAND'],
+      byPlayer: 'self',
+      cause: 'cost',
+    }]);
+    expect(after.players.self.hand, '公開した少年探偵団が手札を離れる').toEqual([]);
+    expect(Array.isArray(host.stackedCards) ? host.stackedCards.length : host.stackedCards, '公開したカードを B08006 自身の下へ重ねる').toBe(1);
+    expect(host.state, 'コストで B08006 自身をスリープする').toBe('sleep');
+    expect(evalCond(after, hasStack, ctx), '重ねた直後から stack 数条件を満たす').toBe(true);
   });
 });
 
@@ -1032,5 +1073,52 @@ describe('W4 step4 exemplar shapes (B09048 / B08006)', () => {
     const after = produce(s, (d) => { pay(d, B09048.abilities[1]!.cost as never, ctx); });
     { const stacked = after.players.self.scene.find(c => c.uid === 'naka#2')!.stackedCards; expect(Array.isArray(stacked) ? stacked.length : stacked, 'cost で自身の下に重なる').toBe(1); }
     expect(after.players.self.scene.some(c => c.uid === 'py#1')).toBe(false);
+  });
+
+  it('実カード B09048 のコストで MR を重ねても PA へ移らず、host 離場時に MR 能力は発動しない', () => {
+    resetDefRegistry();
+    event._resetRegistry(); _resetTriggeredRegistered(); registerTriggeredListener();
+    const POL_MR = mkChar('POL_MR', {
+      colors: ['黄'], level: 6, traits: ['警察'], isMR: true,
+      abilities: [{
+        id: 'a1', type: 'triggered', scope: 'on-scene',
+        trigger: { hook: 'leave:to-remove', selfOnly: true },
+        effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+        description: '', ruleRefs: [],
+      } as never],
+    } as never);
+    registerCardDef(B09048); registerCardDef(POL_MR);
+
+    const control = createEmptyGameState();
+    control.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
+    control.players.self.scene = [sceneChar('POL_MR', 'polmr#control')];
+    control.players.self.deck = ['DRAW_CONTROL'];
+    const removedLive = produce(control, (d) => {
+      mutate.scene.removeToRemove(d, 'polmr#control', 'effect');
+      runAllUntilEmpty(d);
+    });
+    expect(removedLive.players.self.hand, '現場から通常リムーブされた時は MR の能力が発動する').toEqual(['DRAW_CONTROL']);
+
+    const s = createEmptyGameState();
+    s.turn = { number: 6, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
+    s.players.self.scene = [sceneChar('B09048', 'naka#mr'), sceneChar('POL_MR', 'polmr#1')];
+    s.players.self.deck = ['DRAW_BLOCKED'];
+    const ctx: EffectCtx = {
+      source: { cardId: 'B09048', uid: 'naka#mr', abilityId: 'a2', player: 'self', area: 'scene' },
+      bindings: {},
+    } as EffectCtx;
+    const stacked = produce(s, (d) => { pay(d, B09048.abilities[1]!.cost as never, ctx); });
+    const host = stacked.players.self.scene.find(c => c.uid === 'naka#mr')!;
+    expect(stacked.players.self.scene.some(c => c.uid === 'polmr#1'), 'MR は scene を離れて host の下へ重なる').toBe(false);
+    expect(Array.isArray(host.stackedCards) ? host.stackedCards.length : host.stackedCards, 'B09048 の下に MR が1枚重なる').toBe(1);
+    expect(stacked.players.self.partnerAreaMR ?? null, '相手ターンでも MR の PA redirect は起きない').toBeNull();
+
+    const afterHostLeave = produce(stacked, (d) => {
+      mutate.scene.removeToRemove(d, 'naka#mr', 'effect');
+      runAllUntilEmpty(d);
+    });
+    expect(afterHostLeave.players.self.remove).toEqual(expect.arrayContaining(['B09048', 'POL_MR']));
+    expect(afterHostLeave.players.self.hand, '重なっていた MR の離場能力は発動しない').toEqual([]);
+    expect(afterHostLeave.players.self.deck).toEqual(['DRAW_BLOCKED']);
   });
 });

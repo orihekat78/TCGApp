@@ -20,6 +20,12 @@ import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js';
 import { matchOneFilter, registerEffectiveHandLevel } from '../../target/candidates.js';
 import { evalCond } from '../../cond/eval.js';
+import {
+  completeEffectCausalTrace,
+  recordCausalTraceOperation,
+  startStandaloneCausalTrace,
+  withEffectCausalCorrelation,
+} from '../../log/effect-causal.js';
 import { sceneCap } from '../../read/scene-cap.js'; // engine E3 P11 (2026-07-02): 現場登場上限 (既定5、case override 可)
 
 type Player = 'self' | 'opp';
@@ -261,33 +267,45 @@ export function handUseCard(
   } else if (!canHandUseCard(state, p, cardId)) {
     throw new Error(`handUseCard: not allowed for ${p} cardId=${cardId}`);
   }
+  const causalTrace = startStandaloneCausalTrace(state, {
+    actor: p,
+    kind: 'use',
+    source: { kind: 'player', side: p },
+    targets: [],
+    outcome: { type: 'state', state: 'active' },
+  });
   // フラグ + ログ
   mutate.flag.setHandUseUsed(state, p, true);
-  mutate.log.append(state, {
-    ts: Date.now(),
-    player: p,
-    turn: state.turn.number,
-    action: 'handUseCard',
-    target: cardId,
-  });
+  if (causalTrace === undefined) {
+    mutate.log.append(state, {
+      ts: Date.now(),
+      player: p,
+      turn: state.turn.number,
+      action: 'handUseCard',
+      target: cardId,
+    });
+  }
   // Round 4b: payload kind は event-use / character-use に分離。
   // eventRemoveByAP (cards/_shared) 等の matcher が `kind === 'event-use'` を期待する契約。
   const d = readDef.card(cardId);
   const emitKind = d?.kind === 'event' ? 'event-use' : 'character-use';
-  event.emit(
-    state,
-    'effect:declared',
+  withEffectCausalCorrelation(state, causalTrace?.rootEventId, () => {
+    event.emit(
+      state,
+      'effect:declared',
     // BUG-132 GAP-2 (2026-06-12): payload に player を追加 (additive)。「自分が〜使用したとき」の
     // side 判定を将来 matcherCondition (triggerPlayerIs) で直接書けるようにする。既存 matcher は
     // kind/cardId のみ参照するため無影響。現状の B07016/B08020 a2 は condition turn:self による
     // 間接実装 (イベント使用は使用者ターンに限る) で side を遮蔽している。
-    { kind: emitKind, cardId, player: p },
-    { player: p, cardId, ...(d?.kind === 'event' ? { resolutionKind: 'normal-event' as const } : {}) },
-  );
+      { kind: emitKind, cardId, player: p },
+      { player: p, cardId, ...(d?.kind === 'event' ? { resolutionKind: 'normal-event' as const } : {}) },
+    );
+  });
   // キャラの場合: 現場へ登場 (rules/05 §01 + rules/06 + rules/12 §3 — アクティブ・名乗り状態で登場)
   // NextHint と同じパターン (flow/main/next-hint.ts L105-119) を踏襲。
   // 手札の使用とは異なり、効果による登場ではないので viaEffect:false。
   if (d?.kind === 'character') {
+    const sceneBefore = new Set(state.players[p].scene.map((card) => card.uid));
     // 手札から除去 (refactor 1a 2026-06-12: mutate 層経由。indexOf+splice と同一挙動)
     mutate.hand.remove(state, p, [cardId]);
     // 現場登場 (名乗り状態 = rules/05 同ターン登場)。switch 経路では既存 1 枚を
@@ -301,12 +319,40 @@ export function handUseCard(
           named: true,
           viaEffect: false,
         });
-    event.emit(
-      state,
-      'enter',
-      { uid: newChar.uid, viaEffect: false, enterOrder: newChar.enterOrder, enterOrderThisTurn: newChar.enterOrderThisTurn },
-      { player: p, cardId, uid: newChar.uid },
-    );
+    withEffectCausalCorrelation(state, causalTrace?.rootEventId, () => {
+      event.emit(
+        state,
+        'enter',
+        { uid: newChar.uid, viaEffect: false, enterOrder: newChar.enterOrder, enterOrderThisTurn: newChar.enterOrderThisTurn },
+        { player: p, cardId, uid: newChar.uid },
+      );
+    });
+    const removedFromScene = [...sceneBefore].filter(
+      (uid) => !state.players[p].scene.some((card) => card.uid === uid),
+    ).length;
+    if (removedFromScene > 0) {
+      recordCausalTraceOperation(state, causalTrace, {
+        actor: p,
+        kind: 'zone-move',
+        source: { kind: 'zone', side: p, zone: 'scene' },
+        targets: [{ kind: 'zone', side: p, zone: 'remove' }],
+        outcome: { type: 'move', from: 'scene', to: 'remove', count: removedFromScene },
+      });
+    }
+    recordCausalTraceOperation(state, causalTrace, {
+      actor: p,
+      kind: 'zone-move',
+      source: { kind: 'zone', side: p, zone: 'hand' },
+      targets: [{ kind: 'zone', side: p, zone: 'scene' }],
+      outcome: { type: 'move', from: 'hand', to: 'scene', count: 1 },
+    });
+    recordCausalTraceOperation(state, causalTrace, {
+      actor: p,
+      kind: 'enter',
+      source: { kind: 'player', side: p },
+      targets: [{ kind: 'scene-card', side: p, uid: newChar.uid }],
+      outcome: { type: 'state', state: 'success' },
+    });
   } else if (d?.kind === 'event') {
     // Round 4a (バグ D): イベントカードは使い切り、使用後リムーブエリアへ (rules/06)。
     // 旧実装は kind='character' 分岐のみで event 用処理が欠落、使用後も手札に残るバグだった。
@@ -314,5 +360,13 @@ export function handUseCard(
     // pendingEffects に積む設計。本 fix は「手札除去 + リムーブ移動」のみを保証する。
     mutate.hand.remove(state, p, [cardId]); // refactor 1a: mutate 層経由
     mutate.remove.add(state, p, [cardId]);
+    recordCausalTraceOperation(state, causalTrace, {
+      actor: p,
+      kind: 'zone-move',
+      source: { kind: 'zone', side: p, zone: 'hand' },
+      targets: [{ kind: 'zone', side: p, zone: 'remove' }],
+      outcome: { type: 'move', from: 'hand', to: 'remove', count: 1 },
+    });
   }
+  completeEffectCausalTrace(state, causalTrace, p);
 }

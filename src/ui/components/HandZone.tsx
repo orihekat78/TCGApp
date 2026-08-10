@@ -148,7 +148,8 @@ function HandCard({
             ? '🔍 で拡大表示'
             : undefined
       }
-      aria-disabled={disabled || undefined}
+      aria-disabled={(disabled && onExpand === undefined) || undefined}
+      data-action-disabled={disabled || undefined}
       onClick={disabled ? undefined : onClick}
     >
       <div className="cost">{card.cost}</div>

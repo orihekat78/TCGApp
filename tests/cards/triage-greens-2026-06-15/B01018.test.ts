@@ -48,6 +48,7 @@ import { useGameStateStore } from '@/ui/state/store';
 import { sceneChar } from '../../helpers/fixtures';
 import type { CardDef, GameState } from '@/engine/types';
 import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
+import { openCaseHirameki } from '../../helpers/open-case-hirameki';
 
 // 江戸川コナンでない通常キャラ decoy (cardName 条件のみで弾かれるべき)。
 // id 衝突回避のため DEC_B01018_ prefix。
@@ -183,16 +184,9 @@ describe('B01018 宮野志保 — gate5 runtime behavior', () => {
       const s = makeStateWithEvidence();
       const startHand = s.players.self.hand.length;
       const startDeck = s.players.self.deck.length;
-      engine.event.emit(
-        s,
-        'evidence:remove-by-action',
-        { player: 'self', ev: { cardId: 'B01018' } },
-        { player: 'opp', uid: 'opp-attacker' },
-      );
-      const pending = _drainPendingHirameki();
+      const { pending } = openCaseHirameki(s, 'B01018');
       expect(pending, 'B01018 の【ヒラメキ】が発火 (pending set)').not.toBeNull();
-      expect(pending!.cardId, 'pending は B01018 のヒラメキ').toBe('B01018');
-      useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
+      expect(pending.cardId, 'pending は B01018 のヒラメキ').toBe('B01018');
       const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' });
       expect(r.ok).toBe(true);
       const after = useGameStateStore.getState().gameState!;
@@ -204,15 +198,8 @@ describe('B01018 宮野志保 — gate5 runtime behavior', () => {
       const s = makeStateWithEvidence();
       const startHand = s.players.self.hand.length;
       const startDeck = s.players.self.deck.length;
-      engine.event.emit(
-        s,
-        'evidence:remove-by-action',
-        { player: 'self', ev: { cardId: 'B01018' } },
-        { player: 'opp', uid: 'opp-attacker' },
-      );
-      const pending = _drainPendingHirameki();
+      const { pending } = openCaseHirameki(s, 'B01018');
       expect(pending, 'ヒラメキが発火 (任意発動 surface)').not.toBeNull();
-      useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
       const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'skip' });
       expect(r.ok).toBe(true);
       const after = useGameStateStore.getState().gameState!;

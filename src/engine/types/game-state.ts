@@ -217,7 +217,8 @@ export type TurnScopedFlags = {
   actionCutinBanOppFilter?: TargetFilter;
 };
 
-export type LogEntry = {
+export type LegacyLogEntry = {
+  schemaVersion?: never;
   ts: number;
   player: 'self' | 'opp';
   turn: number;
@@ -226,6 +227,89 @@ export type LogEntry = {
   /** When set, target is private to this player; action/result remain public. */
   targetAudience?: 'self' | 'opp';
   result?: string;
+};
+
+export type CausalEventKind =
+  | 'use'
+  | 'declare'
+  | 'select'
+  | 'draw'
+  | 'discard'
+  | 'zone-move'
+  | 'enter'
+  | 'sleep'
+  | 'stun'
+  | 'activate'
+  | 'face-change'
+  | 'value-change'
+  | 'evidence'
+  | 'case-status-change'
+  | 'case-resolve'
+  | 'negate'
+  | 'fizzle'
+  | 'cancel'
+  | 'game-result'
+  | 'summary';
+
+export type CausalEventTag = 'contact' | 'cutin' | 'hirameki' | 'misread' | 'refresh';
+
+export type PublicCausalZone =
+  | 'deck'
+  | 'hand'
+  | 'scene'
+  | 'partner'
+  | 'case'
+  | 'file'
+  | 'evidence'
+  | 'remove'
+  | 'set-card';
+
+export type PublicCausalRef = {
+  visibility: 'public';
+  kind: 'player' | 'card' | 'zone' | 'counter' | 'rule';
+  label: string;
+  side?: 'self' | 'opp';
+  zone?: PublicCausalZone;
+  cardNumber?: string;
+};
+
+export type CausalOutcome =
+  | { type: 'none' }
+  | { type: 'count'; amount: number; unit: 'card' | 'evidence' | 'lp' | 'ap' | 'level' }
+  | { type: 'move'; from: PublicCausalZone; to: PublicCausalZone; count: number }
+  | { type: 'state'; state: 'success' | 'failed' | 'cancelled' | 'negated' | 'fizzled' | 'sleep' | 'stun' | 'active' }
+  | { type: 'case-status'; from: 'incident'; to: 'resolved' }
+  | { type: 'face-change'; from: 'face-down' | 'face-up'; to: 'face-down' | 'face-up'; count: number }
+  | { type: 'summary'; count: number; kinds: CausalEventKind[] };
+
+export type CausalLogEntryV1 = {
+  schemaVersion: 1;
+  eventId: string;
+  sessionId: string;
+  sequence: number;
+  ts: number;
+  player: 'self' | 'opp';
+  actor: 'self' | 'opp';
+  turn: number;
+  action: string;
+  target?: string;
+  targetAudience?: never;
+  result?: string;
+  kind: CausalEventKind;
+  tags?: CausalEventTag[];
+  parentEventId?: string;
+  correlationEventId?: string;
+  source?: PublicCausalRef;
+  targets: PublicCausalRef[];
+  outcome: CausalOutcome;
+};
+
+export type LogEntry = LegacyLogEntry | CausalLogEntryV1;
+
+export type CausalLogStateV1 = {
+  schemaVersion: 1;
+  sessionId: string;
+  nextSequence: number;
 };
 
 // pendingEffects は EffectStackEntry[] として保持する。
@@ -312,6 +396,8 @@ export type GameState = {
   scratchTrace: { self: '未発見' | '発見済'; opp: '未発見' | '発見済' };
   turnState: { self: TurnScopedFlags; opp: TurnScopedFlags };
   refreshCount: { self: number; opp: number };
+  /** Public causal-log identity and allocator. Optional only before a caller starts a session. */
+  causalLog?: CausalLogStateV1;
   log: LogEntry[];
   gameResult?: { winner: 'self' | 'opp'; reason: 'evidence' | 'deck-out' | 'concede' | 'alt-lose' };
 };

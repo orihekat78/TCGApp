@@ -1,0 +1,79 @@
+{
+  "generatedAt": "2026-08-04T03:35:03.981Z",
+  "scope": {
+    "implemented": [
+      "HISTORY"
+    ],
+    "reviewMocks": [
+      "RESULT desktop",
+      "RESULT mobile",
+      "REPLAY mobile",
+      "MATCH desktop",
+      "MATCH mobile resolution",
+      "MATCH mobile target selection"
+    ],
+    "excluded": [
+      "SETTINGS",
+      "TUTORIAL",
+      "REPLAY desktop"
+    ]
+  },
+  "entries": [
+    {
+      "filename": "history-desktop-1440x900-runtime.png",
+      "viewport": "1440x900",
+      "provenance": "runtime",
+      "source": "implemented HISTORY route",
+      "sha256": "512942db729f239eb8f78f3a262478228c70dd378c50d74d8c6144002b8310e5"
+    },
+    {
+      "filename": "history-mobile-851x393-runtime.png",
+      "viewport": "851x393",
+      "provenance": "runtime",
+      "source": "implemented HISTORY route",
+      "sha256": "5f5ee45e086302844f03004471aeff9a03653653a9695224f4cc76138b2e3e3f"
+    },
+    {
+      "filename": "result-desktop-1440x900-design-mock.png",
+      "viewport": "1440x900",
+      "provenance": "design-mock",
+      "source": "result-revised.html",
+      "sha256": "843226240805dc27ba8ac9f98afb01167e5e2f1e49fe6449647250bf5f1f70a2"
+    },
+    {
+      "filename": "result-mobile-851x393-design-mock.png",
+      "viewport": "851x393",
+      "provenance": "design-mock",
+      "source": "result-revised.html",
+      "sha256": "f8e3e7b9762f63b2ae5bbc9c6aa98bfaf89fe4c6b5eff4518f69dcbd081a5ecd"
+    },
+    {
+      "filename": "replay-mobile-851x393-design-mock.png",
+      "viewport": "851x393",
+      "provenance": "design-mock",
+      "source": "replay-revised.html",
+      "sha256": "e310b576034e4f6d7a1bdd2930b16d18021349182aa645c2bf75dec7c01efcbf"
+    },
+    {
+      "filename": "match-desktop-1440x900-design-mock.png",
+      "viewport": "1440x900",
+      "provenance": "design-mock",
+      "source": "match-revised.html",
+      "sha256": "5612d25466af13cb154522afc227ddaaed17191e2724cd1a764083258fd5b88b"
+    },
+    {
+      "filename": "match-mobile-851x393-resolution-design-mock.png",
+      "viewport": "851x393",
+      "provenance": "design-mock",
+      "source": "match-revised.html",
+      "sha256": "82faceadd167ffd33f2d2b628ef080e74c4504775e7b37deba0f9c55596b8225"
+    },
+    {
+      "filename": "match-mobile-851x393-target-selection-design-mock.png",
+      "viewport": "851x393",
+      "provenance": "design-mock",
+      "source": "match-revised.html",
+      "sha256": "a367b97da6c1c7a3965d6c9fe268e2ee97e7b8c9e1757b90a92032aa05652416"
+    }
+  ]
+}

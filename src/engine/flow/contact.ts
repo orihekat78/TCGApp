@@ -20,6 +20,13 @@ import { evalCond } from '../cond/eval.js';
 import { matchOneFilter } from '../target/candidates.js'; // engine A3 wave (2026-07-11): B05007 filtered action-scoped cutin ban
 import { computeOrder as _computeOrder } from './action/order.js';
 import { contextForState } from './action/context-registry.js';
+import {
+  actionCorrelationEventId,
+  otherPlayer,
+  publicUidLocator,
+  recordActionCausalOperation,
+} from './action/causal.js';
+import { withEffectCausalCorrelation } from '../log/effect-causal.js';
 
 type Player = 'self' | 'opp';
 
@@ -172,8 +179,18 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
     ? cutinAbilities.find(a => a.id === cutinAbilityId)
     : cutinAbilities[0];
   if (!selected) throw new Error(`flow.contact.cutIn: cutin ability not found cardId=${cardId}`);
+  const cutinDecisionEventId = recordActionCausalOperation(state, ax, {
+    actor: p,
+    kind: 'use',
+    tags: ['contact', 'cutin'],
+    source: { kind: 'player', side: p },
+    targets: [{ kind: 'zone', side: p, zone: 'hand' }],
+    outcome: { type: 'state', state: 'active' },
+  });
   event.emit(state, 'effect:declared', { cardId, abilityId: 'cutin', cutinAbilityId: selected.id }, {
     player: p, cardId, bindings: contactBindings, resolutionKind: 'cutin' as const,
+  }, {
+    causalCorrelationEventId: cutinDecisionEventId,
   });
   // engine additive wave-3 (2026-06-30): カットイン使用を第三者キャラが観測する専用 hook (rules/09)。
   // effect:declared(自効果ゲート) とは別 hook = 自効果と第三者観測を分離。payload.player で側、payload.cardId で
@@ -181,18 +198,32 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
   // $contact.byUid 解決を可能にする (B02080「そのキャラを AP+1000」)。新 hook = 既存カード未宣言 → 挙動不変。
   event.emit(state, 'cutin:used', { player: p, cardId }, {
     player: p, cardId, bindings: contactBindings,
+  }, {
+    causalCorrelationEventId: cutinDecisionEventId,
   });
-  mutate.hand.discardToRemove(state, p, [cardId], { byPlayer: p }); // W3 (r17): 自己起因を明示
+  withEffectCausalCorrelation(state, cutinDecisionEventId, () => {
+    mutate.hand.discardToRemove(state, p, [cardId], { byPlayer: p }); // W3 (r17): 自己起因を明示
+  });
+  recordActionCausalOperation(state, ax, {
+    actor: p,
+    kind: 'zone-move',
+    tags: ['contact', 'cutin'],
+    source: { kind: 'zone', side: p, zone: 'hand' },
+    targets: [{ kind: 'zone', side: p, zone: 'remove' }],
+    outcome: { type: 'count', amount: 1, unit: 'card' },
+  });
   if (!ax.cutInUsed) ax.cutInUsed = {};
   ax.cutInUsed[p] = true;
 
-  mutate.log.append(state, {
-    ts: Date.now(),
-    player: p,
-    turn: state.turn.number,
-    action: 'contact-cutin',
-    target: cardId,
-  });
+  if (ax.causalTrace === undefined) {
+    mutate.log.append(state, {
+      ts: Date.now(),
+      player: p,
+      turn: state.turn.number,
+      action: 'contact-cutin',
+      target: cardId,
+    });
+  }
 }
 
 /**
@@ -252,6 +283,14 @@ export function disguise(state: GameState, ax: ActionContext, p: Player, cardId:
     throw new Error(`flow.contact.disguise: target char not found uid=${targetUid}`);
   }
   const fromCardId = targetChar.cardId;
+  const disguiseDecisionEventId = recordActionCausalOperation(state, ax, {
+    actor: p,
+    kind: 'activate',
+    tags: ['contact'],
+    source: { kind: 'player', side: p },
+    targets: [publicUidLocator(state, targetUid, p)],
+    outcome: { type: 'state', state: 'active' },
+  });
   // engine mega-wave W3 (2026-07-03, r51): 入替え元キャラの snapshot (disguiseInto は同一オブジェクトの
   // cardId を書換えるため shallow copy で凍結)。uid は sentinel 化 — targetUid slot はこの後も同 uid の
   // まま新カードが residence するため、素の uid だと disguiseReplacedMatches の filter 評価
@@ -268,6 +307,30 @@ export function disguise(state: GameState, ax: ActionContext, p: Player, cardId:
   mutate.char.disguiseInto(state, targetUid, cardId);
   // 手札から disguise カードを削除
   mutate.hand.remove(state, p, [cardId]);
+  recordActionCausalOperation(state, ax, {
+    actor: p,
+    kind: 'zone-move',
+    tags: ['contact'],
+    source: { kind: 'zone', side: p, zone: 'scene' },
+    targets: [{ kind: 'zone', side: p, zone: 'deck' }],
+    outcome: { type: 'count', amount: 1, unit: 'card' },
+  });
+  recordActionCausalOperation(state, ax, {
+    actor: p,
+    kind: 'zone-move',
+    tags: ['contact'],
+    source: { kind: 'zone', side: p, zone: 'hand' },
+    targets: [{ kind: 'zone', side: p, zone: 'scene' }],
+    outcome: { type: 'count', amount: 1, unit: 'card' },
+  });
+  recordActionCausalOperation(state, ax, {
+    actor: p,
+    kind: 'enter',
+    tags: ['contact'],
+    source: { kind: 'zone', side: p, zone: 'hand' },
+    targets: [publicUidLocator(state, targetUid, p)],
+    outcome: { type: 'state', state: 'success' },
+  });
 
   // disguise:into emit (spec: { uid, fromCardId, newCardId })
   // engine拡張 wave#2 cluster5 (2026-06-14): 変装する p の相手 (= other) が「相手のキャラの【変装時】は
@@ -289,10 +352,13 @@ export function disguise(state: GameState, ax: ActionContext, p: Player, cardId:
       'disguise:into',
       { uid: targetUid, fromCardId, newCardId: cardId, player: p, replacedChar },
       { player: p, uid: targetUid, bindings: buildContactBindings(ax, p) },
+      { causalCorrelationEventId: disguiseDecisionEventId },
     );
   }
   // rules/23: 元キャラのデッキ下移動は「リムーブ扱いではない」→ leave:to-deck Hook を発火 (抑止対象外、常に発火)
-  event.emit(state, 'leave:to-deck', { cardId: fromCardId }, { player: p });
+  event.emit(state, 'leave:to-deck', { cardId: fromCardId }, { player: p }, {
+    causalCorrelationEventId: disguiseDecisionEventId,
+  });
   // engine mega-wave W3 (2026-07-03, r10): 被置換側 (退場した元キャラ) の自己反応 hook (B03052
   // 「〚カード名［ベルモット］〛が【変装】によってこのキャラと入れ替わったとき」)。無条件 emit —
   // B04034 の disguiseTrigger aura は【変装時】アイコン (disguise:into) のみを抑止し、被置換側の
@@ -304,16 +370,19 @@ export function disguise(state: GameState, ax: ActionContext, p: Player, cardId:
     'disguise:replaced',
     { uid: targetUid, fromCardId, newCardId: cardId, player: p },
     { player: p, uid: targetUid, cardId: fromCardId },
+    { causalCorrelationEventId: disguiseDecisionEventId },
   );
 
-  mutate.log.append(state, {
-    ts: Date.now(),
-    player: p,
-    turn: state.turn.number,
-    action: 'contact-disguise',
-    target: targetUid,
-    result: `${fromCardId} → ${cardId}`,
-  });
+  if (ax.causalTrace === undefined) {
+    mutate.log.append(state, {
+      ts: Date.now(),
+      player: p,
+      turn: state.turn.number,
+      action: 'contact-disguise',
+      target: targetUid,
+      result: `${fromCardId} → ${cardId}`,
+    });
+  }
 }
 
 /**
@@ -321,13 +390,24 @@ export function disguise(state: GameState, ax: ActionContext, p: Player, cardId:
  *
  * 副作用なし。ログのみ。caller が firstActed/secondActed を false に維持する。
  */
-export function pass(state: GameState, _ax: ActionContext, p: Player): void {
-  mutate.log.append(state, {
-    ts: Date.now(),
-    player: p,
-    turn: state.turn.number,
-    action: 'contact-pass',
+export function pass(state: GameState, ax: ActionContext, p: Player): void {
+  ax = contextForState(state, ax);
+  recordActionCausalOperation(state, ax, {
+    actor: p,
+    kind: 'select',
+    tags: ['contact'],
+    source: { kind: 'player', side: p },
+    targets: [],
+    outcome: { type: 'none' },
   });
+  if (ax.causalTrace === undefined) {
+    mutate.log.append(state, {
+      ts: Date.now(),
+      player: p,
+      turn: state.turn.number,
+      action: 'contact-pass',
+    });
+  }
 }
 
 /**
@@ -378,6 +458,21 @@ export function judge(
     attackerRemoved: false,
   };
 
+  const judgeEventId = recordActionCausalOperation(state, ax, {
+    actor: ax.byPlayer,
+    kind: 'summary',
+    tags: ['contact'],
+    source: publicUidLocator(state, aUid, ax.byPlayer),
+    targets: defenderRemoved
+      ? [{ kind: 'zone', side: otherPlayer(ax.byPlayer), zone: 'remove' }]
+      : [publicUidLocator(state, bUid, otherPlayer(ax.byPlayer))],
+    outcome: { type: 'state', state: defenderRemoved ? 'success' : 'failed' },
+  });
+  if (judgeEventId !== undefined && ax.causalTrace !== undefined) {
+    ax.causalTrace.completed = true;
+    ax.contactResultCausalEventId = judgeEventId;
+  }
+
   // contact:judge emit
   const winner = defenderRemoved ? aUid : (aAP < bAP ? bUid : aUid /* tie 以上は攻撃側勝ち */);
   const loser = defenderRemoved ? bUid : (aAP < bAP ? aUid : bUid);
@@ -386,18 +481,21 @@ export function judge(
     'contact:judge',
     { winner, loser },
     { player: ax.byPlayer, uid: ax.byUid },
+    { causalCorrelationEventId: judgeEventId ?? actionCorrelationEventId(ax) },
   );
 
   // Phase 8.10e: judge 結果を state.log に記録 (UI の RecentActionToast / LogPanel が拾う)
   // 2026-05-25 拡張: 最終 AP 詳細 + 勝敗を含める。
   const verdict = defenderRemoved ? '✓ HIT (defender removed)' : '✗ MISS';
-  mutate.log.append(state, {
-    ts: Date.now(),
-    player: ax.byPlayer,
-    turn: state.turn.number,
-    action: 'contact-judge',
-    result: `${aSide} VS ${bSide} → ${verdict}`,
-  });
+  if (ax.causalTrace === undefined) {
+    mutate.log.append(state, {
+      ts: Date.now(),
+      player: ax.byPlayer,
+      turn: state.turn.number,
+      action: 'contact-judge',
+      result: `${aSide} VS ${bSide} → ${verdict}`,
+    });
+  }
 
   return result;
 }

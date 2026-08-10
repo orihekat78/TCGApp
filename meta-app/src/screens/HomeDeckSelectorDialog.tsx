@@ -9,9 +9,22 @@ interface Props {
   selectedId: string;
   onConfirm: (id: string) => void;
   onClose: () => void;
+  title?: string;
+  description?: string;
+  confirmLabel?: string;
+  radioName?: string;
 }
 
-export function HomeDeckSelectorDialog({ decks, selectedId, onConfirm, onClose }: Props) {
+export function HomeDeckSelectorDialog({
+  decks,
+  selectedId,
+  onConfirm,
+  onClose,
+  title = '使用デッキを選択',
+  description = '次の対戦で使用するデッキを選びます',
+  confirmLabel = 'このデッキを使用',
+  radioName = 'home-active-deck',
+}: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [draftId, setDraftId] = useState(selectedId);
   const entries = useMemo(() => decks.map((deck) => ({
@@ -50,8 +63,8 @@ export function HomeDeckSelectorDialog({ decks, selectedId, onConfirm, onClose }
       <div className="home-deck-dialog-shell">
         <header className="home-deck-dialog-header">
           <div>
-            <h2 id="home-deck-dialog-title">使用デッキを選択</h2>
-            <p>次の対戦で使用するデッキを選びます</p>
+            <h2 id="home-deck-dialog-title">{title}</h2>
+            <p>{description}</p>
           </div>
           <button className="home-deck-dialog-close" type="button" aria-label="閉じる" onClick={onClose}>×</button>
         </header>
@@ -66,7 +79,7 @@ export function HomeDeckSelectorDialog({ decks, selectedId, onConfirm, onClose }
               <input
                 className="home-deck-choice-input"
                 type="radio"
-                name="home-active-deck"
+                name={radioName}
                 value={deck.id}
                 checked={draftId === deck.id}
                 disabled={!playable}
@@ -98,7 +111,7 @@ export function HomeDeckSelectorDialog({ decks, selectedId, onConfirm, onClose }
               disabled={!draft}
               onClick={() => draft && onConfirm(draft.deck.id)}
             >
-              このデッキを使用
+              {confirmLabel}
             </button>
           </div>
         </footer>

@@ -41,7 +41,7 @@ describe('BUG-121 残課題: sequence 内 human choice (pre-step 二重実行な
   beforeEach(() => {
     _clearPendingEffectPickQueue();
     _clearPendingEffectChoiceSide();
-    (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation = [];
+    delete (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation;
   });
 
   // sequence: [draw1, choice(draw2 / draw4), draw8]

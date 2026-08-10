@@ -96,6 +96,7 @@ const a2: AbilityDef = {
             player: 'self',
             side: 'either',
             n: 2,
+            minimumPolicy: 'exact',
             perSideMax: 1,
             faceDownOnly: true,
             filter: { hasFaceDownSetCards: true },

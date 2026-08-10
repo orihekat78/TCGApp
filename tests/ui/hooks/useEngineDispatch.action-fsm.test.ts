@@ -4,15 +4,18 @@
 // spec: 計画 — Per-Step Action Dispatch
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import { bindPendingDecision, dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { event } from '@/engine/event';
 import {
   _clearPendingEffectPickQueue,
+  _drainPendingChooseInterceptSide,
   _peekPendingEffectPickQueueLength,
   _peekPendingEffectPickSide,
+  _peekPendingChooseInterceptResume,
   _pushPendingEffectPickSideForTest,
+  pushPendingChooseInterceptSide,
   type PendingEffectPickSide,
 } from '@/engine/effect/pending-state';
 import * as flow from '@/engine/flow/index.js';
@@ -182,6 +185,45 @@ describe('useEngineDispatch — per-step action FSM', () => {
     expect(resolved.log.find((entry) => entry.action === 'contact-judge')?.result).toContain('MISS');
   });
 
+  it.each([
+    [
+      { player: 'other', targetUid: 't1', interceptorUid: 'interceptor' },
+      'pendingLeaveIntercept.player',
+    ],
+    [
+      { player: 'opp', targetUid: '', interceptorUid: 'interceptor' },
+      'pendingLeaveIntercept.targetUid',
+    ],
+    [
+      { player: 'opp', targetUid: 't1', interceptorUid: '' },
+      'pendingLeaveIntercept.interceptorUid',
+    ],
+  ])('rejects malformed state-owned leave intercepts before replacing the live state: %s', (
+    pendingLeaveIntercept,
+    expectedPath,
+  ) => {
+    const liveState = makeBattle();
+    useGameStateStore.setState({ gameState: liveState, pendingLeaveIntercept: null });
+    const incoming = makeBattle();
+    incoming.actionContextSeq = 1;
+    incoming.actionContexts = {
+      ax_1: {
+        id: 'ax_1',
+        byUid: 's1',
+        byPlayer: 'self',
+        target: { kind: 'char', uid: 't1' },
+        phase: 'judge',
+        pendingLeaveIntercept: pendingLeaveIntercept as never,
+        startedAt: { turn: 2, nano: 1 },
+      },
+    };
+
+    expect(() => useGameStateStore.getState().setGameState(incoming))
+      .toThrow(new RegExp(expectedPath));
+    expect(useGameStateStore.getState().gameState).toBe(liveState);
+    expect(useGameStateStore.getState().pendingLeaveIntercept).toBeNull();
+  });
+
   it('actionGuard with null → passGuard → leave-resolution (char target)', () => {
     useGameStateStore.setState({ gameState: makeBattle() });
     dispatchEngineAction({ type: 'actionDeclareChar', byUid: 's1', targetUid: 't1' });
@@ -344,6 +386,65 @@ describe('useEngineDispatch — per-step action FSM', () => {
     expect(_peekPendingEffectPickSide()).toEqual(existing);
   });
 
+  it('keeps an invalid choose-intercept response retryable across dispatcher rollback', () => {
+    const state = makeBattle();
+    state.players.self.hand = ['fee'];
+    useGameStateStore.setState({ gameState: state });
+
+    const guard = {
+      player: 'self' as const,
+      protector: { uid: 'protector', cardId: 'PROTECTOR', abilityId: 'a1' },
+      targetUid: 's1',
+    };
+    const pending: PendingEffectPickSide = {
+      player: 'self',
+      ownerPlayer: 'opp',
+      candidates: [{ uid: 's1', cardId: 'cX', player: 'self' }],
+      atomVerb: 'sceneSetState',
+      atomArgs: { uid: '$pick', state: 'sleep' },
+      nMin: 1,
+      nMax: 1,
+      source: { cardId: 'SOURCE', uid: 'source', abilityId: 'a1' },
+      continuation: {
+        kind: 'sequence',
+        remainder: [],
+        ctx: {
+          source: { cardId: 'SOURCE', uid: 'source', abilityId: 'a1', player: 'opp', area: 'scene' },
+          bindings: {},
+        },
+      },
+    };
+    pushPendingChooseInterceptSide(guard, { pending, pickedUid: 's1' });
+    useGameStateStore.getState().setPendingChooseIntercept(_drainPendingChooseInterceptSide());
+    const surfaced = useGameStateStore.getState().pendingChooseIntercept!;
+
+    expect(dispatchEngineAction(bindPendingDecision(surfaced, {
+      type: 'chooseInterceptResolve',
+      discardIndex: 99,
+    }))).toEqual({
+      ok: false,
+      reason: 'engine-error',
+      detail: 'chooseIntercept: invalid discard occurrence',
+    });
+
+    const rolledBack = useGameStateStore.getState();
+    expect(rolledBack.gameState?.players.self.hand).toEqual(['fee']);
+    expect(rolledBack.gameState?.players.self.remove).toEqual([]);
+    expect(rolledBack.gameState?.players.self.scene[0]?.state).toBe('active');
+    expect(rolledBack.pendingChooseIntercept).toEqual(surfaced);
+    expect(_peekPendingChooseInterceptResume()).not.toBeNull();
+
+    expect(dispatchEngineAction(bindPendingDecision(surfaced, {
+      type: 'chooseInterceptResolve',
+      discardIndex: 0,
+    }))).toEqual({ ok: true });
+    const recovered = useGameStateStore.getState();
+    expect(recovered.pendingChooseIntercept).toBeNull();
+    expect(recovered.gameState?.players.self.hand).toEqual([]);
+    expect(recovered.gameState?.players.self.remove).toEqual(['fee']);
+    expect(recovered.gameState?.players.self.scene[0]?.state).toBe('sleep');
+  });
+
   it('actionJudge (case target): removes opp evidence + adds self evidence', () => {
     useGameStateStore.setState({ gameState: makeBattle() });
     const r1 = dispatchEngineAction({ type: 'actionDeclareCase', byUid: 's1', targetPlayer: 'opp' });
@@ -502,17 +603,24 @@ describe('useEngineDispatch — per-step action FSM', () => {
     // 3. advance を action-end まで進める (leave-resolution → contact-pending → action-1 →
     //    action-2 → judge → contact-end → action-end)
     // 各 contact phase は pass で進める
+    const visitedPhases = new Set<string>();
     const advanceTillEnd = (): void => {
       for (let i = 0; i < 20; i++) {
         const cur = getActionContext(axId);
         if (!cur || cur.phase === 'action-end') break;
+        visitedPhases.add(cur.phase);
         if (cur.phase === 'action-1' || cur.phase === 'action-2' || cur.phase === 'action-1-redo') {
-          dispatchEngineAction({
+          const actingUid = cur.phase === 'action-2' ? cur.secondUid : cur.firstUid;
+          const current = useGameStateStore.getState().gameState!;
+          const player = current.players.self.scene.some((card) => card.uid === actingUid)
+            ? 'self'
+            : 'opp';
+          expect(dispatchEngineAction({
             type: 'actionContact',
             actionId: axId,
-            player: cur.byPlayer,
+            player,
             choice: { kind: 'pass' },
-          });
+          }).ok).toBe(true);
         }
         if (cur.phase === 'judge') {
           dispatchEngineAction({ type: 'actionJudge', actionId: axId });
@@ -523,6 +631,8 @@ describe('useEngineDispatch — per-step action FSM', () => {
     advanceTillEnd();
 
     const after = useGameStateStore.getState().gameState!;
+    expect(visitedPhases.has('action-1')).toBe(true);
+    expect(visitedPhases.has('action-2')).toBe(true);
     // 証拠は不変 (guard 成立で rules/10 evidence change スキップ)
     expect(after.players.opp.evidence.length).toBe(evOppBefore);
     expect(after.players.self.evidence.length).toBe(evSelfBefore);

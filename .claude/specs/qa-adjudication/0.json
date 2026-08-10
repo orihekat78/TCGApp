@@ -1275,8 +1275,11 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08063.ts:8",
-        "tests:tests/cards/B08063.test.ts:33"
+        "src:src/cards/ct-p08/B08063.ts:12",
+        "src:src/cards/ct-p08/B08063.ts:18",
+        "tests:tests/cards/B08063.test.ts:109",
+        "tests:tests/cards/B08063.test.ts:110",
+        "tests:tests/cards/B08063.test.ts:113"
       ]
     },
     {
@@ -1286,8 +1289,12 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08063.ts:20",
-        "tests:tests/cards/B08063.test.ts:84"
+        "src:src/cards/ct-p08/B08063.ts:28",
+        "src:src/cards/ct-p08/B08063.ts:38",
+        "tests:tests/cards/B08063.test.ts:171",
+        "tests:tests/cards/B08063.test.ts:172",
+        "tests:tests/cards/B08063.test.ts:174",
+        "tests:tests/cards/B08063.test.ts:175"
       ]
     },
     {
@@ -1297,21 +1304,30 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08063.ts:38",
-        "tests:tests/cards/B08063.test.ts:104"
+        "src:src/cards/ct-p08/B08063.ts:12",
+        "src:src/cards/ct-p08/B08063.ts:16",
+        "tests:tests/cards/B08063.test.ts:134",
+        "tests:tests/cards/B08063.test.ts:135",
+        "tests:tests/cards/B08063.test.ts:136"
       ]
     },
     {
       "qaId": "card:B08069:a96985ed96d005b04cd0c44c2dadf206fac63c8bd49e8c42cef6ea4c73808dae",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08069.ts:29"
-      ],
-      "noteCodes": [
-        "B08069-TURN-END-ORDER-TEST-MISSING"
+        "src:src/cards/ct-p08/B08069.ts:22",
+        "src:src/cards/ct-p08/B08069.ts:33",
+        "tests:tests/cards/B08069.test.ts:100",
+        "tests:tests/cards/B08069.test.ts:119",
+        "tests:tests/cards/B08069.test.ts:121",
+        "tests:tests/cards/B08069.test.ts:127",
+        "tests:tests/cards/B08069.test.ts:128",
+        "tests:tests/cards/B08069.test.ts:94",
+        "tests:tests/cards/B08069.test.ts:96",
+        "tests:tests/cards/B08069.test.ts:99"
       ]
     },
     {

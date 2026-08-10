@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>対戦履歴 改訂デザインモック</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --canvas: #03111f;
+      --header: #020d18;
+      --surface: #071b2d;
+      --surface-strong: #0a2339;
+      --line: rgba(116, 181, 217, .22);
+      --line-strong: rgba(76, 202, 244, .58);
+      --text: #edf7ff;
+      --muted: #8fa8bb;
+      --cyan: #45d0f4;
+      --win: #42d9b0;
+      --loss: #ff776e;
+      font-family: "Yu Gothic UI", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--canvas); color: var(--text); }
+    body { background: linear-gradient(180deg, #06182a 0, var(--canvas) 34%); }
+    button, select { font: inherit; }
+
+    .site-header {
+      height: 72px; display: flex; align-items: stretch; padding: 0 28px;
+      border-bottom: 1px solid rgba(108, 172, 207, .20); background: rgba(2, 13, 24, .96);
+    }
+    .brand { width: 250px; display: flex; align-items: center; flex: 0 0 auto; }
+    .brand img { display: block; width: 192px; height: auto; filter: brightness(0) invert(1); opacity: .95; }
+    .nav { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(7, minmax(80px, 1fr)); }
+    .nav span {
+      position: relative; display: flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 44px; border-left: 1px solid rgba(132, 168, 201, .13);
+      color: #cbd9e5; font-size: 14px; font-weight: 700; white-space: nowrap;
+    }
+    .nav .start { margin: 11px 10px; min-height: 48px; border: 1px solid #3bd4ff; border-radius: 4px; color: #fff; background: linear-gradient(180deg, #0e83b2, #075779); }
+    .nav .active { color: var(--cyan); }
+    .nav .active::after { content: ""; position: absolute; left: 18px; right: 18px; bottom: 0; height: 2px; background: var(--cyan); }
+    .ico { color: #b9ccd9; font-size: 16px; }
+
+    main {
+      width: min(1180px, calc(100% - 48px)); height: calc(100vh - 72px); margin: 0 auto; padding: 0 0 16px;
+      display: grid; grid-template-rows: 75px auto; align-content: start;
+    }
+    .history-head { display: flex; align-items: center; gap: 18px; }
+    .title-lockup { display: flex; align-items: center; gap: 14px; min-width: 250px; }
+    .title-mark { width: 3px; height: 34px; background: var(--cyan); box-shadow: 0 0 12px rgba(69, 208, 244, .25); }
+    h1 { margin: 0; font-family: "Yu Mincho", "Hiragino Mincho ProN", serif; font-size: 26px; font-weight: 600; letter-spacing: .08em; }
+    .history-head p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+    .filters { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+    .filters button, .filters select {
+      min-height: 44px; border: 1px solid #274963; border-radius: 3px; background: rgba(3, 17, 30, .68); color: #c8d8e4;
+    }
+    .filters button { min-width: 58px; padding: 0 14px; font-size: 12px; font-weight: 800; }
+    .filters button.active { border-color: var(--cyan); color: #031421; background: var(--cyan); }
+    .filters select { width: 164px; padding: 0 12px; font-size: 12px; }
+
+    .history-frame {
+      min-height: 0; overflow: hidden; display: grid; grid-template-rows: 34px auto;
+      border: 1px solid rgba(83, 156, 197, .24); border-radius: 4px; background: rgba(5, 24, 41, .82);
+      box-shadow: 0 18px 54px rgba(0, 0, 0, .18);
+    }
+    .notice { margin: 0; padding: 8px 12px; border-bottom: 1px solid var(--line); color: #9bb3c5; font-size: 11px; }
+    .table-scroll { min-height: 0; max-height: calc(100vh - 197px); overflow: auto; scrollbar-gutter: stable; scrollbar-color: rgba(121, 212, 236, .55) transparent; scrollbar-width: thin; }
+    .table-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+    .table-scroll::-webkit-scrollbar-track { background: transparent; }
+    .table-scroll::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(121, 212, 236, .55); }
+    table { width: 100%; min-width: 760px; border-collapse: collapse; table-layout: fixed; }
+    thead { background: #0b2942; }
+    th { height: 38px; padding: 0 14px; border-bottom: 1px solid var(--line-strong); color: #8eb4ca; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-align: left; }
+    th.turn, td.turn { text-align: right; }
+    tbody tr { position: relative; height: 78px; background: rgba(5, 24, 41, .18); }
+    tbody tr:first-child { background: linear-gradient(90deg, rgba(34, 135, 177, .11), rgba(5, 24, 41, .16) 56%); }
+    td { padding: 12px 14px; border-bottom: 1px solid rgba(116, 181, 217, .13); vertical-align: middle; color: #d8e6ef; font-size: 13px; }
+    td:first-child { box-shadow: inset 3px 0 var(--row-accent); }
+    .date-main { display: block; color: #f0f7fc; font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+    .date-time { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+    .mobile-format { display: none; }
+    .result {
+      min-width: 48px; min-height: 24px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      border: 1px solid currentColor; border-radius: 3px; font-size: 11px; font-weight: 900;
+    }
+    .result::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+    .result.win { color: var(--win); background: rgba(66, 217, 176, .09); }
+    .result.loss { color: var(--loss); background: rgba(255, 119, 110, .09); }
+    .mode { color: #a8c5d8; font-size: 12px; }
+    .deck { display: block; overflow: hidden; color: #edf7ff; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+    .deck-note { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; }
+    td.turn { color: #edf8ff; font-size: 24px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1; }
+    .replay {
+      min-width: 92px; min-height: 44px; padding: 0 12px; border: 1px solid #36546b; border-radius: 3px;
+      background: rgba(4, 18, 31, .62); color: #8399aa; font-size: 11px; font-weight: 800;
+    }
+    .row-actions { display: block; }
+    .deck-view {
+      width: 100%; min-height: 44px; padding: 0 8px; border: 1px solid rgba(69, 208, 244, .72); border-radius: 3px;
+      background: linear-gradient(180deg, rgba(16, 82, 111, .82), rgba(7, 42, 61, .88));
+      color: #eafaff; font-size: 11px; font-weight: 900; letter-spacing: .02em; cursor: pointer;
+    }
+    .deck-view::before { content: "▣"; margin-right: 6px; color: var(--cyan); }
+    .deck-view:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+    .saved-decks { display: block; margin-top: 3px; color: #70cce8; font-size: 9px; font-weight: 800; }
+
+    @media (max-width: 900px), (max-height: 560px) {
+      .site-header { height: 54px; padding: 0 10px; }
+      .brand { width: 150px; }
+      .brand img { width: 118px; }
+      .nav { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+      .nav span { gap: 3px; min-height: 44px; padding: 0 2px; font-size: 9px; }
+      .nav .start { min-height: 44px; margin: 5px 4px; }
+      .nav .active::after { left: 6px; right: 6px; }
+      .ico { font-size: 11px; }
+      main { width: calc(100% - 16px); height: calc(100vh - 54px); padding: 0 0 8px; grid-template-rows: 58px auto; }
+      .history-head { gap: 8px; }
+      .title-lockup { min-width: 160px; gap: 8px; }
+      .title-mark { width: 2px; height: 26px; }
+      h1 { font-size: 17px; }
+      .history-head p { font-size: 9px; }
+      .filters { gap: 3px; }
+      .filters button { min-width: 44px; padding: 0 7px; font-size: 9px; }
+      .filters select { width: 116px; padding: 0 6px; font-size: 9px; }
+      .history-frame { grid-template-rows: 28px auto; }
+      .notice { padding: 6px 8px; font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      table { min-width: 100%; }
+      col:nth-child(1) { width: 14% !important; }
+      col:nth-child(2) { width: 10% !important; }
+      col:nth-child(3), th:nth-child(3), td:nth-child(3) { display: none; }
+      col:nth-child(4), col:nth-child(5) { width: 22% !important; }
+      col:nth-child(6) { width: 10% !important; }
+      col:nth-child(7) { width: 22% !important; }
+      th { height: 30px; padding: 0 7px; font-size: 9px; }
+      .table-scroll { max-height: 238px; }
+      tbody tr { height: 68px; }
+      td { padding: 7px; font-size: 11px; }
+      td:first-child { box-shadow: inset 2px 0 var(--row-accent); }
+      .date-main { font-size: 11px; }
+      .date-time { margin-top: 2px; font-size: 9px; }
+      .mobile-format { display: block; margin-top: 2px; color: #70cce8; font-size: 8px; font-weight: 800; }
+      .result { min-width: 44px; min-height: 22px; gap: 4px; font-size: 10px; }
+      .result::before { width: 5px; height: 5px; }
+      .mode { font-size: 10px; }
+      .deck { font-size: 11px; }
+      .deck-note { margin-top: 2px; font-size: 9px; }
+      td.turn { font-size: 17px; }
+      .replay { min-width: 70px; min-height: 44px; padding: 0 7px; font-size: 9px; }
+      .deck-view { min-height: 44px; padding: 0 5px; font-size: 9px; line-height: 1.15; }
+      .deck-view::before { margin-right: 3px; }
+      .saved-decks { margin-top: 2px; font-size: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand"><img src="../../../../../meta-app/src/assets/detective-conan-logo.png" alt="DETECTIVE CONAN"></div>
+    <nav class="nav" aria-label="主な画面">
+      <span><b class="ico">⌂</b>ホーム</span><span><b class="ico">▱</b>デッキ</span><span><b class="ico">▣</b>カード</span>
+      <span class="start"><b class="ico">▶</b>ゲーム開始</span><span><b class="ico">◇</b>チュートリアル</span>
+      <span class="active"><b class="ico">◷</b>履歴</span><span><b class="ico">⚙</b>設定</span>
+    </nav>
+  </header>
+  <main>
+    <section class="history-head">
+      <div class="title-lockup"><span class="title-mark"></span><div><h1>対戦履歴</h1><p>終了した対戦を新しい順に表示</p></div></div>
+      <div class="filters" aria-label="履歴の絞り込み"><button class="active">すべて</button><button>勝利</button><button>敗北</button><select aria-label="使用デッキ"><option>すべてのデッキ</option></select></div>
+    </section>
+    <section class="history-frame">
+      <p class="notice">完全なイベント記録が保存されていないため、この対戦はリプレイできません。</p>
+      <div class="table-scroll">
+        <table aria-label="対戦履歴一覧">
+          <colgroup><col style="width:15%"><col style="width:10%"><col style="width:9%"><col style="width:21%"><col style="width:21%"><col style="width:9%"><col style="width:15%"></colgroup>
+          <thead><tr><th>日時</th><th>結果</th><th>形式</th><th>使用デッキ</th><th>対戦相手デッキ</th><th class="turn">ターン数</th><th>リプレイ</th></tr></thead>
+          <tbody>
+            <tr style="--row-accent: var(--win)"><td><span class="date-main">2026.08.03</span><span class="date-time">18:58</span><span class="mobile-format">CPU対戦</span></td><td><span class="result win">勝利</span></td><td><span class="mode">CPU</span></td><td><span class="deck">少年探偵団・事件</span><span class="deck-note">江戸川コナン</span></td><td><span class="deck">警察・事件</span><span class="deck-note">横溝重悟</span></td><td class="turn">12</td><td><button class="replay" disabled>利用不可</button></td></tr>
+            <tr style="--row-accent: var(--loss)"><td><span class="date-main">2026.08.02</span><span class="date-time">18:55</span><span class="mobile-format">CPU対戦</span></td><td><span class="result loss">敗北</span></td><td><span class="mode">CPU</span></td><td><span class="deck">警察・事件</span><span class="deck-note">横溝重悟</span></td><td><span class="deck">黒ずくめの組織</span><span class="deck-note">ジン</span></td><td class="turn">15</td><td><button class="replay" disabled>利用不可</button></td></tr>
+            <tr style="--row-accent: var(--win)"><td><span class="date-main">2026.08.01</span><span class="date-time">18:58</span><span class="mobile-format">CPU対戦</span></td><td><span class="result win">勝利</span></td><td><span class="mode">CPU</span></td><td><span class="deck">少年探偵団・事件</span><span class="deck-note">江戸川コナン</span></td><td><span class="deck">怪盗キッド</span><span class="deck-note">黒羽快斗</span></td><td class="turn">10</td><td><button class="replay" disabled>利用不可</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script>
+    document.querySelectorAll('tbody .replay').forEach((replay) => {
+      const cell = replay.closest('td');
+      const actions = document.createElement('div');
+      actions.className = 'row-actions';
+      const view = document.createElement('button');
+      view.type = 'button';
+      view.className = 'deck-view';
+      view.setAttribute('aria-label', 'この対戦で使ったプレイヤーとCPUのデッキを見る');
+      view.textContent = '対戦デッキを見る';
+      const saved = document.createElement('span');
+      saved.className = 'saved-decks';
+      saved.textContent = 'PLAYER / CPU の保存済みデッキ';
+      const viewBox = document.createElement('div');
+      viewBox.append(view, saved);
+      replay.hidden = true;
+      actions.append(viewBox, replay);
+      cell.replaceChildren(actions);
+    });
+    document.querySelector('thead th:last-child').textContent = '対戦デッキ';
+  </script>
+</body>
+</html>

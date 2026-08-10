@@ -98,6 +98,8 @@ export function TutorialBoardSnapshot({ zones, activeKey, paneWidth }: Props) {
     >
       <div
         ref={innerRef}
+        inert
+        aria-hidden="true"
         style={{
           transform: `scale(${scale})`,
           transformOrigin: 'top left',

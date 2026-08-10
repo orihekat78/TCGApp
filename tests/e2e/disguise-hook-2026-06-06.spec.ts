@@ -69,16 +69,16 @@ test.describe('disguise-hook 2026-06-06 (タスクC)', () => {
     await dispatchAction(page, { type: 'actionDeclareChar', byUid: 's1', targetUid: 'o1' });
 
     // self の contact window で CID モーダルに「変装」候補 B03129 が出る (canDisguise=true)
-    await expect(page.locator('[data-testid="cid-disg-B03129#0"]')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('[data-testid="cid-disg-card:self:hand:B03129#0"]')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('[data-testid^="cid-hand-card-"]')).toHaveCount(3);
-    await expect(page.locator('[data-testid="cid-hand-card-B03129#0"]')).toHaveClass(/is-eligible/);
-    await expect(page.locator('[data-testid="cid-hand-card-D08017#1"]')).toHaveClass(/is-eligible/);
-    await expect(page.locator('[data-testid="cid-hand-card-D08003#2"]')).not.toHaveClass(/is-eligible/);
-    await expect(page.locator('[data-testid="cid-cutin-D08017#1"]')).toBeVisible();
-    await page.locator('[data-testid="cid-hand-expand-D08003#2"]').click();
+    await expect(page.locator('[data-testid="cid-hand-card-card:self:hand:B03129#0"]')).toHaveClass(/is-eligible/);
+    await expect(page.locator('[data-testid="cid-hand-card-card:self:hand:D08017#1"]')).toHaveClass(/is-eligible/);
+    await expect(page.locator('[data-testid="cid-hand-card-card:self:hand:D08003#2"]')).not.toHaveClass(/is-eligible/);
+    await expect(page.locator('[data-testid="cid-cutin-card:self:hand:D08017#1"]')).toBeVisible();
+    await page.locator('[data-testid="cid-hand-expand-card:self:hand:D08003#2"]').click();
     await expect(page.locator('.card-expand-modal-backdrop')).toBeVisible();
     await page.locator('.card-expand-close').click();
-    await page.locator('[data-testid="cid-disg-B03129#0"]').click();
+    await page.locator('[data-testid="cid-disg-card:self:hand:B03129#0"]').click();
 
     await waitForActionEnd(page);
     const gs = await getGameState(page);
@@ -99,8 +99,8 @@ test.describe('disguise-hook 2026-06-06 (タスクC)', () => {
     await buildGameState(page, buildBoard(6), 6);
 
     await dispatchAction(page, { type: 'actionDeclareChar', byUid: 's1', targetUid: 'o1' });
-    await expect(page.locator('[data-testid="cid-cutin-D08017#1"]')).toBeVisible({ timeout: 5000 });
-    await page.locator('[data-testid="cid-cutin-D08017#1"]').click();
+    await expect(page.locator('[data-testid="cid-cutin-card:self:hand:D08017#1"]')).toBeVisible({ timeout: 5000 });
+    await page.locator('[data-testid="cid-cutin-card:self:hand:D08017#1"]').click();
 
     await waitForActionEnd(page);
     const gs = await getGameState(page);

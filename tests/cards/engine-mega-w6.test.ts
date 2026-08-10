@@ -49,6 +49,21 @@ describe('megaw6 step1 — declareName atom (EffectCtx.declaredNames writer)', (
     expect(ctx.declaredNames?.named).toBe('工藤新一');
   });
 
+  it('does not serialize the declared name or binding key into the legacy fallback log', () => {
+    const s = createEmptyGameState();
+    const privateName = 'PRIVATE-DECLARED-NAME';
+    const privateBind = 'PRIVATE-BIND-KEY';
+    const ctx = makeCtx({ dyn: { declaredName: privateName } });
+
+    runAtom(s, 'declareName', { bind: privateBind }, ctx);
+
+    expect(s.log).toEqual([
+      expect.objectContaining({ action: 'effect:declareName', result: 'supplied' }),
+    ]);
+    expect(JSON.stringify(s.log)).not.toContain(privateName);
+    expect(JSON.stringify(s.log)).not.toContain(privateBind);
+  });
+
   it('unsupplied dyn → empty-string fallback, no throw (defensive, AI/smoke safety)', () => {
     const s = createEmptyGameState();
     const ctx = makeCtx();

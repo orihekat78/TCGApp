@@ -6,7 +6,50 @@ import { isShortFormDelta } from '../atom-pick-spec.js';
 import { removeExcludedSourceCardId } from '../../read/effect-source.js';
 import { resolvePlayer, resolveBindRef, resolveDeltaToNumber, hasNorMax, paShortFormAwait } from './_shared.js';
 import type { Player } from './_shared.js';
-import type { GameState, AtomVerb, EffectCtx } from '../../types/index.js';
+import type { GameState, AtomVerb, EffectCtx, CausalOutcome, PublicCausalZone } from '../../types/index.js';
+import { recordEffectCausalOperation } from '../../log/effect-causal.js';
+
+function sceneOwnerOf(s: GameState, uid: string): Player | undefined {
+  if (s.players.self.scene.some((card) => card.uid === uid)) return 'self';
+  if (s.players.opp.scene.some((card) => card.uid === uid)) return 'opp';
+  return undefined;
+}
+
+function recordSceneValueChange(
+  s: GameState,
+  ctx: EffectCtx,
+  uid: string,
+  outcome: CausalOutcome,
+): void {
+  const owner = sceneOwnerOf(s, uid);
+  if (owner === undefined) return;
+  recordEffectCausalOperation(s, ctx, {
+    actor: ctx.source.player,
+    kind: 'value-change',
+    source: { kind: 'player', side: ctx.source.player },
+    targets: [{ kind: 'scene-card', side: owner, uid }],
+    outcome,
+  });
+}
+
+function recordStackMove(
+  s: GameState,
+  ctx: EffectCtx,
+  sourceSide: Player,
+  sourceZone: PublicCausalZone,
+  hostUid: string,
+  count: number,
+): void {
+  const hostOwner = sceneOwnerOf(s, hostUid);
+  if (hostOwner === undefined || count < 1) return;
+  recordEffectCausalOperation(s, ctx, {
+    actor: ctx.source.player,
+    kind: 'zone-move',
+    source: { kind: 'zone', side: sourceSide, zone: sourceZone },
+    targets: [{ kind: 'scene-card', side: hostOwner, uid: hostUid }],
+    outcome: { type: 'move', from: sourceZone, to: 'scene', count },
+  });
+}
 
 export function atomCharModifyAP(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
       // D11014 a1 driver: PA 短縮形 — uid 不在 + delta + n/max なら pick query 構築 + tryRePickFromAtom
@@ -26,7 +69,17 @@ export function atomCharModifyAP(s: GameState, a: Record<string, unknown>, ctx: 
       if (typeof maUid !== 'string' || maUid.startsWith('$')) return;
       const maDelta = resolveDeltaToNumber(a.delta, s, ctx);
       const maScope = a.scope as 'turn' | 'contact' | 'permanent' | 'action';
+      const maOwner = sceneOwnerOf(s, maUid);
       mutate.char.modifyAP(s, maUid, maDelta, maScope);
+      if (maOwner !== undefined && maDelta !== 0) {
+        recordEffectCausalOperation(s, ctx, {
+          actor: ctx.source.player,
+          kind: 'value-change',
+          source: { kind: 'player', side: ctx.source.player },
+          targets: [{ kind: 'scene-card', side: maOwner, uid: maUid }],
+          outcome: { type: 'count', amount: maDelta, unit: 'ap' },
+        });
+      }
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyAP', target: maUid, result: `${maDelta >= 0 ? '+' : ''}${maDelta}/${maScope}` });
       return;
@@ -49,7 +102,17 @@ export function atomCharModifyLP(s: GameState, a: Record<string, unknown>, ctx: 
       if (typeof mlUid !== 'string' || mlUid.startsWith('$')) return;
       const mlDelta = resolveDeltaToNumber(a.delta, s, ctx);
       const mlScope = a.scope as 'turn' | 'contact' | 'permanent' | 'action';
+      const mlOwner = sceneOwnerOf(s, mlUid);
       mutate.char.modifyLP(s, mlUid, mlDelta, mlScope);
+      if (mlOwner !== undefined && mlDelta !== 0) {
+        recordEffectCausalOperation(s, ctx, {
+          actor: ctx.source.player,
+          kind: 'value-change',
+          source: { kind: 'player', side: ctx.source.player },
+          targets: [{ kind: 'scene-card', side: mlOwner, uid: mlUid }],
+          outcome: { type: 'count', amount: mlDelta, unit: 'lp' },
+        });
+      }
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyLP', target: mlUid, result: `${mlDelta >= 0 ? '+' : ''}${mlDelta}/${mlScope}` });
       return;
@@ -70,7 +133,17 @@ export function atomCharModifyLevel(s: GameState, a: Record<string, unknown>, ct
       if (typeof mlvUid !== 'string' || mlvUid.startsWith('$')) return;
       const mlvDelta = resolveDeltaToNumber(a.delta, s, ctx);
       const mlvScope = a.scope as 'turn' | 'contact' | 'permanent' | 'action';
+      const mlvOwner = sceneOwnerOf(s, mlvUid);
       mutate.char.modifyLevel(s, mlvUid, mlvDelta, mlvScope);
+      if (mlvOwner !== undefined && mlvDelta !== 0) {
+        recordEffectCausalOperation(s, ctx, {
+          actor: ctx.source.player,
+          kind: 'value-change',
+          source: { kind: 'player', side: ctx.source.player },
+          targets: [{ kind: 'scene-card', side: mlvOwner, uid: mlvUid }],
+          outcome: { type: 'count', amount: mlvDelta, unit: 'level' },
+        });
+      }
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyLevel', target: mlvUid, result: `${mlvDelta >= 0 ? '+' : ''}${mlvDelta}/${mlvScope}` });
       return;
     }
@@ -80,6 +153,8 @@ export function atomCharOverrideAP(s: GameState, a: Record<string, unknown>, ctx
       const oaUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof oaUid !== 'string' || oaUid.startsWith('$')) return;
       const oaVal = a.val as number | null;
+      const oaChar = readScene.byUid(s, oaUid);
+      const oaBefore = a.scope === 'turn' ? oaChar?.turnEffects['apOverride_turn'] : oaChar?.apOverride;
       // engine defer-unlock mini-wave (2026-07-09): scope:'turn' = 「ターン終了時まで元のAPを X にする」
       // (B05022)。turnEffects['apOverride_turn'] ベース (rules/19 QA: 修整±は残る = read.char.ap の
       // base のみ差替)。clearTurnEffects('turn') で失効。scope 未指定は従来の恒久 apOverride (byte 不変)。
@@ -87,6 +162,13 @@ export function atomCharOverrideAP(s: GameState, a: Record<string, unknown>, ctx
         mutate.char.setOverrideAPTurn(s, oaUid, oaVal);
       } else {
         mutate.char.setOverrideAP(s, oaUid, oaVal);
+      }
+      const oaAfterChar = readScene.byUid(s, oaUid);
+      const oaAfter = a.scope === 'turn' ? oaAfterChar?.turnEffects['apOverride_turn'] : oaAfterChar?.apOverride;
+      if (oaBefore !== oaAfter) {
+        recordSceneValueChange(s, ctx, oaUid, oaVal === null
+          ? { type: 'state', state: 'success' }
+          : { type: 'count', amount: oaVal, unit: 'ap' });
       }
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charOverrideAP', target: oaUid, result: oaVal === null ? 'reset' : String(oaVal) });
@@ -98,12 +180,21 @@ export function atomCharOverrideLP(s: GameState, a: Record<string, unknown>, ctx
       const olUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof olUid !== 'string' || olUid.startsWith('$')) return;
       const olVal = a.val as number | null;
+      const olChar = readScene.byUid(s, olUid);
+      const olBefore = a.scope === 'turn' ? olChar?.turnEffects['lpOverride_turn'] : olChar?.lpOverride;
       // engine mini-wave (2026-07-10): scope:'turn' = 「ターン終了時まで元のLPを X にする」
       // (B01045/B01054/B09011)。charOverrideAP scope:'turn' と完全対称。scope 未指定は従来恒久 (byte 不変)。
       if (a.scope === 'turn') {
         mutate.char.setOverrideLPTurn(s, olUid, olVal);
       } else {
         mutate.char.setOverrideLP(s, olUid, olVal);
+      }
+      const olAfterChar = readScene.byUid(s, olUid);
+      const olAfter = a.scope === 'turn' ? olAfterChar?.turnEffects['lpOverride_turn'] : olAfterChar?.lpOverride;
+      if (olBefore !== olAfter) {
+        recordSceneValueChange(s, ctx, olUid, olVal === null
+          ? { type: 'state', state: 'success' }
+          : { type: 'count', amount: olVal, unit: 'lp' });
       }
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charOverrideLP', target: olUid, result: olVal === null ? 'reset' : String(olVal) });
@@ -127,7 +218,14 @@ export function atomCharGrantKeyword(s: GameState, a: Record<string, unknown>, c
       if (typeof grantUid !== 'string' || grantUid.startsWith('$')) return;
       const grantKw = a.kw as string;
       const grantScope = (a.scope as 'turn' | 'contact' | 'permanent' | undefined) ?? 'permanent';
+      const grantChar = readScene.byUid(s, grantUid);
+      const keywordAlreadyGranted = grantScope === 'permanent'
+        ? grantChar?.keywordOverrides.granted.includes(grantKw) === true
+        : ((grantChar?.turnEffects.grantedKeywords as string[] | undefined) ?? []).includes(grantKw);
       mutate.char.grantKeyword(s, grantUid, grantKw, grantScope);
+      if (grantChar !== null && !keywordAlreadyGranted) {
+        recordSceneValueChange(s, ctx, grantUid, { type: 'state', state: 'success' });
+      }
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charGrantKeyword', target: grantUid, result: `${grantKw}/${grantScope}` });
       return;
@@ -141,10 +239,17 @@ export function atomCharRevokeKeyword(s: GameState, a: Record<string, unknown>, 
       // 既定 'permanent' は従来どおり granted-splice (外部付与キーワードの恒久除去)。現出荷カードに
       // charRevokeKeyword 使用は0件ゆえ既定挙動は不変 (回帰0)。turn は revokedKeywords へ積み read.char.keywords が減算。
       const revokeScope = (a.scope as 'turn' | 'permanent' | undefined) ?? 'permanent';
+      const revokeChar = readScene.byUid(s, revokeUid);
+      const keywordWillChange = revokeScope === 'turn'
+        ? !((revokeChar?.turnEffects.revokedKeywords as string[] | undefined) ?? []).includes(revokeKw)
+        : revokeChar?.keywordOverrides.granted.includes(revokeKw) === true;
       if (revokeScope === 'turn') {
         mutate.char.revokeKeywordTurn(s, revokeUid, revokeKw);
       } else {
         mutate.char.revokeKeyword(s, revokeUid, revokeKw);
+      }
+      if (revokeChar !== null && keywordWillChange) {
+        recordSceneValueChange(s, ctx, revokeUid, { type: 'state', state: 'success' });
       }
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charRevokeKeyword', target: revokeUid, result: `${revokeKw}/${revokeScope}` });
@@ -159,7 +264,13 @@ export function atomCharGrantTrait(s: GameState, a: Record<string, unknown>, ctx
       if (typeof gtUid !== 'string' || gtUid.startsWith('$')) return;
       const gtTrait = a.trait as string;
       const gtScope = (a.scope as 'turn' | 'permanent' | undefined) ?? 'permanent';
+      const gtChar = readScene.byUid(s, gtUid);
+      const gtKey = gtScope === 'turn' ? 'grantedTraits_turn' : 'grantedTraits_permanent';
+      const traitAlreadyGranted = ((gtChar?.turnEffects[gtKey] as string[] | undefined) ?? []).includes(gtTrait);
       mutate.char.grantTrait(s, gtUid, gtTrait, gtScope);
+      if (gtChar !== null && !traitAlreadyGranted) {
+        recordSceneValueChange(s, ctx, gtUid, { type: 'state', state: 'success' });
+      }
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charGrantTrait', target: gtUid, result: `${gtTrait}/${gtScope}` });
       return;
     }
@@ -170,7 +281,13 @@ export function atomCharRevokeTrait(s: GameState, a: Record<string, unknown>, ct
       if (typeof rtUid !== 'string' || rtUid.startsWith('$')) return;
       const rtTrait = a.trait as string;
       const rtScope = (a.scope as 'turn' | 'permanent' | undefined) ?? 'permanent';
+      const rtChar = readScene.byUid(s, rtUid);
+      const rtKey = rtScope === 'turn' ? 'revokedTraits_turn' : 'revokedTraits_permanent';
+      const traitAlreadyRevoked = ((rtChar?.turnEffects[rtKey] as string[] | undefined) ?? []).includes(rtTrait);
       mutate.char.revokeTrait(s, rtUid, rtTrait, rtScope);
+      if (rtChar !== null && !traitAlreadyRevoked) {
+        recordSceneValueChange(s, ctx, rtUid, { type: 'state', state: 'success' });
+      }
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charRevokeTrait', target: rtUid, result: `${rtTrait}/${rtScope}` });
       return;
     }
@@ -180,7 +297,14 @@ export function atomCharDisableOriginal(s: GameState, a: Record<string, unknown>
       const doUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof doUid !== 'string' || doUid.startsWith('$')) return;
       const scope = (a.scope as 'turn' | 'permanent' | undefined) ?? 'permanent';
+      const doChar = readScene.byUid(s, doUid);
+      const alreadyDisabled = scope === 'turn'
+        ? doChar?.turnEffects.originalAbilitiesDisabled_turn === true
+        : doChar?.keywordOverrides.disabledOriginal === true;
       mutate.char.disableOriginalAbilities(s, doUid, scope);
+      if (doChar !== null && !alreadyDisabled) {
+        recordSceneValueChange(s, ctx, doUid, { type: 'state', state: 'success' });
+      }
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charDisableOriginal', target: doUid, result: scope });
       return;
@@ -331,7 +455,6 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
             : undefined);
           const setSrcAreas = (Array.isArray(setSrcAreaRaw) ? setSrcAreaRaw : [setSrcAreaRaw])
             .filter((x): x is 'remove' | 'hand' | 'deck' => x === 'remove' || x === 'hand' || x === 'deck');
-          const setSrcArea = setSrcAreas[0];
           const setSrcSide = ((a.target && typeof a.target === 'object')
             ? ((a.target as { query?: { side?: string } }).query?.side)
             : undefined) as 'self' | 'opp' | undefined;
@@ -340,24 +463,56 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
           // controller が opp の場合に相対化されない — 現 consumer (B08036) は side:'self' のみで非到達。
           // opp-side source の consumer 追加時は resolvePlayer 相対化を検討 (DEFERRED-INDEX megaw1)。
           const fromPlayer = setSrcSide === 'opp' ? 'opp' : setOwnerP;
-          if (setSrcArea !== undefined) {
-            for (const cid of setIds) {
-              // union pick: pick 済 cardId を各 area 順に探し、最初に見つかった zone から 1 枚消費。
-              for (const ar of setSrcAreas) {
-                const arr = (s.players[fromPlayer] as unknown as Record<string, string[]>)[ar];
-                const idx = arr?.indexOf(cid) ?? -1;
-                if (idx !== -1) {
-                  arr.splice(idx, 1);
-                  if (ar === 'remove') mutate.remove.emitExit(s, fromPlayer, cid); // remove→set-card 離脱 (wave-4 流儀)
-                  break;
-                }
-              }
+          // A resumed pick may be stale. Plan every exact occurrence before mutating any
+          // source zone so a missing duplicate or moved card cannot be recreated under
+          // the host, and a partially valid selection remains atomic.
+          const selectedSources: Array<{ cardId: string; area: 'remove' | 'hand' | 'deck' }> = [];
+          if (setSrcAreas.length > 0) {
+            const remainingByArea = new Map<'remove' | 'hand' | 'deck', Map<string, number>>();
+            for (const area of setSrcAreas) {
+              const counts = new Map<string, number>();
+              const cards = (s.players[fromPlayer] as unknown as Record<string, string[]>)[area] ?? [];
+              for (const cardId of cards) counts.set(cardId, (counts.get(cardId) ?? 0) + 1);
+              remainingByArea.set(area, counts);
             }
+            for (const cardId of setIds) {
+              const area = setSrcAreas.find((candidate) => {
+                const remaining = remainingByArea.get(candidate)?.get(cardId) ?? 0;
+                if (remaining < 1) return false;
+                remainingByArea.get(candidate)!.set(cardId, remaining - 1);
+                return true;
+              });
+              if (area === undefined) {
+                (ctx.dyn ??= {}).chainStepNoApply = true;
+                return;
+              }
+              selectedSources.push({ cardId, area });
+            }
+          }
+          const movedFrom = new Map<'remove' | 'hand' | 'deck', number>();
+          for (const { cardId, area } of selectedSources) {
+            const arr = (s.players[fromPlayer] as unknown as Record<string, string[]>)[area];
+            const idx = arr.indexOf(cardId);
+            arr.splice(idx, 1);
+            movedFrom.set(area, (movedFrom.get(area) ?? 0) + 1);
+            if (area === 'remove') mutate.remove.emitExit(s, fromPlayer, cardId); // remove→set-card 離脱 (wave-4 流儀)
           }
           for (const cid of setIds) {
             // M2後半 (2026-07-10, PR234 a1): faceUp:true 明示時のみ表向きセット (「表向きでセットする」)。
             // 既定は従来どおり裏向き (rules/16) — B08036 等の既存 consumer は引数無しで裏向き前提 = byte 互換。
             mutate.char.setCard(s, scUid, cid, a.faceUp === true);
+          }
+          const setCardOwner = sceneOwnerOf(s, scUid);
+          if (setCardOwner !== undefined) {
+            for (const [from, count] of movedFrom) {
+              recordEffectCausalOperation(s, ctx, {
+                actor: ctx.source.player,
+                kind: 'zone-move',
+                source: { kind: 'zone', side: fromPlayer, zone: from },
+                targets: [{ kind: 'zone', side: setCardOwner, zone: 'set-card' }],
+                outcome: { type: 'move', from, to: 'set-card', count },
+              });
+            }
           }
           mutate.log.append(s, {
             ts: Date.now(),
@@ -388,8 +543,23 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
         const ownerP = resolvePlayer((a.player as string | undefined) ?? 'self', ctx);
         const removeArr = s.players[ownerP].remove;
         const ridx = removeArr.lastIndexOf(selfCid);
-        if (ridx >= 0) { removeArr.splice(ridx, 1); mutate.remove.emitExit(s, ownerP, selfCid); } // wave-4: remove→set-card 離脱 (原因非依存 remove:exit)
+        if (ridx < 0) {
+          (ctx.dyn ??= {}).chainStepNoApply = true;
+          return;
+        }
+        removeArr.splice(ridx, 1);
+        mutate.remove.emitExit(s, ownerP, selfCid); // wave-4: remove→set-card 離脱 (原因非依存 remove:exit)
         mutate.char.setCard(s, scUid, selfCid, true);
+        const setCardOwner = sceneOwnerOf(s, scUid);
+        if (setCardOwner !== undefined) {
+          recordEffectCausalOperation(s, ctx, {
+            actor: ctx.source.player,
+            kind: 'zone-move',
+            source: { kind: 'zone', side: ownerP, zone: 'remove' },
+            targets: [{ kind: 'zone', side: setCardOwner, zone: 'set-card' }],
+            outcome: { type: 'move', from: 'remove', to: 'set-card', count: 1 },
+          });
+        }
         mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: selfCid });
         return;
       }
@@ -399,6 +569,7 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
       // (cardId 引数は無視、自動補完される)
       let scCardId: string;
       let refreshAfterSet: (() => void) | undefined;
+      let deckSetSides: { deck: Player; setCard: Player } | undefined;
       if (a.fromDeckTop) {
         // BUG-153: host (scUid) が現場不在なら deck を消費しない。
         // setCard は host 不在で no-op (mutate/char.ts findChar) なので、shift を先に走らせると
@@ -416,16 +587,30 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
         const sscP = a.deckOwner === 'picked-host'
           ? (s.players.self.scene.some(c => c.uid === scUid) ? 'self' as const : 'opp' as const)
           : resolvePlayer(a.player ?? 'self', ctx);
+        const setCardOwner = sceneOwnerOf(s, scUid);
         // session64 (rules/14, 26 + BUG-142 同族): デッキ0 で「上からセット」する場合、silent no-op ではなく
         // リフレッシュ後に残りを解決する (公式Q&A B08033「残り全部セット→リフレッシュ→残り分セット」)。
         // host 存在は上で確認済 → ここで refresh して安全に shift できる (draw/fileAdd/evidenceGain と同型)。
         // remove も 0 なら refresh 失敗 = deck-out 敗北 (rules/14)。
         const excludedSource = removeExcludedSourceCardId(ctx, sscP);
+        const removeBeforeRefresh = s.players[sscP].remove.length;
         if (!mutate.deck.refreshAfterTake(s, sscP, excludedSource)) {
           mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: 'empty-deck-refresh-fail' });
           return;
         }
+        const refreshedBeforeSet = removeBeforeRefresh - s.players[sscP].remove.length;
+        if (refreshedBeforeSet > 0) {
+          recordEffectCausalOperation(s, ctx, {
+            actor: ctx.source.player,
+            kind: 'zone-move',
+            tags: ['refresh'],
+            source: { kind: 'zone', side: sscP, zone: 'remove' },
+            targets: [{ kind: 'zone', side: sscP, zone: 'deck' }],
+            outcome: { type: 'move', from: 'remove', to: 'deck', count: refreshedBeforeSet },
+          });
+        }
         scCardId = s.players[sscP].deck.shift()!;
+        if (setCardOwner !== undefined) deckSetSides = { deck: sscP, setCard: setCardOwner };
         // Keep the transfer atomic to observers: setCard emits setcard:enter,
         // then the completed take may refresh and emit remove:exit.
         refreshAfterSet = () => mutate.deck.refreshAfterTake(s, sscP, excludedSource);
@@ -434,7 +619,32 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
         if (typeof scCardId !== 'string' || scCardId.startsWith('$')) return;
       }
       mutate.char.setCard(s, scUid, scCardId, a.faceUp as boolean);
+      if (deckSetSides !== undefined) {
+        recordEffectCausalOperation(s, ctx, {
+          actor: ctx.source.player,
+          kind: 'zone-move',
+          source: { kind: 'zone', side: deckSetSides.deck, zone: 'deck' },
+          targets: [{ kind: 'zone', side: deckSetSides.setCard, zone: 'set-card' }],
+          outcome: { type: 'move', from: 'deck', to: 'set-card', count: 1 },
+        });
+      }
+      const removeBeforeTrailingRefresh = deckSetSides === undefined
+        ? undefined
+        : s.players[deckSetSides.deck].remove.length;
       refreshAfterSet?.();
+      if (deckSetSides !== undefined && removeBeforeTrailingRefresh !== undefined) {
+        const refreshedAfterSet = removeBeforeTrailingRefresh - s.players[deckSetSides.deck].remove.length;
+        if (refreshedAfterSet > 0) {
+          recordEffectCausalOperation(s, ctx, {
+            actor: ctx.source.player,
+            kind: 'zone-move',
+            tags: ['refresh'],
+            source: { kind: 'zone', side: deckSetSides.deck, zone: 'remove' },
+            targets: [{ kind: 'zone', side: deckSetSides.deck, zone: 'deck' }],
+            outcome: { type: 'move', from: 'remove', to: 'deck', count: refreshedAfterSet },
+          });
+        }
+      }
       // BUG-073: effect log
       mutate.log.append(s, {
         ts: Date.now(),
@@ -470,7 +680,9 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
         if (typeof hostUid !== 'string' || hostUid.startsWith('$')) return; // decline/未解決 → no-op (chain gate は skip 側が担う)
         const selfUid = ctx.source.uid;
         if (typeof selfUid !== 'string') return;
-        mutate.scene.toStack(s, selfUid, hostUid);
+        const sourceOwner = sceneOwnerOf(s, selfUid);
+        const moved = mutate.scene.toStack(s, selfUid, hostUid);
+        if (moved && sourceOwner !== undefined) recordStackMove(s, ctx, sourceOwner, 'scene', hostUid, 1);
         mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charStackCard:self-under', target: hostUid, result: selfUid });
         return;
       }
@@ -497,7 +709,9 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
         if (typeof movedUid !== 'string' || movedUid.startsWith('$')) { (ctx.dyn ??= {}).chainStepNoApply = true; return; }
         const hostUid = typeof a.hostUid === 'string' ? a.hostUid : ctx.source.uid;
         if (typeof hostUid !== 'string') return;
-        mutate.scene.toStack(s, movedUid, hostUid);
+        const sourceOwner = sceneOwnerOf(s, movedUid);
+        const moved = mutate.scene.toStack(s, movedUid, hostUid);
+        if (moved && sourceOwner !== undefined) recordStackMove(s, ctx, sourceOwner, 'scene', hostUid, 1);
         mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charStackCard:scene-under', target: hostUid, result: movedUid });
         return;
       }
@@ -569,15 +783,24 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
           (ctx.bindings as Record<string, unknown>)[a.bind] = cardIds.map(cardId => ({ cardId }));
         }
         mutate.char.stackCard(s, stUid, cardIds.length, cardIds);
+        if (sourceArea === 'remove' || sourceArea === 'hand' || sourceArea === 'deck') {
+          const fromPlayer = sourceSide === 'opp' ? 'opp' : ownerP;
+          recordStackMove(s, ctx, fromPlayer, sourceArea, stUid, cardIds.length);
+        } else {
+          recordSceneValueChange(s, ctx, stUid, { type: 'count', amount: cardIds.length, unit: 'card' });
+        }
         mutate.log.append(s, {
           ts: Date.now(), player: ownerP, turn: s.turn.number,
-          action: 'effect:charStackCard', target: stUid, result: cardIds.join(','),
+          action: 'effect:charStackCard', target: stUid, result: String(cardIds.length),
         });
         return;
       }
       // legacy: { uid, n }
       const stN = a.n as number;
       mutate.char.stackCard(s, stUid, stN);
+      if (Number.isSafeInteger(stN) && stN > 0) {
+        recordSceneValueChange(s, ctx, stUid, { type: 'count', amount: stN, unit: 'card' });
+      }
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charStackCard', target: stUid, result: String(stN) });
       return;
     }

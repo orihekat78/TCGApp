@@ -23,13 +23,15 @@ import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { SelectableCardTile } from './SelectableCardTile.js';
+import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
 import './SouzaReorderModal.css';
 
 export function DeckPlaceModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingDeckPlace);
+  const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   // S2 B01093: gate は選択者 (ownerPlayer) — 対象デッキ所有者 (player) ではない。
   // 「相手デッキの top 1 を公開し、自分が上か下かを選ぶ」で human に modal を出すための座標系是正。
-  return pending && pending.ownerPlayer === 'self'
+  return pending && isHumanDecisionOwner(pending.ownerPlayer, spectatorMode)
     ? <DeckPlaceModalInner key={`${pending.decisionId ?? 'legacy'}:${pending.cardIds.join('|')}`} pending={pending} />
     : null;
 }

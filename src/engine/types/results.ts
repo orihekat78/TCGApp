@@ -3,6 +3,7 @@
 
 import type { CardId, GameState } from './game-state.js';
 import type { HookName } from './hooks.js';
+import type { CausalEffectTrace } from './effect-ctx.js';
 
 export type RemoveResult = {
   removed: { uid?: string; cardId: string };
@@ -98,6 +99,14 @@ export type ActionContext = {
    * (startFromEffect が bootstrap)。undefined = 通常アクション (既存挙動 byte 等価)。
    */
   generatedByEffect?: boolean;
+  /** State-owned public causal lineage for this action/contact. */
+  causalTrace?: CausalEffectTrace;
+  /** Complete this case action's evidence gain after its Hirameki decision/effect. */
+  deferredCaseEvidenceGain?: boolean;
+  /** Exact event used to correlate contact:start and its triggered children. */
+  contactCausalEventId?: string;
+  /** Exact terminal contact result/cancellation event. */
+  contactResultCausalEventId?: string;
   startedAt: { turn: number; nano: number };
 };
 

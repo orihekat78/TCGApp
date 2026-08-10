@@ -10,6 +10,7 @@ import type { LogEntry } from '@/engine/types/game-state.js';
 import { LogPanel } from '@/ui/components/LogPanel';
 import { createSampleGameState } from '@/ui/fixtures/sampleGameState';
 import { registerAll } from '@/cards';
+import { appendCausal, startCausalSession } from '@/engine/log/causal';
 
 function strip(html: string): string {
   return html.replace(/<!--.*?-->/g, '');
@@ -133,6 +134,60 @@ describe('LogPanel', () => {
     expect(opponentHtml).not.toContain('PRIVATE-EVIDENCE');
     expect(spectatorHtml).not.toContain('PRIVATE-EVIDENCE');
     expect(opponentHtml).toContain('effect:evidencePeek');
+  });
+
+  it('uses the normalized public graph for the production GameState log', () => {
+    const state = createSampleGameState();
+    state.log = [{
+      ts: 1,
+      player: 'self',
+      turn: 1,
+      action: 'legacy-private',
+      target: 'PRIVATE-TARGET',
+      result: 'PRIVATE-RESULT',
+    }];
+    startCausalSession(state, 'log-panel-session');
+    appendCausal(state, {
+      actor: 'opp',
+      kind: 'select',
+      source: { kind: 'partner-card', side: 'opp' },
+      targets: [{ kind: 'case-card', side: 'self' }],
+      outcome: { type: 'state', state: 'success' },
+    });
+
+    const html = strip(renderToString(
+      <LogPanel entries={state.log} open gameState={state} viewer={null} />,
+    ));
+
+    expect(html).toContain('対象を選択');
+    expect(html).not.toContain('causal.select');
+    expect(html).toContain(state.players.self.case.cardId);
+    expect(html.indexOf('対象を選択')).toBeLessThan(html.indexOf('legacy-private'));
+    expect(html).not.toContain('PRIVATE-TARGET');
+    expect(html).not.toContain('PRIVATE-RESULT');
+  });
+
+  it('renders public face changes and active state in Japanese', () => {
+    const state = createSampleGameState();
+    startCausalSession(state, 'log-panel-state-vocabulary');
+    appendCausal(state, {
+      actor: 'self', kind: 'face-change', targets: [],
+      outcome: { type: 'face-change', from: 'face-down', to: 'face-up', count: 1 },
+    });
+    appendCausal(state, {
+      actor: 'self', kind: 'activate', targets: [], outcome: { type: 'state', state: 'active' },
+    });
+
+    const html = strip(renderToString(
+      <LogPanel entries={state.log} open gameState={state} viewer={null} />,
+    ));
+
+    expect(html).toContain('カードの向きを変更');
+    expect(html).toContain('1枚を表向きに変更');
+    expect(html).toContain('アクティブにする');
+    expect(html).toContain('アクティブ');
+    expect(html).not.toContain('causal.face-change');
+    expect(html).not.toContain('causal.activate');
   });
 
   // BUG-069 (2026-05-28): scene char uid / partner uid を表示名に解決する

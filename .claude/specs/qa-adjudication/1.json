@@ -439,8 +439,13 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04074.ts:1",
-        "tests:tests/cards/engine-megaw5-dyn-cost.test.ts:362"
+        "src:src/cards/ct-p04/B04074.ts:30",
+        "src:src/cards/ct-p04/B04074.ts:43",
+        "tests:tests/cards/official-qa/B04074.test.ts:74",
+        "tests:tests/cards/official-qa/B04074.test.ts:76",
+        "tests:tests/cards/official-qa/B04074.test.ts:79",
+        "tests:tests/cards/official-qa/B04074.test.ts:80",
+        "tests:tests/cards/official-qa/B04074.test.ts:81"
       ]
     },
     {
@@ -557,8 +562,12 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05039.ts:1",
-        "tests:tests/cards/bug-140-deferred-real-cards.test.ts:115"
+        "src:src/cards/ct-p05/B05039.ts:21",
+        "src:src/cards/ct-p05/B05039.ts:34",
+        "tests:tests/cards/reasoning-hook-batch3.test.ts:105",
+        "tests:tests/cards/reasoning-hook-batch3.test.ts:97",
+        "tests:tests/cards/reasoning-hook-batch3.test.ts:98",
+        "tests:tests/cards/reasoning-hook-batch3.test.ts:99"
       ]
     },
     {
@@ -884,8 +893,11 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07015.ts:1",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:210"
+        "src:src/cards/ct-p07/B07015.ts:24",
+        "src:src/cards/ct-p07/B07015.ts:9",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:247",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:248",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:249"
       ]
     },
     {
@@ -906,8 +918,10 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07037.ts:1",
-        "tests:tests/cards/engine-wave-a1-pa-consume.test.ts:155"
+        "src:src/cards/ct-p07/B07037.ts:30",
+        "src:src/cards/ct-p07/B07037.ts:50",
+        "tests:tests/cards/engine-wave-a1-pa-consume.test.ts:238",
+        "tests:tests/cards/engine-wave-a1-pa-consume.test.ts:241"
       ]
     },
     {
@@ -939,8 +953,10 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07056.ts:1",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:357"
+        "src:src/cards/ct-p07/B07056.ts:24",
+        "src:src/cards/ct-p07/B07056.ts:40",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:573",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:577"
       ]
     },
     {
@@ -1033,8 +1049,11 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08006.ts:1",
-        "tests:tests/cards/engine-mega-w4.test.ts:844"
+        "src:src/cards/ct-p08/B08006.ts:27",
+        "src:src/cards/ct-p08/B08006.ts:31",
+        "tests:tests/cards/engine-mega-w4.test.ts:978",
+        "tests:tests/cards/engine-mega-w4.test.ts:984",
+        "tests:tests/cards/engine-mega-w4.test.ts:985"
       ]
     },
     {
@@ -1142,8 +1161,17 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08069.ts:1",
-        "tests:tests/cards/engine-mega-w6b.test.ts:90"
+        "src:src/cards/ct-p08/B08069.ts:22",
+        "src:src/cards/ct-p08/B08069.ts:33",
+        "tests:tests/cards/B08069.test.ts:100",
+        "tests:tests/cards/B08069.test.ts:123",
+        "tests:tests/cards/B08069.test.ts:127",
+        "tests:tests/cards/B08069.test.ts:128",
+        "tests:tests/cards/B08069.test.ts:89",
+        "tests:tests/cards/B08069.test.ts:90",
+        "tests:tests/cards/B08069.test.ts:94",
+        "tests:tests/cards/B08069.test.ts:96",
+        "tests:tests/cards/B08069.test.ts:99"
       ]
     },
     {
@@ -1339,8 +1367,10 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09048.ts:1",
-        "tests:tests/cards/engine-mega-w4.test.ts:579"
+        "src:src/cards/ct-p09/B09048.ts:64",
+        "tests:tests/cards/engine-mega-w4.test.ts:1112",
+        "tests:tests/cards/engine-mega-w4.test.ts:1113",
+        "tests:tests/cards/engine-mega-w4.test.ts:1114"
       ]
     },
     {
@@ -1385,8 +1415,10 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09081.ts:1",
-        "tests:tests/cards/night-wC/hirameki-optional.test.ts:53"
+        "src:src/cards/ct-p09/B09081.ts:61",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:198",
+        "tests:tests/engine/mutate/scene.test.ts:264",
+        "tests:tests/engine/mutate/scene.test.ts:302"
       ]
     },
     {
@@ -1422,8 +1454,12 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09090.ts:1",
-        "tests:tests/cards/engine-mega-w6.test.ts:424"
+        "src:src/cards/ct-p09/B09090.ts:26",
+        "src:src/cards/ct-p09/B09090.ts:49",
+        "tests:tests/cards/engine-mega-w6.test.ts:596",
+        "tests:tests/cards/engine-mega-w6.test.ts:598",
+        "tests:tests/cards/engine-mega-w6.test.ts:599",
+        "tests:tests/cards/step12-batch1.test.ts:289"
       ]
     },
     {
@@ -2079,8 +2115,12 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR100.ts:1",
-        "tests:tests/engine/effect/atom-handlers.test.ts:90"
+        "src:src/cards/pr-01/PR100.ts:21",
+        "src:src/cards/pr-01/PR100.ts:30",
+        "tests:tests/cards/pr-01/PR100.test.ts:104",
+        "tests:tests/cards/pr-01/PR100.test.ts:106",
+        "tests:tests/cards/pr-01/PR100.test.ts:97",
+        "tests:tests/cards/pr-01/PR100.test.ts:98"
       ]
     },
     {
@@ -2090,8 +2130,10 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR105.ts:1",
-        "tests:tests/cards/engine-mega-w6.test.ts:243"
+        "src:src/cards/pr-01/PR105.ts:50",
+        "src:src/cards/pr-01/PR105.ts:55",
+        "tests:tests/cards/step12-batch2.test.ts:334",
+        "tests:tests/cards/step12-batch2.test.ts:335"
       ]
     },
     {
@@ -2162,8 +2204,10 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR195.ts:1",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:216"
+        "src:src/cards/pr-01/PR195.ts:51",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:156",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:157",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:494"
       ]
     },
     {

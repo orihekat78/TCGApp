@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>対戦履歴 — reviewed mock</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Yu Gothic UI", "Noto Sans JP", system-ui, sans-serif;
+      --ink: #07111d;
+      --panel: #0b1a2a;
+      --panel-raised: #10263a;
+      --line: #25455f;
+      --quiet: #91a9bc;
+      --text: #edf6fb;
+      --cyan: #42cdf4;
+      --cyan-deep: #0d6e92;
+      --win: #5ad3a7;
+      --loss: #e47e88;
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--ink); }
+    button, a { font: inherit; }
+    button { cursor: pointer; }
+    .app { min-height: 100%; background: linear-gradient(135deg, #06101a 0%, #091928 52%, #06111d 100%); color: var(--text); }
+    .header { height: 72px; display: flex; align-items: stretch; padding: 0 28px; border-bottom: 1px solid var(--line); background: rgba(5, 15, 25, .96); }
+    .brand { width: 250px; display: flex; align-items: center; }
+    .brand img { display: block; width: 194px; height: 44px; object-fit: contain; filter: brightness(0) invert(1); }
+    .nav { flex: 1; display: grid; grid-template-columns: repeat(7, minmax(86px, 1fr)); }
+    .nav a { position: relative; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 0 8px; border-left: 1px solid rgba(102, 145, 176, .16); color: #d3e0e9; font-size: 14px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+    .nav-icon { color: inherit; font-size: 16px; line-height: 1; }
+    .nav .start { margin: 11px 10px; min-height: 48px; border: 1px solid #2586aa; border-radius: 4px; background: #0c5875; color: #fff; }
+    .nav .current { color: var(--cyan); }
+    .nav .current::after { content: ""; position: absolute; right: 22px; bottom: 0; left: 22px; height: 2px; background: var(--cyan); }
+    .main { max-width: 1392px; margin: 0 auto; padding: 29px 28px 34px; }
+    .heading { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 23px; }
+    .eyebrow { color: var(--cyan); font-size: 11px; font-weight: 800; letter-spacing: .16em; }
+    h1 { margin: 0; font-size: 26px; letter-spacing: .04em; }
+    .count { padding: 5px 9px; border: 1px solid #28516a; border-radius: 3px; color: var(--quiet); font-family: ui-monospace, monospace; font-size: 11px; }
+    .content { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 20px; align-items: start; }
+    .filters { padding: 15px; border: 1px solid var(--line); border-radius: 6px; background: rgba(11, 27, 42, .88); }
+    .filters h2, .records h2 { margin: 0; color: var(--quiet); font-size: 11px; letter-spacing: .14em; }
+    .filter-group { margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(115, 159, 190, .18); }
+    .filter-group h3 { margin: 0 0 8px; color: #d9e9f3; font-size: 13px; }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 7px; }
+    .filter { min-width: 44px; min-height: 44px; padding: 0 11px; border: 1px solid #36546b; border-radius: 4px; background: #0b1b2b; color: #b9cbd8; font-size: 12px; font-weight: 700; }
+    .filter.active { border-color: var(--cyan); background: #0c5875; color: #fff; box-shadow: inset 0 0 0 1px rgba(108, 224, 255, .22); }
+    .records { min-width: 0; }
+    .records-head { display: flex; align-items: center; justify-content: space-between; margin: 1px 0 10px; }
+    .sort { min-height: 44px; padding: 0 12px; border: 1px solid #36546b; border-radius: 4px; background: #0b1b2b; color: #c7d8e4; font-size: 12px; }
+    .list { display: grid; gap: 9px; }
+    .match { display: grid; grid-template-columns: 52px minmax(180px, 1.24fr) minmax(165px, 1fr) 98px 140px; gap: 15px; align-items: center; padding: 14px 16px; border: 1px solid var(--line); border-radius: 6px; background: linear-gradient(90deg, rgba(14, 37, 55, .96), rgba(8, 25, 39, .95)); }
+    .outcome { display: grid; place-items: center; width: 48px; min-height: 48px; border: 1px solid currentColor; border-radius: 4px; font-weight: 900; font-size: 18px; }
+    .win { color: var(--win); background: rgba(67, 167, 130, .11); }
+    .loss { color: var(--loss); background: rgba(183, 70, 84, .11); }
+    .match-info strong, .deck strong { display: block; font-size: 14px; }
+    .match-info span, .deck span { display: block; margin-top: 5px; color: var(--quiet); font-size: 12px; }
+    .deck strong { color: #dcecf5; }
+    .meta { color: #c6d9e5; font-family: ui-monospace, monospace; font-size: 12px; line-height: 1.7; }
+    .open { min-width: 140px; min-height: 44px; border: 1px solid #2586aa; border-radius: 4px; background: #0c5875; color: #fff; font-size: 12px; font-weight: 800; letter-spacing: .03em; }
+    .open:hover, .open:focus-visible, .filter:hover, .filter:focus-visible, .sort:focus-visible, .nav a:focus-visible { outline: 2px solid #b9efff; outline-offset: 2px; }
+    @media (max-width: 900px), (max-height: 560px) {
+      .header { height: 54px; padding: 0 10px; }
+      .brand { width: 150px; }
+      .brand img { width: 118px; height: auto; }
+      .nav { grid-template-columns: repeat(7, minmax(44px, 1fr)); }
+      .nav a { min-height: 44px; gap: 3px; padding: 0 3px; border-left: 0; font-size: 9px; }
+      .nav-icon { font-size: 11px; }
+      .nav .start { min-height: 44px; margin: 5px 4px; }
+      .nav .current::after { right: 8px; left: 8px; }
+      .main { padding: 9px 10px 12px; }
+      .heading { gap: 10px; margin-bottom: 8px; }
+      .eyebrow { font-size: 9px; }
+      h1 { font-size: 17px; }
+      .count { padding: 3px 6px; font-size: 9px; }
+      .content { display: block; }
+      .filters { display: flex; align-items: center; gap: 8px; padding: 0; border: 0; background: transparent; }
+      .filters h2 { display: none; }
+      .filter-group { display: contents; margin: 0; padding: 0; border: 0; }
+      .filter-group h3 { display: none; }
+      .filter-row { flex-wrap: nowrap; gap: 6px; }
+      .filter { min-height: 44px; padding: 0 12px; font-size: 10px; white-space: nowrap; }
+      .records-head { margin: 6px 0 5px; }
+      .records h2 { font-size: 9px; }
+      .sort { min-height: 44px; padding: 0 10px; font-size: 10px; }
+      .list { gap: 5px; }
+      .match { grid-template-columns: 43px minmax(183px, 1.15fr) minmax(142px, .92fr) 59px 122px; gap: 8px; padding: 7px 9px; }
+      .outcome { width: 42px; min-height: 42px; font-size: 15px; }
+      .match-info strong, .deck strong { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .match-info span, .deck span { margin-top: 3px; font-size: 9px; }
+      .meta { font-size: 9px; line-height: 1.5; }
+      .open { min-width: 122px; min-height: 44px; padding: 0 7px; font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <a class="brand" href="#home" aria-label="ホーム"><img src="../../../../../meta-app/src/assets/detective-conan-logo.png" alt="DETECTIVE CONAN"></a>
+      <nav class="nav" aria-label="メインナビゲーション">
+        <a href="#home"><span class="nav-icon">⌂</span>ホーム</a><a href="#deck"><span class="nav-icon">▱</span>デッキ</a><a href="#cards"><span class="nav-icon">▣</span>カード</a><a class="start" href="#game"><span class="nav-icon">▶</span>ゲーム開始</a><a href="#tutorial"><span class="nav-icon">⌑</span>チュートリアル</a><a class="current" href="#history" aria-current="page"><span class="nav-icon">◴</span>履歴</a><a href="#settings"><span class="nav-icon">☼</span>設定</a>
+      </nav>
+    </header>
+    <main class="main">
+      <div class="heading"><span class="eyebrow">MATCH HISTORY</span><h1>対戦履歴</h1><span class="count">3 件を表示</span></div>
+      <div class="content">
+        <aside class="filters" aria-label="履歴の絞り込み">
+          <h2>絞り込み</h2>
+          <section class="filter-group"><h3>結果</h3><div class="filter-row"><button class="filter active" aria-pressed="true">全結果</button><button class="filter" aria-pressed="false">勝利</button><button class="filter" aria-pressed="false">敗北</button></div></section>
+          <section class="filter-group"><h3>相手</h3><div class="filter-row"><button class="filter active" aria-pressed="true">CPU</button><button class="filter" aria-pressed="false">プレイヤー</button></div></section>
+          <section class="filter-group"><h3>使用デッキ</h3><div class="filter-row"><button class="filter active" aria-pressed="true">全デッキ</button><button class="filter" aria-pressed="false">少年探偵団</button><button class="filter" aria-pressed="false">警察</button></div></section>
+        </aside>
+        <section class="records" aria-labelledby="records-title">
+          <div class="records-head"><h2 id="records-title">最近の対戦</h2><button class="sort">新しい順 ↓</button></div>
+          <div class="list">
+            <article class="match"><div class="outcome win">勝</div><div class="match-info"><strong>2026/8/3 18:58</strong><span>CPU 対戦 ・ 12 ターン</span></div><div class="deck"><strong>少年探偵団・標準</strong><span>相手：警察・標準</span></div><div class="meta">12T<br>勝利</div><button class="open">リプレイを開く</button></article>
+            <article class="match"><div class="outcome loss">敗</div><div class="match-info"><strong>2026/8/2 18:55</strong><span>CPU 対戦 ・ 15 ターン</span></div><div class="deck"><strong>警察・標準</strong><span>相手：黒組の守護者</span></div><div class="meta">15T<br>敗北</div><button class="open">リプレイを開く</button></article>
+            <article class="match"><div class="outcome win">勝</div><div class="match-info"><strong>2026/8/1 18:58</strong><span>CPU 対戦 ・ 10 ターン</span></div><div class="deck"><strong>少年探偵団・標準</strong><span>相手：怪盗キッド</span></div><div class="meta">10T<br>勝利</div><button class="open">リプレイを開く</button></article>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

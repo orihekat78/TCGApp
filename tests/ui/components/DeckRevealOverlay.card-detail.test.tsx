@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DeckRevealOverlay } from '@/ui/components/DeckRevealOverlay';
 import { useGameStateStore } from '@/ui/state/store';
+import { createEmptyGameState } from '@/engine/state-factory';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -101,10 +102,46 @@ describe('DeckRevealOverlay card details', () => {
     expect(container.querySelector('.deck-reveal-match-badge')).toBeNull();
   });
 
+  it('shows a terminal reveal without stagger and dismisses it within three seconds', () => {
+    vi.useFakeTimers();
+    const terminal = createEmptyGameState();
+    terminal.gameResult = { winner: 'self', reason: 'evidence' };
+    useGameStateStore.setState({
+      gameState: terminal,
+      pendingDeckReveal: {
+        player: 'self', visibility: 'public', viewer: 'all',
+        revealed: ['D08015', 'D08015', 'D08015', 'D08015', 'D08015', 'D08015'],
+        matched: 'D08015',
+      },
+    });
+    act(() => root.render(<DeckRevealOverlay />));
+
+    const overlay = container.querySelector('[data-testid="deck-reveal-overlay"]');
+    expect(overlay?.classList.contains('is-terminal')).toBe(true);
+    act(() => vi.advanceTimersByTime(2_999));
+    expect(container.querySelector('[data-testid="deck-reveal-overlay"]')).not.toBeNull();
+    act(() => vi.advanceTimersByTime(1));
+    expect(container.querySelector('[data-testid="deck-reveal-overlay"]')).toBeNull();
+  });
+
   it('fails closed without rendering an unauthorized private CPU look', () => {
     useGameStateStore.setState({
       pendingDeckReveal: {
         player: 'opp', visibility: 'private', viewer: 'opp',
+        revealed: ['D08015'], matched: 'D08015',
+      },
+    });
+    act(() => root.render(<DeckRevealOverlay />));
+
+    expect(container.querySelector('[data-testid="deck-reveal-overlay"]')).toBeNull();
+    expect(container.querySelector('img')).toBeNull();
+  });
+
+  it('fails closed for every private look when no human owns a side', () => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
+    useGameStateStore.setState({
+      pendingDeckReveal: {
+        player: 'self', visibility: 'private', viewer: 'self',
         revealed: ['D08015'], matched: 'D08015',
       },
     });

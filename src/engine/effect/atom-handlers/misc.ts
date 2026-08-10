@@ -4,10 +4,56 @@ import { action as flowAction } from '../../flow/action/state-machine.js'; // W6
 import { resolvePlayer, resolveBindRef, _setPendingContactStartAxId } from './_shared.js';
 import type { Player } from './_shared.js';
 import type { GameState, EffectCtx, LogEntry, Effect, Condition } from '../../types/index.js';
+import { recordEffectCausalOperation } from '../../log/effect-causal.js';
 
 export function atomPartnerAssist(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       const paP = resolvePlayer(a.player, ctx);
+      const paPartnerBefore = s.players[paP].partner;
+      const paStateBefore = paPartnerBefore.state;
+      const paLocationBefore = paPartnerBefore.location;
+      const paCardIdBefore = paPartnerBefore.cardId;
+      const paFileCountBefore = s.players[paP].file.length;
+      const paCaseStatusBefore = s.players[paP].case.status;
+      if (paCardIdBefore && paLocationBefore === 'partner-area' && paStateBefore !== 'sleep') {
+        recordEffectCausalOperation(s, ctx, {
+          actor: ctx.source.player,
+          kind: 'sleep',
+          source: { kind: 'player', side: paP },
+          targets: [{ kind: 'partner-card', side: paP }],
+          outcome: { type: 'state', state: 'sleep' },
+        });
+      }
       mutate.partner.assist(s, paP);
+      const paPartnerAfter = s.players[paP].partner;
+      const paCardId = paPartnerAfter.cardId;
+      if (
+        paCardId
+        && paLocationBefore === 'partner-area'
+        && paPartnerAfter.location === 'file-area'
+        && s.players[paP].file.length === paFileCountBefore + 1
+      ) {
+        recordEffectCausalOperation(s, ctx, {
+          actor: ctx.source.player,
+          kind: 'zone-move',
+          source: { kind: 'zone', side: paP, zone: 'partner' },
+          targets: [{ kind: 'partner-card', side: paP }],
+          outcome: { type: 'move', from: 'partner', to: 'file', count: 1 },
+        });
+      }
+      if (
+        paCaseStatusBefore === '事件編'
+        && s.players[paP].case.status === '解決編'
+        && paCardId
+        && s.players[paP].case.cardId
+      ) {
+        recordEffectCausalOperation(s, ctx, {
+          actor: ctx.source.player,
+          kind: 'case-status-change',
+          source: { kind: 'zone', side: paP, zone: 'file' },
+          targets: [{ kind: 'case-card', side: paP }],
+          outcome: { type: 'case-status', from: 'incident', to: 'resolved' },
+        });
+      }
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: paP, turn: s.turn.number, action: 'effect:partnerAssist' });
       return;
@@ -25,7 +71,28 @@ export function atomPartnerSetState(s: GameState, a: Record<string, unknown>, ct
         mutate.log.append(s, { ts: Date.now(), player: psP, turn: s.turn.number, action: 'effect:partnerSetState', result: 'not-active-gate' });
         return;
       }
+      const psBefore = s.players[psP].partner.state;
       mutate.partner.setState(s, psP, psState);
+      const psAfter = s.players[psP].partner.state;
+      if (psBefore !== psAfter && (psAfter === 'sleep' || psAfter === 'stun') && s.players[psP].partner.cardId) {
+        recordEffectCausalOperation(s, ctx, {
+          actor: ctx.source.player,
+          kind: psAfter,
+          source: { kind: 'player', side: ctx.source.player },
+          targets: [{ kind: 'partner-card', side: psP }],
+          outcome: { type: 'state', state: psAfter },
+        });
+      }
+      if (psBefore !== psAfter && psAfter === 'active' && s.players[psP].partner.cardId) {
+        recordEffectCausalOperation(s, ctx, {
+          actor: ctx.source.player,
+          kind: 'activate',
+          source: { kind: 'player', side: ctx.source.player },
+          targets: [{ kind: 'partner-card', side: psP }],
+          outcome: { type: 'state', state: 'active' },
+        });
+      }
+      if (psBefore === psAfter) (ctx.dyn ??= {}).chainStepNoApply = true;
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: psP, turn: s.turn.number, action: 'effect:partnerSetState', result: psState });
       return;
@@ -33,9 +100,35 @@ export function atomPartnerSetState(s: GameState, a: Record<string, unknown>, ct
 
 export function atomPartnerSolveCase(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       const scP = resolvePlayer(a.player, ctx);
-      mutate.partner.solveCase(s, scP);
+      if (s.gameResult !== undefined) return;
+      const priorPartnerState = s.players[scP].partner.state;
+      const priorResult = s.gameResult;
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: scP, turn: s.turn.number, action: 'effect:partnerSolveCase' });
+      mutate.partner.solveCase(s, scP);
+      if (priorPartnerState !== 'sleep'
+        && s.players[scP].partner.state === 'sleep'
+        && s.players[scP].partner.cardId) {
+        recordEffectCausalOperation(s, ctx, {
+          actor: scP,
+          kind: 'sleep',
+          source: { kind: 'partner-card', side: scP },
+          targets: [{ kind: 'partner-card', side: scP }],
+          outcome: { type: 'state', state: 'sleep' },
+        });
+      }
+      if (priorResult === undefined
+        && s.gameResult !== undefined
+        && s.players[scP].partner.cardId
+        && s.players[scP].case.cardId) {
+        recordEffectCausalOperation(s, ctx, {
+          actor: scP,
+          kind: 'case-resolve',
+          source: { kind: 'partner-card', side: scP },
+          targets: [{ kind: 'case-card', side: scP }],
+          outcome: { type: 'state', state: 'success' },
+        });
+      }
       return;
     }
 
@@ -44,19 +137,30 @@ export function atomOpponentLoses(s: GameState, a: Record<string, unknown>, ctx:
       // winner = 効果所有者 (args.player、既定 self)。deck-out 系と同じ first-writer guard:
       // 既に gameResult があれば no-op (先着の決着を上書きしない、rules/15 即時解決)。
       const olP = resolvePlayer(a.player, ctx);
-      if (s.gameResult === undefined) {
-        mutate.gameResult.set(s, olP, 'alt-lose');
-      }
+      if (s.gameResult !== undefined) return;
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: olP, turn: s.turn.number, action: 'effect:opponentLoses' });
+      mutate.gameResult.set(s, olP, 'alt-lose');
       return;
     }
 
 export function atomCaseToResolved(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       const p = resolvePlayer(a.player, ctx);
+      const priorStatus = s.players[p].case.status;
       // BUG-089: case:to-resolved hook emit は mutate.case.toResolved に集約
       // (assist / FILE>=7 自動移行を含む全移行経路で発火させるため)。ここでの二重 emit は不要。
       mutate.case.toResolved(s, p);
+      if (priorStatus === '事件編'
+        && s.players[p].case.status === '解決編'
+        && s.players[p].case.cardId) {
+        recordEffectCausalOperation(s, ctx, {
+          actor: ctx.source.player,
+          kind: 'case-status-change',
+          source: { kind: 'player', side: ctx.source.player },
+          targets: [{ kind: 'case-card', side: p }],
+          outcome: { type: 'case-status', from: 'incident', to: 'resolved' },
+        });
+      }
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:caseToResolved' });
       return;
@@ -314,14 +418,23 @@ export function atomDeclareName(s: GameState, a: Record<string, unknown>, ctx: E
       if (name === '') {
         mutate.log.append(s, {
           ts: Date.now(), player: ctx.source.player, turn: s.turn.number,
-          action: 'effect:declareName:unsupplied', target: bindKey,
+          action: 'effect:declareName:unsupplied', result: 'unsupplied',
         });
       } else {
         mutate.log.append(s, {
           ts: Date.now(), player: ctx.source.player, turn: s.turn.number,
-          action: 'effect:declareName', target: bindKey, result: name,
+          action: 'effect:declareName', result: 'supplied',
         });
       }
       (ctx.declaredNames ??= {})[bindKey] = name;
+      if (name !== '') {
+        recordEffectCausalOperation(s, ctx, {
+          actor: ctx.source.player,
+          kind: 'declare',
+          source: { kind: 'player', side: ctx.source.player },
+          targets: [],
+          outcome: { type: 'state', state: 'success' },
+        });
+      }
       return;
     }

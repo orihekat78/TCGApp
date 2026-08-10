@@ -35,13 +35,14 @@ interface Props {
   hoverable?: boolean;
   badge?: 'partner' | 'case' | string;
   isFavorited?: boolean;
+  imageLoading?: 'eager' | 'lazy';
 }
 
 export function MetaCard({
   card, w = 90, selected = false, dimmed = false,
   count, maxCount = 3, showMax = false, atMax = false,
   onClick, onDoubleClick, onContextMenu,
-  hoverable = true, badge, isFavorited = false,
+  hoverable = true, badge, isFavorited = false, imageLoading = 'lazy',
 }: Props) {
   ensureInteractionStyles();
   // 事件カードは縦/横 (portrait/landscape) が混在する (rules/06 + Phase 9-D)。
@@ -56,9 +57,10 @@ export function MetaCard({
   const over = showMax && count != null && maxCount !== 'unlimited' && count > maxCount;
   return (
     <div
+      data-card-orientation={landscape ? 'landscape' : 'portrait'}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
-      onContextMenu={onContextMenu ? (e) => { e.preventDefault(); onContextMenu(); } : undefined}
+      onContextMenu={onContextMenu ? (e) => { e.preventDefault(); e.currentTarget.focus(); onContextMenu(); } : undefined}
       onKeyDown={onClick ? (e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); }
       } : undefined}
@@ -73,7 +75,7 @@ export function MetaCard({
         borderRadius: w >= 90 ? 6 : 4,
         overflow: 'hidden',
         cursor: interactive ? 'pointer' : 'default',
-        outline: selected ? `2.5px solid ${T.gold}` : 'none',
+        outline: selected ? `2.5px solid ${T.gold}` : undefined,
         outlineOffset: 1,
         opacity: dimmed ? 0.42 : atMax ? 0.6 : 1,
         boxShadow: selected
@@ -89,6 +91,7 @@ export function MetaCard({
         cardId={card.num}
         alt={card.name}
         className={isCase ? 'meta-card-art meta-card-art--contain' : 'meta-card-art'}
+        loading={imageLoading}
       />
 
       {/* ---- atMax: 上限到達のグレーアウト + MAX タグ ---- */}

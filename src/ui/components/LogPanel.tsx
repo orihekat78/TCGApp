@@ -12,6 +12,9 @@ import type { GameState, LogEntry } from '@/engine/types/game-state.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { redactLogEntryForViewer, type LogViewer } from '@/engine/read/log.js';
 import { uidToDisplayName } from '@/ui/services/uidNames.js';
+import { normalizedGameLogForUi } from '@/ui/presentation/normalizedLog';
+import type { CausalOutcome } from '@/engine/types';
+import { actionLabelForAction } from '@/ui/services/actionLabel.js';
 import './LogPanel.css';
 
 function resolveKnownCard(cardId: string): { cardId: string; name: string } | null {
@@ -55,6 +58,41 @@ function renderResult(
   _onCardExpand: ((cardId: string) => void) | undefined,
 ): ReactNode {
   return result;
+}
+
+type DisplayLogEntry = {
+  id: string;
+  ts: number;
+  player: 'self' | 'opp';
+  turn: number;
+  action: string;
+  target?: string;
+  result?: string;
+};
+
+function formatPublicOutcome(outcome: CausalOutcome): string | undefined {
+  switch (outcome.type) {
+    case 'none': return undefined;
+    case 'count': return `${outcome.amount} ${outcome.unit}`;
+    case 'move': return `${outcome.from} → ${outcome.to} (${outcome.count})`;
+    case 'state': return publicStateLabel(outcome.state);
+    case 'case-status': return '事件編から解決編へ';
+    case 'face-change': return `${outcome.count}枚を${outcome.to === 'face-up' ? '表向き' : '裏向き'}に変更`;
+    case 'summary': return `${outcome.count}件`;
+  }
+}
+
+function publicStateLabel(state: Extract<CausalOutcome, { type: 'state' }>['state']): string {
+  return ({
+    success: '成功',
+    failed: '失敗',
+    cancelled: 'キャンセル',
+    negated: '無効',
+    fizzled: '不発',
+    sleep: 'スリープ',
+    stun: 'スタン',
+    active: 'アクティブ',
+  } as const)[state];
 }
 
 export type LogPanelProps = {
@@ -174,10 +212,30 @@ export function LogPanel({ entries, open, maxEntries = 30, onClose, gameState, o
   const resolvedViewer = viewer === undefined
     ? ((globalThis as { __humanPlayerSide?: LogViewer }).__humanPlayerSide ?? null)
     : viewer;
-  const sorted = entries
-    .slice(-maxEntries)
-    .reverse()
-    .map((entry) => redactLogEntryForViewer(entry, resolvedViewer));
+  const sorted: DisplayLogEntry[] = gameState && entries === gameState.log
+    ? normalizedGameLogForUi(gameState).nodes
+      .slice(-maxEntries)
+      .reverse()
+      .map((node) => ({
+        id: node.id,
+        ts: node.ts,
+        player: node.actor,
+        turn: node.turn,
+        action: node.label,
+        ...((node.source || node.targets.length > 0) ? {
+          target: [node.source?.label, ...node.targets.map((target) => target.label)]
+            .filter((label): label is string => label !== undefined)
+            .join(' → '),
+        } : {}),
+        ...(formatPublicOutcome(node.outcome) ? { result: formatPublicOutcome(node.outcome) } : {}),
+      }))
+    : entries
+      .slice(-maxEntries)
+      .reverse()
+      .map((entry, index) => {
+        const redacted = redactLogEntryForViewer(entry, resolvedViewer);
+        return { ...redacted, id: `legacy-render:${index}` };
+      });
 
   // Round 3b: backdrop click 閉。
   //   - `.log-panel-backdrop` 透明レイヤ (z=199) で panel の外側 click を捕捉。
@@ -225,13 +283,13 @@ export function LogPanel({ entries, open, maxEntries = 30, onClose, gameState, o
         ) : (
           sorted.map((e, i) => (
             <div
-              key={`${e.ts}-${i}`}
+              key={e.id ?? `${e.ts}-${i}`}
               className={`log-entry side-${e.player}`}
             >
               <span className="log-time">{formatTime(e.ts)}</span>
               <span className="log-turn">T{e.turn}</span>
               <span className="log-player">{e.player === 'self' ? '自' : '相'}</span>
-              <span className="log-action">{ACTION_LABEL[e.action] ?? e.action}</span>
+              <span className="log-action">{ACTION_LABEL[e.action] ?? actionLabelForAction(e.action)}</span>
               {e.target !== undefined && <span className="log-target">→ {renderTarget(e.target, gameState, onCardExpand)}</span>}
               {e.result !== undefined && <span className="log-result">: {renderResult(e.result, onCardExpand)}</span>}
             </div>

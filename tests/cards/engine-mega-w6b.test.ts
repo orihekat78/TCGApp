@@ -10,6 +10,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { produce } from 'immer';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { startCausalSession } from '@/engine/log/causal';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
@@ -20,6 +21,7 @@ import { mutate } from '@/engine/mutate/index';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types';
 import { useGameStateStore } from '@/ui/state/store';
+import { resetPresentationQueue } from '@/ui/presentation/coordinator';
 import { run as runEffect } from '@/engine/effect/resolver';
 import { drainAiEffectPicks } from '@/engine/effect/apply-pick';
 import {
@@ -73,8 +75,16 @@ function caseAttackBase(oppEvidenceTop: string): GameState {
   s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
   s.players.self.scene = [sceneChar('PLAIN7', 'atk')];
   s.players.self.deck = ['MOB7', 'MOB7', 'MOB7'];
+  s.players.opp.case = {
+    cardId: 'CASE7',
+    status: 'case-front',
+    requiredEvidence: 7,
+    colors: ['green'],
+  };
   s.players.opp.evidence = [ev(oppEvidenceTop)];
   s.players.opp.deck = ['MOB7', 'MOB7'];
+  startCausalSession(s, 'engine-mega-w6b-case');
+  resetPresentationQueue('engine-mega-w6b-case');
   return s;
 }
 
@@ -141,6 +151,11 @@ describe('W6b step7 (row70): setEvidenceGainSuppress + hirameki defer', () => {
     return dispatchEngineAction(bindPendingDecision(pending, { type: 'hiramekiResolve', choice }));
   }
 
+  function completeCaseAction(actionId: string): void {
+    expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
+    expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
+  }
+
   it('§7-1 fast path 回帰: ヒラメキ無し証拠 → actionJudge 同 dispatch 内で self 証拠+1 / opp 証拠-1', () => {
     useGameStateStore.getState().setGameState(caseAttackBase('PLAIN7'));
     driveUnguardedCaseAction();
@@ -166,9 +181,10 @@ describe('W6b step7 (row70): setEvidenceGainSuppress + hirameki defer', () => {
     useGameStateStore.getState().setGameState(caseAttackBase('HSUP'));
     let gainFired = 0;
     const off = event.on('evidence:gain', () => { gainFired += 1; });
-    driveUnguardedCaseAction();
+    const actionId = driveUnguardedCaseAction();
     const r = resolvePendingHirameki('skip');
     expect(r.ok).toBe(true);
+    completeCaseAction(actionId);
     off();
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.evidence.length).toBe(1);
@@ -179,9 +195,10 @@ describe('W6b step7 (row70): setEvidenceGainSuppress + hirameki defer', () => {
     useGameStateStore.getState().setGameState(caseAttackBase('HSUP'));
     let gainFired = 0;
     const off = event.on('evidence:gain', () => { gainFired += 1; });
-    driveUnguardedCaseAction();
+    const actionId = driveUnguardedCaseAction();
     const r = resolvePendingHirameki('fire');
     expect(r.ok).toBe(true);
+    completeCaseAction(actionId);
     off();
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.evidence.length).toBe(0); // 得られない
@@ -195,9 +212,10 @@ describe('W6b step7 (row70): setEvidenceGainSuppress + hirameki defer', () => {
     s.players.self.deck = [];
     s.players.self.remove = ['MOB7', 'MOB7'];
     useGameStateStore.getState().setGameState(s);
-    driveUnguardedCaseAction();
+    const actionId = driveUnguardedCaseAction();
     const r = resolvePendingHirameki('skip');
     expect(r.ok).toBe(true);
+    completeCaseAction(actionId);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.evidence.length).toBe(1); // refresh → gain
     expect(after.gameResult).toBeUndefined();
@@ -215,12 +233,13 @@ describe('W6b step7 (row70): setEvidenceGainSuppress + hirameki defer', () => {
     const s = caseAttackBase('HDRAW');
     s.players.opp.deck = ['MOB7', 'MOB7', 'MOB7'];
     useGameStateStore.getState().setGameState(s);
-    driveUnguardedCaseAction();
+    const actionId = driveUnguardedCaseAction();
     const mid = useGameStateStore.getState().gameState!;
     expect(mid.players.self.evidence.length).toBe(0); // defer 中
     const oppHandBefore = mid.players.opp.hand.length;
     const r = resolvePendingHirameki('fire');
     expect(r.ok).toBe(true);
+    completeCaseAction(actionId);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.evidence.length).toBe(1); // suppress 無し → gain は走る
     expect(after.players.opp.hand.length).toBe(oppHandBefore + 1); // hirameki draw も解決済

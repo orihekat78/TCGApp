@@ -10,6 +10,7 @@
 
 import type { JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
+import { endMatchSession } from '@/ui/services/matchSession';
 import { cardIdToDisplayName } from '@/ui/services/uidNames.js';
 import './HiramekiDemoBanner.css';
 
@@ -19,16 +20,13 @@ export function HiramekiDemoBanner(): JSX.Element | null {
   if (mode !== 'completed') return null;
 
   const handleReset = (): void => {
-    // picker に戻る (gameState クリア + mode='picking')
-    useGameStateStore.getState().setGameState(null as never);
+    // 前の session を破棄して picker に戻る。
+    endMatchSession();
     useGameStateStore.getState().setHiramekiDemoMode('picking');
-    useGameStateStore.getState().setHiramekiDemoSelectedCardId(null);
   };
   const handleExit = (): void => {
-    // 通常タイトル画面 (GameSetupModal) に戻る
-    useGameStateStore.getState().setGameState(null as never);
-    useGameStateStore.getState().setHiramekiDemoMode('idle');
-    useGameStateStore.getState().setHiramekiDemoSelectedCardId(null);
+    // session を破棄して通常タイトル画面へ戻る。
+    endMatchSession();
   };
 
   return (

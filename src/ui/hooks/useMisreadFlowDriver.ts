@@ -16,24 +16,22 @@ import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from './useEngineDispatch.js';
 import { bindPendingDecision } from './useEngineDispatch/types.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
+import { getHumanDecisionSide } from '@/ui/services/humanDecisionOwner.js';
 
-function getHumanPlayerSide(): 'self' | 'opp' | null {
-  return (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
-}
-
-export function useMisreadFlowDriver(): void {
+export function useMisreadFlowDriver(enabled = true): void {
   const pending = useGameStateStore((s) => s.pendingMisread);
   const gameState = useGameStateStore((s) => s.gameState);
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
 
   useEffect(() => {
+    if (!enabled) return;
     if (!pending || !gameState) return;
     if (gameState.gameResult) {
       // 試合終了後は解決せずクリアのみ
       useGameStateStore.getState().setPendingMisread(null);
       return;
     }
-    const humanPlayer = spectatorMode ? null : getHumanPlayerSide();
+    const humanPlayer = getHumanDecisionSide(spectatorMode);
     if (humanPlayer === pending.player) return;
     // 人間推理 / AI defender: HeuristicPolicy 自動判定
     const ai = new HeuristicPolicy();
@@ -41,5 +39,5 @@ export function useMisreadFlowDriver(): void {
       ? ai.chooseMisreadTriggers(gameState, pending.reasoningUid, pending.candidates)
       : []; // フォールバック: 全スキップ
     dispatchEngineAction(bindPendingDecision(pending, { type: 'misreadResolve', picks }));
-  }, [pending, gameState, spectatorMode]);
+  }, [enabled, pending, gameState, spectatorMode]);
 }

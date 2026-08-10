@@ -571,8 +571,8 @@
       "evidence": [
         "rules:.claude/rules/11-reasoning.md:11",
         "src:src/cards/ct-p05/B05011.ts:18",
-        "src:src/engine/flow/main/reasoning.ts:109",
-        "src:src/engine/flow/main/reasoning.ts:178",
+        "src:src/engine/flow/main/reasoning.ts:157",
+        "src:src/engine/flow/main/reasoning.ts:273",
         "src:src/engine/listeners/triggered.ts:85"
       ],
       "noteCodes": [

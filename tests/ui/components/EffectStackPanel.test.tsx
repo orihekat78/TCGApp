@@ -22,20 +22,14 @@ function makeEntry(overrides: Partial<EffectStackEntry> & Pick<EffectStackEntry,
 }
 
 describe('EffectStackPanel', () => {
-  it('renders empty placeholder when no entries (closed)', () => {
+  it('renders nothing when closed and no entries', () => {
     const html = strip(renderToString(
       <EffectStackPanel entries={[]} open={false} />,
     ));
-    expect(html).toMatch(/effect-stack-panel/);
-    expect(html).not.toMatch(/effect-stack-panel open/);
-    expect(html).toMatch(/aria-expanded="false"/);
-    expect(html).toMatch(/effect-stack-label">効果解決</);
-    expect(html).toMatch(/effect-stack-empty">—/);
-    expect(html).not.toMatch(/effect-stack-count/);
-    expect(html).not.toMatch(/effect-stack-list/);
+    expect(html).toBe('');
   });
 
-  it('shows count badge with value when entries exist (closed)', () => {
+  it('renders nothing when closed even if pending entries exist', () => {
     const entries: EffectStackEntry[] = [
       makeEntry({ id: 'e1' }),
       makeEntry({ id: 'e2' }),
@@ -44,9 +38,7 @@ describe('EffectStackPanel', () => {
     const html = strip(renderToString(
       <EffectStackPanel entries={entries} open={false} />,
     ));
-    expect(html).toMatch(/effect-stack-count">3</);
-    expect(html).not.toMatch(/effect-stack-empty">—/);
-    expect(html).not.toMatch(/effect-stack-list/);
+    expect(html).toBe('');
   });
 
   it('renders empty-list message when open + no entries', () => {

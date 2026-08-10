@@ -19,10 +19,33 @@ import { _resetSpectatorDriving } from '@/ui/hooks/useSpectatorTurnDriver';
 import { MATCH_SESSION_RESET_STATE, useGameStateStore } from '@/ui/state/store';
 import { _setHumanPlayerSide } from '@/engine/listeners/triggered';
 import { _resetResolutionLock } from '@/engine/resolve/stack';
+import { resetPresentationQueue } from '@/ui/presentation/coordinator';
+import { usePresentationStore } from '@/ui/presentation/store';
+import {
+  discardLiveReplayRecording,
+  finalizeLiveReplayRecording,
+  startLiveReplayRecording,
+} from '@/ui/services/liveReplayRecorder';
 
 export type MatchSessionToken = number;
 
 let currentGeneration = 0;
+let matchSessionActive = false;
+
+function fallbackMatchSessionNamespace(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (part) => {
+    const random = Math.floor(Math.random() * 16);
+    return (part === 'x' ? random : (random & 0x3) | 0x8).toString(16);
+  });
+}
+
+const matchSessionNamespace = globalThis.crypto?.randomUUID?.() ?? fallbackMatchSessionNamespace();
+
+/** Stable for one runtime session and namespaced across reloads. */
+export function matchSessionId(token: MatchSessionToken): string {
+  if (!Number.isSafeInteger(token) || token < 1) throw new Error('Invalid match session token');
+  return `match-${matchSessionNamespace}-${token}`;
+}
 
 /** Promise を先に決着させ、その後に対戦の UI/engine 一時状態を破棄する。 */
 export function resetMatchSession(options: { preserveGameState?: boolean } = {}): void {
@@ -60,20 +83,51 @@ export function resetMatchSession(options: { preserveGameState?: boolean } = {})
   resetPendingAtomSession();
   _resetPendingHirameki();
   _resetPendingMisread();
+  usePresentationStore.getState().resetPresentationControls({
+    preserveCompletionNotice: options.preserveGameState === true,
+  });
+  resetPresentationQueue();
 }
 
 /** 新しい非同期対戦開始の所有権を発行する。 */
 export function beginMatchSession(humanPlayer: 'self' | null = 'self'): MatchSessionToken {
   const token = ++currentGeneration;
   resetMatchSession();
+  const sessionId = matchSessionId(token);
+  resetPresentationQueue(sessionId);
+  startLiveReplayRecording({
+    sessionId,
+    viewerMode: humanPlayer === null ? 'spectator' : 'solo-self',
+  });
   _setHumanPlayerSide(humanPlayer);
+  matchSessionActive = true;
   return token;
 }
 
 /** Invalidate late async completion and settle prompts. Result routes opt into retaining GameState. */
 export function endMatchSession(options: { preserveGameState?: boolean } = {}): void {
-  currentGeneration += 1;
-  resetMatchSession(options);
+  const sessionId = currentGeneration > 0 ? matchSessionId(currentGeneration) : null;
+  try {
+    if (sessionId !== null) {
+      if (options.preserveGameState === true) {
+        const finalized = finalizeLiveReplayRecording(sessionId);
+        if (!finalized) discardLiveReplayRecording(sessionId);
+      } else discardLiveReplayRecording(sessionId);
+    }
+  } catch {
+    // A malformed or oversized recording must only make Replay unavailable.
+    // It must never trap a completed match on MATCH or discard its RESULT state.
+    if (sessionId !== null) discardLiveReplayRecording(sessionId);
+  } finally {
+    matchSessionActive = false;
+    currentGeneration += 1;
+    resetMatchSession(options);
+  }
+}
+
+/** True only while a setup-owned match session is alive in this runtime. */
+export function isMatchSessionActive(): boolean {
+  return matchSessionActive;
 }
 
 export function isCurrentMatchSession(token: MatchSessionToken): boolean {
@@ -83,6 +137,5 @@ export function isCurrentMatchSession(token: MatchSessionToken): boolean {
 /** 古いマリガン等が後から完了しても、最新開始の GameState だけを採用する。 */
 export function commitMatchSession(token: MatchSessionToken, state: GameState): boolean {
   if (!isCurrentMatchSession(token)) return false;
-  useGameStateStore.getState().setGameState(state);
-  return true;
+  return useGameStateStore.getState().setGameState(state);
 }

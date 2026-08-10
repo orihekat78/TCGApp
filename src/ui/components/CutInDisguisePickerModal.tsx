@@ -16,7 +16,7 @@ import { CardExpandModal } from './CardExpandModal.js';
 import './CutInDisguisePickerModal.css';
 
 export type CutInDisguiseCandidate = {
-  /** hand occurrence uid (`cardId#index`). Legacy callers may omit it. */
+  /** Stable hand occurrence uid. Legacy callers may omit it. */
   uid?: string;
   cardId: string;
   name: string;

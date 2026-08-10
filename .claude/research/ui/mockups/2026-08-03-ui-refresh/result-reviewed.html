@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RESULT — Detective Conan Card Game</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #f3f8ff;
+        --muted: #9badc2;
+        --line: rgba(142, 183, 223, .24);
+        --line-strong: rgba(92, 194, 243, .55);
+        --canvas: #020c17;
+        --canvas-top: #05182a;
+        --panel: rgba(5, 24, 41, .72);
+        --cyan: #33c8ff;
+        --cyan-deep: #087cae;
+        --violet: #b799ff;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { min-width: 320px; min-height: 100%; margin: 0; }
+      body {
+        min-height: 100vh;
+        overflow-x: hidden;
+        color: var(--ink);
+        font-family: "Yu Gothic UI", "Yu Gothic", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+        background:
+          radial-gradient(ellipse at 50% -12%, rgba(28, 119, 176, .22), transparent 47%),
+          linear-gradient(180deg, var(--canvas-top), var(--canvas) 70%);
+      }
+
+      .site-header {
+        height: 72px;
+        display: flex;
+        align-items: stretch;
+        padding: 0 28px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(2, 13, 24, .76);
+      }
+      .brand {
+        width: 251px;
+        display: flex;
+        align-items: center;
+      }
+      .brand img { display: block; width: 192px; height: 42px; object-fit: contain; filter: brightness(0) invert(1); opacity: .94; }
+      .nav { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(7, minmax(90px, 1fr)); }
+      .nav a {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        color: #d7e3ef;
+        border-left: 1px solid rgba(132, 168, 201, .14);
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .nav .nav-icon { color: #c7d5e1; font-size: 18px; line-height: 1; }
+      .nav a.active {
+        margin: 11px 10px;
+        min-height: 48px;
+        border: 1px solid #3bd4ff;
+        border-radius: 4px;
+        color: #fff;
+        background: linear-gradient(180deg, #0e83b2, #075779);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.13), 0 0 16px rgba(39, 191, 255, .16);
+      }
+      .nav a.active + a { border-left-color: transparent; }
+
+      main { min-height: calc(100vh - 72px); padding: clamp(28px, 4.4vh, 55px) 28px 38px; }
+      .result-shell {
+        width: min(1060px, 100%);
+        margin: 0 auto;
+        padding: 22px 32px 26px;
+        border-top: 1px solid var(--line-strong);
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(90deg, rgba(8, 38, 64, .35), transparent 19%, transparent 81%, rgba(8, 38, 64, .35));
+      }
+      .eyebrow {
+        margin: 0;
+        color: #57baff;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: .27em;
+        text-align: center;
+      }
+      .result-title {
+        margin: 5px 0 2px;
+        color: #fff;
+        font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+        font-size: clamp(92px, 11.1vw, 154px);
+        font-weight: 500;
+        letter-spacing: .19em;
+        line-height: 1;
+        text-align: center;
+        text-shadow: 0 0 25px rgba(139, 208, 255, .24);
+      }
+      .reason {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin: 6px 0 29px;
+        color: #dce9f6;
+        font-size: 19px;
+        font-weight: 700;
+      }
+      .reason::before, .reason::after { content: ""; width: 102px; height: 1px; background: var(--line); }
+      .reason i { width: 5px; height: 5px; border-radius: 50%; background: #7da5c4; }
+      .reason span { white-space: nowrap; }
+
+      .summary { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+      .score-line {
+        display: grid;
+        grid-template-columns: 1fr 105px 1fr;
+        min-height: 98px;
+        align-items: stretch;
+      }
+      .side { padding: 18px 22px; }
+      .side.opponent { text-align: right; }
+      .side-label { display: block; color: #5abaf5; font-size: 12px; font-weight: 800; letter-spacing: .19em; }
+      .opponent .side-label { color: var(--violet); }
+      .side-score { margin-top: 5px; font-family: Georgia, "Yu Mincho", serif; font-size: 28px; font-weight: 700; }
+      .side-score strong { color: #68c8ff; font-size: 32px; }
+      .opponent .side-score strong { color: var(--violet); }
+      .side-sub { margin-top: 3px; color: var(--muted); font-size: 13px; }
+      .versus {
+        display: grid;
+        place-items: center;
+        color: #51bcf7;
+        font-family: Georgia, serif;
+        font-size: 28px;
+        border-left: 1px solid var(--line);
+        border-right: 1px solid var(--line);
+      }
+      .facts { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
+      .fact { min-height: 62px; padding: 10px 20px; border-right: 1px solid var(--line); }
+      .fact:last-child { border-right: 0; }
+      .fact dt { color: var(--muted); font-size: 12px; font-weight: 700; }
+      .fact dd { margin: 5px 0 0; color: #eaf5ff; font-size: 17px; font-weight: 700; }
+      .fact dd.emphasis { color: var(--cyan); }
+
+      .confirmed {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        min-height: 65px;
+        border-bottom: 1px solid var(--line);
+        color: var(--muted);
+      }
+      .card-mark { width: 27px; height: 39px; border: 2px solid #bed2e5; border-radius: 3px; position: relative; transform: skewY(-7deg); }
+      .card-mark::after { content: ""; position: absolute; inset: 4px; border: 1px solid rgba(190,210,229,.65); }
+      .confirmed-copy { display: grid; gap: 3px; font-size: 13px; }
+      .confirmed strong { color: #f4f8fc; font-size: 16px; }
+      .actions { display: flex; justify-content: center; gap: 16px; padding-top: 23px; }
+      .action {
+        min-width: 285px;
+        min-height: 52px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        border: 1px solid #47647e;
+        border-radius: 5px;
+        color: #eaf5ff;
+        background: rgba(5, 25, 43, .72);
+        font: inherit;
+        font-size: 17px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .action.primary { border-color: #42cffb; background: linear-gradient(180deg, #118ec0, #066c9c); box-shadow: inset 0 0 0 1px rgba(255,255,255,.15), 0 0 15px rgba(35,197,255,.12); }
+      .action:hover, .action:focus-visible { outline: none; border-color: #c5efff; filter: brightness(1.15); }
+      .button-icon { font-size: 22px; line-height: 1; }
+
+      @media (max-width: 900px), (max-height: 600px) {
+        .site-header { height: 54px; padding: 0 10px; }
+        .brand { width: 150px; }
+        .brand img { width: 118px; height: auto; }
+        .nav { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+        .nav a { min-height: 44px; gap: 4px; font-size: 10px; }
+        .nav .nav-icon { font-size: 12px; }
+        .nav a.active { min-height: 44px; margin: 5px 4px; }
+        main { min-height: calc(100vh - 54px); padding: 14px 52px 18px; display: grid; place-items: center; }
+        .result-shell { padding: 11px 20px 8px; background: rgba(5, 24, 41, .45); }
+        .eyebrow { display: none; }
+        .result-title { grid-area: title; margin: 0; font-size: clamp(64px, 9.2vw, 90px); align-self: center; }
+        .reason { grid-area: reason; margin: -6px 0 0; font-size: 12px; gap: 6px; }
+        .desktop-reason { display: inline; }
+        .reason::before, .reason::after { width: 18px; }
+        .reason i { width: 4px; height: 4px; }
+        .summary { grid-area: summary; }
+        .result-shell { display: grid; grid-template-columns: 32% 1fr; grid-template-areas: "title summary" "reason summary" "actions actions"; column-gap: 18px; }
+        .score-line { min-height: 71px; grid-template-columns: 1fr 48px 1fr; }
+        .side { padding: 9px 11px; }
+        .side-label { font-size: 9px; }
+        .side-score { margin-top: 2px; font-size: 18px; }
+        .side-score strong { font-size: 22px; }
+        .side-sub { margin-top: 0; font-size: 10px; }
+        .versus { font-size: 19px; }
+        .facts { grid-template-columns: repeat(3, 1fr); }
+        .fact { min-height: 45px; padding: 6px 10px; }
+        .fact dt { font-size: 9px; }
+        .fact dd { margin-top: 2px; font-size: 12px; white-space: nowrap; }
+        .confirmed { min-height: 49px; gap: 9px; }
+        .card-mark { width: 19px; height: 27px; margin-left: 1px; }
+        .card-mark::after { inset: 3px; }
+        .confirmed-copy { gap: 1px; font-size: 9px; }
+        .confirmed strong { font-size: 12px; }
+        .actions { grid-area: actions; gap: 10px; padding-top: 8px; }
+        .action { min-width: 0; flex: 1; min-height: 44px; font-size: 13px; }
+        .button-icon { font-size: 17px; }
+      }
+
+      @media (max-width: 620px) {
+        .brand { width: 123px; }
+        .brand img { width: 104px; }
+        .nav a { font-size: 0; }
+        .nav .nav-icon { font-size: 15px; }
+        main { padding-inline: 10px; }
+        .result-shell { padding-inline: 12px; grid-template-columns: 31% 1fr; column-gap: 10px; }
+        .fact { padding-inline: 5px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header" aria-label="メインナビゲーション">
+      <div class="brand" aria-label="DETECTIVE CONAN CARD GAME">
+        <img src="../../../../../meta-app/src/assets/detective-conan-logo.png" alt="DETECTIVE CONAN" />
+      </div>
+      <nav class="nav">
+        <a href="#home"><span class="nav-icon">⌂</span><span>ホーム</span></a>
+        <a href="#deck"><span class="nav-icon">♧</span><span>デッキ</span></a>
+        <a href="#cards"><span class="nav-icon">▣</span><span>カード</span></a>
+        <a class="active" href="#setup"><span class="nav-icon">▶</span><span>ゲーム開始</span></a>
+        <a href="#tutorial"><span class="nav-icon">⌁</span><span>チュートリアル</span></a>
+        <a href="#history"><span class="nav-icon">◴</span><span>履歴</span></a>
+        <a href="#settings"><span class="nav-icon">⚙</span><span>設定</span></a>
+      </nav>
+    </header>
+
+    <main>
+      <!-- One fixture is intentionally shared by desktop and the 851x393 mobile review. -->
+      <section class="result-shell" aria-labelledby="result-title" data-fixture="cpu-win-evidence-7">
+        <p class="eyebrow">RESULT</p>
+        <h1 id="result-title" class="result-title">勝利</h1>
+        <p class="reason"><i></i><span>CPU対戦</span><span class="desktop-reason">：必要証拠数達成</span><i></i></p>
+
+        <div class="summary" aria-label="対戦結果の詳細">
+          <div class="score-line">
+            <div class="side">
+              <span class="side-label">PLAYER</span>
+              <div class="side-score">証拠 <strong>7</strong> / 7</div>
+              <div class="side-sub">プレイヤーの勝利</div>
+            </div>
+            <div class="versus" aria-hidden="true">VS</div>
+            <div class="side opponent">
+              <span class="side-label">CPU</span>
+              <div class="side-score">証拠 <strong>4</strong> / 7</div>
+              <div class="side-sub">CPUの敗北</div>
+            </div>
+          </div>
+          <dl class="facts">
+            <div class="fact"><dt>ターン数</dt><dd>12ターン</dd></div>
+            <div class="fact"><dt>自リフレッシュ</dt><dd>0</dd></div>
+            <div class="fact"><dt>相手リフレッシュ</dt><dd>0</dd></div>
+          </dl>
+          <div class="confirmed">
+            <span class="card-mark" aria-hidden="true"></span>
+            <div class="confirmed-copy"><span>この対戦で確認したカード</span><strong>江戸川コナン</strong></div>
+          </div>
+        </div>
+
+        <div class="actions" aria-label="結果画面の操作">
+          <a class="action primary" href="#setup"><span class="button-icon">⚔</span>もう一度対戦</a>
+          <a class="action" href="#replay"><span class="button-icon">▻</span>リプレイを見る</a>
+          <a class="action" href="#history"><span class="button-icon">◴</span>対戦履歴へ</a>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

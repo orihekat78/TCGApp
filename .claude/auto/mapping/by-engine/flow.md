@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `415f1ba21e0a`
+> Source hash: `2cb4a21e8333`
 
 `src/engine/flow/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -38,10 +38,12 @@
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 - [`engine-api-flow-setup`](../by-spec/engine-api-flow-setup.md)
 
-## 📄 ソース (20)
+## 📄 ソース (22)
 
 - [`src/engine/flow/action-case.ts`](../../../../src/engine/flow/action-case.ts)
+- [`src/engine/flow/action/causal.ts`](../../../../src/engine/flow/action/causal.ts)
 - [`src/engine/flow/action/context-registry.ts`](../../../../src/engine/flow/action/context-registry.ts)
+- [`src/engine/flow/action/legacy-replay-compat.ts`](../../../../src/engine/flow/action/legacy-replay-compat.ts)
 - [`src/engine/flow/action/order.ts`](../../../../src/engine/flow/action/order.ts)
 - [`src/engine/flow/action/state-machine.ts`](../../../../src/engine/flow/action/state-machine.ts)
 - [`src/engine/flow/action/target-expander.ts`](../../../../src/engine/flow/action/target-expander.ts)
@@ -58,5 +60,4 @@
 - [`src/engine/flow/main/next-hint.ts`](../../../../src/engine/flow/main/next-hint.ts)
 - [`src/engine/flow/main/partner-ability.ts`](../../../../src/engine/flow/main/partner-ability.ts)
 - [`src/engine/flow/main/reasoning.ts`](../../../../src/engine/flow/main/reasoning.ts)
-- [`src/engine/flow/setup.ts`](../../../../src/engine/flow/setup.ts)
-- [`src/engine/flow/turn.ts`](../../../../src/engine/flow/turn.ts)
+- _...ほか 2 件_

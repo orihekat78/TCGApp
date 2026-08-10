@@ -24,7 +24,7 @@ describe('review-hardening', () => {
   beforeEach(() => {
     _clearPendingEffectPickQueue();
     _clearPendingEffectChoiceSide();
-    (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation = [];
+    delete (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation;
   });
 
   // #6: 短縮形 sceneEnter — 現場満杯なら pick modal (queue push) を出さず即 skip

@@ -30,7 +30,7 @@ import { char as charMutator } from '../mutate/char.js'; // W6 step4 (r58/B09090
 import { flag } from '../mutate/flag.js';            // BUG-096: declaredUseCount 流用
 import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from '../effect/resolve-picks.js';
-import { _setDeferredEntryPickResolver, effectCtxFromStackEntry } from '../resolve/stack.js';
+import { _setDeferredEntryPickResolver } from '../resolve/stack.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import type { GameState, AbilityDef, AbilityScope, Effect, EffectCtx, EffectResolutionKind, EffectStackEntry } from '../types/index.js';
 // 2026-05-27 Option C: ヒラメキは triggered hook='evidence:remove-by-action' + optional:true
@@ -534,8 +534,7 @@ function handleHook(
 // BUG-132 GAP-2: declaredReaction entry の遅延 pick substitute (stack.runOne から呼ばれる)。
 // handleHook の queue 時 resolveEffectPicks と同じ contract を、解決時盤面に対して実行する。
 // stack コアに AI import を持ち込まないため、listener 層から関数注入する (敵対レビュー反映)。
-function resolveDeferredEntryPicks(state: GameState, entry: EffectStackEntry): Effect {
-  const resolveCtx = effectCtxFromStackEntry(entry);
+function resolveDeferredEntryPicks(state: GameState, entry: EffectStackEntry, resolveCtx: EffectCtx): Effect {
   const abilityId = entry.declaredReaction?.abilityId ?? entry.source.abilityId ?? '';
   const humanSide = getHumanPlayerSide();
   const isHumanEffect = humanSide !== null && entry.source.player === humanSide;
@@ -628,7 +627,14 @@ export function registerTriggeredListener(): void {
  * - trigger.optional=false なら従来の triggered と同じく強制発動 (effect queue)
  */
 function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: unknown): void {
-  const p = payload as { player?: 'self' | 'opp'; ev?: { cardId?: string }; byUid?: string; occurrence?: { player?: 'self' | 'opp'; cardId?: string; removeIndex?: number } } | undefined;
+  const p = payload as {
+    player?: 'self' | 'opp';
+    ev?: { cardId?: string };
+    byUid?: string;
+    actionId?: string;
+    causalCorrelationEventId?: string;
+    occurrence?: { player?: 'self' | 'opp'; cardId?: string; removeIndex?: number };
+  } | undefined;
   if (!p || !p.player || !p.ev || !p.ev.cardId) return;
   // B06049 cluster8 (2026-06-15): アクション[事件] を行った側が「相手の【ヒラメキ】は発動しない」を
   // セットしている場合 (turnState[証拠を失う側].hiramekiSuppressed)、optional/forced 両経路の
@@ -685,6 +691,8 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
         // (forced 経路は baseCtx.triggerPayload=payload に byUid が既に載る)。hiramekiResolve が
         // queue payload に復元し '$trigger.byUid' (「アクション中のキャラ」) を解決可能にする。
         actorUid: p.byUid,
+        actionId: p.actionId,
+        causalCorrelationEventId: p.causalCorrelationEventId,
         occurrence: occurrence
           && occurrence.player === p.player
           && occurrence.cardId === p.ev.cardId

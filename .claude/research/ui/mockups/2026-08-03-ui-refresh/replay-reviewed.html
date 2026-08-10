@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>REPLAY reviewed mock</title>
+  <style>
+    :root { color-scheme: dark; font-family: "Yu Gothic UI", "Noto Sans JP", system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #030913; }
+    .screen { position: relative; width: 100%; height: 100%; overflow: hidden; background: #030913; }
+    .desktop-reference { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+    .desktop-header {
+      position: absolute; z-index: 4; inset: 0 0 auto; height: 72px; display: flex; align-items: stretch;
+      padding: 0 28px; border-bottom: 1px solid rgba(142, 183, 223, .24); background: rgb(2, 13, 24);
+    }
+    .desktop-brand { width: 251px; display: flex; align-items: center; }
+    .desktop-brand img { display: block; width: 192px; height: 42px; object-fit: contain; filter: brightness(0) invert(1); opacity: .94; }
+    .desktop-nav { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(7, minmax(90px, 1fr)); }
+    .desktop-nav span {
+      min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px;
+      border-left: 1px solid rgba(132, 168, 201, .14); color: #d7e3ef; font-size: 15px; font-weight: 700;
+    }
+    .desktop-nav .start { margin: 11px 10px; min-height: 48px; border: 1px solid #3bd4ff; border-radius: 4px; background: linear-gradient(180deg, #0e83b2, #075779); color: #fff; }
+    .desktop-nav .active { position: relative; color: #4ed1ff; }
+    .desktop-nav .active::after { content: ""; position: absolute; left: 24px; right: 24px; bottom: 0; height: 2px; background: #4ed1ff; }
+    .desktop-rail {
+      position: absolute; z-index: 2; inset: auto 0 0; height: 68px; display: grid;
+      grid-template-columns: 106px 126px 126px 126px minmax(168px, 1fr) 130px 122px;
+      gap: 10px; align-items: center; padding: 10px 34px 12px;
+      background: linear-gradient(180deg, rgba(5, 14, 29, .95), #071323 76%);
+      border-top: 1px solid rgba(76, 194, 255, .35); box-shadow: 0 -12px 28px rgba(0,0,0,.42);
+    }
+    .rail-button, .speed {
+      min-width: 44px; min-height: 44px; border: 1px solid #3a607f; border-radius: 5px;
+      color: #edf8ff; background: linear-gradient(180deg, #17283d, #0b1727); font: 700 13px/1 inherit;
+      letter-spacing: .03em; white-space: nowrap;
+    }
+    .rail-button.play { border-color: #20bdf4; color: #7ddfff; box-shadow: inset 0 0 0 1px rgba(35, 202, 255, .15); }
+    .rail-button.end { border-color: #2da3f1; background: linear-gradient(180deg, #15508a, #0b2c56); }
+    .progress { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; color: #d8eeff; font-weight: 700; font-size: 12px; }
+    .progress-track { height: 5px; border-radius: 9px; background: #1a3045; overflow: hidden; }
+    .progress-fill { width: 42%; height: 100%; background: #39c5ff; box-shadow: 0 0 10px #39c5ff; }
+    .speed { display: flex; justify-content: center; align-items: center; }
+    .mobile { display: none; }
+
+    @media (max-width: 900px), (max-height: 560px) {
+      .desktop { display: none; }
+      .mobile { display: block; }
+      .mobile-header {
+        position: absolute; inset: 0 0 auto; z-index: 4; height: 54px; display: flex; align-items: center;
+        padding: 0 10px; border-bottom: 1px solid #2499cf; background: linear-gradient(90deg, #020a14, #071321 70%, #04111e);
+        color: #f3f7fa; font-size: 10px; font-weight: 800; letter-spacing: .04em;
+      }
+      .brand { width: 150px; display: flex; align-items: center; }
+      .brand img { display: block; width: 118px; height: auto; filter: brightness(0) invert(1); opacity: .94; }
+      .mobile-nav { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); flex: 1; align-self: stretch; color: #dce7ee; font-size: 10px; }
+      .nav-item { position: relative; min-width: 44px; min-height: 44px; padding: 0 5px; border: 0; background: transparent; color: inherit; font: inherit; font-weight: 800; white-space: nowrap; display:flex; align-items:center; justify-content:center; gap:3px; }
+      .nav-item .ico { font-size: 12px; }
+      .mobile-nav .start { min-height:44px; margin:5px 4px; border:1px solid #3bd4ff; border-radius:4px; background:linear-gradient(180deg,#0e83b2,#075779); color:#fff; }
+      .mobile-nav .active { color: #4ed1ff; }
+      .mobile-nav .active::after { content:""; position:absolute; left:7px; right:7px; bottom:0; height:2px; background:#4ed1ff; }
+      .canvas {
+        position: absolute; left: 12px; top: 62px; width: 568px; height: 297px; overflow: hidden;
+        border: 1px solid rgba(63, 190, 244, .66); border-radius: 3px; background: #06111f;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, .45);
+      }
+      .canvas img { position: absolute; top: -21.73px; left: 0; width: 568px; height: 355.5px; max-width: none; }
+      .canvas-label {
+        position: absolute; z-index: 1; left: 50%; top: 4px; transform: translateX(-50%); padding: 2px 16px;
+        border: 1px solid rgba(95, 199, 243, .55); border-radius: 3px; background: rgba(3, 13, 26, .84);
+        color: #d8f5ff; font-size: 10px; font-weight: 700; white-space: nowrap;
+      }
+      .mobile-rail {
+        position: absolute; z-index: 3; top: 62px; right: 10px; bottom: 8px; width: 247px; padding: 9px;
+        border: 1px solid #2f82ad; border-radius: 5px; background: linear-gradient(180deg, rgba(5,20,35,.98), rgba(5,13,25,.98));
+        box-shadow: 0 8px 20px rgba(0,0,0,.42);
+      }
+      .rail-meta { display: flex; justify-content: space-between; margin: 0 2px 8px; color: #b8d8e7; font-size: 10px; font-weight: 700; }
+      .rail-meta strong { color: #f1fbff; }
+      .mobile-controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+      .mobile-controls .rail-button, .mobile-controls .speed { min-height: 44px; padding: 3px; font-size: 10px; }
+      .mobile-controls .play { grid-column: span 1; }
+      .mobile-controls .speed { grid-column: span 1; }
+      .mobile-controls .end { grid-column: span 1; }
+      .mobile-progress { margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(70, 142, 182, .36); }
+      .mobile-progress .progress { grid-template-columns: auto 1fr; gap: 8px; font-size: 10px; }
+      .current { margin-top: 11px; padding: 8px; border-left: 2px solid #28bff4; background: rgba(29, 73, 103, .28); color: #d9effd; font-size: 10px; line-height: 1.45; }
+      .current b { display: block; color: #6ad9ff; font-size: 9px; letter-spacing: .08em; }
+    }
+  </style>
+</head>
+<body>
+  <main class="screen" aria-label="リプレイ画面のreviewed mock">
+    <section class="desktop" aria-label="デスクトップ リプレイ">
+      <img class="desktop-reference" src="replay-desktop-1440x900-concept.png" alt="盤面を保ったリプレイ画面">
+      <header class="desktop-header" aria-label="メインナビゲーション">
+        <div class="desktop-brand"><img src="../../../../../meta-app/src/assets/detective-conan-logo.png" alt="DETECTIVE CONAN"></div>
+        <nav class="desktop-nav"><span>⌂ ホーム</span><span>▱ デッキ</span><span>▣ カード</span><span class="start">▶ ゲーム開始</span><span>⌑ チュートリアル</span><span class="active">◴ 履歴</span><span>☼ 設定</span></nav>
+      </header>
+      <nav class="desktop-rail" aria-label="リプレイ操作">
+        <button class="rail-button">戻る</button>
+        <button class="rail-button">一件戻る</button>
+        <button class="rail-button play">再生</button>
+        <button class="rail-button">一件進む</button>
+        <div class="progress"><span>T5 / T12</span><div class="progress-track"><div class="progress-fill"></div></div></div>
+        <button class="speed">速度 1.0×</button>
+        <button class="rail-button end">終了</button>
+      </nav>
+    </section>
+
+    <section class="mobile" aria-label="モバイル リプレイ">
+      <header class="mobile-header"><span class="brand"><img src="../../../../../meta-app/src/assets/detective-conan-logo.png" alt="DETECTIVE CONAN"></span><nav class="mobile-nav" aria-label="主な画面"><button class="nav-item"><span class="ico">⌂</span>ホーム</button><button class="nav-item"><span class="ico">▱</span>デッキ</button><button class="nav-item"><span class="ico">▣</span>カード</button><button class="nav-item start"><span class="ico">▶</span>ゲーム開始</button><button class="nav-item"><span class="ico">⌑</span>チュートリアル</button><button class="nav-item active"><span class="ico">◴</span>履歴</button><button class="nav-item"><span class="ico">☼</span>設定</button></nav></header>
+      <div class="canvas" aria-label="等比縮小された盤面キャンバス"><img src="replay-desktop-1440x900-concept.png" alt="リプレイの盤面"><div class="canvas-label">リプレイ · T5 / T12</div></div>
+      <aside class="mobile-rail" aria-label="ネイティブ固定リプレイ操作">
+        <div class="rail-meta"><span>リプレイ操作</span><strong>T5 / T12</strong></div>
+        <div class="mobile-controls">
+          <button class="rail-button play">再生</button>
+          <button class="rail-button">一件戻る</button>
+          <button class="rail-button">一件進む</button>
+          <button class="speed">速度<br>1.0×</button>
+          <button class="rail-button end">終了</button>
+        </div>
+        <div class="mobile-progress"><div class="progress"><span>00:05 / 00:18</span><div class="progress-track"><div class="progress-fill"></div></div></div></div>
+        <div class="current"><b>現在の記録</b>CPUがカードを1枚引いた<br>デッキ → 手札　+1</div>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>

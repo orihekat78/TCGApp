@@ -13,20 +13,24 @@ import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from './useEngineDispatch.js';
 import { bindPendingDecision } from './useEngineDispatch/types.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
+import { getHumanDecisionSide } from '@/ui/services/humanDecisionOwner.js';
 
-export function useHiramekiFlowDriver(): void {
+export function useHiramekiFlowDriver(enabled = true): void {
   const pending = useGameStateStore((s) => s.pendingHirameki);
   const gameState = useGameStateStore((s) => s.gameState);
+  const spectatorMode = useGameStateStore((s) => s.spectatorMode);
 
   useEffect(() => {
+    if (!enabled) return;
     if (!pending || !gameState) return;
     if (gameState.gameResult) {
       // 試合終了後は解決せずクリアのみ
       useGameStateStore.getState().setPendingHirameki(null);
       return;
     }
-    if (pending.player === 'self') return; // モーダル待ち
-    // opp owner: AI 自動判定
+    const humanPlayer = getHumanDecisionSide(spectatorMode);
+    if (pending.player === humanPlayer) return; // 人間所有ならモーダル待ち
+    // AI 所有、または観戦中: 自動判定
     const ai = new HeuristicPolicy();
     const fire = ai.chooseHiramekiTrigger
       ? ai.chooseHiramekiTrigger(gameState, { cardId: pending.cardId, abilityId: pending.abilityId })
@@ -35,5 +39,5 @@ export function useHiramekiFlowDriver(): void {
       pending,
       { type: 'hiramekiResolve', choice: fire ? 'fire' : 'skip' },
     ));
-  }, [pending, gameState]);
+  }, [enabled, pending, gameState, spectatorMode]);
 }

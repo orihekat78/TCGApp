@@ -11,9 +11,10 @@ export type CardArtProps = {
   cardId: string | null | undefined;
   alt?: string;
   className?: string;
+  loading?: 'eager' | 'lazy';
 };
 
-export function CardArt({ cardId, alt, className }: CardArtProps): JSX.Element {
+export function CardArt({ cardId, alt, className, loading = 'lazy' }: CardArtProps): JSX.Element {
   const candidate = useCardImage(cardId);
   const [src, setSrc] = useState<string>(candidate);
 
@@ -27,7 +28,7 @@ export function CardArt({ cardId, alt, className }: CardArtProps): JSX.Element {
       className={className ? `card-art ${className}` : 'card-art'}
       src={src}
       alt={alt ?? cardId ?? ''}
-      loading="lazy"
+      loading={loading}
       draggable={false}
       onError={() => {
         const placeholder = getCardImagePlaceholder();

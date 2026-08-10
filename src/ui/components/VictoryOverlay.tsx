@@ -8,8 +8,9 @@
 //   - reason: evidence (事件解決), deck-out (デッキ切れ), concede (投了)
 //   - pointer-events:auto で背景操作をブロック (再戦ボタンは未実装、本 PR では表示のみ)
 
-import type { JSX } from 'react';
+import { useSyncExternalStore, type JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
+import { getPresentationQueue } from '@/ui/presentation/coordinator.js';
 import './VictoryOverlay.css';
 
 const REASON_LABEL: Record<string, string> = {
@@ -20,9 +21,22 @@ const REASON_LABEL: Record<string, string> = {
 };
 
 export function VictoryOverlay(): JSX.Element | null {
-  const gameState = useGameStateStore.getState().gameState;
+  useGameStateStore((state) => state.gameState);
+  useGameStateStore((state) => state.pendingDeckReveal);
+  useGameStateStore((state) => state.pendingPublicHandReveal);
+  const { gameState, pendingDeckReveal, pendingPublicHandReveal } = useGameStateStore.getState();
+  const queue = getPresentationQueue();
+  useSyncExternalStore(
+    (listener) => queue.subscribe(listener),
+    () => queue.revision(),
+    () => queue.revision(),
+  );
   const result = gameState?.gameResult;
   if (!result) return null;
+
+  const presentationPending = queue.outstandingCount() > 0
+    || pendingDeckReveal !== null
+    || pendingPublicHandReveal?.lifetime === 'presentation';
 
   const selfWon = result.winner === 'self';
   const headline = selfWon ? 'YOU WIN' : 'YOU LOSE';
@@ -30,10 +44,11 @@ export function VictoryOverlay(): JSX.Element | null {
 
   return (
     <div
-      className={`victory-overlay ${selfWon ? 'win' : 'lose'}`}
+      className={`victory-overlay ${selfWon ? 'win' : 'lose'}${presentationPending ? ' is-presentation-pending' : ''}`}
       data-testid="victory-overlay"
-      role="alertdialog"
-      aria-labelledby="victory-headline"
+      role={presentationPending ? undefined : 'alertdialog'}
+      aria-hidden={presentationPending ? true : undefined}
+      aria-labelledby={presentationPending ? undefined : 'victory-headline'}
     >
       <div className="victory-card">
         <div id="victory-headline" className="victory-headline">{headline}</div>

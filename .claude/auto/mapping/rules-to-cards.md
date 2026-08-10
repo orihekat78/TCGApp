@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `21167e51368a`
+> Source hash: `9e2419c1d298`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -22,7 +22,7 @@
 | [`07-action-flow.md`](../../rules/07-action-flow.md) | 186 | `ai/action-resolution.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 183 件 |
 | [`08-contact.md`](../../rules/08-contact.md) | 118 | `ai/action-resolution.ts`, `ai/policies/heuristic.ts`, `cards/_shared/contactTargetMatches.ts` ほか 115 件 |
 | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) | 271 | `cards/_shared/contactTargetMatches.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d01/D01009.ts` ほか 268 件 |
-| [`10-action-event.md`](../../rules/10-action-event.md) | 308 | `cards/ct-d01/D01003.ts`, `cards/ct-d01/D01006.ts`, `cards/ct-d01/D01012.ts` ほか 305 件 |
+| [`10-action-event.md`](../../rules/10-action-event.md) | 307 | `cards/ct-d01/D01003.ts`, `cards/ct-d01/D01006.ts`, `cards/ct-d01/D01012.ts` ほか 304 件 |
 | [`11-reasoning.md`](../../rules/11-reasoning.md) | 75 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `cards/ct-d01/D01010.ts` ほか 72 件 |
 | [`12-next-hint.md`](../../rules/12-next-hint.md) | 34 | `ai/policies/heuristic.ts`, `cards/ct-p01/B01005.ts`, `cards/ct-p01/B01009.ts` ほか 31 件 |
 | [`13-keywords.md`](../../rules/13-keywords.md) | 446 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 443 件 |

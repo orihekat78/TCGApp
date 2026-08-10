@@ -17,6 +17,7 @@ import { promptMulligan } from '@/ui/hooks/useMulligan.js';
 import { BUG_274_PARTNER } from '@/ui/fixtures/bug274PartnerFixture.js';
 import type { GameState } from '@/engine/types/game-state';
 import type { CardId } from '@/engine/types';
+import { startCausalSession } from '@/engine/log/causal';
 
 type Player = 'self' | 'opp';
 
@@ -64,10 +65,17 @@ const defaultMulliganProvider: MulliganProvider = async (player, hand) => {
   return [];
 };
 
+export function performGameStart(
+  mulliganProvider: MulliganProvider | undefined,
+  deckSelection: { selfDeckId: DeckId; oppDeckId: DeckId } | undefined,
+  options: { sessionId: string },
+): Promise<GameState>;
 export async function performGameStart(
   mulliganProvider: MulliganProvider = defaultMulliganProvider,
   deckSelection?: { selfDeckId: DeckId; oppDeckId: DeckId },
+  options?: { sessionId: string },
 ): Promise<GameState> {
+  if (!options) throw new Error('performGameStart: sessionId is required');
   const decks = deckSelection
     ? buildDeckPair(deckSelection)
     : buildMvpDeckPair();
@@ -76,6 +84,7 @@ export async function performGameStart(
   if (usesBug274Fixture) engine.cards.register(BUG_274_PARTNER);
   // Phase A: init / decideFirstPlayer / dealOpeningHand × 2
   let state = produce(createEmptyGameState(), (draft) => {
+    startCausalSession(draft, options.sessionId);
     engine.flow.setup.init(draft, decks);
     // The public regression fixture must expose the self partner immediately.
     engine.flow.setup.decideFirstPlayer(

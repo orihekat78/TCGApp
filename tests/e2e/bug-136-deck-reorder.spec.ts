@@ -7,7 +7,12 @@
 //
 // rules: 13-keywords.md §捜査X (「好きな順番でデッキの下に移す」), 26-qa-deck-refresh.md
 import { test, expect } from '@playwright/test';
-import { setupGamePage, buildGameState, getGameState } from './helpers';
+import {
+  setupGamePage,
+  buildGameState,
+  getGameState,
+  surfaceDeckReorderDecision,
+} from './helpers';
 
 test.describe('BUG-136 — deckToBottomBound 順序選択 modal (実機)', () => {
   test('modal 表示 → ▲ で並べ替え → 確定 → deck 底ブロックが選んだ順に', async ({ page }) => {
@@ -24,11 +29,7 @@ test.describe('BUG-136 — deckToBottomBound 順序選択 modal (実機)', () =>
         { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     });
 
-    // pendingDeckReorder を set (engine が human 所有 & 2 枚以上で set するのと同値、unit test 済)。
-    await page.evaluate(() => {
-      const w = window as unknown as { __game: { getState: () => { setPendingDeckReorder: (p: unknown) => void } } };
-      w.__game.getState().setPendingDeckReorder({ player: 'self', cardIds: ['D08003', 'D08007', 'D08013'] });
-    });
+    await surfaceDeckReorderDecision(page, ['D08003', 'D08007', 'D08013']);
 
     const modal = page.locator('[data-testid="deck-reorder-modal"]');
     await expect(modal).toBeVisible();
@@ -73,10 +74,7 @@ test.describe('BUG-136 — deckToBottomBound 順序選択 modal (実機)', () =>
       (gs as unknown as { turn: { number: number; player: string; phase: string; isFirstPlayerFirstTurn: boolean } }).turn =
         { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     });
-    await page.evaluate(() => {
-      const w = window as unknown as { __game: { getState: () => { setPendingDeckReorder: (p: unknown) => void } } };
-      w.__game.getState().setPendingDeckReorder({ player: 'self', cardIds: ['D08003', 'D08007', 'D08013'] });
-    });
+    await surfaceDeckReorderDecision(page, ['D08003', 'D08007', 'D08013']);
 
     await expect(page.locator('[data-testid="deck-reorder-modal"]')).toBeVisible();
     // row0 (D08003) を row2 (D08013) 位置へ drag → [D08007, D08013, D08003]

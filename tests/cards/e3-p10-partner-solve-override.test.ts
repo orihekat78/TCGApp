@@ -120,6 +120,18 @@ describe('E3 P10 ② solveCase override execution (alt-lose + 証拠リムーブ
     expect(s1.gameResult).toEqual({ winner: 'self', reason: 'evidence' });
     expect(s1.players.self.evidence.length).toBe(2);
   });
+
+  it('終局後はoverrideでもpartner・evidence・pending effectsを一切変更しない', () => {
+    registerCardDef(caseDef('CASE_OV', { abilities: [overrideAbility()] }));
+    registerCardDef(partnerDef('PA_BLACK', ['黒']));
+    const terminal = produce(winnable('CASE_OV', 'PA_BLACK', 3, 2), draft => {
+      draft.gameResult = { winner: 'opp', reason: 'deck-out' };
+    });
+
+    const result = produce(terminal, draft => partnerMutate.solveCase(draft, 'self'));
+
+    expect(result).toBe(terminal);
+  });
 });
 
 describe('E3 P10 ③ canWin availability は override で不変 (列挙は通常 solve と同一)', () => {

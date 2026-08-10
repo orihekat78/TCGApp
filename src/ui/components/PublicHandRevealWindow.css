@@ -15,16 +15,31 @@
   pointer-events: none;
 }
 
-.public-hand-reveal-heading { margin-bottom: 8px; font-size: 13px; font-weight: 700; }
+.public-hand-reveal-window--embedded {
+  position: static;
+  z-index: auto;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  box-shadow: none;
+  pointer-events: auto;
+}
+
+.public-hand-reveal-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.public-hand-reveal-heading { font-size: 13px; font-weight: 700; }
 .public-hand-reveal-cards { display: flex; gap: 8px; overflow-x: auto; }
-.public-hand-reveal-card { position: relative; display: grid; grid-template-columns: 36px minmax(70px, 1fr) auto; gap: 6px; align-items: center; min-width: 150px; pointer-events: auto; }
+.public-hand-reveal-card { position: relative; display: grid; grid-template-columns: 36px minmax(70px, 1fr) auto auto; gap: 6px; align-items: center; min-width: 190px; pointer-events: auto; }
 .public-hand-reveal-art { width: 34px; height: 48px; object-fit: cover; }
 .public-hand-reveal-name { font-size: 12px; overflow-wrap: anywhere; }
 .public-hand-reveal-occurrence { font-size: 10px; color: #c8bde8; }
-.public-hand-reveal-card button { position: absolute; top: 3px; left: 14px; width: 22px; height: 22px; padding: 0; border: 1px solid #7c6ab4; border-radius: 50%; background: #2c254a; color: inherit; }
+.public-hand-reveal-card button { position: static; display: grid; place-items: center; min-width: 44px; min-height: 44px; padding: 0; border: 1px solid #7c6ab4; border-radius: 6px; background: #2c254a; color: inherit; }
+.public-hand-reveal-close { min-width: 44px; min-height: 44px; padding: 4px 10px; border: 1px solid #7c6ab4; border-radius: 6px; background: #2c254a; color: inherit; pointer-events: auto; }
+.public-hand-reveal-close:hover,
+.public-hand-reveal-close:focus-visible { border-color: #b6a4f0; background: #443b68; }
 
 @media (max-height: 430px) and (orientation: landscape) {
   .public-hand-reveal-window { right: 8px; bottom: 8px; max-height: calc(100vh - 16px); }
   .public-hand-reveal-art { width: 28px; height: 40px; }
-  .public-hand-reveal-card { min-width: 128px; }
+  .public-hand-reveal-card { min-width: 174px; }
+  .public-hand-reveal-window--embedded { max-height: none; }
 }

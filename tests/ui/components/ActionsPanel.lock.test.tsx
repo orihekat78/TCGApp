@@ -18,6 +18,12 @@ function enabledProps(over: Partial<ActionsPanelProps> = {}): ActionsPanelProps 
 const count = (s: string, sub: string) => s.split(sub).length - 1;
 
 describe('ActionsPanel interactionLocked', () => {
+  it('renders every primary action as a native keyboard-operable button', () => {
+    const html = renderToString(<ActionsPanel {...enabledProps({ onActionItemClick: () => undefined })} />);
+    expect(html.match(/<button[^>]*data-action-id=/g)).toHaveLength(8);
+    expect(html).not.toMatch(/<li[^>]*data-action-id=/);
+  });
+
   it('非ロック時は有効アクションが disabled にならない', () => {
     const html = renderToString(<ActionsPanel {...enabledProps()} />);
     expect(count(html, 'aria-disabled="true"')).toBe(0);

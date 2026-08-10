@@ -17,9 +17,10 @@ import {
 import { event } from '@/engine/event/index';
 import { mutate } from '@/engine/mutate/index';
 import { judge } from '@/engine/flow/contact';
+import { startCausalSession, validateCausalLog } from '@/engine/log/causal';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
-import type { CardDef, GameState, ActionContext } from '@/engine/types';
+import type { CardDef, CausalLogEntryV1, GameState, ActionContext } from '@/engine/types';
 
 function makeCard(id: string, opts: Partial<CardDef> = {}): CardDef {
   return {
@@ -121,6 +122,31 @@ describe('engine.flow.action.declare', () => {
     });
     expect(ax?.phase).toBe('guard-window');
   });
+
+  it('starts one public causal chain when declaring an action against a case', () => {
+    const { s, selfUid } = makeScene({ oppEvidence: 1 });
+    let ax: ActionContext | undefined;
+    const out = produce(s, draft => {
+      draft.players.opp.case.cardId = 'PRIVATE-CASE-ID';
+      startCausalSession(draft, 'case-action');
+      ax = declare(draft, selfUid, { kind: 'case', player: 'opp' });
+    });
+
+    const graph = validateCausalLog(out.log as CausalLogEntryV1[]);
+    expect(graph.map((node) => [node.kind, node.parentEventId])).toEqual([
+      ['declare', undefined],
+      ['sleep', 'case-action:1'],
+    ]);
+    expect(graph[0]).toMatchObject({
+      source: { kind: 'card', side: 'self', zone: 'scene' },
+      targets: [{ kind: 'card', side: 'opp', zone: 'case' }],
+    });
+    expect(JSON.stringify(graph)).not.toContain('ev-0');
+    expect(ax?.causalTrace).toMatchObject({
+      rootEventId: 'case-action:1',
+      tailEventId: 'case-action:2',
+    });
+  });
 });
 
 describe('engine.flow.action.tryGuard', () => {
@@ -150,6 +176,28 @@ describe('engine.flow.action.tryGuard', () => {
     expect(captured.length).toBe(1);
     // engine additive A2 (2026-07-11, B04073): action:guarded payload に targetUid を同梱 (char 対象=oppUid)
     expect(captured[0]).toEqual({ byUid: selfUid, guardUid, targetUid: oppUid });
+  });
+
+  it('guarded case enters the full contact sequence against the guard', () => {
+    const starts: { aUid: string; bUid: string }[] = [];
+    event.on('contact:start', (_state, payload) => {
+      starts.push(payload as { aUid: string; bUid: string });
+    });
+    const { s, selfUid, guardUid } = makeScene({ guardActive: true, oppEvidence: 1 });
+    let ax: ActionContext | undefined;
+
+    produce(s, draft => {
+      ax = declare(draft, selfUid, { kind: 'case', player: 'opp' });
+      tryGuard(draft, ax, guardUid);
+      advance(draft, ax);
+      expect(ax.phase).toBe('contact-pending');
+      advance(draft, ax);
+    });
+
+    expect(ax?.phase).toBe('action-1');
+    expect(ax?.firstUid).toBe(guardUid);
+    expect(ax?.secondUid).toBe(selfUid);
+    expect(starts).toEqual([{ aUid: selfUid, bUid: guardUid }]);
   });
 });
 
@@ -221,6 +269,41 @@ describe('engine.flow.action.abortIfMissing', () => {
     expect(ax?.phase).toBe('action-end');
   });
 
+  it('passGuard aborts instead of opening the unguarded path when the target left first', () => {
+    const unguarded: unknown[] = [];
+    event.on('action:unguarded', (_state, payload) => {
+      unguarded.push(payload);
+    });
+    const { s, selfUid, oppUid } = makeScene({});
+
+    const after = produce(s, draft => {
+      const ax = declare(draft, selfUid, { kind: 'char', uid: oppUid });
+      mutate.scene.removeToRemove(draft, oppUid, 'effect');
+      passGuard(draft, ax);
+    });
+
+    expect(after.actionContexts).toEqual({});
+    expect(unguarded).toEqual([]);
+  });
+
+  it('tryGuard aborts before validating a guard when the declared target left first', () => {
+    const guarded: unknown[] = [];
+    event.on('action:guarded', (_state, payload) => {
+      guarded.push(payload);
+    });
+    const { s, selfUid, oppUid, guardUid } = makeScene({ guardActive: true });
+
+    const after = produce(s, draft => {
+      const ax = declare(draft, selfUid, { kind: 'char', uid: oppUid });
+      mutate.scene.removeToRemove(draft, oppUid, 'effect');
+      tryGuard(draft, ax, guardUid);
+    });
+
+    expect(after.actionContexts).toEqual({});
+    expect(after.players.opp.scene.find((card) => card.uid === guardUid)?.state).toBe('active');
+    expect(guarded).toEqual([]);
+  });
+
   it('abortIfMissing emits action:end with result aborted', () => {
     const captured: { byUid: string; result: string }[] = [];
     event.on('action:end', (_s, payload) => {
@@ -234,6 +317,37 @@ describe('engine.flow.action.abortIfMissing', () => {
     });
     expect(captured.length).toBeGreaterThanOrEqual(1);
     expect(captured[captured.length - 1].result).toBe('aborted');
+  });
+
+  it('does not classify an aborted case action as contact', () => {
+    const { s, selfUid } = makeScene({ oppEvidence: 1 });
+    const after = produce(s, draft => {
+      draft.players.opp.case.cardId = 'PRIVATE-CASE-ID';
+      startCausalSession(draft, 'case-abort');
+      const ax = declare(draft, selfUid, { kind: 'case', player: 'opp' });
+      mutate.scene.removeToRemove(draft, selfUid, 'effect');
+      abortIfMissing(draft, ax);
+    });
+    const graph = validateCausalLog(after.log as CausalLogEntryV1[]);
+    const completion = graph.at(-1);
+
+    expect(completion).toMatchObject({ kind: 'cancel' });
+    expect(completion?.tags ?? []).not.toContain('contact');
+  });
+
+  it('does not classify a character action aborted before contact start as contact', () => {
+    const { s, selfUid, oppUid } = makeScene();
+    const after = produce(s, draft => {
+      startCausalSession(draft, 'char-abort-before-contact');
+      const ax = declare(draft, selfUid, { kind: 'char', uid: oppUid });
+      mutate.scene.removeToRemove(draft, selfUid, 'effect');
+      abortIfMissing(draft, ax);
+    });
+    const graph = validateCausalLog(after.log as CausalLogEntryV1[]);
+    const completion = graph.at(-1);
+
+    expect(completion).toMatchObject({ kind: 'cancel' });
+    expect(completion?.tags ?? []).not.toContain('contact');
   });
 });
 

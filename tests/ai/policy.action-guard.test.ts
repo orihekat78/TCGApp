@@ -19,6 +19,8 @@ import { register as registerCardDef, _resetRegistry as resetDefRegistry } from 
 import type { CardDef, GameState } from '@/engine/types';
 
 import { applyMove } from '@/ai/policy';
+import type { AIPolicy } from '@/ai/policy';
+import { resolveActionAgainstChar } from '@/ai/action-resolution';
 
 function makeCard(id: string, opts: Partial<CardDef> = {}): CardDef {
   return {
@@ -63,6 +65,48 @@ beforeEach(() => {
 });
 
 describe('policy.applyMove — actionAgainstChar with chooseGuard (Phase 8.7c)', () => {
+
+  it.each(['attacker', 'target'] as const)(
+    'ends before guard selection/contact when the %s leaves during declaration effects',
+    (removed) => {
+      registerCardDef(makeCard('Attacker', { ap: 1500, lp: 1 }));
+      registerCardDef(makeCard('Target', { ap: 1000, lp: 1 }));
+      registerCardDef(makeCard('Guardian', { ap: 2500, lp: 1 }));
+      const s = produce(makeBaseState(), (draft) => {
+        mutate.scene.enter(draft, 'self', 'Attacker', { active: true });
+        mutate.scene.enter(draft, 'opp', 'Target', { active: false });
+        mutate.scene.enter(draft, 'opp', 'Guardian', { active: true });
+      });
+      const atkUid = s.players.self.scene.find((c) => c.cardId === 'Attacker')!.uid;
+      const tgtUid = s.players.opp.scene.find((c) => c.cardId === 'Target')!.uid;
+      const guardUid = s.players.opp.scene.find((c) => c.cardId === 'Guardian')!.uid;
+      const removedUid = removed === 'attacker' ? atkUid : tgtUid;
+      let guardChoices = 0;
+      let contactStarts = 0;
+      const defenderPolicy: AIPolicy = {
+        choose: () => null,
+        chooseGuard: () => {
+          guardChoices += 1;
+          return guardUid;
+        },
+      };
+      event.on('action:declare', (state) => {
+        mutate.scene.removeToRemove(state, removedUid, 'effect');
+      });
+      event.on('contact:start', () => {
+        contactStarts += 1;
+      });
+
+      const after = produce(s, (draft) => {
+        resolveActionAgainstChar(draft, atkUid, tgtUid, defenderPolicy);
+      });
+
+      expect(guardChoices).toBe(0);
+      expect(contactStarts).toBe(0);
+      expect(after.actionContexts).toEqual({});
+    },
+  );
+
   it('CPU guard: defender has high-AP active char → guard fires + that char sleeps', () => {
     registerCardDef(makeCard('Attacker', { ap: 1500, lp: 1 }));
     registerCardDef(makeCard('Target', { ap: 1000, lp: 1 }));
@@ -135,6 +179,10 @@ describe('policy.applyMove — actionAgainstCase with chooseGuard (BUG-144)', ()
     });
     const atkUid = s.players.self.scene.find((c) => c.cardId === 'Attacker')!.uid;
     const guardUid = s.players.opp.scene.find((c) => c.cardId === 'Guardian')!.uid;
+    const contactStarts: { aUid: string; bUid: string }[] = [];
+    event.on('contact:start', (_state, payload) => {
+      contactStarts.push(payload as { aUid: string; bUid: string });
+    });
 
     const after = produce(s, (draft) => {
       applyMove(draft, { kind: 'actionAgainstCase', byUid: atkUid, targetPlayer: 'opp' }, 'self');
@@ -147,6 +195,8 @@ describe('policy.applyMove — actionAgainstCase with chooseGuard (BUG-144)', ()
     expect(after.players.self.evidence.length).toBe(0);
     // Attacker (1500) < Guardian (2500) → judge で何も起こらない (Attacker 残存・スリープ)
     expect(after.players.self.scene.find((c) => c.uid === atkUid)?.state).toBe('sleep');
+    expect(contactStarts).toEqual([{ aUid: atkUid, bUid: guardUid }]);
+    expect(after.actionContexts).toEqual({});
   });
 
   it('CPU passGuard on case-action: ガード候補なし → 既存挙動 (証拠リムーブ + 自証拠獲得)', () => {

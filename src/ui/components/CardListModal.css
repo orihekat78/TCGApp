@@ -156,9 +156,10 @@
 
 .card-list-pick-shell,
 .card-list-detail-shell {
-  position: relative;
   min-width: 0;
-  display: block;
+  display: grid;
+  grid-template-rows: minmax(0, auto) 44px;
+  row-gap: 4px;
 }
 
 .card-list-pick-shell > .card-list-item,
@@ -167,9 +168,8 @@
 }
 
 .card-list-pick-detail {
-  position: absolute;
-  inset: 6px 6px auto auto;
-  z-index: 2;
+  position: static;
+  justify-self: end;
   min-inline-size: 44px;
   min-block-size: 44px;
   min-width: 44px;
@@ -194,9 +194,7 @@
 }
 
 .card-list-pick-detail > span {
-  position: absolute;
-  top: 12px;
-  left: 12px;
+  position: static;
   display: grid;
   width: 20px;
   height: 20px;
@@ -207,6 +205,7 @@
   color: #fff;
   font-size: 12px;
   line-height: 1;
+  margin: auto;
 }
 
 .card-list-pick-detail:hover,

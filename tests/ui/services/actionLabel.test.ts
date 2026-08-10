@@ -28,4 +28,21 @@ describe('actionLabel', () => {
   it('maps "contact-judge" → "判定" (Phase 8.10e)', () => {
     expect(actionLabel(entry('contact-judge'))).toBe('判定');
   });
+
+  it('never exposes internal causal action identifiers', () => {
+    const causalActions = [
+      'use', 'declare', 'select', 'draw', 'discard', 'zone-move', 'sleep', 'stun',
+      'activate', 'face-change', 'value-change', 'evidence', 'case-status-change', 'case-resolve', 'negate', 'fizzle', 'cancel',
+      'game-result', 'summary',
+    ].map((kind) => `causal.${kind}`);
+
+    for (const action of causalActions) {
+      expect(actionLabel(entry(action))).not.toContain('causal.');
+    }
+  });
+
+  it('labels activation and face changes in player-facing Japanese', () => {
+    expect(actionLabel(entry('causal.activate'))).toBe('アクティブにする');
+    expect(actionLabel(entry('causal.face-change'))).toBe('カードの向きを変更');
+  });
 });

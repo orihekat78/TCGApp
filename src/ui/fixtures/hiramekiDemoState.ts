@@ -5,10 +5,9 @@
 //
 // 役割:
 //   ユーザが picker で選んだ icon-flash 持ち cardId を self.evidence top に face-down で配置、
-//   opp 現場 3 枚 (active+sleep 混在) で初期化。turn.player='opp' main phase なので
-//   `dispatch({ type: 'actionAgainstCase', byUid: 'demo-opp-1', targetPlayer: 'self' })`
-//   が即受付可能 → self.evidence top をリムーブ → hirameki listener 発火 →
-//   HiramekiPickerModal が表示される。
+//   opp 現場 3 枚 (active+sleep 混在) で初期化。startHiramekiDemoSession が
+//   production と同じ actionDeclareCase → actionGuard → actionJudge を進め、
+//   self.evidence top をリムーブ → hirameki listener 発火 → picker を表示する。
 //
 // 設計上の注意:
 //   - opp.scene[0] は active で isNamed: false (アクション可能な前提)
@@ -69,7 +68,7 @@ function oppSide(): PlayerState {
     partner: { cardId: 'D08001', state: 'active', location: 'partner-area' },
     case: { cardId: 'D08020', status: '事件編', requiredEvidence: 7, colors: ['青'], declaredUseCount: {} },
     scene: [
-      // 現場 #1 (active) — actionAgainstCase の byUid に使う
+      // 現場 #1 (active) — actionDeclareCase の byUid に使う
       makeScene('D08017', 'demo-opp-1', { enterOrder: 0, state: 'active' }),
       // 現場 #2 (sleep) — active/sleep 混在を示す
       makeScene('D08009', 'demo-opp-2', { enterOrder: 1, state: 'sleep' }),
@@ -90,7 +89,7 @@ function oppSide(): PlayerState {
  *
  * @param pickedCardId user が picker で選んだ icon-flash 持ちカードの cardId
  * @returns turn.player='opp' main phase の初期 state。opp 現場 #1 active で
- *          actionAgainstCase 即受付可能。self.evidence 最上部に pickedCardId face-down。
+ *          actionDeclareCase 即受付可能。self.evidence 最上部に pickedCardId face-down。
  */
 export function createHiramekiDemoState(pickedCardId: string): GameState {
   return {

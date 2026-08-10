@@ -10,6 +10,7 @@
 import type { CardColor, CardDef, CardKind } from './types';
 import type { CardDef as EngineCardDef } from '@/engine/types';
 import { ALL_CARDS } from '@/cards/index';
+import { CASE_DIFFICULTIES_BY_NUM } from './caseDifficulties.generated';
 
 const COLOR_MAP: Record<string, CardColor> = {
   '青': 'blue', '黄': 'yellow', '赤': 'red', '緑': 'green', '紫': 'purple', '黒': 'black', '白': 'white',
@@ -25,6 +26,18 @@ const COLOR_MAP: Record<string, CardColor> = {
 function officialCardId(no: string): string {
   const slash = no.indexOf('/');
   return slash > 0 ? no.slice(0, slash) : no;
+}
+
+/** 印刷番号から公式の商品・収録弾へ結ぶ。
+ * Bxx はブースターパック CT-Pxx、Dxx はスタートデッキ CT-Dxx、PR はプロモ群。
+ * パラレル接尾辞は同じ商品へ集約する。 */
+export function cardSetCode(num: string): string {
+  const booster = /^B(\d{2})/i.exec(num);
+  if (booster) return `CT-P${booster[1]}`;
+  const deck = /^D(\d{2})/i.exec(num);
+  if (deck) return `CT-D${deck[1]}`;
+  if (/^PR/i.test(num)) return 'PR';
+  return 'その他';
 }
 
 /** ability の公式テキスト + engine.keywords からデッキ編集フィルタ用キーワードを抽出。 */
@@ -56,9 +69,14 @@ function engineToMeta(e: EngineCardDef): CardDef {
   // 混色カードは複数色を保持 (rules/20)。color は表示用の代表色 (= 先頭)。
   const colors = [...new Set((e.colors ?? []).map((c) => COLOR_MAP[c] ?? 'blue'))];
   const primary: CardColor = colors[0] ?? 'blue';
+  const caseDifficulty = e.kind === 'case' ? CASE_DIFFICULTIES_BY_NUM[e.id] : undefined;
+  if (e.kind === 'case' && !caseDifficulty) {
+    throw new Error(`official case difficulty is missing for ${e.id}`);
+  }
   return {
     num: e.id,
     id: officialCardId(e.no),
+    setCode: cardSetCode(e.id),
     name: e.names[0] ?? e.id,
     type: e.kind,
     color: primary,
@@ -68,6 +86,8 @@ function engineToMeta(e: EngineCardDef): CardDef {
     lp: e.lp,
     // `cost` は手札使用コストだけ、`level` は事件カードの表示値も保持する。
     level: e.kind === 'case' ? (e.caseLevel ?? e.level) : playLevel,
+    difficultyFirst: caseDifficulty?.first,
+    difficultySecond: caseDifficulty?.second,
     rarity: e.rarity,
     features: e.kind === 'case' ? (e.caseTraits ?? e.traits) : e.traits,
     keywords: deriveKeywords(e),
@@ -77,6 +97,13 @@ function engineToMeta(e: EngineCardDef): CardDef {
 }
 
 export const CARD_POOL: readonly CardDef[] = ALL_CARDS.map(engineToMeta);
+
+/** フィルタに出す収録弾。商品系列→弾番号の順で安定させる。 */
+export const ALL_CARD_SETS: readonly string[] = (() => {
+  const sets = [...new Set(CARD_POOL.map((card) => card.setCode ?? cardSetCode(card.num)))];
+  const rank = (code: string) => code.startsWith('CT-P') ? 0 : code.startsWith('CT-D') ? 1 : code === 'PR' ? 2 : 3;
+  return sets.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b, 'ja', { numeric: true }));
+})();
 
 // cardNum → cardId 解決テーブル。パラレル (同 id・別 num) を「同じカード」として
 // 集計するために使う (3 枚上限 / 種類カウント)。rules/02-deck-construction.md。
@@ -112,9 +139,19 @@ export const DISTINCT_CARDS: readonly CardDef[] = (() => {
 /** カード種類 (distinct cardId) の総数。CARD_POOL は cardNum 単位なのでパラレルを畳む。 */
 export const DISTINCT_CARD_COUNT = DISTINCT_CARDS.length;
 
+const CARD_VARIANTS_BY_ID: ReadonlyMap<string, readonly CardDef[]> = (() => {
+  const variants = new Map<string, CardDef[]>();
+  for (const card of CARD_POOL) {
+    const group = variants.get(card.id);
+    if (group) group.push(card);
+    else variants.set(card.id, [card]);
+  }
+  return variants;
+})();
+
 /** 指定 cardId の全印刷 (パラレル含む) を返す。 */
 export function variantsOfId(id: string): CardDef[] {
-  return CARD_POOL.filter((c) => c.id === id);
+  return [...(CARD_VARIANTS_BY_ID.get(id) ?? [])];
 }
 
 // パートナー → 既定の事件カード (cardNum)。明示マップに無ければ色で推定する

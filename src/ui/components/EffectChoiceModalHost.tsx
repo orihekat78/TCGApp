@@ -22,14 +22,17 @@ import { def as readDef } from '@/engine/read/def.js';
 import { sceneCap } from '@/engine/read/scene-cap.js';
 import { useSceneSwitchPickerStore } from '@/ui/hooks/useSceneSwitchPickerStore.js';
 import { ChoicePickerModal } from './ChoicePickerModal.js';
+import { LinkedPublicHandReveal } from './PublicHandRevealWindow.js';
+import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
 
 export function EffectChoiceModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingEffectChoice);
+  const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const switchPicker = useSceneSwitchPickerStore((s) => s.current);
   // The switch surface is a direct-manipulation layer in Playmat. Suspend this
   // full-screen host while it owns the next decision; otherwise .cp-overlay
   // catches every pointer event above the scene cards.
-  if (!pending || pending.player !== 'self' || switchPicker) return null;
+  if (!pending || !isHumanDecisionOwner(pending.player, spectatorMode) || switchPicker) return null;
 
   const sourceName = pending.source.cardId
     ? readDef.card(pending.source.cardId)?.names?.[0] ?? pending.source.cardId
@@ -82,6 +85,9 @@ export function EffectChoiceModalHost(): JSX.Element | null {
       onCancel={() => {
         // enter トリガの choice は必須効果 (rules/15)。cancel 不可 — modal は option 選択まで閉じない。
       }}
+      contentBeforeOptions={(
+        <LinkedPublicHandReveal resolutionToken={pending.publicHandRevealToken} />
+      )}
     />
   );
 }

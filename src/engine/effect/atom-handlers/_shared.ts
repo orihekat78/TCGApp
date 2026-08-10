@@ -205,10 +205,34 @@ export type PendingDeckPlaceSide = {
    * (BUG-175 の player/ownerPlayer 分離パターン踏襲)。B05047 は player===ownerPlayer で挙動不変。
    */
   ownerPlayer: 'self' | 'opp';
+  /** Full deck at the decision boundary. Rejects stale or cross-session answers. */
+  deckSnapshot: string[];
+  /** Exact deck occurrences shown by the effect, including duplicate card IDs. */
+  occurrences: Array<{ cardId: string; index: number }>;
+  /** Effect authority retained until the human answer resumes resolution. */
+  ctx: EffectCtx;
+  /** Saved sequence/chain remainder owned by this decision. */
+  continuation?: ContinuationFrame;
 };
 
 export function _peekPendingDeckPlaceSide(): PendingDeckPlaceSide | null {
   return (globalThis as { __pendingDeckPlaceSide?: PendingDeckPlaceSide | null }).__pendingDeckPlaceSide ?? null;
+}
+
+export function _attachPendingDeckPlaceContinuation(frame: ContinuationFrame, preserveFrameCtx = false): void {
+  const pending = _peekPendingDeckPlaceSide();
+  if (!pending) return;
+  const safeFrame: ContinuationFrame = {
+    ...frame,
+    ctx: preserveFrameCtx ? frame.ctx : (pending.ctx ?? frame.ctx),
+  };
+  if (!pending.continuation) {
+    pending.continuation = safeFrame;
+    return;
+  }
+  let tail = pending.continuation;
+  while (tail.outer) tail = tail.outer;
+  tail.outer = safeFrame;
 }
 
 export function _drainPendingDeckPlaceSide(): PendingDeckPlaceSide | null {

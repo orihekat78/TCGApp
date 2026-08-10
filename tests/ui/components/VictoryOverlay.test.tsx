@@ -2,6 +2,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderToString } from 'react-dom/server';
+import { readFileSync } from 'node:fs';
 import { VictoryOverlay } from '@/ui/components/VictoryOverlay';
 import { useGameStateStore } from '@/ui/state/store';
 import { createSampleGameState } from '@/ui/fixtures/sampleGameState';
@@ -19,7 +20,11 @@ function setResult(
 
 describe('VictoryOverlay', () => {
   beforeEach(() => {
-    useGameStateStore.setState({ gameState: null });
+    useGameStateStore.setState({
+      gameState: null,
+      pendingDeckReveal: null,
+      pendingPublicHandReveal: null,
+    });
   });
 
   it('renders nothing when gameResult is null', () => {
@@ -49,5 +54,25 @@ describe('VictoryOverlay', () => {
     setResult('self', 'concede');
     const html = renderToString(<VictoryOverlay />);
     expect(html).toContain('投了');
+  });
+
+  it('keeps the verdict card hidden and inert while a terminal explanation remains', () => {
+    setResult('self', 'evidence');
+    useGameStateStore.setState({
+      pendingDeckReveal: {
+        player: 'self', visibility: 'public', viewer: 'all',
+        revealed: ['D08015'], matched: 'D08015',
+      },
+    });
+
+    const html = renderToString(<VictoryOverlay />);
+    expect(html).toContain('is-presentation-pending');
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).not.toContain('role="alertdialog"');
+  });
+
+  it('removes victory animation under reduced motion without hiding final content', () => {
+    const css = readFileSync('src/ui/components/VictoryOverlay.css', 'utf8');
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*\.victory-overlay,[\s\S]*animation:\s*none;/);
   });
 });

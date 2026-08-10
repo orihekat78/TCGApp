@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-state.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:state`
-> Source hash: `c52f333d44ba`
+> Source hash: `2554f3b9ec7d`
 
 `src/engine/types/game-state.ts` から抽出した GameState の構造図。
 
@@ -36,6 +36,7 @@ classDiagram
     +scratchTrace: «object×2»
     +turnState: «object×2»
     +refreshCount: «object×2»
+    +causalLog?: CausalLogStateV1
     +log: LogEntry[]
     +gameResult?: «object×2»
   }
@@ -70,14 +71,10 @@ classDiagram
     +disguiseBanned?: boolean
     +actionCutinBanOppFilter?: TargetFilter
   }
-  class LogEntry {
-    +ts: number
-    +player: 'self' | 'opp'
-    +turn: number
-    +action: string
-    +target?: string
-    +targetAudience?: 'self' | 'opp'
-    +result?: string
+  class CausalLogStateV1 {
+    +schemaVersion: 1
+    +sessionId: string
+    +nextSequence: number
   }
   class PartnerOnBoard {
     +cardId: string
@@ -118,7 +115,7 @@ classDiagram
   }
   GameState --> PlayerState : players
   GameState --> TurnScopedFlags : turnState
-  GameState --> LogEntry : log
+  GameState --> CausalLogStateV1 : causalLog
   PlayerState --> PartnerOnBoard : partner
   PlayerState --> SceneCharacter : partnerAreaMR
   PlayerState --> SceneCharacter : scene

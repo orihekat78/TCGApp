@@ -4,7 +4,7 @@
 // 特徴・キーワードは OR/AND 切替可 (複数値 facet)。色/種別/レアリティ/コストは facet 内 OR。
 
 import { T } from '../shared/tokens';
-import { CARD_POOL } from './cardPool';
+import { ALL_CARD_SETS, CARD_POOL, cardSetCode } from './cardPool';
 import type { CardColor, CardDef, CardKind } from './types';
 
 export type SortKey = 'num' | 'cost' | 'ap' | 'lp' | 'name';
@@ -13,6 +13,7 @@ export type MatchMode = 'or' | 'and';
 
 export interface CardFilterState {
   q: string;
+  sets: string[];
   colors: CardColor[];
   types: CardKind[];
   features: string[];
@@ -24,7 +25,7 @@ export interface CardFilterState {
 }
 
 export const EMPTY_FILTER: CardFilterState = {
-  q: '', colors: [], types: [], features: [], keywords: [], rarities: [], costs: [],
+  q: '', sets: [], colors: [], types: [], features: [], keywords: [], rarities: [], costs: [],
   featureMode: 'or', keywordMode: 'or',
 };
 
@@ -33,7 +34,6 @@ export const COLOR_META: { c: CardColor; label: string; hex: string }[] = [
   { c: 'yellow', label: '黄', hex: T.yellow },
   { c: 'red',    label: '赤', hex: T.red },
   { c: 'green',  label: '緑', hex: T.green },
-  { c: 'purple', label: '紫', hex: T.purple },
   { c: 'black',  label: '黒', hex: T.black },
   { c: 'white',  label: '白', hex: T.white },
 ];
@@ -77,6 +77,9 @@ export const ALL_RARITIES: string[] = (() => {
 /** コストチップ値 (-1=なし は表示しない。0..8 を提供、8 は 8+)。 */
 export const COST_BUCKETS: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
+/** CARD_POOL に実在する公式商品・収録弾。 */
+export { ALL_CARD_SETS };
+
 /** カードのコストをチップ値 (0..8) に丸める。コスト無しは -1。 */
 export function costBucket(c: CardDef): number {
   return c.cost == null ? -1 : Math.min(c.cost, 8);
@@ -84,9 +87,11 @@ export function costBucket(c: CardDef): number {
 
 /** facet グループ識別子。`except` に渡すとその group の条件を無視して一致判定する
  *  (facet カウントの cross-filter 用: 他 group で絞った母集団に対する各 option の件数)。 */
-export type FacetGroup = 'colors' | 'types' | 'rarities' | 'costs' | 'features' | 'keywords';
+export type FacetGroup = 'sets' | 'colors' | 'types' | 'rarities' | 'costs' | 'features' | 'keywords';
 
 export function matchesFilter(c: CardDef, f: CardFilterState, except?: FacetGroup): boolean {
+  const selectedSets = f.sets ?? [];
+  if (except !== 'sets' && selectedSets.length && !selectedSets.includes(c.setCode ?? cardSetCode(c.num))) return false;
   const cardColors = c.colors ?? [c.color];
   if (except !== 'colors' && f.colors.length && !f.colors.some((x) => cardColors.includes(x))) return false;
   if (except !== 'types' && f.types.length && !f.types.includes(c.type)) return false;
@@ -118,7 +123,7 @@ export function matchesFilter(c: CardDef, f: CardFilterState, except?: FacetGrou
 /** 有効になっている facet の数 (検索文字列を含む)。0 なら無フィルタ。 */
 export function activeFilterCount(f: CardFilterState): number {
   return (f.q.trim() ? 1 : 0)
-    + f.colors.length + f.types.length + f.features.length
+    + (f.sets?.length ?? 0) + f.colors.length + f.types.length + f.features.length
     + f.keywords.length + f.rarities.length + f.costs.length;
 }
 

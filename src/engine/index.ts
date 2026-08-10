@@ -16,6 +16,7 @@ import { registerHiramekiListener } from './listeners/hirameki.js';
 import { registerMisreadListener } from './listeners/misread.js';
 import { registerTriggeredListener } from './listeners/triggered.js';
 import { registerReservedEffectListener } from './listeners/reserved-effects.js';
+import * as causalLog from './log/causal.js';
 
 const effect = { runAtom, run: effectRun, validate: effectValidate };
 
@@ -29,7 +30,7 @@ registerTriggeredListener();
 // 排他 — reservedEffects field のみを見る)。
 registerReservedEffectListener();
 
-export const engine = { read, mutate, invariant, event, effect, dyn, target, cost, cond, resolve, flow, cards };
+export const engine = { read, mutate, invariant, event, effect, dyn, target, cost, cond, resolve, flow, cards, causalLog };
 
 // re-export namespace components for direct import
 export { read } from './read/index.js';
@@ -47,6 +48,7 @@ export { cost } from './cost/index.js';
 export { cond } from './cond/index.js';
 export { resolve } from './resolve/index.js';
 export { flow } from './flow/index.js';
+export * from './log/causal.js';
 
 // Round 4j-fix (BUG-034): hirameki/misread side-channel drain/reset を engine namespace で
 // re-export。vite dev mode で `'@/engine/listeners/*.js'` 直接 import と `'./listeners/*.js'`

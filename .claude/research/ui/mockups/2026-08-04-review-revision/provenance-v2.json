@@ -1,0 +1,31 @@
+{
+  "createdAt": "2026-08-04",
+  "sourceCommit": "0b6bc0314f62724fb8a71e63f4bdbd688260e8cb",
+  "status": "design-mock-only",
+  "approvedConstraints": {
+    "result": "unchanged",
+    "match": "existing playmat and existing ACTIONS only; no new side rail",
+    "replay": "headerless compact landscape with vertically stacked controls",
+    "history": "quiet match ledger; no franchise decoration"
+  },
+  "outputs": [
+    "history-stylish-desktop-1440x900-design-mock.png",
+    "history-stylish-mobile-851x393-design-mock.png",
+    "match-mobile-851x393-expanded-resolution-design-mock.png",
+    "match-mobile-851x393-expanded-target-design-mock.png",
+    "replay-mobile-851x393-headerless-design-mock.png",
+    "replay-mobile-851x393-playing-state-design-mock.png",
+    "replay-mobile-851x393-speed-menu-design-mock.png"
+  ],
+  "geometry": {
+    "matchMobile": { "playmat": "699x393", "actions": "152x393" },
+    "replayMobile": { "inset": 8, "board": "627x377", "gap": 8, "remote": "200x377" }
+  },
+  "verification": {
+    "script": "scripts/ui/capture-review-revision-v2.mjs",
+    "exactDimensions": true,
+    "viewportOverflow": false,
+    "replayControlMinimumHeight": 44,
+    "browserConsoleErrors": 0
+  }
+}

@@ -27,6 +27,9 @@ import type {
 import { makeChar as baseChar } from '../../helpers/fixtures';
 import { register as engineRegisterCardDef } from '@/engine/read/def';
 import { useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
+import { appendCausal, startCausalSession } from '@/engine/log/causal';
+import { snapshotPendingRuntimeState } from '@/engine/effect/runtime-state';
+import { resetPresentationQueue } from '@/ui/presentation/coordinator';
 
 // ---- fixtures ----
 
@@ -233,6 +236,52 @@ describe('dispatchEngineAction (pure function)', () => {
       if (!result.ok) {
         expect(result.reason).toBe('engine-error');
         expect(result.detail).toMatch(/boom/);
+      }
+    });
+
+    it('rejects a malformed presentation commit without advancing UI surfaces or runtime', () => {
+      const init = withMainPhase(withSelfPartnerActive(createEmptyGameState()));
+      startCausalSession(init, 'dispatch-validation');
+      resetPresentationQueue('dispatch-validation');
+      appendCausal(init, {
+        actor: 'self',
+        kind: 'use',
+        targets: [],
+        outcome: { type: 'none' },
+      });
+      useGameStateStore.getState().setGameState(init);
+
+      const runtime = globalThis as { __pendingContactStartAxId?: string };
+      runtime.__pendingContactStartAxId = 'runtime-before';
+      const stateBefore = useGameStateStore.getState().gameState;
+      const surfaceBefore = useGameStateStore.getState().activeActionId;
+      const runtimeBefore = snapshotPendingRuntimeState();
+
+      vi.spyOn(flow, 'doReasoning').mockImplementation((draft) => {
+        appendCausal(draft, {
+          actor: 'self',
+          kind: 'draw',
+          targets: [],
+          outcome: { type: 'none' },
+        });
+        (draft.log.at(-1) as { parentEventId?: string }).parentEventId = 'dispatch-validation:999';
+        runtime.__pendingContactStartAxId = 'runtime-after';
+      });
+
+      try {
+        const result = dispatchEngineAction({ type: 'reasoning', uid: 'partner:self' });
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.reason).toBe('engine-error');
+          expect(result.detail).toMatch(/presentation|parent|missing|edge/i);
+        }
+        expect(useGameStateStore.getState().gameState).toBe(stateBefore);
+        expect(useGameStateStore.getState().activeActionId).toBe(surfaceBefore);
+        expect(snapshotPendingRuntimeState()).toEqual(runtimeBefore);
+      } finally {
+        delete runtime.__pendingContactStartAxId;
+        useGameStateStore.setState({ activeActionId: null });
       }
     });
   });

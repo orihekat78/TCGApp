@@ -63,6 +63,12 @@ test('B02039 resolves the selected duplicate set-card occurrence through the rea
   await expect(modal).not.toContainText('D08003');
   await expect(modal).not.toContainText('江戸川コナン');
   await expect(second).toHaveAttribute('data-instance-id', 'set:opp-host:beta');
+  expect(await page.evaluate(() => {
+    const game = (window as unknown as {
+      __game: { getState: () => { pendingSetCardChoice: { decisionId?: string } | null } };
+    }).__game;
+    return game.getState().pendingSetCardChoice?.decisionId;
+  })).toMatch(/^decision:\d+$/);
   if (testInfo.project.name === 'mobile-chromium') {
     expect(await page.evaluate(() => navigator.maxTouchPoints)).toBeGreaterThan(0);
     await second.tap();
@@ -71,6 +77,12 @@ test('B02039 resolves the selected duplicate set-card occurrence through the rea
     await second.press('Enter');
   }
   await expect(page.locator('[data-testid="set-card-choice-modal"]')).toBeHidden();
+  expect(await page.evaluate(() => {
+    const game = (window as unknown as {
+      __game: { getState: () => { pendingSetCardChoice: unknown | null } };
+    }).__game;
+    return game.getState().pendingSetCardChoice;
+  })).toBeNull();
   const state = await getGameState(page);
   const opp = state.players.opp as unknown as {
     evidence: { cardId: string; faceUp: boolean }[];

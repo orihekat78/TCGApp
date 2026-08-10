@@ -9,7 +9,7 @@ import { produce } from 'immer';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
-import { registerHiramekiListener, _drainPendingHirameki, _resetPendingHirameki, _resetHiramekiRegistered } from '@/engine/listeners/hirameki';
+import { registerHiramekiListener, _resetPendingHirameki, _resetHiramekiRegistered } from '@/engine/listeners/hirameki';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { run as runEffect } from '@/engine/effect/resolver';
 import { resolve, runAllUntilEmpty } from '@/engine/resolve/index';
@@ -27,6 +27,7 @@ import { B06049 } from '@/cards/ct-p06/B06049';
 import { D03004 } from '@/cards/ct-d03/D03004';
 import type { AbilityDef, CardDef, Effect, EffectCtx, GameState, SceneCharacter } from '@/engine/types';
 import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
+import { openCaseHirameki } from '../../helpers/open-case-hirameki';
 
 type Player = 'self' | 'opp';
 const setHuman = (v: Player | null) => { (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide = v; };
@@ -99,6 +100,21 @@ describe('shape / validate', () => {
 });
 
 describe('BUG-249 public direct invoke order gate', () => {
+  it('B06023 a2 cannot pay its evidence cost from the opponent evidence area', () => {
+    const s = baseState();
+    mutate.case.toResolved(s, 'self');
+    s.players.self.scene = [sc('B06023', 'B06023#0')];
+    s.players.opp.evidence = [{ cardId: B06049.id, faceUp: false, origin: { turn: 1, via: 'reasoning' } }] as GameState['players']['opp']['evidence'];
+    useGameStateStore.setState({ gameState: s });
+
+    const result = dispatchEngineAction({ type: 'declaredAbility', uid: 'B06023#0', abilId: 'a2', costParams: { flipFaceUpEvidence: { indices: [0] } } } as never);
+
+    expect(result.ok, 'self evidence is empty, so the opponent evidence cannot satisfy the cost').toBe(false);
+    const after = useGameStateStore.getState().gameState!;
+    expect(after.players.opp.evidence[0].faceUp, 'opponent evidence remains face-down').toBe(false);
+    expect(after.players.self.scene.find(char => char.uid === 'B06023#0')?.state, 'failed payment is atomic').toBe('active');
+  });
+
   it('confirms B06049.a3 before creating its human pick', () => {
     setHuman('self');
     const s = baseState();
@@ -322,10 +338,8 @@ describe('B06034 鬼丸城 production (【ヒラメキ】fire → flip pick → 
     return s;
   }
   function fire(s: GameState): void {
-    event.emit(s, 'evidence:remove-by-action', { player: 'self', ev: { cardId: 'B06034' }, byUid: 'atk' }, { player: 'opp', uid: 'atk' });
-    const pending = _drainPendingHirameki();
+    const { pending } = openCaseHirameki(s, 'B06034', { actorCardId: 'PLAIN' });
     expect(pending, 'B06034【ヒラメキ】検出').not.toBeNull();
-    useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
     expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
   }
   function resolveFlipPick(cardId: string): void {

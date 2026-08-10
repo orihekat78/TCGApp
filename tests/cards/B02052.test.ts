@@ -43,7 +43,14 @@ describe('B02052 トランプ銃', () => {
     const pending = _drainPendingSetCardReplacementSide();
     expect(pending?.candidates.map((c) => c.uid)).toEqual([to.uid]);
     expect(pending?.candidates.map((c) => c.uid)).not.toContain(decoy.uid);
-    applySetCardReplacement(s, pending!, to.uid);
+    expect(applySetCardReplacement(s, pending!, 'unknown-target')).toBe(false);
+    expect(s.players.self.scene.find((c) => c.uid === from.uid)?.setCards.map((e) => e.cardId)).toEqual(['B02052']);
+    expect(s.players.self.remove).toEqual([]);
+    pending!.candidates.push({ uid: decoy.uid, cardId: decoy.cardId });
+    expect(applySetCardReplacement(s, pending!, decoy.uid)).toBe(false);
+    expect(s.players.self.scene.find((c) => c.uid === decoy.uid)?.setCards).toEqual([]);
+    pending!.candidates.pop();
+    expect(applySetCardReplacement(s, pending!, to.uid)).toBe(true);
     expect(s.players.self.scene.find((c) => c.uid === to.uid)?.setCards.map((e) => e.cardId)).toEqual(['B02052']);
   });
 

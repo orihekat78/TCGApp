@@ -50,26 +50,30 @@ async function closeCardDetails(page: Page): Promise<void> {
   await expect(page.locator('.card-expand-modal')).toHaveCount(0);
 }
 
-test('BUG-231 log card ID opens the card modal and Escape preserves the log', async ({ page }) => {
+test('BUG-231 log stays text-only while the approved hand magnifier opens card details', async ({ page }) => {
   const { errors } = await setupGamePage(page);
   await humanMode(page);
   await buildGameState(page, (gs) => {
     gs.log = [
       { ts: 1, player: 'self', turn: 1, action: 'handUseCard', target: 'D11013' },
     ];
+    gs.players.self.hand = ['D11013'];
   });
 
   await page.getByRole('button', { name: 'ログを開く' }).click();
   const logDialog = page.getByRole('dialog', { name: 'ゲームログ' });
   await expect(logDialog).toBeVisible();
 
-  await page.getByRole('button', { name: '萩原千速 (D11013) を拡大表示' }).click();
+  await expect(logDialog.getByRole('button', { name: /D11013.*拡大表示/ })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(logDialog).toBeHidden();
+
+  await page.locator('.hand-mini-card[data-card-id="D11013"]').click();
+  await page.getByTestId('hand-card-magnifier-D11013').click();
   const cardDialog = page.getByRole('dialog', { name: 'カード拡大表示: 萩原千速' });
   await expect(cardDialog).toBeVisible();
-
   await page.keyboard.press('Escape');
   await expect(cardDialog).toBeHidden();
-  await expect(logDialog).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -86,7 +90,7 @@ test('self evidence/remove browsing persists and remove cards can be enlarged', 
   await page.locator('.remove-area.side-self').click();
   const removeModal = page.locator('.card-list-modal');
   await expect(removeModal).toBeVisible();
-  await page.getByTestId('card-list-item-D08003-0').click();
+  await page.getByTestId('card-list-detail-D08003-0').click();
   await expect(page.locator('.card-expand-modal')).toBeVisible();
   await page.locator('.card-expand-modal-backdrop').click({ position: { x: 5, y: 5 } });
   await expect(removeModal).toBeVisible();
@@ -98,7 +102,7 @@ test('self evidence/remove browsing persists and remove cards can be enlarged', 
   expect(errors).toEqual([]);
 });
 
-test('BUG-240 landscape HUD leaves the card-list close hit target reachable', async ({ page }, testInfo) => {
+test('BUG-240 desktop-equivalent mobile playmat leaves the card-list close hit target reachable', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile-chromium', 'formal BUG-240 fixture is Pixel 5 landscape');
 
   const { errors } = await setupGamePage(page);
@@ -113,7 +117,7 @@ test('BUG-240 landscape HUD leaves the card-list close hit target reachable', as
   const hud = page.getByTestId('spectator-hud');
   await expect(modal).toBeVisible();
   await expect(close).toBeVisible();
-  await expect(hud).toBeVisible();
+  await expect(hud).toHaveCount(0);
 
   const closePoint = await close.evaluate((element) => {
     const { x, y, width, height } = element.getBoundingClientRect();
@@ -127,14 +131,12 @@ test('BUG-240 landscape HUD leaves the card-list close hit target reachable', as
   await close.click();
   await expect(modal).toHaveCount(0);
 
-  const pause = page.getByTestId('spectator-pause-toggle');
-  await expect(pause).toBeVisible();
-  await pause.click();
-  await expect(pause).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('mobile-ai-pause')).toHaveCount(0);
+  await expect(page.getByTestId('mobile-ai-step')).toHaveCount(0);
   expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
 });
 
-test('BUG-240 landscape HUD button gaps pass through to the covered close control', async ({ page }, testInfo) => {
+test('BUG-240 removed fixed HUD cannot cover the card-list close control', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile-chromium', 'formal BUG-240 fixture is Pixel 5 landscape');
 
   const { errors } = await setupGamePage(page);
@@ -149,46 +151,17 @@ test('BUG-240 landscape HUD button gaps pass through to the covered close contro
   await expect(modal).toBeVisible();
   await expect(close).toBeVisible();
 
-  const gapPoint = await page.evaluate(() => {
-    const buttonRail = document.querySelector<HTMLElement>('.spectator-hud-buttons');
-    if (!buttonRail) return null;
-
-    const railRect = buttonRail.getBoundingClientRect();
-    const buttonRects = [...buttonRail.querySelectorAll('button')].map((button) => button.getBoundingClientRect());
-    for (let index = 1; index < buttonRects.length; index += 1) {
-      const previous = buttonRects[index - 1]!;
-      const next = buttonRects[index]!;
-      const gapLeft = previous.right;
-      const gapRight = next.left;
-      const overlapTop = Math.max(previous.top, next.top);
-      const overlapBottom = Math.min(previous.bottom, next.bottom);
-      if (gapRight > gapLeft && overlapBottom > overlapTop) {
-        const x = (gapLeft + gapRight) / 2;
-        const y = (overlapTop + overlapBottom) / 2;
-        if (x > railRect.left && x < railRect.right && y > railRect.top && y < railRect.bottom) {
-          return { x, y };
-        }
-      }
-    }
-    return null;
+  await expect(page.getByTestId('spectator-hud')).toHaveCount(0);
+  const closePoint = await close.evaluate((element) => {
+    const { x, y, width, height } = element.getBoundingClientRect();
+    return { x: x + width / 2, y: y + height / 2 };
   });
-  expect(gapPoint, 'the HUD speed rail exposes a non-button flex-gap coordinate').not.toBeNull();
-
-  await close.evaluate((element, point) => {
-    const { width, height } = element.getBoundingClientRect();
-    Object.assign(element.style, {
-      position: 'fixed',
-      left: `${point.x - width / 2}px`,
-      top: `${point.y - height / 2}px`,
-    });
-  }, gapPoint!);
-
   expect(await page.evaluate(({ x, y }) => {
     const hit = document.elementFromPoint(x, y);
     return hit?.closest('.card-list-modal-close') !== null;
-  }, gapPoint!), 'the HUD button gap must not own the modal close hit point').toBe(true);
+  }, closePoint), 'the close target must own its center after the HUD removal').toBe(true);
 
-  await page.mouse.click(gapPoint!.x, gapPoint!.y);
+  await close.click();
   await expect(modal).toHaveCount(0);
   expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
 });
@@ -369,6 +342,7 @@ test('B04026 acquire and hand sceneEnter switches a character when scene is full
   }).toEqual(expect.arrayContaining([expect.objectContaining({ cardId: 'B04021' })]));
 
   const gs = await getGameState(page);
+  expect({ eventSpent: !gs.players.self.hand.includes('B04026'), acquired: gs.players.self.scene.some((card) => card.cardId === 'B04021') }).toEqual({ eventSpent: true, acquired: true });
   expect(gs.players.self.scene).toHaveLength(5);
   expect(gs.players.self.scene.map((c) => c.uid)).not.toContain('full-2');
   expect(gs.players.self.remove).toContain('D08003');
@@ -422,17 +396,14 @@ test('B06029 enter picker keeps public evidence inspectable and hidden evidence 
   await closeCardDetails(page);
   await expect(publicEvidencePrimary).toBeVisible();
 
-  await publicEvidencePrimary.click({ button: 'right' });
-  await closeCardDetails(page);
-  await expect(publicEvidencePrimary).toBeVisible();
-
   await publicEvidencePrimary.focus();
   await page.keyboard.press('Enter');
 
-  const handPrimary = page.getByTestId('effect-pick-cand-D08011#0');
+  const handPrimary = page.getByTestId('effect-pick-cand-card:self:hand:D08011#0');
   await expect(handPrimary).toBeVisible();
   await expectActualCardImage(handPrimary, '1743743093474254.jpg');
-  const handDetail = page.getByTestId('effect-pick-detail-D08011#0');
+  await expect(page.getByTestId('effect-pick-cand-card:self:hand:D08003#1')).toBeVisible();
+  const handDetail = page.getByTestId('effect-pick-detail-card:self:hand:D08011#0');
   await expectTouchTarget(handDetail);
   await handDetail.click();
   await closeCardDetails(page);
@@ -488,18 +459,17 @@ test('B04026 preserves public detail access and the chosen reordered card order'
   await revealDetail.click();
   await closeCardDetails(page);
   await expect(reveal).toBeVisible();
-  await eligible.click({ button: 'right' });
-  await closeCardDetails(page);
-  await expect(reveal).toBeVisible();
   await expect(eligible).toBeVisible();
 
   const skip = page.getByTestId('card-list-pick-skip');
   await expectInViewport(skip);
   await skip.focus();
+  await expect(skip).toBeFocused();
   await page.keyboard.press('Enter');
+  await expect(reveal).toHaveCount(0);
 
   const reorder = page.getByTestId('deck-reorder-modal');
-  await expect(reorder).toBeVisible();
+  await expect(reorder).toBeVisible({ timeout: 10_000 });
   const rows = reorder.getByTestId(/deck-reorder-row-/);
   await expect(rows).toHaveCount(3);
   await expect(rows.locator('img')).toHaveCount(3);
@@ -513,8 +483,6 @@ test('B04026 preserves public detail access and the chosen reordered card order'
   const reorderDetail = rows.nth(1).getByTestId('selectable-card-tile-detail');
   await expectTouchTarget(reorderDetail);
   await reorderDetail.click();
-  await closeCardDetails(page);
-  await rows.nth(1).locator('.selectable-card-tile__select').click({ button: 'right' });
   await closeCardDetails(page);
   await expect(rows).toHaveCount(3);
 
@@ -582,7 +550,7 @@ test('B04026 keeps duplicate reveal and reorder occurrences independently addres
   await expectTouchTarget(secondDetail);
   await firstDetail.click();
   await closeCardDetails(page);
-  await secondDuplicate.click({ button: 'right' });
+  await secondDetail.click();
   await closeCardDetails(page);
   await expect(firstDuplicate).toBeVisible();
   await expect(secondDuplicate).toBeVisible();

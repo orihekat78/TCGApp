@@ -7,7 +7,7 @@
 //     自分の現場にいるキャラに裏向きでセットされているカードを合わせて2枚リムーブしてもよい。
 //     そうした場合、自分のリムーブエリアにあるレベル3以下の【白】のキャラを1枚まで選び、登場させる。
 // 句マッピングは B07031.ts と同一 (同テキスト別ファイル full def 慣行 — B07047P / B03066P 同様)。
-// known-gap (family 共通、B07031 と同一): charRemoveSetCard n:2 の AI 経路 clamp — DEFERRED-INDEX 記録済。
+// 「裏向きでセット」限定・物理 occurrence・exact 2枚の契約は B07031 と同一。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 
@@ -48,7 +48,7 @@ const a2: AbilityDef = {
         effect: {
           kind: 'chain',
           steps: [
-            { kind: 'atom', verb: 'charRemoveSetCard', args: { player: 'self', side: 'self', n: 2, filter: { hasSetCards: true } } },
+            { kind: 'atom', verb: 'charRemoveSetCard', args: { player: 'self', side: 'self', n: 2, minimumPolicy: 'exact', faceDownOnly: true, filter: { hasSetCards: true } } },
             {
               kind: 'atom',
               verb: 'sceneEnter',

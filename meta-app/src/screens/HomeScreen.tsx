@@ -144,10 +144,11 @@ function RecentMatchesSection({ history, onSeeAll }: { history: MatchRecord[]; o
         <ul className="home-match-list">
           {history.map((match) => {
             const recorded = getSafeRecordedDate(match.recorded);
+            const observed = match.mode === 'observe';
             return (
               <li key={match.id}>
-                <span className={`home-match-result ${match.won ? 'is-win' : 'is-loss'}`}>
-                  {match.won ? '勝利' : '敗北'}
+                <span className={`home-match-result ${observed ? 'is-observe' : match.won ? 'is-win' : 'is-loss'}`}>
+                  {observed ? `CPU ${match.won ? '1' : '2'}勝利` : match.won ? '勝利' : '敗北'}
                 </span>
                 <span title={match.oppDeckName ?? 'CPU'}>{match.oppDeckName ?? 'CPU'}</span>
                 {recorded ? (

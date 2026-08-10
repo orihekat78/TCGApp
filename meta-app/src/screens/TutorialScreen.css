@@ -1,0 +1,181 @@
+@import './Wave2Motion.css';
+
+.tutorial-screen {
+  position: absolute;
+  inset: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tutorial-toolbar {
+  min-width: 0;
+  min-height: 60px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.25));
+  border-bottom: 1px solid rgba(78, 195, 255, 0.15);
+}
+
+.tutorial-start-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 6px 16px;
+  color: #ffe4e0;
+  background: rgba(130, 28, 28, 0.94);
+  border-bottom: 1px solid rgba(255, 130, 120, 0.65);
+  font-size: 13px;
+}
+
+.tutorial-start-error button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 14px;
+  color: #1a1208;
+  background: #f0e08a;
+  border: 1px solid #ffe9b8;
+  border-radius: 4px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.tutorial-workspace {
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  padding: 16px 24px;
+  display: grid;
+  grid-template-columns: minmax(148px, 0.72fr) minmax(0, 1.45fr) minmax(176px, 0.92fr);
+  gap: 14px;
+  overflow: hidden;
+}
+
+.tutorial-sidebar,
+.tutorial-step-list,
+.tutorial-summary {
+  min-width: 0;
+  min-height: 0;
+}
+
+.tutorial-concept {
+  width: min(100%, 720px);
+  margin: 0 auto;
+  padding: 24px;
+  color: #e0ecf8;
+  background: rgba(6, 20, 34, 0.82);
+  border: 1px solid rgba(78, 195, 255, 0.34);
+  border-radius: 6px;
+}
+
+.tutorial-concept figcaption {
+  margin-bottom: 22px;
+  color: #ffd700;
+  font: 700 11px "Cascadia Code", Consolas, monospace;
+  letter-spacing: 0.22em;
+}
+
+.tutorial-concept-flow,
+.tutorial-concept-part {
+  display: flex;
+  align-items: center;
+}
+
+.tutorial-concept-flow {
+  justify-content: center;
+  gap: 14px;
+}
+
+.tutorial-concept-part {
+  gap: 14px;
+}
+
+.tutorial-concept-node {
+  min-width: 116px;
+  padding: 18px 14px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.45;
+  background: rgba(20, 54, 82, 0.78);
+  border: 1px solid rgba(78, 195, 255, 0.48);
+  border-radius: 5px;
+}
+
+.tutorial-concept-arrow {
+  color: #4ec3ff;
+  font-size: 22px;
+}
+
+@media (max-width: 700px) {
+  .tutorial-concept-flow {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tutorial-concept-part {
+    flex-direction: column;
+  }
+
+  .tutorial-concept-arrow {
+    transform: rotate(90deg);
+  }
+}
+
+@media (max-width: 980px) {
+  .tutorial-toolbar {
+    min-height: 48px;
+    padding: 0 16px;
+  }
+
+  .tutorial-toolbar > span:nth-child(2) {
+    font-size: 16px !important;
+  }
+
+  .tutorial-toolbar > div:nth-child(3) {
+    margin-left: 14px !important;
+    min-width: 0;
+  }
+
+  .tutorial-toolbar > div:last-child {
+    margin-left: 12px !important;
+  }
+
+  .tutorial-workspace {
+    padding: 10px 16px 16px;
+    gap: 10px;
+  }
+
+  .tutorial-step-list {
+    padding: 12px 14px !important;
+  }
+
+  .tutorial-summary {
+    padding: 12px 14px !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .tutorial-toolbar > span:first-child,
+  .tutorial-toolbar > div:nth-child(3) {
+    display: none;
+  }
+
+  .tutorial-toolbar > div:last-child {
+    margin-left: auto !important;
+  }
+
+  .tutorial-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    overflow: auto;
+  }
+
+  .tutorial-sidebar {
+    min-height: 220px;
+  }
+}

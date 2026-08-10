@@ -101,7 +101,8 @@ describe('distinctLevel — pending 伝播 + 候補フィルタ (human path)', (
     const pick = _drainPendingEffectPickSide();
     expect(pick?.atomVerb, 'sceneEnter pick surface').toBe('sceneEnter');
     expect(pick!.distinctLevel, 'distinctLevel flag が pending に伝播').toBe(true);
-    expect(pick!.nMax, '5枚まで').toBe(5);
+    expect(pick!.requestedNMax, '印字は5枚まで').toBe(5);
+    expect(pick!.nMax, 'distinctLevelで実行可能な最大数').toBe(3);
     const cids = (pick!.candidates as Array<{ cardId: string }>).map(c => c.cardId).sort();
     expect(cids, '候補 = 犯人 lv8以下 (lv9/非犯人 除外)').toEqual(['HANL3A', 'HANL3B', 'HANL5', 'HANL8'].sort());
   });

@@ -6,13 +6,15 @@ import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { SelectableCardTile } from './SelectableCardTile.js';
+import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
 import './ChoicePickerModal.css';
 
 /** Optional destination selection for a face-up set-card removal replacement. */
 export function SetCardReplacementModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingSetCardReplacement);
+  const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const expandModal = useCardExpandModal();
-  if (!pending || pending.player !== 'self') return null;
+  if (!pending || !isHumanDecisionOwner(pending.player, spectatorMode)) return null;
   return <div className="cp-overlay" role="dialog" aria-modal="true" data-testid="set-card-replacement-modal">
     <div className="cp-modal"><div className="cp-header"><h2>Move set card</h2><p className="cp-sub">Choose a character, or remove the card.</p></div>
       <div className="cp-body"><ul className="cp-list">{pending.candidates.map((candidate, index) => <li key={candidate.uid}><SelectableCardTile cardId={candidate.cardId} instanceId={candidate.uid} occurrenceLabel={publicCardOccurrenceLabel(pending.candidates.map((item) => item.cardId), candidate.cardId, index)} selectTestId={`set-card-replacement-${candidate.uid}`} onSelect={() => dispatchEngineAction(bindPendingDecision(pending, { type: 'setCardReplacementResolve', targetUid: candidate.uid }))} onExpand={expandModal.open} /></li>)}</ul></div>

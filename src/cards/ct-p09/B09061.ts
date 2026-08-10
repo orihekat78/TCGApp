@@ -8,22 +8,16 @@
 //   - 【登場時】 => a1: type 'triggered', scope 'on-scene', trigger {hook 'enter', selfOnly:true}
 //       [VERBATIM in src/cards/ct-d01/D01008.ts a1 / src/cards/ct-p03/B03053.ts a2。enter = 【登場時】 (capability-map Hooks)。
 //        selfOnly:true で自カード自身の登場のみ発火 (listeners/triggered.ts selfOnlyMatches、BUG-146 scene.ts enter emit source=登場キャラ)。]
-//   - 手札から〚特徴［FBI］〛のキャラを3枚公開してもよい。そうした場合、引く => chain[ handReveal(n:3), draw(n:1) ]
-//       [handReveal exact-N gate (2026-06-28、本カード a1 のために導入)。短縮形 n:3 = pick {min:3,max:3} = 固定数
-//        「3枚公開する」(rules/15「3枚」=「まで」なし all-or-nothing)。手札の FBI キャラ候補が 3 枚未満なら公開不可と
-//        判定し chainStepNoApply で「そうした場合」(=draw) を gate する (src/engine/effect/atom-handlers/core.ts:104
-//        atomHandReveal exact-N gate 分岐 = a.target undefined && typeof a.n==='number' → targetCandidates(...).length < n)。
-//        gate は短縮形 entry の候補数で判定 (drain 経路は resolved target を単一に collapse するため resolved length 不可信)。
+//   - 手札から〚特徴［FBI］〛のキャラを3枚公開してもよい。そうした場合、引く
+//       => optional{ chain[ handReveal(n:3, minimumPolicy:'exact'), draw(n:1) ] }
+//       [固定数は共通 producer では best-effort。本カードは「3枚公開してもよい。そうした場合」の exact prerequisite
+//        なので minimumPolicy:'exact' を明示する。FBI候補が3枚未満なら pending を作らず、chainStepNoApply で後続 draw も
+//        実行しない。候補数は producer が player 側の完全な候補集合から算出し、UI/AI/apply は canonical pending を共有する。
 //        公開=zone 変化なし (手札に残る、公式Q&A: 効果解決後に元へ戻してよい)。テスト tests/engine/effect/atom-hand-reveal.test.ts
 //        §10b (候補3=n:3→公開→draw) / §10a (候補2<3→draw skip) / §10g (player 側候補数で判定) が本句の挙動を固定。
 //        filter:{trait:'FBI', kind:'character'} = 「FBI のキャラ」(trait FBI ∧ kind character、BUG-123「キャラ」=kind 必須)。
-//        ★「3枚公開してもよい」の decline は本 DSL では人間に提示されない: exact-N=n:{min:3,max:3} ゆえ
-//        EffectPickerModal の canSkip=(nMin===0)=false (skip ボタン無し)。optional{} で wrap すると resolver.ts:128
-//        が ctx.dyn.optionalRun=true でのみ実行 → AI 経路は optional を surface せず skip → draw を取り逃す
-//        (AI 後退)。よって bare chain (engine 作者が exact-N gate と同時に certify した authoring、
-//        tests/engine/effect/atom-hand-reveal.test.ts §10 が B09061 を名指しで bare chain 検証) を採用。
-//        forced-reveal は無害: 公開=zone 不変 (Q&A「解決時点で元に戻してかまいません」) + draw 1 = strictly dominant、
-//        AI は hand-info を判断に使わない。human pick 経路は本カード test「human pick 経路」で empirical 固定済。]
+//        optional{} が発動する/しないを所有し、発動後の picker は3枚を必須選択する。AI は optional 方針、UI は
+//        optional modal、engine は exact pending policy を担当し、同じ可否へ収束する。]
 //   - 【ヒラメキ】（証拠からリムーブされるときに発動する） => a2: type 'triggered', scope 'on-evidence',
 //       trigger {hook 'evidence:remove-by-action', optional:true}
 //       [VERBATIM in src/cards/ct-d01/D01013.ts a2 (灰原哀 ヒラメキ)。optional:true = ヒラメキは発動を選択可 (rules/10)。
@@ -47,29 +41,35 @@ const a1: AbilityDef = {
     selfOnly: true
   },
   effect: {
-    kind: 'chain',
-    steps: [
-      {
-        kind: 'atom',
-        verb: 'handReveal',
-        args: {
-          player: 'self',
-          n: 3,
-          filter: {
-            trait: 'FBI',
-            kind: 'character'
+    kind: 'optional',
+    effect: {
+      kind: 'chain',
+      steps: [
+        {
+          kind: 'atom',
+          verb: 'handReveal',
+          args: {
+            player: 'self',
+            audience: 'all',
+            lifetime: 'presentation',
+            n: 3,
+            minimumPolicy: 'exact',
+            filter: {
+              trait: 'FBI',
+              kind: 'character'
+            }
+          }
+        },
+        {
+          kind: 'atom',
+          verb: 'draw',
+          args: {
+            player: 'self',
+            n: 1
           }
         }
-      },
-      {
-        kind: 'atom',
-        verb: 'draw',
-        args: {
-          player: 'self',
-          n: 1
-        }
-      }
-    ]
+      ]
+    }
   },
   description: '【登場時】手札から〚特徴［FBI］〛のキャラを3枚公開してもよい。そうした場合、カードを1枚引く。',
   ruleRefs: [

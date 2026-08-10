@@ -15,6 +15,7 @@ describe('DeckPlaceModalHost card details', () => {
   let root: Root;
 
   beforeEach(() => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -31,6 +32,7 @@ describe('DeckPlaceModalHost card details', () => {
     act(() => root.unmount());
     container.remove();
     useGameStateStore.getState().setPendingDeckPlace(null);
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   });
 
   it('keeps bucket assignment and duplicate occurrence identity after card details close', () => {
@@ -85,5 +87,18 @@ describe('DeckPlaceModalHost card details', () => {
       top: ['DUPLICATE-CARD', 'UNKNOWN-CARD'],
       bottom: ['DUPLICATE-CARD'],
     });
+  });
+
+  it('renders when the opponent side is the actual human decision owner', () => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'opp';
+    act(() => {
+      useGameStateStore.getState().setPendingDeckPlace({
+        ownerPlayer: 'opp',
+        cardIds: ['D08015'],
+      });
+      root.render(<DeckPlaceModalHost />);
+    });
+
+    expect(container.querySelector('[data-testid="deck-place-modal"]')).not.toBeNull();
   });
 });

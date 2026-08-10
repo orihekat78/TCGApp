@@ -334,11 +334,10 @@ describe('megaw5 step4 — removeDeckTop.n dyn (r37)', () => {
   });
 
   it('B04088 E2E: canPay gate — deck6で支払い後、即時refresh', async () => {
-    const { registerAll } = await import('@/cards/index');
     const { B04088 } = await import('@/cards/ct-p04/B04088');
     const { canPay } = await import('@/engine/cost/evaluate');
     const { pay } = await import('@/engine/cost/pay');
-    registerAll();
+    registerCardDef(B04088);
     const mk = (deckN: number) => {
       const s = st(3, deckN);
       s.players.self.scene = [makeChar({ uid: 'sc#1', cardId: 'B04088', state: 'active' })];
@@ -488,9 +487,8 @@ describe('megaw5 step3 — levelIn/levelInBound + deckRevealUntil dyn filter (r4
   });
 
   it('B04074 E2E (AI 経路): bond 不在 → 捜査2 + 発見 level 一致キャラのみ sceneRemove 候補', async () => {
-    const { registerAll } = await import('@/cards/index');
     const { B04074 } = await import('@/cards/ct-p04/B04074');
-    registerAll();
+    registerCardDef(B04074);
     regLv('SC_LV3', 3); regLv('SC_LV9', 9);
     regLv('OD_LV3', 3); regLv('OD_LV5', 5);
     const s = createEmptyGameState();
@@ -515,9 +513,8 @@ describe('megaw5 step3 — levelIn/levelInBound + deckRevealUntil dyn filter (r4
   });
 
   it('B04074 E2E: bond (風見裕也) 在 → 捜査4 に escalate', async () => {
-    const { registerAll } = await import('@/cards/index');
     const { B04074 } = await import('@/cards/ct-p04/B04074');
-    registerAll();
+    registerCardDef(B04074);
     registerCardDef({
       id: 'KAZAMI', no: 'NO', kind: 'character', names: ['風見裕也'], colors: [], traits: [],
       rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [], level: 4, ap: 1000, lp: 1,
@@ -539,8 +536,6 @@ describe('megaw5 step3 — levelIn/levelInBound + deckRevealUntil dyn filter (r4
   });
 
   it('B09109 a1 idiom (chain): bindPick → deckRevealUntil dyn → sceneEnter $matched + rider + 残りデッキ下 + shuffle', async () => {
-    const { registerAll } = await import('@/cards/index');
-    registerAll();
     regLv('KID5', 5, '怪盗キッド');
     regLv('DK_L3', 3); regLv('DK_KID5', 5, '怪盗キッド'); regLv('DK_L8', 8);
     const s = createEmptyGameState();
@@ -574,8 +569,6 @@ describe('megaw5 step3 — levelIn/levelInBound + deckRevealUntil dyn filter (r4
   it('negative control (r47 risk): sequence だと bind が deckRevealUntil dispatch 前に確定するか — 実測記録', async () => {
     // chain 版と同一 DSL を sequence にした場合の挙動を固定 (壊れるなら card-authoring checklist の
     // 「chain 必須」根拠、壊れないなら short-form dispatch-time 解決の追加保証)。
-    const { registerAll } = await import('@/cards/index');
-    registerAll();
     regLv('KID5b', 5, 'X2');
     regLv('DKb_KID5', 5, 'X2'); regLv('DKb_L1', 1);
     const s = createEmptyGameState();

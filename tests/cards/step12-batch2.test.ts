@@ -331,7 +331,7 @@ describe('PR105 工藤有希子', () => {
       drainAiEffectPicks(d);
       runAllUntilEmpty(d);
     });
-    expect(charRead.ap(done, uid)).toBe(6000);
+    expect(charRead.ap(done, uid), 'PR105 a2 keeps AP+1000 when name declaration is skipped').toBe(6000);
     expect(charRead.names(done, uid), '空宣言 = 書き換え不発 (engine 空文字防御)').toEqual(['工藤有希子']);
   });
 });

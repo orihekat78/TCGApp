@@ -6,6 +6,7 @@ import { def as readDef } from '@/engine/read/def.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { CardArt } from './CardArt.js';
+import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
 import './ChoicePickerModal.css';
 
 function LeaveInterceptCard({
@@ -53,10 +54,11 @@ function LeaveInterceptCard({
 export function LeaveInterceptModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingLeaveIntercept);
   const state = useGameStateStore((s) => s.gameState);
+  const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const expandModal = useCardExpandModal();
-  if (!pending || pending.player !== 'self' || !state) return null;
-  const interceptor = state.players.self.scene.find((c) => c.uid === pending.interceptorUid);
-  const target = state.players.self.scene.find((c) => c.uid === pending.targetUid);
+  if (!pending || !isHumanDecisionOwner(pending.player, spectatorMode) || !state) return null;
+  const interceptor = state.players[pending.player].scene.find((c) => c.uid === pending.interceptorUid);
+  const target = state.players[pending.player].scene.find((c) => c.uid === pending.targetUid);
   const interceptorName = interceptor ? (readDef.card(interceptor.cardId)?.names?.[0] ?? interceptor.cardId) : 'character';
   const targetName = target ? (readDef.card(target.cardId)?.names?.[0] ?? target.cardId) : 'character';
   const resolve = (accept: boolean): void => {

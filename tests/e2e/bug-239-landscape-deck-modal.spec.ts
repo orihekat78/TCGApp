@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { setupGamePage, buildGameState, getGameState } from './helpers';
+import {
+  setupGamePage,
+  buildGameState,
+  getGameState,
+  surfaceDeckPlaceDecision,
+  surfaceDeckReorderDecision,
+} from './helpers';
 
 test.describe('BUG-239 landscape deck decisions', () => {
   test('keeps a long deck reorder decision inside the 851x393 viewport', async ({ page }) => {
@@ -14,10 +20,10 @@ test.describe('BUG-239 landscape deck decisions', () => {
       (gs as unknown as { turn: { number: number; player: string; phase: string; isFirstPlayerFirstTurn: boolean } }).turn =
         { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     });
-    await page.evaluate((cardIds) => {
-      const w = window as unknown as { __game: { getState: () => { setPendingDeckReorder: (p: unknown) => void } } };
-      w.__game.getState().setPendingDeckReorder({ player: 'self', cardIds });
-    }, ['D08003', 'D08007', 'D08013', 'D08001', 'D08003', 'D08007', 'D08013', 'D08001']);
+    await surfaceDeckReorderDecision(
+      page,
+      ['D08003', 'D08007', 'D08013', 'D08001', 'D08003', 'D08007', 'D08013', 'D08001'],
+    );
 
     const modal = page.getByTestId('deck-reorder-modal');
     const panel = modal.locator('.souza-modal');
@@ -80,10 +86,7 @@ test.describe('BUG-239 landscape deck decisions', () => {
       (gs as unknown as { turn: { number: number; player: string; phase: string; isFirstPlayerFirstTurn: boolean } }).turn =
         { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     });
-    await page.evaluate((pending) => {
-      const w = window as unknown as { __game: { getState: () => { setPendingDeckPlace: (p: unknown) => void } } };
-      w.__game.getState().setPendingDeckPlace(pending);
-    }, { player: 'self', ownerPlayer: 'self', cardIds });
+    await surfaceDeckPlaceDecision(page, cardIds);
 
     const modal = page.getByTestId('deck-place-modal');
     const panel = modal.locator('.souza-modal');

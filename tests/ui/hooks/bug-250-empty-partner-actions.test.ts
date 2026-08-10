@@ -4,6 +4,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { startCausalSession } from '@/engine/log/causal';
+import { resetPresentationQueue } from '@/ui/presentation/coordinator';
 import { isAllowed } from '@/ui/hooks/useEngineDispatch/can-check';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { canAssistForUi, canSolveCaseForUi } from '@/ui/hooks/useActionsPanelFlow/enumerators';
@@ -153,11 +155,15 @@ describe('BUG-250 common partner action identity/location gate', () => {
     const afterAssist = useGameStateStore.getState().gameState!;
     expect(afterAssist.players[player].partner).toMatchObject({ state: 'sleep', location: 'file-area' });
 
-    const solveState = readyState(player);
+    const solveState = structuredClone(readyState(player));
+    const sessionId = `dispatch-solve-${player}`;
+    startCausalSession(solveState, sessionId);
+    resetPresentationQueue(sessionId);
     useGameStateStore.getState().setGameState(solveState);
     expect(dispatchEngineAction({ type: 'solveCase', player })).toEqual({ ok: true });
     const afterSolve = useGameStateStore.getState().gameState!;
     expect(afterSolve.players[player].partner.state).toBe('sleep');
     expect(afterSolve.gameResult).toEqual({ winner: player, reason: 'evidence' });
+    expect(afterSolve.log.at(-1)).toMatchObject({ kind: 'game-result', actor: player });
   });
 });

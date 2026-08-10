@@ -78,14 +78,16 @@
 }
 
 .selectable-card-tile__detail {
-  position: absolute;
-  inset: 8px auto auto 8px;
+  position: static;
+  grid-column: 3;
+  grid-row: 1;
+  align-self: stretch;
   min-inline-size: 44px;
   min-block-size: 44px;
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 50%;
-  background: rgba(8, 18, 36, 0.84);
+  border-radius: 4px;
+  background: rgba(8, 18, 36, 0.72);
   color: inherit;
   cursor: pointer;
   font-size: 12px;
