@@ -18,6 +18,12 @@ import {
 } from "../../scripts/private-hosted/manifest.ts";
 
 const roots: string[] = [];
+const PAGES_ROUTES = `{
+  "version": 1,
+  "include": ["/api/v1/*"],
+  "exclude": []
+}
+`;
 
 function fixture(): string {
   const root = mkdtempSync(join(tmpdir(), "conan-private-hosted-dist-"));
@@ -27,6 +33,7 @@ function fixture(): string {
   writeFileSync(join(root, "index.html"), "<!doctype html>\n");
   writeFileSync(join(root, "favicon.svg"), "<svg/>\n");
   writeFileSync(join(root, "_headers"), "/*\n");
+  writeFileSync(join(root, "_routes.json"), PAGES_ROUTES);
   writeFileSync(join(root, "assets", "app.js"), 'import "./app.css";\n');
   writeFileSync(join(root, "assets", "app.css"), "body {}\n");
   writeFileSync(
@@ -69,6 +76,11 @@ describe("private hosted build manifest", () => {
         {
           path: "/_headers",
           bytes: 3,
+          sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
+        },
+        {
+          path: "/_routes.json",
+          bytes: Buffer.byteLength(PAGES_ROUTES),
           sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
         },
         {
@@ -117,6 +129,15 @@ describe("private hosted build manifest", () => {
     });
   });
 
+  it("accepts platform line endings without widening the Pages route", async () => {
+    const dist = fixture();
+    write(dist, "_routes.json", PAGES_ROUTES.replace(/\n/g, "\r\n"));
+
+    await expect(inspectBuild(dist)).resolves.toMatchObject({
+      schemaVersion: 1,
+    });
+  });
+
   it("follows imports, dynamic imports, CSS, and assets transitively", async () => {
     const dist = fixture();
     write(dist, "assets/imported.js", "export {};\n");
@@ -146,6 +167,7 @@ describe("private hosted build manifest", () => {
     const manifests = await inspectBuild(dist);
     expect(manifests.upload.map((entry) => entry.path)).toEqual([
       "/_headers",
+      "/_routes.json",
       "/assets/app.css",
       "/assets/app.js",
       "/assets/asset.js",
@@ -157,6 +179,9 @@ describe("private hosted build manifest", () => {
     ]);
     expect(manifests.response.map((entry) => entry.path)).not.toContain(
       "/_headers",
+    );
+    expect(manifests.response.map((entry) => entry.path)).not.toContain(
+      "/_routes.json",
     );
   });
 
@@ -192,7 +217,6 @@ describe("private hosted build manifest", () => {
     ["webp", "assets/card.webp"],
     ["Pages worker", "_worker.js"],
     ["Pages functions", "functions/handler.js"],
-    ["Pages routes", "_routes.json"],
     ["redirects", "_redirects"],
     ["orphan JavaScript", "assets/orphan.js"],
     ["orphan CSS", "assets/orphan.css"],
@@ -202,6 +226,12 @@ describe("private hosted build manifest", () => {
     const dist = fixture();
     write(dist, path);
     await expect(inspectBuild(dist)).rejects.toThrow();
+  });
+
+  it("rejects a Pages route broader than the reviewed API boundary", async () => {
+    const dist = fixture();
+    write(dist, "_routes.json", '{"version":1,"include":["/*"],"exclude":[]}\n');
+    await expect(inspectBuild(dist)).rejects.toThrow(/Pages routes/);
   });
 
   it("rejects an empty Pages functions directory", async () => {
@@ -315,6 +345,7 @@ describe("private hosted build manifest", () => {
         .sort(),
     ).toEqual([
       "_headers",
+      "_routes.json",
       "assets",
       "assets/app.css",
       "assets/app.js",

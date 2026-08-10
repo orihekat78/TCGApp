@@ -11969,7 +11969,7 @@ const REVIEWED_PERSIST_STORES = new Map<
     {
       name: "conan.meta.v1.decks",
       sha256:
-        "c4667ca99069c893742f2bc89f1758d73ff5f966a2cdee0fc3f37cc84e7a9dde",
+        "6f31d779c943eaea02baa2f58ed0dac6591a67c0e5d66e9bbc0d752ef2a251ca",
     },
   ],
   [
@@ -12794,7 +12794,7 @@ async function inspectBuild(
       "browser externalization warning",
     );
   }
-  if (/\b(?:build:meta|dist-meta)\b/i.test(combined)) {
+  if (/\bdist-meta\b/i.test(combined)) {
     addFinding(findings, "build", "meta-build", "alternate meta build output");
   }
   if (

@@ -21,7 +21,19 @@ import type { BuildManifests, ManifestEntry } from "./types.ts";
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 const MAX_FILE_COUNT = 20_000;
 const MANIFEST_PATH = ".vite/manifest.json";
-const ALWAYS_ALLOWED = new Set(["index.html", "favicon.svg", "_headers"]);
+const PAGES_ROUTES_PATH = "_routes.json";
+const EXPECTED_PAGES_ROUTES = `{
+  "version": 1,
+  "include": ["/api/v1/*"],
+  "exclude": []
+}
+`;
+const ALWAYS_ALLOWED = new Set([
+  "index.html",
+  "favicon.svg",
+  "_headers",
+  PAGES_ROUTES_PATH,
+]);
 const SHA256 = /^[0-9a-f]{64}$/;
 const TRUSTED_BRAND_LOGO = /^assets\/detective-conan-logo-[A-Za-z0-9_-]+\.png$/;
 
@@ -354,7 +366,8 @@ function validateExpected(expected: BuildManifests): void {
     }
   }
   const response = expected.upload.filter(
-    (entry) => entry.path !== "/_headers",
+    (entry) =>
+      entry.path !== "/_headers" && entry.path !== `/${PAGES_ROUTES_PATH}`,
   );
   if (
     response.length !== expected.response.length ||
@@ -399,6 +412,13 @@ export async function inspectBuild(distDir: string): Promise<BuildManifests> {
   if (!files.includes(MANIFEST_PATH)) fail("Vite manifest is missing");
   const manifestFile = await regularFile(rootReal, MANIFEST_PATH);
   const manifest = parseManifest(await readFile(manifestFile.absolute, "utf8"));
+  const routesFile = await regularFile(rootReal, PAGES_ROUTES_PATH);
+  const routesText = (await readFile(routesFile.absolute, "utf8")).replace(
+    /\r\n?/g,
+    "\n",
+  );
+  if (routesText !== EXPECTED_PAGES_ROUTES)
+    fail("Pages routes must include only /api/v1/*");
   const closure = reachableFiles(manifest);
   const allowed = new Set([...ALWAYS_ALLOWED, ...closure, MANIFEST_PATH]);
   if (files.some((path) => !allowed.has(path)))
@@ -409,7 +429,10 @@ export async function inspectBuild(distDir: string): Promise<BuildManifests> {
   const upload = await Promise.all(
     uploadPaths.map((path) => digestEntry(rootReal, path)),
   );
-  const response = upload.filter((entry) => entry.path !== "/_headers");
+  const response = upload.filter(
+    (entry) =>
+      entry.path !== "/_headers" && entry.path !== `/${PAGES_ROUTES_PATH}`,
+  );
   return { schemaVersion: 1, upload, response };
 }
 

@@ -62,7 +62,8 @@ const NPM_VERSION = "11.12.1";
 const ROOT_ENTRY = "meta-app/index.html";
 const RELEASE_CONFIG = "vite.config.private-hosted.ts";
 const PACKAGE_BUILD_COMMAND = "vite build";
-const RELEASE_BUILD_COMMAND = `npm run build -- --manifest --config ${RELEASE_CONFIG}`;
+const PACKAGE_META_BUILD_COMMAND = `vite build --config ${RELEASE_CONFIG}`;
+const RELEASE_BUILD_COMMAND = "npm run build:meta -- --manifest";
 const FIXED_GIT_PATH =
   process.platform === "win32"
     ? resolve(dirname(process.execPath), "..", "Git", "cmd", "git.exe")
@@ -494,8 +495,17 @@ async function contract(
   const scripts = record(pkg.scripts);
   if (scripts?.build !== PACKAGE_BUILD_COMMAND)
     fail("package.json build command must be exactly vite build");
+  if (scripts?.["build:meta"] !== PACKAGE_META_BUILD_COMMAND)
+    fail(
+      `package.json build:meta command must be exactly ${PACKAGE_META_BUILD_COMMAND}`,
+    );
   if (scripts?.prebuild !== undefined || scripts?.postbuild !== undefined)
     fail("package.json must not define prebuild or postbuild");
+  if (
+    scripts?.["prebuild:meta"] !== undefined ||
+    scripts?.["postbuild:meta"] !== undefined
+  )
+    fail("package.json must not define prebuild:meta or postbuild:meta");
   if (
     pkg.packageManager !== `npm@${NPM_VERSION}` ||
     record(pkg.engines)?.node !== "24.x" ||
@@ -587,7 +597,7 @@ async function contract(
 export function assertAcceptableBuildOutput(output: string): void {
   if (/externalized for browser compatibility/i.test(output))
     fail("browser externalization warning");
-  if (/\b(?:build:meta|dist-meta)\b/i.test(output))
+  if (/\bdist-meta\b/i.test(output))
     fail("build warning: forbidden alternate meta output");
 }
 function npm(args: string[]): { command: string; args: string[] } {
@@ -690,11 +700,9 @@ async function npmVerified(
   return {
     command: npm([
       "run",
-      "build",
+      "build:meta",
       "--",
       "--manifest",
-      "--config",
-      RELEASE_CONFIG,
     ]),
     version: NPM_VERSION,
   };

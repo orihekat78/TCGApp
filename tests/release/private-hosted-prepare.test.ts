@@ -35,6 +35,17 @@ const roots: string[] = [];
 const externalFiles: string[] = [];
 const RELEASE_ENTRY = "meta-app/index.html";
 const RELEASE_CONFIG = "vite.config.private-hosted.ts";
+const RELEASE_META_BUILD = `vite build --config ${RELEASE_CONFIG}`;
+const RELEASE_SCRIPTS = {
+  build: "vite build",
+  "build:meta": RELEASE_META_BUILD,
+} as const;
+const PAGES_ROUTES = `{
+  "version": 1,
+  "include": ["/api/v1/*"],
+  "exclude": []
+}
+`;
 
 type Fixture = {
   root: string;
@@ -71,6 +82,7 @@ function writeBuild(root: string, contents = "export const app = 1;\n"): void {
   write(root, "dist/index.html", "<!doctype html>\n");
   write(root, "dist/favicon.svg", "<svg/>\n");
   write(root, "dist/_headers", "/*\n");
+  write(root, "dist/_routes.json", PAGES_ROUTES);
   write(root, "dist/assets/app.js", contents);
   write(root, "dist/assets/app.css", "body {}\n");
   write(
@@ -102,7 +114,7 @@ function fixture(): Fixture {
         type: "module",
         packageManager: "npm@11.12.1",
         engines: { node: "24.x" },
-        scripts: { build: "vite build" },
+        scripts: RELEASE_SCRIPTS,
         devDependencies: { wrangler: "4.118.0" },
       },
       null,
@@ -192,6 +204,7 @@ describe("private hosted release preparation", () => {
     expect(builds).toBe(2);
     expect(result.manifests.upload.map((entry) => entry.path)).toEqual([
       "/_headers",
+      "/_routes.json",
       "/assets/app.css",
       "/assets/app.js",
       "/favicon.svg",
@@ -213,9 +226,9 @@ describe("private hosted release preparation", () => {
       {
         schemaVersion: 1,
         rootEntry: RELEASE_ENTRY,
-        buildCommand: `npm run build -- --manifest --config ${RELEASE_CONFIG}`,
+        buildCommand: "npm run build:meta -- --manifest",
         wranglerVersion: "4.118.0",
-        fileCount: 5,
+        fileCount: 6,
         totalBytes: expect.any(Number),
         createdAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
       },
@@ -226,6 +239,7 @@ describe("private hosted release preparation", () => {
         .sort(),
     ).toEqual([
       "_headers",
+      "_routes.json",
       "assets",
       "assets/app.css",
       "assets/app.js",
@@ -303,7 +317,32 @@ describe("private hosted release preparation", () => {
         write(
           item.root,
           "package.json",
-          JSON.stringify({ scripts: { build: "vite build --mode test" } }),
+          JSON.stringify({
+            type: "module",
+            packageManager: "npm@11.12.1",
+            engines: { node: "24.x" },
+            scripts: { ...RELEASE_SCRIPTS, build: "vite build --mode test" },
+            devDependencies: { wrangler: "4.118.0" },
+          }),
+        ),
+    ],
+    [
+      "wrong Meta build command",
+      true,
+      (item: Fixture) =>
+        write(
+          item.root,
+          "package.json",
+          JSON.stringify({
+            type: "module",
+            packageManager: "npm@11.12.1",
+            engines: { node: "24.x" },
+            scripts: {
+              ...RELEASE_SCRIPTS,
+              "build:meta": "vite build --mode test",
+            },
+            devDependencies: { wrangler: "4.118.0" },
+          }),
         ),
     ],
     [
@@ -317,7 +356,26 @@ describe("private hosted release preparation", () => {
             type: "module",
             packageManager: "npm@11.12.1",
             engines: { node: "24.x" },
-            scripts: { build: "vite build", prebuild: "echo injected" },
+            scripts: { ...RELEASE_SCRIPTS, prebuild: "echo injected" },
+            devDependencies: { wrangler: "4.118.0" },
+          }),
+        ),
+    ],
+    [
+      "Meta prebuild hook",
+      true,
+      (item: Fixture) =>
+        write(
+          item.root,
+          "package.json",
+          JSON.stringify({
+            type: "module",
+            packageManager: "npm@11.12.1",
+            engines: { node: "24.x" },
+            scripts: {
+              ...RELEASE_SCRIPTS,
+              "prebuild:meta": "echo injected",
+            },
             devDependencies: { wrangler: "4.118.0" },
           }),
         ),
@@ -333,7 +391,26 @@ describe("private hosted release preparation", () => {
             type: "module",
             packageManager: "npm@11.12.1",
             engines: { node: "24.x" },
-            scripts: { build: "vite build", postbuild: "echo injected" },
+            scripts: { ...RELEASE_SCRIPTS, postbuild: "echo injected" },
+            devDependencies: { wrangler: "4.118.0" },
+          }),
+        ),
+    ],
+    [
+      "Meta postbuild hook",
+      true,
+      (item: Fixture) =>
+        write(
+          item.root,
+          "package.json",
+          JSON.stringify({
+            type: "module",
+            packageManager: "npm@11.12.1",
+            engines: { node: "24.x" },
+            scripts: {
+              ...RELEASE_SCRIPTS,
+              "postbuild:meta": "echo injected",
+            },
             devDependencies: { wrangler: "4.118.0" },
           }),
         ),
@@ -349,7 +426,7 @@ describe("private hosted release preparation", () => {
             type: "module",
             packageManager: "npm@11.12.1",
             engines: { node: "22.x" },
-            scripts: { build: "vite build" },
+            scripts: RELEASE_SCRIPTS,
             devDependencies: { wrangler: "4.118.0" },
           }),
         ),
@@ -696,6 +773,10 @@ describe("private hosted release preparation", () => {
       else process.env.GIT_WORK_TREE = originalGitWorkTree;
     }
     expect(builds).toBe(0);
+  });
+
+  it("accepts the reviewed Meta build lifecycle output", () => {
+    expect(() => assertAcceptableBuildOutput("npm run build:meta")).not.toThrow();
   });
 
   it.each([
@@ -1158,8 +1239,7 @@ describe("private hosted release preparation", () => {
       "browser externalization",
       'Module "node:fs" has been externalized for browser compatibility',
     ],
-    ["meta build", "npm run build:meta"],
-    ["forbidden meta output", "npm run build:meta"],
+    ["forbidden meta output", "dist-meta/index.html"],
   ])("rejects %s build output", (label, output) => {
     expect(() => assertAcceptableBuildOutput(output)).toThrow(
       label === "browser externalization"
@@ -1262,13 +1342,11 @@ describe("private hosted release preparation", () => {
             }
             expect(command.file).toBe(process.execPath);
             expect(command.cwd).toBe(item.root);
-            expect(command.args.slice(-6)).toEqual([
+            expect(command.args.slice(-4)).toEqual([
               "run",
-              "build",
+              "build:meta",
               "--",
               "--manifest",
-              "--config",
-              RELEASE_CONFIG,
             ]);
             expect(command.env?.NPM_CONFIG_GLOBALCONFIG).toBe(
               resolve(item.root, ".private-hosted-empty-global-npmrc"),
@@ -1288,8 +1366,7 @@ describe("private hosted release preparation", () => {
     expect(
       commands.filter(
         (command) =>
-          command.args.slice(-6).join(" ") ===
-          `run build -- --manifest --config ${RELEASE_CONFIG}`,
+          command.args.slice(-4).join(" ") === "run build:meta -- --manifest",
       ),
     ).toHaveLength(2);
     expect(commands.every((command) => !("shell" in command))).toBe(true);
@@ -1364,7 +1441,7 @@ describe("private hosted release preparation", () => {
         },
       ),
     ).rejects.toThrow(
-      `npm run build -- --manifest --config ${RELEASE_CONFIG} failed`,
+      "npm run build:meta -- --manifest failed",
     );
     expect(existsSync(item.staging)).toBe(false);
     expect(existsSync(item.evidence)).toBe(false);
