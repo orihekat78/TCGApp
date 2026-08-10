@@ -77,7 +77,7 @@ export function EffectPickerModal(): JSX.Element | null {
       dialog.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'),
     );
     const focusable = getFocusable();
-    focusable[0]?.focus();
+    if (!dialog.contains(document.activeElement)) focusable[0]?.focus();
     const onKeyDown = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') {
         event.preventDefault();

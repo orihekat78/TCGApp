@@ -53,7 +53,7 @@ describe('EffectPickerModal card details', () => {
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   });
 
-  it('shows public evidence art and opens details without selecting it', () => {
+  it('shows public evidence art and returns focus to the exact detail trigger', async () => {
     act(() => root.render(<EffectPickerModal />));
 
     const select = container.querySelector<HTMLButtonElement>('[data-testid="effect-pick-cand-evidence:self:0"]')!;
@@ -63,9 +63,15 @@ describe('EffectPickerModal card details', () => {
     expect(detail.getAttribute('aria-label')).toContain(select.querySelector('.cand-name')!.textContent!);
     expect(detail.getAttribute('aria-label')).toContain('詳細を表示');
     expect(select.parentElement).toBe(detail.parentElement);
+    detail.focus();
     act(() => detail.click());
     expect(container.querySelector('.card-expand-modal')).not.toBeNull();
     expect(container.querySelector('[data-testid="effect-picker-modal"]')).not.toBeNull();
+    await act(async () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+
+    act(() => container.querySelector<HTMLButtonElement>('.card-expand-close')!.click());
+    expect(container.querySelector('.card-expand-modal')).toBeNull();
+    expect(document.activeElement).toBe(detail);
   });
 
   it('keeps face-down evidence opaque in text, DOM, and details', () => {
