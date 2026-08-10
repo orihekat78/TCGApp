@@ -266,7 +266,13 @@ async function driveMatchThroughVisibleTurn30(page: Page, testInfo: TestInfo): P
   let sawEndTurn = false;
   while (Date.now() < deadline && transitions < 30) {
     if (await page.locator('[data-testid="victory-overlay"]').isVisible().catch(() => false)) break;
-    if (await page.locator('[data-testid="opp-turn-overlay"]').isVisible().catch(() => false)) {
+    if (
+      await page
+        .getByTestId("match-narrator-status")
+        .filter({ hasText: "相手のターン処理中" })
+        .isVisible()
+        .catch(() => false)
+    ) {
       sawCpu = true;
     }
     const chapter = await page.locator(".chapter-tag").innerText();
