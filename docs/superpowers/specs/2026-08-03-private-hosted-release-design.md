@@ -1,100 +1,79 @@
 # Private Hosted Release Design
 
-Date: 2026-08-04 — Existing-app direction approved; Cloudflare setup not performed
+Date: 2026-08-10 — Production deployed and accepted
 
 ## Goal and audience boundary
 
-- Host the existing app for a fixed, named, small circle of family and acquaintances
-  to use on smartphones.
+- Host the existing app for a fixed, named, small circle of family and acquaintances.
 - No public signup, transferable invitation, anonymous access, discoverable page,
   monetization, advertising, donation, or analytics.
 - The approved email list is capped at 12 people including the operator. Changes
   require operator approval and a fresh Access audit.
-- This remains a fan project. Access restriction, small scale, and no revenue do
-  not grant rights or conclusively determine whether an act is public transmission.
-- Hosting copies application and card/rules data to a server. A rightsholder request
-  or material legal concern triggers containment and suspension; see the legal note.
+- This remains a fan project. Restricted, small-scale, noncommercial access does
+  not grant rights. A rightsholder request triggers immediate containment.
 
 ## Product shipped
 
-- Deploy the same Vite product scope (engine, cards, setup, tutorial, replay, and
-  YOU-vs-CPU); do not change rules, CPU policy, or match outcomes.
-- Retain only UI decision-ID, hand-occurrence-ID, and 44px tap-target corrections.
-- No human-vs-human play, accounts, shared state, backend, matchmaking, chat, or
-  cross-device persistence is added.
-- Card-image bytes are not bundled, staged, uploaded, or server-hosted. The browser
-  may request existing official image URLs; failure uses the local SVG placeholder.
-- No service worker, PWA, source map, server runtime, remote logging, telemetry,
-  browser persistence, or development bridge is shipped.
+- Ship the same Vite product: engine, cards, setup, tutorial, replay, and YOU-vs-CPU.
+- No PvP, accounts, backend, matchmaking, chat, or cross-device persistence.
+- Card-image bytes are not bundled or hosted. The browser may request the existing
+  official image host; failure uses the local SVG placeholder.
+- No service worker, PWA, source map, server runtime, telemetry, or remote logging.
 - Match, tutorial, and imported replay state remain in memory and clear on reload.
 
-## Static payload and release inspection
+## Static payload and inspection
 
-- Phase 1 defines the browser-only build and response headers. Phase 2 creates
-  only an inspected, reproducible staging payload plus repo-external evidence.
-- The required release inspection is bounded to build success, dependencies,
-  embedded-secret markers, and literal external destinations.
-- Secret and destination scans run against the exact staged upload payload; evidence reports labels or origins only, never URL paths or queries.
-- Dynamic alias/runtime-flow analysis is optional and not a required release gate.
-- Runtime CSP is `connect-src 'none'`; scripts/styles/fonts are same-origin,
-  workers and forms are disabled, and images are limited to self, data, and the
-  existing official image host.
-- Every response requires no-store, noindex, no-referrer, nosniff, frame denial,
-  and the exact restrictive CSP.
+- Required release inspection is limited to build success, dependencies, embedded
+  secrets, and literal external destinations.
+- Secret and destination scans inspect the exact staged upload payload. Evidence
+  records redacted labels or origins, never URL paths, queries, or credentials.
+- Dynamic alias/runtime-flow analysis is optional and not a release gate.
+- Runtime CSP uses `connect-src 'none'`; scripts, styles, and fonts are same-origin.
+- Every response uses no-store, noindex, no-referrer, nosniff, frame denial, and CSP.
 
 ## Cloudflare architecture
 
-- Use a dedicated Cloudflare account, one empty Pages Direct Upload project, and
-  two Access applications: the project root and wildcard deployment domain.
-- The sole identity provider is Cloudflare login. Email OTP and independent
-  Access MFA are disabled. Access has no shared site password.
-- Both applications allow only that IdP, auto-redirect to it, reject WARP
-  authentication, and require the same Login Method in an Allow policy.
-- `preflight`: exactly the operator email, session at most 30 minutes.
-- `active`: exactly all approved emails, session at most 12 hours.
-- `contained`: exactly one `Block Everyone` policy on each application,
-  with no Allow, Exclude, or Require rules.
-- Broad selectors, Bypass, Service Auth, alternate IdPs, public paths, extra apps,
-  and policy overlap fail audit.
-- Access protects both the stable project URL and every deployment URL before
-  any real application bytes are uploaded.
+- Dedicated Pages Direct Upload project: `conan-private-7302df07`.
+- Access protects both `conan-private-7302df07.pages.dev` and
+  `*.conan-private-7302df07.pages.dev` before application bytes are uploaded.
+- The sole identity provider is Cloudflare One-time PIN. Cloudflare account login,
+  alternate IdPs, shared passwords, WARP authentication, and independent MFA are off.
+- Both applications allow only that IdP and auto-redirect to it.
+- Active policy: exact approved emails only, no Exclude or Require rules, 12h maximum.
+- Contained policy: exactly one Block Everyone policy on each application and no Allow.
+- Broad selectors, bypass, alternate IdPs, public paths, extra apps, or overlap fail audit.
 
 ## Authority and secrets
 
-- Strict operator JSON stays outside the repository and contains identifiers/emails,
-  not credentials. Links, hard links, broad-write ACLs, swaps, and repo paths fail.
-- The OS operator/admin account is trusted. API tokens are short-lived, process-
-  environment-only, and never enter config, evidence, logs, arguments, or Git.
-- Pages and Access tokens stay separate. The read-only auditor paginates all results,
-  strips ambient credentials, redacts API data, and emits bounded evidence.
-- Account, Zero Trust, tokens, empty project, and Access applications are
-  user-operated Phase 4 Task 3 work. Implementation stops before that task.
+- Strict operator JSON stays outside the repository and contains IDs/emails only.
+- API credentials are short-lived, environment-only, and never enter config, logs,
+  arguments, evidence, chat, or Git.
+- The temporary setup token was revoked after deployment. Browser OAuth handles Pages.
+- The read-only auditor paginates results, strips ambient credentials, and redacts API data.
 
-## Qualification and release gates
+## Qualification and release
 
-- Phase 3 must pass build, high-severity dependency audit, staged secret and
-  destination scans, bug gate, typecheck, lint, full unit suite, 1,000-game smoke,
-  development E2E, docs checks, payload preparation, and static Playwright.
-- Static Playwright uses public controls and covers desktop/mobile setup, gameplay,
-  tutorial, replay, reset, image fallback, staged bytes/headers, and runtime errors.
-- The final qualification producer starts and ends on the same clean commit and
-  lockfile, rehashes manifests after E2E, and atomically publishes a complete
-  report only after every command passes once in the required order.
-- No Pages project, Access application, external endpoint, or upload is created
-  by Phases 3 or Phase 4 Tasks 1-2.
-- Release stays blocked until Task 3, preflight audit, deployment gates, and user
-  acceptance of documented rights and operational residual risks are complete.
+- Final qualification runs 16 ordered gates: install, build, dependency audit, bug gate,
+  typecheck, lint, unit, smoke, development E2E, docs, preparation, exact-payload secret
+  and destination scans, static E2E, and clean-tree verification.
+- Qualification passed for clean commit `9f608fd5bff7249ee1aa59ba1b101cfb884d5ea3`.
+- Production deployment `945de0aa-1af1-4836-86f1-b8048dc6d32e` uploaded the exact
+  qualified staging payload. Anonymous root and wildcard probes redirect to Access.
+- OTP login and gameplay opening were accepted on PC and smartphone.
 
 ## Operations
 
-- Containment is fail-closed and never auto-unblocks. It applies `Block
-  Everyone` to root/wildcard before rollback or deletion work.
-- Removing a user means removing the exact email and revoking its sessions for
-  both applications. Adding a user requires a deliberate audited change.
-- Keep redacted evidence locally, rotate/revoke tokens after use, and never
-  publish the repository or payload outside the fixed named circle.
+- Containment is fail-closed and never auto-unblocks. Apply Block Everyone to root and
+  wildcard before rollback, deletion, investigation, or rights-response work.
+- Removing a user means removing the exact email and revoking its sessions. Adding one
+  requires an approved config/policy change and fresh audit.
+- Detailed release, membership, containment, and rollback steps are in the
+  [production operations runbook](../plans/2026-08-10-private-hosted-production-operations.md).
 
-## Current sources
+## Sources
+
 - [Project legal recommendation](../../../.claude/research/legal/04-recommendation.md)
+- [Cloudflare One-time PIN](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/)
 - [Cloudflare Access policies](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/)
-- [Cloudflare Pages known issues](https://developers.cloudflare.com/pages/platform/known-issues/)
+- [Cloudflare session management](https://developers.cloudflare.com/cloudflare-one/access-controls/access-settings/session-management/)
+- [Cloudflare Pages rollbacks](https://developers.cloudflare.com/pages/configuration/rollbacks/)

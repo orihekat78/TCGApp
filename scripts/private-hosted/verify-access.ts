@@ -248,39 +248,27 @@ function inspectIdentityProvider(
     addFinding(
       findings,
       "idp.count",
-      "Exactly one Cloudflare identity provider is required.",
+      "Exactly one one-time PIN identity provider is required.",
     );
   }
   const raw = values.find(isRecord);
   if (!raw) return { id: undefined, snapshot: null };
   const id = safeId(raw.id);
   if (!id) {
-    addFinding(findings, "idp.id", "The Cloudflare identity provider ID is invalid.");
+    addFinding(findings, "idp.id", "The one-time PIN identity provider ID is invalid.");
   }
-  if (raw.type !== "cloudflare") {
+  if (raw.type !== "onetimepin") {
     addFinding(
       findings,
       "idp.type",
-      "The sole identity provider must be Cloudflare Access.",
-    );
-  }
-  const providerConfig = isRecord(raw.config) ? raw.config : undefined;
-  if (providerConfig?.restrict_to_account_members !== false) {
-    addFinding(
-      findings,
-      "idp.account-members",
-      "Cloudflare account-member restriction must be disabled.",
+      "The sole identity provider must be Cloudflare one-time PIN.",
     );
   }
   return {
     id,
     snapshot: {
       id: id ?? null,
-      type: raw.type === "cloudflare" ? "cloudflare" : "unsupported",
-      restrictToAccountMembers:
-        typeof providerConfig?.restrict_to_account_members === "boolean"
-          ? providerConfig.restrict_to_account_members
-          : null,
+      type: raw.type === "onetimepin" ? "onetimepin" : "unsupported",
     },
   };
 }
@@ -343,7 +331,7 @@ function inspectApplication(
     addFinding(
       findings,
       `application.${target}.allowed-idps`,
-      `The ${target} application must allow only the Cloudflare identity provider.`,
+      `The ${target} application must allow only the one-time PIN identity provider.`,
     );
   }
   if (raw.auto_redirect_to_identity !== true) {
@@ -470,16 +458,6 @@ function safeEmailLiteral(value: unknown): value is string {
   return separator > 0 && separator === value.lastIndexOf("@") && separator < value.length - 1;
 }
 
-function isExactLoginMethodRule(value: unknown, identityProviderId: string): boolean {
-  return (
-    isRecord(value) &&
-    exactKeys(value, ["login_method"]) &&
-    isRecord(value.login_method) &&
-    exactKeys(value.login_method, ["id"]) &&
-    value.login_method.id === identityProviderId
-  );
-}
-
 function isExactEveryoneRule(value: unknown): boolean {
   return (
     isRecord(value) &&
@@ -494,7 +472,6 @@ function inspectPolicies(
   values: readonly unknown[],
   mode: AccessAuditMode,
   expectedEmails: readonly string[],
-  identityProviderId: string | undefined,
   findings: AuditFinding[],
 ): void {
   const records = values.filter(isRecord);
@@ -630,16 +607,11 @@ function inspectPolicies(
       `The ${target} policy must not contain Exclude rules.`,
     );
   }
-  if (
-    !identityProviderId ||
-    !Array.isArray(policy.require) ||
-    policy.require.length !== 1 ||
-    !isExactLoginMethodRule(policy.require[0], identityProviderId)
-  ) {
+  if (!Array.isArray(policy.require) || policy.require.length !== 0) {
     addFinding(
       findings,
       `policy.${target}.login-method`,
-      `The ${target} policy must require only the same Cloudflare login method.`,
+      `The ${target} policy must not add a second login-method requirement.`,
     );
   }
 }
@@ -767,7 +739,6 @@ export async function auditAccess(
     rootPolicies,
     mode,
     expectedEmails,
-    identityProvider.id,
     findings,
   );
   inspectPolicies(
@@ -775,7 +746,6 @@ export async function auditAccess(
     wildcardPolicies,
     mode,
     expectedEmails,
-    identityProvider.id,
     findings,
   );
   const probes = await Promise.all([

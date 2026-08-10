@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 265
-- **ファイル数**: 5627
+- **ファイル数**: 5628
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -2014,6 +2014,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-07-26-hand-occurrence-rebase.md` — Hand occurrence rebase Implementation Plan
       - `2026-07-26-rule-manual-ver2-5.md` — Rule Manual Ver.2.5 Implementation Plan
       - `2026-08-04-private-hosted-phase3-4-handoff.md` — Private Hosted Phase 3-4 Handoff
+      - `2026-08-10-private-hosted-production-operations.md` — Private Hosted Production Operations
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)

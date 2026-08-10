@@ -1,24 +1,21 @@
 # Private Hosted Phase 3-4 Handoff
 
-Date: 2026-08-04
-Status: Phase 4 Task 3 boundary; no Cloudflare account or resource configured
+Date: 2026-08-10
+Status: Production deployed; PC and smartphone acceptance complete
 
 ## Release invariant
 
-- Ship the existing Vite feature set as static files. Preserve YOU-vs-CPU, rules,
-  cards, setup, tutorial, and replay. Do not add PvP or a backend.
-- Retained product deltas are limited to restoring existing flows: strip UI-only
-  decision IDs at one resolver guard, use area-qualified hand occurrence IDs, and
-  enforce 44px smartphone tap targets. No rules, CPU, or match outcome changes.
-- Required inspection is limited to build, dependencies, embedded secrets, and
-  literal external destinations. Advanced runtime-flow analysis is optional.
+- Ship the existing static Vite app. Preserve YOU-vs-CPU, rules, cards, setup,
+  tutorial, and replay. Do not add PvP or a backend.
 - Never upload bundled card images. Never enable public signup or public paths.
 - Audience is a fixed named list, maximum 12 people including the operator.
+- Required inspection is build, dependencies, embedded secrets, and literal external
+  destinations. Advanced runtime-flow analysis is optional.
 
-## Phase 3 qualification contract
+## Qualification contract
 
-Run `npm run private-hosted:qualify-final` from one clean release commit. The
-producer must execute these IDs exactly once and in this order:
+`npm run private-hosted:qualify-final` must run from one clean release commit and
+execute these IDs once in order:
 
 1. `npm-ci`
 2. `build`
@@ -37,45 +34,37 @@ producer must execute these IDs exactly once and in this order:
 15. `prepared-private-e2e`
 16. `clean-tree-check`
 
-Secret and destination scans inspect the exact staged upload payload. Acceptance
-requires exit code 0 for every command, empty findings, stable commit/lockfile/
-manifests, an atomically published repository-external report, and a clean tree.
-This does not authorize Cloudflare setup or deployment.
+Acceptance requires every exit code 0, empty scan findings, stable commit/lockfile/
+manifests, a repository-external report, and a clean tree.
 
-## Phase 4 Task 1: operator config implementation
+## Operator config and Access auditor
 
-- `private-hosted:init` writes strict operator configuration outside the repo.
-- It validates account/project/team identifiers, lowercase exact emails,
-  uniqueness, operator membership, maximum 12, path containment, file identity,
-  and restrictive local permissions.
-- The config contains no token or password.
+- `private-hosted:init` writes strict ID/email configuration outside the repository.
+- Config contains no token or password and caps the approved list at 12.
+- `private-hosted:audit` is read-only. It checks API state plus anonymous root and
+  wildcard probes and emits bounded, redacted evidence.
+- Required state: one One-time PIN IdP; exact root/wildcard applications; exact email
+  sets; no policy Require/Exclude; bounded sessions; no broad selectors or bypasses.
+- Modes: `preflight` operator only, `active` approved list, and `contained` Block Everyone.
 
-## Phase 4 Task 2: read-only Access auditor implementation
+## Phase 4 Task 3 completion evidence
 
-- `private-hosted:audit` uses read-only Cloudflare API access plus anonymous
-  root/wildcard probes. It never creates, changes, or deletes Cloudflare state.
-- It requires one Cloudflare login IdP, exact root and wildcard applications,
-  exact email sets, the same required login method, bounded sessions, and no
-  broad selectors, bypasses, public paths, extra apps, or alternate IdPs.
-- Modes are `preflight` (operator only), `active` (approved list), and
-  `contained` (Block Everyone, no Allow). Evidence is redacted and bounded.
-- Every API and public probe has a fixed deadline and honors caller cancellation.
-- Live audit cannot run until Task 3 supplies the external config and short-lived
-  read-only token. Fixture tests and local qualification are completed first.
+- Cloudflare account ID: `8b2b1b63c5cf8d5c49dcc608b730dd10`.
+- Zero Trust team: `steep-mouse-bb22`.
+- Pages project: `conan-private-7302df07`; production branch: `main`.
+- Root Access app: `85536426-8d52-4c43-a42b-8f12beb0d1e6`.
+- Wildcard Access app: `77346ed1-a299-4acf-91b2-9b73530dea9c`.
+- Sole approved operator email is kept in repo-external config; session maximum: 12h.
+- Authentication: One-time PIN only; independent MFA and WARP login disabled.
+- Qualified commit: `9f608fd5bff7249ee1aa59ba1b101cfb884d5ea3`.
+- Deployment: `945de0aa-1af1-4836-86f1-b8048dc6d32e`.
+- Stable URL: `https://conan-private-7302df07.pages.dev/`.
+- Exact deployment URL: `https://945de0aa.conan-private-7302df07.pages.dev/`.
+- Anonymous root/deployment probes returned Access redirects. OTP login and game open
+  were accepted on PC and smartphone. Temporary setup token was revoked.
 
-## Stop: Phase 4 Task 3 requires the operator
+## Next operational action
 
-Do not continue automatically. The operator must:
-
-1. Create the dedicated Cloudflare account and Zero Trust Free organization.
-2. Configure Cloudflare account login as the sole Access identity provider;
-   disable Email OTP, alternate IdPs, Access MFA, and account-member restriction.
-3. Run `npm run private-hosted:init` and keep the JSON outside the repository.
-4. Create a short-lived Pages Edit token and an empty Direct Upload project.
-5. Create separate Access applications for the root and wildcard domains before
-   any application bytes are uploaded; allow only the operator for preflight.
-6. Create a separate short-lived read-only audit token. Never paste tokens into
-   chat, files, command arguments, Git, or evidence.
-
-After those steps, resume with preflight audit. Upload remains blocked until the
-audit passes and the later release gates are explicitly accepted.
+No feature implementation remains for this release. Follow the
+[production operations runbook](2026-08-10-private-hosted-production-operations.md)
+for later releases, membership changes, emergency containment, and rollback.

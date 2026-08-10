@@ -38,43 +38,20 @@
 - The separate UI-quality worktree continued independently from 63 to 69
   changed paths during this task. It remains unmerged and untouched here.
 
-## 2026-08-04: Private hosted Phase 1 static boundary
+## 2026-08-10: Private hosted production release
 
-- Static-only scope; no Cloudflare resource or endpoint was created.
-- Browser registry no longer exposes its unused dynamic Node loader; direct
-  Node-only `loadSet` remains tested.
-- Official remote card images and local SVG failure placeholder are unchanged;
-  card art is absent from `dist` and browser storage.
-- Exact headers/toolchain and release tests reject server files, source maps,
-  Node chunks, and card payloads. Full gates and both reviews passed.
-
-## 2026-08-04: Private hosted Phase 2 payload authority
-
-- Inspected-payload scope; no Cloudflare resource, upload, or endpoint exists.
-- A clean canonical HEAD, pinned toolchain, two identical builds, and ignored-input
-  audit precede atomic staging and repo-external evidence publication.
-- The fixed launcher clears ambient authority and pins CWD/cache/temp. Full gates
-  and final adversarial review passed; no engine, UI, or caller changed.
-
-## 2026-08-04: Private hosted Phase 3 and Phase 4 Tasks 1-2
-
-- Existing scope is preserved. Only set-card decision IDs, hand occurrence IDs, and
-  44px tap targets changed; no PvP, backend, account, persistence, resource, or upload.
-- Qualification requires a repo-external report naming the exact clean commit and gates.
-- External operator JSON caps the named audience at 12 and rejects unsafe paths or ACLs.
-- Lockfile vendor code is split and SHA-256 pinned; pin changes require requalification.
-- Access audit requires a dedicated account, sole Cloudflare IdP, root/wildcard apps,
-  exact audiences, session limits, and Block Everyone containment.
-- User-operated account and dashboard setup begins at Phase 4 Task 3; stop before it.
-- Browser qualification fixed set-card payload validation and stable area-qualified IDs.
-- Pending/headless runtime uses own descriptors; inherited accessors cannot alter identity.
-- Boundary follows callable timer provenance, typed iframes, and cyclic browser aliases.
-- Access pagination must be complete; config writes are limited to operator/system/admin.
-- Invocation flow tracks comma/qualified `Reflect.apply` and hoisted local-callable identity.
-- React trust follows `.default` aliases through binding and assignment projections.
-- Computed iframe keys use access-point values; local browser-named models stay plain.
-
-## 2026-08-09: Private hosted release gate scope
-- Final qualification requires build, high-severity dependency audit, secret scan, and approved destination scan.
-- Advanced runtime-boundary analysis remains optional and is not a deployment blocker.
-- After this branch, user Cloudflare setup precedes our Access audit, upload, and phone verification.
+- Existing static app scope is preserved; no PvP, backend, account, telemetry,
+  bundled card art, or cross-device persistence was added.
+- Final qualification passed all 16 ordered gates on clean commit `9f608fd5`.
+  Required inspection is build, dependency, secret, and literal-destination checks;
+  advanced runtime-flow analysis remains optional.
+- Exact qualified staging payload deployed to Pages project
+  `conan-private-7302df07`, deployment `945de0aa-1af1-4836-86f1-b8048dc6d32e`.
+- Access protects stable root and wildcard deployment domains. Sole authentication
+  is One-time PIN; exact approved emails only, no Require/Exclude, session <=12h.
+- Operator config remains outside the repo and contains IDs/emails only. Temporary
+  setup token was revoked; no credential enters chat, Git, config, logs, or evidence.
+- Anonymous root/deployment probes redirect to Access. OTP login and game opening
+  were accepted on PC and smartphone.
+- Operational changes use the production runbook: qualify exact staging, probe both
+  domains, add/remove exact emails on both apps, contain before rollback or rights work.

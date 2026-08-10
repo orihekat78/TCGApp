@@ -42,7 +42,7 @@ function policy(id: string, emails: readonly string[]): Record<string, unknown> 
     decision: "allow",
     include: emails.map((value) => ({ email: { email: value } })),
     exclude: [],
-    require: [{ login_method: { id: ids.idp } }],
+    require: [],
     mfa_config: { mfa_disabled: true },
   };
 }
@@ -65,12 +65,9 @@ function goodFixture(emails: readonly string[] = [config.operatorEmail]): Fixtur
     idps: [
       {
         id: ids.idp,
-        name: "Cloudflare Access",
-        type: "cloudflare",
-        config: {
-          restrict_to_account_members: false,
-          client_secret: "must-never-enter-evidence",
-        },
+        name: "One-time PIN",
+        type: "onetimepin",
+        config: {},
       },
     ],
     apps: [
@@ -222,8 +219,7 @@ describe("private hosted Access audit", () => {
     expect(result.configSnapshot).toMatchObject({
       idp: {
         id: ids.idp,
-        type: "cloudflare",
-        restrictToAccountMembers: false,
+        type: "onetimepin",
       },
       rootApp: { id: ids.rootApp, domain: `${config.projectName}.pages.dev` },
       wildcardApp: {
@@ -357,8 +353,8 @@ describe("private hosted Access audit", () => {
     const fixture = goodFixture();
     fixture.idps.push({
       id: "66666666-6666-4666-8666-666666666666",
-      type: "onetimepin",
-      config: {},
+      type: "cloudflare",
+      config: { restrict_to_account_members: false },
     });
     fixture.apps.push({
       id: "77777777-7777-4777-8777-777777777777",
@@ -414,7 +410,7 @@ describe("private hosted Access audit", () => {
     },
   );
 
-  it("rejects exclusions, alternate login methods, duplicates, and bad redirects", async () => {
+  it("rejects exclusions, policy login methods, duplicates, and bad redirects", async () => {
     const fixture = goodFixture();
     fixture.policies[ids.rootApp]!.push(
       policy("88888888-8888-4888-8888-888888888888", [config.operatorEmail]),
@@ -436,6 +432,20 @@ describe("private hosted Access audit", () => {
         "probe.wildcard.redirect",
       ]),
     );
+  });
+
+  it("rejects Cloudflare account login in place of the sole one-time PIN provider", async () => {
+    const fixture = goodFixture();
+    fixture.idps[0] = {
+      id: ids.idp,
+      name: "Cloudflare Access",
+      type: "cloudflare",
+      config: { restrict_to_account_members: false },
+    };
+
+    const result = await auditAccess(config, "preflight", fixtureFetch(fixture));
+
+    expect(findingCodes(result)).toContain("idp.type");
   });
 
   it("rejects policy session overrides above the mode limit and independent MFA", async () => {
