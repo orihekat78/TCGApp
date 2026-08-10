@@ -28,6 +28,7 @@ export interface OfficialNewsResult {
 }
 
 interface LoadOptions {
+  allowNetwork?: boolean;
   fetcher?: typeof fetch;
   storage?: Pick<Storage, "getItem" | "setItem">;
   now?: number;
@@ -179,6 +180,7 @@ export function readOfficialNewsCache({
 }
 
 export async function loadOfficialNews({
+  allowNetwork = import.meta.env.VITE_PRIVATE_HOSTED_RELEASE !== "true",
   fetcher = fetch,
   storage = typeof localStorage === "undefined" ? undefined : localStorage,
   now = Date.now(),
@@ -191,6 +193,10 @@ export async function loadOfficialNews({
     throw signal.reason instanceof Error
       ? signal.reason
       : new DOMException("Aborted", "AbortError");
+  }
+
+  if (!allowNetwork) {
+    return cached ?? { items: [], source: "empty" };
   }
 
   const controller = new AbortController();

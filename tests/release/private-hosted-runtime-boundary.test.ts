@@ -21,6 +21,7 @@ export default defineConfig({
   plugins: [react()],
   define: {
     "import.meta.env.VITE_CLOUD_DATA_SYNC_ENABLED": JSON.stringify("true"),
+    "import.meta.env.VITE_PRIVATE_HOSTED_RELEASE": JSON.stringify("true"),
   },
   build: {
     outDir: resolve(__dirname, "dist"),

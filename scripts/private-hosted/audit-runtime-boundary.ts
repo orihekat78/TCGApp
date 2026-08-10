@@ -56,6 +56,7 @@ export default defineConfig({
   plugins: [react()],
   define: {
     "import.meta.env.VITE_CLOUD_DATA_SYNC_ENABLED": JSON.stringify("true"),
+    "import.meta.env.VITE_PRIVATE_HOSTED_RELEASE": JSON.stringify("true"),
   },
   build: {
     outDir: resolve(__dirname, "dist"),
@@ -99,7 +100,7 @@ const TRUSTED_VENDOR_SHA256 =
 const TRUSTED_RUNTIME_SHA256 =
   "5db5ba82eef00d1dee7e86e663098c9427d01183a88d357437daff295aec3e75";
 const TRUSTED_APP_SHA256 =
-  "2985137c9e2c68fd4fa714361b666637bd562e54b7b0a6558789b079192c7700";
+  "176961c6b9033975397add0baabf8a7f22598a4d1fcbad32161c2df22ec9709a";
 const TRUSTED_BRAND_LOGO_SHA256 =
   "8567c177ecaaf03c8b360dedd8aeea385b58e0bdffe359303f1784ef52e9beff";
 
@@ -11976,12 +11977,13 @@ const REVIEWED_META_CAPABILITIES = new Map<
     "meta-app/src/services/officialNews.ts",
     {
       sha256:
-        "6f58451acf1760cce78f3a42c51d26b7ea3008ffae7a308af3c5eac74241bf7b",
+        "c891f52f7d0030829c5c2d02b89b366369b0b17c10572e7dcbe439d0db4b9651",
       allowed: new Set([
         "external-origin:https://www.takaratomy.co.jp/products/conan-cardgame/",
         "network-api:fetch",
         "network-api:URL",
         "persistent-storage:localStorage",
+        "vite-variable:VITE_PRIVATE_HOSTED_RELEASE",
       ]),
     },
   ],

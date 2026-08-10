@@ -94,6 +94,46 @@ describe("official NEWS boundary", () => {
     );
   });
 
+  it("returns empty without contacting the official site when network access is disabled", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValue(new Response(HTML, { status: 200 }));
+    const result = await loadOfficialNews({
+      allowNetwork: false,
+      fetcher,
+      storage: localStorage,
+      now: Date.UTC(2026, 7, 2, 12),
+    });
+
+    expect(result).toEqual({ items: [], source: "empty" });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("keeps stale cached metadata without refreshing when network access is disabled", async () => {
+    const now = Date.UTC(2026, 7, 2, 12);
+    const initial = await loadOfficialNews({
+      fetcher: vi.fn().mockResolvedValue(new Response(HTML, { status: 200 })),
+      storage: localStorage,
+      now,
+    });
+
+    const fetcher = vi
+      .fn()
+      .mockResolvedValue(new Response(HTML, { status: 200 }));
+    const result = await loadOfficialNews({
+      allowNetwork: false,
+      fetcher,
+      storage: localStorage,
+      now: now + 6 * 60 * 60 * 1000,
+    });
+
+    expect(result).toEqual({
+      ...initial,
+      source: "stale",
+    });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("refreshes a fresh legacy cache created under the three-item limit", async () => {
     const now = Date.UTC(2026, 7, 3, 12);
     localStorage.setItem(

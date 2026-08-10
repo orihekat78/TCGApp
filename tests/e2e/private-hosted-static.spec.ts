@@ -22,7 +22,7 @@ const SECURITY_HEADERS = {
   "x-robots-tag": "noindex, nofollow, noarchive",
 } as const;
 const CSP =
-  "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.takaratomy.co.jp; font-src 'self'; connect-src https://www.takaratomy.co.jp; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; worker-src 'none'";
+  "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.takaratomy.co.jp; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; worker-src 'none'";
 const IMAGE_BODY =
   '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="3"><rect width="2" height="3" fill="#123"/></svg>';
 
@@ -131,8 +131,7 @@ async function expectRuntimeClean(
     try {
       return (
         new URL(url).origin !== APP_ORIGIN &&
-        !url.startsWith(OFFICIAL_IMAGE_BASE) &&
-        url !== OFFICIAL_NEWS_URL
+        !url.startsWith(OFFICIAL_IMAGE_BASE)
       );
     } catch {
       return true;
@@ -202,22 +201,19 @@ async function expectNoHorizontalOverflow(page: Page): Promise<void> {
 }
 
 test.describe("private hosted production static Meta app", () => {
-  test("@desktop serves the exact response set with release headers and no dev bridge", async ({
+  test("@desktop serves the exact response set and keeps official NEWS cache-only", async ({
     page,
     request,
   }) => {
     await mockOfficialResources(page);
     const evidence = monitorPage(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator(".home-screen")).toBeVisible();
+    await expect(
+      page.getByText("公式NEWSを読み込めませんでした"),
+    ).toBeVisible();
+    expect(evidence.officialNewsRequests).toEqual([]);
     await openSetupFromHome(page);
-    await expect.poll(() => evidence.officialNewsRequests.length).toBe(1);
-    expect(evidence.officialNewsRequests).toEqual([
-      {
-        url: OFFICIAL_NEWS_URL,
-        method: "GET",
-        postData: null,
-        referer: undefined,
-      },
-    ]);
     const staging = requiredEnvironment("PRIVATE_HOSTED_STAGING_DIR");
     const responseEntries = await manifestEntries(
       "PRIVATE_HOSTED_RESPONSE_MANIFEST",

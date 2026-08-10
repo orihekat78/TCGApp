@@ -117,5 +117,11 @@ describe("private-hosted cloud sync flag", () => {
     expect(
       localDefine["import.meta.env.VITE_CLOUD_DATA_SYNC_ENABLED"],
     ).toBeUndefined();
+    expect(
+      privateDefine["import.meta.env.VITE_PRIVATE_HOSTED_RELEASE"],
+    ).toBe(JSON.stringify("true"));
+    expect(
+      localDefine["import.meta.env.VITE_PRIVATE_HOSTED_RELEASE"],
+    ).toBeUndefined();
   });
 });
