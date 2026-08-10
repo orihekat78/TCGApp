@@ -1,6 +1,9 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SAMPLE_DECK, SAMPLE_DECK_OPP } from '../../meta-app/src/data/sampleDeck';
-import { useDecksStore } from '../../meta-app/src/state/decksStore';
+import {
+  registerDeckDeleteJournal,
+  useDecksStore,
+} from '../../meta-app/src/state/decksStore';
 
 type ActiveDeckState = ReturnType<typeof useDecksStore.getState> & {
   activeDeckId: string;
@@ -49,5 +52,24 @@ describe('decksStore active deck', () => {
     getState().remove(SAMPLE_DECK_OPP.id);
 
     expect(getState().activeDeckId).toBe(SAMPLE_DECK.id);
+  });
+
+  it('commits a removal only after its durable journal finishes', async () => {
+    let finishJournal!: () => void;
+    const journal = vi.fn(() => new Promise<void>((resolve) => { finishJournal = resolve; }));
+    const unregister = registerDeckDeleteJournal(journal);
+
+    try {
+      const removal = getState().remove(SAMPLE_DECK_OPP.id);
+      expect(getState().byId(SAMPLE_DECK_OPP.id)).toBeDefined();
+      expect(journal).toHaveBeenCalledWith(SAMPLE_DECK_OPP.id);
+
+      finishJournal();
+      await removal;
+
+      expect(getState().byId(SAMPLE_DECK_OPP.id)).toBeUndefined();
+    } finally {
+      unregister();
+    }
   });
 });

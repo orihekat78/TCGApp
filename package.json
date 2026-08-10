@@ -53,6 +53,7 @@
     "private-hosted:qualify-final": "tsx scripts/private-hosted/run-final-qualification.ts",
     "private-hosted:init": "tsx scripts/private-hosted/init-config.ts",
     "private-hosted:audit": "tsx scripts/private-hosted/verify-access.ts",
+    "cloud-data:measure-d1-budget": "tsx scripts/cloud-data/measure-d1-budget.ts",
     "dev:meta": "vite --config meta-app/vite.config.meta.ts",
     "build:meta": "vite build --config meta-app/vite.config.meta.ts",
     "preview:meta": "vite preview --config meta-app/vite.config.meta.ts",
@@ -114,6 +115,7 @@
     "pre-commit": "npm run docs:check && npm run lint:bugs && npm run lint:listener && npm run lint:card-addition && npm run lint:side-channel && npm run lint:component-testid && npm run lint:ok-false-pattern && npm run lint:test-pair && npm run lint:icon-abilities"
   },
   "dependencies": {
+    "jose": "^6.2.8",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "zustand": "^5.0.13"

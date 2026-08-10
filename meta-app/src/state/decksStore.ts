@@ -15,10 +15,22 @@ interface DecksState {
   _hasHydrated: boolean;
   add: (d: Omit<DeckRecord, "modified">) => void;
   update: (id: string, patch: Partial<DeckRecord>) => void;
-  remove: (id: string) => void;
+  remove: (id: string) => Promise<void>;
   setActiveDeck: (id: string) => void;
   byId: (id: string) => DeckRecord | undefined;
   _setHydrated: (v: boolean) => void;
+}
+
+type DeckDeleteJournal = (deckId: string) => Promise<void>;
+
+let activeDeleteJournal: { token: symbol; journal: DeckDeleteJournal } | null = null;
+
+export function registerDeckDeleteJournal(journal: DeckDeleteJournal): () => void {
+  const token = Symbol('deck-delete-journal');
+  activeDeleteJournal = { token, journal };
+  return () => {
+    if (activeDeleteJournal?.token === token) activeDeleteJournal = null;
+  };
 }
 
 function normalizeActiveDeckId(
@@ -58,14 +70,18 @@ export const useDecksStore = create<DecksState>()(
             activeDeckId: normalizeActiveDeckId(decks, s.activeDeckId),
           };
         }),
-      remove: (id) =>
+      remove: async (id) => {
+        if (!get().decks.some((deck) => deck.id === id)) return;
+        const journal = activeDeleteJournal?.journal;
+        if (journal) await journal(id);
         set((s) => {
           const decks = s.decks.filter((d) => d.id !== id);
           return {
             decks,
             activeDeckId: normalizeActiveDeckId(decks, s.activeDeckId),
           };
-        }),
+        });
+      },
       setActiveDeck: (id) =>
         set((s) =>
           s.decks.some((deck) => deck.id === id && isPlayable(deck))

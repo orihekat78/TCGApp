@@ -24,9 +24,11 @@ import { TutorialScreen } from './screens/TutorialScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { endMatchSession } from '@/ui/services/matchSession';
 import { useMetaStore } from './state/metaStore';
+import { useDecksStore } from './state/decksStore';
 import { useHistoryStore } from './state/historyStore';
 import { listStoredHistoryRows } from './services/historyReplayRepository';
 import { clearReplayReturnFocus } from './services/replayReturnFocus';
+import { acquireCloudSyncRuntime } from './cloud/runtime';
 
 function clearFinishedMatch(): void {
   const meta = useMetaStore.getState();
@@ -45,6 +47,9 @@ function leaveActiveMatch(next: Route): void {
 }
 
 export function App() {
+  const decksHydrated = useDecksStore((state) => state._hasHydrated);
+  const historyHydrated = useHistoryStore((state) => state._hasHydrated);
+  const historyCanonicalLoaded = useHistoryStore((state) => state._hasCanonicalLoaded);
   const navigationBlocker = useRef<NavigationBlocker | null>(null);
   const confirmRouteLeave = useCallback<RouteLeaveGuard>((change) => (
     navigationBlocker.current?.confirmRouteLeave(change) ?? true
@@ -82,6 +87,11 @@ export function App() {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
+
+  useEffect(() => {
+    if (!decksHydrated || !historyHydrated || !historyCanonicalLoaded) return undefined;
+    return acquireCloudSyncRuntime();
+  }, [decksHydrated, historyCanonicalLoaded, historyHydrated]);
 
   useEffect(() => {
     let cancelled = false;

@@ -9,8 +9,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 ## サマリ
 
 - **対象ルート**: `.`
-- **ディレクトリ数**: 283
-- **ファイル数**: 5815
+- **ディレクトリ数**: 292
+- **ファイル数**: 5863
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -2082,6 +2082,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-08-03-setup-screen-refresh.md` — SETUP Screen Refresh Plan
       - `2026-08-04-private-hosted-phase3-4-handoff.md` — Private Hosted Phase 3-4 Handoff
       - `2026-08-04-remaining-ui-mock-and-rollout.md` — Remaining UI Mock and Rollout Plan
+      - `2026-08-10-cloud-data-backend-mvp.md` — Cloud Data Backend MVP Implementation Plan
       - `2026-08-10-private-hosted-production-operations.md` — Private Hosted Production Operations
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
@@ -2101,8 +2102,22 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-08-03-setup-screen-refresh-design.md` — SETUP Screen Refresh Design
       - `2026-08-04-wave3-causal-presentation-contract.md` — Wave 3 Causal Presentation Contract
       - `2026-08-09-causal-presentation-migration-table.md` — Causal Presentation Migration Table
+- **`functions/`**
+  - **`api/`**
+    - **`v1/`**
+      - `[[path]].ts`
 - **`meta-app/`**
   - **`src/`**
+    - **`cloud/`**
+      - `apiClient.ts`
+      - `migration.ts`
+      - `projection.ts`
+      - `reconciliation.ts`
+      - `runtime.ts`
+      - `statusStore.ts`
+      - `storage.ts` — Preserve the original mutation error.
+      - `syncEngine.ts`
+      - `types.ts`
     - **`data/`**
       - `bug274ValidationDeck.ts` — Public, deterministic regression fixture for BUG-274.
       - `cardFilter.ts` — spec: .claude/specs/meta-ui/ (Phase 18: Master Duel 風カード絞り込みの共有モジュール)
@@ -2155,6 +2170,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `AppTopBar.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 03-routing.md
       - `Button.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
       - `CardSilhouette.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
+      - `CloudSyncIndicator.tsx`
       - `EmptyState.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
       - `FilterGroup.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 07-screens-library.md
       - `FilterRail.tsx` — spec: .claude/specs/meta-ui/ (Phase 18: Master Duel 風 共有フィルタレール)
@@ -2214,8 +2230,14 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - `tsconfig.json`
   - `tsconfig.node.json`
   - `vite.config.meta.ts` — spec: .claude/specs/meta-ui/01-project-setup.md
+- **`migrations/`**
+  - **`environments/`**
+    - `preview.sql`
+    - `production.sql`
+  - `0001_cloud_data.sql`
 - **`public/`**
   - `_headers`
+  - `_routes.json`
   - `favicon.svg`
 - **`scripts/`** — ビルド・メンテナンスツール
   - **`_archive/`**
@@ -2245,6 +2267,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `official-api.cjs`
     - `qa-normalize.cjs`
     - `write-qa-hash-snapshot.cjs`
+  - **`cloud-data/`**
+    - `measure-d1-budget.ts`
   - **`compiler/`**
     - **`rules/`**
       - `exceptions.json`
@@ -4609,6 +4633,18 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `PR304.ts` — cards/pr-01/PR304 松田陣平 (character) — Task A green候補 (engine変更0)
     - `AGENTS.md` — Card Instructions
     - `index.ts` — cards/index — トップレベル barrel + registerAll()
+  - **`cloud-data/`**
+    - `access-auth.ts`
+    - `api.ts`
+    - `contracts.ts`
+    - `d1-types.ts`
+    - `idempotency.ts`
+    - `identity.ts` — A concurrent first request can win the insert. Re-read and validate it.
+    - `rate-limit.ts`
+    - `repository.ts`
+    - `request-context.ts`
+    - `retention.ts`
+    - `usage-budget.ts`
   - **`engine/`** — Engine コア (React 非依存、純関数 + Immer)
     - **`cards/`**
       - `index.ts` — engine/cards barrel export
@@ -5544,6 +5580,20 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `wave16-cutin-observer.test.ts` — tests/cards/wave16-cutin-observer
     - `wave17-b08086-tequila.test.ts` — tests/cards/wave17-b08086-tequila
     - `wave2-cluster2-batch.test.ts` — engine拡張 wave#2 cluster2 — ability-presence filter 解禁 10枚の実 flow 検証 (decoy 付き)
+  - **`cloud-data/`**
+    - `access-auth.test.ts` — @vitest-environment node
+    - `api.test.ts` — @vitest-environment node
+    - `contracts.test.ts`
+    - `d1-test-adapter.ts`
+    - `environment-binding.test.ts`
+    - `idempotency.test.ts` — @vitest-environment node
+    - `identity.test.ts` — @vitest-environment node
+    - `rate-limit.test.ts` — @vitest-environment node
+    - `repository.test.ts` — @vitest-environment node
+    - `request-context.test.ts`
+    - `retention.test.ts`
+    - `schema.test.ts`
+    - `usage-budget.test.ts`
   - **`compiler/`**
     - `canonical.test.ts` — Track B compiler — canonical 正規化の単体テスト。
     - `cards-data-consistency.test.ts`
@@ -5902,6 +5952,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `TutorialScreen.canonical.test.ts`
     - `cardDisplayResolvers.test.ts`
     - `caseDifficultyGenerator.test.ts`
+    - `cloudApiClient.test.ts`
+    - `cloudSyncEngine.test.ts`
+    - `cloudSyncIndicator.test.tsx`
+    - `cloudSyncMigration.test.ts`
+    - `cloudSyncProjection.test.ts`
+    - `cloudSyncRuntime.test.ts`
+    - `cloudSyncStorage.test.ts`
     - `customGameStart.side-mapping.test.ts`
     - `decksStore.test.ts`
     - `engineStub.deck-limit.test.ts` — rules: 02-deck-construction.md

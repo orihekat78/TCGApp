@@ -106,8 +106,8 @@ const decks = {
   update(id: string, patch: Partial<DeckRecord>): void {
     useDecksStore.getState().update(id, patch);
   },
-  remove(id: string): void {
-    useDecksStore.getState().remove(id);
+  remove(id: string): Promise<void> {
+    return useDecksStore.getState().remove(id);
   },
 };
 

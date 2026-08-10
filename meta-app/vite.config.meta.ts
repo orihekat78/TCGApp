@@ -1,12 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
+import packageJson from '../package.json';
 
 // spec: .claude/specs/meta-ui/01-project-setup.md
 export default defineConfig({
   root: resolve(__dirname, '.'),
   publicDir: resolve(__dirname, '../public'),
   plugins: [react()],
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(packageJson.version),
+  },
   server: {
     port: 5174,
     strictPort: true,

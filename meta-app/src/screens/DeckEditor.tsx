@@ -251,9 +251,14 @@ export function DeckEditor({
     const d: DeckRecord = { ...structuredClone(draft), id: `deck-${Date.now()}`, name: `${draft.name} のコピー`, modified: Date.now() };
     setEditingId(d.id); setDraft(d);
   };
-  const deleteDeck = () => {
+  const deleteDeck = async () => {
     if (!window.confirm(`「${draft.name}」を削除しますか?`)) return;
-    removeDeck(draft.id);
+    try {
+      await removeDeck(draft.id);
+    } catch {
+      announce('デッキ削除の保存に失敗しました。もう一度お試しください。', 'error');
+      return;
+    }
     const remaining = decks.filter((d) => d.id !== draft.id);
     if (remaining[0]) { setEditingId(remaining[0].id); setDraft(structuredClone(remaining[0])); }
     else { const d = emptyDeck(); setEditingId(d.id); setDraft(d); }
