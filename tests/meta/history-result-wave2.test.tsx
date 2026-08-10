@@ -586,12 +586,14 @@ describe('Wave 2 history and result contract', () => {
     expect(writeText).toHaveBeenLastCalledWith(encodeDeck(SAMPLE_DECK_OPP));
 
     const close = dialog.querySelector<HTMLButtonElement>('button[aria-label="対戦デッキを閉じる"]')!;
-    await act(async () => {
-      close.click();
-      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-    });
+    act(() => close.click());
     expect(container.querySelector('[role="dialog"]')).toBeNull();
     expect(document.activeElement).toBe(open);
+
+    const nextAction = container.querySelector<HTMLButtonElement>('button[data-route="home"]')!;
+    nextAction.focus();
+    await act(async () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+    expect(document.activeElement).toBe(nextAction);
   });
 
   it('states when saved cards are missing from analytics instead of silently undercounting', () => {

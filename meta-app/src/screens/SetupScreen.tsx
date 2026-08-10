@@ -66,10 +66,7 @@ export function SetupScreen({ onNav }: Props) {
   }, [setupStartError]);
 
   const closeDeckDialog = () => {
-    const trigger = deckDialogSide === 'self' ? selfChangeRef.current : oppChangeRef.current;
     setDeckDialogSide(null);
-    trigger?.focus();
-    requestAnimationFrame(() => trigger?.focus());
   };
 
   const handleReady = () => {
@@ -215,6 +212,7 @@ export function SetupScreen({ onNav }: Props) {
             }
             closeDeckDialog();
           }}
+          returnFocus={deckDialogSide === 'self' ? selfChangeRef.current : oppChangeRef.current}
         />
       )}
     </div>

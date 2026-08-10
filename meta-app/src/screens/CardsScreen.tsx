@@ -100,7 +100,6 @@ export function CardsScreen({ onNav }: Props) {
   const closeFilters = () => {
     setFilterOpen(false);
     filterTriggerRef.current?.focus();
-    requestAnimationFrame(() => filterTriggerRef.current?.focus());
   };
 
   useEffect(() => {
@@ -111,7 +110,6 @@ export function CardsScreen({ onNav }: Props) {
         event.stopPropagation();
         setFilterOpen(false);
         filterTriggerRef.current?.focus();
-        requestAnimationFrame(() => filterTriggerRef.current?.focus());
       }
     };
     document.addEventListener('keydown', onKeyDown);
@@ -279,7 +277,14 @@ function FilterDrawer({
 
   return (
     <div className="cards-filter-layer">
-      <div className="cards-filter-backdrop" aria-hidden="true" onMouseDown={onClose} />
+      <div
+        className="cards-filter-backdrop"
+        aria-hidden="true"
+        onMouseDown={(event) => {
+          event.preventDefault();
+          onClose();
+        }}
+      />
       <aside
         className="cards-filter-drawer"
         role="dialog"

@@ -92,9 +92,9 @@ export function HistoryScreen({ onNav }: Props) {
         setSelectedMatch(match);
       }} />}
     </main>
-    {selectedMatch && <HistoryDeckDialog match={selectedMatch} onClose={() => {
+    {selectedMatch && <HistoryDeckDialog match={selectedMatch} returnFocus={deckDialogTriggerRef.current} onClose={() => {
       setSelectedMatch(null);
-      requestAnimationFrame(() => deckDialogTriggerRef.current?.focus());
+      deckDialogTriggerRef.current = null;
     }} />}
   </div>;
 }

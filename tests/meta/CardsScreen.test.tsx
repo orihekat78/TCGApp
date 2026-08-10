@@ -39,7 +39,7 @@ describe("CARDS filter drawer", () => {
     container.remove();
   });
 
-  it("keeps filters off canvas until requested, then Escape closes them and restores focus", () => {
+  it("closes filters on Escape without stealing a later focus move", async () => {
     act(() => root.render(<CardsScreen onNav={() => undefined} />));
 
     const trigger = Array.from(
@@ -75,6 +75,11 @@ describe("CARDS filter drawer", () => {
       container.querySelector('[role="dialog"][aria-label="カードを絞り込む"]'),
     ).toBeNull();
     expect(document.activeElement).toBe(trigger);
+
+    const nextAction = container.querySelector<HTMLButtonElement>('button[data-route="home"]')!;
+    nextAction.focus();
+    await act(async () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+    expect(document.activeElement).toBe(nextAction);
   });
 
   it("names search without exposing developer-facing OR/AND controls", () => {

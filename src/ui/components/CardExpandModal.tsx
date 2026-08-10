@@ -72,9 +72,8 @@ export function CardExpandModal({ cardId, onClose }: CardExpandModalProps): JSX.
       window.cancelAnimationFrame(focusFrame);
       window.removeEventListener('keydown', onKey, { capture: true });
       const target = returnFocusRef.current;
-      window.requestAnimationFrame(() => {
-        if (target?.isConnected) target.focus();
-      });
+      returnFocusRef.current = null;
+      if (target?.isConnected) target.focus();
     };
   }, [cardId]);
 

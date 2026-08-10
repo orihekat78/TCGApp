@@ -13,6 +13,7 @@ interface Props {
   description?: string;
   confirmLabel?: string;
   radioName?: string;
+  returnFocus?: HTMLElement | null;
 }
 
 export function HomeDeckSelectorDialog({
@@ -24,8 +25,10 @@ export function HomeDeckSelectorDialog({
   description = '次の対戦で使用するデッキを選びます',
   confirmLabel = 'このデッキを使用',
   radioName = 'home-active-deck',
+  returnFocus,
 }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
   const [draftId, setDraftId] = useState(selectedId);
   const entries = useMemo(() => decks.map((deck) => ({
     deck,
@@ -38,12 +41,17 @@ export function HomeDeckSelectorDialog({
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
+    returnFocusRef.current = returnFocus
+      ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.setAttribute('open', '');
     return () => {
       if (dialog.open && typeof dialog.close === 'function') dialog.close();
+      const target = returnFocusRef.current;
+      returnFocusRef.current = null;
+      if (target?.isConnected) target.focus();
     };
-  }, []);
+  }, [returnFocus]);
 
   return (
     <dialog

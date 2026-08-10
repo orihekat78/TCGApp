@@ -7,13 +7,15 @@ import { encodeDeck } from '../util/deckCode';
 interface Props {
   match: MatchRecord;
   onClose: () => void;
+  returnFocus?: HTMLElement | null;
 }
 
 type DeckSide = 'self' | 'opp';
 const IMAGE_LOAD_BLOCKING_MS = 2_500;
 
-export function HistoryDeckDialog({ match, onClose }: Props) {
+export function HistoryDeckDialog({ match, onClose, returnFocus }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const selfTabRef = useRef<HTMLButtonElement>(null);
   const oppTabRef = useRef<HTMLButtonElement>(null);
@@ -25,13 +27,18 @@ export function HistoryDeckDialog({ match, onClose }: Props) {
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
+    returnFocusRef.current = returnFocus
+      ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.setAttribute('open', '');
     closeRef.current?.focus();
     return () => {
       if (dialog.open && typeof dialog.close === 'function') dialog.close();
+      const target = returnFocusRef.current;
+      returnFocusRef.current = null;
+      if (target?.isConnected) target.focus();
     };
-  }, []);
+  }, [returnFocus]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDialogElement>) => {
     if (event.key === 'Escape') {

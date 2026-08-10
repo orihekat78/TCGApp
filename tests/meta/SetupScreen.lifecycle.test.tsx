@@ -193,6 +193,21 @@ describe('SetupScreen match-session lifecycle', () => {
     expect(container.querySelector('.setup-player-panel--opp')?.getAttribute('data-deck-id')).toBe(SAMPLE_DECK_OPP.id);
   });
 
+  it('does not steal focus back after closing the setup deck dialog', async () => {
+    act(() => root.render(<SetupScreen onNav={() => undefined} />));
+    const selfChange = container.querySelector<HTMLButtonElement>('.setup-player-panel--self .setup-change-deck')!;
+    const oppChange = container.querySelector<HTMLButtonElement>('.setup-player-panel--opp .setup-change-deck')!;
+    act(() => selfChange.click());
+    const dialog = container.querySelector<HTMLDialogElement>('dialog')!;
+    act(() => dialog.dispatchEvent(new Event('cancel', { cancelable: true })));
+
+    expect(container.querySelector('dialog')).toBeNull();
+    expect(document.activeElement).toBe(selfChange);
+    oppChange.focus();
+    await act(async () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+    expect(document.activeElement).toBe(oppChange);
+  });
+
   it('新規開始はtarget/confirmation PromiseをcancelしUI action/pendingを全消去する', async () => {
     const targetDone = vi.fn();
     const confirmDone = vi.fn();

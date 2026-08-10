@@ -28,8 +28,6 @@ export function HomeScreen({ onNav }: Props) {
   const navigate = (route: Route) => onNav(route);
   const closeDeckSelector = () => {
     setDeckSelectorOpen(false);
-    changeDeckRef.current?.focus();
-    requestAnimationFrame(() => changeDeckRef.current?.focus());
   };
 
   return (
@@ -79,6 +77,7 @@ export function HomeScreen({ onNav }: Props) {
             setActiveDeck(id);
             closeDeckSelector();
           }}
+          returnFocus={changeDeckRef.current}
         />
       )}
     </div>

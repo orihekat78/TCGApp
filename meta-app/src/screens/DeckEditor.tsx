@@ -191,7 +191,9 @@ export function DeckEditor({
 
   const closeDetail = () => {
     setDetailOpen(false);
-    requestAnimationFrame(() => detailTriggerRef.current?.focus());
+    const target = detailTriggerRef.current;
+    detailTriggerRef.current = null;
+    if (target?.isConnected) target.focus();
   };
 
   const openSlotPicker = (kind: 'partner' | 'case', returnFocus: HTMLElement | null = null) => {
@@ -238,7 +240,7 @@ export function DeckEditor({
   };
   const closeDeckSelector = () => {
     setDeckSelectorOpen(false);
-    requestAnimationFrame(() => deckSelectorTriggerRef.current?.focus());
+    deckSelectorTriggerRef.current = null;
   };
   const selectDeckForEditing = (id: string) => {
     if (!loadDeck(id)) return;
@@ -417,6 +419,7 @@ export function DeckEditor({
           radioName="deck-editor-selection"
           onConfirm={selectDeckForEditing}
           onClose={closeDeckSelector}
+          returnFocus={deckSelectorTriggerRef.current}
         />
       )}
 
@@ -558,7 +561,14 @@ function DetailDrawer({ card, count, printCount, closeRef, onClose, onAdd, onRem
 
   return (
     <div className="deck-detail-layer">
-      <div className="deck-detail-backdrop" onMouseDown={onClose} aria-hidden="true" />
+      <div
+        className="deck-detail-backdrop"
+        onMouseDown={(event) => {
+          event.preventDefault();
+          onClose();
+        }}
+        aria-hidden="true"
+      />
       <aside
         ref={dialogRef}
         className="deck-detail-drawer"
@@ -995,9 +1005,8 @@ function useModalFocus(active: boolean, onClose: () => void, explicitReturnFocus
     return () => {
       window.cancelAnimationFrame(focusFrame);
       const target = returnFocusRef.current;
-      window.requestAnimationFrame(() => {
-        if (target?.isConnected) target.focus();
-      });
+      returnFocusRef.current = null;
+      if (target?.isConnected) target.focus();
     };
   }, [active, explicitReturnFocus]);
 

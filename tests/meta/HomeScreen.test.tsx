@@ -129,7 +129,7 @@ describe('HOME deck identity', () => {
     expect(container.querySelector('[role="dialog"]')).toBeNull();
   });
 
-  it('discards a provisional choice on Escape and restores focus to the trigger', () => {
+  it('discards a provisional choice on Escape without stealing a later focus move', async () => {
     act(() => root.render(<HomeScreen onNav={() => undefined} />));
     const changeDeck = Array.from(container.querySelectorAll<HTMLButtonElement>('button'))
       .find((button) => button.textContent?.trim() === '使用デッキを変更')!;
@@ -143,6 +143,11 @@ describe('HOME deck identity', () => {
     expect(useDecksStore.getState().activeDeckId).toBe(SAMPLE_DECK.id);
     expect(container.querySelector('[role="dialog"]')).toBeNull();
     expect(document.activeElement).toBe(changeDeck);
+
+    const nextAction = container.querySelector<HTMLButtonElement>('button[data-route="deck"]')!;
+    nextAction.focus();
+    await act(async () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+    expect(document.activeElement).toBe(nextAction);
   });
 
   it('keeps an unplayable saved deck visible but unavailable for selection', () => {

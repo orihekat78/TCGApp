@@ -52,4 +52,36 @@ describe('CardExpandModal close controls', () => {
     act(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
     expect(onClose).toHaveBeenCalledTimes(2);
   });
+
+  it('does not steal focus back after the user moves to another control while closing', async () => {
+    act(() => root.render(
+      <>
+        <button type="button" data-testid="detail-trigger">Details</button>
+        <button type="button" data-testid="next-action">Next</button>
+      </>,
+    ));
+    const trigger = container.querySelector('[data-testid="detail-trigger"]') as HTMLButtonElement;
+    trigger.focus();
+
+    act(() => root.render(
+      <>
+        <button type="button" data-testid="detail-trigger">Details</button>
+        <button type="button" data-testid="next-action">Next</button>
+        <CardExpandModal cardId="D08015" onClose={vi.fn()} />
+      </>,
+    ));
+    await act(async () => new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve())));
+
+    act(() => root.render(
+      <>
+        <button type="button" data-testid="detail-trigger">Details</button>
+        <button type="button" data-testid="next-action">Next</button>
+      </>,
+    ));
+    const next = container.querySelector('[data-testid="next-action"]') as HTMLButtonElement;
+    next.focus();
+    await act(async () => new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve())));
+
+    expect(document.activeElement).toBe(next);
+  });
 });

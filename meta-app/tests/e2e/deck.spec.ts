@@ -26,6 +26,31 @@ test('DECK刷新: プールのクリックは枚数を変えず、左詳細を�
   await page.keyboard.press('Escape');
   await expect(detail).toBeHidden();
   await expect(poolCard).toBeFocused();
+
+  const detailCloseKeepsNewFocus = await page.evaluate(async () => {
+    const trigger = document.querySelector<HTMLElement>('[data-testid="deck-pool-card-D08023"]');
+    const nextAction = document.querySelector<HTMLElement>('[data-route="home"]');
+    if (!trigger || !nextAction) throw new Error('DECK detail focus probe prerequisites are missing');
+    trigger.click();
+    await Promise.resolve();
+    const drawer = document.querySelector<HTMLElement>('.deck-detail-drawer');
+    if (!drawer || drawer.getClientRects().length === 0) {
+      throw new Error('DECK detail drawer did not open');
+    }
+    drawer.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    await Promise.resolve();
+    nextAction.focus();
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    return {
+      stable: document.activeElement === nextAction,
+      dialogClosed: !document.querySelector('.deck-detail-drawer'),
+      activeRoute: document.activeElement?.getAttribute('data-route') ?? null,
+      nextConnected: nextAction.isConnected,
+    };
+  });
+  expect(detailCloseKeepsNewFocus).toEqual({
+    stable: true, dialogClosed: true, activeRoute: 'home', nextConnected: true,
+  });
   expect(errors).toEqual([]);
 });
 
@@ -164,6 +189,24 @@ test('DECK刷新: 編集対象はホームと同じカード型ダイアログ�
   await expect(dialog).toBeHidden();
   await expect(trigger).toBeFocused();
 
+  const selectorCloseKeepsNewFocus = await page.evaluate(async () => {
+    const trigger = document.querySelector<HTMLElement>('.deck-change-button');
+    const nextAction = document.querySelector<HTMLElement>('[data-route="home"]');
+    if (!trigger || !nextAction) throw new Error('DECK selector focus probe prerequisites are missing');
+    trigger.click();
+    await Promise.resolve();
+    const dialog = document.querySelector<HTMLDialogElement>('.home-deck-dialog');
+    if (!dialog?.open || dialog.getClientRects().length === 0) {
+      throw new Error('DECK selector dialog did not open');
+    }
+    dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
+    await Promise.resolve();
+    nextAction.focus();
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    return document.activeElement === nextAction && !document.querySelector('.home-deck-dialog');
+  });
+  expect(selectorCloseKeepsNewFocus).toBe(true);
+
   await trigger.click();
   await dialog.locator('.home-deck-choice').filter({ hasText: '警察・標準' }).click();
   await dialog.getByRole('button', { name: 'このデッキを編集' }).click();
@@ -190,6 +233,31 @@ test('DECK刷新: フィルタと共通モーダルはフォーカスを閉じ�
   await page.keyboard.press('Escape');
   await expect(filterDialog).toBeHidden();
   await expect(filterTrigger).toBeFocused();
+
+  const filterCloseKeepsNewFocus = await page.evaluate(async () => {
+    const trigger = document.querySelector<HTMLElement>('.deck-pool-filter');
+    const nextAction = document.querySelector<HTMLElement>('[data-route="home"]');
+    if (!trigger || !nextAction) throw new Error('DECK filter focus probe prerequisites are missing');
+    trigger.click();
+    await Promise.resolve();
+    const dialog = document.querySelector<HTMLElement>('.deck-filter-dialog');
+    if (!dialog || dialog.getClientRects().length === 0) {
+      throw new Error('DECK filter dialog did not open');
+    }
+    dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    await Promise.resolve();
+    nextAction.focus();
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    return {
+      stable: document.activeElement === nextAction,
+      dialogClosed: !document.querySelector('.deck-filter-dialog'),
+      activeRoute: document.activeElement?.getAttribute('data-route') ?? null,
+      nextConnected: nextAction.isConnected,
+    };
+  });
+  expect(filterCloseKeepsNewFocus).toEqual({
+    stable: true, dialogClosed: true, activeRoute: 'home', nextConnected: true,
+  });
 
   const codeTrigger = page.getByRole('button', { name: 'コード' });
   await codeTrigger.click();
