@@ -99,7 +99,7 @@ const TRUSTED_VENDOR_SHA256 =
 const TRUSTED_RUNTIME_SHA256 =
   "5db5ba82eef00d1dee7e86e663098c9427d01183a88d357437daff295aec3e75";
 const TRUSTED_APP_SHA256 =
-  "549d08466711a5a53d390a63ec65d950f15112ad82a045c138f38772ae431957";
+  "2985137c9e2c68fd4fa714361b666637bd562e54b7b0a6558789b079192c7700";
 const TRUSTED_BRAND_LOGO_SHA256 =
   "8567c177ecaaf03c8b360dedd8aeea385b58e0bdffe359303f1784ef52e9beff";
 
@@ -11783,7 +11783,7 @@ function safeOutputPath(value: string): boolean {
 const REVIEWED_META_RUNTIME_STYLE_SHA256 = new Map<string, string>([
   [
     "meta-app/src/MetaShell.tsx",
-    "ba32d81351d6df7808bbf4094c2876083bc3163ea48176e03e6018d7580c5d2c",
+    "20ba2475bf873d1abf2b83119e72a1ba236c8756b1dcc51ddfed83927904ff99",
   ],
   [
     "meta-app/src/screens/CardsScreen.tsx",
@@ -11791,7 +11791,7 @@ const REVIEWED_META_RUNTIME_STYLE_SHA256 = new Map<string, string>([
   ],
   [
     "meta-app/src/screens/DeckEditor.tsx",
-    "07f749c44178122de0a64810cbe5c36ca6557c0eb59b2d279ba812571a4749da",
+    "0f3955f6d3cc8dd930c860fa7a29c7886c74c65094aec80d0da0f49c05cd008e",
   ],
   [
     "meta-app/src/screens/HistoryScreen.tsx",
@@ -11850,6 +11850,10 @@ const REVIEWED_META_RUNTIME_STYLE_SHA256 = new Map<string, string>([
     "0f83823383576e86b6f19c3d77add833f1450ddc5823076a49812c6dc2f93066",
   ],
   [
+    "meta-app/src/shared/NetworkStatus.tsx",
+    "26867d366e3c9f3527c39ba9cc599d345ea8b695e16a544e42ba70d7dad7c602",
+  ],
+  [
     "meta-app/src/shared/WarningBanner.tsx",
     "eeef3220d56fcc522bb338272a26d031f044cab821fccfc97ecf62b1f2487a57",
   ],
@@ -11862,6 +11866,34 @@ const REVIEWED_META_CAPABILITIES = new Map<
     allowed: ReadonlySet<string>;
   }
 >([
+  [
+    "meta-app/src/cloud/apiClient.ts",
+    {
+      sha256:
+        "59ea9b0c036dbcda04ee70298f0f255752dbf3b8176f0e6fe920ef1f27f30989",
+      allowed: new Set(["network-api:fetch"]),
+    },
+  ],
+  [
+    "meta-app/src/cloud/runtime.ts",
+    {
+      sha256:
+        "f4657ff0555f09297c2326d1ba816024665c622f6dae10fe3c9ff7d2d6c576bf",
+      allowed: new Set([
+        "browser-global-escape:privileged browser global",
+        "vite-variable:VITE_APP_VERSION",
+        "vite-variable:VITE_CLOUD_DATA_SYNC_ENABLED",
+      ]),
+    },
+  ],
+  [
+    "meta-app/src/cloud/storage.ts",
+    {
+      sha256:
+        "87adfb105b19bd9f1aa781e6247861147874ad4f67a7dfd9223c4584942b8740",
+      allowed: new Set(["persistent-storage:indexedDB"]),
+    },
+  ],
   [
     "meta-app/src/router/useHashRoute.ts",
     {
@@ -11877,7 +11909,7 @@ const REVIEWED_META_CAPABILITIES = new Map<
     "meta-app/src/screens/DeckEditor.tsx",
     {
       sha256:
-        "07f749c44178122de0a64810cbe5c36ca6557c0eb59b2d279ba812571a4749da",
+        "0f3955f6d3cc8dd930c860fa7a29c7886c74c65094aec80d0da0f49c05cd008e",
       allowed: new Set(["persistent-storage:clipboard"]),
     },
   ],
@@ -12848,6 +12880,7 @@ async function inspectBuild(
   const expectedFiles = new Set([
     ".vite/manifest.json",
     "_headers",
+    "_routes.json",
     "favicon.svg",
     "index.html",
   ]);

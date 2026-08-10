@@ -80,6 +80,10 @@ async function fixture(appSource = "export default function App() {}") {
     "/*\n  Cache-Control: no-store\n  Content-Security-Policy: img-src https://www.takaratomy.co.jp;\n",
   );
   await writeFile(
+    resolve(root, "dist/_routes.json"),
+    JSON.stringify({ version: 1, include: ["/api/v1/*"], exclude: [] }),
+  );
+  await writeFile(
     resolve(root, "dist/favicon.svg"),
     '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0h1v1z"/></svg>',
   );
@@ -240,6 +244,61 @@ describe("private hosted runtime boundary", () => {
     });
   });
 
+  it("permits only the reviewed cloud client capabilities at their exact source hashes", async () => {
+    const cases = [
+      ["cloud/apiClient.ts", "./cloud/apiClient"],
+      ["cloud/runtime.ts", "./cloud/runtime"],
+      ["cloud/storage.ts", "./cloud/storage"],
+    ] as const;
+
+    for (const [file, specifier] of cases) {
+      const root = await fixture();
+      await mkdir(resolve(root, "meta-app/src", file, ".."), {
+        recursive: true,
+      });
+      await writeFile(
+        resolve(root, "meta-app/src/App.tsx"),
+        `import '${specifier}'; export default function App() {}`,
+      );
+      await writeFile(
+        resolve(root, "meta-app/src", file),
+        await readFile(resolve(process.cwd(), "meta-app/src", file), "utf8"),
+      );
+
+      const findings = await auditRuntimeBoundary(root, async () => ({
+        stdout: "",
+        stderr: "",
+      }));
+      expect(findings, file).toEqual([]);
+    }
+
+    const tamperedRoot = await fixture();
+    await mkdir(resolve(tamperedRoot, "meta-app/src/cloud"), {
+      recursive: true,
+    });
+    await writeFile(
+      resolve(tamperedRoot, "meta-app/src/App.tsx"),
+      "import './cloud/apiClient'; export default function App() {}",
+    );
+    const source = await readFile(
+      resolve(process.cwd(), "meta-app/src/cloud/apiClient.ts"),
+      "utf8",
+    );
+    await writeFile(
+      resolve(tamperedRoot, "meta-app/src/cloud/apiClient.ts"),
+      `${source}\n// tampered`,
+    );
+    const tampered = await auditRuntimeBoundary(tamperedRoot, async () => ({
+      stdout: "",
+      stderr: "",
+    }));
+    expect(tampered).toContainEqual({
+      file: "meta-app/src/cloud/apiClient.ts",
+      code: "network-api",
+      detail: "fetch",
+    });
+  });
+
   it("permits reviewed Meta runtime styles without opening unreviewed modules", async () => {
     const reviewedRoot = await fixture();
     await mkdir(resolve(reviewedRoot, "meta-app/src/screens"), {
@@ -283,6 +342,50 @@ describe("private hosted runtime boundary", () => {
       code: "runtime-style",
       detail: "background",
     });
+  });
+
+  it("pins the current reviewed runtime styles changed by the Meta refresh", async () => {
+    const cases = [
+      ["MetaShell.tsx", "./MetaShell"],
+      ["screens/DeckEditor.tsx", "./screens/DeckEditor"],
+      ["shared/NetworkStatus.tsx", "./shared/NetworkStatus"],
+    ] as const;
+
+    for (const [file, specifier] of cases) {
+      const root = await fixture();
+      await mkdir(resolve(root, "meta-app/src", file, ".."), {
+        recursive: true,
+      });
+      await writeFile(
+        resolve(root, "meta-app/src/App.tsx"),
+        `import '${specifier}'; export default function App() {}`,
+      );
+      await writeFile(
+        resolve(root, "meta-app/src", file),
+        await readFile(resolve(process.cwd(), "meta-app/src", file), "utf8"),
+      );
+      const findings = await auditRuntimeBoundary(root, async () => ({
+        stdout: "",
+        stderr: "",
+      }));
+      expect(findings, file).toEqual([]);
+    }
+  });
+
+  it("accepts only the canonical Pages Functions route artifact", async () => {
+    const root = await fixture();
+    await writeFile(
+      resolve(root, "dist/_routes.json"),
+      JSON.stringify({ version: 1, include: ["/api/v1/*"], exclude: [] }),
+    );
+
+    const findings = await auditRuntimeBoundary(root, async () => ({
+      stdout: "",
+      stderr: "",
+    }));
+    expect(
+      findings.filter(({ file }) => file === "dist/_routes.json"),
+    ).toEqual([]);
   });
 
   it("permits only the four reviewed Zustand persist stores with literal namespaces and partialize", async () => {
