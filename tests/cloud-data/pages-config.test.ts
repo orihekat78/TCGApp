@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { normalizeAccessTeamDomain } from "../../src/cloud-data/access-auth";
 import privateHostedViteConfig from "../../vite.config.private-hosted";
 import metaViteConfig from "../../meta-app/vite.config.meta";
 
@@ -87,7 +88,7 @@ describe("Cloudflare Pages environment config", () => {
         { binding: "DB", database_name: databaseName, database_id: databaseId },
       ]);
       expect(effective.vars).toMatchObject({
-        ACCESS_TEAM_DOMAIN: "steep-mouse-bb22",
+        ACCESS_TEAM_DOMAIN: "https://steep-mouse-bb22.cloudflareaccess.com",
         DEPLOYMENT_ENV: environment,
         APP_HOST_KIND: hostKind,
         APP_HOST_VALUE: hostValue,
@@ -105,6 +106,16 @@ describe("Cloudflare Pages environment config", () => {
     expect(production.vars.ACCESS_AUD).not.toBe(preview.vars.ACCESS_AUD);
     expect(JSON.stringify(config)).not.toMatch(/EMAIL_KEY_SECRET|@/iu);
   });
+
+  it.each(["production", "preview"] as const)(
+    "keeps the effective %s Access team domain valid for runtime authentication",
+    (environment) => {
+      const effective = effectiveEnvironment(readConfig(), environment);
+      expect(
+        normalizeAccessTeamDomain(effective.vars.ACCESS_TEAM_DOMAIN),
+      ).toBe("https://steep-mouse-bb22.cloudflareaccess.com");
+    },
+  );
 });
 
 describe("private-hosted cloud sync flag", () => {

@@ -11,7 +11,7 @@
     }
   ],
   "vars": {
-    "ACCESS_TEAM_DOMAIN": "steep-mouse-bb22",
+    "ACCESS_TEAM_DOMAIN": "https://steep-mouse-bb22.cloudflareaccess.com",
     "ACCESS_AUD": "804dd12e524e3dfd51dd950d3db03b610e415e7e5c71f0300f82a0ccd269c007",
     "DEPLOYMENT_ENV": "production",
     "APP_HOST_KIND": "exact",
@@ -29,7 +29,7 @@
         }
       ],
       "vars": {
-        "ACCESS_TEAM_DOMAIN": "steep-mouse-bb22",
+        "ACCESS_TEAM_DOMAIN": "https://steep-mouse-bb22.cloudflareaccess.com",
         "ACCESS_AUD": "c66e537b50260e04bdafccf18918674d9da7e387cea5fe9637217b0ea80b081e",
         "DEPLOYMENT_ENV": "preview",
         "APP_HOST_KIND": "suffix",
