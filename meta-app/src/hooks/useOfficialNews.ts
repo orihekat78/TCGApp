@@ -3,7 +3,7 @@ import {
   loadOfficialNews,
   readOfficialNewsCache,
   type OfficialNewsResult,
-} from "@meta/services/officialNews";
+} from "../services/officialNews";
 
 const INITIAL: OfficialNewsResult = { items: [], source: "loading" };
 
