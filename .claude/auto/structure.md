@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 292
-- **ファイル数**: 5863
+- **ファイル数**: 5867
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -2269,6 +2269,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `write-qa-hash-snapshot.cjs`
   - **`cloud-data/`**
     - `measure-d1-budget.ts`
+    - `prepare-preview-ops.ts`
   - **`compiler/`**
     - **`rules/`**
       - `exceptions.json`
@@ -5588,6 +5589,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `environment-binding.test.ts`
     - `idempotency.test.ts` — @vitest-environment node
     - `identity.test.ts` — @vitest-environment node
+    - `pages-config.test.ts`
+    - `preview-ops.test.ts`
     - `rate-limit.test.ts` — @vitest-environment node
     - `repository.test.ts` — @vitest-environment node
     - `request-context.test.ts`
@@ -6169,6 +6172,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 - `vite.config.private-hosted.ts`
 - `vite.config.ts` — Vite ビルド設定
 - `vitest.config.ts` — Vitest 設定
+- `wrangler.json`
 
 ---
 

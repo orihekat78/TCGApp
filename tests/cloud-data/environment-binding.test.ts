@@ -12,6 +12,11 @@ const migration = readFileSync(
   resolve(process.cwd(), "migrations/0001_cloud_data.sql"),
   "utf8",
 );
+const productionDatabaseId = (
+  JSON.parse(
+    readFileSync(resolve(process.cwd(), "wrangler.json"), "utf8"),
+  ) as { d1_databases: Array<{ database_id: string }> }
+).d1_databases[0]!.database_id;
 const databases: DatabaseSync[] = [];
 
 function provision(environment: "production" | "preview"): DatabaseSync {
@@ -48,7 +53,7 @@ describe("database-anchored environment sentinel", () => {
     environment: "production",
     host: { kind: "exact", value: "conan-private.pages.dev" },
     audience: "production-audience",
-    databaseId: "production-database",
+    databaseId: productionDatabaseId,
   };
 
   it("accepts the sentinel read from the matching database", () => {
@@ -88,7 +93,7 @@ describe("database-anchored environment sentinel", () => {
     ).toThrow("DATABASE_SENTINEL_IMMUTABLE");
     expect(sentinelFrom(production)).toEqual({
       environment: "production",
-      databaseId: "production-database",
+      databaseId: productionDatabaseId,
     });
   });
 

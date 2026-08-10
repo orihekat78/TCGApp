@@ -53,6 +53,7 @@
     "private-hosted:qualify-final": "tsx scripts/private-hosted/run-final-qualification.ts",
     "private-hosted:init": "tsx scripts/private-hosted/init-config.ts",
     "private-hosted:audit": "tsx scripts/private-hosted/verify-access.ts",
+    "cloud-data:prepare-preview": "tsx scripts/cloud-data/prepare-preview-ops.ts",
     "cloud-data:measure-d1-budget": "tsx scripts/cloud-data/measure-d1-budget.ts",
     "dev:meta": "vite --config meta-app/vite.config.meta.ts",
     "build:meta": "vite build --config vite.config.private-hosted.ts",
