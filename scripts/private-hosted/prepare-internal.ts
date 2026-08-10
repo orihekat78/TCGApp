@@ -59,10 +59,10 @@ export type PreparedRelease = {
 const execFile = promisify(execFileCallback);
 const WRANGLER_VERSION = "4.118.0";
 const NPM_VERSION = "11.12.1";
-const ROOT_ENTRY = "index.html";
+const ROOT_ENTRY = "meta-app/index.html";
+const RELEASE_CONFIG = "vite.config.private-hosted.ts";
 const PACKAGE_BUILD_COMMAND = "vite build";
-const RELEASE_BUILD_COMMAND =
-  "npm run build -- --manifest --config vite.config.ts";
+const RELEASE_BUILD_COMMAND = `npm run build -- --manifest --config ${RELEASE_CONFIG}`;
 const FIXED_GIT_PATH =
   process.platform === "win32"
     ? resolve(dirname(process.execPath), "..", "Git", "cmd", "git.exe")
@@ -344,6 +344,7 @@ async function assertNoIgnoredBuildInputs(root: string): Promise<void> {
     "--exclude-standard",
     "--",
     "src",
+    "meta-app",
     "public",
     "index.html",
     ":(glob,icase)vite.config.*",
@@ -364,6 +365,7 @@ async function assertNoIgnoredBuildInputs(root: string): Promise<void> {
     if (
       path === ".npmrc" ||
       path.startsWith("src/") ||
+      path.startsWith("meta-app/") ||
       path.startsWith("public/") ||
       /^(?:package.*\.json|tsconfig.*\.json|\.env.*|vite\.config\..+|postcss\.config\..+|\.postcssrc(?:\..+)?|tailwind\.config\..*)$/i.test(
         path,
@@ -457,15 +459,15 @@ async function contract(
     "package.json",
     "package-lock.json",
     ROOT_ENTRY,
-    "vite.config.ts",
+    RELEASE_CONFIG,
   ]) {
     const blob = await authorityFile(root, path);
-    if (path === "vite.config.ts") configBlob = blob;
+    if (path === RELEASE_CONFIG) configBlob = blob;
   }
-  const configBytes = await readFile(resolve(root, "vite.config.ts"));
+  const configBytes = await readFile(resolve(root, RELEASE_CONFIG));
   if (
     createHash("sha256")
-      .update(await gitBlob(root, "HEAD:vite.config.ts"))
+      .update(await gitBlob(root, `HEAD:${RELEASE_CONFIG}`))
       .digest("hex") !== expectedConfigSha256
   )
     fail("Vite config does not match the reviewed identity");
@@ -522,7 +524,7 @@ async function contract(
     )
   )
     fail("Vite must not inherit ambient environment authority");
-  const configPath = resolve(root, "vite.config.ts");
+  const configPath = resolve(root, RELEASE_CONFIG);
   const source = configBytes.toString("utf8");
   if (/\bprocess\.(?:env|argv)\b|\bnpm_lifecycle_event\b/i.test(source))
     fail("Vite config must not depend on ambient process state");
@@ -567,10 +569,10 @@ async function contract(
       "production",
     );
     if (
-      (await realpath(resolved.root)) !== root ||
+      (await realpath(resolved.root)) !== resolve(root, "meta-app") ||
       resolve(root, resolved.build.outDir) !== resolve(root, "dist")
     )
-      fail("Vite root and outDir must be repository root and dist");
+      fail("Vite root and outDir must be meta-app and repository dist");
   } catch (error) {
     if (
       error instanceof Error &&
@@ -585,8 +587,8 @@ async function contract(
 export function assertAcceptableBuildOutput(output: string): void {
   if (/externalized for browser compatibility/i.test(output))
     fail("browser externalization warning");
-  if (/\b(?:build:meta|meta-app|dist-meta)\b/i.test(output))
-    fail("build warning: forbidden meta build output");
+  if (/\b(?:build:meta|dist-meta)\b/i.test(output))
+    fail("build warning: forbidden alternate meta output");
 }
 function npm(args: string[]): { command: string; args: string[] } {
   return {
@@ -692,7 +694,7 @@ async function npmVerified(
       "--",
       "--manifest",
       "--config",
-      "vite.config.ts",
+      RELEASE_CONFIG,
     ]),
     version: NPM_VERSION,
   };

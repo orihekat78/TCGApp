@@ -7,7 +7,9 @@ import {
   scanReleaseSecrets,
 } from "../../scripts/private-hosted/audit-release-basics.js";
 
-async function fixture(files: Record<string, string | Uint8Array>): Promise<string> {
+async function fixture(
+  files: Record<string, string | Uint8Array>,
+): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), "conan-release-basics-"));
   const dist = resolve(root, "dist");
   await mkdir(dist);
@@ -24,11 +26,13 @@ describe("private hosted basic release scans", () => {
     const root = await fixture({
       "index.html": '<script src="/assets/app.js"></script>',
       "assets/app.js": [
+        'const news="https://www.takaratomy.co.jp/products/conan-cardgame/";',
         'const image="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/a.webp";',
         'const svg="http://www.w3.org/2000/svg";',
         String.raw`const pattern=/\/\/+ /;`,
       ].join("\n"),
-      "_headers": "Content-Security-Policy: img-src https://www.takaratomy.co.jp;",
+      _headers:
+        "Content-Security-Policy: img-src https://www.takaratomy.co.jp;",
     });
 
     expect(await scanReleaseSecrets(root)).toEqual([]);
@@ -48,10 +52,18 @@ describe("private hosted basic release scans", () => {
     });
 
     const findings = await scanReleaseSecrets(root);
-    expect(findings).toEqual(expect.arrayContaining([
-      expect.objectContaining({ file: "dist/assets/app.js", code: "embedded-secret" }),
-      expect.objectContaining({ file: "dist/copied-config", code: "embedded-secret" }),
-    ]));
+    expect(findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          file: "dist/assets/app.js",
+          code: "embedded-secret",
+        }),
+        expect.objectContaining({
+          file: "dist/copied-config",
+          code: "embedded-secret",
+        }),
+      ]),
+    );
     expect(JSON.stringify(findings)).not.toContain(token);
   });
 
@@ -78,19 +90,23 @@ describe("private hosted basic release scans", () => {
     });
 
     const findings = await scanReleaseDestinations(root);
-    expect(findings).toEqual(expect.arrayContaining([
-      expect.objectContaining({ detail: "https://example.invalid" }),
-      expect.objectContaining({ detail: "wss://example.invalid" }),
-      expect.objectContaining({ detail: "ws://example.invalid" }),
-      expect.objectContaining({ detail: "//cdn.example.invalid" }),
-      expect.objectContaining({ detail: "https://www.takaratomy.co.jp.example.invalid" }),
-      expect.objectContaining({ detail: "https://bit.ly" }),
-      expect.objectContaining({ detail: "https://evil.example" }),
-      expect.objectContaining({ detail: "https://[2606:4700:4700::1111]" }),
-      expect.objectContaining({ detail: "https://escaped.example" }),
-      expect.objectContaining({ detail: "https://backslash.example" }),
-      expect.objectContaining({ detail: "https://entity.example" }),
-    ]));
+    expect(findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ detail: "https://example.invalid" }),
+        expect.objectContaining({ detail: "wss://example.invalid" }),
+        expect.objectContaining({ detail: "ws://example.invalid" }),
+        expect.objectContaining({ detail: "//cdn.example.invalid" }),
+        expect.objectContaining({
+          detail: "https://www.takaratomy.co.jp.example.invalid",
+        }),
+        expect.objectContaining({ detail: "https://bit.ly" }),
+        expect.objectContaining({ detail: "https://evil.example" }),
+        expect.objectContaining({ detail: "https://[2606:4700:4700::1111]" }),
+        expect.objectContaining({ detail: "https://escaped.example" }),
+        expect.objectContaining({ detail: "https://backslash.example" }),
+        expect.objectContaining({ detail: "https://entity.example" }),
+      ]),
+    );
     expect(JSON.stringify(findings)).not.toContain(token);
     expect(JSON.stringify(findings)).not.toContain(pathToken);
   });
@@ -108,10 +124,16 @@ describe("private hosted basic release scans", () => {
     expect(await scanReleaseSecrets(root)).toEqual([]);
     expect(await scanReleaseDestinations(root)).toEqual([]);
     expect(await scanReleaseSecrets(root, staging)).toEqual([
-      expect.objectContaining({ file: "staging/app.js", code: "embedded-secret" }),
+      expect.objectContaining({
+        file: "staging/app.js",
+        code: "embedded-secret",
+      }),
     ]);
     expect(await scanReleaseDestinations(root, staging)).toEqual([
-      expect.objectContaining({ file: "staging/app.js", detail: "https://evil.example" }),
+      expect.objectContaining({
+        file: "staging/app.js",
+        detail: "https://evil.example",
+      }),
     ]);
   });
 
@@ -136,19 +158,29 @@ describe("private hosted basic release scans", () => {
 
     expect(await scanReleaseSecrets(root)).toHaveLength(2);
     expect(await scanReleaseDestinations(root)).toEqual([
-      expect.objectContaining({ file: "dist/big.html", detail: "https://evil.example" }),
-      expect.objectContaining({ file: "dist/little.html", detail: "https://evil.example" }),
+      expect.objectContaining({
+        file: "dist/big.html",
+        detail: "https://evil.example",
+      }),
+      expect.objectContaining({
+        file: "dist/little.html",
+        detail: "https://evil.example",
+      }),
     ]);
   });
 
   it("fails closed when dist is missing or contains a symbolic link", async () => {
-    const missing = await mkdtemp(join(tmpdir(), "conan-release-basics-missing-"));
+    const missing = await mkdtemp(
+      join(tmpdir(), "conan-release-basics-missing-"),
+    );
     await expect(scanReleaseSecrets(missing)).rejects.toThrow(/dist/);
 
     const root = await fixture({ "assets/app.js": "export {};" });
     const external = resolve(root, "external");
     await mkdir(external);
     await symlink(external, resolve(root, "dist/linked"), "junction");
-    await expect(scanReleaseDestinations(root)).rejects.toThrow(/symbolic link/);
+    await expect(scanReleaseDestinations(root)).rejects.toThrow(
+      /symbolic link/,
+    );
   });
 });

@@ -3,8 +3,8 @@
 // (Master Duel 研究: フィルタが遷移でリセットされる不満を回避)。
 // persist namespace: conan.meta.v1.filters
 
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import {
   ALL_CARD_SETS,
   ALL_FEATURES,
@@ -17,11 +17,11 @@ import {
   type CardFilterState,
   type SortDir,
   type SortKey,
-} from '../data/cardFilter';
+} from "../data/cardFilter";
 
 interface FiltersState {
-  cards: CardFilterState;     // CardsScreen のコレクション絞り込み
-  deck: CardFilterState;      // DeckEditor のプール絞り込み
+  cards: CardFilterState; // CardsScreen のコレクション絞り込み
+  deck: CardFilterState; // DeckEditor のプール絞り込み
   cardsSort: SortKey;
   cardsSortDir: SortDir;
   setCards: (patch: Partial<CardFilterState>) => void;
@@ -31,38 +31,55 @@ interface FiltersState {
   setCardsSort: (key: SortKey, dir?: SortDir) => void;
 }
 
-function normalizeArray<T extends string | number>(value: unknown, allowed: readonly T[]): T[] {
+function normalizeArray<T extends string | number>(
+  value: unknown,
+  allowed: readonly T[],
+): T[] {
   if (!Array.isArray(value)) return [];
   const allowedValues = new Set<T>(allowed);
-  return [...new Set(value.filter((item): item is T => allowedValues.has(item as T)))];
+  return [
+    ...new Set(value.filter((item): item is T => allowedValues.has(item as T))),
+  ];
 }
 
-function normalizeMatchMode(value: unknown): CardFilterState['featureMode'] {
-  return value === 'and' || value === 'or' ? value : 'or';
+function normalizeMatchMode(value: unknown): CardFilterState["featureMode"] {
+  return value === "and" || value === "or" ? value : "or";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 function normalizeSortKey(value: unknown): SortKey {
-  return value === 'num' || value === 'cost' || value === 'ap' || value === 'lp' || value === 'name'
+  return value === "num" ||
+    value === "cost" ||
+    value === "ap" ||
+    value === "lp" ||
+    value === "name"
     ? value
-    : 'num';
+    : "num";
 }
 
 function normalizeSortDir(value: unknown): SortDir {
-  return value === 'asc' || value === 'desc' ? value : 'desc';
+  return value === "asc" || value === "desc" ? value : "desc";
 }
 
 export function normalizePersistedFilter(value: unknown): CardFilterState {
-  const filter = isRecord(value) ? value as Partial<CardFilterState> : undefined;
+  const filter = isRecord(value)
+    ? (value as Partial<CardFilterState>)
+    : undefined;
   return {
     ...EMPTY_FILTER,
-    q: typeof filter?.q === 'string' ? filter.q : '',
+    q: typeof filter?.q === "string" ? filter.q : "",
     sets: normalizeArray(filter?.sets, ALL_CARD_SETS),
-    colors: normalizeArray(filter?.colors, COLOR_META.map(({ c }) => c)),
-    types: normalizeArray(filter?.types, TYPE_META.map(({ t }) => t)),
+    colors: normalizeArray(
+      filter?.colors,
+      COLOR_META.map(({ c }) => c),
+    ),
+    types: normalizeArray(
+      filter?.types,
+      TYPE_META.map(({ t }) => t),
+    ),
     features: normalizeArray(filter?.features, ALL_FEATURES),
     keywords: normalizeArray(filter?.keywords, ALL_KEYWORDS),
     rarities: normalizeArray(filter?.rarities, ALL_RARITIES),
@@ -72,7 +89,9 @@ export function normalizePersistedFilter(value: unknown): CardFilterState {
   };
 }
 
-export function normalizePersistedFiltersState(value: unknown): Pick<FiltersState, 'cards' | 'deck' | 'cardsSort' | 'cardsSortDir'> {
+export function normalizePersistedFiltersState(
+  value: unknown,
+): Pick<FiltersState, "cards" | "deck" | "cardsSort" | "cardsSortDir"> {
   const state = isRecord(value) ? value : {};
   return {
     cards: normalizePersistedFilter(state.cards),
@@ -87,17 +106,24 @@ export const useFiltersStore = create<FiltersState>()(
     (set) => ({
       cards: { ...EMPTY_FILTER },
       deck: { ...EMPTY_FILTER },
-      cardsSort: 'num',
-      cardsSortDir: 'desc',
+      cardsSort: "num",
+      cardsSortDir: "desc",
       setCards: (patch) => set((s) => ({ cards: { ...s.cards, ...patch } })),
       setDeck: (patch) => set((s) => ({ deck: { ...s.deck, ...patch } })),
       resetCards: () => set({ cards: { ...EMPTY_FILTER } }),
       resetDeck: () => set({ deck: { ...EMPTY_FILTER } }),
-      setCardsSort: (key, dir) => set((s) => ({ cardsSort: key, cardsSortDir: dir ?? s.cardsSortDir })),
+      setCardsSort: (key, dir) =>
+        set((s) => ({ cardsSort: key, cardsSortDir: dir ?? s.cardsSortDir })),
     }),
     {
-      name: 'conan.meta.v1.filters',
+      name: "conan.meta.v1.filters",
       version: 2,
+      partialize: (state) => ({
+        cards: state.cards,
+        deck: state.deck,
+        cardsSort: state.cardsSort,
+        cardsSortDir: state.cardsSortDir,
+      }),
       migrate: (persisted) => {
         return normalizePersistedFiltersState(persisted) as FiltersState;
       },
@@ -107,6 +133,6 @@ export const useFiltersStore = create<FiltersState>()(
           ...normalizePersistedFiltersState(persisted),
         };
       },
-    }
-  )
+    },
+  ),
 );

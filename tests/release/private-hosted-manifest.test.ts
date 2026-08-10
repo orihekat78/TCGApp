@@ -160,6 +160,28 @@ describe("private hosted build manifest", () => {
     );
   });
 
+  it("includes the manifest-referenced hashed brand logo", async () => {
+    const dist = fixture();
+    const logo = "assets/detective-conan-logo-AbC123_-.png";
+    write(dist, logo, "brand-logo");
+    write(
+      dist,
+      ".vite/manifest.json",
+      JSON.stringify({
+        "index.html": {
+          file: "assets/app.js",
+          isEntry: true,
+          css: ["assets/app.css"],
+          assets: [logo],
+        },
+        "src/assets/detective-conan-logo.png": { file: logo },
+      }),
+    );
+
+    const manifests = await inspectBuild(dist);
+    expect(manifests.upload.map((entry) => entry.path)).toContain(`/${logo}`);
+  });
+
   it.each([
     ["source map", "assets/app.js.map"],
     ["environment file", ".env"],

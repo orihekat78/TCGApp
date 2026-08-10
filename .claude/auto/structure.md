@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 283
-- **ファイル数**: 5814
+- **ファイル数**: 5815
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -6109,6 +6109,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 - `start-apps.bat`
 - `start.bat`
 - `tsconfig.json` — TypeScript 設定
+- `vite.config.private-hosted.ts`
 - `vite.config.ts` — Vite ビルド設定
 - `vitest.config.ts` — Vitest 設定
 

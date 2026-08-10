@@ -23,6 +23,7 @@ const MAX_FILE_COUNT = 20_000;
 const MANIFEST_PATH = ".vite/manifest.json";
 const ALWAYS_ALLOWED = new Set(["index.html", "favicon.svg", "_headers"]);
 const SHA256 = /^[0-9a-f]{64}$/;
+const TRUSTED_BRAND_LOGO = /^assets\/detective-conan-logo-[A-Za-z0-9_-]+\.png$/;
 
 type ViteManifestEntry = {
   file?: unknown;
@@ -75,6 +76,16 @@ function extensionIs(path: string, extension: ".js" | ".css"): boolean {
 function assertScriptOrStyle(path: string, label: string): void {
   if (!extensionIs(path, ".js") && !extensionIs(path, ".css")) {
     fail(`${label} is not JavaScript or CSS: ${path}`);
+  }
+}
+
+function assertReachableAsset(path: string, label: string): void {
+  if (
+    !extensionIs(path, ".js") &&
+    !extensionIs(path, ".css") &&
+    !TRUSTED_BRAND_LOGO.test(path)
+  ) {
+    fail(`${label} is not an approved build asset: ${path}`);
   }
 }
 
@@ -270,7 +281,7 @@ function reachableFiles(manifest: ViteManifest): Set<string> {
       reachable.add(css);
     }
     for (const asset of checkedList(entry.assets, `${key}.assets`)) {
-      assertScriptOrStyle(asset, `${key}.assets`);
+      assertReachableAsset(asset, `${key}.assets`);
       reachable.add(asset);
     }
     for (const importKey of [
@@ -282,7 +293,20 @@ function reachableFiles(manifest: ViteManifest): Set<string> {
 
   visit("index.html");
   for (const key of Object.keys(manifest)) {
-    if (!visited.has(key)) fail(`unreachable manifest entry: ${key}`);
+    if (visited.has(key)) continue;
+    const entry = manifest[key];
+    if (!entry || typeof entry !== "object")
+      fail(`missing manifest entry: ${key}`);
+    const file = checkedRelative(entry.file, `${key}.file`);
+    const assetOnly =
+      TRUSTED_BRAND_LOGO.test(file) &&
+      reachable.has(file) &&
+      entry.isEntry !== true &&
+      checkedList(entry.css, `${key}.css`).length === 0 &&
+      checkedList(entry.assets, `${key}.assets`).length === 0 &&
+      checkedList(entry.imports, `${key}.imports`).length === 0 &&
+      checkedList(entry.dynamicImports, `${key}.dynamicImports`).length === 0;
+    if (!assetOnly) fail(`unreachable manifest entry: ${key}`);
   }
   return reachable;
 }

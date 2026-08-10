@@ -30,6 +30,7 @@ export const QUALIFICATION_COMMAND_IDS = [
   "dev-e2e",
   "docs",
   "docs-check",
+  "advanced-boundary",
   "prepare-release",
   "secret-scan",
   "destination-scan",
@@ -92,7 +93,9 @@ type QualificationSnapshot = {
 };
 
 type QualificationControls = {
-  execute: (input: QualificationCommandInput) => Promise<QualificationExecution>;
+  execute: (
+    input: QualificationCommandInput,
+  ) => Promise<QualificationExecution>;
   snapshot: (repoRoot: string) => Promise<QualificationSnapshot>;
   status: (repoRoot: string) => Promise<string>;
   now: () => Date;
@@ -230,7 +233,10 @@ export function validateQualificationReport(
   const value = record(candidate);
   exactKeys(value, REPORT_KEYS, "qualification report");
   if (value.schemaVersion !== 2) fail("schemaVersion must be 2");
-  if (typeof value.releaseCommit !== "string" || !COMMIT.test(value.releaseCommit)) {
+  if (
+    typeof value.releaseCommit !== "string" ||
+    !COMMIT.test(value.releaseCommit)
+  ) {
     fail("releaseCommit must be a 40-character lowercase Git hash");
   }
   hash(value.packageLockSha256, "packageLockSha256");
@@ -239,11 +245,18 @@ export function validateQualificationReport(
   hash(value.bugGateSha256, "bugGateSha256");
   const reportStarted = Date.parse(utc(value.startedAt, "startedAt"));
   const reportCompleted = Date.parse(utc(value.completedAt, "completedAt"));
-  if (reportCompleted < reportStarted) fail("report timestamp order is invalid");
-  if (!Array.isArray(value.secretFindings) || value.secretFindings.length !== 0) {
+  if (reportCompleted < reportStarted)
+    fail("report timestamp order is invalid");
+  if (
+    !Array.isArray(value.secretFindings) ||
+    value.secretFindings.length !== 0
+  ) {
     fail("secret findings must be empty");
   }
-  if (!Array.isArray(value.destinationFindings) || value.destinationFindings.length !== 0) {
+  if (
+    !Array.isArray(value.destinationFindings) ||
+    value.destinationFindings.length !== 0
+  ) {
     fail("destination findings must be empty");
   }
   if (!Array.isArray(value.commands)) fail("commands must be an array");
@@ -262,13 +275,21 @@ export function validateQualificationReport(
         : COMMAND_KEYS,
       `${id} command`,
     );
-    if (!Array.isArray(item.argv) || item.argv.length === 0 || item.argv.some((part) => typeof part !== "string" || !part)) {
+    if (
+      !Array.isArray(item.argv) ||
+      item.argv.length === 0 ||
+      item.argv.some((part) => typeof part !== "string" || !part)
+    ) {
       fail(`${id} argv is invalid`);
     }
     if (item.exitCode !== 0) fail(`${id} exitCode must be 0`);
     const started = Date.parse(utc(item.startedAt, `${id}.startedAt`));
     const completed = Date.parse(utc(item.completedAt, `${id}.completedAt`));
-    if (started < previous || completed < started || completed > reportCompleted) {
+    if (
+      started < previous ||
+      completed < started ||
+      completed > reportCompleted
+    ) {
       fail(`${id} timestamp order is invalid`);
     }
     previous = completed;
@@ -306,8 +327,10 @@ export function validateQualificationReport(
         fail("prepared-private-e2e preparedInputs are invalid");
       }
       if (
-        hash(prepared.uploadManifestSha256, "prepared upload manifest") !== value.uploadManifestSha256 ||
-        hash(prepared.responseManifestSha256, "prepared response manifest") !== value.responseManifestSha256
+        hash(prepared.uploadManifestSha256, "prepared upload manifest") !==
+          value.uploadManifestSha256 ||
+        hash(prepared.responseManifestSha256, "prepared response manifest") !==
+          value.responseManifestSha256
       ) {
         fail("prepared manifest hashes differ from the report");
       }
@@ -319,7 +342,9 @@ export function validateQualificationReport(
 }
 
 async function sha256File(path: string): Promise<string> {
-  return createHash("sha256").update(await readFile(path)).digest("hex");
+  return createHash("sha256")
+    .update(await readFile(path))
+    .digest("hex");
 }
 
 function childEnvironment(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
@@ -367,7 +392,9 @@ async function executeLogged(
       }),
   );
   if ((await stat(input.logPath)).size === 0) {
-    await writeFile(input.logPath, "[command produced no output]\n", { flag: "a" });
+    await writeFile(input.logPath, "[command produced no output]\n", {
+      flag: "a",
+    });
   }
   return { exitCode, startedAt, completedAt: new Date().toISOString() };
 }
@@ -385,10 +412,20 @@ function fixedPowerShellPath(): string {
 }
 
 function npmCliPath(): string {
-  return resolve(dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js");
+  return resolve(
+    dirname(process.execPath),
+    "node_modules",
+    "npm",
+    "bin",
+    "npm-cli.js",
+  );
 }
 
-async function capture(file: string, args: string[], cwd: string): Promise<string> {
+async function capture(
+  file: string,
+  args: string[],
+  cwd: string,
+): Promise<string> {
   const child = spawn(file, args, {
     cwd,
     env: childEnvironment(),
@@ -407,7 +444,9 @@ async function capture(file: string, args: string[], cwd: string): Promise<strin
     });
   });
   if (exitCode !== 0) {
-    fail(`snapshot command failed: ${Buffer.concat(stderr).toString("utf8").trim()}`);
+    fail(
+      `snapshot command failed: ${Buffer.concat(stderr).toString("utf8").trim()}`,
+    );
   }
   return Buffer.concat(stdout).toString("utf8");
 }
@@ -458,7 +497,9 @@ function isolatedE2EPort(runDir: string): string {
   return String(20_000 + (value % 10_000));
 }
 
-function commandInputs(paths: QualificationPaths): Array<Omit<QualificationCommandInput, "logPath">> {
+function commandInputs(
+  paths: QualificationPaths,
+): Array<Omit<QualificationCommandInput, "logPath">> {
   const npmRun = (
     id: QualificationCommandId,
     script: string,
@@ -473,14 +514,12 @@ function commandInputs(paths: QualificationPaths): Array<Omit<QualificationComma
     npmRun("lint", "lint"),
     npmRun("unit", "test"),
     npmRun("smoke", "smoke:1000"),
-    npmInput(
-      "dev-e2e",
-      ["run", "--silent", "test:e2e"],
-      paths,
-      { PLAYWRIGHT_PORT: isolatedE2EPort(paths.runDir) },
-    ),
+    npmInput("dev-e2e", ["run", "--silent", "test:e2e"], paths, {
+      PLAYWRIGHT_PORT: isolatedE2EPort(paths.runDir),
+    }),
     npmRun("docs", "docs"),
     npmRun("docs-check", "docs:check"),
+    npmRun("advanced-boundary", "private-hosted:boundary:advanced"),
     {
       id: "prepare-release",
       file: fixedPowerShellPath(),
@@ -527,7 +566,10 @@ function commandInputs(paths: QualificationPaths): Array<Omit<QualificationComma
   ];
 }
 
-async function parseJsonLog(path: string, label: string): Promise<Record<string, unknown>> {
+async function parseJsonLog(
+  path: string,
+  label: string,
+): Promise<Record<string, unknown>> {
   try {
     return record(JSON.parse(await readFile(path, "utf8")));
   } catch {
@@ -535,11 +577,20 @@ async function parseJsonLog(path: string, label: string): Promise<Record<string,
   }
 }
 
-async function pathsFor(repoRoot: string, runDir: string): Promise<QualificationPaths> {
-  if (!isAbsolute(repoRoot) || !isAbsolute(runDir)) fail("paths must be absolute");
-  const repoReal = await realpath(repoRoot).catch(() => fail("repository does not exist"));
-  const runReal = await realpath(runDir).catch(() => fail("run directory does not exist"));
-  if (within(repoReal, runReal)) fail("run directory must be outside the repository");
+async function pathsFor(
+  repoRoot: string,
+  runDir: string,
+): Promise<QualificationPaths> {
+  if (!isAbsolute(repoRoot) || !isAbsolute(runDir))
+    fail("paths must be absolute");
+  const repoReal = await realpath(repoRoot).catch(() =>
+    fail("repository does not exist"),
+  );
+  const runReal = await realpath(runDir).catch(() =>
+    fail("run directory does not exist"),
+  );
+  if (within(repoReal, runReal))
+    fail("run directory must be outside the repository");
   const entries = await lstat(runReal);
   if (!entries.isDirectory() || entries.isSymbolicLink()) {
     fail("run directory must be a regular directory");
@@ -564,9 +615,15 @@ export async function runFinalQualification(
   controlOverrides: Partial<QualificationControls> = {},
 ): Promise<QualificationReport> {
   const controls = { ...DEFAULT_CONTROLS, ...controlOverrides };
-  const paths = await pathsFor(resolve(options.repoRoot), resolve(options.runDir));
+  const paths = await pathsFor(
+    resolve(options.repoRoot),
+    resolve(options.runDir),
+  );
   const initial = await controls.snapshot(paths.repoRoot);
-  if (!COMMIT.test(initial.releaseCommit) || !HASH.test(initial.packageLockSha256)) {
+  if (
+    !COMMIT.test(initial.releaseCommit) ||
+    !HASH.test(initial.packageLockSha256)
+  ) {
     fail("initial repository snapshot is invalid");
   }
   if ((await controls.status(paths.repoRoot)) !== "") {
@@ -584,16 +641,21 @@ export async function runFinalQualification(
   for (let index = 0; index < inputs.length; index += 1) {
     const base = inputs[index]!;
     const expectedId = QUALIFICATION_COMMAND_IDS[index];
-    if (base.id !== expectedId) fail("internal command order differs from contract");
+    if (base.id !== expectedId)
+      fail("internal command order differs from contract");
     const relativeLog = `logs/${String(index + 1).padStart(2, "0")}-${base.id}.log`;
     const input: QualificationCommandInput = {
       ...base,
       logPath: resolve(paths.runDir, relativeLog),
     };
     const execution = await controls.execute(input);
-    if (execution.exitCode !== 0) fail(`${base.id} exited with code ${execution.exitCode}`);
-    const logStat = await stat(input.logPath).catch(() => fail(`${base.id} log is missing`));
-    if (!logStat.isFile() || logStat.size <= 0) fail(`${base.id} log is missing or empty`);
+    if (execution.exitCode !== 0)
+      fail(`${base.id} exited with code ${execution.exitCode}`);
+    const logStat = await stat(input.logPath).catch(() =>
+      fail(`${base.id} log is missing`),
+    );
+    if (!logStat.isFile() || logStat.size <= 0)
+      fail(`${base.id} log is missing or empty`);
     const command: QualificationCommandRecord = {
       id: base.id,
       argv: [base.file, ...base.args],
@@ -618,7 +680,11 @@ export async function runFinalQualification(
     }
     if (base.id === "bug-gate") {
       const result = await parseJsonLog(input.logPath, "bug-gate");
-      if (result.ok !== true || !Array.isArray(result.blockers) || result.blockers.length > 0) {
+      if (
+        result.ok !== true ||
+        !Array.isArray(result.blockers) ||
+        result.blockers.length > 0
+      ) {
         fail("bug gate has blockers or invalid output");
       }
       bugGateSha256 = command.log.sha256;
@@ -678,7 +744,10 @@ export async function runFinalQualification(
     bugGateSha256,
   };
   validateQualificationReport(report);
-  await publishQualificationReport(paths.reportPath, `${JSON.stringify(report, null, 2)}\n`);
+  await publishQualificationReport(
+    paths.reportPath,
+    `${JSON.stringify(report, null, 2)}\n`,
+  );
   return report;
 }
 
@@ -688,6 +757,9 @@ export async function runFinalQualificationCli(): Promise<void> {
   process.stdout.write(`${runDir}\n`);
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (
+  process.argv[1] &&
+  resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
   await runFinalQualificationCli();
 }

@@ -10,14 +10,7 @@ import {
 } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
-import {
-  dirname,
-  isAbsolute,
-  join,
-  relative,
-  resolve,
-  sep,
-} from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { BuildManifests, ManifestEntry } from "./types.js";
 import { inspectBuild, stageBuild, verifyStagedBuild } from "./manifest.js";
@@ -74,10 +67,7 @@ function within(root: string, candidate: string): boolean {
   );
 }
 
-function requiredAbsolute(
-  value: string | undefined,
-  name: string,
-): string {
+function requiredAbsolute(value: string | undefined, name: string): string {
   if (!value || !isAbsolute(value)) fail(`${name} must be absolute`);
   return resolve(value);
 }
@@ -138,9 +128,12 @@ export function resolvePrivateHostedEnvironment(
   ] as const) {
     assertExternal(root, path, name);
   }
-  if (!within(runDir, stagingDir)) fail("staging directory must be in run directory");
-  if (!within(runDir, uploadManifestPath)) fail("upload manifest must be in run directory");
-  if (!within(runDir, responseManifestPath)) fail("response manifest must be in run directory");
+  if (!within(runDir, stagingDir))
+    fail("staging directory must be in run directory");
+  if (!within(runDir, uploadManifestPath))
+    fail("upload manifest must be in run directory");
+  if (!within(runDir, responseManifestPath))
+    fail("response manifest must be in run directory");
   return {
     repoRoot: root,
     runDir,
@@ -153,7 +146,11 @@ export function resolvePrivateHostedEnvironment(
 function parseEntries(value: unknown, label: string): ManifestEntry[] {
   if (!Array.isArray(value)) fail(`${label} files must be an array`);
   return value.map((candidate, index) => {
-    if (typeof candidate !== "object" || candidate === null || Array.isArray(candidate)) {
+    if (
+      typeof candidate !== "object" ||
+      candidate === null ||
+      Array.isArray(candidate)
+    ) {
       return fail(`${label} files[${index}] must be an object`);
     }
     const item = candidate as Record<string, unknown>;
@@ -172,9 +169,13 @@ function parseEntries(value: unknown, label: string): ManifestEntry[] {
   });
 }
 
-async function readManifest(path: string, label: string): Promise<ManifestEntry[]> {
+async function readManifest(
+  path: string,
+  label: string,
+): Promise<ManifestEntry[]> {
   const stat = await lstat(path).catch(() => fail(`${label} does not exist`));
-  if (!stat.isFile() || stat.isSymbolicLink()) fail(`${label} must be a regular file`);
+  if (!stat.isFile() || stat.isSymbolicLink())
+    fail(`${label} must be a regular file`);
   let parsed: unknown;
   try {
     parsed = JSON.parse(await readFile(path, "utf8"));
@@ -192,15 +193,23 @@ async function readManifest(path: string, label: string): Promise<ManifestEntry[
 async function loadPreparedManifests(
   paths: LocalQualificationPaths,
 ): Promise<BuildManifests> {
-  const upload = await readManifest(paths.uploadManifestPath, "upload manifest");
-  const response = await readManifest(paths.responseManifestPath, "response manifest");
+  const upload = await readManifest(
+    paths.uploadManifestPath,
+    "upload manifest",
+  );
+  const response = await readManifest(
+    paths.responseManifestPath,
+    "response manifest",
+  );
   return { schemaVersion: 1, upload, response };
 }
 
 export async function assertPrivateHostedPortAvailable(): Promise<void> {
   const server = createServer();
   await new Promise<void>((done, reject) => {
-    server.once("error", () => reject(new Error(`port ${PORT} is already in use`)));
+    server.once("error", () =>
+      reject(new Error(`port ${PORT} is already in use`)),
+    );
     server.listen(PORT, HOST, () => {
       server.close((error) => (error ? reject(error) : done()));
     });
@@ -361,7 +370,8 @@ async function canonicalPreparedPaths(
     "directory",
     controls,
   );
-  if (within(repoReal, runReal)) fail("run directory real path must be outside the repository");
+  if (within(repoReal, runReal))
+    fail("run directory real path must be outside the repository");
   const stagingReal = await canonicalExistingPath(
     paths.stagingDir,
     "staging directory",
@@ -487,7 +497,10 @@ export async function runPreparedLocalQualificationForTest(
   paths: LocalQualificationPaths & { manifests?: BuildManifests },
   controls: Partial<LocalQualificationControls>,
 ): Promise<void> {
-  await runPreparedLocalQualification(paths, { ...DEFAULT_CONTROLS, ...controls });
+  await runPreparedLocalQualification(paths, {
+    ...DEFAULT_CONTROLS,
+    ...controls,
+  });
 }
 
 async function runCommand(
@@ -506,8 +519,12 @@ async function runCommand(
   if (exitCode !== 0) fail(`${file} exited with code ${exitCode}`);
 }
 
-async function createStandalonePaths(repoRoot: string): Promise<LocalQualificationPaths> {
-  const runDir = await mkdtemp(join(tmpdir(), "conan-private-hosted-qualification-"));
+async function createStandalonePaths(
+  repoRoot: string,
+): Promise<LocalQualificationPaths> {
+  const runDir = await mkdtemp(
+    join(tmpdir(), "conan-private-hosted-qualification-"),
+  );
   const distDir = resolve(runDir, "dist");
   const stagingDir = resolve(runDir, "staging");
   const uploadManifestPath = resolve(runDir, "upload-manifest.json");
@@ -520,7 +537,7 @@ async function createStandalonePaths(repoRoot: string): Promise<LocalQualificati
       "build",
       "--manifest",
       "--config",
-      "vite.config.ts",
+      "vite.config.private-hosted.ts",
       "--outDir",
       distDir,
       "--emptyOutDir",

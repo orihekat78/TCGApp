@@ -33,6 +33,8 @@ import { createHash } from "node:crypto";
 
 const roots: string[] = [];
 const externalFiles: string[] = [];
+const RELEASE_ENTRY = "meta-app/index.html";
+const RELEASE_CONFIG = "vite.config.private-hosted.ts";
 
 type Fixture = {
   root: string;
@@ -55,7 +57,7 @@ function commit(root: string, message: string): void {
 
 function reviewedConfigSha256(root: string): string {
   return createHash("sha256")
-    .update(run(root, "git", ["cat-file", "blob", "HEAD:vite.config.ts"]))
+    .update(run(root, "git", ["cat-file", "blob", `HEAD:${RELEASE_CONFIG}`]))
     .digest("hex");
 }
 
@@ -109,9 +111,23 @@ function fixture(): Fixture {
   );
   write(root, "package-lock.json", '{"lockfileVersion":3}\n');
   write(root, ".gitignore", "dist/\n");
-  write(root, "index.html", "<!doctype html>\n");
+  write(root, RELEASE_ENTRY, "<!doctype html>\n");
   write(root, "src/payload.ts", "export const payload = 'reviewed';\n");
   write(root, "vite.config.ts", "export default {};\n");
+  write(
+    root,
+    RELEASE_CONFIG,
+    [
+      'import { resolve } from "node:path";',
+      "export default {",
+      '  root: resolve(__dirname, "meta-app"),',
+      '  publicDir: resolve(__dirname, "public"),',
+      '  build: { outDir: resolve(__dirname, "dist"), emptyOutDir: true },',
+      '  resolve: { alias: { "@": resolve(__dirname, "src") } },',
+      "};",
+      "",
+    ].join("\n"),
+  );
   run(root, "git", ["init", "--quiet"]);
   run(root, "git", ["config", "user.email", "test@example.invalid"]);
   run(root, "git", ["config", "user.name", "Private Hosted Test"]);
@@ -196,8 +212,8 @@ describe("private hosted release preparation", () => {
     expect(JSON.parse(readFileSync(result.metadataPath, "utf8"))).toMatchObject(
       {
         schemaVersion: 1,
-        rootEntry: "index.html",
-        buildCommand: "npm run build -- --manifest --config vite.config.ts",
+        rootEntry: RELEASE_ENTRY,
+        buildCommand: `npm run build -- --manifest --config ${RELEASE_CONFIG}`,
         wranglerVersion: "4.118.0",
         fileCount: 5,
         totalBytes: expect.any(Number),
@@ -240,24 +256,20 @@ describe("private hosted release preparation", () => {
     expect(existsSync(item.evidence)).toBe(false);
   });
 
-  it(
-    "production wrapper accepts the repository's reviewed Vite configuration",
-    async () => {
-      const outputs = mkdtempSync(
-        join(tmpdir(), "conan-private-hosted-production-prepare-"),
-      );
-      roots.push(outputs);
+  it("production wrapper accepts the repository's reviewed Vite configuration", async () => {
+    const outputs = mkdtempSync(
+      join(tmpdir(), "conan-private-hosted-production-prepare-"),
+    );
+    roots.push(outputs);
 
-      await expect(
-        prepareRelease({
-          repoRoot: process.cwd(),
-          stagingDir: join(outputs, "staging"),
-          evidenceDir: join(outputs, "evidence"),
-        }),
-      ).resolves.toMatchObject({ manifests: expect.any(Object) });
-    },
-    300_000,
-  );
+    await expect(
+      prepareRelease({
+        repoRoot: process.cwd(),
+        stagingDir: join(outputs, "staging"),
+        evidenceDir: join(outputs, "evidence"),
+      }),
+    ).resolves.toMatchObject({ manifests: expect.any(Object) });
+  }, 300_000);
 
   it("fails when the injected build runner fails", async () => {
     const item = fixture();
@@ -355,7 +367,7 @@ describe("private hosted release preparation", () => {
     [
       "missing root entry",
       true,
-      (item: Fixture) => rmSync(join(item.root, "index.html")),
+      (item: Fixture) => rmSync(join(item.root, RELEASE_ENTRY)),
     ],
     [
       "wrong output directory",
@@ -363,7 +375,7 @@ describe("private hosted release preparation", () => {
       (item: Fixture) =>
         write(
           item.root,
-          "vite.config.ts",
+          RELEASE_CONFIG,
           'export default { build: { outDir: "dist-meta" } };\n',
         ),
     ],
@@ -373,7 +385,7 @@ describe("private hosted release preparation", () => {
       (item: Fixture) =>
         write(
           item.root,
-          "vite.config.ts",
+          RELEASE_CONFIG,
           'const output = "dist-meta"; export default { build: { outDir: output } };\n',
         ),
     ],
@@ -384,7 +396,7 @@ describe("private hosted release preparation", () => {
         write(item.root, "config-root.ts", 'export const root = "meta-app";\n');
         write(
           item.root,
-          "vite.config.ts",
+          RELEASE_CONFIG,
           'import { root } from "./config-root"; export default { root };\n',
         );
       },
@@ -408,7 +420,7 @@ describe("private hosted release preparation", () => {
     const sentinel = join(item.root, "dirty-config-sentinel.txt");
     write(
       item.root,
-      "vite.config.ts",
+      RELEASE_CONFIG,
       [
         'import { writeFileSync } from "node:fs";',
         `writeFileSync(${JSON.stringify(sentinel)}, "executed\\n");`,
@@ -424,7 +436,7 @@ describe("private hosted release preparation", () => {
           builds += 1;
         },
       }),
-    ).rejects.toThrow("tracked file differs from HEAD: vite.config.ts");
+    ).rejects.toThrow(`tracked file differs from HEAD: ${RELEASE_CONFIG}`);
 
     expect(existsSync(sentinel)).toBe(false);
     expect(builds).toBe(0);
@@ -435,7 +447,7 @@ describe("private hosted release preparation", () => {
     const sentinel = join(item.root, "contract-config-sentinel.txt");
     write(
       item.root,
-      "vite.config.ts",
+      RELEASE_CONFIG,
       [
         'import { writeFileSync } from "node:fs";',
         `writeFileSync(${JSON.stringify(sentinel)}, "executed\\n");`,
@@ -466,7 +478,7 @@ describe("private hosted release preparation", () => {
     const item = fixture();
     write(
       item.root,
-      "vite.config.ts",
+      RELEASE_CONFIG,
       'export default { build: { outDir: process.env.npm_lifecycle_event === "build" ? "dist" : "dist-meta" } };\n',
     );
     commit(item.root, "ambient config");
@@ -497,7 +509,7 @@ describe("private hosted release preparation", () => {
     const executionMarker = "__privateHostedConfigExecuted";
     const globals = globalThis as Record<string, unknown>;
     delete globals[executionMarker];
-    write(item.root, "vite.config.ts", reviewed);
+    write(item.root, RELEASE_CONFIG, reviewed);
     commit(item.root, "pad reviewed config");
     write(
       item.root,
@@ -507,7 +519,7 @@ describe("private hosted release preparation", () => {
     write(
       item.root,
       ".git/info/attributes",
-      "vite.config.ts filter=private-hosted-hide-change\n",
+      `${RELEASE_CONFIG} filter=private-hosted-hide-change\n`,
     );
     run(item.root, "git", [
       "config",
@@ -518,23 +530,25 @@ describe("private hosted release preparation", () => {
     expect(maliciousPrefix.length).toBeLessThan(reviewed.length);
     write(
       item.root,
-      "vite.config.ts",
+      RELEASE_CONFIG,
       `${maliciousPrefix}${" ".repeat(reviewed.length - maliciousPrefix.length)}`,
     );
     expect(
-      run(item.root, "git", ["check-attr", "filter", "--", "vite.config.ts"]),
+      run(item.root, "git", ["check-attr", "filter", "--", RELEASE_CONFIG]),
     ).toContain("private-hosted-hide-change");
     expect(
       run(item.root, "git", [
         "hash-object",
-        "--path=vite.config.ts",
-        "vite.config.ts",
+        `--path=${RELEASE_CONFIG}`,
+        RELEASE_CONFIG,
       ]).trim(),
-    ).toBe(run(item.root, "git", ["rev-parse", "HEAD:vite.config.ts"]).trim());
+    ).toBe(
+      run(item.root, "git", ["rev-parse", `HEAD:${RELEASE_CONFIG}`]).trim(),
+    );
     expect(run(item.root, "git", ["status", "--porcelain"])).toBe("");
 
     await expect(prepare(item)).rejects.toThrow(
-      "tracked file differs from HEAD: vite.config.ts",
+      `tracked file differs from HEAD: ${RELEASE_CONFIG}`,
     );
     expect(globals[executionMarker]).toBeUndefined();
     delete globals[executionMarker];
@@ -853,7 +867,7 @@ describe("private hosted release preparation", () => {
     );
     write(
       item.root,
-      "vite.config.ts",
+      RELEASE_CONFIG,
       'import config from "./config-side-effect"; export default config;\n',
     );
     commit(item.root, "malicious local config dependency");
@@ -884,7 +898,7 @@ describe("private hosted release preparation", () => {
     "rejects %s Vite config dependencies before loading",
     async (_label, source) => {
       const item = fixture();
-      write(item.root, "vite.config.ts", `${source}\n`);
+      write(item.root, RELEASE_CONFIG, `${source}\n`);
       commit(item.root, "unreviewed config import form");
       await expect(prepare(item)).rejects.toThrow(
         "Vite config must not import local executable dependencies",
@@ -925,19 +939,23 @@ describe("private hosted release preparation", () => {
 
   it("rejects ignored, untracked authority files after the clean snapshot", async () => {
     const item = fixture();
-    run(item.root, "git", ["rm", "--cached", "--quiet", "index.html"]);
+    run(item.root, "git", ["rm", "--cached", "--quiet", RELEASE_ENTRY]);
     run(item.root, "git", [
       "commit",
       "--quiet",
       "-m",
       "remove authority entry",
     ]);
-    writeFileSync(join(item.root, ".git", "info", "exclude"), "index.html\n", {
-      flag: "a",
-    });
-    write(item.root, "index.html", "<!doctype html>\n");
+    writeFileSync(
+      join(item.root, ".git", "info", "exclude"),
+      `${RELEASE_ENTRY}\n`,
+      {
+        flag: "a",
+      },
+    );
+    write(item.root, RELEASE_ENTRY, "<!doctype html>\n");
     await expect(prepare(item)).rejects.toThrow(
-      "ignored build input is forbidden: index.html",
+      `ignored build input is forbidden: ${RELEASE_ENTRY}`,
     );
   });
 
@@ -955,10 +973,10 @@ describe("private hosted release preparation", () => {
     );
     write(
       item.root,
-      "vite.config.ts",
+      RELEASE_CONFIG,
       'import { ignored } from "./ignored-config-dependency"; export default ignored;\n',
     );
-    run(item.root, "git", ["add", "vite.config.ts"]);
+    run(item.root, "git", ["add", RELEASE_CONFIG]);
     run(item.root, "git", [
       "commit",
       "--quiet",
@@ -1250,7 +1268,7 @@ describe("private hosted release preparation", () => {
               "--",
               "--manifest",
               "--config",
-              "vite.config.ts",
+              RELEASE_CONFIG,
             ]);
             expect(command.env?.NPM_CONFIG_GLOBALCONFIG).toBe(
               resolve(item.root, ".private-hosted-empty-global-npmrc"),
@@ -1271,7 +1289,7 @@ describe("private hosted release preparation", () => {
       commands.filter(
         (command) =>
           command.args.slice(-6).join(" ") ===
-          "run build -- --manifest --config vite.config.ts",
+          `run build -- --manifest --config ${RELEASE_CONFIG}`,
       ),
     ).toHaveLength(2);
     expect(commands.every((command) => !("shell" in command))).toBe(true);
@@ -1346,7 +1364,7 @@ describe("private hosted release preparation", () => {
         },
       ),
     ).rejects.toThrow(
-      "npm run build -- --manifest --config vite.config.ts failed",
+      `npm run build -- --manifest --config ${RELEASE_CONFIG} failed`,
     );
     expect(existsSync(item.staging)).toBe(false);
     expect(existsSync(item.evidence)).toBe(false);
@@ -1888,7 +1906,7 @@ describe("private hosted release preparation", () => {
               run(item.root, "git", [
                 "cat-file",
                 "blob",
-                "HEAD:vite.config.ts",
+                `HEAD:${RELEASE_CONFIG}`,
               ]),
             )
             .digest("hex"),

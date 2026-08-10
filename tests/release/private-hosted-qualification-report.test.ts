@@ -15,7 +15,9 @@ import {
 const HASH = "a".repeat(64);
 
 async function fixture(): Promise<{ repoRoot: string; runDir: string }> {
-  const parent = await mkdtemp(join(tmpdir(), "conan-final-qualification-test-"));
+  const parent = await mkdtemp(
+    join(tmpdir(), "conan-final-qualification-test-"),
+  );
   const repoRoot = resolve(parent, "repo");
   const runDir = resolve(parent, "run");
   await mkdir(repoRoot);
@@ -52,7 +54,9 @@ describe("private hosted final qualification", () => {
         ),
       ).rejects.toThrow(/injected/);
       await expect(readFile(reportPath, "utf8")).rejects.toThrow();
-      expect((await readdir(f.runDir)).filter((name) => name.includes(".tmp-"))).toEqual([]);
+      expect(
+        (await readdir(f.runDir)).filter((name) => name.includes(".tmp-")),
+      ).toEqual([]);
     }
   });
 
@@ -61,7 +65,9 @@ describe("private hosted final qualification", () => {
     let tick = Date.parse("2026-08-04T00:00:00.000Z");
     const seen: string[] = [];
     const seenInputs: QualificationCommandInput[] = [];
-    const execute = async (input: QualificationCommandInput): Promise<QualificationExecution> => {
+    const execute = async (
+      input: QualificationCommandInput,
+    ): Promise<QualificationExecution> => {
       seen.push(input.id);
       seenInputs.push({
         ...input,
@@ -71,7 +77,8 @@ describe("private hosted final qualification", () => {
       const startedAt = new Date(tick).toISOString();
       tick += 1_000;
       let output = `${input.id}\n`;
-      if (input.id === "lint") output = "lint complete: ✓\r\nall bytes included\n";
+      if (input.id === "lint")
+        output = "lint complete: ✓\r\nall bytes included\n";
       if (input.id === "secret-scan" || input.id === "destination-scan") {
         output = `${JSON.stringify({ schemaVersion: 1, ok: true, findings: [] }, null, 2)}\n`;
       }
@@ -81,8 +88,14 @@ describe("private hosted final qualification", () => {
       if (input.id === "prepare-release") {
         await mkdir(resolve(f.runDir, "evidence"));
         await mkdir(resolve(f.runDir, "staging"));
-        await writeFile(resolve(f.runDir, "evidence/upload-manifest.json"), manifest([]));
-        await writeFile(resolve(f.runDir, "evidence/response-manifest.json"), manifest([]));
+        await writeFile(
+          resolve(f.runDir, "evidence/upload-manifest.json"),
+          manifest([]),
+        );
+        await writeFile(
+          resolve(f.runDir, "evidence/response-manifest.json"),
+          manifest([]),
+        );
       }
       await writeFile(input.logPath, output, { flag: "wx" });
       const completedAt = new Date(tick).toISOString();
@@ -94,19 +107,28 @@ describe("private hosted final qualification", () => {
       { repoRoot: f.repoRoot, runDir: f.runDir },
       {
         execute,
-        snapshot: async () => ({ releaseCommit: "1".repeat(40), packageLockSha256: HASH }),
+        snapshot: async () => ({
+          releaseCommit: "1".repeat(40),
+          packageLockSha256: HASH,
+        }),
         status: async () => "",
         now: () => new Date(tick),
       },
     );
 
     expect(seen).toEqual(QUALIFICATION_COMMAND_IDS);
-    const expectedNpmArgs: Partial<Record<(typeof QUALIFICATION_COMMAND_IDS)[number], string[]>> = {
+    const expectedNpmArgs: Partial<
+      Record<(typeof QUALIFICATION_COMMAND_IDS)[number], string[]>
+    > = {
       "npm-ci": ["ci"],
       build: ["run", "--silent", "build"],
       "dependency-audit": ["audit", "--audit-level=high"],
       "secret-scan": ["run", "--silent", "private-hosted:scan-secrets"],
-      "destination-scan": ["run", "--silent", "private-hosted:scan-destinations"],
+      "destination-scan": [
+        "run",
+        "--silent",
+        "private-hosted:scan-destinations",
+      ],
       "bug-gate": ["run", "--silent", "private-hosted:bug-gate"],
       typecheck: ["run", "--silent", "typecheck"],
       lint: ["run", "--silent", "lint"],
@@ -115,6 +137,11 @@ describe("private hosted final qualification", () => {
       "dev-e2e": ["run", "--silent", "test:e2e"],
       docs: ["run", "--silent", "docs"],
       "docs-check": ["run", "--silent", "docs:check"],
+      "advanced-boundary": [
+        "run",
+        "--silent",
+        "private-hosted:boundary:advanced",
+      ],
       "prepared-private-e2e": [
         "run",
         "--silent",
@@ -153,24 +180,30 @@ describe("private hosted final qualification", () => {
         .filter(({ id }) => id !== "dev-e2e")
         .every(({ env }) => env.PLAYWRIGHT_PORT === undefined),
     ).toBe(true);
-    expect(seenInputs.find(({ id }) => id === "prepare-release")).toMatchObject({
-      args: [
-        "-NoProfile",
-        "-NonInteractive",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        resolve(f.repoRoot, "scripts/private-hosted/prepare.ps1"),
-        "--staging",
-        resolve(f.runDir, "staging"),
-        "--evidence",
-        resolve(f.runDir, "evidence"),
-      ],
-    });
-    expect(seenInputs.find(({ id }) => id === "clean-tree-check")).toMatchObject({
+    expect(seenInputs.find(({ id }) => id === "prepare-release")).toMatchObject(
+      {
+        args: [
+          "-NoProfile",
+          "-NonInteractive",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          resolve(f.repoRoot, "scripts/private-hosted/prepare.ps1"),
+          "--staging",
+          resolve(f.runDir, "staging"),
+          "--evidence",
+          resolve(f.runDir, "evidence"),
+        ],
+      },
+    );
+    expect(
+      seenInputs.find(({ id }) => id === "clean-tree-check"),
+    ).toMatchObject({
       args: ["status", "--porcelain=v1", "--untracked-files=all"],
     });
-    const preparedInput = seenInputs.find(({ id }) => id === "prepared-private-e2e")!;
+    const preparedInput = seenInputs.find(
+      ({ id }) => id === "prepared-private-e2e",
+    )!;
     expect(preparedInput.env).toMatchObject({
       PRIVATE_HOSTED_FINAL_PRODUCER: "1",
       PRIVATE_HOSTED_RUN_DIR: f.runDir,
@@ -196,14 +229,15 @@ describe("private hosted final qualification", () => {
     expect(report.commands.map((command) => command.id)).toEqual(
       QUALIFICATION_COMMAND_IDS,
     );
-    expect(report.commands.find((command) => command.id === "prepared-private-e2e"))
-      .toMatchObject({
-        preparedInputs: {
-          mode: "prepared",
-          stagingRealpath: resolve(f.runDir, "staging"),
-          postStopStagingMatch: true,
-        },
-      });
+    expect(
+      report.commands.find((command) => command.id === "prepared-private-e2e"),
+    ).toMatchObject({
+      preparedInputs: {
+        mode: "prepared",
+        stagingRealpath: resolve(f.runDir, "staging"),
+        postStopStagingMatch: true,
+      },
+    });
     expect(report.bugGateSha256).toMatch(/^[0-9a-f]{64}$/);
     const lintRecord = report.commands.find(({ id }) => id === "lint")!;
     const lintBytes = await readFile(resolve(f.runDir, lintRecord.log.path));
@@ -212,8 +246,11 @@ describe("private hosted final qualification", () => {
       createHash("sha256").update(lintBytes).digest("hex"),
     );
     expect(validateQualificationReport(report)).toBe(report);
-    expect(JSON.parse(await readFile(resolve(f.runDir, "qualification-report.json"), "utf8")))
-      .toEqual(report);
+    expect(
+      JSON.parse(
+        await readFile(resolve(f.runDir, "qualification-report.json"), "utf8"),
+      ),
+    ).toEqual(report);
   });
 
   it("does not write a report after a failure, skip, duplicate, dirty tree, or changed snapshot", async () => {
@@ -221,7 +258,9 @@ describe("private hosted final qualification", () => {
       const f = await fixture();
       let tick = Date.parse("2026-08-04T00:00:00.000Z");
       let executions = 0;
-      const execute = async (input: QualificationCommandInput): Promise<QualificationExecution> => {
+      const execute = async (
+        input: QualificationCommandInput,
+      ): Promise<QualificationExecution> => {
         executions += 1;
         const startedAt = new Date(tick).toISOString();
         tick += 1_000;
@@ -229,12 +268,20 @@ describe("private hosted final qualification", () => {
         if (input.id === "secret-scan" || input.id === "destination-scan") {
           output = '{"schemaVersion":1,"ok":true,"findings":[]}\n';
         }
-        if (input.id === "bug-gate") output = '{"schemaVersion":1,"ok":true,"blockers":[],"knownLimitations":[]}\n';
+        if (input.id === "bug-gate")
+          output =
+            '{"schemaVersion":1,"ok":true,"blockers":[],"knownLimitations":[]}\n';
         if (input.id === "prepare-release") {
           await mkdir(resolve(f.runDir, "evidence"));
           await mkdir(resolve(f.runDir, "staging"));
-          await writeFile(resolve(f.runDir, "evidence/upload-manifest.json"), manifest([]));
-          await writeFile(resolve(f.runDir, "evidence/response-manifest.json"), manifest([]));
+          await writeFile(
+            resolve(f.runDir, "evidence/upload-manifest.json"),
+            manifest([]),
+          );
+          await writeFile(
+            resolve(f.runDir, "evidence/response-manifest.json"),
+            manifest([]),
+          );
         }
         if (failure === "manifest" && input.id === "prepared-private-e2e") {
           await writeFile(
@@ -259,21 +306,29 @@ describe("private hosted final qualification", () => {
             execute,
             snapshot: async () => ({
               releaseCommit: "1".repeat(40),
-              packageLockSha256: failure === "snapshot" && snapshots++ > 0 ? "b".repeat(64) : HASH,
+              packageLockSha256:
+                failure === "snapshot" && snapshots++ > 0
+                  ? "b".repeat(64)
+                  : HASH,
             }),
-            status: async () => (failure === "dirty" ? " M generated.md\n" : ""),
+            status: async () =>
+              failure === "dirty" ? " M generated.md\n" : "",
             now: () => new Date(tick),
           },
         ),
       ).rejects.toThrow();
-      await expect(readFile(resolve(f.runDir, "qualification-report.json"), "utf8"))
-        .rejects.toThrow();
+      await expect(
+        readFile(resolve(f.runDir, "qualification-report.json"), "utf8"),
+      ).rejects.toThrow();
       if (failure === "dirty") expect(executions).toBe(0);
     }
   });
 
   it("rejects reordered commands, missing logs, non-UTC times, or non-empty release findings", () => {
-    const command = (id: (typeof QUALIFICATION_COMMAND_IDS)[number], index: number) => ({
+    const command = (
+      id: (typeof QUALIFICATION_COMMAND_IDS)[number],
+      index: number,
+    ) => ({
       id,
       argv: ["node", id],
       exitCode: 0 as const,
@@ -309,16 +364,33 @@ describe("private hosted final qualification", () => {
       destinationFindings: [],
       bugGateSha256: HASH,
     };
-    expect(() => validateQualificationReport({ ...base, commands: [...base.commands].reverse() }))
-      .toThrow(/command order/);
-    expect(() => validateQualificationReport({ ...base, commands: base.commands.slice(0, -1) }))
-      .toThrow(/command order/);
-    expect(() => validateQualificationReport({ ...base, secretFindings: [{ code: "x" }] }))
-      .toThrow(/secret/);
-    expect(() => validateQualificationReport({ ...base, destinationFindings: [{ code: "x" }] }))
-      .toThrow(/destination/);
-    expect(() => validateQualificationReport({ ...base, startedAt: "2026-08-04 00:00:00" }))
-      .toThrow(/UTC/);
+    expect(() =>
+      validateQualificationReport({
+        ...base,
+        commands: [...base.commands].reverse(),
+      }),
+    ).toThrow(/command order/);
+    expect(() =>
+      validateQualificationReport({
+        ...base,
+        commands: base.commands.slice(0, -1),
+      }),
+    ).toThrow(/command order/);
+    expect(() =>
+      validateQualificationReport({ ...base, secretFindings: [{ code: "x" }] }),
+    ).toThrow(/secret/);
+    expect(() =>
+      validateQualificationReport({
+        ...base,
+        destinationFindings: [{ code: "x" }],
+      }),
+    ).toThrow(/destination/);
+    expect(() =>
+      validateQualificationReport({
+        ...base,
+        startedAt: "2026-08-04 00:00:00",
+      }),
+    ).toThrow(/UTC/);
     const badLog = structuredClone(base);
     badLog.commands[0]!.log.bytes = 0;
     expect(() => validateQualificationReport(badLog)).toThrow(/log/);
@@ -329,6 +401,8 @@ describe("private hosted final qualification", () => {
       commands: Array<(typeof base.commands)[number] & { secret?: string }>;
     };
     extraCommand.commands[0]!.secret = "must not enter evidence";
-    expect(() => validateQualificationReport(extraCommand)).toThrow(/exact schema/);
+    expect(() => validateQualificationReport(extraCommand)).toThrow(
+      /exact schema/,
+    );
   });
 });

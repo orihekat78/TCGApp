@@ -12,7 +12,7 @@ const MODULE_REPOSITORY_ROOT = resolve(
   "..",
 );
 const EXPECTED_VITE_CONFIG_SHA256 =
-  "f9341320fe8bac84708e7633ef37691c6f4557e8b037c233a6a6f91d677d3ea2";
+  "0a5d91e367b103324b21e33d2d4565e36d6b76561a3039f4c5752d94aeb84b9f";
 
 export type { PrepareReleaseOptions } from "./prepare-internal.js";
 export {

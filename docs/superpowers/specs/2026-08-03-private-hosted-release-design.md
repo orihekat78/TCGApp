@@ -23,12 +23,13 @@ Date: 2026-08-10 — Production deployed and accepted
 
 ## Static payload and inspection
 
-- Required release inspection is limited to build success, dependencies, embedded
-  secrets, and literal external destinations.
+- Required release inspection includes build and dependency checks, repository gates,
+  advanced runtime-boundary analysis, embedded secrets, and literal external
+  destinations.
 - Secret and destination scans inspect the exact staged upload payload. Evidence
   records redacted labels or origins, never URL paths, queries, or credentials.
-- Dynamic alias/runtime-flow analysis is optional and not a release gate.
-- Runtime CSP uses `connect-src 'none'`; scripts, styles, and fonts are same-origin.
+- Dynamic alias/runtime-flow analysis is a mandatory, fail-closed release gate.
+- Runtime CSP permits only the official Conan Card Game site for NEWS reads; scripts, styles, and fonts are same-origin.
 - Every response uses no-store, noindex, no-referrer, nosniff, frame denial, and CSP.
 
 ## Cloudflare architecture
@@ -53,10 +54,12 @@ Date: 2026-08-10 — Production deployed and accepted
 
 ## Qualification and release
 
-- Final qualification runs 16 ordered gates: install, build, dependency audit, bug gate,
-  typecheck, lint, unit, smoke, development E2E, docs, preparation, exact-payload secret
-  and destination scans, static E2E, and clean-tree verification.
-- Qualification passed for clean commit `9f608fd5bff7249ee1aa59ba1b101cfb884d5ea3`.
+- Final qualification runs 17 ordered gates: install, build, dependency audit, bug gate,
+  typecheck, lint, unit, smoke, development E2E, docs generation, docs check, advanced
+  runtime-boundary audit, preparation, exact-payload secret and destination scans,
+  static E2E, and clean-tree verification.
+- The previous 16-gate qualification passed for clean commit
+  `9f608fd5bff7249ee1aa59ba1b101cfb884d5ea3`.
 - Production deployment `945de0aa-1af1-4836-86f1-b8048dc6d32e` uploaded the exact
   qualified staging payload. Anonymous root and wildcard probes redirect to Access.
 - OTP login and gameplay opening were accepted on PC and smartphone.
