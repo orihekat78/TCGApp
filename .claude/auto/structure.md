@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 293
-- **ファイル数**: 5903
+- **ファイル数**: 5904
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5709,6 +5709,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `set-card-choice.spec.ts`
     - `set-card-replacement.spec.ts`
     - `setcard-removal-2026-06-06.spec.ts` — E2E: set-card 除去 (charRemoveSetCard) の実機 text-faithfulness 検証。
+    - `setup-network-hermetic.spec.ts`
     - `spectator-speed.spec.ts`
     - `stacked-card-cost-picker.spec.ts`
     - `task-d-extensions-2026-06-12.spec.ts` — E2E verification for Task D engine拡張 wave#1 (2026-06-12):
