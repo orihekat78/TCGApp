@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type LandscapeStatus = "pending" | "portrait" | "landscape";
 export type LandscapeRequestResult = "idle" | "entered" | "rotate" | "denied";
@@ -16,23 +16,40 @@ function isLandscape() {
 export function useLandscapeExperience(): LandscapeExperience {
   const [status, setStatus] = useState<LandscapeStatus>("pending");
   const [requestResult, setRequestResult] = useState<LandscapeRequestResult>("idle");
+  const mountedRef = useRef(false);
+  const requestTokenRef = useRef(0);
 
   useEffect(() => {
     const media = window.matchMedia?.("(orientation: landscape)");
     const updateStatus = () => setStatus(isLandscape() ? "landscape" : "portrait");
 
+    mountedRef.current = true;
     updateStatus();
-    media?.addEventListener("change", updateStatus);
+    if (media?.addEventListener) {
+      media.addEventListener("change", updateStatus);
+    } else {
+      media?.addListener?.(updateStatus);
+    }
     window.addEventListener("resize", updateStatus);
     screen.orientation?.addEventListener?.("change", updateStatus);
     return () => {
-      media?.removeEventListener("change", updateStatus);
+      mountedRef.current = false;
+      if (media?.removeEventListener) {
+        media.removeEventListener("change", updateStatus);
+      } else {
+        media?.removeListener?.(updateStatus);
+      }
       window.removeEventListener("resize", updateStatus);
       screen.orientation?.removeEventListener?.("change", updateStatus);
     };
   }, []);
 
   const requestLandscape = useCallback(async () => {
+    const requestToken = ++requestTokenRef.current;
+    const isCurrentRequest = () => mountedRef.current && requestToken === requestTokenRef.current;
+    const setCurrentRequestResult = (result: LandscapeRequestResult) => {
+      if (isCurrentRequest()) setRequestResult(result);
+    };
     const fullscreen = document.documentElement.requestFullscreen;
     const lock = screen.orientation?.lock;
 
@@ -40,21 +57,22 @@ export function useLandscapeExperience(): LandscapeExperience {
       try {
         await fullscreen.call(document.documentElement);
       } catch {
-        setRequestResult("denied");
+        setCurrentRequestResult("denied");
         return;
       }
     }
 
+    if (!isCurrentRequest()) return;
     if (!lock) {
-      setRequestResult("rotate");
+      setCurrentRequestResult("rotate");
       return;
     }
 
     try {
       await lock.call(screen.orientation, "landscape");
-      setRequestResult("entered");
+      setCurrentRequestResult("entered");
     } catch {
-      setRequestResult("rotate");
+      setCurrentRequestResult("rotate");
     }
   }, []);
 

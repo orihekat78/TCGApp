@@ -5,6 +5,16 @@ import { useLandscapeExperience, type LandscapeExperience } from "../../meta-app
 
 type Listener = (event: Event) => void;
 
+function deferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((nextResolve, nextReject) => {
+    resolve = nextResolve;
+    reject = nextReject;
+  });
+  return { promise, resolve, reject };
+}
+
 function createMediaQuery(initialMatches = false) {
   let matches = initialMatches;
   const listeners = new Set<Listener>();
@@ -124,5 +134,64 @@ describe("useLandscapeExperience", () => {
     expect(media.query.removeEventListener).toHaveBeenCalledWith("change", expect.any(Function));
     expect(removeWindowListener).toHaveBeenCalledWith("resize", expect.any(Function));
     expect(screen.orientation.removeEventListener).toHaveBeenCalledWith("change", expect.any(Function));
+  });
+
+  it("supports legacy media query listeners through mount, rotation, and cleanup", () => {
+    let matches = false;
+    let listener!: Listener;
+    const addListener = vi.fn((next: Listener) => { listener = next; });
+    const removeListener = vi.fn();
+    vi.stubGlobal("matchMedia", vi.fn(() => ({
+      get matches() { return matches; },
+      addListener,
+      removeListener,
+    })));
+
+    render();
+    expect(current.status).toBe("portrait");
+    act(() => {
+      matches = true;
+      listener(new Event("change"));
+    });
+    expect(current.status).toBe("landscape");
+    act(() => root.unmount());
+    expect(removeListener).toHaveBeenCalledWith(listener);
+  });
+
+  it("does not update or continue deferred browser requests after unmount", async () => {
+    const fullscreen = deferred<void>();
+    const orientationLock = deferred<void>();
+    requestFullscreen.mockReturnValueOnce(fullscreen.promise).mockResolvedValueOnce(undefined);
+    lock.mockReturnValueOnce(orientationLock.promise);
+    render();
+    const fullscreenRequest = current.requestLandscape();
+    act(() => root.unmount());
+    await act(async () => { fullscreen.resolve(); await Promise.resolve(); });
+    expect(lock).not.toHaveBeenCalled();
+
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+    render();
+    const lockRequest = current.requestLandscape();
+    await act(async () => { await Promise.resolve(); });
+    expect(lock).toHaveBeenCalledTimes(1);
+    act(() => root.unmount());
+    await act(async () => { orientationLock.resolve(); await lockRequest; });
+    expect(current.requestResult).toBe("idle");
+    void fullscreenRequest;
+  });
+
+  it("keeps the latest rapid request result", async () => {
+    const firstFullscreen = deferred<void>();
+    requestFullscreen.mockReturnValueOnce(firstFullscreen.promise).mockResolvedValueOnce(undefined);
+    lock.mockRejectedValueOnce(new Error("rotate"));
+    render();
+    const first = current.requestLandscape();
+    const second = current.requestLandscape();
+    await act(async () => { await second; });
+    expect(current.requestResult).toBe("rotate");
+    await act(async () => { firstFullscreen.reject(new Error("denied")); await first; });
+    expect(current.requestResult).toBe("rotate");
   });
 });
