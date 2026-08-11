@@ -22,7 +22,21 @@ const MAX_FILE_BYTES = 25 * 1024 * 1024;
 const MAX_FILE_COUNT = 20_000;
 const MAX_INITIAL_HOME_BYTES = 512 * 1024;
 const MANIFEST_PATH = ".vite/manifest.json";
-const ALWAYS_ALLOWED = new Set(["index.html", "favicon.svg", "_headers"]);
+const PAGES_ROUTES_PATH = "_routes.json";
+const PAGES_WORKER_PATH = "_worker.js";
+const EXPECTED_PAGES_ROUTES = `{
+  "version": 1,
+  "include": ["/api/v1/*"],
+  "exclude": []
+}
+`;
+const ALWAYS_ALLOWED = new Set([
+  "index.html",
+  "favicon.svg",
+  "_headers",
+  PAGES_ROUTES_PATH,
+  PAGES_WORKER_PATH,
+]);
 const SHA256 = /^[0-9a-f]{64}$/;
 const TRUSTED_BRAND_LOGO = /^assets\/detective-conan-logo-[A-Za-z0-9_-]+\.png$/;
 const APPROVED_DYNAMIC_ENTRY_KEYS = new Set([
@@ -37,6 +51,11 @@ const APPROVED_DYNAMIC_ENTRY_KEYS = new Set([
   "src/screens/SetupScreen.tsx",
   "src/screens/TutorialScreen.tsx",
 ]);
+const STATIC_ROUTE_CLOSURES = [
+  { key: "index.html", label: "HOME" },
+  { key: "src/screens/DeckEditor.tsx", label: "DECK" },
+  { key: "src/screens/CardsScreen.tsx", label: "CARDS" },
+] as const;
 
 type ViteManifestEntry = {
   file?: unknown;
@@ -294,6 +313,27 @@ function manifestEntry(manifest: ViteManifest, key: string): ViteManifestEntry {
   return entry;
 }
 
+function heavyChunkName(key: string, entry: ViteManifestEntry): string | undefined {
+  if (key === "src/services/gameRuntimeBundle.ts") return "game runtime";
+  const name = entry.name;
+  if (name !== undefined && typeof name !== "string")
+    fail(`${key}.name must be a string`);
+  if (name === "engine" || name === "cards") return name;
+  const file = checkedRelative(entry.file, `${key}.file`);
+  const fileHeavyName = /(?:^|[/_-])(engine|cards)(?:[-_.]|$)/i
+    .exec(file)?.[1]
+    ?.toLowerCase();
+  if (fileHeavyName === "engine" || fileHeavyName === "cards")
+    return fileHeavyName;
+  if (APPROVED_DYNAMIC_ENTRY_KEYS.has(key)) return undefined;
+  const keyHeavyName = /(?:^|[/_-])(engine|cards)(?:[-_.]|$)/i
+    .exec(key)?.[1]
+    ?.toLowerCase();
+  return keyHeavyName === "engine" || keyHeavyName === "cards"
+    ? keyHeavyName
+    : undefined;
+}
+
 export function validateManifestClosure(
   source: unknown,
 ): ValidatedManifestClosure {
@@ -335,7 +375,11 @@ export function validateManifestClosure(
     );
     if (key !== "index.html" && isEntry === true)
       fail(`sole isEntry root is index.html: ${key}`);
-    if (key !== "index.html" && isDynamicEntry === true && !rootDynamicKeys.has(key))
+    if (
+      key !== "index.html" &&
+      isDynamicEntry === true &&
+      !rootDynamicKeys.has(key)
+    )
       fail(`unknown dynamic manifest entry: ${key}`);
     if (rootDynamicKeys.has(key) && isDynamicEntry !== true)
       fail(`malformed dynamic manifest entry: ${key}`);
@@ -344,7 +388,8 @@ export function validateManifestClosure(
     keyOwnership.set(key, file);
     if (extensionIs(file, ".js")) {
       const owner = javascriptOwners.get(file);
-      if (owner) fail(`duplicate JavaScript output: ${file} (${owner}, ${key})`);
+      if (owner)
+        fail(`duplicate JavaScript output: ${file} (${owner}, ${key})`);
       javascriptOwners.set(file, key);
     }
     reachable.add(file);
@@ -384,6 +429,29 @@ export function validateManifestClosure(
     if (!assetOnly) fail(`unreachable manifest entry: ${key}`);
   }
 
+  function assertStaticRouteClosure(
+    key: string,
+    route: (typeof STATIC_ROUTE_CLOSURES)[number]["label"],
+    visitedKeys = new Set<string>(),
+  ): void {
+    if (visitedKeys.has(key)) return;
+    visitedKeys.add(key);
+    const entry = manifestEntry(manifest, key);
+    const heavy = heavyChunkName(key, entry);
+    if (heavy) {
+      const file = keyOwnership.get(key);
+      if (!file) fail(`missing reachable manifest ownership: ${key}`);
+      fail(`static ${route} closure reaches ${heavy}: ${file}`);
+    }
+    for (const importKey of checkedList(entry.imports, `${key}.imports`))
+      assertStaticRouteClosure(importKey, route, visitedKeys);
+  }
+
+  for (const route of STATIC_ROUTE_CLOSURES) {
+    if (route.key !== "index.html" && !rootDynamicKeys.has(route.key)) continue;
+    assertStaticRouteClosure(route.key, route.label);
+  }
+
   const initialFiles = new Set<string>();
   const initialKeys = new Set<string>();
   function collectInitial(key: string): void {
@@ -392,17 +460,13 @@ export function validateManifestClosure(
     const entry = manifestEntry(manifest, key);
     const file = keyOwnership.get(key);
     if (!file) fail(`missing reachable manifest ownership: ${key}`);
-    const name = entry.name;
-    if (name !== undefined && typeof name !== "string")
-      fail(`${key}.name must be a string`);
-    const heavyName = typeof name === "string" && (name === "engine" || name === "cards")
-      ? name
-      : /(?:^|[/_-])(engine|cards)(?:[-_.]|$)/i.exec(`${key}/${file}`)?.[1]?.toLowerCase();
-    if (heavyName === "engine" || heavyName === "cards")
-      fail(`initial HOME closure reaches ${heavyName}: ${file}`);
+    const heavy = heavyChunkName(key, entry);
+    if (heavy) fail(`initial HOME closure reaches ${heavy}: ${file}`);
     initialFiles.add(file);
-    for (const css of checkedList(entry.css, `${key}.css`)) initialFiles.add(css);
-    for (const asset of checkedList(entry.assets, `${key}.assets`)) initialFiles.add(asset);
+    for (const css of checkedList(entry.css, `${key}.css`))
+      initialFiles.add(css);
+    for (const asset of checkedList(entry.assets, `${key}.assets`))
+      initialFiles.add(asset);
     for (const importKey of checkedList(entry.imports, `${key}.imports`))
       collectInitial(importKey);
   }
@@ -417,6 +481,59 @@ function equalEntry(left: ManifestEntry, right: ManifestEntry): boolean {
     left.bytes === right.bytes &&
     left.sha256 === right.sha256
   );
+}
+
+function storedRecord(value: unknown, label: string): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    fail(`${label} must be an object`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function exactStoredKeys(
+  value: Record<string, unknown>,
+  expected: readonly string[],
+  label: string,
+): void {
+  if (
+    JSON.stringify(Object.keys(value).sort()) !==
+    JSON.stringify([...expected].sort())
+  ) {
+    fail(`${label} fields must match the exact schema`);
+  }
+}
+
+function parseStoredManifest(value: unknown, label: string): ManifestEntry[] {
+  const record = storedRecord(value, label);
+  exactStoredKeys(record, ["files", "schemaVersion"], label);
+  if (record.schemaVersion !== 1) fail(`${label} schemaVersion must be 1`);
+  if (!Array.isArray(record.files)) fail(`${label} files must be an array`);
+  return record.files.map((candidate, index) => {
+    const entry = storedRecord(candidate, `${label} files[${index}]`);
+    exactStoredKeys(
+      entry,
+      ["bytes", "path", "sha256"],
+      `${label} files[${index}]`,
+    );
+    return {
+      path: entry.path as string,
+      bytes: entry.bytes as number,
+      sha256: entry.sha256 as string,
+    };
+  });
+}
+
+export function parseStoredBuildManifests(
+  uploadRecord: unknown,
+  responseRecord: unknown,
+): BuildManifests {
+  const manifests: BuildManifests = {
+    schemaVersion: 1,
+    upload: parseStoredManifest(uploadRecord, "upload manifest"),
+    response: parseStoredManifest(responseRecord, "response manifest"),
+  };
+  validateExpected(manifests);
+  return manifests;
 }
 
 function validateExpected(expected: BuildManifests): void {
@@ -454,7 +571,10 @@ function validateExpected(expected: BuildManifests): void {
     }
   }
   const response = expected.upload.filter(
-    (entry) => entry.path !== "/_headers",
+    (entry) =>
+      entry.path !== "/_headers" &&
+      entry.path !== `/${PAGES_ROUTES_PATH}` &&
+      entry.path !== `/${PAGES_WORKER_PATH}`,
   );
   if (
     response.length !== expected.response.length ||
@@ -499,6 +619,13 @@ export async function inspectBuild(distDir: string): Promise<BuildManifests> {
   if (!files.includes(MANIFEST_PATH)) fail("Vite manifest is missing");
   const manifestFile = await regularFile(rootReal, MANIFEST_PATH);
   const manifest = parseManifest(await readFile(manifestFile.absolute, "utf8"));
+  const routesFile = await regularFile(rootReal, PAGES_ROUTES_PATH);
+  const routesText = (await readFile(routesFile.absolute, "utf8")).replace(
+    /\r\n?/g,
+    "\n",
+  );
+  if (routesText !== EXPECTED_PAGES_ROUTES)
+    fail("Pages routes must include only /api/v1/*");
   const closure = validateManifestClosure(manifest);
   const allowed = new Set([
     ...ALWAYS_ALLOWED,
@@ -513,7 +640,9 @@ export async function inspectBuild(distDir: string): Promise<BuildManifests> {
   const upload = await Promise.all(
     uploadPaths.map((path) => digestEntry(rootReal, path)),
   );
-  const uploadByPath = new Map(upload.map((entry) => [entry.path.slice(1), entry]));
+  const uploadByPath = new Map(
+    upload.map((entry) => [entry.path.slice(1), entry]),
+  );
   const initialBytes = [...closure.initialFiles].reduce((total, path) => {
     const entry = uploadByPath.get(path);
     if (!entry) fail(`initial HOME file is missing from upload: ${path}`);
@@ -521,7 +650,12 @@ export async function inspectBuild(distDir: string): Promise<BuildManifests> {
   }, 0);
   if (initialBytes > MAX_INITIAL_HOME_BYTES)
     fail(`initial HOME payload exceeds ${MAX_INITIAL_HOME_BYTES} bytes`);
-  const response = upload.filter((entry) => entry.path !== "/_headers");
+  const response = upload.filter(
+    (entry) =>
+      entry.path !== "/_headers" &&
+      entry.path !== `/${PAGES_ROUTES_PATH}` &&
+      entry.path !== `/${PAGES_WORKER_PATH}`,
+  );
   return { schemaVersion: 1, upload, response };
 }
 

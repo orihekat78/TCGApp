@@ -4,7 +4,6 @@
 
 import type { CardDef, DeckRecord, MatchRecord, ValidationResult } from '../data/types';
 import { CARD_POOL } from '../data/cardPool';
-import { ALL_CARDS } from '@/cards/index';
 import { useDecksStore } from '../state/decksStore';
 import { useHistoryStore } from '../state/historyStore';
 import { captureMatchDeckSnapshot } from '../data/matchDeckSnapshot';
@@ -43,7 +42,7 @@ const cards = {
     // 同一 cardId (パラレル) を合算して 3 枚上限を判定する。
     // rules/02-deck-construction.md「絵柄が違っても ID が同じであれば同じカード」。
     // cardNum 単位で数えると D08003×3 + D08004×3 (= 同 cardId 0489 を 6 枚) が通ってしまう。
-    const deckLimitByNum = new Map(ALL_CARDS.map((card) => [card.id, card.deckLimit ?? 3]));
+    const deckLimitByNum = new Map(CARD_POOL.map((card) => [card.num, card.deckLimit ?? 3]));
     const idAgg = new Map<string, {
       total: number;
       name: string;
@@ -106,8 +105,8 @@ const decks = {
   update(id: string, patch: Partial<DeckRecord>): void {
     useDecksStore.getState().update(id, patch);
   },
-  remove(id: string): void {
-    useDecksStore.getState().remove(id);
+  remove(id: string): Promise<void> {
+    return useDecksStore.getState().remove(id);
   },
 };
 

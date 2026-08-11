@@ -2225,6 +2225,7 @@ button {
   display: flex;
   justify-content: center;
   align-self: start;
+  aspect-ratio: 5 / 7;
 }
 
 .cards-window-spacer {
@@ -3150,6 +3151,13 @@ button {
 
 .deck-pool-window-grid {
   width: 100%;
+}
+
+.deck-pool-window-item {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  aspect-ratio: 5 / 7;
 }
 
 .deck-card-open:focus,

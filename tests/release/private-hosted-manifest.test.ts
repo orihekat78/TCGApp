@@ -14,11 +14,18 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   inspectBuild,
+  parseStoredBuildManifests,
   stageBuild,
   validateManifestClosure,
 } from "../../scripts/private-hosted/manifest.ts";
 
 const roots: string[] = [];
+const PAGES_ROUTES = `{
+  "version": 1,
+  "include": ["/api/v1/*"],
+  "exclude": []
+}
+`;
 
 const APPROVED_DYNAMIC_ENTRY_KEYS = [
   "src/services/gameRuntimeBundle.ts",
@@ -62,6 +69,8 @@ function fixture(): string {
   writeFileSync(join(root, "index.html"), "<!doctype html>\n");
   writeFileSync(join(root, "favicon.svg"), "<svg/>\n");
   writeFileSync(join(root, "_headers"), "/*\n");
+  writeFileSync(join(root, "_routes.json"), PAGES_ROUTES);
+  writeFileSync(join(root, "_worker.js"), "export default {};\n");
   writeFileSync(join(root, "assets", "app.js"), 'import "./app.css";\n');
   writeFileSync(join(root, "assets", "app.css"), "body {}\n");
   writeFileSync(
@@ -95,6 +104,54 @@ afterEach(() => {
 });
 
 describe("private hosted build manifest", () => {
+  it("parses only exact stored upload and response manifest records", () => {
+    const upload = {
+      schemaVersion: 1,
+      files: [
+        { path: "/_headers", bytes: 1, sha256: "a".repeat(64) },
+        { path: "/_routes.json", bytes: 2, sha256: "b".repeat(64) },
+        { path: "/_worker.js", bytes: 3, sha256: "c".repeat(64) },
+        { path: "/index.html", bytes: 4, sha256: "d".repeat(64) },
+      ],
+    };
+    const response = {
+      schemaVersion: 1,
+      files: [{ path: "/index.html", bytes: 4, sha256: "d".repeat(64) }],
+    };
+
+    expect(parseStoredBuildManifests(upload, response)).toEqual({
+      schemaVersion: 1,
+      upload: upload.files,
+      response: response.files,
+    });
+    expect(() =>
+      parseStoredBuildManifests({ ...upload, extra: true }, response),
+    ).toThrow(/exact schema/);
+    expect(() =>
+      parseStoredBuildManifests(
+        {
+          ...upload,
+          files: upload.files.map((entry, index) =>
+            index === 0 ? { ...entry, extra: true } : entry,
+          ),
+        },
+        response,
+      ),
+    ).toThrow(/exact schema/);
+    expect(() =>
+      parseStoredBuildManifests(
+        { ...upload, files: [...upload.files].reverse() },
+        response,
+      ),
+    ).toThrow(/sorted and unique/);
+    expect(() =>
+      parseStoredBuildManifests(upload, {
+        ...response,
+        files: [upload.files[2], ...response.files],
+      }),
+    ).toThrow(/response manifest/);
+  });
+
   it("exports a validated closure with files and manifest-key ownership", () => {
     const source: unknown = {
       "index.html": { file: "assets/app.js", isEntry: true },
@@ -117,6 +174,16 @@ describe("private hosted build manifest", () => {
         {
           path: "/_headers",
           bytes: 3,
+          sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
+        },
+        {
+          path: "/_routes.json",
+          bytes: Buffer.byteLength(PAGES_ROUTES),
+          sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
+        },
+        {
+          path: "/_worker.js",
+          bytes: 19,
           sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
         },
         {
@@ -165,6 +232,15 @@ describe("private hosted build manifest", () => {
     });
   });
 
+  it("accepts platform line endings without widening the Pages route", async () => {
+    const dist = fixture();
+    write(dist, "_routes.json", PAGES_ROUTES.replace(/\n/g, "\r\n"));
+
+    await expect(inspectBuild(dist)).resolves.toMatchObject({
+      schemaVersion: 1,
+    });
+  });
+
   it("follows imports, dynamic imports, CSS, and assets transitively", async () => {
     const dist = fixture();
     write(dist, "assets/imported.js", "export {};\n");
@@ -194,6 +270,8 @@ describe("private hosted build manifest", () => {
     const manifests = await inspectBuild(dist);
     expect(manifests.upload.map((entry) => entry.path)).toEqual([
       "/_headers",
+      "/_routes.json",
+      "/_worker.js",
       "/assets/app.css",
       "/assets/app.js",
       "/assets/asset.js",
@@ -214,6 +292,12 @@ describe("private hosted build manifest", () => {
     ]);
     expect(manifests.response.map((entry) => entry.path)).not.toContain(
       "/_headers",
+    );
+    expect(manifests.response.map((entry) => entry.path)).not.toContain(
+      "/_routes.json",
+    );
+    expect(manifests.response.map((entry) => entry.path)).not.toContain(
+      "/_worker.js",
     );
   });
 
@@ -244,15 +328,138 @@ describe("private hosted build manifest", () => {
   });
 
   it("rejects engine or cards when a shared import pulls them into HOME", () => {
-    expect(() => validateManifestClosure({
+    expect(() =>
+      validateManifestClosure({
+        "index.html": {
+          file: "assets/app.js",
+          isEntry: true,
+          imports: ["shared"],
+        },
+        shared: { file: "assets/shared.js", imports: ["engine"] },
+        engine: { file: "assets/engine.js", name: "engine" },
+      }),
+    ).toThrow("static HOME closure reaches engine");
+  });
+
+  it.each([
+    ["HOME", "game runtime", "index.html", "src/services/gameRuntimeBundle.ts"],
+    ["DECK", "engine", "src/screens/DeckEditor.tsx", "engine"],
+    ["CARDS", "cards", "src/screens/CardsScreen.tsx", "cards"],
+  ] as const)(
+    "rejects a static %s closure that reaches %s",
+    (_route, heavyLabel, routeKey, heavyKey) => {
+      expect(() =>
+        validateManifestClosure({
+          "index.html": {
+            file: "assets/app.js",
+            isEntry: true,
+            dynamicImports: [
+              "src/services/gameRuntimeBundle.ts",
+              "src/screens/CardsScreen.tsx",
+              "src/screens/DeckEditor.tsx",
+              "src/screens/RealMatchView.tsx",
+            ],
+            ...(routeKey === "index.html" ? { imports: [heavyKey] } : {}),
+          },
+          "src/services/gameRuntimeBundle.ts": {
+            file: "assets/game-runtime.js",
+            isDynamicEntry: true,
+          },
+          "src/screens/CardsScreen.tsx": {
+            file: "assets/CardsScreen.js",
+            isDynamicEntry: true,
+            imports: routeKey === "src/screens/CardsScreen.tsx" ? [heavyKey] : [],
+          },
+          "src/screens/DeckEditor.tsx": {
+            file: "assets/DeckEditor.js",
+            isDynamicEntry: true,
+            imports: routeKey === "src/screens/DeckEditor.tsx" ? [heavyKey] : [],
+          },
+          "src/screens/RealMatchView.tsx": {
+            file: "assets/real-match.js",
+            isDynamicEntry: true,
+            imports: ["src/services/gameRuntimeBundle.ts", "engine", "cards"],
+          },
+          engine: { file: "assets/engine.js", name: "engine" },
+          cards: { file: "assets/cards.js", name: "cards" },
+        }),
+      ).toThrow(`static ${_route} closure reaches ${heavyLabel}`);
+    },
+  );
+
+  it("rejects a CARDS entry emitted as an engine chunk", () => {
+    expect(() =>
+      validateManifestClosure({
+        "index.html": {
+          file: "assets/app.js",
+          isEntry: true,
+          dynamicImports: [
+            "src/services/gameRuntimeBundle.ts",
+            "src/screens/CardsScreen.tsx",
+            "src/screens/DeckEditor.tsx",
+          ],
+        },
+        "src/services/gameRuntimeBundle.ts": {
+          file: "assets/game-runtime.js",
+          isDynamicEntry: true,
+          imports: ["cards"],
+        },
+        "src/screens/CardsScreen.tsx": {
+          file: "assets/engine.js",
+          isDynamicEntry: true,
+          name: "CardsScreen",
+        },
+        "src/screens/DeckEditor.tsx": {
+          file: "assets/DeckEditor.js",
+          isDynamicEntry: true,
+        },
+        cards: { file: "assets/cards.js", name: "cards" },
+      }),
+    ).toThrow("static CARDS closure reaches engine");
+  });
+
+  it("keeps engine and cards in the game runtime and RealMatch closures", () => {
+    const closure = validateManifestClosure({
       "index.html": {
         file: "assets/app.js",
         isEntry: true,
-        imports: ["shared"],
+        dynamicImports: [
+          "src/services/gameRuntimeBundle.ts",
+          "src/screens/CardsScreen.tsx",
+          "src/screens/DeckEditor.tsx",
+          "src/screens/RealMatchView.tsx",
+        ],
       },
-      shared: { file: "assets/shared.js", imports: ["engine"] },
+      "src/services/gameRuntimeBundle.ts": {
+        file: "assets/game-runtime.js",
+        isDynamicEntry: true,
+        imports: ["engine", "cards"],
+      },
+      "src/screens/CardsScreen.tsx": {
+        file: "assets/CardsScreen.js",
+        isDynamicEntry: true,
+      },
+      "src/screens/DeckEditor.tsx": {
+        file: "assets/DeckEditor.js",
+        isDynamicEntry: true,
+      },
+      "src/screens/RealMatchView.tsx": {
+        file: "assets/real-match.js",
+        isDynamicEntry: true,
+        imports: ["src/services/gameRuntimeBundle.ts"],
+      },
       engine: { file: "assets/engine.js", name: "engine" },
-    })).toThrow("initial HOME closure reaches engine");
+      cards: { file: "assets/cards.js", name: "cards" },
+    });
+
+    expect([...closure.reachableFiles]).toEqual(
+      expect.arrayContaining([
+        "assets/game-runtime.js",
+        "assets/real-match.js",
+        "assets/engine.js",
+        "assets/cards.js",
+      ]),
+    );
   });
 
   it("rejects an oversized initial HOME payload while retaining lazy routes", async () => {
@@ -360,9 +567,8 @@ describe("private hosted build manifest", () => {
     ["png", "assets/card.png"],
     ["jpg", "assets/card.jpg"],
     ["webp", "assets/card.webp"],
-    ["Pages worker", "_worker.js"],
+    ["nested Pages worker", "assets/_worker.js"],
     ["Pages functions", "functions/handler.js"],
-    ["Pages routes", "_routes.json"],
     ["redirects", "_redirects"],
     ["orphan JavaScript", "assets/orphan.js"],
     ["orphan CSS", "assets/orphan.css"],
@@ -372,6 +578,16 @@ describe("private hosted build manifest", () => {
     const dist = fixture();
     write(dist, path);
     await expect(inspectBuild(dist)).rejects.toThrow();
+  });
+
+  it("rejects a Pages route broader than the reviewed API boundary", async () => {
+    const dist = fixture();
+    write(
+      dist,
+      "_routes.json",
+      '{"version":1,"include":["/*"],"exclude":[]}\n',
+    );
+    await expect(inspectBuild(dist)).rejects.toThrow(/Pages routes/);
   });
 
   it("rejects an empty Pages functions directory", async () => {
@@ -485,6 +701,8 @@ describe("private hosted build manifest", () => {
         .sort(),
     ).toEqual([
       "_headers",
+      "_routes.json",
+      "_worker.js",
       "assets",
       "assets/app.css",
       "assets/app.js",

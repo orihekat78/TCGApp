@@ -14,12 +14,24 @@ Date: 2026-08-10
 ## Normal release
 
 1. Start from one clean release commit. Do not deploy an uncommitted tree.
-2. Run `npm run private-hosted:qualify-final` and keep its external report path.
-3. Confirm all 18 commands passed, including the generated Meta card-identity check, and secret/destination findings are empty.
+2. Create one short-lived token scoped only to the fixed account. Grant `Pages
+   Write`, `Access: Apps and Policies Read`, and `Access: Organizations, Identity
+   Providers, and Groups Read`; do not grant either Access write permission. Put
+   it only in `CLOUDFLARE_API_TOKEN`, then run `node
+   scripts/private-hosted/deploy-qualified.mjs` with no arguments. Do not invoke
+   it through npm, tsx, Wrangler, or an externally supplied run directory.
+3. The launcher runs final qualification exactly once. Confirm all 18 commands
+   passed, including the generated Meta card-identity check, and
+   secret/destination findings are empty.
    Confirm the HOME initial closure is at most 512 KiB and all approved lazy chunks
    appear in the exact response manifest with no unknown or orphan JavaScript.
-4. Deploy the report's exact `staging` directory. Never rebuild or upload `dist`.
-5. Record commit, deployment ID/URL, report path, and manifest hashes.
+4. The launcher revalidates the report, exact command arguments, logs,
+   manifests, staged `_worker.js`, clean commit, fixed account/project, remote
+   bindings, and root/wildcard Access before uploading its in-memory snapshot
+   through the Cloudflare Pages API. Never run `wrangler pages deploy`, rebuild,
+   upload `dist`, or reuse a qualification directory manually.
+5. Record commit, deployment ID/URL, report path, upload/response manifest
+   hashes, and the staged `_worker.js` SHA-256.
 6. Probe stable and deployment URLs anonymously. Both must redirect to
    `steep-mouse-bb22.cloudflareaccess.com`; no app HTML may be anonymous.
 7. Open the stable URL through OTP on PC, then smartphone. Verify `HOME -> DECK`
@@ -29,7 +41,8 @@ Date: 2026-08-10
    `button[data-route='setup']`, `#setup-title`, `button.setup-start`,
    `#match`, `button.mulligan-skip`, then `#scaler`. At `851x393`, confirm
    `#scaler[data-playmat-layout='desktop'][data-playmat-fit='contained-landscape']`.
-8. Revoke temporary credentials. Browser OAuth may remain for Pages administration.
+8. Delete the short-lived token from the environment and revoke it. Browser OAuth
+   may remain for Pages administration.
 
 Never put tokens, OTPs, credentials, or unredacted signed URLs in chat, Git, command
 arguments, configuration, screenshots, or evidence.

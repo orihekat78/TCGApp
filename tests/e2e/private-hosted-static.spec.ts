@@ -22,7 +22,7 @@ const SECURITY_HEADERS = {
   "x-robots-tag": "noindex, nofollow, noarchive",
 } as const;
 const CSP =
-  "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.takaratomy.co.jp; font-src 'self'; connect-src https://www.takaratomy.co.jp; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; worker-src 'none'";
+  "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.takaratomy.co.jp; font-src 'self'; connect-src 'self' https://www.takaratomy.co.jp; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; worker-src 'none'";
 const IMAGE_BODY =
   '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="3"><rect width="2" height="3" fill="#123"/></svg>';
 
@@ -40,6 +40,7 @@ type ApprovedRouteChunks = {
 type PageEvidence = {
   errors: string[];
   requests: string[];
+  unauthorizedResponses: string[];
   officialRequests: { url: string; referer: string | undefined }[];
   officialNewsRequests: {
     url: string;
@@ -183,6 +184,7 @@ function monitorPage(page: Page): PageEvidence {
   const evidence: PageEvidence = {
     errors: [],
     requests: [],
+    unauthorizedResponses: [],
     officialRequests: [],
     officialNewsRequests: [],
   };
@@ -211,6 +213,11 @@ function monitorPage(page: Page): PageEvidence {
       });
     }
   });
+  page.on("response", (response) => {
+    if (response.status() === 401) {
+      evidence.unauthorizedResponses.push(response.url());
+    }
+  });
   return evidence;
 }
 
@@ -230,7 +237,25 @@ async function expectRuntimeClean(
     }
   });
   expect(forbidden, "self and approved official requests only").toEqual([]);
-  expect(evidence.errors, "console/page errors").toEqual([]);
+  const expectedUnauthorizedConsole =
+    "console: Failed to load resource: the server responded with a status of 401 (Unauthorized)";
+  const unexpectedUnauthorizedResponses = evidence.unauthorizedResponses.filter(
+    (url) => new URL(url).pathname !== "/api/v1/bootstrap",
+  );
+  expect(
+    unexpectedUnauthorizedResponses,
+    "only the local Access bootstrap probe may be unauthorized",
+  ).toEqual([]);
+  const unauthorizedConsoleCount = evidence.errors.filter(
+    (error) => error === expectedUnauthorizedConsole,
+  ).length;
+  expect(unauthorizedConsoleCount).toBeLessThanOrEqual(
+    evidence.unauthorizedResponses.length,
+  );
+  expect(
+    evidence.errors.filter((error) => error !== expectedUnauthorizedConsole),
+    "console/page errors",
+  ).toEqual([]);
   expect(await page.evaluate(() => "__game" in window)).toBe(false);
   expect(
     await page.evaluate(async () =>
@@ -297,22 +322,26 @@ async function expectNoHorizontalOverflow(page: Page): Promise<void> {
 }
 
 test.describe("private hosted production static Meta app", () => {
-  test("@desktop serves the exact response set with release headers and no dev bridge", async ({
+  test("@desktop serves the exact response set and loads official NEWS once", async ({
     page,
     request,
   }) => {
+    const bootstrap = await request.get("/api/v1/bootstrap");
+    expect(bootstrap.status()).toBe(401);
+    expect(bootstrap.headers()["content-type"]).toBe(
+      "application/json; charset=utf-8",
+    );
+    expect(await bootstrap.json()).toEqual({
+      error: { code: "UNAUTHORIZED" },
+    });
+
     await mockOfficialResources(page);
     const evidence = monitorPage(page);
-    await openSetupFromHome(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator(".home-screen")).toBeVisible();
     await expect.poll(() => evidence.officialNewsRequests.length).toBe(1);
-    expect(evidence.officialNewsRequests).toEqual([
-      {
-        url: OFFICIAL_NEWS_URL,
-        method: "GET",
-        postData: null,
-        referer: undefined,
-      },
-    ]);
+    await expect(page.getByText("Private release check")).toBeVisible();
+    await openSetupFromHome(page);
     const staging = requiredEnvironment("PRIVATE_HOSTED_STAGING_DIR");
     const responseEntries = await manifestEntries(
       "PRIVATE_HOSTED_RESPONSE_MANIFEST",
@@ -473,6 +502,9 @@ test.describe("private hosted production static Meta app", () => {
 
     const poolTiles = page.locator(".deck-pool-card");
     await expect(poolTiles.first()).toBeVisible();
+    const initiallyVisibleTestIds = await poolTiles.evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute("data-testid")),
+    );
     const initialTileCount = await poolTiles.count();
     expect(initialTileCount, "initial catalog tile count").toBeGreaterThan(0);
     expect(initialTileCount, "initial catalog tile count").toBeLessThanOrEqual(48);
@@ -489,6 +521,88 @@ test.describe("private hosted production static Meta app", () => {
       peakTileCount = Math.max(peakTileCount, await poolTiles.count());
     }
     expect(peakTileCount, "catalog tiles mounted while scrolling").toBeLessThanOrEqual(96);
+
+    const distantTileTestId = await poolTiles.evaluateAll(
+      (elements, initialIds) =>
+        elements
+          .map((element) => element.getAttribute("data-testid"))
+          .find(
+            (testId): testId is string =>
+              testId !== null && !initialIds.includes(testId),
+          ),
+      initiallyVisibleTestIds,
+    );
+    if (!distantTileTestId) {
+      throw new Error("scrolling must expose a DECK pool tile outside the initial window");
+    }
+    const distantTile = page.locator(`[data-testid="${distantTileTestId}"]`);
+    await expect(distantTile).toBeVisible();
+    const distantTileIdentity = await distantTile.evaluate((element) => {
+      const identity = `private-hosted-deck-tile-${Date.now()}`;
+      (element as HTMLElement & { __e2eIdentity?: string }).__e2eIdentity =
+        identity;
+      return identity;
+    });
+    await distantTile.dispatchEvent("pointerdown", {
+      button: 0,
+      isPrimary: true,
+      pointerType: "touch",
+    });
+    expect(
+      await distantTile.evaluate(
+        (element, identity) =>
+          element.isConnected &&
+          (element as HTMLElement & { __e2eIdentity?: string })
+            .__e2eIdentity === identity,
+        distantTileIdentity,
+      ),
+      "pointerdown keeps the newly visible DECK tile mounted",
+    ).toBe(true);
+    await distantTile.focus();
+    await expect(distantTile).toBeFocused();
+    expect(
+      await distantTile.evaluate(
+        (element, identity) =>
+          element.isConnected &&
+          document.activeElement === element &&
+          (element as HTMLElement & { __e2eIdentity?: string })
+            .__e2eIdentity === identity,
+        distantTileIdentity,
+      ),
+      "the pointer target remains the focused DECK tile",
+    ).toBe(true);
+    await distantTile.click();
+
+    const detailDialog = page.locator(".deck-detail-drawer[role='dialog']");
+    await expect(detailDialog).toBeVisible();
+    await expect(detailDialog).toContainText(
+      distantTileTestId.replace("deck-pool-card-", ""),
+    );
+    await expect(detailDialog.locator("[data-testid='deck-detail-actions']")).toBeVisible();
+    const closeDetail = detailDialog.getByRole("button", {
+      name: "カード詳細を閉じる",
+    });
+    const addToDeck = detailDialog.locator(".deck-detail-add");
+    await expect(closeDetail).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
+    await expect(addToDeck).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(closeDetail).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(detailDialog).toBeHidden();
+    await expect(distantTile).toBeFocused();
+    expect(
+      await distantTile.evaluate(
+        (element, identity) =>
+          element.isConnected &&
+          document.activeElement === element &&
+          (element as HTMLElement & { __e2eIdentity?: string })
+            .__e2eIdentity === identity,
+        distantTileIdentity,
+      ),
+      "closing detail returns focus to the same mounted DECK tile",
+    ).toBe(true);
+
     expect(evidence.officialNewsRequests).toEqual([
       {
         url: OFFICIAL_NEWS_URL,

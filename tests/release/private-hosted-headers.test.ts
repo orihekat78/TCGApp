@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { beforeAll, describe, expect, it } from "vitest";
 
 const EXPECTED = `/*
-  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.takaratomy.co.jp; font-src 'self'; connect-src https://www.takaratomy.co.jp; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; worker-src 'none'
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.takaratomy.co.jp; font-src 'self'; connect-src 'self' https://www.takaratomy.co.jp; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; worker-src 'none'
   Cache-Control: no-store, max-age=0
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
@@ -41,7 +41,7 @@ describe("private hosted security headers", () => {
   beforeAll(() => {
     const npmCli = process.env.npm_execpath;
     if (!npmCli) throw new Error("npm_execpath is required");
-    const result = spawnSync(process.execPath, [npmCli, "run", "build"], {
+    const result = spawnSync(process.execPath, [npmCli, "run", "build:meta"], {
       encoding: "utf8",
       env: { ...process.env, NODE_ENV: "production" },
     });
@@ -62,10 +62,17 @@ describe("private hosted security headers", () => {
     const pkg = JSON.parse(readFileSync("package.json", "utf8")) as {
       packageManager?: string;
       engines?: { node?: string };
+      scripts?: Record<string, string>;
       devDependencies?: Record<string, string>;
     };
     expect(pkg.packageManager).toBe("npm@11.12.1");
     expect(pkg.engines?.node).toBe("24.x");
+    expect(pkg.scripts?.["build:meta"]).toBe(
+      "tsx scripts/private-hosted/build-meta.ts",
+    );
+    expect(pkg.scripts?.["preview:meta"]).toBe(
+      "vite preview --config vite.config.private-hosted.ts",
+    );
     expect(pkg.devDependencies?.wrangler).toBe("4.118.0");
     expect(readFileSync(".gitignore", "utf8").split(/\r?\n/)).toContain(
       ".wrangler/",
@@ -156,7 +163,6 @@ describe("private hosted security headers", () => {
       "fileURLToPath",
       ".claude/specs/cards-data",
       "fetchCardImageUrl",
-      "localStorage",
       "__game",
     ]) {
       expect(javascript).not.toContain(forbidden);
@@ -164,7 +170,7 @@ describe("private hosted security headers", () => {
     expect(buildOutput).not.toContain("externalized for browser compatibility");
   });
 
-  it("ships only the static application boundary", () => {
+  it("ships the static Meta artifact with only the reviewed API route", () => {
     const files = readdirSync("dist", {
       recursive: true,
       encoding: "utf8",
@@ -180,15 +186,28 @@ describe("private hosted security headers", () => {
     expect(
       files.filter((path) => path.split("/").at(-1) === "_headers"),
     ).toHaveLength(1);
+    expect(
+      files.filter((path) => path.split("/").at(-1) === "_routes.json"),
+    ).toHaveLength(1);
+    expect(JSON.parse(readFileSync("dist/_routes.json", "utf8"))).toEqual({
+      version: 1,
+      include: ["/api/v1/*"],
+      exclude: [],
+    });
     expect(files.some((path) => path.endsWith(".map"))).toBe(false);
     expect(
       files.filter((path) => isCardImagePayload(path, knownStems)),
     ).toEqual([]);
+    expect(files.filter((path) => path === "_worker.js")).toHaveLength(1);
     expect(
-      files.some((path) =>
-        /(?:^|\/)(?:functions|_worker\.js|_routes\.json)(?:\/|$)/i.test(path),
-      ),
+      files.some((path) => /(?:^|\/)functions(?:\/|$)/i.test(path)),
     ).toBe(false);
+
+    expect(
+      readdirSync("functions", { recursive: true, encoding: "utf8" })
+        .map((path) => path.replaceAll("\\", "/"))
+        .sort(),
+    ).toEqual(["api", "api/v1", "api/v1/[[path]].ts"]);
 
     const javascript = files
       .filter((path) => path.endsWith(".js"))

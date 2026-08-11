@@ -96,6 +96,10 @@ describe("private hosted final qualification", () => {
           resolve(f.runDir, "evidence/response-manifest.json"),
           manifest([]),
         );
+        await writeFile(
+          resolve(f.runDir, "evidence/pages-deployment.json"),
+          '{"schemaVersion":1}\n',
+        );
       }
       await writeFile(input.logPath, output, { flag: "wx" });
       const completedAt = new Date(tick).toISOString();
@@ -122,7 +126,7 @@ describe("private hosted final qualification", () => {
     > = {
       "npm-ci": ["ci"],
       "card-identities": ["run", "--silent", "check:meta-card-identities"],
-      build: ["run", "--silent", "build"],
+      build: ["run", "--silent", "build:meta"],
       "dependency-audit": ["audit", "--audit-level=high"],
       "secret-scan": ["run", "--silent", "private-hosted:scan-secrets"],
       "destination-scan": [
@@ -255,7 +259,14 @@ describe("private hosted final qualification", () => {
   });
 
   it("does not write a report after a failure, stale identities, dirty tree, or changed snapshot", async () => {
-    for (const failure of ["exit", "card-identities", "dirty", "snapshot", "manifest"] as const) {
+    for (const failure of [
+      "exit",
+      "card-identities",
+      "dirty",
+      "snapshot",
+      "manifest",
+      "pages-deployment",
+    ] as const) {
       const f = await fixture();
       let tick = Date.parse("2026-08-04T00:00:00.000Z");
       let executions = 0;
@@ -285,11 +296,24 @@ describe("private hosted final qualification", () => {
             resolve(f.runDir, "evidence/response-manifest.json"),
             manifest([]),
           );
+          await writeFile(
+            resolve(f.runDir, "evidence/pages-deployment.json"),
+            '{"schemaVersion":1}\n',
+          );
         }
         if (failure === "manifest" && input.id === "prepared-private-e2e") {
           await writeFile(
             resolve(f.runDir, "evidence/upload-manifest.json"),
             manifest([{ path: "/changed" }]),
+          );
+        }
+        if (
+          failure === "pages-deployment" &&
+          input.id === "prepared-private-e2e"
+        ) {
+          await writeFile(
+            resolve(f.runDir, "evidence/pages-deployment.json"),
+            '{"schemaVersion":1,"changed":true}\n',
           );
         }
         await writeFile(input.logPath, output, { flag: "wx" });
@@ -356,17 +380,19 @@ describe("private hosted final qualification", () => {
               stagingRealpath: "C:\\outside\\staging",
               uploadManifestSha256: HASH,
               responseManifestSha256: HASH,
+              pagesDeploymentSha256: HASH,
               postStopStagingMatch: true as const,
             },
           }
         : {}),
     });
     const base = {
-      schemaVersion: 2 as const,
+      schemaVersion: 3 as const,
       releaseCommit: "1".repeat(40),
       packageLockSha256: HASH,
       uploadManifestSha256: HASH,
       responseManifestSha256: HASH,
+      pagesDeploymentSha256: HASH,
       startedAt: "2026-08-04T00:00:00.000Z",
       completedAt: "2026-08-04T00:01:00.000Z",
       commands: QUALIFICATION_COMMAND_IDS.map(command),

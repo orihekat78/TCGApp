@@ -153,6 +153,20 @@ describe("private hosted local qualification", () => {
         const compatibilityDateFlag = input.args.indexOf("--compatibility-date");
         expect(compatibilityDateFlag).toBeGreaterThan(-1);
         expect(input.args[compatibilityDateFlag + 1]).toBe("2026-08-06");
+        expect(input.args.filter((arg) => arg === "--d1")).toHaveLength(1);
+        expect(input.args[input.args.indexOf("--d1") + 1]).toBe("DB");
+        const bindings = input.args.flatMap((arg, index) =>
+          arg === "--binding" ? [input.args[index + 1]] : [],
+        );
+        expect(bindings).toEqual([
+          "ACCESS_TEAM_DOMAIN=https://steep-mouse-bb22.cloudflareaccess.com",
+          "ACCESS_AUD=804dd12e524e3dfd51dd950d3db03b610e415e7e5c71f0300f82a0ccd269c007",
+          "DEPLOYMENT_ENV=production",
+          "APP_HOST_KIND=exact",
+          "APP_HOST_VALUE=127.0.0.1",
+          "D1_DATABASE_ID=4ee3b0b4-560a-46b9-9e9f-17dd394fc291",
+          "EMAIL_KEY_SECRET=local-qualification-placeholder-not-production",
+        ]);
         expect(input.persistDir.startsWith(f.runDir)).toBe(true);
         expect(input.persistDir.startsWith(f.stagingDir)).toBe(false);
         return { stop: async () => events.push("stop") };

@@ -13,7 +13,7 @@ import {
   markReplayReturnFocus,
   pendingReplayReturnFocus,
 } from '../services/replayReturnFocus';
-import { listStoredHistoryRows } from '../services/historyReplayRepository';
+import { listStoredHistoryRows } from '../services/historyRowsRepository';
 import './HistoryScreen.css';
 
 interface Props { onNav: (r: Route) => void; }

@@ -12,12 +12,27 @@ import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { BuildManifests, ManifestEntry } from "./types.js";
-import { inspectBuild, stageBuild, verifyStagedBuild } from "./manifest.js";
+import type { BuildManifests } from "./types.js";
+import { buildMetaRelease } from "./build-meta.js";
+import {
+  inspectBuild,
+  parseStoredBuildManifests,
+  stageBuild,
+  verifyStagedBuild,
+} from "./manifest.js";
 
 const HOST = "127.0.0.1";
 const PORT = 5196;
 const WRANGLER_COMPATIBILITY_DATE = "2026-08-06";
+const LOCAL_WORKER_BINDINGS = [
+  "ACCESS_TEAM_DOMAIN=https://steep-mouse-bb22.cloudflareaccess.com",
+  "ACCESS_AUD=804dd12e524e3dfd51dd950d3db03b610e415e7e5c71f0300f82a0ccd269c007",
+  "DEPLOYMENT_ENV=production",
+  "APP_HOST_KIND=exact",
+  "APP_HOST_VALUE=127.0.0.1",
+  "D1_DATABASE_ID=4ee3b0b4-560a-46b9-9e9f-17dd394fc291",
+  "EMAIL_KEY_SECRET=local-qualification-placeholder-not-production",
+] as const;
 const MODULE_REPOSITORY_ROOT = resolve(
   dirname(fileURLToPath(import.meta.url)),
   "..",
@@ -143,36 +158,7 @@ export function resolvePrivateHostedEnvironment(
   };
 }
 
-function parseEntries(value: unknown, label: string): ManifestEntry[] {
-  if (!Array.isArray(value)) fail(`${label} files must be an array`);
-  return value.map((candidate, index) => {
-    if (
-      typeof candidate !== "object" ||
-      candidate === null ||
-      Array.isArray(candidate)
-    ) {
-      return fail(`${label} files[${index}] must be an object`);
-    }
-    const item = candidate as Record<string, unknown>;
-    if (
-      typeof item.path !== "string" ||
-      !item.path.startsWith("/") ||
-      typeof item.bytes !== "number" ||
-      !Number.isSafeInteger(item.bytes) ||
-      item.bytes < 0 ||
-      typeof item.sha256 !== "string" ||
-      !/^[0-9a-f]{64}$/.test(item.sha256)
-    ) {
-      return fail(`${label} files[${index}] is invalid`);
-    }
-    return { path: item.path, bytes: item.bytes, sha256: item.sha256 };
-  });
-}
-
-async function readManifest(
-  path: string,
-  label: string,
-): Promise<ManifestEntry[]> {
+async function readManifest(path: string, label: string): Promise<unknown> {
   const stat = await lstat(path).catch(() => fail(`${label} does not exist`));
   if (!stat.isFile() || stat.isSymbolicLink())
     fail(`${label} must be a regular file`);
@@ -182,26 +168,17 @@ async function readManifest(
   } catch {
     return fail(`${label} must be valid JSON`);
   }
-  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-    fail(`${label} must be an object`);
-  }
-  const record = parsed as Record<string, unknown>;
-  if (record.schemaVersion !== 1) fail(`${label} schemaVersion must be 1`);
-  return parseEntries(record.files, label);
+  return parsed;
 }
 
 async function loadPreparedManifests(
   paths: LocalQualificationPaths,
 ): Promise<BuildManifests> {
-  const upload = await readManifest(
-    paths.uploadManifestPath,
-    "upload manifest",
-  );
-  const response = await readManifest(
-    paths.responseManifestPath,
-    "response manifest",
-  );
-  return { schemaVersion: 1, upload, response };
+  const [upload, response] = await Promise.all([
+    readManifest(paths.uploadManifestPath, "upload manifest"),
+    readManifest(paths.responseManifestPath, "response manifest"),
+  ]);
+  return parseStoredBuildManifests(upload, response);
 }
 
 export async function assertPrivateHostedPortAvailable(): Promise<void> {
@@ -470,6 +447,9 @@ async function runPreparedLocalQualification(
       String(PORT),
       "--compatibility-date",
       WRANGLER_COMPATIBILITY_DATE,
+      "--d1",
+      "DB",
+      ...LOCAL_WORKER_BINDINGS.flatMap((binding) => ["--binding", binding]),
       "--persist-to",
       persistDir,
     ],
@@ -503,48 +483,19 @@ export async function runPreparedLocalQualificationForTest(
   });
 }
 
-async function runCommand(
-  file: string,
-  args: string[],
-  cwd: string,
-  environment: NodeJS.ProcessEnv,
-): Promise<void> {
-  const child = spawn(file, args, {
-    cwd,
-    env: childEnvironment(environment),
-    stdio: "inherit",
-    windowsHide: true,
-  });
-  const exitCode = await waitForClose(child);
-  if (exitCode !== 0) fail(`${file} exited with code ${exitCode}`);
-}
-
 async function createStandalonePaths(
   repoRoot: string,
 ): Promise<LocalQualificationPaths> {
   const runDir = await mkdtemp(
     join(tmpdir(), "conan-private-hosted-qualification-"),
   );
-  const distDir = resolve(runDir, "dist");
+  const distDir = resolve(repoRoot, "dist");
   const stagingDir = resolve(runDir, "staging");
   const uploadManifestPath = resolve(runDir, "upload-manifest.json");
   const responseManifestPath = resolve(runDir, "response-manifest.json");
-  const viteBin = resolve(repoRoot, "node_modules", "vite", "bin", "vite.js");
-  await runCommand(
-    process.execPath,
-    [
-      viteBin,
-      "build",
-      "--manifest",
-      "--config",
-      "vite.config.private-hosted.ts",
-      "--outDir",
-      distDir,
-      "--emptyOutDir",
-    ],
-    repoRoot,
-    {},
-  );
+  const build = await buildMetaRelease(repoRoot);
+  process.stdout.write(build.stdout);
+  process.stderr.write(build.stderr);
   const manifests = await inspectBuild(distDir);
   await stageBuild(distDir, stagingDir, manifests);
   await writeFile(

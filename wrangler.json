@@ -1,0 +1,57 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "conan-private-7302df07",
+  "pages_build_output_dir": "./dist",
+  "compatibility_date": "2026-08-10",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "conan-cloud-data-production",
+      "database_id": "4ee3b0b4-560a-46b9-9e9f-17dd394fc291"
+    }
+  ],
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "https://steep-mouse-bb22.cloudflareaccess.com",
+    "ACCESS_AUD": "804dd12e524e3dfd51dd950d3db03b610e415e7e5c71f0300f82a0ccd269c007",
+    "DEPLOYMENT_ENV": "production",
+    "APP_HOST_KIND": "exact",
+    "APP_HOST_VALUE": "conan-private-7302df07.pages.dev",
+    "D1_DATABASE_ID": "4ee3b0b4-560a-46b9-9e9f-17dd394fc291"
+  },
+  "env": {
+    "production": {
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "conan-cloud-data-production",
+          "database_id": "4ee3b0b4-560a-46b9-9e9f-17dd394fc291"
+        }
+      ],
+      "vars": {
+        "ACCESS_TEAM_DOMAIN": "https://steep-mouse-bb22.cloudflareaccess.com",
+        "ACCESS_AUD": "804dd12e524e3dfd51dd950d3db03b610e415e7e5c71f0300f82a0ccd269c007",
+        "DEPLOYMENT_ENV": "production",
+        "APP_HOST_KIND": "exact",
+        "APP_HOST_VALUE": "conan-private-7302df07.pages.dev",
+        "D1_DATABASE_ID": "4ee3b0b4-560a-46b9-9e9f-17dd394fc291"
+      }
+    },
+    "preview": {
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "conan-cloud-data-preview",
+          "database_id": "94745040-6b8d-4579-82e5-5a6a9e8a71cb"
+        }
+      ],
+      "vars": {
+        "ACCESS_TEAM_DOMAIN": "https://steep-mouse-bb22.cloudflareaccess.com",
+        "ACCESS_AUD": "c66e537b50260e04bdafccf18918674d9da7e387cea5fe9637217b0ea80b081e",
+        "DEPLOYMENT_ENV": "preview",
+        "APP_HOST_KIND": "suffix",
+        "APP_HOST_VALUE": ".conan-private-7302df07.pages.dev",
+        "D1_DATABASE_ID": "94745040-6b8d-4579-82e5-5a6a9e8a71cb"
+      }
+    }
+  }
+}

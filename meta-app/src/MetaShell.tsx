@@ -6,6 +6,10 @@ import { MetaBg, type SceneName } from './shared/MetaBg';
 import { ensureInteractionStyles } from './shared/interactionStyles';
 import type { Route } from './router/routes';
 import { useMetaStore } from './state/metaStore';
+import {
+  CloudSyncIndicator,
+  shouldShowCloudSyncIndicator,
+} from './shared/CloudSyncIndicator';
 
 interface Props {
   route: Route;
@@ -47,6 +51,7 @@ export function MetaShell({ route, children }: Props) {
           {children}
         </div>
       </MetaBg>
+      {shouldShowCloudSyncIndicator(route) && <CloudSyncIndicator />}
     </div>
   );
 }

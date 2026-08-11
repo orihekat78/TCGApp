@@ -21,6 +21,10 @@ export default defineConfig({
   root: resolve(__dirname, "meta-app"),
   publicDir: resolve(__dirname, "public"),
   plugins: [react()],
+  define: {
+    "import.meta.env.VITE_CLOUD_DATA_SYNC_ENABLED": JSON.stringify("true"),
+    "import.meta.env.VITE_PRIVATE_HOSTED_RELEASE": JSON.stringify("true"),
+  },
   build: {
     outDir: resolve(__dirname, "dist"),
     emptyOutDir: true,
@@ -77,6 +81,10 @@ async function fixture(appSource = "export default function App() {}") {
   await writeFile(
     resolve(root, "dist/_headers"),
     "/*\n  Cache-Control: no-store\n  Content-Security-Policy: img-src https://www.takaratomy.co.jp;\n",
+  );
+  await writeFile(
+    resolve(root, "dist/_routes.json"),
+    JSON.stringify({ version: 1, include: ["/api/v1/*"], exclude: [] }),
   );
   await writeFile(
     resolve(root, "dist/favicon.svg"),
@@ -239,6 +247,61 @@ describe("private hosted runtime boundary", () => {
     });
   });
 
+  it("permits only the reviewed cloud client capabilities at their exact source hashes", async () => {
+    const cases = [
+      ["cloud/apiClient.ts", "./cloud/apiClient"],
+      ["cloud/runtime.ts", "./cloud/runtime"],
+      ["cloud/storage.ts", "./cloud/storage"],
+    ] as const;
+
+    for (const [file, specifier] of cases) {
+      const root = await fixture();
+      await mkdir(resolve(root, "meta-app/src", file, ".."), {
+        recursive: true,
+      });
+      await writeFile(
+        resolve(root, "meta-app/src/App.tsx"),
+        `import '${specifier}'; export default function App() {}`,
+      );
+      await writeFile(
+        resolve(root, "meta-app/src", file),
+        await readFile(resolve(process.cwd(), "meta-app/src", file), "utf8"),
+      );
+
+      const findings = await auditRuntimeBoundary(root, async () => ({
+        stdout: "",
+        stderr: "",
+      }));
+      expect(findings, file).toEqual([]);
+    }
+
+    const tamperedRoot = await fixture();
+    await mkdir(resolve(tamperedRoot, "meta-app/src/cloud"), {
+      recursive: true,
+    });
+    await writeFile(
+      resolve(tamperedRoot, "meta-app/src/App.tsx"),
+      "import './cloud/apiClient'; export default function App() {}",
+    );
+    const source = await readFile(
+      resolve(process.cwd(), "meta-app/src/cloud/apiClient.ts"),
+      "utf8",
+    );
+    await writeFile(
+      resolve(tamperedRoot, "meta-app/src/cloud/apiClient.ts"),
+      `${source}\n// tampered`,
+    );
+    const tampered = await auditRuntimeBoundary(tamperedRoot, async () => ({
+      stdout: "",
+      stderr: "",
+    }));
+    expect(tampered).toContainEqual({
+      file: "meta-app/src/cloud/apiClient.ts",
+      code: "network-api",
+      detail: "fetch",
+    });
+  });
+
   it("permits reviewed Meta runtime styles without opening unreviewed modules", async () => {
     const reviewedRoot = await fixture();
     await mkdir(resolve(reviewedRoot, "meta-app/src/screens"), {
@@ -282,6 +345,52 @@ describe("private hosted runtime boundary", () => {
       code: "runtime-style",
       detail: "background",
     });
+  });
+
+  it("pins the current reviewed runtime styles changed by the Meta refresh", async () => {
+    const cases = [
+      ["MetaShell.tsx", "./MetaShell"],
+      ["screens/CardsScreen.tsx", "./screens/CardsScreen"],
+      ["screens/DeckEditor.tsx", "./screens/DeckEditor"],
+      ["shared/MetaCard.tsx", "./shared/MetaCard"],
+      ["shared/NetworkStatus.tsx", "./shared/NetworkStatus"],
+    ] as const;
+
+    for (const [file, specifier] of cases) {
+      const root = await fixture();
+      await mkdir(resolve(root, "meta-app/src", file, ".."), {
+        recursive: true,
+      });
+      await writeFile(
+        resolve(root, "meta-app/src/App.tsx"),
+        `import '${specifier}'; export default function App() {}`,
+      );
+      await writeFile(
+        resolve(root, "meta-app/src", file),
+        await readFile(resolve(process.cwd(), "meta-app/src", file), "utf8"),
+      );
+      const findings = await auditRuntimeBoundary(root, async () => ({
+        stdout: "",
+        stderr: "",
+      }));
+      expect(findings, file).toEqual([]);
+    }
+  });
+
+  it("accepts only the canonical Pages Functions route artifact", async () => {
+    const root = await fixture();
+    await writeFile(
+      resolve(root, "dist/_routes.json"),
+      JSON.stringify({ version: 1, include: ["/api/v1/*"], exclude: [] }),
+    );
+
+    const findings = await auditRuntimeBoundary(root, async () => ({
+      stdout: "",
+      stderr: "",
+    }));
+    expect(
+      findings.filter(({ file }) => file === "dist/_routes.json"),
+    ).toEqual([]);
   });
 
   it("permits only the four reviewed Zustand persist stores with literal namespaces and partialize", async () => {
@@ -4363,7 +4472,7 @@ describe("private hosted runtime boundary", () => {
     );
   });
 
-  it("allows the official image base only in useCardImage and rejects other origins", async () => {
+  it("allows the official image base in the reviewed legacy image hook only", async () => {
     const root = await fixture(
       "import './ui/hooks/useCardImage'; export default function App() {}",
     );
@@ -4393,6 +4502,48 @@ describe("private hosted runtime boundary", () => {
       file: "src/ui/hooks/useCardImage.ts",
       code: "external-origin",
       detail: "https://cdn.example.test/card.png",
+    });
+  });
+
+  it("pins the Meta catalog image origin to its exact reviewed hook", async () => {
+    const reviewedRoot = await fixture();
+    await writeFile(
+      resolve(reviewedRoot, "meta-app/src/App.tsx"),
+      "import './hooks/useCatalogCardImage'; export default function App() {}",
+    );
+    await mkdir(resolve(reviewedRoot, "meta-app/src/hooks"), {
+      recursive: true,
+    });
+    const reviewedSource = await readFile(
+      resolve(process.cwd(), "meta-app/src/hooks/useCatalogCardImage.ts"),
+      "utf8",
+    );
+    await writeFile(
+      resolve(reviewedRoot, "meta-app/src/hooks/useCatalogCardImage.ts"),
+      reviewedSource,
+    );
+
+    expect(
+      await auditRuntimeBoundary(reviewedRoot, async () => ({
+        stdout: "",
+        stderr: "",
+      })),
+    ).toEqual([]);
+
+    await writeFile(
+      resolve(reviewedRoot, "meta-app/src/hooks/useCatalogCardImage.ts"),
+      `${reviewedSource}\n// tampered`,
+    );
+    expect(
+      await auditRuntimeBoundary(reviewedRoot, async () => ({
+        stdout: "",
+        stderr: "",
+      })),
+    ).toContainEqual({
+      file: "meta-app/src/hooks/useCatalogCardImage.ts",
+      code: "external-origin",
+      detail:
+        "https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/",
     });
   });
 
@@ -5196,9 +5347,25 @@ describe("private hosted runtime boundary", () => {
   it("runs the repository-local Vite executable with ambient build authority removed", async () => {
     const root = await fixture();
     await mkdir(resolve(root, "node_modules/vite/bin"), { recursive: true });
+    await mkdir(resolve(root, "node_modules/wrangler/bin"), {
+      recursive: true,
+    });
+    await mkdir(resolve(root, "functions/api/v1"), { recursive: true });
     await writeFile(
       resolve(root, "node_modules/vite/bin/vite.js"),
       "// fixture",
+    );
+    await writeFile(
+      resolve(root, "node_modules/wrangler/bin/wrangler.js"),
+      "// fixture",
+    );
+    await writeFile(
+      resolve(root, "functions/api/v1/[[path]].ts"),
+      "export {};",
+    );
+    await writeFile(
+      resolve(root, "wrangler.json"),
+      await readFile(resolve(process.cwd(), "wrangler.json")),
     );
     const previousNodeOptions = process.env.NODE_OPTIONS;
     const previousVitePoison = process.env.VITE_POISON;
@@ -5213,11 +5380,149 @@ describe("private hosted runtime boundary", () => {
       }> = [];
       const output = await runCanonicalBoundaryBuild(root, async (command) => {
         seen.push(command);
+        if (command.args.includes("pages")) {
+          const value = (flag: string): string => {
+            const index = command.args.indexOf(flag);
+            if (index < 0 || !command.args[index + 1]) throw new Error(flag);
+            return command.args[index + 1]!;
+          };
+          const outdir = value("--outdir");
+          await writeFile(resolve(outdir, "index.js"), "export default {};\n");
+          const generated =
+            "../.wrangler/tmp/pages-test/functionsRoutes-test.mjs";
+          const inputPaths = [
+            "../src/cloud-data/access-auth.ts",
+            "../src/cloud-data/api.ts",
+            "../src/cloud-data/contracts.ts",
+            "../src/cloud-data/idempotency.ts",
+            "../src/cloud-data/identity.ts",
+            "../src/cloud-data/rate-limit.ts",
+            "../src/cloud-data/repository.ts",
+            "../src/cloud-data/request-context.ts",
+            "../src/cloud-data/retention.ts",
+            "api/v1/[[path]].ts",
+            "../node_modules/jose/dist/webapi/index.js",
+            "../node_modules/jose/dist/webapi/jwe/compact/decrypt.js",
+            "../node_modules/jose/dist/webapi/jwe/compact/encrypt.js",
+            "../node_modules/jose/dist/webapi/jwe/flattened/decrypt.js",
+            "../node_modules/jose/dist/webapi/jwe/flattened/encrypt.js",
+            "../node_modules/jose/dist/webapi/jwe/general/decrypt.js",
+            "../node_modules/jose/dist/webapi/jwe/general/encrypt.js",
+            "../node_modules/jose/dist/webapi/jwk/embedded.js",
+            "../node_modules/jose/dist/webapi/jwk/thumbprint.js",
+            "../node_modules/jose/dist/webapi/jwks/local.js",
+            "../node_modules/jose/dist/webapi/jwks/remote.js",
+            "../node_modules/jose/dist/webapi/jws/compact/sign.js",
+            "../node_modules/jose/dist/webapi/jws/compact/verify.js",
+            "../node_modules/jose/dist/webapi/jws/flattened/sign.js",
+            "../node_modules/jose/dist/webapi/jws/flattened/verify.js",
+            "../node_modules/jose/dist/webapi/jws/general/sign.js",
+            "../node_modules/jose/dist/webapi/jws/general/verify.js",
+            "../node_modules/jose/dist/webapi/jwt/decrypt.js",
+            "../node_modules/jose/dist/webapi/jwt/encrypt.js",
+            "../node_modules/jose/dist/webapi/jwt/sign.js",
+            "../node_modules/jose/dist/webapi/jwt/unsecured.js",
+            "../node_modules/jose/dist/webapi/jwt/verify.js",
+            "../node_modules/jose/dist/webapi/key/export.js",
+            "../node_modules/jose/dist/webapi/key/generate_key_pair.js",
+            "../node_modules/jose/dist/webapi/key/generate_secret.js",
+            "../node_modules/jose/dist/webapi/key/import.js",
+            "../node_modules/jose/dist/webapi/lib/asn1.js",
+            "../node_modules/jose/dist/webapi/lib/base64.js",
+            "../node_modules/jose/dist/webapi/lib/buffer_utils.js",
+            "../node_modules/jose/dist/webapi/lib/content_encryption.js",
+            "../node_modules/jose/dist/webapi/lib/crypto_key.js",
+            "../node_modules/jose/dist/webapi/lib/deflate.js",
+            "../node_modules/jose/dist/webapi/lib/helpers.js",
+            "../node_modules/jose/dist/webapi/lib/invalid_key_input.js",
+            "../node_modules/jose/dist/webapi/lib/is_key_like.js",
+            "../node_modules/jose/dist/webapi/lib/jwe_algorithms.js",
+            "../node_modules/jose/dist/webapi/lib/jwe_decrypt.js",
+            "../node_modules/jose/dist/webapi/lib/jwe_encrypt.js",
+            "../node_modules/jose/dist/webapi/lib/jwk_to_key.js",
+            "../node_modules/jose/dist/webapi/lib/jws_algorithms.js",
+            "../node_modules/jose/dist/webapi/lib/jws_sign.js",
+            "../node_modules/jose/dist/webapi/lib/jws_verify.js",
+            "../node_modules/jose/dist/webapi/lib/jwt_claims_set.js",
+            "../node_modules/jose/dist/webapi/lib/key.js",
+            "../node_modules/jose/dist/webapi/lib/key_algorithm.js",
+            "../node_modules/jose/dist/webapi/lib/key_descriptor.js",
+            "../node_modules/jose/dist/webapi/lib/key_management.js",
+            "../node_modules/jose/dist/webapi/lib/options.js",
+            "../node_modules/jose/dist/webapi/lib/signing.js",
+            "../node_modules/jose/dist/webapi/lib/type_checks.js",
+            "../node_modules/jose/dist/webapi/util/base64url.js",
+            "../node_modules/jose/dist/webapi/util/decode_jwt.js",
+            "../node_modules/jose/dist/webapi/util/decode_protected_header.js",
+            "../node_modules/jose/dist/webapi/util/errors.js",
+            "../node_modules/path-to-regexp/dist.es2015/index.js",
+            "../node_modules/wrangler/templates/pages-template-worker.ts",
+            generated,
+          ];
+          const inputs = Object.fromEntries(
+            inputPaths.map((path) => [
+              path,
+              { bytes: 1, imports: [], format: "esm" },
+            ]),
+          );
+          await writeFile(
+            value("--metafile"),
+            JSON.stringify({
+              inputs,
+              outputs: {
+                [resolve(outdir, "index.js")]: {
+                  imports: [],
+                  exports: ["default"],
+                  entryPoint:
+                    "../node_modules/wrangler/templates/pages-template-worker.ts",
+                  inputs: Object.fromEntries(
+                    inputPaths.map((path) => [
+                      path,
+                      { bytesInOutput: 1 },
+                    ]),
+                  ),
+                },
+              },
+            }),
+          );
+          await writeFile(
+            value("--build-metadata-path"),
+            JSON.stringify({
+              wrangler_config_hash:
+                "ef8f1087757b5770a1e0428c25fe830aa645f9be9ae0fe7bc973fb470d9f3d95",
+              build_output_directory: "dist",
+            }),
+          );
+          await writeFile(
+            value("--output-config-path"),
+            JSON.stringify({
+              routes: [
+                {
+                  routePath: "/api/v1/:path*",
+                  mountPath: "/api/v1",
+                  method: "",
+                  module: ["api/v1/[[path]].ts:onRequest"],
+                },
+              ],
+              baseURL: "/",
+            }),
+          );
+          await writeFile(
+            value("--output-routes-path"),
+            JSON.stringify({
+              version: 1,
+              description: "Generated by wrangler@4.118.0",
+              include: ["/api/v1/*"],
+              exclude: [],
+            }),
+          );
+          return { stdout: "worker\n", stderr: "" };
+        }
         return { stdout: "built\n", stderr: "" };
       });
 
-      expect(output).toEqual({ stdout: "built\n", stderr: "" });
-      expect(seen).toHaveLength(1);
+      expect(output).toEqual({ stdout: "built\nworker\n", stderr: "" });
+      expect(seen).toHaveLength(2);
       expect(seen[0]?.file).toBe(process.execPath);
       expect(seen[0]?.args).toEqual([
         resolve(root, "node_modules/vite/bin/vite.js"),
@@ -5229,6 +5534,10 @@ describe("private hosted runtime boundary", () => {
       expect(seen[0]?.cwd).toBe(root);
       expect(seen[0]?.env.NODE_OPTIONS).toBeUndefined();
       expect(seen[0]?.env.VITE_POISON).toBeUndefined();
+      expect(seen[1]?.file).toBe(process.execPath);
+      expect(seen[1]?.args).toContain("--outdir");
+      expect(seen[1]?.env.NODE_OPTIONS).toBeUndefined();
+      expect(seen[1]?.env.VITE_POISON).toBeUndefined();
     } finally {
       if (previousNodeOptions === undefined) delete process.env.NODE_OPTIONS;
       else process.env.NODE_OPTIONS = previousNodeOptions;

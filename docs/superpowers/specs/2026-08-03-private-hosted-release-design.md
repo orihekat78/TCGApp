@@ -15,10 +15,13 @@ Date: 2026-08-10 — Production deployed and accepted
 ## Product shipped
 
 - Ship the same Vite product: engine, cards, setup, tutorial, replay, and YOU-vs-CPU.
-- No PvP, accounts, backend, matchmaking, chat, or cross-device persistence.
+- No PvP, matchmaking, chat, public signup, or replay synchronization. The
+  local-first cloud-data foundation remains disabled unless its separate preview
+  and production bindings are explicitly approved.
 - Card-image bytes are not bundled or hosted. The browser may request the existing
   official image host; failure uses the local SVG placeholder.
-- No service worker, PWA, source map, server runtime, telemetry, or remote logging.
+- No service worker, PWA, source map, telemetry, or remote logging. The only
+  server runtime is the reviewed same-origin Pages Functions worker for `/api/v1/*`.
 - Match, tutorial, and imported replay state remain in memory and clear on reload.
 
 ## Static payload and inspection
@@ -29,6 +32,8 @@ Date: 2026-08-10 — Production deployed and accepted
 - Secret and destination scans inspect the exact staged upload payload. Evidence
   records redacted labels or origins, never URL paths, queries, or credentials.
 - Dynamic alias/runtime-flow analysis is a mandatory, fail-closed release gate.
+- The Pages Functions entry, exact source closure, Wrangler config, generated
+  route, worker bytes, and bundle capabilities are validated before staging.
 - The Vite manifest permits only the reviewed HOME entry, game-runtime entry, and
   nine lazy screen entries. Every reachable JavaScript chunk is capability-scanned
   and staged with exact bytes and SHA-256 ownership; unknown or orphan chunks fail.
@@ -40,6 +45,8 @@ Date: 2026-08-10 — Production deployed and accepted
 ## Cloudflare architecture
 
 - Dedicated Pages Direct Upload project: `conan-private-7302df07`.
+- The project has no custom domains or source-control integration. Pages build
+  commands, build caching, and Web Analytics remain disabled.
 - Access protects both `conan-private-7302df07.pages.dev` and
   `*.conan-private-7302df07.pages.dev` before application bytes are uploaded.
 - The sole identity provider is Cloudflare One-time PIN. Cloudflare account login,
@@ -63,6 +70,11 @@ Date: 2026-08-10 — Production deployed and accepted
   typecheck, lint, unit, smoke, development E2E, docs generation, docs check, advanced
   runtime-boundary audit, preparation, exact-payload secret and destination scans,
   static E2E, and clean-tree verification.
+- The no-argument Node launcher creates exactly one qualification run, reads its
+  unchanged staging payload once into memory, confirms root and wildcard Access,
+  then sends the exact static bytes and qualified `_worker.js` through the
+  Cloudflare Pages API. npm, tsx, Wrangler, external run directories, and rebuilds
+  never receive the deployment credential.
 - The previous 16-gate qualification passed for clean commit
   `9f608fd5bff7249ee1aa59ba1b101cfb884d5ea3`.
 - Production deployment `945de0aa-1af1-4836-86f1-b8048dc6d32e` uploaded the exact

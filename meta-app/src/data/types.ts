@@ -30,6 +30,8 @@ export interface CardDef {
   features?: string[];
   keywords?: string[];
   effectShort?: string;
+  /** Official CDN-relative card image path. Null means use the local placeholder. */
+  imagePath?: string | null;
   /** 固有のデッキ投入上限。未指定は 3 枚。 */
   deckLimit?: number | 'unlimited';
 }

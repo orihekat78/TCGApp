@@ -22,6 +22,7 @@ import {
 import { promisify } from "node:util";
 import { loadConfigFromFile, resolveConfig } from "vite";
 import { inspectBuild, stageBuild } from "./manifest.js";
+import { buildPagesDeploymentEvidence } from "./pages-deployment-evidence.js";
 
 export type PrepareReleaseOptions = {
   repoRoot: string;
@@ -54,6 +55,7 @@ export type PrivatePrepareControls = {
 export type PreparedRelease = {
   manifests: BuildManifests;
   metadataPath: string;
+  deploymentEvidencePath: string;
 };
 
 const execFile = promisify(execFileCallback);
@@ -62,7 +64,8 @@ const NPM_VERSION = "11.12.1";
 const ROOT_ENTRY = "meta-app/index.html";
 const RELEASE_CONFIG = "vite.config.private-hosted.ts";
 const PACKAGE_BUILD_COMMAND = "vite build";
-const RELEASE_BUILD_COMMAND = `npm run build -- --manifest --config ${RELEASE_CONFIG}`;
+const PACKAGE_META_BUILD_COMMAND = "tsx scripts/private-hosted/build-meta.ts";
+const RELEASE_BUILD_COMMAND = "npm run build:meta";
 const FIXED_GIT_PATH =
   process.platform === "win32"
     ? resolve(dirname(process.execPath), "..", "Git", "cmd", "git.exe")
@@ -494,8 +497,17 @@ async function contract(
   const scripts = record(pkg.scripts);
   if (scripts?.build !== PACKAGE_BUILD_COMMAND)
     fail("package.json build command must be exactly vite build");
+  if (scripts?.["build:meta"] !== PACKAGE_META_BUILD_COMMAND)
+    fail(
+      `package.json build:meta command must be exactly ${PACKAGE_META_BUILD_COMMAND}`,
+    );
   if (scripts?.prebuild !== undefined || scripts?.postbuild !== undefined)
     fail("package.json must not define prebuild or postbuild");
+  if (
+    scripts?.["prebuild:meta"] !== undefined ||
+    scripts?.["postbuild:meta"] !== undefined
+  )
+    fail("package.json must not define prebuild:meta or postbuild:meta");
   if (
     pkg.packageManager !== `npm@${NPM_VERSION}` ||
     record(pkg.engines)?.node !== "24.x" ||
@@ -587,7 +599,7 @@ async function contract(
 export function assertAcceptableBuildOutput(output: string): void {
   if (/externalized for browser compatibility/i.test(output))
     fail("browser externalization warning");
-  if (/\b(?:build:meta|dist-meta)\b/i.test(output))
+  if (/\bdist-meta\b/i.test(output))
     fail("build warning: forbidden alternate meta output");
 }
 function npm(args: string[]): { command: string; args: string[] } {
@@ -688,14 +700,7 @@ async function npmVerified(
     fail("npm version cannot be read");
   }
   return {
-    command: npm([
-      "run",
-      "build",
-      "--",
-      "--manifest",
-      "--config",
-      RELEASE_CONFIG,
-    ]),
+    command: npm(["run", "build:meta"]),
     version: NPM_VERSION,
   };
 }
@@ -869,6 +874,11 @@ export async function prepareReleaseCore(
     fail("commit or package-lock changed while resolving the build contract");
   const run = controls.runCommand ?? commandSystem;
   const verifiedNpm = await npmVerified(root, run);
+  const wranglerVersion = controls.verifyWrangler
+    ? await controls.verifyWrangler()
+    : await wrangler(root, checked.packageJson, run);
+  if (wranglerVersion !== WRANGLER_VERSION)
+    fail("verified wrangler version differs from pinned version");
   const build =
     controls.runBuild ?? (() => defaultBuild(root, verifiedNpm.command, run));
   await build();
@@ -884,12 +894,16 @@ export async function prepareReleaseCore(
   if (JSON.stringify(await snapshot(root)) !== JSON.stringify(initial))
     fail("commit or package-lock changed during builds");
   if (!sameManifests(first, second)) fail("build manifests differ");
-  const wranglerVersion = controls.verifyWrangler
-    ? await controls.verifyWrangler()
-    : await wrangler(root, checked.packageJson, run);
-  if (wranglerVersion !== WRANGLER_VERSION)
-    fail("verified wrangler version differs from pinned version");
   await stageBuild(resolve(root, "dist"), options.stagingDir, second);
+  const wranglerConfigText = await readFile(
+    resolve(root, "wrangler.json"),
+    "utf8",
+  ).catch(() => fail("wrangler.json is missing"));
+  const deploymentEvidence = await buildPagesDeploymentEvidence({
+    stagingDir: options.stagingDir,
+    manifests: second,
+    wranglerConfigText,
+  });
   const metadata = {
     schemaVersion: 1,
     commit: initial.commit,
@@ -920,11 +934,19 @@ export async function prepareReleaseCore(
         name: "release-metadata.json",
         data: `${JSON.stringify(metadata, null, 2)}\n`,
       },
+      {
+        name: "pages-deployment.json",
+        data: `${JSON.stringify(deploymentEvidence, null, 2)}\n`,
+      },
     ],
     write,
   );
   const metadataPath = resolve(evidenceDir, "release-metadata.json");
-  return { manifests: second, metadataPath };
+  const deploymentEvidencePath = resolve(
+    evidenceDir,
+    "pages-deployment.json",
+  );
+  return { manifests: second, metadataPath, deploymentEvidencePath };
 }
 /** Test-only direct core. Public prepare.ts always supplies canonical controls. */
 export async function prepareReleaseForTest(

@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `3f024c815e1c`
+> Source hash: `513461053ea3`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **167** ファイル（[全体 index](./index.md)）
+このグループ: **178** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (23)
 
@@ -116,10 +116,21 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (79)
+## その他 (90)
 
 | ソース | 参照ルール |
 | ------ | --------- |
+| [`src/cloud-data/access-auth.ts`](../../../src/cloud-data/access-auth.ts) | _(参照なし)_ |
+| [`src/cloud-data/api.ts`](../../../src/cloud-data/api.ts) | _(参照なし)_ |
+| [`src/cloud-data/contracts.ts`](../../../src/cloud-data/contracts.ts) | _(参照なし)_ |
+| [`src/cloud-data/d1-types.ts`](../../../src/cloud-data/d1-types.ts) | _(参照なし)_ |
+| [`src/cloud-data/idempotency.ts`](../../../src/cloud-data/idempotency.ts) | _(参照なし)_ |
+| [`src/cloud-data/identity.ts`](../../../src/cloud-data/identity.ts) | _(参照なし)_ |
+| [`src/cloud-data/rate-limit.ts`](../../../src/cloud-data/rate-limit.ts) | _(参照なし)_ |
+| [`src/cloud-data/repository.ts`](../../../src/cloud-data/repository.ts) | _(参照なし)_ |
+| [`src/cloud-data/request-context.ts`](../../../src/cloud-data/request-context.ts) | _(参照なし)_ |
+| [`src/cloud-data/retention.ts`](../../../src/cloud-data/retention.ts) | _(参照なし)_ |
+| [`src/cloud-data/usage-budget.ts`](../../../src/cloud-data/usage-budget.ts) | _(参照なし)_ |
 | [`src/ui/fixtures/bug274PartnerFixture.ts`](../../../src/ui/fixtures/bug274PartnerFixture.ts) | _(参照なし)_ |
 | [`src/ui/fixtures/cutinDemoState.ts`](../../../src/ui/fixtures/cutinDemoState.ts) | [`08-contact.md`](../../rules/08-contact.md) / [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) |
 | [`src/ui/fixtures/hiramekiDemoState.ts`](../../../src/ui/fixtures/hiramekiDemoState.ts) | [`10-action-event.md`](../../rules/10-action-event.md) |

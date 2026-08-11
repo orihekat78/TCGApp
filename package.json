@@ -37,6 +37,8 @@
     "benchmark": "tsx scripts/benchmark/run.ts",
     "cards:fetch": "node scripts/cards/fetch-official.cjs",
     "cards:case-difficulties": "node scripts/cards/generate-case-difficulties.cjs",
+    "gen:meta-card-catalog": "tsx scripts/gen-meta-card-catalog.ts",
+    "check:meta-card-catalog": "npm run gen:meta-card-catalog && git diff --exit-code -- meta-app/src/data/cardCatalog.generated.ts",
     "gen:meta-card-identities": "tsx scripts/gen-meta-card-identities.ts",
     "check:meta-card-identities": "npm run gen:meta-card-identities && git diff --exit-code -- meta-app/src/data/cardIdentities.generated.ts",
     "cards:status": "node scripts/cards/cards-data-status.cjs",
@@ -55,9 +57,11 @@
     "private-hosted:qualify-final": "tsx scripts/private-hosted/run-final-qualification.ts",
     "private-hosted:init": "tsx scripts/private-hosted/init-config.ts",
     "private-hosted:audit": "tsx scripts/private-hosted/verify-access.ts",
+    "cloud-data:prepare-preview": "tsx scripts/cloud-data/prepare-preview-ops.ts",
+    "cloud-data:measure-d1-budget": "tsx scripts/cloud-data/measure-d1-budget.ts",
     "dev:meta": "vite --config meta-app/vite.config.meta.ts",
-    "build:meta": "vite build --config meta-app/vite.config.meta.ts",
-    "preview:meta": "vite preview --config meta-app/vite.config.meta.ts",
+    "build:meta": "tsx scripts/private-hosted/build-meta.ts",
+    "preview:meta": "vite preview --config vite.config.private-hosted.ts",
     "test:meta:e2e": "playwright test --config meta-app/playwright.config.ts",
     "hybrid:prepare": "node scripts/hybrid/prepare.cjs",
     "hybrid:finish": "node scripts/hybrid/finish.cjs",
@@ -116,6 +120,7 @@
     "pre-commit": "npm run docs:check && npm run lint:bugs && npm run lint:listener && npm run lint:card-addition && npm run lint:side-channel && npm run lint:component-testid && npm run lint:ok-false-pattern && npm run lint:test-pair && npm run lint:icon-abilities"
   },
   "dependencies": {
+    "jose": "^6.2.8",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "zustand": "^5.0.13"

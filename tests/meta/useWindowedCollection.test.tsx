@@ -281,6 +281,31 @@ describe("useWindowedCollection", () => {
       .toBeGreaterThan(beforePx);
   });
 
+  it("remeasures every mounted row when only one resized item reports", () => {
+    act(() => root.render(<Harness columns={7} rowPitch={40} itemHeight={36} />));
+    const scroller = container.querySelector<HTMLElement>("[data-testid=scroller]")!;
+    act(() => {
+      Object.defineProperty(scroller, "scrollTop", { configurable: true, value: 400, writable: true });
+      scroller.dispatchEvent(new Event("scroll"));
+    });
+    const nodes = [...container.querySelectorAll<HTMLElement>("button")];
+    for (const node of nodes) {
+      const index = Number(node.dataset.testid!.replace("card-", ""));
+      Object.defineProperty(node, "offsetTop", {
+        configurable: true,
+        value: Math.floor(index / 7) * 50,
+      });
+    }
+
+    act(() => ResizeObserverStub.instances[0]!.callback([
+      { target: nodes[0]! } as ResizeObserverEntry,
+    ], ResizeObserverStub.instances[0] as unknown as ResizeObserver));
+
+    const [start, , beforePx] = container.querySelector("[data-testid=range]")!
+      .textContent!.split(":").map(Number);
+    expect(beforePx).toBe(Math.floor(start / 7) * 50);
+  });
+
   it("resets to the initial chunk when the layout key changes", () => {
     act(() => root.render(<Harness layoutKey="grid" />));
     const scroller = container.querySelector<HTMLElement>("[data-testid=scroller]")!;

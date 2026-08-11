@@ -185,12 +185,11 @@ export function useWindowedCollection<T>({
   }, [chunkSize, focusedKey, keyIndexes, metrics.columns, metrics.rowPitch, mountedLimit, rangeForStart, rangeWithPins, scrollElement, selectedKey]);
 
   useEffect(() => {
-    const observer = new ResizeObserver((entries) => {
+    const observer = new ResizeObserver(() => {
       let changed = false;
-      for (const entry of entries) {
-        const node = entry.target as HTMLElement;
-        const index = nodeIndexesRef.current.get(node);
-        if (index === undefined) continue;
+      // A resized card can move every later row without resizing those cards.
+      // Refresh the whole bounded window so old and new offsetTop values never mix.
+      for (const [index, node] of nodesRef.current) {
         const measurement = { top: node.offsetTop, height: node.offsetHeight };
         const previous = measurementsRef.current.get(index);
         measurementsRef.current.set(index, measurement);

@@ -26,6 +26,23 @@ test('CARDS keeps its catalog window bounded while scrolling without page errors
   expect(errors).toEqual([]);
 });
 
+test('CARDS and DECK keep every virtualized grid row on the portrait card track', async ({ page }) => {
+  await page.goto('/#cards');
+  const cardsItem = page.locator('.cards-grid-item').first();
+  await expect(cardsItem).toBeVisible();
+  expect(await cardsItem.evaluate((node) => (
+    getComputedStyle(node).aspectRatio
+  ))).toBe('5 / 7');
+
+  await page.goto('/#deck');
+  await expect(page.getByTestId('deck-editor')).toBeVisible();
+  const deckItem = page.locator('.deck-pool-window-grid > div').first();
+  await expect(deckItem).toBeVisible();
+  expect(await deckItem.evaluate((node) => (
+    getComputedStyle(node).aspectRatio
+  ))).toBe('5 / 7');
+});
+
 test('CARDS keeps D09014 connected through a real pointer selection and preserves 7-column content coordinates', async ({ page }) => {
   const errors: string[] = [];
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
@@ -50,7 +67,8 @@ test('CARDS keeps D09014 connected through a real pointer selection and preserve
     await expect(target).toBeVisible();
     await expect.poll(() => cards.count()).toBeLessThanOrEqual(96);
   };
-  const contentPosition = () => target.evaluate((node) => {
+  const contentPosition = () => target.evaluateAll(([node]) => {
+    if (!node) return null;
     const scroller = document.querySelector<HTMLElement>('.cards-grid-scroll');
     if (!scroller) throw new Error('cards scroller is missing');
     const box = node.getBoundingClientRect();
@@ -75,10 +93,8 @@ test('CARDS keeps D09014 connected through a real pointer selection and preserve
       node.dispatchEvent(new Event('scroll'));
     }, top);
     await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
-    if (await target.count()) {
-      const position = await contentPosition();
-      targetWindows.push({ top, beforePx: position.beforePx });
-    }
+    const position = await contentPosition();
+    if (position) targetWindows.push({ top, beforePx: position.beforePx });
   }
   expect(targetWindows.length).toBeGreaterThanOrEqual(2);
   const firstWindow = targetWindows[0]!;
@@ -89,10 +105,12 @@ test('CARDS keeps D09014 connected through a real pointer selection and preserve
   const firstPosition = await contentPosition();
   await scrollTo(adjacentWindow!.top);
   const adjacentPosition = await contentPosition();
-  expect(adjacentPosition.x).toBeCloseTo(firstPosition.x, 1);
+  expect(firstPosition).not.toBeNull();
+  expect(adjacentPosition).not.toBeNull();
+  expect(adjacentPosition!.x).toBeCloseTo(firstPosition!.x, 1);
   // Fractional track rounding can accumulate a few pixels over distant rows.
   // A broken non-row boundary moves the card by a full row/column, not <=3px.
-  expect(Math.abs(adjacentPosition.y - firstPosition.y), JSON.stringify({
+  expect(Math.abs(adjacentPosition!.y - firstPosition!.y), JSON.stringify({
     firstWindow,
     adjacentWindow,
     firstPosition,
@@ -226,6 +244,7 @@ test('720/667 landscape keeps actionable CARDS and DECK text at 10px or larger',
     expect(cardsSizes.every((size) => size >= 10)).toBe(true);
 
     await page.goto('/#deck');
+    await expect(page.getByTestId('deck-editor')).toBeVisible();
     const deckSizes = await fontSizes([
       '.home-navigation button',
       '.deck-tool-button',

@@ -6,12 +6,16 @@ import {
 import { projectReplayLogForViewer } from '@/ui/services/replayViewerProjection';
 import type { HistoryReplayRefV1, MatchRecord } from '../data/types';
 import { normalizeHistoryRow, useHistoryStore } from '../state/historyStore';
+import {
+  ARTIFACT_STORE,
+  MAX_HISTORY_RECORDS,
+  openHistoryReplayDatabase,
+  requestValue,
+  ROW_STORE,
+  transactionDone,
+} from './historyRowsRepository';
 
-const DB_NAME = 'conan-history-replay-v1';
-const DB_VERSION = 1;
-const ROW_STORE = 'historyRows';
-const ARTIFACT_STORE = 'replayArtifacts';
-const MAX_RECORDS = 500;
+export { listStoredHistoryRows } from './historyRowsRepository';
 export const MAX_REPLAY_ARTIFACT_BYTES = 32 * 1024 * 1024;
 
 export type StoredReplayArtifactV1 = {
@@ -47,41 +51,6 @@ function assertReplayModeMatchesHistory(row: MatchRecord, log: ReplayLogV3): voi
   if (expectedViewerMode === null || log.viewerMode !== expectedViewerMode) {
     throw new Error('Replay viewer mode does not match history mode');
   }
-}
-
-function requestValue<T>(request: IDBRequest<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error('IndexedDB request failed'));
-  });
-}
-
-function transactionDone(transaction: IDBTransaction): Promise<void> {
-  return new Promise((resolve, reject) => {
-    transaction.oncomplete = () => resolve();
-    transaction.onabort = () => reject(transaction.error ?? new Error('IndexedDB transaction aborted'));
-    transaction.onerror = () => reject(transaction.error ?? new Error('IndexedDB transaction failed'));
-  });
-}
-
-function openDatabase(): Promise<IDBDatabase> {
-  if (!globalThis.indexedDB) return Promise.reject(new Error('Replay storage is unavailable'));
-  return new Promise((resolve, reject) => {
-    const request = globalThis.indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = () => {
-      const database = request.result;
-      if (!database.objectStoreNames.contains(ROW_STORE)) {
-        const rows = database.createObjectStore(ROW_STORE, { keyPath: 'id' });
-        rows.createIndex('recorded', 'recorded');
-      }
-      if (!database.objectStoreNames.contains(ARTIFACT_STORE)) {
-        database.createObjectStore(ARTIFACT_STORE, { keyPath: 'artifactId' });
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error('Replay storage could not be opened'));
-    request.onblocked = () => reject(new Error('Replay storage upgrade is blocked'));
-  });
 }
 
 async function sha256(text: string): Promise<HistoryReplayRefV1['digest']> {
@@ -162,7 +131,7 @@ async function verifyStoredReplayArtifact(value: unknown, row: MatchRecord): Pro
 
 export async function saveHistoryReplay(rawRow: MatchRecord, log: ReplayLogV3): Promise<MatchRecord> {
   const bundle = await prepareHistoryReplayBundle(rawRow, log);
-  const database = await openDatabase();
+  const database = await openHistoryReplayDatabase();
   const transaction = database.transaction([ROW_STORE, ARTIFACT_STORE], 'readwrite');
   const done = transactionDone(transaction);
   try {
@@ -180,7 +149,7 @@ export async function saveHistoryReplay(rawRow: MatchRecord, log: ReplayLogV3): 
     artifacts.put(bundle.artifact);
     const allRows = (await requestValue(rows.getAll()) as MatchRecord[])
       .sort((a, b) => b.recorded - a.recorded);
-    for (const expired of allRows.slice(MAX_RECORDS)) {
+    for (const expired of allRows.slice(MAX_HISTORY_RECORDS)) {
       rows.delete(expired.id);
       if (expired.replayRef) artifacts.delete(expired.replayRef.artifactId);
     }
@@ -199,24 +168,9 @@ export async function saveHistoryReplay(rawRow: MatchRecord, log: ReplayLogV3): 
   }
 }
 
-export async function listStoredHistoryRows(): Promise<MatchRecord[]> {
-  const database = await openDatabase();
-  try {
-    const transaction = database.transaction(ROW_STORE, 'readonly');
-    const rows = await requestValue(transaction.objectStore(ROW_STORE).getAll()) as MatchRecord[];
-    await transactionDone(transaction);
-    return rows.map(normalizeHistoryRow)
-      .filter((row): row is MatchRecord => row !== undefined)
-      .sort((a, b) => b.recorded - a.recorded)
-      .slice(0, MAX_RECORDS);
-  } finally {
-    database.close();
-  }
-}
-
 export async function loadHistoryReplayArtifact(artifactId: string): Promise<ReplayLogV3> {
   if (!artifactId.trim()) throw new Error('Replay artifact ID is required');
-  const database = await openDatabase();
+  const database = await openHistoryReplayDatabase();
   try {
     const transaction = database.transaction([ROW_STORE, ARTIFACT_STORE], 'readonly');
     const artifact = await requestValue(transaction.objectStore(ARTIFACT_STORE).get(artifactId)) as StoredReplayArtifactV1 | undefined;
@@ -232,7 +186,7 @@ export async function loadHistoryReplayArtifact(artifactId: string): Promise<Rep
 }
 
 export async function clearStoredHistoryReplays(): Promise<void> {
-  const database = await openDatabase();
+  const database = await openHistoryReplayDatabase();
   try {
     const transaction = database.transaction([ROW_STORE, ARTIFACT_STORE], 'readwrite');
     transaction.objectStore(ROW_STORE).clear();

@@ -46,6 +46,7 @@ export type PreparedQualificationInputs = {
   stagingRealpath: string;
   uploadManifestSha256: string;
   responseManifestSha256: string;
+  pagesDeploymentSha256: string;
   postStopStagingMatch: true;
 };
 
@@ -60,11 +61,12 @@ export type QualificationCommandRecord = {
 };
 
 export type QualificationReport = {
-  schemaVersion: 2;
+  schemaVersion: 3;
   releaseCommit: string;
   packageLockSha256: string;
   uploadManifestSha256: string;
   responseManifestSha256: string;
+  pagesDeploymentSha256: string;
   startedAt: string;
   completedAt: string;
   commands: QualificationCommandRecord[];
@@ -110,6 +112,7 @@ type QualificationPaths = {
   evidenceDir: string;
   uploadManifestPath: string;
   responseManifestPath: string;
+  pagesDeploymentPath: string;
   reportPath: string;
 };
 
@@ -131,6 +134,7 @@ const REPORT_KEYS = [
   "completedAt",
   "destinationFindings",
   "packageLockSha256",
+  "pagesDeploymentSha256",
   "releaseCommit",
   "responseManifestSha256",
   "schemaVersion",
@@ -233,7 +237,7 @@ export function validateQualificationReport(
 ): QualificationReport {
   const value = record(candidate);
   exactKeys(value, REPORT_KEYS, "qualification report");
-  if (value.schemaVersion !== 2) fail("schemaVersion must be 2");
+  if (value.schemaVersion !== 3) fail("schemaVersion must be 3");
   if (
     typeof value.releaseCommit !== "string" ||
     !COMMIT.test(value.releaseCommit)
@@ -243,6 +247,7 @@ export function validateQualificationReport(
   hash(value.packageLockSha256, "packageLockSha256");
   hash(value.uploadManifestSha256, "uploadManifestSha256");
   hash(value.responseManifestSha256, "responseManifestSha256");
+  hash(value.pagesDeploymentSha256, "pagesDeploymentSha256");
   hash(value.bugGateSha256, "bugGateSha256");
   const reportStarted = Date.parse(utc(value.startedAt, "startedAt"));
   const reportCompleted = Date.parse(utc(value.completedAt, "completedAt"));
@@ -313,6 +318,7 @@ export function validateQualificationReport(
         [
           "mode",
           "postStopStagingMatch",
+          "pagesDeploymentSha256",
           "responseManifestSha256",
           "stagingRealpath",
           "uploadManifestSha256",
@@ -331,7 +337,9 @@ export function validateQualificationReport(
         hash(prepared.uploadManifestSha256, "prepared upload manifest") !==
           value.uploadManifestSha256 ||
         hash(prepared.responseManifestSha256, "prepared response manifest") !==
-          value.responseManifestSha256
+          value.responseManifestSha256 ||
+        hash(prepared.pagesDeploymentSha256, "prepared Pages deployment") !==
+          value.pagesDeploymentSha256
       ) {
         fail("prepared manifest hashes differ from the report");
       }
@@ -509,7 +517,7 @@ function commandInputs(
   return [
     npmInput("npm-ci", ["ci"], paths),
     npmRun("card-identities", "check:meta-card-identities"),
-    npmRun("build", "build"),
+    npmRun("build", "build:meta"),
     npmInput("dependency-audit", ["audit", "--audit-level=high"], paths),
     npmRun("bug-gate", "private-hosted:bug-gate"),
     npmRun("typecheck", "typecheck"),
@@ -608,6 +616,7 @@ async function pathsFor(
     evidenceDir,
     uploadManifestPath: resolve(evidenceDir, "upload-manifest.json"),
     responseManifestPath: resolve(evidenceDir, "response-manifest.json"),
+    pagesDeploymentPath: resolve(evidenceDir, "pages-deployment.json"),
     reportPath: resolve(runReal, "qualification-report.json"),
   };
 }
@@ -635,6 +644,7 @@ export async function runFinalQualification(
   const commands: QualificationCommandRecord[] = [];
   let uploadManifestSha256: string | undefined;
   let responseManifestSha256: string | undefined;
+  let pagesDeploymentSha256: string | undefined;
   let bugGateSha256: string | undefined;
   let secretFindings: ReleaseBasicFinding[] | undefined;
   let destinationFindings: ReleaseBasicFinding[] | undefined;
@@ -694,26 +704,38 @@ export async function runFinalQualification(
     if (base.id === "prepare-release") {
       uploadManifestSha256 = await sha256File(paths.uploadManifestPath);
       responseManifestSha256 = await sha256File(paths.responseManifestPath);
+      pagesDeploymentSha256 = await sha256File(paths.pagesDeploymentPath);
     }
     if (base.id === "prepared-private-e2e") {
-      if (!uploadManifestSha256 || !responseManifestSha256) {
-        fail("prepared manifests were not recorded");
+      if (
+        !uploadManifestSha256 ||
+        !responseManifestSha256 ||
+        !pagesDeploymentSha256
+      ) {
+        fail("prepared release evidence was not recorded");
       }
-      const [postE2eUploadHash, postE2eResponseHash] = await Promise.all([
+      const [
+        postE2eUploadHash,
+        postE2eResponseHash,
+        postE2ePagesDeploymentHash,
+      ] = await Promise.all([
         sha256File(paths.uploadManifestPath),
         sha256File(paths.responseManifestPath),
+        sha256File(paths.pagesDeploymentPath),
       ]);
       if (
         postE2eUploadHash !== uploadManifestSha256 ||
-        postE2eResponseHash !== responseManifestSha256
+        postE2eResponseHash !== responseManifestSha256 ||
+        postE2ePagesDeploymentHash !== pagesDeploymentSha256
       ) {
-        fail("prepared manifests changed during private E2E");
+        fail("prepared release evidence changed during private E2E");
       }
       command.preparedInputs = {
         mode: "prepared",
         stagingRealpath: await realpath(paths.stagingDir),
         uploadManifestSha256,
         responseManifestSha256,
+        pagesDeploymentSha256,
         postStopStagingMatch: true,
       };
     }
@@ -727,17 +749,23 @@ export async function runFinalQualification(
   if ((await controls.status(paths.repoRoot)) !== "") {
     fail("repository is not clean after qualification");
   }
-  if (!uploadManifestSha256 || !responseManifestSha256 || !bugGateSha256) {
+  if (
+    !uploadManifestSha256 ||
+    !responseManifestSha256 ||
+    !pagesDeploymentSha256 ||
+    !bugGateSha256
+  ) {
     fail("qualification evidence is incomplete");
   }
   if (!secretFindings) fail("secret scan evidence is missing");
   if (!destinationFindings) fail("destination scan evidence is missing");
   const report: QualificationReport = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     releaseCommit: initial.releaseCommit,
     packageLockSha256: initial.packageLockSha256,
     uploadManifestSha256,
     responseManifestSha256,
+    pagesDeploymentSha256,
     startedAt,
     completedAt: controls.now().toISOString(),
     commands,

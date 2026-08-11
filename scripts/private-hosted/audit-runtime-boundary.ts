@@ -1,8 +1,6 @@
-import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { lstat, readFile, readdir, stat } from "node:fs/promises";
 import {
-  delimiter,
   dirname,
   extname,
   isAbsolute,
@@ -18,6 +16,11 @@ import {
 } from "lightningcss";
 import { parse } from "parse5";
 import ts from "typescript";
+import {
+  buildMetaRelease,
+  type MetaBuildCommand,
+  type MetaBuildRunner,
+} from "./build-meta.js";
 import { validateManifestClosure } from "./manifest.js";
 
 export type RuntimeBoundaryFinding = {
@@ -55,6 +58,10 @@ export default defineConfig({
   root: resolve(__dirname, "meta-app"),
   publicDir: resolve(__dirname, "public"),
   plugins: [react()],
+  define: {
+    "import.meta.env.VITE_CLOUD_DATA_SYNC_ENABLED": JSON.stringify("true"),
+    "import.meta.env.VITE_PRIVATE_HOSTED_RELEASE": JSON.stringify("true"),
+  },
   build: {
     outDir: resolve(__dirname, "dist"),
     emptyOutDir: true,
@@ -90,6 +97,8 @@ const BUNDLE_MARKERS: Array<[RegExp, string]> = [
 const TRUSTED_VENDOR_BUNDLE = /^assets\/vendor-[A-Za-z0-9_-]+\.js$/;
 const TRUSTED_RUNTIME_BUNDLE = /^assets\/rolldown-runtime-[A-Za-z0-9_-]+\.js$/;
 const TRUSTED_APP_BUNDLE = /^assets\/index-[A-Za-z0-9_-]+\.js$/;
+const TRUSTED_FUNCTIONS_BUNDLE = /^_worker\.js$/;
+const FUNCTIONS_ENTRY = "functions/api/v1/[[path]].ts";
 const TRUSTED_BRAND_LOGO = /^assets\/detective-conan-logo-[A-Za-z0-9_-]+\.png$/;
 // Updated only after npm-ci rebuild, full qualification, and adversarial review.
 const TRUSTED_VENDOR_SHA256 =
@@ -97,7 +106,9 @@ const TRUSTED_VENDOR_SHA256 =
 const TRUSTED_RUNTIME_SHA256 =
   "5db5ba82eef00d1dee7e86e663098c9427d01183a88d357437daff295aec3e75";
 const TRUSTED_APP_SHA256 =
-  "a7378da900262939e81a41934c758278033a10f4010dbb12509849eddedc390a";
+  "e1c6601e171db49e013f421de931177abd65b1c43a3efeaffc4207757e88e4c3";
+const TRUSTED_FUNCTIONS_SHA256 =
+  "8f659832b10f36bd102a991c31576e127bf4b06bea1b75723dae57604dec3a04";
 const TRUSTED_BRAND_LOGO_SHA256 =
   "8567c177ecaaf03c8b360dedd8aeea385b58e0bdffe359303f1784ef52e9beff";
 
@@ -176,6 +187,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
       },
       ...markerFindings(
         "bare fetch",
+        "browser global escape",
         "navigation a element props",
         "navigation href",
         "network API",
@@ -184,10 +196,18 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     ],
   },
   {
+    output: TRUSTED_FUNCTIONS_BUNDLE,
+    owns: (key) => key === "functions/api/v1/[[path]].ts",
+    sha256: TRUSTED_FUNCTIONS_SHA256,
+    integrityCode: "functions-integrity",
+    integrityDetail: "trusted Pages Functions bundle SHA-256 mismatch",
+    approvedFindings: markerFindings("bare fetch"),
+  },
+  {
     output: /^assets\/DeckEditor-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/DeckEditor.tsx",
     sha256:
-      "65cb7117c4cd7fb05f30590e0d88f36c11b2484f89403e0d311ef89fc333b156",
+      "88f925de889d8c7acc8896f2bd25de7f88985aabd02a4bf24cdf9512cff012ef",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed DeckEditor bundle SHA-256 mismatch",
     approvedFindings: markerFindings("persistent storage"),
@@ -196,7 +216,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/historyReplayRepository-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => /^_historyReplayRepository-[A-Za-z0-9_-]+\.js$/.test(key),
     sha256:
-      "3fa26e293adf79845e81cfac66ff9fce651551c1f8d0fec8a476dd0a979c6c88",
+      "90da9325d21022753f34998102ef78b7b1ce0009a36a44e5c6df98ee67b32d80",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed history repository bundle SHA-256 mismatch",
     approvedFindings: markerFindings("persistent storage"),
@@ -205,7 +225,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/HistoryScreen-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/HistoryScreen.tsx",
     sha256:
-      "d5d37f3467a9f0c496f39490ba0b6fdc09a60ca2a8a5f2d59652f2052619afeb",
+      "0c9d9703cec25af8b2f950cabcdc77ba4abc1ac2b368eb602aee6e07ecb4ee0e",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed HistoryScreen bundle SHA-256 mismatch",
     approvedFindings: markerFindings("network API", "persistent storage"),
@@ -214,7 +234,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/RealMatchView-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/RealMatchView.tsx",
     sha256:
-      "6fa56219e4bf37cd8ccb1dbc98bc877dd3c7109896086eeb2ac167f677c666a2",
+      "c4a07028b275e2daddae187e19d4aff3d0b1ebe057f50d4519659a94504da080",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed RealMatchView bundle SHA-256 mismatch",
     approvedFindings: markerFindings("dynamic code execution"),
@@ -223,7 +243,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/ReplayScreen-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/ReplayScreen.tsx",
     sha256:
-      "b41848a61f241bc2cf3e1eb163868bbd0750830f4174ca43da066319062f74fd",
+      "c09d1a4c6e46e49797a76bb20f6d95cff177f9c652fe00204b2b419ae4988d6b",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed ReplayScreen bundle SHA-256 mismatch",
     approvedFindings: markerFindings("network API"),
@@ -232,7 +252,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/ResultScreen-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/ResultScreen.tsx",
     sha256:
-      "4f883fc462080ff32e509164a26803697cfa6581af71b1fdaabe52c9354670ff",
+      "e0f000c11805cd3129d663789e0a3aa7d39ea5d0c310539bdb16f89a53c6b6da",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed ResultScreen bundle SHA-256 mismatch",
     approvedFindings: markerFindings("network API"),
@@ -416,16 +436,8 @@ const NETWORK_BROWSER_PROPERTIES = new Set([
   "Worker",
   "XMLHttpRequest",
 ]);
-export type BoundaryBuildCommand = {
-  file: string;
-  args: string[];
-  cwd: string;
-  env: NodeJS.ProcessEnv;
-};
-
-type BoundaryBuildRunner = (
-  command: BoundaryBuildCommand,
-) => Promise<{ stdout: string; stderr: string }>;
+export type BoundaryBuildCommand = MetaBuildCommand;
+type BoundaryBuildRunner = MetaBuildRunner;
 
 function within(root: string, candidate: string): boolean {
   const path = relative(root, candidate);
@@ -441,54 +453,9 @@ async function existingFile(path: string): Promise<boolean> {
     .catch(() => false);
 }
 
-function buildEnvironment(): NodeJS.ProcessEnv {
-  const system32 =
-    process.platform === "win32" ? "C:\\Windows\\System32" : "/usr/bin";
-  return {
-    PATH: [dirname(process.execPath), system32].join(delimiter),
-    SystemRoot: process.platform === "win32" ? "C:\\Windows" : undefined,
-    SYSTEMROOT: process.platform === "win32" ? "C:\\Windows" : undefined,
-    ComSpec:
-      process.platform === "win32"
-        ? "C:\\Windows\\System32\\cmd.exe"
-        : undefined,
-    COMSPEC:
-      process.platform === "win32"
-        ? "C:\\Windows\\System32\\cmd.exe"
-        : undefined,
-    PATHEXT: process.platform === "win32" ? ".COM;.EXE;.BAT;.CMD" : undefined,
-    TEMP: process.env.TEMP,
-    TMP: process.env.TMP,
-    CI: "1",
-    NODE_ENV: "production",
-  };
-}
-
-async function systemBuildRunner(
-  command: BoundaryBuildCommand,
-): Promise<{ stdout: string; stderr: string }> {
-  return new Promise((accept, reject) => {
-    execFile(
-      command.file,
-      command.args,
-      {
-        cwd: command.cwd,
-        env: command.env,
-        encoding: "utf8",
-        windowsHide: true,
-        maxBuffer: 10 * 1024 * 1024,
-      },
-      (error, stdout, stderr) => {
-        if (error) reject(error);
-        else accept({ stdout, stderr });
-      },
-    );
-  });
-}
-
 export async function runCanonicalBoundaryBuild(
   repoRoot: string,
-  run: BoundaryBuildRunner = systemBuildRunner,
+  run?: BoundaryBuildRunner,
 ): Promise<{ stdout: string; stderr: string }> {
   const root = resolve(repoRoot);
   const configFindings = await inspectViteConfig(root);
@@ -499,25 +466,7 @@ export async function runCanonicalBoundaryBuild(
         .join("; ")}`,
     );
   }
-  const vite = resolve(root, "node_modules/vite/bin/vite.js");
-  const entry = await lstat(vite).catch(() => undefined);
-  if (!entry?.isFile() || entry.isSymbolicLink()) {
-    throw new Error(
-      "private hosted boundary rejected: local Vite executable is missing",
-    );
-  }
-  return run({
-    file: process.execPath,
-    args: [
-      vite,
-      "build",
-      "--manifest",
-      "--config",
-      "vite.config.private-hosted.ts",
-    ],
-    cwd: root,
-    env: buildEnvironment(),
-  });
+  return run ? buildMetaRelease(root, run) : buildMetaRelease(root);
 }
 
 async function resolveImport(
@@ -661,6 +610,14 @@ function cssImports(source: string, filename: string): string[] {
 async function productionFiles(root: string): Promise<ProductionGraph> {
   const entry = resolve(root, "meta-app/src/main.tsx");
   const pending = [entry];
+  const functionsEntry = resolve(root, FUNCTIONS_ENTRY);
+  if (
+    await lstat(functionsEntry)
+      .then((candidate) => candidate.isFile() && !candidate.isSymbolicLink())
+      .catch(() => false)
+  ) {
+    pending.push(functionsEntry);
+  }
   const scripts = new Map<string, ts.SourceFile>();
   const styles = new Map<string, string>();
   const data = new Map<string, string>();
@@ -11909,19 +11866,19 @@ async function buildOutputFiles(root: string): Promise<{
 const REVIEWED_META_RUNTIME_STYLE_SHA256 = new Map<string, string>([
   [
     "meta-app/src/MetaShell.tsx",
-    "ba32d81351d6df7808bbf4094c2876083bc3163ea48176e03e6018d7580c5d2c",
+    "20ba2475bf873d1abf2b83119e72a1ba236c8756b1dcc51ddfed83927904ff99",
   ],
   [
     "meta-app/src/screens/CardsScreen.tsx",
-    "66db36024d1ead7a7200da5709f1a662ce4317574518177ccb3443da5d0b7122",
+    "3aa83036e6b89dd19e4b3b37a80086c5d45422f62dc8d517a8ac01b8432aed93",
   ],
   [
     "meta-app/src/screens/DeckEditor.tsx",
-    "4ac612bddb2be1c4bba3792d58f586d4e79b4bb21b06226196dbfe5ab741c300",
+    "b54ca09fe8d4f4d33c4e23327a5701becfad28e388d8358c932472ff21ae9c38",
   ],
   [
     "meta-app/src/screens/HistoryScreen.tsx",
-    "26257ed742387975a7d3f65c49a7ee41643c99ce6933508e1706f67e4a37b05c",
+    "5fa5cd1e378d14eab0147f04a8e012fb125b5be42cb24d8aab983f65f4f92fde",
   ],
   [
     "meta-app/src/screens/SettingsScreen.tsx",
@@ -11973,7 +11930,11 @@ const REVIEWED_META_RUNTIME_STYLE_SHA256 = new Map<string, string>([
   ],
   [
     "meta-app/src/shared/MetaCard.tsx",
-    "0f83823383576e86b6f19c3d77add833f1450ddc5823076a49812c6dc2f93066",
+    "164cb1f94e01937dd92574db50781d1c3d181eb4c47bfaf84741cf47ea9c946c",
+  ],
+  [
+    "meta-app/src/shared/NetworkStatus.tsx",
+    "26867d366e3c9f3527c39ba9cc599d345ea8b695e16a544e42ba70d7dad7c602",
   ],
   [
     "meta-app/src/shared/WarningBanner.tsx",
@@ -11989,6 +11950,53 @@ const REVIEWED_META_CAPABILITIES = new Map<
   }
 >([
   [
+    "src/cloud-data/access-auth.ts",
+    {
+      sha256:
+        "5f8c86b0dc9c8971dd8dc79c4ff92a091848004f8f1811459aa6c332a3fbacb8",
+      allowed: new Set([
+        "external-origin:constructed absolute URL",
+        "network-api:URL",
+      ]),
+    },
+  ],
+  [
+    "src/cloud-data/api.ts",
+    {
+      sha256:
+        "8ba53fbc62fd7f725fe2aca3293b6a25c2734eb71bff9dc283b0a039a3efc654",
+      allowed: new Set(["network-api:URL"]),
+    },
+  ],
+  [
+    "meta-app/src/cloud/apiClient.ts",
+    {
+      sha256:
+        "59ea9b0c036dbcda04ee70298f0f255752dbf3b8176f0e6fe920ef1f27f30989",
+      allowed: new Set(["network-api:fetch"]),
+    },
+  ],
+  [
+    "meta-app/src/cloud/runtime.ts",
+    {
+      sha256:
+        "f4657ff0555f09297c2326d1ba816024665c622f6dae10fe3c9ff7d2d6c576bf",
+      allowed: new Set([
+        "browser-global-escape:privileged browser global",
+        "vite-variable:VITE_APP_VERSION",
+        "vite-variable:VITE_CLOUD_DATA_SYNC_ENABLED",
+      ]),
+    },
+  ],
+  [
+    "meta-app/src/cloud/storage.ts",
+    {
+      sha256:
+        "87adfb105b19bd9f1aa781e6247861147874ad4f67a7dfd9223c4584942b8740",
+      allowed: new Set(["persistent-storage:indexedDB"]),
+    },
+  ],
+  [
     "meta-app/src/router/useHashRoute.ts",
     {
       sha256:
@@ -12003,7 +12011,7 @@ const REVIEWED_META_CAPABILITIES = new Map<
     "meta-app/src/screens/DeckEditor.tsx",
     {
       sha256:
-        "4ac612bddb2be1c4bba3792d58f586d4e79b4bb21b06226196dbfe5ab741c300",
+        "b54ca09fe8d4f4d33c4e23327a5701becfad28e388d8358c932472ff21ae9c38",
       allowed: new Set(["persistent-storage:clipboard"]),
     },
   ],
@@ -12019,7 +12027,7 @@ const REVIEWED_META_CAPABILITIES = new Map<
     "meta-app/src/screens/HistoryScreen.tsx",
     {
       sha256:
-        "26257ed742387975a7d3f65c49a7ee41643c99ce6933508e1706f67e4a37b05c",
+        "5fa5cd1e378d14eab0147f04a8e012fb125b5be42cb24d8aab983f65f4f92fde",
       allowed: new Set(["network-api:window.location"]),
     },
   ],
@@ -12035,10 +12043,10 @@ const REVIEWED_META_CAPABILITIES = new Map<
     },
   ],
   [
-    "meta-app/src/components/IdentityCardArt.tsx",
+    "meta-app/src/hooks/useCatalogCardImage.ts",
     {
       sha256:
-        "76252bfca6d477c2395c42e4201182c6a7cd6fc029e6235f7d865bb053451af1",
+        "bc857592b98c544a7309d7c91a16d916e6b57e7679adb6576aa3ef8ddb97d7e9",
       allowed: new Set([
         "external-origin:https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/",
       ]),
@@ -12061,10 +12069,10 @@ const REVIEWED_META_CAPABILITIES = new Map<
     },
   ],
   [
-    "meta-app/src/services/historyReplayRepository.ts",
+    "meta-app/src/services/historyRowsRepository.ts",
     {
       sha256:
-        "f2cb308b3f512500a75ea04d6811db45cc59ebd51d09dcbe72015618cfd7dd73",
+        "e98ab17c0cf9b2205730b0f8e3391d50a147caffde8ff5b132961899c068511f",
       allowed: new Set(["persistent-storage:indexedDB"]),
     },
   ],
@@ -12080,7 +12088,7 @@ const REVIEWED_META_CAPABILITIES = new Map<
     "meta-app/src/services/officialNews.ts",
     {
       sha256:
-        "6f58451acf1760cce78f3a42c51d26b7ea3008ffae7a308af3c5eac74241bf7b",
+        "ad495364dd3e942fd13ad2e00ed0fa3a67dbcf06017bab5281fe3076dc1ee22e",
       allowed: new Set([
         "external-origin:https://www.takaratomy.co.jp/products/conan-cardgame/",
         "network-api:fetch",
@@ -12105,10 +12113,10 @@ const REVIEWED_PERSIST_STORES = new Map<
   ],
   [
     "meta-app/src/state/decksStore.ts",
-    {
-      name: "conan.meta.v1.decks",
-      sha256:
-        "4e9cbb7259dbba8b072bdbeeac98308e1ee28c0b63eb05f96701a270f79b31c8",
+      {
+        name: "conan.meta.v1.decks",
+        sha256:
+          "04bb140c996290e5ee9ae1e3c0f2814d519c1ef293a0a537326daa77a7565667",
     },
   ],
   [
@@ -12922,6 +12930,7 @@ function scanSource(
 async function inspectBuild(
   root: string,
   output: { stdout: string; stderr: string },
+  hasFunctions: boolean,
 ): Promise<RuntimeBoundaryFinding[]> {
   const findings: RuntimeBoundaryFinding[] = [];
   const combined = `${output.stdout}\n${output.stderr}`;
@@ -12933,7 +12942,7 @@ async function inspectBuild(
       "browser externalization warning",
     );
   }
-  if (/\b(?:build:meta|dist-meta)\b/i.test(combined)) {
+  if (/\bdist-meta\b/i.test(combined)) {
     addFinding(findings, "build", "meta-build", "alternate meta build output");
   }
   if (
@@ -12970,9 +12979,11 @@ async function inspectBuild(
   const expectedFiles = new Set([
     ".vite/manifest.json",
     "_headers",
+    "_routes.json",
     "favicon.svg",
     "index.html",
   ]);
+  if (hasFunctions) expectedFiles.add("_worker.js");
   if (closure) {
     for (const outputPath of closure.reachableFiles) {
       expectedFiles.add(outputPath);
@@ -13023,6 +13034,7 @@ async function inspectBuild(
     }
   }
   const javascriptOwners = new Map<string, string>();
+  if (hasFunctions) javascriptOwners.set("_worker.js", FUNCTIONS_ENTRY);
   if (closure) {
     for (const [key, outputPath] of closure.keyOwnership) {
       const extension = extname(outputPath).toLowerCase();
@@ -13340,7 +13352,13 @@ export async function auditRuntimeBoundary(
     findings.push(...scanStyle(root, path, source));
   for (const [path, source] of graph.data)
     findings.push(...scanData(root, path, source));
-  findings.push(...(await inspectBuild(root, buildOutput)));
+  findings.push(
+    ...(await inspectBuild(
+      root,
+      buildOutput,
+      graph.scripts.has(resolve(root, FUNCTIONS_ENTRY)),
+    )),
+  );
   return findings.sort((left, right) =>
     `${left.file}\0${left.code}\0${left.detail}`.localeCompare(
       `${right.file}\0${right.code}\0${right.detail}`,

@@ -14,7 +14,7 @@ import {
 import { T, COLOR_TOKEN } from '../shared/tokens';
 import { PrimaryHeader } from '../shared/PrimaryHeader';
 import { MetaCard } from '../shared/MetaCard';
-import { CardExpandModal } from '@/ui/components/CardExpandModal';
+import { CatalogCardExpandModal } from '../components/CatalogCardExpandModal';
 import { FilterRail } from '../shared/FilterRail';
 import {
   CARD_POOL, DISTINCT_CARDS, cardIdOf, variantsOfId,
@@ -770,7 +770,7 @@ function SelectedDetail({
         </button>
       </div>
     </div>
-    <CardExpandModal cardId={expanded ? card.num : null} onClose={() => setExpanded(false)} />
+    <CatalogCardExpandModal card={expanded ? card : null} onClose={() => setExpanded(false)} />
     </>
   );
 }

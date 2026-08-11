@@ -16,7 +16,7 @@ import { FilterRail } from '../shared/FilterRail';
 import { FilterGroup } from '../shared/FilterGroup';
 import { SetupButton } from '../shared/Button';
 import { WarningBanner } from '../shared/WarningBanner';
-import { CardExpandModal } from '@/ui/components/CardExpandModal';
+import { CatalogCardExpandModal } from '../components/CatalogCardExpandModal';
 import { HomeDeckSelectorDialog } from './HomeDeckSelectorDialog';
 import { engineStub } from '../stubs/engineStub';
 import { useDecksStore } from '../state/decksStore';
@@ -253,9 +253,14 @@ export function DeckEditor({
     const d: DeckRecord = { ...structuredClone(draft), id: `deck-${Date.now()}`, name: `${draft.name} のコピー`, modified: Date.now() };
     setEditingId(d.id); setDraft(d);
   };
-  const deleteDeck = () => {
+  const deleteDeck = async () => {
     if (!window.confirm(`「${draft.name}」を削除しますか?`)) return;
-    removeDeck(draft.id);
+    try {
+      await removeDeck(draft.id);
+    } catch {
+      announce('デッキ削除の保存に失敗しました。もう一度お試しください。', 'error');
+      return;
+    }
     const remaining = decks.filter((d) => d.id !== draft.id);
     if (remaining[0]) { setEditingId(remaining[0].id); setDraft(structuredClone(remaining[0])); }
     else { const d = emptyDeck(); setEditingId(d.id); setDraft(d); }
@@ -442,7 +447,10 @@ export function DeckEditor({
         <TestHandModal deck={draft} onClose={() => setModal(null)} />
       )}
 
-      <CardExpandModal cardId={expandedCardId} onClose={() => setExpandedCardId(null)} />
+      <CatalogCardExpandModal
+        card={expandedCardId ? CARD_POOL.find((card) => card.num === expandedCardId) ?? null : null}
+        onClose={() => setExpandedCardId(null)}
+      />
     </div>
   );
 }
@@ -938,7 +946,7 @@ function PoolPane({ cards, selectedNum, idCounts, draggingNum, onOpenDetail, onD
           const limitLabel = limit === 'unlimited' ? '∞' : String(limit);
           const atMax = limit !== 'unlimited' && cnt >= limit;
           return (
-            <div key={card.num} ref={poolItemRefs[index]}>
+            <div className="deck-pool-window-item" key={card.num} ref={poolItemRefs[index]}>
             <button
               type="button"
               className="deck-pool-card"
