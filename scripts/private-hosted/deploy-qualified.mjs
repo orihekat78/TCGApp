@@ -1261,7 +1261,11 @@ function validateRemoteProject(
   ) {
     fail("remote Pages production identity differs");
   }
-  if (!Array.isArray(project.domains) || project.domains.length !== 0) {
+  if (
+    !Array.isArray(project.domains) ||
+    project.domains.length !== 1 ||
+    project.domains[0] !== `${PROJECT_NAME}.pages.dev`
+  ) {
     fail("remote Pages custom domains differ");
   }
   if (project.source !== undefined && project.source !== null) {

@@ -218,7 +218,7 @@ function project(overrides: Record<string, unknown> = {}) {
   return {
     name: PROJECT,
     subdomain: `${PROJECT}.pages.dev`,
-    domains: [],
+    domains: [`${PROJECT}.pages.dev`],
     source: null,
     build_config: {
       web_analytics_tag: null,
