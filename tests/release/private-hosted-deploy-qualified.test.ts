@@ -394,6 +394,8 @@ function scenario(f: Fixture, overrides: Record<string, unknown> = {}) {
   return {
     access: accessFixture(),
     accessProtected: true,
+    accessRedirectHost: null,
+    accessRedirectMode: "valid",
     createdDeployment: created,
     deployedProject: activeProject,
     deploymentStatuses: [deployment({ latest_stage: { status: "success" } })],
@@ -509,6 +511,26 @@ describe("qualified private Pages direct deployment", () => {
       /wrangler\/bin|pages", "deploy|node_modules\\wrangler/,
     );
   });
+
+  it("rejects an Access login path bound to another host before asset APIs", async () => {
+    const f = await fixture();
+    await expect(
+      run(f, {
+        accessRedirectHost: "other.example",
+        mutationAllowed: false,
+      }),
+    ).rejects.toThrow(/Access redirect differs/);
+  });
+
+  it.each(["missing", "wrong"] as const)(
+    "rejects %s Access login query evidence before asset APIs",
+    async (accessRedirectMode) => {
+      const f = await fixture();
+      await expect(
+        run(f, { accessRedirectMode, mutationAllowed: false }),
+      ).rejects.toThrow(/Access redirect differs/);
+    },
+  );
 
   it.each(["report", "evidence", "log", "staging"] as const)(
     "rejects tampered %s before any Cloudflare call",

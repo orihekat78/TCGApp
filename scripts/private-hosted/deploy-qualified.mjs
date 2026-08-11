@@ -1698,12 +1698,22 @@ async function probeAccess(fetchImpl, url, label) {
   } catch {
     return fail(`${label} Access redirect is invalid`);
   }
+  const kids = redirect.searchParams.getAll("kid");
+  const metas = redirect.searchParams.getAll("meta");
+  const redirectUrls = redirect.searchParams.getAll("redirect_url");
   if (
     redirect.origin !== ACCESS_ORIGIN ||
-    redirect.pathname !== "/cdn-cgi/access/login" ||
+    redirect.pathname !== `/cdn-cgi/access/login/${probe.hostname}` ||
     redirect.username !== "" ||
     redirect.password !== "" ||
-    redirect.port !== ""
+    redirect.port !== "" ||
+    redirect.hash !== "" ||
+    kids.length !== 1 ||
+    !/^[a-f0-9]{64}$/.test(kids[0] ?? "") ||
+    metas.length !== 1 ||
+    !/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(metas[0] ?? "") ||
+    redirectUrls.length !== 1 ||
+    redirectUrls[0] !== probe.pathname + probe.search
   ) {
     fail(`${label} Access redirect differs`);
   }
@@ -1919,10 +1929,23 @@ function createStaticTestFetch(scenario, requests) {
       if (!allowedOrigins.has(url.origin)) {
         fail(`unexpected test request: ${url.href}`);
       }
+      const redirect = new URL(
+        `${ACCESS_ORIGIN}/cdn-cgi/access/login/${scenario.accessRedirectHost ?? url.hostname}`,
+      );
+      if (scenario.accessRedirectMode !== "missing") {
+        redirect.searchParams.set("kid", "a".repeat(64));
+        redirect.searchParams.set("meta", "header.payload.signature");
+        redirect.searchParams.set(
+          "redirect_url",
+          scenario.accessRedirectMode === "wrong"
+            ? "/wrong"
+            : url.pathname + url.search,
+        );
+      }
       return scenario.accessProtected
         ? new Response(null, {
             status: 302,
-            headers: { location: `${ACCESS_ORIGIN}/cdn-cgi/access/login` },
+            headers: { location: redirect.href },
           })
         : new Response("public", { status: 200 });
     }
@@ -2021,6 +2044,8 @@ function createStaticTestFetch(scenario, requests) {
 const TEST_SCENARIO_KEYS = [
   "access",
   "accessProtected",
+  "accessRedirectHost",
+  "accessRedirectMode",
   "createdDeployment",
   "deployedProject",
   "deploymentStatuses",
