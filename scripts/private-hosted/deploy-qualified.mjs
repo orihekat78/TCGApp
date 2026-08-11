@@ -877,8 +877,7 @@ async function apiEnvelope(fetchImpl, url, init, label) {
   if (
     !response.ok ||
     envelope.success !== true ||
-    (errors !== undefined &&
-      (!Array.isArray(errors) || errors.length !== 0))
+    (errors !== undefined && (!Array.isArray(errors) || errors.length !== 0))
   ) {
     fail(`${label} failed`);
   }
@@ -1210,7 +1209,12 @@ async function validateActiveAccess(fetchImpl, token, config) {
   validateAccessPolicy(wildcardPolicies, config.approvedEmails, "wildcard");
 }
 
-function validateNoBuildInjection(candidate, label, expectedDestinationDir) {
+function validateNoBuildInjection(
+  candidate,
+  label,
+  expectedDestinationDir,
+  { allowOmittedDestination = false } = {},
+) {
   const config = record(candidate, label);
   const allowed = new Set([
     "build_caching",
@@ -1237,7 +1241,10 @@ function validateNoBuildInjection(candidate, label, expectedDestinationDir) {
       fail(`${label} enables a build or analytics capability`);
     }
   }
-  if (config.destination_dir !== expectedDestinationDir) {
+  if (
+    config.destination_dir !== expectedDestinationDir &&
+    !(allowOmittedDestination && config.destination_dir === undefined)
+  ) {
     fail(`${label} changes the qualified build output directory`);
   }
   if (
@@ -1573,32 +1580,10 @@ async function workerBundle(snapshot) {
   );
 }
 
-function validatedDeployment(
-  candidate,
-  snapshot,
-  expectedId,
-  allowOmittedUsesFunctions = false,
-) {
-  const deployment = record(candidate, "Pages deployment");
-  if (
-    typeof deployment.id !== "string" ||
-    deployment.id.length < 8 ||
-    (expectedId !== undefined && deployment.id !== expectedId) ||
-    deployment.project_name !== PROJECT_NAME ||
-    deployment.environment !== "production" ||
-    (deployment.uses_functions !== true &&
-      !(allowOmittedUsesFunctions && deployment.uses_functions === undefined))
-  ) {
-    fail("Pages deployment identity is invalid");
-  }
-  validateNoBuildInjection(
-    deployment.build_config,
-    "Pages deployment build config",
-    snapshot.deployment.pagesBuildOutputDir,
-  );
+function validatedDeploymentUrl(candidate) {
   let url;
   try {
-    url = new URL(deployment.url);
+    url = new URL(candidate);
   } catch {
     return fail("Pages deployment URL is invalid");
   }
@@ -1615,10 +1600,11 @@ function validatedDeployment(
   ) {
     fail("Pages deployment URL is invalid");
   }
-  const trigger = record(
-    deployment.deployment_trigger,
-    "Pages deployment trigger",
-  );
+  return url.href;
+}
+
+function validateDeploymentTrigger(candidate, snapshot) {
+  const trigger = record(candidate, "Pages deployment trigger");
   const metadata = record(
     trigger.metadata,
     "Pages deployment trigger metadata",
@@ -1632,7 +1618,83 @@ function validatedDeployment(
   ) {
     fail("Pages deployment trigger differs from qualification");
   }
-  return { ...deployment, url: url.href };
+}
+
+function validateCreateDeploymentTrigger(candidate, snapshot) {
+  const trigger = record(candidate, "Pages deployment trigger");
+  if (trigger.type !== undefined && trigger.type !== "ad_hoc") {
+    fail("Pages deployment trigger differs from qualification");
+  }
+  if (trigger.metadata === undefined) return;
+  const metadata = record(
+    trigger.metadata,
+    "Pages deployment trigger metadata",
+  );
+  for (const [name, expected] of Object.entries({
+    branch: PRODUCTION_BRANCH,
+    commit_hash: snapshot.report.releaseCommit,
+    commit_dirty: false,
+    commit_message: `qualified ${snapshot.report.releaseCommit}`,
+  })) {
+    if (metadata[name] !== undefined && metadata[name] !== expected) {
+      fail("Pages deployment trigger differs from qualification");
+    }
+  }
+}
+
+function validatedCreateDeployment(candidate, snapshot) {
+  const deployment = record(candidate, "Pages deployment");
+  if (typeof deployment.id !== "string" || deployment.id.length < 8) {
+    fail("Pages deployment identity is invalid");
+  }
+  if (
+    (deployment.project_name !== undefined &&
+      deployment.project_name !== PROJECT_NAME) ||
+    (deployment.environment !== undefined &&
+      deployment.environment !== "production") ||
+    (deployment.uses_functions !== undefined &&
+      deployment.uses_functions !== null &&
+      typeof deployment.uses_functions !== "boolean")
+  ) {
+    fail("Pages deployment identity is invalid");
+  }
+  if (deployment.build_config !== undefined) {
+    validateNoBuildInjection(
+      deployment.build_config,
+      "Pages deployment build config",
+      snapshot.deployment.pagesBuildOutputDir,
+      { allowOmittedDestination: true },
+    );
+  }
+  if (deployment.url !== undefined) {
+    validatedDeploymentUrl(deployment.url);
+  }
+  if (deployment.deployment_trigger !== undefined) {
+    validateCreateDeploymentTrigger(deployment.deployment_trigger, snapshot);
+  }
+  return { id: deployment.id };
+}
+
+function validatedDeployment(candidate, snapshot, expectedId) {
+  const deployment = record(candidate, "Pages deployment");
+  if (
+    typeof deployment.id !== "string" ||
+    deployment.id.length < 8 ||
+    (expectedId !== undefined && deployment.id !== expectedId) ||
+    deployment.project_name !== PROJECT_NAME ||
+    deployment.environment !== "production" ||
+    deployment.uses_functions !== true
+  ) {
+    fail("Pages deployment identity is invalid");
+  }
+  validateNoBuildInjection(
+    deployment.build_config,
+    "Pages deployment build config",
+    snapshot.deployment.pagesBuildOutputDir,
+  );
+  const url = validatedDeploymentUrl(deployment.url);
+  validateDeploymentTrigger(deployment.deployment_trigger, snapshot);
+  return { ...deployment, url };
 }
 
 async function createDeployment(
@@ -1679,7 +1741,7 @@ async function createDeployment(
       "Pages deployment creation state is unknown; inspect Cloudflare before retrying",
     );
   }
-  return validatedDeployment(result, snapshot, undefined, true);
+  return validatedCreateDeployment(result, snapshot);
 }
 
 async function waitForDeployment(
@@ -1958,8 +2020,16 @@ function createStaticTestFetch(scenario, requests) {
       const allowedOrigins = new Set([
         new URL(STABLE_URL).origin,
         new URL(WILDCARD_PROBE_URL).origin,
-        new URL(scenario.createdDeployment.url).origin,
       ]);
+      if (deploymentPoll > 0) {
+        const deploymentProbeUrl = scenario.deploymentStatuses.find(
+          (candidate) => typeof candidate?.url === "string",
+        )?.url;
+        if (deploymentProbeUrl === undefined) {
+          fail("deployment test scenario has no probe URL");
+        }
+        allowedOrigins.add(new URL(deploymentProbeUrl).origin);
+      }
       if (!allowedOrigins.has(url.origin)) {
         fail(`unexpected test request: ${url.href}`);
       }

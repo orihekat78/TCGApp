@@ -545,20 +545,88 @@ describe("qualified private Pages direct deployment", () => {
 
     expect(result).toMatchObject({ id: "deploy-12345", releaseCommit: COMMIT });
     expect(
-      requests.some(({ method, url }) =>
-        method === "GET" && url.endsWith("/deployments/deploy-12345"),
+      requests.some(
+        ({ method, url }) =>
+          method === "GET" && url.endsWith("/deployments/deploy-12345"),
       ),
     ).toBe(true);
   });
 
-  it("rejects a create response that explicitly disables Functions", async () => {
+  it.each([
+    { id: "deploy-12345" },
+    { id: "deploy-12345", build_config: {} },
+    { id: "deploy-12345", build_config: { build_command: null } },
+    { id: "deploy-12345", build_config: { destination_dir: "dist" } },
+  ])(
+    "accepts a sparse create response before authoritative polling",
+    async (createdDeployment) => {
+      const f = await fixture();
+      const { result } = await run(f, { createdDeployment });
+      expect(result).toMatchObject({
+        id: "deploy-12345",
+        releaseCommit: COMMIT,
+      });
+    },
+  );
+
+  it.each([false, null])(
+    "accepts an unconfirmed create response value %s before authoritative polling",
+    async (usesFunctions) => {
+      const f = await fixture();
+      const { result } = await run(f, {
+        createdDeployment: deployment({ uses_functions: usesFunctions }),
+      });
+      expect(result).toMatchObject({
+        id: "deploy-12345",
+        releaseCommit: COMMIT,
+      });
+    },
+  );
+
+  it("rejects a malformed create response Functions value", async () => {
     const f = await fixture();
     await expect(
       run(f, {
-        createdDeployment: deployment({ uses_functions: false }),
+        createdDeployment: deployment({ uses_functions: "false" }),
       }),
     ).rejects.toThrow(/deployment identity/i);
   });
+
+  it.each([{}, { id: "short" }])(
+    "rejects an invalid sparse create response ID",
+    async (createdDeployment) => {
+      const f = await fixture();
+      await expect(run(f, { createdDeployment })).rejects.toThrow(/identity/i);
+    },
+  );
+
+  it.each([
+    ["project", { project_name: "other-project" }, /identity/i],
+    ["environment", { environment: "preview" }, /identity/i],
+    ["URL", { url: "https://example.com/" }, /deployment URL/i],
+    [
+      "trigger",
+      {
+        deployment_trigger: {
+          metadata: { commit_hash: "f".repeat(40) },
+        },
+      },
+      /trigger/i,
+    ],
+  ])(
+    "rejects a conflicting create response %s field",
+    async (_label, conflict, expected) => {
+      const f = await fixture();
+      await expect(
+        run(f, {
+          createdDeployment: {
+            id: "deploy-12345",
+            ...conflict,
+          },
+        }),
+      ).rejects.toThrow(expected);
+    },
+  );
 
   it("rejects a polling response that omits uses_functions", async () => {
     const f = await fixture();
@@ -567,6 +635,37 @@ describe("qualified private Pages direct deployment", () => {
     });
     await expect(
       run(f, { deploymentStatuses: [deploymentStatus] }),
+    ).rejects.toThrow(/deployment identity/i);
+  });
+
+  it.each([false, null])(
+    "rejects a polling response with uses_functions %s",
+    async (usesFunctions) => {
+      const f = await fixture();
+      await expect(
+        run(f, {
+          deploymentStatuses: [
+            deployment({
+              latest_stage: { status: "success" },
+              uses_functions: usesFunctions,
+            }),
+          ],
+        }),
+      ).rejects.toThrow(/deployment identity/i);
+    },
+  );
+
+  it("rejects a polling response with another deployment ID", async () => {
+    const f = await fixture();
+    await expect(
+      run(f, {
+        deploymentStatuses: [
+          deployment({
+            id: "other-deploy-12345",
+            latest_stage: { status: "success" },
+          }),
+        ],
+      }),
     ).rejects.toThrow(/deployment identity/i);
   });
 
