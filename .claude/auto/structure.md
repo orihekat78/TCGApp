@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 283
-- **ファイル数**: 5815
+- **ファイル数**: 5816
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -2101,6 +2101,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-08-03-setup-screen-refresh-design.md` — SETUP Screen Refresh Design
       - `2026-08-04-wave3-causal-presentation-contract.md` — Wave 3 Causal Presentation Contract
       - `2026-08-09-causal-presentation-migration-table.md` — Causal Presentation Migration Table
+      - `2026-08-11-mobile-catalog-performance-landscape-design.md` — Mobile Catalog Performance and Landscape Design
 - **`meta-app/`**
   - **`src/`**
     - **`data/`**
