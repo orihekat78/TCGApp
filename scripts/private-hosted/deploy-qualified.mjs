@@ -1208,8 +1208,7 @@ async function validateActiveAccess(fetchImpl, token, config) {
   validateAccessPolicy(wildcardPolicies, config.approvedEmails, "wildcard");
 }
 
-function validateNoBuildInjection(candidate, label) {
-  if (candidate === undefined || candidate === null) return;
+function validateNoBuildInjection(candidate, label, expectedDestinationDir) {
   const config = record(candidate, label);
   const allowed = new Set([
     "build_caching",
@@ -1224,7 +1223,6 @@ function validateNoBuildInjection(candidate, label) {
   }
   for (const name of [
     "build_command",
-    "destination_dir",
     "root_dir",
     "web_analytics_tag",
     "web_analytics_token",
@@ -1236,6 +1234,9 @@ function validateNoBuildInjection(candidate, label) {
     ) {
       fail(`${label} enables a build or analytics capability`);
     }
+  }
+  if (config.destination_dir !== expectedDestinationDir) {
+    fail(`${label} changes the qualified build output directory`);
   }
   if (
     config.build_caching !== undefined &&
@@ -1271,7 +1272,11 @@ function validateRemoteProject(
   if (project.source !== undefined && project.source !== null) {
     fail("remote Pages source control must be disconnected");
   }
-  validateNoBuildInjection(project.build_config, "remote Pages build config");
+  validateNoBuildInjection(
+    project.build_config,
+    "remote Pages build config",
+    evidence.pagesBuildOutputDir,
+  );
   const production = record(
     record(project.deployment_configs, "deployment configs").production,
     "production deployment config",
@@ -1565,6 +1570,7 @@ function validatedDeployment(candidate, snapshot, expectedId) {
   validateNoBuildInjection(
     deployment.build_config,
     "Pages deployment build config",
+    snapshot.deployment.pagesBuildOutputDir,
   );
   let url;
   try {

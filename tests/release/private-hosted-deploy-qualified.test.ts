@@ -224,7 +224,7 @@ function project(overrides: Record<string, unknown> = {}) {
       web_analytics_tag: null,
       web_analytics_token: null,
       build_command: null,
-      destination_dir: null,
+      destination_dir: "dist",
       root_dir: null,
       build_caching: false,
     },
@@ -254,6 +254,14 @@ function deployment(overrides: Record<string, unknown> = {}) {
     project_name: PROJECT,
     environment: "production",
     uses_functions: true,
+    build_config: {
+      web_analytics_tag: null,
+      web_analytics_token: null,
+      build_command: null,
+      destination_dir: "dist",
+      root_dir: null,
+      build_caching: null,
+    },
     deployment_trigger: {
       type: "ad_hoc",
       metadata: {
@@ -754,6 +762,32 @@ describe("qualified private Pages direct deployment", () => {
     ["branch", () => project({ production_branch: "preview" })],
     ["custom domain", () => project({ domains: ["public.example.com"] })],
     [
+      "missing build config",
+      () => {
+        const { build_config: _buildConfig, ...value } = project();
+        return value;
+      },
+    ],
+    ["null build config", () => project({ build_config: null })],
+    [
+      "missing build output",
+      () => project({ build_config: { build_command: null } }),
+    ],
+    [
+      "null build output",
+      () =>
+        project({
+          build_config: { build_command: null, destination_dir: null },
+        }),
+    ],
+    [
+      "empty build output",
+      () =>
+        project({
+          build_config: { build_command: null, destination_dir: "" },
+        }),
+    ],
+    [
       "Git source",
       () =>
         project({
@@ -777,6 +811,16 @@ describe("qualified private Pages direct deployment", () => {
           build_config: {
             build_command: "npm run build",
             destination_dir: "dist",
+          },
+        }),
+    ],
+    [
+      "different build output",
+      () =>
+        project({
+          build_config: {
+            build_command: null,
+            destination_dir: "build",
           },
         }),
     ],
@@ -912,5 +956,46 @@ describe("qualified private Pages direct deployment", () => {
     await expect(
       run(f, { project: remote(), mutationAllowed: false }),
     ).rejects.toThrow(/remote Pages/i);
+  });
+
+  it.each([
+    [
+      "create response",
+      {
+        createdDeployment: deployment({
+          build_config: { destination_dir: "build" },
+        }),
+      },
+    ],
+    [
+      "status response",
+      {
+        deploymentStatuses: [
+          deployment({
+            build_config: { destination_dir: "build" },
+            latest_stage: { status: "success" },
+          }),
+        ],
+      },
+    ],
+  ])(
+    "rejects a wrong deployment build output in the %s",
+    async (_label, drift) => {
+      const f = await fixture();
+      await expect(run(f, drift)).rejects.toThrow(/build output directory/i);
+    },
+  );
+
+  it("rejects build output drift that appears only after deployment", async () => {
+    const f = await fixture();
+    const created = deployment();
+    const deployedProject = project({
+      build_config: { destination_dir: "build" },
+      canonical_deployment: created,
+      latest_deployment: created,
+    });
+    await expect(run(f, { deployedProject })).rejects.toThrow(
+      /build output directory/i,
+    );
   });
 });
