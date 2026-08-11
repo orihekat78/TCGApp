@@ -27,6 +27,7 @@ const OPERATOR_CONFIG = {
   approvedEmails: ["friend@example.com", "owner@example.com"],
 } as const;
 const ACCESS_IDS = {
+  cloudflareIdp: "00000000-0000-4000-8000-000000000000",
   idp: "11111111-1111-4111-8111-111111111111",
   rootApp: "22222222-2222-4222-8222-222222222222",
   wildcardApp: "33333333-3333-4333-8333-333333333333",
@@ -96,7 +97,10 @@ function accessFixture() {
   const root = `${PROJECT}.pages.dev`;
   const wildcard = `*.${root}`;
   return {
-    idps: [{ id: ACCESS_IDS.idp, type: "onetimepin" }],
+    idps: [
+      { id: ACCESS_IDS.cloudflareIdp, type: "cloudflare" },
+      { id: ACCESS_IDS.idp, type: "onetimepin" },
+    ],
     apps: [
       {
         id: ACCESS_IDS.rootApp,
@@ -564,6 +568,24 @@ describe("qualified private Pages direct deployment", () => {
         value.idps.push({
           id: "66666666-6666-4666-8666-666666666666",
           type: "github",
+        });
+      },
+    ],
+    [
+      "second one-time PIN identity provider",
+      (value: ReturnType<typeof accessFixture>) => {
+        value.idps.push({
+          id: "77777777-7777-4777-8777-777777777777",
+          type: "onetimepin",
+        });
+      },
+    ],
+    [
+      "second built-in Cloudflare identity provider",
+      (value: ReturnType<typeof accessFixture>) => {
+        value.idps.push({
+          id: "88888888-8888-4888-8888-888888888888",
+          type: "cloudflare",
         });
       },
     ],

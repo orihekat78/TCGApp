@@ -1060,11 +1060,32 @@ async function validateActiveAccess(fetchImpl, token, config) {
     ),
     apiList(fetchImpl, `${base}/apps`, token, "Access applications"),
   ]);
-  if (identityProviders.length !== 1) {
-    fail("Access must have exactly one identity provider");
+  const parsedIdentityProviders = identityProviders.map((candidate) =>
+    record(candidate, "Access identity provider"),
+  );
+  const oneTimePinProviders = parsedIdentityProviders.filter(
+    (candidate) => candidate.type === "onetimepin",
+  );
+  // New Zero Trust organizations expose one immutable Cloudflare provider.
+  // It remains unusable here because each application is pinned to the OTP ID below.
+  const builtInCloudflareProviders = parsedIdentityProviders.filter(
+    (candidate) => candidate.type === "cloudflare",
+  );
+  if (oneTimePinProviders.length !== 1) {
+    fail("Access must have exactly one one-time PIN identity provider");
+  }
+  if (
+    builtInCloudflareProviders.length > 1 ||
+    parsedIdentityProviders.length !==
+      oneTimePinProviders.length + builtInCloudflareProviders.length
+  ) {
+    fail("Access has unsupported identity providers");
+  }
+  for (const provider of builtInCloudflareProviders) {
+    accessId(provider.id, "built-in Cloudflare identity provider");
   }
   const identityProvider = record(
-    identityProviders[0],
+    oneTimePinProviders[0],
     "Access identity provider",
   );
   const identityProviderId = accessId(
