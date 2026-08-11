@@ -40,8 +40,8 @@ function effectiveEnvironment(
 ): Required<EnvironmentConfig> {
   const override = config.env[environment];
   return {
-    d1_databases: override.d1_databases ?? config.d1_databases ?? [],
-    vars: override.vars ?? config.vars ?? {},
+    d1_databases: override.d1_databases ?? [],
+    vars: override.vars ?? {},
   };
 }
 
@@ -81,7 +81,7 @@ describe("Cloudflare Pages environment config", () => {
       hostValue: ".conan-private-7302df07.pages.dev",
     },
   ])(
-    "binds $environment to only its own database and host",
+    "keeps the explicitly selected $environment environment self-contained",
     ({ environment, databaseName, databaseId, hostKind, hostValue }) => {
       const effective = effectiveEnvironment(readConfig(), environment);
       expect(effective.d1_databases).toEqual([
