@@ -25,11 +25,13 @@ function Harness({
   layoutKey = "grid",
   selectedKey,
   focusedKey,
+  hiddenKeys = [],
   onReady,
 }: {
   layoutKey?: string;
   selectedKey?: string;
   focusedKey?: string;
+  hiddenKeys?: readonly string[];
   onReady?: (api: ReturnType<typeof useWindowedCollection<Item>>) => void;
 }) {
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
@@ -46,7 +48,7 @@ function Harness({
   return (
     <div ref={setScrollElement} data-testid="scroller">
       <output data-testid="range">{`${api.start}:${api.end}:${api.beforePx}:${api.afterPx}`}</output>
-      {api.visibleItems.map((item, offset) => {
+      {api.visibleItems.filter((item) => !hiddenKeys.includes(item.key)).map((item, offset) => {
         const index = api.start + offset;
         return <MeasuredItem key={item.key} item={item} index={index} registerItem={api.registerItem} />;
       })}
@@ -172,6 +174,14 @@ describe("useWindowedCollection", () => {
     expect(container.querySelectorAll("button").length).toBeLessThanOrEqual(96);
   });
 
+  it("prioritizes the focused key even when the selected key has the higher index", () => {
+    act(() => root.render(<Harness selectedKey="card-150" focusedKey="card-0" />));
+
+    expect(container.querySelector("[data-testid='card-0']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='card-150']")).toBeNull();
+    expect(container.querySelectorAll("button")).toHaveLength(96);
+  });
+
   it("reveals and focuses a requested key", () => {
     let reveal!: ReturnType<typeof useWindowedCollection<Item>>["reveal"];
     act(() => root.render(<Harness onReady={(api) => { reveal = api.reveal; }} />));
@@ -204,5 +214,15 @@ describe("useWindowedCollection", () => {
       expect(container.querySelectorAll("button").length).toBeLessThanOrEqual(96);
     }
     expect(observer.unobserve).toHaveBeenCalled();
+  });
+
+  it("releases a callback when its registered item unmounts", () => {
+    let api!: ReturnType<typeof useWindowedCollection<Item>>;
+    act(() => root.render(<Harness onReady={(next) => { api = next; }} />));
+    const oldCallback = api.registerItem(0);
+
+    act(() => root.render(<Harness hiddenKeys={["card-0"]} onReady={(next) => { api = next; }} />));
+
+    expect(api.registerItem(0)).not.toBe(oldCallback);
   });
 });
