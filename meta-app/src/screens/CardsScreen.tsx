@@ -9,7 +9,7 @@
 
 import {
   useEffect, useMemo, useRef, useState,
-  type KeyboardEvent as ReactKeyboardEvent, type RefObject,
+  type ComponentProps, type KeyboardEvent as ReactKeyboardEvent, type RefObject,
 } from 'react';
 import { T, COLOR_TOKEN } from '../shared/tokens';
 import { PrimaryHeader } from '../shared/PrimaryHeader';
@@ -21,6 +21,7 @@ import {
 } from '../data/cardPool';
 import { useMetaStore } from '../state/metaStore';
 import { useFiltersStore } from '../state/filtersStore';
+import { useWindowedCollection } from '../hooks/useWindowedCollection';
 import {
   activeFilterCount, matchesFilter, sortCards, rarityHex,
   type CardFilterState, type SortKey, type SortDir,
@@ -41,6 +42,8 @@ const SORTS: { k: SortKey; label: string }[] = [
   { k: 'lp',   label: 'LP' },
   { k: 'name', label: '名前' },
 ];
+
+const cardNumber = (card: CardDef) => card.num;
 
 export function CardsScreen({ onNav }: Props) {
   const filter = useFiltersStore((s) => s.cards);
@@ -339,9 +342,16 @@ function CardGrid({
   viewMode: ViewMode;
   foldParallels: boolean;
 }) {
+  const [scrollElement, setScrollElement] = useState<HTMLElement | null>(null);
   const cardWidth = viewMode === 'large' ? 150 : viewMode === 'grid' ? 104 : 0;
   // 折り畳み時は選択中印刷がグリッドに無い (別イラスト選択) ことがあるので cardId 一致で判定。
   const isSel = (c: CardDef) => foldParallels ? cardIdOf(c.num) === cardIdOf(selectedNum) : c.num === selectedNum;
+  const windowed = useWindowedCollection({
+    items: cards,
+    getKey: cardNumber,
+    scrollElement,
+    layoutKey: `${viewMode}:${cards.map((card) => card.num).join(',')}`,
+  });
   return (
     <section className="cards-grid-panel" aria-label="カード一覧">
       <span className="home-sr-only" role="status" aria-live="polite">{cards.length}件のカード</span>
@@ -350,36 +360,79 @@ function CardGrid({
           条件に一致するカードがありません
         </div>
       ) : viewMode === 'list' ? (
-        <div className="cards-list-scroll">
-          {cards.map((c) => (
-            <CardListRow key={c.num} card={c} selected={isSel(c)}
-              fav={isFav(c)} onClick={() => onSelect(c.num)}
-              onKeyboardSelect={onKeyboardSelect} />
+        <div className="cards-list-scroll" ref={setScrollElement}>
+          <WindowSpacer height={windowed.beforePx} />
+          {windowed.visibleItems.map((c, index) => (
+            <WindowedListRow
+              key={c.num}
+              card={c}
+              index={windowed.start + index}
+              registerItem={windowed.registerItem}
+              selected={isSel(c)}
+              fav={isFav(c)}
+              onClick={() => onSelect(c.num)}
+              onKeyboardSelect={onKeyboardSelect}
+            />
           ))}
+          <WindowSpacer height={windowed.afterPx} />
         </div>
       ) : (
-        <div className="cards-grid-scroll" data-view={viewMode}>
+        <div className="cards-grid-scroll" data-view={viewMode} ref={setScrollElement}>
           <div className="cards-card-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${cardWidth + 8}px, 1fr))` }}>
-            {cards.map((c) => (
-              <div
-                className="cards-grid-item"
-                data-card-num={c.num}
+            <WindowSpacer height={windowed.beforePx} />
+            {windowed.visibleItems.map((c, index) => (
+              <WindowedGridItem
                 key={c.num}
-                onKeyDownCapture={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    requestAnimationFrame(onKeyboardSelect);
-                  }
-                }}
-              >
-                <MetaCard card={c} w={cardWidth} selected={isSel(c)}
-                  isFavorited={isFav(c)}
-                  onClick={() => onSelect(c.num)} hoverable />
-              </div>
+                card={c}
+                index={windowed.start + index}
+                registerItem={windowed.registerItem}
+                width={cardWidth}
+                selected={isSel(c)}
+                isFavorited={isFav(c)}
+                onClick={() => onSelect(c.num)}
+                onKeyboardSelect={onKeyboardSelect}
+              />
             ))}
+            <WindowSpacer height={windowed.afterPx} />
           </div>
         </div>
       )}
     </section>
+  );
+}
+
+function WindowSpacer({ height }: { height: number }) {
+  return <div className="cards-window-spacer" aria-hidden="true" inert style={{ height }} />;
+}
+
+function WindowedListRow({ card, index, registerItem, ...props }: {
+  card: CardDef;
+  index: number;
+  registerItem: (index: number) => (node: HTMLElement | null) => void;
+} & ComponentProps<typeof CardListRow>) {
+  const ref = useMemo(() => registerItem(index), [index, registerItem]);
+  return <div ref={ref}><CardListRow card={card} {...props} /></div>;
+}
+
+function WindowedGridItem({ card, index, registerItem, width, ...props }: {
+  card: CardDef;
+  index: number;
+  registerItem: (index: number) => (node: HTMLElement | null) => void;
+  width: number;
+} & Omit<ComponentProps<typeof MetaCard>, "card" | "w"> & { onKeyboardSelect: () => void }) {
+  const ref = useMemo(() => registerItem(index), [index, registerItem]);
+  const { onKeyboardSelect, ...cardProps } = props;
+  return (
+    <div
+      className="cards-grid-item"
+      data-card-num={card.num}
+      ref={ref}
+      onKeyDownCapture={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') requestAnimationFrame(onKeyboardSelect);
+      }}
+    >
+      <MetaCard card={card} w={width} {...cardProps} hoverable />
+    </div>
   );
 }
 

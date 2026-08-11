@@ -14,12 +14,19 @@ import { COLOR_META, EMPTY_FILTER } from "../../meta-app/src/data/cardFilter";
 import { CARD_POOL } from "../../meta-app/src/data/cardPool";
 import { useFiltersStore } from "../../meta-app/src/state/filtersStore";
 
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
 describe("CARDS filter drawer", () => {
   let container: HTMLDivElement;
   let root: Root;
 
   beforeAll(() => {
     globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+    vi.stubGlobal("ResizeObserver", ResizeObserverStub);
   });
 
   beforeEach(() => {
@@ -398,5 +405,52 @@ describe("CARDS filter drawer", () => {
       expect(Number.isInteger(card.difficultyFirst)).toBe(true);
       expect(Number.isInteger(card.difficultySecond)).toBe(true);
     }
+  });
+
+  it("mounts one initial card window, releases distant cards on scroll, and caps the active window", () => {
+    act(() => root.render(<CardsScreen onNav={() => undefined} />));
+
+    const scroller = container.querySelector<HTMLElement>(".cards-grid-scroll")!;
+    const initialCards = Array.from(
+      container.querySelectorAll<HTMLElement>(".cards-grid-item"),
+    );
+    const firstCard = initialCards[0]!;
+    expect(initialCards).toHaveLength(48);
+
+    act(() => {
+      scroller.scrollTop = 20_000;
+      scroller.dispatchEvent(new Event("scroll", { bubbles: true }));
+    });
+
+    expect(container.querySelectorAll(".cards-grid-item").length).toBeLessThanOrEqual(96);
+    expect(firstCard.isConnected).toBe(false);
+  });
+
+  it("resets the active window for filters and views while retaining the selected print", () => {
+    act(() => root.render(<CardsScreen onNav={() => undefined} />));
+
+    const print = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(".cards-print-chip"),
+    ).find((button) => button.textContent === "B09001P");
+    expect(print).not.toBeNull();
+    act(() => print?.click());
+
+    const scroller = container.querySelector<HTMLElement>(".cards-grid-scroll")!;
+    act(() => {
+      scroller.scrollTop = 20_000;
+      scroller.dispatchEvent(new Event("scroll", { bubbles: true }));
+      useFiltersStore.getState().setCards({ q: "B09001" });
+    });
+
+    expect(container.querySelectorAll(".cards-grid-item")).toHaveLength(1);
+    expect(
+      container.querySelector('.cards-print-chip[aria-checked="true"]')?.textContent,
+    ).toBe("B09001P");
+
+    const listView = container.querySelector<HTMLButtonElement>(
+      '.cards-view-selector button[data-last="true"]',
+    );
+    act(() => listView?.click());
+    expect(container.querySelectorAll(".meta-row")).toHaveLength(1);
   });
 });
