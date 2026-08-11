@@ -538,6 +538,38 @@ describe("qualified private Pages direct deployment", () => {
     );
   });
 
+  it("accepts a create response that omits optional uses_functions before authoritative polling", async () => {
+    const f = await fixture();
+    const { uses_functions: _omitted, ...createdDeployment } = deployment();
+    const { result, requests } = await run(f, { createdDeployment });
+
+    expect(result).toMatchObject({ id: "deploy-12345", releaseCommit: COMMIT });
+    expect(
+      requests.some(({ method, url }) =>
+        method === "GET" && url.endsWith("/deployments/deploy-12345"),
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects a create response that explicitly disables Functions", async () => {
+    const f = await fixture();
+    await expect(
+      run(f, {
+        createdDeployment: deployment({ uses_functions: false }),
+      }),
+    ).rejects.toThrow(/deployment identity/i);
+  });
+
+  it("rejects a polling response that omits uses_functions", async () => {
+    const f = await fixture();
+    const { uses_functions: _omitted, ...deploymentStatus } = deployment({
+      latest_stage: { status: "success" },
+    });
+    await expect(
+      run(f, { deploymentStatuses: [deploymentStatus] }),
+    ).rejects.toThrow(/deployment identity/i);
+  });
+
   it("rejects an Access login path bound to another host before asset APIs", async () => {
     const f = await fixture();
     await expect(

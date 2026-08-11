@@ -1573,7 +1573,12 @@ async function workerBundle(snapshot) {
   );
 }
 
-function validatedDeployment(candidate, snapshot, expectedId) {
+function validatedDeployment(
+  candidate,
+  snapshot,
+  expectedId,
+  allowOmittedUsesFunctions = false,
+) {
   const deployment = record(candidate, "Pages deployment");
   if (
     typeof deployment.id !== "string" ||
@@ -1581,7 +1586,8 @@ function validatedDeployment(candidate, snapshot, expectedId) {
     (expectedId !== undefined && deployment.id !== expectedId) ||
     deployment.project_name !== PROJECT_NAME ||
     deployment.environment !== "production" ||
-    deployment.uses_functions !== true
+    (deployment.uses_functions !== true &&
+      !(allowOmittedUsesFunctions && deployment.uses_functions === undefined))
   ) {
     fail("Pages deployment identity is invalid");
   }
@@ -1673,7 +1679,7 @@ async function createDeployment(
       "Pages deployment creation state is unknown; inspect Cloudflare before retrying",
     );
   }
-  return validatedDeployment(result, snapshot);
+  return validatedDeployment(result, snapshot, undefined, true);
 }
 
 async function waitForDeployment(
