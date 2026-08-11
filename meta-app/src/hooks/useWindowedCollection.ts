@@ -53,6 +53,7 @@ export function useWindowedCollection<T>({
   const [, setMeasurementVersion] = useState(0);
   const measurementsRef = useRef(new Map<number, Measurement>());
   const nodesRef = useRef(new Map<number, HTMLElement>());
+  const nodeIndexesRef = useRef(new Map<HTMLElement, number>());
   const callbacksRef = useRef(new Map<number, (node: HTMLElement | null) => void>());
   const observerRef = useRef<ResizeObserver | null>(null);
   const pendingFocusKeyRef = useRef<string | null>(null);
@@ -92,17 +93,28 @@ export function useWindowedCollection<T>({
   }, [layoutKey, reset, scrollElement]);
 
   useLayoutEffect(() => {
-    const pins = [selectedKey, focusedKey]
-      .map((key) => key == null ? undefined : keyIndexes.get(key))
-      .filter((index): index is number => index !== undefined);
+    const selectedIndex = selectedKey == null ? undefined : keyIndexes.get(selectedKey);
+    const focusedIndex = focusedKey == null ? undefined : keyIndexes.get(focusedKey);
+    const pins = [selectedIndex, focusedIndex].filter((index): index is number => index !== undefined);
     if (pins.length === 0) return;
     const first = Math.min(...pins);
     const last = Math.max(...pins);
     setRange((current) => {
       if (first >= current.start && last < current.end) return current;
-      return rangeForIndex(last);
+      const priorityIndex = focusedIndex ?? selectedIndex!;
+      if (last - first >= mountedLimit) {
+        const next = rangeForIndex(priorityIndex);
+        return next.start === current.start && next.end === current.end ? current : next;
+      }
+      const maxStart = Math.max(0, items.length - mountedLimit);
+      const minimumStart = Math.max(0, last - mountedLimit + 1);
+      const maximumStart = Math.min(first, maxStart);
+      const preferredStart = rangeForIndex(priorityIndex).start;
+      const start = Math.max(minimumStart, Math.min(maximumStart, preferredStart));
+      const next = { start, end: Math.min(items.length, start + mountedLimit) };
+      return next.start === current.start && next.end === current.end ? current : next;
     });
-  }, [focusedKey, keyIndexes, rangeForIndex, selectedKey]);
+  }, [focusedKey, items.length, keyIndexes, mountedLimit, rangeForIndex, selectedKey]);
 
   useEffect(() => {
     if (!scrollElement) return;
@@ -118,7 +130,19 @@ export function useWindowedCollection<T>({
   }, [chunkSize, items.length, metrics.columns, metrics.rowHeight, mountedLimit, scrollElement]);
 
   useEffect(() => {
-    const observer = new ResizeObserver(() => setMeasurementVersion((version) => version + 1));
+    const observer = new ResizeObserver((entries) => {
+      let changed = false;
+      for (const entry of entries) {
+        const node = entry.target as HTMLElement;
+        const index = nodeIndexesRef.current.get(node);
+        if (index === undefined) continue;
+        const measurement = { top: node.offsetTop, height: node.offsetHeight };
+        const previous = measurementsRef.current.get(index);
+        measurementsRef.current.set(index, measurement);
+        changed ||= !previous || previous.top !== measurement.top || previous.height !== measurement.height;
+      }
+      if (changed) setMeasurementVersion((version) => version + 1);
+    });
     observerRef.current = observer;
     for (const node of nodesRef.current.values()) observer.observe(node);
     return () => {
@@ -136,11 +160,16 @@ export function useWindowedCollection<T>({
       if (currentNode) {
         observerRef.current?.unobserve(currentNode);
         nodesRef.current.delete(index);
+        nodeIndexesRef.current.delete(currentNode);
         measurementsRef.current.delete(index);
       }
       currentNode = node;
-      if (!node) return;
+      if (!node) {
+        callbacksRef.current.delete(index);
+        return;
+      }
       nodesRef.current.set(index, node);
+      nodeIndexesRef.current.set(node, index);
       const measurement = { top: node.offsetTop, height: node.offsetHeight };
       const previous = measurementsRef.current.get(index);
       measurementsRef.current.set(index, measurement);

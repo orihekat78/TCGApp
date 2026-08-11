@@ -67,7 +67,7 @@ function MeasuredItem({
   useLayoutEffect(() => {
     const node = ref.current!;
     Object.defineProperties(node, {
-      offsetTop: { configurable: true, value: index * 28 },
+      offsetTop: { configurable: true, value: Math.floor(index / 3) * 40 },
       offsetHeight: { configurable: true, value: item.height },
     });
     const register = registerItem(index);
@@ -120,13 +120,27 @@ describe("useWindowedCollection", () => {
     expect(first.isConnected).toBe(false);
   });
 
-  it("uses registered variable row measurements for spacers", () => {
+  it("refreshes variable row measurements from ResizeObserver entries", () => {
     act(() => root.render(<Harness />));
+    const scroller = container.querySelector<HTMLElement>("[data-testid=scroller]")!;
+    act(() => {
+      Object.defineProperty(scroller, "scrollTop", { configurable: true, value: 20_000, writable: true });
+      scroller.dispatchEvent(new Event("scroll"));
+    });
 
-    const [, , beforePx, afterPx] = container.querySelector("[data-testid=range]")!
+    const [, , beforePx] = container.querySelector("[data-testid=range]")!
       .textContent!.split(":").map(Number);
-    expect(beforePx).toBe(0);
-    expect(afterPx).toBeGreaterThan(180 * 20 - 48 * 20);
+    expect(beforePx).toBeGreaterThan(0);
+
+    const resized = container.querySelector<HTMLElement>("[data-testid='card-84']")!;
+    Object.defineProperty(resized, "offsetHeight", { configurable: true, value: 96 });
+    act(() => ResizeObserverStub.instances[0]!.callback([
+      { target: resized } as ResizeObserverEntry,
+    ], ResizeObserverStub.instances[0] as unknown as ResizeObserver));
+
+    const [, , beforeAfterResize] = container.querySelector("[data-testid=range]")!
+      .textContent!.split(":").map(Number);
+    expect(beforeAfterResize).toBeGreaterThan(beforePx);
   });
 
   it("resets to the initial chunk when the layout key changes", () => {
@@ -142,11 +156,19 @@ describe("useWindowedCollection", () => {
     expect(container.querySelector("[data-testid=range]")?.textContent).toMatch(/^0:48:/);
   });
 
-  it("keeps selected and focused keys mounted", () => {
-    act(() => root.render(<Harness selectedKey="card-130" focusedKey="card-131" />));
+  it("keeps selected and focused keys mounted when they fit one bounded window", () => {
+    act(() => root.render(<Harness selectedKey="card-80" focusedKey="card-131" />));
 
-    expect(container.querySelector("[data-testid='card-130']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='card-80']")).not.toBeNull();
     expect(container.querySelector("[data-testid='card-131']")).not.toBeNull();
+    expect(container.querySelectorAll("button").length).toBeLessThanOrEqual(96);
+  });
+
+  it("prioritizes the focused key when selected and focused keys cannot share the cap", () => {
+    act(() => root.render(<Harness selectedKey="card-0" focusedKey="card-150" />));
+
+    expect(container.querySelector("[data-testid='card-150']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='card-0']")).toBeNull();
     expect(container.querySelectorAll("button").length).toBeLessThanOrEqual(96);
   });
 
@@ -168,5 +190,19 @@ describe("useWindowedCollection", () => {
     act(() => root.unmount());
 
     expect(observer.disconnect).toHaveBeenCalledOnce();
+  });
+
+  it("releases observed nodes while traversing bounded windows", () => {
+    act(() => root.render(<Harness />));
+    const observer = ResizeObserverStub.instances[0]!;
+    const scroller = container.querySelector<HTMLElement>("[data-testid=scroller]")!;
+    for (const scrollTop of [20_000, 0, 20_000]) {
+      act(() => {
+        Object.defineProperty(scroller, "scrollTop", { configurable: true, value: scrollTop, writable: true });
+        scroller.dispatchEvent(new Event("scroll"));
+      });
+      expect(container.querySelectorAll("button").length).toBeLessThanOrEqual(96);
+    }
+    expect(observer.unobserve).toHaveBeenCalled();
   });
 });
