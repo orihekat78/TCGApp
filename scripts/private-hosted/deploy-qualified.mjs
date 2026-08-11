@@ -918,12 +918,17 @@ function accessId(value, label) {
 
 function validateAccessApplication(
   candidate,
+  expectedId,
   domain,
   identityProviderId,
   label,
+  organizationMfaDisabled,
 ) {
   const app = record(candidate, `${label} Access application`);
   const id = accessId(app.id, `${label} Access application`);
+  if (id !== expectedId) {
+    fail(`${label} Access application detail differs from list identity`);
+  }
   if (
     app.type !== "self_hosted" ||
     app.domain !== domain ||
@@ -947,9 +952,18 @@ function validateAccessApplication(
   ) {
     fail(`${label} Access application bypasses OPTIONS`);
   }
-  const mfa = record(app.mfa_config, `${label} Access application mfa_config`);
-  if (mfa.mfa_disabled !== true) {
-    fail(`${label} Access application enables independent MFA`);
+  if (app.mfa_config === undefined || app.mfa_config === null) {
+    if (!organizationMfaDisabled) {
+      fail(`${label} Access application inherits organization MFA`);
+    }
+  } else {
+    const mfa = record(
+      app.mfa_config,
+      `${label} Access application mfa_config`,
+    );
+    if (mfa.mfa_disabled !== true) {
+      fail(`${label} Access application enables independent MFA`);
+    }
   }
   if (app.destinations !== undefined) {
     if (!Array.isArray(app.destinations) || app.destinations.length !== 1) {
@@ -977,6 +991,25 @@ function validateAccessApplication(
     fail(`${label} Access application legacy domain differs`);
   }
   return id;
+}
+
+function validateAccessOrganization(candidate) {
+  const organization = record(candidate, "Access organization");
+  const mfaConfig = organization.mfa_config;
+  if (
+    (organization.mfa_required_for_all_apps !== undefined &&
+      organization.mfa_required_for_all_apps !== null &&
+      organization.mfa_required_for_all_apps !== false) ||
+    (mfaConfig !== undefined &&
+      mfaConfig !== null &&
+      (typeof mfaConfig !== "object" || Array.isArray(mfaConfig)))
+  ) {
+    fail("Access organization MFA must be disabled");
+  }
+  if (organization.allow_authenticate_via_warp !== false) {
+    fail("Access organization WARP authentication must be disabled");
+  }
+  return true;
 }
 
 function policyEmail(candidate) {
@@ -1051,15 +1084,22 @@ function validateAccessPolicy(values, approvedEmails, label) {
 
 async function validateActiveAccess(fetchImpl, token, config) {
   const base = `${API_BASE}/accounts/${ACCOUNT_ID}/access`;
-  const [identityProviders, applications] = await Promise.all([
-    apiList(
-      fetchImpl,
-      `${base}/identity_providers`,
-      token,
-      "Access identity providers",
-    ),
-    apiList(fetchImpl, `${base}/apps`, token, "Access applications"),
-  ]);
+  const [identityProviders, applications, organizationValue] =
+    await Promise.all([
+      apiList(
+        fetchImpl,
+        `${base}/identity_providers`,
+        token,
+        "Access identity providers",
+      ),
+      apiList(fetchImpl, `${base}/apps`, token, "Access applications"),
+      apiJson(
+        fetchImpl,
+        `${base}/organizations`,
+        { headers: authorization(token) },
+        "Access organization",
+      ),
+    ]);
   const parsedIdentityProviders = identityProviders.map((candidate) =>
     record(candidate, "Access identity provider"),
   );
@@ -1098,6 +1138,7 @@ async function validateActiveAccess(fetchImpl, token, config) {
   if (applications.length !== 2) {
     fail("Access must have exactly two applications");
   }
+  const organizationMfaDisabled = validateAccessOrganization(organizationValue);
   const rootDomain = `${PROJECT_NAME}.pages.dev`;
   const wildcardDomain = `*.${rootDomain}`;
   const rootMatches = applications.filter(
@@ -1111,17 +1152,43 @@ async function validateActiveAccess(fetchImpl, token, config) {
   if (rootMatches.length !== 1 || wildcardMatches.length !== 1) {
     fail("Access root and wildcard applications differ");
   }
+  const listedRootId = accessId(
+    record(rootMatches[0], "root Access application list entry").id,
+    "root Access application list entry",
+  );
+  const listedWildcardId = accessId(
+    record(wildcardMatches[0], "wildcard Access application list entry").id,
+    "wildcard Access application list entry",
+  );
+  const [rootDetail, wildcardDetail] = await Promise.all([
+    apiJson(
+      fetchImpl,
+      `${base}/apps/${encodeURIComponent(listedRootId)}`,
+      { headers: authorization(token) },
+      "root Access application detail",
+    ),
+    apiJson(
+      fetchImpl,
+      `${base}/apps/${encodeURIComponent(listedWildcardId)}`,
+      { headers: authorization(token) },
+      "wildcard Access application detail",
+    ),
+  ]);
   const rootId = validateAccessApplication(
-    rootMatches[0],
+    rootDetail,
+    listedRootId,
     rootDomain,
     identityProviderId,
     "root",
+    organizationMfaDisabled,
   );
   const wildcardId = validateAccessApplication(
-    wildcardMatches[0],
+    wildcardDetail,
+    listedWildcardId,
     wildcardDomain,
     identityProviderId,
     "wildcard",
+    organizationMfaDisabled,
   );
   const [rootPolicies, wildcardPolicies] = await Promise.all([
     apiList(
@@ -1863,6 +1930,20 @@ function createStaticTestFetch(scenario, requests) {
     const accessBase = `/client/v4/accounts/${ACCOUNT_ID}/access`;
     if (url.pathname.startsWith(accessBase)) {
       assertTestRequest(init, "GET", TEST_DEPLOY_TOKEN, "Access");
+      if (url.pathname === `${accessBase}/organizations`) {
+        if (url.search !== "") fail("Access organization test query differs");
+        return testEnvelope(scenario.access.organization);
+      }
+      const detail = url.pathname.match(
+        new RegExp(`^${accessBase}/apps/([^/]+)$`),
+      );
+      if (detail) {
+        if (url.search !== "")
+          fail("Access application detail test query differs");
+        return testEnvelope(
+          scenario.access.appDetails[decodeURIComponent(detail[1])],
+        );
+      }
       if (url.search !== "?page=1&per_page=1000") {
         fail("Access test pagination differs");
       }

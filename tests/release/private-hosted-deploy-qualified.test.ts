@@ -96,37 +96,45 @@ function accessPolicy(id: string) {
 function accessFixture() {
   const root = `${PROJECT}.pages.dev`;
   const wildcard = `*.${root}`;
+  const apps = [
+    {
+      id: ACCESS_IDS.rootApp,
+      type: "self_hosted",
+      domain: root,
+      destinations: [{ type: "public", uri: root }],
+      allowed_idps: [ACCESS_IDS.idp],
+      auto_redirect_to_identity: true,
+      session_duration: "12h",
+      allow_authenticate_via_warp: false,
+      options_preflight_bypass: false,
+      mfa_config: { mfa_disabled: true },
+    },
+    {
+      id: ACCESS_IDS.wildcardApp,
+      type: "self_hosted",
+      domain: wildcard,
+      destinations: [{ type: "public", uri: wildcard }],
+      allowed_idps: [ACCESS_IDS.idp],
+      auto_redirect_to_identity: true,
+      session_duration: "12h",
+      allow_authenticate_via_warp: false,
+      options_preflight_bypass: false,
+      mfa_config: { mfa_disabled: true },
+    },
+  ];
   return {
     idps: [
       { id: ACCESS_IDS.cloudflareIdp, type: "cloudflare" },
       { id: ACCESS_IDS.idp, type: "onetimepin" },
     ],
-    apps: [
-      {
-        id: ACCESS_IDS.rootApp,
-        type: "self_hosted",
-        domain: root,
-        destinations: [{ type: "public", uri: root }],
-        allowed_idps: [ACCESS_IDS.idp],
-        auto_redirect_to_identity: true,
-        session_duration: "12h",
-        allow_authenticate_via_warp: false,
-        options_preflight_bypass: false,
-        mfa_config: { mfa_disabled: true },
-      },
-      {
-        id: ACCESS_IDS.wildcardApp,
-        type: "self_hosted",
-        domain: wildcard,
-        destinations: [{ type: "public", uri: wildcard }],
-        allowed_idps: [ACCESS_IDS.idp],
-        auto_redirect_to_identity: true,
-        session_duration: "12h",
-        allow_authenticate_via_warp: false,
-        options_preflight_bypass: false,
-        mfa_config: { mfa_disabled: true },
-      },
-    ],
+    apps,
+    appDetails: {
+      [ACCESS_IDS.rootApp]: apps[0]!,
+      [ACCESS_IDS.wildcardApp]: apps[1]!,
+    },
+    organization: {
+      allow_authenticate_via_warp: false,
+    },
     policies: {
       [ACCESS_IDS.rootApp]: [accessPolicy(ACCESS_IDS.rootPolicy)],
       [ACCESS_IDS.wildcardApp]: [accessPolicy(ACCESS_IDS.wildcardPolicy)],
@@ -559,6 +567,40 @@ describe("qualified private Pages direct deployment", () => {
     await expect(
       run(unprotected, { accessProtected: false, mutationAllowed: false }),
     ).rejects.toThrow(/not protected/);
+  });
+
+  it("uses app details and permits inherited MFA only for a disabled organization", async () => {
+    const f = await fixture();
+    const access = accessFixture();
+    access.apps = access.apps.map(({ id, domain, type }) => ({
+      id,
+      domain,
+      type,
+    }));
+    delete access.appDetails[ACCESS_IDS.rootApp]!.mfa_config;
+    delete access.appDetails[ACCESS_IDS.wildcardApp]!.mfa_config;
+    access.organization.mfa_required_for_all_apps = false;
+    access.organization.mfa_config = { allowed_authenticators: ["totp"] };
+
+    await expect(run(f, { access })).resolves.toMatchObject({
+      result: { id: expect.any(String) },
+    });
+
+    const blocked = await fixture();
+    access.organization.mfa_required_for_all_apps = true;
+    await expect(
+      run(blocked, { access, mutationAllowed: false }),
+    ).rejects.toThrow(/organization MFA|independent MFA/i);
+  });
+
+  it("rejects malformed app MFA detail before Pages mutation", async () => {
+    const f = await fixture();
+    const access = accessFixture();
+    access.appDetails[ACCESS_IDS.rootApp]!.mfa_config = "malformed";
+
+    await expect(run(f, { access, mutationAllowed: false })).rejects.toThrow(
+      /mfa_config|MFA/i,
+    );
   });
 
   it.each([

@@ -30,13 +30,18 @@ const ids = {
 type Fixture = {
   idps: Record<string, unknown>[];
   apps: Record<string, unknown>[];
+  appDetails: Record<string, Record<string, unknown>>;
+  organization: Record<string, unknown>;
   policies: Record<string, Record<string, unknown>[]>;
   redirectHost?: string;
   probeStatus?: number;
   apiStatus?: number;
 };
 
-function policy(id: string, emails: readonly string[]): Record<string, unknown> {
+function policy(
+  id: string,
+  emails: readonly string[],
+): Record<string, unknown> {
   return {
     id,
     name: "private named people",
@@ -59,9 +64,40 @@ function blockPolicy(id: string): Record<string, unknown> {
   };
 }
 
-function goodFixture(emails: readonly string[] = [config.operatorEmail]): Fixture {
+function goodFixture(
+  emails: readonly string[] = [config.operatorEmail],
+): Fixture {
   const root = `${config.projectName}.pages.dev`;
   const wildcard = `*.${root}`;
+  const apps = [
+    {
+      id: ids.rootApp,
+      name: "root",
+      type: "self_hosted",
+      domain: root,
+      destinations: [{ type: "public", uri: root }],
+      allowed_idps: [ids.idp],
+      auto_redirect_to_identity: true,
+      session_duration: "30m",
+      allow_authenticate_via_warp: false,
+      options_preflight_bypass: false,
+      mfa_config: { mfa_disabled: true },
+      raw_secret: "must-never-enter-evidence",
+    },
+    {
+      id: ids.wildcardApp,
+      name: "wildcard",
+      type: "self_hosted",
+      domain: wildcard,
+      destinations: [{ type: "public", uri: wildcard }],
+      allowed_idps: [ids.idp],
+      auto_redirect_to_identity: true,
+      session_duration: "29m",
+      allow_authenticate_via_warp: false,
+      options_preflight_bypass: false,
+      mfa_config: { mfa_disabled: true },
+    },
+  ];
   return {
     idps: [
       {
@@ -77,35 +113,14 @@ function goodFixture(emails: readonly string[] = [config.operatorEmail]): Fixtur
         config: {},
       },
     ],
-    apps: [
-      {
-        id: ids.rootApp,
-        name: "root",
-        type: "self_hosted",
-        domain: root,
-        destinations: [{ type: "public", uri: root }],
-        allowed_idps: [ids.idp],
-        auto_redirect_to_identity: true,
-        session_duration: "30m",
-        allow_authenticate_via_warp: false,
-        options_preflight_bypass: false,
-        mfa_config: { mfa_disabled: true },
-        raw_secret: "must-never-enter-evidence",
-      },
-      {
-        id: ids.wildcardApp,
-        name: "wildcard",
-        type: "self_hosted",
-        domain: wildcard,
-        destinations: [{ type: "public", uri: wildcard }],
-        allowed_idps: [ids.idp],
-        auto_redirect_to_identity: true,
-        session_duration: "29m",
-        allow_authenticate_via_warp: false,
-        options_preflight_bypass: false,
-        mfa_config: { mfa_disabled: true },
-      },
-    ],
+    apps,
+    appDetails: {
+      [ids.rootApp]: apps[0]!,
+      [ids.wildcardApp]: apps[1]!,
+    },
+    organization: {
+      allow_authenticate_via_warp: false,
+    },
     policies: {
       [ids.rootApp]: [policy(ids.rootPolicy, emails)],
       [ids.wildcardApp]: [policy(ids.wildcardPolicy, emails)],
@@ -149,22 +164,31 @@ function fixtureFetch(
   },
 ): CloudflareFetch {
   return vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = new URL(input instanceof Request ? input.url : input.toString());
+    const url = new URL(
+      input instanceof Request ? input.url : input.toString(),
+    );
     if (url.hostname === "api.cloudflare.com") {
       if (fixture.apiStatus) return jsonResponse([], fixture.apiStatus);
       const parts = url.pathname.split("/").filter(Boolean);
       if (parts.at(-1) === "identity_providers") {
         return jsonResponse(fixture.idps);
       }
+      if (parts.at(-1) === "organizations") {
+        return jsonResponse(fixture.organization);
+      }
       if (parts.at(-1) === "apps") return jsonResponse(fixture.apps);
       if (parts.at(-1) === "policies") {
         const appId = parts.at(-2)!;
         return jsonResponse(fixture.policies[appId] ?? []);
       }
+      if (parts.at(-2) === "apps") {
+        return jsonResponse(fixture.appDetails[parts.at(-1)!] ?? null);
+      }
       return jsonResponse([], 404);
     }
     observations.probes.push({ url: url.toString(), init });
-    const host = fixture.redirectHost ?? `${config.teamName}.cloudflareaccess.com`;
+    const host =
+      fixture.redirectHost ?? `${config.teamName}.cloudflareaccess.com`;
     const status = fixture.probeStatus ?? 302;
     return new Response(null, {
       status,
@@ -176,13 +200,17 @@ function fixtureFetch(
   }) as CloudflareFetch;
 }
 
-function findingCodes(result: Awaited<ReturnType<typeof auditAccess>>): string[] {
+function findingCodes(
+  result: Awaited<ReturnType<typeof auditAccess>>,
+): string[] {
   return result.findings.map((finding) => finding.code);
 }
 
 describe("private hosted Access audit", () => {
   it("accepts the operator-only preflight state and emits redacted stable evidence", async () => {
-    const observations = { probes: [] as { url: string; init?: RequestInit }[] };
+    const observations = {
+      probes: [] as { url: string; init?: RequestInit }[],
+    };
     const result = await auditAccess(
       config,
       "preflight",
@@ -224,6 +252,10 @@ describe("private hosted Access audit", () => {
     expect(serialized).not.toContain("must-never-enter-evidence");
     expect(serialized).not.toContain("raw_secret");
     expect(result.configSnapshot).toMatchObject({
+      organization: {
+        mfaRequiredForAllApps: false,
+        allowAuthenticateViaWarp: false,
+      },
       idp: {
         id: ids.idp,
         type: "onetimepin",
@@ -234,6 +266,68 @@ describe("private hosted Access audit", () => {
         domain: `*.${config.projectName}.pages.dev`,
       },
     });
+  });
+
+  it("uses authoritative app details and accepts inherited MFA only when organization MFA is disabled", async () => {
+    const fixture = goodFixture();
+    fixture.apps = fixture.apps.map(({ id, domain, type }) => ({
+      id,
+      domain,
+      type,
+    }));
+    delete fixture.appDetails[ids.rootApp]!.mfa_config;
+    delete fixture.appDetails[ids.wildcardApp]!.mfa_config;
+    fixture.organization.mfa_required_for_all_apps = false;
+    fixture.organization.mfa_config = { allowed_authenticators: ["totp"] };
+
+    const accepted = await auditAccess(
+      config,
+      "preflight",
+      fixtureFetch(fixture),
+    );
+    expect(accepted.ok).toBe(true);
+    expect(accepted.findings).toEqual([]);
+
+    fixture.organization.mfa_required_for_all_apps = true;
+    const rejected = await auditAccess(
+      config,
+      "preflight",
+      fixtureFetch(fixture),
+    );
+    expect(findingCodes(rejected)).toEqual(
+      expect.arrayContaining([
+        "organization.mfa",
+        "application.root.mfa",
+        "application.wildcard.mfa",
+      ]),
+    );
+  });
+
+  it("rejects a malformed application MFA value instead of treating it as inherited", async () => {
+    const fixture = goodFixture();
+    fixture.appDetails[ids.rootApp]!.mfa_config = "malformed";
+
+    const result = await auditAccess(
+      config,
+      "preflight",
+      fixtureFetch(fixture),
+    );
+    expect(findingCodes(result)).toContain("application.root.mfa");
+  });
+
+  it("fails closed when an app detail does not match its list identity", async () => {
+    const fixture = goodFixture();
+    fixture.appDetails[ids.rootApp] = {
+      ...fixture.appDetails[ids.rootApp],
+      id: ids.wildcardApp,
+    };
+
+    const result = await auditAccess(
+      config,
+      "preflight",
+      fixtureFetch(fixture),
+    );
+    expect(findingCodes(result)).toContain("application.root.detail");
   });
 
   it("keeps the redacted snapshot hash stable across API and policy rule order", async () => {
@@ -269,7 +363,11 @@ describe("private hosted Access audit", () => {
     expect(active.ok).toBe(true);
 
     const incomplete = goodFixture([config.operatorEmail]);
-    const rejected = await auditAccess(config, "active", fixtureFetch(incomplete));
+    const rejected = await auditAccess(
+      config,
+      "active",
+      fixtureFetch(incomplete),
+    );
     expect(rejected.ok).toBe(false);
     expect(findingCodes(rejected)).toContain("policy.root.email-set");
     expect(findingCodes(rejected)).toContain("policy.wildcard.email-set");
@@ -283,8 +381,14 @@ describe("private hosted Access audit", () => {
       (await auditAccess(config, "contained", fixtureFetch(contained))).ok,
     ).toBe(true);
 
-    contained.policies[ids.rootApp] = [policy(ids.rootPolicy, [config.operatorEmail])];
-    const rejected = await auditAccess(config, "contained", fixtureFetch(contained));
+    contained.policies[ids.rootApp] = [
+      policy(ids.rootPolicy, [config.operatorEmail]),
+    ];
+    const rejected = await auditAccess(
+      config,
+      "contained",
+      fixtureFetch(contained),
+    );
     expect(findingCodes(rejected)).toContain("policy.root.decision");
   });
 
@@ -315,7 +419,9 @@ describe("private hosted Access audit", () => {
     missing.policies[ids.rootApp] = [];
     missing.policies[ids.wildcardApp] = [blockPolicy(ids.wildcardPolicy)];
     expect(
-      findingCodes(await auditAccess(config, "contained", fixtureFetch(missing))),
+      findingCodes(
+        await auditAccess(config, "contained", fixtureFetch(missing)),
+      ),
     ).toContain("policy.root.count");
 
     const broadened = goodFixture();
@@ -327,7 +433,11 @@ describe("private hosted Access audit", () => {
     broadened.policies[ids.wildcardApp]![0]!.require = [
       { login_method: { id: ids.idp } },
     ];
-    const result = await auditAccess(config, "contained", fixtureFetch(broadened));
+    const result = await auditAccess(
+      config,
+      "contained",
+      fixtureFetch(broadened),
+    );
     expect(findingCodes(result)).toEqual(
       expect.arrayContaining([
         "policy.root.include-rule",
@@ -340,7 +450,11 @@ describe("private hosted Access audit", () => {
     const preflight = goodFixture();
     preflight.apps[0]!.session_duration = "31m";
     preflight.policies[ids.rootApp]![0]!.session_duration = "31m";
-    const rejected = await auditAccess(config, "preflight", fixtureFetch(preflight));
+    const rejected = await auditAccess(
+      config,
+      "preflight",
+      fixtureFetch(preflight),
+    );
     expect(findingCodes(rejected)).toEqual(
       expect.arrayContaining([
         "application.root.session-duration",
@@ -353,7 +467,9 @@ describe("private hosted Access audit", () => {
     active.apps[1]!.session_duration = "12h";
     active.policies[ids.rootApp]![0]!.session_duration = "12h";
     active.policies[ids.wildcardApp]![0]!.session_duration = "12h";
-    expect((await auditAccess(config, "active", fixtureFetch(active))).ok).toBe(true);
+    expect((await auditAccess(config, "active", fixtureFetch(active))).ok).toBe(
+      true,
+    );
   });
 
   it("fails closed for extra identity providers, applications, and unsafe app flags", async () => {
@@ -377,7 +493,11 @@ describe("private hosted Access audit", () => {
       { type: "public", uri: `${config.projectName}.pages.dev/public` },
     ];
 
-    const result = await auditAccess(config, "preflight", fixtureFetch(fixture));
+    const result = await auditAccess(
+      config,
+      "preflight",
+      fixtureFetch(fixture),
+    );
     expect(result.ok).toBe(false);
     expect(findingCodes(result)).toEqual(
       expect.arrayContaining([
@@ -401,7 +521,11 @@ describe("private hosted Access audit", () => {
         id: "66666666-6666-4666-8666-666666666666",
         type,
       });
-      const result = await auditAccess(config, "preflight", fixtureFetch(fixture));
+      const result = await auditAccess(
+        config,
+        "preflight",
+        fixtureFetch(fixture),
+      );
       expect(findingCodes(result)).toContain("idp.count");
     },
   );
@@ -409,13 +533,21 @@ describe("private hosted Access audit", () => {
   it("rejects a malformed built-in Cloudflare identity provider ID", async () => {
     const fixture = goodFixture();
     fixture.idps[0]!.id = "not-an-access-id";
-    const result = await auditAccess(config, "preflight", fixtureFetch(fixture));
+    const result = await auditAccess(
+      config,
+      "preflight",
+      fixtureFetch(fixture),
+    );
     expect(findingCodes(result)).toContain("idp.id");
   });
 
   it.each([
     ["everyone", { everyone: {} }, "policy.root.include-rule"],
-    ["domain", { email_domain: { domain: "example.com" } }, "policy.root.include-rule"],
+    [
+      "domain",
+      { email_domain: { domain: "example.com" } },
+      "policy.root.include-rule",
+    ],
     ["group", { group: { id: "group" } }, "policy.root.include-rule"],
     ["ip", { ip: { ip: "192.0.2.0/24" } }, "policy.root.include-rule"],
     ["country", { geo: { country_code: "JP" } }, "policy.root.include-rule"],
@@ -423,7 +555,11 @@ describe("private hosted Access audit", () => {
   ])("rejects the %s selector", async (_name, rule, expectedCode) => {
     const fixture = goodFixture();
     fixture.policies[ids.rootApp]![0]!.include = [rule];
-    const result = await auditAccess(config, "preflight", fixtureFetch(fixture));
+    const result = await auditAccess(
+      config,
+      "preflight",
+      fixtureFetch(fixture),
+    );
     expect(findingCodes(result)).toContain(expectedCode);
   });
 
@@ -432,7 +568,11 @@ describe("private hosted Access audit", () => {
     async (decision) => {
       const fixture = goodFixture();
       fixture.policies[ids.rootApp]![0]!.decision = decision;
-      const result = await auditAccess(config, "preflight", fixtureFetch(fixture));
+      const result = await auditAccess(
+        config,
+        "preflight",
+        fixtureFetch(fixture),
+      );
       expect(findingCodes(result)).toContain("policy.root.decision");
     },
   );
@@ -449,7 +589,11 @@ describe("private hosted Access audit", () => {
       { login_method: { id: "99999999-9999-4999-8999-999999999999" } },
     ];
     fixture.redirectHost = "attacker.example";
-    const result = await auditAccess(config, "preflight", fixtureFetch(fixture));
+    const result = await auditAccess(
+      config,
+      "preflight",
+      fixtureFetch(fixture),
+    );
     expect(findingCodes(result)).toEqual(
       expect.arrayContaining([
         "policy.root.count",
@@ -470,7 +614,11 @@ describe("private hosted Access audit", () => {
       config: { restrict_to_account_members: false },
     };
 
-    const result = await auditAccess(config, "preflight", fixtureFetch(fixture));
+    const result = await auditAccess(
+      config,
+      "preflight",
+      fixtureFetch(fixture),
+    );
 
     expect(findingCodes(result)).toContain("idp.count");
   });
@@ -482,7 +630,11 @@ describe("private hosted Access audit", () => {
       mfa_disabled: false,
       allowed_authenticators: ["totp"],
     };
-    const result = await auditAccess(config, "preflight", fixtureFetch(fixture));
+    const result = await auditAccess(
+      config,
+      "preflight",
+      fixtureFetch(fixture),
+    );
     expect(findingCodes(result)).toEqual(
       expect.arrayContaining([
         "policy.root.session-duration",
@@ -494,7 +646,11 @@ describe("private hosted Access audit", () => {
   it("rejects non-redirect probe responses", async () => {
     const fixture = goodFixture();
     fixture.probeStatus = 200;
-    const result = await auditAccess(config, "preflight", fixtureFetch(fixture));
+    const result = await auditAccess(
+      config,
+      "preflight",
+      fixtureFetch(fixture),
+    );
     expect(findingCodes(result)).toEqual(
       expect.arrayContaining(["probe.root.status", "probe.wildcard.status"]),
     );
@@ -520,7 +676,11 @@ describe("private hosted Access audit", () => {
     fixture.policies[ids.rootApp]![0]!.include = [
       { email: { email: "must-never-enter-evidence" } },
     ];
-    const result = await auditAccess(config, "preflight", fixtureFetch(fixture));
+    const result = await auditAccess(
+      config,
+      "preflight",
+      fixtureFetch(fixture),
+    );
     expect(result.ok).toBe(false);
     expect(JSON.stringify(result)).not.toContain("must-never-enter-evidence");
   });
@@ -534,7 +694,9 @@ describe("private hosted Access audit", () => {
     };
     const requests: string[] = [];
     const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
-      const url = new URL(input instanceof Request ? input.url : input.toString());
+      const url = new URL(
+        input instanceof Request ? input.url : input.toString(),
+      );
       if (url.hostname !== "api.cloudflare.com") {
         return new Response(null, {
           status: 302,
@@ -543,7 +705,14 @@ describe("private hosted Access audit", () => {
           },
         });
       }
-      requests.push(`${url.pathname}?${url.searchParams.toString()}`);
+      requests.push(`${url.pathname}${url.search}`);
+      if (url.pathname.endsWith("/organizations")) {
+        return jsonResponse(fixture.organization);
+      }
+      const detailId = url.pathname.match(/\/access\/apps\/([^/]+)$/)?.[1];
+      if (detailId) {
+        return jsonResponse(fixture.appDetails[detailId] ?? null);
+      }
       expect(url.searchParams.get("per_page")).toBe("1000");
       const page = Number(url.searchParams.get("page"));
       if (url.pathname.endsWith("/identity_providers")) {
@@ -569,13 +738,18 @@ describe("private hosted Access audit", () => {
     const result = await auditAccess(config, "preflight", fetchImpl);
 
     expect(findingCodes(result)).toContain("application.count");
-    expect(requests.sort()).toEqual([
-      `/client/v4/accounts/${config.accountId}/access/apps?page=1&per_page=1000`,
-      `/client/v4/accounts/${config.accountId}/access/apps?page=2&per_page=1000`,
-      `/client/v4/accounts/${config.accountId}/access/apps/${ids.rootApp}/policies?page=1&per_page=1000`,
-      `/client/v4/accounts/${config.accountId}/access/apps/${ids.wildcardApp}/policies?page=1&per_page=1000`,
-      `/client/v4/accounts/${config.accountId}/access/identity_providers?page=1&per_page=1000`,
-    ].sort());
+    expect(requests.sort()).toEqual(
+      [
+        `/client/v4/accounts/${config.accountId}/access/apps?page=1&per_page=1000`,
+        `/client/v4/accounts/${config.accountId}/access/apps?page=2&per_page=1000`,
+        `/client/v4/accounts/${config.accountId}/access/apps/${ids.rootApp}`,
+        `/client/v4/accounts/${config.accountId}/access/apps/${ids.rootApp}/policies?page=1&per_page=1000`,
+        `/client/v4/accounts/${config.accountId}/access/apps/${ids.wildcardApp}`,
+        `/client/v4/accounts/${config.accountId}/access/apps/${ids.wildcardApp}/policies?page=1&per_page=1000`,
+        `/client/v4/accounts/${config.accountId}/access/identity_providers?page=1&per_page=1000`,
+        `/client/v4/accounts/${config.accountId}/access/organizations`,
+      ].sort(),
+    );
   });
 });
 
@@ -585,7 +759,9 @@ describe("Cloudflare API pagination", () => {
     requests: string[] = [],
   ): CloudflareFetch {
     return vi.fn(async (input: RequestInfo | URL) => {
-      const url = new URL(input instanceof Request ? input.url : input.toString());
+      const url = new URL(
+        input instanceof Request ? input.url : input.toString(),
+      );
       requests.push(url.toString());
       const page = Number(url.searchParams.get("page"));
       const response = pages[page - 1]!;
@@ -624,10 +800,13 @@ describe("Cloudflare API pagination", () => {
     const requests: string[] = [];
     const promise = listCloudflareAccessApplications(
       config.accountId,
-      pagesFetch([
-        { result: fullPage({ id: ids.rootApp }), totalPages: 2 },
-        { result: [], totalPages: 2, status: 403 },
-      ], requests),
+      pagesFetch(
+        [
+          { result: fullPage({ id: ids.rootApp }), totalPages: 2 },
+          { result: [], totalPages: 2, status: 403 },
+        ],
+        requests,
+      ),
     );
     await expect(promise).rejects.toThrow(/HTTP 403/);
     await expect(promise).rejects.not.toThrow(/raw secret from API/);
@@ -635,14 +814,15 @@ describe("Cloudflare API pagination", () => {
   });
 
   it("rejects any page when pagination metadata is absent", async () => {
-    const fetchImpl = vi.fn(async () =>
-      new Response(
-        JSON.stringify({
-          success: true,
-          result: [{ id: ids.rootApp }],
-        }),
-        { status: 200, headers: { "content-type": "application/json" } },
-      ),
+    const fetchImpl = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            success: true,
+            result: [{ id: ids.rootApp }],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
     ) as CloudflareFetch;
 
     await expect(
@@ -651,15 +831,16 @@ describe("Cloudflare API pagination", () => {
   });
 
   it("rejects a server-selected page size or a truncated non-final page", async () => {
-    const wrongPageSize = vi.fn(async () =>
-      new Response(
-        JSON.stringify({
-          success: true,
-          result: [],
-          result_info: { page: 1, per_page: 100, total_pages: 1 },
-        }),
-        { status: 200, headers: { "content-type": "application/json" } },
-      ),
+    const wrongPageSize = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            success: true,
+            result: [],
+            result_info: { page: 1, per_page: 100, total_pages: 1 },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
     ) as CloudflareFetch;
     await expect(
       listCloudflareAccessApplications(config.accountId, wrongPageSize),
@@ -681,31 +862,37 @@ describe("Cloudflare API pagination", () => {
     [2, 2],
     [1, 0],
     [1, 101],
-  ])("rejects malformed pagination page=%s total_pages=%s", async (page, totalPages) => {
-    const fetchImpl = vi.fn(async () =>
-      new Response(
-        JSON.stringify({
-          success: true,
-          result: [],
-          result_info: { page, per_page: 1_000, total_pages: totalPages },
-        }),
-        { status: 200, headers: { "content-type": "application/json" } },
-      ),
-    ) as CloudflareFetch;
+  ])(
+    "rejects malformed pagination page=%s total_pages=%s",
+    async (page, totalPages) => {
+      const fetchImpl = vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              success: true,
+              result: [],
+              result_info: { page, per_page: 1_000, total_pages: totalPages },
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          ),
+      ) as CloudflareFetch;
 
-    await expect(
-      listCloudflareAccessApplications(config.accountId, fetchImpl),
-    ).rejects.toThrow(/pagination metadata is invalid/);
-  });
+      await expect(
+        listCloudflareAccessApplications(config.accountId, fetchImpl),
+      ).rejects.toThrow(/pagination metadata is invalid/);
+    },
+  );
 });
 
 describe("Cloudflare API authorization boundary", () => {
   it("times out a fetch that never settles and aborts its transport", async () => {
     let transportSignal: AbortSignal | undefined;
-    const baseFetch = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-      transportSignal = init?.signal ?? undefined;
-      return await new Promise<Response>(() => undefined);
-    }) as CloudflareFetch;
+    const baseFetch = vi.fn(
+      async (_input: RequestInfo | URL, init?: RequestInit) => {
+        transportSignal = init?.signal ?? undefined;
+        return await new Promise<Response>(() => undefined);
+      },
+    ) as CloudflareFetch;
     const safeFetch = createCloudflareApiFetch("test-token", baseFetch, 10);
 
     await expect(
@@ -731,28 +918,37 @@ describe("Cloudflare API authorization boundary", () => {
   });
 
   it("adds the token only to Cloudflare API requests and strips ambient credentials", async () => {
-    const seen: { url: string; headers: Headers; credentials?: RequestCredentials }[] = [];
-    const baseFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-      seen.push({
-        url: input instanceof Request ? input.url : input.toString(),
-        headers: new Headers(init?.headers),
-        credentials: init?.credentials,
-      });
-      return new Response("{}", { status: 200 });
-    }) as CloudflareFetch;
+    const seen: {
+      url: string;
+      headers: Headers;
+      credentials?: RequestCredentials;
+    }[] = [];
+    const baseFetch = vi.fn(
+      async (input: RequestInfo | URL, init?: RequestInit) => {
+        seen.push({
+          url: input instanceof Request ? input.url : input.toString(),
+          headers: new Headers(init?.headers),
+          credentials: init?.credentials,
+        });
+        return new Response("{}", { status: 200 });
+      },
+    ) as CloudflareFetch;
     const safeFetch = createCloudflareApiFetch("test-token", baseFetch);
 
-    await safeFetch("https://api.cloudflare.com/client/v4/accounts/id/access/apps", {
-      headers: {
-        Cookie: "ambient=bad",
-        Authorization: "Bearer ambient",
-        "CF-Access-Client-Id": "ambient-client",
-        "CF-Access-Client-Secret": "ambient-secret",
-        "X-API-Key": "ambient-api-key",
-        "X-Amz-Security-Token": "ambient-session",
+    await safeFetch(
+      "https://api.cloudflare.com/client/v4/accounts/id/access/apps",
+      {
+        headers: {
+          Cookie: "ambient=bad",
+          Authorization: "Bearer ambient",
+          "CF-Access-Client-Id": "ambient-client",
+          "CF-Access-Client-Secret": "ambient-secret",
+          "X-API-Key": "ambient-api-key",
+          "X-Amz-Security-Token": "ambient-session",
+        },
+        credentials: "include",
       },
-      credentials: "include",
-    });
+    );
     await safeFetch(`https://${config.projectName}.pages.dev/`, {
       headers: {
         Cookie: "ambient=bad",
@@ -770,7 +966,10 @@ describe("Cloudflare API authorization boundary", () => {
     expect(seen[0]!.headers.has("cf-access-client-secret")).toBe(false);
     expect(seen[0]!.headers.has("x-api-key")).toBe(false);
     expect(seen[0]!.headers.has("x-amz-security-token")).toBe(false);
-    expect([...seen[0]!.headers.keys()].sort()).toEqual(["accept", "authorization"]);
+    expect([...seen[0]!.headers.keys()].sort()).toEqual([
+      "accept",
+      "authorization",
+    ]);
     expect(seen[0]!.credentials).toBe("omit");
     expect(seen[1]!.headers.has("authorization")).toBe(false);
     expect(seen[1]!.headers.has("cookie")).toBe(false);
@@ -783,15 +982,21 @@ describe("Cloudflare API authorization boundary", () => {
   });
 
   it("rebuilds Cloudflare API GET requests without Request credentials", async () => {
-    const seen: { method?: string; headers: Headers; credentials?: RequestCredentials }[] = [];
-    const baseFetch = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-      seen.push({
-        method: init?.method,
-        headers: new Headers(init?.headers),
-        credentials: init?.credentials,
-      });
-      return new Response("{}", { status: 200 });
-    }) as CloudflareFetch;
+    const seen: {
+      method?: string;
+      headers: Headers;
+      credentials?: RequestCredentials;
+    }[] = [];
+    const baseFetch = vi.fn(
+      async (_input: RequestInfo | URL, init?: RequestInit) => {
+        seen.push({
+          method: init?.method,
+          headers: new Headers(init?.headers),
+          credentials: init?.credentials,
+        });
+        return new Response("{}", { status: 200 });
+      },
+    ) as CloudflareFetch;
     const safeFetch = createCloudflareApiFetch("test-token", baseFetch);
     const request = new Request(
       "https://api.cloudflare.com/client/v4/accounts/id/access/apps",
@@ -819,15 +1024,21 @@ describe("Cloudflare API authorization boundary", () => {
   });
 
   it("rebuilds public HEAD probes without Request credentials", async () => {
-    const seen: { method?: string; headers: Headers; credentials?: RequestCredentials }[] = [];
-    const baseFetch = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-      seen.push({
-        method: init?.method,
-        headers: new Headers(init?.headers),
-        credentials: init?.credentials,
-      });
-      return new Response(null, { status: 302 });
-    }) as CloudflareFetch;
+    const seen: {
+      method?: string;
+      headers: Headers;
+      credentials?: RequestCredentials;
+    }[] = [];
+    const baseFetch = vi.fn(
+      async (_input: RequestInfo | URL, init?: RequestInit) => {
+        seen.push({
+          method: init?.method,
+          headers: new Headers(init?.headers),
+          credentials: init?.credentials,
+        });
+        return new Response(null, { status: 302 });
+      },
+    ) as CloudflareFetch;
     const safeFetch = createCloudflareApiFetch("test-token", baseFetch);
     const request = new Request(`https://${config.projectName}.pages.dev/`, {
       method: "HEAD",
@@ -864,9 +1075,9 @@ describe("Cloudflare API authorization boundary", () => {
     const safeFetch = createCloudflareApiFetch("test-token", baseFetch);
     const url = "https://api.cloudflare.com/client/v4/accounts/id/access/apps";
 
-    await expect(safeFetch(url, { method: "GET", body: "secret" })).rejects.toThrow(
-      /body is forbidden/,
-    );
+    await expect(
+      safeFetch(url, { method: "GET", body: "secret" }),
+    ).rejects.toThrow(/body is forbidden/);
     await expect(safeFetch(url, { redirect: "follow" })).rejects.toThrow(
       /redirect mode/,
     );
@@ -876,13 +1087,18 @@ describe("Cloudflare API authorization boundary", () => {
   it.each(["POST", "DELETE"])(
     "rejects %s before calling the network",
     async (method) => {
-      const baseFetch = vi.fn(async () => new Response("{}")) as CloudflareFetch;
+      const baseFetch = vi.fn(
+        async () => new Response("{}"),
+      ) as CloudflareFetch;
       const safeFetch = createCloudflareApiFetch("test-token", baseFetch);
 
       await expect(
-        safeFetch("https://api.cloudflare.com/client/v4/accounts/id/access/apps", {
-          method,
-        }),
+        safeFetch(
+          "https://api.cloudflare.com/client/v4/accounts/id/access/apps",
+          {
+            method,
+          },
+        ),
       ).rejects.toThrow(/only GET or HEAD/);
       expect(baseFetch).not.toHaveBeenCalled();
     },
@@ -893,10 +1109,12 @@ describe("Cloudflare API authorization boundary", () => {
     "https://api.cloudflare.com/not-client/v4/accounts/id/access/apps",
   ])("does not send a bearer token to %s", async (url) => {
     const seen: Headers[] = [];
-    const baseFetch = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-      seen.push(new Headers(init?.headers));
-      return new Response("{}", { status: 200 });
-    }) as CloudflareFetch;
+    const baseFetch = vi.fn(
+      async (_input: RequestInfo | URL, init?: RequestInit) => {
+        seen.push(new Headers(init?.headers));
+        return new Response("{}", { status: 200 });
+      },
+    ) as CloudflareFetch;
     const safeFetch = createCloudflareApiFetch("test-token", baseFetch);
 
     await safeFetch(url, { headers: { Authorization: "Bearer ambient" } });
@@ -908,9 +1126,11 @@ describe("Cloudflare API authorization boundary", () => {
 
 describe("Access audit CLI arguments", () => {
   it("requires one mode and accepts an absolute external config path", () => {
-    expect(parseAccessAuditArgs(["--mode", "preflight"], {
-      LOCALAPPDATA: "C:\\Users\\owner\\AppData\\Local",
-    })).toEqual({
+    expect(
+      parseAccessAuditArgs(["--mode", "preflight"], {
+        LOCALAPPDATA: "C:\\Users\\owner\\AppData\\Local",
+      }),
+    ).toEqual({
       mode: "preflight",
       configPath:
         "C:\\Users\\owner\\AppData\\Local\\ConanPrivateHosted\\operator.json",
@@ -926,7 +1146,10 @@ describe("Access audit CLI arguments", () => {
     });
     expect(() => parseAccessAuditArgs([], {})).toThrow(/usage/);
     expect(() =>
-      parseAccessAuditArgs(["--mode", "active", "--config", "relative.json"], {}),
+      parseAccessAuditArgs(
+        ["--mode", "active", "--config", "relative.json"],
+        {},
+      ),
     ).toThrow(/absolute/);
   });
 });

@@ -3,6 +3,8 @@ import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   createCloudflareApiFetch,
+  getCloudflareAccessApplication,
+  getCloudflareAccessOrganization,
   listCloudflareAccessApplications,
   listCloudflareAccessPolicies,
   listCloudflareIdentityProviders,
@@ -23,6 +25,7 @@ export type AuditFinding = {
 };
 
 export type AccessConfigSnapshot = Readonly<{
+  organization: unknown;
   idp: unknown;
   rootApp: unknown;
   wildcardApp: unknown;
@@ -76,8 +79,8 @@ const MAX_PREFLIGHT_SESSION_MILLISECONDS = 30 * 60 * 1_000;
 const DURATION_UNITS: Readonly<Record<string, number>> = {
   ns: 0.000001,
   us: 0.001,
-  "µs": 0.001,
-  "μs": 0.001,
+  µs: 0.001,
+  μs: 0.001,
   ms: 1,
   s: 1_000,
   m: 60_000,
@@ -100,8 +103,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function exactKeys(value: Record<string, unknown>, keys: readonly string[]): boolean {
-  return JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...keys].sort());
+function exactKeys(
+  value: Record<string, unknown>,
+  keys: readonly string[],
+): boolean {
+  return (
+    JSON.stringify(Object.keys(value).sort()) ===
+    JSON.stringify([...keys].sort())
+  );
 }
 
 function safeId(value: unknown): string | undefined {
@@ -168,7 +177,8 @@ function canonicalRule(value: unknown): unknown {
     return {
       email: {
         email:
-          exactKeys(value.email, ["email"]) && safeEmailLiteral(value.email.email)
+          exactKeys(value.email, ["email"]) &&
+          safeEmailLiteral(value.email.email)
             ? value.email.email
             : null,
       },
@@ -286,7 +296,11 @@ function inspectIdentityProvider(
   if (!raw) return { id: undefined, snapshot: null };
   const id = safeId(raw.id);
   if (!id) {
-    addFinding(findings, "idp.id", "The one-time PIN identity provider ID is invalid.");
+    addFinding(
+      findings,
+      "idp.id",
+      "The one-time PIN identity provider ID is invalid.",
+    );
   }
   return {
     id,
@@ -306,6 +320,84 @@ function destinationIsExact(value: unknown, domain: string): boolean {
   );
 }
 
+function inspectOrganization(
+  value: unknown,
+  findings: AuditFinding[],
+): { mfaDisabled: boolean; snapshot: unknown } {
+  if (!isRecord(value)) {
+    addFinding(
+      findings,
+      "organization.shape",
+      "The Access organization response is invalid.",
+    );
+    return { mfaDisabled: false, snapshot: null };
+  }
+  const mfaRequired = value.mfa_required_for_all_apps;
+  const mfaConfigValid =
+    value.mfa_config === undefined ||
+    value.mfa_config === null ||
+    isRecord(value.mfa_config);
+  const mfaDisabled =
+    (mfaRequired === undefined ||
+      mfaRequired === null ||
+      mfaRequired === false) &&
+    mfaConfigValid;
+  if (!mfaDisabled) {
+    addFinding(
+      findings,
+      "organization.mfa",
+      "The Access organization must not require inherited MFA.",
+    );
+  }
+  if (value.allow_authenticate_via_warp !== false) {
+    addFinding(
+      findings,
+      "organization.warp",
+      "The Access organization must not authenticate via WARP.",
+    );
+  }
+  return {
+    mfaDisabled,
+    snapshot: {
+      mfaRequiredForAllApps: mfaRequired === true,
+      mfaConfigured: isRecord(value.mfa_config),
+      allowAuthenticateViaWarp:
+        typeof value.allow_authenticate_via_warp === "boolean"
+          ? value.allow_authenticate_via_warp
+          : null,
+    },
+  };
+}
+
+function discoverApplicationId(
+  target: AppTarget,
+  values: readonly unknown[],
+  domain: string,
+  findings: AuditFinding[],
+): string | undefined {
+  const matches = values.filter(
+    (value): value is Record<string, unknown> =>
+      isRecord(value) && value.domain === domain,
+  );
+  if (matches.length !== 1) {
+    addFinding(
+      findings,
+      `application.${target}.count`,
+      `Exactly one ${target} Access application is required.`,
+    );
+    return undefined;
+  }
+  const id = safeId(matches[0]!.id);
+  if (!id) {
+    addFinding(
+      findings,
+      `application.${target}.id`,
+      `The ${target} Access application ID is invalid.`,
+    );
+  }
+  return id;
+}
+
 function inspectApplication(
   target: AppTarget,
   values: readonly unknown[],
@@ -313,6 +405,8 @@ function inspectApplication(
   identityProviderId: string | undefined,
   mode: AccessAuditMode,
   findings: AuditFinding[],
+  expectedId: string | undefined,
+  organizationMfaDisabled: boolean,
 ): AppInspection {
   const matches = values.filter(
     (value): value is Record<string, unknown> =>
@@ -335,6 +429,13 @@ function inspectApplication(
       `The ${target} Access application ID is invalid.`,
     );
   }
+  if (expectedId && id !== expectedId) {
+    addFinding(
+      findings,
+      `application.${target}.detail`,
+      `The ${target} Access application detail does not match its list identity.`,
+    );
+  }
   if (raw.type !== "self_hosted") {
     addFinding(
       findings,
@@ -343,7 +444,9 @@ function inspectApplication(
     );
   }
   const allowedIdps = Array.isArray(raw.allowed_idps)
-    ? raw.allowed_idps.filter((value): value is string => safeId(value) !== undefined)
+    ? raw.allowed_idps.filter(
+        (value): value is string => safeId(value) !== undefined,
+      )
     : [];
   if (
     !identityProviderId ||
@@ -394,8 +497,14 @@ function inspectApplication(
       `The ${target} application must not bypass OPTIONS requests.`,
     );
   }
+  const inheritsOrganizationMfa =
+    raw.mfa_config === undefined || raw.mfa_config === null;
   const mfa = isRecord(raw.mfa_config) ? raw.mfa_config : undefined;
-  if (mfa?.mfa_disabled !== true) {
+  if (
+    (!inheritsOrganizationMfa && mfa === undefined) ||
+    (mfa !== undefined && mfa.mfa_disabled !== true) ||
+    (inheritsOrganizationMfa && !organizationMfaDisabled)
+  ) {
     addFinding(
       findings,
       `application.${target}.mfa`,
@@ -428,7 +537,7 @@ function inspectApplication(
   }
   return {
     raw,
-    id,
+    id: id === expectedId ? id : undefined,
     snapshot: {
       id: id ?? null,
       domain,
@@ -456,10 +565,17 @@ function inspectApplication(
 }
 
 function emailFromRule(value: unknown): string | undefined {
-  if (!isRecord(value) || !exactKeys(value, ["email"]) || !isRecord(value.email)) {
+  if (
+    !isRecord(value) ||
+    !exactKeys(value, ["email"]) ||
+    !isRecord(value.email)
+  ) {
     return undefined;
   }
-  if (!exactKeys(value.email, ["email"]) || !safeEmailLiteral(value.email.email)) {
+  if (
+    !exactKeys(value.email, ["email"]) ||
+    !safeEmailLiteral(value.email.email)
+  ) {
     return undefined;
   }
   return value.email.email;
@@ -479,7 +595,11 @@ function safeEmailLiteral(value: unknown): value is string {
     return false;
   }
   const separator = value.indexOf("@");
-  return separator > 0 && separator === value.lastIndexOf("@") && separator < value.length - 1;
+  return (
+    separator > 0 &&
+    separator === value.lastIndexOf("@") &&
+    separator < value.length - 1
+  );
 }
 
 function isExactEveryoneRule(value: unknown): boolean {
@@ -517,7 +637,11 @@ function inspectPolicies(
     const policy = records[0];
     if (!policy) return;
     if (!safeId(policy.id)) {
-      addFinding(findings, `policy.${target}.id`, `The ${target} policy ID is invalid.`);
+      addFinding(
+        findings,
+        `policy.${target}.id`,
+        `The ${target} policy ID is invalid.`,
+      );
     }
     if (policy.decision !== "deny") {
       addFinding(
@@ -613,7 +737,9 @@ function inspectPolicies(
       `The ${target} policy Include rules must contain individual emails only.`,
     );
   }
-  const actualEmails = emails.filter((value): value is string => value !== undefined);
+  const actualEmails = emails.filter(
+    (value): value is string => value !== undefined,
+  );
   if (
     JSON.stringify([...actualEmails].sort()) !==
     JSON.stringify([...expectedEmails].sort())
@@ -714,11 +840,16 @@ export async function auditAccess(
   const config = validateOperatorConfig(inputConfig);
   const startedAt = new Date().toISOString();
   const findings: AuditFinding[] = [];
-  const [identityProviders, applications] = await Promise.all([
-    listCloudflareIdentityProviders(config.accountId, fetchImpl),
-    listCloudflareAccessApplications(config.accountId, fetchImpl),
-  ]);
-  if (applications.length !== 2 || applications.some((item) => !isRecord(item))) {
+  const [identityProviders, applications, organizationValue] =
+    await Promise.all([
+      listCloudflareIdentityProviders(config.accountId, fetchImpl),
+      listCloudflareAccessApplications(config.accountId, fetchImpl),
+      getCloudflareAccessOrganization(config.accountId, fetchImpl),
+    ]);
+  if (
+    applications.length !== 2 ||
+    applications.some((item) => !isRecord(item))
+  ) {
     addFinding(
       findings,
       "application.count",
@@ -726,23 +857,56 @@ export async function auditAccess(
     );
   }
   const identityProvider = inspectIdentityProvider(identityProviders, findings);
+  const organization = inspectOrganization(organizationValue, findings);
   const rootDomain = `${config.projectName}.pages.dev`;
   const wildcardDomain = `*.${rootDomain}`;
-  const root = inspectApplication(
+  const listedRootId = discoverApplicationId(
     "root",
     applications,
+    rootDomain,
+    findings,
+  );
+  const listedWildcardId = discoverApplicationId(
+    "wildcard",
+    applications,
+    wildcardDomain,
+    findings,
+  );
+  const [rootDetail, wildcardDetail] = await Promise.all([
+    listedRootId
+      ? getCloudflareAccessApplication(
+          config.accountId,
+          listedRootId,
+          fetchImpl,
+        )
+      : Promise.resolve(undefined),
+    listedWildcardId
+      ? getCloudflareAccessApplication(
+          config.accountId,
+          listedWildcardId,
+          fetchImpl,
+        )
+      : Promise.resolve(undefined),
+  ]);
+  const root = inspectApplication(
+    "root",
+    rootDetail === undefined ? [] : [rootDetail],
     rootDomain,
     identityProvider.id,
     mode,
     findings,
+    listedRootId,
+    organization.mfaDisabled,
   );
   const wildcard = inspectApplication(
     "wildcard",
-    applications,
+    wildcardDetail === undefined ? [] : [wildcardDetail],
     wildcardDomain,
     identityProvider.id,
     mode,
     findings,
+    listedWildcardId,
+    organization.mfaDisabled,
   );
   const [rootPolicies, wildcardPolicies] = await Promise.all([
     root.id
@@ -758,20 +922,8 @@ export async function auditAccess(
       : mode === "active"
         ? config.approvedEmails
         : [];
-  inspectPolicies(
-    "root",
-    rootPolicies,
-    mode,
-    expectedEmails,
-    findings,
-  );
-  inspectPolicies(
-    "wildcard",
-    wildcardPolicies,
-    mode,
-    expectedEmails,
-    findings,
-  );
+  inspectPolicies("root", rootPolicies, mode, expectedEmails, findings);
+  inspectPolicies("wildcard", wildcardPolicies, mode, expectedEmails, findings);
   const probes = await Promise.all([
     inspectProbe(
       "root",
@@ -791,6 +943,7 @@ export async function auditAccess(
     ),
   ]);
   const configSnapshot: AccessConfigSnapshot = {
+    organization: organization.snapshot,
     idp: identityProvider.snapshot,
     rootApp: root.snapshot,
     wildcardApp: wildcard.snapshot,
@@ -825,11 +978,15 @@ export function parseAccessAuditArgs(
     const flag = args[index];
     const value = args[index + 1];
     if (!value || !flag || !["--mode", "--config"].includes(flag)) {
-      fail("usage: private-hosted:audit -- --mode <preflight|active|contained> [--config <absolute-path>]");
+      fail(
+        "usage: private-hosted:audit -- --mode <preflight|active|contained> [--config <absolute-path>]",
+      );
     }
     if (flag === "--mode") {
       if (mode || !ACCESS_MODES.has(value as AccessAuditMode)) {
-        fail("usage: private-hosted:audit -- --mode <preflight|active|contained> [--config <absolute-path>]");
+        fail(
+          "usage: private-hosted:audit -- --mode <preflight|active|contained> [--config <absolute-path>]",
+        );
       }
       mode = value as AccessAuditMode;
     } else {
@@ -840,7 +997,9 @@ export function parseAccessAuditArgs(
     index += 1;
   }
   if (!mode) {
-    fail("usage: private-hosted:audit -- --mode <preflight|active|contained> [--config <absolute-path>]");
+    fail(
+      "usage: private-hosted:audit -- --mode <preflight|active|contained> [--config <absolute-path>]",
+    );
   }
   return {
     mode,
@@ -867,6 +1026,9 @@ export async function runAccessAuditCli(
   if (!result.ok) process.exitCode = 1;
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (
+  process.argv[1] &&
+  resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
   await runAccessAuditCli();
 }

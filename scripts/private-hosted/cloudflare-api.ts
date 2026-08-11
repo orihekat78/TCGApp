@@ -25,9 +25,7 @@ function record(value: unknown): Record<string, unknown> {
 
 function safeInteger(value: unknown, minimum: number): value is number {
   return (
-    typeof value === "number" &&
-    Number.isSafeInteger(value) &&
-    value >= minimum
+    typeof value === "number" && Number.isSafeInteger(value) && value >= minimum
   );
 }
 
@@ -99,13 +97,18 @@ export function createCloudflareApiFetch(
     });
     const abortFromCaller = () => {
       controller.abort();
-      rejectGuard?.(new Error("Cloudflare read-only API rejected: request aborted"));
+      rejectGuard?.(
+        new Error("Cloudflare read-only API rejected: request aborted"),
+      );
     };
     if (callerSignal?.aborted) abortFromCaller();
-    else callerSignal?.addEventListener("abort", abortFromCaller, { once: true });
+    else
+      callerSignal?.addEventListener("abort", abortFromCaller, { once: true });
     const timeout = setTimeout(() => {
       controller.abort();
-      rejectGuard?.(new Error("Cloudflare read-only API rejected: request timed out"));
+      rejectGuard?.(
+        new Error("Cloudflare read-only API rejected: request timed out"),
+      );
     }, requestTimeoutMs);
     timeout.unref?.();
     try {
@@ -132,6 +135,60 @@ type ListEndpoint = {
   label: string;
 };
 
+async function parseObjectResponse(
+  response: Response,
+  label: string,
+): Promise<unknown> {
+  if (!response.ok) fail(`${label} returned HTTP ${response.status}`);
+  const declaredLength = response.headers.get("content-length");
+  if (
+    declaredLength !== null &&
+    (!/^\d+$/.test(declaredLength) ||
+      Number(declaredLength) > MAX_RESPONSE_BYTES)
+  ) {
+    fail(`${label} response size is invalid`);
+  }
+  const body = await response.text();
+  if (Buffer.byteLength(body, "utf8") > MAX_RESPONSE_BYTES) {
+    fail(`${label} response is too large`);
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    return fail(`${label} returned invalid JSON`);
+  }
+  const envelope = record(parsed);
+  if (envelope.success !== true || !record(envelope.result)) {
+    fail(`${label} returned an unsuccessful or invalid envelope`);
+  }
+  return envelope.result;
+}
+
+async function getAccountResource(
+  accountId: string,
+  endpoint: ListEndpoint,
+  fetchImpl: CloudflareFetch,
+): Promise<unknown> {
+  if (!ACCOUNT_ID.test(accountId)) fail("account ID is invalid");
+  const url = new URL(
+    `${API_ORIGIN}${API_PREFIX}accounts/${accountId}/${endpoint.path}`,
+  );
+  let response: Response;
+  try {
+    response = await fetchImpl(url, {
+      method: "GET",
+      redirect: "error",
+      credentials: "omit",
+      cache: "no-store",
+      headers: { accept: "application/json" },
+    });
+  } catch {
+    return fail(`${endpoint.label} request failed`);
+  }
+  return parseObjectResponse(response, endpoint.label);
+}
+
 async function parseListPage(
   response: Response,
   endpoint: ListEndpoint,
@@ -141,7 +198,8 @@ async function parseListPage(
   const declaredLength = response.headers.get("content-length");
   if (
     declaredLength !== null &&
-    (!/^\d+$/.test(declaredLength) || Number(declaredLength) > MAX_RESPONSE_BYTES)
+    (!/^\d+$/.test(declaredLength) ||
+      Number(declaredLength) > MAX_RESPONSE_BYTES)
   ) {
     fail(`${endpoint.label} response size is invalid`);
   }
@@ -175,7 +233,10 @@ async function parseListPage(
   ) {
     fail(`${endpoint.label} pagination metadata is invalid`);
   }
-  if (requestedPage < info.total_pages && envelope.result.length !== PAGE_SIZE) {
+  if (
+    requestedPage < info.total_pages &&
+    envelope.result.length !== PAGE_SIZE
+  ) {
     fail(`${endpoint.label} returned a truncated non-final page`);
   }
   return { result: envelope.result, totalPages: info.total_pages };
@@ -248,6 +309,35 @@ export function listCloudflareAccessApplications(
   return listAccountResource(
     accountId,
     { path: "access/apps", label: "Access application list" },
+    fetchImpl,
+  );
+}
+
+export function getCloudflareAccessApplication(
+  accountId: string,
+  applicationId: string,
+  fetchImpl: CloudflareFetch,
+): Promise<unknown> {
+  if (!/^[0-9a-f-]{1,64}$/.test(applicationId)) {
+    fail("Access application ID is invalid");
+  }
+  return getAccountResource(
+    accountId,
+    {
+      path: `access/apps/${encodeURIComponent(applicationId)}`,
+      label: "Access application detail",
+    },
+    fetchImpl,
+  );
+}
+
+export function getCloudflareAccessOrganization(
+  accountId: string,
+  fetchImpl: CloudflareFetch,
+): Promise<unknown> {
+  return getAccountResource(
+    accountId,
+    { path: "access/organizations", label: "Access organization" },
     fetchImpl,
   );
 }
