@@ -655,6 +655,129 @@ describe("qualified private Pages direct deployment", () => {
     },
   );
 
+  it.each([
+    ["active", undefined],
+    ["active", false],
+    ["active", null],
+    ["idle", false],
+  ])(
+    "accepts a sparse %s polling response with unconfirmed Functions value %s before strict success",
+    async (status, usesFunctions) => {
+      const f = await fixture();
+      const pending = {
+        id: "deploy-12345",
+        latest_stage: { status },
+        ...(usesFunctions === undefined
+          ? {}
+          : { uses_functions: usesFunctions }),
+      };
+      const { result, requests } = await run(f, {
+        deploymentStatuses: [
+          pending,
+          deployment({ latest_stage: { status: "success" } }),
+        ],
+      });
+
+      expect(result).toMatchObject({
+        id: "deploy-12345",
+        releaseCommit: COMMIT,
+      });
+      expect(
+        requests.filter(
+          ({ method, url }) =>
+            method === "GET" && url.endsWith("/deployments/deploy-12345"),
+        ),
+      ).toHaveLength(2);
+    },
+  );
+
+  it("rejects a malformed Functions value in a pending polling response", async () => {
+    const f = await fixture();
+    await expect(
+      run(f, {
+        deploymentStatuses: [
+          {
+            id: "deploy-12345",
+            latest_stage: { status: "active" },
+            uses_functions: "false",
+          },
+        ],
+      }),
+    ).rejects.toThrow(/deployment identity/i);
+  });
+
+  it.each(["failure", "canceled"])(
+    "stops on a sparse terminal polling response with status %s",
+    async (status) => {
+      const f = await fixture();
+      await expect(
+        run(f, {
+          deploymentStatuses: [
+            { id: "deploy-12345", latest_stage: { status } },
+          ],
+        }),
+      ).rejects.toThrow(new RegExp(`ended with ${status}`));
+    },
+  );
+
+  it.each([
+    ["missing", {}],
+    ["null", { status: null }],
+    ["queued", { status: "queued" }],
+  ])(
+    "rejects an unrecognized polling status %s",
+    async (_label, latestStage) => {
+      const f = await fixture();
+      await expect(
+        run(f, {
+          deploymentStatuses: [
+            { id: "deploy-12345", latest_stage: latestStage },
+          ],
+        }),
+      ).rejects.toThrow(/deployment status/i);
+    },
+  );
+
+  it("times out after thirty valid pending polling responses", async () => {
+    const f = await fixture();
+    await expect(
+      run(f, {
+        deploymentStatuses: Array.from({ length: 30 }, () => ({
+          id: "deploy-12345",
+          latest_stage: { status: "active" },
+        })),
+      }),
+    ).rejects.toThrow(/did not complete in time/i);
+  });
+
+  it.each([
+    ["deployment ID", { id: "other-deploy-12345" }, /identity/i],
+    ["project", { project_name: "other-project" }, /identity/i],
+    ["environment", { environment: "preview" }, /identity/i],
+    [
+      "build output",
+      { build_config: { destination_dir: "build" } },
+      /build config/i,
+    ],
+    ["URL", { url: "https://example.com/" }, /deployment URL/i],
+  ])(
+    "rejects a conflicting pending polling %s",
+    async (_label, conflict, expected) => {
+      const f = await fixture();
+      await expect(
+        run(f, {
+          deploymentStatuses: [
+            {
+              id: "deploy-12345",
+              latest_stage: { status: "active" },
+              ...conflict,
+            },
+          ],
+        }),
+      ).rejects.toThrow(expected);
+    },
+  );
+
   it("rejects a polling response with another deployment ID", async () => {
     const f = await fixture();
     await expect(

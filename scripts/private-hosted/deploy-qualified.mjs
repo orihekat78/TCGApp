@@ -1697,6 +1697,26 @@ function validatedDeployment(candidate, snapshot, expectedId) {
   return { ...deployment, url };
 }
 
+function validatedPollingDeployment(candidate, snapshot, expectedId) {
+  const deployment = record(candidate, "Pages deployment status result");
+  const receipt = validatedCreateDeployment(deployment, snapshot);
+  if (receipt.id !== expectedId) {
+    fail("Pages deployment identity is invalid");
+  }
+  const stage = record(deployment.latest_stage, "Pages latest stage");
+  const status = stage.status;
+  if (
+    status !== "idle" &&
+    status !== "active" &&
+    status !== "success" &&
+    status !== "failure" &&
+    status !== "canceled"
+  ) {
+    fail("Pages deployment status is invalid");
+  }
+  return { deployment, status };
+}
+
 async function createDeployment(
   fetchImpl,
   token,
@@ -1753,20 +1773,22 @@ async function waitForDeployment(
   snapshot,
 ) {
   for (let attempt = 0; attempt < 30; attempt += 1) {
-    const current = record(
-      await apiJson(
-        fetchImpl,
-        `${API_BASE}/accounts/${accountId}/pages/projects/${PROJECT_NAME}/deployments/${encodeURIComponent(deployment.id)}`,
-        { headers: authorization(token) },
-        "Pages deployment status",
-      ),
-      "Pages deployment status result",
+    const current = await apiJson(
+      fetchImpl,
+      `${API_BASE}/accounts/${accountId}/pages/projects/${PROJECT_NAME}/deployments/${encodeURIComponent(deployment.id)}`,
+      { headers: authorization(token) },
+      "Pages deployment status",
     );
-    const checked = validatedDeployment(current, snapshot, deployment.id);
-    const stage = record(checked.latest_stage, "Pages latest stage");
-    if (stage.status === "success") return checked;
-    if (stage.status === "failure" || stage.status === "canceled") {
-      fail(`Pages deployment ended with ${stage.status}`);
+    const pending = validatedPollingDeployment(
+      current,
+      snapshot,
+      deployment.id,
+    );
+    if (pending.status === "success") {
+      return validatedDeployment(current, snapshot, deployment.id);
+    }
+    if (pending.status === "failure" || pending.status === "canceled") {
+      fail(`Pages deployment ended with ${pending.status}`);
     }
     await sleep(2_000);
   }
@@ -1996,6 +2018,7 @@ function assertTestRequest(init, method, token, label) {
 function createStaticTestFetch(scenario, requests) {
   let projectReads = 0;
   let deploymentPoll = 0;
+  let lastDeploymentStatus = null;
   return async (input, init = {}) => {
     const url = new URL(String(input));
     const method = (init.method ?? "GET").toUpperCase();
@@ -2021,10 +2044,8 @@ function createStaticTestFetch(scenario, requests) {
         new URL(STABLE_URL).origin,
         new URL(WILDCARD_PROBE_URL).origin,
       ]);
-      if (deploymentPoll > 0) {
-        const deploymentProbeUrl = scenario.deploymentStatuses.find(
-          (candidate) => typeof candidate?.url === "string",
-        )?.url;
+      if (lastDeploymentStatus !== null) {
+        const deploymentProbeUrl = lastDeploymentStatus.url;
         if (deploymentProbeUrl === undefined) {
           fail("deployment test scenario has no probe URL");
         }
@@ -2142,6 +2163,7 @@ function createStaticTestFetch(scenario, requests) {
       const result = scenario.deploymentStatuses[deploymentPoll];
       if (result === undefined)
         fail("test deployment status response is missing");
+      lastDeploymentStatus = result;
       deploymentPoll += 1;
       return testEnvelope(result);
     }
