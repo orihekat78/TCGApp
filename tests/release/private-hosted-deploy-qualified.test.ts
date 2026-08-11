@@ -407,6 +407,7 @@ function scenario(f: Fixture, overrides: Record<string, unknown> = {}) {
     accessProtected: true,
     accessRedirectHost: null,
     accessRedirectMode: "valid",
+    assetEnvelopesOmitErrors: false,
     createdDeployment: created,
     deployedProject: activeProject,
     deploymentStatuses: [deployment({ latest_stage: { status: "success" } })],
@@ -520,6 +521,20 @@ describe("qualified private Pages direct deployment", () => {
     );
     expect(source).not.toMatch(
       /wrangler\/bin|pages", "deploy|node_modules\\wrangler/,
+    );
+  });
+
+  it("accepts successful Pages asset envelopes that omit the optional errors field", async () => {
+    const f = await fixture();
+    const { result, requests } = await run(f, {
+      assetEnvelopesOmitErrors: true,
+    });
+    expect(result).toMatchObject({ id: "deploy-12345", releaseCommit: COMMIT });
+    expect(
+      requests.some(({ url }) => url.endsWith("/assets/check-missing")),
+    ).toBe(true);
+    expect(requests.some(({ url }) => url.endsWith("/assets/upload"))).toBe(
+      true,
     );
   });
 

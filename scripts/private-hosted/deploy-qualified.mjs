@@ -873,11 +873,12 @@ async function apiEnvelope(fetchImpl, url, init, label) {
   }
   const payload = parseJson(text, label);
   const envelope = record(payload, label);
+  const errors = envelope.errors;
   if (
     !response.ok ||
     envelope.success !== true ||
-    !Array.isArray(envelope.errors) ||
-    envelope.errors.length !== 0
+    (errors !== undefined &&
+      (!Array.isArray(errors) || errors.length !== 0))
   ) {
     fail(`${label} failed`);
   }
@@ -1897,11 +1898,11 @@ function cloneTestData(value, label) {
   return cloned;
 }
 
-function testEnvelope(result, list = false) {
+function testEnvelope(result, list = false, omitErrors = false) {
   return new Response(
     JSON.stringify({
       success: true,
-      errors: [],
+      ...(omitErrors ? {} : { errors: [] }),
       result,
       ...(list
         ? { result_info: { page: 1, per_page: 1_000, total_pages: 1 } }
@@ -2031,7 +2032,11 @@ function createStaticTestFetch(scenario, requests) {
     const assetToken = scenario.uploadToken;
     if (url.pathname === "/client/v4/pages/assets/check-missing") {
       assertTestRequest(init, "POST", assetToken, "Pages missing-assets check");
-      return testEnvelope(scenario.missingHashes);
+      return testEnvelope(
+        scenario.missingHashes,
+        false,
+        scenario.assetEnvelopesOmitErrors,
+      );
     }
     if (
       url.pathname === "/client/v4/pages/assets/upload" ||
@@ -2040,7 +2045,7 @@ function createStaticTestFetch(scenario, requests) {
       if (!scenario.mutationAllowed)
         fail("test scenario forbids Pages mutation");
       assertTestRequest(init, "POST", assetToken, "Pages asset mutation");
-      return testEnvelope({});
+      return testEnvelope({}, false, scenario.assetEnvelopesOmitErrors);
     }
     if (url.pathname === `${projectPath}/deployments` && method === "POST") {
       if (!scenario.mutationAllowed)
@@ -2073,6 +2078,7 @@ const TEST_SCENARIO_KEYS = [
   "accessProtected",
   "accessRedirectHost",
   "accessRedirectMode",
+  "assetEnvelopesOmitErrors",
   "createdDeployment",
   "deployedProject",
   "deploymentStatuses",
