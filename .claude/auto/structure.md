@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 283
-- **ファイル数**: 5819
+- **ファイル数**: 5821
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -2117,6 +2117,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `types.ts` — spec: .claude/specs/meta-ui/02-design-system.md + 05-engine-stub.md
     - **`hooks/`**
       - `useOfficialNews.ts` — Aborted requests are intentionally ignored during route changes.
+      - `useWindowedCollection.ts`
     - **`router/`**
       - `navigationBlocker.ts`
       - `routes.ts` — spec: .claude/specs/meta-ui/03-routing.md
@@ -5918,6 +5919,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `replayRoute.test.ts`
     - `settings-history-ux-wave2.test.tsx`
     - `useHashRoute.navigation-blocker.test.tsx`
+    - `useWindowedCollection.test.tsx`
   - **`release/`**
     - `private-hosted-access-audit.test.ts`
     - `private-hosted-bug-gate.test.ts`
