@@ -26,12 +26,18 @@ function Harness({
   selectedKey,
   focusedKey,
   hiddenKeys = [],
+  columns = 3,
+  rowPitch = 40,
+  itemHeight,
   onReady,
 }: {
   layoutKey?: string;
   selectedKey?: string;
   focusedKey?: string;
   hiddenKeys?: readonly string[];
+  columns?: number;
+  rowPitch?: number;
+  itemHeight?: number;
   onReady?: (api: ReturnType<typeof useWindowedCollection<Item>>) => void;
 }) {
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
@@ -50,7 +56,7 @@ function Harness({
       <output data-testid="range">{`${api.start}:${api.end}:${api.beforePx}:${api.afterPx}`}</output>
       {api.visibleItems.filter((item) => !hiddenKeys.includes(item.key)).map((item, offset) => {
         const index = api.start + offset;
-        return <MeasuredItem key={item.key} item={item} index={index} registerItem={api.registerItem} />;
+        return <MeasuredItem key={item.key} item={item} index={index} columns={columns} rowPitch={rowPitch} itemHeight={itemHeight} registerItem={api.registerItem} />;
       })}
     </div>
   );
@@ -59,23 +65,29 @@ function Harness({
 function MeasuredItem({
   item,
   index,
+  columns,
+  rowPitch,
+  itemHeight,
   registerItem,
 }: {
   item: Item;
   index: number;
+  columns: number;
+  rowPitch: number;
+  itemHeight?: number;
   registerItem: ReturnType<typeof useWindowedCollection<Item>>["registerItem"];
 }) {
   const ref = useRef<HTMLButtonElement | null>(null);
   useLayoutEffect(() => {
     const node = ref.current!;
     Object.defineProperties(node, {
-      offsetTop: { configurable: true, value: Math.floor(index / 3) * 40 },
-      offsetHeight: { configurable: true, value: item.height },
+      offsetTop: { configurable: true, value: Math.floor(index / columns) * rowPitch },
+      offsetHeight: { configurable: true, value: itemHeight ?? item.height },
     });
     const register = registerItem(index);
     register(node);
     return () => register(null);
-  }, [index, item.height, registerItem]);
+  }, [columns, index, item.height, itemHeight, registerItem, rowPitch]);
   return <button ref={ref} data-testid={item.key} type="button">{item.key}</button>;
 }
 
@@ -108,6 +120,22 @@ describe("useWindowedCollection", () => {
     expect(container.querySelectorAll("button")).toHaveLength(48);
   });
 
+  it("uses measured grid row pitch for spacers and reveal scroll offsets", () => {
+    let api!: ReturnType<typeof useWindowedCollection<Item>>;
+    act(() => root.render(<Harness columns={1} rowPitch={254} itemHeight={240} onReady={(next) => { api = next; }} />));
+    const scroller = container.querySelector<HTMLElement>("[data-testid=scroller]")!;
+
+    expect(container.querySelector("[data-testid=range]")?.textContent).toBe("0:48:0:33528");
+    act(() => api.reveal("card-100"));
+    expect(scroller.scrollTop).toBe(25_400);
+  });
+
+  it("uses measured list row pitch when the gap exceeds item height", () => {
+    act(() => root.render(<Harness columns={1} rowPitch={45} itemHeight={42} />));
+
+    expect(container.querySelector("[data-testid=range]")?.textContent).toBe("0:48:0:5940");
+  });
+
   it("replaces the initial chunk with no more than two chunks after a distant scroll", () => {
     act(() => root.render(<Harness />));
     const first = container.querySelector("[data-testid='card-0']")!;
@@ -122,7 +150,7 @@ describe("useWindowedCollection", () => {
     expect(first.isConnected).toBe(false);
   });
 
-  it("refreshes variable row measurements from ResizeObserver entries", () => {
+  it("does not mistake variable card height for row pitch", () => {
     act(() => root.render(<Harness />));
     const scroller = container.querySelector<HTMLElement>("[data-testid=scroller]")!;
     act(() => {
@@ -142,7 +170,29 @@ describe("useWindowedCollection", () => {
 
     const [, , beforeAfterResize] = container.querySelector("[data-testid=range]")!
       .textContent!.split(":").map(Number);
-    expect(beforeAfterResize).toBeGreaterThan(beforePx);
+    expect(beforeAfterResize).toBe(beforePx);
+  });
+
+  it("refreshes row pitch from ResizeObserver offsets", () => {
+    act(() => root.render(<Harness columns={1} rowPitch={45} itemHeight={42} />));
+    const scroller = container.querySelector<HTMLElement>("[data-testid=scroller]")!;
+    act(() => {
+      Object.defineProperty(scroller, "scrollTop", { configurable: true, value: 20_000, writable: true });
+      scroller.dispatchEvent(new Event("scroll"));
+    });
+    const beforePx = Number(container.querySelector("[data-testid=range]")!.textContent!.split(":")[2]);
+    const nodes = [...container.querySelectorAll<HTMLElement>("button")];
+    for (const node of nodes) {
+      const index = Number(node.dataset.testid!.replace("card-", ""));
+      Object.defineProperty(node, "offsetTop", { configurable: true, value: index * 50 });
+    }
+    act(() => ResizeObserverStub.instances[0]!.callback(
+      nodes.map((target) => ({ target } as ResizeObserverEntry)),
+      ResizeObserverStub.instances[0] as unknown as ResizeObserver,
+    ));
+
+    expect(Number(container.querySelector("[data-testid=range]")!.textContent!.split(":")[2]))
+      .toBeGreaterThan(beforePx);
   });
 
   it("resets to the initial chunk when the layout key changes", () => {

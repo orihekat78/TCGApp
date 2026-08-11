@@ -72,7 +72,12 @@ export function useWindowedCollection<T>({
     const rowHeight = rowHeights.length === 0
       ? FALLBACK_ROW_HEIGHT
       : rowHeights.reduce((total, height) => total + height, 0) / rowHeights.length;
-    return { columns, rowHeight };
+    const rowTops = [...rows.keys()].sort((left, right) => left - right);
+    const pitches = rowTops.slice(1).map((top, index) => top - rowTops[index]!);
+    const rowPitch = pitches.length === 0
+      ? rowHeight
+      : pitches.reduce((total, pitch) => total + pitch, 0) / pitches.length;
+    return { columns, rowPitch };
   })();
 
   const rangeForIndex = useCallback((index: number): Range => {
@@ -119,7 +124,7 @@ export function useWindowedCollection<T>({
   useEffect(() => {
     if (!scrollElement) return;
     const onScroll = () => {
-      const estimatedChunkHeight = Math.max(1, Math.ceil(chunkSize / metrics.columns) * metrics.rowHeight);
+      const estimatedChunkHeight = Math.max(1, Math.ceil(chunkSize / metrics.columns) * metrics.rowPitch);
       const chunk = Math.floor(scrollElement.scrollTop / estimatedChunkHeight);
       const total = items.length;
       const start = Math.max(0, Math.min(Math.max(0, total - mountedLimit), chunk * chunkSize));
@@ -127,7 +132,7 @@ export function useWindowedCollection<T>({
     };
     scrollElement.addEventListener("scroll", onScroll, { passive: true });
     return () => scrollElement.removeEventListener("scroll", onScroll);
-  }, [chunkSize, items.length, metrics.columns, metrics.rowHeight, mountedLimit, scrollElement]);
+  }, [chunkSize, items.length, metrics.columns, metrics.rowPitch, mountedLimit, scrollElement]);
 
   useEffect(() => {
     const observer = new ResizeObserver((entries) => {
@@ -198,13 +203,13 @@ export function useWindowedCollection<T>({
     if (options?.focus) pendingFocusKeyRef.current = key;
     setRange(rangeForIndex(index));
     if (scrollElement) {
-      scrollElement.scrollTop = Math.floor(index / metrics.columns) * metrics.rowHeight;
+      scrollElement.scrollTop = Math.floor(index / metrics.columns) * metrics.rowPitch;
     }
-  }, [keyIndexes, metrics.columns, metrics.rowHeight, rangeForIndex, scrollElement]);
+  }, [keyIndexes, metrics.columns, metrics.rowPitch, rangeForIndex, scrollElement]);
 
-  const beforePx = Math.round(Math.floor(range.start / metrics.columns) * metrics.rowHeight);
+  const beforePx = Math.round(Math.floor(range.start / metrics.columns) * metrics.rowPitch);
   const totalRows = Math.ceil(items.length / metrics.columns);
-  const afterPx = Math.max(0, Math.round(totalRows * metrics.rowHeight - Math.ceil(range.end / metrics.columns) * metrics.rowHeight));
+  const afterPx = Math.max(0, Math.round(totalRows * metrics.rowPitch - Math.ceil(range.end / metrics.columns) * metrics.rowPitch));
 
   return {
     start: range.start,
