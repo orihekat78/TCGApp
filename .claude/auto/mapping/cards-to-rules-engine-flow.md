@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `9c35e304d02c`
+> Source hash: `3f024c815e1c`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **166** ファイル（[全体 index](./index.md)）
+このグループ: **167** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (23)
 
@@ -116,7 +116,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (78)
+## その他 (79)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -187,6 +187,7 @@
 | [`src/ui/services/humanDecisionOwner.ts`](../../../src/ui/services/humanDecisionOwner.ts) | _(参照なし)_ |
 | [`src/ui/services/liveReplayRecorder.ts`](../../../src/ui/services/liveReplayRecorder.ts) | _(参照なし)_ |
 | [`src/ui/services/matchSession.ts`](../../../src/ui/services/matchSession.ts) | _(参照なし)_ |
+| [`src/ui/services/matchSessionId.ts`](../../../src/ui/services/matchSessionId.ts) | _(参照なし)_ |
 | [`src/ui/services/replayOwnership.ts`](../../../src/ui/services/replayOwnership.ts) | _(参照なし)_ |
 | [`src/ui/services/replayStateBoundary.ts`](../../../src/ui/services/replayStateBoundary.ts) | _(参照なし)_ |
 | [`src/ui/services/replayViewerProjection.ts`](../../../src/ui/services/replayViewerProjection.ts) | _(参照なし)_ |

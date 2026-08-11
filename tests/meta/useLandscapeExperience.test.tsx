@@ -191,7 +191,9 @@ describe("useLandscapeExperience", () => {
     const second = current.requestLandscape();
     await act(async () => { await second; });
     expect(current.requestResult).toBe("rotate");
-    await act(async () => { firstFullscreen.reject(new Error("denied")); await first; });
+    expect(lock).toHaveBeenCalledTimes(1);
+    await act(async () => { firstFullscreen.resolve(); await first; });
     expect(current.requestResult).toBe("rotate");
+    expect(lock).toHaveBeenCalledTimes(1);
   });
 });

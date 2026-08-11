@@ -4,8 +4,10 @@ import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   auditRuntimeBoundary,
+  isReviewedBundleFindingAllowed,
   runCanonicalBoundaryBuild,
   scanScriptOriginsWithTrustedImportsForTest,
+  type TrustedBundlePolicy,
 } from "../../scripts/private-hosted/audit-runtime-boundary.js";
 
 const roots: string[] = [];
@@ -4435,7 +4437,7 @@ describe("private hosted runtime boundary", () => {
     });
   });
 
-  it("rejects dynamic chunks and forbidden server markers in the production manifest", async () => {
+  it("accepts an approved reachable dynamic route", async () => {
     const root = await fixture();
     await writeFile(
       resolve(root, "dist/.vite/manifest.json"),
@@ -4443,23 +4445,168 @@ describe("private hosted runtime boundary", () => {
         "index.html": {
           file: "assets/index.js",
           isEntry: true,
-          dynamicImports: ["src/lazy.ts"],
+          imports: [],
+          dynamicImports: ["src/screens/SettingsScreen.tsx"],
         },
-        "src/lazy.ts": { file: "assets/lazy.js" },
+        "src/screens/SettingsScreen.tsx": {
+          file: "assets/SettingsScreen.js",
+          isDynamicEntry: true,
+          imports: [],
+        },
       }),
     );
     await writeFile(
-      resolve(root, "dist/assets/index.js"),
-      "const leaked = 'node:fs'; const file = readFileSync;",
+      resolve(root, "dist/assets/SettingsScreen.js"),
+      "export default 1;",
     );
-    await writeFile(resolve(root, "dist/assets/lazy.js"), "export default 1;");
+
+    expect(
+      await auditRuntimeBoundary(root, async () => ({
+        stdout: "",
+        stderr: "",
+      })),
+    ).toEqual([]);
+  });
+
+  it("suppresses a reviewed bundle finding only for exact output, owner, hash, and detail", () => {
+    const policy: TrustedBundlePolicy = {
+      output: /^assets\/Reviewed-[A-Za-z0-9_-]+\.js$/,
+      owns: (key) => key === "src/screens/Reviewed.tsx",
+      sha256: "qualified-sha",
+      integrityCode: "bundle-capability-integrity",
+      integrityDetail: "reviewed bundle SHA-256 mismatch",
+      approvedFindings: [{ code: "forbidden-bundle-marker", detail: "network API" }],
+    };
+    const finding = { code: "forbidden-bundle-marker", detail: "network API" };
+
+    expect(isReviewedBundleFindingAllowed(
+      policy,
+      "assets/Reviewed-output.js",
+      "src/screens/Reviewed.tsx",
+      "qualified-sha",
+      finding,
+    )).toBe(true);
+    expect(isReviewedBundleFindingAllowed(
+      policy,
+      "assets/Reviewed-output.js",
+      "src/screens/Wrong.tsx",
+      "qualified-sha",
+      finding,
+    )).toBe(false);
+    expect(isReviewedBundleFindingAllowed(
+      policy,
+      "assets/Reviewed-output.js",
+      "src/screens/Reviewed.tsx",
+      "qualified-sha-drift",
+      finding,
+    )).toBe(false);
+    expect(isReviewedBundleFindingAllowed(
+      policy,
+      "assets/Reviewed-output.js",
+      "src/screens/Reviewed.tsx",
+      "qualified-sha",
+      { ...finding, detail: "persistent storage" },
+    )).toBe(false);
+    expect(isReviewedBundleFindingAllowed(
+      policy,
+      "assets/Other-output.js",
+      "src/screens/Reviewed.tsx",
+      "qualified-sha",
+      finding,
+    )).toBe(false);
+  });
+
+  it("scans every reachable dynamic chunk for network, storage, and code execution", async () => {
+    const root = await fixture();
+    await writeFile(
+      resolve(root, "dist/.vite/manifest.json"),
+      JSON.stringify({
+        "index.html": {
+          file: "assets/index.js",
+          isEntry: true,
+          imports: [],
+          dynamicImports: ["src/screens/SettingsScreen.tsx"],
+        },
+        "src/screens/SettingsScreen.tsx": {
+          file: "assets/SettingsScreen.js",
+          isDynamicEntry: true,
+          imports: [],
+        },
+      }),
+    );
+    await writeFile(
+      resolve(root, "dist/assets/SettingsScreen.js"),
+      "fetch('/lazy'); localStorage.setItem('lazy', '1'); Function('return 1')();",
+    );
 
     const findings = await auditRuntimeBoundary(root, async () => ({
       stdout: "",
       stderr: "",
     }));
-    expect(findings.map(({ code }) => code)).toEqual(
-      expect.arrayContaining(["dynamic-import", "forbidden-bundle-marker"]),
+
+    expect(findings).toEqual(
+      expect.arrayContaining([
+        {
+          file: "dist/assets/SettingsScreen.js",
+          code: "forbidden-bundle-marker",
+          detail: "bare fetch",
+        },
+        {
+          file: "dist/assets/SettingsScreen.js",
+          code: "forbidden-bundle-marker",
+          detail: "persistent storage",
+        },
+        {
+          file: "dist/assets/SettingsScreen.js",
+          code: "forbidden-bundle-marker",
+          detail: "dynamic code execution",
+        },
+      ]),
+    );
+  });
+
+  it("rejects unknown dynamic keys and orphan output through the shared closure", async () => {
+    const root = await fixture();
+    await writeFile(
+      resolve(root, "dist/.vite/manifest.json"),
+      JSON.stringify({
+        "index.html": {
+          file: "assets/index.js",
+          isEntry: true,
+          imports: [],
+          dynamicImports: ["src/lazy.ts"],
+        },
+        "src/lazy.ts": {
+          file: "assets/lazy.js",
+          isDynamicEntry: true,
+          imports: [],
+        },
+      }),
+    );
+    await writeFile(resolve(root, "dist/assets/lazy.js"), "export default 1;");
+    await writeFile(
+      resolve(root, "dist/assets/orphan.js"),
+      "export default 1;",
+    );
+
+    const findings = await auditRuntimeBoundary(root, async () => ({
+      stdout: "",
+      stderr: "",
+    }));
+
+    expect(findings).toEqual(
+      expect.arrayContaining([
+        {
+          file: "dist/.vite/manifest.json",
+          code: "production-manifest",
+          detail: "unknown dynamic manifest entry: src/lazy.ts",
+        },
+        {
+          file: "dist/assets/orphan.js",
+          code: "untracked-build-artifact",
+          detail: "not declared by the canonical build",
+        },
+      ]),
     );
   });
 
@@ -4489,8 +4636,8 @@ describe("private hosted runtime boundary", () => {
 
     expect(findings).toContainEqual({
       file: "dist/.vite/manifest.json",
-      code: "production-entry",
-      detail: "src/extra.ts",
+      code: "production-manifest",
+      detail: "unreachable manifest entry: src/extra.ts",
     });
   });
 

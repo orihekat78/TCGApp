@@ -15,13 +15,17 @@ Date: 2026-08-10
 
 1. Start from one clean release commit. Do not deploy an uncommitted tree.
 2. Run `npm run private-hosted:qualify-final` and keep its external report path.
-3. Confirm all 17 commands passed and secret/destination findings are empty.
+3. Confirm all 18 commands passed, including the generated Meta card-identity check, and secret/destination findings are empty.
+   Confirm the HOME initial closure is at most 512 KiB and all approved lazy chunks
+   appear in the exact response manifest with no unknown or orphan JavaScript.
 4. Deploy the report's exact `staging` directory. Never rebuild or upload `dist`.
 5. Record commit, deployment ID/URL, report path, and manifest hashes.
 6. Probe stable and deployment URLs anonymously. Both must redirect to
    `steep-mouse-bb22.cloudflareaccess.com`; no app HTML may be anonymous.
-7. Open the stable URL through OTP on PC, then smartphone. Verify the public
-   `HOME -> SETUP -> MATCH` path: `/#home`, `.home-screen`,
+7. Open the stable URL through OTP on PC, then smartphone. Verify `HOME -> DECK`
+   opens without a reload or crash, starts with at most 48 catalog tiles, and stays
+   at or below 96 while scrolling. Then verify the public `HOME -> SETUP -> MATCH`
+   path: `/#home`, `.home-screen`,
    `button[data-route='setup']`, `#setup-title`, `button.setup-start`,
    `#match`, `button.mulligan-skip`, then `#scaler`. At `851x393`, confirm
    `#scaler[data-playmat-layout='desktop'][data-playmat-fit='contained-landscape']`.

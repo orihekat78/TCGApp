@@ -22,7 +22,7 @@ import { useGameStateStore } from '@/ui/state/store';
 import { usePresentationStore } from '@/ui/presentation/store';
 import { beginMatchSession, matchSessionId } from '@/ui/services/matchSession';
 import { getFinalizedReplay } from '@/ui/services/liveReplayRecorder';
-import { HistoryScreen } from '../../meta-app/src/screens/HistoryScreen';
+import { HistoryRoute, HistoryScreen } from '../../meta-app/src/screens/HistoryScreen';
 import { currentReplayEventSummary, ReplayScreen } from '../../meta-app/src/screens/ReplayScreen';
 import { ResultScreen } from '../../meta-app/src/screens/ResultScreen';
 import { App } from '../../meta-app/src/App';
@@ -324,7 +324,10 @@ describe('Wave 2 history and result contract', () => {
     window.history.replaceState(null, '', '#match');
     window.history.pushState(null, '', '#result');
     act(() => root.render(<App />));
-    expect(container.querySelector('#result-title')).not.toBeNull();
+    await vi.waitFor(async () => {
+      await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+      expect(container.querySelector('#result-title')).not.toBeNull();
+    }, { timeout: 15_000 });
 
     const backNavigation = new Promise<void>((resolve) => {
       window.addEventListener('hashchange', () => resolve(), { once: true });
@@ -370,7 +373,10 @@ describe('Wave 2 history and result contract', () => {
 
     window.history.replaceState(null, '', '#match');
     act(() => root.render(<App />));
-    await act(async () => { await Promise.resolve(); });
+    await vi.waitFor(async () => {
+      await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+      expect(container.querySelector('#scaler')).not.toBeNull();
+    }, { timeout: 15_000 });
 
     const resultNavigation = new Promise<void>((resolve) => {
       window.addEventListener('hashchange', () => resolve(), { once: true });
@@ -400,6 +406,10 @@ describe('Wave 2 history and result contract', () => {
     useMetaStore.getState().startPracticeFor('L5-4');
     window.history.replaceState(null, '', '#match');
     act(() => root.render(<App />));
+    await vi.waitFor(async () => {
+      await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+      expect(container.querySelector('#scaler')).not.toBeNull();
+    }, { timeout: 15_000 });
 
     const navigation = new Promise<void>((resolve) => {
       window.addEventListener('hashchange', () => resolve(), { once: true });
@@ -594,6 +604,33 @@ describe('Wave 2 history and result contract', () => {
     nextAction.focus();
     await act(async () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
     expect(document.activeElement).toBe(nextAction);
+  });
+
+  it('loads canonical replay rows only when the lazy history route mounts', async () => {
+    const sessionId = 'history-route-canonical-load';
+    const initial = createEmptyGameState();
+    startCausalSession(initial, sessionId);
+    const terminal = structuredClone(initial);
+    mutate.gameResult.set(terminal, 'self', 'evidence');
+    const log = buildReplayLogV3({
+      artifactId: `replay-${sessionId}`,
+      sessionId,
+      viewerMode: 'solo-self',
+      states: [initial, terminal],
+    });
+    await saveHistoryReplay({ ...match, id: sessionId, sessionId }, log);
+    useHistoryStore.setState({
+      history: [],
+      _hasCanonicalLoaded: false,
+    } as never);
+
+    act(() => root.render(<HistoryRoute onNav={() => undefined} />));
+    await act(async () => {
+      await vi.waitFor(() => {
+        expect(useHistoryStore.getState()._hasCanonicalLoaded).toBe(true);
+        expect(container.textContent).toContain('自分のデッキ');
+      });
+    });
   });
 
   it('states when saved cards are missing from analytics instead of silently undercounting', () => {

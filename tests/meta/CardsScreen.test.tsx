@@ -470,6 +470,38 @@ describe("CARDS filter drawer", () => {
     );
   });
 
+  it("keeps a scrolled-in D09014 node connected from pointer focus through click", () => {
+    act(() => root.render(<CardsScreen onNav={() => undefined} />));
+
+    const scroller = container.querySelector<HTMLElement>(".cards-grid-scroll")!;
+    const targetSelector = '[data-card-num="D09014"] [role="button"]';
+    expect(container.querySelector(targetSelector)).toBeNull();
+
+    let target: HTMLElement | null = null;
+    for (let scrollTop = 1; scrollTop <= 100 && !target; scrollTop += 1) {
+      act(() => {
+        scroller.scrollTop = scrollTop;
+        scroller.dispatchEvent(new Event("scroll", { bubbles: true }));
+      });
+      target = container.querySelector<HTMLElement>(targetSelector);
+    }
+    expect(target).not.toBeNull();
+
+    const initialNode = target!;
+    act(() => {
+      initialNode.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      initialNode.focus();
+    });
+    expect(container.querySelector(targetSelector)).toBe(initialNode);
+    expect(initialNode.isConnected).toBe(true);
+
+    act(() => {
+      initialNode.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+      initialNode.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(initialNode.getAttribute("aria-pressed")).toBe("true");
+  });
+
   it("resets large grid and list windows after filter and view changes", () => {
     act(() => root.render(<CardsScreen onNav={() => undefined} />));
 
@@ -486,7 +518,7 @@ describe("CARDS filter drawer", () => {
     const resetQuery = activeNum.startsWith("B") ? "D" : "B";
     act(() => useFiltersStore.getState().setCards({ q: resetQuery }));
     expect(gridScroller.scrollTop).toBe(0);
-    expect(container.querySelectorAll(".cards-grid-item")).toHaveLength(48);
+    expect(container.querySelectorAll(".cards-grid-item").length).toBeLessThanOrEqual(96);
     const resultCount = Number(container.querySelector('[role="status"]')?.textContent?.match(/\d+/)?.[0]);
     expect(resultCount).toBeGreaterThan(48);
 

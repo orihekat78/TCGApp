@@ -18,7 +18,7 @@ export interface WindowedCollection<T> {
   beforePx: number;
   afterPx: number;
   registerItem: (index: number) => (node: HTMLElement | null) => void;
-  reveal: (key: string, options?: { focus?: boolean }) => void;
+  reveal: (key: string, options?: { focus?: boolean; preserveViewport?: boolean }) => void;
 }
 
 interface Measurement {
@@ -50,6 +50,8 @@ export function useWindowedCollection<T>({
   const chunkSize = Math.max(1, Math.min(initialItems, maxMountedItems));
   const mountedLimit = Math.max(chunkSize, maxMountedItems);
   const [range, setRange] = useState(() => initialRange(items.length, chunkSize));
+  const rangeRef = useRef(range);
+  rangeRef.current = range;
   const [, setMeasurementVersion] = useState(0);
   const measurementsRef = useRef(new Map<number, Measurement>());
   const nodesRef = useRef(new Map<number, HTMLElement>());
@@ -57,6 +59,12 @@ export function useWindowedCollection<T>({
   const callbacksRef = useRef(new Map<number, (node: HTMLElement | null) => void>());
   const observerRef = useRef<ResizeObserver | null>(null);
   const pendingFocusKeyRef = useRef<string | null>(null);
+  const resetPinKeysRef = useRef<{ selected: string | null | undefined; focused: string | null | undefined }>({
+    selected: undefined,
+    focused: undefined,
+  });
+  const latestPinKeysRef = useRef(resetPinKeysRef.current);
+  latestPinKeysRef.current = { selected: selectedKey, focused: focusedKey };
 
   const keyIndexes = useMemo(() => new Map(items.map((item, index) => [getKey(item), index])), [getKey, items]);
 
@@ -82,59 +90,99 @@ export function useWindowedCollection<T>({
     return { columns, rowPitch };
   })();
 
-  const rangeForIndex = useCallback((index: number): Range => {
+  const rangeForStart = useCallback((preferredStart: number, requestedItems: number): Range => {
     const total = items.length;
-    if (total <= chunkSize) return initialRange(total, chunkSize);
-    const maxStart = Math.max(0, total - mountedLimit);
-    const start = Math.max(0, Math.min(maxStart, index - Math.floor(mountedLimit / 2)));
-    return { start, end: Math.min(total, start + mountedLimit) };
-  }, [chunkSize, items.length, mountedLimit]);
+    const columns = Math.min(Math.max(1, metrics.columns), Math.max(1, requestedItems));
+    const rowCapacity = Math.floor(mountedLimit / columns) * columns;
+    if (total <= mountedLimit || rowCapacity === 0) return { start: 0, end: total };
+
+    const capacity = Math.min(rowCapacity, total);
+    const itemCount = Math.min(capacity, Math.max(1, requestedItems));
+    const rowItemCount = Math.min(capacity, Math.ceil(itemCount / columns) * columns);
+    const maxStart = Math.ceil(Math.max(0, total - capacity) / columns) * columns;
+    const start = Math.max(0, Math.min(maxStart, Math.floor(preferredStart / columns) * columns));
+    return { start, end: Math.min(total, start + rowItemCount) };
+  }, [items.length, metrics.columns, mountedLimit]);
+
+  const rangeForIndex = useCallback((index: number): Range => {
+    const columns = Math.max(1, metrics.columns);
+    const rowCapacity = Math.floor(mountedLimit / columns) * columns;
+    const capacity = rowCapacity === 0 ? mountedLimit : rowCapacity;
+    return rangeForStart(index - Math.floor(capacity / 2), capacity);
+  }, [metrics.columns, mountedLimit, rangeForStart]);
+
+  const rangeWithPins = useCallback((requested: Range, selectedIndex?: number, focusedIndex?: number): Range => {
+    const pins = [selectedIndex, focusedIndex].filter((index): index is number => index !== undefined);
+    if (pins.length === 0) return rangeForStart(requested.start, requested.end - requested.start);
+    // A focus event fires before click. Do not replace an already-mounted target
+    // between pointerdown and pointerup merely to expand the window for its pin.
+    if (pins.every((index) => index >= requested.start && index < requested.end)) return requested;
+
+    const columns = Math.max(1, metrics.columns);
+    const rowCapacity = Math.floor(mountedLimit / columns) * columns;
+    const capacity = rowCapacity === 0 ? mountedLimit : rowCapacity;
+    const priorityIndex = focusedIndex ?? selectedIndex!;
+    const first = Math.min(...pins);
+    const last = Math.max(...pins);
+    const pinStart = Math.floor(first / columns) * columns;
+    const pinEnd = Math.min(items.length, Math.ceil((last + 1) / columns) * columns);
+    if (pinEnd - pinStart > capacity) return rangeForIndex(priorityIndex);
+
+    const maxStart = Math.ceil(Math.max(0, items.length - capacity) / columns) * columns;
+    const minimumStart = Math.ceil(Math.max(0, pinEnd - capacity) / columns) * columns;
+    const maximumStart = Math.floor(Math.min(pinStart, maxStart) / columns) * columns;
+    if (minimumStart > maximumStart) return rangeForIndex(priorityIndex);
+
+    const preferredStart = rangeForIndex(priorityIndex).start;
+    const start = Math.max(minimumStart, Math.min(maximumStart, preferredStart));
+    return rangeForStart(start, capacity);
+  }, [items.length, metrics.columns, mountedLimit, rangeForIndex, rangeForStart]);
+  const rangeWithPinsRef = useRef(rangeWithPins);
+  rangeWithPinsRef.current = rangeWithPins;
 
   const reset = useCallback(() => {
     setRange(initialRange(items.length, chunkSize));
   }, [chunkSize, items.length]);
 
   useLayoutEffect(() => {
+    resetPinKeysRef.current = latestPinKeysRef.current;
     reset();
     if (scrollElement) scrollElement.scrollTop = 0;
   }, [layoutKey, reset, scrollElement]);
 
   useLayoutEffect(() => {
-    const selectedIndex = selectedKey == null ? undefined : keyIndexes.get(selectedKey);
-    const focusedIndex = focusedKey == null ? undefined : keyIndexes.get(focusedKey);
-    const pins = [selectedIndex, focusedIndex].filter((index): index is number => index !== undefined);
-    if (pins.length === 0) return;
-    const first = Math.min(...pins);
-    const last = Math.max(...pins);
+    const selectedIndex = selectedKey == null || selectedKey === resetPinKeysRef.current.selected
+      ? undefined
+      : keyIndexes.get(selectedKey);
+    const focusedIndex = focusedKey == null || focusedKey === resetPinKeysRef.current.focused
+      ? undefined
+      : keyIndexes.get(focusedKey);
     setRange((current) => {
-      if (first >= current.start && last < current.end) return current;
-      const priorityIndex = focusedIndex ?? selectedIndex!;
-      if (last - first >= mountedLimit) {
-        const next = rangeForIndex(priorityIndex);
-        return next.start === current.start && next.end === current.end ? current : next;
-      }
-      const maxStart = Math.max(0, items.length - mountedLimit);
-      const minimumStart = Math.max(0, last - mountedLimit + 1);
-      const maximumStart = Math.min(first, maxStart);
-      const preferredStart = rangeForIndex(priorityIndex).start;
-      const start = Math.max(minimumStart, Math.min(maximumStart, preferredStart));
-      const next = { start, end: Math.min(items.length, start + mountedLimit) };
+      const next = rangeWithPinsRef.current(current, selectedIndex, focusedIndex);
       return next.start === current.start && next.end === current.end ? current : next;
     });
-  }, [focusedKey, items.length, keyIndexes, mountedLimit, rangeForIndex, selectedKey]);
+  }, [focusedKey, keyIndexes, selectedKey]);
 
   useEffect(() => {
     if (!scrollElement) return;
     const onScroll = () => {
       const estimatedChunkHeight = Math.max(1, Math.ceil(chunkSize / metrics.columns) * metrics.rowPitch);
       const chunk = Math.floor(scrollElement.scrollTop / estimatedChunkHeight);
-      const total = items.length;
-      const start = Math.max(0, Math.min(Math.max(0, total - mountedLimit), chunk * chunkSize));
-      setRange(start === 0 ? initialRange(total, chunkSize) : { start, end: Math.min(total, start + mountedLimit) });
+      const selectedIndex = selectedKey == null || selectedKey === resetPinKeysRef.current.selected
+        ? undefined
+        : keyIndexes.get(selectedKey);
+      const focusedIndex = focusedKey == null || focusedKey === resetPinKeysRef.current.focused
+        ? undefined
+        : keyIndexes.get(focusedKey);
+      const next = rangeForStart(chunk * chunkSize, chunk === 0 ? chunkSize : mountedLimit);
+      setRange((current) => {
+        const pinned = rangeWithPins(next, selectedIndex, focusedIndex);
+        return pinned.start === current.start && pinned.end === current.end ? current : pinned;
+      });
     };
     scrollElement.addEventListener("scroll", onScroll, { passive: true });
     return () => scrollElement.removeEventListener("scroll", onScroll);
-  }, [chunkSize, items.length, metrics.columns, metrics.rowPitch, mountedLimit, scrollElement]);
+  }, [chunkSize, focusedKey, keyIndexes, metrics.columns, metrics.rowPitch, mountedLimit, rangeForStart, rangeWithPins, scrollElement, selectedKey]);
 
   useEffect(() => {
     const observer = new ResizeObserver((entries) => {
@@ -199,15 +247,28 @@ export function useWindowedCollection<T>({
     pendingFocusKeyRef.current = null;
   }, [keyIndexes, range]);
 
-  const reveal = useCallback((key: string, options?: { focus?: boolean }) => {
+  const reveal = useCallback((key: string, options?: { focus?: boolean; preserveViewport?: boolean }) => {
     const index = keyIndexes.get(key);
     if (index === undefined) return;
+    const alreadyMounted = index >= rangeRef.current.start && index < rangeRef.current.end;
     if (options?.focus) pendingFocusKeyRef.current = key;
-    setRange(rangeForIndex(index));
-    if (scrollElement) {
+    const selectedIndex = selectedKey == null || selectedKey === resetPinKeysRef.current.selected
+      ? undefined
+      : keyIndexes.get(selectedKey);
+    const focusedIndex = options?.focus
+      ? index
+      : focusedKey == null || focusedKey === resetPinKeysRef.current.focused
+        ? undefined
+        : keyIndexes.get(focusedKey);
+    setRange((current) => {
+      if (index >= current.start && index < current.end) return current;
+      const next = rangeWithPins(rangeForIndex(index), selectedIndex, focusedIndex);
+      return next.start === current.start && next.end === current.end ? current : next;
+    });
+    if (scrollElement && (!alreadyMounted || !options?.preserveViewport)) {
       scrollElement.scrollTop = Math.floor(index / metrics.columns) * metrics.rowPitch;
     }
-  }, [keyIndexes, metrics.columns, metrics.rowPitch, rangeForIndex, scrollElement]);
+  }, [focusedKey, keyIndexes, metrics.columns, metrics.rowPitch, rangeForIndex, rangeWithPins, scrollElement, selectedKey]);
 
   const beforePx = Math.round(Math.floor(range.start / metrics.columns) * metrics.rowPitch);
   const totalRows = Math.ceil(items.length / metrics.columns);

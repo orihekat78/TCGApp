@@ -20,14 +20,29 @@ import type { BuildManifests, ManifestEntry } from "./types.ts";
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 const MAX_FILE_COUNT = 20_000;
+const MAX_INITIAL_HOME_BYTES = 512 * 1024;
 const MANIFEST_PATH = ".vite/manifest.json";
 const ALWAYS_ALLOWED = new Set(["index.html", "favicon.svg", "_headers"]);
 const SHA256 = /^[0-9a-f]{64}$/;
 const TRUSTED_BRAND_LOGO = /^assets\/detective-conan-logo-[A-Za-z0-9_-]+\.png$/;
+const APPROVED_DYNAMIC_ENTRY_KEYS = new Set([
+  "src/services/gameRuntimeBundle.ts",
+  "src/screens/CardsScreen.tsx",
+  "src/screens/DeckEditor.tsx",
+  "src/screens/HistoryScreen.tsx",
+  "src/screens/RealMatchView.tsx",
+  "src/screens/ReplayScreen.tsx",
+  "src/screens/ResultScreen.tsx",
+  "src/screens/SettingsScreen.tsx",
+  "src/screens/SetupScreen.tsx",
+  "src/screens/TutorialScreen.tsx",
+]);
 
 type ViteManifestEntry = {
   file?: unknown;
+  name?: unknown;
   isEntry?: unknown;
+  isDynamicEntry?: unknown;
   imports?: unknown;
   dynamicImports?: unknown;
   css?: unknown;
@@ -35,6 +50,12 @@ type ViteManifestEntry = {
 };
 
 type ViteManifest = Record<string, ViteManifestEntry>;
+
+export type ValidatedManifestClosure = {
+  reachableFiles: ReadonlySet<string>;
+  initialFiles: ReadonlySet<string>;
+  keyOwnership: ReadonlyMap<string, string>;
+};
 
 function fail(message: string): never {
   throw new Error(`private hosted manifest rejected: ${message}`);
@@ -67,6 +88,12 @@ function checkedList(value: unknown, label: string): string[] {
   return value.map((path, index) =>
     checkedRelative(path, `${label}[${index}]`),
   );
+}
+
+function checkedBoolean(value: unknown, label: string): boolean | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "boolean") fail(`${label} must be a boolean`);
+  return value;
 }
 
 function extensionIs(path: string, extension: ".js" | ".css"): boolean {
@@ -260,21 +287,66 @@ function parseManifest(source: string): ViteManifest {
   return parsed as ViteManifest;
 }
 
-function reachableFiles(manifest: ViteManifest): Set<string> {
-  const root = manifest["index.html"];
-  if (!root || root.isEntry !== true)
+function manifestEntry(manifest: ViteManifest, key: string): ViteManifestEntry {
+  const entry = manifest[key];
+  if (!entry || typeof entry !== "object" || Array.isArray(entry))
+    fail(`missing manifest entry: ${key}`);
+  return entry;
+}
+
+export function validateManifestClosure(
+  source: unknown,
+): ValidatedManifestClosure {
+  if (source === null || typeof source !== "object" || Array.isArray(source))
+    fail("Vite manifest must be an object");
+  const manifest = source as ViteManifest;
+  const root = manifestEntry(manifest, "index.html");
+  if (checkedBoolean(root.isEntry, "index.html.isEntry") !== true)
     fail("Vite manifest lacks root index.html entry");
+  if (checkedBoolean(root.isDynamicEntry, "index.html.isDynamicEntry") === true)
+    fail("root index.html must not be a dynamic entry");
+
+  const rootDynamicImports = checkedList(
+    root.dynamicImports,
+    "index.html.dynamicImports",
+  );
+  const rootDynamicKeys = new Set<string>();
+  for (const key of rootDynamicImports) {
+    if (!APPROVED_DYNAMIC_ENTRY_KEYS.has(key))
+      fail(`unknown dynamic manifest entry: ${key}`);
+    if (rootDynamicKeys.has(key))
+      fail(`duplicate dynamic manifest entry: ${key}`);
+    rootDynamicKeys.add(key);
+  }
+
   const reachable = new Set<string>();
   const visited = new Set<string>();
+  const keyOwnership = new Map<string, string>();
+  const javascriptOwners = new Map<string, string>();
 
   function visit(key: string): void {
     if (visited.has(key)) return;
-    const entry = manifest[key];
-    if (!entry || typeof entry !== "object")
-      fail(`missing manifest entry: ${key}`);
+    const entry = manifestEntry(manifest, key);
     visited.add(key);
+    const isEntry = checkedBoolean(entry.isEntry, `${key}.isEntry`);
+    const isDynamicEntry = checkedBoolean(
+      entry.isDynamicEntry,
+      `${key}.isDynamicEntry`,
+    );
+    if (key !== "index.html" && isEntry === true)
+      fail(`sole isEntry root is index.html: ${key}`);
+    if (key !== "index.html" && isDynamicEntry === true && !rootDynamicKeys.has(key))
+      fail(`unknown dynamic manifest entry: ${key}`);
+    if (rootDynamicKeys.has(key) && isDynamicEntry !== true)
+      fail(`malformed dynamic manifest entry: ${key}`);
     const file = checkedRelative(entry.file, `${key}.file`);
     assertScriptOrStyle(file, `${key}.file`);
+    keyOwnership.set(key, file);
+    if (extensionIs(file, ".js")) {
+      const owner = javascriptOwners.get(file);
+      if (owner) fail(`duplicate JavaScript output: ${file} (${owner}, ${key})`);
+      javascriptOwners.set(file, key);
+    }
     reachable.add(file);
     for (const css of checkedList(entry.css, `${key}.css`)) {
       if (!extensionIs(css, ".css")) fail(`${key}.css is not CSS: ${css}`);
@@ -284,31 +356,59 @@ function reachableFiles(manifest: ViteManifest): Set<string> {
       assertReachableAsset(asset, `${key}.assets`);
       reachable.add(asset);
     }
-    for (const importKey of [
-      ...checkedList(entry.imports, `${key}.imports`),
-      ...checkedList(entry.dynamicImports, `${key}.dynamicImports`),
-    ])
+    for (const importKey of checkedList(entry.imports, `${key}.imports`))
       visit(importKey);
+    const dynamicImports =
+      key === "index.html"
+        ? rootDynamicImports
+        : checkedList(entry.dynamicImports, `${key}.dynamicImports`);
+    if (key !== "index.html" && dynamicImports.length > 0)
+      fail(`unknown dynamic manifest entry: ${key}`);
+    for (const importKey of dynamicImports) visit(importKey);
   }
 
   visit("index.html");
   for (const key of Object.keys(manifest)) {
     if (visited.has(key)) continue;
-    const entry = manifest[key];
-    if (!entry || typeof entry !== "object")
-      fail(`missing manifest entry: ${key}`);
+    const entry = manifestEntry(manifest, key);
     const file = checkedRelative(entry.file, `${key}.file`);
     const assetOnly =
-      TRUSTED_BRAND_LOGO.test(file) &&
+      (extensionIs(file, ".css") || TRUSTED_BRAND_LOGO.test(file)) &&
       reachable.has(file) &&
-      entry.isEntry !== true &&
+      checkedBoolean(entry.isEntry, `${key}.isEntry`) !== true &&
+      checkedBoolean(entry.isDynamicEntry, `${key}.isDynamicEntry`) !== true &&
       checkedList(entry.css, `${key}.css`).length === 0 &&
       checkedList(entry.assets, `${key}.assets`).length === 0 &&
       checkedList(entry.imports, `${key}.imports`).length === 0 &&
       checkedList(entry.dynamicImports, `${key}.dynamicImports`).length === 0;
     if (!assetOnly) fail(`unreachable manifest entry: ${key}`);
   }
-  return reachable;
+
+  const initialFiles = new Set<string>();
+  const initialKeys = new Set<string>();
+  function collectInitial(key: string): void {
+    if (initialKeys.has(key)) return;
+    initialKeys.add(key);
+    const entry = manifestEntry(manifest, key);
+    const file = keyOwnership.get(key);
+    if (!file) fail(`missing reachable manifest ownership: ${key}`);
+    const name = entry.name;
+    if (name !== undefined && typeof name !== "string")
+      fail(`${key}.name must be a string`);
+    const heavyName = typeof name === "string" && (name === "engine" || name === "cards")
+      ? name
+      : /(?:^|[/_-])(engine|cards)(?:[-_.]|$)/i.exec(`${key}/${file}`)?.[1]?.toLowerCase();
+    if (heavyName === "engine" || heavyName === "cards")
+      fail(`initial HOME closure reaches ${heavyName}: ${file}`);
+    initialFiles.add(file);
+    for (const css of checkedList(entry.css, `${key}.css`)) initialFiles.add(css);
+    for (const asset of checkedList(entry.assets, `${key}.assets`)) initialFiles.add(asset);
+    for (const importKey of checkedList(entry.imports, `${key}.imports`))
+      collectInitial(importKey);
+  }
+  collectInitial("index.html");
+
+  return { reachableFiles: reachable, initialFiles, keyOwnership };
 }
 
 function equalEntry(left: ManifestEntry, right: ManifestEntry): boolean {
@@ -399,16 +499,28 @@ export async function inspectBuild(distDir: string): Promise<BuildManifests> {
   if (!files.includes(MANIFEST_PATH)) fail("Vite manifest is missing");
   const manifestFile = await regularFile(rootReal, MANIFEST_PATH);
   const manifest = parseManifest(await readFile(manifestFile.absolute, "utf8"));
-  const closure = reachableFiles(manifest);
-  const allowed = new Set([...ALWAYS_ALLOWED, ...closure, MANIFEST_PATH]);
+  const closure = validateManifestClosure(manifest);
+  const allowed = new Set([
+    ...ALWAYS_ALLOWED,
+    ...closure.reachableFiles,
+    MANIFEST_PATH,
+  ]);
   if (files.some((path) => !allowed.has(path)))
     fail("dist contains a forbidden or orphan file");
   await assertOnlyAllowedDirectories(rootReal, allowed);
   for (const path of allowed) await regularFile(rootReal, path);
-  const uploadPaths = [...ALWAYS_ALLOWED, ...closure].sort();
+  const uploadPaths = [...ALWAYS_ALLOWED, ...closure.reachableFiles].sort();
   const upload = await Promise.all(
     uploadPaths.map((path) => digestEntry(rootReal, path)),
   );
+  const uploadByPath = new Map(upload.map((entry) => [entry.path.slice(1), entry]));
+  const initialBytes = [...closure.initialFiles].reduce((total, path) => {
+    const entry = uploadByPath.get(path);
+    if (!entry) fail(`initial HOME file is missing from upload: ${path}`);
+    return total + entry.bytes;
+  }, 0);
+  if (initialBytes > MAX_INITIAL_HOME_BYTES)
+    fail(`initial HOME payload exceeds ${MAX_INITIAL_HOME_BYTES} bytes`);
   const response = upload.filter((entry) => entry.path !== "/_headers");
   return { schemaVersion: 1, upload, response };
 }

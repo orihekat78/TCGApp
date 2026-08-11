@@ -6,8 +6,11 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { DeckRecord } from "../data/types";
 import { SAMPLE_DECK, SAMPLE_DECK_OPP } from "../data/sampleDeck";
-import { defaultCaseForPartner, CARD_POOL } from "../data/cardPool";
-import { isPlayable } from "../util/deckBridge";
+import {
+  defaultCaseForPartner,
+  isDeckIdentityCard,
+} from "../data/cardIdentities.generated";
+import { isHomeDeckEligible } from "../util/deckEligibility";
 
 interface DecksState {
   decks: DeckRecord[];
@@ -26,9 +29,9 @@ function normalizeActiveDeckId(
   activeDeckId: string | undefined,
 ): string {
   const active = decks.find((deck) => deck.id === activeDeckId);
-  return active && isPlayable(active)
+  return active && isHomeDeckEligible(active)
     ? active.id
-    : (decks.find((deck) => isPlayable(deck))?.id ?? "");
+    : (decks.find((deck) => isHomeDeckEligible(deck))?.id ?? "");
 }
 
 export const useDecksStore = create<DecksState>()(
@@ -68,7 +71,7 @@ export const useDecksStore = create<DecksState>()(
         }),
       setActiveDeck: (id) =>
         set((s) =>
-          s.decks.some((deck) => deck.id === id && isPlayable(deck))
+          s.decks.some((deck) => deck.id === id && isHomeDeckEligible(deck))
             ? { activeDeckId: id }
             : {},
         ),
@@ -105,8 +108,7 @@ export const useDecksStore = create<DecksState>()(
               d.cards = structuredClone(SAMPLE_DECK_OPP.cards);
             } else if (fromVersion < 2) {
               d.cards = (d.cards ?? []).filter((e) => {
-                const c = CARD_POOL.find((x) => x.num === e.num);
-                return c?.type !== "partner" && c?.type !== "case";
+                return !isDeckIdentityCard(e.num);
               });
             }
           }

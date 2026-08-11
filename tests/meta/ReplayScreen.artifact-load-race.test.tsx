@@ -79,9 +79,10 @@ describe('ReplayScreen artifact-load ownership', () => {
     loadArtifactMock.mockReturnValue(artifact.promise);
 
     act(() => root.render(<App />));
-    await act(async () => {
-      await vi.waitFor(() => expect(loadArtifactMock).toHaveBeenCalledOnce());
-    });
+    await vi.waitFor(async () => {
+      await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+      expect(loadArtifactMock).toHaveBeenCalledOnce();
+    }, { timeout: 15_000 });
 
     act(() => {
       window.history.replaceState(null, '', '#setup');

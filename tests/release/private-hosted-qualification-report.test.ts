@@ -121,6 +121,7 @@ describe("private hosted final qualification", () => {
       Record<(typeof QUALIFICATION_COMMAND_IDS)[number], string[]>
     > = {
       "npm-ci": ["ci"],
+      "card-identities": ["run", "--silent", "check:meta-card-identities"],
       build: ["run", "--silent", "build"],
       "dependency-audit": ["audit", "--audit-level=high"],
       "secret-scan": ["run", "--silent", "private-hosted:scan-secrets"],
@@ -253,15 +254,17 @@ describe("private hosted final qualification", () => {
     ).toEqual(report);
   });
 
-  it("does not write a report after a failure, skip, duplicate, dirty tree, or changed snapshot", async () => {
-    for (const failure of ["exit", "dirty", "snapshot", "manifest"] as const) {
+  it("does not write a report after a failure, stale identities, dirty tree, or changed snapshot", async () => {
+    for (const failure of ["exit", "card-identities", "dirty", "snapshot", "manifest"] as const) {
       const f = await fixture();
       let tick = Date.parse("2026-08-04T00:00:00.000Z");
       let executions = 0;
+      const executedIds: string[] = [];
       const execute = async (
         input: QualificationCommandInput,
       ): Promise<QualificationExecution> => {
         executions += 1;
+        executedIds.push(input.id);
         const startedAt = new Date(tick).toISOString();
         tick += 1_000;
         let output = `${input.id}\n`;
@@ -293,7 +296,11 @@ describe("private hosted final qualification", () => {
         const completedAt = new Date(tick).toISOString();
         tick += 1_000;
         return {
-          exitCode: failure === "exit" && input.id === "lint" ? 1 : 0,
+          exitCode:
+            (failure === "exit" && input.id === "lint") ||
+            (failure === "card-identities" && input.id === "card-identities")
+              ? 1
+              : 0,
           startedAt,
           completedAt,
         };
@@ -321,6 +328,9 @@ describe("private hosted final qualification", () => {
         readFile(resolve(f.runDir, "qualification-report.json"), "utf8"),
       ).rejects.toThrow();
       if (failure === "dirty") expect(executions).toBe(0);
+      if (failure === "card-identities") {
+        expect(executedIds).toEqual(["npm-ci", "card-identities"]);
+      }
     }
   });
 

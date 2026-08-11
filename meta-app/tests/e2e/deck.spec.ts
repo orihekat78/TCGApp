@@ -31,6 +31,52 @@ test('DECK keeps its pool window bounded while selected and focused cards remain
   expect(errors).toEqual([]);
 });
 
+test('DECK retains selected and focused D09019 while a later pool scroll changes the window', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
+  page.on('pageerror', (error) => errors.push(error.message));
+
+  await page.goto('/#deck');
+  await expect(page.getByTestId('deck-editor')).toBeVisible({ timeout: 6000 });
+  const scroller = page.locator('.deck-pool-grid');
+  const poolCards = page.locator('[data-testid^="deck-pool-card-"]');
+  const target = page.getByTestId('deck-pool-card-D09019');
+  const positions = await scroller.evaluate((node) => {
+    const max = Math.max(0, node.scrollHeight - node.clientHeight);
+    return Array.from({ length: 17 }, (_, index) => Math.round(max * index / 16));
+  });
+  let targetTop = 0;
+  for (const top of positions) {
+    await scroller.evaluate((node, value) => {
+      node.scrollTop = value;
+      node.dispatchEvent(new Event('scroll'));
+    }, top);
+    if (await target.count()) {
+      targetTop = top;
+      break;
+    }
+  }
+  await expect(target).toBeVisible();
+  await target.click();
+  await expect(page.locator('.deck-detail-drawer')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(target).toBeFocused();
+  const selectedNode = await target.elementHandle();
+  expect(selectedNode).not.toBeNull();
+
+  const maxTop = positions.at(-1) ?? 0;
+  const laterTop = targetTop > maxTop / 2 ? 0 : maxTop;
+  await scroller.evaluate((node, value) => {
+    node.scrollTop = value;
+    node.dispatchEvent(new Event('scroll'));
+  }, laterTop);
+  await expect.poll(() => poolCards.count()).toBeLessThanOrEqual(96);
+  expect(await selectedNode!.evaluate((node) => (
+    node.isConnected && document.activeElement === node
+  ))).toBe(true);
+  expect(errors).toEqual([]);
+});
+
 test('DECK刷新: プールのクリックは枚数を変えず、左詳細を開いてフォーカスを戻す', async ({ page }) => {
   const errors: string[] = [];
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });

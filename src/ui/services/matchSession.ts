@@ -26,26 +26,12 @@ import {
   finalizeLiveReplayRecording,
   startLiveReplayRecording,
 } from '@/ui/services/liveReplayRecorder';
+import { matchSessionId, type MatchSessionToken } from '@/ui/services/matchSessionId';
 
-export type MatchSessionToken = number;
+export { matchSessionId, type MatchSessionToken } from '@/ui/services/matchSessionId';
 
 let currentGeneration = 0;
 let matchSessionActive = false;
-
-function fallbackMatchSessionNamespace(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (part) => {
-    const random = Math.floor(Math.random() * 16);
-    return (part === 'x' ? random : (random & 0x3) | 0x8).toString(16);
-  });
-}
-
-const matchSessionNamespace = globalThis.crypto?.randomUUID?.() ?? fallbackMatchSessionNamespace();
-
-/** Stable for one runtime session and namespaced across reloads. */
-export function matchSessionId(token: MatchSessionToken): string {
-  if (!Number.isSafeInteger(token) || token < 1) throw new Error('Invalid match session token');
-  return `match-${matchSessionNamespace}-${token}`;
-}
 
 /** Promise を先に決着させ、その後に対戦の UI/engine 一時状態を破棄する。 */
 export function resetMatchSession(options: { preserveGameState?: boolean } = {}): void {

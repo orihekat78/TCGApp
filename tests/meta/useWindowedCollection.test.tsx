@@ -153,6 +153,19 @@ describe("useWindowedCollection", () => {
     expect(scroller.scrollTop).toBe(25_400);
   });
 
+  it("does not move an already mounted focus target before its click can finish", () => {
+    let api!: ReturnType<typeof useWindowedCollection<Item>>;
+    act(() => root.render(<Harness onReady={(next) => { api = next; }} />));
+    const scroller = container.querySelector<HTMLElement>("[data-testid=scroller]")!;
+    Object.defineProperty(scroller, "scrollTop", { configurable: true, value: 40, writable: true });
+
+    act(() => api.reveal("card-20", { preserveViewport: true }));
+
+    expect(scroller.scrollTop).toBe(40);
+    expect(container.querySelector("[data-testid=range]")?.textContent?.split(":").slice(0, 2))
+      .toEqual(["0", "48"]);
+  });
+
   it("uses measured list row pitch when the gap exceeds item height", () => {
     act(() => root.render(<Harness columns={1} rowPitch={45} itemHeight={42} />));
 
@@ -160,9 +173,9 @@ describe("useWindowedCollection", () => {
   });
 
   it.each([
-    { columns: 5, scrollTop: 400, beforePx: 360, afterPx: 280, revealOffset: 800 },
-    { columns: 7, scrollTop: 280, beforePx: 240, afterPx: 200, revealOffset: 560 },
-  ])("keeps $columns-column partial windows aligned after scrolling", ({ columns, scrollTop, beforePx, afterPx, revealOffset }) => {
+    { columns: 5, scrollTop: 400, range: "45:140", beforePx: 360, afterPx: 320, revealOffset: 800 },
+    { columns: 7, scrollTop: 280, range: "42:133", beforePx: 240, afterPx: 280, revealOffset: 560 },
+  ])("keeps $columns-column partial windows aligned after scrolling", ({ columns, scrollTop, range, beforePx, afterPx, revealOffset }) => {
     let api!: ReturnType<typeof useWindowedCollection<Item>>;
     act(() => root.render(
       <Harness columns={columns} rowPitch={40} itemHeight={36} onReady={(next) => { api = next; }} />,
@@ -175,9 +188,27 @@ describe("useWindowedCollection", () => {
     });
 
     expect(container.querySelector("[data-testid=range]")?.textContent)
-      .toBe(`48:144:${beforePx}:${afterPx}`);
+      .toBe(`${range}:${beforePx}:${afterPx}`);
     act(() => api.reveal("card-100"));
     expect(scroller.scrollTop).toBe(revealOffset);
+  });
+
+  it("keeps 7-column windows and spacers aligned to complete rows", () => {
+    act(() => root.render(<Harness columns={7} rowPitch={40} itemHeight={36} />));
+    const scroller = container.querySelector<HTMLElement>("[data-testid=scroller]")!;
+
+    act(() => {
+      scroller.scrollTop = 280;
+      scroller.dispatchEvent(new Event("scroll"));
+    });
+
+    const [start, end, beforePx, afterPx] = container.querySelector("[data-testid=range]")!
+      .textContent!.split(":").map(Number);
+    expect(start % 7).toBe(0);
+    expect(end % 7).toBe(0);
+    expect(end - start).toBeLessThanOrEqual(96);
+    expect(beforePx).toBe(Math.floor(start / 7) * 40);
+    expect(afterPx).toBe((Math.ceil(items.length / 7) - Math.ceil(end / 7)) * 40);
   });
 
   it("stabilizes direct mapped refs after strict reattachment", () => {
@@ -304,6 +335,21 @@ describe("useWindowedCollection", () => {
     expect(container.querySelector("[data-testid='card-0']")).not.toBeNull();
     expect(container.querySelector("[data-testid='card-150']")).toBeNull();
     expect(container.querySelectorAll("button")).toHaveLength(96);
+  });
+
+  it("retains focused and selected pins after later scroll ranges", () => {
+    act(() => root.render(<Harness />));
+    act(() => root.render(<Harness selectedKey="card-80" focusedKey="card-131" />));
+    const scroller = container.querySelector<HTMLElement>("[data-testid=scroller]")!;
+
+    act(() => {
+      Object.defineProperty(scroller, "scrollTop", { configurable: true, value: 0, writable: true });
+      scroller.dispatchEvent(new Event("scroll"));
+    });
+
+    expect(container.querySelector("[data-testid='card-80']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='card-131']")).not.toBeNull();
+    expect(container.querySelectorAll("button").length).toBeLessThanOrEqual(96);
   });
 
   it("reveals and focuses a requested key", () => {

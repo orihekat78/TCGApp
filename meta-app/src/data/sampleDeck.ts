@@ -3,7 +3,6 @@
 // 公式ルール準拠: 40 枚ちょうど・同 ID ≤ 3 枚 (rules/02-deck-construction.md)
 
 import type { DeckRecord } from './types';
-import { CARD_POOL } from './cardPool';
 
 export const SAMPLE_DECK: DeckRecord = {
   id: 'sample-d08',
@@ -66,31 +65,3 @@ export const SAMPLE_DECK_OPP: DeckRecord = {
     { num: 'D11020', count: 2 },
   ],
 };
-
-export interface DeckStats {
-  total: number;
-  colors: Partial<Record<string, number>>;
-  costs: Partial<Record<number, number>>;
-  types: Partial<Record<string, number>>;
-}
-
-export function deckStats(deck: DeckRecord): DeckStats {
-  let total = 0;
-  const colors: DeckStats['colors'] = {};
-  const costs: DeckStats['costs'] = {};
-  const types: DeckStats['types'] = {};
-  for (const entry of deck.cards) {
-    const card = CARD_POOL.find((c) => c.num === entry.num);
-    if (!card) continue;
-    total += entry.count;
-    for (const color of card.colors ?? [card.color]) {
-      colors[color] = (colors[color] ?? 0) + entry.count;
-    }
-    types[card.type] = (types[card.type] ?? 0) + entry.count;
-    if (card.cost != null) {
-      const k = Math.min(card.cost, 8);
-      costs[k] = (costs[k] ?? 0) + entry.count;
-    }
-  }
-  return { total, colors, costs, types };
-}

@@ -13,10 +13,28 @@ import {
   markReplayReturnFocus,
   pendingReplayReturnFocus,
 } from '../services/replayReturnFocus';
+import { listStoredHistoryRows } from '../services/historyReplayRepository';
 import './HistoryScreen.css';
 
 interface Props { onNav: (r: Route) => void; }
 type ResultFilter = 'all' | 'win' | 'loss';
+
+export function HistoryRoute(props: Props) {
+  useEffect(() => {
+    let cancelled = false;
+    void listStoredHistoryRows().then((records) => {
+      if (cancelled) return;
+      const history = useHistoryStore.getState();
+      history.mergeCanonical(records);
+      history._setCanonicalLoaded(true);
+    }).catch(() => {
+      if (!cancelled) useHistoryStore.getState()._setCanonicalLoaded(true);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  return <HistoryScreen {...props} />;
+}
 
 export function HistoryScreen({ onNav }: Props) {
   const allHistory = useHistoryStore((state) => state.history);

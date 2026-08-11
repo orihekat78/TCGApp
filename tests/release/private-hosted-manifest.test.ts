@@ -15,9 +15,44 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   inspectBuild,
   stageBuild,
+  validateManifestClosure,
 } from "../../scripts/private-hosted/manifest.ts";
 
 const roots: string[] = [];
+
+const APPROVED_DYNAMIC_ENTRY_KEYS = [
+  "src/services/gameRuntimeBundle.ts",
+  "src/screens/CardsScreen.tsx",
+  "src/screens/DeckEditor.tsx",
+  "src/screens/HistoryScreen.tsx",
+  "src/screens/RealMatchView.tsx",
+  "src/screens/ReplayScreen.tsx",
+  "src/screens/ResultScreen.tsx",
+  "src/screens/SettingsScreen.tsx",
+  "src/screens/SetupScreen.tsx",
+  "src/screens/TutorialScreen.tsx",
+] as const;
+
+function approvedDynamicEntries(): Record<
+  (typeof APPROVED_DYNAMIC_ENTRY_KEYS)[number],
+  { file: string; isDynamicEntry: true }
+> {
+  return Object.fromEntries(
+    APPROVED_DYNAMIC_ENTRY_KEYS.map((key, index) => [
+      key,
+      { file: `assets/screen-${index}.js`, isDynamicEntry: true },
+    ]),
+  ) as Record<
+    (typeof APPROVED_DYNAMIC_ENTRY_KEYS)[number],
+    { file: string; isDynamicEntry: true }
+  >;
+}
+
+function writeApprovedDynamicScreenFiles(root: string): void {
+  APPROVED_DYNAMIC_ENTRY_KEYS.forEach((_key, index) =>
+    write(root, `assets/screen-${index}.js`, "export {};\n"),
+  );
+}
 
 function fixture(): string {
   const root = mkdtempSync(join(tmpdir(), "conan-private-hosted-dist-"));
@@ -60,6 +95,19 @@ afterEach(() => {
 });
 
 describe("private hosted build manifest", () => {
+  it("exports a validated closure with files and manifest-key ownership", () => {
+    const source: unknown = {
+      "index.html": { file: "assets/app.js", isEntry: true },
+    };
+
+    const closure = validateManifestClosure(source);
+
+    expect([...closure.reachableFiles]).toEqual(["assets/app.js"]);
+    expect([...closure.keyOwnership]).toEqual([
+      ["index.html", "assets/app.js"],
+    ]);
+  });
+
   it("derives sorted upload and response manifests from the Vite root closure", async () => {
     const dist = fixture();
 
@@ -120,9 +168,9 @@ describe("private hosted build manifest", () => {
   it("follows imports, dynamic imports, CSS, and assets transitively", async () => {
     const dist = fixture();
     write(dist, "assets/imported.js", "export {};\n");
-    write(dist, "assets/dynamic.js", "export {};\n");
     write(dist, "assets/asset.js", "export {};\n");
     write(dist, "assets/imported.css", "main {}\n");
+    writeApprovedDynamicScreenFiles(dist);
     write(
       dist,
       ".vite/manifest.json",
@@ -131,7 +179,7 @@ describe("private hosted build manifest", () => {
           file: "assets/app.js",
           isEntry: true,
           imports: ["assets/imported.js"],
-          dynamicImports: ["assets/dynamic.js"],
+          dynamicImports: APPROVED_DYNAMIC_ENTRY_KEYS,
           css: ["assets/app.css"],
         },
         "assets/imported.js": {
@@ -139,7 +187,7 @@ describe("private hosted build manifest", () => {
           css: ["assets/imported.css"],
           assets: ["assets/asset.js"],
         },
-        "assets/dynamic.js": { file: "assets/dynamic.js" },
+        ...approvedDynamicEntries(),
       }),
     );
 
@@ -149,14 +197,136 @@ describe("private hosted build manifest", () => {
       "/assets/app.css",
       "/assets/app.js",
       "/assets/asset.js",
-      "/assets/dynamic.js",
       "/assets/imported.css",
       "/assets/imported.js",
+      "/assets/screen-0.js",
+      "/assets/screen-1.js",
+      "/assets/screen-2.js",
+      "/assets/screen-3.js",
+      "/assets/screen-4.js",
+      "/assets/screen-5.js",
+      "/assets/screen-6.js",
+      "/assets/screen-7.js",
+      "/assets/screen-8.js",
+      "/assets/screen-9.js",
       "/favicon.svg",
       "/index.html",
     ]);
     expect(manifests.response.map((entry) => entry.path)).not.toContain(
       "/_headers",
+    );
+  });
+
+  it("keeps the initial HOME closure separate from approved lazy game chunks", () => {
+    const closure = validateManifestClosure({
+      "index.html": {
+        file: "assets/app.js",
+        isEntry: true,
+        imports: ["shared"],
+        dynamicImports: ["src/services/gameRuntimeBundle.ts"],
+        css: ["assets/app.css"],
+      },
+      shared: { file: "assets/shared.js", name: "vendor" },
+      "src/services/gameRuntimeBundle.ts": {
+        file: "assets/game-runtime.js",
+        isDynamicEntry: true,
+        imports: ["engine"],
+      },
+      engine: { file: "assets/engine.js", name: "engine" },
+    });
+
+    expect([...closure.initialFiles].sort()).toEqual([
+      "assets/app.css",
+      "assets/app.js",
+      "assets/shared.js",
+    ]);
+    expect(closure.reachableFiles).toContain("assets/engine.js");
+  });
+
+  it("rejects engine or cards when a shared import pulls them into HOME", () => {
+    expect(() => validateManifestClosure({
+      "index.html": {
+        file: "assets/app.js",
+        isEntry: true,
+        imports: ["shared"],
+      },
+      shared: { file: "assets/shared.js", imports: ["engine"] },
+      engine: { file: "assets/engine.js", name: "engine" },
+    })).toThrow("initial HOME closure reaches engine");
+  });
+
+  it("rejects an oversized initial HOME payload while retaining lazy routes", async () => {
+    const dist = fixture();
+    write(dist, "assets/app.js", "x".repeat(524_289));
+
+    await expect(inspectBuild(dist)).rejects.toThrow(
+      "initial HOME payload exceeds 524288 bytes",
+    );
+  });
+
+  it("rejects a dynamic import outside the approved screen keys", async () => {
+    const dist = fixture();
+    write(dist, "assets/unapproved.js", "export {};\n");
+    write(
+      dist,
+      ".vite/manifest.json",
+      JSON.stringify({
+        "index.html": {
+          file: "assets/app.js",
+          isEntry: true,
+          css: ["assets/app.css"],
+          dynamicImports: ["src/screens/UnexpectedScreen.tsx"],
+        },
+        "src/screens/UnexpectedScreen.tsx": {
+          file: "assets/unapproved.js",
+          isDynamicEntry: true,
+        },
+      }),
+    );
+
+    await expect(inspectBuild(dist)).rejects.toThrow(
+      "unknown dynamic manifest entry",
+    );
+  });
+
+  it("rejects another isEntry key even when it is reachable from the root", async () => {
+    const dist = fixture();
+    write(dist, "assets/second-entry.js", "export {};\n");
+    write(
+      dist,
+      ".vite/manifest.json",
+      JSON.stringify({
+        "index.html": {
+          file: "assets/app.js",
+          isEntry: true,
+          css: ["assets/app.css"],
+          imports: ["second-entry"],
+        },
+        "second-entry": { file: "assets/second-entry.js", isEntry: true },
+      }),
+    );
+
+    await expect(inspectBuild(dist)).rejects.toThrow("sole isEntry root");
+  });
+
+  it("rejects two reachable JavaScript keys that claim the same output file", async () => {
+    const dist = fixture();
+    write(
+      dist,
+      ".vite/manifest.json",
+      JSON.stringify({
+        "index.html": {
+          file: "assets/app.js",
+          isEntry: true,
+          css: ["assets/app.css"],
+          imports: ["duplicate"],
+        },
+        duplicate: { file: "assets/app.js" },
+      }),
+    );
+
+    await expect(inspectBuild(dist)).rejects.toThrow(
+      "duplicate JavaScript output",
     );
   });
 

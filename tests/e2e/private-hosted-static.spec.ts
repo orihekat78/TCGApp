@@ -27,6 +27,16 @@ const IMAGE_BODY =
   '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="3"><rect width="2" height="3" fill="#123"/></svg>';
 
 type ManifestEntry = { path: string; bytes: number; sha256: string };
+type ViteManifestEntry = {
+  file?: unknown;
+  imports?: unknown;
+  isDynamicEntry?: unknown;
+};
+type ViteManifest = Record<string, ViteManifestEntry>;
+type ApprovedRouteChunks = {
+  routes: Record<(typeof APPROVED_LAZY_ROUTE_KEYS)[number], string>;
+  homeDeferredJavaScript: string[];
+};
 type PageEvidence = {
   errors: string[];
   requests: string[];
@@ -38,6 +48,19 @@ type PageEvidence = {
     referer: string | undefined;
   }[];
 };
+
+const APPROVED_LAZY_ROUTE_KEYS = [
+  "src/services/gameRuntimeBundle.ts",
+  "src/screens/CardsScreen.tsx",
+  "src/screens/DeckEditor.tsx",
+  "src/screens/HistoryScreen.tsx",
+  "src/screens/RealMatchView.tsx",
+  "src/screens/ReplayScreen.tsx",
+  "src/screens/ResultScreen.tsx",
+  "src/screens/SettingsScreen.tsx",
+  "src/screens/SetupScreen.tsx",
+  "src/screens/TutorialScreen.tsx",
+] as const;
 
 function requiredEnvironment(name: string): string {
   const value = process.env[name];
@@ -55,6 +78,74 @@ async function manifestEntries(name: string): Promise<ManifestEntry[]> {
   expect(parsed.schemaVersion).toBe(1);
   expect(Array.isArray(parsed.files)).toBe(true);
   return parsed.files;
+}
+
+async function approvedLazyRouteChunks(): Promise<ApprovedRouteChunks> {
+  const staging = requiredEnvironment("PRIVATE_HOSTED_STAGING_DIR");
+  const manifestCandidates = [
+    resolve(staging, "..", "dist", ".vite", "manifest.json"),
+    resolve("dist", ".vite", "manifest.json"),
+  ];
+  let manifestSource: string | undefined;
+  for (const candidate of manifestCandidates) {
+    try {
+      manifestSource = await readFile(candidate, "utf8");
+      break;
+    } catch (error) {
+      if (!(error instanceof Error) || !("code" in error) || error.code !== "ENOENT") {
+        throw error;
+      }
+    }
+  }
+  if (!manifestSource) {
+    throw new Error("Vite build manifest is unavailable for the staged artifact");
+  }
+  const manifest = JSON.parse(manifestSource) as ViteManifest;
+  const routes = Object.fromEntries(
+    APPROVED_LAZY_ROUTE_KEYS.map((key) => {
+      const entry = manifest[key];
+      expect(entry, `Vite entry ${key}`).toBeDefined();
+      expect(entry?.isDynamicEntry, `Vite entry ${key} is dynamic`).toBe(true);
+      expect(typeof entry?.file, `Vite entry ${key} output`).toBe("string");
+      return [key, `/${entry!.file as string}`];
+    }),
+  ) as ApprovedRouteChunks["routes"];
+  const javaScriptClosure = (rootKeys: readonly string[]): Set<string> => {
+    const keys = [...rootKeys];
+    const visited = new Set<string>();
+    const paths = new Set<string>();
+    while (keys.length > 0) {
+      const key = keys.pop();
+      if (!key || visited.has(key)) continue;
+      visited.add(key);
+      const entry = manifest[key];
+      expect(entry, `Vite closure entry ${key}`).toBeDefined();
+      expect(typeof entry?.file, `Vite closure entry ${key} output`).toBe("string");
+      const file = entry?.file as string;
+      if (/\.(?:m?js)$/i.test(file)) paths.add(`/${file}`);
+      if (entry?.imports !== undefined) {
+        expect(Array.isArray(entry.imports), `Vite closure entry ${key} imports`).toBe(true);
+        keys.push(...(entry.imports as string[]));
+      }
+    }
+    return paths;
+  };
+  const initialJavaScript = javaScriptClosure(["index.html"]);
+  const homeDeferredJavaScript = [...javaScriptClosure(APPROVED_LAZY_ROUTE_KEYS)].filter(
+    (path) => !initialJavaScript.has(path),
+  );
+  const responseEntries = await manifestEntries("PRIVATE_HOSTED_RESPONSE_MANIFEST");
+  for (const path of [...Object.values(routes), ...homeDeferredJavaScript]) {
+    expect(
+      responseEntries.some((entry) => entry.path === path),
+      `approved Vite output ${path} is staged for the browser`,
+    ).toBe(true);
+  }
+  return { routes, homeDeferredJavaScript };
+}
+
+function requestedPaths(evidence: PageEvidence): string[] {
+  return evidence.requests.map((url) => new URL(url).pathname);
 }
 
 async function mockOfficialImages(
@@ -168,6 +259,10 @@ async function openSetupFromHome(page: Page): Promise<void> {
 
 async function startMatchFromHome(page: Page): Promise<void> {
   await openSetupFromHome(page);
+  await startMatchFromCurrentSetup(page);
+}
+
+async function startMatchFromCurrentSetup(page: Page): Promise<void> {
   await page.locator("button.setup-start").click();
   await expect(page).toHaveURL(/#match$/);
   const skip = page.locator("button.mulligan-skip");
@@ -333,16 +428,98 @@ test.describe("private hosted production static Meta app", () => {
     }
   });
 
-  test("@all keeps the HOME-first match flow contained at desktop and 851x393", async ({
+  test("@all defers approved runtime and DECK chunks until rendered HOME navigation", async ({
     page,
   }) => {
     await mockOfficialResources(page);
     const evidence = monitorPage(page);
+    const chunks = await approvedLazyRouteChunks();
+    const approvedLazyChunks = new Set(chunks.homeDeferredJavaScript);
+    const approvedRouteChunks = new Set(Object.values(chunks.routes));
+
+    await page.goto("/#home", { waitUntil: "domcontentloaded" });
+    await expect(page.locator(".home-screen")).toBeVisible();
+    await expect.poll(() => evidence.officialNewsRequests.length).toBe(1);
+    expect(
+      requestedPaths(evidence).filter((path) => approvedLazyChunks.has(path)),
+      "HOME must not load a lazy card, runtime, or route chunk",
+    ).toEqual([]);
+
+    await page.locator("button[data-route='deck']").click();
+    await expect(page).toHaveURL(/#deck$/);
+    await expect(page.locator(".deck-pool-grid")).toBeVisible();
+
+    const requested = requestedPaths(evidence);
+    const loadedLazyChunks = [...approvedRouteChunks]
+      .filter((path) => requested.includes(path))
+      .sort();
+    const expectedDeckChunks = [chunks.routes["src/screens/DeckEditor.tsx"]];
+    expect(
+      loadedLazyChunks,
+      "DECK navigation must load only the approved DECK route chunk",
+    ).toEqual(expectedDeckChunks);
+    for (const path of expectedDeckChunks) {
+      expect(
+        requested.filter((requestPath) => requestPath === path),
+        `${path} loads once`,
+      ).toHaveLength(1);
+    }
+    expect(
+      requested.filter(
+        (path) => path === chunks.routes["src/services/gameRuntimeBundle.ts"],
+      ),
+      "DECK does not initialize the match runtime",
+    ).toEqual([]);
+
+    const poolTiles = page.locator(".deck-pool-card");
+    await expect(poolTiles.first()).toBeVisible();
+    const initialTileCount = await poolTiles.count();
+    expect(initialTileCount, "initial catalog tile count").toBeGreaterThan(0);
+    expect(initialTileCount, "initial catalog tile count").toBeLessThanOrEqual(48);
+
+    let peakTileCount = initialTileCount;
+    for (const fraction of [0.25, 0.5, 0.75, 1]) {
+      await page.locator(".deck-pool-grid").evaluate((element, nextFraction) => {
+        element.scrollTop = Math.round(
+          (element.scrollHeight - element.clientHeight) * nextFraction,
+        );
+        element.dispatchEvent(new Event("scroll"));
+      }, fraction);
+      await expect.poll(() => poolTiles.count()).toBeGreaterThan(0);
+      peakTileCount = Math.max(peakTileCount, await poolTiles.count());
+    }
+    expect(peakTileCount, "catalog tiles mounted while scrolling").toBeLessThanOrEqual(96);
+    expect(evidence.officialNewsRequests).toEqual([
+      {
+        url: OFFICIAL_NEWS_URL,
+        method: "GET",
+        postData: null,
+        referer: undefined,
+      },
+    ]);
+    await expectRuntimeClean(page, evidence);
+  });
+
+  test("@all keeps the HOME-first match flow contained and loads runtime once", async ({
+    page,
+  }) => {
+    await mockOfficialResources(page);
+    const evidence = monitorPage(page);
+    const chunks = await approvedLazyRouteChunks();
+    const runtimeChunk = chunks.routes["src/services/gameRuntimeBundle.ts"];
     await openSetupFromHome(page);
+    expect(
+      requestedPaths(evidence).filter((path) => path === runtimeChunk),
+      "SETUP navigation loads the game runtime once",
+    ).toHaveLength(1);
     await expectNoHorizontalOverflow(page);
     await expectInsideViewport(page, page.locator("#setup-title"));
     await expectInsideViewport(page, page.locator("button.setup-start"));
-    await startMatchFromHome(page);
+    await startMatchFromCurrentSetup(page);
+    expect(
+      requestedPaths(evidence).filter((path) => path === runtimeChunk),
+      "MATCH flow must reuse the SETUP-loaded game runtime",
+    ).toHaveLength(1);
     await expectNoHorizontalOverflow(page);
     await expectInsideViewport(page, page.locator("#scaler"));
     if (

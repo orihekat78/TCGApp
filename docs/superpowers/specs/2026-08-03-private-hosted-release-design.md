@@ -29,6 +29,11 @@ Date: 2026-08-10 — Production deployed and accepted
 - Secret and destination scans inspect the exact staged upload payload. Evidence
   records redacted labels or origins, never URL paths, queries, or credentials.
 - Dynamic alias/runtime-flow analysis is a mandatory, fail-closed release gate.
+- The Vite manifest permits only the reviewed HOME entry, game-runtime entry, and
+  nine lazy screen entries. Every reachable JavaScript chunk is capability-scanned
+  and staged with exact bytes and SHA-256 ownership; unknown or orphan chunks fail.
+- HOME's complete initial static closure is capped at 512 KiB. Engine, card-registry,
+  and route chunks must remain outside that closure and load only on navigation.
 - Runtime CSP permits only the official Conan Card Game site for NEWS reads; scripts, styles, and fonts are same-origin.
 - Every response uses no-store, noindex, no-referrer, nosniff, frame denial, and CSP.
 
@@ -54,7 +59,7 @@ Date: 2026-08-10 — Production deployed and accepted
 
 ## Qualification and release
 
-- Final qualification runs 17 ordered gates: install, build, dependency audit, bug gate,
+- Final qualification runs 18 ordered gates: install, generated Meta card identities, build, dependency audit, bug gate,
   typecheck, lint, unit, smoke, development E2E, docs generation, docs check, advanced
   runtime-boundary audit, preparation, exact-payload secret and destination scans,
   static E2E, and clean-tree verification.

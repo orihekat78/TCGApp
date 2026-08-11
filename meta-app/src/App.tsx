@@ -12,32 +12,35 @@ import type {
 } from './router/navigationBlocker';
 import { MetaShell } from './MetaShell';
 import { HelpOverlay } from './shared/HelpOverlay';
+import { LandscapeGate } from './shared/LandscapeGate';
 import { HomeScreen } from './screens/HomeScreen';
-import { SetupScreen } from './screens/SetupScreen';
-import { RealMatchView } from './screens/RealMatchView';
-import { ResultScreen } from './screens/ResultScreen';
-import { DeckEditor } from './screens/DeckEditor';
-import { CardsScreen } from './screens/CardsScreen';
-import { HistoryScreen } from './screens/HistoryScreen';
-import { ReplayScreen } from './screens/ReplayScreen';
-import { TutorialScreen } from './screens/TutorialScreen';
-import { SettingsScreen } from './screens/SettingsScreen';
-import { endMatchSession } from '@/ui/services/matchSession';
+import { lazyScreens } from './router/lazyScreens';
+import { endLoadedMatchSession } from './services/gameRuntime';
 import { useMetaStore } from './state/metaStore';
-import { useHistoryStore } from './state/historyStore';
-import { listStoredHistoryRows } from './services/historyReplayRepository';
 import { clearReplayReturnFocus } from './services/replayReturnFocus';
+
+const {
+  setup: SetupScreen,
+  match: RealMatchView,
+  result: ResultScreen,
+  deck: DeckEditor,
+  cards: CardsScreen,
+  history: HistoryScreen,
+  replay: ReplayScreen,
+  tutorial: TutorialScreen,
+  settings: SettingsScreen,
+} = lazyScreens;
 
 function clearFinishedMatch(): void {
   const meta = useMetaStore.getState();
   meta.clearMatchMeta();
   meta.clearPendingPractice();
-  endMatchSession();
+  endLoadedMatchSession();
 }
 
 function leaveActiveMatch(next: Route): void {
   const preserveForResult = next === 'result';
-  endMatchSession({ preserveGameState: preserveForResult });
+  endLoadedMatchSession({ preserveGameState: preserveForResult });
   if (preserveForResult) return;
   const meta = useMetaStore.getState();
   meta.clearMatchMeta();
@@ -84,20 +87,6 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    void listStoredHistoryRows().then((records) => {
-      if (!cancelled) {
-        const history = useHistoryStore.getState();
-        history.mergeCanonical(records);
-        history._setCanonicalLoaded(true);
-      }
-    }).catch(() => {
-      if (!cancelled) useHistoryStore.getState()._setCanonicalLoaded(true);
-    });
-    return () => { cancelled = true; };
-  }, []);
-
-  useEffect(() => {
     const previous = previousRoute.current;
     previousRoute.current = route;
     if (previous === 'match' && route !== 'match') {
@@ -108,19 +97,19 @@ export function App() {
   }, [route]);
 
   useEffect(() => () => {
-    endMatchSession();
+    endLoadedMatchSession();
     const meta = useMetaStore.getState();
     meta.clearMatchMeta();
     meta.clearPendingPractice();
   }, []);
 
   return (
-    <>
+    <LandscapeGate>
       <MetaShell route={route}>
         {renderScreen(route, nav, registerNavigationBlocker)}
       </MetaShell>
       <HelpOverlay open={helpOpen} onClose={() => setHelpOpen(false)} />
-    </>
+    </LandscapeGate>
   );
 }
 

@@ -37,6 +37,8 @@
     "benchmark": "tsx scripts/benchmark/run.ts",
     "cards:fetch": "node scripts/cards/fetch-official.cjs",
     "cards:case-difficulties": "node scripts/cards/generate-case-difficulties.cjs",
+    "gen:meta-card-identities": "tsx scripts/gen-meta-card-identities.ts",
+    "check:meta-card-identities": "npm run gen:meta-card-identities && git diff --exit-code -- meta-app/src/data/cardIdentities.generated.ts",
     "cards:status": "node scripts/cards/cards-data-status.cjs",
     "cards:qa-snapshot": "node scripts/cards/write-qa-hash-snapshot.cjs",
     "cards:check": "node scripts/cards/check-official-sync.cjs",

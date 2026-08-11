@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CardArt } from '@/ui/components/CardArt';
-import { CARD_POOL } from '../data/cardPool';
+import { IdentityCardArt } from '../components/IdentityCardArt';
+import { cardIdentityFor } from '../data/cardIdentities.generated';
 import type { DeckRecord } from '../data/types';
-import { isPlayable } from '../util/deckBridge';
+import { isHomeDeckEligible } from '../util/deckEligibility';
 
 interface Props {
   decks: DeckRecord[];
@@ -32,9 +32,9 @@ export function HomeDeckSelectorDialog({
   const [draftId, setDraftId] = useState(selectedId);
   const entries = useMemo(() => decks.map((deck) => ({
     deck,
-    partner: CARD_POOL.find((card) => card.num === deck.partner),
-    incident: CARD_POOL.find((card) => card.num === deck.case),
-    playable: isPlayable(deck),
+    partner: cardIdentityFor(deck.partner),
+    incident: cardIdentityFor(deck.case),
+    playable: isHomeDeckEligible(deck),
   })), [decks]);
   const draft = entries.find((entry) => entry.deck.id === draftId && entry.playable);
 
@@ -94,7 +94,7 @@ export function HomeDeckSelectorDialog({
                 onChange={() => setDraftId(deck.id)}
               />
               <span className="home-deck-choice-partner">
-                {partner ? <CardArt cardId={partner.num} alt="" /> : <span aria-hidden="true" />}
+                {partner ? <IdentityCardArt imagePath={partner.imagePath} alt="" /> : <span aria-hidden="true" />}
               </span>
               <span className="home-deck-choice-copy">
                 <strong>{deck.name}</strong>
@@ -103,7 +103,7 @@ export function HomeDeckSelectorDialog({
                 {!playable && <em>調整が必要</em>}
               </span>
               <span className="home-deck-choice-incident">
-                {incident ? <CardArt cardId={incident.num} alt="" /> : <span aria-hidden="true" />}
+                {incident ? <IdentityCardArt imagePath={incident.imagePath} alt="" /> : <span aria-hidden="true" />}
               </span>
             </label>
           ))}

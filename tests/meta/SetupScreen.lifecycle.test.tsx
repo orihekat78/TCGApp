@@ -398,6 +398,10 @@ describe('SetupScreen match-session lifecycle', () => {
     startMock.mockReturnValue(pending.promise);
     window.location.hash = '#setup';
     act(() => root.render(<App />));
+    await vi.waitFor(async () => {
+      await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+      expect(container.querySelector('#setup-title')).not.toBeNull();
+    }, { timeout: 15_000 });
 
     const appMode = container.querySelector<HTMLSelectElement>('select[aria-label="プレイモード"]')!;
     act(() => { appMode.value = 'observe'; appMode.dispatchEvent(new Event('change', { bubbles: true })); });

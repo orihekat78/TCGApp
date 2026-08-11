@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
-import { CardArt } from "@/ui/components/CardArt";
+import { IdentityCardArt } from "../components/IdentityCardArt";
 import type { Route } from "../router/routes";
-import { CARD_POOL } from "../data/cardPool";
-import type { CardDef, MatchRecord } from "../data/types";
+import { cardIdentityFor, type CardIdentity } from "../data/cardIdentities.generated";
+import type { MatchRecord } from "../data/types";
 import { useOfficialNews } from "../hooks/useOfficialNews";
 import { useDecksStore } from "../state/decksStore";
 import { useHistoryStore } from "../state/historyStore";
@@ -23,10 +23,10 @@ export function HomeScreen({ onNav }: Props) {
   const changeDeckRef = useRef<HTMLButtonElement>(null);
   const deck = decks.find((candidate) => candidate.id === activeDeckId);
   const partner = deck
-    ? CARD_POOL.find((card) => card.num === deck.partner)
+    ? cardIdentityFor(deck.partner)
     : undefined;
   const incident = deck
-    ? CARD_POOL.find((card) => card.num === deck.case)
+    ? cardIdentityFor(deck.case)
     : undefined;
 
   const navigate = (route: Route) => onNav(route);
@@ -114,7 +114,7 @@ function IdentityCard({
   card,
   role,
 }: {
-  card: CardDef;
+  card: CardIdentity;
   role: "partner" | "incident";
 }) {
   const captionId = `home-card-${card.num}-name`;
@@ -124,7 +124,7 @@ function IdentityCard({
       aria-labelledby={captionId}
     >
       <div className="home-identity-art">
-        <CardArt cardId={card.num} alt="" className="home-card-art" />
+        <IdentityCardArt imagePath={card.imagePath} alt="" className="home-card-art" />
       </div>
       <figcaption>
         <strong id={captionId}>{card.name}</strong>

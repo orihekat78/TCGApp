@@ -26,6 +26,133 @@ test('CARDS keeps its catalog window bounded while scrolling without page errors
   expect(errors).toEqual([]);
 });
 
+test('CARDS keeps D09014 connected through a real pointer selection and preserves 7-column content coordinates', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
+  page.on('pageerror', (error) => errors.push(error.message));
+
+  await page.goto('/#cards');
+  const scroller = page.locator('.cards-grid-scroll');
+  const cards = page.locator('.cards-grid-item');
+  const target = page.locator('[data-card-num="D09014"] [role="button"]');
+  await expect(target).toHaveCount(0);
+  const gridColumnCount = await page.locator('.cards-window-grid').evaluate((grid) => (
+    getComputedStyle(grid).gridTemplateColumns.split(' ').length
+  ));
+  expect(gridColumnCount).toBe(7);
+
+  const scrollTo = async (top: number) => {
+    await scroller.evaluate((node, value) => {
+      node.scrollTop = value;
+      node.dispatchEvent(new Event('scroll'));
+    }, top);
+    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    await expect(target).toBeVisible();
+    await expect.poll(() => cards.count()).toBeLessThanOrEqual(96);
+  };
+  const contentPosition = () => target.evaluate((node) => {
+    const scroller = document.querySelector<HTMLElement>('.cards-grid-scroll');
+    if (!scroller) throw new Error('cards scroller is missing');
+    const box = node.getBoundingClientRect();
+    const scrollBox = scroller.getBoundingClientRect();
+    return {
+      x: box.left - scrollBox.left + scroller.scrollLeft,
+      y: box.top - scrollBox.top + scroller.scrollTop,
+      beforePx: Number.parseFloat(
+        scroller.querySelector<HTMLElement>('.cards-window-spacer')?.style.height ?? '0',
+      ),
+    };
+  });
+
+  const positions = await scroller.evaluate((node) => {
+    const max = Math.max(0, node.scrollHeight - node.clientHeight);
+    return Array.from({ length: 33 }, (_, index) => Math.round(max * index / 32));
+  });
+  const targetWindows: Array<{ top: number; beforePx: number }> = [];
+  for (const top of positions) {
+    await scroller.evaluate((node, value) => {
+      node.scrollTop = value;
+      node.dispatchEvent(new Event('scroll'));
+    }, top);
+    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    if (await target.count()) {
+      const position = await contentPosition();
+      targetWindows.push({ top, beforePx: position.beforePx });
+    }
+  }
+  expect(targetWindows.length).toBeGreaterThanOrEqual(2);
+  const firstWindow = targetWindows[0]!;
+  const adjacentWindow = targetWindows.find((window) => window.beforePx !== firstWindow.beforePx);
+  expect(adjacentWindow).toBeDefined();
+
+  await scrollTo(firstWindow.top);
+  const firstPosition = await contentPosition();
+  await scrollTo(adjacentWindow!.top);
+  const adjacentPosition = await contentPosition();
+  expect(adjacentPosition.x).toBeCloseTo(firstPosition.x, 1);
+  // Fractional track rounding can accumulate a few pixels over distant rows.
+  // A broken non-row boundary moves the card by a full row/column, not <=3px.
+  expect(Math.abs(adjacentPosition.y - firstPosition.y), JSON.stringify({
+    firstWindow,
+    adjacentWindow,
+    firstPosition,
+    adjacentPosition,
+  })).toBeLessThanOrEqual(3);
+
+  await target.scrollIntoViewIfNeeded();
+  await expect(target).toBeInViewport();
+  const initialNode = await target.elementHandle();
+  expect(initialNode).not.toBeNull();
+  const box = await target.boundingBox();
+  expect(box).not.toBeNull();
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+  await page.mouse.down();
+  await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+  expect(await initialNode!.evaluate((node) => (
+    node.isConnected
+    && document.activeElement === node
+    && document.querySelector('[data-card-num="D09014"] [role="button"]') === node
+  ))).toBe(true);
+  await page.mouse.up();
+  await expect(target).toHaveAttribute('aria-pressed', 'true');
+  expect(errors).toEqual([]);
+});
+
+test('CARDS retains the selected and focused PR138 pin after a later scroll window', async ({ page }) => {
+  await page.goto('/#cards');
+  const scroller = page.locator('.cards-grid-scroll');
+  const cards = page.locator('.cards-grid-item');
+  const target = page.locator('[data-card-num="PR138"] [role="button"]');
+  await expect(target).toBeVisible();
+  await target.scrollIntoViewIfNeeded();
+  await expect(target).toBeInViewport();
+  const initialNode = await target.elementHandle();
+  expect(initialNode).not.toBeNull();
+  const box = await target.boundingBox();
+  expect(box).not.toBeNull();
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+  await page.mouse.down();
+  await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+  expect(await initialNode!.evaluate((node) => (
+    node.isConnected
+    && document.activeElement === node
+    && document.querySelector('[data-card-num="PR138"] [role="button"]') === node
+  ))).toBe(true);
+  await page.mouse.up();
+  await expect(page.locator('.cards-detail-panel')).toContainText('PR138');
+  const selectedNode = await target.elementHandle();
+  expect(selectedNode).not.toBeNull();
+
+  await scroller.evaluate((node) => {
+    node.scrollTop = node.scrollHeight;
+    node.dispatchEvent(new Event('scroll'));
+  });
+  await expect.poll(() => cards.count()).toBeLessThanOrEqual(96);
+  expect(await selectedNode!.evaluate((node) => (
+    node.isConnected && document.activeElement === node
+  ))).toBe(true);
+});
+
 test('CARDS keeps the 54px shared header, grid columns, and compact print visuals with 44px hits', async ({ page }) => {
   await page.goto('/#cards');
 

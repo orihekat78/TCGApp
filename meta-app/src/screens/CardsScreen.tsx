@@ -366,7 +366,7 @@ function CardGrid({
   });
   const handleFocusedCard = (num: string | null) => {
     setFocusedNum(num);
-    if (num) windowed.reveal(num, { focus: true });
+    if (num) windowed.reveal(num, { focus: true, preserveViewport: true });
   };
   useLayoutEffect(() => {
     if (!focusedNum || !scrollElement) return;

@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { matchSessionId } from '@/ui/services/matchSession';
+import { matchSessionId } from '@/ui/services/matchSessionId';
 import { TUTORIAL_STEPS } from '@/ui/services/tutorialSteps';
 import type { MatchDeckSnapshotV1 } from '../data/types';
 

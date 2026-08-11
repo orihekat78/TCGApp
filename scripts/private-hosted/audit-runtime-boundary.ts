@@ -18,6 +18,7 @@ import {
 } from "lightningcss";
 import { parse } from "parse5";
 import ts from "typescript";
+import { validateManifestClosure } from "./manifest.js";
 
 export type RuntimeBoundaryFinding = {
   file: string;
@@ -96,9 +97,147 @@ const TRUSTED_VENDOR_SHA256 =
 const TRUSTED_RUNTIME_SHA256 =
   "5db5ba82eef00d1dee7e86e663098c9427d01183a88d357437daff295aec3e75";
 const TRUSTED_APP_SHA256 =
-  "549d08466711a5a53d390a63ec65d950f15112ad82a045c138f38772ae431957";
+  "a7378da900262939e81a41934c758278033a10f4010dbb12509849eddedc390a";
 const TRUSTED_BRAND_LOGO_SHA256 =
   "8567c177ecaaf03c8b360dedd8aeea385b58e0bdffe359303f1784ef52e9beff";
+
+export type TrustedBundlePolicy = {
+  output: RegExp;
+  owns: (key: string) => boolean;
+  sha256: string;
+  integrityCode: string;
+  integrityDetail: string;
+  approvedFindings: ReadonlyArray<
+    Pick<RuntimeBoundaryFinding, "code" | "detail">
+  >;
+};
+
+const markerFindings = (
+  ...details: readonly string[]
+): ReadonlyArray<Pick<RuntimeBoundaryFinding, "code" | "detail">> =>
+  details.map((detail) => ({ code: "forbidden-bundle-marker", detail }));
+
+export function isReviewedBundleFindingAllowed(
+  policy: TrustedBundlePolicy | undefined,
+  outputPath: string,
+  owner: string | undefined,
+  sourceHash: string,
+  finding: Pick<RuntimeBoundaryFinding, "code" | "detail">,
+): boolean {
+  return Boolean(
+    policy &&
+      policy.output.test(outputPath) &&
+      owner &&
+      policy.owns(owner) &&
+      sourceHash === policy.sha256 &&
+      policy.approvedFindings.some(
+        ({ code, detail }) => code === finding.code && detail === finding.detail,
+      ),
+  );
+}
+
+const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
+  {
+    output: TRUSTED_VENDOR_BUNDLE,
+    owns: (key) => /^_vendor-[A-Za-z0-9_-]+\.js$/.test(key),
+    sha256: TRUSTED_VENDOR_SHA256,
+    integrityCode: "vendor-integrity",
+    integrityDetail: "trusted vendor bundle SHA-256 mismatch",
+    approvedFindings: markerFindings(
+      "browser global escape",
+      "dynamic browser property",
+      "dynamic code execution",
+      "navigation action",
+      "navigation form element props",
+      "navigation form props",
+      "navigation href",
+      "network API",
+      "persistent storage",
+    ),
+  },
+  {
+    output: TRUSTED_RUNTIME_BUNDLE,
+    owns: (key) => /^_rolldown-runtime-[A-Za-z0-9_-]+\.js$/.test(key),
+    sha256: TRUSTED_RUNTIME_SHA256,
+    integrityCode: "runtime-integrity",
+    integrityDetail: "trusted runtime bundle SHA-256 mismatch",
+    approvedFindings: [],
+  },
+  {
+    output: TRUSTED_APP_BUNDLE,
+    owns: (key) => key === "index.html",
+    sha256: TRUSTED_APP_SHA256,
+    integrityCode: "app-integrity",
+    integrityDetail: "trusted application bundle SHA-256 mismatch",
+    approvedFindings: [
+      {
+        code: "external-origin",
+        detail: "https://www.takaratomy.co.jp/products/conan-cardgame/",
+      },
+      ...markerFindings(
+        "bare fetch",
+        "navigation a element props",
+        "navigation href",
+        "network API",
+        "persistent storage",
+      ),
+    ],
+  },
+  {
+    output: /^assets\/DeckEditor-[A-Za-z0-9_-]+\.js$/,
+    owns: (key) => key === "src/screens/DeckEditor.tsx",
+    sha256:
+      "65cb7117c4cd7fb05f30590e0d88f36c11b2484f89403e0d311ef89fc333b156",
+    integrityCode: "bundle-capability-integrity",
+    integrityDetail: "reviewed DeckEditor bundle SHA-256 mismatch",
+    approvedFindings: markerFindings("persistent storage"),
+  },
+  {
+    output: /^assets\/historyReplayRepository-[A-Za-z0-9_-]+\.js$/,
+    owns: (key) => /^_historyReplayRepository-[A-Za-z0-9_-]+\.js$/.test(key),
+    sha256:
+      "3fa26e293adf79845e81cfac66ff9fce651551c1f8d0fec8a476dd0a979c6c88",
+    integrityCode: "bundle-capability-integrity",
+    integrityDetail: "reviewed history repository bundle SHA-256 mismatch",
+    approvedFindings: markerFindings("persistent storage"),
+  },
+  {
+    output: /^assets\/HistoryScreen-[A-Za-z0-9_-]+\.js$/,
+    owns: (key) => key === "src/screens/HistoryScreen.tsx",
+    sha256:
+      "d5d37f3467a9f0c496f39490ba0b6fdc09a60ca2a8a5f2d59652f2052619afeb",
+    integrityCode: "bundle-capability-integrity",
+    integrityDetail: "reviewed HistoryScreen bundle SHA-256 mismatch",
+    approvedFindings: markerFindings("network API", "persistent storage"),
+  },
+  {
+    output: /^assets\/RealMatchView-[A-Za-z0-9_-]+\.js$/,
+    owns: (key) => key === "src/screens/RealMatchView.tsx",
+    sha256:
+      "6fa56219e4bf37cd8ccb1dbc98bc877dd3c7109896086eeb2ac167f677c666a2",
+    integrityCode: "bundle-capability-integrity",
+    integrityDetail: "reviewed RealMatchView bundle SHA-256 mismatch",
+    approvedFindings: markerFindings("dynamic code execution"),
+  },
+  {
+    output: /^assets\/ReplayScreen-[A-Za-z0-9_-]+\.js$/,
+    owns: (key) => key === "src/screens/ReplayScreen.tsx",
+    sha256:
+      "b41848a61f241bc2cf3e1eb163868bbd0750830f4174ca43da066319062f74fd",
+    integrityCode: "bundle-capability-integrity",
+    integrityDetail: "reviewed ReplayScreen bundle SHA-256 mismatch",
+    approvedFindings: markerFindings("network API"),
+  },
+  {
+    output: /^assets\/ResultScreen-[A-Za-z0-9_-]+\.js$/,
+    owns: (key) => key === "src/screens/ResultScreen.tsx",
+    sha256:
+      "4f883fc462080ff32e509164a26803697cfa6581af71b1fdaabe52c9354670ff",
+    integrityCode: "bundle-capability-integrity",
+    integrityDetail: "reviewed ResultScreen bundle SHA-256 mismatch",
+    approvedFindings: markerFindings("network API"),
+  },
+];
 
 const trustedBundle = (source: string, expectedSha256: string): boolean =>
   createHash("sha256").update(source, "utf8").digest("hex") === expectedSha256;
@@ -11767,16 +11906,6 @@ async function buildOutputFiles(root: string): Promise<{
   return { files: files.sort(), symlinks: symlinks.sort() };
 }
 
-function safeOutputPath(value: string): boolean {
-  const normalized = value.replace(/\\/g, "/");
-  return (
-    normalized === value &&
-    normalized.length > 0 &&
-    !isAbsolute(normalized) &&
-    !normalized.split("/").includes("..")
-  );
-}
-
 const REVIEWED_META_RUNTIME_STYLE_SHA256 = new Map<string, string>([
   [
     "meta-app/src/MetaShell.tsx",
@@ -11784,15 +11913,15 @@ const REVIEWED_META_RUNTIME_STYLE_SHA256 = new Map<string, string>([
   ],
   [
     "meta-app/src/screens/CardsScreen.tsx",
-    "02b7d5c533d0db02984307f003650e389f0d98b46647ca38a27a64ad721e94f8",
+    "66db36024d1ead7a7200da5709f1a662ce4317574518177ccb3443da5d0b7122",
   ],
   [
     "meta-app/src/screens/DeckEditor.tsx",
-    "07f749c44178122de0a64810cbe5c36ca6557c0eb59b2d279ba812571a4749da",
+    "4ac612bddb2be1c4bba3792d58f586d4e79b4bb21b06226196dbfe5ab741c300",
   ],
   [
     "meta-app/src/screens/HistoryScreen.tsx",
-    "ac07d07e217cf1d609cddc830b7cc311730b9d7146d8087f9b671c545e5be1da",
+    "26257ed742387975a7d3f65c49a7ee41643c99ce6933508e1706f67e4a37b05c",
   ],
   [
     "meta-app/src/screens/SettingsScreen.tsx",
@@ -11874,7 +12003,7 @@ const REVIEWED_META_CAPABILITIES = new Map<
     "meta-app/src/screens/DeckEditor.tsx",
     {
       sha256:
-        "07f749c44178122de0a64810cbe5c36ca6557c0eb59b2d279ba812571a4749da",
+        "4ac612bddb2be1c4bba3792d58f586d4e79b4bb21b06226196dbfe5ab741c300",
       allowed: new Set(["persistent-storage:clipboard"]),
     },
   ],
@@ -11890,7 +12019,7 @@ const REVIEWED_META_CAPABILITIES = new Map<
     "meta-app/src/screens/HistoryScreen.tsx",
     {
       sha256:
-        "ac07d07e217cf1d609cddc830b7cc311730b9d7146d8087f9b671c545e5be1da",
+        "26257ed742387975a7d3f65c49a7ee41643c99ce6933508e1706f67e4a37b05c",
       allowed: new Set(["network-api:window.location"]),
     },
   ],
@@ -11898,10 +12027,20 @@ const REVIEWED_META_CAPABILITIES = new Map<
     "meta-app/src/screens/HomeScreen.tsx",
     {
       sha256:
-        "9b12d8d352f7e45e75870a10f7f0b3eff629c60ec8cf2575fed4fddf497a26e2",
+        "ea619ae1ebb7022708e95e2ced6bd3e9f14ecc1715ef537c10c510691d1803ce",
       allowed: new Set([
         "external-origin:https://www.takaratomy.co.jp/products/conan-cardgame/",
         "network-api:navigation href",
+      ]),
+    },
+  ],
+  [
+    "meta-app/src/components/IdentityCardArt.tsx",
+    {
+      sha256:
+        "76252bfca6d477c2395c42e4201182c6a7cd6fc029e6235f7d865bb053451af1",
+      allowed: new Set([
+        "external-origin:https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/",
       ]),
     },
   ],
@@ -11961,7 +12100,7 @@ const REVIEWED_PERSIST_STORES = new Map<
     {
       name: "conan.meta.v1.settings",
       sha256:
-        "6718fcd8097a57fe5de39989972ef745e68733606c1ff783f4979970e53ee25c",
+        "4ec8ee949aba19e067796d499f5e861e384cc89189a6e78d7ffb9af0fb585c97",
     },
   ],
   [
@@ -11969,7 +12108,7 @@ const REVIEWED_PERSIST_STORES = new Map<
     {
       name: "conan.meta.v1.decks",
       sha256:
-        "c4667ca99069c893742f2bc89f1758d73ff5f966a2cdee0fc3f37cc84e7a9dde",
+        "4e9cbb7259dbba8b072bdbeeac98308e1ee28c0b63eb05f96701a270f79b31c8",
     },
   ],
   [
@@ -12811,35 +12950,21 @@ async function inspectBuild(
   }
 
   const manifestPath = resolve(root, "dist/.vite/manifest.json");
-  type ManifestEntry = {
-    file?: unknown;
-    dynamicImports?: unknown;
-    isEntry?: unknown;
-    css?: unknown;
-    assets?: unknown;
-  };
-  let manifest: Record<string, ManifestEntry>;
+  let closure: ReturnType<typeof validateManifestClosure> | undefined;
   try {
-    const parsed: unknown = JSON.parse(await readFile(manifestPath, "utf8"));
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
-      throw new Error("invalid");
-    manifest = parsed as Record<string, ManifestEntry>;
-  } catch {
-    addFinding(
-      findings,
-      "dist/.vite/manifest.json",
-      "production-manifest",
-      "missing or invalid",
+    closure = validateManifestClosure(
+      JSON.parse(await readFile(manifestPath, "utf8")),
     );
-    return findings;
-  }
-  const entry = manifest["index.html"];
-  if (!entry || entry.isEntry !== true) {
+  } catch (error) {
+    const detail =
+      error instanceof Error
+        ? error.message.replace(/^private hosted manifest rejected: /, "")
+        : "missing or invalid";
     addFinding(
       findings,
       "dist/.vite/manifest.json",
       "production-manifest",
-      "index.html entry missing or invalid",
+      detail,
     );
   }
   const expectedFiles = new Set([
@@ -12848,77 +12973,28 @@ async function inspectBuild(
     "favicon.svg",
     "index.html",
   ]);
-  for (const [key, value] of Object.entries(manifest)) {
-    if (key !== "index.html" && value.isEntry === true) {
-      addFinding(findings, "dist/.vite/manifest.json", "production-entry", key);
-    }
-    if (
-      value.dynamicImports !== undefined &&
-      !Array.isArray(value.dynamicImports)
-    ) {
-      addFinding(
-        findings,
-        "dist/.vite/manifest.json",
-        "production-manifest",
-        `invalid dynamic imports: ${key}`,
-      );
-    } else if (
-      Array.isArray(value.dynamicImports) &&
-      value.dynamicImports.length > 0
-    ) {
-      addFinding(findings, "dist/.vite/manifest.json", "dynamic-import", key);
-    }
-    if (/tsv-loader-fs/i.test(key)) {
-      addFinding(
-        findings,
-        "dist/.vite/manifest.json",
-        "production-node-helper",
-        key,
-      );
-    }
-    const outputs = [value.file];
-    for (const field of [value.css, value.assets]) {
-      if (field !== undefined && !Array.isArray(field)) {
+  if (closure) {
+    for (const outputPath of closure.reachableFiles) {
+      expectedFiles.add(outputPath);
+      const trustedBrandLogo =
+        TRUSTED_BRAND_LOGO.test(outputPath) &&
+        (await readFile(resolve(root, "dist", outputPath))
+          .then(
+            (source) =>
+              createHash("sha256").update(source).digest("hex") ===
+              TRUSTED_BRAND_LOGO_SHA256,
+          )
+          .catch(() => false));
+      if (
+        /\.(?:avif|gif|jpe?g|png|webp)$/i.test(outputPath) &&
+        !trustedBrandLogo
+      ) {
         addFinding(
           findings,
-          "dist/.vite/manifest.json",
-          "production-manifest",
-          `invalid output list: ${key}`,
+          `dist/${outputPath}`,
+          "server-hosted-image",
+          "bundled raster image",
         );
-      } else if (Array.isArray(field)) {
-        outputs.push(...field);
-      }
-    }
-    for (const outputPath of outputs) {
-      if (typeof outputPath !== "string" || !safeOutputPath(outputPath)) {
-        addFinding(
-          findings,
-          "dist/.vite/manifest.json",
-          "production-manifest",
-          `unsafe or invalid output: ${key}`,
-        );
-      } else {
-        expectedFiles.add(outputPath);
-        const trustedBrandLogo =
-          TRUSTED_BRAND_LOGO.test(outputPath) &&
-          (await readFile(resolve(root, "dist", outputPath))
-            .then(
-              (source) =>
-                createHash("sha256").update(source).digest("hex") ===
-                TRUSTED_BRAND_LOGO_SHA256,
-            )
-            .catch(() => false));
-        if (
-          /\.(?:avif|gif|jpe?g|png|webp)$/i.test(outputPath) &&
-          !trustedBrandLogo
-        ) {
-          addFinding(
-            findings,
-            `dist/${outputPath}`,
-            "server-hosted-image",
-            "bundled raster image",
-          );
-        }
       }
     }
   }
@@ -12946,28 +13022,49 @@ async function inspectBuild(
       );
     }
   }
+  const javascriptOwners = new Map<string, string>();
+  if (closure) {
+    for (const [key, outputPath] of closure.keyOwnership) {
+      const extension = extname(outputPath).toLowerCase();
+      if (![".js", ".mjs"].includes(extension)) continue;
+      const owner = javascriptOwners.get(outputPath);
+      if (owner) {
+        addFinding(
+          findings,
+          "dist/.vite/manifest.json",
+          "production-manifest",
+          `ambiguous JavaScript ownership: ${outputPath} (${owner}, ${key})`,
+        );
+      } else {
+        javascriptOwners.set(outputPath, key);
+      }
+    }
+  }
   const trustedVendorOutputs = new Set<string>();
   const trustedRuntimeOutputs = new Set<string>();
-  const trustedAppOutputs = new Set<string>();
+  const trustedBundles = new Map<string, TrustedBundlePolicy>();
   for (const outputPath of inventory.files) {
-    const expectedHash = TRUSTED_VENDOR_BUNDLE.test(outputPath)
-      ? TRUSTED_VENDOR_SHA256
-      : TRUSTED_RUNTIME_BUNDLE.test(outputPath)
-        ? TRUSTED_RUNTIME_SHA256
-        : TRUSTED_APP_BUNDLE.test(outputPath)
-          ? TRUSTED_APP_SHA256
-          : undefined;
-    if (!expectedHash) continue;
+    const policy = TRUSTED_BUNDLE_POLICIES.find(({ output }) =>
+      output.test(outputPath),
+    );
+    if (!policy) continue;
+    const owner = javascriptOwners.get(outputPath);
     const source = await readFile(
       resolve(root, "dist", outputPath),
       "utf8",
     ).catch(() => undefined);
-    if (!source || !trustedBundle(source, expectedHash)) continue;
-    if (TRUSTED_VENDOR_BUNDLE.test(outputPath))
+    if (
+      !source ||
+      !owner ||
+      !policy.owns(owner) ||
+      !trustedBundle(source, policy.sha256)
+    )
+      continue;
+    trustedBundles.set(outputPath, policy);
+    if (policy.integrityCode === "vendor-integrity")
       trustedVendorOutputs.add(outputPath);
-    else if (TRUSTED_RUNTIME_BUNDLE.test(outputPath))
+    else if (policy.integrityCode === "runtime-integrity")
       trustedRuntimeOutputs.add(outputPath);
-    else trustedAppOutputs.add(outputPath);
   }
   const trustedImportsFor = (
     importer: string,
@@ -13006,50 +13103,44 @@ async function inspectBuild(
       continue;
     }
     if ([".js", ".mjs"].includes(extension)) {
-      const vendorOutput = TRUSTED_VENDOR_BUNDLE.test(outputPath);
-      const runtimeOutput = TRUSTED_RUNTIME_BUNDLE.test(outputPath);
-      const appOutput = TRUSTED_APP_BUNDLE.test(outputPath);
-      const trustedVendor =
-        vendorOutput && trustedVendorOutputs.has(outputPath);
-      const trustedRuntime =
-        runtimeOutput && trustedRuntimeOutputs.has(outputPath);
-      const trustedApp = appOutput && trustedAppOutputs.has(outputPath);
-      if (vendorOutput && !trustedVendor) {
+      const policy = TRUSTED_BUNDLE_POLICIES.find(({ output }) =>
+        output.test(outputPath),
+      );
+      const trustedPolicy = trustedBundles.get(outputPath);
+      if (policy && policy !== trustedPolicy) {
         addFinding(
           findings,
           file,
-          "vendor-integrity",
-          "trusted vendor bundle SHA-256 mismatch",
+          policy.integrityCode,
+          policy.integrityDetail,
         );
       }
-      if (runtimeOutput && !trustedRuntime) {
-        addFinding(
-          findings,
-          file,
-          "runtime-integrity",
-          "trusted runtime bundle SHA-256 mismatch",
-        );
-      }
-      if (appOutput && !trustedApp) {
-        addFinding(
-          findings,
-          file,
-          "app-integrity",
-          "trusted application bundle SHA-256 mismatch",
-        );
-      }
-      if (!trustedVendor && !trustedRuntime && !trustedApp) {
-        findings.push(
-          ...scanScriptOrigins(root, absolute, source, {
-            vendor: trustedImportsFor(absolute, trustedVendorOutputs),
-            runtime: trustedImportsFor(absolute, trustedRuntimeOutputs),
-          }),
-        );
-        for (const [marker, detail] of BUNDLE_MARKERS) {
-          if (marker.test(source)) {
-            addFinding(findings, file, "forbidden-bundle-marker", detail);
-          }
+      const scriptFindings = scanScriptOrigins(root, absolute, source, {
+        vendor: trustedImportsFor(absolute, trustedVendorOutputs),
+        runtime: trustedImportsFor(absolute, trustedRuntimeOutputs),
+      });
+      for (const [marker, detail] of BUNDLE_MARKERS) {
+        if (marker.test(source)) {
+          scriptFindings.push({
+            file,
+            code: "forbidden-bundle-marker",
+            detail,
+          });
         }
+      }
+      const owner = javascriptOwners.get(outputPath);
+      const sourceHash = createHash("sha256")
+        .update(source, "utf8")
+        .digest("hex");
+      for (const finding of scriptFindings) {
+        const approved = isReviewedBundleFindingAllowed(
+          trustedPolicy,
+          outputPath,
+          owner,
+          sourceHash,
+          finding,
+        );
+        if (!approved) findings.push(finding);
       }
     } else if (extension === ".json") {
       if (outputPath !== ".vite/manifest.json") {
