@@ -8,7 +8,7 @@
 //   - 表示 グリッド大/小 + リスト行 + パラレルまとめトグル + キーボード操作 (MetaCard)
 
 import {
-  useEffect, useMemo, useRef, useState,
+  useEffect, useLayoutEffect, useMemo, useRef, useState,
   type ComponentProps, type KeyboardEvent as ReactKeyboardEvent, type RefObject,
 } from 'react';
 import { T, COLOR_TOKEN } from '../shared/tokens';
@@ -343,15 +343,37 @@ function CardGrid({
   foldParallels: boolean;
 }) {
   const [scrollElement, setScrollElement] = useState<HTMLElement | null>(null);
+  const [focusedNum, setFocusedNum] = useState<string | null>(null);
   const cardWidth = viewMode === 'large' ? 150 : viewMode === 'grid' ? 104 : 0;
   // 折り畳み時は選択中印刷がグリッドに無い (別イラスト選択) ことがあるので cardId 一致で判定。
   const isSel = (c: CardDef) => foldParallels ? cardIdOf(c.num) === cardIdOf(selectedNum) : c.num === selectedNum;
+  const selectedKey = cards.find(isSel)?.num ?? null;
+  const layoutKey = `${viewMode}:${cards.map((card) => card.num).join(',')}`;
+  const previousLayoutKeyRef = useRef(layoutKey);
+  const resetSelectionKeyRef = useRef<string | null>(null);
+  if (previousLayoutKeyRef.current !== layoutKey) {
+    previousLayoutKeyRef.current = layoutKey;
+    resetSelectionKeyRef.current = selectedKey;
+  }
+  const pinnedSelectedKey = selectedKey === resetSelectionKeyRef.current ? null : selectedKey;
   const windowed = useWindowedCollection({
     items: cards,
     getKey: cardNumber,
     scrollElement,
-    layoutKey: `${viewMode}:${cards.map((card) => card.num).join(',')}`,
+    selectedKey: pinnedSelectedKey,
+    focusedKey: focusedNum,
+    layoutKey,
   });
+  const handleFocusedCard = (num: string | null) => {
+    setFocusedNum(num);
+    if (num) windowed.reveal(num, { focus: true });
+  };
+  useLayoutEffect(() => {
+    if (!focusedNum || !scrollElement) return;
+    const activeCard = (document.activeElement as HTMLElement | null)?.closest<HTMLElement>("[data-card-num]");
+    if (activeCard?.dataset.cardNum === focusedNum) return;
+    scrollElement.querySelector<HTMLElement>(`[data-card-num="${focusedNum}"] [role="button"]`)?.focus();
+  }, [focusedNum, scrollElement, windowed.end, windowed.start]);
   return (
     <section className="cards-grid-panel" aria-label="カード一覧">
       <span className="home-sr-only" role="status" aria-live="polite">{cards.length}件のカード</span>
@@ -362,24 +384,27 @@ function CardGrid({
       ) : viewMode === 'list' ? (
         <div className="cards-list-scroll" ref={setScrollElement}>
           <WindowSpacer height={windowed.beforePx} />
-          {windowed.visibleItems.map((c, index) => (
-            <WindowedListRow
-              key={c.num}
-              card={c}
-              index={windowed.start + index}
-              registerItem={windowed.registerItem}
-              selected={isSel(c)}
-              fav={isFav(c)}
-              onClick={() => onSelect(c.num)}
-              onKeyboardSelect={onKeyboardSelect}
-            />
-          ))}
+          <div className="cards-window-list">
+            {windowed.visibleItems.map((c, index) => (
+              <WindowedListRow
+                key={c.num}
+                card={c}
+                index={windowed.start + index}
+                registerItem={windowed.registerItem}
+                selected={isSel(c)}
+                fav={isFav(c)}
+                onClick={() => onSelect(c.num)}
+                onKeyboardSelect={onKeyboardSelect}
+                onFocusedChange={handleFocusedCard}
+              />
+            ))}
+          </div>
           <WindowSpacer height={windowed.afterPx} />
         </div>
       ) : (
         <div className="cards-grid-scroll" data-view={viewMode} ref={setScrollElement}>
-          <div className="cards-card-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${cardWidth + 8}px, 1fr))` }}>
-            <WindowSpacer height={windowed.beforePx} />
+          <WindowSpacer height={windowed.beforePx} />
+          <div className="cards-window-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${cardWidth + 8}px, 1fr))` }}>
             {windowed.visibleItems.map((c, index) => (
               <WindowedGridItem
                 key={c.num}
@@ -391,10 +416,11 @@ function CardGrid({
                 isFavorited={isFav(c)}
                 onClick={() => onSelect(c.num)}
                 onKeyboardSelect={onKeyboardSelect}
+                onFocusedChange={handleFocusedCard}
               />
             ))}
-            <WindowSpacer height={windowed.afterPx} />
           </div>
+          <WindowSpacer height={windowed.afterPx} />
         </div>
       )}
     </section>
@@ -405,20 +431,31 @@ function WindowSpacer({ height }: { height: number }) {
   return <div className="cards-window-spacer" aria-hidden="true" inert style={{ height }} />;
 }
 
-function WindowedListRow({ card, index, registerItem, ...props }: {
+function WindowedListRow({ card, index, registerItem, onFocusedChange, ...props }: {
   card: CardDef;
   index: number;
   registerItem: (index: number) => (node: HTMLElement | null) => void;
+  onFocusedChange: (num: string | null) => void;
 } & ComponentProps<typeof CardListRow>) {
   const ref = useMemo(() => registerItem(index), [index, registerItem]);
-  return <div ref={ref}><CardListRow card={card} {...props} /></div>;
+  return (
+    <div
+      ref={ref}
+      data-card-num={card.num}
+      onFocusCapture={() => onFocusedChange(card.num)}
+      onBlurCapture={(event) => {
+        if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node)) onFocusedChange(null);
+      }}
+    ><CardListRow card={card} {...props} /></div>
+  );
 }
 
-function WindowedGridItem({ card, index, registerItem, width, ...props }: {
+function WindowedGridItem({ card, index, registerItem, width, onFocusedChange, ...props }: {
   card: CardDef;
   index: number;
   registerItem: (index: number) => (node: HTMLElement | null) => void;
   width: number;
+  onFocusedChange: (num: string | null) => void;
 } & Omit<ComponentProps<typeof MetaCard>, "card" | "w"> & { onKeyboardSelect: () => void }) {
   const ref = useMemo(() => registerItem(index), [index, registerItem]);
   const { onKeyboardSelect, ...cardProps } = props;
@@ -427,6 +464,10 @@ function WindowedGridItem({ card, index, registerItem, width, ...props }: {
       className="cards-grid-item"
       data-card-num={card.num}
       ref={ref}
+      onFocusCapture={() => onFocusedChange(card.num)}
+      onBlurCapture={(event) => {
+        if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node)) onFocusedChange(null);
+      }}
       onKeyDownCapture={(event) => {
         if (event.key === 'Enter' || event.key === ' ') requestAnimationFrame(onKeyboardSelect);
       }}

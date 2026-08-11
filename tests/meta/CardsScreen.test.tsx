@@ -407,13 +407,34 @@ describe("CARDS filter drawer", () => {
     }
   });
 
-  it("mounts one initial card window, releases distant cards on scroll, and caps the active window", () => {
+  it("uses gapless scroll containers around the grid and list windows", () => {
+    act(() => root.render(<CardsScreen onNav={() => undefined} />));
+
+    const childClasses = (scroll: HTMLElement) => Array.from(scroll.children).map(
+      (child) => child.className,
+    );
+    expect(childClasses(container.querySelector<HTMLElement>(".cards-grid-scroll")!)).toEqual([
+      "cards-window-spacer",
+      "cards-window-grid",
+      "cards-window-spacer",
+    ]);
+
+    const listView = container.querySelector<HTMLButtonElement>(
+      '.cards-view-selector button[data-last="true"]',
+    )!;
+    act(() => listView.click());
+    expect(childClasses(container.querySelector<HTMLElement>(".cards-list-scroll")!)).toEqual([
+      "cards-window-spacer",
+      "cards-window-list",
+      "cards-window-spacer",
+    ]);
+  });
+
+  it("mounts one initial grid window, releases distant cards on scroll, and caps the active window", () => {
     act(() => root.render(<CardsScreen onNav={() => undefined} />));
 
     const scroller = container.querySelector<HTMLElement>(".cards-grid-scroll")!;
-    const initialCards = Array.from(
-      container.querySelectorAll<HTMLElement>(".cards-grid-item"),
-    );
+    const initialCards = Array.from(container.querySelectorAll<HTMLElement>(".cards-grid-item"));
     const firstCard = initialCards[0]!;
     expect(initialCards).toHaveLength(48);
 
@@ -426,31 +447,61 @@ describe("CARDS filter drawer", () => {
     expect(firstCard.isConnected).toBe(false);
   });
 
-  it("resets the active window for filters and views while retaining the selected print", () => {
+  it("retains selected and focused cards when the scroll window moves away", () => {
     act(() => root.render(<CardsScreen onNav={() => undefined} />));
-
-    const print = Array.from(
-      container.querySelectorAll<HTMLButtonElement>(".cards-print-chip"),
-    ).find((button) => button.textContent === "B09001P");
-    expect(print).not.toBeNull();
-    act(() => print?.click());
 
     const scroller = container.querySelector<HTMLElement>(".cards-grid-scroll")!;
     act(() => {
       scroller.scrollTop = 20_000;
       scroller.dispatchEvent(new Event("scroll", { bubbles: true }));
-      useFiltersStore.getState().setCards({ q: "B09001" });
     });
+    const selected = container.querySelector<HTMLElement>(".cards-grid-item")!;
+    const selectedNum = selected.dataset.cardNum!;
+    const selectedButton = selected.querySelector<HTMLElement>('[role="button"]')!;
+    act(() => {
+      selectedButton.click();
+      selectedButton.focus();
+      scroller.scrollTop = 0;
+      scroller.dispatchEvent(new Event("scroll", { bubbles: true }));
+    });
+    expect(container.querySelector(`[data-card-num="${selectedNum}"]`)).not.toBeNull();
+    expect(document.activeElement).toBe(
+      container.querySelector(`[data-card-num="${selectedNum}"] [role="button"]`),
+    );
+  });
 
-    expect(container.querySelectorAll(".cards-grid-item")).toHaveLength(1);
-    expect(
-      container.querySelector('.cards-print-chip[aria-checked="true"]')?.textContent,
-    ).toBe("B09001P");
+  it("resets large grid and list windows after filter and view changes", () => {
+    act(() => root.render(<CardsScreen onNav={() => undefined} />));
+
+    const gridScroller = container.querySelector<HTMLElement>(".cards-grid-scroll")!;
+    act(() => {
+      gridScroller.scrollTop = 20_000;
+      gridScroller.dispatchEvent(new Event("scroll", { bubbles: true }));
+    });
+    expect(container.querySelectorAll(".cards-grid-item").length).toBeLessThanOrEqual(96);
+
+    const activeNum = container.querySelector<HTMLButtonElement>(
+      '.cards-print-chip[aria-checked="true"]',
+    )!.textContent!;
+    const resetQuery = activeNum.startsWith("B") ? "D" : "B";
+    act(() => useFiltersStore.getState().setCards({ q: resetQuery }));
+    expect(gridScroller.scrollTop).toBe(0);
+    expect(container.querySelectorAll(".cards-grid-item")).toHaveLength(48);
+    const resultCount = Number(container.querySelector('[role="status"]')?.textContent?.match(/\d+/)?.[0]);
+    expect(resultCount).toBeGreaterThan(48);
 
     const listView = container.querySelector<HTMLButtonElement>(
       '.cards-view-selector button[data-last="true"]',
     );
     act(() => listView?.click());
-    expect(container.querySelectorAll(".meta-row")).toHaveLength(1);
+    const listScroller = container.querySelector<HTMLElement>(".cards-list-scroll")!;
+    expect(listScroller.scrollTop).toBe(0);
+    expect(container.querySelectorAll(".meta-row")).toHaveLength(48);
+    act(() => {
+      listScroller.scrollTop = 20_000;
+      listScroller.dispatchEvent(new Event("scroll", { bubbles: true }));
+    });
+    expect(container.querySelectorAll(".meta-row").length).toBeLessThanOrEqual(96);
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(String(resultCount));
   });
 });

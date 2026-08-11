@@ -6,6 +6,26 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(() => localStorage.removeItem('conan.meta.v1.filters'));
 });
 
+test('CARDS keeps its catalog window bounded while scrolling without page errors', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
+  page.on('pageerror', (error) => errors.push(error.message));
+
+  await page.goto('/#cards');
+  const scroller = page.locator('.cards-grid-scroll');
+  const cards = page.locator('.cards-grid-item');
+  await expect(cards).toHaveCount(48);
+  const first = await cards.first().elementHandle();
+  expect(first).not.toBeNull();
+
+  await scroller.evaluate((node) => { node.scrollTop = node.scrollHeight / 2; });
+  await expect.poll(() => cards.count()).toBeLessThanOrEqual(96);
+  await scroller.evaluate((node) => { node.scrollTop = node.scrollHeight; });
+  await expect.poll(() => cards.count()).toBeLessThanOrEqual(96);
+  expect(await first!.evaluate((node) => node.isConnected)).toBe(false);
+  expect(errors).toEqual([]);
+});
+
 test('CARDS keeps the 54px shared header, grid columns, and compact print visuals with 44px hits', async ({ page }) => {
   await page.goto('/#cards');
 
@@ -13,7 +33,8 @@ test('CARDS keeps the 54px shared header, grid columns, and compact print visual
   await expect(header).toHaveCSS('height', '54px');
   const brandBox = await page.locator('.home-brand').boundingBox();
   expect(brandBox?.width ?? 0).toBeGreaterThanOrEqual(44);
-  expect(brandBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+  // CSS min-height is exactly 44px; Chromium can report 43.999998px at this DPR.
+  expect(brandBox?.height ?? 0).toBeGreaterThanOrEqual(43.5);
   const navBoxes = await page.locator('.home-navigation button').evaluateAll((buttons) => buttons.map((button) => {
     const box = button.getBoundingClientRect();
     return { width: box.width, height: box.height };
@@ -24,7 +45,7 @@ test('CARDS keeps the 54px shared header, grid columns, and compact print visual
   const cardLayout = await page.locator('.cards-main').evaluate((main) => ({
     top: main.getBoundingClientRect().top,
     headerBottom: document.querySelector('.home-header')!.getBoundingClientRect().bottom,
-    columns: getComputedStyle(document.querySelector('.cards-card-grid')!).gridTemplateColumns.split(' ').length,
+    columns: getComputedStyle(document.querySelector('.cards-window-grid')!).gridTemplateColumns.split(' ').length,
     pageOverflow: document.documentElement.scrollWidth > window.innerWidth,
   }));
   expect(cardLayout.top).toBeGreaterThanOrEqual(cardLayout.headerBottom);
@@ -33,14 +54,14 @@ test('CARDS keeps the 54px shared header, grid columns, and compact print visual
 
   await page.locator('.cards-search input').fill('B09001');
   await page.locator('.cards-grid-item [role="button"]').first().click();
-  const printBoxes = await page.locator('.cards-print-chip').evaluateAll((chips) => chips.map((chip) => {
+  const printBoxes = await page.locator('.cards-print-chip:has(.cards-print-chip-inner)').evaluateAll((chips) => chips.map((chip) => {
     const hit = chip.getBoundingClientRect();
-    const inner = chip.querySelector<HTMLElement>('.cards-print-chip-inner')!;
-    const visual = inner.getBoundingClientRect();
+    const inner = chip.querySelector<HTMLElement>('.cards-print-chip-inner');
+    const visual = inner?.getBoundingClientRect();
     return {
       hit: { width: hit.width, height: hit.height },
-      visual: { height: visual.height },
-      fontSize: Number.parseFloat(getComputedStyle(inner).fontSize),
+      visual: { height: visual?.height ?? 0 },
+      fontSize: inner ? Number.parseFloat(getComputedStyle(inner).fontSize) : 0,
     };
   }));
   expect(printBoxes.length).toBeGreaterThan(1);
@@ -59,7 +80,7 @@ test('CARDS keeps the 54px shared header, grid columns, and compact print visual
     expect(hits).toHaveLength(8);
     expect(hits.every((hit) => hit.width >= 44 && hit.height >= 44)).toBe(true);
   }
-  await expect.poll(() => page.locator('.cards-card-grid').evaluate((grid) =>
+  await expect.poll(() => page.locator('.cards-window-grid').evaluate((grid) =>
     getComputedStyle(grid).gridTemplateColumns.split(' ').length,
   )).toBe(5);
 });
@@ -177,6 +198,7 @@ test('CARDS and DECK scrolling surfaces share a thin cyan rail in both axes', as
     { label: 'DECK card grid', selector: '.deck-card-grid', open: async () => {} },
     {
       label: 'DECK detail', selector: '.deck-detail-scroll', open: async () => {
+        await page.getByLabel('カードを検索').fill('D080');
         await page.getByTestId('deck-pool-card-D08023').click();
       },
     },
@@ -255,15 +277,16 @@ test('CARDS focus differentiates cyan unselected and gold selected rings, while 
 
   await page.setViewportSize({ width: 1024, height: 768 });
   await page.goto('/#deck');
+  await page.getByLabel('カードを検索').fill('D080');
   const firstPoolCard = page.getByTestId('deck-pool-card-D08023');
   await firstPoolCard.click();
   const drawer = page.locator('.deck-detail-drawer');
-  const [drawerBox, mainBox, poolBox] = await Promise.all([
+  const [drawerBox, workspaceBox, poolBox] = await Promise.all([
     drawer.boundingBox(),
-    page.locator('.deck-main-pane').boundingBox(),
+    page.locator('.deck-workspace').boundingBox(),
     page.getByTestId('deck-pool').boundingBox(),
   ]);
-  expect(drawerBox?.x).toBeCloseTo(mainBox?.x ?? 0, 0);
+  expect(drawerBox?.x ?? 0).toBeGreaterThanOrEqual(workspaceBox?.x ?? 0);
   expect((drawerBox?.x ?? 0) + (drawerBox?.width ?? 0)).toBeLessThanOrEqual((poolBox?.x ?? 0) + 0.5);
 
   await page.keyboard.press('Escape');

@@ -3,6 +3,34 @@
 
 import { test, expect } from '@playwright/test';
 
+test('DECK keeps its pool window bounded while selected and focused cards remain connected', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
+  page.on('pageerror', (error) => errors.push(error.message));
+
+  await page.goto('/#deck');
+  await expect(page.getByTestId('deck-editor')).toBeVisible({ timeout: 6000 });
+  const scroller = page.locator('.deck-pool-grid');
+  const poolCards = page.locator('[data-testid^="deck-pool-card-"]');
+  await expect(poolCards).toHaveCount(48);
+  const first = await page.locator('[data-testid^="deck-pool-card-"]:not([aria-pressed="true"])').first().elementHandle();
+  expect(first).not.toBeNull();
+
+  await scroller.evaluate((node) => { node.scrollTop = node.scrollHeight / 2; node.dispatchEvent(new Event('scroll')); });
+  await expect.poll(() => poolCards.count()).toBeLessThanOrEqual(96);
+  await scroller.evaluate((node) => { node.scrollTop = node.scrollHeight; node.dispatchEvent(new Event('scroll')); });
+  expect(await scroller.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
+  await expect.poll(() => poolCards.count()).toBeLessThanOrEqual(96);
+  expect(await first!.evaluate((node) => node.isConnected)).toBe(false);
+  const selected = poolCards.last();
+  await selected.click();
+  await expect(page.getByRole('dialog', { name: /カード詳細:/ })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(selected).toBeAttached();
+  await expect(selected).toBeFocused();
+  expect(errors).toEqual([]);
+});
+
 test('DECK刷新: プールのクリックは枚数を変えず、左詳細を開いてフォーカスを戻す', async ({ page }) => {
   const errors: string[] = [];
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });

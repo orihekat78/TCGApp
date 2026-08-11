@@ -61,9 +61,9 @@ const usageCount = decks.filter(d => d.cards.some(c => c.num === selectedCard.nu
 - CARDS 詳細パネル: `T.card.detail` (250×350)
 
 ### パフォーマンス
-- カードプール 47 枚なので virtualization 不要
-- `React.memo(MetaCard)` で 不要 re-render 抑制
-- 各 card に `key={card.num}` 必須
+- DECK のカードプールは `useWindowedCollection` で初期 48 枚、スクロール中も最大 96 枚だけを描画する
+- スペーサーはスクロール面、カードの gap は内側グリッドで管理し、選択・フォーカス中のカードは描画を維持する
+- 40 枚の `DeckGrid` は window 化しない。各 card に `key={card.num}` 必須
 
 ### 色制限の表示
 - DECK 編集でカードプールフィルターに「事件の色」設定があれば、その色以外を `dimmed` 表示

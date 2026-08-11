@@ -2196,7 +2196,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`e2e/`**
       - `bug-275-favicon.spec.ts`
       - `bug274-public-fixture.spec.ts`
-      - `cards-deck-wave1.spec.ts`
+      - `cards-deck-wave1.spec.ts` — CSS min-height is exactly 44px; Chromium can report 43.999998px at this DPR.
       - `cards.spec.ts` — spec: .claude/specs/meta-ui/11-cards-rebuild.md
       - `control-density.spec.ts`
       - `deck.spec.ts` — spec: .claude/specs/meta-ui/ (Phase 18: DeckEditor リデザイン + 同 ID 3 枚上限の UI 可視化)

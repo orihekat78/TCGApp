@@ -21,6 +21,7 @@ import { HomeDeckSelectorDialog } from './HomeDeckSelectorDialog';
 import { engineStub } from '../stubs/engineStub';
 import { useDecksStore } from '../state/decksStore';
 import { useFiltersStore } from '../state/filtersStore';
+import { useWindowedCollection } from '../hooks/useWindowedCollection';
 import {
   CARD_POOL, cardIdOf, countsByCardId, defaultCaseForPartner,
   PARTNER_CARDS, CASE_CARDS,
@@ -43,6 +44,7 @@ const NOOP_REGISTER_NAVIGATION_BLOCKER: RegisterNavigationBlocker = () => () => 
 
 const DEFAULT_MAX_PER_ID = 3;
 const POOL_TYPES: CardKind[] = ['character', 'event'];
+const poolCardNumber = (card: CardDef) => card.num;
 
 const SORTS: { k: SortKey; label: string }[] = [
   { k: 'num',  label: '番号' },
@@ -873,6 +875,21 @@ function PoolPane({ cards, selectedNum, idCounts, draggingNum, onOpenDetail, onD
   sortKey: SortKey; sortDir: SortDir; onSort: (k: SortKey, d?: SortDir) => void;
   filterCount: number; onOpenFilter: () => void;
 }) {
+  const [scrollElement, setScrollElement] = useState<HTMLElement | null>(null);
+  const [focusedNum, setFocusedNum] = useState<string | null>(null);
+  const windowed = useWindowedCollection({
+    items: cards,
+    getKey: poolCardNumber,
+    scrollElement,
+    layoutKey: cards.map((card) => card.num).join(','),
+    selectedKey: selectedNum,
+    focusedKey: focusedNum,
+  });
+  const { visibleItems, registerItem, start } = windowed;
+  const poolItemRefs = useMemo(
+    () => visibleItems.map((_, index) => registerItem(start + index)),
+    [registerItem, start, visibleItems],
+  );
   return (
     <div className="deck-pool-surface" style={{
       flex: 1, minHeight: 0, padding: '10px 12px', ...panelBg,
@@ -908,18 +925,21 @@ function PoolPane({ cards, selectedNum, idCounts, draggingNum, onOpenDetail, onD
       </div>
 
       <div className="deck-pool-grid" style={{
-        flex: 1, overflow: 'auto',
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))',
-        gap: 8, alignContent: 'start', paddingRight: 4,
-      }}>
-        {cards.map((card) => {
+        flex: 1, overflow: 'auto', paddingRight: 4,
+      }} ref={setScrollElement}>
+        <PoolWindowSpacer height={windowed.beforePx} />
+        <div className="deck-pool-window-grid" style={{
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))',
+          gap: 8, alignContent: 'start',
+        }}>
+          {windowed.visibleItems.map((card, index) => {
           const cnt = idCounts.get(card.id) ?? 0;
           const limit = card.deckLimit ?? DEFAULT_MAX_PER_ID;
           const limitLabel = limit === 'unlimited' ? '∞' : String(limit);
           const atMax = limit !== 'unlimited' && cnt >= limit;
           return (
+            <div key={card.num} ref={poolItemRefs[index]}>
             <button
-              key={card.num}
               type="button"
               className="deck-pool-card"
               data-testid={`deck-pool-card-${card.num}`}
@@ -928,6 +948,7 @@ function PoolPane({ cards, selectedNum, idCounts, draggingNum, onOpenDetail, onD
               draggable
               aria-label={`${card.name} ${cnt}/${limitLabel}。詳細を開く。詳細画面からデッキに追加できます`}
               aria-pressed={card.num === selectedNum}
+              onFocus={() => setFocusedNum(card.num)}
               onClick={(event) => onOpenDetail(card.num, event.currentTarget)}
               onContextMenu={(event) => { event.preventDefault(); event.currentTarget.focus(); onExpand(card.num); }}
               onDragStart={(event) => {
@@ -943,8 +964,11 @@ function PoolPane({ cards, selectedNum, idCounts, draggingNum, onOpenDetail, onD
                 count={cnt || undefined} maxCount={limit} showMax atMax={atMax}
                 hoverable={false} />
             </button>
+            </div>
           );
-        })}
+          })}
+        </div>
+        <PoolWindowSpacer height={windowed.afterPx} />
         {cards.length === 0 && (
           <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: T.textMuted, fontFamily: T.fontMono, fontSize: 11, padding: 24 }}>
             条件に一致するカードがありません
@@ -953,6 +977,10 @@ function PoolPane({ cards, selectedNum, idCounts, draggingNum, onOpenDetail, onD
       </div>
     </div>
   );
+}
+
+function PoolWindowSpacer({ height }: { height: number }) {
+  return <div className="deck-pool-window-spacer" aria-hidden="true" inert style={{ height }} />;
 }
 
 function PoolSortControl({ sortKey, sortDir, onSort }: {

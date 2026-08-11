@@ -26,3 +26,19 @@ view toggle shape.
 Self-review: complete. Horizontal investigation: grid and list both use the
 same window, keep `filtered.length` status, and preserve existing selection
 and keyboard handler contracts.
+
+## Fix round 1
+
+RED: the scoped review tests failed with grid spacers inside `.cards-card-grid`
+instead of gapless scroll siblings, and a distant focused card unmounted.
+The stricter filter-reset probe then failed `expected 48 but got 96`; an
+unchanged inspector selection was pinning the old distant range.
+
+Change: grid/list gaps now live only on their visible-item wrappers. CARDS
+passes folded selected and captured focus keys to the hook, restores focus to a
+materialized tile, and suppresses only an unchanged selected key across a new
+layout key so reset reaches the first 48. A later selected/focused key pins.
+
+Verification: PASS `npx vitest run tests/meta/CardsScreen.test.tsx
+tests/meta/useWindowedCollection.test.tsx --maxWorkers=1` (33 tests); PASS
+`npm run typecheck`; PASS scoped ESLint and `git diff --check`.
