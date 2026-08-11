@@ -244,25 +244,49 @@ function inspectIdentityProvider(
   values: readonly unknown[],
   findings: AuditFinding[],
 ): { id: string | undefined; snapshot: unknown } {
-  if (values.length !== 1 || !isRecord(values[0])) {
+  const providers = values.filter(isRecord);
+  const oneTimePinProviders = providers.filter(
+    (candidate) => candidate.type === "onetimepin",
+  );
+  const builtInCloudflareProviders = providers.filter(
+    (candidate) => candidate.type === "cloudflare",
+  );
+  const unsupportedProviders = providers.filter(
+    (candidate) =>
+      candidate.type !== "onetimepin" && candidate.type !== "cloudflare",
+  );
+  if (
+    providers.length !== values.length ||
+    oneTimePinProviders.length !== 1 ||
+    builtInCloudflareProviders.length > 1
+  ) {
     addFinding(
       findings,
       "idp.count",
-      "Exactly one one-time PIN identity provider is required.",
+      "Exactly one one-time PIN and at most one built-in Cloudflare identity provider are required.",
     );
   }
-  const raw = values.find(isRecord);
+  if (unsupportedProviders.length > 0) {
+    addFinding(
+      findings,
+      "idp.type",
+      "Only one-time PIN and the built-in Cloudflare identity provider are supported.",
+    );
+  }
+  for (const provider of builtInCloudflareProviders) {
+    if (!safeId(provider.id)) {
+      addFinding(
+        findings,
+        "idp.id",
+        "The built-in Cloudflare identity provider ID is invalid.",
+      );
+    }
+  }
+  const raw = oneTimePinProviders[0];
   if (!raw) return { id: undefined, snapshot: null };
   const id = safeId(raw.id);
   if (!id) {
     addFinding(findings, "idp.id", "The one-time PIN identity provider ID is invalid.");
-  }
-  if (raw.type !== "onetimepin") {
-    addFinding(
-      findings,
-      "idp.type",
-      "The sole identity provider must be Cloudflare one-time PIN.",
-    );
   }
   return {
     id,

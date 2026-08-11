@@ -49,9 +49,10 @@ Date: 2026-08-10 — Production deployed and accepted
   commands, build caching, and Web Analytics remain disabled.
 - Access protects both `conan-private-7302df07.pages.dev` and
   `*.conan-private-7302df07.pages.dev` before application bytes are uploaded.
-- The sole identity provider is Cloudflare One-time PIN. Cloudflare account login,
-  alternate IdPs, shared passwords, WARP authentication, and independent MFA are off.
-- Both applications allow only that IdP and auto-redirect to it.
+- Cloudflare One-time PIN is the sole application-allowed identity provider. The
+  immutable account-level Cloudflare IdP may coexist, but neither application allows it.
+- Both applications allow only the OTP IdP and auto-redirect to it. Cloudflare account
+  login, alternate IdPs, shared passwords, WARP authentication, and independent MFA are off.
 - Active policy: exact approved emails only, no Exclude or Require rules, 12h maximum.
 - Contained policy: exactly one Block Everyone policy on each application and no Allow.
 - Broad selectors, bypass, alternate IdPs, public paths, extra apps, or overlap fail audit.

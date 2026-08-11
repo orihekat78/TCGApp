@@ -19,6 +19,7 @@ const config = {
 };
 
 const ids = {
+  cloudflareIdp: "00000000-0000-4000-8000-000000000000",
   idp: "11111111-1111-4111-8111-111111111111",
   rootApp: "22222222-2222-4222-8222-222222222222",
   wildcardApp: "33333333-3333-4333-8333-333333333333",
@@ -63,6 +64,12 @@ function goodFixture(emails: readonly string[] = [config.operatorEmail]): Fixtur
   const wildcard = `*.${root}`;
   return {
     idps: [
+      {
+        id: ids.cloudflareIdp,
+        name: "",
+        type: "cloudflare",
+        config: { restrict_to_account_members: true },
+      },
       {
         id: ids.idp,
         name: "One-time PIN",
@@ -353,8 +360,8 @@ describe("private hosted Access audit", () => {
     const fixture = goodFixture();
     fixture.idps.push({
       id: "66666666-6666-4666-8666-666666666666",
-      type: "cloudflare",
-      config: { restrict_to_account_members: false },
+      type: "github",
+      config: {},
     });
     fixture.apps.push({
       id: "77777777-7777-4777-8777-777777777777",
@@ -374,7 +381,7 @@ describe("private hosted Access audit", () => {
     expect(result.ok).toBe(false);
     expect(findingCodes(result)).toEqual(
       expect.arrayContaining([
-        "idp.count",
+        "idp.type",
         "application.count",
         "application.root.auto-redirect",
         "application.root.warp",
@@ -384,6 +391,26 @@ describe("private hosted Access audit", () => {
         "application.root.destination",
       ]),
     );
+  });
+
+  it.each(["onetimepin", "cloudflare"])(
+    "rejects a second %s identity provider",
+    async (type) => {
+      const fixture = goodFixture();
+      fixture.idps.push({
+        id: "66666666-6666-4666-8666-666666666666",
+        type,
+      });
+      const result = await auditAccess(config, "preflight", fixtureFetch(fixture));
+      expect(findingCodes(result)).toContain("idp.count");
+    },
+  );
+
+  it("rejects a malformed built-in Cloudflare identity provider ID", async () => {
+    const fixture = goodFixture();
+    fixture.idps[0]!.id = "not-an-access-id";
+    const result = await auditAccess(config, "preflight", fixtureFetch(fixture));
+    expect(findingCodes(result)).toContain("idp.id");
   });
 
   it.each([
@@ -436,7 +463,7 @@ describe("private hosted Access audit", () => {
 
   it("rejects Cloudflare account login in place of the sole one-time PIN provider", async () => {
     const fixture = goodFixture();
-    fixture.idps[0] = {
+    fixture.idps[1] = {
       id: ids.idp,
       name: "Cloudflare Access",
       type: "cloudflare",
@@ -445,7 +472,7 @@ describe("private hosted Access audit", () => {
 
     const result = await auditAccess(config, "preflight", fixtureFetch(fixture));
 
-    expect(findingCodes(result)).toContain("idp.type");
+    expect(findingCodes(result)).toContain("idp.count");
   });
 
   it("rejects policy session overrides above the mode limit and independent MFA", async () => {

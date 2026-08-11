@@ -52,7 +52,7 @@ arguments, configuration, screenshots, or evidence.
 1. Obtain operator approval; keep total approved emails at 12 or fewer.
 2. Add the exact lowercase email to the external operator config.
 3. Add the same exact email to the one Allow policy on both Access applications.
-4. Keep One-time PIN as the sole IdP, Require/Exclude empty, and session at most 12h.
+4. Keep One-time PIN as the sole application-allowed IdP; the immutable account-level Cloudflare IdP may coexist. Keep Require/Exclude empty and session at most 12h.
 5. Run active Access audit and anonymous probes, then test OTP with that person.
 
 ## Remove a person
