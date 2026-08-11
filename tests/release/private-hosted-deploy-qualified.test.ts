@@ -209,12 +209,15 @@ function qualificationArgv(id: string, repoRoot: string, runDir: string) {
 }
 
 function project(overrides: Record<string, unknown> = {}) {
-  const env_vars = Object.fromEntries(
-    Object.entries(vars).map(([name, value]) => [
-      name,
-      { type: "plain_text", value },
-    ]),
-  );
+  const env_vars = {
+    ...Object.fromEntries(
+      Object.entries(vars).map(([name, value]) => [
+        name,
+        { type: "plain_text", value },
+      ]),
+    ),
+    EMAIL_KEY_SECRET: { type: "secret_text", value: "" },
+  };
   return {
     name: PROJECT,
     subdomain: `${PROJECT}.pages.dev`,
@@ -508,9 +511,9 @@ describe("qualified private Pages direct deployment", () => {
     expect(await (form.get("_routes.json") as Blob).text()).toContain(
       "/api/v1/*",
     );
-    expect(await (form.get("_worker.bundle") as Blob).text()).toContain(
-      '"main_module":"_worker.js"',
-    );
+    const workerBundle = await (form.get("_worker.bundle") as Blob).text();
+    expect(workerBundle).toContain('"main_module":"_worker.js"');
+    expect(workerBundle).not.toContain("EMAIL_KEY_SECRET");
     const source = await readFile(
       resolve(process.cwd(), "scripts/private-hosted/deploy-qualified.mjs"),
       "utf8",
@@ -830,6 +833,44 @@ describe("qualified private Pages direct deployment", () => {
         const value = project();
         value.deployment_configs.production.env_vars.DEPLOYMENT_ENV.value =
           "preview";
+        return value;
+      },
+    ],
+    [
+      "missing email-key secret",
+      () => {
+        const value = project();
+        delete (value.deployment_configs.production.env_vars as any)
+          .EMAIL_KEY_SECRET;
+        return value;
+      },
+    ],
+    [
+      "wrong email-key secret type",
+      () => {
+        const value = project();
+        value.deployment_configs.production.env_vars.EMAIL_KEY_SECRET.type =
+          "plain_text";
+        return value;
+      },
+    ],
+    [
+      "visible email-key secret value",
+      () => {
+        const value = project();
+        value.deployment_configs.production.env_vars.EMAIL_KEY_SECRET.value =
+          "must-stay-redacted";
+        return value;
+      },
+    ],
+    [
+      "extra environment secret",
+      () => {
+        const value = project();
+        (value.deployment_configs.production.env_vars as any).EXTRA_SECRET = {
+          type: "secret_text",
+          value: "",
+        };
         return value;
       },
     ],

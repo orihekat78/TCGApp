@@ -95,6 +95,7 @@ const EXPECTED_VARS = {
   APP_HOST_VALUE: `${PROJECT_NAME}.pages.dev`,
   D1_DATABASE_ID: DATABASE_ID,
 };
+const REQUIRED_SECRET_VAR = "EMAIL_KEY_SECRET";
 
 function fail(message) {
   throw new Error(`qualified private hosted deploy rejected: ${message}`);
@@ -1328,9 +1329,13 @@ function validateRemoteProject(
     fail("remote Pages Functions runtime model differs");
   }
   const envVars = record(production.env_vars, "production env vars");
+  const expectedEnvNames = [
+    ...Object.keys(EXPECTED_VARS),
+    REQUIRED_SECRET_VAR,
+  ].sort();
   if (
     JSON.stringify(Object.keys(envVars).sort()) !==
-    JSON.stringify(Object.keys(EXPECTED_VARS).sort())
+    JSON.stringify(expectedEnvNames)
   ) {
     fail("remote Pages environment names differ");
   }
@@ -1339,6 +1344,18 @@ function validateRemoteProject(
     if (binding.type !== "plain_text" || binding.value !== expected) {
       fail(`remote Pages environment ${name} differs`);
     }
+  }
+  const secretBinding = record(
+    envVars[REQUIRED_SECRET_VAR],
+    `production env ${REQUIRED_SECRET_VAR}`,
+  );
+  if (
+    JSON.stringify(Object.keys(secretBinding).sort()) !==
+      JSON.stringify(["type", "value"]) ||
+    secretBinding.type !== "secret_text" ||
+    secretBinding.value !== ""
+  ) {
+    fail(`remote Pages environment ${REQUIRED_SECRET_VAR} differs`);
   }
   const databases = record(production.d1_databases, "production D1 bindings");
   if (
