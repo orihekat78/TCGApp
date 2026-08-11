@@ -1,4 +1,4 @@
-import { act, useLayoutEffect, useRef, useState } from "react";
+import { act, StrictMode, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { useWindowedCollection } from "../../meta-app/src/hooks/useWindowedCollection";
@@ -9,6 +9,7 @@ const items: Item[] = Array.from({ length: 180 }, (_, index) => ({
   key: `card-${index}`,
   height: index % 3 === 0 ? 36 : 20,
 }));
+const itemKey = (item: Item) => item.key;
 
 class ResizeObserverStub {
   static instances: ResizeObserverStub[] = [];
@@ -43,7 +44,7 @@ function Harness({
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
   const api = useWindowedCollection({
     items,
-    getKey: (item) => item.key,
+    getKey: itemKey,
     scrollElement,
     layoutKey,
     selectedKey,
@@ -91,6 +92,28 @@ function MeasuredItem({
   return <button ref={ref} data-testid={item.key} type="button">{item.key}</button>;
 }
 
+function DirectRefHarness({ onRender }: { onRender: () => void }) {
+  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
+  const { visibleItems, start, registerItem } = useWindowedCollection({
+    items,
+    getKey: itemKey,
+    scrollElement,
+  });
+  const refs = useMemo(
+    () => visibleItems.map((_, offset) => registerItem(start + offset)),
+    [registerItem, start, visibleItems],
+  );
+
+  onRender();
+  return (
+    <div ref={setScrollElement} data-testid="direct-scroller">
+      {visibleItems.map((item, offset) => (
+        <button key={item.key} ref={refs[offset]} type="button">{item.key}</button>
+      ))}
+    </div>
+  );
+}
+
 describe("useWindowedCollection", () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -134,6 +157,38 @@ describe("useWindowedCollection", () => {
     act(() => root.render(<Harness columns={1} rowPitch={45} itemHeight={42} />));
 
     expect(container.querySelector("[data-testid=range]")?.textContent).toBe("0:48:0:5940");
+  });
+
+  it.each([
+    { columns: 5, scrollTop: 400, beforePx: 360, afterPx: 280, revealOffset: 800 },
+    { columns: 7, scrollTop: 280, beforePx: 240, afterPx: 200, revealOffset: 560 },
+  ])("keeps $columns-column partial windows aligned after scrolling", ({ columns, scrollTop, beforePx, afterPx, revealOffset }) => {
+    let api!: ReturnType<typeof useWindowedCollection<Item>>;
+    act(() => root.render(
+      <Harness columns={columns} rowPitch={40} itemHeight={36} onReady={(next) => { api = next; }} />,
+    ));
+    const scroller = container.querySelector<HTMLElement>("[data-testid=scroller]")!;
+
+    act(() => {
+      scroller.scrollTop = scrollTop;
+      scroller.dispatchEvent(new Event("scroll"));
+    });
+
+    expect(container.querySelector("[data-testid=range]")?.textContent)
+      .toBe(`48:144:${beforePx}:${afterPx}`);
+    act(() => api.reveal("card-100"));
+    expect(scroller.scrollTop).toBe(revealOffset);
+  });
+
+  it("stabilizes direct mapped refs after strict reattachment", () => {
+    let renders = 0;
+
+    act(() => root.render(
+      <StrictMode><DirectRefHarness onRender={() => { renders += 1; }} /></StrictMode>,
+    ));
+
+    expect(renders).toBeLessThan(10);
+    expect(container.querySelectorAll("button")).toHaveLength(48);
   });
 
   it("replaces the initial chunk with no more than two chunks after a distant scroll", () => {
@@ -208,7 +263,24 @@ describe("useWindowedCollection", () => {
     expect(container.querySelector("[data-testid=range]")?.textContent).toMatch(/^0:48:/);
   });
 
+  it("resets ahead of an unchanged distant selection but pins later selection changes", () => {
+    act(() => root.render(<Harness selectedKey="card-150" />));
+    expect(container.querySelector("[data-testid=range]")?.textContent).toMatch(/^0:48:/);
+    expect(container.querySelector("[data-testid='card-150']")).toBeNull();
+
+    act(() => root.render(<Harness selectedKey="card-151" />));
+    expect(container.querySelector("[data-testid='card-151']")).not.toBeNull();
+
+    act(() => root.render(<Harness layoutKey="filtered" selectedKey="card-151" />));
+    expect(container.querySelector("[data-testid=range]")?.textContent).toMatch(/^0:48:/);
+    expect(container.querySelector("[data-testid='card-151']")).toBeNull();
+
+    act(() => root.render(<Harness layoutKey="filtered" selectedKey="card-152" />));
+    expect(container.querySelector("[data-testid='card-152']")).not.toBeNull();
+  });
+
   it("keeps selected and focused keys mounted when they fit one bounded window", () => {
+    act(() => root.render(<Harness />));
     act(() => root.render(<Harness selectedKey="card-80" focusedKey="card-131" />));
 
     expect(container.querySelector("[data-testid='card-80']")).not.toBeNull();
@@ -217,6 +289,7 @@ describe("useWindowedCollection", () => {
   });
 
   it("prioritizes the focused key when selected and focused keys cannot share the cap", () => {
+    act(() => root.render(<Harness />));
     act(() => root.render(<Harness selectedKey="card-0" focusedKey="card-150" />));
 
     expect(container.querySelector("[data-testid='card-150']")).not.toBeNull();
@@ -225,6 +298,7 @@ describe("useWindowedCollection", () => {
   });
 
   it("prioritizes the focused key even when the selected key has the higher index", () => {
+    act(() => root.render(<Harness />));
     act(() => root.render(<Harness selectedKey="card-150" focusedKey="card-0" />));
 
     expect(container.querySelector("[data-testid='card-0']")).not.toBeNull();

@@ -62,13 +62,15 @@ export function useWindowedCollection<T>({
 
   const metrics = (() => {
     const rows = new Map<number, number>();
+    const rowCounts = new Map<number, number>();
     for (const measurement of measurementsRef.current.values()) {
       rows.set(measurement.top, Math.max(rows.get(measurement.top) ?? 0, measurement.height));
+      rowCounts.set(measurement.top, (rowCounts.get(measurement.top) ?? 0) + 1);
     }
     const rowHeights = [...rows.values()];
     const columns = rowHeights.length === 0
       ? 1
-      : Math.max(1, Math.round(measurementsRef.current.size / rowHeights.length));
+      : Math.max(1, ...rowCounts.values());
     const rowHeight = rowHeights.length === 0
       ? FALLBACK_ROW_HEIGHT
       : rowHeights.reduce((total, height) => total + height, 0) / rowHeights.length;
@@ -170,7 +172,7 @@ export function useWindowedCollection<T>({
       }
       currentNode = node;
       if (!node) {
-        callbacksRef.current.delete(index);
+        if (callbacksRef.current.get(index) === callback) callbacksRef.current.delete(index);
         return;
       }
       nodesRef.current.set(index, node);
