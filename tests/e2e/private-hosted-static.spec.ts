@@ -440,10 +440,8 @@ test.describe("private hosted production static Meta app", () => {
       const secondPage = await second.newPage();
       const firstEvidence = monitorPage(firstPage);
       const secondEvidence = monitorPage(secondPage);
-      await Promise.all([
-        startMatchFromHome(firstPage),
-        openSetupFromHome(secondPage),
-      ]);
+      await startMatchFromHome(firstPage);
+      await openSetupFromHome(secondPage);
       await expect(firstPage.locator("#scaler")).toBeVisible();
       await expect(secondPage.locator("#setup-title")).toBeVisible();
       await expect(
