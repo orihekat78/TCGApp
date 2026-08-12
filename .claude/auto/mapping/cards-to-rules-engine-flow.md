@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `858c4e086433`
+> Source hash: `db5e932296ed`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **182** ファイル（[全体 index](./index.md)）
+このグループ: **183** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (23)
 
@@ -116,7 +116,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (94)
+## その他 (95)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -166,6 +166,7 @@
 | [`src/ui/hooks/useHiramekiDemoDriver.ts`](../../../src/ui/hooks/useHiramekiDemoDriver.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useHiramekiFlowDriver.ts`](../../../src/ui/hooks/useHiramekiFlowDriver.ts) | [`10-action-event.md`](../../rules/10-action-event.md) |
 | [`src/ui/hooks/useLogEntries.ts`](../../../src/ui/hooks/useLogEntries.ts) | _(参照なし)_ |
+| [`src/ui/hooks/useMatchModalLayer.ts`](../../../src/ui/hooks/useMatchModalLayer.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useMisreadFlowDriver.ts`](../../../src/ui/hooks/useMisreadFlowDriver.ts) | [`13-keywords.md`](../../rules/13-keywords.md) |
 | [`src/ui/hooks/useModalFocusTrap.ts`](../../../src/ui/hooks/useModalFocusTrap.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useMulligan.ts`](../../../src/ui/hooks/useMulligan.ts) | [`26-05-11-ui-game-setup-flows.md`](../../rules/26-05-11-ui-game-setup-flows.md) |

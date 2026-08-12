@@ -121,6 +121,21 @@ describe('opponent autonomous presentation guard', () => {
     expect(stepTurnMock).not.toHaveBeenCalled();
   });
 
+  it('cancels a scheduled opponent callback when surrender commits on the same turn', async () => {
+    useGameStateStore.getState().setAiSpeedMs(400);
+    act(() => root.render(<Probe enabled />));
+    expect(vi.getTimerCount()).toBe(1);
+
+    const terminal = structuredClone(useGameStateStore.getState().gameState!);
+    terminal.gameResult = { winner: 'opp', reason: 'concede' };
+    act(() => useGameStateStore.getState().setGameState(terminal));
+
+    expect(vi.getTimerCount()).toBe(0);
+    await act(async () => vi.advanceTimersByTime(400));
+    expect(stepTurnMock).not.toHaveBeenCalled();
+    expect(useGameStateStore.getState().gameState).toBe(terminal);
+  });
+
   it('does not advance while a Hirameki decision remains unresolved', async () => {
     useGameStateStore.setState({
       pendingHirameki: { player: 'opp', cardId: 'D08013', abilityId: 'a2' },

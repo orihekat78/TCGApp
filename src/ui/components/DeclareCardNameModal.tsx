@@ -15,6 +15,7 @@
 
 import type { JSX } from 'react';
 import { useState } from 'react';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import './DeclareCardNameModal.css';
 
 export type DeclareCardNameModalProps = {
@@ -33,6 +34,7 @@ export type DeclareCardNameModalProps = {
 export function DeclareCardNameModal(props: DeclareCardNameModalProps): JSX.Element | null {
   const { open, prompt, candidateNames, onConfirm, onSkip, onCancel } = props;
   const [name, setName] = useState('');
+  const dialogRef = useModalFocusTrap({ active: open });
   if (!open) return null;
 
   const trimmed = name.trim();
@@ -42,6 +44,7 @@ export function DeclareCardNameModal(props: DeclareCardNameModalProps): JSX.Elem
 
   return (
     <div
+      ref={dialogRef}
       className="declare-card-name-overlay"
       role="dialog"
       data-match-modal-registered="true"

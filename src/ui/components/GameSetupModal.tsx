@@ -15,6 +15,7 @@ import { performGameStart } from '@/ui/services/gameStarter.js';
 import { createSampleGameState } from '@/ui/fixtures/sampleGameState.js';
 import { AVAILABLE_DECKS, type DeckId } from '@/ui/services/deckBuilder.js';
 import { beginMatchSession, commitMatchSession, isCurrentLiveMatchSession, matchSessionId } from '@/ui/services/matchSession.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import './GameSetupModal.css';
 
 export type GameSetupModalProps = {
@@ -49,6 +50,8 @@ export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | n
   const hiramekiDemoMode = useGameStateStore.getState().hiramekiDemoMode;
   // 2026-05-27: カットインデモ picker 表示中も隠す。
   const cutinDemoMode = useGameStateStore.getState().cutinDemoMode;
+  const modalActive = gameState === null && hiramekiDemoMode === 'idle' && cutinDemoMode === 'idle';
+  const dialogRef = useModalFocusTrap({ active: modalActive });
   // BUG-042 (#17): self / opp のデッキを独立選択可能化
   const [selfDeckId, setSelfDeckId] = useState<DeckId>('CT-D08');
   const [oppDeckId, setOppDeckId] = useState<DeckId>('CT-D11');
@@ -103,7 +106,7 @@ export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | n
   };
 
   return (
-    <div className="game-setup-modal-overlay" role="dialog" data-match-modal-registered="true" aria-modal="true" aria-labelledby="setup-title">
+    <div ref={dialogRef} className="game-setup-modal-overlay" role="dialog" data-match-modal-registered="true" aria-modal="true" aria-labelledby="setup-title">
       <div className="game-setup-modal">
         <h1 id="setup-title">名探偵コナンTCG</h1>
         <p className="game-setup-subtitle">MVP 開発版</p>

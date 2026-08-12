@@ -10,6 +10,7 @@
 
 import type { JSX } from 'react';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { CardArt } from './CardArt.js';
 import './HiramekiPickerModal.css';
@@ -29,9 +30,11 @@ export type HiramekiPickerModalProps = {
 export function HiramekiPickerModal(props: HiramekiPickerModalProps): JSX.Element | null {
   const { open, cardId, cardName, abilityText, onFire, onSkip } = props;
   const expandModal = useCardExpandModal();
+  const dialogRef = useModalFocusTrap({ active: open });
   if (!open) return null;
   return (
     <div
+      ref={dialogRef}
       className="hirameki-picker-overlay"
       role="dialog"
       data-match-modal-registered="true"

@@ -146,6 +146,17 @@ describe('ResultScreen', () => {
     expect(container.querySelector('.result-panel')?.textContent).not.toContain('MATCH SUMMARY');
   });
 
+  it('renders an opponent win with the concede reason from the public surrender flow', () => {
+    const state = createEmptyGameState();
+    state.gameResult = { winner: 'opp', reason: 'concede' };
+    useGameStateStore.setState({ gameState: state });
+
+    renderResult();
+
+    expect(container.querySelector('.result-verdict h1')?.textContent).toBe('敗北');
+    expect(container.querySelector('.result-end-reason strong')?.textContent).toBe('投了');
+  });
+
   it('announces terminal presentation work carried across the result transition', () => {
     const state = createEmptyGameState();
     state.gameResult = { winner: 'self', reason: 'evidence' };
@@ -285,6 +296,7 @@ describe('ResultScreen', () => {
     act(() => retry.click());
     await flushUntil(() => container.querySelector('#result-replay-note')?.textContent
       === 'この対戦の完全なリプレイを再生できます。');
+    expect(saveReplaySpy).toHaveBeenCalledTimes(2);
     expect(useHistoryStore.getState().history).toHaveLength(1);
     expect(await historyReplayRepository.listStoredHistoryRows()).toHaveLength(1);
     expect(getFinalizedReplay(sessionId)).toBeNull();

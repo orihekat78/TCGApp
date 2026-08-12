@@ -135,6 +135,7 @@ let _lastConsumedStep = 0;
 export function useSpectatorTurnDriver(enabled = true): void {
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const turnPlayer = useGameStateStore((s) => s.gameState?.turn.player ?? null);
+  const terminal = useGameStateStore((s) => s.gameState?.gameResult !== undefined);
   const activeActionId = useGameStateStore((s) => s.activeActionId);
   const aiSpeedMs = useGameStateStore((s) => s.aiSpeedMs);
   const isAiPaused = useGameStateStore((s) => s.isAiPaused);
@@ -144,7 +145,7 @@ export function useSpectatorTurnDriver(enabled = true): void {
   const presentationOutstanding = usePresentationOutstandingCount();
   useEffect(() => {
     if (!enabled) return undefined;
-    if (!spectatorMode || turnPlayer !== 'self' || activeActionId !== null || pendingDecisionBlocked) return undefined;
+    if (terminal || !spectatorMode || turnPlayer !== 'self' || activeActionId !== null || pendingDecisionBlocked) return undefined;
     if (presentationOutstanding > 0) return undefined;
     // Phase 12-B: paused なら step 要求があった時だけ進む
     if (isAiPaused) {
@@ -162,5 +163,5 @@ export function useSpectatorTurnDriver(enabled = true): void {
       clearTimeout(id);
       if (scheduledSpectatorTimer === id) scheduledSpectatorTimer = null;
     };
-  }, [enabled, spectatorMode, turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, aiMoveTick, pendingDecisionBlocked, presentationOutstanding]);
+  }, [enabled, terminal, spectatorMode, turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, aiMoveTick, pendingDecisionBlocked, presentationOutstanding]);
 }

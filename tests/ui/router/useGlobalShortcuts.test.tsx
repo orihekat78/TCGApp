@@ -7,7 +7,8 @@ import { useGlobalShortcuts } from '../../../meta-app/src/router/useGlobalShortc
 import type { Route } from '../../../meta-app/src/router/routes';
 
 function ShortcutHarness({ onNav, route = 'match' }: { onNav: (route: Route) => void; route?: Route }): null {
-  useGlobalShortcuts({ route, onNav });
+  const { helpOpen } = useGlobalShortcuts({ route, onNav });
+  document.body.dataset.helpOpen = String(helpOpen);
   return null;
 }
 
@@ -37,7 +38,7 @@ describe('useGlobalShortcuts modal priority', () => {
     });
 
     act(() => {
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     });
 
     expect(onNav).not.toHaveBeenCalled();
@@ -56,7 +57,7 @@ describe('useGlobalShortcuts modal priority', () => {
     });
 
     act(() => {
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     });
 
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -76,11 +77,25 @@ describe('useGlobalShortcuts modal priority', () => {
     });
 
     act(() => {
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     });
 
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(onNav).not.toHaveBeenCalled();
+  });
+
+  it('does not toggle HelpOverlay with ? while MatchMenu owns the top layer', () => {
+    act(() => {
+      root.render(
+        <>
+          <ShortcutHarness onNav={vi.fn()} />
+          <div role="dialog" aria-modal="true" data-match-menu-dialog="true" />
+        </>,
+      );
+    });
+    expect(document.body.dataset.helpOpen).toBe('false');
+    act(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true })));
+    expect(document.body.dataset.helpOpen).toBe('false');
   });
 
   it.each(['h', 'd', 'c', 't', 's', 'p', 'm', 'r', 'y', 'l'])(

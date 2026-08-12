@@ -57,6 +57,7 @@ export function useGlobalShortcuts({ route, onNav }: Options): {
         e.key === 'Enter' ||
         routeHotkey !== undefined;
       if (modalOpen && isNavigationKey) return;
+      if (e.key === '?' && document.querySelector('[data-match-menu-dialog="true"]')) return;
 
       // 対戦画面ではEsc/Backspaceによるグローバル離脱を無効化する。
       // 効果・対象選択中もdialogではないため、ここを通すと試合が破棄される。

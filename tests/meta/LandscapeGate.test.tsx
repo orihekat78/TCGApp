@@ -1,6 +1,16 @@
 import { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createEmptyGameState } from '@/engine/state-factory';
+import {
+  beginMatchSession,
+  commitMatchSession,
+  endMatchSession,
+} from '@/ui/services/matchSession';
+import { useGameStateStore } from '@/ui/state/store';
+import { CardExpandModal } from '@/ui/components/CardExpandModal';
+import { ChoicePickerModal } from '@/ui/components/ChoicePickerModal';
+import { MatchMenu } from '../../meta-app/src/components/MatchMenu';
 import { LandscapeGate } from '../../meta-app/src/shared/LandscapeGate';
 
 type Listener = (event: Event) => void;
@@ -51,6 +61,7 @@ describe('LandscapeGate', () => {
   beforeAll(() => { globalThis.IS_REACT_ACT_ENVIRONMENT = true; });
 
   beforeEach(() => {
+    endMatchSession();
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -73,6 +84,7 @@ describe('LandscapeGate', () => {
     container.remove();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+    endMatchSession();
   });
 
   function render(children = <StateProbe />) {
@@ -102,6 +114,75 @@ describe('LandscapeGate', () => {
       key: 'Tab', shiftKey: true, bubbles: true,
     })));
     expect(document.activeElement).toBe(cta);
+  });
+
+  it('removes an open MATCH menu before the portrait gate becomes the sole modal owner', () => {
+    const token = beginMatchSession('self');
+    expect(commitMatchSession(token, createEmptyGameState())).toBe(true);
+    render(<MatchMenu replayActive={false} />);
+    setLandscape(true);
+
+    act(() => container.querySelector<HTMLButtonElement>('[data-testid="match-menu-trigger"]')!.click());
+    act(() => document.querySelector<HTMLButtonElement>('[data-testid="match-menu-surrender"]')!.click());
+    const staleSubmit = document.querySelector<HTMLButtonElement>('[data-testid="match-menu-confirm-submit"]')!;
+    expect(document.querySelector('[data-testid="match-menu-dialog"]')).not.toBeNull();
+
+    setLandscape(false);
+
+    const cta = container.querySelector<HTMLButtonElement>('[data-testid="landscape-gate-cta"]')!;
+    expect(document.querySelector('[data-testid="match-menu-dialog"]')).toBeNull();
+    expect(document.querySelectorAll('[role="dialog"][aria-modal="true"]')).toHaveLength(1);
+    expect(document.activeElement).toBe(cta);
+    act(() => cta.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Tab', bubbles: true, cancelable: true,
+    })));
+    expect(document.activeElement).toBe(cta);
+
+    act(() => staleSubmit.click());
+    expect(useGameStateStore.getState().gameState?.gameResult).toBeUndefined();
+    expect(useGameStateStore.getState().gameState?.log.filter((entry) => entry.kind === 'game-result')).toHaveLength(0);
+  });
+
+  it('contains a card-detail portal and suspends every underlying modal in portrait', () => {
+    const closeDetail = vi.fn();
+    const cancelDecision = vi.fn();
+    render(
+      <>
+        <ChoicePickerModal
+          open
+          sourceName="Decision"
+          options={[{ index: 0, label: 'Option' }]}
+          onPick={vi.fn()}
+          onCancel={cancelDecision}
+        />
+        <CardExpandModal cardId="D08015" onClose={closeDetail} />
+      </>,
+    );
+    setLandscape(true);
+
+    const content = container.querySelector<HTMLElement>('[data-testid="landscape-gate-content"]')!;
+    const detail = document.querySelector<HTMLElement>('.card-expand-modal-backdrop')!;
+    expect(content.contains(detail)).toBe(true);
+
+    setLandscape(false);
+
+    expect(document.querySelectorAll('.card-expand-modal-backdrop[aria-modal="true"]')).toHaveLength(0);
+    expect(document.querySelectorAll('[role="dialog"][aria-modal="true"]')).toHaveLength(1);
+    act(() => window.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Escape', bubbles: true, cancelable: true,
+    })));
+    expect(closeDetail).not.toHaveBeenCalled();
+    expect(cancelDecision).not.toHaveBeenCalled();
+
+    setLandscape(true);
+    expect(detail.getAttribute('aria-modal')).toBe('true');
+    expect(detail.hasAttribute('aria-hidden')).toBe(false);
+    expect(detail.hasAttribute('inert')).toBe(false);
+    act(() => window.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Escape', bubbles: true, cancelable: true,
+    })));
+    expect(closeDetail).toHaveBeenCalledOnce();
+    expect(cancelDecision).not.toHaveBeenCalled();
   });
 
   it('focuses the route content after the first landscape transition', () => {

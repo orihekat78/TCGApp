@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { SAMPLE_DECK, SAMPLE_DECK_OPP } from '../../src/data/sampleDeck';
+import { gotoReadyLandscapeRoute } from './landscape-test-helpers';
 
 const NAV_ORDER = ['ホーム', 'デッキ', 'カード', 'ゲーム開始', 'チュートリアル', '履歴', '設定'];
 
@@ -11,7 +12,23 @@ const CLOUD_SYNC_CASES = [
 ] as const;
 
 async function setCloudSyncPhase(page: Page, phase: (typeof CLOUD_SYNC_CASES)[number]['phase']) {
-  await page.waitForTimeout(50);
+  await page.waitForFunction(async () => {
+    const [
+      { useCloudSyncStatusStore },
+      { useDecksStore },
+      { useHistoryStore },
+    ] = await Promise.all([
+      import('/src/cloud/statusStore.ts'),
+      import('/src/state/decksStore.ts'),
+      import('/src/state/historyStore.ts'),
+    ]);
+    const decks = useDecksStore.getState();
+    const history = useHistoryStore.getState();
+    return decks._hasHydrated
+      && history._hasHydrated
+      && history._hasCanonicalLoaded
+      && useCloudSyncStatusStore.getState().status.phase === 'disabled';
+  });
   await page.evaluate(async (nextPhase) => {
     const { useCloudSyncStatusStore } = await import('/src/cloud/statusStore.ts');
     useCloudSyncStatusStore.getState().setStatus({
@@ -22,6 +39,7 @@ async function setCloudSyncPhase(page: Page, phase: (typeof CLOUD_SYNC_CASES)[nu
       message: null,
     });
   }, phase);
+  await expect(page.locator('.cloud-sync-indicator')).toHaveAttribute('data-cloud-sync-phase', phase);
 }
 
 async function assertNoHorizontalOverflow(page: Page) {
@@ -546,6 +564,65 @@ test('HOME 720x393 keeps the 20/80 rail reachable inside the viewport', async ({
   expect(geometry.railBottom).toBeLessThanOrEqual(393);
   expect(geometry.screenOverflowY).toBe('hidden');
   await assertNoHorizontalOverflow(page);
+});
+
+test('HOME iPhone landscapes keep the 54px shell, art, and fixed navigation contained', async ({ page }) => {
+  for (const viewport of [{ width: 667, height: 375 }, { width: 851, height: 393 }]) {
+    await gotoReadyLandscapeRoute(page, 'home', '.home-screen', viewport);
+
+    await expect(page.locator('.home-header')).toHaveCSS('height', '54px');
+    await assertNoHorizontalOverflow(page);
+    const geometry = await page.evaluate(() => {
+    const screen = document.querySelector<HTMLElement>('.home-screen')!;
+    const images = [...document.querySelectorAll<HTMLImageElement>('.home-identity-art img')];
+    const buttons = [...document.querySelectorAll<HTMLElement>('.home-brand, .home-navigation button')];
+    return {
+      viewportHeight: window.innerHeight,
+      screenBottom: screen.getBoundingClientRect().bottom,
+      overflowY: getComputedStyle(screen).overflowY,
+      arts: images.map((image) => {
+        const imageRect = image.getBoundingClientRect();
+        const frameRect = image.closest<HTMLElement>('.home-identity-art')!.getBoundingClientRect();
+        return {
+          naturalWidth: image.naturalWidth,
+          naturalHeight: image.naturalHeight,
+          left: imageRect.left,
+          top: imageRect.top,
+          right: imageRect.right,
+          bottom: imageRect.bottom,
+          frameLeft: frameRect.left,
+          frameTop: frameRect.top,
+          frameRight: frameRect.right,
+          frameBottom: frameRect.bottom,
+        };
+      }),
+      navHits: buttons.map((button) => {
+        const rect = button.getBoundingClientRect();
+        return { width: rect.width, height: rect.height, left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
+      }),
+    };
+    });
+    expect(geometry.screenBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
+    expect(['hidden', 'clip']).toContain(geometry.overflowY);
+    expect(geometry.arts).toHaveLength(2);
+    expect(geometry.arts.every((art) => (
+      art.naturalWidth > 0
+      && art.naturalHeight > 0
+      && art.left >= art.frameLeft - 0.5
+      && art.top >= art.frameTop - 0.5
+      && art.right <= art.frameRight + 0.5
+      && art.bottom <= art.frameBottom + 0.5
+    ))).toBe(true);
+    expect(geometry.navHits).toHaveLength(8);
+    expect(geometry.navHits.every((hit) => (
+      hit.width >= 44
+      && hit.height >= 44
+      && hit.left >= 0
+      && hit.top >= 0
+      && hit.right <= viewport.width
+      && hit.bottom <= viewport.height
+    ))).toBe(true);
+  }
 });
 
 test('HOME navigation content stays inside its buttons around the compact breakpoint', async ({ page }) => {

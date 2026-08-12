@@ -5,6 +5,8 @@
 //   - gameState !== null のときは null を返す (非表示)
 //   - 「対戦開始」ボタンクリックで setGameState が呼ばれる (sampleGameState 相当)
 
+import { act } from 'react';
+import { createRoot } from 'react-dom/client';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import { GameSetupModal } from '@/ui/components/GameSetupModal';
@@ -49,5 +51,35 @@ describe('GameSetupModal', () => {
     expect(after?.turn.player).toMatch(/self|opp/);
     expect(after?.players.self).toBeDefined();
     expect(after?.players.opp).toBeDefined();
+  });
+
+  it('registers its visible root and includes the MatchMenu trigger in both Tab directions', () => {
+    globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    try {
+      act(() => root.render(
+        <>
+          <GameSetupModal />
+          <button type="button" data-match-menu-trigger="true" data-testid="menu-trigger">Menu</button>
+        </>,
+      ));
+      const modal = container.querySelector<HTMLElement>('[role="dialog"]')!;
+      const first = document.activeElement as HTMLElement;
+      const trigger = container.querySelector<HTMLButtonElement>('[data-testid="menu-trigger"]')!;
+      expect(modal.getAttribute('data-match-modal-registered')).toBe('true');
+      act(() => document.dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'Tab', shiftKey: true, bubbles: true, cancelable: true,
+      })));
+      expect(document.activeElement).toBe(trigger);
+      act(() => document.dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'Tab', bubbles: true, cancelable: true,
+      })));
+      expect(document.activeElement).toBe(first);
+    } finally {
+      act(() => root.unmount());
+      container.remove();
+    }
   });
 });

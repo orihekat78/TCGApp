@@ -7,6 +7,7 @@ import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { CardArt } from './CardArt.js';
 import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import './ChoicePickerModal.css';
 
 function LeaveInterceptCard({
@@ -56,7 +57,11 @@ export function LeaveInterceptModalHost(): JSX.Element | null {
   const state = useGameStateStore((s) => s.gameState);
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const expandModal = useCardExpandModal();
-  if (!pending || !isHumanDecisionOwner(pending.player, spectatorMode) || !state) return null;
+  const isOpen = pending !== null
+    && state !== null
+    && isHumanDecisionOwner(pending.player, spectatorMode);
+  const dialogRef = useModalFocusTrap({ active: isOpen });
+  if (!isOpen || !pending || !state) return null;
   const interceptor = state.players[pending.player].scene.find((c) => c.uid === pending.interceptorUid);
   const target = state.players[pending.player].scene.find((c) => c.uid === pending.targetUid);
   const interceptorName = interceptor ? (readDef.card(interceptor.cardId)?.names?.[0] ?? interceptor.cardId) : 'character';
@@ -64,7 +69,7 @@ export function LeaveInterceptModalHost(): JSX.Element | null {
   const resolve = (accept: boolean): void => {
     dispatchEngineAction(bindPendingDecision(pending, { type: 'leaveInterceptResolve', accept }));
   };
-  return <div className="cp-overlay" role="dialog" data-match-modal-registered="true" aria-modal="true" data-testid="leave-intercept-modal">
+  return <div ref={dialogRef} className="cp-overlay" role="dialog" data-match-modal-registered="true" aria-modal="true" data-testid="leave-intercept-modal">
     <div className="cp-modal"><div className="cp-header"><h2>Leave intercept</h2><p className="cp-sub">Remove {interceptorName} to move {targetName} to hand?</p></div>
       <div className="cp-body">
         <div className="leave-intercept-cards">

@@ -1,9 +1,10 @@
 import { expect, test } from '@playwright/test';
+import { gotoReadyLandscapeRoute } from './landscape-test-helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => localStorage.removeItem('conan.meta.v1.settings'));
-  await page.goto('/#tutorial');
+  await gotoReadyLandscapeRoute(page, 'tutorial', '.tutorial-screen', { width: 1280, height: 800 });
   await expect(page.getByText('探偵学校')).toBeVisible({ timeout: 6000 });
 });
 
@@ -87,11 +88,12 @@ test('TUTORIAL: a selected canonical step starts the matching guided overlay', a
   await page.getByRole('button', { name: /このステップを実戦で試す/ }).click();
   await expect(page).toHaveURL(/#match/);
 
-  const mulligan = page.locator('.mulligan-modal button:has-text("引き直しなし")');
-  if (await mulligan.isVisible({ timeout: 6000 }).catch(() => false)) await mulligan.click();
-
   const overlay = page.getByTestId('tutorial-overlay');
-  await expect(overlay).toBeVisible({ timeout: 8000 });
+  const mulligan = page.locator('button.mulligan-skip');
+  await expect.poll(async () => {
+    if (await mulligan.isVisible().catch(() => false)) await mulligan.click();
+    return overlay.isVisible();
+  }, { timeout: 10_000 }).toBe(true);
   await expect(overlay.locator('.tutorial-id')).toHaveText('L3-1');
   await expect(page.locator('.tutorial-highlight')).toBeVisible();
 });

@@ -116,11 +116,35 @@ describe('live ReplayLogV3 recorder', () => {
     useGameStateStore.getState().setGameState(committedTerminal);
     expect(finalizeLiveReplayRecording(sessionId)).toBe(true);
     const replay = getFinalizedReplay(sessionId);
+    expect(replay?.result).toEqual({ winner: 'opp', reason: 'concede', turns: 1 });
     expect(replay?.frames).toHaveLength(2);
     expect(replay?.frames.map(({ causalEventIds }) => causalEventIds)).toEqual([
       [`${sessionId}:1`],
       [`${sessionId}:2`],
     ]);
+    const replayedStates = replayStates(replay!);
+    const terminalStates = replayedStates.filter((state) => state.gameResult !== undefined);
+    expect(terminalStates).toHaveLength(1);
+    expect(terminalStates[0]?.gameResult).toEqual({ winner: 'opp', reason: 'concede' });
+    const terminalEvents = terminalStates[0]!.log.filter((entry) => (
+      typeof entry === 'object' && entry !== null && 'kind' in entry && entry.kind === 'game-result'
+    ));
+    expect(terminalEvents).toHaveLength(1);
+    expect(terminalEvents[0]).toMatchObject({
+      actor: 'opp',
+      source: { kind: 'player', side: 'opp' },
+      targets: [{ kind: 'player', side: 'self' }],
+    });
+    for (const state of replayedStates) {
+      expect(state.pendingEffects).toEqual([]);
+      expect(state.reservedEffects).toEqual([]);
+      expect(state.actionContexts).toEqual({});
+      expect(state.pendingRuntimeState).toBeUndefined();
+      expect(state.pendingReasoningContinuation).toBeUndefined();
+      expect(state.pendingTurnTransition).toBeUndefined();
+    }
+    expect(finalizeLiveReplayRecording(sessionId)).toBe(false);
+    expect(getFinalizedReplay(sessionId)).toEqual(replay);
   });
 
   it('does not roll a stale checkpoint over a replacement recording authority', () => {

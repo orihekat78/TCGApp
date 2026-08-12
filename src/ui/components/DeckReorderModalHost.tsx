@@ -23,6 +23,7 @@ import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { SelectableCardTile } from './SelectableCardTile.js';
 import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import './SouzaReorderModal.css';
 
 export function DeckReorderModalHost(): JSX.Element | null {
@@ -50,6 +51,7 @@ function DeckReorderModalInner({
   const [order, setOrder] = useState<OrderedCard[]>(() => asOrderedCards(cardIds));
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const expandModal = useCardExpandModal();
+  const dialogRef = useModalFocusTrap({ active: true });
   useEffect(() => {
     setOrder(asOrderedCards(cardIds));
     setDragIdx(null);
@@ -74,6 +76,7 @@ function DeckReorderModalInner({
 
   return (
     <div
+      ref={dialogRef}
       className="souza-overlay"
       role="dialog"
       data-match-modal-registered="true"

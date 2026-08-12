@@ -1,4 +1,4 @@
-import { act, useState } from 'react';
+import { act, StrictMode, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -22,7 +22,7 @@ function Harness({ underlyingEscape }: { underlyingEscape: () => void }) {
   return (
     <>
       <div ref={dialogRef} role="dialog" aria-modal="true" tabIndex={-1} data-testid="decision">
-        <button type="button" data-testid="decision-action">Resolve decision</button>
+        <span><button type="button" data-testid="decision-action">Resolve decision</button></span>
       </div>
       <button
         type="button"
@@ -110,15 +110,15 @@ describe('useMatchModalLayer', () => {
     const late = document.createElement('div');
     late.setAttribute('role', 'dialog');
     late.setAttribute('aria-modal', 'true');
-    late.setAttribute(MATCH_MODAL_REGISTERED_ATTRIBUTE, 'true');
     document.body.appendChild(late);
 
     await act(async () => Promise.resolve());
-    expect(late.getAttribute(MATCH_MODAL_REGISTERED_ATTRIBUTE)).toBe('true');
     const unregistered = Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal]'))
       .filter((node) => !node.hasAttribute('data-match-menu-dialog'))
       .filter((node) => node.getAttribute(MATCH_MODAL_REGISTERED_ATTRIBUTE) !== 'true');
-    expect(unregistered).toHaveLength(0);
+    expect(unregistered).toEqual([late]);
+
+    late.setAttribute(MATCH_MODAL_REGISTERED_ATTRIBUTE, 'true');
 
     const trigger = container.querySelector<HTMLButtonElement>('[data-testid="menu-trigger"]')!;
     act(() => trigger.click());
@@ -152,6 +152,25 @@ describe('useMatchModalLayer', () => {
     expect(document.activeElement).not.toBe(action);
   });
 
+  it.each([
+    ['hidden', (action: HTMLElement) => { action.hidden = true; }],
+    ['display none', (action: HTMLElement) => { action.style.display = 'none'; }],
+    ['visibility hidden', (action: HTMLElement) => { action.style.visibility = 'hidden'; }],
+    ['aria-hidden ancestor', (action: HTMLElement) => { action.parentElement!.setAttribute('aria-hidden', 'true'); }],
+    ['inert ancestor', (action: HTMLElement) => { action.parentElement!.setAttribute('inert', ''); }],
+  ])('does not restore focus to a %s prior control under StrictMode', (_label, makeDead) => {
+    act(() => root.render(<StrictMode><Harness underlyingEscape={vi.fn()} /></StrictMode>));
+    const action = container.querySelector<HTMLButtonElement>('[data-testid="decision-action"]')!;
+    const trigger = container.querySelector<HTMLButtonElement>('[data-testid="menu-trigger"]')!;
+    action.focus();
+    act(() => trigger.click());
+    makeDead(action);
+    act(() => document.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Escape', bubbles: true, cancelable: true,
+    })));
+    expect(document.activeElement).not.toBe(action);
+  });
+
   it('keeps the checked-in modal-owner inventory exhaustive', () => {
     const rootDir = resolve(process.cwd(), 'src/ui/components');
     const actual = readdirSync(rootDir)
@@ -166,10 +185,46 @@ describe('useMatchModalLayer', () => {
       'utf8',
     ).trim().split(/\r?\n/u).sort();
     expect(actual).toEqual(expected);
+    const customEquivalentOwners = new Set([
+      'src/ui/components/CardExpandModal.tsx',
+      'src/ui/components/EffectPickerModal.tsx',
+      'src/ui/components/MulliganModal.tsx',
+    ]);
     for (const file of actual) {
       const source = readFileSync(resolve(process.cwd(), file), 'utf8');
-      expect(source, `${file} must explicitly register its modal root`).toMatch(
-        /useModalFocusTrap|data-match-modal-registered/,
+      if (!customEquivalentOwners.has(file)) {
+        expect(source, `${file} must use the shared focus-scope contract`).toMatch(/useModalFocusTrap/);
+      } else {
+        expect(source, `${file} custom trap must include the MATCH menu trigger`).toMatch(/withMatchMenuTrigger/);
+        expect(source, `${file} custom trap must reject dead focus restoration`).toMatch(/canRestoreModalFocus/);
+        expect(source, `${file} custom trap must own keyboard arbitration`).toMatch(/addEventListener\('keydown'/);
+        expect(source, `${file} custom trap must require visible top-layer ownership`).toMatch(
+          /isTopmostMatchModalRoot/,
+        );
+      }
+      const ariaModalRoots = source.match(/<[^>]+aria-modal(?:=|\s)[^>]*>/gu) ?? [];
+      expect(ariaModalRoots.length, `${file} must contain an aria-modal root`).toBeGreaterThan(0);
+      for (const modalRoot of ariaModalRoots) {
+        const usesRegisteredTrap = /useModalFocusTrap/.test(source) && /ref=\{dialogRef\}/.test(modalRoot);
+        const usesCustomEquivalent = customEquivalentOwners.has(file)
+          && /data-match-modal-registered="true"/.test(modalRoot);
+        expect(
+          usesRegisteredTrap || usesCustomEquivalent,
+          `${file} must register each aria-modal root exactly at the root`,
+        ).toBe(true);
+      }
+    }
+    for (const file of [
+      'src/ui/components/DeckPlaceModalHost.tsx',
+      'src/ui/components/GameSetupModal.tsx',
+      'src/ui/components/LogPanel.tsx',
+    ]) {
+      const source = readFileSync(resolve(process.cwd(), file), 'utf8');
+      expect(source, `${file} interactive modal must share the registered focus-scope contract`).toMatch(
+        /useModalFocusTrap/,
+      );
+      expect(source, `${file} visible root must own the registered trap ref`).toMatch(
+        /ref=\{dialogRef\}/,
       );
     }
   });

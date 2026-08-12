@@ -7,6 +7,7 @@ import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { SelectableCardTile } from './SelectableCardTile.js';
 import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import './ChoicePickerModal.css';
 
 /** Chooses a physical set-card without revealing its identity before selection. */
@@ -14,7 +15,9 @@ export function SetCardChoiceModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingSetCardChoice);
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const expandModal = useCardExpandModal();
-  if (!pending || !isHumanDecisionOwner(pending.player, spectatorMode)) return null;
+  const isOpen = pending !== null && isHumanDecisionOwner(pending.player, spectatorMode);
+  const dialogRef = useModalFocusTrap({ active: isOpen });
+  if (!isOpen || !pending) return null;
   const isCost = pending.purpose === 'cost';
   const selected = new Set(pending.selectedInstanceIds ?? []);
   const canConfirm = selected.size >= (pending.nMin ?? 0) && selected.size <= (pending.nMax ?? 0);
@@ -25,7 +28,7 @@ export function SetCardChoiceModalHost(): JSX.Element | null {
       : pending.destination?.area === 'scene'
         ? 'Choose one set card to move to the selected character.'
         : 'Choose one facedown set card.';
-  return <div className="cp-overlay" role="dialog" data-match-modal-registered="true" aria-modal="true" data-testid="set-card-choice-modal">
+  return <div ref={dialogRef} className="cp-overlay" role="dialog" data-match-modal-registered="true" aria-modal="true" data-testid="set-card-choice-modal">
     <div className="cp-modal"><div className="cp-header"><h2>Set card</h2><p className="cp-sub">{isCost ? `${pending.nMin ?? 1}枚をコストとして選んでください。` : movePrompt}</p></div>
       <div className="cp-body"><ul className="cp-list">{pending.entries.map((entry) => {
         const hidden = entry.hidden ?? true;

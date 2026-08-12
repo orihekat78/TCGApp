@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from 'react';
+import { useLayoutEffect, useRef, type RefObject } from 'react';
 
 export const MATCH_MODAL_REGISTERED_ATTRIBUTE = 'data-match-modal-registered';
 
@@ -23,15 +23,43 @@ function modalRoots(): HTMLElement[] {
   ));
 }
 
+function isSuppressedModalRoot(dialog: HTMLElement): boolean {
+  if (!dialog.isConnected || dialog.getAttribute('aria-modal') !== 'true') return true;
+  if (dialog.closest('[hidden], [inert], [aria-hidden="true"]') !== null) return true;
+  for (let node: HTMLElement | null = dialog; node; node = node.parentElement) {
+    const style = window.getComputedStyle(node);
+    if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') {
+      return true;
+    }
+  }
+  return false;
+}
+
 /** Explicitly enrolls one live-MATCH modal root in top-layer arbitration. */
 export function registerMatchModalRoot(dialog: HTMLElement): void {
   dialog.setAttribute(MATCH_MODAL_REGISTERED_ATTRIBUTE, 'true');
 }
 
-function canRestoreFocus(target: HTMLElement | null): target is HTMLElement {
+/** True only for the visible, unsuspended registered root that owns keyboard input. */
+export function isTopmostMatchModalRoot(dialog: HTMLElement | null): dialog is HTMLElement {
+  if (!dialog || isSuppressedModalRoot(dialog)) return false;
+  const activeRoots = modalRoots().filter((root) => !isSuppressedModalRoot(root));
+  return activeRoots.at(-1) === dialog;
+}
+
+/** Shared guard for modal cleanup: never focus a dead or hidden control. */
+export function canRestoreModalFocus(target: HTMLElement | null): target is HTMLElement {
   if (!target?.isConnected) return false;
-  if (target.matches(':disabled, [aria-disabled="true"], [inert]')) return false;
-  return target.closest('[inert], [aria-hidden="true"]') === null;
+  if (!target.matches(FOCUSABLE_SELECTOR)) return false;
+  if (target.matches(':disabled, [aria-disabled="true"], [hidden], [inert]')) return false;
+  if (target.closest('[hidden], [inert], [aria-hidden="true"]') !== null) return false;
+  for (let node: HTMLElement | null = target; node; node = node.parentElement) {
+    const style = window.getComputedStyle(node);
+    if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') {
+      return false;
+    }
+  }
+  return true;
 }
 
 /** Adds the persistent MATCH menu trigger to an active dialog's keyboard scope. */
@@ -64,7 +92,7 @@ export function useMatchModalLayer({
   onEscapeRef.current = onEscape;
   shouldRestoreFocusRef.current = shouldRestoreFocus;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!active) return undefined;
     const menu = dialogRef.current;
     if (!menu) return undefined;
@@ -141,7 +169,7 @@ export function useMatchModalLayer({
       }
       const returnFocus = returnFocusRef.current;
       returnFocusRef.current = null;
-      if (shouldRestoreFocusRef.current() && canRestoreFocus(returnFocus)) returnFocus.focus();
+      if (shouldRestoreFocusRef.current() && canRestoreModalFocus(returnFocus)) returnFocus.focus();
     };
   }, [active, initialFocusSelector]);
 

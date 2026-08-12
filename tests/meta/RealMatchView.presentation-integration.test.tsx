@@ -130,6 +130,7 @@ describe('RealMatchView committed terminal presentation integration', () => {
     const advanceTerminal = vi.spyOn(queue, 'advanceTerminal');
     const onMatchEnd = vi.fn(() => endMatchSession({ preserveGameState: true }));
     act(() => root.render(<RealMatchView onMatchEnd={onMatchEnd} />));
+    expect(container.querySelector('[data-testid="match-menu-trigger"]')).not.toBeNull();
 
     commitTerminalState(liveState, true);
     expect(usePresentationStore.getState().presentationError).toBeNull();
@@ -145,7 +146,10 @@ describe('RealMatchView committed terminal presentation integration', () => {
     expect(queue.outstandingCount()).toBe(0);
     expect(useGameStateStore.getState().pendingDeckReveal).toBeNull();
     expect(useGameStateStore.getState().pendingPublicHandReveal).toBeNull();
-    expect(getFinalizedReplay(sessionId)).not.toBeNull();
+    expect(container.querySelector('[data-testid="match-menu-trigger"]')).toBeNull();
+    expect(getFinalizedReplay(sessionId)?.result).toEqual({
+      winner: 'opp', reason: 'concede', turns: 0,
+    });
     act(() => vi.advanceTimersByTime(10_000));
     expect(onMatchEnd).toHaveBeenCalledOnce();
   });
@@ -185,8 +189,40 @@ describe('RealMatchView committed terminal presentation integration', () => {
     expect(usePresentationStore.getState().presentationError).toBeNull();
     expect(useGameStateStore.getState().gameState?.gameResult).toEqual({
       winner: 'opp',
-      reason: 'evidence',
+      reason: 'concede',
     });
+  });
+
+  it('keeps the match menu absent for precommit, spectator, replay, and terminal ownership', () => {
+    const token = beginMatchSession('self');
+    const onMatchEnd = vi.fn();
+    act(() => root.render(<RealMatchView onMatchEnd={onMatchEnd} />));
+    expect(container.querySelector('[data-testid="match-menu-trigger"]')).toBeNull();
+
+    const liveState = createEmptyGameState();
+    startCausalSession(liveState, matchSessionId(token));
+    expect(commitMatchSession(token, liveState)).toBe(true);
+    act(() => root.render(<RealMatchView onMatchEnd={onMatchEnd} />));
+    expect(container.querySelector('[data-testid="match-menu-trigger"]')).not.toBeNull();
+
+    act(() => useGameStateStore.getState().setSpectatorMode(true));
+    expect(container.querySelector('[data-testid="match-menu-trigger"]')).toBeNull();
+
+    act(() => {
+      useGameStateStore.getState().setSpectatorMode(false);
+      replayMock.log = {};
+      root.render(<RealMatchView onMatchEnd={onMatchEnd} />);
+    });
+    expect(container.querySelector('[data-testid="match-menu-trigger"]')).toBeNull();
+    act(() => vi.advanceTimersByTime(10_000));
+    expect(onMatchEnd).not.toHaveBeenCalled();
+
+    act(() => {
+      replayMock.log = null;
+      root.render(<RealMatchView onMatchEnd={onMatchEnd} />);
+    });
+    commitTerminalState(liveState, false);
+    expect(container.querySelector('[data-testid="match-menu-trigger"]')).toBeNull();
   });
 });
 
@@ -214,7 +250,7 @@ function commitTerminalState(
     targets: [{ kind: 'player', side: 'self' }],
     outcome: { type: 'state', state: 'success' },
   });
-  terminalState.gameResult = { winner: 'opp', reason: 'evidence' };
+  terminalState.gameResult = { winner: 'opp', reason: 'concede' };
   act(() => {
     useGameStateStore.getState().setGameState(terminalState);
     if (!retainSurfaces) return;

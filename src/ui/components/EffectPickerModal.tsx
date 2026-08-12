@@ -18,7 +18,11 @@ import { CardExpandModal } from './CardExpandModal.js';
 import { PublicHandRevealCards } from './PublicHandRevealWindow.js';
 import { shouldRenderEffectPicker } from '@/ui/services/effectPickerVisibility.js';
 import { effectivePendingPickRange, pendingPickSelectionViolation } from '@/engine/effect/pick-selection.js';
-import { withMatchMenuTrigger } from '@/ui/hooks/useMatchModalLayer.js';
+import {
+  canRestoreModalFocus,
+  isTopmostMatchModalRoot,
+  withMatchMenuTrigger,
+} from '@/ui/hooks/useMatchModalLayer.js';
 import './EffectPickerModal.css';
 
 /**
@@ -57,7 +61,7 @@ export function EffectPickerModal(): JSX.Element | null {
     if (!shouldRender) {
       const returnFocus = returnFocusRef.current;
       returnFocusRef.current = null;
-      if (returnFocus?.isConnected) returnFocus.focus();
+      if (canRestoreModalFocus(returnFocus)) returnFocus.focus();
       return;
     }
     if (!returnFocusRef.current && document.activeElement instanceof HTMLElement) {
@@ -66,7 +70,7 @@ export function EffectPickerModal(): JSX.Element | null {
     return () => {
       const returnFocus = returnFocusRef.current;
       returnFocusRef.current = null;
-      if (returnFocus?.isConnected) returnFocus.focus();
+      if (canRestoreModalFocus(returnFocus)) returnFocus.focus();
     };
   }, [shouldRender]);
 
@@ -81,7 +85,7 @@ export function EffectPickerModal(): JSX.Element | null {
     const focusable = getFocusable();
     if (!dialog.contains(document.activeElement)) focusable[0]?.focus();
     const onKeyDown = (event: KeyboardEvent): void => {
-      if (dialog.hasAttribute('inert')) return;
+      if (!isTopmostMatchModalRoot(dialog)) return;
       if (event.key === 'Escape') {
         event.preventDefault();
         event.stopPropagation();
@@ -89,19 +93,19 @@ export function EffectPickerModal(): JSX.Element | null {
       }
       if (event.key !== 'Tab') return;
       const controls = getFocusable();
-      if (controls.length === 0) return;
-      const activeIndex = controls.indexOf(document.activeElement as HTMLButtonElement);
-      if (event.shiftKey) {
-        if (activeIndex <= 0) {
-          event.preventDefault();
-          controls.at(-1)?.focus();
-        }
+      if (controls.length === 0) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        dialog.focus();
         return;
       }
-      if (activeIndex === -1 || activeIndex === controls.length - 1) {
-        event.preventDefault();
-        controls[0]?.focus();
-      }
+      const activeIndex = controls.indexOf(document.activeElement as HTMLElement);
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const nextIndex = event.shiftKey
+        ? (activeIndex <= 0 ? controls.length - 1 : activeIndex - 1)
+        : (activeIndex === -1 || activeIndex === controls.length - 1 ? 0 : activeIndex + 1);
+      controls[nextIndex]?.focus();
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);

@@ -9,12 +9,13 @@
 //   親 (App.tsx) が setGameState(createCutinDemoState(cardId)) + mode='playing'
 //   + dispatch actionDeclareChar を行う。
 
-import { useEffect, type JSX } from 'react';
+import type { JSX } from 'react';
 import type { CardDef } from '@/engine/types';
 import { ALL_CARDS } from '@/cards';
 import { CardArt } from './CardArt.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import { cardIdToDisplayName, cardIdToPrintedNumber } from '@/ui/services/uidNames.js';
 // hirameki picker と同じ class 名で見た目を流用 (色は青系統に override 可能だが
 // まずは demo パターンの統一感を優先)
@@ -42,16 +43,11 @@ const ICON_CUTIN_CARDS = getIconCutinCards();
 export function CutinDemoPickerModal(props: CutinDemoPickerModalProps): JSX.Element {
   const { onPick, onClose } = props;
   const expandModal = useCardExpandModal();
-  useEffect(() => {
-    const handler = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [onClose]);
+  const dialogRef = useModalFocusTrap({ active: true, onEscape: onClose });
 
   return (
     <div
+      ref={dialogRef}
       className="hirameki-demo-picker-backdrop"
       role="dialog"
       data-match-modal-registered="true"

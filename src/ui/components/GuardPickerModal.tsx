@@ -12,6 +12,7 @@
 import type { JSX } from 'react';
 import type { SceneCharacter } from '@/engine/types/game-state.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { SelectableCardTile } from './SelectableCardTile.js';
@@ -46,10 +47,12 @@ export type GuardPickerModalProps = {
 export function GuardPickerModal(props: GuardPickerModalProps): JSX.Element | null {
   const { open, candidates, attackerName, onPick, onSkip, mustGuard } = props;
   const expandModal = useCardExpandModal();
+  const dialogRef = useModalFocusTrap({ active: open });
   if (!open) return null;
 
   return (
     <div
+      ref={dialogRef}
       className="guard-picker-overlay"
       role="dialog"
       data-match-modal-registered="true"

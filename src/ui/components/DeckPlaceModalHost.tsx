@@ -20,6 +20,7 @@ import {
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { SelectableCardTile } from './SelectableCardTile.js';
@@ -52,6 +53,7 @@ function DeckPlaceModalInner({
   const [rows, setRows] = useState<Row[]>(() => asRows(cardIds));
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const expandModal = useCardExpandModal();
+  const dialogRef = useModalFocusTrap({ active: true });
   useEffect(() => {
     setRows(asRows(cardIds));
     setDragIdx(null);
@@ -79,6 +81,7 @@ function DeckPlaceModalInner({
 
   return (
     <div
+      ref={dialogRef}
       className="souza-overlay"
       role="dialog"
       data-match-modal-registered="true"

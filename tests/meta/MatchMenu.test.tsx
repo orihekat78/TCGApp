@@ -1,4 +1,4 @@
-import { act } from 'react';
+import { act, StrictMode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { registerAll } from '@/cards';
@@ -117,6 +117,37 @@ describe('MatchMenu', () => {
     expect(terminalEvents).toHaveLength(1);
     expect(document.activeElement).not.toBe(trigger);
     expect(document.querySelector('[data-match-menu-dialog]')).toBeNull();
+  });
+
+  it.each(['replay', 'spectator', 'session loss'])('closes and releases the underlying modal when eligibility drifts through %s', (label) => {
+    beginCommittedMatch();
+    let replayActive = false;
+    const render = () => root.render(
+      <StrictMode>
+        <div role="dialog" aria-modal="true" data-match-modal-registered="true" data-testid="underlying">
+          <button type="button" data-testid="underlying-action">Resolve</button>
+        </div>
+        <MatchMenu replayActive={replayActive} />
+      </StrictMode>,
+    );
+    act(render);
+    const action = container.querySelector<HTMLButtonElement>('[data-testid="underlying-action"]')!;
+    action.focus();
+    act(() => container.querySelector<HTMLButtonElement>('[data-testid="match-menu-trigger"]')!.click());
+    expect(container.querySelector('[data-testid="underlying"]')?.hasAttribute('inert')).toBe(true);
+
+    act(() => {
+      if (label === 'replay') replayActive = true;
+      if (label === 'spectator') useGameStateStore.setState({ spectatorMode: true });
+      if (label === 'session loss') endMatchSession();
+      render();
+    });
+
+    const underlying = container.querySelector<HTMLElement>('[data-testid="underlying"]')!;
+    expect(document.querySelector('[data-match-menu-dialog]')).toBeNull();
+    expect(underlying.hasAttribute('inert')).toBe(false);
+    expect(underlying.getAttribute('aria-modal')).toBe('true');
+    expect(underlying.hasAttribute('aria-hidden')).toBe(false);
   });
 });
 

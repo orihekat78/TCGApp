@@ -1,7 +1,45 @@
 // spec: .claude/specs/meta-ui/ (Phase 18: DeckEditor リデザイン + 同 ID 3 枚上限の UI 可視化)
 // 「処理だけでなく UI 上で確認できる」ことを検証する (rules/02: 同じカード=同 ID、最大 3 枚)。
 
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
+import { gotoReadyLandscapeRoute } from './landscape-test-helpers';
+
+async function revealPoolCard(page: Page, cardNumber: string) {
+  await page.getByRole('textbox', { name: 'カードを検索' }).fill(cardNumber);
+  const visibleResults = page.locator('[data-testid^="deck-pool-card-"]');
+  await expect.poll(async () => visibleResults.evaluateAll((items, expectedNumber) => (
+    items.length > 0
+      && items.every((item) => item.getAttribute('data-testid') === `deck-pool-card-${expectedNumber}`)
+  ), cardNumber)).toBe(true);
+  const card = page.getByTestId(`deck-pool-card-${cardNumber}`);
+  await expect(card).toBeVisible();
+  return card;
+}
+
+async function expectFullyVisibleHitTarget(
+  control: Locator,
+  viewport: { width: number; height: number },
+) {
+  await expect(control).toBeVisible();
+  await expect(control).toBeEnabled();
+  const geometry = await control.evaluate((element: HTMLElement) => {
+    const box = element.getBoundingClientRect();
+    return {
+      cssWidth: element.offsetWidth,
+      cssHeight: element.offsetHeight,
+      left: box.left,
+      top: box.top,
+      right: box.right,
+      bottom: box.bottom,
+    };
+  });
+  expect(geometry.cssWidth).toBeGreaterThanOrEqual(44);
+  expect(geometry.cssHeight).toBeGreaterThanOrEqual(44);
+  expect(geometry.left).toBeGreaterThanOrEqual(0);
+  expect(geometry.top).toBeGreaterThanOrEqual(0);
+  expect(geometry.right).toBeLessThanOrEqual(viewport.width);
+  expect(geometry.bottom).toBeLessThanOrEqual(viewport.height);
+}
 
 test('DECK keeps its pool window bounded while selected and focused cards remain connected', async ({ page }) => {
   const errors: string[] = [];
@@ -86,9 +124,9 @@ test('DECK刷新: プールのクリックは枚数を変えず、左詳細を�
   await expect(page.getByText('検証 OK')).toBeVisible({ timeout: 6000 });
   await expect(page.getByTestId('spectator-hud')).toHaveCount(0);
 
-  const poolCard = page.getByTestId('deck-pool-card-D08023');
   const count = page.getByTestId('deck-count-D08023');
   await expect(count).toHaveAttribute('data-count', '2');
+  const poolCard = await revealPoolCard(page, 'D08023');
   await poolCard.click();
 
   const detail = page.getByRole('dialog', { name: 'カード詳細: 毛利蘭' });
@@ -157,12 +195,12 @@ test('DECK刷新: プールからデッキへドラッグして追加し、同�
   await page.goto('/#deck');
   await expect(page.getByText('検証 OK')).toBeVisible({ timeout: 6000 });
 
-  const poolCard = page.getByTestId('deck-pool-card-D08023');
   const dropzone = page.getByTestId('deck-dropzone');
   const count = page.getByTestId('deck-count-D08023');
   const status = page.getByRole('status', { name: 'デッキ編集結果' });
 
   await expect(count).toHaveAttribute('data-count', '2');
+  const poolCard = await revealPoolCard(page, 'D08023');
   await poolCard.dragTo(dropzone);
   await expect(count).toHaveAttribute('data-count', '3');
   await expect(status).toContainText('毛利蘭を1枚追加しました');
@@ -344,7 +382,7 @@ test('DECK刷新: フィルタと共通モーダルはフォーカスを閉じ�
   await expect(codeDialog).toBeHidden();
   await expect(codeTrigger).toBeFocused();
 
-  const poolCard = page.getByTestId('deck-pool-card-D08023');
+  const poolCard = await revealPoolCard(page, 'D08023');
   await poolCard.click({ button: 'right' });
   const expandDialog = page.getByRole('dialog', { name: 'カード拡大表示: 毛利蘭' });
   const expandClose = expandDialog.getByRole('button', { name: '閉じる' });
@@ -615,9 +653,8 @@ test('DECK刷新: カード一覧を収録弾で絞り込める', async ({ page 
 });
 
 test('DECK刷新: 851x393でもデッキとプールを横並びに保ち、詳細操作は44px以上', async ({ page }) => {
-  await page.setViewportSize({ width: 851, height: 393 });
-  await page.goto('/#deck');
-  await expect(page.getByTestId('deck-editor')).toBeVisible({ timeout: 6000 });
+  const viewport = { width: 851, height: 393 };
+  await gotoReadyLandscapeRoute(page, 'deck', '[data-testid="deck-editor"]', viewport);
   await expect(page.locator('.deck-main-pane')).toHaveCSS('scrollbar-width', 'thin');
 
   const geometry = await page.evaluate(() => {
@@ -664,21 +701,96 @@ test('DECK刷新: 851x393でもデッキとプールを横並びに保ち、詳�
   await page.getByLabel('デッキ名').fill('少年探偵団・標準 改');
   await expect(page.getByRole('button', { name: '保存（未保存の変更あり）' })).toBeVisible();
 
-  await page.getByTestId('deck-pool-card-D08023').click();
-  const detail = page.getByRole('dialog', { name: 'カード詳細: 毛利蘭' });
+  const poolCard = await revealPoolCard(page, 'D08023');
+  await poolCard.click();
+  const detail = page.getByRole('dialog', { name: 'カード詳細: 毛利蘭', exact: true });
   await expect(detail).toBeVisible();
   await expect(detail.getByTestId('deck-detail-effect')).toBeInViewport();
-  const effectBox = await detail.getByTestId('deck-detail-effect').boundingBox();
+  const scrollBox = await detail.locator('.deck-detail-scroll').boundingBox();
   const actionBox = await detail.getByTestId('deck-detail-actions').boundingBox();
-  expect((effectBox?.y ?? 0) + (effectBox?.height ?? 0)).toBeLessThanOrEqual(actionBox?.y ?? 0);
-  for (const button of [
-    detail.getByRole('button', { name: 'カード詳細を閉じる' }),
-    detail.getByRole('button', { name: '毛利蘭をデッキに追加' }),
-    detail.getByRole('button', { name: '毛利蘭をデッキから1枚除く' }),
+  expect((scrollBox?.y ?? 0) + (scrollBox?.height ?? 0)).toBeLessThanOrEqual(actionBox?.y ?? 0);
+  for (const control of [
+    detail.getByRole('button', { name: 'カード詳細を閉じる', exact: true }),
+    detail.getByRole('button', { name: '1枚追加: 毛利蘭をデッキに追加', exact: true }),
+    detail.getByRole('button', { name: '毛利蘭をデッキから1枚除く', exact: true }),
   ]) {
-    const box = await button.boundingBox();
-    expect(box?.height).toBeGreaterThanOrEqual(44);
-    expect(box?.width).toBeGreaterThanOrEqual(44);
+    await expectFullyVisibleHitTarget(control, viewport);
+  }
+});
+
+test('DECK exact SE3 landscape keeps D08023 detail scrollable with pinned named actions', async ({ page }) => {
+  const viewport = { width: 667, height: 375 };
+  await gotoReadyLandscapeRoute(page, 'deck', '[data-testid="deck-editor"]', viewport);
+
+  const count = page.getByTestId('deck-count-D08023');
+  await expect(count).toHaveAttribute('data-count', '2');
+  const poolCard = await revealPoolCard(page, 'D08023');
+  await poolCard.click();
+
+  const detail = page.getByRole('dialog', { name: 'カード詳細: 毛利蘭', exact: true });
+  const scroll = detail.locator('.deck-detail-scroll');
+  const footer = detail.getByTestId('deck-detail-actions');
+  const close = detail.getByRole('button', { name: 'カード詳細を閉じる', exact: true });
+  const add = detail.getByRole('button', { name: '1枚追加: 毛利蘭をデッキに追加', exact: true });
+  const remove = detail.getByRole('button', { name: '毛利蘭をデッキから1枚除く', exact: true });
+
+  await expect(detail).toBeVisible();
+  await expect(scroll).toHaveCSS('overflow-y', 'auto');
+  const before = await page.evaluate(() => {
+    const drawer = document.querySelector<HTMLElement>('.deck-detail-drawer')!.getBoundingClientRect();
+    const content = document.querySelector<HTMLElement>('.deck-detail-scroll')!;
+    const contentBox = content.getBoundingClientRect();
+    const actions = document.querySelector<HTMLElement>('[data-testid="deck-detail-actions"]')!.getBoundingClientRect();
+    return {
+      drawerBottom: drawer.bottom,
+      contentBottom: contentBox.bottom,
+      contentClientHeight: content.clientHeight,
+      contentScrollHeight: content.scrollHeight,
+      footerTop: actions.top,
+      footerBottom: actions.bottom,
+    };
+  });
+  expect(before.contentScrollHeight).toBeGreaterThan(before.contentClientHeight);
+  expect(before.contentBottom).toBeLessThanOrEqual(before.footerTop + 0.5);
+  expect(before.footerBottom).toBeLessThanOrEqual(before.drawerBottom + 0.5);
+  expect(before.footerBottom).toBeLessThanOrEqual(viewport.height);
+
+  for (const control of [close, add, remove]) {
+    await expectFullyVisibleHitTarget(control, viewport);
+  }
+
+  await scroll.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await expect.poll(() => scroll.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  const pinnedFooterTop = await footer.evaluate((element) => element.getBoundingClientRect().top);
+  expect(pinnedFooterTop).toBeCloseTo(before.footerTop, 2);
+
+  await remove.click();
+  await expect(count).toHaveAttribute('data-count', '1');
+  await add.click();
+  await expect(count).toHaveAttribute('data-count', '2');
+  await close.click();
+  await expect(detail).toHaveCount(0);
+});
+
+test('DECK iPhone landscapes keep catalog controls reachable without page overflow', async ({ page }) => {
+  for (const viewport of [{ width: 667, height: 375 }, { width: 851, height: 393 }]) {
+    await gotoReadyLandscapeRoute(page, 'deck', '[data-testid="deck-editor"]', viewport);
+
+    const geometry = await page.evaluate(() => ({
+    header: document.querySelector<HTMLElement>('.home-header')!.getBoundingClientRect().height,
+    overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    workspaceBottom: document.querySelector<HTMLElement>('[data-testid="deck-workspace"]')!.getBoundingClientRect().bottom,
+    controls: [...document.querySelectorAll<HTMLElement>('.home-brand, .home-navigation button, .deck-search-box, .deck-pool-sort-button')]
+      .map((control) => {
+        const box = control.getBoundingClientRect();
+        return { width: box.width, height: box.height, right: box.right, bottom: box.bottom };
+      }),
+    }));
+    expect(geometry.header).toBe(54);
+    expect(geometry.overflowX).toBe(0);
+    expect(geometry.workspaceBottom).toBeLessThanOrEqual(viewport.height);
+    expect(geometry.controls.length).toBeGreaterThan(10);
+    expect(geometry.controls.every((control) => control.width >= 44 && control.height >= 44 && control.right <= viewport.width && control.bottom <= viewport.height)).toBe(true);
   }
 });
 
@@ -717,32 +829,34 @@ test('DECK: パラレル合算の同ID上限が UI で機能する (追加→兄
   await page.goto('/#deck');
   await expect(page.getByText('検証 OK')).toBeVisible({ timeout: 6000 });
 
-  // 毛利蘭は D08023×2 のみ採用 = cardId 0096 が 2/3。
-  // 同 cardId の全印刷が合算で "2/3" 表示 (パラレル合算の可視化)。
-  const at2 = page.getByLabel('毛利蘭 2/3');
-  const variantCount = await at2.count();
-  expect(variantCount).toBeGreaterThanOrEqual(2);
+  // 毛利蘭 D08023×2 の採用は cardId 0096 全体で 2/3。
+  // 仮想化されたプールでは、対象と兄弟印刷を番号検索で個別に表示して確認する。
+  const d08023 = await revealPoolCard(page, 'D08023');
+  await expect(d08023).toHaveAttribute('aria-label', /^毛利蘭 2\/3。/);
   await page.screenshot({ path: '.tmp/verify-id-before.png', fullPage: false });
 
-  // 1 枚目の絵柄を選択 → 詳細パネルに "2 / 3" + ＋ 有効
-  await at2.first().click();
+  // D08023 を選択 → 詳細パネルに "2 / 3" + ＋ 有効
+  await d08023.click();
   await expect(page.getByText('2 / 3')).toBeVisible();
-  // 詳細の ＋ で +1 → cardId 0096 = 3 → 全絵柄が "3/3" + MAX 表示
+  // 詳細の ＋ で +1 → D08023 自身が 3/3 + MAX 表示
   await page.getByRole('button', { name: '1枚追加' }).press('Enter');
-  await expect(page.getByLabel('毛利蘭 3/3')).toHaveCount(variantCount);
+  await expect(d08023).toHaveAttribute('aria-label', /^毛利蘭 3\/3。/);
   await expect(page.getByText('MAX 3').first()).toBeVisible();
   await page.locator('.deck-detail-header button').click();
   const feedback = page.getByTestId('deck-feedback');
   if (await feedback.isVisible()) await feedback.locator('button').click();
 
-  // 兄弟絵柄 (別 cardNum・同 cardId) を選択 → 詳細で「同 ID 上限」+ ＋ 無効でブロックが可視
-  await page.getByLabel('毛利蘭 3/3').last().click();
+  // 兄弟絵柄 D01007 (別 cardNum・同 cardId) も 3/3。
+  // 詳細では「同 ID 上限」+ ＋ 無効で追加がブロックされる。
+  const d01007 = await revealPoolCard(page, 'D01007');
+  await expect(d01007).toHaveAttribute('aria-label', /^毛利蘭 3\/3。/);
+  await d01007.click();
   await expect(page.getByText('同 ID 上限')).toBeVisible();
   await expect(page.getByRole('button', { name: '1枚追加' })).toBeDisabled();
   await page.screenshot({ path: '.tmp/verify-id-after.png', fullPage: false });
 
-  // 4/3 にはならない (兄弟絵柄経由でも超過不可)
-  await expect(page.getByLabel('毛利蘭 4/3')).toHaveCount(0);
+  // 4/3 にはならない (兄弟絵柄・別印刷でも共通上限)。
+  await expect(d01007).not.toHaveAttribute('aria-label', /^毛利蘭 4\/3。/);
 
   expect(errors).toEqual([]);
 });

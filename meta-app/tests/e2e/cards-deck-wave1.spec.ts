@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoReadyLandscapeRoute } from './landscape-test-helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 851, height: 393 });
@@ -214,8 +215,8 @@ test('CARDS keeps the 54px shared header, grid columns, and compact print visual
   expect(printBoxes.every(({ visual }) => visual.height >= 24 && visual.height <= 26)).toBe(true);
   expect(printBoxes.every(({ fontSize }) => fontSize >= 10)).toBe(true);
 
-  for (const width of [720, 667]) {
-    await page.setViewportSize({ width, height: 393 });
+  for (const viewport of [{ width: 720, height: 393 }, { width: 667, height: 375 }]) {
+    await page.setViewportSize(viewport);
     const hits = await page.locator('.home-brand, .home-navigation button').evaluateAll((elements) =>
       elements.map((element) => {
         const box = element.getBoundingClientRect();
@@ -230,21 +231,19 @@ test('CARDS keeps the 54px shared header, grid columns, and compact print visual
   )).toBe(5);
 });
 
-test('720/667 landscape keeps actionable CARDS and DECK text at 10px or larger', async ({ page }) => {
+test('720x393 and exact SE3 landscape keep actionable CARDS and DECK text at 10px or larger', async ({ page }) => {
   const fontSizes = (selector: string) => page.locator(selector).evaluateAll((elements) =>
     elements.map((element) => Number.parseFloat(getComputedStyle(element).fontSize)),
   );
 
-  for (const width of [720, 667]) {
-    await page.setViewportSize({ width, height: 393 });
-    await page.goto('/#cards');
+  for (const viewport of [{ width: 720, height: 393 }, { width: 667, height: 375 }]) {
+    await gotoReadyLandscapeRoute(page, 'cards', '.cards-main', viewport);
     await page.locator('.cards-filter-trigger').click();
     const cardsSizes = await fontSizes('.home-navigation button, .cards-sort-control select, .cards-filter-options button');
     expect(cardsSizes.length).toBeGreaterThan(9);
     expect(cardsSizes.every((size) => size >= 10)).toBe(true);
 
-    await page.goto('/#deck');
-    await expect(page.getByTestId('deck-editor')).toBeVisible();
+    await gotoReadyLandscapeRoute(page, 'deck', '[data-testid="deck-editor"]', viewport);
     const deckSizes = await fontSizes([
       '.home-navigation button',
       '.deck-tool-button',

@@ -127,6 +127,20 @@ describe('spectator move presentation timing', () => {
     expect(stepTurnMock).not.toHaveBeenCalled();
   });
 
+  it('cancels a scheduled spectator callback when a terminal result commits on the same turn', async () => {
+    act(() => root.render(<Probe />));
+    expect(vi.getTimerCount()).toBe(1);
+
+    const terminal = structuredClone(useGameStateStore.getState().gameState!);
+    terminal.gameResult = { winner: 'opp', reason: 'concede' };
+    act(() => useGameStateStore.getState().setGameState(terminal));
+
+    expect(vi.getTimerCount()).toBe(0);
+    await act(async () => vi.advanceTimersByTime(400));
+    expect(stepTurnMock).not.toHaveBeenCalled();
+    expect(useGameStateStore.getState().gameState).toBe(terminal);
+  });
+
   it('sets the self active card before waiting the configured interval after an important move', async () => {
     const before = useGameStateStore.getState().gameState!;
     const after = structuredClone(before);

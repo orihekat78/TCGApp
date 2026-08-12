@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `6744e9a655b5`
+> Source hash: `15a874a43358`
 
 仕様書 [`D06003`](../../../specs/grounding/D06003.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

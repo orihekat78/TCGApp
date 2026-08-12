@@ -8,6 +8,7 @@ import { useTutorialStore } from '@/ui/state/tutorialStore.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { TUTORIAL_STEPS } from '@/ui/services/tutorialSteps.js';
 import { TutorialHighlight } from './TutorialHighlight.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import './TutorialOverlay.css';
 
 export function TutorialOverlay(): JSX.Element | null {
@@ -22,16 +23,17 @@ export function TutorialOverlay(): JSX.Element | null {
   useEffect(() => useTutorialStore.subscribe(() => forceUpdate({})), []);
   const terminal = useGameStateStore((state) => state.gameState?.gameResult !== undefined);
   const { currentStep, next, prev, exit } = useTutorialStore.getState();
+  const step = currentStep === null ? undefined : TUTORIAL_STEPS[currentStep];
+  const dialogRef = useModalFocusTrap({ active: !terminal && step !== undefined });
   if (terminal) return null;
   if (currentStep === null) return null;
-  const step = TUTORIAL_STEPS[currentStep];
   if (!step) return null;
 
   const total = TUTORIAL_STEPS.length;
   const canPrev = currentStep > 0;
 
   return (
-    <div className="tutorial-overlay" role="dialog" data-match-modal-registered="true" aria-modal="true" data-testid="tutorial-overlay">
+    <div ref={dialogRef} className="tutorial-overlay" role="dialog" data-match-modal-registered="true" aria-modal="true" data-testid="tutorial-overlay">
       {/* Round 3c-A: step.target があるとき盤面要素を border + glow + 矢印でハイライト。
           無いときは bar のみ表示 (story-only step の fallback) */}
       {step.target && <TutorialHighlight key={step.id} target={step.target} />}

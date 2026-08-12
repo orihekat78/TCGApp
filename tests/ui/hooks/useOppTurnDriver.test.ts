@@ -8,7 +8,7 @@
 //   - self ターン中は no-op
 //   - 二重呼出 / 再エントリは isDriving フラグで防止
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { driveOppTurn, _resetIsDriving } from '@/ui/hooks/useOppTurnDriver';
 import { useGameStateStore } from '@/ui/state/store';
 import { createEmptyGameState } from '@/engine/state-factory';
@@ -75,6 +75,25 @@ describe('driveOppTurn', () => {
     const before = useGameStateStore.getState().gameState;
     driveOppTurn();
     expect(useGameStateStore.getState().gameState).toBe(before);
+  });
+
+  it('cannot commit an opponent step scheduled before surrender', () => {
+    vi.useFakeTimers();
+    try {
+      const live = setupOppTurnMinimal();
+      useGameStateStore.setState({ gameState: live });
+      setTimeout(driveOppTurn, 400);
+      const terminal = structuredClone(live);
+      terminal.gameResult = { winner: 'opp', reason: 'concede' };
+      useGameStateStore.setState({ gameState: terminal });
+
+      vi.advanceTimersByTime(400);
+
+      expect(useGameStateStore.getState().gameState).toBe(terminal);
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+    }
   });
 
   it('is a no-op while human misread decision is pending', () => {

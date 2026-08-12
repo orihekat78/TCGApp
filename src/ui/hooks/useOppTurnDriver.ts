@@ -224,6 +224,7 @@ let _lastConsumedStep = 0;
 
 export function useOppTurnDriver(enabled = true): void {
   const turnPlayer = useGameStateStore((s) => s.gameState?.turn.player ?? null);
+  const terminal = useGameStateStore((s) => s.gameState?.gameResult !== undefined);
   // Commit 2.5: activeActionId 復帰 (action-end) で続きの move を再開するため
   // useEffect deps に追加。set 中は driveOppTurn 内で early return される。
   const activeActionId = useGameStateStore((s) => s.activeActionId);
@@ -240,7 +241,7 @@ export function useOppTurnDriver(enabled = true): void {
   const presentationOutstanding = usePresentationOutstandingCount();
   useEffect(() => {
     if (!enabled) return undefined;
-    if (turnPlayer !== 'opp' || activeActionId !== null) return undefined;
+    if (terminal || turnPlayer !== 'opp' || activeActionId !== null) return undefined;
     if (presentationOutstanding > 0) return undefined;
     if (pendingDecisionBlocked) return undefined;
     // Phase 12-B: paused なら step 要求があった時だけ進む
@@ -260,5 +261,5 @@ export function useOppTurnDriver(enabled = true): void {
       clearTimeout(id);
       if (scheduledOppTimer === id) scheduledOppTimer = null;
     };
-  }, [enabled, turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, pendingDecisionBlocked, oppMoveTick, presentationOutstanding]);
+  }, [enabled, terminal, turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, pendingDecisionBlocked, oppMoveTick, presentationOutstanding]);
 }

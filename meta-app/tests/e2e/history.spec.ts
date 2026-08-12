@@ -7,6 +7,11 @@ import { createEmptyGameState } from '../../../src/engine/state-factory';
 import { SAMPLE_DECK, SAMPLE_DECK_OPP } from '../../src/data/sampleDeck';
 import { encodeDeck } from '../../src/util/deckCode';
 
+const OFFICIAL_CARD_IMAGE_URL =
+  'https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/**';
+const DETERMINISTIC_CARD_IMAGE =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="3"><rect width="2" height="3" fill="#123"/></svg>';
+
 const snapshot = (deck: typeof SAMPLE_DECK) => ({
   schemaVersion: 1,
   deckId: deck.id,
@@ -212,8 +217,17 @@ test('HISTORY: switches immutable PLAYER and CPU decks in one full-width viewer 
 
 test('HISTORY: 851x393 switches the two saved decks in the compact viewer without overflow', async ({ page }) => {
   const errors: string[] = [];
+  let officialCardImageRequests = 0;
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
   page.on('pageerror', (error) => errors.push(error.message));
+  await page.route(OFFICIAL_CARD_IMAGE_URL, async (route) => {
+    officialCardImageRequests += 1;
+    await route.fulfill({
+      status: 200,
+      contentType: 'image/svg+xml',
+      body: DETERMINISTIC_CARD_IMAGE,
+    });
+  });
   await page.setViewportSize({ width: 851, height: 393 });
   await page.goto('/#history');
   await page.getByRole('button', { name: /2024.*対戦デッキを見る/ }).click();
@@ -242,6 +256,7 @@ test('HISTORY: 851x393 switches the two saved decks in the compact viewer withou
   await expect.poll(async () => cpuPanel.locator('img').evaluateAll((images) => (
     images.length > 0 && images.every((image) => image.complete && image.naturalWidth > 0)
   ))).toBe(true);
+  expect(officialCardImageRequests).toBeGreaterThan(0);
   await expect(dialog.getByText('萩原千速').first()).toBeVisible();
 
   const geometry = await dialog.evaluate((element) => ({
@@ -300,7 +315,7 @@ test('HISTORY: stalled card images stop blocking the saved card numbers and coun
   });
   let releaseRequests = () => undefined;
   const stalled = new Promise<void>((resolve) => { releaseRequests = resolve; });
-  await page.route('https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/**', async (route) => {
+  await page.route(OFFICIAL_CARD_IMAGE_URL, async (route) => {
     await stalled;
     await route.abort();
   });

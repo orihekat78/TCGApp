@@ -106,7 +106,7 @@ const TRUSTED_VENDOR_SHA256 =
 const TRUSTED_RUNTIME_SHA256 =
   "5db5ba82eef00d1dee7e86e663098c9427d01183a88d357437daff295aec3e75";
 const TRUSTED_APP_SHA256 =
-  "37ea78c67318b3fac197057acdd7b383f0e40f92c9e74d4ff276a2e71e94dbaa";
+  "cce932b4d6929da938883776de5cacd619d9b5530bc73803502f165f662117c0";
 const TRUSTED_FUNCTIONS_SHA256 =
   "8f659832b10f36bd102a991c31576e127bf4b06bea1b75723dae57604dec3a04";
 const TRUSTED_BRAND_LOGO_SHA256 =
@@ -207,7 +207,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/DeckEditor-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/DeckEditor.tsx",
     sha256:
-      "c0b95029b07725d19cca51f83fbbd83710b04f2c82a545940932af099db1ee00",
+      "cc437259ab3a176aa8a84980c425ddafc2d4e4f4ccd0b634ba318dbcb19a3a20",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed DeckEditor bundle SHA-256 mismatch",
     approvedFindings: markerFindings("persistent storage"),
@@ -216,16 +216,16 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/historyReplayRepository-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => /^_historyReplayRepository-[A-Za-z0-9_-]+\.js$/.test(key),
     sha256:
-      "bf166fcb80e4d5ea73ae3280b8e38bf5fc7096d89ac098346e4db7703e6f238e",
+      "5d86694c3c0bd348b3d55c78763ad3b327c4c6bff957140812683927242bf502",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed history repository bundle SHA-256 mismatch",
-    approvedFindings: markerFindings("persistent storage"),
+    approvedFindings: [],
   },
   {
     output: /^assets\/HistoryScreen-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/HistoryScreen.tsx",
     sha256:
-      "9462dfa818483d77858cf172f824b7739b37faaad343bc853f4cf5ae66cff6a7",
+      "f6ffceab7ed5f8c032818bfcbcc721742ebd278c6634a79571a182b36e9120c9",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed HistoryScreen bundle SHA-256 mismatch",
     approvedFindings: markerFindings("network API", "persistent storage"),
@@ -234,7 +234,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/RealMatchView-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/RealMatchView.tsx",
     sha256:
-      "e7f9bfcbfe40a31c15504479c7a54054949ebd4d82da7256b9f0f40b686a7426",
+      "0db9220cf07d667feb146727c00d762d2750c3023e27d0c912851b2c0ead59c4",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed RealMatchView bundle SHA-256 mismatch",
     approvedFindings: markerFindings("dynamic code execution"),
@@ -243,7 +243,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/ReplayScreen-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/ReplayScreen.tsx",
     sha256:
-      "4504e409f9bc568e627b45eea865d383d81cc66509f47fe5c6aec6624611d2a6",
+      "b01433d076a475daa8caccf33f752afd18963345ba2221856bc0f09c6b169769",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed ReplayScreen bundle SHA-256 mismatch",
     approvedFindings: markerFindings("network API"),
@@ -252,7 +252,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/ResultScreen-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/ResultScreen.tsx",
     sha256:
-      "88d6a7f063ccc6229a8394c01ced8a415fca3efcc4d4a3f7233bf574c84442c8",
+      "574313fb03793c9cb4c5d54891dc6df90cdb741bdd0dc16e31d930fe6cd5362f",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed ResultScreen bundle SHA-256 mismatch",
     approvedFindings: markerFindings("network API"),
@@ -11934,7 +11934,7 @@ const REVIEWED_META_RUNTIME_STYLE_SHA256 = new Map<string, string>([
   ],
   [
     "meta-app/src/shared/NetworkStatus.tsx",
-    "26867d366e3c9f3527c39ba9cc599d345ea8b695e16a544e42ba70d7dad7c602",
+    "8a0e58406d97bb28840d61085981c727f08e7a7aa97c7d02d6177b49123ded45",
   ],
   [
     "meta-app/src/shared/WarningBanner.tsx",

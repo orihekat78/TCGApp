@@ -14,6 +14,7 @@
 import type { JSX } from 'react';
 import { useEffect, useState } from 'react';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import { CardArt } from './CardArt.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import './MisreadPickerModal.css';
@@ -42,6 +43,7 @@ export function MisreadPickerModal(props: MisreadPickerModalProps): JSX.Element 
   const { open, decisionKey, reasoningName, reasoningLp, candidates, onConfirm, onSkip } = props;
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const expandModal = useCardExpandModal();
+  const dialogRef = useModalFocusTrap({ active: open });
   useEffect(() => {
     setSelected(new Set());
   }, [open, decisionKey]);
@@ -64,6 +66,7 @@ export function MisreadPickerModal(props: MisreadPickerModalProps): JSX.Element 
   return (
     <>
     <div
+      ref={dialogRef}
       className="misread-picker-overlay"
       role="dialog"
       data-match-modal-registered="true"

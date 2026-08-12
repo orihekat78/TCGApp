@@ -1,4 +1,4 @@
-import { useRef, useState, type JSX } from 'react';
+import { useLayoutEffect, useRef, useState, type JSX } from 'react';
 import { createPortal } from 'react-dom';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useMatchModalLayer } from '@/ui/hooks/useMatchModalLayer';
@@ -6,30 +6,41 @@ import { getRegisteredHumanDecisionSide } from '@/ui/services/humanDecisionOwner
 import { currentMatchSessionToken } from '@/ui/services/matchSession';
 import type { MatchSessionToken } from '@/ui/services/matchSessionId';
 import { useGameStateStore } from '@/ui/state/store';
+import { useLandscapeGateStatus } from '../shared/LandscapeGate';
 
 export function MatchMenu({ replayActive }: { replayActive: boolean }): JSX.Element | null {
   const gameState = useGameStateStore((state) => state.gameState);
   const spectatorMode = useGameStateStore((state) => state.spectatorMode);
+  const landscapeStatus = useLandscapeGateStatus();
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [failure, setFailure] = useState(false);
   const tokenRef = useRef<MatchSessionToken | null>(null);
   const submittingRef = useRef(false);
   const succeededRef = useRef(false);
-  const dialogRef = useMatchModalLayer({
-    active: open,
-    initialFocusSelector: confirming
-      ? '[data-testid="match-menu-confirm-cancel"]'
-      : '[data-testid="match-menu-close"]',
-    onEscape: () => closeMenu(),
-    shouldRestoreFocus: () => !succeededRef.current,
-  });
-
   const eligible = gameState !== null
     && gameState.gameResult === undefined
     && currentMatchSessionToken() !== null
     && getRegisteredHumanDecisionSide(spectatorMode) === 'self'
-    && !replayActive;
+    && !replayActive
+    && landscapeStatus === 'landscape';
+  const dialogRef = useMatchModalLayer({
+    active: open && eligible,
+    initialFocusSelector: confirming
+      ? '[data-testid="match-menu-confirm-cancel"]'
+      : '[data-testid="match-menu-close"]',
+    onEscape: () => closeMenu(),
+    shouldRestoreFocus: () => !succeededRef.current && eligible,
+  });
+
+  useLayoutEffect(() => {
+    if (eligible) return;
+    setOpen(false);
+    setConfirming(false);
+    setFailure(false);
+    tokenRef.current = null;
+    submittingRef.current = false;
+  }, [eligible]);
 
   function closeMenu(): void {
     if (submittingRef.current) return;

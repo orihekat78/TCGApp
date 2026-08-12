@@ -68,6 +68,28 @@ for (const viewport of VIEWPORTS) {
     await expect(decisionOption.click({ timeout: 300 })).rejects.toThrow();
     await expect(decision).toBeVisible();
     await expect(page.locator('[role="dialog"][aria-modal="true"]')).toHaveCount(1);
+
+    if (viewport.width === 851) {
+      await page.setViewportSize({ width: 393, height: 851 });
+      const gateCta = page.getByTestId('landscape-gate-cta');
+      await expect(page.getByTestId('match-menu-dialog')).toHaveCount(0);
+      await expect(page.locator('[role="dialog"][aria-modal="true"]')).toHaveCount(1);
+      await expect(gateCta).toBeFocused();
+      await page.keyboard.press('Escape');
+      await expect(gateCta).toBeFocused();
+      await page.keyboard.press('Tab');
+      await expect(gateCta).toBeFocused();
+      await page.keyboard.press('Shift+Tab');
+      await expect(gateCta).toBeFocused();
+      await expect(decision).toBeHidden();
+      await page.setViewportSize(viewport);
+      await expect(page.getByTestId('match-menu-trigger')).toBeVisible();
+      await expect(decision).toBeVisible();
+      await expect(decisionOption).toBeEnabled();
+      await expect(page.locator('.result-screen')).toHaveCount(0);
+      await page.getByTestId('match-menu-trigger').click();
+      await expect(page.getByTestId('match-menu-dialog')).toBeVisible();
+    }
     await testInfo.attach('match-menu', {
       body: await page.screenshot(),
       contentType: 'image/png',
@@ -85,7 +107,8 @@ for (const viewport of VIEWPORTS) {
 
     await expect(page).toHaveURL(/#result$/, { timeout: 10_000 });
     await expect(page.locator('.result-screen.is-loss')).toBeVisible();
-    await expect(page.locator('.result-end-reason strong')).toHaveText(/謚穂ｺ|投了/);
+    await expect(page.locator('.result-verdict h1')).toHaveText('敗北');
+    await expect(page.locator('.result-end-reason strong')).toHaveText('投了');
     await expect(decision).toHaveCount(0);
     await expect(menu).toHaveCount(0);
     expect(await page.evaluate(() => (

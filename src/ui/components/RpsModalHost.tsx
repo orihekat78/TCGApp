@@ -3,6 +3,7 @@ import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import './ChoicePickerModal.css';
 
 const hands = [
@@ -15,9 +16,11 @@ const hands = [
 export function RpsModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingRps);
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
-  if (!pending || !isHumanDecisionOwner(pending.player, spectatorMode)) return null;
+  const isOpen = pending !== null && isHumanDecisionOwner(pending.player, spectatorMode);
+  const dialogRef = useModalFocusTrap({ active: isOpen });
+  if (!isOpen || !pending) return null;
   return (
-    <div className="cp-overlay" role="dialog" data-match-modal-registered="true" aria-modal="true" aria-labelledby="rps-title" data-testid="rps-modal">
+    <div ref={dialogRef} className="cp-overlay" role="dialog" data-match-modal-registered="true" aria-modal="true" aria-labelledby="rps-title" data-testid="rps-modal">
       <div className="cp-modal">
         <div className="cp-header"><h2 id="rps-title">\u3058\u3083\u3093\u3051\u3093</h2></div>
         <div className="cp-body"><p className="cp-sub">Choose a hand.</p></div>

@@ -7,7 +7,7 @@
 // 注: mock は下端パネル未実装 → ui-overall.md の「閉時 32px / 展開時 200px」
 //     仕様を実装。閉時の見た目のみ mock の .log-btn を流用。
 
-import { useEffect, type JSX, type MouseEvent, type ReactNode } from 'react';
+import { type JSX, type MouseEvent, type ReactNode } from 'react';
 import type { GameState, LogEntry } from '@/engine/types/game-state.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { redactLogEntryForViewer, type LogViewer } from '@/engine/read/log.js';
@@ -15,6 +15,7 @@ import { uidToDisplayName } from '@/ui/services/uidNames.js';
 import { normalizedGameLogForUi } from '@/ui/presentation/normalizedLog';
 import type { CausalOutcome } from '@/engine/types';
 import { actionLabelForAction } from '@/ui/services/actionLabel.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import './LogPanel.css';
 
 function resolveKnownCard(cardId: string): { cardId: string; name: string } | null {
@@ -193,17 +194,7 @@ function formatTime(ts: number): string {
 }
 
 export function LogPanel({ entries, open, maxEntries = 30, onClose, gameState, onCardExpand, viewer }: LogPanelProps): JSX.Element | null {
-  useEffect(() => {
-    if (!open || !onClose) return;
-    const handleEscape = (e: KeyboardEvent): void => {
-      if (e.key !== 'Escape') return;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      onClose();
-    };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [open, onClose]);
+  const dialogRef = useModalFocusTrap({ active: open, onEscape: onClose });
 
   // Phase 8.5: 閉時は何もレンダリングしない (LOG ボタンは ActionsPanel が持つ)
   if (!open) return null;
@@ -255,6 +246,7 @@ export function LogPanel({ entries, open, maxEntries = 30, onClose, gameState, o
         />
       )}
       <div
+        ref={dialogRef}
         className="log-panel open"
         role="dialog"
         data-match-modal-registered="true"

@@ -466,8 +466,29 @@ describe('LogPanel — interaction (Round 3b)', () => {
       root.render(<LogPanel entries={[]} open={true} onClose={onClose} />);
     });
     act(() => {
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     });
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('registers its visible root and includes the MatchMenu trigger in both Tab directions', () => {
+    act(() => root.render(
+      <>
+        <LogPanel entries={[]} open onClose={vi.fn()} />
+        <button type="button" data-match-menu-trigger="true" data-testid="menu-trigger">Menu</button>
+      </>,
+    ));
+    const modal = container.querySelector<HTMLElement>('[role="dialog"]')!;
+    const first = document.activeElement as HTMLElement;
+    const trigger = container.querySelector<HTMLButtonElement>('[data-testid="menu-trigger"]')!;
+    expect(modal.getAttribute('data-match-modal-registered')).toBe('true');
+    act(() => document.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Tab', shiftKey: true, bubbles: true, cancelable: true,
+    })));
+    expect(document.activeElement).toBe(trigger);
+    act(() => document.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Tab', bubbles: true, cancelable: true,
+    })));
+    expect(document.activeElement).toBe(first);
   });
 });

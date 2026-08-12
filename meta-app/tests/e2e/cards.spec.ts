@@ -1,6 +1,23 @@
 // spec: .claude/specs/meta-ui/11-cards-rebuild.md
 
 import { test, expect } from "@playwright/test";
+import { gotoReadyLandscapeRoute } from "./landscape-test-helpers";
+
+async function revealCatalogCard(
+  page: import("@playwright/test").Page,
+  cardNumber: string,
+) {
+  await page.getByPlaceholder("カード名・番号・効果で検索").fill(cardNumber);
+  const visibleResults = page.locator(".cards-grid-item");
+  await expect.poll(async () => visibleResults.evaluateAll((items, expectedNumber) => (
+    items.length > 0
+      && items.every((item) => item.getAttribute("data-card-num") === expectedNumber)
+  ), cardNumber)).toBe(true);
+  const card = page.locator(`[data-card-num="${cardNumber}"]`);
+  await expect(card).toBeVisible();
+  await expect(card.locator("[data-card-orientation]")).toBeVisible();
+  return card;
+}
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
@@ -8,6 +25,32 @@ test.beforeEach(async ({ page }) => {
     localStorage.removeItem("conan.meta.v1.settings");
     localStorage.removeItem("conan.meta.v1.filters");
   });
+});
+
+test('CARDS iPhone landscapes keep the shell and initial catalog window bounded', async ({ page }) => {
+  for (const viewport of [{ width: 667, height: 375 }, { width: 851, height: 393 }]) {
+    await gotoReadyLandscapeRoute(page, 'cards', '.cards-main', viewport);
+
+    await expect(page.locator('.home-header')).toHaveCSS('height', '54px');
+    await expect(page.locator('.cards-grid-item')).toHaveCount(48);
+    const geometry = await page.evaluate(() => {
+    const viewport = { width: window.innerWidth, height: window.innerHeight };
+    const controls = [...document.querySelectorAll<HTMLElement>('.home-brand, .home-navigation button, .cards-filter-trigger')]
+      .map((control) => {
+        const box = control.getBoundingClientRect();
+        return { width: box.width, height: box.height, right: box.right, bottom: box.bottom };
+      });
+    return {
+      overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      catalogCount: document.querySelectorAll('.cards-grid-item').length,
+      controls,
+      viewport,
+    };
+    });
+    expect(geometry.overflowX).toBe(0);
+    expect(geometry.catalogCount).toBeLessThanOrEqual(96);
+    expect(geometry.controls.every((control) => control.width >= 44 && control.height >= 44 && control.right <= geometry.viewport.width && control.bottom <= geometry.viewport.height)).toBe(true);
+  }
 });
 
 test("CARDS: 共通ヘッダーと簡潔な一覧を表示し、絞り込みは必要時だけ開く", async ({
@@ -270,20 +313,30 @@ test("CARDS: 色は実カードの単色・混色をすべて表示する", asyn
 test("CARDS: 縦横比を維持し、左から右へ並べて次の行へ進む", async ({
   page,
 }) => {
-  await page.goto("/#cards");
-  const landscapeCard = page.getByRole("button", {
-    name: "青の古城探索事件",
-    exact: true,
+  await gotoReadyLandscapeRoute(page, "cards", ".cards-main", {
+    width: 1280,
+    height: 800,
   });
+  const landscapeCard = await revealCatalogCard(page, "D08026");
+  await expect(
+    landscapeCard.locator('[data-card-orientation="landscape"]'),
+  ).toBeVisible();
+  await landscapeCard.getByRole("button", { name: "青の古城探索事件", exact: true }).click();
+  const selectedLandscapeArt = page.locator(
+    '.cards-selected-art > [data-card-orientation="landscape"]',
+  );
   await expect
     .poll(async () => {
-      const box = await landscapeCard.boundingBox();
+      const box = await selectedLandscapeArt.boundingBox();
       return (box?.height ?? 0) / (box?.width ?? 1);
     })
     .toBeCloseTo(0.72, 1);
 
+  await page.getByPlaceholder("カード名・番号・効果で検索").fill("");
+  await expect.poll(() => page.locator(".cards-window-grid .cards-grid-item").count())
+    .toBeGreaterThan(1);
   const rowMajor = await page
-    .locator(".cards-grid-item")
+    .locator(".cards-window-grid .cards-grid-item")
     .evaluateAll((items) => {
       const rects = items
         .slice(0, 20)
@@ -309,8 +362,10 @@ test("CARDS: 縦横比を維持し、左から右へ並べて次の行へ進む"
 test("CARDS: 851×393の小型タイル表示は7列で、選択した横長カードを読める大きさで保つ", async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 851, height: 393 });
-  await page.goto("/#cards");
+  await gotoReadyLandscapeRoute(page, "cards", ".cards-main", {
+    width: 851,
+    height: 393,
+  });
 
   const firstEightGridItems = await page
     .locator(".cards-grid-item")
@@ -335,8 +390,9 @@ test("CARDS: 851×393の小型タイル表示は7列で、選択した横長カ�
   );
 
   await page.setViewportSize({ width: 667, height: 375 });
+  await expect(page.locator(".cards-window-grid")).toBeVisible();
   const narrowLandscape = await page
-    .locator(".cards-card-grid")
+    .locator(".cards-window-grid")
     .evaluate((grid) => {
       const items = Array.from(grid.children)
         .slice(0, 6)
@@ -393,9 +449,8 @@ test("CARDS: 851×393でも比率を維持し、画面外にはみ出さない",
   await page.setViewportSize({ width: 851, height: 393 });
   await page.goto("/#cards");
 
-  const search = page.getByPlaceholder("カード名・番号・効果で検索");
-  await search.fill("B09001");
-  await page.getByRole("button", { name: "江戸川コナン", exact: true }).click();
+  const B09001 = await revealCatalogCard(page, "B09001");
+  await B09001.getByRole("button", { name: "江戸川コナン", exact: true }).click();
   const detailScroll = page.locator(".cards-selected-scroll");
   const printStrip = detailScroll.locator(".cards-print-strip");
   const compactStrip = await printStrip.evaluate((element) => ({
@@ -429,24 +484,27 @@ test("CARDS: 851×393でも比率を維持し、画面外にはみ出さない",
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
   expect(dimensions.scrollHeight).toBeLessThanOrEqual(dimensions.clientHeight);
 
-  await search.fill("D09014");
-  const portraitCard = page.getByRole("button", {
-    name: "大和敢助",
-    exact: true,
-  });
-  const portraitBox = await portraitCard.boundingBox();
+  const portraitCard = await revealCatalogCard(page, "D09014");
+  await expect(
+    portraitCard.locator('[data-card-orientation="portrait"]'),
+  ).toBeVisible();
+  const portraitBox = await portraitCard
+    .locator('[data-card-orientation="portrait"]')
+    .boundingBox();
   expect(portraitBox).not.toBeNull();
   expect((portraitBox?.height ?? 0) / (portraitBox?.width ?? 1)).toBeCloseTo(
     1.4,
     1,
   );
 
-  await search.fill("D08026");
-  const landscapeCard = page.getByRole("button", {
-    name: "青の古城探索事件",
-    exact: true,
-  });
-  const landscapeBox = await landscapeCard.boundingBox();
+  const landscapeCard = await revealCatalogCard(page, "D08026");
+  await expect(
+    landscapeCard.locator('[data-card-orientation="landscape"]'),
+  ).toBeVisible();
+  await landscapeCard.getByRole("button", { name: "青の古城探索事件", exact: true }).click();
+  const landscapeBox = await page
+    .locator('.cards-selected-art > [data-card-orientation="landscape"]')
+    .boundingBox();
   expect(landscapeBox).not.toBeNull();
   expect((landscapeBox?.height ?? 0) / (landscapeBox?.width ?? 1)).toBeCloseTo(
     0.72,
@@ -535,7 +593,7 @@ test("CARDS: 667×375でもヘッダーに隠れず、検索と一覧を操作�
     ["cards", ".cards-main"],
     ["setup", ".setup-main"],
   ] as const) {
-    await page.goto(`/#${route}`);
+    await gotoReadyLandscapeRoute(page, route, mainSelector, { width: 667, height: 375 });
     const header = await page.locator(".home-header").boundingBox();
     const main = await page.locator(mainSelector).boundingBox();
     expect(header).not.toBeNull();
@@ -582,7 +640,8 @@ test("CARDS: 標準カード寸法とコンパクト選択詳細を保つ", asyn
 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/#cards");
-  const desktopGrid = page.locator(".cards-card-grid");
+  const desktopGrid = page.locator(".cards-window-grid");
+  await expect(desktopGrid.locator(":scope > .cards-grid-item")).toHaveCount(48);
   const desktopItems = await desktopGrid.locator(":scope > .cards-grid-item").evaluateAll(
     (items) => items.slice(0, 9).map((item) => {
       const box = item.getBoundingClientRect();

@@ -16,7 +16,11 @@ import { useEffect, useMemo, useRef, useState, type JSX } from 'react';
 import { useMulliganStore, resolveMulligan } from '@/ui/hooks/useMulligan.js';
 import { cardIdToDisplayName, cardIdToPrintedNumber } from '@/ui/services/uidNames.js';
 import { CardArt } from './CardArt.js';
-import { withMatchMenuTrigger } from '@/ui/hooks/useMatchModalLayer.js';
+import {
+  canRestoreModalFocus,
+  isTopmostMatchModalRoot,
+  withMatchMenuTrigger,
+} from '@/ui/hooks/useMatchModalLayer.js';
 import './MulliganModal.css';
 
 const PLAYER_LABEL: Record<'self' | 'opp', string> = {
@@ -63,7 +67,7 @@ export function MulliganModal(): JSX.Element | null {
     skipRef.current?.focus();
     return () => {
       const target = returnFocusRef.current;
-      if (target?.isConnected) target.focus();
+      if (canRestoreModalFocus(target)) target.focus();
     };
   }, [current]);
 
@@ -80,7 +84,8 @@ export function MulliganModal(): JSX.Element | null {
       )])
       : [];
     const onKeyDown = (event: KeyboardEvent): void => {
-      if (dialogRef.current?.hasAttribute('inert')) return;
+      const scope = zoomIdxRef.current !== null ? zoomDialogRef.current : dialogRef.current;
+      if (!isTopmostMatchModalRoot(scope)) return;
       if (event.key === 'Escape') {
         event.preventDefault();
         event.stopImmediatePropagation();
@@ -94,22 +99,20 @@ export function MulliganModal(): JSX.Element | null {
         return;
       }
       if (event.key !== 'Tab') return;
-      const scope = zoomIdxRef.current !== null ? zoomDialogRef.current : dialogRef.current;
       const controls = focusables(scope);
       if (controls.length === 0) {
         event.preventDefault();
+        event.stopImmediatePropagation();
         scope?.focus();
         return;
       }
-      const first = controls[0]!;
-      const last = controls[controls.length - 1]!;
-      if (event.shiftKey && (document.activeElement === first || !scope?.contains(document.activeElement))) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && (document.activeElement === last || !scope?.contains(document.activeElement))) {
-        event.preventDefault();
-        first.focus();
-      }
+      const activeIndex = controls.indexOf(document.activeElement as HTMLElement);
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const nextIndex = event.shiftKey
+        ? (activeIndex <= 0 ? controls.length - 1 : activeIndex - 1)
+        : (activeIndex === -1 || activeIndex === controls.length - 1 ? 0 : activeIndex + 1);
+      controls[nextIndex]?.focus();
     };
     window.addEventListener('keydown', onKeyDown, { capture: true });
     return () => window.removeEventListener('keydown', onKeyDown, { capture: true });

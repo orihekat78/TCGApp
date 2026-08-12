@@ -1,5 +1,10 @@
-import { useEffect, useRef, type RefObject } from 'react';
-import { registerMatchModalRoot, withMatchMenuTrigger } from '@/ui/hooks/useMatchModalLayer';
+import { useLayoutEffect, useRef, type RefObject } from 'react';
+import {
+  canRestoreModalFocus,
+  isTopmostMatchModalRoot,
+  registerMatchModalRoot,
+  withMatchMenuTrigger,
+} from '@/ui/hooks/useMatchModalLayer';
 
 const FOCUSABLE_SELECTOR = [
   'button:not(:disabled)',
@@ -25,7 +30,7 @@ export function useModalFocusTrap({
   const onEscapeRef = useRef(onEscape);
   onEscapeRef.current = onEscape;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!active) return undefined;
     const dialog = dialogRef.current;
     if (!dialog) return undefined;
@@ -44,12 +49,12 @@ export function useModalFocusTrap({
     (initialFocus ?? focusable()[0] ?? dialog).focus();
 
     const onKeyDown = (event: KeyboardEvent): void => {
-      if (dialog.hasAttribute('inert')) return;
+      if (!isTopmostMatchModalRoot(dialog)) return;
       // A nested modal (for example card detail) owns an already-handled key.
       if (event.defaultPrevented) return;
       if (event.key === 'Escape') {
         event.preventDefault();
-        event.stopPropagation();
+        event.stopImmediatePropagation();
         onEscapeRef.current?.();
         return;
       }
@@ -62,6 +67,7 @@ export function useModalFocusTrap({
       }
       const activeIndex = controls.indexOf(document.activeElement as HTMLElement);
       event.preventDefault();
+      event.stopImmediatePropagation();
       const nextIndex = event.shiftKey
         ? (activeIndex <= 0 ? controls.length - 1 : activeIndex - 1)
         : (activeIndex === -1 || activeIndex === controls.length - 1 ? 0 : activeIndex + 1);
@@ -73,7 +79,7 @@ export function useModalFocusTrap({
       document.removeEventListener('keydown', onKeyDown, { capture: true });
       const returnFocus = returnFocusRef.current;
       returnFocusRef.current = null;
-      if (returnFocus?.isConnected) returnFocus.focus();
+      if (canRestoreModalFocus(returnFocus)) returnFocus.focus();
     };
   }, [active, initialFocusSelector]);
 

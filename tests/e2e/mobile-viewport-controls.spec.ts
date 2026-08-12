@@ -48,6 +48,7 @@ test.describe('mobile viewport controls', () => {
     for (const viewport of [
       { width: 851, height: 393 },
       { width: 720, height: 393 },
+      { width: 667, height: 375 },
     ]) {
       await page.setViewportSize(viewport);
       const scaler = page.locator('#scaler');
@@ -112,12 +113,19 @@ test.describe('mobile viewport controls', () => {
         expect(geometry.board.x).toBeCloseTo(76.1667, 1);
         expect(geometry.board.y).toBeCloseTo(0, 1);
         expect(viewport.width - geometry.board.x - geometry.board.width).toBeCloseTo(76.1667, 1);
-      } else {
+      } else if (viewport.width === 720) {
         expect(geometry.board.width).toBeCloseTo(698.6667, 1);
         expect(geometry.board.height).toBeCloseTo(393, 1);
         expect(geometry.board.x).toBeCloseTo(10.6667, 1);
         expect(geometry.board.y).toBeCloseTo(0, 1);
         expect(viewport.width - geometry.board.x - geometry.board.width).toBeCloseTo(10.6667, 1);
+      } else {
+        expect(geometry.scale).toBeCloseTo(375 / 1080, 4);
+        expect(geometry.board.width).toBeCloseTo(666.6667, 1);
+        expect(geometry.board.height).toBeCloseTo(375, 1);
+        expect(geometry.board.x).toBeCloseTo(0.1667, 1);
+        expect(geometry.board.y).toBeCloseTo(0, 1);
+        expect(viewport.width - geometry.board.x - geometry.board.width).toBeCloseTo(0.1667, 1);
       }
 
       if (viewport.width === 851) {

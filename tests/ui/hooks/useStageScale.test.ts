@@ -45,6 +45,22 @@ describe('useStageScale', () => {
     expect(layout.rightGutter).toBeCloseTo(76.1667, 4);
   });
 
+  it('contains and centers the unchanged board at the exact iPhone SE3 landscape viewport', () => {
+    const layout = computePlaymatViewportLayout(667, 375);
+
+    expect(layout).toMatchObject({
+      containedLandscape: true,
+      logicalWidth: 1920,
+      logicalHeight: 1080,
+    });
+    expect(layout.scale).toBeCloseTo(375 / 1080, 8);
+    expect(layout.renderedWidth).toBeCloseTo(666.6667, 4);
+    expect(layout.renderedHeight).toBeCloseTo(375, 4);
+    expect(layout.left).toBeCloseTo(0.1667, 4);
+    expect(layout.top).toBeCloseTo(0, 4);
+    expect(layout.rightGutter).toBeCloseTo(0.1667, 4);
+  });
+
   it('centers the unchanged board at 720x393 without reserving a presentation rail', () => {
     const layout = computePlaymatViewportLayout(720, 393);
 

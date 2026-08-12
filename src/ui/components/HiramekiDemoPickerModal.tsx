@@ -8,12 +8,13 @@
 //   全カードを enumerate して grid 表示。click で `onPick(cardId)` を発火、
 //   親 (App / RealMatchView) が共通 demo session を開始する。
 
-import { useEffect, type JSX } from 'react';
+import type { JSX } from 'react';
 import type { CardDef } from '@/engine/types';
 import { ALL_CARDS } from '@/cards';
 import { CardArt } from './CardArt.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import { cardIdToDisplayName, cardIdToPrintedNumber } from '@/ui/services/uidNames.js';
 import './HiramekiDemoPickerModal.css';
 
@@ -40,17 +41,11 @@ const ICON_FLASH_CARDS = getIconFlashCards();
 export function HiramekiDemoPickerModal(props: HiramekiDemoPickerModalProps): JSX.Element {
   const { onPick, onClose } = props;
   const expandModal = useCardExpandModal();
-  // Esc で閉じる
-  useEffect(() => {
-    const handler = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [onClose]);
+  const dialogRef = useModalFocusTrap({ active: true, onEscape: onClose });
 
   return (
     <div
+      ref={dialogRef}
       className="hirameki-demo-picker-backdrop"
       role="dialog"
       data-match-modal-registered="true"

@@ -11,7 +11,11 @@ import { createPortal } from 'react-dom';
 import type { CardId } from '@/engine/types';
 import { CardArt } from './CardArt.js';
 import { cardIdToDisplayName } from '@/ui/services/uidNames.js';
-import { withMatchMenuTrigger } from '@/ui/hooks/useMatchModalLayer.js';
+import {
+  canRestoreModalFocus,
+  isTopmostMatchModalRoot,
+  withMatchMenuTrigger,
+} from '@/ui/hooks/useMatchModalLayer.js';
 import './CardExpandModal.css';
 
 export type CardExpandModalProps = {
@@ -28,6 +32,11 @@ export function CardExpandModal({ cardId, onClose }: CardExpandModalProps): JSX.
   onCloseRef.current = onClose;
   const portalAnchorRef = useCallback((anchor: HTMLSpanElement | null): void => {
     if (!anchor || typeof document === 'undefined') return;
+    const designatedHost = anchor.closest<HTMLElement>('[data-modal-portal-host="true"]');
+    if (designatedHost) {
+      setPortalHost(designatedHost);
+      return;
+    }
     let host = anchor.parentElement;
     while (host?.parentElement && host.parentElement !== document.body) {
       host = host.parentElement;
@@ -41,7 +50,7 @@ export function CardExpandModal({ cardId, onClose }: CardExpandModalProps): JSX.
     returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const focusFrame = window.requestAnimationFrame(() => closeRef.current?.focus());
     function onKey(e: KeyboardEvent): void {
-      if (dialogRef.current?.hasAttribute('inert')) return;
+      if (!isTopmostMatchModalRoot(dialogRef.current)) return;
       if (e.key === 'Escape') {
         // BUG-231: window capture phase で最前面modalがEscapeを消費する。
         // 下層LogPanel/global shortcutのlistenerへ伝播させず、このmodalだけ閉じる。
@@ -55,21 +64,20 @@ export function CardExpandModal({ cardId, onClose }: CardExpandModalProps): JSX.
       if (!dialog) return;
       const focusable = withMatchMenuTrigger(dialog, [...dialog.querySelectorAll<HTMLElement>(
         'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      )].filter((element) => element.getClientRects().length > 0));
+      )]);
       if (focusable.length === 0) {
         e.preventDefault();
+        e.stopImmediatePropagation();
         dialogRef.current?.focus();
         return;
       }
-      const first = focusable[0]!;
-      const last = focusable[focusable.length - 1]!;
-      if (e.shiftKey && (document.activeElement === first || !dialogRef.current?.contains(document.activeElement))) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && (document.activeElement === last || !dialogRef.current?.contains(document.activeElement))) {
-        e.preventDefault();
-        first.focus();
-      }
+      const activeIndex = focusable.indexOf(document.activeElement as HTMLElement);
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      const nextIndex = e.shiftKey
+        ? (activeIndex <= 0 ? focusable.length - 1 : activeIndex - 1)
+        : (activeIndex === -1 || activeIndex === focusable.length - 1 ? 0 : activeIndex + 1);
+      focusable[nextIndex]?.focus();
     }
     window.addEventListener('keydown', onKey, { capture: true });
     return () => {
@@ -77,7 +85,7 @@ export function CardExpandModal({ cardId, onClose }: CardExpandModalProps): JSX.
       window.removeEventListener('keydown', onKey, { capture: true });
       const target = returnFocusRef.current;
       returnFocusRef.current = null;
-      if (target?.isConnected) target.focus();
+      if (canRestoreModalFocus(target)) target.focus();
     };
   }, [cardId]);
 

@@ -12,6 +12,7 @@
 
 import { useEffect, useState, type JSX } from 'react';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { SelectableCardTile } from './SelectableCardTile.js';
@@ -42,6 +43,7 @@ export function SouzaReorderModal(props: SouzaReorderModalProps): JSX.Element | 
   const [order, setOrder] = useState<OrderedCard[]>(() => asOrderedCards(deckTop));
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const expandModal = useCardExpandModal();
+  const dialogRef = useModalFocusTrap({ active: open });
   useEffect(() => {
     setOrder(asOrderedCards(deckTop));
     setDragIdx(null);
@@ -60,6 +62,7 @@ export function SouzaReorderModal(props: SouzaReorderModalProps): JSX.Element | 
   if (!open) return null;
   return (
     <div
+      ref={dialogRef}
       className="souza-overlay"
       role="dialog"
       data-match-modal-registered="true"
