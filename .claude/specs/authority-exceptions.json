@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "snapshots": {
+    "cardCatalog": "0b802a33dc1d5df3a1c7f8d41a6e6aa23a4ea61ea9877443e7a7ca102cf66245",
+    "cardFaq": "0457f3e5bd9ce56243f038ca4beb81d0a01c984b4b164000aa265fc2d0d3b3a3",
+    "cardRestrictions": "9efdfa51ef55205607a5c26295020d75624910004187eca5ace9c954897a16e8",
+    "errata": "2f61606a9f7f61f0d2531a30edd4652eb6e0e9d3a70f31b667df48ba1d432764",
+    "floorRule": "b71650d9e463c64fc4a7384107b3efed913685531e3bcb9dd3aed92ace5a1d00",
+    "ruleManual": "2a3caf3372e66656cd9ac0c5ba9dc8fc4177c176317f4f97086975c1c9e65d41"
+  },
+  "exceptions": []
+}

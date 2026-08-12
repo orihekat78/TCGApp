@@ -1,7 +1,7 @@
 # CI — push/PR ごとの回帰ゲート (2026-06-12 導入、private repo 無料枠 2,000 min/月)
 #
 # ローカルの挙動不変ゲートのうち、トークンを消費せず GitHub 側で常時走らせられるものを実行する:
-#   typecheck / full vitest / lint 7本 / smoke:1000 (異常時 exit 1)
+#   typecheck / full vitest / authority exceptions / lint / smoke:1000 (異常時 exit 1)
 # docs:check は除外 (Windows 開発環境で生成した hash が Linux checkout と一致しない可能性があるため。
 # ローカル pre-commit hook で引き続き強制される)。playwright e2e も v1 では除外 (要ブラウザ環境)。
 name: CI
@@ -39,6 +39,9 @@ jobs:
 
       - name: Unit tests (vitest)
         run: npx vitest run
+
+      - name: Validate authority exceptions
+        run: npm run cards:authority:exceptions
 
       - name: Lint chain (規約 8 本)
         run: |

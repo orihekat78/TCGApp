@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 293
-- **ファイル数**: 5930
+- **ファイル数**: 5933
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1808,6 +1808,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `INDEX.md` — 設計ドキュメントの目次
     - `NEXT-SESSION-PLAN.md` — 次セッション計画 (post 2026-05-11)
     - `all-cards-completion-plan-2026-07-02.md` — 全カード追加 完了計画 (2026-07-02 / 同日改定: 二 Track 並行)
+    - `authority-exceptions.json`
     - `bug-111-human-decline-fix-design.md` — BUG-111 #2 修正設計 — human-decline 経路の continuation 取り扱い
     - `card-addition-checklist.md` — 新カード追加時のチェックリスト
     - `card-authoring-convention.md` — カード実装コーディング規約
@@ -2297,6 +2298,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `generate-case-difficulties.cjs`
     - `official-api.cjs`
     - `qa-normalize.cjs`
+    - `validate-authority-exceptions.ts`
     - `write-qa-hash-snapshot.cjs`
   - **`cloud-data/`**
     - `measure-d1-budget.ts`
@@ -6061,6 +6063,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `structure-root-portability.test.ts`
     - `structure-tracked-files.test.ts`
     - `taskA-codegen-use-condition.test.ts`
+    - `validate-authority-exceptions.test.ts`
     - `you-vs-cpu-validation-loop.test.ts`
   - **`smoke/`** — 1000 戦 AI vs AI smoke テスト
     - `aggregate.test.ts` — tests/smoke/aggregate — Phase 9-A pure aggregation tests

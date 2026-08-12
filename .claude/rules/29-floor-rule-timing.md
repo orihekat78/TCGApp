@@ -5,6 +5,7 @@
 
 > 出典: [公式フロアルールPDF](https://www.takaratomy.co.jp/products/conan-cardgame/pdf/rule/floor_rule.pdf)
 > ローカル: `.tmp/floor_rule/floor_rule.pdf` / `.tmp/floor_rule/floor_rule.txt`
+> 再検証: 2026-08-13（SHA-256 は [sources.md](sources.md) に固定）
 
 ## マッチ形式 (2.1)
 

@@ -3,7 +3,7 @@
 公式競技イベント（チャレンジバトル等）にのみ適用。
 カジュアル・ファンイベント・MVP本アプリでは原則影響しないが、デッキ検証時に表示する。
 
-> 出典: [公式制限リスト](https://www.takaratomy.co.jp/products/conan-cardgame/news/detail/60) / フロアルール 6.2
+> 出典: [公式制限リスト](https://www.takaratomy.co.jp/products/conan-cardgame/card_limit/limit/) / フロアルール 6.2
 
 ## 禁止カード（0枚制限）
 
@@ -45,8 +45,8 @@
 
 ## 関連
 - [02-deck-construction.md](02-deck-construction.md) - デッキ構築基本
-- [29-floor-rule.md](29-floor-rule.md) - フロアルール
+- [29-floor-rule-timing.md](29-floor-rule-timing.md) - フロアルール
 - [sources.md](sources.md)
 
 ## 取得日
-- 2026-05-10
+- 2026-08-13（SHA-256 は [sources.md](sources.md) に固定）
