@@ -34,6 +34,24 @@ describe('CloudSyncIndicator', () => {
     expect(html).not.toContain('family@example.com');
   });
 
+  it('renders a compact, fully named live status for the persistent shell', () => {
+    const status = {
+      phase: 'syncing',
+      pendingCount: 2,
+      message: 'SYNCING',
+    } as const;
+
+    const html = renderToStaticMarkup(<CloudSyncIndicator statusOverride={status} />);
+
+    expect(html).toContain('class="cloud-sync-indicator"');
+    expect(html).toContain('role="status"');
+    expect(html).toContain('aria-live="polite"');
+    expect(html).toContain('aria-label="クラウド同期中。保留2件"');
+    expect(html).toContain('class="network-status network-status--compact"');
+    expect(html).toContain('class="network-status__primary"');
+    expect(html).toContain('SYNCING');
+  });
+
   it('stays out of the active match controls', () => {
     expect(shouldShowCloudSyncIndicator('match')).toBe(false);
     expect(shouldShowCloudSyncIndicator('home')).toBe(true);

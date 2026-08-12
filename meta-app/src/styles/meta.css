@@ -3777,3 +3777,70 @@ button {
     animation-iteration-count: 1 !important;
   }
 }
+/* Persistent shell status: compact enough for iPhone SE landscape. */
+.cloud-sync-indicator {
+  position: absolute;
+  right: max(6px, env(safe-area-inset-right));
+  bottom: max(6px, env(safe-area-inset-bottom));
+  z-index: 90;
+  pointer-events: none;
+}
+
+.network-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid color-mix(in srgb, var(--network-status-color) 40%, transparent);
+  border-radius: 12px;
+  font-family: "Cascadia Code", "Consolas", "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+}
+
+.network-status--compact {
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+}
+
+.network-status__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--network-status-color);
+}
+
+.network-status[data-network-state="online"] .network-status__dot {
+  box-shadow: 0 0 6px var(--network-status-color);
+}
+
+.network-status[data-network-state="syncing"] .network-status__dot {
+  animation: meta-pulse 1.2s infinite;
+}
+
+.network-status__primary {
+  color: var(--network-status-color);
+  font-weight: 800;
+}
+
+.network-status__secondary {
+  color: #7090b5;
+}
+
+@media (max-height: 420px) {
+  .network-status--compact .network-status__secondary {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}

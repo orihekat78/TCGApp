@@ -43,15 +43,9 @@ export function CloudSyncIndicator({ statusOverride }: Props = {}) {
       aria-label={label}
       title={label}
       data-cloud-sync-phase={status.phase}
-      style={{
-        position: 'absolute',
-        right: 12,
-        bottom: 10,
-        zIndex: 90,
-        pointerEvents: 'none',
-      }}
+      className="cloud-sync-indicator"
     >
-      <NetworkStatus state={NETWORK_STATE[status.phase]} />
+      <NetworkStatus state={NETWORK_STATE[status.phase]} compact />
     </div>
   );
 }

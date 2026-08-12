@@ -62,6 +62,46 @@ test('HOME navigation typography and icons scale down with the viewport', async 
   expect(compact.iconWidth).toBeLessThan(desktop.iconWidth);
 });
 
+test('HOME keeps cloud sync status compact and clear on iPhone SE landscape', async ({ page }) => {
+  await page.setViewportSize({ width: 667, height: 375 });
+  await page.goto('/#home');
+
+  const indicator = page.locator('.cloud-sync-indicator');
+  await expect(indicator).toBeVisible();
+  await expect(indicator).toHaveAttribute('role', 'status');
+  await expect(indicator).toHaveAttribute('aria-live', 'polite');
+  await expect(indicator).toHaveAttribute('aria-label', /.+/);
+
+  const geometry = await indicator.evaluate((node) => {
+    const box = node.getBoundingClientRect();
+    const primary = node.querySelector<HTMLElement>('.network-status__primary')!;
+    const captions = Array.from(document.querySelectorAll('.home-identity-card figcaption'))
+      .map((caption) => caption.getBoundingClientRect());
+    const overlapsCaption = captions.some((caption) => (
+      box.left < caption.right
+      && box.right > caption.left
+      && box.top < caption.bottom
+      && box.bottom > caption.top
+    ));
+    return {
+      box: { left: box.left, top: box.top, right: box.right, bottom: box.bottom, width: box.width, height: box.height },
+      fontSize: Number.parseFloat(getComputedStyle(primary).fontSize),
+      pointerEvents: getComputedStyle(node).pointerEvents,
+      overlapsCaption,
+    };
+  });
+
+  expect(geometry.box.width).toBeLessThanOrEqual(112);
+  expect(geometry.box.height).toBeLessThanOrEqual(22);
+  expect(geometry.box.left).toBeGreaterThanOrEqual(0);
+  expect(geometry.box.top).toBeGreaterThanOrEqual(0);
+  expect(geometry.box.right).toBeLessThanOrEqual(667);
+  expect(geometry.box.bottom).toBeLessThanOrEqual(375);
+  expect(geometry.fontSize).toBeGreaterThanOrEqual(10);
+  expect(geometry.pointerEvents).toBe('none');
+  expect(geometry.overlapsCaption).toBe(false);
+});
+
 test('HOME identity cards stay contained after the game card stylesheet loads', async ({ page }) => {
   test.setTimeout(60_000);
   for (const viewport of [
