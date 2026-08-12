@@ -1,4 +1,5 @@
 import { useEffect, useRef, type RefObject } from 'react';
+import { registerMatchModalRoot, withMatchMenuTrigger } from '@/ui/hooks/useMatchModalLayer';
 
 const FOCUSABLE_SELECTOR = [
   'button:not(:disabled)',
@@ -28,19 +29,22 @@ export function useModalFocusTrap({
     if (!active) return undefined;
     const dialog = dialogRef.current;
     if (!dialog) return undefined;
+    registerMatchModalRoot(dialog);
     returnFocusRef.current = document.activeElement instanceof HTMLElement
       ? document.activeElement
       : null;
 
-    const focusable = (): HTMLElement[] => Array.from(
-      dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-    );
+    const focusable = (): HTMLElement[] => {
+      const controls = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+      return withMatchMenuTrigger(dialog, controls);
+    };
     const initialFocus = initialFocusSelector
       ? dialog.querySelector<HTMLElement>(initialFocusSelector)
       : null;
     (initialFocus ?? focusable()[0] ?? dialog).focus();
 
     const onKeyDown = (event: KeyboardEvent): void => {
+      if (dialog.hasAttribute('inert')) return;
       // A nested modal (for example card detail) owns an already-handled key.
       if (event.defaultPrevented) return;
       if (event.key === 'Escape') {
@@ -57,17 +61,11 @@ export function useModalFocusTrap({
         return;
       }
       const activeIndex = controls.indexOf(document.activeElement as HTMLElement);
-      if (event.shiftKey) {
-        if (activeIndex <= 0) {
-          event.preventDefault();
-          controls.at(-1)?.focus();
-        }
-        return;
-      }
-      if (activeIndex === -1 || activeIndex === controls.length - 1) {
-        event.preventDefault();
-        controls[0]?.focus();
-      }
+      event.preventDefault();
+      const nextIndex = event.shiftKey
+        ? (activeIndex <= 0 ? controls.length - 1 : activeIndex - 1)
+        : (activeIndex === -1 || activeIndex === controls.length - 1 ? 0 : activeIndex + 1);
+      controls[nextIndex]?.focus();
     };
 
     document.addEventListener('keydown', onKeyDown, { capture: true });

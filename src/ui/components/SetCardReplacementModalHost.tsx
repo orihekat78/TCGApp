@@ -15,7 +15,7 @@ export function SetCardReplacementModalHost(): JSX.Element | null {
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const expandModal = useCardExpandModal();
   if (!pending || !isHumanDecisionOwner(pending.player, spectatorMode)) return null;
-  return <div className="cp-overlay" role="dialog" aria-modal="true" data-testid="set-card-replacement-modal">
+  return <div className="cp-overlay" role="dialog" data-match-modal-registered="true" aria-modal="true" data-testid="set-card-replacement-modal">
     <div className="cp-modal"><div className="cp-header"><h2>Move set card</h2><p className="cp-sub">Choose a character, or remove the card.</p></div>
       <div className="cp-body"><ul className="cp-list">{pending.candidates.map((candidate, index) => <li key={candidate.uid}><SelectableCardTile cardId={candidate.cardId} instanceId={candidate.uid} occurrenceLabel={publicCardOccurrenceLabel(pending.candidates.map((item) => item.cardId), candidate.cardId, index)} selectTestId={`set-card-replacement-${candidate.uid}`} onSelect={() => dispatchEngineAction(bindPendingDecision(pending, { type: 'setCardReplacementResolve', targetUid: candidate.uid }))} onExpand={expandModal.open} /></li>)}</ul></div>
       <div className="cp-actions"><button type="button" className="cp-btn cp-btn-cancel" data-testid="set-card-replacement-decline" onClick={() => dispatchEngineAction(bindPendingDecision(pending, { type: 'setCardReplacementResolve', targetUid: null }))}>Remove card</button></div>

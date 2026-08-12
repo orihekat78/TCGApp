@@ -44,6 +44,7 @@ export function DeclareCardNameModal(props: DeclareCardNameModalProps): JSX.Elem
     <div
       className="declare-card-name-overlay"
       role="dialog"
+      data-match-modal-registered="true"
       aria-labelledby="declare-card-name-title"
       aria-modal="true"
       data-testid="declare-card-name-modal"

@@ -18,6 +18,7 @@ import { CardExpandModal } from './CardExpandModal.js';
 import { PublicHandRevealCards } from './PublicHandRevealWindow.js';
 import { shouldRenderEffectPicker } from '@/ui/services/effectPickerVisibility.js';
 import { effectivePendingPickRange, pendingPickSelectionViolation } from '@/engine/effect/pick-selection.js';
+import { withMatchMenuTrigger } from '@/ui/hooks/useMatchModalLayer.js';
 import './EffectPickerModal.css';
 
 /**
@@ -73,12 +74,14 @@ export function EffectPickerModal(): JSX.Element | null {
     if (!shouldRender || expandModal.expandedCard) return;
     const dialog = dialogRef.current;
     if (!dialog) return;
-    const getFocusable = (): HTMLButtonElement[] => Array.from(
-      dialog.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'),
+    const getFocusable = (): HTMLElement[] => withMatchMenuTrigger(
+      dialog,
+      Array.from(dialog.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')),
     );
     const focusable = getFocusable();
     if (!dialog.contains(document.activeElement)) focusable[0]?.focus();
     const onKeyDown = (event: KeyboardEvent): void => {
+      if (dialog.hasAttribute('inert')) return;
       if (event.key === 'Escape') {
         event.preventDefault();
         event.stopPropagation();
@@ -184,6 +187,7 @@ export function EffectPickerModal(): JSX.Element | null {
       ref={dialogRef}
       className="effect-picker-overlay"
       role="dialog"
+      data-match-modal-registered="true"
       aria-labelledby="effect-picker-title"
       aria-modal="true"
       data-testid="effect-picker-modal"

@@ -64,7 +64,7 @@ export function LeaveInterceptModalHost(): JSX.Element | null {
   const resolve = (accept: boolean): void => {
     dispatchEngineAction(bindPendingDecision(pending, { type: 'leaveInterceptResolve', accept }));
   };
-  return <div className="cp-overlay" role="dialog" aria-modal="true" data-testid="leave-intercept-modal">
+  return <div className="cp-overlay" role="dialog" data-match-modal-registered="true" aria-modal="true" data-testid="leave-intercept-modal">
     <div className="cp-modal"><div className="cp-header"><h2>Leave intercept</h2><p className="cp-sub">Remove {interceptorName} to move {targetName} to hand?</p></div>
       <div className="cp-body">
         <div className="leave-intercept-cards">

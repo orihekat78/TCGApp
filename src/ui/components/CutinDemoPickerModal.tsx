@@ -54,6 +54,7 @@ export function CutinDemoPickerModal(props: CutinDemoPickerModalProps): JSX.Elem
     <div
       className="hirameki-demo-picker-backdrop"
       role="dialog"
+      data-match-modal-registered="true"
       aria-modal="true"
       aria-labelledby="cutin-demo-picker-title"
       data-testid="cutin-demo-picker"

@@ -34,6 +34,7 @@ export function HiramekiPickerModal(props: HiramekiPickerModalProps): JSX.Elemen
     <div
       className="hirameki-picker-overlay"
       role="dialog"
+      data-match-modal-registered="true"
       aria-labelledby="hirameki-picker-title"
       aria-modal="true"
       data-testid="hirameki-picker-modal"

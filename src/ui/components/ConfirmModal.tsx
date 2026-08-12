@@ -4,8 +4,9 @@
 // 設計: 純粋な presentation component。store 購読は親側 (Playmat) が行い、
 // current を prop として渡す。SSR/テスト時に renderToString で値を制御しやすい。
 
-import { useEffect, useRef, type JSX, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import type { JSX } from 'react';
 import type { ResolvedConfirmRequest } from '@/ui/hooks/useConfirmation.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import './ConfirmModal.css';
 
 export type ConfirmModalProps = {
@@ -20,53 +21,21 @@ export function ConfirmModal({
   onAccept,
   onReject,
 }: ConfirmModalProps): JSX.Element | null {
-  const cancelRef = useRef<HTMLButtonElement>(null);
-  const acceptRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (current === null) return undefined;
-
-    const previousFocus = document.activeElement;
-    acceptRef.current?.focus();
-
-    return () => {
-      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
-        previousFocus.focus();
-      }
-    };
-  }, [current]);
+  const dialogRef = useModalFocusTrap({
+    active: current !== null,
+    initialFocusSelector: '.confirm-ok',
+    onEscape: onReject,
+  });
 
   if (current === null) return null;
 
-  const handleKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>): void => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      event.stopPropagation();
-      onReject();
-      return;
-    }
-
-    if (event.key !== 'Tab') return;
-    const first = cancelRef.current;
-    const last = acceptRef.current;
-    if (!first || !last) return;
-
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  };
-
   return (
     <div
+      ref={dialogRef}
       className="confirm-modal-backdrop"
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-modal-title"
-      onKeyDown={handleKeyDown}
     >
       <div className={`confirm-modal confirm-modal--${current.kind}`}>
         <header className="confirm-modal-header">
@@ -76,10 +45,10 @@ export function ConfirmModal({
         </header>
         <div className="confirm-modal-body">{current.body}</div>
         <footer className="confirm-modal-footer">
-          <button ref={cancelRef} type="button" className="confirm-cancel" onClick={onReject}>
+          <button type="button" className="confirm-cancel" onClick={onReject}>
             {current.cancelLabel}
           </button>
-          <button ref={acceptRef} type="button" className="confirm-ok" onClick={onAccept}>
+          <button type="button" className="confirm-ok" onClick={onAccept}>
             {current.okLabel}
           </button>
         </footer>

@@ -257,6 +257,7 @@ export function LogPanel({ entries, open, maxEntries = 30, onClose, gameState, o
       <div
         className="log-panel open"
         role="dialog"
+        data-match-modal-registered="true"
         aria-modal="true"
         aria-label="ゲームログ"
         aria-expanded={true}

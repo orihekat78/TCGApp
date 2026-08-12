@@ -62,6 +62,7 @@ export function SouzaReorderModal(props: SouzaReorderModalProps): JSX.Element | 
     <div
       className="souza-overlay"
       role="dialog"
+      data-match-modal-registered="true"
       aria-labelledby="souza-title"
       aria-modal="true"
       data-testid="souza-modal"

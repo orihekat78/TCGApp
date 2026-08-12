@@ -17,7 +17,7 @@ export function RpsModalHost(): JSX.Element | null {
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   if (!pending || !isHumanDecisionOwner(pending.player, spectatorMode)) return null;
   return (
-    <div className="cp-overlay" role="dialog" aria-modal="true" aria-labelledby="rps-title" data-testid="rps-modal">
+    <div className="cp-overlay" role="dialog" data-match-modal-registered="true" aria-modal="true" aria-labelledby="rps-title" data-testid="rps-modal">
       <div className="cp-modal">
         <div className="cp-header"><h2 id="rps-title">\u3058\u3083\u3093\u3051\u3093</h2></div>
         <div className="cp-body"><p className="cp-sub">Choose a hand.</p></div>

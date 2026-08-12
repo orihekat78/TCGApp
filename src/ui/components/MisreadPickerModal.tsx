@@ -66,6 +66,7 @@ export function MisreadPickerModal(props: MisreadPickerModalProps): JSX.Element 
     <div
       className="misread-picker-overlay"
       role="dialog"
+      data-match-modal-registered="true"
       aria-labelledby="misread-picker-title"
       aria-modal="true"
       data-testid="misread-picker-modal"

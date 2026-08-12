@@ -16,6 +16,7 @@ import { useEffect, useMemo, useRef, useState, type JSX } from 'react';
 import { useMulliganStore, resolveMulligan } from '@/ui/hooks/useMulligan.js';
 import { cardIdToDisplayName, cardIdToPrintedNumber } from '@/ui/services/uidNames.js';
 import { CardArt } from './CardArt.js';
+import { withMatchMenuTrigger } from '@/ui/hooks/useMatchModalLayer.js';
 import './MulliganModal.css';
 
 const PLAYER_LABEL: Record<'self' | 'opp', string> = {
@@ -73,12 +74,13 @@ export function MulliganModal(): JSX.Element | null {
   useEffect(() => {
     if (current === null) return undefined;
 
-    const focusables = (scope: HTMLElement | null): HTMLElement[] => [
-      ...(scope?.querySelectorAll<HTMLElement>(
+    const focusables = (scope: HTMLElement | null): HTMLElement[] => scope
+      ? withMatchMenuTrigger(scope, [...scope.querySelectorAll<HTMLElement>(
         'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      ) ?? []),
-    ];
+      )])
+      : [];
     const onKeyDown = (event: KeyboardEvent): void => {
+      if (dialogRef.current?.hasAttribute('inert')) return;
       if (event.key === 'Escape') {
         event.preventDefault();
         event.stopImmediatePropagation();
@@ -151,6 +153,7 @@ export function MulliganModal(): JSX.Element | null {
       ref={dialogRef}
       className="mulligan-modal-backdrop"
       role={zoomIdx === null ? 'dialog' : undefined}
+      data-match-modal-registered="true"
       aria-modal={zoomIdx === null ? 'true' : undefined}
       aria-labelledby={zoomIdx === null ? 'mulligan-modal-title' : undefined}
     >
@@ -213,6 +216,7 @@ export function MulliganModal(): JSX.Element | null {
             ref={zoomDialogRef}
             className="mulligan-zoom-overlay"
             role="dialog"
+            data-match-modal-registered="true"
             aria-modal="true"
             tabIndex={-1}
             aria-label="カード拡大表示"

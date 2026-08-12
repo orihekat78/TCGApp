@@ -36,6 +36,7 @@ import { useGameStateStore } from '@/ui/state/store';
 import { engine } from '@/engine';
 import { useMetaStore } from '../state/metaStore';
 import { isMatchSessionActive } from '@/ui/services/matchSession';
+import { MatchMenu } from '../components/MatchMenu';
 import '@/ui/styles/tokens.css';
 
 // JSON は src/ がリポジトリルート相対参照しているのと同じパスにする
@@ -176,6 +177,7 @@ export function RealMatchView({ onMatchEnd, onReturnToSetup = () => undefined }:
       {/* BUG-088: replay 再生中は CPU 制御 HUD を出さない (ReplayPanel と top で重なり close を遮るため) */}
       <EffectPickerModal />
       <EffectDecisionModalHosts />
+      <MatchMenu replayActive={replayDriver.state.log !== null} />
       <DeckRevealOverlay />
       <PublicHandRevealWindow />
       <PresentationCoordinatorHost

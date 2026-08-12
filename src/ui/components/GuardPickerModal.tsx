@@ -52,6 +52,7 @@ export function GuardPickerModal(props: GuardPickerModalProps): JSX.Element | nu
     <div
       className="guard-picker-overlay"
       role="dialog"
+      data-match-modal-registered="true"
       aria-labelledby="guard-picker-title"
       aria-modal="true"
       data-testid="guard-picker-modal"

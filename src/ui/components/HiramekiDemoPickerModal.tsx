@@ -53,6 +53,7 @@ export function HiramekiDemoPickerModal(props: HiramekiDemoPickerModalProps): JS
     <div
       className="hirameki-demo-picker-backdrop"
       role="dialog"
+      data-match-modal-registered="true"
       aria-modal="true"
       aria-labelledby="hirameki-demo-picker-title"
       data-testid="hirameki-demo-picker"

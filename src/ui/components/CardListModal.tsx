@@ -13,6 +13,7 @@
 
 import { useEffect, useState, type JSX } from 'react';
 import type { CardId } from '@/engine/types';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import { CardArt } from './CardArt.js';
 import { cardIdToDisplayName, cardIdToPrintedNumber, publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import './CardListModal.css';
@@ -145,6 +146,11 @@ export type CardListModalProps = {
 
 export function CardListModal(props: CardListModalProps): JSX.Element | null {
   const { kind, side, cards, faceDownCount = 0, faceUpEvidence, onClose, onExpand, pickCands, pickCandidateUids, pickSessionKey, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents, pickDistinctLevel, pickLevels, pickDistinctColors, pickColors, pickForcedUids } = props;
+  const dialogRef = useModalFocusTrap({
+    active: kind !== null,
+    initialFocusSelector: '.card-list-modal-close',
+    onEscape: onClose,
+  });
   // BUG-085: 表向き証拠 index → cardId の lookup (裏向き cell ループ内で公開描画に切替)
   const faceUpByIndex = new Map<number, { cardId: CardId; faceState?: '表向き' | '裏向き' }>((faceUpEvidence ?? []).map((e) => [e.index, e]));
   const inPickMode = pickCands !== undefined
@@ -257,15 +263,6 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
   const candidateAreaLabel = (uid: string): string | undefined => pickCands?.find((candidate) => candidate.uid === uid)?.areaLabel;
 
   // Esc で閉じる (本 modal のみ scope。global keymap には影響しない)
-  useEffect(() => {
-    if (kind === null) return;
-    const handler = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [kind, onClose]);
-
   if (kind === null) return null;
 
   const sideLabel = side === 'self' ? '自分の' : '相手の';
@@ -275,6 +272,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
 
   return (
     <div
+      ref={dialogRef}
       className="card-list-modal-backdrop"
       role="dialog"
       aria-modal="true"

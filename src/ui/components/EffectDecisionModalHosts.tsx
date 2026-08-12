@@ -9,7 +9,11 @@ import { RpsModalHost } from '@/ui/components/RpsModalHost';
 import { SetCardChoiceModalHost } from '@/ui/components/SetCardChoiceModalHost';
 import { SetCardReplacementModalHost } from '@/ui/components/SetCardReplacementModalHost';
 
-/** All engine decision surfaces that must accompany EffectPickerModal. */
+/**
+ * All engine decision surfaces that must accompany EffectPickerModal.
+ * Each visible root explicitly enrolls through the shared focus hook or
+ * registry marker so MatchMenu can arbitrate one top layer.
+ */
 export function EffectDecisionModalHosts() {
   return (
     <>

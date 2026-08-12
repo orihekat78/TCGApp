@@ -11,6 +11,7 @@ import { createPortal } from 'react-dom';
 import type { CardId } from '@/engine/types';
 import { CardArt } from './CardArt.js';
 import { cardIdToDisplayName } from '@/ui/services/uidNames.js';
+import { withMatchMenuTrigger } from '@/ui/hooks/useMatchModalLayer.js';
 import './CardExpandModal.css';
 
 export type CardExpandModalProps = {
@@ -40,6 +41,7 @@ export function CardExpandModal({ cardId, onClose }: CardExpandModalProps): JSX.
     returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const focusFrame = window.requestAnimationFrame(() => closeRef.current?.focus());
     function onKey(e: KeyboardEvent): void {
+      if (dialogRef.current?.hasAttribute('inert')) return;
       if (e.key === 'Escape') {
         // BUG-231: window capture phase で最前面modalがEscapeを消費する。
         // 下層LogPanel/global shortcutのlistenerへ伝播させず、このmodalだけ閉じる。
@@ -49,9 +51,11 @@ export function CardExpandModal({ cardId, onClose }: CardExpandModalProps): JSX.
         return;
       }
       if (e.key !== 'Tab') return;
-      const focusable = [...(dialogRef.current?.querySelectorAll<HTMLElement>(
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      const focusable = withMatchMenuTrigger(dialog, [...dialog.querySelectorAll<HTMLElement>(
         'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      ) ?? [])].filter((element) => element.getClientRects().length > 0);
+      )].filter((element) => element.getClientRects().length > 0));
       if (focusable.length === 0) {
         e.preventDefault();
         dialogRef.current?.focus();
@@ -87,6 +91,7 @@ export function CardExpandModal({ cardId, onClose }: CardExpandModalProps): JSX.
       className="card-expand-modal-backdrop"
       onClick={onClose}
       role="dialog"
+      data-match-modal-registered="true"
       aria-modal="true"
       aria-label={`カード拡大表示: ${name}`}
       tabIndex={-1}

@@ -25,7 +25,7 @@ export function SetCardChoiceModalHost(): JSX.Element | null {
       : pending.destination?.area === 'scene'
         ? 'Choose one set card to move to the selected character.'
         : 'Choose one facedown set card.';
-  return <div className="cp-overlay" role="dialog" aria-modal="true" data-testid="set-card-choice-modal">
+  return <div className="cp-overlay" role="dialog" data-match-modal-registered="true" aria-modal="true" data-testid="set-card-choice-modal">
     <div className="cp-modal"><div className="cp-header"><h2>Set card</h2><p className="cp-sub">{isCost ? `${pending.nMin ?? 1}枚をコストとして選んでください。` : movePrompt}</p></div>
       <div className="cp-body"><ul className="cp-list">{pending.entries.map((entry) => {
         const hidden = entry.hidden ?? true;

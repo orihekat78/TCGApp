@@ -81,6 +81,7 @@ function DeckPlaceModalInner({
     <div
       className="souza-overlay"
       role="dialog"
+      data-match-modal-registered="true"
       aria-labelledby="deckplace-title"
       aria-modal="true"
       data-testid="deck-place-modal"

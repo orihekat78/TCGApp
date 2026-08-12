@@ -76,6 +76,7 @@ function DeckReorderModalInner({
     <div
       className="souza-overlay"
       role="dialog"
+      data-match-modal-registered="true"
       aria-labelledby="deckreorder-title"
       aria-modal="true"
       data-testid="deck-reorder-modal"

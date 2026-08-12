@@ -3851,3 +3851,105 @@ button {
     border: 0;
   }
 }
+
+/* Live MATCH controls stay outside the fitted playmat transform. */
+.match-menu-trigger {
+  position: fixed;
+  top: max(8px, env(safe-area-inset-top));
+  right: max(8px, env(safe-area-inset-right));
+  z-index: 11000;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid rgba(141, 232, 255, 0.62);
+  border-radius: 8px;
+  background: rgba(7, 19, 31, 0.96);
+  color: #edf5fb;
+  font: 700 12px/1 "Hiragino Sans", "Yu Gothic UI", sans-serif;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.match-menu-backdrop {
+  position: fixed;
+  z-index: 11001;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: rgba(3, 10, 17, 0.78);
+}
+
+.match-menu-panel {
+  width: min(100%, 340px);
+  padding: 20px;
+  border: 1px solid rgba(141, 232, 255, 0.44);
+  border-radius: 12px;
+  background: linear-gradient(145deg, #102b42, #091a2a);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.52);
+  color: #edf5fb;
+}
+
+.match-menu-panel h2,
+.match-menu-panel p {
+  margin-top: 0;
+}
+
+.match-menu-panel h2 {
+  margin-bottom: 12px;
+  font-size: 20px;
+}
+
+.match-menu-panel p {
+  margin-bottom: 16px;
+  color: #b9cede;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.match-menu-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.match-menu-actions--stacked {
+  flex-direction: column;
+}
+
+.match-menu-actions button {
+  min-height: 44px;
+  padding: 9px 16px;
+  border: 1px solid rgba(237, 245, 251, 0.32);
+  border-radius: 8px;
+  background: #17354c;
+  color: #edf5fb;
+  font: inherit;
+  cursor: pointer;
+}
+
+.match-menu-actions .match-menu-danger {
+  border-color: #ff887e;
+  background: #7b211f;
+  color: #fff7f5;
+}
+
+.match-menu-alert {
+  color: #ffb3ac !important;
+  font-weight: 700;
+}
+
+@media (max-height: 420px) {
+  .match-menu-panel {
+    padding: 14px;
+  }
+
+  .match-menu-panel h2 {
+    margin-bottom: 8px;
+    font-size: 17px;
+  }
+
+  .match-menu-panel p {
+    margin-bottom: 10px;
+  }
+}
