@@ -665,12 +665,12 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
       || Object.keys(prepared.actionContexts ?? {}).length !== 0
       || !validatePresentationCommit(prepared)
     ) return false;
-    const store = get();
-    const completedDeckReveal = store.pendingDeckReveal?.awaitingPick === true
+    const storeBefore = get();
+    const completedDeckReveal = storeBefore.pendingDeckReveal?.awaitingPick === true
       ? null
-      : store.pendingDeckReveal;
-    const presentationHandReveal = store.pendingPublicHandReveal?.lifetime === 'presentation'
-      ? store.pendingPublicHandReveal
+      : storeBefore.pendingDeckReveal;
+    const presentationHandReveal = storeBefore.pendingPublicHandReveal?.lifetime === 'presentation'
+      ? storeBefore.pendingPublicHandReveal
       : null;
     const runtimeBefore = snapshotPendingRuntimeState();
     try {
@@ -684,7 +684,15 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
       admitCommittedPresentation(prepared);
       return true;
     } catch (error) {
-      restorePendingRuntimeState(runtimeBefore);
+      try {
+        set(storeBefore, true);
+      } catch {
+        // The exact replacement is already installed before Zustand notifies
+        // subscribers. A rollback listener failure must not mask the original
+        // failed terminal publish.
+      } finally {
+        restorePendingRuntimeState(runtimeBefore);
+      }
       throw error;
     }
   },

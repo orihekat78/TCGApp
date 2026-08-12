@@ -64,7 +64,7 @@ function cancelPendingAfterGameEnd(
   options: { preserveCompletedPresentations: boolean },
 ): void {
   for (const entry of state.pendingEffects) {
-    if (entry.state === 'pending') entry.state = 'cancelled';
+    if (entry.state === 'pending' || entry.state === 'resolving') entry.state = 'cancelled';
   }
   delete state.pendingTurnTransition;
   clearPersistedPendingRuntimeState(state);

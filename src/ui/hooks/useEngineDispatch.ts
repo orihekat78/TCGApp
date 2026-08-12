@@ -581,6 +581,9 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     try {
       const terminal = produce(current, (draft) => {
         runEngineAction(draft, action, authorities);
+        runAllUntilEmpty(draft, {
+          preserveCompletedPresentationsOnTerminalEntry: true,
+        });
       });
       const latestStore = useGameStateStore.getState();
       const authorityStillCurrent = latestStore.gameState === current

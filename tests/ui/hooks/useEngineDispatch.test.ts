@@ -24,14 +24,22 @@ import type {
   FileCard,
   SceneCharacter,
 } from '@/engine/types/game-state';
+import type { EffectStackEntry } from '@/engine/types/effect-stack';
 import { makeChar as baseChar } from '../../helpers/fixtures';
 import { register as engineRegisterCardDef } from '@/engine/read/def';
 import { useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
-import { appendCausal, startCausalSession } from '@/engine/log/causal';
+import { appendCausal, isCausalLogEntry, startCausalSession } from '@/engine/log/causal';
 import { snapshotPendingRuntimeState } from '@/engine/effect/runtime-state';
 import { currentPresentationSessionId, getPresentationQueue, resetPresentationQueue } from '@/ui/presentation/coordinator';
-import { beginMatchSession, endMatchSession, matchSessionId } from '@/ui/services/matchSession';
-import { markReplayOwnedState } from '@/ui/services/replayOwnership';
+import {
+  beginMatchSession,
+  currentMatchSessionToken,
+  endMatchSession,
+  isMatchSessionActive,
+  matchSessionId,
+} from '@/ui/services/matchSession';
+import { isReplayOwnedState, markReplayOwnedState } from '@/ui/services/replayOwnership';
+import { usePresentationStore } from '@/ui/presentation/store';
 
 // ---- fixtures ----
 
@@ -49,24 +57,63 @@ function makeChar(uid: string, cardId = 'cX'): SceneCharacter {
   return baseChar({ cardId, uid, enterOrder: 0 });
 }
 
-function snapshotRejectedConcedeState() {
+function makePendingEffect(id: string, state: EffectStackEntry['state']): EffectStackEntry {
   return {
-    store: { ...useGameStateStore.getState() },
+    id,
+    source: { player: 'self' },
+    triggeredBy: { hook: 'surrender-test' },
+    triggeredAt: { turn: 1, phase: 'main', nano: id === 'pending' ? 1 : 2 },
+    effect: { kind: 'atom', verb: 'noop', args: {} },
+    state,
+  };
+}
+
+function snapshotRejectedConcedeState() {
+  const queue = getPresentationQueue();
+  const store = useGameStateStore.getState();
+  const humanRoot = globalThis as { __humanPlayerSide?: 'self' | 'opp' | null };
+  return {
+    store: { ...store },
     runtime: snapshotPendingRuntimeState(),
     presentation: {
       sessionId: currentPresentationSessionId(),
-      revision: getPresentationQueue().revision(),
+      epoch: queue.currentEpoch(),
+      revision: queue.revision(),
+      outstanding: queue.outstandingCount(),
+      items: queue.items(),
+      controls: { ...usePresentationStore.getState() },
+    },
+    authority: {
+      sessionActive: isMatchSessionActive(),
+      sessionToken: currentMatchSessionToken(),
+      humanRegistered: Object.prototype.hasOwnProperty.call(humanRoot, '__humanPlayerSide'),
+      humanSide: humanRoot.__humanPlayerSide,
+      replayOwned: isReplayOwnedState(store.gameState),
     },
   };
 }
 
 function expectRejectedConcedeState(before: ReturnType<typeof snapshotRejectedConcedeState>) {
   expect({ ...useGameStateStore.getState() }).toEqual(before.store);
+  expect(useGameStateStore.getState().gameState).toBe(before.store.gameState);
   expect(snapshotPendingRuntimeState()).toEqual(before.runtime);
+  const queue = getPresentationQueue();
   expect({
     sessionId: currentPresentationSessionId(),
-    revision: getPresentationQueue().revision(),
+    epoch: queue.currentEpoch(),
+    revision: queue.revision(),
+    outstanding: queue.outstandingCount(),
+    items: queue.items(),
+    controls: { ...usePresentationStore.getState() },
   }).toEqual(before.presentation);
+  const humanRoot = globalThis as { __humanPlayerSide?: 'self' | 'opp' | null };
+  expect({
+    sessionActive: isMatchSessionActive(),
+    sessionToken: currentMatchSessionToken(),
+    humanRegistered: Object.prototype.hasOwnProperty.call(humanRoot, '__humanPlayerSide'),
+    humanSide: humanRoot.__humanPlayerSide,
+    replayOwned: isReplayOwnedState(useGameStateStore.getState().gameState),
+  }).toEqual(before.authority);
 }
 
 // ---- tests ----
@@ -195,6 +242,37 @@ describe('dispatchEngineAction (pure function)', () => {
       const token = beginMatchSession('self');
       const init = withMainPhase(createEmptyGameState());
       startCausalSession(init, matchSessionId(token));
+      init.pendingEffects = [
+        makePendingEffect('pending', 'pending'),
+        makePendingEffect('resolving', 'resolving'),
+      ];
+      init.pendingTurnTransition = {
+        endingPlayer: 'self',
+        stage: 'after-end-start',
+        startNextTurn: true,
+      };
+      init.pendingRuntimeState = {
+        token: 1,
+        snapshot: [
+          { key: '__pendingContactStartAxId', present: true, value: 'ax_1' },
+          {
+            key: '__pendingDeckRevealSide',
+            present: true,
+            value: {
+              player: 'self', visibility: 'public', viewer: 'all',
+              revealed: ['D08001'], matched: null, presentation: 'reveal-return',
+            },
+          },
+          {
+            key: '__pendingPublicHandRevealSide',
+            present: true,
+            value: {
+              owner: 'self', audience: 'all', cardIds: ['D08001'], handSnapshot: ['D08001'],
+              lifetime: 'presentation', resolutionToken: 'public-hand-reveal:1', source: {},
+            },
+          },
+        ],
+      };
       init.actionContexts = {
         ax_1: {
           id: 'ax_1', byUid: 'partner:self', byPlayer: 'self',
@@ -204,24 +282,81 @@ describe('dispatchEngineAction (pure function)', () => {
       };
       const causalCountBefore = init.log.length;
       useGameStateStore.getState().setGameState(init);
-      useGameStateStore.setState({ activeActionId: 'ax_1', pendingEffectPick: {} as never });
+      const completedDeckReveal = useGameStateStore.getState().pendingDeckReveal;
+      const presentationHandReveal = useGameStateStore.getState().pendingPublicHandReveal;
+      expect(completedDeckReveal).not.toBeNull();
+      expect(presentationHandReveal).not.toBeNull();
+      useGameStateStore.setState({
+        activeActionId: 'ax_1',
+        pendingEffectPick: {} as never,
+      });
 
       try {
         expect(dispatchEngineAction({ type: 'concede', player: 'self', sessionToken: token })).toEqual({ ok: true });
         const terminal = useGameStateStore.getState().gameState!;
         expect(terminal.gameResult).toEqual({ winner: 'opp', reason: 'concede' });
         expect(terminal.actionContexts).toEqual({});
+        expect(terminal.pendingEffects.map(({ id, state }) => ({ id, state }))).toEqual([
+          { id: 'pending', state: 'cancelled' },
+          { id: 'resolving', state: 'cancelled' },
+        ]);
+        expect(terminal.pendingTurnTransition).toBeUndefined();
+        expect(terminal.pendingRuntimeState).toBeUndefined();
         expect(terminal.log.at(-1)).toMatchObject({
+          kind: 'game-result',
           actor: 'opp', source: { kind: 'player', side: 'opp' },
           targets: [{ kind: 'player', side: 'self' }],
         });
         expect(terminal.log).toHaveLength(causalCountBefore + 1);
+        expect(terminal.log.filter(isCausalLogEntry).filter(({ kind }) => kind === 'game-result'))
+          .toHaveLength(1);
         expect(useGameStateStore.getState().activeActionId).toBeNull();
         expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
+        expect(useGameStateStore.getState().pendingDeckReveal).toBe(completedDeckReveal);
+        expect(useGameStateStore.getState().pendingPublicHandReveal).toBe(presentationHandReveal);
         expect(dispatchEngineAction({ type: 'actionAdvance', actionId: 'ax_1' }))
           .toEqual({ ok: false, reason: 'not-allowed' });
         expect(useGameStateStore.getState().gameState).toBe(terminal);
       } finally {
+        endMatchSession();
+      }
+    });
+
+    it('rolls back a terminal publish when a Zustand subscriber throws once', () => {
+      const token = beginMatchSession('self');
+      const init = withMainPhase(createEmptyGameState());
+      startCausalSession(init, matchSessionId(token));
+      init.pendingEffects = [makePendingEffect('pending', 'pending')];
+      init.pendingRuntimeState = {
+        token: 1,
+        snapshot: [{ key: '__pendingContactStartAxId', present: true, value: 'ambient-action' }],
+      };
+      useGameStateStore.getState().setGameState(init);
+      useGameStateStore.setState({
+        activeActionId: 'ambient-action',
+        activeCardUid: 'active-card',
+        activeCardLabel: 'Active Card',
+        pendingDecisionSeq: 41,
+        pendingEffectPick: {} as never,
+      });
+      const before = snapshotRejectedConcedeState();
+      let throwOnce = true;
+      const unsubscribe = useGameStateStore.subscribe(() => {
+        if (!throwOnce) return;
+        throwOnce = false;
+        throw new Error('one-shot terminal subscriber failure');
+      });
+
+      try {
+        expect(dispatchEngineAction({ type: 'concede', player: 'self', sessionToken: token }))
+          .toEqual({
+            ok: false,
+            reason: 'engine-error',
+            detail: 'one-shot terminal subscriber failure',
+          });
+        expectRejectedConcedeState(before);
+      } finally {
+        unsubscribe();
         endMatchSession();
       }
     });
