@@ -1,4 +1,5 @@
-import { readFile, stat } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -137,6 +138,27 @@ describe("generated meta card identities", () => {
     const once = renderMetaCardIdentities(sources);
     expect(renderMetaCardIdentities(sources)).toBe(once);
     expect(committed.replace(/\r\n?/g, "\n")).toBe(once);
+  });
+
+  it("does not rewrite a checkout whose only difference is line endings", async () => {
+    const { writeMetaCardIdentitiesIfChanged } = await import(
+      "../../scripts/gen-meta-card-identities"
+    );
+    const directory = await mkdtemp(resolve(tmpdir(), "conan-card-identities-"));
+    const target = resolve(directory, "identities.ts");
+
+    try {
+      await writeFile(target, "alpha\r\nbeta\r\n", "utf8");
+      const before = (await stat(target, { bigint: true })).mtimeNs;
+
+      expect(
+        await writeMetaCardIdentitiesIfChanged(target, "alpha\nbeta\n"),
+      ).toBe(false);
+      expect(await readFile(target, "utf8")).toBe("alpha\r\nbeta\r\n");
+      expect((await stat(target, { bigint: true })).mtimeNs).toBe(before);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
   });
 
   it("shows identity art before the card registry has been registered", async () => {
