@@ -65,6 +65,10 @@ import {
 } from '@/ui/services/matchSession';
 import { getRegisteredHumanDecisionSide } from '@/ui/services/humanDecisionOwner';
 import {
+  checkpointLiveReplayRecording,
+  rollbackLiveReplayRecording,
+} from '@/ui/services/liveReplayRecorder';
+import {
   toPendingSetCardChoiceSide,
   toPendingSetCardReplacementSide,
 } from './useEngineDispatch/set-card-boundary.js';
@@ -578,6 +582,7 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
 
   if (action.type === 'concede') {
     const pendingRuntimeBefore = snapshotPendingRuntimeState();
+    let replayCheckpoint: ReturnType<typeof checkpointLiveReplayRecording> | undefined;
     try {
       const terminal = produce(current, (draft) => {
         runEngineAction(draft, action, authorities);
@@ -594,12 +599,18 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
         && isCurrentMatchSession(action.sessionToken)
         && getRegisteredHumanDecisionSide(latestStore.spectatorMode) === action.player
         && !isReplayOwnedState(current);
-      if (!authorityStillCurrent || !latestStore.commitTerminalState(terminal)) {
+      if (!authorityStillCurrent) {
+        restorePendingRuntimeState(pendingRuntimeBefore);
+        return { ok: false, reason: 'not-allowed' };
+      }
+      replayCheckpoint = checkpointLiveReplayRecording();
+      if (!latestStore.commitTerminalState(terminal)) {
         restorePendingRuntimeState(pendingRuntimeBefore);
         return { ok: false, reason: 'not-allowed' };
       }
       return { ok: true };
     } catch (error) {
+      if (replayCheckpoint !== undefined) rollbackLiveReplayRecording(replayCheckpoint);
       restorePendingRuntimeState(pendingRuntimeBefore);
       return {
         ok: false,

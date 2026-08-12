@@ -40,6 +40,11 @@ import {
 } from '@/ui/services/matchSession';
 import { isReplayOwnedState, markReplayOwnedState } from '@/ui/services/replayOwnership';
 import { usePresentationStore } from '@/ui/presentation/store';
+import {
+  discardLiveReplayRecording,
+  finalizeLiveReplayRecording,
+  getFinalizedReplay,
+} from '@/ui/services/liveReplayRecorder';
 
 // ---- fixtures ----
 
@@ -251,6 +256,7 @@ describe('dispatchEngineAction (pure function)', () => {
         stage: 'after-end-start',
         startNextTurn: true,
       };
+      init.pendingReasoningContinuation = { token: 7, uid: 'reasoner:self', player: 'self' };
       init.pendingRuntimeState = {
         token: 1,
         snapshot: [
@@ -291,6 +297,8 @@ describe('dispatchEngineAction (pure function)', () => {
         pendingEffectPick: {} as never,
       });
 
+      let ended = false;
+      const sessionId = matchSessionId(token);
       try {
         expect(dispatchEngineAction({ type: 'concede', player: 'self', sessionToken: token })).toEqual({ ok: true });
         const terminal = useGameStateStore.getState().gameState!;
@@ -302,6 +310,7 @@ describe('dispatchEngineAction (pure function)', () => {
         ]);
         expect(terminal.pendingTurnTransition).toBeUndefined();
         expect(terminal.pendingRuntimeState).toBeUndefined();
+        expect(terminal.pendingReasoningContinuation).toBeUndefined();
         expect(terminal.log.at(-1)).toMatchObject({
           kind: 'game-result',
           actor: 'opp', source: { kind: 'player', side: 'opp' },
@@ -317,8 +326,14 @@ describe('dispatchEngineAction (pure function)', () => {
         expect(dispatchEngineAction({ type: 'actionAdvance', actionId: 'ax_1' }))
           .toEqual({ ok: false, reason: 'not-allowed' });
         expect(useGameStateStore.getState().gameState).toBe(terminal);
+        endMatchSession({ preserveGameState: true });
+        ended = true;
+        const replay = getFinalizedReplay(sessionId);
+        expect(replay?.result).toEqual({ winner: 'opp', reason: 'concede', turns: 1 });
+        expect(replay?.frames).toHaveLength(1);
+        discardLiveReplayRecording(sessionId);
       } finally {
-        endMatchSession();
+        if (!ended) endMatchSession();
       }
     });
 
@@ -341,7 +356,7 @@ describe('dispatchEngineAction (pure function)', () => {
       });
       const before = snapshotRejectedConcedeState();
       let throwOnce = true;
-      const unsubscribe = useGameStateStore.subscribe(() => {
+      let unsubscribe: (() => void) | null = useGameStateStore.subscribe(() => {
         if (!throwOnce) return;
         throwOnce = false;
         throw new Error('one-shot terminal subscriber failure');
@@ -355,9 +370,21 @@ describe('dispatchEngineAction (pure function)', () => {
             detail: 'one-shot terminal subscriber failure',
           });
         expectRejectedConcedeState(before);
-      } finally {
         unsubscribe();
-        endMatchSession();
+        unsubscribe = null;
+        const sessionId = matchSessionId(token);
+        expect(finalizeLiveReplayRecording(sessionId)).toBe(false);
+        expect(dispatchEngineAction({ type: 'concede', player: 'self', sessionToken: token }))
+          .toEqual({ ok: true });
+        endMatchSession({ preserveGameState: true });
+        const replay = getFinalizedReplay(sessionId);
+        expect(replay?.result).toEqual({ winner: 'opp', reason: 'concede', turns: 1 });
+        expect(replay?.frames).toHaveLength(1);
+        expect(replay?.frames[0]?.causalEventIds).toEqual([`${sessionId}:1`]);
+        discardLiveReplayRecording(sessionId);
+      } finally {
+        unsubscribe?.();
+        if (isMatchSessionActive()) endMatchSession();
       }
     });
 

@@ -11,6 +11,7 @@ import { projectReplayStateForViewer } from '@/ui/services/replayViewerProjectio
 import { useGameStateStore } from '@/ui/state/store';
 
 type ActiveReplayRecording = {
+  generation: number;
   sessionId: string;
   viewerMode: ReplayViewerMode;
   states: GameState[];
@@ -19,7 +20,15 @@ type ActiveReplayRecording = {
 
 let activeRecording: ActiveReplayRecording | null = null;
 let unsubscribe: (() => void) | null = null;
+let recordingGeneration = 0;
 const finalizedReplays = new Map<string, ReplayLogV3>();
+
+export type LiveReplayRecordingCheckpoint = Readonly<{
+  generation: number;
+  sessionId: string;
+  statesLength: number;
+  rawCausalHistory: CausalLogEntryV1[];
+}> | null;
 
 function stateBelongsToSession(state: GameState, sessionId: string): boolean {
   return state.causalLog?.schemaVersion === 1 && state.causalLog.sessionId === sessionId;
@@ -62,8 +71,41 @@ export function startLiveReplayRecording(input: {
   }
   ensureSubscription();
   finalizedReplays.delete(input.sessionId);
-  activeRecording = { ...input, states: [], rawCausalHistory: [] };
+  activeRecording = {
+    ...input,
+    generation: ++recordingGeneration,
+    states: [],
+    rawCausalHistory: [],
+  };
   captureCommittedState(useGameStateStore.getState().gameState);
+}
+
+/** Opaque transaction point for a store commit that may synchronously roll back. */
+export function checkpointLiveReplayRecording(): LiveReplayRecordingCheckpoint {
+  const active = activeRecording;
+  return active === null
+    ? null
+    : {
+        generation: active.generation,
+        sessionId: active.sessionId,
+        statesLength: active.states.length,
+        rawCausalHistory: structuredClone(active.rawCausalHistory),
+      };
+}
+
+/** Restore recorder-owned speculative captures only while the same authority is active. */
+export function rollbackLiveReplayRecording(checkpoint: LiveReplayRecordingCheckpoint): boolean {
+  if (checkpoint === null) return activeRecording === null;
+  const active = activeRecording;
+  if (
+    active === null
+    || active.generation !== checkpoint.generation
+    || active.sessionId !== checkpoint.sessionId
+    || active.states.length < checkpoint.statesLength
+  ) return false;
+  active.states.length = checkpoint.statesLength;
+  active.rawCausalHistory = structuredClone(checkpoint.rawCausalHistory);
+  return true;
 }
 
 export function finalizeLiveReplayRecording(sessionId: string): boolean {

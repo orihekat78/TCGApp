@@ -5,9 +5,11 @@ import { mutate } from '@/engine/mutate';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { FILE_CARD_BACK_PLACEHOLDER, type SceneCharacter } from '@/engine/types';
 import {
+  checkpointLiveReplayRecording,
   finalizeLiveReplayRecording,
   getFinalizedReplay,
   resetLiveReplayRecorderForTests,
+  rollbackLiveReplayRecording,
   startLiveReplayRecording,
 } from '@/ui/services/liveReplayRecorder';
 import { resetPresentationQueue } from '@/ui/presentation/coordinator';
@@ -89,6 +91,56 @@ describe('live ReplayLogV3 recorder', () => {
     expect(log!.viewerMode).toBe('solo-self');
     expect(log!.frames).toHaveLength(2);
     expect(log!.result).toEqual({ winner: 'self', reason: 'evidence', turns: 1 });
+  });
+
+  it('rolls back only speculative captures and preserves the confirmed prefix', () => {
+    const sessionId = 'match-live-transaction';
+    startRecording(sessionId, 'solo-self');
+    const initial = trackedState(sessionId, 1);
+    useGameStateStore.getState().setGameState(initial);
+    const confirmed = structuredClone(initial);
+    appendCausal(confirmed, {
+      actor: 'self', kind: 'use', targets: [], outcome: { type: 'state', state: 'success' },
+    });
+    useGameStateStore.getState().setGameState(confirmed);
+    const checkpoint = checkpointLiveReplayRecording();
+    const speculativeTerminal = structuredClone(confirmed);
+    mutate.gameResult.set(speculativeTerminal, 'opp', 'concede');
+    useGameStateStore.getState().setGameState(speculativeTerminal);
+
+    expect(rollbackLiveReplayRecording(checkpoint)).toBe(true);
+    expect(finalizeLiveReplayRecording(sessionId)).toBe(false);
+
+    const committedTerminal = structuredClone(confirmed);
+    mutate.gameResult.set(committedTerminal, 'opp', 'concede');
+    useGameStateStore.getState().setGameState(committedTerminal);
+    expect(finalizeLiveReplayRecording(sessionId)).toBe(true);
+    const replay = getFinalizedReplay(sessionId);
+    expect(replay?.frames).toHaveLength(2);
+    expect(replay?.frames.map(({ causalEventIds }) => causalEventIds)).toEqual([
+      [`${sessionId}:1`],
+      [`${sessionId}:2`],
+    ]);
+  });
+
+  it('does not roll a stale checkpoint over a replacement recording authority', () => {
+    startRecording('match-live-old', 'solo-self');
+    useGameStateStore.getState().setGameState(trackedState('match-live-old', 1));
+    const staleCheckpoint = checkpointLiveReplayRecording();
+
+    const sessionId = 'match-live-new';
+    startRecording(sessionId, 'spectator');
+    const initial = trackedState(sessionId, 1);
+    useGameStateStore.getState().setGameState(initial);
+    const terminal = structuredClone(initial);
+    mutate.gameResult.set(terminal, 'self', 'evidence');
+    useGameStateStore.getState().setGameState(terminal);
+
+    expect(rollbackLiveReplayRecording(staleCheckpoint)).toBe(false);
+    expect(finalizeLiveReplayRecording(sessionId)).toBe(true);
+    expect(getFinalizedReplay(sessionId)?.result).toEqual({
+      winner: 'self', reason: 'evidence', turns: 1,
+    });
   });
 
   it('ignores foreign-session states and refuses a non-terminal finalization', () => {

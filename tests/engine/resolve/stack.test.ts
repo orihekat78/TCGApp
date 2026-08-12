@@ -300,19 +300,35 @@ describe('engine.resolve.stack', () => {
       expect(result.players.self.scene[0].turnEffects['apMod_turn']).toBe(7);
     });
 
-    it('cancels the pending stack when a terminal result already exists', () => {
+    it('cancels every active continuation when a terminal result already exists', () => {
       const s = newStateWithChar();
-      const e = makeEntry(s, {
+      const pending = makeEntry(s, {
         kind: 'atom', verb: 'charModifyAP',
         args: { uid: 'A#1', delta: 100, scope: 'turn' },
+      }, { id: 'pending' });
+      const resolving = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, {
+        id: 'resolving', state: 'resolving',
+      });
+      const resolved = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, {
+        id: 'resolved', state: 'resolved',
+      });
+      const cancelled = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, {
+        id: 'cancelled', state: 'cancelled',
       });
       const result = produce(s, draft => {
-        resolve.queue(draft, e);
+        draft.pendingEffects.push(pending, resolving, resolved, cancelled);
+        draft.pendingReasoningContinuation = { token: 7, uid: 'A#1', player: 'self' };
         draft.gameResult = { winner: 'opp', reason: 'deck-out' };
         resolve.runAllUntilEmpty(draft);
       });
 
-      expect(result.pendingEffects[0]?.state).toBe('cancelled');
+      expect(result.pendingEffects.map(({ id, state }) => ({ id, state }))).toEqual([
+        { id: 'pending', state: 'cancelled' },
+        { id: 'resolving', state: 'cancelled' },
+        { id: 'resolved', state: 'resolved' },
+        { id: 'cancelled', state: 'cancelled' },
+      ]);
+      expect(result.pendingReasoningContinuation).toBeUndefined();
       expect(result.players.self.scene[0].turnEffects['apMod_turn']).toBeUndefined();
     });
 
