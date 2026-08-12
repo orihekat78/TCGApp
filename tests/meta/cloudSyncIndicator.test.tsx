@@ -4,6 +4,7 @@ import {
   CloudSyncIndicator,
   shouldShowCloudSyncIndicator,
 } from '../../meta-app/src/shared/CloudSyncIndicator';
+import type { CloudSyncStatus } from '../../meta-app/src/cloud/types';
 import { useCloudSyncStatusStore } from '../../meta-app/src/cloud/statusStore';
 
 describe('CloudSyncIndicator', () => {
@@ -51,6 +52,33 @@ describe('CloudSyncIndicator', () => {
     expect(html).toContain('class="network-status__primary"');
     expect(html).toContain('SYNCING');
   });
+
+  it.each([
+    ['online', 'クラウド同期済み', 'online', '#3aa67a'],
+    ['syncing', 'クラウド同期中', 'syncing', '#ffd700'],
+    ['offline', 'オフライン。ローカル保存中', 'offline', '#ff8a8a'],
+    ['error', 'クラウド同期に失敗。ローカル保存中', 'error', '#ff8a8a'],
+  ] as const)(
+    'renders exact compact status semantics for %s',
+    (phase, label, networkState, color) => {
+      const status: CloudSyncStatus = {
+        phase,
+        email: null,
+        pendingCount: 0,
+        lastSyncedAt: null,
+        message: null,
+      };
+
+      const html = renderToStaticMarkup(<CloudSyncIndicator statusOverride={status} />);
+
+      expect(html).toContain(`data-cloud-sync-phase="${phase}"`);
+      expect(html).toContain(`aria-label="${label}"`);
+      expect(html).toContain(`title="${label}"`);
+      expect(html).toContain('network-status--compact');
+      expect(html).toContain(`data-network-state="${networkState}"`);
+      expect(html).toContain(`--network-status-color:${color}`);
+    },
+  );
 
   it('stays out of the active match controls', () => {
     expect(shouldShowCloudSyncIndicator('match')).toBe(false);

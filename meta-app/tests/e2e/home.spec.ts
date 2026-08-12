@@ -3,6 +3,27 @@ import { SAMPLE_DECK, SAMPLE_DECK_OPP } from '../../src/data/sampleDeck';
 
 const NAV_ORDER = ['ホーム', 'デッキ', 'カード', 'ゲーム開始', 'チュートリアル', '履歴', '設定'];
 
+const CLOUD_SYNC_CASES = [
+  { phase: 'online', label: 'クラウド同期済み' },
+  { phase: 'syncing', label: 'クラウド同期中' },
+  { phase: 'offline', label: 'オフライン。ローカル保存中' },
+  { phase: 'error', label: 'クラウド同期に失敗。ローカル保存中' },
+] as const;
+
+async function setCloudSyncPhase(page: Page, phase: (typeof CLOUD_SYNC_CASES)[number]['phase']) {
+  await page.waitForTimeout(50);
+  await page.evaluate(async (nextPhase) => {
+    const { useCloudSyncStatusStore } = await import('/src/cloud/statusStore.ts');
+    useCloudSyncStatusStore.getState().setStatus({
+      phase: nextPhase,
+      email: null,
+      pendingCount: 0,
+      lastSyncedAt: null,
+      message: null,
+    });
+  }, phase);
+}
+
 async function assertNoHorizontalOverflow(page: Page) {
   const sizes = await page.evaluate(() => ({
     documentWidth: document.documentElement.scrollWidth,
@@ -62,44 +83,113 @@ test('HOME navigation typography and icons scale down with the viewport', async 
   expect(compact.iconWidth).toBeLessThan(desktop.iconWidth);
 });
 
-test('HOME keeps cloud sync status compact and clear on iPhone SE landscape', async ({ page }) => {
+test('HOME keeps cloud sync status compact and clear on iPhone landscapes', async ({ page }) => {
+  for (const viewport of [
+    { width: 667, height: 375 },
+    { width: 851, height: 393 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/#home');
+
+    const indicator = page.locator('.cloud-sync-indicator');
+    await expect(indicator).toBeVisible();
+    await expect(indicator).toHaveAttribute('role', 'status');
+    await expect(indicator).toHaveAttribute('aria-live', 'polite');
+    await expect(indicator).toHaveAttribute('aria-label', 'クラウド同期は無効。ローカル保存中');
+    await expect(indicator).toHaveAttribute('title', 'クラウド同期は無効。ローカル保存中');
+    await expect(indicator).toHaveAttribute('data-cloud-sync-phase', 'disabled');
+
+    const geometry = await indicator.evaluate((node) => {
+      const box = node.getBoundingClientRect();
+      const primary = node.querySelector<HTMLElement>('.network-status__primary')!;
+      const captions = Array.from(document.querySelectorAll('.home-identity-card figcaption'))
+        .map((caption) => caption.getBoundingClientRect());
+      const overlapsCaption = captions.some((caption) => (
+        box.left < caption.right
+        && box.right > caption.left
+        && box.top < caption.bottom
+        && box.bottom > caption.top
+      ));
+      const rgb = getComputedStyle(primary).color.match(/\d+/g)!.map(Number);
+      const channel = (value: number) => {
+        const normalized = value / 255;
+        return normalized <= 0.04045
+          ? normalized / 12.92
+          : ((normalized + 0.055) / 1.055) ** 2.4;
+      };
+      const luminance = 0.2126 * channel(rgb[0]!) + 0.7152 * channel(rgb[1]!) + 0.0722 * channel(rgb[2]!);
+      return {
+        box: { left: box.left, top: box.top, right: box.right, bottom: box.bottom, width: box.width, height: box.height },
+        background: getComputedStyle(primary.parentElement!).backgroundColor,
+        contrast: (luminance + 0.05) / 0.05,
+        fontSize: Number.parseFloat(getComputedStyle(primary).fontSize),
+        pointerEvents: getComputedStyle(node).pointerEvents,
+        overlapsCaption,
+      };
+    });
+
+    expect(geometry.box.width).toBeLessThanOrEqual(112);
+    expect(geometry.box.height).toBeLessThanOrEqual(22);
+    expect(geometry.box.left).toBeGreaterThanOrEqual(0);
+    expect(geometry.box.top).toBeGreaterThanOrEqual(0);
+    expect(geometry.box.right).toBeLessThanOrEqual(viewport.width);
+    expect(geometry.box.bottom).toBeLessThanOrEqual(viewport.height);
+    expect(geometry.background).toBe('rgb(0, 0, 0)');
+    expect(geometry.contrast).toBeGreaterThanOrEqual(4.5);
+    expect(geometry.fontSize).toBeGreaterThanOrEqual(10);
+    expect(geometry.pointerEvents).toBe('none');
+    expect(geometry.overlapsCaption).toBe(false);
+  }
+});
+
+test('HOME disables syncing pulse when reduced motion is requested', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.setViewportSize({ width: 667, height: 375 });
   await page.goto('/#home');
+  await setCloudSyncPhase(page, 'syncing');
 
-  const indicator = page.locator('.cloud-sync-indicator');
-  await expect(indicator).toBeVisible();
-  await expect(indicator).toHaveAttribute('role', 'status');
-  await expect(indicator).toHaveAttribute('aria-live', 'polite');
-  await expect(indicator).toHaveAttribute('aria-label', /.+/);
-
-  const geometry = await indicator.evaluate((node) => {
-    const box = node.getBoundingClientRect();
-    const primary = node.querySelector<HTMLElement>('.network-status__primary')!;
-    const captions = Array.from(document.querySelectorAll('.home-identity-card figcaption'))
-      .map((caption) => caption.getBoundingClientRect());
-    const overlapsCaption = captions.some((caption) => (
-      box.left < caption.right
-      && box.right > caption.left
-      && box.top < caption.bottom
-      && box.bottom > caption.top
-    ));
-    return {
-      box: { left: box.left, top: box.top, right: box.right, bottom: box.bottom, width: box.width, height: box.height },
-      fontSize: Number.parseFloat(getComputedStyle(primary).fontSize),
-      pointerEvents: getComputedStyle(node).pointerEvents,
-      overlapsCaption,
-    };
+  const animation = await page.locator('.network-status__dot').evaluate((dot) => {
+    const styles = getComputedStyle(dot);
+    return { name: styles.animationName, color: styles.backgroundColor };
   });
 
-  expect(geometry.box.width).toBeLessThanOrEqual(112);
-  expect(geometry.box.height).toBeLessThanOrEqual(22);
-  expect(geometry.box.left).toBeGreaterThanOrEqual(0);
-  expect(geometry.box.top).toBeGreaterThanOrEqual(0);
-  expect(geometry.box.right).toBeLessThanOrEqual(667);
-  expect(geometry.box.bottom).toBeLessThanOrEqual(375);
-  expect(geometry.fontSize).toBeGreaterThanOrEqual(10);
-  expect(geometry.pointerEvents).toBe('none');
-  expect(geometry.overlapsCaption).toBe(false);
+  expect(animation.name).toBe('none');
+  expect(animation.color).toBe('rgb(255, 215, 0)');
+});
+
+test('HOME renders each cloud status through the actual store at both iPhone landscapes', async ({ page }) => {
+  for (const viewport of [
+    { width: 667, height: 375 },
+    { width: 851, height: 393 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/#home');
+
+    for (const status of CLOUD_SYNC_CASES) {
+      await setCloudSyncPhase(page, status.phase);
+      const indicator = page.getByRole('status', { name: status.label });
+      await expect(indicator).toBeVisible();
+      await expect(indicator).toHaveAttribute('aria-label', status.label);
+      await expect(indicator).toHaveAttribute('title', status.label);
+      await expect(indicator).toHaveAttribute('data-cloud-sync-phase', status.phase);
+
+      const geometry = await indicator.evaluate((node) => {
+        const box = node.getBoundingClientRect();
+        return {
+          background: getComputedStyle(node.querySelector('.network-status')!).backgroundColor,
+          box: { width: box.width, height: box.height, left: box.left, top: box.top, right: box.right, bottom: box.bottom },
+        };
+      });
+
+      expect(geometry.background).toBe('rgb(0, 0, 0)');
+      expect(geometry.box.width).toBeLessThanOrEqual(112);
+      expect(geometry.box.height).toBeLessThanOrEqual(22);
+      expect(geometry.box.left).toBeGreaterThanOrEqual(0);
+      expect(geometry.box.top).toBeGreaterThanOrEqual(0);
+      expect(geometry.box.right).toBeLessThanOrEqual(viewport.width);
+      expect(geometry.box.bottom).toBeLessThanOrEqual(viewport.height);
+    }
+  }
 });
 
 test('HOME identity cards stay contained after the game card stylesheet loads', async ({ page }) => {

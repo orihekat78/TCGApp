@@ -12,6 +12,8 @@ interface Props {
   compact?: boolean;
 }
 
+const COMPACT_ALERT_COLOR = '#ff8a8a';
+
 const CONFIG: Record<NetState, { color: string; label: string; sub: string }> = {
   online:  { color: T.green, label: 'ONLINE',      sub: '同期 OK' },
   syncing: { color: T.gold,  label: 'SYNCING',     sub: '同期中' },
@@ -22,11 +24,14 @@ const CONFIG: Record<NetState, { color: string; label: string; sub: string }> = 
 export function NetworkStatus({ state = 'online', compact = false }: Props) {
   ensureInteractionStyles();
   const cfg = CONFIG[state];
+  const color = compact && (state === 'offline' || state === 'error')
+    ? COMPACT_ALERT_COLOR
+    : cfg.color;
   return (
     <div
       className={`network-status${compact ? ' network-status--compact' : ''}`}
       data-network-state={state}
-      style={{ '--network-status-color': cfg.color } as CSSProperties}
+      style={{ '--network-status-color': color } as CSSProperties}
     >
       <span className="network-status__dot" />
       <span className="network-status__primary">{cfg.label}</span>
