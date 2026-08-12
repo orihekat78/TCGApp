@@ -208,6 +208,17 @@ describe('official authority acquisition', () => {
     })).rejects.toThrow(error);
   });
 
+  it('accepts the official null created_at representation while retaining the field', async () => {
+    const { fetchOfficialCardsOnce } = require('../../scripts/cards/authority-refresh.cjs');
+    const snapshot = await fetchOfficialCardsOnce({
+      fetchImpl: async () => officialResponse(officialPage([officialCard({ created_at: null })])),
+      delay: async () => undefined,
+    });
+
+    expect(snapshot.cards).toHaveLength(1);
+    expect(snapshot.cards[0]).toHaveProperty('created_at', null);
+  });
+
   it('enforces the byte limit when Content-Length is absent', async () => {
     const { fetchOfficialCardsOnce } = require('../../scripts/cards/authority-refresh.cjs');
 

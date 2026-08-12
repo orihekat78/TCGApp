@@ -88,13 +88,14 @@ function validateOfficialCard(card) {
   const cardNum = String(card.card_num ?? '').trim();
   if (!cardNum) throw new Error('official card schema has a missing card_num');
   if (!CARD_NUM.test(cardNum)) throw new Error(`official card schema has an invalid card_num: ${cardNum}`);
-  for (const key of ['card_id', 'title', 'package', 'type', 'created_at', 'updated_at']) {
+  for (const key of ['card_id', 'title', 'package', 'type', 'updated_at']) {
     if (typeof card[key] !== 'string' || !card[key].trim()) throw new Error(`official card schema has a missing ${key}`);
   }
-  for (const key of ['created_at', 'updated_at']) {
-    if (!isValidOfficialTimestamp(card[key])) {
-      throw new Error(`official card schema has an invalid ${key}: ${cardNum}`);
-    }
+  if (card.created_at !== null && !isValidOfficialTimestamp(card.created_at)) {
+    throw new Error(`official card schema has an invalid created_at: ${cardNum}`);
+  }
+  if (!isValidOfficialTimestamp(card.updated_at)) {
+    throw new Error(`official card schema has an invalid updated_at: ${cardNum}`);
   }
   packageCode(card.package);
   return card;
