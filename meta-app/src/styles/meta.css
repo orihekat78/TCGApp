@@ -678,13 +678,14 @@ button {
   justify-content: center;
 }
 
-.home-card-art {
+.home-identity-art > img.card-art.home-card-art {
   display: block;
   max-width: 100%;
   width: auto;
   max-height: 100%;
   height: auto;
   object-fit: contain;
+  flex: 0 1 auto;
   border-radius: 8px;
   box-shadow: 0 18px 34px rgba(0, 0, 0, 0.34);
 }

@@ -132,37 +132,96 @@ async function verifyStoredReplayArtifact(value: unknown, row: MatchRecord): Pro
 export async function saveHistoryReplay(rawRow: MatchRecord, log: ReplayLogV3): Promise<MatchRecord> {
   const bundle = await prepareHistoryReplayBundle(rawRow, log);
   const database = await openHistoryReplayDatabase();
-  const transaction = database.transaction([ROW_STORE, ARTIFACT_STORE], 'readwrite');
-  const done = transactionDone(transaction);
   try {
+    const transaction = database.transaction([ROW_STORE, ARTIFACT_STORE], 'readwrite');
     const rows = transaction.objectStore(ROW_STORE);
     const artifacts = transaction.objectStore(ARTIFACT_STORE);
-    const existingRow = await requestValue(rows.get(bundle.row.id)) as MatchRecord | undefined;
-    const existingArtifact = await requestValue(artifacts.get(bundle.artifact.artifactId)) as StoredReplayArtifactV1 | undefined;
-    if (existingRow?.replayRef && existingRow.replayRef.digest !== bundle.row.replayRef.digest) {
-      throw new Error('History session already owns a different replay');
-    }
-    if (existingArtifact && existingArtifact.digest !== bundle.artifact.digest) {
-      throw new Error('Replay artifact ID collision');
-    }
-    rows.put(bundle.row);
-    artifacts.put(bundle.artifact);
-    const allRows = (await requestValue(rows.getAll()) as MatchRecord[])
-      .sort((a, b) => b.recorded - a.recorded);
-    for (const expired of allRows.slice(MAX_HISTORY_RECORDS)) {
-      rows.delete(expired.id);
-      if (expired.replayRef) artifacts.delete(expired.replayRef.artifactId);
-    }
-    await done;
-    return bundle.row;
-  } catch (error) {
-    try {
-      transaction.abort();
-    } catch {
-      // The transaction may already have completed or aborted after an async request error.
-    }
-    await done.catch(() => undefined);
-    throw error;
+    return await new Promise<MatchRecord>((resolve, reject) => {
+      let originalError: unknown;
+      let settled = false;
+      const rejectOnce = (error: unknown) => {
+        if (settled) return;
+        settled = true;
+        reject(error);
+      };
+      const abortWith = (error: unknown) => {
+        originalError = error;
+        try {
+          transaction.abort();
+        } catch {
+          rejectOnce(error);
+        }
+      };
+      const rememberRequestError = (request: IDBRequest) => {
+        request.onerror = () => {
+          originalError ??= request.error ?? new Error('IndexedDB request failed');
+        };
+      };
+
+      transaction.oncomplete = () => {
+        if (settled) return;
+        settled = true;
+        resolve(bundle.row);
+      };
+      transaction.onerror = () => {
+        rejectOnce(originalError ?? transaction.error ?? new Error('IndexedDB transaction failed'));
+      };
+      transaction.onabort = () => {
+        rejectOnce(originalError ?? transaction.error ?? new Error('IndexedDB transaction aborted'));
+      };
+
+      const existingRowRequest = rows.get(bundle.row.id);
+      rememberRequestError(existingRowRequest);
+      existingRowRequest.onsuccess = () => {
+        try {
+          const existingRow = existingRowRequest.result as MatchRecord | undefined;
+          if (existingRow?.replayRef && existingRow.replayRef.digest !== bundle.row.replayRef.digest) {
+            throw new Error('History session already owns a different replay');
+          }
+
+          const existingArtifactRequest = artifacts.get(bundle.artifact.artifactId);
+          rememberRequestError(existingArtifactRequest);
+          existingArtifactRequest.onsuccess = () => {
+            try {
+              const existingArtifact = existingArtifactRequest.result as StoredReplayArtifactV1 | undefined;
+              if (existingArtifact && existingArtifact.digest !== bundle.artifact.digest) {
+                throw new Error('Replay artifact ID collision');
+              }
+
+              // Keep each follow-up request inside the preceding success event.
+              // Safari may otherwise deactivate this read/write transaction.
+              const rowWrite = rows.put(bundle.row);
+              const artifactWrite = artifacts.put(bundle.artifact);
+              rememberRequestError(rowWrite);
+              rememberRequestError(artifactWrite);
+
+              const allRowsRequest = rows.getAll();
+              rememberRequestError(allRowsRequest);
+              allRowsRequest.onsuccess = () => {
+                try {
+                  const allRows = (allRowsRequest.result as MatchRecord[])
+                    .sort((a, b) => b.recorded - a.recorded);
+                  for (const expired of allRows.slice(MAX_HISTORY_RECORDS)) {
+                    const rowDelete = rows.delete(expired.id);
+                    rememberRequestError(rowDelete);
+                    if (expired.replayRef) {
+                      const artifactDelete = artifacts.delete(expired.replayRef.artifactId);
+                      rememberRequestError(artifactDelete);
+                    }
+                  }
+                } catch (error) {
+                  abortWith(error);
+                }
+              };
+            } catch (error) {
+              abortWith(error);
+            }
+          };
+        } catch (error) {
+          abortWith(error);
+        }
+      };
+    });
   } finally {
     database.close();
   }

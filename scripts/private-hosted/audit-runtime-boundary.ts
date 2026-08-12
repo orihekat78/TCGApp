@@ -106,7 +106,7 @@ const TRUSTED_VENDOR_SHA256 =
 const TRUSTED_RUNTIME_SHA256 =
   "5db5ba82eef00d1dee7e86e663098c9427d01183a88d357437daff295aec3e75";
 const TRUSTED_APP_SHA256 =
-  "e1c6601e171db49e013f421de931177abd65b1c43a3efeaffc4207757e88e4c3";
+  "37ea78c67318b3fac197057acdd7b383f0e40f92c9e74d4ff276a2e71e94dbaa";
 const TRUSTED_FUNCTIONS_SHA256 =
   "8f659832b10f36bd102a991c31576e127bf4b06bea1b75723dae57604dec3a04";
 const TRUSTED_BRAND_LOGO_SHA256 =
@@ -207,7 +207,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/DeckEditor-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/DeckEditor.tsx",
     sha256:
-      "88f925de889d8c7acc8896f2bd25de7f88985aabd02a4bf24cdf9512cff012ef",
+      "c0b95029b07725d19cca51f83fbbd83710b04f2c82a545940932af099db1ee00",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed DeckEditor bundle SHA-256 mismatch",
     approvedFindings: markerFindings("persistent storage"),
@@ -216,7 +216,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/historyReplayRepository-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => /^_historyReplayRepository-[A-Za-z0-9_-]+\.js$/.test(key),
     sha256:
-      "90da9325d21022753f34998102ef78b7b1ce0009a36a44e5c6df98ee67b32d80",
+      "bf166fcb80e4d5ea73ae3280b8e38bf5fc7096d89ac098346e4db7703e6f238e",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed history repository bundle SHA-256 mismatch",
     approvedFindings: markerFindings("persistent storage"),
@@ -225,7 +225,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/HistoryScreen-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/HistoryScreen.tsx",
     sha256:
-      "0c9d9703cec25af8b2f950cabcdc77ba4abc1ac2b368eb602aee6e07ecb4ee0e",
+      "9462dfa818483d77858cf172f824b7739b37faaad343bc853f4cf5ae66cff6a7",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed HistoryScreen bundle SHA-256 mismatch",
     approvedFindings: markerFindings("network API", "persistent storage"),
@@ -234,7 +234,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/RealMatchView-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/RealMatchView.tsx",
     sha256:
-      "c4a07028b275e2daddae187e19d4aff3d0b1ebe057f50d4519659a94504da080",
+      "e7f9bfcbfe40a31c15504479c7a54054949ebd4d82da7256b9f0f40b686a7426",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed RealMatchView bundle SHA-256 mismatch",
     approvedFindings: markerFindings("dynamic code execution"),
@@ -243,7 +243,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/ReplayScreen-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/ReplayScreen.tsx",
     sha256:
-      "c09d1a4c6e46e49797a76bb20f6d95cff177f9c652fe00204b2b419ae4988d6b",
+      "4504e409f9bc568e627b45eea865d383d81cc66509f47fe5c6aec6624611d2a6",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed ReplayScreen bundle SHA-256 mismatch",
     approvedFindings: markerFindings("network API"),
@@ -252,7 +252,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/ResultScreen-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/ResultScreen.tsx",
     sha256:
-      "e0f000c11805cd3129d663789e0a3aa7d39ea5d0c310539bdb16f89a53c6b6da",
+      "88d6a7f063ccc6229a8394c01ced8a415fca3efcc4d4a3f7233bf574c84442c8",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed ResultScreen bundle SHA-256 mismatch",
     approvedFindings: markerFindings("network API"),
@@ -11992,7 +11992,7 @@ const REVIEWED_META_CAPABILITIES = new Map<
     "meta-app/src/cloud/storage.ts",
     {
       sha256:
-        "87adfb105b19bd9f1aa781e6247861147874ad4f67a7dfd9223c4584942b8740",
+        "9c559552e9ea24f4f738ede9266b0dabdeb83e03925d778f40dc64080990f2ef",
       allowed: new Set(["persistent-storage:indexedDB"]),
     },
   ],

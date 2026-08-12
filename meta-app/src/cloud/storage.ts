@@ -114,23 +114,57 @@ export async function updateCloudSyncState(
   try {
     const transaction = database.transaction(STATE_STORE, 'readwrite');
     const store = transaction.objectStore(STATE_STORE);
-    const current = readStoredState(await requestResult(store.get(STATE_KEY)));
-    const next = structuredClone(current);
-    try {
-      mutate(next);
-      if (next.schemaVersion !== 1) throw new Error('CLOUD_SYNC_STATE_INVALID');
-      store.put(structuredClone(next), STATE_KEY);
-    } catch (error) {
-      transaction.abort();
-      try {
-        await transactionDone(transaction);
-      } catch {
-        // Preserve the original mutation error.
-      }
-      throw error;
-    }
-    await transactionDone(transaction);
-    return structuredClone(next);
+    const next = await new Promise<CloudSyncState>((resolve, reject) => {
+      let pendingState: CloudSyncState | undefined;
+      let originalError: unknown;
+      let settled = false;
+      const rejectOnce = (error: unknown) => {
+        if (settled) return;
+        settled = true;
+        reject(error);
+      };
+
+      transaction.oncomplete = () => {
+        if (settled) return;
+        if (!pendingState) {
+          rejectOnce(new Error('CLOUD_SYNC_STORAGE_WRITE_FAILED'));
+          return;
+        }
+        settled = true;
+        resolve(structuredClone(pendingState));
+      };
+      transaction.onerror = () => {
+        rejectOnce(originalError ?? transaction.error ?? new Error('CLOUD_SYNC_STORAGE_WRITE_FAILED'));
+      };
+      transaction.onabort = () => {
+        rejectOnce(originalError ?? transaction.error ?? new Error('CLOUD_SYNC_STORAGE_WRITE_ABORTED'));
+      };
+
+      const request = store.get(STATE_KEY);
+      request.onerror = () => {
+        originalError = request.error ?? new Error('CLOUD_SYNC_STORAGE_READ_FAILED');
+      };
+      request.onsuccess = () => {
+        try {
+          const current = readStoredState(request.result);
+          pendingState = structuredClone(current);
+          mutate(pendingState);
+          if (pendingState.schemaVersion !== 1) throw new Error('CLOUD_SYNC_STATE_INVALID');
+
+          // Safari may deactivate an IndexedDB transaction as soon as this
+          // success callback returns. Queue the write synchronously here.
+          store.put(structuredClone(pendingState), STATE_KEY);
+        } catch (error) {
+          originalError = error;
+          try {
+            transaction.abort();
+          } catch {
+            rejectOnce(error);
+          }
+        }
+      };
+    });
+    return next;
   } finally {
     database.close();
   }

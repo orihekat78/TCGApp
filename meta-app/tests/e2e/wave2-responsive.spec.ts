@@ -64,7 +64,7 @@ test('WAVE 2: Result focuses its announced verdict and honors reduced motion at 
 
   const title = page.locator('#result-title');
   await expect(title).toBeFocused();
-  await expect(page.getByRole('status')).toContainText(/./);
+  await expect(page.locator('.result-screen').getByRole('status')).toContainText(/./);
   const motion = await page.locator('.result-screen').evaluate((element) => {
     const style = getComputedStyle(element);
     return { animation: style.animationName, transition: style.transitionDuration };

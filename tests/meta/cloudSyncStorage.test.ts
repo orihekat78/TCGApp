@@ -1,4 +1,4 @@
-import { IDBFactory } from 'fake-indexeddb';
+import { IDBFactory, IDBObjectStore } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CloudSyncOwnerMismatchError,
@@ -111,5 +111,47 @@ describe('cloud sync IndexedDB storage', () => {
     }])).rejects.toThrow(/duplicate/i);
 
     expect((await readCloudSyncState()).outbox).toEqual([operation]);
+  });
+
+  it('writes inside the read success event before Safari can deactivate the transaction', async () => {
+    const originalGet = IDBObjectStore.prototype.get;
+    const originalPut = IDBObjectStore.prototype.put;
+    let requestEventActive = false;
+
+    vi.spyOn(IDBObjectStore.prototype, 'get').mockImplementation(function (...args) {
+      const request = originalGet.apply(this, args);
+      let successHandler: ((this: IDBRequest, event: Event) => unknown) | null = null;
+      Object.defineProperty(request, 'onsuccess', {
+        configurable: true,
+        enumerable: true,
+        get() {
+          if (!successHandler) return null;
+          return function wrappedSuccess(this: IDBRequest, event: Event) {
+            requestEventActive = true;
+            try {
+              return successHandler?.call(this, event);
+            } finally {
+              requestEventActive = false;
+            }
+          };
+        },
+        set(handler) {
+          successHandler = handler;
+        },
+      });
+      return request;
+    });
+    vi.spyOn(IDBObjectStore.prototype, 'put').mockImplementation(function (...args) {
+      if (!requestEventActive) {
+        throw new DOMException('The transaction is inactive', 'TransactionInactiveError');
+      }
+      return originalPut.apply(this, args);
+    });
+
+    await updateCloudSyncState((state) => {
+      state.initialImportCompletedAt = 1_000;
+    });
+
+    expect((await readCloudSyncState()).initialImportCompletedAt).toBe(1_000);
   });
 });

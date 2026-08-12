@@ -38,15 +38,15 @@ test('SETTINGS: drafts changes until save, then restores them after reload at de
   await groups.nth(1).getByRole('button').nth(1).click();
   await groups.nth(2).getByRole('button').nth(1).click();
 
-  await expect(page.getByRole('status')).toHaveText('未保存の変更があります。');
-  await expect(page.getByRole('status')).toBeVisible();
+  await expect(page.locator('.settings-actions').getByRole('status')).toHaveText('未保存の変更があります。');
+  await expect(page.locator('.settings-actions').getByRole('status')).toBeVisible();
   expect(await persistedSettings(page)).toMatchObject(savedSettings);
   await expect(groups.nth(0).getByRole('button').nth(1)).toHaveAttribute('aria-pressed', 'true');
   await expect(groups.nth(1).getByRole('button').nth(1)).toHaveAttribute('aria-pressed', 'true');
   await expect(groups.nth(2).getByRole('button').nth(1)).toHaveAttribute('aria-pressed', 'true');
 
   await page.getByRole('button', { name: '設定を保存', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText('保存');
+  await expect(page.locator('.settings-actions').getByRole('status')).toContainText('保存');
   expect(await persistedSettings(page)).toMatchObject({
     ...savedSettings,
     density: 'comfortable', presentationSpeed: 'standard', spectatorAi: 'standard',
@@ -81,7 +81,7 @@ test('SETTINGS: reset changes only the draft and keeps both actions usable in co
   await expect(actions).toBeInViewport({ ratio: 1 });
 
   await page.locator('.settings-segmented').nth(0).getByRole('button').nth(1).click();
-  await expect(page.getByRole('status')).toHaveText('未保存の変更があります。');
+  await expect(page.locator('.settings-actions').getByRole('status')).toHaveText('未保存の変更があります。');
   await expect(actions).toBeInViewport({ ratio: 1 });
 
   await page.getByRole('button', { name: '初期状態に戻す', exact: true }).click();

@@ -78,7 +78,7 @@ test("CARDS: 共通ヘッダーと簡潔な一覧を表示し、絞り込みは�
   await dialog.getByRole("button", { name: "一覧を見る" }).click();
   await expect(dialog).toHaveCount(0);
   await expect(filterTrigger).toBeFocused();
-  await expect(page.getByRole("status")).toContainText("件のカード");
+  await expect(page.locator('.cards-grid-panel').getByRole("status")).toContainText("件のカード");
 
   await filterTrigger.click();
   await expect(
@@ -143,7 +143,7 @@ test("CARDS: 検索はカード番号と名前を絞り込み、視覚的な枚�
   const search = page.getByPlaceholder("カード名・番号・効果で検索");
 
   await search.fill("D09014");
-  await expect(page.getByRole("status")).toHaveText("1件のカード");
+  await expect(page.locator('.cards-grid-panel').getByRole("status")).toHaveText("1件のカード");
   await expect(
     page
       .locator(".cards-grid-panel")

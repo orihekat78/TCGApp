@@ -62,6 +62,47 @@ test('HOME navigation typography and icons scale down with the viewport', async 
   expect(compact.iconWidth).toBeLessThan(desktop.iconWidth);
 });
 
+test('HOME identity cards stay contained after the game card stylesheet loads', async ({ page }) => {
+  test.setTimeout(60_000);
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 851, height: 393 },
+    { width: 667, height: 375 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/#setup');
+    await expect(page.locator('#setup-title')).toBeVisible({ timeout: 10_000 });
+    await page.locator('button[data-route="home"]').click();
+    await expect(page.locator('.home-screen')).toBeVisible();
+
+    const cards = page.locator('.home-identity-art > img.home-card-art');
+    await expect(cards).toHaveCount(2);
+    await expect.poll(() => cards.evaluateAll((images: HTMLImageElement[]) => (
+      images.every((image) => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0)
+    ))).toBe(true);
+
+    const geometry = await cards.evaluateAll((images: HTMLImageElement[]) => images.map((image) => {
+      const rendered = image.getBoundingClientRect();
+      const frame = image.closest('.home-identity-art')!.getBoundingClientRect();
+      return {
+        objectFit: getComputedStyle(image).objectFit,
+        naturalRatio: image.naturalWidth / image.naturalHeight,
+        renderedRatio: rendered.width / rendered.height,
+        fitsFrame: rendered.left >= frame.left - 0.5
+          && rendered.top >= frame.top - 0.5
+          && rendered.right <= frame.right + 0.5
+          && rendered.bottom <= frame.bottom + 0.5,
+      };
+    }));
+    for (const card of geometry) {
+      expect(card.objectFit).toBe('contain');
+      expect(Math.abs(card.naturalRatio - card.renderedRatio)).toBeLessThan(0.02);
+      expect(card.fitsFrame).toBe(true);
+    }
+    await assertNoHorizontalOverflow(page);
+  }
+});
+
 test('HOME desktop preserves the 20/80 hierarchy and sole game-start entry', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/#home');
@@ -73,7 +114,7 @@ test('HOME desktop preserves the 20/80 hierarchy and sole game-start entry', asy
   const firstNavBox = (await nav.getByRole('button', { name: 'ホーム', exact: true }).boundingBox())!;
   expect(firstNavBox.x - (brandBox.x + brandBox.width)).toBeGreaterThanOrEqual(0);
   expect(firstNavBox.x - (brandBox.x + brandBox.width)).toBeLessThanOrEqual(40);
-  await expect(page.getByText('OFFLINE', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('SYNC FAILED', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'ゲーム開始', exact: true })).toHaveCount(1);
   await expect(page.getByRole('heading', { level: 1, name: '少年探偵団・標準' })).toBeVisible();
   await expect(page.getByLabel('江戸川コナン')).toBeVisible();
@@ -379,7 +420,7 @@ test('HOME 720x393 keeps the 20/80 rail reachable inside the viewport', async ({
 
 test('HOME navigation content stays inside its buttons around the compact breakpoint', async ({ page }) => {
   for (const width of [621, 640, 700]) {
-    await page.setViewportSize({ width, height: 800 });
+    await page.setViewportSize({ width, height: 375 });
     await page.goto('/#home');
 
     const navButtons = page.locator('.home-navigation button');

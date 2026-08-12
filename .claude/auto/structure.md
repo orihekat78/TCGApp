@@ -2122,7 +2122,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `reconciliation.ts`
       - `runtime.ts`
       - `statusStore.ts`
-      - `storage.ts` — Preserve the original mutation error.
+      - `storage.ts` — Safari may deactivate an IndexedDB transaction as soon as this
       - `syncEngine.ts`
       - `types.ts`
     - **`components/`**

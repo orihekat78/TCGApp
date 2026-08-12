@@ -182,6 +182,49 @@ describe('history replay repository contract', () => {
     await expect(loadHistoryReplayArtifact(log.artifactId)).rejects.toThrow(/not found/i);
   });
 
+  it('queues replay writes inside an IndexedDB request event for Safari', async () => {
+    const originalGet = IDBObjectStore.prototype.get;
+    const originalPut = IDBObjectStore.prototype.put;
+    let requestEventActive = false;
+
+    vi.spyOn(IDBObjectStore.prototype, 'get').mockImplementation(function (...args) {
+      const request = originalGet.apply(this, args);
+      let successHandler: ((this: IDBRequest, event: Event) => unknown) | null = null;
+      Object.defineProperty(request, 'onsuccess', {
+        configurable: true,
+        enumerable: true,
+        get() {
+          if (!successHandler) return null;
+          return function wrappedSuccess(this: IDBRequest, event: Event) {
+            requestEventActive = true;
+            try {
+              return successHandler?.call(this, event);
+            } finally {
+              requestEventActive = false;
+            }
+          };
+        },
+        set(handler) {
+          successHandler = handler;
+        },
+      });
+      return request;
+    });
+    vi.spyOn(IDBObjectStore.prototype, 'put').mockImplementation(function (...args) {
+      if (!requestEventActive) {
+        throw new DOMException('The transaction is inactive', 'TransactionInactiveError');
+      }
+      return originalPut.apply(this, args);
+    });
+
+    const log = replayFixture('history-replay-safari');
+    await expect(saveHistoryReplay(rowFixture(log.sessionId), log)).resolves.toMatchObject({
+      id: log.sessionId,
+    });
+    await expect(loadHistoryReplayArtifact(log.artifactId)).resolves
+      .toEqual(projectReplayLogForViewer(log));
+  });
+
   it.each([
     ['solo-self', 'solo', true],
     ['spectator', 'observe', false],
