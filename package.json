@@ -43,6 +43,7 @@
     "check:meta-card-identities": "npm run gen:meta-card-identities && git diff --exit-code -- meta-app/src/data/cardIdentities.generated.ts",
     "cards:status": "node scripts/cards/cards-data-status.cjs",
     "cards:qa-snapshot": "node scripts/cards/write-qa-hash-snapshot.cjs",
+    "cards:authority:packet": "node scripts/cards/build-authority-packet.cjs",
     "cards:check": "node scripts/cards/check-official-sync.cjs",
     "cards:check:live-status": "node scripts/cards/check-official-sync.cjs --live-status",
     "cards:sync": "npm run cards:fetch && npm run cards:case-difficulties && node scripts/compiler/tsv-corpus.cjs && tsx scripts/compiler/dump-shipped.ts && node scripts/compiler/mine.cjs && node scripts/compiler/oracle.cjs --gate",

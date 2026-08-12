@@ -4,7 +4,7 @@
 
 **Goal:** Replace the stale 2,240-printing authority with a reviewed official snapshot, prove every card/FAQ/rules change, and publish the exact inputs required by legality and card-semantics waves.
 
-**Architecture:** Fetch only Takara Tomy primary sources into an external temporary tree, compare them to tracked authority before any repository write, then atomically publish reviewed generated artifacts. Keep unresolved rule judgments in a strict versioned exception table; never infer behavior from tests or old snapshots.
+**Architecture:** Fetch only Takara Tomy primary sources twice into a unique external temporary tree, require identical canonical digests, compare them to tracked hash-only authority before any repository write, then atomically publish reviewed generated artifacts. Keep unresolved rule judgments in a strict versioned exception table; never infer behavior from tests or old snapshots.
 
 **Tech Stack:** Node.js/TypeScript, official JSON API, SHA-256, Vitest, existing card and QA generators.
 
@@ -13,6 +13,7 @@
 - Start only from clean `main` with `HEAD === origin/main`; network refresh is forbidden in a dirty worktree.
 - Official hosts only: `www.takaratomy.co.jp`; redirects, content type, byte limits, duplicate IDs, and schema drift fail closed.
 - Never hand-edit `.claude/auto/**`, `_raw/**`, TSV, status, QA snapshot, generated CardDefs, or Meta generated identity files.
+- Raw official bodies and TSV remain ignored local artifacts and must never be tracked; only hash-only authority metadata and reviewed reports may enter Git.
 - Do not claim 2,256 printings, PR305–PR320, a FAQ total, manual version, or errata count until the fresh packet proves it.
 - Restrictions remain event warnings, separate from base deck-legality errors.
 
@@ -20,12 +21,12 @@
 
 ### Task 1: Fail-closed authority packet
 
-**Files:** Create `scripts/cards/authority-refresh.cjs`, `scripts/cards/authority-diff.cjs`, `tests/scripts/cards-authority-refresh.test.ts`; modify `package.json`.
+**Files:** Create `scripts/cards/authority-refresh.cjs`, `scripts/cards/authority-diff.cjs`, `tests/scripts/cards-authority-refresh.test.ts`; modify `package.json`. Task 3 publishes the first tracked hash-only `authority-field-index.json` after bootstrap review.
 
-**Interfaces:** Produce `buildAuthorityPacket({projectRoot,tempRoot,fetchedAt}): {status,qaSnapshot,diff,sourceDigests}` and `validateAuthorityPacket(packet,prior): void`; CLI writes `%TEMP%\conan-authority-refresh\packet.json` and publishes that exact reviewed packet.
+**Interfaces:** Produce `buildAuthorityPacket({projectRoot,tempRoot,fetchedAt}): {status,qaSnapshot,fieldIndex,diff,sourceDigests,artifacts}` and `validateAuthorityPacket(packet,prior,{packetRoot,projectRoot}): void`; a separate publishability validator requires dispositions for every removal, existing-printing update, and FAQ answer change. CLI uses a run-specific `mkdtemp` directory and publishes those exact rehashed artifacts offline.
 
 - [ ] RED fixtures reject non-official redirects, HTML where JSON/PDF is expected, oversized bodies, missing/duplicate card numbers, raw/TSV mismatch, FAQ ID collision/conflicting answers, removed printings, and unreviewed existing-card text changes.
-- [ ] RED exact set-diff requires no removals and emits sorted `added`, `removed`, `changedFields`, `qaAdded`, `qaRemoved`, and `qaAnswerChanged`; do not hard-code PR305–PR320 as truth.
+- [ ] RED exact set-diff emits sorted `added`, `removed`, `changedFields`, `qaAdded`, `qaRemoved`, and `qaAnswerChanged`; unresolved removals/changes make the packet non-publishable. The initial bootstrap may use the tracked card-number set plus `updated_at > prior fetchedAt` review flags because no prior field index exists; do not claim exact historical field names or hard-code PR305–PR320 as truth.
 - [ ] Implement external-temp acquisition using existing `official-api.cjs`, `cards-data-status.cjs`, and `write-qa-hash-snapshot.cjs`; repository writes remain zero until validation succeeds.
 - [ ] Run `npx vitest run tests/scripts/cards-authority-refresh.test.ts tests/compiler/qa-normalize.test.ts tests/scripts/gen-qa-trace.test.ts --maxWorkers=1`; commit `feat(cards): add reviewed authority refresh packet`.
 
@@ -44,11 +45,11 @@
 
 **Files:** Modify generated outputs under `.claude/specs/cards-data/**` only through `cards:fetch`, `cards:status`, and `cards:qa-snapshot`; create `.claude/reports/2026-08-12-authority-refresh/diff.json` and `verification.md`.
 
-**Interfaces:** Consume the reviewed Task 1 packet; produce tracked raw/TSV/status/FAQ snapshots with identical card-number hashes and zero conflicts.
+**Interfaces:** Consume the reviewed Task 1 packet; produce ignored raw/TSV artifacts plus tracked hash-only status/FAQ/field-index snapshots with identical card-number hashes and zero conflicts.
 
 - [ ] On clean exact main run `npm run cards:check:live-status` and record the expected RED without editing tracked files.
 - [ ] Run the packet in a temporary tree; review every added/removed/changed card and FAQ answer hash. Any unexplained removal or changed answer stops publication.
-- [ ] Run `npm run cards:authority:publish -- --packet "$env:TEMP\conan-authority-refresh\packet.json"`; the publisher reads `fetchedAt` from that packet, regenerates status/FAQ, and rejects any byte mismatch.
+- [ ] Run `npm run cards:authority:publish -- --packet "<run-specific-external-packet>"`; the offline publisher reads `fetchedAt` from that packet, rehashes every artifact, regenerates status/FAQ, and rejects any byte mismatch or prior-HEAD drift.
 - [ ] Run `npm run cards:check:live-status`, `npm run qa:adjudication:verify-local`, and `git diff --check`; commit `data(cards): refresh official catalog and FAQ authority`.
 
 ### Task 4: Newly added printing runtime grounding

@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 293
-- **ファイル数**: 5926
+- **ファイル数**: 5930
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -2288,6 +2288,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `mcts-vs-heuristic.ts` — scripts/benchmark/mcts-vs-heuristic — Phase 9-F: MCTS vs Heuristic 100 戦比較
     - `run.ts` — scripts/benchmark/run — Phase 9-H パフォーマンス計測ランナー
   - **`cards/`**
+    - `authority-diff.cjs`
+    - `authority-refresh.cjs`
+    - `build-authority-packet.cjs`
     - `cards-data-status.cjs`
     - `check-official-sync.cjs`
     - `fetch-official.cjs`
@@ -6040,6 +6043,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `private-hosted-runtime-boundary.test.ts`
   - **`scripts/`**
     - `build-tcg-runtime-packet.test.ts`
+    - `cards-authority-refresh.test.ts`
     - `check-codex-quality.test.ts`
     - `check-wave-scope.test.ts`
     - `gen-card-probes.test.ts`

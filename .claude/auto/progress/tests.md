@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-progress.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:progress`
-> Source hash: `e4d97037d646`
+> Source hash: `d76457085933`
 
 `tests/` 配下のテストファイル数を領域別に集計。最新の vitest 結果（あれば）も併記。
 
@@ -20,10 +20,10 @@
 | `meta` | 23 |
 | `release` | 13 |
 | `root` | 2 |
-| `scripts` | 19 |
+| `scripts` | 20 |
 | `smoke` | 2 |
 | `ui` | 62 |
-| **合計** | **911** |
+| **合計** | **912** |
 
 ## 最新 vitest 実行サマリ
 
