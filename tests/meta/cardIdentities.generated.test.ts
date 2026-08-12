@@ -123,7 +123,7 @@ describe("generated meta card identities", () => {
     });
   });
 
-  it("renders the committed identity index deterministically", async () => {
+  it("renders the committed identity index deterministically across checkout line endings", async () => {
     const { ALL_CARDS } = await import("@/cards/index");
     const { renderMetaCardIdentities } = await import(
       "../../scripts/gen-meta-card-identities"
@@ -136,7 +136,7 @@ describe("generated meta card identities", () => {
     const sources = identitySources(ALL_CARDS);
     const once = renderMetaCardIdentities(sources);
     expect(renderMetaCardIdentities(sources)).toBe(once);
-    expect(committed).toBe(once);
+    expect(committed.replace(/\r\n?/g, "\n")).toBe(once);
   });
 
   it("shows identity art before the card registry has been registered", async () => {

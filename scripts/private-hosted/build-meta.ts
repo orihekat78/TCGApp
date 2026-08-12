@@ -19,8 +19,8 @@ export type MetaBuildRunner = (
 
 const execFile = promisify(execFileCallback);
 const FUNCTIONS_ENTRY = "functions/api/v1/[[path]].ts";
-const WRANGLER_CONFIG_SHA256 =
-  "ef8f1087757b5770a1e0428c25fe830aa645f9be9ae0fe7bc973fb470d9f3d95";
+const REVIEWED_WRANGLER_CONFIG_SHA256 =
+  "310537869a294dac13c08ccb489f2e4138cc193b643076952842cfb95d5a9a17";
 const FUNCTIONS_SOURCE_INPUTS = [
   "../src/cloud-data/access-auth.ts",
   "../src/cloud-data/api.ts",
@@ -112,23 +112,28 @@ function exactJson(value: unknown, expected: unknown, label: string): void {
   }
 }
 
+function normalizeLineEndings(text: string): string {
+  return text.replace(/\r\n?/g, "\n");
+}
+
 export function validateFunctionsBuildEvidence(evidence: {
   metafile: unknown;
   buildMetadata: unknown;
   config: unknown;
   routes: unknown;
   publicRoutes: unknown;
-  wranglerConfigSha256: string;
+  wranglerBuildMetadataConfigSha256: string;
+  reviewedWranglerConfigSha256: string;
 }): void {
   exactJson(
     evidence.buildMetadata,
     {
-      wrangler_config_hash: WRANGLER_CONFIG_SHA256,
+      wrangler_config_hash: evidence.wranglerBuildMetadataConfigSha256,
       build_output_directory: "dist",
     },
     "Wrangler build metadata",
   );
-  if (evidence.wranglerConfigSha256 !== WRANGLER_CONFIG_SHA256) {
+  if (evidence.reviewedWranglerConfigSha256 !== REVIEWED_WRANGLER_CONFIG_SHA256) {
     failEvidence("wrangler.json differs from the reviewed release contract");
   }
   exactJson(
@@ -332,10 +337,32 @@ export async function buildMetaRelease(
 
   const wrangler = resolve(root, "node_modules/wrangler/bin/wrangler.js");
   await regularExecutable(wrangler, "Wrangler executable");
+  const wranglerConfig = await readFile(resolve(root, "wrangler.json"));
+  const wranglerConfigSha256 = createHash("sha256")
+    .update(wranglerConfig)
+    .digest("hex");
+  const reviewedWranglerConfigSha256 = createHash("sha256")
+    .update(normalizeLineEndings(wranglerConfig.toString("utf8")))
+    .digest("hex");
+  if (reviewedWranglerConfigSha256 !== REVIEWED_WRANGLER_CONFIG_SHA256) {
+    failEvidence("wrangler.json differs from the reviewed release contract");
+  }
+
+  const controlDirectory = await mkdtemp(
+    join(tmpdir(), "conan-private-build-control-"),
+  );
   const workerDirectory = await mkdtemp(
     join(tmpdir(), "conan-private-worker-build-"),
   );
   try {
+    const wranglerConfigSnapshotPath = resolve(
+      controlDirectory,
+      "wrangler.json",
+    );
+    await writeFile(wranglerConfigSnapshotPath, wranglerConfig, {
+      flag: "wx",
+      mode: 0o600,
+    });
     const metafilePath = resolve(workerDirectory, "metafile.json");
     const buildMetadataPath = resolve(workerDirectory, "build-metadata.json");
     const configPath = resolve(workerDirectory, "config.json");
@@ -348,6 +375,8 @@ export async function buildMetaRelease(
         "functions",
         "build",
         "functions",
+        "--config",
+        wranglerConfigSnapshotPath,
         "--outdir",
         workerDirectory,
         "--metafile",
@@ -369,6 +398,12 @@ export async function buildMetaRelease(
       cwd: root,
       env: buildEnvironment(),
     });
+    const wranglerConfigSnapshot = await readFile(
+      wranglerConfigSnapshotPath,
+    ).catch(() => undefined);
+    if (!wranglerConfigSnapshot?.equals(wranglerConfig)) {
+      failEvidence("Wrangler config snapshot changed during build");
+    }
     const workerPath = resolve(workerDirectory, "index.js");
     const workerEntry = await lstat(workerPath).catch(() => undefined);
     if (!workerEntry?.isFile() || workerEntry.isSymbolicLink()) {
@@ -388,9 +423,8 @@ export async function buildMetaRelease(
         resolve(root, "dist/_routes.json"),
         "deployed Pages routes",
       ),
-      wranglerConfigSha256: createHash("sha256")
-        .update(await readFile(resolve(root, "wrangler.json")))
-        .digest("hex"),
+      wranglerBuildMetadataConfigSha256: wranglerConfigSha256,
+      reviewedWranglerConfigSha256,
     });
     await writeFile(
       resolve(root, "dist/_worker.js"),
@@ -404,7 +438,10 @@ export async function buildMetaRelease(
       stderr: `${output.stderr}${workerOutput.stderr}`,
     };
   } finally {
-    await rm(workerDirectory, { recursive: true, force: true });
+    await Promise.all([
+      rm(controlDirectory, { recursive: true, force: true }),
+      rm(workerDirectory, { recursive: true, force: true }),
+    ]);
   }
 }
 

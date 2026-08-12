@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { isAbsolute, join, relative, resolve } from "node:path";
 import {
   buildMetaRelease,
   validateFunctionsBuildEvidence,
@@ -9,8 +10,8 @@ import {
 } from "../../scripts/private-hosted/build-meta";
 
 const roots: string[] = [];
-const configHash =
-  "ef8f1087757b5770a1e0428c25fe830aa645f9be9ae0fe7bc973fb470d9f3d95";
+const reviewedWranglerConfigHash =
+  "310537869a294dac13c08ccb489f2e4138cc193b643076952842cfb95d5a9a17";
 const sources = [
   "../src/cloud-data/access-auth.ts",
   "../src/cloud-data/api.ts",
@@ -84,7 +85,10 @@ const dependencies = [
 const generatedRoute =
   "../.wrangler/tmp/pages-fixture/functionsRoutes-fixture.mjs";
 
-function validEvidence(outputPath = "C:/tmp/worker/index.js") {
+function validEvidence(
+  outputPath = "C:/tmp/worker/index.js",
+  wranglerBuildMetadataConfigSha256 = "fixture-raw-config-hash",
+) {
   const inputPaths = [...sources, ...dependencies, generatedRoute];
   const inputs = Object.fromEntries(
     inputPaths.map((path) => [path, { bytes: 1, imports: [], format: "esm" }]),
@@ -106,7 +110,7 @@ function validEvidence(outputPath = "C:/tmp/worker/index.js") {
       },
     },
     buildMetadata: {
-      wrangler_config_hash: configHash,
+      wrangler_config_hash: wranglerBuildMetadataConfigSha256,
       build_output_directory: "dist",
     },
     config: {
@@ -127,7 +131,8 @@ function validEvidence(outputPath = "C:/tmp/worker/index.js") {
       exclude: [],
     },
     publicRoutes: { version: 1, include: ["/api/v1/*"], exclude: [] },
-    wranglerConfigSha256: configHash,
+    wranglerBuildMetadataConfigSha256,
+    reviewedWranglerConfigSha256: reviewedWranglerConfigHash,
   };
 }
 
@@ -137,6 +142,89 @@ function argument(command: MetaBuildCommand, flag: string): string {
     throw new Error(`missing command argument: ${flag}`);
   }
   return command.args[index + 1]!;
+}
+
+async function writeWorkerEvidence(
+  command: MetaBuildCommand,
+  wranglerConfig: string,
+  workerSource = "export default {};\n",
+): Promise<void> {
+  const outdir = argument(command, "--outdir");
+  const rawConfigHash = createHash("sha256")
+    .update(wranglerConfig)
+    .digest("hex");
+  await writeFile(resolve(outdir, "index.js"), workerSource);
+  await writeFile(
+    argument(command, "--metafile"),
+    JSON.stringify(
+      validEvidence(resolve(outdir, "index.js"), rawConfigHash).metafile,
+    ),
+  );
+  await writeFile(
+    argument(command, "--build-metadata-path"),
+    JSON.stringify(
+      validEvidence("C:/tmp/worker/index.js", rawConfigHash).buildMetadata,
+    ),
+  );
+  await writeFile(
+    argument(command, "--output-config-path"),
+    JSON.stringify(validEvidence().config),
+  );
+  await writeFile(
+    argument(command, "--output-routes-path"),
+    JSON.stringify(validEvidence().routes),
+  );
+}
+
+async function buildWithWranglerConfig(wranglerConfig: string): Promise<void> {
+  const root = await mkdtemp(join(tmpdir(), "conan-build-meta-eol-"));
+  roots.push(root);
+  await mkdir(resolve(root, "node_modules/vite/bin"), { recursive: true });
+  await mkdir(resolve(root, "node_modules/wrangler/bin"), { recursive: true });
+  await mkdir(resolve(root, "functions/api/v1"), { recursive: true });
+  await writeFile(resolve(root, "node_modules/vite/bin/vite.js"), "// vite");
+  await writeFile(
+    resolve(root, "node_modules/wrangler/bin/wrangler.js"),
+    "// wrangler",
+  );
+  await writeFile(resolve(root, "functions/api/v1/[[path]].ts"), "export {};");
+  await writeFile(resolve(root, "wrangler.json"), wranglerConfig);
+
+  await buildMetaRelease(root, async (command) => {
+    if (command.args.includes("build") && command.args.includes("--manifest")) {
+      await mkdir(resolve(root, "dist"), { recursive: true });
+      await writeFile(
+        resolve(root, "dist/_routes.json"),
+        JSON.stringify({ version: 1, include: ["/api/v1/*"], exclude: [] }),
+      );
+      return { stdout: "vite\n", stderr: "" };
+    }
+
+    const outdir = argument(command, "--outdir");
+    const rawConfigHash = createHash("sha256")
+      .update(wranglerConfig)
+      .digest("hex");
+    await writeFile(resolve(outdir, "index.js"), "export default {};\n");
+    await writeFile(
+      argument(command, "--metafile"),
+      JSON.stringify(
+        validEvidence(resolve(outdir, "index.js"), rawConfigHash).metafile,
+      ),
+    );
+    await writeFile(
+      argument(command, "--build-metadata-path"),
+      JSON.stringify(validEvidence("C:/tmp/worker/index.js", rawConfigHash).buildMetadata),
+    );
+    await writeFile(
+      argument(command, "--output-config-path"),
+      JSON.stringify(validEvidence().config),
+    );
+    await writeFile(
+      argument(command, "--output-routes-path"),
+      JSON.stringify(validEvidence().routes),
+    );
+    return { stdout: "worker\n", stderr: "" };
+  });
 }
 
 afterEach(async () => {
@@ -204,6 +292,128 @@ describe("private hosted Meta release build", () => {
     );
   });
 
+  it("accepts reviewed Wrangler JSON across line endings but rejects content drift", async () => {
+    const reviewed = (await readFile(resolve(process.cwd(), "wrangler.json"), "utf8"))
+      .replaceAll("\r\n", "\n");
+    const mixed = reviewed
+      .split("\n")
+      .map((line, index, lines) =>
+        index === lines.length - 1
+          ? line
+          : `${line}${index % 2 === 0 ? "\r\n" : "\n"}`,
+      )
+      .join("");
+
+    for (const lineEndingVariant of [
+      reviewed,
+      reviewed.replaceAll("\n", "\r\n"),
+      mixed,
+    ]) {
+      await expect(buildWithWranglerConfig(lineEndingVariant)).resolves.toBeUndefined();
+    }
+
+    await expect(
+      buildWithWranglerConfig(
+        reviewed.replace('"DEPLOYMENT_ENV": "production"', '"DEPLOYMENT_ENV": "staging"'),
+      ),
+    ).rejects.toThrow(/wrangler.json differs from the reviewed release contract/);
+  });
+
+  it("builds from one external reviewed snapshot when the repo config changes during Wrangler", async () => {
+    const root = await mkdtemp(join(tmpdir(), "conan-build-meta-snapshot-"));
+    roots.push(root);
+    await mkdir(resolve(root, "node_modules/vite/bin"), { recursive: true });
+    await mkdir(resolve(root, "node_modules/wrangler/bin"), { recursive: true });
+    await mkdir(resolve(root, "functions/api/v1"), { recursive: true });
+    await writeFile(resolve(root, "node_modules/vite/bin/vite.js"), "// vite");
+    await writeFile(
+      resolve(root, "node_modules/wrangler/bin/wrangler.js"),
+      "// wrangler",
+    );
+    await writeFile(resolve(root, "functions/api/v1/[[path]].ts"), "export {};");
+    const reviewed = await readFile(resolve(process.cwd(), "wrangler.json"), "utf8");
+    const drifted = reviewed.replace(
+      '"DEPLOYMENT_ENV": "production"',
+      '"DEPLOYMENT_ENV": "staging"',
+    );
+    const repoConfigPath = resolve(root, "wrangler.json");
+    await writeFile(repoConfigPath, reviewed);
+
+    await buildMetaRelease(root, async (command) => {
+      if (command.args.includes("build") && command.args.includes("--manifest")) {
+        await mkdir(resolve(root, "dist"), { recursive: true });
+        await writeFile(
+          resolve(root, "dist/_routes.json"),
+          JSON.stringify({ version: 1, include: ["/api/v1/*"], exclude: [] }),
+        );
+        return { stdout: "vite\n", stderr: "" };
+      }
+
+      await writeFile(repoConfigPath, drifted);
+      try {
+        const snapshotPath = argument(command, "--config");
+        const snapshotRelative = relative(root, snapshotPath);
+        expect(
+          snapshotRelative.startsWith("..") || isAbsolute(snapshotRelative),
+        ).toBe(true);
+        const snapshot = await readFile(snapshotPath, "utf8");
+        expect(snapshot).toBe(reviewed);
+        await writeWorkerEvidence(
+          command,
+          snapshot,
+          snapshot.includes('"DEPLOYMENT_ENV": "staging"')
+            ? 'export default "staging";\n'
+            : 'export default "production";\n',
+        );
+      } finally {
+        await writeFile(repoConfigPath, reviewed);
+      }
+      return { stdout: "worker\n", stderr: "" };
+    });
+
+    expect(await readFile(resolve(root, "dist/_worker.js"), "utf8")).toBe(
+      'export default "production";\n',
+    );
+  });
+
+  it("rejects a child-modified Wrangler snapshot before publishing", async () => {
+    const root = await mkdtemp(join(tmpdir(), "conan-build-meta-snapshot-tamper-"));
+    roots.push(root);
+    await mkdir(resolve(root, "node_modules/vite/bin"), { recursive: true });
+    await mkdir(resolve(root, "node_modules/wrangler/bin"), { recursive: true });
+    await mkdir(resolve(root, "functions/api/v1"), { recursive: true });
+    await writeFile(resolve(root, "node_modules/vite/bin/vite.js"), "// vite");
+    await writeFile(
+      resolve(root, "node_modules/wrangler/bin/wrangler.js"),
+      "// wrangler",
+    );
+    await writeFile(resolve(root, "functions/api/v1/[[path]].ts"), "export {};");
+    const reviewed = await readFile(resolve(process.cwd(), "wrangler.json"), "utf8");
+    await writeFile(resolve(root, "wrangler.json"), reviewed);
+
+    await expect(
+      buildMetaRelease(root, async (command) => {
+        if (command.args.includes("build") && command.args.includes("--manifest")) {
+          await mkdir(resolve(root, "dist"), { recursive: true });
+          await writeFile(
+            resolve(root, "dist/_routes.json"),
+            JSON.stringify({ version: 1, include: ["/api/v1/*"], exclude: [] }),
+          );
+          return { stdout: "vite\n", stderr: "" };
+        }
+
+        const snapshotPath = argument(command, "--config");
+        const snapshot = await readFile(snapshotPath, "utf8");
+        await writeWorkerEvidence(command, snapshot);
+        await writeFile(snapshotPath, `${snapshot}\n`);
+        return { stdout: "worker\n", stderr: "" };
+      }),
+    ).rejects.toThrow(/Wrangler config snapshot changed during build/);
+    await expect(
+      readFile(resolve(root, "dist/_worker.js")),
+    ).rejects.toMatchObject({ code: "ENOENT" });
+  });
+
   it("builds Vite then copies only the validated raw Wrangler index", async () => {
     const root = await mkdtemp(join(tmpdir(), "conan-build-meta-test-"));
     roots.push(root);
@@ -225,6 +435,9 @@ describe("private hosted Meta release build", () => {
       resolve(root, "wrangler.json"),
       await readFile(resolve(process.cwd(), "wrangler.json")),
     );
+    const rawConfigHash = createHash("sha256")
+      .update(await readFile(resolve(root, "wrangler.json")))
+      .digest("hex");
 
     const seen: MetaBuildCommand[] = [];
     const result = await buildMetaRelease(root, async (command) => {
@@ -245,11 +458,15 @@ describe("private hosted Meta release build", () => {
       await writeFile(resolve(outdir, "index.js"), "export default {};\n");
       await writeFile(
         argument(command, "--metafile"),
-        JSON.stringify(validEvidence(resolve(outdir, "index.js")).metafile),
+        JSON.stringify(
+          validEvidence(resolve(outdir, "index.js"), rawConfigHash).metafile,
+        ),
       );
       await writeFile(
         argument(command, "--build-metadata-path"),
-        JSON.stringify(validEvidence().buildMetadata),
+        JSON.stringify(
+          validEvidence("C:/tmp/worker/index.js", rawConfigHash).buildMetadata,
+        ),
       );
       await writeFile(
         argument(command, "--output-config-path"),
