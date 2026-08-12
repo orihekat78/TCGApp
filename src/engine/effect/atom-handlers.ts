@@ -17,7 +17,10 @@ import type { GameState, AtomVerb, EffectCtx } from '../types/index.js';
 import { takePublicHandRevealToken } from './atom-handlers/_shared.js';
 export {
   _drainPendingDeckRevealSide,
+  _peekPendingDeckRevealSide,
   _drainPendingPublicHandRevealSide,
+  _peekPendingPublicHandRevealSide,
+  queuePendingPublicHandRevealSide,
   _drainPendingDeckReorderSide,
   _drainPendingDeckPlaceSide, // mini-wave #5 P2: deckPlaceSplitBound (top/bottom 振り分け) の drain
   _drainPendingContactStartAxId, // W6 step9 (row65): startContact 生成 ax.id の drain

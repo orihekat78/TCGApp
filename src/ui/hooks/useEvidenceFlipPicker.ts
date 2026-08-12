@@ -16,6 +16,7 @@
 //     (useNextHintPicker と同パターン)。
 
 import { create } from 'zustand';
+import { areTerminalInteractionsBlocked } from '@/ui/services/terminalInteractionGate.js';
 
 /** 表向きにできる候補 = 自分の裏向き証拠 1 件 (evidence 配列 index + cardId)。 */
 export type EvidenceFlipCandidate = {
@@ -69,6 +70,7 @@ export type EvidenceFlipPicker = {
 };
 
 function askEvidenceFlip(req: EvidenceFlipRequest): Promise<EvidenceFlipChoice> {
+  if (areTerminalInteractionsBlocked()) return Promise.resolve({ kind: 'cancel' });
   const store = useEvidenceFlipPickerStore.getState();
   // 既に open 中の Promise があれば cancel で resolve して破棄
   const prev = store._resolver;

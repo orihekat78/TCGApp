@@ -41,6 +41,7 @@ import {
 import { isReplayOwnedState, markReplayOwnedState } from '@/ui/services/replayOwnership';
 import { usePresentationStore } from '@/ui/presentation/store';
 import {
+  checkpointLiveReplayRecording,
   discardLiveReplayRecording,
   finalizeLiveReplayRecording,
   getFinalizedReplay,
@@ -385,6 +386,132 @@ describe('dispatchEngineAction (pure function)', () => {
       } finally {
         unsubscribe?.();
         if (isMatchSessionActive()) endMatchSession();
+      }
+    });
+
+    it('does not restore stale runtime when a failed concession starts a replacement session', () => {
+      const token = beginMatchSession('self');
+      const init = withMainPhase(createEmptyGameState());
+      startCausalSession(init, matchSessionId(token));
+      init.pendingRuntimeState = {
+        token: 41,
+        snapshot: [{ key: '__pendingContactStartAxId', present: true, value: 'old-session' }],
+      };
+      useGameStateStore.getState().setGameState(init);
+      let replacementToken: ReturnType<typeof beginMatchSession> | null = null;
+      let replacement: GameState | null = null;
+      let replacementRuntime: ReturnType<typeof snapshotPendingRuntimeState> | null = null;
+      let replaceOnce = true;
+      const unsubscribe = useGameStateStore.subscribe((state) => {
+        if (!replaceOnce || state.gameState?.gameResult === undefined) return;
+        replaceOnce = false;
+        replacementToken = beginMatchSession('self');
+        replacement = withMainPhase(createEmptyGameState());
+        startCausalSession(replacement, matchSessionId(replacementToken));
+        replacement.pendingRuntimeState = {
+          token: 42,
+          snapshot: [{ key: '__pendingContactStartAxId', present: true, value: 'new-session' }],
+        };
+        useGameStateStore.getState().setGameState(replacement);
+        replacementRuntime = snapshotPendingRuntimeState();
+        throw new Error('concede subscriber replaced session');
+      });
+
+      try {
+        expect(dispatchEngineAction({ type: 'concede', player: 'self', sessionToken: token }))
+          .toEqual({
+            ok: false,
+            reason: 'engine-error',
+            detail: 'concede subscriber replaced session',
+          });
+        expect(replacementToken).not.toBeNull();
+        expect(currentMatchSessionToken()).toBe(replacementToken);
+        expect(useGameStateStore.getState().gameState).toBe(replacement);
+        expect(snapshotPendingRuntimeState()).toEqual(replacementRuntime);
+      } finally {
+        unsubscribe();
+        if (isMatchSessionActive()) endMatchSession();
+      }
+    });
+
+    it('keeps a legitimate same-session publication made while concession rolls back', () => {
+      const token = beginMatchSession('self');
+      const init = withMainPhase(createEmptyGameState());
+      startCausalSession(init, matchSessionId(token));
+      useGameStateStore.getState().setGameState(init);
+      const storeBefore = useGameStateStore.getState();
+      const replayBefore = checkpointLiveReplayRecording();
+      const nested = { ...init, turn: { ...init.turn, number: init.turn.number + 1 } };
+      let nestedPublished = false;
+      const nestedUnsubscribe = useGameStateStore.subscribe((state) => {
+        if (nestedPublished || state !== storeBefore) return;
+        nestedPublished = true;
+        useGameStateStore.getState().setGameState(nested);
+      });
+      const failingUnsubscribe = useGameStateStore.subscribe((state) => {
+        if (state.gameState?.gameResult !== undefined) {
+          throw new Error('concede terminal publish failure');
+        }
+      });
+
+      try {
+        expect(dispatchEngineAction({ type: 'concede', player: 'self', sessionToken: token }))
+          .toEqual({
+            ok: false,
+            reason: 'engine-error',
+            detail: 'concede terminal publish failure',
+          });
+        expect(nestedPublished).toBe(true);
+        expect(useGameStateStore.getState().gameState).toBe(nested);
+        expect(checkpointLiveReplayRecording()?.statesLength)
+          .toBe((replayBefore?.statesLength ?? 0) + 1);
+      } finally {
+        failingUnsubscribe();
+        nestedUnsubscribe();
+        if (isMatchSessionActive()) endMatchSession();
+      }
+    });
+
+    it('keeps same-GameState UI and runtime published while concession rolls back', () => {
+      const token = beginMatchSession('self');
+      const init = withMainPhase(createEmptyGameState());
+      startCausalSession(init, matchSessionId(token));
+      useGameStateStore.getState().setGameState(init);
+      const storeBefore = useGameStateStore.getState();
+      const runtime = globalThis as { __pendingContactStartAxId?: string };
+      let nestedRuntime: ReturnType<typeof snapshotPendingRuntimeState> | null = null;
+      let nestedPublished = false;
+      const nestedUnsubscribe = useGameStateStore.subscribe((state) => {
+        if (nestedPublished || state !== storeBefore) return;
+        nestedPublished = true;
+        useGameStateStore.getState().setActiveCard('nested-concede-card', 'nested concede');
+        runtime.__pendingContactStartAxId = 'nested-concede-runtime';
+        nestedRuntime = snapshotPendingRuntimeState();
+      });
+      const failingUnsubscribe = useGameStateStore.subscribe((state) => {
+        if (state.gameState?.gameResult !== undefined) {
+          throw new Error('concede same-state publish failure');
+        }
+      });
+
+      try {
+        expect(dispatchEngineAction({ type: 'concede', player: 'self', sessionToken: token }))
+          .toEqual({
+            ok: false,
+            reason: 'engine-error',
+            detail: 'concede same-state publish failure',
+          });
+        expect(useGameStateStore.getState()).toMatchObject({
+          gameState: init,
+          activeCardUid: 'nested-concede-card',
+          activeCardLabel: 'nested concede',
+        });
+        expect(snapshotPendingRuntimeState()).toEqual(nestedRuntime);
+      } finally {
+        failingUnsubscribe();
+        nestedUnsubscribe();
+        if (isMatchSessionActive()) endMatchSession();
+        delete runtime.__pendingContactStartAxId;
       }
     });
 

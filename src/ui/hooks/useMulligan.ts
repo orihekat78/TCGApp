@@ -14,6 +14,7 @@
 
 import { create } from 'zustand';
 import type { CardId } from '@/engine/types';
+import { areTerminalInteractionsBlocked } from '@/ui/services/terminalInteractionGate.js';
 
 type Player = 'self' | 'opp';
 
@@ -49,6 +50,7 @@ export const useMulliganStore = create<MulliganStore>((set) => ({
  * 空配列 = マリガンしない (engine.flow.setup.mulligan は []で呼ぶ = 権利消費のみ)。
  */
 export function promptMulligan(req: MulliganRequest): Promise<ReadonlyArray<CardId>> {
+  if (areTerminalInteractionsBlocked()) return Promise.resolve([]);
   const store = useMulliganStore.getState();
   // 既存 prompt があれば空配列で resolve して上書き (理論上発生しないが安全側)
   const prev = store._resolver;

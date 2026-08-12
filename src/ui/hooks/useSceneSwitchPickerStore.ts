@@ -15,6 +15,7 @@
 //   - resolve(uid) で commit / resolve(null) で cancel
 
 import { create } from 'zustand';
+import { areTerminalInteractionsBlocked } from '@/ui/services/terminalInteractionGate.js';
 
 // switch victim 候補の表示用 view。元は SceneSwitchPickerModal.tsx で定義していたが、
 // UI picker Direct Manipulation 化で同 modal を撤去 (現場直接クリックへ移行) したため
@@ -43,6 +44,12 @@ export type SceneSwitchPickerStore = {
 
 export const useSceneSwitchPickerStore = create<SceneSwitchPickerStore>((set) => ({
   current: null,
-  _open: (o) => set({ current: o }),
+  _open: (o) => {
+    if (areTerminalInteractionsBlocked()) {
+      o.resolve(null);
+      return;
+    }
+    set({ current: o });
+  },
   _close: () => set({ current: null }),
 }));

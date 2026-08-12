@@ -8,6 +8,7 @@ import { useConfirmation } from '../useConfirmation.js';
 import { useTargetPicker } from '../useTargetPicker.js';
 import { useNextHintPicker, type NextHintCandidate } from '../useNextHintPicker.js';
 import { useSceneSwitchPickerStore } from '../useSceneSwitchPickerStore.js';
+import { currentInteractionEpoch, isCurrentLiveInteraction } from '@/ui/services/terminalInteractionGate.js';
 import { useEvidenceFlipPicker } from '../useEvidenceFlipPicker.js';
 import { useHandCostPicker } from '../useHandCostPicker.js';
 import { useStackedCardCostPicker } from '../useStackedCardCostPicker.js';
@@ -876,6 +877,7 @@ export async function runHandUseFlow(opts: {
     isNamed: c.isNamed,
   }));
   const newCardName = readDef.card(opts.cardId)?.names?.[0] ?? opts.cardId;
+  const interactionEpoch = currentInteractionEpoch();
   const removeUid = await new Promise<string | null>((resolve) => {
     useSceneSwitchPickerStore.getState()._open({
       cardId: opts.cardId,
@@ -884,6 +886,7 @@ export async function runHandUseFlow(opts: {
       resolve,
     });
   });
+  if (!isCurrentLiveInteraction(interactionEpoch)) return { ok: false, reason: 'not-allowed' };
   if (removeUid === null) return { ok: false, reason: 'cancelled' };
   if (selectInteractionLocked(useGameStateStore.getState())) {
     return { ok: false, reason: 'not-allowed' };

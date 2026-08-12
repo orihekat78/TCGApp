@@ -20,6 +20,7 @@ import type { CardId } from '@/engine/types';
 import { startCausalSession } from '@/engine/log/causal';
 
 type Player = 'self' | 'opp';
+type GameStartOptions = { sessionId: string; isSessionCurrent?: () => boolean };
 
 /**
  * turn-1 開始の GameState を返す (rules/04)。
@@ -68,12 +69,12 @@ const defaultMulliganProvider: MulliganProvider = async (player, hand) => {
 export function performGameStart(
   mulliganProvider: MulliganProvider | undefined,
   deckSelection: { selfDeckId: DeckId; oppDeckId: DeckId } | undefined,
-  options: { sessionId: string },
+  options: GameStartOptions,
 ): Promise<GameState>;
 export async function performGameStart(
   mulliganProvider: MulliganProvider = defaultMulliganProvider,
   deckSelection?: { selfDeckId: DeckId; oppDeckId: DeckId },
-  options?: { sessionId: string },
+  options?: GameStartOptions,
 ): Promise<GameState> {
   if (!options) throw new Error('performGameStart: sessionId is required');
   const decks = deckSelection
@@ -103,6 +104,9 @@ export async function performGameStart(
   for (const p of [first, second] as const) {
     const hand = state.players[p].hand;
     const returns = await mulliganProvider(p, hand);
+    // Terminal cleanup settles the prompt with []. Do not interpret that as a
+    // valid skip for a match that ended while setup was suspended.
+    if (options.isSessionCurrent?.() === false) return state;
     state = produce(state, (draft) => {
       engine.flow.setup.mulligan(draft, p, [...returns]);
     });

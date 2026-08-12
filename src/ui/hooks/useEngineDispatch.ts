@@ -24,7 +24,7 @@ import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import { _drainPendingHirameki, _drainPendingMisread, _peekPendingHirameki, _markPendingHiramekiGainDeferred } from '@/engine';
 import { _drainPendingEffectPickSide, _drainPendingEffectChoiceSide, _drainPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
 import { _drainPendingChooseInterceptSide, _drainPendingEffectRepeatOptionalSide, _drainPendingRpsSide, _drainPendingSetCardChoiceSide, _drainPendingSetCardReplacementSide } from '@/engine/effect/pending-state.js';
-import { _drainPendingDeckRevealSide, _drainPendingPublicHandRevealSide, _drainPendingDeckReorderSide, _drainPendingDeckPlaceSide, _drainPendingContactStartAxId } from '@/engine/effect/atom-handlers';
+import { _drainPendingDeckRevealSide, _peekPendingDeckRevealSide, _drainPendingPublicHandRevealSide, _peekPendingPublicHandRevealSide, _drainPendingDeckReorderSide, _drainPendingDeckPlaceSide, _drainPendingContactStartAxId } from '@/engine/effect/atom-handlers';
 import {
   cancelPendingEffectPickByPublicRevealToken,
   readPendingDeckPlaceAuthority,
@@ -65,9 +65,13 @@ import {
 } from '@/ui/services/matchSession';
 import { getRegisteredHumanDecisionSide } from '@/ui/services/humanDecisionOwner';
 import {
-  checkpointLiveReplayRecording,
-  rollbackLiveReplayRecording,
-} from '@/ui/services/liveReplayRecorder';
+  areStoreRollbackParticipantsCurrent,
+  checkpointStoreRollbackParticipants,
+  rollbackStoreRollbackParticipants,
+  runStoreRollbackPublication,
+  StoreRollbackHandledError,
+  storeRollbackCause,
+} from '@/ui/services/storeTransaction';
 import {
   toPendingSetCardChoiceSide,
   toPendingSetCardReplacementSide,
@@ -496,6 +500,21 @@ function runEngineAction(
  * effectPickResolve 等の「queue 空なら null クリア」特殊処理は dispatchEngineAction 専用。
  */
 export function surfacePendingSideChannels(): void {
+  const store = useGameStateStore.getState();
+  if (store.gameState?.gameResult !== undefined) {
+    // Terminal UI cannot revive decisions. A completed reveal is presentation,
+    // though, and remains FIFO-visible even when the last engine transition won.
+    if (store.pendingDeckReveal === null && _peekPendingDeckRevealSide()?.awaitingPick !== true) {
+      const reveal = _drainPendingDeckRevealSide();
+      if (reveal) store.setPendingDeckReveal(reveal);
+    }
+    if (store.pendingPublicHandReveal === null
+      && _peekPendingPublicHandRevealSide()?.lifetime === 'presentation') {
+      const reveal = _drainPendingPublicHandRevealSide();
+      if (reveal) store.setPendingPublicHandReveal(reveal);
+    }
+    return;
+  }
   surfacePendingSideChannelsFromStore(useGameStateStore.getState);
 }
 
@@ -582,7 +601,7 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
 
   if (action.type === 'concede') {
     const pendingRuntimeBefore = snapshotPendingRuntimeState();
-    let replayCheckpoint: ReturnType<typeof checkpointLiveReplayRecording> | undefined;
+    const participantCheckpoints = checkpointStoreRollbackParticipants();
     try {
       const terminal = produce(current, (draft) => {
         runEngineAction(draft, action, authorities);
@@ -600,28 +619,42 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
         && getRegisteredHumanDecisionSide(latestStore.spectatorMode) === action.player
         && !isReplayOwnedState(current);
       if (!authorityStillCurrent) {
-        restorePendingRuntimeState(pendingRuntimeBefore);
+        if (areStoreRollbackParticipantsCurrent(participantCheckpoints)) {
+          restorePendingRuntimeState(pendingRuntimeBefore);
+        }
         return { ok: false, reason: 'not-allowed' };
       }
-      replayCheckpoint = checkpointLiveReplayRecording();
       if (!latestStore.commitTerminalState(terminal)) {
-        restorePendingRuntimeState(pendingRuntimeBefore);
+        if (areStoreRollbackParticipantsCurrent(participantCheckpoints)) {
+          restorePendingRuntimeState(pendingRuntimeBefore);
+        }
         return { ok: false, reason: 'not-allowed' };
       }
       return { ok: true };
     } catch (error) {
-      if (replayCheckpoint !== undefined) rollbackLiveReplayRecording(replayCheckpoint);
-      restorePendingRuntimeState(pendingRuntimeBefore);
+      if (error instanceof StoreRollbackHandledError) {
+        if (useGameStateStore.getState() === store
+          && areStoreRollbackParticipantsCurrent(participantCheckpoints)) {
+          restorePendingRuntimeState(pendingRuntimeBefore);
+        }
+      } else {
+        const authorityCurrent = rollbackStoreRollbackParticipants(participantCheckpoints);
+        if (authorityCurrent && areStoreRollbackParticipantsCurrent(participantCheckpoints)) {
+          restorePendingRuntimeState(pendingRuntimeBefore);
+        }
+      }
+      const cause = storeRollbackCause(error);
       return {
         ok: false,
         reason: 'engine-error',
-        detail: error instanceof Error ? error.message : String(error),
+        detail: cause instanceof Error ? cause.message : String(cause),
       };
     }
   }
 
   _justDeclaredAxId = null;
   const pendingRuntimeBefore = snapshotPendingRuntimeState();
+  const participantCheckpoints = checkpointStoreRollbackParticipants();
   try {
     const committed = store.dispatch((state) =>
       produce(state, (draft) => {
@@ -633,6 +666,10 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     );
     if (!committed) {
       throw new Error('presentation commit rejected');
+    }
+    if (useGameStateStore.getState().gameState?.gameResult !== undefined) {
+      _justDeclaredAxId = null;
+      return { ok: true };
     }
     // Commit 2: declareChar/Case 直後は ActionContext.id を store.activeActionId にセット
     // BUG-249: owner ordering is stored inside GameState, but the opponent-turn
@@ -774,12 +811,33 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     return { ok: true };
   } catch (e) {
     _justDeclaredAxId = null;
-    restorePendingRuntimeState(pendingRuntimeBefore);
-    useGameStateStore.setState(store, true);
-    if (e instanceof RejectedDecisionError) {
+    if (e instanceof StoreRollbackHandledError) {
+      if (useGameStateStore.getState() === store
+        && areStoreRollbackParticipantsCurrent(participantCheckpoints)) {
+        restorePendingRuntimeState(pendingRuntimeBefore);
+      }
+    } else {
+      const authorityCurrent = rollbackStoreRollbackParticipants(participantCheckpoints);
+      if (authorityCurrent) {
+        try {
+          if (useGameStateStore.getState() !== store) {
+            runStoreRollbackPublication(store, () => useGameStateStore.setState(store, true));
+          }
+        } catch {
+          // Zustand installs the exact snapshot before notifying subscribers.
+          // Preserve the original dispatch or post-publication error.
+        }
+        if (useGameStateStore.getState() === store
+          && areStoreRollbackParticipantsCurrent(participantCheckpoints)) {
+          restorePendingRuntimeState(pendingRuntimeBefore);
+        }
+      }
+    }
+    const cause = storeRollbackCause(e);
+    if (cause instanceof RejectedDecisionError) {
       return { ok: false, reason: 'not-allowed' };
     }
-    const detail = e instanceof Error ? e.message : String(e);
+    const detail = cause instanceof Error ? cause.message : String(cause);
     return { ok: false, reason: 'engine-error', detail };
   }
 }

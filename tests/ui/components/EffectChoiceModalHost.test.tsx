@@ -5,6 +5,7 @@ import { EffectChoiceModalHost } from '@/ui/components/EffectChoiceModalHost';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { useSceneSwitchPickerStore } from '@/ui/hooks/useSceneSwitchPickerStore';
 import { useGameStateStore } from '@/ui/state/store';
+import { beginMatchSession, commitMatchSession, resetMatchSession } from '@/ui/services/matchSession';
 
 const { dispatchEngineActionMock } = vi.hoisted(() => ({ dispatchEngineActionMock: vi.fn() }));
 
@@ -65,5 +66,31 @@ describe('EffectChoiceModalHost B04030 full-scene switch', () => {
 
     expect(useSceneSwitchPickerStore.getState().current).toBeNull();
     expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'choiceResolve', choiceIndex: 0 });
+  });
+
+  it('does not dispatch after terminal cleanup resolves the open switch', async () => {
+    const scene = useGameStateStore.getState().gameState!.players.self.scene;
+    const session = beginMatchSession('self');
+    const initial = createEmptyGameState();
+    initial.players.self.scene = scene;
+    expect(commitMatchSession(session, initial)).toBe(true);
+    useGameStateStore.setState({
+      pendingEffectChoice: {
+        player: 'self', source: { player: 'self', area: 'scene', cardId: 'B04030', uid: 'kaito', abilityId: 'a1' },
+        options: [{ index: 0, label: 'hand' }, { index: 1, label: 'enter', sceneEnter: true }],
+      },
+    });
+    act(() => { root.render(<EffectChoiceModalHost />); });
+    const enter = container.querySelector<HTMLButtonElement>('[data-testid="cp-opt-1"]')!;
+    await act(async () => { enter.click(); });
+    expect(useSceneSwitchPickerStore.getState().current).not.toBeNull();
+
+    const terminal = structuredClone(initial);
+    terminal.gameResult = { winner: 'self', reason: 'evidence' };
+    act(() => expect(commitMatchSession(session, terminal)).toBe(true));
+    await act(async () => {});
+
+    expect(dispatchEngineActionMock).not.toHaveBeenCalled();
+    resetMatchSession();
   });
 });

@@ -8,6 +8,20 @@ import { bindPendingDecision, dispatchEngineAction } from '@/ui/hooks/useEngineD
 import { useGameStateStore } from '@/ui/state/store';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { event } from '@/engine/event';
+import { gameResult } from '@/engine/mutate/gameResult';
+import { startCausalSession } from '@/engine/log/causal';
+import { snapshotPendingRuntimeState } from '@/engine/effect/runtime-state';
+import {
+  beginMatchSession,
+  currentMatchSessionToken,
+  endMatchSession,
+  isMatchSessionActive,
+  matchSessionId,
+} from '@/ui/services/matchSession';
+import {
+  checkpointLiveReplayRecording,
+  resetLiveReplayRecorderForTests,
+} from '@/ui/services/liveReplayRecorder';
 import {
   _clearPendingEffectPickQueue,
   _drainPendingChooseInterceptSide,
@@ -61,6 +75,23 @@ describe('useEngineDispatch — per-step action FSM', () => {
     expect(ax?.phase).toBe('guard-window');
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.find((c) => c.uid === 's1')?.state).toBe('sleep');
+  });
+
+  it('does not restore an active action or side channels after a declaration naturally ends the game', () => {
+    useGameStateStore.setState({ gameState: makeBattle(), activeActionId: null });
+    const unsubscribe = event.on('action:declare', (state) => {
+      gameResult.set(state, 'self', 'evidence');
+    });
+
+    try {
+      expect(dispatchEngineAction({
+        type: 'actionDeclareChar', byUid: 's1', targetUid: 't1',
+      })).toEqual({ ok: true });
+      expect(useGameStateStore.getState().gameState?.gameResult).toEqual({ winner: 'self', reason: 'evidence' });
+      expect(useGameStateStore.getState().activeActionId).toBeNull();
+    } finally {
+      unsubscribe();
+    }
   });
 
   it('actionDeclareCase: sets activeActionId + ax phase guard-window + target=case', () => {
@@ -335,6 +366,253 @@ describe('useEngineDispatch — per-step action FSM', () => {
       targetUid: 't1',
     }).ok).toBe(true);
     expect(useGameStateStore.getState().activeActionId).toBe('ax_1');
+  });
+
+  it('rolls back replay and the whole store when post-dispatch UI publication throws', () => {
+    const token = beginMatchSession('self');
+    const initial = makeBattle();
+    startCausalSession(initial, matchSessionId(token));
+    useGameStateStore.getState().setGameState(initial);
+    const storeBefore = useGameStateStore.getState();
+    const runtimeBefore = snapshotPendingRuntimeState();
+    const replayBefore = checkpointLiveReplayRecording();
+    const unsubscribe = useGameStateStore.subscribe((state) => {
+      if (state.activeActionId !== null) {
+        throw new Error('post-dispatch active-action failure');
+      }
+    });
+
+    try {
+      expect(dispatchEngineAction({
+        type: 'actionDeclareChar',
+        byUid: 's1',
+        targetUid: 't1',
+      })).toEqual({
+        ok: false,
+        reason: 'engine-error',
+        detail: 'post-dispatch active-action failure',
+      });
+      expect(useGameStateStore.getState()).toBe(storeBefore);
+      expect(snapshotPendingRuntimeState()).toEqual(runtimeBefore);
+      expect(checkpointLiveReplayRecording()).toEqual(replayBefore);
+    } finally {
+      unsubscribe();
+      if (isMatchSessionActive()) endMatchSession();
+    }
+  });
+
+  it('rolls back replay captured by a nested store publication before the engine mutator throws', () => {
+    const token = beginMatchSession('self');
+    const initial = makeBattle();
+    startCausalSession(initial, matchSessionId(token));
+    useGameStateStore.getState().setGameState(initial);
+    const storeBefore = useGameStateStore.getState();
+    const runtimeBefore = snapshotPendingRuntimeState();
+    const replayBefore = checkpointLiveReplayRecording();
+    const unsubscribe = event.on('action:declare', () => {
+      expect(useGameStateStore.getState().dispatch((state) => ({ ...state }))).toBe(true);
+      throw new Error('outer listener failure after nested publish');
+    });
+
+    try {
+      expect(dispatchEngineAction({
+        type: 'actionDeclareChar',
+        byUid: 's1',
+        targetUid: 't1',
+      })).toEqual({
+        ok: false,
+        reason: 'engine-error',
+        detail: 'outer listener failure after nested publish',
+      });
+      expect(useGameStateStore.getState()).toBe(storeBefore);
+      expect(snapshotPendingRuntimeState()).toEqual(runtimeBefore);
+      expect(checkpointLiveReplayRecording()).toEqual(replayBefore);
+    } finally {
+      unsubscribe();
+      if (isMatchSessionActive()) endMatchSession();
+    }
+  });
+
+  it('does not leak rollback suppression when an earlier subscriber rejects the restore notification', () => {
+    resetLiveReplayRecorderForTests();
+    let rejectRollback = false;
+    let storeBefore: ReturnType<typeof useGameStateStore.getState> | null = null;
+    const earlyUnsubscribe = useGameStateStore.subscribe((state) => {
+      if (!rejectRollback || state !== storeBefore) return;
+      rejectRollback = false;
+      throw new Error('earlier rollback subscriber failure');
+    });
+    const token = beginMatchSession('self');
+    const initial = makeBattle();
+    startCausalSession(initial, matchSessionId(token));
+    useGameStateStore.getState().setGameState(initial);
+    storeBefore = useGameStateStore.getState();
+    const replayBefore = checkpointLiveReplayRecording();
+    const publishUnsubscribe = useGameStateStore.subscribe((state) => {
+      if (state.activeActionId === null) return;
+      rejectRollback = true;
+      throw new Error('post-dispatch publish failure');
+    });
+
+    try {
+      expect(dispatchEngineAction({
+        type: 'actionDeclareChar',
+        byUid: 's1',
+        targetUid: 't1',
+      })).toEqual({
+        ok: false,
+        reason: 'engine-error',
+        detail: 'post-dispatch publish failure',
+      });
+      expect(useGameStateStore.getState()).toBe(storeBefore);
+      expect(checkpointLiveReplayRecording()).toEqual(replayBefore);
+      publishUnsubscribe();
+      expect(dispatchEngineAction({
+        type: 'actionDeclareChar',
+        byUid: 's1',
+        targetUid: 't1',
+      })).toEqual({ ok: true });
+      const replayAfter = checkpointLiveReplayRecording();
+      expect(replayAfter?.statesLength).toBe((replayBefore?.statesLength ?? 0) + 1);
+    } finally {
+      publishUnsubscribe();
+      earlyUnsubscribe();
+      if (isMatchSessionActive()) endMatchSession();
+      resetLiveReplayRecorderForTests();
+    }
+  });
+
+  it('records a legitimate nested publication started by a rollback subscriber', () => {
+    resetLiveReplayRecorderForTests();
+    let publishNested = false;
+    let nestedPublished = false;
+    let storeBefore: ReturnType<typeof useGameStateStore.getState> | null = null;
+    let nestedState: GameState | null = null;
+    const earlyUnsubscribe = useGameStateStore.subscribe((state) => {
+      if (!publishNested || nestedPublished || state !== storeBefore || state.gameState === null) return;
+      nestedPublished = true;
+      nestedState = {
+        ...state.gameState,
+        turn: { ...state.gameState.turn, count: state.gameState.turn.count + 1 },
+      };
+      useGameStateStore.setState({ gameState: nestedState });
+    });
+    const token = beginMatchSession('self');
+    const initial = makeBattle();
+    startCausalSession(initial, matchSessionId(token));
+    useGameStateStore.getState().setGameState(initial);
+    storeBefore = useGameStateStore.getState();
+    const replayBefore = checkpointLiveReplayRecording();
+    const publishUnsubscribe = useGameStateStore.subscribe((state) => {
+      if (state.activeActionId === null) return;
+      publishNested = true;
+      throw new Error('post-dispatch publish failure before nested rollback publication');
+    });
+
+    try {
+      expect(dispatchEngineAction({
+        type: 'actionDeclareChar',
+        byUid: 's1',
+        targetUid: 't1',
+      })).toEqual({
+        ok: false,
+        reason: 'engine-error',
+        detail: 'post-dispatch publish failure before nested rollback publication',
+      });
+      expect(nestedPublished).toBe(true);
+      expect(useGameStateStore.getState().gameState).toBe(nestedState);
+      const replayAfter = checkpointLiveReplayRecording();
+      expect(replayAfter?.statesLength).toBe((replayBefore?.statesLength ?? 0) + 1);
+    } finally {
+      publishUnsubscribe();
+      earlyUnsubscribe();
+      if (isMatchSessionActive()) endMatchSession();
+      resetLiveReplayRecorderForTests();
+    }
+  });
+
+  it('keeps same-GameState UI and runtime published during action rollback', () => {
+    const token = beginMatchSession('self');
+    const initial = makeBattle();
+    startCausalSession(initial, matchSessionId(token));
+    useGameStateStore.getState().setGameState(initial);
+    const storeBefore = useGameStateStore.getState();
+    const runtime = globalThis as { __pendingContactStartAxId?: string };
+    let nestedRuntime: ReturnType<typeof snapshotPendingRuntimeState> | null = null;
+    let nestedPublished = false;
+    const nestedUnsubscribe = useGameStateStore.subscribe((state) => {
+      if (nestedPublished || state !== storeBefore) return;
+      nestedPublished = true;
+      useGameStateStore.getState().setActiveCard('nested-action-card', 'nested action');
+      runtime.__pendingContactStartAxId = 'nested-action-runtime';
+      nestedRuntime = snapshotPendingRuntimeState();
+    });
+    const failingUnsubscribe = useGameStateStore.subscribe((state) => {
+      if (state.gameState !== initial) throw new Error('action publication failure');
+    });
+
+    try {
+      expect(dispatchEngineAction({
+        type: 'actionDeclareChar',
+        byUid: 's1',
+        targetUid: 't1',
+      })).toEqual({
+        ok: false,
+        reason: 'engine-error',
+        detail: 'action publication failure',
+      });
+      expect(useGameStateStore.getState()).toMatchObject({
+        gameState: initial,
+        activeCardUid: 'nested-action-card',
+        activeCardLabel: 'nested action',
+      });
+      expect(snapshotPendingRuntimeState()).toEqual(nestedRuntime);
+    } finally {
+      failingUnsubscribe();
+      nestedUnsubscribe();
+      if (isMatchSessionActive()) endMatchSession();
+      delete runtime.__pendingContactStartAxId;
+    }
+  });
+
+  it('does not overwrite a replacement match session when a subscriber changes authority then throws', () => {
+    const originalToken = beginMatchSession('self');
+    const initial = makeBattle();
+    startCausalSession(initial, matchSessionId(originalToken));
+    useGameStateStore.getState().setGameState(initial);
+    let replacementToken: ReturnType<typeof beginMatchSession> | null = null;
+    let replacement: GameState | null = null;
+    let replacementRuntime: ReturnType<typeof snapshotPendingRuntimeState> | null = null;
+    let replaceOnce = true;
+    const unsubscribe = useGameStateStore.subscribe((state) => {
+      if (!replaceOnce || state.activeActionId === null) return;
+      replaceOnce = false;
+      replacementToken = beginMatchSession('self');
+      replacement = makeBattle();
+      startCausalSession(replacement, matchSessionId(replacementToken));
+      useGameStateStore.getState().setGameState(replacement);
+      replacementRuntime = snapshotPendingRuntimeState();
+      throw new Error('session replaced during publication');
+    });
+
+    try {
+      expect(dispatchEngineAction({
+        type: 'actionDeclareChar',
+        byUid: 's1',
+        targetUid: 't1',
+      })).toEqual({
+        ok: false,
+        reason: 'engine-error',
+        detail: 'session replaced during publication',
+      });
+      expect(replacementToken).not.toBeNull();
+      expect(currentMatchSessionToken()).toBe(replacementToken);
+      expect(useGameStateStore.getState().gameState).toBe(replacement);
+      expect(snapshotPendingRuntimeState()).toEqual(replacementRuntime);
+    } finally {
+      unsubscribe();
+      if (isMatchSessionActive()) endMatchSession();
+    }
   });
 
   it('rolls back Zustand decisions and module side channels when a listener throws', () => {

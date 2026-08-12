@@ -14,6 +14,7 @@
 //     `useConfirmationStore((s) => s.current)` を component で呼ぶ。
 
 import { create } from 'zustand';
+import { areTerminalInteractionsBlocked } from '@/ui/services/terminalInteractionGate.js';
 
 export type ConfirmKind = 'standard' | 'warning' | 'victory';
 
@@ -56,6 +57,7 @@ export type Confirmation = {
 };
 
 function askConfirmation(req: ConfirmRequest): Promise<boolean> {
+  if (areTerminalInteractionsBlocked()) return Promise.resolve(false);
   const resolved: ResolvedConfirmRequest = {
     kind: req.kind,
     title: req.title,

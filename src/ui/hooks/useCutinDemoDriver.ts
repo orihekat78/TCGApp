@@ -14,6 +14,13 @@ import { useEffect, useRef } from 'react';
 import { isCausalLogEntry } from '@/engine/log/causal.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 
+let activeCompletionTimer: ReturnType<typeof setTimeout> | null = null;
+
+export function _resetCutinDemoDriver(): void {
+  if (activeCompletionTimer !== null) clearTimeout(activeCompletionTimer);
+  activeCompletionTimer = null;
+}
+
 export function useCutinDemoDriver(): void {
   const mode = useGameStateStore((s) => s.cutinDemoMode);
   const runToken = useGameStateStore((s) => s.cutinDemoRunToken);
@@ -34,16 +41,14 @@ export function useCutinDemoDriver(): void {
       scheduledRunTokenRef.current = null;
     }
     return () => {
-      if (completionTimerRef.current !== null) {
-        clearTimeout(completionTimerRef.current);
-        completionTimerRef.current = null;
-      }
+      _resetCutinDemoDriver();
+      completionTimerRef.current = null;
     };
   }, [mode, runToken]);
 
   // log を監視: playing 中に base 以降に 'contact-cutin' action が出たら完了
   useEffect(() => {
-    if (mode !== 'playing' || !gameState) return;
+    if (mode !== 'playing' || !gameState || gameState.gameResult !== undefined) return;
     if (baseLogLenRef.current === null) return;
     const recent = gameState.log.slice(baseLogLenRef.current);
     const cutinFired = recent.some((entry) => entry.action === 'contact-cutin'
@@ -54,13 +59,20 @@ export function useCutinDemoDriver(): void {
     if (cutinFired && scheduledRunTokenRef.current !== runToken) {
       scheduledRunTokenRef.current = runToken;
       // contact 終了まで少し待つ (judge / contact-end / action-end を経て log が安定)
-      completionTimerRef.current = setTimeout(() => {
+      activeCompletionTimer = setTimeout(() => {
+        if (completionTimerRef.current !== activeCompletionTimer) return;
+        activeCompletionTimer = null;
         completionTimerRef.current = null;
         const store = useGameStateStore.getState();
-        if (store.cutinDemoMode === 'playing' && store.cutinDemoRunToken === runToken) {
+        if (
+          store.cutinDemoMode === 'playing'
+          && store.cutinDemoRunToken === runToken
+          && store.gameState?.gameResult === undefined
+        ) {
           store.setCutinDemoMode('completed');
         }
       }, 400);
+      completionTimerRef.current = activeCompletionTimer;
     }
   }, [mode, gameState, runToken]);
 }

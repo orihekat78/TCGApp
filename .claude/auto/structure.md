@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 293
-- **ファイル数**: 5907
+- **ファイル数**: 5915
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -4773,6 +4773,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `effect-causal.ts`
     - **`mutate/`**
       - `.gitkeep`
+      - `action-scopes.ts`
       - `case.ts` — engine.mutate.case — 事件カード操作プリミティブ
       - `char.ts` — engine.mutate.char — キャラ修正プリミティブ
       - `deck.ts` — engine.mutate.deck — デッキ操作プリミティブ
@@ -4999,12 +5000,16 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `hiramekiDemoSession.ts`
       - `humanDecisionOwner.ts`
       - `liveReplayRecorder.ts` — Freeze the committed board/log state without carrying executable live
-      - `matchSession.ts` — Direct setState also upgrades a long-running Vite/HMR store instance that
+      - `matchSession.ts` — Store owns publication, this live-session service owns whether UI cleanup
       - `matchSessionId.ts`
       - `replayOwnership.ts`
       - `replayStateBoundary.ts`
       - `replayViewerProjection.ts`
       - `scenePick.ts` — scenePick — scene-char effect pick を「現場カード直接クリック」(Direct Manipulation) で
+      - `storeTransaction.ts`
+      - `terminalInteractionCleanup.ts`
+      - `terminalInteractionGate.ts`
+      - `terminalInteractionPublication.ts` — Import-free terminal publication hook. Store commits notify it only after a
       - `tutorialSteps.ts` — Phase 9a-1 / 9a-2 / 9b / 9c: チュートリアル L0-L13 (MVP 全カバー)
       - `uidNames.ts` — UID → 表示名解決ユーティリティ (Round 2 で新設)
     - **`state/`**
@@ -6086,6 +6091,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `MulliganModal.accessibility.test.tsx` — @vitest-environment jsdom
       - `PartnerArea.test.tsx` — Phase 7 Task 7.5: PartnerArea tests
       - `Playmat.b10094-mixed-source.test.tsx`
+      - `Playmat.terminal-callbacks.test.tsx`
       - `Playmat.test.tsx` — Phase 7 Task 7.3: Playmat layout structure tests
       - `Playmat.user-bug-wave.test.tsx`
       - `PublicHandRevealWindow.test.tsx`
@@ -6176,6 +6182,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `liveReplayRecorder.test.ts` — Bypass the production normalizer here so the test can mutate the exact
       - `replayViewerProjection.test.ts` — Auto phase has returned the assisted partner, so its historical FILE entry
       - `scenePick.test.ts` — TDD: isSceneDirectPick 述語 (UI picker Direct Manipulation 化 設計 v2 BLOCKER)
+      - `terminalInteractionCleanup.test.ts`
+      - `terminalInteractionDrivers.test.tsx`
       - `tutorialSteps.test.ts` — Phase 9a-1: tutorialSteps constants test
     - **`state/`**
       - `interaction-lock.test.ts`

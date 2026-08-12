@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `0889eaffccde`
+> Source hash: `858c4e086433`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **178** ファイル（[全体 index](./index.md)）
+このグループ: **182** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (23)
 
@@ -116,7 +116,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (90)
+## その他 (94)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -203,6 +203,10 @@
 | [`src/ui/services/replayStateBoundary.ts`](../../../src/ui/services/replayStateBoundary.ts) | _(参照なし)_ |
 | [`src/ui/services/replayViewerProjection.ts`](../../../src/ui/services/replayViewerProjection.ts) | _(参照なし)_ |
 | [`src/ui/services/scenePick.ts`](../../../src/ui/services/scenePick.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
+| [`src/ui/services/storeTransaction.ts`](../../../src/ui/services/storeTransaction.ts) | _(参照なし)_ |
+| [`src/ui/services/terminalInteractionCleanup.ts`](../../../src/ui/services/terminalInteractionCleanup.ts) | _(参照なし)_ |
+| [`src/ui/services/terminalInteractionGate.ts`](../../../src/ui/services/terminalInteractionGate.ts) | _(参照なし)_ |
+| [`src/ui/services/terminalInteractionPublication.ts`](../../../src/ui/services/terminalInteractionPublication.ts) | _(参照なし)_ |
 | [`src/ui/services/tutorialSteps.ts`](../../../src/ui/services/tutorialSteps.ts) | [`01-curriculum-design.md`](../../rules/01-curriculum-design.md) |
 | [`src/ui/services/uidNames.ts`](../../../src/ui/services/uidNames.ts) | _(参照なし)_ |
 | [`src/ui/state/autonomousDecisionGate.ts`](../../../src/ui/state/autonomousDecisionGate.ts) | _(参照なし)_ |

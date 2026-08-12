@@ -22,6 +22,7 @@ import {
   snapshotPendingRuntimeState,
   withIsolatedPendingRuntimeState,
 } from '@/engine/effect/runtime-state.js';
+import { _drainPendingDeckRevealSide, _drainPendingPublicHandRevealSide } from '@/engine/effect/atom-handlers.js';
 import {
   collectPendingSideChannels,
   type PendingSurfaceState,
@@ -33,6 +34,15 @@ import {
   validatePresentationAtCurrentState,
 } from '@/ui/presentation/coordinator.js';
 import { usePresentationStore } from '@/ui/presentation/store.js';
+import {
+  areStoreRollbackParticipantsCurrent,
+  checkpointStoreRollbackParticipants,
+  markStoreRollbackHandled,
+  rollbackStoreRollbackParticipants,
+  runStoreRollbackPublication,
+  StoreRollbackHandledError,
+} from '@/ui/services/storeTransaction.js';
+import { notifyTerminalInteractionPublication } from '@/ui/services/terminalInteractionPublication.js';
 
 export type GameStateMutator = (state: GameState) => GameState;
 export type PendingDecisionIdentity = { decisionId: string };
@@ -616,7 +626,10 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
     if (state !== null && !validatePresentationCommit(state)) return false;
     const prepared = state === null ? null : prepareGameStateForStore(state);
     const gameState = prepared?.gameState ?? null;
-    const openAction = prepared?.openAction;
+    if (gameState?.gameResult !== undefined) {
+      return get().commitTerminalState(gameState);
+    }
+    const openAction = gameState?.gameResult === undefined ? prepared?.openAction : null;
     const store = get();
     const pending = openAction?.pendingLeaveIntercept;
     const leaveDecisionSeq = store.pendingDecisionSeq + (pending ? 1 : 0);
@@ -641,7 +654,7 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
     let pendingSurface = surfaceSeed;
     try {
       if (options?.preserveRuntime !== true) resetPendingRuntimeState();
-      if (gameState !== null) {
+      if (gameState !== null && gameState.gameResult === undefined) {
         hydratePendingRuntimeState(gameState);
         pendingSurface = collectPendingSideChannels(surfaceSeed);
       }
@@ -652,7 +665,7 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
     set({
       ...pendingSurface,
       gameState,
-      activeActionId: openAction?.id ?? null,
+      activeActionId: gameState?.gameResult === undefined ? openAction?.id ?? null : null,
     });
     if (gameState !== null) admitCommittedPresentation(gameState);
     return true;
@@ -666,15 +679,20 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
       || !validatePresentationCommit(prepared)
     ) return false;
     const storeBefore = get();
-    const completedDeckReveal = storeBefore.pendingDeckReveal?.awaitingPick === true
+    let completedDeckReveal = storeBefore.pendingDeckReveal?.awaitingPick === true
       ? null
       : storeBefore.pendingDeckReveal;
-    const presentationHandReveal = storeBefore.pendingPublicHandReveal?.lifetime === 'presentation'
+    let presentationHandReveal = storeBefore.pendingPublicHandReveal?.lifetime === 'presentation'
       ? storeBefore.pendingPublicHandReveal
       : null;
     const runtimeBefore = snapshotPendingRuntimeState();
+    const participantCheckpoints = checkpointStoreRollbackParticipants();
     try {
       resetPendingRuntimeStateAfterGameEnd({ preserveCompletedPresentations: true });
+      // The terminal resolver may have just completed a FIFO reveal after the
+      // previous store surface was consumed. Keep exactly one presentable item.
+      completedDeckReveal ??= _drainPendingDeckRevealSide();
+      presentationHandReveal ??= _drainPendingPublicHandRevealSide();
       set({
         ...TERMINAL_SURFACE_RESET_STATE,
         gameState: prepared,
@@ -682,19 +700,27 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
         pendingPublicHandReveal: presentationHandReveal,
       });
       admitCommittedPresentation(prepared);
-      return true;
     } catch (error) {
-      try {
-        set(storeBefore, true);
-      } catch {
-        // The exact replacement is already installed before Zustand notifies
-        // subscribers. A rollback listener failure must not mask the original
-        // failed terminal publish.
-      } finally {
-        restorePendingRuntimeState(runtimeBefore);
+      const authorityCurrent = rollbackStoreRollbackParticipants(participantCheckpoints);
+      if (authorityCurrent) {
+        try {
+          runStoreRollbackPublication(storeBefore, () => set(storeBefore, true));
+        } catch {
+          // The exact replacement is already installed before Zustand notifies
+          // subscribers. A rollback listener failure must not mask the original
+          // failed terminal publish.
+        }
+        if (get() === storeBefore
+          && areStoreRollbackParticipantsCurrent(participantCheckpoints)) {
+          restorePendingRuntimeState(runtimeBefore);
+        }
       }
-      throw error;
+      throw markStoreRollbackHandled(error);
     }
+    if (storeBefore.gameState?.gameResult === undefined) {
+      notifyTerminalInteractionPublication();
+    }
+    return true;
   },
   setReplayGameState: (state) => {
     if (state !== null && !validatePresentationCommit(state)) return;
@@ -710,16 +736,45 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   dispatch: (mutator) => {
     const current = get().gameState;
     if (current === null) return false;
-    const next = mutator(current);
+    const storeBefore = get();
+    const runtimeBefore = snapshotPendingRuntimeState();
+    const participantCheckpoints = checkpointStoreRollbackParticipants();
+    try {
+      const next = mutator(current);
     // BUG-006: state-machine の advance() は module-level ax.phase のみ変えて
     // GameState を mutate しないケースがあり、Immer produce が同一参照を返す。
     // 同一参照だと Zustand subscribers が起きず、ContactFlowDriver の useEffect が
     // 再 run しないため judge phase で stuck する。常に新参照を保証して driver を起動する。
-    const nextRef = Object.is(next, current) ? { ...current } : next;
-    if (!validatePresentationCommit(nextRef)) return false;
-    set({ gameState: nextRef });
-    admitCommittedPresentation(nextRef);
-    return true;
+      const nextRef = Object.is(next, current) ? { ...current } : next;
+      if (!validatePresentationCommit(nextRef)) return false;
+      if (nextRef.gameResult !== undefined) return get().commitTerminalState(nextRef);
+      set({ gameState: nextRef });
+      admitCommittedPresentation(nextRef);
+      return true;
+    } catch (error) {
+      if (error instanceof StoreRollbackHandledError) {
+        if (get() === storeBefore
+          && areStoreRollbackParticipantsCurrent(participantCheckpoints)) {
+          restorePendingRuntimeState(runtimeBefore);
+        }
+        throw error;
+      }
+      const authorityCurrent = rollbackStoreRollbackParticipants(participantCheckpoints);
+      if (authorityCurrent) {
+        try {
+          if (get() !== storeBefore) {
+            runStoreRollbackPublication(storeBefore, () => set(storeBefore, true));
+          }
+        } catch {
+          // Store state is replaced before listener delivery; preserve original error.
+        }
+        if (get() === storeBefore
+          && areStoreRollbackParticipantsCurrent(participantCheckpoints)) {
+          restorePendingRuntimeState(runtimeBefore);
+        }
+      }
+      throw markStoreRollbackHandled(error);
+    }
   },
   activeActionId: null,
   setActiveActionId: (id) => set({ activeActionId: id }),

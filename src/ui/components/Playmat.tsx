@@ -70,6 +70,7 @@ import { CutInDisguisePickerModal } from './CutInDisguisePickerModal.js';
 import { HiramekiPickerModal } from './HiramekiPickerModal.js';
 import { useNextHintPickerStore, useNextHintPicker } from '@/ui/hooks/useNextHintPicker.js';
 import { useSceneSwitchPickerStore } from '../hooks/useSceneSwitchPickerStore.js';
+import { currentInteractionEpoch, isCurrentLiveInteraction } from '../services/terminalInteractionGate.js';
 import { ChoicePickerModal } from './ChoicePickerModal.js';
 import { useChoicePicker, useChoicePickerStore } from '../hooks/useChoicePicker.js';
 import { DeclareCardNameModal } from './DeclareCardNameModal.js';
@@ -354,6 +355,7 @@ export function Playmat({
   const [handExpanded, setHandExpanded] = useState(false);
   // Round 4l (BUG-001): カード拡大 modal の state
   const expandModal = useCardExpandModal();
+  const closeExpandModal = expandModal.close;
   // Phase 8.5: log パネル開閉。ActionsPanel に LOG ボタンを集約、開時は overlay 表示。
   const [logOpen, setLogOpen] = useState(false);
   // UI picker Direct Manipulation 化 (設計 v2 flicker gate): sceneEnter overflow の switch victim を
@@ -367,12 +369,33 @@ export function Playmat({
     origin: 'browse' | 'pick';
     hostUid?: string;
   } | null>(null);
+  const terminal = gameState?.gameResult !== undefined;
+  const terminalRef = useRef(terminal);
+  terminalRef.current = terminal;
+  // Result is a hard UI boundary: local browse/detail/log overlays must not
+  // retain a focus trap after the live interaction stores are settled.
+  useEffect(() => {
+    if (!terminal) return;
+    setHandExpanded(false);
+    setLogOpen(false);
+    setSwitchSessionActive(false);
+    setAreaModal(null);
+    closeExpandModal();
+  }, [terminal, closeExpandModal]);
   const handleAreaClick = (kind: CardListKind, side: 'self' | 'opp'): void => {
+    if (terminalRef.current) return;
     setAreaModal({ kind, side, origin: 'browse' });
   };
   const closeAreaModal = (): void => setAreaModal(null);
   const inspectSetCards = (side: 'self' | 'opp', hostUid: string): void => {
+    if (terminalRef.current) return;
     setAreaModal({ kind: 'set', side, origin: 'browse', hostUid });
+  };
+  const openCardExpand = (cardId: string): void => {
+    if (!terminalRef.current) expandModal.open(cardId);
+  };
+  const openHand = (): void => {
+    if (!terminalRef.current) setHandExpanded(true);
   };
 
   // User vision (CardListModal を pick UI として流用 + HandZone も同様):
@@ -710,9 +733,14 @@ export function Playmat({
       // area modal を閉じ・auto-open を抑止して self 現場を直接クリックさせる (設計 v2 flicker gate)
       setAreaModal(null);
       setSwitchSessionActive(true);
+      const interactionEpoch = currentInteractionEpoch();
       const removeUid = await new Promise<string | null>((resolve) => {
         useSceneSwitchPickerStore.getState()._open({ cardId: reanimateCardId, newCardName, candidates: sceneChars, resolve });
       });
+      if (!isCurrentLiveInteraction(interactionEpoch)) {
+        setSwitchSessionActive(false);
+        return;
+      }
       if (removeUid === null) {
         setSwitchSessionActive(false);
         dispatchEngineAction(bindPendingDecision(pend, { type: 'effectPickResolve', pickedUid: null }));
@@ -818,7 +846,7 @@ export function Playmat({
       ? getHandUseDisabledReason(gameState, 'self', card.cardId) ?? '使用不可'
       : '未開始';
   const handleHandUse = (cardId: string): void => {
-    if (interactionLocked) return;
+    if (terminalRef.current || interactionLocked) return;
     void runHandUseFlow({ player: 'self', cardId });
   };
   const handleHandPickCard: HandZoneProps['onPickCard'] = isCutinPick
@@ -875,11 +903,11 @@ export function Playmat({
     : undefined;
 
   const handleEndTurn = (): void => {
-    if (replayReadOnly) return;
+    if (terminalRef.current || replayReadOnly) return;
     void runEndTurnFlow({ player: 'self' });
   };
   const handleActionItemClick = (id: ActionItemId): void => {
-    if (interactionLocked || pickerPhase.phase !== 'idle') return;
+    if (terminalRef.current || interactionLocked || pickerPhase.phase !== 'idle') return;
     cancelTarget();
     if (id === 'reasoning') void runReasoningFlow({ player: 'self' });
     else if (id === 'next-hint') void runNextHintFlow({ player: 'self' });
@@ -919,7 +947,7 @@ export function Playmat({
     narratorMessage,
     logEntryCount: gameState?.log.length ?? 0,
     logOpen,
-    onLogToggle: () => setLogOpen((value) => !value),
+    onLogToggle: () => { if (!terminalRef.current) setLogOpen((value) => !value); },
   };
   // Desktop は現行 zoom を維持。短い横画面でも 1920×1080 の同じ盤面 DOM を
   // reflow せず等比縮小し、既存の操作・対象選択をそのまま使う。
@@ -1016,9 +1044,9 @@ export function Playmat({
             onUnitClick={replayReadOnly ? undefined : (uid) => pickAndConfirm(uid)}
             isCaseCandidate={replayReadOnly ? false : isOppCaseCandidate}
             onCaseClick={replayReadOnly ? undefined : () => pickAndConfirm(ACTION_CASE_TARGET_OPP)}
-            onAreaClick={replayReadOnly ? undefined : handleAreaClick}
-            onExpand={replayReadOnly ? undefined : expandModal.open}
-            onSetInspect={replayReadOnly ? undefined : inspectSetCards}
+            onAreaClick={replayReadOnly || terminal ? undefined : handleAreaClick}
+            onExpand={replayReadOnly || terminal ? undefined : openCardExpand}
+            onSetInspect={replayReadOnly || terminal ? undefined : inspectSetCards}
             pickCharUids={replayReadOnly ? EMPTY_UID_SET : oppScenePickUids}
             onPickChar={replayReadOnly ? undefined : oppOnPickChar}
             activeCardUid={activeCardUid}
@@ -1042,9 +1070,9 @@ export function Playmat({
             // 2026-05-30: 宣言能力 source として自分の事件が候補のとき黄色強調 + クリックで選択
             isCaseCandidate={replayReadOnly ? false : isSelfCaseCandidate}
             onCaseClick={replayReadOnly ? undefined : () => pickAndConfirm('case:self')}
-            onAreaClick={replayReadOnly ? undefined : handleAreaClick}
-            onExpand={replayReadOnly ? undefined : expandModal.open}
-            onSetInspect={replayReadOnly ? undefined : inspectSetCards}
+            onAreaClick={replayReadOnly || terminal ? undefined : handleAreaClick}
+            onExpand={replayReadOnly || terminal ? undefined : openCardExpand}
+            onSetInspect={replayReadOnly || terminal ? undefined : inspectSetCards}
             pickCharUids={replayReadOnly ? EMPTY_UID_SET : selfScenePickUids}
             onPickChar={replayReadOnly ? undefined : selfOnPickChar}
             // 2026-05-30: ネクストヒント中は FILE 表示を引いた後の枚数 (-1) にして誤解を防ぐ
@@ -1066,10 +1094,10 @@ export function Playmat({
         ) : <HandZone
           cards={isNextHintPick ? handCardsForZone : handCards}
           expanded={handExpanded}
-          onExpand={() => setHandExpanded(true)}
+          onExpand={terminal ? undefined : openHand}
           onCollapse={isDiscardPick || isNextHintPick || isCutinPick || isHandSceneEnterPick ? undefined : () => setHandExpanded(false)}
           onCardClick={replayReadOnly ? undefined : handleHandUse}
-          onCardExpand={expandModal.open}
+          onCardExpand={terminal ? undefined : openCardExpand}
           canUse={handCanUse}
           disabledReason={handDisabledReason}
           pickMode={handPickMode}
@@ -1111,7 +1139,7 @@ export function Playmat({
         {/* /board-content (BUG-150): 以降の modal/overlay は非 zoom で viewport 基準を保つ */}
 
         {/* ConfirmModal — useConfirmation の state を全画面オーバーレイで描画 */}
-        {!replayReadOnly && (
+        {!replayReadOnly && !terminal && (
           <>
             <PlaymatConfirmModal />
 
@@ -1150,7 +1178,7 @@ export function Playmat({
               open={logOpen}
               onClose={() => setLogOpen(false)}
               gameState={gameState}
-              onCardExpand={expandModal.open}
+              onCardExpand={openCardExpand}
             />
           </>
         )}
@@ -1158,7 +1186,7 @@ export function Playmat({
         {/* Round 2: FILE/証拠/リムーブ クリック → 内容確認モーダル
             証拠 / FILE は engine 上裏向きなので faceDownCount で枚数のみ表示。
             リムーブは表向きなので cards (cardId[]) で実カード表示。 */}
-        {!replayReadOnly && areaModal && gameState && pendingDeckReorder === null && (() => {
+        {!replayReadOnly && !terminal && areaModal && gameState && pendingDeckReorder === null && (() => {
           const player = gameState.players[areaModal.side];
           // Round 3: FILE 内アシスト中パートナーのみ表向き表示 (ユーザ指示)
           //   - file の中身を 「assisted-partner cards (表向き)」 と 「card-back count (裏向き)」 に分割
@@ -1241,7 +1269,7 @@ export function Playmat({
                 }
                 closeAreaModal();
               }}
-              onExpand={(cardId) => expandModal.open(cardId)}
+              onExpand={openCardExpand}
               pickCands={isPickModeForThisArea
                 ? (declaredSourcePick.length > 0 ? declaredSourcePick : pendingPickForArea!.candidates)
                 : undefined}
@@ -1321,6 +1349,7 @@ export function Playmat({
                     // area modal を閉じ・auto-open を抑止して self 現場を直接クリックさせる (設計 v2 flicker gate)
                     setAreaModal(null);
                     setSwitchSessionActive(true);
+                    const interactionEpoch = currentInteractionEpoch();
                     const victims: string[] = [];
                     for (let i = 0; i < overflow; i++) {
                       const sceneChars = gsE.players[pendE.player].scene
@@ -1331,6 +1360,10 @@ export function Playmat({
                           cardId: '', newCardName: `登場${uids.length}枚 — 退場 ${i + 1}/${overflow}`, candidates: sceneChars, resolve,
                         });
                       });
+                      if (!isCurrentLiveInteraction(interactionEpoch)) {
+                        setSwitchSessionActive(false);
+                        return;
+                      }
                       if (v === null) {
                         // cancel = 全辞退。B09010 は skipResolvesAtom により後続 FILE上1リムーブは解決される。
                         setSwitchSessionActive(false);
@@ -1381,7 +1414,7 @@ export function Playmat({
           );
         })()}
         {/* Round 4l (BUG-001): カード拡大表示 modal */}
-        {!replayReadOnly && <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />}
+        {!replayReadOnly && !terminal && <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />}
         {/* User vision (拡張 5 chain): SceneArea pick mode で skip 可能 (max:N) の場合
             scene キャラを click せず「リムーブしない」できるよう overlay ボタン表示 */}
         {!replayReadOnly && isScenePick && (

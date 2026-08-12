@@ -110,6 +110,24 @@ export function _drainPendingDeckRevealSide(): PendingDeckRevealSide | null {
   return next;
 }
 
+/** Read the next public-hand presentation without consuming its FIFO entry. */
+export function _peekPendingPublicHandRevealSide(): PublicHandRevealSide | null {
+  const current = (globalThis as {
+    __pendingPublicHandRevealSide?: PublicHandRevealSide | PublicHandRevealSide[] | null;
+  }).__pendingPublicHandRevealSide;
+  if (!current) return null;
+  return Array.isArray(current) ? current[0] ?? null : current;
+}
+
+/** Read the next deck reveal without consuming its FIFO entry. */
+export function _peekPendingDeckRevealSide(): PendingDeckRevealSide | null {
+  const channel = (globalThis as {
+    __pendingDeckRevealSide?: PendingDeckRevealSide | PendingDeckRevealSide[] | null;
+  }).__pendingDeckRevealSide;
+  if (!channel) return null;
+  return Array.isArray(channel) ? channel[0] ?? null : channel;
+}
+
 /** FIFO prevents simultaneous reveal effects from overwriting a different player's private card. */
 export function queuePendingDeckRevealSide(next: PendingDeckRevealSide): void {
   const root = globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | PendingDeckRevealSide[] | null };

@@ -172,6 +172,38 @@ describe('useReplayDriver', () => {
     expect(replayPlayerMock.replayLog).not.toHaveBeenCalled();
   });
 
+  it('pauses autoplay immediately on a terminal replay frame without touching live cleanup', async () => {
+    vi.useFakeTimers();
+    const initial = createEmptyGameState();
+    startCausalSession(initial, 'terminal-autoplay');
+    const opened = appendCausal(initial, {
+      actor: 'self', kind: 'use', source: { kind: 'player', side: 'self' },
+      targets: [], outcome: { type: 'state', state: 'active' },
+    });
+    const terminal = structuredClone(initial);
+    terminal.turn.number = 2;
+    appendCausal(terminal, {
+      actor: 'self', kind: 'game-result', parentEventId: opened.eventId, source: { kind: 'player', side: 'self' },
+      targets: [{ kind: 'player', side: 'opp' }], outcome: { type: 'state', state: 'success' },
+    });
+    terminal.gameResult = { winner: 'self', reason: 'evidence' };
+    const log = buildReplayLogV3({
+      artifactId: 'terminal-autoplay-artifact', sessionId: 'terminal-autoplay', viewerMode: 'solo-self',
+      states: [initial, terminal],
+    });
+
+    act(() => driver!.loadLog(log));
+    act(() => {
+      driver!.setSpeed(10);
+      driver!.play();
+    });
+    await act(async () => vi.advanceTimersByTime(10));
+
+    expect(useGameStateStore.getState().gameState?.gameResult).toEqual({ winner: 'self', reason: 'evidence' });
+    expect(driver!.state.isPlaying).toBe(false);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it('projects imported V3 runtime continuations before store preparation can hydrate them', () => {
     const log = makeTerminalV3LogWithUntrustedRuntime();
 

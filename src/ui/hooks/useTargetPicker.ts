@@ -22,6 +22,7 @@
 //   - これにより React レンダラ無しのテストから直接 hook を呼び出せる。
 
 import { create } from 'zustand';
+import { areTerminalInteractionsBlocked } from '@/ui/services/terminalInteractionGate.js';
 // (no other module imports — state is self-contained)
 
 export type PickerPhase =
@@ -70,6 +71,7 @@ export type TargetPicker = {
 };
 
 function startPick(opts: { candidates: readonly string[]; purpose?: string }): Promise<string | null> {
+  if (areTerminalInteractionsBlocked()) return Promise.resolve(null);
   const { candidates, purpose = '' } = opts;
 
   // 候補 0 件 → 即 null resolve (rules/17 §「〜まで」)

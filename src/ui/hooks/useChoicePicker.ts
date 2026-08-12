@@ -15,6 +15,7 @@
 //   - 既に open 中に再 ask が来たら旧 Promise を cancel resolve して新 modal を出す (同パターン)。
 
 import { create } from 'zustand';
+import { areTerminalInteractionsBlocked } from '@/ui/services/terminalInteractionGate.js';
 
 /** 選択肢 1 件 = effect.options の index + 表示ラベル ("LP＋1" 等)。 */
 export type ChoiceOption = {
@@ -62,6 +63,7 @@ export type ChoicePicker = {
 };
 
 function askChoice(req: ChoiceRequest): Promise<ChoiceResult> {
+  if (areTerminalInteractionsBlocked()) return Promise.resolve({ kind: 'cancel' });
   const store = useChoicePickerStore.getState();
   const prev = store._resolver;
   if (prev) prev({ kind: 'cancel' }); // open 中の旧 Promise を破棄

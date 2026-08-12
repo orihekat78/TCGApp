@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `0889eaffccde`
+> Source hash: `858c4e086433`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **37** ファイル（[全体 index](./index.md)）
+このグループ: **38** ファイル（[全体 index](./index.md)）
 
 ## engine/types (10)
 
@@ -41,10 +41,11 @@
 | [`src/engine/read/triggered-aura.ts`](../../../src/engine/read/triggered-aura.ts) | _(参照なし)_ |
 | [`src/engine/read/turn.ts`](../../../src/engine/read/turn.ts) | [`04-game-setup.md`](../../rules/04-game-setup.md) / [`05-turn-phases.md`](../../rules/05-turn-phases.md) |
 
-## engine/mutate (14)
+## engine/mutate (15)
 
 | ソース | 参照ルール |
 | ------ | --------- |
+| [`src/engine/mutate/action-scopes.ts`](../../../src/engine/mutate/action-scopes.ts) | _(参照なし)_ |
 | [`src/engine/mutate/case.ts`](../../../src/engine/mutate/case.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`06-card-types.md`](../../rules/06-card-types.md) / [`13-keywords.md`](../../rules/13-keywords.md) |
 | [`src/engine/mutate/char.ts`](../../../src/engine/mutate/char.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 | [`src/engine/mutate/deck.ts`](../../../src/engine/mutate/deck.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |

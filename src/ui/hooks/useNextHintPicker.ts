@@ -12,6 +12,7 @@
 //     useNextHintPickerStore((s) => s.current) を component で呼ぶ
 
 import { create } from 'zustand';
+import { areTerminalInteractionsBlocked } from '@/ui/services/terminalInteractionGate.js';
 
 /** step2 候補カード 1 件 (FILE-top または使用可能な手札カード) */
 export type NextHintCandidate = {
@@ -70,6 +71,7 @@ export type NextHintPicker = {
 };
 
 function askNextHint(req: NextHintRequest): Promise<NextHintChoice> {
+  if (areTerminalInteractionsBlocked()) return Promise.resolve({ kind: 'cancel' });
   const store = useNextHintPickerStore.getState();
   // 既に open 中の Promise があれば cancel で resolve して破棄
   const prev = store._resolver;

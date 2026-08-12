@@ -89,7 +89,7 @@
       "evidence": [
         "rules:.claude/rules/22-qa-action-contact.md:45",
         "src:src/cards/ct-p01/B01028.ts:23",
-        "src:src/engine/flow/action/state-machine.ts:269"
+        "src:src/engine/flow/action/state-machine.ts:263"
       ],
       "noteCodes": [
         "RAW-READ",

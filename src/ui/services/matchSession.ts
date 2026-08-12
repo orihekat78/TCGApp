@@ -3,19 +3,6 @@ import { flow, _resetPendingHirameki, _resetPendingMisread } from '@/engine';
 import { resetPendingEffectSession } from '@/engine/effect/pending-state';
 import { resetRuntimeAtomTargetPolicySession } from '@/engine/effect/resolve-picks';
 import { resetPendingAtomSession } from '@/engine/effect/atom-handlers';
-import { cancelChoicePicker } from '@/ui/hooks/useChoicePicker';
-import { rejectPendingConfirmation } from '@/ui/hooks/useConfirmation';
-import { useContactModalStore } from '@/ui/hooks/useContactModalStore';
-import { cancelDeclareNamePicker } from '@/ui/hooks/useDeclareNamePicker';
-import { cancelEvidenceFlipPicker } from '@/ui/hooks/useEvidenceFlipPicker';
-import { cancelHandCostPicker } from '@/ui/hooks/useHandCostPicker';
-import { useMulliganStore, resolveMulligan } from '@/ui/hooks/useMulligan';
-import { cancelNextHintPicker } from '@/ui/hooks/useNextHintPicker';
-import { useSceneSwitchPickerStore } from '@/ui/hooks/useSceneSwitchPickerStore';
-import { cancelStackedCardCostPicker } from '@/ui/hooks/useStackedCardCostPicker';
-import { cancelTargetPicker } from '@/ui/hooks/useTargetPicker';
-import { _resetIsDriving } from '@/ui/hooks/useOppTurnDriver';
-import { _resetSpectatorDriving } from '@/ui/hooks/useSpectatorTurnDriver';
 import { MATCH_SESSION_RESET_STATE, useGameStateStore } from '@/ui/state/store';
 import { _setHumanPlayerSide } from '@/engine/listeners/triggered';
 import { _resetResolutionLock } from '@/engine/resolve/stack';
@@ -27,11 +14,22 @@ import {
   startLiveReplayRecording,
 } from '@/ui/services/liveReplayRecorder';
 import { matchSessionId, type MatchSessionToken } from '@/ui/services/matchSessionId';
+import {
+  cleanupTerminalInteractions,
+  resetLiveMatchInteractions,
+} from '@/ui/services/terminalInteractionCleanup';
+import { registerTerminalInteractionPublication } from '@/ui/services/terminalInteractionPublication';
 
 export { matchSessionId, type MatchSessionToken } from '@/ui/services/matchSessionId';
 
 let currentGeneration = 0;
 let matchSessionActive = false;
+
+// Store owns publication, this live-session service owns whether UI cleanup
+// applies. Replays and orphaned state projections never register as live.
+registerTerminalInteractionPublication(() => {
+  if (matchSessionActive) cleanupTerminalInteractions();
+});
 
 /** Promise を先に決着させ、その後に対戦の UI/engine 一時状態を破棄する。 */
 export function resetMatchSession(options: { preserveGameState?: boolean } = {}): void {
@@ -39,23 +37,7 @@ export function resetMatchSession(options: { preserveGameState?: boolean } = {})
     ? useGameStateStore.getState().gameState
     : null;
   _setHumanPlayerSide(null);
-  cancelTargetPicker();
-  rejectPendingConfirmation();
-  cancelChoicePicker();
-  cancelDeclareNamePicker();
-  cancelEvidenceFlipPicker();
-  cancelHandCostPicker();
-  cancelNextHintPicker();
-  cancelStackedCardCostPicker();
-
-  const sceneSwitch = useSceneSwitchPickerStore.getState();
-  sceneSwitch.current?.resolve(null);
-  sceneSwitch._close();
-
-  if (useMulliganStore.getState().current !== null) resolveMulligan([]);
-  useContactModalStore.getState()._reset();
-  _resetIsDriving();
-  _resetSpectatorDriving();
+  resetLiveMatchInteractions();
 
   // Direct setState also upgrades a long-running Vite/HMR store instance that
   // predates resetMatchSessionState; READY must not throw on the first click.
@@ -73,6 +55,9 @@ export function resetMatchSession(options: { preserveGameState?: boolean } = {})
     preserveCompletionNotice: options.preserveGameState === true,
   });
   resetPresentationQueue();
+  if (options.preserveGameState === true && preservedGameState?.gameResult !== undefined) {
+    cleanupTerminalInteractions();
+  }
 }
 
 /** 新しい非同期対戦開始の所有権を発行する。 */
@@ -125,8 +110,16 @@ export function isCurrentMatchSession(token: MatchSessionToken): boolean {
   return matchSessionActive && token === currentGeneration;
 }
 
+/** Setup continuations also require that no terminal state has committed. */
+export function isCurrentLiveMatchSession(token: MatchSessionToken): boolean {
+  return isCurrentMatchSession(token)
+    && useGameStateStore.getState().gameState?.gameResult === undefined;
+}
+
+/** Async setup continuations are valid only for this still-live, nonterminal match. */
 /** 古いマリガン等が後から完了しても、最新開始の GameState だけを採用する。 */
 export function commitMatchSession(token: MatchSessionToken, state: GameState): boolean {
   if (!isCurrentMatchSession(token)) return false;
+  if (useGameStateStore.getState().gameState?.gameResult !== undefined) return false;
   return useGameStateStore.getState().setGameState(state);
 }

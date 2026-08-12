@@ -46,6 +46,7 @@ vi.mock('@/ui/hooks/useHiramekiDemoDriver', () => ({
 }));
 vi.mock('@/ui/hooks/useCutinDemoDriver', () => ({
   useCutinDemoDriver: vi.fn(),
+  _resetCutinDemoDriver: vi.fn(),
 }));
 vi.mock('@/ui/components/MulliganModal', () => ({ MulliganModal: () => null }));
 vi.mock('@/ui/components/EffectPickerModal', () => ({ EffectPickerModal: () => null }));

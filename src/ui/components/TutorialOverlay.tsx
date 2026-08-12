@@ -5,6 +5,7 @@
 
 import { useEffect, useState, type JSX } from 'react';
 import { useTutorialStore } from '@/ui/state/tutorialStore.js';
+import { useGameStateStore } from '@/ui/state/store.js';
 import { TUTORIAL_STEPS } from '@/ui/services/tutorialSteps.js';
 import { TutorialHighlight } from './TutorialHighlight.js';
 import './TutorialOverlay.css';
@@ -19,7 +20,9 @@ export function TutorialOverlay(): JSX.Element | null {
   //   - 本番 (browser) では subscribe 経由で state 変化を検知 → forceUpdate で再描画
   const [, forceUpdate] = useState({});
   useEffect(() => useTutorialStore.subscribe(() => forceUpdate({})), []);
+  const terminal = useGameStateStore((state) => state.gameState?.gameResult !== undefined);
   const { currentStep, next, prev, exit } = useTutorialStore.getState();
+  if (terminal) return null;
   if (currentStep === null) return null;
   const step = TUTORIAL_STEPS[currentStep];
   if (!step) return null;

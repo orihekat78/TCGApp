@@ -21,6 +21,7 @@ import { choiceOptionLabel } from '@/ui/hooks/useActionsPanelFlow.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { sceneCap } from '@/engine/read/scene-cap.js';
 import { useSceneSwitchPickerStore } from '@/ui/hooks/useSceneSwitchPickerStore.js';
+import { currentInteractionEpoch, isCurrentLiveInteraction } from '@/ui/services/terminalInteractionGate.js';
 import { ChoicePickerModal } from './ChoicePickerModal.js';
 import { LinkedPublicHandReveal } from './PublicHandRevealWindow.js';
 import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
@@ -51,6 +52,7 @@ export function EffectChoiceModalHost(): JSX.Element | null {
     const isB04030EnterChoice = (pending.source.cardId === 'B04030' || pending.source.cardId === 'B04030P')
       && option?.index === 1;
     if (isB04030EnterChoice && state && state.players[pending.player].scene.length >= sceneCap(state, pending.player)) {
+      const interactionEpoch = currentInteractionEpoch();
       const candidates = state.players[pending.player].scene.map((character) => ({
         uid: character.uid,
         cardId: character.cardId,
@@ -63,6 +65,7 @@ export function EffectChoiceModalHost(): JSX.Element | null {
           cardId: '', newCardName: '登場するキャラ', candidates, resolve,
         });
       });
+      if (!isCurrentLiveInteraction(interactionEpoch)) return;
       if (switchRemoveUid !== null) {
         dispatchEngineAction(bindPendingDecision(
           pending,

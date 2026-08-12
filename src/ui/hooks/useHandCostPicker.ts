@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { areTerminalInteractionsBlocked } from '@/ui/services/terminalInteractionGate.js';
 
 export type HandCostRequest = {
   side: 'self' | 'opp';
@@ -37,6 +38,7 @@ export function cancelHandCostPicker(): void { settle({ kind: 'cancel' }); }
 export function useHandCostPicker() {
   return {
     ask: (request: HandCostRequest) => {
+      if (areTerminalInteractionsBlocked()) return Promise.resolve<HandCostChoice>({ kind: 'cancel' });
       const store = useHandCostPickerStore.getState();
       store.resolver?.({ kind: 'cancel' });
       return new Promise<HandCostChoice>((resolve) => {

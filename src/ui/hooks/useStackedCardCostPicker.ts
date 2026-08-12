@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { areTerminalInteractionsBlocked } from '@/ui/services/terminalInteractionGate.js';
 
 export type StackedCardCostCandidate = { instanceId: string; cardId: string };
 export type StackedCardCostRequest = {
@@ -40,6 +41,7 @@ export function cancelStackedCardCostPicker(): void {
 }
 
 function ask(request: StackedCardCostRequest): Promise<StackedCardCostChoice> {
+  if (areTerminalInteractionsBlocked()) return Promise.resolve({ kind: 'cancel' });
   const store = useStackedCardCostPickerStore.getState();
   store._resolver?.({ kind: 'cancel' });
   return new Promise((resolve) => {

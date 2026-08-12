@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { CausalLogEntryV1, LegacyLogEntry } from '@/engine/types';
 import { useCutinDemoDriver } from '@/ui/hooks/useCutinDemoDriver';
+import { beginMatchSession, commitMatchSession } from '@/ui/services/matchSession';
 import { useGameStateStore } from '@/ui/state/store';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -88,5 +89,30 @@ describe('useCutinDemoDriver', () => {
     await act(async () => vi.advanceTimersByTime(400));
 
     expect(useGameStateStore.getState().cutinDemoMode).toBe('playing');
+  });
+
+  it('cancels an already scheduled completion timer when the match becomes terminal', async () => {
+    let session!: ReturnType<typeof beginMatchSession>;
+    act(() => {
+      session = beginMatchSession('self');
+    });
+    const initial = createEmptyGameState();
+    act(() => expect(commitMatchSession(session, initial)).toBe(true));
+    act(() => useGameStateStore.getState().setCutinDemoMode('playing'));
+    const logged = structuredClone(initial);
+    logged.log = [legacyCutin()];
+    act(() => expect(commitMatchSession(session, logged)).toBe(true));
+    await act(async () => vi.advanceTimersByTime(0));
+
+    const terminal = structuredClone(logged);
+    terminal.gameResult = { winner: 'self', reason: 'evidence' };
+    act(() => expect(commitMatchSession(session, terminal)).toBe(true));
+    await act(async () => vi.advanceTimersByTime(400));
+
+    expect(useGameStateStore.getState()).toMatchObject({
+      gameState: { gameResult: { winner: 'self', reason: 'evidence' } },
+      cutinDemoMode: 'idle',
+    });
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `3380a53272ab`
+> Source hash: `b25adda624b4`
 
 `src/engine/mutate/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -29,8 +29,9 @@
 - [`20-color-and-switch.md`](../by-rule/20-color-and-switch.md)
 - [`26-qa-deck-refresh.md`](../by-rule/26-qa-deck-refresh.md)
 
-## 📄 ソース (14)
+## 📄 ソース (15)
 
+- [`src/engine/mutate/action-scopes.ts`](../../../../src/engine/mutate/action-scopes.ts)
 - [`src/engine/mutate/case.ts`](../../../../src/engine/mutate/case.ts)
 - [`src/engine/mutate/char.ts`](../../../../src/engine/mutate/char.ts)
 - [`src/engine/mutate/deck.ts`](../../../../src/engine/mutate/deck.ts)

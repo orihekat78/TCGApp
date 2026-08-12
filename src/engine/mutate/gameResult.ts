@@ -5,6 +5,7 @@
 import type { GameState } from '@/engine/types';
 import { appendCausal } from '@/engine/log/causal.js';
 import { isStructuredCausalResolutionActive } from '@/engine/log/effect-causal.js';
+import { clearTerminalActionState } from './action-scopes.js';
 
 // 'alt-lose': engine E3 (2026-07-02) — 「相手はゲームに敗北する」カード効果決着 (opponentLoses verb)
 type WinReason = 'evidence' | 'deck-out' | 'concede' | 'alt-lose';
@@ -16,6 +17,9 @@ function set(s: GameState, winner: 'self' | 'opp', reason: WinReason): void {
   // The first terminal write owns the result. Every later write is a no-op,
   // including a contradictory winner/reason from a re-entrant effect path.
   if (s.gameResult !== undefined) return;
+  // This is an engine invariant, not a UI projection: every terminal producer
+  // (including deck-out and evidence) invalidates resumable action state first.
+  clearTerminalActionState(s);
   s.gameResult = { winner, reason };
   if (s.causalLog !== undefined && !isStructuredCausalResolutionActive(s)) {
     appendCausal(s, {

@@ -8,6 +8,10 @@ import { isCausalLogEntry } from '@/engine/log/causal';
 import type { CausalLogEntryV1, GameState } from '@/engine/types';
 import { isReplayOwnedState } from '@/ui/services/replayOwnership';
 import { projectReplayStateForViewer } from '@/ui/services/replayViewerProjection';
+import {
+  isStoreRollbackPublication,
+  registerStoreRollbackParticipant,
+} from '@/ui/services/storeTransaction';
 import { useGameStateStore } from '@/ui/state/store';
 
 type ActiveReplayRecording = {
@@ -16,6 +20,7 @@ type ActiveReplayRecording = {
   viewerMode: ReplayViewerMode;
   states: GameState[];
   rawCausalHistory: CausalLogEntryV1[];
+  lastCapturedSourceState: GameState | null;
 };
 
 let activeRecording: ActiveReplayRecording | null = null;
@@ -28,6 +33,7 @@ export type LiveReplayRecordingCheckpoint = Readonly<{
   sessionId: string;
   statesLength: number;
   rawCausalHistory: CausalLogEntryV1[];
+  lastCapturedSourceState: GameState | null;
 }> | null;
 
 function stateBelongsToSession(state: GameState, sessionId: string): boolean {
@@ -37,6 +43,7 @@ function stateBelongsToSession(state: GameState, sessionId: string): boolean {
 function captureCommittedState(state: GameState | null): void {
   const active = activeRecording;
   if (active === null || state === null || isReplayOwnedState(state)) return;
+  if (state === active.lastCapturedSourceState) return;
   if (!stateBelongsToSession(state, active.sessionId)) return;
   const rawCausalHistory = state.log.filter(isCausalLogEntry);
   if (rawCausalHistory.length < active.rawCausalHistory.length) {
@@ -51,12 +58,14 @@ function captureCommittedState(state: GameState | null): void {
   // resolver continuations into the read-only Replay artifact.
   active.states.push(projectReplayStateForViewer(state, active.viewerMode, active.states.at(-1)));
   active.rawCausalHistory = structuredClone(rawCausalHistory);
+  active.lastCapturedSourceState = state;
 }
 
 function ensureSubscription(): void {
   if (unsubscribe !== null) return;
   unsubscribe = useGameStateStore.subscribe((current, previous) => {
     if (current.gameState === previous.gameState) return;
+    if (isStoreRollbackPublication(current)) return;
     captureCommittedState(current.gameState);
   });
 }
@@ -76,6 +85,7 @@ export function startLiveReplayRecording(input: {
     generation: ++recordingGeneration,
     states: [],
     rawCausalHistory: [],
+    lastCapturedSourceState: null,
   };
   captureCommittedState(useGameStateStore.getState().gameState);
 }
@@ -90,22 +100,32 @@ export function checkpointLiveReplayRecording(): LiveReplayRecordingCheckpoint {
         sessionId: active.sessionId,
         statesLength: active.states.length,
         rawCausalHistory: structuredClone(active.rawCausalHistory),
+        lastCapturedSourceState: active.lastCapturedSourceState,
       };
 }
 
 /** Restore recorder-owned speculative captures only while the same authority is active. */
-export function rollbackLiveReplayRecording(checkpoint: LiveReplayRecordingCheckpoint): boolean {
-  if (checkpoint === null) return activeRecording === null;
-  const active = activeRecording;
-  if (
-    active === null
-    || active.generation !== checkpoint.generation
-    || active.sessionId !== checkpoint.sessionId
-    || active.states.length < checkpoint.statesLength
-  ) return false;
+export function rollbackLiveReplayRecording(
+  checkpoint: LiveReplayRecordingCheckpoint,
+): boolean {
+  if (!isLiveReplayRecordingCheckpointCurrent(checkpoint)) return false;
+  if (checkpoint === null) return true;
+  const active = activeRecording!;
   active.states.length = checkpoint.statesLength;
   active.rawCausalHistory = structuredClone(checkpoint.rawCausalHistory);
+  active.lastCapturedSourceState = checkpoint.lastCapturedSourceState;
   return true;
+}
+
+export function isLiveReplayRecordingCheckpointCurrent(
+  checkpoint: LiveReplayRecordingCheckpoint,
+): boolean {
+  if (checkpoint === null) return activeRecording === null;
+  const active = activeRecording;
+  return active !== null
+    && active.generation === checkpoint.generation
+    && active.sessionId === checkpoint.sessionId
+    && active.states.length >= checkpoint.statesLength;
 }
 
 export function finalizeLiveReplayRecording(sessionId: string): boolean {
@@ -142,3 +162,13 @@ export function resetLiveReplayRecorderForTests(): void {
   unsubscribe?.();
   unsubscribe = null;
 }
+
+registerStoreRollbackParticipant({
+  checkpoint: checkpointLiveReplayRecording,
+  isCurrent: (checkpoint) => isLiveReplayRecordingCheckpointCurrent(
+    checkpoint as LiveReplayRecordingCheckpoint,
+  ),
+  rollback: (checkpoint) => {
+    rollbackLiveReplayRecording(checkpoint as LiveReplayRecordingCheckpoint);
+  },
+});

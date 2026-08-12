@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -5488,8 +5489,9 @@ describe("private hosted runtime boundary", () => {
           await writeFile(
             value("--build-metadata-path"),
             JSON.stringify({
-              wrangler_config_hash:
-                "ef8f1087757b5770a1e0428c25fe830aa645f9be9ae0fe7bc973fb470d9f3d95",
+              wrangler_config_hash: createHash("sha256")
+                .update(await readFile(value("--config")))
+                .digest("hex"),
               build_output_directory: "dist",
             }),
           );

@@ -321,6 +321,12 @@ export function useReplayDriver(): ReplayDriverApi {
       }
       currentMoveIndexRef.current = next;
       setCurrentMoveIndex(next);
+      // Playback terminal frames are display-only. Stop immediately so a
+      // replay timer cannot remain live after the final result projection.
+      if (useGameStateStore.getState().gameState?.gameResult !== undefined
+        || next >= loadedStepCountRef.current) {
+        setIsPlaying(false);
+      }
     }, speedMs);
     return () => {
       if (intervalRef.current !== null) {

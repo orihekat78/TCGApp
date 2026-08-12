@@ -6,6 +6,17 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { snapshotPendingRuntimeState } from '@/engine/effect/runtime-state';
 import { useGameStateStore } from '@/ui/state/store';
 import { getPresentationQueue, resetPresentationQueue } from '@/ui/presentation/coordinator';
+import { startCausalSession } from '@/engine/log/causal';
+import {
+  beginMatchSession,
+  endMatchSession,
+  isMatchSessionActive,
+  matchSessionId,
+} from '@/ui/services/matchSession';
+import {
+  checkpointLiveReplayRecording,
+  resetLiveReplayRecorderForTests,
+} from '@/ui/services/liveReplayRecorder';
 
 const { stepTurnMock } = vi.hoisted(() => ({ stepTurnMock: vi.fn() }));
 const { surfacePendingSideChannelsMock } = vi.hoisted(() => ({
@@ -186,6 +197,129 @@ describe('opponent autonomous presentation guard', () => {
     } finally {
       dispatch.mockRestore();
       setGameState.mockRestore();
+      delete runtime.__pendingContactStartAxId;
+    }
+  });
+
+  it('restores the pre-step runtime when a natural terminal publish throws', () => {
+    const store = useGameStateStore.getState();
+    const before = store.gameState!;
+    const terminal = structuredClone(before);
+    terminal.gameResult = { winner: 'self', reason: 'evidence' };
+    const runtime = globalThis as { __pendingContactStartAxId?: string };
+    runtime.__pendingContactStartAxId = 'before-terminal-step';
+    const runtimeBefore = snapshotPendingRuntimeState();
+    stepTurnMock.mockImplementationOnce(() => {
+      runtime.__pendingContactStartAxId = 'after-terminal-step';
+      return {
+        move: { kind: 'endTurn' },
+        nextState: terminal,
+        done: true,
+      };
+    });
+    const unsubscribe = useGameStateStore.subscribe((next) => {
+      if (next.gameState?.gameResult !== undefined) {
+        throw new Error('opponent terminal subscriber failure');
+      }
+    });
+
+    try {
+      expect(() => driveOppTurn()).toThrow('opponent terminal subscriber failure');
+      expect(useGameStateStore.getState().gameState).toBe(before);
+      expect(snapshotPendingRuntimeState()).toEqual(runtimeBefore);
+      expect(surfacePendingSideChannelsMock).not.toHaveBeenCalled();
+    } finally {
+      unsubscribe();
+      delete runtime.__pendingContactStartAxId;
+    }
+  });
+
+  it('preserves a legitimate nested publication made while terminal rollback notifies', () => {
+    resetLiveReplayRecorderForTests();
+    const token = beginMatchSession('self');
+    const before = createEmptyGameState();
+    before.turn = { number: 2, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    startCausalSession(before, matchSessionId(token));
+    useGameStateStore.getState().setGameState(before);
+    const storeBefore = useGameStateStore.getState();
+    const replayBefore = checkpointLiveReplayRecording();
+    const nested = { ...before, turn: { ...before.turn, number: before.turn.number + 1 } };
+    const runtime = globalThis as { __pendingContactStartAxId?: string };
+    let nestedRuntime: ReturnType<typeof snapshotPendingRuntimeState> | null = null;
+    let nestedPublished = false;
+    const nestedUnsubscribe = useGameStateStore.subscribe((state) => {
+      if (nestedPublished || state !== storeBefore) return;
+      nestedPublished = true;
+      useGameStateStore.getState().setGameState(nested);
+      runtime.__pendingContactStartAxId = 'nested-opponent-runtime';
+      nestedRuntime = snapshotPendingRuntimeState();
+    });
+    const failingUnsubscribe = useGameStateStore.subscribe((state) => {
+      if (state.gameState?.gameResult !== undefined) {
+        throw new Error('opponent terminal rollback nested publication');
+      }
+    });
+    const terminal = structuredClone(before);
+    terminal.gameResult = { winner: 'self', reason: 'evidence' };
+    stepTurnMock.mockImplementationOnce(() => {
+      runtime.__pendingContactStartAxId = 'speculative-opponent-runtime';
+      return { move: { kind: 'endTurn' }, nextState: terminal, done: true };
+    });
+
+    try {
+      expect(() => driveOppTurn()).toThrow('opponent terminal rollback nested publication');
+      expect(nestedPublished).toBe(true);
+      expect(useGameStateStore.getState().gameState).toBe(nested);
+      expect(snapshotPendingRuntimeState()).toEqual(nestedRuntime);
+      expect(checkpointLiveReplayRecording()?.statesLength)
+        .toBe((replayBefore?.statesLength ?? 0) + 1);
+    } finally {
+      failingUnsubscribe();
+      nestedUnsubscribe();
+      if (isMatchSessionActive()) endMatchSession();
+      resetLiveReplayRecorderForTests();
+      delete runtime.__pendingContactStartAxId;
+    }
+  });
+
+  it('preserves nested UI state and runtime when rollback keeps the same GameState', () => {
+    const before = useGameStateStore.getState().gameState!;
+    const storeBefore = useGameStateStore.getState();
+    const terminal = structuredClone(before);
+    terminal.gameResult = { winner: 'self', reason: 'evidence' };
+    const runtime = globalThis as { __pendingContactStartAxId?: string };
+    runtime.__pendingContactStartAxId = 'before-same-state-rollback';
+    let nestedRuntime: ReturnType<typeof snapshotPendingRuntimeState> | null = null;
+    let nestedPublished = false;
+    const nestedUnsubscribe = useGameStateStore.subscribe((state) => {
+      if (nestedPublished || state !== storeBefore) return;
+      nestedPublished = true;
+      useGameStateStore.getState().setActiveCard('nested-card', 'nested publication');
+      runtime.__pendingContactStartAxId = 'nested-same-state-runtime';
+      nestedRuntime = snapshotPendingRuntimeState();
+    });
+    const failingUnsubscribe = useGameStateStore.subscribe((state) => {
+      if (state.gameState?.gameResult !== undefined) {
+        throw new Error('opponent same-state rollback publication');
+      }
+    });
+    stepTurnMock.mockImplementationOnce(() => {
+      runtime.__pendingContactStartAxId = 'speculative-same-state-runtime';
+      return { move: { kind: 'endTurn' }, nextState: terminal, done: true };
+    });
+
+    try {
+      expect(() => driveOppTurn()).toThrow('opponent same-state rollback publication');
+      expect(nestedPublished).toBe(true);
+      expect(useGameStateStore.getState()).toMatchObject({
+        gameState: before,
+        activeCardUid: 'nested-card',
+        activeCardLabel: 'nested publication',
+      });
+      expect(snapshotPendingRuntimeState()).toEqual(nestedRuntime);
+    } finally {
+      failingUnsubscribe();
+      nestedUnsubscribe();
       delete runtime.__pendingContactStartAxId;
     }
   });

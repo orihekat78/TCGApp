@@ -36,12 +36,20 @@ import {
   usePresentationOutstandingCount,
 } from '@/ui/presentation/usePresentationQueue.js';
 import { selectAutonomousDecisionBlocked } from '@/ui/state/autonomousDecisionGate.js';
+import {
+  areStoreRollbackParticipantsCurrent,
+  checkpointStoreRollbackParticipants,
+  storeRollbackCause,
+} from '@/ui/services/storeTransaction.js';
 
 let isDriving = false;
 let previousMoveKind: Move['kind'] | null = null;
+let scheduledOppTimer: ReturnType<typeof setTimeout> | null = null;
 
 /** Test 用: 二重呼出ガードをリセット。 */
 export function _resetIsDriving(): void {
+  if (scheduledOppTimer !== null) clearTimeout(scheduledOppTimer);
+  scheduledOppTimer = null;
   isDriving = false;
   previousMoveKind = null;
   _lastConsumedStep = 0;
@@ -75,16 +83,23 @@ export function driveOppTurn(): void {
   // B05047 a2 が発火し modal 待ちになる — 漏れると AI driver が await 中に deck を動かし振り分けが部分無効化)。
   if (isDriving) return;
   isDriving = true;
+  const pendingRuntimeBefore = snapshotPendingRuntimeState();
+  const participantCheckpoints = checkpointStoreRollbackParticipants();
+  const restoreStepRuntimeIfCurrent = (): void => {
+    if (useGameStateStore.getState() === store
+      && areStoreRollbackParticipantsCurrent(participantCheckpoints)) {
+      restorePendingRuntimeState(pendingRuntimeBefore);
+    }
+  };
   try {
     // Task4: 1 手だけ進める (stepTurn)。1 手ごとに setGameState + activeCard + oppMoveTick++ し、
     // useEffect が表示間隔後に再 fire → 次の 1 手。登場・能力・アクション・アシスト・解決編だけ
     // aiSpeedMs を適用し、routine 手は 0ms yield。pauseOnAction で action 手は従来どおり
     // contact FSM (useContactFlowDriver) へ委譲する。
-    const pendingRuntimeBefore = snapshotPendingRuntimeState();
     const step = stepTurn(current, new HeuristicPolicy(), 'opp', { pauseOnAction: true });
     // 中間 state を store にコミット (action 直前 / 通常 move 適用後 / pause 時は不変参照)
     if (!store.setGameState(step.nextState, { preserveRuntime: true })) {
-      restorePendingRuntimeState(pendingRuntimeBefore);
+      restoreStepRuntimeIfCurrent();
       return;
     }
     previousMoveKind = step.paused?.move?.kind ?? step.move?.kind ?? null;
@@ -137,6 +152,9 @@ export function driveOppTurn(): void {
     // BUG-090: self auto-phase で 事件編→解決編 になり case a1 が human discard pick を積む場合、
     // dispatchEngineAction と同様に store へ転送しないと modal が出ないため surface する。
     surfacePendingSideChannels();
+  } catch (error) {
+    restoreStepRuntimeIfCurrent();
+    throw storeRollbackCause(error);
   } finally {
     isDriving = false;
   }
@@ -232,7 +250,15 @@ export function useOppTurnDriver(enabled = true): void {
     }
     // pause 中の1ステップは即時。通常進行は「直前の重要手」の表示後だけ待つ。
     const delay = isAiPaused ? 0 : movePresentationDelay(previousMoveKind, aiSpeedMs);
-    const id = setTimeout(driveOppTurn, delay);
-    return () => clearTimeout(id);
+    const id = setTimeout(() => {
+      if (scheduledOppTimer !== id) return;
+      scheduledOppTimer = null;
+      driveOppTurn();
+    }, delay);
+    scheduledOppTimer = id;
+    return () => {
+      clearTimeout(id);
+      if (scheduledOppTimer === id) scheduledOppTimer = null;
+    };
   }, [enabled, turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, pendingDecisionBlocked, oppMoveTick, presentationOutstanding]);
 }

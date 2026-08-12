@@ -17,6 +17,7 @@
 //   - AI 経路は本 hook を通らず常に未供給 (= 常に decline、atom コメント準拠)。
 
 import { create } from 'zustand';
+import { areTerminalInteractionsBlocked } from '@/ui/services/terminalInteractionGate.js';
 
 export type DeclareNameRequest = {
   /** 発動カード名 (banner 表示用) */
@@ -62,6 +63,7 @@ export type DeclareNamePicker = {
 };
 
 function askDeclareName(req: DeclareNameRequest): Promise<DeclareNameResult> {
+  if (areTerminalInteractionsBlocked()) return Promise.resolve({ kind: 'cancel' });
   const store = useDeclareNamePickerStore.getState();
   const prev = store._resolver;
   if (prev) prev({ kind: 'cancel' }); // open 中の旧 Promise を破棄 (useChoicePicker 同パターン)

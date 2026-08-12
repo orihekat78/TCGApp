@@ -7,6 +7,14 @@ import { snapshotPendingRuntimeState } from '@/engine/effect/runtime-state';
 import { makeChar } from '../../helpers/fixtures';
 import { useGameStateStore } from '@/ui/state/store';
 import { getPresentationQueue, resetPresentationQueue } from '@/ui/presentation/coordinator';
+import { startCausalSession } from '@/engine/log/causal';
+import {
+  beginMatchSession,
+  currentMatchSessionToken,
+  endMatchSession,
+  isMatchSessionActive,
+  matchSessionId,
+} from '@/ui/services/matchSession';
 
 const { stepTurnMock } = vi.hoisted(() => ({ stepTurnMock: vi.fn() }));
 const { surfacePendingSideChannelsMock } = vi.hoisted(() => ({
@@ -301,6 +309,93 @@ describe('spectator move presentation timing', () => {
     } finally {
       dispatch.mockRestore();
       setGameState.mockRestore();
+      delete runtime.__pendingContactStartAxId;
+    }
+  });
+
+  it('restores the pre-step runtime when a spectator terminal publish throws', () => {
+    const store = useGameStateStore.getState();
+    const before = store.gameState!;
+    const terminal = structuredClone(before);
+    terminal.gameResult = { winner: 'opp', reason: 'evidence' };
+    const runtime = globalThis as { __pendingContactStartAxId?: string };
+    runtime.__pendingContactStartAxId = 'before-spectator-terminal-step';
+    const runtimeBefore = snapshotPendingRuntimeState();
+    stepTurnMock.mockImplementationOnce(() => {
+      runtime.__pendingContactStartAxId = 'after-spectator-terminal-step';
+      return {
+        move: { kind: 'endTurn' },
+        nextState: terminal,
+        done: true,
+      };
+    });
+    const unsubscribe = useGameStateStore.subscribe((next) => {
+      if (next.gameState?.gameResult !== undefined) {
+        throw new Error('spectator terminal subscriber failure');
+      }
+    });
+
+    try {
+      act(() => root.render(<Probe />));
+      expect(() => act(() => vi.advanceTimersByTime(0)))
+        .toThrow('spectator terminal subscriber failure');
+      expect(useGameStateStore.getState().gameState).toBe(before);
+      expect(snapshotPendingRuntimeState()).toEqual(runtimeBefore);
+      expect(surfacePendingSideChannelsMock).not.toHaveBeenCalled();
+    } finally {
+      unsubscribe();
+      delete runtime.__pendingContactStartAxId;
+    }
+  });
+
+  it('does not overwrite a replacement match started by a terminal subscriber', () => {
+    const originalToken = beginMatchSession(null);
+    const before = createEmptyGameState();
+    before.turn = { number: 2, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    startCausalSession(before, matchSessionId(originalToken));
+    useGameStateStore.getState().setGameState(before);
+    useGameStateStore.getState().setSpectatorMode(true);
+    const terminal = structuredClone(before);
+    terminal.gameResult = { winner: 'opp', reason: 'evidence' };
+    const runtime = globalThis as { __pendingContactStartAxId?: string };
+    let replacementToken: ReturnType<typeof beginMatchSession> | null = null;
+    let replacement = null as typeof before | null;
+    let replacementRuntime: ReturnType<typeof snapshotPendingRuntimeState> | null = null;
+    let replaceOnce = true;
+    const unsubscribe = useGameStateStore.subscribe((state) => {
+      if (!replaceOnce || state.gameState?.gameResult === undefined) return;
+      replaceOnce = false;
+      replacementToken = beginMatchSession(null);
+      replacement = createEmptyGameState();
+      replacement.turn = {
+        number: 4,
+        player: 'self',
+        phase: 'main',
+        isFirstPlayerFirstTurn: false,
+      };
+      startCausalSession(replacement, matchSessionId(replacementToken));
+      useGameStateStore.getState().setGameState(replacement);
+      useGameStateStore.getState().setSpectatorMode(true);
+      runtime.__pendingContactStartAxId = 'replacement-spectator-runtime';
+      replacementRuntime = snapshotPendingRuntimeState();
+      throw new Error('spectator terminal subscriber replaced session');
+    });
+    stepTurnMock.mockImplementationOnce(() => {
+      runtime.__pendingContactStartAxId = 'speculative-spectator-runtime';
+      return { move: { kind: 'endTurn' }, nextState: terminal, done: true };
+    });
+
+    try {
+      act(() => root.render(<Probe />));
+      expect(() => act(() => vi.advanceTimersByTime(0)))
+        .toThrow('spectator terminal subscriber replaced session');
+      expect(replacementToken).not.toBeNull();
+      expect(currentMatchSessionToken()).toBe(replacementToken);
+      expect(useGameStateStore.getState().gameState).toBe(replacement);
+      expect(snapshotPendingRuntimeState()).toEqual(replacementRuntime);
+    } finally {
+      unsubscribe();
+      if (isMatchSessionActive()) endMatchSession();
       delete runtime.__pendingContactStartAxId;
     }
   });

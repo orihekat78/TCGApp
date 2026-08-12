@@ -10,8 +10,12 @@ import { _resetTargetExpanders } from '@/engine/flow/action/target-expander';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { registerAll } from '@/cards/index';
 import { performGameStart } from '@/ui/services/gameStarter';
+import { beginMatchSession, commitMatchSession, isCurrentLiveMatchSession, matchSessionId, resetMatchSession } from '@/ui/services/matchSession';
+import { createEmptyGameState } from '@/engine/state-factory';
+import { useMulliganStore } from '@/ui/hooks/useMulligan';
 
 beforeEach(() => {
+  resetMatchSession();
   engine.cards._resetRegistry();
   event._resetRegistry();
   _resetActionContexts();
@@ -25,6 +29,22 @@ beforeEach(() => {
 const skipMulligan = async (): Promise<ReadonlyArray<string>> => [];
 
 describe('performGameStart', () => {
+  it('does not start setup after terminal cleanup settles a pending mulligan', async () => {
+    const session = beginMatchSession('self');
+    const pending = performGameStart(undefined, undefined, {
+      sessionId: matchSessionId(session),
+      isSessionCurrent: () => isCurrentLiveMatchSession(session),
+    });
+    await Promise.resolve();
+    expect(useMulliganStore.getState().current).not.toBeNull();
+    const terminal = createEmptyGameState();
+    terminal.gameResult = { winner: 'opp', reason: 'concede' };
+    expect(commitMatchSession(session, terminal)).toBe(true);
+    const started = await pending;
+    expect(started.turn.phase).not.toBe('main');
+    expect(commitMatchSession(session, started)).toBe(false);
+    resetMatchSession();
+  });
   it('returns turn-1 state: 先攻は手札 6 (5+auto draw)、後攻は手札 5', async () => {
     const s = await performGameStart(skipMulligan, undefined, { sessionId: 'starter-turn-1' });
     expect(s.turn.number).toBe(1);

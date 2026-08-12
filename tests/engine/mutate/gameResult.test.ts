@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { gameResult } from '@/engine/mutate/gameResult';
+import { startCausalSession } from '@/engine/log/causal';
 
 describe('engine.mutate.gameResult', () => {
   describe('set', () => {
@@ -28,6 +29,21 @@ describe('engine.mutate.gameResult', () => {
         gameResult.set(draft, 'self', 'concede');
       });
       expect(result.gameResult).toEqual({ winner: 'self', reason: 'concede' });
+    });
+
+    it('direct terminal write clears resumable action/contact state before its causal result', () => {
+      const s = createEmptyGameState();
+      s.actionContexts = { pending: {} } as never;
+      s.players.self.partner.turnEffects = { apMod_contact: 2, granted_action: true };
+      s.turnState.self.hiramekiSuppressed = true;
+      startCausalSession(s, 'terminal-scopes');
+
+      gameResult.set(s, 'opp', 'deck-out');
+
+      expect(s.actionContexts).toEqual({});
+      expect(s.players.self.partner.turnEffects).toEqual({});
+      expect(s.turnState.self.hiramekiSuppressed).toBe(false);
+      expect(s.log.at(-1)).toMatchObject({ kind: 'game-result', actor: 'opp' });
     });
   });
 

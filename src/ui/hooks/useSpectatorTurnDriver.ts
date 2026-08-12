@@ -28,11 +28,19 @@ import {
   usePresentationOutstandingCount,
 } from '@/ui/presentation/usePresentationQueue.js';
 import { selectAutonomousDecisionBlocked } from '@/ui/state/autonomousDecisionGate.js';
+import {
+  areStoreRollbackParticipantsCurrent,
+  checkpointStoreRollbackParticipants,
+  storeRollbackCause,
+} from '@/ui/services/storeTransaction.js';
 
 let isDriving = false;
 let previousMoveKind: Move['kind'] | null = null;
+let scheduledSpectatorTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function _resetSpectatorDriving(): void {
+  if (scheduledSpectatorTimer !== null) clearTimeout(scheduledSpectatorTimer);
+  scheduledSpectatorTimer = null;
   isDriving = false;
   previousMoveKind = null;
   _lastConsumedStep = 0;
@@ -52,11 +60,18 @@ function driveSelfTurn(): void {
   if (hasOutstandingPresentation()) return;
   if (isDriving) return;
   isDriving = true;
+  const pendingRuntimeBefore = snapshotPendingRuntimeState();
+  const participantCheckpoints = checkpointStoreRollbackParticipants();
+  const restoreStepRuntimeIfCurrent = (): void => {
+    if (useGameStateStore.getState() === store
+      && areStoreRollbackParticipantsCurrent(participantCheckpoints)) {
+      restorePendingRuntimeState(pendingRuntimeBefore);
+    }
+  };
   try {
-    const pendingRuntimeBefore = snapshotPendingRuntimeState();
     const result = stepTurn(current, new HeuristicPolicy(), 'self', { pauseOnAction: true });
     if (!store.setGameState(result.nextState, { preserveRuntime: true })) {
-      restorePendingRuntimeState(pendingRuntimeBefore);
+      restoreStepRuntimeIfCurrent();
       return;
     }
     previousMoveKind = result.paused?.move?.kind ?? result.move?.kind ?? null;
@@ -101,6 +116,9 @@ function driveSelfTurn(): void {
     // pending (deckReveal 演出等) を store へ転送し取り残しを防ぐ。観戦モードは human pick が
     // 出ない (__humanPlayerSide=null) が、全ターンドライバで一貫して surface しておく。
     surfacePendingSideChannels();
+  } catch (error) {
+    restoreStepRuntimeIfCurrent();
+    throw storeRollbackCause(error);
   } finally {
     isDriving = false;
   }
@@ -134,7 +152,15 @@ export function useSpectatorTurnDriver(enabled = true): void {
       _lastConsumedStep = aiStepCounter;
     }
     const delay = isAiPaused ? 0 : movePresentationDelay(previousMoveKind, aiSpeedMs);
-    const id = setTimeout(driveSelfTurn, delay);
-    return () => clearTimeout(id);
+    const id = setTimeout(() => {
+      if (scheduledSpectatorTimer !== id) return;
+      scheduledSpectatorTimer = null;
+      driveSelfTurn();
+    }, delay);
+    scheduledSpectatorTimer = id;
+    return () => {
+      clearTimeout(id);
+      if (scheduledSpectatorTimer === id) scheduledSpectatorTimer = null;
+    };
   }, [enabled, spectatorMode, turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, aiMoveTick, pendingDecisionBlocked, presentationOutstanding]);
 }

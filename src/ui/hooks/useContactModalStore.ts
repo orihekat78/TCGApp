@@ -10,6 +10,7 @@
 //     React useEffect 駆動の単一 step ドライバと相性が良い)
 
 import { create } from 'zustand';
+import { areTerminalInteractionsBlocked } from '@/ui/services/terminalInteractionGate.js';
 import type { GuardPickerCandidate } from '../components/GuardPickerModal.js';
 import type { CutInDisguiseCandidate } from '../components/CutInDisguisePickerModal.js';
 
@@ -47,7 +48,13 @@ export type ContactModalStore = {
 export const useContactModalStore = create<ContactModalStore>((set) => ({
   guardPicker: null,
   cutInDisguise: null,
-  _setGuardPicker: (s) => set({ guardPicker: s }),
-  _setCutInDisguise: (s) => set({ cutInDisguise: s }),
+  _setGuardPicker: (s) => {
+    if (s !== null && areTerminalInteractionsBlocked()) return;
+    set({ guardPicker: s });
+  },
+  _setCutInDisguise: (s) => {
+    if (s !== null && areTerminalInteractionsBlocked()) return;
+    set({ cutInDisguise: s });
+  },
   _reset: () => set({ guardPicker: null, cutInDisguise: null }),
 }));

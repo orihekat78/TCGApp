@@ -741,7 +741,7 @@
       "adjudicationResult": "test-gap",
       "sourceRefs": [
         "src/cards/ct-p01/B01028.ts:23",
-        "src/engine/flow/action/state-machine.ts:269"
+        "src/engine/flow/action/state-machine.ts:263"
       ],
       "testRefs": []
     },

@@ -280,6 +280,57 @@ describe('Playmat', () => {
     expect(html).toMatch(/class="panel-log-btn-count">0/);
   });
 
+  it('closes local hand, browse, card-detail, and log overlays when the supplied match becomes terminal', () => {
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    const state = createEmptyGameState();
+    state.players.self.hand = ['D08015'];
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    try {
+      act(() => root.render(<Playmat
+        gameState={state}
+        resolveCard={resolveCard}
+        resolveHandCard={(cardId) => ({
+          cardId, name: cardId, color: 'blue', type: '繧ｭ繝｣繝ｩ', cost: 1, ap: 1, lp: 1, lv: 1,
+        })}
+      />));
+      act(() => (container.querySelector('.panel-log-btn') as HTMLButtonElement).click());
+      act(() => (container.querySelector('.hand-mini-card') as HTMLElement).click());
+      expect(container.querySelector('.hand-zone--expanded')).not.toBeNull();
+      act(() => (container.querySelector('[data-testid="hand-card-magnifier-D08015"]') as HTMLButtonElement).click());
+      act(() => (container.querySelector('.remove-area.side-self') as HTMLElement).click());
+      expect(container.querySelector('.log-panel')).not.toBeNull();
+      expect(container.querySelector('.card-list-modal')).not.toBeNull();
+      expect(container.querySelector('.card-expand-modal-backdrop')).not.toBeNull();
+
+      const terminal = structuredClone(state);
+      terminal.gameResult = { winner: 'self', reason: 'evidence' };
+      act(() => root.render(<Playmat
+        gameState={terminal}
+        resolveCard={resolveCard}
+        resolveHandCard={(cardId) => ({
+          cardId, name: cardId, color: 'blue', type: '繧ｭ繝｣繝ｩ', cost: 1, ap: 1, lp: 1, lv: 1,
+        })}
+      />));
+
+      expect(container.querySelector('.log-panel')).toBeNull();
+      expect(container.querySelector('.hand-zone--expanded')).toBeNull();
+      expect(container.querySelector('.card-list-modal')).toBeNull();
+      expect(container.querySelector('.card-expand-modal-backdrop')).toBeNull();
+
+      act(() => (container.querySelector('.panel-log-btn') as HTMLButtonElement).click());
+      act(() => (container.querySelector('.hand-mini-card') as HTMLElement).click());
+      act(() => (container.querySelector('.remove-area.side-self') as HTMLElement).click());
+      expect(container.querySelector('.log-panel')).toBeNull();
+      expect(container.querySelector('.hand-zone--expanded')).toBeNull();
+      expect(container.querySelector('.card-list-modal')).toBeNull();
+    } finally {
+      act(() => root.unmount());
+      container.remove();
+    }
+  });
+
   it('does not offer card details from a log entry', () => {
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     const state = createEmptyGameState();

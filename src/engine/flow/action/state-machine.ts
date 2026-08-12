@@ -13,6 +13,7 @@
 
 import type { GameState, ActionContext, ActionPhase } from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
+import { clearActionScopedState, clearContactScopedState } from '../../mutate/action-scopes.js';
 import { event } from '../../event/index.js';
 import { char as readChar } from '../../read/char.js';
 import { def as readDef } from '../../read/def.js';
@@ -466,26 +467,6 @@ export function isMissingBeforeGuard(state: GameState, ax: ActionContext): boole
   return byMissing || targetMissing;
 }
 
-function clearActionScopedState(state: GameState): void {
-  for (const p of ['self', 'opp'] as const) {
-    for (const c of state.players[p].scene) {
-      mutate.char.clearTurnEffects(state, c.uid, 'action');
-    }
-    mutate.char.clearTurnEffects(state, `partner:${p}`, 'action');
-  }
-  state.turnState.self.hiramekiSuppressed = false;
-  state.turnState.opp.hiramekiSuppressed = false;
-}
-
-function clearContactScopedState(state: GameState): void {
-  for (const p of ['self', 'opp'] as const) {
-    for (const c of state.players[p].scene) {
-      mutate.char.clearTurnEffects(state, c.uid, 'contact');
-    }
-    mutate.char.clearTurnEffects(state, `partner:${p}`, 'contact');
-  }
-}
-
 /**
  * Terminal paths must invalidate action work before the terminal causal event.
  * That keeps replay frames from carrying a continuation past their final node.
@@ -496,9 +477,6 @@ export function abortForTerminal(
   reason: 'concede',
 ): void {
   if (state.gameResult !== undefined) return;
-  clearActionScopedState(state);
-  clearContactScopedState(state);
-  state.actionContexts = {};
   mutate.gameResult.set(state, winner, reason);
 }
 

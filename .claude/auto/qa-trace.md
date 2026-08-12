@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-qa-trace.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:qa-trace`
-> Source hash: `1e4cead3f449`
+> Source hash: `50afa336ffb2`
 
 Tracked Q&A identifiers and digests only. Official question and answer bodies are intentionally excluded.
 

@@ -2,6 +2,7 @@
 // 既存 pendingSetCardChoice / SetCardChoiceModalHost を再利用し、裏向き cardId はUIへ渡さない。
 
 import { useGameStateStore } from '@/ui/state/store.js';
+import { areTerminalInteractionsBlocked } from '@/ui/services/terminalInteractionGate.js';
 
 export type SetCardCostCandidate = {
   hostUid: string;
@@ -27,6 +28,7 @@ export type SetCardCostChoice =
 let resolver: ((choice: SetCardCostChoice) => void) | null = null;
 
 function ask(request: SetCardCostRequest): Promise<SetCardCostChoice> {
+  if (areTerminalInteractionsBlocked()) return Promise.resolve({ kind: 'cancel' });
   if (resolver) resolver({ kind: 'cancel' });
   return new Promise((resolve) => {
     resolver = resolve;
@@ -45,8 +47,7 @@ function ask(request: SetCardCostRequest): Promise<SetCardCostChoice> {
 
 function settle(choice: SetCardCostChoice): void {
   const pending = useGameStateStore.getState().pendingSetCardChoice;
-  if (pending?.purpose !== 'cost') return;
-  useGameStateStore.getState().setPendingSetCardChoice(null);
+  if (pending?.purpose === 'cost') useGameStateStore.getState().setPendingSetCardChoice(null);
   const current = resolver;
   resolver = null;
   current?.(choice);
