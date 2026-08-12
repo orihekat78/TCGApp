@@ -7,6 +7,9 @@ import type { QaSnapshot } from './gen-docs/gen-qa-trace.js';
 
 const ROOT = process.cwd();
 const require = createRequire(import.meta.url);
+type CardsDataSnapshot = { baseDir: string; lockToken: unknown; recovery: unknown };
+type WithCardsDataSnapshot = <T>(options: { baseDir: string; lockToken?: unknown; read: (snapshot: CardsDataSnapshot) => T }) => T;
+const { withCardsDataSnapshot } = require('./cards/official-api.cjs') as { withCardsDataSnapshot: WithCardsDataSnapshot };
 const SOURCE_CORPUS_CACHE = new Map<string, string>();
 const HASH = /^[a-f0-9]{64}$/;
 const QA_ID = /^card:[^:\s]+:[a-f0-9]{64}$/;
@@ -293,9 +296,16 @@ function pathAt(root: string, ...parts: string[]): string {
   return resolve(root, '.claude/specs/qa-adjudication', ...parts);
 }
 
+function withQaCardsDataSnapshot<T>(root: string, lockToken: unknown, read: (snapshot: CardsDataSnapshot) => T): T {
+  return withCardsDataSnapshot({
+    baseDir: resolve(root, '.claude/specs/cards-data'),
+    ...(lockToken === undefined ? {} : { lockToken }),
+    read,
+  });
+}
+
 /** Read-only hash-only work queue. Does not touch ignored raw data or adjudication files. */
-export function readQaAdjudicationQueue(options: { root?: string } = {}): QaAdjudicationQueue {
-  const root = resolve(options.root ?? ROOT);
+function readQaAdjudicationQueueUnlocked(root: string): QaAdjudicationQueue {
   const snapshot = readJson(resolve(root, '.claude/specs/cards-data/qa-hash-snapshot.json'));
   validateSnapshot(snapshot);
   const shards = SHARDS.map((name) => {
@@ -338,6 +348,11 @@ export function readQaAdjudicationQueue(options: { root?: string } = {}): QaAdju
   return { total: shardItems.length, unreviewedCount: shardItems.filter((item) => item.result === 'unreviewed').length, shards: queueShards };
 }
 
+export function readQaAdjudicationQueue(options: { root?: string; lockToken?: unknown } = {}): QaAdjudicationQueue {
+  const root = resolve(options.root ?? ROOT);
+  return withQaCardsDataSnapshot(root, options.lockToken, () => readQaAdjudicationQueueUnlocked(root));
+}
+
 function rawPackageMetadata(root: string): QaRawPackage[] {
   const rawRoot = resolve(root, '.claude/specs/cards-data/_raw');
   if (!existsSync(rawRoot)) return [];
@@ -369,8 +384,10 @@ function validateLocalRawSnapshot(root: string, snapshot: QaSnapshot): void {
   if (JSON.stringify(rebuilt) !== JSON.stringify(snapshot)) throw new Error('local raw Q&A snapshot drift');
 }
 
-export function mergeQaAdjudication(options: { root?: string; check?: boolean; requireReviewed?: boolean; withLocalRaw?: boolean } = {}): { manifest: QaAdjudicationManifest; statuses: Record<string, QaAdjudicationStatus>; results: Record<string, QaAdjudicationResult>; methods: Record<string, QaAdjudicationMethod>; evidence: Record<string, string[]>; allAdjudicated: boolean } {
-  const root = resolve(options.root ?? ROOT);
+type MergeQaAdjudicationResult = { manifest: QaAdjudicationManifest; statuses: Record<string, QaAdjudicationStatus>; results: Record<string, QaAdjudicationResult>; methods: Record<string, QaAdjudicationMethod>; evidence: Record<string, string[]>; allAdjudicated: boolean };
+type MergeQaAdjudicationOptions = { root?: string; check?: boolean; requireReviewed?: boolean; withLocalRaw?: boolean; lockToken?: unknown };
+
+function mergeQaAdjudicationUnlocked(root: string, options: MergeQaAdjudicationOptions): MergeQaAdjudicationResult {
   const snapshot = readJson(resolve(root, '.claude/specs/cards-data/qa-hash-snapshot.json'));
   validateSnapshot(snapshot);
   const manifest = readJson(pathAt(root, 'manifest.json'));
@@ -406,7 +423,12 @@ export function mergeQaAdjudication(options: { root?: string; check?: boolean; r
   return { manifest, statuses, results, methods, evidence, allAdjudicated };
 }
 
-export function writeQaAdjudicationBootstrap(root: string, force = false): void {
+export function mergeQaAdjudication(options: MergeQaAdjudicationOptions = {}): MergeQaAdjudicationResult {
+  const root = resolve(options.root ?? ROOT);
+  return withQaCardsDataSnapshot(root, options.lockToken, () => mergeQaAdjudicationUnlocked(root, options));
+}
+
+function writeQaAdjudicationBootstrapUnlocked(root: string, force = false): void {
   if (existsSync(pathAt(root, 'manifest.json')) && !force) throw new Error('adjudication shards already exist; use --force only for initial/reset bootstrap');
   const snapshot = readJson(resolve(root, '.claude/specs/cards-data/qa-hash-snapshot.json'));
   validateSnapshot(snapshot);
@@ -416,17 +438,28 @@ export function writeQaAdjudicationBootstrap(root: string, force = false): void 
   for (const shard of built.shards) writeFileSync(pathAt(root, `${shard.shard}.json`), `${JSON.stringify(shard, null, 2)}\n`);
 }
 
+export function writeQaAdjudicationBootstrap(root: string, force = false, options: { lockToken?: unknown } = {}): void {
+  const projectRoot = resolve(root);
+  return withQaCardsDataSnapshot(projectRoot, options.lockToken, () => writeQaAdjudicationBootstrapUnlocked(projectRoot, force));
+}
+
 function main(): void {
   try {
     const args = process.argv.slice(2);
     const exact = (...expected: string[]) => args.length === expected.length && args.every((arg, index) => arg === expected[index]);
     if (exact('--queue')) {
-      process.stdout.write(`${JSON.stringify(readQaAdjudicationQueue({ root: ROOT }))}\n`);
+      const result = readQaAdjudicationQueue({ root: ROOT });
+      process.stdout.write(`${JSON.stringify(result)}\n`);
       return;
     }
     if (exact('--bootstrap') || exact('--bootstrap', '--force')) {
-      writeQaAdjudicationBootstrap(ROOT, args.includes('--force'));
-      const result = mergeQaAdjudication({ root: ROOT });
+      const result = withCardsDataSnapshot({
+        baseDir: resolve(ROOT, '.claude/specs/cards-data'),
+        read: ({ lockToken }) => {
+          writeQaAdjudicationBootstrap(ROOT, args.includes('--force'), { lockToken });
+          return mergeQaAdjudication({ root: ROOT, lockToken });
+        },
+      });
       process.stdout.write(`[qa:adjudication] items=${Object.keys(result.statuses).length} all-adjudicated=${result.allAdjudicated}\n`);
       return;
     }

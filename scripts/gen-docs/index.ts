@@ -1,3 +1,5 @@
+import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
 import { runGenApi } from './gen-api.js';
 import { runGenState } from './gen-state.js';
 import { runGenFlows } from './gen-flows.js';
@@ -6,6 +8,11 @@ import { runGenMapping } from './gen-mapping.js';
 import { runGenStructure } from './gen-structure.js';
 import { runGenChangelog } from './gen-changelog.js';
 import { runGenQaTrace } from './gen-qa-trace.js';
+
+const require = createRequire(import.meta.url);
+type CardsDataSnapshot = { baseDir: string; lockToken: unknown; recovery: unknown };
+type WithCardsDataSnapshot = <T>(options: { baseDir: string; read: (snapshot: CardsDataSnapshot) => T }) => T;
+const { withCardsDataSnapshot } = require('../cards/official-api.cjs') as { withCardsDataSnapshot: WithCardsDataSnapshot };
 
 type Command = 'api' | 'state' | 'flows' | 'progress' | 'mapping' | 'structure' | 'changelog' | 'qa-trace' | 'all' | 'check';
 
@@ -27,7 +34,7 @@ function parseArgs(argv: string[]): ParsedArgs {
 interface GeneratorEntry {
   name: string;
   matches: (cmd: Command) => boolean;
-  run: (opts: { checkOnly: boolean }) => { changedFiles: string[]; totalFiles: number };
+  run: (opts: { checkOnly: boolean }, lockToken?: unknown) => { changedFiles: string[]; totalFiles: number };
 }
 
 const GENERATORS: GeneratorEntry[] = [
@@ -38,11 +45,10 @@ const GENERATORS: GeneratorEntry[] = [
   { name: 'mapping', matches: (c) => c === 'mapping' || c === 'all' || c === 'check', run: runGenMapping },
   { name: 'structure', matches: (c) => c === 'structure' || c === 'all' || c === 'check', run: runGenStructure },
   { name: 'changelog', matches: (c) => c === 'changelog' || c === 'all' || c === 'check', run: runGenChangelog },
-  { name: 'qa-trace', matches: (c) => c === 'qa-trace' || c === 'all' || c === 'check', run: runGenQaTrace },
+  { name: 'qa-trace', matches: (c) => c === 'qa-trace' || c === 'all' || c === 'check', run: (options, lockToken) => runGenQaTrace(options, undefined, { lockToken }) },
 ];
 
-function main(): void {
-  const { command } = parseArgs(process.argv);
+function runGenerators(command: Command, lockToken: unknown): void {
   const checkOnly = command === 'check';
 
   console.log(`[gen-docs] command: ${command} (${checkOnly ? 'check-only' : 'write'})`);
@@ -55,7 +61,7 @@ function main(): void {
   for (const gen of GENERATORS) {
     if (!gen.matches(command)) continue;
     try {
-      const result = gen.run({ checkOnly });
+      const result = gen.run({ checkOnly }, lockToken);
       totalChanged += result.changedFiles.length;
       totalFiles += result.totalFiles;
       console.log(
@@ -79,13 +85,23 @@ function main(): void {
 
   if (failures.length > 0) {
     console.error(`[gen-docs] ${failures.length} generator(s) failed: ${failures.join(', ')}`);
-    process.exit(2);
+    process.exitCode = 2;
+    return;
   }
 
   if (checkOnly && totalChanged > 0) {
     console.error('[gen-docs] check failed: docs are out of sync. Run `npm run docs` to regenerate.');
-    process.exit(1);
+    process.exitCode = 1;
   }
+}
+
+function main(): void {
+  const { command } = parseArgs(process.argv);
+  const baseDir = resolve(process.cwd(), '.claude/specs/cards-data');
+  withCardsDataSnapshot({
+    baseDir,
+    read: ({ lockToken }) => runGenerators(command, lockToken),
+  });
 }
 
 main();

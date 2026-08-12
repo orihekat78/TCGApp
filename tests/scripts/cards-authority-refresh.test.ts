@@ -360,6 +360,102 @@ describe('official authority packet', () => {
     expect(() => validateAuthorityPacket(packet, prior, { packetRoot, projectRoot })).not.toThrow();
   });
 
+  it('rederives a current-parser packet offline from the immutable raw artifacts of a reviewed old packet', async () => {
+    const {
+      buildAuthorityFieldIndex,
+      buildAuthorityPacket,
+      rederiveAuthorityPacket,
+      validateAuthorityPacket,
+    } = require('../../scripts/cards/authority-refresh.cjs');
+    const projectRoot = tempDir();
+    const sourceRoot = tempDir();
+    const outputRoot = tempDir();
+    const card = officialCard({ q_a: JSON.stringify({ Question: 'Answer' }) });
+    const prior = {
+      status: { source: { fetchedAt: '2025-12-31T00:00:00.000Z' } },
+      fieldIndex: buildAuthorityFieldIndex([card], {
+        url: 'https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/cards',
+        fetchedAt: '2025-12-31T00:00:00.000Z',
+      }),
+      qaSnapshot: { items: [], conflicts: [] },
+    };
+    const oldPacket = await buildAuthorityPacket({
+      projectRoot,
+      tempRoot: sourceRoot,
+      fetchedAt: '2026-01-02T00:00:00.000Z',
+      releaseCommit: RELEASE_COMMIT,
+      prior,
+      fetchImpl: async () => officialResponse(officialPage([card])),
+      delay: async () => undefined,
+    });
+    const qaPath = join(sourceRoot, 'snapshot', '.claude', 'specs', 'cards-data', 'qa-hash-snapshot.json');
+    oldPacket.qaSnapshot.items[0].answerHash = 'f'.repeat(64);
+    writeFileSync(qaPath, `${JSON.stringify(oldPacket.qaSnapshot, null, 2)}\n`);
+    refreshPacketArtifact(oldPacket, sourceRoot, 'snapshot/.claude/specs/cards-data/qa-hash-snapshot.json');
+    const sourcePacketPath = join(sourceRoot, 'packet.json');
+    writeFileSync(sourcePacketPath, `${JSON.stringify(oldPacket, null, 2)}\n`);
+    const sourcePacketBytes = readFileSync(sourcePacketPath);
+    const sourcePacketSha256 = createHash('sha256').update(sourcePacketBytes).digest('hex');
+
+    expect(() => validateAuthorityPacket(oldPacket, prior, { packetRoot: sourceRoot, projectRoot })).toThrow(
+      /metadata does not match raw artifacts/i,
+    );
+    const originalFetch = globalThis.fetch;
+    let fetchCalls = 0;
+    globalThis.fetch = (async () => {
+      fetchCalls += 1;
+      throw new Error('network forbidden during authority rederivation');
+    }) as typeof fetch;
+    try {
+      const rederived = await rederiveAuthorityPacket({
+        projectRoot,
+        sourcePacketPath,
+        outputRoot,
+        expectedSourcePacketSha256: sourcePacketSha256,
+        expectedSourceReleaseCommit: RELEASE_COMMIT,
+        releaseCommit: 'b'.repeat(40),
+        prior,
+      });
+
+      expect(fetchCalls).toBe(0);
+      expect(rederived.basis.releaseCommit).toBe('b'.repeat(40));
+      expect(rederived.source).toEqual(oldPacket.source);
+      expect(rederived.sourceDigests).toEqual(oldPacket.sourceDigests);
+      expect(rederived.diff.added).toEqual(oldPacket.diff.added);
+      expect(rederived.diff.removed).toEqual(oldPacket.diff.removed);
+      expect(rederived.diff.changedFields).toEqual(oldPacket.diff.changedFields);
+      expect(rederived.qaSnapshot.items[0].answerHash).not.toBe('f'.repeat(64));
+      expect(readFileSync(sourcePacketPath)).toEqual(sourcePacketBytes);
+      expect(readFileSync(
+        join(outputRoot, 'snapshot', '.claude', 'specs', 'cards-data', '_raw', 'ct-p01-api.json'),
+      )).toEqual(readFileSync(
+        join(sourceRoot, 'snapshot', '.claude', 'specs', 'cards-data', '_raw', 'ct-p01-api.json'),
+      ));
+      expect(() => validateAuthorityPacket(rederived, prior, { packetRoot: outputRoot, projectRoot })).not.toThrow();
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('rejects an unreviewed source packet digest before writing rederived artifacts', async () => {
+    const { rederiveAuthorityPacket } = require('../../scripts/cards/authority-refresh.cjs');
+    const projectRoot = tempDir();
+    const sourceRoot = tempDir();
+    const outputRoot = tempDir();
+    writeFileSync(join(sourceRoot, 'packet.json'), '{}\n');
+
+    await expect(rederiveAuthorityPacket({
+      projectRoot,
+      sourcePacketPath: join(sourceRoot, 'packet.json'),
+      outputRoot,
+      expectedSourcePacketSha256: '0'.repeat(64),
+      expectedSourceReleaseCommit: RELEASE_COMMIT,
+      releaseCommit: 'b'.repeat(40),
+      prior: {},
+    })).rejects.toThrow(/source packet digest/i);
+    expect(readdirSync(outputRoot)).toEqual([]);
+  });
+
   it('rejects a raw and TSV card-number mismatch before producing a packet', async () => {
     const { buildAuthorityPacket } = require('../../scripts/cards/authority-refresh.cjs');
     const projectRoot = tempDir();
@@ -1387,5 +1483,363 @@ describe('authority packet CLI', () => {
     }
     expect(buildCalls).toBe(0);
     expect(readdirSync(projectRoot)).toEqual([]);
+  });
+});
+
+describe('authority packet publication', () => {
+  const publisherModule = require('../../scripts/cards/publish-authority-packet.cjs');
+  const publisherArmed = /^[a-f0-9]{40}$/.test(publisherModule.REVIEWED_INFRA_COMMIT);
+  const armedIt = publisherArmed ? it : it.skip;
+  const testPublishHead = 'e'.repeat(40);
+
+  async function publicationFixture(releaseCommit = testPublishHead) {
+    const {
+      authorityReviewDigest,
+      buildAuthorityPacket,
+    } = require('../../scripts/cards/authority-refresh.cjs');
+    const projectRoot = tempDir();
+    const publisherPath = join(projectRoot, 'scripts', 'cards', 'publish-authority-packet.cjs');
+    mkdirSync(join(projectRoot, 'scripts', 'cards'), { recursive: true });
+    writeFileSync(publisherPath, readFileSync(resolve(__dirname, '..', '..', 'scripts', 'cards', 'publish-authority-packet.cjs')));
+    const baselineRoot = tempDir();
+    const packetRoot = tempDir();
+    const emptyPrior = {
+      status: { source: { fetchedAt: '2025-01-01T00:00:00.000Z' } },
+      fieldIndex: { cards: [] },
+      qaSnapshot: { items: [] },
+    };
+    const first = officialCard();
+    const baseline = await buildAuthorityPacket({
+      projectRoot,
+      tempRoot: baselineRoot,
+      fetchedAt: '2026-01-01T00:00:00.000Z',
+      releaseCommit,
+      prior: emptyPrior,
+      fetchImpl: async () => officialResponse(officialPage([first])),
+      delay: async () => undefined,
+    });
+    const cardsDataRoot = join(projectRoot, '.claude', 'specs', 'cards-data');
+    mkdirSync(join(cardsDataRoot, '_raw'), { recursive: true });
+    writeFileSync(join(cardsDataRoot, 'INDEX.md'), 'static authority instructions\n');
+    writeFileSync(join(cardsDataRoot, '_raw', 'stale-api.json'), '{}\n');
+    writeFileSync(join(cardsDataRoot, 'status.json'), `${JSON.stringify(baseline.status, null, 2)}\n`);
+    writeFileSync(join(cardsDataRoot, 'qa-hash-snapshot.json'), `${JSON.stringify(baseline.qaSnapshot, null, 2)}\n`);
+    writeFileSync(join(cardsDataRoot, 'authority-field-index.json'), `${JSON.stringify(baseline.fieldIndex, null, 2)}\n`);
+    const prior = { status: baseline.status, fieldIndex: baseline.fieldIndex, qaSnapshot: baseline.qaSnapshot };
+    const added = officialCard({
+      id: 2,
+      card_id: '0002',
+      card_num: 'B00002',
+      main_path: 'two.jpg',
+      updated_at: '2026-01-02T00:00:00.000000Z',
+    });
+    const packet = await buildAuthorityPacket({
+      projectRoot,
+      tempRoot: packetRoot,
+      fetchedAt: '2026-01-02T00:00:00.000Z',
+      releaseCommit,
+      prior,
+      fetchImpl: async () => officialResponse(officialPage([first, added])),
+      delay: async () => undefined,
+    });
+    const packetDigest = authorityReviewDigest(packet);
+    const approvalRoot = tempDir();
+    const approvalPath = join(approvalRoot, 'approval.json');
+    writeFileSync(approvalPath, `${JSON.stringify({
+      schemaVersion: 1,
+      packetDigest,
+      dispositions: [{ kind: 'added', identity: 'B00002', packetDigest }],
+    }, null, 2)}\n`);
+    return { approvalPath, cardsDataRoot, packet, packetRoot, prior, projectRoot };
+  }
+
+  function publicationGit(projectRoot: string, head: string, changes: string[] = []) {
+    const {
+      EXPECTED_ARMING_CHANGES,
+      PACKET_RELEASE,
+      REVIEWED_INFRA_COMMIT,
+      REVIEWED_INFRA_PLACEHOLDER,
+      REVIEWED_TASK2_COMMIT,
+    } = require('../../scripts/cards/publish-authority-packet.cjs');
+    return (_command: string, args: string[]) => {
+      if (args.includes('--show-toplevel')) return `${projectRoot}\n`;
+      if (args.includes('--abbrev-ref')) return 'main\n';
+      if (args.includes('--porcelain=v1')) return '';
+      if (args[0] === 'rev-list' && args.at(-1) === head) return `${head} ${REVIEWED_INFRA_COMMIT}\n`;
+      if (args[0] === 'rev-list' && args.at(-1) === REVIEWED_INFRA_COMMIT) return `${REVIEWED_INFRA_COMMIT} ${REVIEWED_TASK2_COMMIT}\n`;
+      if (args[0] === 'rev-list' && args.at(-1) === REVIEWED_TASK2_COMMIT) return `${REVIEWED_TASK2_COMMIT} ${PACKET_RELEASE}\n`;
+      if (args[0] === 'diff-tree') {
+        const from = args.at(-2);
+        const to = args.at(-1);
+        const selected = from === REVIEWED_TASK2_COMMIT && to === REVIEWED_INFRA_COMMIT
+          ? changes
+          : from === REVIEWED_INFRA_COMMIT && to === head
+            ? EXPECTED_ARMING_CHANGES
+            : [];
+        return `${selected.join('\n')}${selected.length ? '\n' : ''}`;
+      }
+      if (args[0] === 'show' && args[1] === `${REVIEWED_INFRA_COMMIT}:scripts/cards/publish-authority-packet.cjs`) {
+        return readFileSync(join(projectRoot, 'scripts', 'cards', 'publish-authority-packet.cjs'), 'utf8')
+          .replace(
+            `const REVIEWED_INFRA_COMMIT = '${REVIEWED_INFRA_COMMIT}';`,
+            `const REVIEWED_INFRA_COMMIT = '${REVIEWED_INFRA_PLACEHOLDER}';`,
+          );
+      }
+      if (args[0] === 'show' && args[1] === `${head}:scripts/cards/publish-authority-packet.cjs`) {
+        return readFileSync(join(projectRoot, 'scripts', 'cards', 'publish-authority-packet.cjs'), 'utf8');
+      }
+      if (args.at(-1) === 'HEAD' || args.at(-1) === 'origin/main') return `${head}\n`;
+      throw new Error(`unexpected Git command: ${args.join(' ')}`);
+    };
+  }
+
+  it('rejects a poisoned staged static tree even when the source tree is restored', () => {
+    const { stableJson } = require('../../scripts/cards/authority-refresh.cjs');
+    const { assertStaticCardsDataSnapshot } = publisherModule;
+    const baseDir = tempDir();
+    const stagedBaseDir = tempDir();
+    const reviewed = Buffer.from('reviewed static authority\n');
+    writeFileSync(join(baseDir, 'INDEX.md'), reviewed);
+    writeFileSync(join(stagedBaseDir, 'INDEX.md'), 'poisoned static authority\n');
+    const expectedSnapshot = stableJson([{
+      path: 'INDEX.md',
+      type: 'file',
+      bytes: reviewed.byteLength,
+      sha256: createHash('sha256').update(reviewed).digest('hex'),
+    }]);
+
+    expect(() => assertStaticCardsDataSnapshot(baseDir, stagedBaseDir, expectedSnapshot)).toThrow(/staged static cards-data/i);
+    expect(readFileSync(join(baseDir, 'INDEX.md'))).toEqual(reviewed);
+  });
+
+  it('accepts only an arming commit whose publisher bytes differ by the reviewed commit literal', () => {
+    const {
+      EXPECTED_ARMING_CHANGES,
+      EXPECTED_REBASE_INFRA_CHANGES,
+      PACKET_RELEASE,
+      REVIEWED_INFRA_PLACEHOLDER,
+      REVIEWED_TASK2_COMMIT,
+      assertPublisherGitState,
+    } = publisherModule;
+    const reviewedInfraCommit = 'f'.repeat(40);
+    const head = 'e'.repeat(40);
+    const reviewedSource = `const REVIEWED_INFRA_COMMIT = '${REVIEWED_INFRA_PLACEHOLDER}';\nconst protectedBody = true;\n`;
+    const currentSource = `const REVIEWED_INFRA_COMMIT = '${reviewedInfraCommit}';\nconst protectedBody = true;\n`;
+    const git = (_command: string, args: string[]) => {
+      if (args.includes('--show-toplevel')) return 'C:/repo\n';
+      if (args.includes('--abbrev-ref')) return 'main\n';
+      if (args.includes('--porcelain=v1')) return '';
+      if (args[0] === 'rev-list' && args.at(-1) === head) return `${head} ${reviewedInfraCommit}\n`;
+      if (args[0] === 'rev-list' && args.at(-1) === reviewedInfraCommit) return `${reviewedInfraCommit} ${REVIEWED_TASK2_COMMIT}\n`;
+      if (args[0] === 'rev-list' && args.at(-1) === REVIEWED_TASK2_COMMIT) return `${REVIEWED_TASK2_COMMIT} ${PACKET_RELEASE}\n`;
+      if (args[0] === 'diff-tree') {
+        return `${(args.at(-1) === reviewedInfraCommit ? EXPECTED_REBASE_INFRA_CHANGES : EXPECTED_ARMING_CHANGES).join('\n')}\n`;
+      }
+      if (args.at(-1) === 'HEAD' || args.at(-1) === 'origin/main') return `${head}\n`;
+      throw new Error(`unexpected Git command: ${args.join(' ')}`);
+    };
+
+    expect(() => assertPublisherGitState('C:/repo', git, {
+      reviewedInfraCommit,
+      currentSource,
+      reviewedSource,
+    })).not.toThrow();
+    expect(() => assertPublisherGitState('C:/repo', git, {
+      reviewedInfraCommit,
+      currentSource: `${currentSource}const unreviewed = true;\n`,
+      reviewedSource,
+    })).toThrow(/changed bytes beyond/i);
+  });
+
+  armedIt('rederives the reviewed packet offline after exact reviewed lineage', async () => {
+    const {
+      EXPECTED_REBASE_INFRA_CHANGES,
+      PACKET_RELEASE,
+      rebaseAuthorityPacket,
+    } = require('../../scripts/cards/publish-authority-packet.cjs');
+    const fixture = await publicationFixture(PACKET_RELEASE);
+    const outputRoot = tempDir();
+    const head = testPublishHead;
+    const sourceBytes = readFileSync(join(fixture.packetRoot, 'packet.json'));
+    const result = await rebaseAuthorityPacket({
+      projectRoot: fixture.projectRoot,
+      packetPath: join(fixture.packetRoot, 'packet.json'),
+      outputRoot,
+      expectedSourcePacketSha256: createHash('sha256').update(sourceBytes).digest('hex'),
+      git: publicationGit(fixture.projectRoot, head, EXPECTED_REBASE_INFRA_CHANGES),
+    });
+    const rebased = JSON.parse(readFileSync(result.packetPath, 'utf8'));
+    const restored = structuredClone(rebased);
+    restored.basis.releaseCommit = PACKET_RELEASE;
+
+    expect(readFileSync(join(fixture.packetRoot, 'packet.json'))).toEqual(sourceBytes);
+    expect(restored.source).toEqual(fixture.packet.source);
+    expect(restored.sourceDigests).toEqual(fixture.packet.sourceDigests);
+    expect(restored.diff).toEqual(fixture.packet.diff);
+    expect(rebased.basis.releaseCommit).toBe(head);
+    expect(result.reviewDigest).not.toBe(require('../../scripts/cards/authority-refresh.cjs').authorityReviewDigest(fixture.packet));
+  });
+
+  armedIt('rejects unreviewed rederivation lineage before writing packet bytes', async () => {
+    const { PACKET_RELEASE, rebaseAuthorityPacket } = require('../../scripts/cards/publish-authority-packet.cjs');
+    const fixture = await publicationFixture(PACKET_RELEASE);
+    const outputRoot = tempDir();
+
+    await expect(rebaseAuthorityPacket({
+      projectRoot: fixture.projectRoot,
+      packetPath: join(fixture.packetRoot, 'packet.json'),
+      outputRoot,
+      git: publicationGit(fixture.projectRoot, testPublishHead, ['M\tunexpected.ts']),
+    })).rejects.toThrow(/unreviewed path/i);
+    expect(readdirSync(outputRoot)).toEqual([]);
+  });
+
+  armedIt('installs every approved authority artifact as one root and preserves static files', async () => {
+    const { publishAuthorityPacket } = require('../../scripts/cards/publish-authority-packet.cjs');
+    const fixture = await publicationFixture();
+    const result = publishAuthorityPacket({
+      projectRoot: fixture.projectRoot,
+      packetPath: join(fixture.packetRoot, 'packet.json'),
+      approvalPath: fixture.approvalPath,
+      git: publicationGit(fixture.projectRoot, testPublishHead, publisherModule.EXPECTED_REBASE_INFRA_CHANGES),
+    });
+
+    expect(result.packetDigest).toMatch(/^[a-f0-9]{64}$/);
+    expect(readFileSync(join(fixture.cardsDataRoot, 'INDEX.md'), 'utf8')).toBe('static authority instructions\n');
+    expect(existsSync(join(fixture.cardsDataRoot, '_raw', 'stale-api.json'))).toBe(false);
+    expect(JSON.parse(readFileSync(join(fixture.cardsDataRoot, 'status.json'), 'utf8'))).toEqual(fixture.packet.status);
+    expect(JSON.parse(readFileSync(join(fixture.cardsDataRoot, 'authority-field-index.json'), 'utf8'))).toEqual(fixture.packet.fieldIndex);
+  });
+
+  armedIt('rejects a stale approval before creating a stage or changing authority files', async () => {
+    const { publishAuthorityPacket } = require('../../scripts/cards/publish-authority-packet.cjs');
+    const fixture = await publicationFixture();
+    const before = readFileSync(join(fixture.cardsDataRoot, 'status.json'));
+    const approval = JSON.parse(readFileSync(fixture.approvalPath, 'utf8'));
+    approval.packetDigest = '0'.repeat(64);
+    approval.dispositions[0].packetDigest = approval.packetDigest;
+    writeFileSync(fixture.approvalPath, `${JSON.stringify(approval, null, 2)}\n`);
+
+    expect(() => publishAuthorityPacket({
+      projectRoot: fixture.projectRoot,
+      packetPath: join(fixture.packetRoot, 'packet.json'),
+      approvalPath: fixture.approvalPath,
+      git: publicationGit(fixture.projectRoot, testPublishHead, publisherModule.EXPECTED_REBASE_INFRA_CHANGES),
+    })).toThrow(/approval digest/i);
+    expect(readFileSync(join(fixture.cardsDataRoot, 'status.json'))).toEqual(before);
+    expect(readdirSync(join(fixture.projectRoot, '.claude', 'specs')).filter((name) => name.startsWith('.cards-data.stage-'))).toEqual([]);
+  });
+
+  armedIt('rejects a concurrent publisher before reading or changing authority data', async () => {
+    const { publishAuthorityPacket } = publisherModule;
+    const { acquireCardsDataWriteLock, releaseCardsDataWriteLock } = require('../../scripts/cards/official-api.cjs');
+    const fixture = await publicationFixture();
+    const before = readFileSync(join(fixture.cardsDataRoot, 'status.json'));
+    const lockToken = acquireCardsDataWriteLock(fixture.cardsDataRoot);
+
+    try {
+      expect(() => publishAuthorityPacket({
+        projectRoot: fixture.projectRoot,
+        packetPath: join(fixture.packetRoot, 'packet.json'),
+        approvalPath: fixture.approvalPath,
+        git: publicationGit(fixture.projectRoot, testPublishHead, publisherModule.EXPECTED_REBASE_INFRA_CHANGES),
+      })).toThrow(/lock is already held/i);
+      expect(readFileSync(join(fixture.cardsDataRoot, 'status.json'))).toEqual(before);
+    } finally {
+      expect(releaseCardsDataWriteLock(fixture.cardsDataRoot, lockToken)).toBe(true);
+    }
+  });
+
+  armedIt('rejects static cards-data mutation before the atomic swap', async () => {
+    const { publishAuthorityPacket } = publisherModule;
+    const fixture = await publicationFixture();
+    const before = readFileSync(join(fixture.cardsDataRoot, 'status.json'));
+    const stableGit = publicationGit(fixture.projectRoot, testPublishHead, publisherModule.EXPECTED_REBASE_INFRA_CHANGES);
+    let statusReads = 0;
+    const mutatingGit = (command: string, args: string[]) => {
+      if (args.includes('--porcelain=v1')) {
+        statusReads += 1;
+        if (statusReads === 2) writeFileSync(join(fixture.cardsDataRoot, 'INDEX.md'), 'concurrent mutation\n');
+      }
+      return stableGit(command, args);
+    };
+
+    expect(() => publishAuthorityPacket({
+      projectRoot: fixture.projectRoot,
+      packetPath: join(fixture.packetRoot, 'packet.json'),
+      approvalPath: fixture.approvalPath,
+      git: mutatingGit,
+    })).toThrow(/static cards-data changed/i);
+    expect(readFileSync(join(fixture.cardsDataRoot, 'status.json'))).toEqual(before);
+    expect(readdirSync(join(fixture.projectRoot, '.claude', 'specs')).filter((name) => name.startsWith('.cards-data.stage-'))).toEqual([]);
+  });
+
+  armedIt('hashes the exact approval bytes captured before the atomic swap', async () => {
+    const { publishAuthorityPacket } = publisherModule;
+    const fixture = await publicationFixture();
+    const approvalBytes = readFileSync(fixture.approvalPath);
+    const stableGit = publicationGit(fixture.projectRoot, testPublishHead, publisherModule.EXPECTED_REBASE_INFRA_CHANGES);
+    let headReads = 0;
+    const replacingGit = (command: string, args: string[]) => {
+      if (args.at(-1) === 'HEAD') {
+        headReads += 1;
+        if (headReads === 5) writeFileSync(fixture.approvalPath, '{}\n');
+      }
+      return stableGit(command, args);
+    };
+
+    const result = publishAuthorityPacket({
+      projectRoot: fixture.projectRoot,
+      packetPath: join(fixture.packetRoot, 'packet.json'),
+      approvalPath: fixture.approvalPath,
+      git: replacingGit,
+    });
+    expect(result.approvalSha256).toBe(createHash('sha256').update(approvalBytes).digest('hex'));
+  });
+
+  armedIt('rolls the whole authority root back when Git refs drift after installation', async () => {
+    const { publishAuthorityPacket } = require('../../scripts/cards/publish-authority-packet.cjs');
+    const fixture = await publicationFixture();
+    const before = readFileSync(join(fixture.cardsDataRoot, 'status.json'));
+    const stableGit = publicationGit(fixture.projectRoot, testPublishHead, publisherModule.EXPECTED_REBASE_INFRA_CHANGES);
+    let headReads = 0;
+    const driftingGit = (command: string, args: string[]) => {
+      if (args.at(-1) === 'HEAD') {
+        headReads += 1;
+        if (headReads >= 5) return `${'b'.repeat(40)}\n`;
+      }
+      if (args.at(-1) === 'origin/main' && headReads >= 5) return `${'b'.repeat(40)}\n`;
+      return stableGit(command, args);
+    };
+
+    expect(() => publishAuthorityPacket({
+      projectRoot: fixture.projectRoot,
+      packetPath: join(fixture.packetRoot, 'packet.json'),
+      approvalPath: fixture.approvalPath,
+      git: driftingGit,
+    })).toThrow(/Git refs changed/i);
+    expect(readFileSync(join(fixture.cardsDataRoot, 'status.json'))).toEqual(before);
+    expect(readFileSync(join(fixture.cardsDataRoot, 'INDEX.md'), 'utf8')).toBe('static authority instructions\n');
+  });
+
+  it('refuses all publication mutation until the reviewed infrastructure commit is armed', async () => {
+    if (publisherArmed) return;
+    const { PACKET_RELEASE, rebaseAuthorityPacket } = publisherModule;
+    const fixture = await publicationFixture(PACKET_RELEASE);
+    const outputRoot = tempDir();
+
+    await expect(rebaseAuthorityPacket({
+      projectRoot: fixture.projectRoot,
+      packetPath: join(fixture.packetRoot, 'packet.json'),
+      outputRoot,
+      git: publicationGit(fixture.projectRoot, testPublishHead, publisherModule.EXPECTED_REBASE_INFRA_CHANGES),
+    })).rejects.toThrow(/attestation is not armed/i);
+    expect(readdirSync(outputRoot)).toEqual([]);
+  });
+
+  it('registers offline rederivation and publish commands', () => {
+    const pkg = JSON.parse(readFileSync(resolve(__dirname, '..', '..', 'package.json'), 'utf8'));
+    expect(pkg.scripts['cards:authority:rederive']).toBe('node scripts/cards/publish-authority-packet.cjs rederive');
+    expect(pkg.scripts['cards:authority:publish']).toBe('node scripts/cards/publish-authority-packet.cjs publish');
   });
 });

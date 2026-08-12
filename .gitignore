@@ -71,6 +71,7 @@ analysis.txt
 /.claude/specs/.cards-data.transactions/
 /.claude/specs/.cards-data.stage-*
 /.claude/specs/.cards-data.backup-*
+/.claude/specs/.cards-data.publish.lock/
 /.codex/config.local.toml
 /.codex/context/current.md
 /.claude/sessions/row-026-runtime-packet.json

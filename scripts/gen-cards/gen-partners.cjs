@@ -11,9 +11,10 @@
 
 const fs = require('fs');
 const path = require('path');
+const { withCardsDataSnapshot } = require('../cards/official-api.cjs');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const DATA_DIR = path.join(ROOT, '.claude', 'specs', 'cards-data');
+const DATA_DIR = path.resolve(process.env.CONAN_CARDS_DATA_DIR || path.join(ROOT, '.claude', 'specs', 'cards-data'));
 const CARDS_DIR = path.join(ROOT, 'src', 'cards');
 const SKIP_PKGS = new Set(['ct-d08', 'ct-d11']); // MVP は手書き済
 
@@ -129,4 +130,4 @@ ${arrLines.join('\n')}
   console.log(`[gen-partners] barrel: src/cards/_generated/partners.ts (${generated.length} cards)`);
 }
 
-main();
+withCardsDataSnapshot({ baseDir: DATA_DIR, read: () => main() });

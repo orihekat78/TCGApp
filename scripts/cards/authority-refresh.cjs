@@ -6,7 +6,13 @@ const path = require('node:path');
 const { regenerateAll } = require('../../.claude/specs/cards-data/_regen_all.cjs');
 const { buildAuthorityDiff } = require('./authority-diff.cjs');
 const { generateCardsDataStatus } = require('./cards-data-status.cjs');
-const { fetchAllCards, OFFICIAL_CARDS_URL, packageCode, writeRawPackages } = require('./official-api.cjs');
+const {
+  fetchAllCards,
+  OFFICIAL_CARDS_URL,
+  packageCode,
+  withCardsDataSnapshot,
+  writeRawPackagesToStaging,
+} = require('./official-api.cjs');
 const { compareOrdinal } = require('./qa-normalize.cjs');
 const { buildQaHashSnapshot } = require('./write-qa-hash-snapshot.cjs');
 
@@ -251,7 +257,7 @@ function extractCatalogCardNums(source) {
   return cardNums.sort(compareOrdinal);
 }
 
-function loadPriorAuthority(projectRoot) {
+function loadPriorAuthorityUnlocked(projectRoot) {
   const root = path.resolve(projectRoot);
   const cardsDataRoot = path.join(root, '.claude', 'specs', 'cards-data');
   const status = JSON.parse(fs.readFileSync(path.join(cardsDataRoot, 'status.json'), 'utf8'));
@@ -298,6 +304,16 @@ function loadPriorAuthority(projectRoot) {
     },
     qaSnapshot,
   };
+}
+
+function loadPriorAuthority(projectRoot, { lockToken } = {}) {
+  const root = path.resolve(projectRoot);
+  const baseDir = path.join(root, '.claude', 'specs', 'cards-data');
+  return withCardsDataSnapshot({
+    baseDir,
+    ...(lockToken ? { lockToken } : {}),
+    read: () => loadPriorAuthorityUnlocked(root),
+  });
 }
 
 function buildAuthorityDiffForPacket(prior, next) {
@@ -391,6 +407,19 @@ function assertPinnedTemp(pin) {
   if (fs.realpathSync.native(pin.temporary) !== pin.temporary || stat.dev !== pin.device || stat.ino !== pin.inode) {
     throw new Error('authority temporary root identity changed');
   }
+  if (pin.sentinel) {
+    const sentinelPath = path.join(pin.temporary, pin.sentinel.name);
+    let sentinelStat;
+    try {
+      sentinelStat = fs.lstatSync(sentinelPath);
+    } catch {
+      throw new Error('authority temporary root identity changed');
+    }
+    if (!sentinelStat.isFile() || sentinelStat.isSymbolicLink()
+      || fs.readFileSync(sentinelPath, 'utf8') !== pin.sentinel.value) {
+      throw new Error('authority temporary root identity changed');
+    }
+  }
 }
 
 function removePinnedDirectory(pin) {
@@ -399,6 +428,13 @@ function removePinnedDirectory(pin) {
   if (!stat.isDirectory() || stat.isSymbolicLink()
     || stat.dev !== pin.device || stat.ino !== pin.inode
     || fs.realpathSync.native(pin.temporary) !== pin.temporary) return false;
+  if (pin.sentinel) {
+    const sentinelPath = path.join(pin.temporary, pin.sentinel.name);
+    if (!fs.existsSync(sentinelPath)) return false;
+    const sentinelStat = fs.lstatSync(sentinelPath);
+    if (!sentinelStat.isFile() || sentinelStat.isSymbolicLink()
+      || fs.readFileSync(sentinelPath, 'utf8') !== pin.sentinel.value) return false;
+  }
   fs.rmSync(pin.temporary, { recursive: true, force: true });
   return true;
 }
@@ -465,10 +501,16 @@ function validationTempRoot(
       }
     },
   });
+  const sentinel = {
+    name: `.authority-validation-pin-${crypto.randomUUID()}`,
+    value: `${crypto.randomUUID()}\n`,
+  };
+  fs.writeFileSync(path.join(validationPin.resolved, sentinel.name), sentinel.value, { flag: 'wx', mode: 0o600 });
   return {
     temporary: validationPin.resolved,
     device: validationPin.device,
     inode: validationPin.inode,
+    sentinel,
   };
 }
 
@@ -482,7 +524,7 @@ function validateTsvArtifactsAgainstRaw(projectRoot, packetRoot, rawCards, packe
   try {
     const cardsDataRoot = path.join(validationPath, 'snapshot', '.claude', 'specs', 'cards-data');
     const rawRoot = path.join(cardsDataRoot, '_raw');
-    writeRawPackages(rawCards, rawRoot);
+    writeRawPackagesToStaging(rawCards, rawRoot);
     regenerate({ baseDir: cardsDataRoot, rawDir: rawRoot });
     assertPinnedTemp(pin);
 
@@ -711,6 +753,290 @@ function validatePublishableAuthorityPacket(packet, prior, dispositions = [], op
   return packet;
 }
 
+function readPinnedRegularFile(rootPin, filePath, label) {
+  assertPinnedTemp(rootPin);
+  const before = fs.lstatSync(filePath);
+  if (!before.isFile() || before.isSymbolicLink()) throw new Error(`${label} must be a regular file`);
+  const bytes = fs.readFileSync(filePath);
+  const after = fs.lstatSync(filePath);
+  if (!after.isFile() || after.isSymbolicLink()
+    || after.dev !== before.dev || after.ino !== before.ino || after.size !== before.size) {
+    throw new Error(`${label} identity changed while reading`);
+  }
+  assertPinnedTemp(rootPin);
+  return bytes;
+}
+
+function validateArtifactManifestShape(artifacts) {
+  if (!Array.isArray(artifacts) || artifacts.length < 3 || artifacts.some((entry) => {
+    try {
+      exactKeys(entry, ['bytes', 'path', 'sha256'], 'authority packet artifact');
+    } catch {
+      return true;
+    }
+    return !entry.path || entry.path.startsWith('../') || path.isAbsolute(entry.path)
+      || !isAllowedArtifactPath(entry.path)
+      || !Number.isInteger(entry.bytes) || entry.bytes < 0
+      || !/^[a-f0-9]{64}$/.test(entry.sha256);
+  })) throw new Error('authority packet artifact path is invalid');
+  const paths = artifacts.map((entry) => entry.path);
+  if (new Set(paths).size !== paths.length
+    || stableJson([...paths].sort(compareOrdinal)) !== stableJson(paths)) {
+    throw new Error('authority packet artifacts must be unique and sorted');
+  }
+}
+
+function readReviewedAuthorityRawSource({
+  projectRoot,
+  sourcePacketPath,
+  expectedSourcePacketSha256,
+  expectedSourceReleaseCommit,
+  prior,
+}) {
+  if (!/^[a-f0-9]{64}$/.test(expectedSourcePacketSha256 ?? '')) {
+    throw new Error('reviewed authority source packet digest is invalid');
+  }
+  if (!/^[a-f0-9]{40}$/.test(expectedSourceReleaseCommit ?? '')) {
+    throw new Error('reviewed authority source releaseCommit is invalid');
+  }
+  const projectPin = admitPlainDirectory(projectRoot, 'authority project root');
+  const sourceRoot = path.dirname(path.resolve(sourcePacketPath));
+  const sourceDirectoryPin = admitPlainDirectory(sourceRoot, 'reviewed authority source root', {
+    validateResolved: (resolved) => {
+      if (pathsOverlap(projectPin.resolved, resolved)) {
+        throw new Error('reviewed authority source root must be external to the project');
+      }
+    },
+  });
+  const rootPin = {
+    temporary: sourceDirectoryPin.resolved,
+    device: sourceDirectoryPin.device,
+    inode: sourceDirectoryPin.inode,
+  };
+  const exactPacketPath = path.join(sourceDirectoryPin.resolved, 'packet.json');
+  if (path.resolve(sourcePacketPath) !== exactPacketPath) {
+    throw new Error('reviewed authority source packet must be packet.json at the source root');
+  }
+  const packetBytes = readPinnedRegularFile(rootPin, exactPacketPath, 'reviewed authority source packet');
+  if (sha256(packetBytes) !== expectedSourcePacketSha256) {
+    throw new Error('reviewed authority source packet digest mismatch');
+  }
+  let packet;
+  try {
+    packet = JSON.parse(packetBytes.toString('utf8'));
+  } catch {
+    throw new Error('reviewed authority source packet is invalid JSON');
+  }
+  exactKeys(packet, ['artifacts', 'basis', 'diff', 'fieldIndex', 'qaSnapshot', 'schemaVersion', 'source', 'sourceDigests', 'state', 'status'], 'reviewed authority source packet');
+  if (packet.schemaVersion !== 1 || packet.state !== 'acquired') throw new Error('reviewed authority source packet schema is invalid');
+  exactKeys(packet.source, ['fetchedAt', 'url'], 'reviewed authority source');
+  if (packet.source.url !== OFFICIAL_CARDS_URL || !isValidOfficialTimestamp(packet.source.fetchedAt)) {
+    throw new Error('reviewed authority source is invalid');
+  }
+  exactKeys(packet.basis, ['priorDigest', 'releaseCommit'], 'reviewed authority source basis');
+  if (packet.basis.releaseCommit !== expectedSourceReleaseCommit
+    || packet.basis.priorDigest !== authorityPriorDigest(prior)) {
+    throw new Error('reviewed authority source basis does not match');
+  }
+  exactKeys(packet.sourceDigests, ['acquisitions', 'officialCards'], 'reviewed authority source digests');
+  if (!/^[a-f0-9]{64}$/.test(packet.sourceDigests.officialCards)
+    || !Array.isArray(packet.sourceDigests.acquisitions)
+    || packet.sourceDigests.acquisitions.length !== 2
+    || packet.sourceDigests.acquisitions.some((digest) => digest !== packet.sourceDigests.officialCards)) {
+    throw new Error('reviewed authority source digests are invalid');
+  }
+  validateArtifactManifestShape(packet.artifacts);
+  const actualArtifacts = exactArtifactFiles(sourceDirectoryPin.resolved);
+  if (stableJson(actualArtifacts) !== stableJson(packet.artifacts)) {
+    throw new Error('reviewed authority source artifact bytes changed');
+  }
+
+  const rawPrefix = 'snapshot/.claude/specs/cards-data/_raw/';
+  const rawEntries = packet.artifacts.filter((entry) => entry.path.startsWith(rawPrefix));
+  if (rawEntries.length === 0) throw new Error('reviewed authority source has no raw artifacts');
+  const cards = [];
+  const rawArtifacts = [];
+  for (const entry of rawEntries) {
+    const relativeParts = entry.path.split('/');
+    const artifactPath = path.join(sourceDirectoryPin.resolved, ...relativeParts);
+    const bytes = readPinnedRegularFile(rootPin, artifactPath, `reviewed authority raw artifact ${entry.path}`);
+    if (bytes.byteLength !== entry.bytes || sha256(bytes) !== entry.sha256) {
+      throw new Error(`reviewed authority raw artifact digest mismatch: ${entry.path}`);
+    }
+    let raw;
+    try {
+      raw = JSON.parse(bytes.toString('utf8'));
+    } catch {
+      throw new Error(`reviewed authority raw artifact is invalid JSON: ${entry.path}`);
+    }
+    if (!raw || Object.keys(raw).length !== 1 || !Array.isArray(raw.data)) {
+      throw new Error(`reviewed authority raw artifact schema changed: ${entry.path}`);
+    }
+    const expectedPackage = path.basename(entry.path).replace(/-api\.json$/, '').toLowerCase();
+    for (const card of raw.data) {
+      if (packageCode(card?.package).toLowerCase() !== expectedPackage) {
+        throw new Error(`reviewed authority raw package ${expectedPackage} contains a foreign card`);
+      }
+      cards.push(card);
+    }
+    rawArtifacts.push({ path: entry.path, bytes });
+  }
+  validateOfficialCardSet(cards);
+  cards.sort((left, right) => compareOrdinal(left.card_num, right.card_num));
+  if (sha256(Buffer.from(stableJson(cards))) !== packet.sourceDigests.officialCards) {
+    throw new Error('reviewed authority raw artifacts do not match source digest');
+  }
+  const fieldIndex = buildAuthorityFieldIndex(cards, packet.source);
+  if (stableJson(fieldIndex) !== stableJson(packet.fieldIndex)) {
+    throw new Error('reviewed authority field index does not match raw artifacts');
+  }
+  const rawCardNumsHash = sha256(Buffer.from(cards.map((card) => card.card_num).sort(compareOrdinal).join('\n')));
+  if (packet.status?.printings?.raw !== cards.length
+    || packet.status?.hashes?.rawCardNums !== rawCardNumsHash) {
+    throw new Error('reviewed authority status does not match raw artifacts');
+  }
+  const cardDiff = buildAuthorityDiffForPacket(prior, { fieldIndex, qaSnapshot: prior?.qaSnapshot ?? { items: [] } });
+  for (const key of ['added', 'removed', 'changedFields']) {
+    if (stableJson(cardDiff[key]) !== stableJson(packet.diff?.[key])) {
+      throw new Error(`reviewed authority card diff changed: ${key}`);
+    }
+  }
+  return {
+    packet,
+    packetBytes,
+    rootPin,
+    cards,
+    rawArtifacts,
+    actualArtifacts,
+  };
+}
+
+async function materializeAuthorityPacket({
+  projectRoot,
+  pin,
+  source,
+  releaseCommit,
+  prior,
+  cards,
+  sourceDigests,
+  regenerate,
+  rawArtifacts,
+}) {
+  assertPinnedTemp(pin);
+  if (!isValidOfficialTimestamp(source?.fetchedAt) || source.url !== OFFICIAL_CARDS_URL) {
+    throw new Error('authority packet source is invalid');
+  }
+  if (!/^[a-f0-9]{40}$/.test(releaseCommit)) throw new Error('authority packet releaseCommit is invalid');
+  validateOfficialCardSet(cards);
+  const sortedCards = [...cards].sort((left, right) => compareOrdinal(left.card_num, right.card_num));
+  const sourceDigest = sha256(Buffer.from(stableJson(sortedCards)));
+  if (sourceDigests?.officialCards !== sourceDigest
+    || !Array.isArray(sourceDigests?.acquisitions)
+    || sourceDigests.acquisitions.length !== 2
+    || sourceDigests.acquisitions.some((digest) => digest !== sourceDigest)) {
+    throw new Error('authority materialization source digest mismatch');
+  }
+  const dataRoot = path.join(pin.temporary, 'snapshot');
+  const cardsDataRoot = path.join(dataRoot, '.claude', 'specs', 'cards-data');
+  const rawRoot = path.join(cardsDataRoot, '_raw');
+  fs.mkdirSync(cardsDataRoot, { recursive: true });
+  assertPinnedTemp(pin);
+  if (rawArtifacts) {
+    for (const artifact of rawArtifacts) {
+      const outputPath = path.join(pin.temporary, ...artifact.path.split('/'));
+      fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+      fs.writeFileSync(outputPath, artifact.bytes, { flag: 'wx', mode: 0o600 });
+      assertPinnedTemp(pin);
+    }
+  } else {
+    writeRawPackagesToStaging(sortedCards, rawRoot);
+  }
+  await regenerate({ baseDir: cardsDataRoot, rawDir: rawRoot });
+  assertPinnedTemp(pin);
+  const status = generateCardsDataStatus(dataRoot, source);
+  writeJson(path.join(cardsDataRoot, 'status.json'), status);
+  const qaSnapshot = buildQaHashSnapshot(dataRoot);
+  if (qaSnapshot.conflicts.length) throw new Error(`Q&A conflict: ${qaSnapshot.conflicts[0].qaId}`);
+  writeJson(path.join(cardsDataRoot, 'qa-hash-snapshot.json'), qaSnapshot);
+  const fieldIndex = buildAuthorityFieldIndex(sortedCards, source);
+  writeJson(path.join(cardsDataRoot, 'authority-field-index.json'), fieldIndex);
+  const packet = {
+    schemaVersion: 1,
+    state: 'acquired',
+    source,
+    basis: { releaseCommit, priorDigest: authorityPriorDigest(prior) },
+    status,
+    qaSnapshot,
+    fieldIndex,
+    diff: buildAuthorityDiffForPacket(prior, { fieldIndex, qaSnapshot }),
+    sourceDigests,
+    artifacts: exactArtifactFiles(pin.temporary),
+  };
+  assertPinnedTemp(pin);
+  validateAuthorityPacket(packet, prior, { packetRoot: pin.temporary, projectRoot });
+  const packetFile = path.join(pin.temporary, 'packet.json');
+  try {
+    writeJson(packetFile, packet);
+    assertPinnedTemp(pin);
+    validateAuthorityPacket(packet, prior, { packetRoot: pin.temporary, projectRoot });
+  } catch (error) {
+    removePinnedFile(pin, 'packet.json');
+    throw error;
+  }
+  return packet;
+}
+
+async function rederiveAuthorityPacket({
+  projectRoot,
+  sourcePacketPath,
+  outputRoot,
+  expectedSourcePacketSha256,
+  expectedSourceReleaseCommit,
+  releaseCommit,
+  prior,
+  regenerate = regenerateAll,
+  tempAdmissionOperations,
+} = {}) {
+  const effectivePrior = prior ?? loadPriorAuthority(projectRoot);
+  const source = readReviewedAuthorityRawSource({
+    projectRoot,
+    sourcePacketPath,
+    expectedSourcePacketSha256,
+    expectedSourceReleaseCommit,
+    prior: effectivePrior,
+  });
+  const outputPin = assertEmptyExternalTemp(projectRoot, outputRoot, tempAdmissionOperations);
+  if (pathsOverlap(source.rootPin.temporary, outputPin.temporary)) {
+    throw new Error('authority rederivation output must be separate from its source packet');
+  }
+  const packet = await materializeAuthorityPacket({
+    projectRoot,
+    pin: outputPin,
+    source: source.packet.source,
+    releaseCommit,
+    prior: effectivePrior,
+    cards: source.cards,
+    sourceDigests: source.packet.sourceDigests,
+    regenerate,
+    rawArtifacts: source.rawArtifacts,
+  });
+  for (const key of ['added', 'removed', 'changedFields']) {
+    if (stableJson(packet.diff[key]) !== stableJson(source.packet.diff[key])) {
+      throw new Error(`authority rederivation changed reviewed card diff: ${key}`);
+    }
+  }
+  const sourcePacketBytesAfter = readPinnedRegularFile(
+    source.rootPin,
+    sourcePacketPath,
+    'reviewed authority source packet',
+  );
+  if (!sourcePacketBytesAfter.equals(source.packetBytes)
+    || stableJson(exactArtifactFiles(source.rootPin.temporary)) !== stableJson(source.actualArtifacts)) {
+    throw new Error('reviewed authority source changed during rederivation');
+  }
+  return packet;
+}
+
 async function buildAuthorityPacket({
   projectRoot,
   tempRoot,
@@ -723,55 +1049,25 @@ async function buildAuthorityPacket({
   tempAdmissionOperations,
 } = {}) {
   const pin = assertEmptyExternalTemp(projectRoot, tempRoot, tempAdmissionOperations);
-  const { temporary } = pin;
   if (!isValidOfficialTimestamp(fetchedAt)) throw new Error('authority packet fetchedAt is invalid');
   if (!/^[a-f0-9]{40}$/.test(releaseCommit)) throw new Error('authority packet releaseCommit is invalid');
   const effectivePrior = prior ?? loadPriorAuthority(projectRoot);
   const acquisition = await acquireStableOfficialCards({ fetchImpl, delay });
   assertPinnedTemp(pin);
-  const dataRoot = path.join(temporary, 'snapshot');
-  const cardsDataRoot = path.join(dataRoot, '.claude', 'specs', 'cards-data');
-  const rawRoot = path.join(cardsDataRoot, '_raw');
-  fs.mkdirSync(cardsDataRoot, { recursive: true });
-  assertPinnedTemp(pin);
-  writeRawPackages(acquisition.cards, rawRoot);
-  await regenerate({ baseDir: cardsDataRoot, rawDir: rawRoot });
-  assertPinnedTemp(pin);
   const source = { url: OFFICIAL_CARDS_URL, fetchedAt };
-  const status = generateCardsDataStatus(dataRoot, source);
-  writeJson(path.join(cardsDataRoot, 'status.json'), status);
-  const qaSnapshot = buildQaHashSnapshot(dataRoot);
-  if (qaSnapshot.conflicts.length) throw new Error(`Q&A conflict: ${qaSnapshot.conflicts[0].qaId}`);
-  writeJson(path.join(cardsDataRoot, 'qa-hash-snapshot.json'), qaSnapshot);
-  const fieldIndex = buildAuthorityFieldIndex(acquisition.cards, source);
-  writeJson(path.join(cardsDataRoot, 'authority-field-index.json'), fieldIndex);
-  const packet = {
-    schemaVersion: 1,
-    state: 'acquired',
+  return materializeAuthorityPacket({
+    projectRoot,
+    pin,
     source,
-    basis: { releaseCommit, priorDigest: authorityPriorDigest(effectivePrior) },
-    status,
-    qaSnapshot,
-    fieldIndex,
-    diff: buildAuthorityDiffForPacket(effectivePrior, { fieldIndex, qaSnapshot }),
+    releaseCommit,
+    prior: effectivePrior,
+    cards: acquisition.cards,
     sourceDigests: {
       officialCards: acquisition.digest,
       acquisitions: acquisition.acquisitionDigests,
     },
-    artifacts: exactArtifactFiles(temporary),
-  };
-  assertPinnedTemp(pin);
-  validateAuthorityPacket(packet, effectivePrior, { packetRoot: temporary, projectRoot });
-  const packetFile = path.join(temporary, 'packet.json');
-  try {
-    writeJson(packetFile, packet);
-    assertPinnedTemp(pin);
-    validateAuthorityPacket(packet, effectivePrior, { packetRoot: temporary, projectRoot });
-  } catch (error) {
-    removePinnedFile(pin, 'packet.json');
-    throw error;
-  }
-  return packet;
+    regenerate,
+  });
 }
 
 module.exports = {
@@ -783,6 +1079,7 @@ module.exports = {
   buildAuthorityPacket,
   fetchOfficialCardsOnce,
   loadPriorAuthority,
+  rederiveAuthorityPacket,
   stableJson,
   validateAuthorityPacket,
   validateOfficialCard,

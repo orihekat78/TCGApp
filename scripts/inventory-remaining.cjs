@@ -4,11 +4,14 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const { withCardsDataSnapshot } = require('./cards/official-api.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 // Official TSV data is intentionally ignored. Tests inject a minimal catalog
 // without making CI depend on a developer-local corpus.
 const root = path.resolve(process.env.CONAN_CARDS_DATA_DIR || path.join(repoRoot, '.claude/specs/cards-data'));
+
+function main() {
 
 function parseArgs(argv) {
   let pkg;
@@ -194,3 +197,7 @@ if (args.json) {
     untagged: untagged.map(({ num, kind, pkg }) => ({ num, kind, pkg })),
   })}\n`);
 }
+
+}
+
+withCardsDataSnapshot({ baseDir: root, read: () => main() });

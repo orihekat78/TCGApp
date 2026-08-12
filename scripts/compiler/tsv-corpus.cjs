@@ -5,7 +5,8 @@
 // 使い方: node scripts/compiler/tsv-corpus.cjs  → .tmp/compiler/corpus.json
 const fs = require('fs');
 const path = require('path');
-const { loadQaCorpus: normalizeQaCorpus } = require('../cards/qa-normalize.cjs');
+const { isQaShaped, normalizeQaCards } = require('../cards/qa-normalize.cjs');
+const { withCardsDataSnapshot } = require('../cards/official-api.cjs');
 
 // kind ごとの TSV 列構成 (2026-07-02 実測):
 //   character: cardNum cardId title color level ap lp rarity features imagePath effect cutIn hirameki henso illustrator flavor qAndA
@@ -50,8 +51,11 @@ function parseTsv(file, pkg, kind) {
   return rows;
 }
 
-function loadCorpus(root) {
-  const base = path.join(root, '.claude', 'specs', 'cards-data');
+function cardsDataDir(root) {
+  return path.resolve(process.env.CONAN_CARDS_DATA_DIR || path.join(root, '.claude', 'specs', 'cards-data'));
+}
+
+function loadCorpusUnlocked(root, base = cardsDataDir(root)) {
   const out = [];
   for (const pkg of fs.readdirSync(base).sort()) {
     const dir = path.join(base, pkg);
@@ -63,6 +67,13 @@ function loadCorpus(root) {
   }
   out.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   return out;
+}
+
+function loadCorpus(root, base = cardsDataDir(root)) {
+  return withCardsDataSnapshot({
+    baseDir: base,
+    read: () => loadCorpusUnlocked(root, base),
+  });
 }
 
 function dupIds(corpus) {
@@ -77,14 +88,29 @@ function dupIds(corpus) {
 
 // Kept separate from card rows: CardDef/compiler card semantics must not depend
 // on official Q&A source text.
-function loadQaCorpus(root) {
-  return normalizeQaCorpus(root);
+function loadQaCorpusUnlocked(root, base = cardsDataDir(root)) {
+  const rawDir = path.join(base, '_raw');
+  if (!fs.existsSync(rawDir)) return normalizeQaCards([]);
+  const cards = fs.readdirSync(rawDir).sort()
+    .filter((file) => file.endsWith('-api.json'))
+    .flatMap((file) => JSON.parse(fs.readFileSync(path.join(rawDir, file), 'utf8')).data ?? []);
+  return normalizeQaCards(cards.filter((card) => isQaShaped(card.q_a ?? card.qAndA)));
+}
+
+function loadQaCorpus(root, base = cardsDataDir(root)) {
+  return withCardsDataSnapshot({
+    baseDir: base,
+    read: () => loadQaCorpusUnlocked(root, base),
+  });
 }
 
 if (require.main === module) {
   const root = path.join(__dirname, '..', '..');
-  const corpus = loadCorpus(root);
-  const qa = loadQaCorpus(root);
+  const baseDir = cardsDataDir(root);
+  const { corpus, qa } = withCardsDataSnapshot({
+    baseDir,
+    read: () => ({ corpus: loadCorpusUnlocked(root, baseDir), qa: loadQaCorpusUnlocked(root, baseDir) }),
+  });
   const dups = dupIds(corpus);
   const byKind = {};
   let withText = 0;
@@ -101,4 +127,4 @@ if (require.main === module) {
   console.log(`  q&a: ${qa.items.length} items / answer conflicts: ${qa.conflicts.length}`);
 }
 
-module.exports = { loadCorpus, loadQaCorpus, dupIds, TEXT_COLS };
+module.exports = { cardsDataDir, loadCorpus, loadQaCorpus, dupIds, TEXT_COLS };

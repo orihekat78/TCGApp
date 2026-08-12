@@ -1,5 +1,7 @@
 const fs=require("fs"),path=require("path");
-const DATA="./.claude/specs/cards-data";
+const { withCardsDataSnapshot } = require("./cards/official-api.cjs");
+const DATA=path.resolve(process.env.CONAN_CARDS_DATA_DIR||"./.claude/specs/cards-data");
+function main(){
 function parseTsv(p){const raw=fs.readFileSync(p,"utf8").replace(/\r/g,"");const lines=raw.split("\n").filter(l=>l.length>0);if(!lines.length)return[];const h=lines[0].split("\t");return lines.slice(1).map(line=>{const c=line.split("\t");const r={};h.forEach((k,i)=>r[k]=c[i]??"");return r;});}
 const kinds=["character","event","case","partner"];
 const cat={};
@@ -40,3 +42,5 @@ const feat=(t)=>{const s=[t.effect,t.cutIn,t.hirameki,t.henso].join(" ");const t
 const bDist={};for(const o of out){const b=feat(o.repRecord);bDist[b]=(bDist[b]||0)+1;}
 const sorted=Object.entries(bDist).sort((a,b)=>b[1]-a[1]);
 console.log("--- pre-group buckets (rep count) ---");for(const[k,v]of sorted)console.log(String(v).padStart(3),k);
+}
+withCardsDataSnapshot({baseDir:DATA,read:()=>main()});

@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { runGenQaTrace, validateQaSnapshot, validateQaSnapshotAgainstStatus, type QaSnapshot, type QaSnapshotItem, type CoverageStatus } from './gen-docs/gen-qa-trace.js';
@@ -7,6 +8,10 @@ import { ADJUDICATION_RESULTS, type QaAdjudicationResult } from './qa-adjudicati
 import { mergeQaAdjudication } from './qa-adjudication.js';
 
 const ROOT = process.cwd();
+const require = createRequire(import.meta.url);
+type CardsDataSnapshot = { baseDir: string; lockToken: unknown; recovery: unknown };
+type WithCardsDataSnapshot = <T>(options: { baseDir: string; lockToken?: unknown; read: (snapshot: CardsDataSnapshot) => T }) => T;
+const { withCardsDataSnapshot } = require('./cards/official-api.cjs') as { withCardsDataSnapshot: WithCardsDataSnapshot };
 const HASH = /^[a-f0-9]{64}$/;
 const STATUSES: readonly CoverageStatus[] = ['matched', 'test-missing', 'legacy-unreviewed', 'unmapped', 'mismatch', 'deferred', 'manual-only'];
 const ALLOWED_COVERAGE_TRANSITIONS: Readonly<Record<CoverageStatus, ReadonlySet<CoverageStatus>>> = {
@@ -179,6 +184,9 @@ function compareCoverage(baseline: QaTraceCoverage, current: QaTraceCoverage, is
 export function lintQaTrace(options: { root?: string; requireAll?: boolean; requireReviewed?: boolean; checkGenerated?: boolean } = {}): QaLintResult {
   const root = resolve(options.root ?? ROOT);
   const dataDir = resolve(root, '.claude/specs/cards-data');
+  return withCardsDataSnapshot({
+    baseDir: dataDir,
+    read: ({ lockToken }) => {
   const snapshot = readJson(resolve(dataDir, 'qa-hash-snapshot.json'));
   validateQaSnapshot(snapshot);
   validateQaSnapshotAgainstStatus(snapshot, readJson(resolve(dataDir, 'status.json')));
@@ -190,25 +198,30 @@ export function lintQaTrace(options: { root?: string; requireAll?: boolean; requ
   compareSnapshots(baseline, snapshot, issues);
   compareCoverage(baseline.coverage, coverage, issues);
   if (options.checkGenerated) {
-    const result = runGenQaTrace({ checkOnly: true }, root);
+    const result = runGenQaTrace({ checkOnly: true }, root, { lockToken });
     if (result.changedFiles.length) push(issues, 'generated-docs-drift', `generated Q&A artifacts are stale: ${result.changedFiles.join(', ')}`);
   }
   if (options.requireAll && !coverage.allCompliant) push(issues, 'require-all', 'Q&A coverage is not all compliant');
   if (options.requireReviewed) {
     try {
-      mergeQaAdjudication({ root, check: true, requireReviewed: true });
+      mergeQaAdjudication({ root, check: true, requireReviewed: true, lockToken });
     } catch (error) {
       push(issues, 'require-reviewed', error instanceof Error ? error.message : 'Q&A adjudications are not strictly reviewed');
     }
     if (!coverage.allAdjudicated || coverage.statusCounts['legacy-unreviewed'] > 0) push(issues, 'require-reviewed', 'Q&A adjudications still contain unreviewed, needs-manual, trace-audit, or legacy-unreviewed items');
   }
   return { issues, coverage, baseline };
+    },
+  });
 }
 
 /** Regenerate the tracked hash-only review baseline after an intentional, reviewed source update. */
 export function writeQaTraceBaseline(root = ROOT): QaTraceBaseline {
   const projectRoot = resolve(root);
   const dataDir = resolve(projectRoot, '.claude/specs/cards-data');
+  return withCardsDataSnapshot({
+    baseDir: dataDir,
+    read: () => {
   const snapshot = readJson(resolve(dataDir, 'qa-hash-snapshot.json'));
   validateQaSnapshot(snapshot);
   validateQaSnapshotAgainstStatus(snapshot, readJson(resolve(dataDir, 'status.json')));
@@ -218,6 +231,8 @@ export function writeQaTraceBaseline(root = ROOT): QaTraceBaseline {
   });
   writeFileSync(resolve(projectRoot, '.claude/specs/qa-trace-baseline.json'), `${JSON.stringify(baseline, null, 2)}\n`);
   return baseline;
+    },
+  });
 }
 
 export function lintExitCode(result: QaLintResult): 0 | 1 {

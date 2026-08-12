@@ -1,8 +1,12 @@
 // P-spread generator: base 出荷済 + TSV 全列同文の P variant を slim clone で生成し _reuse/index.ts に登録
 const fs = require('fs');
 const path = require('path');
+const { withCardsDataSnapshot } = require('./cards/official-api.cjs');
 // M2後半 (2026-07-10): ROOT hardcode を env 対応に (worktree 運用で spread 0 件になる latent の恒久 fix)。
 const ROOT = process.env.CONAN_ROOT || 'C:/Users/arumi/OneDrive/デスクトップ/conan';
+const DATA_DIR = path.resolve(process.env.CONAN_CARDS_DATA_DIR || path.join(ROOT, '.claude/specs/cards-data'));
+
+function main() {
 
 const corpus = JSON.parse(fs.readFileSync(path.join(ROOT, '.tmp/compiler/corpus.json'), 'utf8')).cards;
 const byId = new Map(corpus.map(c => [c.id, c]));
@@ -32,7 +36,7 @@ console.log('spread-ready:', candidates.length);
 
 // ---- 2. TSV から imageUrl 抽出 ----
 function tsvRow(id, pkg) {
-  const dir = path.join(ROOT, '.claude/specs/cards-data', pkg);
+  const dir = path.join(DATA_DIR, pkg);
   for (const f of fs.readdirSync(dir)) {
     if (!f.endsWith('.tsv')) continue;
     const lines = fs.readFileSync(path.join(dir, f), 'utf8').split(/\r?\n/);
@@ -102,3 +106,6 @@ reuse = reuse.slice(0, arrClose) + section + reuse.slice(arrClose);
 fs.writeFileSync(reusePath, reuse);
 console.log('wrote', results.length, 'files + registered');
 console.log(ids.join(' '));
+}
+
+withCardsDataSnapshot({ baseDir: DATA_DIR, read: () => main() });

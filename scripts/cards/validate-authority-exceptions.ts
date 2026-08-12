@@ -1,6 +1,12 @@
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+
+const require = createRequire(import.meta.url);
+type CardsDataSnapshot = { baseDir: string; lockToken: unknown; recovery: unknown };
+type WithCardsDataSnapshot = <T>(options: { baseDir: string; read: (snapshot: CardsDataSnapshot) => T }) => T;
+const { withCardsDataSnapshot } = require('./official-api.cjs') as { withCardsDataSnapshot: WithCardsDataSnapshot };
 
 export const AUTHORITY_SNAPSHOT_IDS = [
   'cardCatalog',
@@ -354,13 +360,21 @@ export function validateAuthorityExceptions(
 
 async function main(): Promise<void> {
   const projectRoot = resolve(import.meta.dirname, '../..');
-  const path = resolve(projectRoot, '.claude/specs/authority-exceptions.json');
-  const input: unknown = JSON.parse(readFileSync(path, 'utf8'));
+  const dataDir = resolve(projectRoot, '.claude/specs/cards-data');
   const cardsModule = await import(pathToFileURL(resolve(projectRoot, 'src/cards/index.ts')).href);
-  const registeredCardIds = registeredCardIdsFromCards(
-    cardsModule.ALL_CARDS as Array<{ id: string }>,
-  );
-  const validated = validateAuthorityExceptions(input, { projectRoot, registeredCardIds });
+  const registeredCardIds = registeredCardIdsFromCards(cardsModule.ALL_CARDS as Array<{ id: string }>);
+  const validated = withCardsDataSnapshot({
+    baseDir: dataDir,
+    read: () => validateAuthorityExceptions(
+      JSON.parse(readFileSync(resolve(projectRoot, '.claude/specs/authority-exceptions.json'), 'utf8')) as unknown,
+      {
+        projectRoot,
+        expectedSnapshots: loadCurrentAuthoritySnapshotHashes(projectRoot),
+        minimumReviewedAt: currentMinimumReviewedAt(projectRoot),
+        registeredCardIds,
+      },
+    ),
+  });
   process.stdout.write(`${JSON.stringify({
     schemaVersion: 1,
     ok: true,

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { withCardsDataSnapshot } = require('./cards/official-api.cjs');
 
 function extractLiterals(text) {
   if (!text) return [];
@@ -19,8 +20,11 @@ function crosscheck(abilities, texts) {
   return { ok: missing.length === 0, missing };
 }
 
-function loadTsv() {
-  const root = path.join(__dirname, '..', '.claude', 'specs', 'cards-data');
+function cardsDataDir() {
+  return path.resolve(process.env.CONAN_CARDS_DATA_DIR || path.join(__dirname, '..', '.claude', 'specs', 'cards-data'));
+}
+
+function loadTsv(root = cardsDataDir()) {
   const rows = {};
   for (const pkg of fs.readdirSync(root)) {
     const dir = path.join(root, pkg);
@@ -39,7 +43,8 @@ function loadTsv() {
 }
 
 if (require.main === module) {
-  const rows = loadTsv();
+  const baseDir = cardsDataDir();
+  const rows = withCardsDataSnapshot({ baseDir, read: () => loadTsv(baseDir) });
   const cands = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '.tmp/card-factory/t0-abilities.json'), 'utf8'));
   let fail = 0;
   for (const c of cands) {
@@ -49,4 +54,4 @@ if (require.main === module) {
   console.log(`crosscheck: ${cands.length - fail}/${cands.length} ok`);
   process.exit(fail ? 1 : 0);
 }
-module.exports = { extractLiterals, crosscheck };
+module.exports = { cardsDataDir, extractLiterals, crosscheck, loadTsv };

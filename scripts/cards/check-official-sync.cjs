@@ -3,11 +3,11 @@ const crypto = require("node:crypto");
 const { execFileSync } = require("node:child_process");
 const path = require("node:path");
 
-const { fetchAllCards } = require("./official-api.cjs");
+const { fetchAllCards, withCardsDataSnapshot } = require("./official-api.cjs");
 const { normalizedFaqHashFromCards } = require("./cards-data-status.cjs");
 
-function readLocalQaByCardNum(root) {
-  const rawDir = path.join(root, ".claude", "specs", "cards-data", "_raw");
+function readLocalQaByCardNum(root, cardsDataDir = path.join(root, ".claude", "specs", "cards-data")) {
+  const rawDir = path.join(cardsDataDir, "_raw");
   const qaByCardNum = new Map();
   if (!fs.existsSync(rawDir)) return qaByCardNum;
   for (const file of fs.readdirSync(rawDir).sort()) {
@@ -20,7 +20,7 @@ function readLocalQaByCardNum(root) {
   return qaByCardNum;
 }
 
-function readLocalCards(root = path.resolve(__dirname, "..", "..")) {
+function readLocalCards(root = path.resolve(__dirname, "..", ".."), cardsDataDir = path.join(root, ".claude", "specs", "cards-data")) {
   execFileSync(process.execPath, [path.join(root, "node_modules", "tsx", "dist", "cli.mjs"), "scripts/compiler/dump-shipped.ts"], {
     cwd: root,
     stdio: "ignore",
@@ -28,7 +28,7 @@ function readLocalCards(root = path.resolve(__dirname, "..", "..")) {
   const dump = JSON.parse(
     fs.readFileSync(path.join(root, ".tmp", "compiler", "shipped-dsl.json"), "utf8"),
   );
-  const qaByCardNum = readLocalQaByCardNum(root);
+  const qaByCardNum = readLocalQaByCardNum(root, cardsDataDir);
   return dump.cards.map((card) => ({ cardNum: card.id, qAndA: qaByCardNum.get(card.id) ?? "" }));
 }
 
@@ -55,8 +55,13 @@ function compareOfficialSync({ officialCards, localCards }) {
 }
 
 async function runOfficialSyncCheck({ root, fetchImpl } = {}) {
+  const resolvedRoot = root ?? path.resolve(__dirname, "..", "..");
+  const baseDir = path.resolve(process.env.CONAN_CARDS_DATA_DIR || path.join(resolvedRoot, ".claude", "specs", "cards-data"));
   const official = await fetchAllCards({ fetchImpl });
-  return compareOfficialSync({ officialCards: official.cards, localCards: readLocalCards(root) });
+  return compareOfficialSync({
+    officialCards: official.cards,
+    localCards: withCardsDataSnapshot({ baseDir, read: () => readLocalCards(resolvedRoot, baseDir) }),
+  });
 }
 
 function syncExitCode(result) {
@@ -102,8 +107,12 @@ function compareLiveStatus({ officialCards, status }) {
 }
 
 async function runLiveStatusCheck({ root = path.resolve(__dirname, "..", ".."), fetchImpl } = {}) {
+  const baseDir = path.resolve(process.env.CONAN_CARDS_DATA_DIR || path.join(root, ".claude", "specs", "cards-data"));
   const official = await fetchAllCards({ fetchImpl });
-  return compareLiveStatus({ officialCards: official.cards, status: readTrackedStatus(root) });
+  return compareLiveStatus({
+    officialCards: official.cards,
+    status: withCardsDataSnapshot({ baseDir, read: () => readTrackedStatus(root) }),
+  });
 }
 
 function liveStatusExitCode(result) {

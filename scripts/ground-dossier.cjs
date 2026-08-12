@@ -15,9 +15,11 @@
 
 const fs = require('fs');
 const path = require('path');
+const { withCardsDataSnapshot } = require('./cards/official-api.cjs');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, '.tmp', '_ground');
+const CARDS_DATA_DIR = path.resolve(process.env.CONAN_CARDS_DATA_DIR || path.join(ROOT, '.claude', 'specs', 'cards-data'));
 fs.mkdirSync(OUT, { recursive: true });
 
 const ids = process.argv.slice(2).filter(a => !a.startsWith('-'));
@@ -86,7 +88,10 @@ function capabilities() {
 }
 
 // ── per-ID dossier ────────────────────────────────────────────────────────────
-const tsvFiles = listFiles(path.join(ROOT, '.claude/specs/cards-data'), p => p.endsWith('.tsv'));
+withCardsDataSnapshot({
+  baseDir: CARDS_DATA_DIR,
+  read: () => {
+    const tsvFiles = listFiles(CARDS_DATA_DIR, p => p.endsWith('.tsv'));
 const cardFiles = listFiles(path.join(ROOT, 'src/cards'), p => p.endsWith('.ts'));
 const reuseIdx = read(path.join(ROOT, 'src/cards/_reuse/index.ts'));
 const defIdx = read(path.join(ROOT, '.claude/specs/DEFERRED-INDEX.md'));
@@ -154,3 +159,5 @@ for (const id of ids) {
   const defc = (d.match(/^- \|/gm) || []).length;
   console.log(`[ground-dossier] ${id} → .tmp/_ground/${id}.md (${reg}, DEFER 行 ${defc})`);
 }
+  },
+});

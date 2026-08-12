@@ -44,6 +44,8 @@
     "cards:status": "node scripts/cards/cards-data-status.cjs",
     "cards:qa-snapshot": "node scripts/cards/write-qa-hash-snapshot.cjs",
     "cards:authority:packet": "node scripts/cards/build-authority-packet.cjs",
+    "cards:authority:rederive": "node scripts/cards/publish-authority-packet.cjs rederive",
+    "cards:authority:publish": "node scripts/cards/publish-authority-packet.cjs publish",
     "cards:authority:exceptions": "tsx scripts/cards/validate-authority-exceptions.ts",
     "cards:check": "node scripts/cards/check-official-sync.cjs",
     "cards:check:live-status": "node scripts/cards/check-official-sync.cjs --live-status",

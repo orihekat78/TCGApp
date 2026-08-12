@@ -4,17 +4,24 @@
 // DEFER_ALLOWLIST: 実装を意図的に見送ったカード (.claude/specs/DEFERRED-INDEX.md に理由記載)。
 // allowlist 記載なのに欠落が解消されている場合も fail (stale allowlist 検知)。
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import { ALL_CARDS } from '../src/cards/index.js';
 import { defHasKeyword } from '../src/engine/read/keyword.js';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const DATA = resolve(ROOT, '.claude/specs/cards-data');
+const require = createRequire(import.meta.url);
+type CardsDataSnapshot = { baseDir: string; lockToken: unknown; recovery: unknown };
+type WithCardsDataSnapshot = <T>(options: { baseDir: string; read: (snapshot: CardsDataSnapshot) => T }) => T;
+const { withCardsDataSnapshot } = require('./cards/official-api.cjs') as { withCardsDataSnapshot: WithCardsDataSnapshot };
 
 // id:icon → DEFER 理由 (DEFERRED-INDEX.md と同期)
 const DEFER_ALLOWLIST = new Map<string, string>([
 ]);
 
+function main(): void {
+  withCardsDataSnapshot({ baseDir: DATA, read: () => {
 const registered = new Map(ALL_CARDS.map((d) => [d.id, d]));
 const rows: { id: string; set: string; cutIn: string; hirameki: string }[] = [];
 
@@ -42,7 +49,7 @@ for (const set of existsSync(DATA) ? readdirSync(DATA) : []) {
 // 欠落検出が全 vacuous になり allowlist が STALE 誤判定される → skip (ローカル実行で担保)。
 if (rows.length === 0) {
   console.log('[lint:icon-abilities] SKIP — cards-data TSV 不在 (ローカル専用 data)');
-  process.exit(0);
+  return;
 }
 
 const violations: string[] = [];
@@ -73,6 +80,11 @@ if (violations.length) {
   console.error(`[lint:icon-abilities] ${violations.length} violation(s):`);
   for (const v of violations) console.error(`  ${v}`);
   console.error('  → TSV cutIn/hirameki 列の能力を実装するか、意図的 DEFER なら DEFERRED-INDEX.md 記載の上 allowlist へ');
-  process.exit(1);
+  process.exitCode = 1;
+  return;
 }
 console.log(`[lint:icon-abilities] OK (shipped=${registered.size}, deferred=${deferredSeen.size})`);
+  }});
+}
+
+main();

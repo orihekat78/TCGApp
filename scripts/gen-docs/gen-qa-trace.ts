@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ALL_CARDS } from '../../src/cards/index.js';
@@ -8,6 +9,10 @@ import { diffMarkdown, writeMarkdown } from './lib/markdown.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(HERE, '../..');
+const require = createRequire(import.meta.url);
+type CardsDataSnapshot = { baseDir: string; lockToken: unknown; recovery: unknown };
+type WithCardsDataSnapshot = <T>(options: { baseDir: string; lockToken?: unknown; read: (snapshot: CardsDataSnapshot) => T }) => T;
+const { withCardsDataSnapshot } = require('../cards/official-api.cjs') as { withCardsDataSnapshot: WithCardsDataSnapshot };
 const HASH = /^[a-f0-9]{64}$/;
 const QA_ID = /^card:([^:\s]+):([a-f0-9]{64})$/;
 const QA_ANNOTATION = /^\s*\/\/\s*qa:\s*(card:[^\s]+)\s*$/;
@@ -371,10 +376,10 @@ function loadQaCoverageOverrides(projectRoot: string, snapshot: QaSnapshot): Map
 }
 
 /** Tracked sharded adjudications overlay inferred coverage; legacy overrides remain authoritative. */
-function loadQaAdjudications(projectRoot: string): { statuses: Map<string, QaAdjudicationStatus>; results: Map<string, QaAdjudicationResult>; methods: Map<string, QaAdjudicationMethod>; evidence: Map<string, readonly string[]> } | undefined {
+function loadQaAdjudications(projectRoot: string, lockToken: unknown): { statuses: Map<string, QaAdjudicationStatus>; results: Map<string, QaAdjudicationResult>; methods: Map<string, QaAdjudicationMethod>; evidence: Map<string, readonly string[]> } | undefined {
   const manifestPath = resolve(projectRoot, '.claude/specs/qa-adjudication/manifest.json');
   if (!existsSync(manifestPath)) return undefined;
-  const merged = mergeQaAdjudication({ root: projectRoot, check: true });
+  const merged = mergeQaAdjudication({ root: projectRoot, check: true, lockToken });
   return { statuses: new Map(Object.entries(merged.statuses)), results: new Map(Object.entries(merged.results)), methods: new Map(Object.entries(merged.methods)), evidence: new Map(Object.entries(merged.evidence)) };
 }
 
@@ -457,12 +462,17 @@ function writeJson(path: string, value: string): void {
   writeFileSync(path, value, 'utf8');
 }
 
-export function runGenQaTrace(options: RunOptions, projectRoot = PROJECT_ROOT): RunResult {
+export function runGenQaTrace(options: RunOptions, projectRoot = PROJECT_ROOT, snapshotOptions: { lockToken?: unknown } = {}): RunResult {
+  const dataDir = resolve(projectRoot, '.claude/specs/cards-data');
+  return withCardsDataSnapshot({
+    baseDir: dataDir,
+    ...(snapshotOptions.lockToken === undefined ? {} : { lockToken: snapshotOptions.lockToken }),
+    read: ({ lockToken }) => {
   const snapshot = loadTrackedSnapshot(projectRoot);
   validateQaSnapshotAgainstStatus(snapshot, loadTrackedStatus(projectRoot));
   const files = [...listSourceFiles(resolve(projectRoot, 'src')), ...listSourceFiles(resolve(projectRoot, 'tests'))]
     .map((path) => ({ path: relative(projectRoot, path).replaceAll('\\', '/'), content: readFileSync(path, 'utf8') }));
-  const adjudications = loadQaAdjudications(projectRoot);
+  const adjudications = loadQaAdjudications(projectRoot, lockToken);
   const trace = buildQaTrace({
     snapshot,
     files,
@@ -490,4 +500,6 @@ export function runGenQaTrace(options: RunOptions, projectRoot = PROJECT_ROOT): 
   }
   if (!options.checkOnly) writeJson(reportPath, nonblockingCoverageReport(trace));
   return { changedFiles: changed, totalFiles: 2 };
+    },
+  });
 }

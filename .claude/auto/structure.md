@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 293
-- **ファイル数**: 5933
+- **ファイル数**: 5935
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1532,7 +1532,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `WORKFLOW-GUIDELINES.md` — カード処理ワークフロー図 作成ガイドライン
     - **`cards-data/`**
       - `INDEX.md` — cards-data — local official-card cache
-      - `_regen.js` — TSV regenerator from fresh API JSON in _raw/.
+      - `_regen.js` — Legacy entrypoint retained for operator compatibility.
       - `_regen_all.cjs`
       - `packages.md` — cards-data package IDs
       - `qa-hash-snapshot.json`
@@ -2297,6 +2297,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `fetch-official.cjs`
     - `generate-case-difficulties.cjs`
     - `official-api.cjs`
+    - `publish-authority-packet.cjs`
     - `qa-normalize.cjs`
     - `validate-authority-exceptions.ts`
     - `write-qa-hash-snapshot.cjs`
@@ -6046,6 +6047,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - **`scripts/`**
     - `build-tcg-runtime-packet.test.ts`
     - `cards-authority-refresh.test.ts`
+    - `cards-data-snapshot-cli.test.ts`
     - `check-codex-quality.test.ts`
     - `check-wave-scope.test.ts`
     - `gen-card-probes.test.ts`

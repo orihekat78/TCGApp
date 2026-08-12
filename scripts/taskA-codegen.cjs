@@ -14,6 +14,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { withCardsDataSnapshot } = require('./cards/official-api.cjs');
 
 // Official TSV data is intentionally ignored. Tests inject a minimal catalog
 // without making CI depend on a developer-local corpus.
@@ -238,9 +239,10 @@ function main() {
     process.exit(1);
   }
   const specs = JSON.parse(fs.readFileSync(specsPath, 'utf8'));
-  const cat = loadCatalog();
-  const results = [];
-  for (const spec of specs) {
+  return withCardsDataSnapshot({ baseDir: DATA, read: () => {
+    const cat = loadCatalog();
+    const results = [];
+    for (const spec of specs) {
     if (spec.verdict !== 'green') continue;
     if (spec.needsManual) { console.error(`skip (needsManual): ${spec.rep} — ${spec.manualReason || ''}`); continue; }
     const { id, pkg, file } = genFile(spec, cat);
@@ -251,17 +253,18 @@ function main() {
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(outPath, file);
     }
-  }
-  console.error(`${write ? 'wrote' : 'would write'} ${results.length} files`);
-  if (!write && results.length) {
+    }
+    console.error(`${write ? 'wrote' : 'would write'} ${results.length} files`);
+    if (!write && results.length) {
     console.log('=== DRY RUN: first file ===');
     console.log(results[0].file);
-  }
+    }
   // emit registration helper (imports + array entries) to stdout-json on demand
-  if (write) {
+    if (write) {
     const reg = results.map((r) => ({ id: r.id, pkg: r.pkg }));
     fs.writeFileSync(path.join(__dirname, '..', '.tmp-taskA-registered.json'), JSON.stringify(reg, null, 1));
-  }
+    }
+  }});
 }
 
 main();

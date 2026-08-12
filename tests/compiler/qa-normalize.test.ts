@@ -159,6 +159,84 @@ describe('compiler/qa-normalize', () => {
     expect(result.items).toHaveLength(2);
   });
 
+  it('treats official standalone bullet headings as repeated section boundaries', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([{
+      card_num: 'PR305',
+      card_id: 'fixture-pr305',
+      q_a: '●【宣言】能力\nQ: First question\nA: First answer\n\n●スタンさせる\nQ: Second question\nA: Second answer',
+    }]);
+
+    expect(result.conflicts).toEqual([]);
+    expect(result.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        section: '●【宣言】能力',
+        questionHash: sha256('First question'),
+        answerHash: sha256('First answer'),
+      }),
+      expect.objectContaining({
+        section: '●スタンさせる',
+        questionHash: sha256('Second question'),
+        answerHash: sha256('Second answer'),
+      }),
+    ]));
+  });
+
+  it('keeps answer bullets as answer text unless the next nonblank line starts a question', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([{
+      card_num: 'PR309',
+      card_id: 'fixture-pr309',
+      q_a: '●【ヒラメキ】\nQ: One question\nA: First line\n●answer bullet\ncontinued answer',
+    }]);
+
+    expect(result.items).toEqual([expect.objectContaining({
+      section: '●【ヒラメキ】',
+      answerHash: sha256('First line ●answer bullet continued answer'),
+    })]);
+  });
+
+  it('lets an inline bracket section override a surrounding bullet section', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([{
+      card_num: 'PR315',
+      card_id: 'fixture-pr315',
+      q_a: '●Outer section\nQ: One question\nA: One answer\nQ: 【Inline section】 Two question\nA: Two answer',
+    }]);
+
+    expect(result.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({ section: '●Outer section', questionHash: sha256('One question') }),
+      expect.objectContaining({ section: 'Inline section', questionHash: sha256('Two question') }),
+    ]));
+  });
+
+  it('keeps an initial unsectioned Q/A separate before a later bullet section', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([{
+      card_num: 'PR320',
+      card_id: 'fixture-pr320',
+      q_a: 'Q: Initial question\nA: Initial answer\n●Case section\nQ: Later question\nA: Later answer',
+    }]);
+
+    expect(result.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({ section: '', questionHash: sha256('Initial question') }),
+      expect.objectContaining({ section: '●Case section', questionHash: sha256('Later question') }),
+    ]));
+  });
+
+  it('keeps repeated identical bullet-section questions as distinct occurrences', () => {
+    const { normalizeQaCards } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([{
+      card_num: 'PR320',
+      card_id: 'fixture-pr320-repeat',
+      q_a: '●Case section\nQ: Same question\nA: First answer\n●Case section\nQ: Same question\nA: Second answer',
+    }]);
+
+    expect(result.items).toHaveLength(2);
+    expect(new Set(result.items.map((item: { qaId: string }) => item.qaId)).size).toBe(2);
+    expect(result.items.every((item: { section: string }) => item.section === '●Case section')).toBe(true);
+  });
+
   it('collects multiline questions before the answer marker under a Japanese section', () => {
     const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
     const result = normalizeQaCards([{

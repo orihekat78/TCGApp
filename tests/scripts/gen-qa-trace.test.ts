@@ -383,8 +383,8 @@ describe('gen-qa-trace', () => {
     const output = path.join(dataDir, 'qa-hash-snapshot.json');
     writeFileSync(output, 'keep-existing-snapshot');
 
-    const { writeQaHashSnapshot } = require('../../scripts/cards/write-qa-hash-snapshot.cjs');
-    expect(() => writeQaHashSnapshot(root)).toThrow(/normalized FAQ hash mismatch/);
+    const { buildQaHashSnapshot } = require('../../scripts/cards/write-qa-hash-snapshot.cjs');
+    expect(() => buildQaHashSnapshot(root)).toThrow(/normalized FAQ hash mismatch/);
     expect(readFileSync(output, 'utf8')).toBe('keep-existing-snapshot');
   });
 
@@ -405,8 +405,8 @@ describe('gen-qa-trace', () => {
     const output = path.join(dataDir, 'qa-hash-snapshot.json');
     writeFileSync(output, 'keep-existing-snapshot');
 
-    const { writeQaHashSnapshot } = require('../../scripts/cards/write-qa-hash-snapshot.cjs');
-    expect(() => writeQaHashSnapshot(root)).toThrow(/source URL and fetchedAt/);
+    const { buildQaHashSnapshot } = require('../../scripts/cards/write-qa-hash-snapshot.cjs');
+    expect(() => buildQaHashSnapshot(root)).toThrow(/source URL and fetchedAt/);
     expect(readFileSync(output, 'utf8')).toBe('keep-existing-snapshot');
   });
 

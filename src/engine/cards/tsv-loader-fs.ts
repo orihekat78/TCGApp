@@ -11,6 +11,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve as resolvePath, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import type { CardDef } from '../types/index.js';
 import { parseTsv } from './tsv-loader.js';
 
@@ -22,6 +23,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const PROJECT_ROOT = resolvePath(__dirname, '..', '..', '..');
 const CARDS_DATA_DIR = resolvePath(PROJECT_ROOT, '.claude', 'specs', 'cards-data');
+const require = createRequire(import.meta.url);
+const { withCardsDataSnapshot } = require('../../../scripts/cards/official-api.cjs') as {
+  withCardsDataSnapshot<T>(options: {
+    baseDir: string;
+    read: () => T;
+  }): T;
+};
 
 /**
  * セット内の全 TSV (partner/character/event/case) を読みこみ CardDef[] にする。
@@ -31,14 +39,19 @@ export function loadSet(
   setCode: 'CT-D08' | 'CT-D11',
   readText: (file: string) => string = file => readFileSync(file, 'utf8'),
 ): CardDef[] {
-  const setDir = setCode.toLowerCase();
-  const dir = resolvePath(CARDS_DATA_DIR, setDir);
-  const out: CardDef[] = [];
-  const kinds: CardDef['kind'][] = ['partner', 'character', 'event', 'case'];
-  for (const k of kinds) {
-    const file = resolvePath(dir, `${k}.tsv`);
-    const text = readText(file);
-    out.push(...parseTsv(text, k));
-  }
-  return out;
+  return withCardsDataSnapshot({
+    baseDir: CARDS_DATA_DIR,
+    read: () => {
+      const setDir = setCode.toLowerCase();
+      const dir = resolvePath(CARDS_DATA_DIR, setDir);
+      const out: CardDef[] = [];
+      const kinds: CardDef['kind'][] = ['partner', 'character', 'event', 'case'];
+      for (const k of kinds) {
+        const file = resolvePath(dir, `${k}.tsv`);
+        const text = readText(file);
+        out.push(...parseTsv(text, k));
+      }
+      return out;
+    },
+  });
 }

@@ -6,6 +6,22 @@ const path = require('path');
 
 function regenerateAll({ baseDir = __dirname, rawDir = path.join(baseDir, '_raw') } = {}) {
 
+const canonicalLiveRoot = process.platform === 'win32' ? __dirname.toLowerCase() : __dirname;
+const requestedRoot = process.platform === 'win32' ? path.resolve(baseDir).toLowerCase() : path.resolve(baseDir);
+let requestedRealRoot = requestedRoot;
+try {
+  const realRoot = fs.realpathSync.native(path.resolve(baseDir));
+  requestedRealRoot = process.platform === 'win32' ? realRoot.toLowerCase() : realRoot;
+} catch {
+  // The ordinary read path will reject a missing or invalid staging root.
+}
+if (requestedRoot === canonicalLiveRoot || requestedRealRoot === canonicalLiveRoot) {
+  throw new Error('direct TSV regeneration of the live cards-data root is forbidden');
+}
+if (path.resolve(rawDir) !== path.join(path.resolve(baseDir), '_raw')) {
+  throw new Error('TSV regeneration raw root must belong to the cards-data root');
+}
+
 const kindMap = { 'パートナー':'partner', 'キャラ':'character', 'イベント':'event', '事件':'case' };
 
 const colsByKind = {
@@ -52,7 +68,18 @@ function cellFor(c, col) {
   }
 }
 
-const files = fs.readdirSync(rawDir).filter(f => /-api\.json$/.test(f));
+const rawEntries = fs.readdirSync(rawDir, { withFileTypes: true });
+for (const entry of rawEntries) {
+  if (!entry.isFile() || !/^(?:ct-(?:d|p)\d{2}|pr-\d{2})-api\.json$/.test(entry.name)) {
+    throw new Error('invalid raw package filename: ' + entry.name);
+  }
+}
+const files = rawEntries.map((entry) => entry.name).sort();
+for (const entry of fs.readdirSync(baseDir, { withFileTypes: true })) {
+  if (entry.isDirectory() && /^(?:ct-(?:d|p)\d{2}|pr-\d{2})$/i.test(entry.name)) {
+    fs.rmSync(path.join(baseDir, entry.name), { recursive: true, force: true });
+  }
+}
 let totalCards = 0;
 for (const file of files) {
   const setDir = file.replace(/-api\.json$/, ''); // e.g. ct-p01
@@ -89,6 +116,40 @@ console.log('total ' + totalCards + ' cards across ' + files.length + ' packages
   return { totalCards, packageCount: files.length };
 }
 
-if (require.main === module) regenerateAll();
+function regenerateAllLocked({
+  baseDir = __dirname,
+  rawDir = path.join(baseDir, '_raw'),
+  hooks,
+  renameSync,
+  rmSync,
+} = {}) {
+  const {
+    mutateCardsDataRoot,
+  } = require('../../../scripts/cards/official-api.cjs');
+  const expectedRawDir = path.join(path.resolve(baseDir), '_raw');
+  if (path.resolve(rawDir) !== expectedRawDir) {
+    throw new Error('TSV regeneration raw root must belong to the cards-data root');
+  }
+  const mutation = mutateCardsDataRoot({
+    baseDir,
+    mutate: ({ baseDir: stagedBaseDir }) => regenerateAll({
+      baseDir: stagedBaseDir,
+      rawDir: path.join(stagedBaseDir, '_raw'),
+    }),
+    ...(renameSync ? { renameSync } : {}),
+    ...(rmSync ? { rmSync } : {}),
+    ...(hooks ? { hooks } : {}),
+  });
+  return {
+    ...mutation.value,
+    lockCleanupPending: mutation.lockCleanupPending ?? false,
+    cleanupPending: mutation.cleanupPending,
+  };
+}
 
-module.exports = { regenerateAll };
+if (require.main === module) {
+  const result = regenerateAllLocked();
+  if (result.lockCleanupPending) console.error('TSV regeneration committed; cards-data write-lock cleanup is pending');
+}
+
+module.exports = { regenerateAll, regenerateAllLocked };

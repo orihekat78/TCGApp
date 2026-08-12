@@ -65,8 +65,24 @@ function splitSectionQuestion(value, fallbackSection = '') {
   };
 }
 
+function matchQuestionLine(line) {
+  return line.match(/^\s*Q(?:uestion)?\s*[.:：]\s*(.*)$/i);
+}
+
+function matchStandaloneBulletSection(lines, index, question, answerLines) {
+  if (question !== null && answerLines === null) return null;
+  const match = lines[index].match(/^\s*●\s*(\S(?:.*?\S)?)\s*$/u);
+  if (!match) return null;
+  for (let next = index + 1; next < lines.length; next++) {
+    if (!lines[next].trim()) continue;
+    return matchQuestionLine(lines[next]) ? `●${match[1]}` : null;
+  }
+  return null;
+}
+
 function parseQaText(value) {
   const text = String(value ?? '').replace(/\r\n?/g, '\n');
+  const lines = text.split('\n');
   const pairs = [];
   let section = '';
   const preamble = [];
@@ -84,14 +100,21 @@ function parseQaText(value) {
     answerLines = null;
   };
 
-  for (const line of text.split('\n')) {
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
     const sectionMatch = line.match(/^\s*【([^】]+)】\s*$/);
     if (sectionMatch) {
       flush();
       section = sectionMatch[1];
       continue;
     }
-    const questionMatch = line.match(/^\s*Q(?:uestion)?\s*[.:：]\s*(.*)$/i);
+    const bulletSection = matchStandaloneBulletSection(lines, index, question, answerLines);
+    if (bulletSection !== null) {
+      flush();
+      section = normalizeText(bulletSection);
+      continue;
+    }
+    const questionMatch = matchQuestionLine(line);
     if (questionMatch) {
       flush();
       if (!section && preamble.length) section = normalizeText(preamble.join('\n'));

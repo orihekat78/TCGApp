@@ -2,10 +2,12 @@ const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const { OFFICIAL_CARDS_URL } = require("./official-api.cjs");
+const {
+  OFFICIAL_CARDS_URL,
+  mutateCardsDataRoot,
+} = require("./official-api.cjs");
 const { compareOrdinal, isQaShaped, loadRawQaCards, normalizeQaCards } = require("./qa-normalize.cjs");
 
-const STATUS_FILE = path.join(".claude", "specs", "cards-data", "status.json");
 const RAW_KIND = {
   "パートナー": "partner",
   "キャラ": "character",
@@ -35,8 +37,8 @@ function duplicateCardNums(cardNums) {
   return [...duplicates].sort(compareOrdinal);
 }
 
-function readRaw(root) {
-  const rawDir = path.join(root, ".claude", "specs", "cards-data", "_raw");
+function readRawFromBaseDir(baseDir) {
+  const rawDir = path.join(baseDir, "_raw");
   const cardNums = [];
   const packages = {};
   const kinds = {};
@@ -59,8 +61,11 @@ function readRaw(root) {
   return { cardNums, packages: sortedObject(packages), kinds: sortedObject(kinds) };
 }
 
-function readTsv(root) {
-  const dataDir = path.join(root, ".claude", "specs", "cards-data");
+function readRaw(root) {
+  return readRawFromBaseDir(path.join(root, ".claude", "specs", "cards-data"));
+}
+
+function readTsvFromBaseDir(dataDir) {
   const cardNums = [];
   const packages = {};
   const kinds = {};
@@ -86,6 +91,10 @@ function readTsv(root) {
   return { cardNums, packages: sortedObject(packages), kinds: sortedObject(kinds) };
 }
 
+function readTsv(root) {
+  return readTsvFromBaseDir(path.join(root, ".claude", "specs", "cards-data"));
+}
+
 function cardNumHash(cardNums) {
   return sha256([...cardNums].sort(compareOrdinal).join("\n"));
 }
@@ -104,13 +113,27 @@ function normalizedFaqMetadata(root) {
   return normalizedFaqMetadataFromCards(loadRawQaCards(root));
 }
 
+function normalizedFaqMetadataFromBaseDir(baseDir) {
+  const rawDir = path.join(baseDir, "_raw");
+  const cards = [];
+  if (fs.existsSync(rawDir)) {
+    for (const file of fs.readdirSync(rawDir).sort(compareOrdinal)) {
+      if (!file.endsWith("-api.json")) continue;
+      const raw = JSON.parse(fs.readFileSync(path.join(rawDir, file), "utf8"));
+      if (!Array.isArray(raw.data)) throw new Error(`invalid raw package: ${file}`);
+      cards.push(...raw.data);
+    }
+  }
+  return normalizedFaqMetadataFromCards(cards);
+}
+
 function normalizedFaqHashFromCards(cards) {
   return sha256(JSON.stringify(normalizedFaqMetadataFromCards(cards)));
 }
 
-function generateCardsDataStatus(root, source = {}) {
-  const raw = readRaw(root);
-  const tsv = readTsv(root);
+function generateCardsDataStatusFromBaseDir(baseDir, source = {}) {
+  const raw = readRawFromBaseDir(baseDir);
+  const tsv = readTsvFromBaseDir(baseDir);
   const rawDuplicates = duplicateCardNums(raw.cardNums);
   const tsvDuplicates = duplicateCardNums(tsv.cardNums);
   if (rawDuplicates.length || tsvDuplicates.length) throw new Error("duplicate cardNum in raw or TSV data");
@@ -118,7 +141,7 @@ function generateCardsDataStatus(root, source = {}) {
   if (JSON.stringify(raw.packages) !== JSON.stringify(tsv.packages)) throw new Error("raw/TSV package count mismatch");
   if (JSON.stringify(raw.kinds) !== JSON.stringify(tsv.kinds)) throw new Error("raw/TSV kind count mismatch");
 
-  const qa = normalizedFaqMetadata(root);
+  const qa = normalizedFaqMetadataFromBaseDir(baseDir);
   return {
     schemaVersion: 1,
     source: {
@@ -137,26 +160,50 @@ function generateCardsDataStatus(root, source = {}) {
   };
 }
 
-function writeCardsDataStatus(root, source) {
-  const status = generateCardsDataStatus(root, source);
-  const output = path.join(root, STATUS_FILE);
-  fs.writeFileSync(output, `${JSON.stringify(status, null, 2)}\n`, "utf8");
+function generateCardsDataStatus(root, source = {}) {
+  return generateCardsDataStatusFromBaseDir(path.join(root, ".claude", "specs", "cards-data"), source);
+}
+
+function writeCardsDataStatusToBaseDir(baseDir, source) {
+  const status = generateCardsDataStatusFromBaseDir(baseDir, source);
+  fs.writeFileSync(path.join(baseDir, "status.json"), `${JSON.stringify(status, null, 2)}\n`, "utf8");
   return status;
+}
+
+function writeCardsDataStatusLocked(root, source, options = {}) {
+  const baseDir = path.join(root, ".claude", "specs", "cards-data");
+  const mutation = mutateCardsDataRoot({
+    baseDir,
+    mutate: ({ baseDir: stagedBaseDir }) => writeCardsDataStatusToBaseDir(stagedBaseDir, source),
+    ...(options.renameSync ? { renameSync: options.renameSync } : {}),
+    ...(options.rmSync ? { rmSync: options.rmSync } : {}),
+    ...(options.hooks ? { hooks: options.hooks } : {}),
+  });
+  return {
+    status: mutation.value,
+    lockCleanupPending: mutation.lockCleanupPending ?? false,
+    cleanupPending: mutation.cleanupPending,
+  };
 }
 
 if (require.main === module) {
   const fetchedAtIndex = process.argv.indexOf("--fetched-at");
   const fetchedAt = fetchedAtIndex >= 0 ? process.argv[fetchedAtIndex + 1] : undefined;
-  const status = writeCardsDataStatus(path.resolve(__dirname, "..", ".."), { fetchedAt });
+  const { status, lockCleanupPending } = writeCardsDataStatusLocked(path.resolve(__dirname, "..", ".."), { fetchedAt });
   process.stdout.write(`${JSON.stringify(status)}\n`);
+  if (lockCleanupPending) process.stderr.write("cards-data status committed; write-lock cleanup is pending\n");
 }
 
 module.exports = {
   generateCardsDataStatus,
+  generateCardsDataStatusFromBaseDir,
   normalizedFaqHashFromCards,
   normalizedFaqMetadata,
+  normalizedFaqMetadataFromBaseDir,
   normalizedFaqMetadataFromCards,
   readRaw,
+  readRawFromBaseDir,
   readTsv,
-  writeCardsDataStatus,
+  readTsvFromBaseDir,
+  writeCardsDataStatusLocked,
 };
