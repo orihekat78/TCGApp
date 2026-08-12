@@ -59,6 +59,12 @@ import { _resolveMisreadPicks } from '@/engine/listeners/misread.js';
 import type { EngineAction, DispatchResult } from './useEngineDispatch/types.js';
 import { isReplayOwnedState } from '@/ui/services/replayOwnership';
 import {
+  currentMatchSessionToken,
+  isCurrentMatchSession,
+  isMatchSessionActive,
+} from '@/ui/services/matchSession';
+import { getRegisteredHumanDecisionSide } from '@/ui/services/humanDecisionOwner';
+import {
   toPendingSetCardChoiceSide,
   toPendingSetCardReplacementSide,
 } from './useEngineDispatch/set-card-boundary.js';
@@ -123,6 +129,13 @@ function runEngineAction(
   switch (action.type) {
     case 'reasoning':
       flow.doReasoning(draft, action.uid);
+      return;
+    case 'concede':
+      flow.action.abortForTerminal(
+        draft,
+        action.player === 'self' ? 'opp' : 'self',
+        'concede',
+      );
       return;
     case 'handUseCard':
       flow.handUseCard(draft, action.player, action.cardId);
@@ -506,6 +519,16 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     : undefined;
   if (current === null) return { ok: false, reason: 'no-state' };
   if (isReplayOwnedState(current)) return { ok: false, reason: 'not-allowed' };
+  const concedeAuthority = action.type === 'concede'
+    ? {
+        allowed: current.gameResult === undefined
+          && isMatchSessionActive()
+          && currentMatchSessionToken() === action.sessionToken
+          && isCurrentMatchSession(action.sessionToken)
+          && !store.spectatorMode
+          && getRegisteredHumanDecisionSide(store.spectatorMode) === action.player,
+      }
+    : undefined;
   const authorities = {
     effectPick: action.type === 'effectPickResolve'
       ? readPendingEffectPickAuthority(current)
@@ -551,7 +574,37 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
   if (action.type === 'effectPickResolve' && authorities.effectPick === null) {
     return { ok: false, reason: 'not-allowed' };
   }
-  if (!isAllowed(current, action)) return { ok: false, reason: 'not-allowed' };
+  if (!isAllowed(current, action, { concede: concedeAuthority })) return { ok: false, reason: 'not-allowed' };
+
+  if (action.type === 'concede') {
+    const pendingRuntimeBefore = snapshotPendingRuntimeState();
+    try {
+      const terminal = produce(current, (draft) => {
+        runEngineAction(draft, action, authorities);
+      });
+      const latestStore = useGameStateStore.getState();
+      const authorityStillCurrent = latestStore.gameState === current
+        && latestStore.spectatorMode === store.spectatorMode
+        && current.gameResult === undefined
+        && isMatchSessionActive()
+        && currentMatchSessionToken() === action.sessionToken
+        && isCurrentMatchSession(action.sessionToken)
+        && getRegisteredHumanDecisionSide(latestStore.spectatorMode) === action.player
+        && !isReplayOwnedState(current);
+      if (!authorityStillCurrent || !latestStore.commitTerminalState(terminal)) {
+        restorePendingRuntimeState(pendingRuntimeBefore);
+        return { ok: false, reason: 'not-allowed' };
+      }
+      return { ok: true };
+    } catch (error) {
+      restorePendingRuntimeState(pendingRuntimeBefore);
+      return {
+        ok: false,
+        reason: 'engine-error',
+        detail: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
 
   _justDeclaredAxId = null;
   const pendingRuntimeBefore = snapshotPendingRuntimeState();

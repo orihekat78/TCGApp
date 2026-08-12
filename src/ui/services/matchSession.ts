@@ -116,8 +116,13 @@ export function isMatchSessionActive(): boolean {
   return matchSessionActive;
 }
 
+/** Read-only live-session token for UI actions bound to this exact match. */
+export function currentMatchSessionToken(): MatchSessionToken | null {
+  return matchSessionActive ? currentGeneration : null;
+}
+
 export function isCurrentMatchSession(token: MatchSessionToken): boolean {
-  return token === currentGeneration;
+  return matchSessionActive && token === currentGeneration;
 }
 
 /** 古いマリガン等が後から完了しても、最新開始の GameState だけを採用する。 */

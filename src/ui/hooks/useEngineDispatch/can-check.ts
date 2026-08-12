@@ -79,10 +79,18 @@ function matchesHiramekiCheckpoint(state: GameState, pending: PendingHirameki): 
     && edge.outcome.count === 1;
 }
 
-export function isAllowed(state: GameState, action: EngineAction): boolean {
+export type ConcedeAuthority = { allowed: boolean };
+
+export function isAllowed(
+  state: GameState,
+  action: EngineAction,
+  authority?: { concede?: ConcedeAuthority },
+): boolean {
   if (state.gameResult !== undefined) return false;
   if (isNewPrimaryAction(action) && hasExclusivePublicActionContext(state)) return false;
   switch (action.type) {
+    case 'concede':
+      return authority?.concede?.allowed === true;
     case 'reasoning':
       return flow.canReason(state, action.uid);
     case 'handUseCard':

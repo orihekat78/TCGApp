@@ -24,7 +24,7 @@
 
 | 名前 | メンバー |
 | ---- | -------- |
-| `action` | `_deleteContext`, `_getContext`, `_hasOpenActionContext`, `_resetActionContexts`, `_resetTargetExpanders`, `abortIfMissing`, `advance`, `candidates`, `computeOrder`, `declare`, `isMissingBeforeGuard`, `mustTargetCandidates`, `passGuard`, `registerTargetExpander`, `snapshotAP`, `startFromEffect`, `tryGuard` |
+| `action` | `_deleteContext`, `_getContext`, `_hasOpenActionContext`, `_resetActionContexts`, `_resetTargetExpanders`, `abortForTerminal`, `abortIfMissing`, `advance`, `candidates`, `computeOrder`, `declare`, `isMissingBeforeGuard`, `mustTargetCandidates`, `passGuard`, `registerTargetExpander`, `snapshotAP`, `startFromEffect`, `tryGuard` |
 | `actionCase` | `flashWindow`, `gainSelfEvidence`, `matchesHiramekiCheckpoint`, `removeOpponentEvidenceTop`, `resolveHiramekiDecision` |
 | `contact` | `canCutIn`, `canDisguise`, `computeOrder`, `cutIn`, `disguise`, `judge`, `pass` |
 | `guard` | `canGuard`, `candidates`, `mustGuardCandidates` |

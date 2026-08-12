@@ -17,6 +17,7 @@ import { isCausalLogEntry } from '@/engine/log/causal.js';
 import {
   hydratePendingRuntimeState,
   resetPendingRuntimeState,
+  resetPendingRuntimeStateAfterGameEnd,
   restorePendingRuntimeState,
   snapshotPendingRuntimeState,
   withIsolatedPendingRuntimeState,
@@ -47,6 +48,8 @@ export type GameStateStore = {
   /** state を全置換する（ゲーム開始 / リセット / リプレイ読み込み用） */
   /** `true` only when presentation validation passed and the replacement was committed. */
   setGameState: (state: GameState | null, options?: SetGameStateOptions) => boolean;
+  /** Atomically publish a validated terminal state with no actionable UI surface. */
+  commitTerminalState: (state: GameState) => boolean;
   /** Replay projection only. Never hydrates resolver continuations or decision surfaces. */
   setReplayGameState: (state: GameState | null) => void;
   /** 新規対戦開始前に GameState と UI 上の対戦一時状態を一括破棄する。 */
@@ -492,6 +495,17 @@ const PENDING_SURFACE_RESET_STATE = {
   pendingDeckPlace: null,
 } as const;
 
+const TERMINAL_SURFACE_RESET_STATE = {
+  ...PENDING_SURFACE_RESET_STATE,
+  activeActionId: null,
+  activeCardUid: null,
+  activeCardLabel: null,
+  hiramekiDemoMode: 'idle',
+  hiramekiDemoSelectedCardId: null,
+  cutinDemoMode: 'idle',
+  cutinDemoSelectedCardId: null,
+} as const;
+
 function latestOpenActionContext(
   state: GameState,
 ): NonNullable<GameState['actionContexts']>[string] | undefined {
@@ -642,6 +656,37 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
     });
     if (gameState !== null) admitCommittedPresentation(gameState);
     return true;
+  },
+  commitTerminalState: (state) => {
+    if (state.gameResult === undefined) return false;
+    const prepared = prepareGameStateForStore(state).gameState;
+    if (
+      prepared.gameResult === undefined
+      || Object.keys(prepared.actionContexts ?? {}).length !== 0
+      || !validatePresentationCommit(prepared)
+    ) return false;
+    const store = get();
+    const completedDeckReveal = store.pendingDeckReveal?.awaitingPick === true
+      ? null
+      : store.pendingDeckReveal;
+    const presentationHandReveal = store.pendingPublicHandReveal?.lifetime === 'presentation'
+      ? store.pendingPublicHandReveal
+      : null;
+    const runtimeBefore = snapshotPendingRuntimeState();
+    try {
+      resetPendingRuntimeStateAfterGameEnd({ preserveCompletedPresentations: true });
+      set({
+        ...TERMINAL_SURFACE_RESET_STATE,
+        gameState: prepared,
+        pendingDeckReveal: completedDeckReveal,
+        pendingPublicHandReveal: presentationHandReveal,
+      });
+      admitCommittedPresentation(prepared);
+      return true;
+    } catch (error) {
+      restorePendingRuntimeState(runtimeBefore);
+      throw error;
+    }
   },
   setReplayGameState: (state) => {
     if (state !== null && !validatePresentationCommit(state)) return;

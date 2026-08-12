@@ -486,6 +486,22 @@ function clearContactScopedState(state: GameState): void {
   }
 }
 
+/**
+ * Terminal paths must invalidate action work before the terminal causal event.
+ * That keeps replay frames from carrying a continuation past their final node.
+ */
+export function abortForTerminal(
+  state: GameState,
+  winner: Player,
+  reason: 'concede',
+): void {
+  if (state.gameResult !== undefined) return;
+  clearActionScopedState(state);
+  clearContactScopedState(state);
+  state.actionContexts = {};
+  mutate.gameResult.set(state, winner, reason);
+}
+
 export function abortIfMissing(state: GameState, ax: ActionContext): boolean {
   ax = contextForState(state, ax);
   if (isMissingBeforeGuard(state, ax)) {
@@ -675,6 +691,7 @@ export const action = {
   passGuard,
   advance,
   abortIfMissing,
+  abortForTerminal,
   isMissingBeforeGuard,
   snapshotAP,
   computeOrder,

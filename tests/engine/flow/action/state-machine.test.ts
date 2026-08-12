@@ -10,6 +10,7 @@ import {
   passGuard,
   advance,
   abortIfMissing,
+  abortForTerminal,
   snapshotAP,
   computeOrder,
   _resetActionContexts,
@@ -243,6 +244,17 @@ describe('engine.flow.action.abortIfMissing', () => {
     _resetActionContexts();
     _resetUidCounter();
     resetDefRegistry();
+  });
+
+  it('clears every action context before writing a terminal result', () => {
+    const { s, selfUid, oppUid } = makeScene({});
+    const after = produce(s, draft => {
+      declare(draft, selfUid, { kind: 'char', uid: oppUid });
+      abortForTerminal(draft, 'opp', 'concede');
+    });
+
+    expect(after.actionContexts).toEqual({});
+    expect(after.gameResult).toEqual({ winner: 'opp', reason: 'concede' });
   });
 
   it('byUid removed → action-end', () => {

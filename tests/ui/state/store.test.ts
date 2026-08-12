@@ -111,4 +111,30 @@ describe('useGameStateStore', () => {
       unsubscribe();
     }
   });
+
+  it('commits terminal state and central actionable surfaces in one snapshot', () => {
+    const state = createEmptyGameState();
+    state.gameResult = { winner: 'opp', reason: 'concede' };
+    const completedDeckReveal = { awaitingPick: false } as never;
+    const presentationHandReveal = { lifetime: 'presentation' } as never;
+    useGameStateStore.setState({
+      activeActionId: 'ax_1',
+      pendingEffectPick: {} as never,
+      pendingDeckReveal: completedDeckReveal,
+      pendingPublicHandReveal: presentationHandReveal,
+    });
+    const snapshots: ReturnType<typeof useGameStateStore.getState>[] = [];
+    const unsubscribe = useGameStateStore.subscribe((snapshot) => snapshots.push(snapshot));
+    try {
+      expect(useGameStateStore.getState().commitTerminalState(state)).toBe(true);
+      expect(snapshots).toHaveLength(1);
+      expect(snapshots[0].gameState?.gameResult).toEqual({ winner: 'opp', reason: 'concede' });
+      expect(snapshots[0].activeActionId).toBeNull();
+      expect(snapshots[0].pendingEffectPick).toBeNull();
+      expect(snapshots[0].pendingDeckReveal).toBe(completedDeckReveal);
+      expect(snapshots[0].pendingPublicHandReveal).toBe(presentationHandReveal);
+    } finally {
+      unsubscribe();
+    }
+  });
 });

@@ -29,7 +29,9 @@ import { register as engineRegisterCardDef } from '@/engine/read/def';
 import { useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
 import { appendCausal, startCausalSession } from '@/engine/log/causal';
 import { snapshotPendingRuntimeState } from '@/engine/effect/runtime-state';
-import { resetPresentationQueue } from '@/ui/presentation/coordinator';
+import { currentPresentationSessionId, getPresentationQueue, resetPresentationQueue } from '@/ui/presentation/coordinator';
+import { beginMatchSession, endMatchSession, matchSessionId } from '@/ui/services/matchSession';
+import { markReplayOwnedState } from '@/ui/services/replayOwnership';
 
 // ---- fixtures ----
 
@@ -45,6 +47,26 @@ function withSelfPartnerActive(s: GameState): GameState {
 
 function makeChar(uid: string, cardId = 'cX'): SceneCharacter {
   return baseChar({ cardId, uid, enterOrder: 0 });
+}
+
+function snapshotRejectedConcedeState() {
+  return {
+    store: { ...useGameStateStore.getState() },
+    runtime: snapshotPendingRuntimeState(),
+    presentation: {
+      sessionId: currentPresentationSessionId(),
+      revision: getPresentationQueue().revision(),
+    },
+  };
+}
+
+function expectRejectedConcedeState(before: ReturnType<typeof snapshotRejectedConcedeState>) {
+  expect({ ...useGameStateStore.getState() }).toEqual(before.store);
+  expect(snapshotPendingRuntimeState()).toEqual(before.runtime);
+  expect({
+    sessionId: currentPresentationSessionId(),
+    revision: getPresentationQueue().revision(),
+  }).toEqual(before.presentation);
 }
 
 // ---- tests ----
@@ -169,6 +191,96 @@ describe('dispatchEngineAction (pure function)', () => {
   });
 
   describe('negative paths', () => {
+    it('commits a live registered human surrender while an action context is pending', () => {
+      const token = beginMatchSession('self');
+      const init = withMainPhase(createEmptyGameState());
+      startCausalSession(init, matchSessionId(token));
+      init.actionContexts = {
+        ax_1: {
+          id: 'ax_1', byUid: 'partner:self', byPlayer: 'self',
+          target: { kind: 'case', player: 'opp' }, phase: 'guard-window',
+          startedAt: { turn: 1, nano: 1 },
+        },
+      };
+      const causalCountBefore = init.log.length;
+      useGameStateStore.getState().setGameState(init);
+      useGameStateStore.setState({ activeActionId: 'ax_1', pendingEffectPick: {} as never });
+
+      try {
+        expect(dispatchEngineAction({ type: 'concede', player: 'self', sessionToken: token })).toEqual({ ok: true });
+        const terminal = useGameStateStore.getState().gameState!;
+        expect(terminal.gameResult).toEqual({ winner: 'opp', reason: 'concede' });
+        expect(terminal.actionContexts).toEqual({});
+        expect(terminal.log.at(-1)).toMatchObject({
+          actor: 'opp', source: { kind: 'player', side: 'opp' },
+          targets: [{ kind: 'player', side: 'self' }],
+        });
+        expect(terminal.log).toHaveLength(causalCountBefore + 1);
+        expect(useGameStateStore.getState().activeActionId).toBeNull();
+        expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
+        expect(dispatchEngineAction({ type: 'actionAdvance', actionId: 'ax_1' }))
+          .toEqual({ ok: false, reason: 'not-allowed' });
+        expect(useGameStateStore.getState().gameState).toBe(terminal);
+      } finally {
+        endMatchSession();
+      }
+    });
+
+    it('rejects concession outside strict live-human authority without mutation', () => {
+      const assertRejected = (action: Parameters<typeof dispatchEngineAction>[0]) => {
+        const before = snapshotRejectedConcedeState();
+        expect(dispatchEngineAction(action)).toEqual({ ok: false, reason: 'not-allowed' });
+        expectRejectedConcedeState(before);
+      };
+
+      const inactiveToken = beginMatchSession('self');
+      useGameStateStore.getState().setGameState(withMainPhase(createEmptyGameState()));
+      endMatchSession({ preserveGameState: true });
+      assertRejected({ type: 'concede', player: 'self', sessionToken: inactiveToken });
+
+      const missingToken = beginMatchSession('self');
+      useGameStateStore.getState().setGameState(withMainPhase(createEmptyGameState()));
+      delete (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide;
+      assertRejected({ type: 'concede', player: 'self', sessionToken: missingToken });
+      endMatchSession();
+
+      const nullHumanToken = beginMatchSession(null);
+      useGameStateStore.getState().setGameState(withMainPhase(createEmptyGameState()));
+      assertRejected({ type: 'concede', player: 'self', sessionToken: nullHumanToken });
+      endMatchSession();
+
+      const staleToken = beginMatchSession('self');
+      const currentToken = beginMatchSession('self');
+      useGameStateStore.getState().setGameState(withMainPhase(createEmptyGameState()));
+      assertRejected({ type: 'concede', player: 'self', sessionToken: staleToken });
+      useGameStateStore.setState({ spectatorMode: true });
+      assertRejected({ type: 'concede', player: 'self', sessionToken: currentToken });
+      useGameStateStore.setState({ spectatorMode: false });
+      assertRejected({ type: 'concede', player: 'opp', sessionToken: currentToken });
+      const terminal = withMainPhase(createEmptyGameState());
+      terminal.gameResult = { winner: 'opp', reason: 'concede' };
+      useGameStateStore.getState().setGameState(terminal);
+      assertRejected({ type: 'concede', player: 'self', sessionToken: currentToken });
+      endMatchSession();
+    });
+
+    it('rejects pre-commit and replay concession without mutation', () => {
+      const noStateBefore = snapshotRejectedConcedeState();
+      expect(dispatchEngineAction({ type: 'concede', player: 'self', sessionToken: 0 as never }))
+        .toEqual({ ok: false, reason: 'no-state' });
+      expectRejectedConcedeState(noStateBefore);
+
+      const token = beginMatchSession('self');
+      const replay = withMainPhase(createEmptyGameState());
+      markReplayOwnedState(replay);
+      useGameStateStore.getState().setReplayGameState(replay);
+      const replayBefore = snapshotRejectedConcedeState();
+      expect(dispatchEngineAction({ type: 'concede', player: 'self', sessionToken: token }))
+        .toEqual({ ok: false, reason: 'not-allowed' });
+      expectRejectedConcedeState(replayBefore);
+      endMatchSession();
+    });
+
     it('no-state: returns { ok:false, reason:"no-state" } and does not call engine', () => {
       const spy = vi.spyOn(flow, 'doReasoning');
       const result = dispatchEngineAction({ type: 'reasoning', uid: 'partner:self' });

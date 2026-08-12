@@ -1,5 +1,6 @@
 // useEngineDispatch/types.ts — Phase 3d 分割 (EngineAction / ContactChoice / DispatchResult / Player, verbatim, 2026-06-22)
 import type { AbilityCostParams } from '@/engine/flow/index.js';
+import type { MatchSessionToken } from '@/ui/services/matchSessionId.js';
 
 export type Player = 'self' | 'opp';
 export type DecisionResponse = { decisionId: string };
@@ -23,6 +24,7 @@ export type ContactChoice =
   | { kind: 'pass' };
 
 export type EngineAction =
+  | { type: 'concede'; player: Player; sessionToken: MatchSessionToken }
   | { type: 'reasoning'; uid: string }
   | { type: 'handUseCard'; player: Player; cardId: string }
   // Phase 5 advance: SceneSwitch (rules/20) — scene 5 埋まり時のキャラ手札使用
