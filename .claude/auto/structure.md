@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 293
-- **ファイル数**: 5925
+- **ファイル数**: 5926
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -2087,6 +2087,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-08-11-app-landscape-gate-implementation.md` — App Landscape Gate Implementation Plan
       - `2026-08-11-meta-route-splitting-private-release-implementation.md` — Meta Route Splitting and Private Release Implementation Plan
       - `2026-08-11-windowed-card-catalog-implementation.md` — Windowed Card Catalog Implementation Plan
+      - `2026-08-12-authority-refresh.md` — Official Authority Refresh Implementation Plan
       - `2026-08-12-iphone-se3-landscape-implementation.md` — iPhone SE 3 Landscape UI Implementation Plan
       - `2026-08-12-match-surrender-implementation.md` — MATCH Surrender Implementation Plan
     - **`specs/`**
