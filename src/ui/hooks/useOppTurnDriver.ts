@@ -140,7 +140,7 @@ export function driveOppTurn(): void {
 
     // endTurn move は flow.endTurn を呼ばない (policy.ts コメント参照)。ここで明示的に呼んで
     // turn.player を 'self' に戻し、ターン終了 listener が積んだ pendingEffects も解消する。
-    // useEngineDispatch.endTurn と対称的に resetTurnFlags + startTurn(self) を呼ぶ (Round 2)。
+    // useEngineDispatch.endTurn と対称的に startTurn(self) まで継続する (startTurn が両側を reset)。
     store.dispatch((s) =>
       produce(s, (draft) => {
         if (draft.gameResult) return;

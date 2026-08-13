@@ -1978,14 +1978,13 @@
     {
       "qaId": "card:PR099:66bdc617b3738eb67c09245f9af51faf6bffe85703797a9dcdd7d5ef898b0c08",
       "answerHash": "04e65263ebb2adce9a08bbc627471d2eb48a50d8cc22215217b7c0b32192241c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR099.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/pr-01/PR099.ts:25",
+        "tests:tests/cards/official-qa/set-card-host-absent.test.ts:91",
+        "tests:tests/cards/official-qa/set-card-host-absent.test.ts:95"
       ]
     },
     {

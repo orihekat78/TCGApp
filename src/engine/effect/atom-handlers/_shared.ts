@@ -678,7 +678,11 @@ export function paShortFormAwait(
   const paArgs = { ...a, uid: '$pick', target: paTarget };
   tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, {
     byPlayer: chooser,
-    source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+    source: {
+      cardId: ctx.source.cardId ?? '',
+      abilityId: ctx.source.abilityId ?? '',
+      uid: ctx.source.uid,
+    },
   });
   mutate.log.append(s, { ts: Date.now(), player: chooser, turn: s.turn.number, action: `effect:${verb}:awaiting-pick` });
 }

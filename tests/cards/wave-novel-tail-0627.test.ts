@@ -14,6 +14,7 @@ import { register as registerCardDef, _resetRegistry } from '@/engine/read/def';
 import { mutate } from '@/engine/mutate/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { endTurn } from '@/engine/flow/turn';
 import { registerAll } from '@/cards/index';
 import { produce } from '@/engine/produce';
 import { D07018 } from '@/cards/ct-d07/D07018';
@@ -182,5 +183,21 @@ describe('wave novel-tail-0627 — B02008 enter trigger gating (decoy 1対1)', (
     const { s, bearerUid } = withBearer();
     const after = enterAndEmit(s, 'opp', 'SBD');
     expect(fired(after, bearerUid)).toBe(false);
+  });
+
+  it('【ターン①】は自分ターンで発動後も、直後の相手ターンに再び発動できる', () => {
+    const { s, bearerUid } = withBearer();
+    let after = enterAndEmit(s, 'self', 'SBD');
+    expect(fired(after, bearerUid)).toBe(true);
+
+    after = produce(after, (d) => {
+      // この検証は発動回数のターン境界だけを対象とするため、1回目の効果を解決済みにする。
+      d.pendingEffects = [];
+      endTurn(d, 'self', { startNextTurn: true });
+    });
+    expect(after.turn.player).toBe('opp');
+
+    const nextTurn = enterAndEmit(after, 'self', 'SBD');
+    expect(fired(nextTurn, bearerUid)).toBe(true);
   });
 });

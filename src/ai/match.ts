@@ -10,9 +10,7 @@
 //       1. policy.playTurn → メインフェイズの行動を全て適用
 //       2. engine.flow.endTurn → エンドフェイズ → ターン番号 / プレイヤー切替
 //       3. engine.resolve.runAllUntilEmpty → ターン終了時 trigger 解消
-//       4. engine.flow.runAutoPhase(nextPlayer) → 次ターンのオートフェイズ
-//       5. engine.mutate.flag.resetTurnFlags(currentPlayer) → ターンフラグリセット
-//         (注: engine.flow.endTurn は flag リセットを行わない — Phase 4 設計)
+//       4. engine.flow.startTurn(nextPlayer) → 両側のターンフラグをリセットしてオートフェイズ
 //   - try/catch でループを包み、エンジン bug / invariant 違反を 'invariant-fail' で受ける
 //   - movesPerTurn に各ターンの move 数を記録 (debug 用)
 
@@ -70,7 +68,7 @@ const DEFAULT_MAX_TURNS = 100;
  *       * 現在のプレイヤーの policy を選択
  *       * playTurn で main フェイズの全 move 適用 (内部で resolve も回す)
  *       * gameResult が決まったら終了
- *       * endTurn → resolve → 反対プレイヤーで runAutoPhase → resetTurnFlags
+ *       * endTurn → resolve → 反対プレイヤーで startTurn (両側 reset + auto phase)
  *   - turn.number > maxTurns で 'draw'/'turn-cap'
  *   - 例外 / invariant 違反は 'invariant-fail' で捕捉
  */

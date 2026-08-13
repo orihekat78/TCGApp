@@ -30,6 +30,13 @@ type Player = 'self' | 'opp';
  *   - メインフェイズ突入
  */
 export function startTurn(state: GameState, p: Player): void {
+  // rules/17 【ターン①/②/③】は「各ターン」の発動回数制限。ターンは両プレイヤーに
+  // 共通の境界なので、手番側だけでなく両側の turn-scope flag / declaredUseCount を
+  // turn:start より前に初期化する。初回開始と endTurn continuation の直呼び経路も
+  // 同じ契約にするため、reset authority は startTurn に置く。
+  for (const side of ['self', 'opp'] as const) {
+    flagMutator.resetTurnFlags(state, side);
+  }
   // BUG-170 (2026-07-04, B08014/B09070 first-consumer probe が検出): selectedByOwnMr /
   // shippuFiredCharThisTurn は endTurn の clearTurnEffects('turn') で消すと、phase:end:start で
   // queue された効果の conditional / forEach 列挙 (rules/25 解決時参照) が caller の
@@ -126,7 +133,6 @@ export function _continueTurnTransition(state: GameState): boolean {
   state.turn.player = nextPlayer;
   delete state.pendingTurnTransition;
   if (startNextTurn && !state.gameResult) {
-    flagMutator.resetTurnFlags(state, nextPlayer);
     state.turn.isFirstPlayerFirstTurn = false;
     startTurn(state, nextPlayer);
   }

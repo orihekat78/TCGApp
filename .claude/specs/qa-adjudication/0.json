@@ -151,16 +151,14 @@
     {
       "qaId": "card:B02022:ef91248ad4c7cd36369332abbce6bf5e9d32f6b12d9f68a55e542ae916e50173",
       "answerHash": "e9a3439e946b0abfde2b0ff385c5e06be2bb5b65150ac4ef9340b7a17d7974e6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/07-action-flow.md:27",
-        "src:src/cards/ct-p02/B02022.ts:11"
-      ],
-      "noteCodes": [
-        "CASE-ONLY-EXCEPTION-UNTESTED",
-        "TEST-GAP"
+        "src:src/cards/ct-p02/B02022.ts:11",
+        "tests:tests/cards/ct-p02/B02022.test.ts:70",
+        "tests:tests/cards/ct-p02/B02022.test.ts:72"
       ]
     },
     {

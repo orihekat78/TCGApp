@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-flows.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:flows`
-> Source hash: `d97c39ee6b92`
+> Source hash: `e4f9c346b3d8`
 
 1 ターンは 3 フェイズ（auto / main / end）で構成され、6 種類のメイン行動が好きな順番で実行される。 詳細は `rules/05-turn-phases.md` を参照。
 

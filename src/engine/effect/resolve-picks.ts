@@ -310,7 +310,7 @@ export interface ResolveEffectPicksOpts {
    */
   humanPlayer?: Player | null;
   /** Pending side-channel に保存する識別子 (UI 側で表示や resolve 時に使用) */
-  source?: { cardId: string; abilityId: string };
+  source?: { cardId: string; abilityId: string; uid?: string };
   /**
    * BUG-077: tryRePickFromAtom (runtime atom-handler awaiting-pick) から呼ばれた場合 true。
    * 初期 walk (resolveEffectPicks via triggered.ts) から呼ばれた場合 false (default)。

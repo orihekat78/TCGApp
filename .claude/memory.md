@@ -60,3 +60,10 @@
 - Apply the rule to cloud sync state and history Replay artifact persistence.
 - HOME identity art must use a route-scoped high-specificity `contain` rule so
   lazy game-card CSS cannot crop partner or incident cards after navigation.
+
+## 2026-08-13: Global turn-boundary reset
+
+- 【ターン①/②/③】and other turn-scope flags reset for both players at the start
+  of every turn, before `turn:start`; `startTurn` owns the canonical boundary.
+- Do not move this reset to `endTurn`: queued end-phase effects may still read the
+  ending turn's state before the next turn starts. See `BUG-303`.

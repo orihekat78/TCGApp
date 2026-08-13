@@ -188,29 +188,29 @@
     {
       "qaId": "card:B02008:3240a4626ffa31e953f10ca03af61b33b9d3367feeffa3bc87cd8b3c7be01d9b",
       "answerHash": "acf8317ad874c3db5a4906f82ad4587818bc56f6f0f653803a6a7204b86abaf3",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:11",
-        "src:src/cards/ct-p02/B02008.ts:20"
-      ],
-      "noteCodes": [
-        "ZERO-PICK-TURN-LIMIT-UNTESTED"
+        "src:src/cards/ct-p02/B02008.ts:20",
+        "tests:tests/cards/official-qa/B02008-turn-limit-order-ap.test.ts:103",
+        "tests:tests/cards/official-qa/B02008-turn-limit-order-ap.test.ts:112"
       ]
     },
     {
       "qaId": "card:B02008:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/24-qa-naming-stun.md:55",
-        "src:src/cards/ct-p02/B02008.ts:24"
-      ],
-      "noteCodes": [
-        "MULTI-COPY-ORDER-UNTESTED"
+        "src:src/cards/ct-p02/B02008.ts:24",
+        "tests:tests/cards/official-qa/B02008-turn-limit-order-ap.test.ts:121",
+        "tests:tests/cards/official-qa/B02008-turn-limit-order-ap.test.ts:130",
+        "tests:tests/cards/official-qa/B02008-turn-limit-order-ap.test.ts:138",
+        "tests:tests/cards/official-qa/B02008-turn-limit-order-ap.test.ts:141"
       ]
     },
     {

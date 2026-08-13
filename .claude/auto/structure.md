@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6018
+- **ファイル数**: 6021
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -483,6 +483,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-300.md` — Contact driverの再開dependency欠落
     - `BUG-301.md` — 手札使用とswitch対象選択のTOCTOU
     - `BUG-302.md` — 観戦時の非公開デッキ公開境界
+    - `BUG-303.md` — 【ターン①】の両プレイヤー共通ターン境界
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -5427,6 +5428,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`official-qa/`**
       - `B01025-B01026-partner-abilities.test.ts` — Official Q&A: B01025/B01025P/B01026/B01026P
       - `B01077-empty-hand-event.test.ts` — qaId=card:B01077:d42cf418c120cd75f5388b9a434fa679d9f97908baa2ffb6eb9152c28dcb8e5…
+      - `B02008-turn-limit-order-ap.test.ts` — qaId=card:B02008:3240a4626ffa31e953f10ca03af61b33b9d3367feeffa3bc87cd8b3c7be01d9…
       - `B03020.test.ts` — Official Q&A B03020: fewer than three cards cannot resolve the effect.
       - `B03023.test.ts` — Official Q&A: B03023 脇田兼則
       - `B04030.test.ts` — The opposing contact character has left, but Kaito remains in the scene.
@@ -5434,6 +5436,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B04074.test.ts`
       - `B05118-family-nonblack-partner.test.ts` — Official Q&A cluster: these seven cases share the same printed
       - `B07102-refresh-includes-removed.test.ts` — qaId=card:B07102:99f16dd6a248501c9d63a44dd85b2d6097ef720865e4181d1b451669f04b05d…
+      - `set-card-host-absent.test.ts`
     - **`pr-01/`**
       - `PR100.test.ts`
       - `PR158.test.ts` — tests/cards/pr-01/PR158 犯人 (character, cutin remove-name scaling AP)

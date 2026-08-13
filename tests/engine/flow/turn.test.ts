@@ -68,6 +68,42 @@ describe('engine.flow.startTurn', () => {
     });
     expect(after.turn.phase).toBe('main');
   });
+
+  it('turn:start より前に両プレイヤーのターン単位フラグをリセットする', () => {
+    const s = produce(makeStateWithDeck(10, { player: 'opp' }), draft => {
+      draft.turnState.self.eventUseBanned = true;
+      draft.turnState.opp.cutinBanned = true;
+      draft.players.self.scene = [sceneChar('SELF-LIMIT', 'self-limit')];
+      draft.players.opp.scene = [sceneChar('OPP-LIMIT', 'opp-limit')];
+      draft.players.self.scene[0].declaredUseCount.a1 = 1;
+      draft.players.opp.scene[0].declaredUseCount.a1 = 1;
+    });
+    let atTurnStart: {
+      selfEventBan: boolean;
+      oppCutinBan: boolean;
+      selfLimit: number | undefined;
+      oppLimit: number | undefined;
+    } | undefined;
+    event.on('turn:start', (state) => {
+      atTurnStart = {
+        selfEventBan: state.turnState.self.eventUseBanned === true,
+        oppCutinBan: state.turnState.opp.cutinBanned === true,
+        selfLimit: state.players.self.scene[0]?.declaredUseCount.a1,
+        oppLimit: state.players.opp.scene[0]?.declaredUseCount.a1,
+      };
+    });
+
+    produce(s, draft => {
+      startTurn(draft, 'opp');
+    });
+
+    expect(atTurnStart).toEqual({
+      selfEventBan: false,
+      oppCutinBan: false,
+      selfLimit: undefined,
+      oppLimit: undefined,
+    });
+  });
 });
 
 describe('engine.flow.startMainPhase', () => {

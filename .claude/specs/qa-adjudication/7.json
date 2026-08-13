@@ -99,11 +99,14 @@
     {
       "qaId": "card:B02008:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb",
       "answerHash": "13dee71614f2c905921b2ddfef97bebc1511fd57bc103eea3684b5b242c6180c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02008.ts:37"
+        "src:src/cards/ct-p02/B02008.ts:37",
+        "tests:tests/cards/official-qa/B02008-turn-limit-order-ap.test.ts:164",
+        "tests:tests/cards/official-qa/B02008-turn-limit-order-ap.test.ts:165",
+        "tests:tests/cards/official-qa/B02008-turn-limit-order-ap.test.ts:166"
       ]
     },
     {
