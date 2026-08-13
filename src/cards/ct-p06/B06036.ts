@@ -54,7 +54,7 @@ const a2: AbilityDef = {
     kind: 'atom',
     verb: 'invokeHiramekiOfCard',
     args: {
-      cardId: '$pick.cardId',
+      occurrence: '$pick',
       player: 'self',
       trait: 'YAIBA',
       target: {

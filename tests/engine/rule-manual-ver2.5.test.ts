@@ -8,6 +8,7 @@ import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/l
 import { _resetPendingHirameki } from '@/engine/listeners/hirameki';
 import { _resetRegistry, register } from '@/engine/read/def';
 import { candidates } from '@/engine/target/candidates';
+import { cardOccurrenceUid, cardOccurrenceWitness } from '@/engine/target/card-occurrence';
 import { targetFilterToPredicateWithCtx } from '@/engine/effect/atom-handlers/_shared';
 import { evalCond } from '@/engine/cond/eval';
 import { D09006 } from '@/cards/ct-d09/D09006';
@@ -146,9 +147,18 @@ describe('official rule manual Ver.2.5', () => {
 
     state.players.self.partner.cardId = greenPartner.id;
     state.players.opp.partner.cardId = yellowPartner.id;
+    state.players.opp.remove = [conditionalAssault.id];
     const opponentBoundCtx: EffectCtx = {
       ...targetCtx,
-      bindings: { revealed: [{ kind: 'card', cardId: conditionalAssault.id, area: 'remove', player: 'opp', index: 0 }] },
+      bindings: { revealed: [{
+        kind: 'card',
+        uid: cardOccurrenceUid('opp', 'remove', conditionalAssault.id, 0),
+        cardId: conditionalAssault.id,
+        area: 'remove',
+        player: 'opp',
+        index: 0,
+        occurrenceWitness: cardOccurrenceWitness(state, 'opp', 'remove'),
+      }] },
     };
     const keywordFilter = { keyword: '突撃' };
     expect(evalCond(state, { kind: 'boundMatchesFilter', bindKey: 'revealed', filter: keywordFilter }, opponentBoundCtx)).toBe(true);

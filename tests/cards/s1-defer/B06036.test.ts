@@ -30,8 +30,7 @@
 //   空 bindings を復元する。結果 candidates.ts fromGroupCards='$costFlipped' が空集合 → 候補0 → pick 不発。
 //   → 実証: $costFlipped を bindings に手置きすると candidates() は正しく [YH] のみ返す (decoy 除外も機能)。
 //   engine 側 3 点 (pay $costFlipped / candidates fromGroupCards evidence / invoke $pick.cardId Pattern B)
-//   は正しいが、cost→effect の bindings 橋渡し (resolveCtx.bindings forward + queue 6th arg 永続化) が欠落。
-//   本ファイルの invoke/owner=opp describe は describe.skip でこの依存を明示。engine 追記後に unskip する。
+//   cost→effect の bindings は declared queue に永続化し、physical occurrence を保つ。
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { produce } from 'immer';
@@ -123,7 +122,7 @@ beforeEach(() => {
 // ============================================================
 // a2 cost + invokeHiramekiOfCard pick (fromGroupCards='$costFlipped' + filter)
 // ============================================================
-describe.skip('B06036 a2 — flip 3 → cost-flipped 内の YAIBA∩ヒラメキ を pick → 【ヒラメキ】effect 発動 (BLOCKED: engine cost→effect bindings)', () => {
+describe('B06036 a2 — flip 3 → cost-flipped 内の YAIBA∩ヒラメキ を pick → 【ヒラメキ】effect 発動', () => {
   it('① 候補は YAIBA∩ヒラメキ の 1枚のみ (非YAIBA / ヒラメキ無 decoy を除外)', () => {
     setHuman('self');
     produce(base(), (d) => {
@@ -151,6 +150,35 @@ describe.skip('B06036 a2 — flip 3 → cost-flipped 内の YAIBA∩ヒラメキ
     });
     expect(after.players.self.hand.length, 'YH の【ヒラメキ】draw1 発動').toBe(1);
     expect(after.players.self.evidence.slice(0, 3).every((e) => e.faceUp), 'cost で証拠3つ表向き').toBe(true);
+  });
+
+  it('AI declared resolution binds the selected exact evidence occurrence before queueing', () => {
+    setHuman(null);
+    const after = produce(base({ evidence: [evd(YH), evd(YH), evd(YNH)] }), (d) => {
+      activateDeclaredAbility(d, 'case:self', 'a2', { flipFaceUpEvidence: { indices: [0, 1, 2] } });
+
+      const declared = d.pendingEffects.find((entry) =>
+        entry.source.cardId === 'B06036' && entry.source.abilityId === 'a2',
+      );
+      expect(declared?.effect).toMatchObject({
+        kind: 'atom',
+        verb: 'invokeHiramekiOfCard',
+        args: {
+          occurrence: {
+            uid: 'evidence:self:0',
+            cardId: YH,
+            player: 'self',
+            area: 'evidence',
+            index: 0,
+            occurrenceWitness: expect.any(String),
+          },
+        },
+      });
+
+      runAllUntilEmpty(d);
+    });
+    expect(after.players.self.hand.length, 'selected evidence Hirameki draw').toBe(1);
+    expect(after.players.self.evidence.slice(0, 3).every((e) => e.faceUp), 'exact paid evidence remains live').toBe(true);
   });
 
   it('③ cost 前から faceUp の YAIBA∩ヒラメキ証拠 (YH2) は候補外 (fromGroupCards gate)', () => {
@@ -224,7 +252,7 @@ describe('B06036 a2 — cost flipFaceUpEvidence 3つ (canPay)', () => {
 // ============================================================
 // owner=opp pin — case:opp で side 反転しない (BUG-174)
 // ============================================================
-describe.skip('B06036 a2 — owner=opp pin (BLOCKED: engine cost→effect bindings)', () => {
+describe('B06036 a2 — owner=opp pin', () => {
   it('⑤ case:opp (human opp) → opp 側の証拠を flip・opp が pick・opp の【ヒラメキ】が opp を draw', () => {
     setHuman('opp');
     const after = produce(base({ side: 'opp' }), (d) => {

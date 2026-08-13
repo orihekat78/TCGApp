@@ -137,6 +137,21 @@ describe('B10046 山本萌奈', () => {
     expect(value.players.self.partnerAreaCards ?? []).toEqual([]);
   });
 
+  it('fizzles the destination after the chosen occurrence is replaced during its choice', () => {
+    const value = state();
+    emitTurnEnd(value);
+    resolveHumanPick(value, 1);
+    mutate.remove.removeFromHere(value, 'self', ['GEM']);
+    mutate.remove.add(value, 'self', ['GEM']);
+
+    applyChoiceAndContinuation(value, _drainPendingEffectChoiceSide()!, 1);
+    runAllUntilEmpty(value);
+
+    expect(value.players.self.remove).toEqual(['DECOY', 'GEM', 'GEM']);
+    expect(value.players.self.hand).toEqual([]);
+    expect(value.players.self.partnerAreaCards ?? []).toEqual([]);
+  });
+
   it('uses the AI path to select an eligible event and choose partner area', () => {
     globals.__humanPlayerSide = null;
     const value = state();

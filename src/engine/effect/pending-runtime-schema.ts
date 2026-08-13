@@ -2,6 +2,11 @@ import type { Effect } from '../types/index.js';
 import type { PendingEffectPickSide } from './pending-state.js';
 import { effectivePendingPickRange } from './pick-selection.js';
 import { ATOM_VERBS, validate } from './validate.js';
+import {
+  cardOccurrenceUid,
+  isCardOccurrenceWitness,
+  isCardOccurrenceWitnessFor,
+} from '../target/card-occurrence.js';
 
 type ValidationMode = 'live' | 'persisted';
 
@@ -13,6 +18,12 @@ export type PendingRuntimeValidationOptions = {
 const PLAYERS = new Set(['self', 'opp']);
 const SOURCE_AREAS = new Set([
   'scene', 'partner-area', 'hand', 'evidence', 'file', 'remove', 'case',
+]);
+const CARD_CANDIDATE_AREAS = new Set([
+  'scene', 'partner-area', 'hand', 'deck', 'remove', 'evidence', 'file', 'case', 'set-card',
+]);
+const INDEXED_CARD_CANDIDATE_AREAS = new Set([
+  'partner-area', 'hand', 'deck', 'remove', 'evidence', 'file',
 ]);
 const RESOLUTION_KINDS = new Set(['normal-event', 'hirameki', 'cutin']);
 const DANGEROUS_OBJECT_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
@@ -42,6 +53,25 @@ function string(value: unknown, path: string, allowEmpty = false): string {
 
 function optionalString(value: unknown, path: string): void {
   if (value !== undefined) string(value, path);
+}
+
+function occurrenceWitness(value: unknown, path: string): void {
+  string(value, path);
+  if (!isCardOccurrenceWitness(value)) {
+    fail(path, 'expected a versioned indexed-zone witness');
+  }
+}
+
+function boundOccurrenceWitness(
+  value: unknown,
+  path: string,
+  player: 'self' | 'opp',
+  area: 'evidence' | 'remove',
+): void {
+  occurrenceWitness(value, path);
+  if (!isCardOccurrenceWitnessFor(value, player, area)) {
+    fail(path, 'must match the candidate player and area');
+  }
 }
 
 function bool(value: unknown, path: string): boolean {
@@ -148,6 +178,7 @@ function source(value: unknown, path: string, requireUid = false): void {
   const item = record(value, path);
   string(item.cardId, `${path}.cardId`, true);
   string(item.abilityId, `${path}.abilityId`, true);
+  if (item.area !== undefined) oneOf(item.area, SOURCE_AREAS, `${path}.area`);
   if (requireUid) string(item.uid, `${path}.uid`, true);
   else if (item.uid !== undefined) string(item.uid, `${path}.uid`, true);
   if (item.resolutionKind !== undefined) oneOf(item.resolutionKind, RESOLUTION_KINDS, `${path}.resolutionKind`);
@@ -170,19 +201,29 @@ function candidate(value: unknown, path: string): void {
       string(item.uid, `${path}.uid`);
       string(item.cardId, `${path}.cardId`);
       player(item.player, `${path}.player`);
+      if (item.area !== undefined || item.index !== undefined) fail(path, 'char candidates cannot carry an area or index');
       return;
     case 'partner':
       player(item.player, `${path}.player`);
       return;
-    case 'card':
+    case 'card': {
       string(item.cardId, `${path}.cardId`);
-      string(item.area, `${path}.area`);
+      const area = oneOf(item.area, CARD_CANDIDATE_AREAS, `${path}.area`);
       player(item.player, `${path}.player`);
-      optionalInteger(item.index, `${path}.index`);
+      if (INDEXED_CARD_CANDIDATE_AREAS.has(area)) integer(item.index, `${path}.index`);
+      else if (item.index !== undefined) fail(`${path}.index`, 'not allowed for this area');
       optionalString(item.hostUid, `${path}.hostUid`);
       optionalString(item.setCardInstanceId, `${path}.setCardInstanceId`);
+      if (area === 'evidence' || area === 'remove') occurrenceWitness(item.occurrenceWitness, `${path}.occurrenceWitness`);
+      else optionalString(item.occurrenceWitness, `${path}.occurrenceWitness`);
       return;
+    }
     case 'evidence':
+      player(item.player, `${path}.player`);
+      integer(item.index, `${path}.index`);
+      if (item.area !== undefined && item.area !== 'evidence') fail(`${path}.area`, 'evidence candidates require area evidence');
+      occurrenceWitness(item.occurrenceWitness, `${path}.occurrenceWitness`);
+      return;
     case 'file':
       player(item.player, `${path}.player`);
       integer(item.index, `${path}.index`);
@@ -229,8 +270,24 @@ function effectCtx(value: unknown, path: string, mode: ValidationMode, depth = 0
     array(values, `${path}.bindings.${key}`)
       .forEach((entry, index) => {
         const entryPath = `${path}.bindings.${key}[${index}]`;
-        record(entry, entryPath);
+        const binding = record(entry, entryPath);
         genericData(entry, entryPath, mode);
+        if (binding.area === 'remove' || binding.area === 'evidence') {
+          player(binding.player, `${entryPath}.player`);
+          const bindingPlayer = binding.player as 'self' | 'opp';
+          const bindingIndex = integer(binding.index, `${entryPath}.index`);
+          occurrenceWitness(binding.occurrenceWitness, `${entryPath}.occurrenceWitness`);
+          if (binding.area === 'remove') {
+            const cardId = string(binding.cardId, `${entryPath}.cardId`);
+            if (binding.uid !== undefined
+              && binding.uid !== cardOccurrenceUid(bindingPlayer, 'remove', cardId, bindingIndex)) {
+              fail(`${entryPath}.uid`, 'does not match the indexed remove occurrence');
+            }
+          } else if (binding.uid !== undefined) {
+            const expectedUid = `evidence:${bindingPlayer}:${bindingIndex}`;
+            if (binding.uid !== expectedUid) fail(`${entryPath}.uid`, 'does not match the indexed evidence occurrence');
+          }
+        }
       });
   }
   if (item.declaredNames !== undefined) {
@@ -283,18 +340,71 @@ function pendingPick(value: unknown, path: string, mode: ValidationMode): void {
   player(item.player, `${path}.player`);
   optionalPlayer(item.ownerPlayer, `${path}.ownerPlayer`);
   const candidates = array(item.candidates, `${path}.candidates`);
+  const candidateUids = new Set<string>();
   candidates.forEach((raw, index) => {
     const candidateItem = record(raw, `${path}.candidates[${index}]`);
-    string(candidateItem.uid, `${path}.candidates[${index}].uid`);
-    string(candidateItem.cardId, `${path}.candidates[${index}].cardId`);
-    player(candidateItem.player, `${path}.candidates[${index}].player`);
-    if (candidateItem.kind !== undefined) {
-      oneOf(candidateItem.kind, new Set(['char', 'card', 'evidence']), `${path}.candidates[${index}].kind`);
+    const candidateUid = string(candidateItem.uid, `${path}.candidates[${index}].uid`);
+    if (candidateUids.has(candidateUid)) {
+      fail(`${path}.candidates[${index}].uid`, 'duplicate candidate uid');
     }
-    optionalString(candidateItem.area, `${path}.candidates[${index}].area`);
-    optionalInteger(candidateItem.index, `${path}.candidates[${index}].index`);
+    candidateUids.add(candidateUid);
+    const candidateCardId = string(candidateItem.cardId, `${path}.candidates[${index}].cardId`);
+    player(candidateItem.player, `${path}.candidates[${index}].player`);
+    const candidatePlayer = candidateItem.player as 'self' | 'opp';
+    const candidateKind = candidateItem.kind === undefined
+      ? undefined
+      : oneOf(candidateItem.kind, new Set(['char', 'card', 'evidence']), `${path}.candidates[${index}].kind`);
+    if (candidateKind === 'char') {
+      if (candidateItem.area !== undefined || candidateItem.index !== undefined) {
+        fail(`${path}.candidates[${index}]`, 'char candidates cannot carry an area or index');
+      }
+    } else if (candidateKind === 'card') {
+      const area = oneOf(candidateItem.area, CARD_CANDIDATE_AREAS, `${path}.candidates[${index}].area`);
+      let candidateIndex: number | undefined;
+      if (INDEXED_CARD_CANDIDATE_AREAS.has(area)) {
+        candidateIndex = integer(candidateItem.index, `${path}.candidates[${index}].index`);
+      } else if (candidateItem.index !== undefined) {
+        fail(`${path}.candidates[${index}].index`, 'not allowed for this area');
+      }
+      if (area === 'evidence' || area === 'remove') {
+        if (candidateUid !== cardOccurrenceUid(candidatePlayer, area, candidateCardId, candidateIndex!)) {
+          fail(`${path}.candidates[${index}].uid`, 'does not match the indexed card occurrence');
+        }
+        boundOccurrenceWitness(
+          candidateItem.occurrenceWitness,
+          `${path}.candidates[${index}].occurrenceWitness`,
+          candidatePlayer,
+          area,
+        );
+      }
+    } else if (candidateKind === 'evidence') {
+      if (candidateItem.area !== undefined && candidateItem.area !== 'evidence') {
+        fail(`${path}.candidates[${index}].area`, 'evidence candidates require area evidence');
+      }
+      const candidateIndex = integer(candidateItem.index, `${path}.candidates[${index}].index`);
+      if (candidateUid !== `evidence:${candidatePlayer}:${candidateIndex}`) {
+        fail(`${path}.candidates[${index}].uid`, 'does not match the indexed evidence occurrence');
+      }
+      boundOccurrenceWitness(
+        candidateItem.occurrenceWitness,
+        `${path}.candidates[${index}].occurrenceWitness`,
+        candidatePlayer,
+        'evidence',
+      );
+    } else {
+      const area = candidateItem.area;
+      if (area === 'evidence' || area === 'remove') {
+        fail(`${path}.candidates[${index}].kind`, 'required for a physical evidence/remove occurrence');
+      }
+      if (area === undefined && (candidateItem.index !== undefined || candidateItem.occurrenceWitness !== undefined)) {
+        fail(`${path}.candidates[${index}].kind`, 'required for an indexed physical occurrence');
+      }
+      if (area !== undefined) oneOf(area, CARD_CANDIDATE_AREAS, `${path}.candidates[${index}].area`);
+      optionalInteger(candidateItem.index, `${path}.candidates[${index}].index`);
+    }
     optionalString(candidateItem.hostUid, `${path}.candidates[${index}].hostUid`);
     optionalString(candidateItem.setCardInstanceId, `${path}.candidates[${index}].setCardInstanceId`);
+    optionalString(candidateItem.occurrenceWitness, `${path}.candidates[${index}].occurrenceWitness`);
     if (candidateItem.hidden !== undefined && typeof candidateItem.hidden !== 'boolean') {
       fail(`${path}.candidates[${index}].hidden`, 'expected a boolean');
     }
@@ -550,9 +660,12 @@ export function assertPendingRuntimeValue(
         optionalBool(item.gainDeferred, `${entryPath}.gainDeferred`);
         if (item.occurrence !== undefined) {
           const occurrence = record(item.occurrence, `${entryPath}.occurrence`);
+          string(occurrence.uid, `${entryPath}.occurrence.uid`);
           player(occurrence.player, `${entryPath}.occurrence.player`);
           string(occurrence.cardId, `${entryPath}.occurrence.cardId`);
-          integer(occurrence.removeIndex, `${entryPath}.occurrence.removeIndex`);
+          if (occurrence.area !== 'remove') fail(`${entryPath}.occurrence.area`, 'expected remove');
+          integer(occurrence.index, `${entryPath}.occurrence.index`);
+          occurrenceWitness(occurrence.occurrenceWitness, `${entryPath}.occurrence.occurrenceWitness`);
         }
       });
       return;

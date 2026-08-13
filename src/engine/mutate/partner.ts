@@ -10,6 +10,8 @@ import { evidence as evidenceMut } from './evidence.js'; // engine E3 P10: 【�
 import { gameResult as gameResultMut } from './gameResult.js'; // engine E3 P10: alt-lose 決着 (無条件 set、旧 evidence 直代入と対称)
 import { game as readGame } from '../read/game.js'; // engine E3 P10: partnerSolveOverride 走査 (read→mutate 片方向、cycle なし)
 
+import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
+
 type Player = 'self' | 'opp';
 type PartnerState = 'active' | 'sleep' | 'stun';
 type PartnerLocation = 'partner-area' | 'file-area' | 'mr-removed';
@@ -118,6 +120,7 @@ function addAreaCardFromRemove(s: GameState, p: Player, cardId: string, exactInd
     : list.lastIndexOf(cardId);
   if (idx === -1) return false;
   list.splice(idx, 1);
+  advanceIndexedZoneEpoch(s, p, 'remove');
   removeMut.emitExit(s, p, cardId);
   (s.players[p].partnerAreaCards ??= []).push(cardId);
   return true;
@@ -140,6 +143,7 @@ function removeAreaCardsToRemove(s: GameState, p: Player, cardIds: string[]): vo
     if (idx === -1) continue;
     list.splice(idx, 1);
     s.players[p].remove.push(cardId);
+    advanceIndexedZoneEpoch(s, p, 'remove');
   }
 }
 
@@ -154,6 +158,7 @@ function removeAreaCardToRemoveAt(s: GameState, p: Player, cardId: string, index
   if (!list || list[index] !== cardId) return false;
   list.splice(index, 1);
   s.players[p].remove.push(cardId);
+  advanceIndexedZoneEpoch(s, p, 'remove');
   return true;
 }
 

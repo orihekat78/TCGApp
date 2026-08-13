@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-state.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:state`
-> Source hash: `2554f3b9ec7d`
+> Source hash: `5a5f2dd71dcb`
 
 `src/engine/types/game-state.ts` から抽出した GameState の構造図。
 
@@ -15,6 +15,7 @@ classDiagram
   class GameState {
     +turn: «object×4»
     +players: «object×2»
+    +indexedZoneEpochs?: «object×4»
     +pendingEffects: EffectStackEntry[]
     +actionContexts?: Record<string, ActionContext>
     +actionContextSeq?: number

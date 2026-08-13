@@ -32,7 +32,7 @@ import { findChooseIntercept } from './consult-choose-intercept.js';
 import { hand } from '../mutate/hand.js';
 import { run as runEffect } from './resolver.js';
 import { eventUseAllowed } from '../flow/main/hand-use-card.js';
-import { cardOccurrenceUid, setCardOccurrenceUid } from '../target/card-occurrence.js';
+import { cardOccurrenceUid, cardOccurrenceWitness, setCardOccurrenceUid } from '../target/card-occurrence.js';
 import { char as charMutator } from '../mutate/char.js';
 import { peekPublicHandRevealToken, takePublicHandRevealToken } from './atom-handlers/_shared.js';
 import { chooseHeuristicAtomTarget } from './heuristic-atom-target.js';
@@ -60,6 +60,7 @@ function pendingSource<T extends { cardId: string; abilityId: string }>(state: G
   markEffectCausalAwaitingResume(trace);
   return {
     ...source,
+    ...(ctx.source.area ? { area: ctx.source.area } : {}),
     ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}),
     ...(ctx.source.triggerBatch !== undefined ? { triggerBatch: ctx.source.triggerBatch } : {}),
     ...(ctx.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: ctx.source.ownerChosenOrder } : {}),
@@ -322,6 +323,8 @@ export interface ResolveEffectPicksOpts {
    * 初期 walk での side-channel set が必須なので、この flag に関わらず set する。
    */
   _fromAtomHandler?: boolean;
+  /** Initial pre-walk context: this atom follows at least one printed sequence step. */
+  _hasPriorSequenceStep?: boolean;
   /** Internal sequence signal: a human runtime pick must pause before later pre-walks. */
   _runtimePickPause?: { encountered: boolean };
 }
@@ -331,6 +334,32 @@ function humanDecisionPlayer(opts: ResolveEffectPicksOpts): Player | null {
   const globalHuman = (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide;
   if (globalHuman === 'self' || globalHuman === 'opp') return globalHuman;
   return opts.humanChooser === true ? (opts.byPlayer ?? 'self') : null;
+}
+
+function targetDecisionPlayer(
+  target: { chooser?: unknown },
+  ctx: EffectCtx,
+  opts: ResolveEffectPicksOpts,
+): Player {
+  return target.chooser === 'opp-of-owner'
+    ? (ctx.source.player === 'self' ? 'opp' : 'self')
+    : (opts.byPlayer ?? 'self');
+}
+
+function isExplicitlyKnownNonHumanDecision(
+  target: { chooser?: unknown },
+  ctx: EffectCtx,
+  opts: ResolveEffectPicksOpts,
+): boolean {
+  const ownerKnown = opts.humanChooser !== undefined || opts.humanPlayer !== undefined;
+  return ownerKnown && humanDecisionPlayer(opts) !== targetDecisionPlayer(target, ctx, opts);
+}
+
+function isIndexedPhysicalPickTarget(target: unknown): boolean {
+  const area = (target as { query?: { area?: unknown } } | undefined)?.query?.area;
+  if (area === 'remove' || area === 'evidence') return true;
+  return Array.isArray(area)
+    && area.some(value => value === 'remove' || value === 'evidence');
 }
 
 /**
@@ -568,6 +597,17 @@ function substituteAtomPick(
     target as { kind?: string; query?: unknown } & Record<string, unknown>,
     ctx,
   );
+  const deferLaterIndexedPatternB = opts._fromAtomHandler !== true
+    && opts._hasPriorSequenceStep === true
+    && isPatternB
+    && isIndexedPhysicalPickTarget(resolvedTarget)
+    && isExplicitlyKnownNonHumanDecision(target, ctx, opts);
+  if (deferLaterIndexedPatternB) {
+    // A prior printed step can mutate the indexed zone and invalidate an
+    // otherwise exact witness. Keep only this atom unresolved; its runtime
+    // handler re-picks from the post-prior-step state. Never refresh a witness.
+    return atom as Effect;
+  }
   const cands0 = targetCandidates(state, resolvedTarget as TargetingRef, ctx);
   // S2 wave (2026-07-11, B03093): 「相手のイベントの効果によって選ばれない」— pick 経路唯一の
   // chokepoint (AI substitute / human pending 双方が本列挙を通る) で char candidate を負 filter。
@@ -636,10 +676,7 @@ function substituteAtomPick(
   // (target.chooser を一律 owner 相対解釈すると owner='opp' の短縮形で二重反転する)。'opp-of-owner' は
   // 型に存在するが既存カード/短縮形いずれも未使用 (grep 実測 0) = 純 additive。pending.player=chooser
   // 側に載り、owner≠chooser の再実行座標系は BUG-175 pending.ownerPlayer が支える (下 push 参照)。
-  const targetChooser = (target as { chooser?: string }).chooser;
-  const byPlayer: Player = targetChooser === 'opp-of-owner'
-    ? (ctx.source.player === 'self' ? 'opp' : 'self')
-    : (opts.byPlayer ?? 'self');
+  const byPlayer = targetDecisionPlayer(target, ctx, opts);
 
   // mega-wave W6 step6 (2026-07-04, r79/B08014): source card が MR の「選ぶ」効果 — 解決済み現場
   // キャラ uid を informational field `_mrSelectCharUids` として args に同梱する (turnEffects への
@@ -741,11 +778,19 @@ function substituteAtomPick(
         // Card candidates have no native uid.  The occurrence identity must include
         // player + area + index: a union query can contain the same cardId at index 0
         // in more than one area.
-        cardLikeCands.push({ uid: cardOccurrenceUid(c.player, c.area, c.cardId, c.index ?? 0), cardId: c.cardId, player: c.player, kind: 'card', area: c.area, index: c.index });
+        cardLikeCands.push({
+          uid: cardOccurrenceUid(c.player, c.area, c.cardId, c.index ?? 0), cardId: c.cardId,
+          player: c.player, kind: 'card', area: c.area, index: c.index,
+          ...(c.occurrenceWitness === undefined ? {} : { occurrenceWitness: c.occurrenceWitness }),
+        });
       } else if (c.kind === 'evidence') {
         // BUG-076: evidence area の pick (D08013 a1 step 2 evidenceToHand 等)
         const evCardId = state.players[c.player].evidence[c.index]?.cardId ?? 'unknown';
-        cardLikeCands.push({ uid: `evidence:${c.player}:${c.index}`, cardId: evCardId, player: c.player, kind: 'evidence', area: 'evidence' });
+        cardLikeCands.push({
+          uid: `evidence:${c.player}:${c.index}`, cardId: evCardId, player: c.player,
+          kind: 'evidence', area: 'evidence', index: c.index,
+          ...(c.occurrenceWitness === undefined ? {} : { occurrenceWitness: c.occurrenceWitness }),
+        });
       }
       // file kind は face-down で cardId 不明のため skip (face-up にした後 separately 処理)
     }
@@ -891,6 +936,58 @@ function substituteAtomPick(
     } as Effect;
   }
 
+  // A picked Hirameki source is a physical occurrence, not a card-id value.
+  // Mirror the human continuation shape so autonomous resolution preserves
+  // the selected uid plus its owner/area/index across the declared queue.
+  if (args.occurrence === '$pick') {
+    const occurrence = (() => {
+      if (picked.kind === 'char') {
+        return {
+          kind: 'char' as const,
+          uid: picked.uid,
+          cardId: picked.cardId,
+          player: picked.player,
+          area: 'scene' as const,
+        };
+      }
+      if (picked.kind === 'evidence') {
+        const cardId = state.players[picked.player].evidence[picked.index]?.cardId;
+        return cardId === undefined ? null : {
+          kind: 'evidence' as const,
+          uid: `evidence:${picked.player}:${picked.index}`,
+          cardId,
+          player: picked.player,
+          area: 'evidence' as const,
+          index: picked.index,
+          occurrenceWitness: picked.occurrenceWitness ?? cardOccurrenceWitness(state, picked.player, 'evidence'),
+        };
+      }
+      if (picked.kind !== 'card') return null;
+      const supportedArea = picked.area === 'remove'
+        || picked.area === 'case'
+        || picked.area === 'partner-area'
+        || picked.area === 'hand';
+      if (!supportedArea) return null;
+      return {
+        kind: 'card' as const,
+        uid: picked.uid ?? cardOccurrenceUid(picked.player, picked.area, picked.cardId, picked.index ?? 0),
+        cardId: picked.cardId,
+        player: picked.player,
+        area: picked.area,
+        ...(picked.index === undefined ? {} : { index: picked.index }),
+        ...((picked.area === 'remove' && typeof picked.index === 'number')
+          ? { occurrenceWitness: picked.occurrenceWitness ?? cardOccurrenceWitness(state, picked.player, 'remove') }
+          : picked.occurrenceWitness === undefined ? {} : { occurrenceWitness: picked.occurrenceWitness }),
+      };
+    })();
+    if (occurrence === null) return atom as Effect;
+    return {
+      kind: 'atom',
+      verb: atom.verb as never,
+      args: markAutonomousPick(resolveDynArgs(state, { ...args, occurrence }, ctx)),
+    } as Effect;
+  }
+
   // Pattern B: target → cardId/uid 配列に置換 (atom-handler が配列を期待)
   // BUG-077 後続: evidence kind (evidenceToHand 等の AI 経路) も解決対象に含む
   // BUG-103 (D08021): multi-pick contract (cardIds:'$pick.cardIds')。AI 経路では cardIds が
@@ -920,10 +1017,31 @@ function substituteAtomPick(
         ...args,
         cardIds: chosenIds,
         selectedDeckIndexes: chosen.map((candidate) => candidate.kind === 'card' ? candidate.index : undefined),
-        selectedCardOccurrences: chosen.flatMap((candidate) => candidate.kind === 'card'
-          && typeof candidate.index === 'number'
-          ? [{ cardId: candidate.cardId, area: candidate.area, player: candidate.player, index: candidate.index }]
-          : []),
+        selectedCardOccurrences: chosen.flatMap((candidate) => {
+          if (candidate.kind === 'card' && typeof candidate.index === 'number') {
+            return [{
+              uid: cardOccurrenceUid(candidate.player, candidate.area, candidate.cardId, candidate.index),
+              cardId: candidate.cardId,
+              area: candidate.area,
+              player: candidate.player,
+              index: candidate.index,
+              ...(candidate.occurrenceWitness === undefined ? {} : { occurrenceWitness: candidate.occurrenceWitness }),
+            }];
+          }
+          if (candidate.kind === 'evidence') {
+            const cardId = state.players[candidate.player].evidence[candidate.index]?.cardId;
+            return cardId === undefined ? [] : [{
+              uid: `evidence:${candidate.player}:${candidate.index}`,
+              cardId,
+              area: 'evidence' as const,
+              player: candidate.player,
+              index: candidate.index,
+              occurrenceWitness: candidate.occurrenceWitness
+                ?? cardOccurrenceWitness(state, candidate.player, 'evidence'),
+            }];
+          }
+          return [];
+        }),
       }, ctx)),
     } as Effect;
   }
@@ -951,11 +1069,50 @@ function substituteAtomPick(
         cardId: pickedCardId,
         ...(picked.kind === 'card' ? { selectedCardIndex: picked.index } : {}),
         ...(picked.kind === 'card' && typeof picked.index === 'number'
-          ? { selectedCardOccurrences: [{ cardId: picked.cardId, area: picked.area, player: picked.player, index: picked.index }] }
-          : {}),
+          ? { selectedCardOccurrences: [{ uid: cardOccurrenceUid(picked.player, picked.area, picked.cardId, picked.index), cardId: picked.cardId, area: picked.area, player: picked.player, index: picked.index, ...(picked.occurrenceWitness === undefined ? {} : { occurrenceWitness: picked.occurrenceWitness }) }] }
+          : picked.kind === 'evidence'
+            ? { selectedCardOccurrences: [{
+              uid: `evidence:${picked.player}:${picked.index}`,
+              cardId: pickedCardId,
+              area: 'evidence' as const,
+              player: picked.player,
+              index: picked.index,
+              occurrenceWitness: picked.occurrenceWitness
+                ?? cardOccurrenceWitness(state, picked.player, 'evidence'),
+            }] }
+            : {}),
       }, ctx)),
     } as Effect;
   }
+  const selectedIndexedOccurrenceOf = (candidate: Candidate) => {
+    if (candidate.kind === 'card'
+      && typeof candidate.index === 'number'
+      && (candidate.area === 'remove' || candidate.area === 'evidence')) {
+      return {
+        uid: cardOccurrenceUid(candidate.player, candidate.area, candidate.cardId, candidate.index),
+        cardId: candidate.cardId,
+        area: candidate.area,
+        player: candidate.player,
+        index: candidate.index,
+        occurrenceWitness: candidate.occurrenceWitness
+          ?? cardOccurrenceWitness(state, candidate.player, candidate.area),
+      };
+    }
+    if (candidate.kind === 'evidence') {
+      const cardId = state.players[candidate.player].evidence[candidate.index]?.cardId;
+      if (cardId === undefined) return null;
+      return {
+        uid: `evidence:${candidate.player}:${candidate.index}`,
+        cardId,
+        area: 'evidence' as const,
+        player: candidate.player,
+        index: candidate.index,
+        occurrenceWitness: candidate.occurrenceWitness
+          ?? cardOccurrenceWitness(state, candidate.player, 'evidence'),
+      };
+    }
+    return null;
+  };
   const pickValueOf = (c: (typeof cands)[number]): string | null =>
     c.kind === 'card' ? c.cardId :
     c.kind === 'char' ? c.uid :
@@ -973,30 +1130,44 @@ function substituteAtomPick(
       ? [...cands.filter((c) => c.kind === 'char' && forcedUids.includes(c.uid)),
          ...cands.filter((c) => !(c.kind === 'char' && forcedUids.includes(c.uid)))]
       : cands;
-    const pickValues = orderedCands
-      .map(pickValueOf)
-      .filter((v): v is string => v !== null)
+    const chosenCands = orderedCands
+      .filter((candidate) => pickValueOf(candidate) !== null)
       .slice(0, nMaxG);
+    const pickValues = chosenCands
+      .map(pickValueOf)
+      .filter((value): value is string => value !== null);
     if (pickValues.length === 0) return atom as Effect;
     // W6 step6 (r79): 選択集合中の char-kind uid のみを MR タグ対象にする (card/evidence は対象外)
-    const w6CharUidsG = orderedCands
-      .filter((c) => pickValueOf(c) !== null)
-      .slice(0, nMaxG)
+    const w6CharUidsG = chosenCands
       .filter((c): c is Extract<typeof c, { kind: 'char' }> => c.kind === 'char')
       .map((c) => c.uid);
+    const indexedOccurrences = chosenCands.map(selectedIndexedOccurrenceOf);
+    const selectedOccurrencePart = indexedOccurrences.length > 0
+      && indexedOccurrences.every(occurrence => occurrence !== null)
+      ? { selectedCardOccurrences: indexedOccurrences }
+      : {};
     return {
       kind: 'atom',
       verb: atom.verb as never,
-      args: markAutonomousPick(w6TagMr(resolveDynArgs(state, { ...args, target: pickValues }, ctx) as Record<string, unknown>, w6CharUidsG)),
+      args: markAutonomousPick(w6TagMr(resolveDynArgs(state, {
+        ...args,
+        target: pickValues,
+        ...selectedOccurrencePart,
+      }, ctx) as Record<string, unknown>, w6CharUidsG)),
     } as Effect;
   }
   const pickValue = pickValueOf(picked);
   if (pickValue === null) return atom as Effect;
+  const indexedOccurrence = selectedIndexedOccurrenceOf(picked);
   return {
     kind: 'atom',
     verb: atom.verb as never,
     args: markAutonomousPick(w6TagMr(
-      resolveDynArgs(state, { ...args, target: [pickValue] }, ctx) as Record<string, unknown>,
+      resolveDynArgs(state, {
+        ...args,
+        target: [pickValue],
+        ...(indexedOccurrence === null ? {} : { selectedCardOccurrences: [indexedOccurrence] }),
+      }, ctx) as Record<string, unknown>,
       picked.kind === 'char' ? [picked.uid] : [],
     )),
   } as Effect;
@@ -1044,6 +1215,7 @@ export function resolveEffectPicks(
         const choiceBefore = _peekPendingEffectChoiceSide() !== null;
         seqOut.push(resolveEffectPicks(state, effect.steps[i]!, ctx, {
           ...opts,
+          _hasPriorSequenceStep: opts._hasPriorSequenceStep === true || i > 0,
           _runtimePickPause: runtimePickPause,
         }));
         if (runtimePickPause.encountered) {

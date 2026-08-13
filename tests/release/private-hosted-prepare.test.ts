@@ -13,7 +13,7 @@ import { spawnSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { tmpdir, userInfo } from "node:os";
 import { pathToFileURL } from "node:url";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import {
   assertAcceptableBuildOutput,
   parsePrepareArgs,
@@ -46,6 +46,7 @@ const PAGES_ROUTES = `{
   "exclude": []
 }
 `;
+const workerNodePath = process.env.NODE_PATH;
 
 type Fixture = {
   root: string;
@@ -212,10 +213,19 @@ function prepare(
   );
 }
 
+beforeAll(() => {
+  delete process.env.NODE_PATH;
+});
+
 afterEach(() => {
   for (const root of roots.splice(0))
     rmSync(root, { recursive: true, force: true });
   for (const path of externalFiles.splice(0)) rmSync(path, { force: true });
+});
+
+afterAll(() => {
+  if (workerNodePath === undefined) delete process.env.NODE_PATH;
+  else process.env.NODE_PATH = workerNodePath;
 });
 
 describe("private hosted release preparation", () => {

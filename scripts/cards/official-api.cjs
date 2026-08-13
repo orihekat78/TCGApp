@@ -14,15 +14,67 @@ const KERNEL_GATE_WORKER = String.raw`
   const net = require("node:net");
   const { parentPort, workerData } = require("node:worker_threads");
   const state = new Int32Array(workerData.state);
+  let ready = false;
   const finishReady = (code) => {
+    if (ready) return;
+    ready = true;
     Atomics.store(state, 1, code);
     Atomics.store(state, 0, 1);
     Atomics.notify(state, 0);
   };
-  const server = net.createServer((socket) => socket.destroy());
-  server.once("error", (error) => finishReady(error && error.code === "EADDRINUSE" ? 1 : 2));
-  server.listen(workerData.endpoint, () => finishReady(0));
-  parentPort.once("message", () => server.close(() => process.exit(0)));
+  const clients = new Set();
+  const server = net.createServer((socket) => {
+    clients.add(socket);
+    socket.once("close", () => clients.delete(socket));
+    socket.once("error", () => clients.delete(socket));
+    socket.write(workerData.mode);
+    Atomics.store(state, 3, 1);
+    Atomics.notify(state, 3);
+  });
+  const listen = () => server.listen(workerData.endpoint);
+  const waitForReaderRelease = () => {
+    let holderMode = "";
+    let settled = false;
+    const socket = net.createConnection(workerData.endpoint);
+    const retryListen = () => {
+      if (settled || ready) return;
+      settled = true;
+      socket.destroy();
+      listen();
+    };
+    socket.on("data", (chunk) => {
+      holderMode += chunk.toString("utf8");
+      if (holderMode === "writer") {
+        settled = true;
+        socket.destroy();
+        finishReady(1);
+      } else if (holderMode !== "reader" && !"reader".startsWith(holderMode)) {
+        settled = true;
+        socket.destroy();
+        finishReady(2);
+      }
+    });
+    socket.once("error", (error) => {
+      if (error && (error.code === "ECONNREFUSED" || error.code === "ENOENT")) retryListen();
+      else finishReady(2);
+    });
+    socket.once("close", () => {
+      if (settled || ready) return;
+      if (holderMode === "writer") finishReady(1);
+      else retryListen();
+    });
+  };
+  server.on("error", (error) => {
+    if (!error || error.code !== "EADDRINUSE") finishReady(2);
+    else if (!workerData.waitForReader) finishReady(1);
+    else waitForReaderRelease();
+  });
+  server.on("listening", () => finishReady(0));
+  listen();
+  parentPort.once("message", () => {
+    for (const socket of clients) socket.destroy();
+    server.close(() => process.exit(0));
+  });
   process.once("exit", () => {
     Atomics.store(state, 2, 1);
     Atomics.notify(state, 2);
@@ -208,16 +260,18 @@ function kernelGateEndpoint(baseDir) {
   return { host: "127.0.0.1", port, exclusive: true };
 }
 
-function acquireCardsDataKernelGate(baseDir) {
-  const stateBuffer = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 3);
+function acquireCardsDataKernelGate(baseDir, { mode = "writer", waitForReader = false } = {}) {
+  if (mode !== "reader" && mode !== "writer") throw new Error("cards-data kernel gate mode is invalid");
+  const stateBuffer = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4);
   const state = new Int32Array(stateBuffer);
   const endpoint = kernelGateEndpoint(baseDir);
   const worker = new Worker(KERNEL_GATE_WORKER, {
     eval: true,
-    workerData: { endpoint, state: stateBuffer },
+    workerData: { endpoint, state: stateBuffer, mode, waitForReader },
   });
   worker.unref();
-  const waitResult = Atomics.wait(state, 0, 0, 5_000);
+  const waitTimeoutMs = mode === "reader" && waitForReader ? 15_000 : 5_000;
+  const waitResult = Atomics.wait(state, 0, 0, waitTimeoutMs);
   const result = Atomics.load(state, 1);
   if (waitResult === "timed-out" || Atomics.load(state, 0) !== 1 || result !== 0) {
     void worker.terminate();
@@ -283,6 +337,11 @@ function readCardsDataWriteLock(lockDirectory, baseDir) {
     pid: owner.pid,
     nonce: owner.nonce,
   };
+}
+
+function sameCardsDataWriteLockIdentity(left, right) {
+  return left.device === right.device && left.inode === right.inode
+    && left.pid === right.pid && left.nonce === right.nonce;
 }
 
 function assertOwnedCardsDataWriteLock(lockToken) {
@@ -414,9 +473,16 @@ function cleanupOrphanedCardsDataWriteLocks(baseDir, activeCandidate) {
   }
 }
 
-function acquireCardsDataWriteLock(baseDir, { afterReadStaleLock = () => undefined } = {}) {
+function acquireCardsDataLock(baseDir, {
+  afterReadStaleLock = () => undefined,
+  kernelGateMode = "writer",
+  waitForReader = false,
+} = {}) {
   const resolvedBaseDir = resolveCanonicalCardsDataBaseDir(baseDir);
-  const kernelGate = acquireCardsDataKernelGate(resolvedBaseDir);
+  const kernelGate = acquireCardsDataKernelGate(resolvedBaseDir, {
+    mode: kernelGateMode,
+    waitForReader,
+  });
   const lockDirectory = cardsDataWriteLockDirectory(resolvedBaseDir);
   const recoveryDirectory = cardsDataWriteLockRecoveryDirectory(resolvedBaseDir);
   let candidate;
@@ -425,6 +491,10 @@ function acquireCardsDataWriteLock(baseDir, { afterReadStaleLock = () => undefin
     candidate = prepareCardsDataWriteLockCandidate(resolvedBaseDir);
     cleanupOrphanedCardsDataWriteLocks(resolvedBaseDir, candidate);
     for (let attempt = 0; attempt < 8; attempt += 1) {
+      const currentCandidate = readCardsDataWriteLock(candidate.lockDirectory, resolvedBaseDir);
+      if (!sameCardsDataWriteLockIdentity(currentCandidate, candidate)) {
+        throw new Error("cards-data write lock candidate identity changed");
+      }
       if (fs.existsSync(recoveryDirectory)) {
         const recovering = readCardsDataWriteLock(recoveryDirectory, resolvedBaseDir);
         const isolatedRecovery = path.join(transactionDirectory(resolvedBaseDir), `.stale-lock-${randomUUID()}`);
@@ -445,10 +515,13 @@ function acquireCardsDataWriteLock(baseDir, { afterReadStaleLock = () => undefin
       try {
         fs.renameSync(candidate.lockDirectory, lockDirectory);
         const installed = readCardsDataWriteLock(lockDirectory, resolvedBaseDir);
+        if (!sameCardsDataWriteLockIdentity(installed, candidate)) {
+          throw new Error("cards-data write lock candidate identity changed during installation");
+        }
         acquired = true;
         return { ...installed, kernelGate };
       } catch (error) {
-        if (!fs.existsSync(lockDirectory)) throw error;
+        if (!fs.existsSync(lockDirectory)) continue;
         const existing = readCardsDataWriteLock(lockDirectory, resolvedBaseDir);
         afterReadStaleLock(existing);
         try {
@@ -475,6 +548,10 @@ function acquireCardsDataWriteLock(baseDir, { afterReadStaleLock = () => undefin
     }
     if (!acquired) releaseCardsDataKernelGate(kernelGate);
   }
+}
+
+function acquireCardsDataWriteLock(baseDir, { afterReadStaleLock = () => undefined } = {}) {
+  return acquireCardsDataLock(baseDir, { afterReadStaleLock });
 }
 
 function assertCardsDataWriteLock(baseDir, lockToken) {
@@ -876,7 +953,10 @@ function recoverCardsDataTransactions(options) {
 function withCardsDataSnapshot({ baseDir, lockToken, read }) {
   if (typeof read !== "function") throw new Error("cards-data snapshot reader must be a function");
   const ownedLock = lockToken === undefined;
-  const activeLock = lockToken ?? acquireCardsDataWriteLock(baseDir);
+  const activeLock = lockToken ?? acquireCardsDataLock(baseDir, {
+    kernelGateMode: "reader",
+    waitForReader: true,
+  });
   let operationError;
   try {
     assertCardsDataWriteLock(baseDir, activeLock);

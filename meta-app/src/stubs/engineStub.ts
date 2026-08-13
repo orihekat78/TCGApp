@@ -8,6 +8,63 @@ import { useDecksStore } from '../state/decksStore';
 import { useHistoryStore } from '../state/historyStore';
 import { captureMatchDeckSnapshot } from '../data/matchDeckSnapshot';
 import { useMetaStore, type Settings } from '../state/metaStore';
+import {
+  DEFAULT_DECK_LIMIT,
+  validateDeckLegality,
+  type DeckLegalityError,
+  type DeckLegalityWarning,
+} from '../../../src/shared/deck-legality';
+
+const legalityErrorText: Record<DeckLegalityError, string> = {
+  PARTNER_MISSING: 'パートナーカードを選択してください',
+  PARTNER_UNKNOWN: 'パートナーカードが見つかりません',
+  PARTNER_KIND: 'パートナー欄にはパートナーカードを選択してください',
+  CASE_MISSING: '事件カードを選択してください',
+  CASE_UNKNOWN: '事件カードが見つかりません',
+  CASE_KIND: '事件欄には事件カードを選択してください',
+  MAIN_COUNT: 'メインデッキは40枚にしてください',
+  MAIN_ENTRY_COUNT: 'カード枚数は1以上の整数にしてください',
+  MAIN_UNKNOWN: '未登録のカードが含まれています',
+  MAIN_KIND: 'メインデッキにはキャラまたはイベントのみ入れられます',
+  CARD_METADATA_CONFLICT: '同一カードIDの印刷情報が一致しません',
+  COPY_LIMIT: '同一カードIDの枚数上限を超えています',
+};
+
+function legalityWarningText(warning: DeckLegalityWarning): string {
+  const [, officialId] = warning.split(':');
+  if (warning.startsWith('COMPETITIVE_PROHIBITED:')) return `大会制限: ${officialId} は使用禁止です`;
+  if (warning.startsWith('COMPETITIVE_RESTRICTED:')) return `大会制限: ${officialId} は制限カードです`;
+  return `大会制限: ${officialId} はイベントカードのみのデッキ用事件です`;
+}
+
+export type DeckLegalityCardOverlay = (printingId: string) => CardDef | undefined;
+
+function validateDeckWithSharedLegality(
+  deck: DeckRecord,
+  overlay?: DeckLegalityCardOverlay,
+): ValidationResult {
+  const result = validateDeckLegality({
+    partner: deck?.partner,
+    case: deck?.case,
+    main: Array.isArray(deck?.cards)
+      ? deck.cards.map((entry) => ({ printingId: entry?.num, count: entry?.count }))
+      : [],
+  }, (printingId) => {
+    const card = overlay?.(printingId) ?? CARD_POOL.find((candidate) => candidate.num === printingId);
+    if (!card || card.num !== printingId) return undefined;
+    return {
+      printingId: card.num,
+      officialId: card.id,
+      kind: card.type,
+      deckLimit: card.deckLimit ?? DEFAULT_DECK_LIMIT,
+    };
+  });
+  return {
+    ok: result.ok,
+    errors: result.errors.map((error) => legalityErrorText[error]),
+    warnings: result.warnings.map(legalityWarningText),
+  };
+}
 
 // ── cards ───────────────────────────────────────────────────────────
 const cards = {
@@ -17,77 +74,8 @@ const cards = {
   byNum(num: string): CardDef | undefined {
     return CARD_POOL.find((c) => c.num === num);
   },
-  validateDeck(deck: DeckRecord): ValidationResult {
-    const errors: string[] = [];
-    if (!deck || !Array.isArray(deck.cards)) {
-      return { ok: false, errors: ['デッキデータが不正です'] };
-    }
-
-    const partner = CARD_POOL.find((c) => c.num === deck.partner);
-    if (!partner) errors.push('パートナーが指定されていません');
-    else if (partner.type !== 'partner') errors.push('パートナー枠にパートナー以外のカードが指定されています');
-
-    // 事件は 1 デッキ 1 枚必須 (rules/02: パートナー1+事件1+キャラ/イベント40)。
-    const caseCard = CARD_POOL.find((c) => c.num === deck.case);
-    if (!deck.case) errors.push('事件が指定されていません');
-    else if (!caseCard) errors.push('事件カードが見つかりません');
-    else if (caseCard.type !== 'case') errors.push('事件枠に事件以外のカードが指定されています');
-
-    const total = deck.cards.reduce((s, e) => s + e.count, 0);
-    if (total !== 40) {
-      const diff = total < 40 ? `(${40 - total} 枚不足)` : `(${total - 40} 枚超過)`;
-      errors.push(`枚数違反: ${total}/40 ${diff}`);
-    }
-
-    // 同一 cardId (パラレル) を合算して 3 枚上限を判定する。
-    // rules/02-deck-construction.md「絵柄が違っても ID が同じであれば同じカード」。
-    // cardNum 単位で数えると D08003×3 + D08004×3 (= 同 cardId 0489 を 6 枚) が通ってしまう。
-    const deckLimitByNum = new Map(CARD_POOL.map((card) => [card.num, card.deckLimit ?? 3]));
-    const idAgg = new Map<string, {
-      total: number;
-      name: string;
-      nums: Set<string>;
-      limits: Set<number | 'unlimited'>;
-    }>();
-    for (const entry of deck.cards) {
-      if (entry.count < 1) {
-        errors.push(`枚数 0 のエントリ: ${entry.num}`);
-      }
-      const card = CARD_POOL.find((c) => c.num === entry.num);
-      // 存在しないカード番号 (デッキコード import 等) は拒否する。
-      if (!card) {
-        errors.push(`未知のカード: ${entry.num}`);
-        continue;
-      }
-      // デッキにはキャラ/イベントのみ。パートナーと事件は入れられない (rules/02)。
-      if (card.type === 'partner') {
-        errors.push(`デッキにパートナーは入れられません: ${card.name}`);
-      }
-      if (card.type === 'case') {
-        errors.push(`デッキに事件は入れられません: ${card.name}`);
-      }
-      const id = card.id;
-      const agg = idAgg.get(id) ?? {
-        total: 0,
-        name: card.name,
-        nums: new Set<string>(),
-        limits: new Set<number | 'unlimited'>(),
-      };
-      agg.total += entry.count;
-      agg.nums.add(entry.num);
-      agg.limits.add(deckLimitByNum.get(entry.num) ?? 3);
-      idAgg.set(id, agg);
-    }
-    for (const agg of idAgg.values()) {
-      const numericLimits = [...agg.limits].filter((limit): limit is number => limit !== 'unlimited');
-      const limit = numericLimits.length === 0 ? 'unlimited' : Math.min(...numericLimits);
-      if (limit !== 'unlimited' && agg.total > limit) {
-        const variants = agg.nums.size > 1 ? ` (${[...agg.nums].join('+')})` : '';
-        errors.push(`同 ID 上限超過: ${agg.name}${variants} ×${agg.total} (上限 ${limit})`);
-      }
-    }
-
-    return { ok: errors.length === 0, errors };
+  validateDeck(deck: DeckRecord, overlay?: DeckLegalityCardOverlay): ValidationResult {
+    return validateDeckWithSharedLegality(deck, overlay);
   },
 };
 

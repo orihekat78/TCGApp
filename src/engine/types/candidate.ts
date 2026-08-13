@@ -4,6 +4,6 @@
 export type Candidate =
   | { kind: 'char'; uid: string; cardId: string; player: 'self' | 'opp' }
   | { kind: 'partner'; player: 'self' | 'opp' }
-  | { kind: 'card'; cardId: string; area: string; player: 'self' | 'opp'; index?: number; hostUid?: string; setCardInstanceId?: string }
-  | { kind: 'evidence'; player: 'self' | 'opp'; index: number }
+  | { kind: 'card'; uid?: string; cardId: string; area: string; player: 'self' | 'opp'; index?: number; hostUid?: string; setCardInstanceId?: string; occurrenceWitness?: string }
+  | { kind: 'evidence'; player: 'self' | 'opp'; index: number; occurrenceWitness?: string }
   | { kind: 'file'; player: 'self' | 'opp'; index: number };

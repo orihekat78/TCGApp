@@ -5,6 +5,7 @@
 import { stackedCardCount, type AbilityDef, type GameState, type StackedCardEntry } from '@/engine/types';
 import { event } from '../event/index.js'; // engine拡張 wave#2 cluster9: removeOneSetCard で setcard:leave emit
 import { def as readDef } from '../read/def.js';
+import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 import { evalCond } from '../cond/eval.js';
 import { matchOneFilter } from '../target/candidates.js';
 import { pushPendingSetCardReplacementSide, type PendingSetCardReplacementSide } from '../effect/pending-state.js';
@@ -661,13 +662,16 @@ function removeAllSetAndStacked(s: GameState, uid: string): void {
   for (const entry of char.setCards) {
     s.players[player].remove.push(entry.cardId);
   }
+  if (char.setCards.length > 0) advanceIndexedZoneEpoch(s, player, 'remove');
   char.setCards = [];
 
   // stackedCards 分の back-card をリムーブエリアへ
   if (Array.isArray(char.stackedCards)) {
     s.players[player].remove.push(...char.stackedCards.map(entry => entry.cardId));
+    if (char.stackedCards.length > 0) advanceIndexedZoneEpoch(s, player, 'remove');
   } else {
     for (let i = 0; i < char.stackedCards; i++) s.players[player].remove.push('back-card');
+    if (char.stackedCards > 0) advanceIndexedZoneEpoch(s, player, 'remove');
   }
   char.stackedCards = 0;
 }
@@ -714,6 +718,7 @@ function removeOneSetCard(
   const entry = char.setCards.splice(idx, 1)[0];
   if (!entry) return null;
   s.players[player].remove.push(entry.cardId);
+  advanceIndexedZoneEpoch(s, player, 'remove');
   // engine拡張 wave#2 cluster9: set card 1枚が現場から離れる (host は在場のまま) → setcard:leave emit。
   // rules/16: B08034「セットされているカードを1枚リムーブ」= 現場から離れる。host が scene に残るため
   // listener (host 自身 / 他キャラ) は collectCardsInPlay で捕捉される (splice 前後の懸念なし)。

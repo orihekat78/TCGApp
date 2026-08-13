@@ -15,6 +15,7 @@ import type {
   EvidenceCard,
 } from '@/engine/types';
 import { makeChar, makeCtx } from '../../helpers/fixtures';
+import { cardOccurrenceWitness } from '@/engine/target/card-occurrence';
 
 
 function defOf(overrides: Partial<CardDef> & { id: string }): CardDef {
@@ -211,7 +212,14 @@ describe('engine.cost.pay', () => {
       expect(result.players.self.evidence[0].faceUp).toBe(true);
       expect(result.players.self.evidence[1].faceUp).toBe(false);
       expect(result.players.self.evidence[2].faceUp).toBe(true);
-      expect(ctx.costPaid?.flipFaceUpEvidence).toEqual({ count: 2, ids: ['A', 'C'] });
+      expect(ctx.costPaid?.flipFaceUpEvidence).toEqual({
+        count: 2,
+        ids: ['A', 'C'],
+        occurrences: [
+          { kind: 'card', uid: 'evidence:self:0', cardId: 'A', area: 'evidence', player: 'self', index: 0, occurrenceWitness: cardOccurrenceWitness(result, 'self', 'evidence') },
+          { kind: 'card', uid: 'evidence:self:2', cardId: 'C', area: 'evidence', player: 'self', index: 2, occurrenceWitness: cardOccurrenceWitness(result, 'self', 'evidence') },
+        ],
+      });
     });
 
     it('throws when indices.length below min', () => {

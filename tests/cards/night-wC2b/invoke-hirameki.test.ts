@@ -28,6 +28,8 @@ import { D03004 } from '@/cards/ct-d03/D03004';
 import type { AbilityDef, CardDef, Effect, EffectCtx, GameState, SceneCharacter } from '@/engine/types';
 import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 import { openCaseHirameki } from '../../helpers/open-case-hirameki';
+import { cardOccurrenceWitness } from '@/engine/target/card-occurrence';
+import { advanceIndexedZoneEpoch } from '@/engine/state/indexed-zone-epoch';
 
 type Player = 'self' | 'opp';
 const setHuman = (v: Player | null) => { (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide = v; };
@@ -224,6 +226,92 @@ describe('invokeHiramekiOfCard verb (直接 runEffect)', () => {
     expect(after.players.self.hand.length).toBe(0);
   });
 
+  it('physical occurrence is fail-closed when its exact evidence index is stale', () => {
+    const s = baseState();
+    s.players.self.evidence = [{ cardId: 'HIR_DRAW', faceUp: true, origin: { turn: 1, via: 'reasoning' } }] as GameState['players']['self']['evidence'];
+    const after = produce(s, (d) => {
+      runEffect(d, invoke({
+        occurrence: { uid: 'evidence:self:1', cardId: 'HIR_DRAW', player: 'self', area: 'evidence', index: 1 },
+        trait: 'YAIBA', player: 'self',
+      }), srcCtx());
+      runAllUntilEmpty(d);
+    });
+    expect(after.players.self.hand).toEqual([]);
+  });
+
+  it.each([
+    ['evidence', {
+      uid: 'evidence:self:0', cardId: 'HIR_DRAW', player: 'self', area: 'evidence', index: 0,
+    }, (state: GameState) => { state.players.self.evidence.shift(); }],
+    ['remove', {
+      uid: 'remove:self:0', cardId: 'HIR_DRAW', player: 'self', area: 'remove', index: 0,
+    }, (state: GameState) => { state.players.self.remove.shift(); }],
+  ] as const)('does not retarget a selected %s duplicate after an earlier same-ID occurrence disappears', (_area, occurrence, removeEarlier) => {
+    const s = baseState();
+    if (occurrence.area === 'evidence') {
+      s.players.self.evidence = [
+        { cardId: 'HIR_DRAW', faceUp: true, origin: { turn: 1, via: 'reasoning' } },
+        { cardId: 'HIR_DRAW', faceUp: true, origin: { turn: 1, via: 'reasoning' } },
+      ] as GameState['players']['self']['evidence'];
+    } else {
+      s.players.self.remove = ['HIR_DRAW', 'HIR_DRAW'];
+    }
+    const witnessedOccurrence = {
+      ...occurrence,
+      occurrenceWitness: cardOccurrenceWitness(s, occurrence.player, occurrence.area),
+    };
+    removeEarlier(s);
+    advanceIndexedZoneEpoch(s, occurrence.player, occurrence.area);
+
+    const after = produce(s, (draft) => {
+      runEffect(draft, invoke({ occurrence: witnessedOccurrence, trait: 'YAIBA' }), srcCtx());
+      runAllUntilEmpty(draft);
+    });
+
+    expect(after.players.self.hand).toEqual([]);
+  });
+
+  it.each([
+    ['evidence', (state: GameState) => { state.players.self.evidence.shift(); }],
+    ['remove', (state: GameState) => { state.players.self.remove.shift(); }],
+  ] as const)('rejects a witnessless physical %s occurrence after a duplicate shifts into its index', (area, removeEarlier) => {
+    const s = baseState();
+    if (area === 'evidence') {
+      s.players.self.evidence = [
+        { cardId: 'HIR_DRAW', faceUp: true, origin: { turn: 1, via: 'reasoning' } },
+        { cardId: 'HIR_DRAW', faceUp: true, origin: { turn: 1, via: 'reasoning' } },
+      ] as GameState['players']['self']['evidence'];
+    } else {
+      s.players.self.remove = ['HIR_DRAW', 'HIR_DRAW'];
+    }
+    removeEarlier(s);
+
+    const after = produce(s, (draft) => {
+      runEffect(draft, invoke({
+        occurrence: { uid: `${area}:self:0`, cardId: 'HIR_DRAW', player: 'self', area, index: 0 },
+        trait: 'YAIBA',
+      }), srcCtx());
+      runAllUntilEmpty(draft);
+    });
+
+    expect(after.players.self.hand).toEqual([]);
+  });
+
+  it('rejects forged occurrence areas instead of treating them as a file occurrence', () => {
+    const s = baseState();
+    s.players.self.file = [{ cardId: 'HIR_DRAW', faceUp: true }] as GameState['players']['self']['file'];
+
+    const after = produce(s, (draft) => {
+      runEffect(draft, invoke({
+        occurrence: { uid: 'file:self:0', cardId: 'HIR_DRAW', player: 'self', area: 'deck', index: 0 },
+        trait: 'YAIBA',
+      }), srcCtx());
+      runAllUntilEmpty(draft);
+    });
+
+    expect(after.players.self.hand).toEqual([]);
+  });
+
   it('trait gate: 非YAIBA card + trait:YAIBA → no-op / trait 省略なら発動 (印字判定)', () => {
     const gated = produce(baseState(), (d) => { runEffect(d, invoke({ cardId: 'HIR_NONYAIBA', trait: 'YAIBA', player: 'self' }), srcCtx()); runAllUntilEmpty(d); });
     expect(gated.players.self.hand.length, 'trait 不一致 → no-op').toBe(0);
@@ -347,6 +435,8 @@ describe('B06034 鬼丸城 production (【ヒラメキ】fire → flip pick → 
     expect(pick, 'flip pick surface').not.toBeNull();
     const c = pick.candidates.find((x) => x.cardId === cardId)!;
     expect(c, `候補に ${cardId}`).toBeTruthy();
+    expect(c.occurrenceWitness, 'human pending selection carries its zone witness')
+      .toBe(cardOccurrenceWitness(useGameStateStore.getState().gameState!, c.player, 'evidence'));
     expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: c.uid }).ok).toBe(true);
   }
 

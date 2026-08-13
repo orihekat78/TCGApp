@@ -106,7 +106,7 @@ const TRUSTED_VENDOR_SHA256 =
 const TRUSTED_RUNTIME_SHA256 =
   "5db5ba82eef00d1dee7e86e663098c9427d01183a88d357437daff295aec3e75";
 const TRUSTED_APP_SHA256 =
-  "cce932b4d6929da938883776de5cacd619d9b5530bc73803502f165f662117c0";
+  "b96b4d552b09d0653a6712acd10fe09baeb7f2552293997c5f3fe3abedf4f500";
 const TRUSTED_FUNCTIONS_SHA256 =
   "8f659832b10f36bd102a991c31576e127bf4b06bea1b75723dae57604dec3a04";
 const TRUSTED_BRAND_LOGO_SHA256 =
@@ -207,7 +207,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/DeckEditor-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/DeckEditor.tsx",
     sha256:
-      "cc437259ab3a176aa8a84980c425ddafc2d4e4f4ccd0b634ba318dbcb19a3a20",
+      "02974ad7f33e2665b3a8ee2935cd911e26f050eea4a7393a111af94153db4138",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed DeckEditor bundle SHA-256 mismatch",
     approvedFindings: markerFindings("persistent storage"),
@@ -216,7 +216,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/historyReplayRepository-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => /^_historyReplayRepository-[A-Za-z0-9_-]+\.js$/.test(key),
     sha256:
-      "5d86694c3c0bd348b3d55c78763ad3b327c4c6bff957140812683927242bf502",
+      "44b3917aa12b5c196a25e7f83dcfd54848c1669d0edb93c4da1b423ac2ccc62d",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed history repository bundle SHA-256 mismatch",
     approvedFindings: [],
@@ -225,7 +225,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/HistoryScreen-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/HistoryScreen.tsx",
     sha256:
-      "f6ffceab7ed5f8c032818bfcbcc721742ebd278c6634a79571a182b36e9120c9",
+      "21ee75fd33a36ee9e536d99dd5a9344be5c2c6dae4c5bd0c69ac4fbfc3683f85",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed HistoryScreen bundle SHA-256 mismatch",
     approvedFindings: markerFindings("network API", "persistent storage"),
@@ -234,7 +234,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/RealMatchView-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/RealMatchView.tsx",
     sha256:
-      "0db9220cf07d667feb146727c00d762d2750c3023e27d0c912851b2c0ead59c4",
+      "f90abcca828de208a953e5554d7b30402e665cc48cd25562caef3bf485a0e888",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed RealMatchView bundle SHA-256 mismatch",
     approvedFindings: markerFindings("dynamic code execution"),
@@ -243,7 +243,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/ReplayScreen-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/ReplayScreen.tsx",
     sha256:
-      "b01433d076a475daa8caccf33f752afd18963345ba2221856bc0f09c6b169769",
+      "b1a52af63658fb0be38c2d7df043fae8dca623299b2f8f2c03f43f9cb1a7b42b",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed ReplayScreen bundle SHA-256 mismatch",
     approvedFindings: markerFindings("network API"),
@@ -252,7 +252,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/ResultScreen-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/ResultScreen.tsx",
     sha256:
-      "574313fb03793c9cb4c5d54891dc6df90cdb741bdd0dc16e31d930fe6cd5362f",
+      "6b462ab10a1993109a9680820e429586472f6d3075edc0eb9854b5732e14b7d8",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed ResultScreen bundle SHA-256 mismatch",
     approvedFindings: markerFindings("network API"),
@@ -11874,7 +11874,7 @@ const REVIEWED_META_RUNTIME_STYLE_SHA256 = new Map<string, string>([
   ],
   [
     "meta-app/src/screens/DeckEditor.tsx",
-    "b54ca09fe8d4f4d33c4e23327a5701becfad28e388d8358c932472ff21ae9c38",
+    "d485b1926fe978bd47165a815ad61f6d7069cc021616b9af4421e00455105475",
   ],
   [
     "meta-app/src/screens/HistoryScreen.tsx",
@@ -12011,7 +12011,7 @@ const REVIEWED_META_CAPABILITIES = new Map<
     "meta-app/src/screens/DeckEditor.tsx",
     {
       sha256:
-        "b54ca09fe8d4f4d33c4e23327a5701becfad28e388d8358c932472ff21ae9c38",
+        "d485b1926fe978bd47165a815ad61f6d7069cc021616b9af4421e00455105475",
       allowed: new Set(["persistent-storage:clipboard"]),
     },
   ],

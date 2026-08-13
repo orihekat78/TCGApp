@@ -34,6 +34,7 @@ import { _resetUidCounter } from '@/engine/mutate/scene';
 import { evalCond } from '@/engine/cond/index';
 import { read } from '@/engine/read/index';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
+import { cardOccurrenceUid, cardOccurrenceWitness } from '@/engine/target/card-occurrence';
 import { sceneChar } from '../helpers/fixtures';
 import { B05102 } from '@/cards/ct-p05/B05102';
 import type { CardDef, EffectCtx, GameState } from '@/engine/types';
@@ -171,15 +172,25 @@ describe('B05102 §4 — sceneEnter 黄 + FILE枚数以下 filter', () => {
 });
 
 describe('B05102 §5 — 【ヒラメキ】self→hand (PR085 a2 同型)', () => {
-  const hctx = (cardId: string): EffectCtx =>
-    ({ source: { player: 'self', area: 'evidence', cardId, abilityId: 'a2', uid: 'evidence:self' }, bindings: {} } as unknown as EffectCtx);
+  const hctx = (state: GameState, cardId: string): EffectCtx => {
+    const index = state.players.self.remove.lastIndexOf(cardId);
+    return {
+      source: { player: 'self', area: 'remove', cardId, abilityId: 'a2', uid: cardOccurrenceUid('self', 'remove', cardId, index) },
+      bindings: {
+        occurrence: [{
+          kind: 'card', uid: cardOccurrenceUid('self', 'remove', cardId, index), cardId, player: 'self', area: 'remove', index,
+          occurrenceWitness: cardOccurrenceWitness(state, 'self', 'remove'),
+        }],
+      },
+    } as unknown as EffectCtx;
+  };
   it('remove=[OTHER, B05102], source=B05102 → B05102 のみ手札 (別 cardId は残る)', () => {
     const s0 = produce(createEmptyGameState(), (d) => {
       d.players.self.hand = [];
       d.players.self.remove = ['OTHER', 'B05102'];
     });
     const after = produce(s0, (d) => {
-      runAtom(d, 'handAddFromRemove', { player: 'self', fromSelf: true }, hctx('B05102'));
+      runAtom(d, 'handAddFromRemove', { player: 'self', fromSelf: true }, hctx(d, 'B05102'));
     });
     expect(after.players.self.hand).toEqual(['B05102']);
     expect(after.players.self.remove).toEqual(['OTHER']);

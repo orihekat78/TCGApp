@@ -63,6 +63,9 @@ function resumedEntryExtras(source: {
 }
 
 import { run as runEffect } from './resolver.js';
+import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
+import { cardOccurrenceUid, cardOccurrenceWitness, isLiveCardOccurrenceWitness } from '../target/card-occurrence.js';
+import { mutate } from '../mutate/index.js';
 import {
   _takePendingChooseInterceptResume,
   _peekPendingChooseInterceptResume,
@@ -193,7 +196,7 @@ export function applyRpsAndContinuation(state: GameState, pending: PendingRpsSid
   const resume = _takePendingRpsResume();
   if (!resume || resume.effect.kind !== 'rps') return;
   const ctx: EffectCtx = {
-    source: { cardId: pending.source.cardId, uid: pending.source.uid, abilityId: pending.source.abilityId, player: pending.ownerPlayer, area: 'scene', ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}), ...(pending.source.triggerBatch !== undefined ? { triggerBatch: pending.source.triggerBatch } : {}), ...(pending.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: pending.source.ownerChosenOrder } : {}), ...(pending.source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: pending.source.ownerOrderConfirmed } : {}), ...(pending.source.declaredBatch !== undefined ? { declaredBatch: pending.source.declaredBatch } : {}) },
+    source: { cardId: pending.source.cardId, uid: pending.source.uid, abilityId: pending.source.abilityId, player: pending.ownerPlayer, area: pending.source.area ?? 'scene', ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}), ...(pending.source.triggerBatch !== undefined ? { triggerBatch: pending.source.triggerBatch } : {}), ...(pending.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: pending.source.ownerChosenOrder } : {}), ...(pending.source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: pending.source.ownerOrderConfirmed } : {}), ...(pending.source.declaredBatch !== undefined ? { declaredBatch: pending.source.declaredBatch } : {}) },
     bindings: resume.bindings as EffectCtx['bindings'],
   };
   const decisionTrace = restoreEffectCausalTrace(ctx, pending.source.causalTrace);
@@ -260,7 +263,7 @@ export function applySetCardChoiceAndContinuation(state: GameState, pending: Pen
       uid: canonical.source.uid,
       abilityId: canonical.source.abilityId,
       player: canonical.player,
-      area: 'scene',
+      area: canonical.source.area ?? 'scene',
       ...(canonical.source.resolutionKind ? { resolutionKind: canonical.source.resolutionKind } : {}),
       ...(canonical.source.triggerBatch !== undefined ? { triggerBatch: canonical.source.triggerBatch } : {}),
       ...(canonical.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: canonical.source.ownerChosenOrder } : {}),
@@ -294,6 +297,7 @@ export function applySetCardChoiceAndContinuation(state: GameState, pending: Pen
       const moved = charMutator.takeOneSetCard(state, canonical.hostUid, instanceId);
       if (moved) {
         state.players[moved.player].evidence.push({ cardId: moved.cardId, faceUp: true, origin: { turn: state.turn.number, via: 'effect', sourceCardId: canonical.source.cardId } });
+        advanceIndexedZoneEpoch(state, moved.player, 'evidence');
         applied = true;
       }
     } else if (consumed.effect.kind === 'moveSetCard' && canonical.destination && canonical.face) {
@@ -301,6 +305,7 @@ export function applySetCardChoiceAndContinuation(state: GameState, pending: Pen
       if (moved) {
         if (canonical.destination.area === 'evidence') {
           state.players[moved.player].evidence.push({ cardId: moved.cardId, faceUp: canonical.destination.faceUp, origin: { turn: state.turn.number, via: 'effect', sourceCardId: canonical.source.cardId } });
+          advanceIndexedZoneEpoch(state, moved.player, 'evidence');
         } else if (canonical.destination.area === 'hand') {
           state.players[moved.player].hand.push(moved.cardId);
         }
@@ -942,7 +947,7 @@ export function applyPickAndContinuation(
       uid: (pending.source as { uid?: string }).uid ?? '',
       abilityId: pending.source.abilityId,
       player: pending.player,
-      area: 'scene' as const,
+      area: pending.source.area ?? 'scene',
       ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
     },
     bindings: {},
@@ -966,6 +971,28 @@ export function applyPickAndContinuation(
   const commitDecision = (): void => {
     if (!causalDecisionAlreadyRecorded) recordEffectCausalDecision(state, decisionTrace, pending.player);
   };
+  const selectedIndexedOccurrencesAreLive = (pickedUids ?? [pickedUid]).every((uid) => {
+    const candidate = findPendingPickCandidate(pending, uid);
+    if (!candidate || (candidate.area !== 'evidence' && candidate.area !== 'remove')) return candidate !== undefined;
+    const index = candidate.index;
+    if (typeof index !== 'number' || !Number.isInteger(index)
+      || !isLiveCardOccurrenceWitness(state, candidate.player, candidate.area, candidate.occurrenceWitness)) return false;
+    return candidate.area === 'evidence'
+      ? state.players[candidate.player].evidence[index]?.cardId === candidate.cardId
+      : state.players[candidate.player].remove[index] === candidate.cardId;
+  });
+  if (!selectedIndexedOccurrencesAreLive) {
+    // Resolve only the stale decision.  Never let a replacement occurrence
+    // reach choose-intercept, atom execution, or a paused continuation.
+    consumeQueuedPick(pending);
+    commitDecision();
+    mutate.log.append(state, {
+      ts: Date.now(), player: pending.player, turn: state.turn.number,
+      action: 'effect:pick', result: 'stale-selection',
+    });
+    completeEffectCausalTrace(state, decisionTrace, interceptCtx.source.player, 'fizzle', { type: 'state', state: 'fizzled' });
+    return;
+  }
   if (isStaleEffectEventUsePick(state, pending, pickedUid, pickedUids)) {
     // Consume only the stale UI decision.  In particular, do not create
     // bindings, logs, hooks, queued atoms, or continuation-side effects.
@@ -1088,6 +1115,7 @@ export function applyPickAndContinuation(
     }
     const hasCardIdBind = (pending.atomArgs as { cardId?: unknown }).cardId === '$pick.cardId';
     const hasCardIdsBind = (pending.atomArgs as { cardIds?: unknown }).cardIds === '$pick.cardIds';
+    const hasOccurrenceBind = (pending.atomArgs as { occurrence?: unknown }).occurrence === '$pick';
     const hasInstanceIdsBind = (pending.atomArgs as { selectedInstanceIds?: unknown }).selectedInstanceIds === '$pick.uids';
     const allUids: string[] = pickedUids ?? [pickedUid];
     const allCardIds: string[] = allUids
@@ -1102,14 +1130,43 @@ export function applyPickAndContinuation(
       const legacy = /#(\d+)$/.exec(uid);
       return legacy ? Number(legacy[1]) : undefined;
     });
-    const selectedCardOccurrences = selectedCandidates.flatMap((candidate) => candidate?.kind === 'card'
-      && typeof candidate.index === 'number'
-      && typeof candidate.area === 'string'
-      ? [{ cardId: candidate.cardId, area: candidate.area, player: candidate.player, index: candidate.index }]
-      : []);
+    const selectedCardOccurrences = selectedCandidates.flatMap((candidate) => {
+      if (candidate?.kind === 'card'
+        && typeof candidate.index === 'number'
+        && typeof candidate.area === 'string') {
+        return [{
+          uid: cardOccurrenceUid(candidate.player, candidate.area, candidate.cardId, candidate.index),
+          cardId: candidate.cardId,
+          area: candidate.area,
+          player: candidate.player,
+          index: candidate.index,
+          ...(candidate.occurrenceWitness === undefined ? {} : { occurrenceWitness: candidate.occurrenceWitness }),
+        }];
+      }
+      if (candidate?.kind === 'evidence' && typeof candidate.index === 'number') {
+        const cardId = state.players[candidate.player].evidence[candidate.index]?.cardId;
+        return cardId === undefined ? [] : [{
+          uid: `evidence:${candidate.player}:${candidate.index}`,
+          cardId,
+          area: 'evidence' as const,
+          player: candidate.player,
+          index: candidate.index,
+          occurrenceWitness: candidate.occurrenceWitness
+            ?? cardOccurrenceWitness(state, candidate.player, 'evidence'),
+        }];
+      }
+      return [];
+    });
     const selectedOccurrencePart = selectedCardOccurrences.length === allUids.length
       ? { selectedCardOccurrences }
       : {};
+    // Scene candidates are character-shaped, but an invoked card ability needs
+    // the same physical occurrence contract as evidence/remove candidates.
+    const selectedOccurrence = selectedCandidates.length === 1 && selectedCandidates[0]
+      ? selectedCandidates[0]!.kind === 'char'
+        ? { ...selectedCandidates[0], area: 'scene' as const }
+        : selectedCandidates[0]
+      : undefined;
     // switch-on-effect-enter: sceneEnter が現場満杯のとき UI が収集した switch 退場 uid を
     // 解決済 atom args に載せる (handler が switchEnter する)。他 atom には影響しない (未指定なら付かない)。
     // cluster14: multi-card sceneEnter は switchRemoveUids[] (plural, overflow 枚数ぶん) を優先。
@@ -1125,6 +1182,8 @@ export function applyPickAndContinuation(
         // UI Playmat multi-select / AI chooseAiPick が渡す) を握り潰し先頭 1枚に collapse していた
         // (B04005「手札を2枚リムーブする」が全経路 1枚しか落ちない / handReveal ★未対応(3) の bind 1枚問題)。
         // allCardIds = pickedUids ?? [pickedUid] の解決済全件 → n:1 は [resolvedCardId] と byte 同一。
+        : hasOccurrenceBind && selectedOccurrence
+          ? { ...pending.atomArgs, occurrence: selectedOccurrence, ...selectedOccurrencePart, ...switchPart }
         : {
           ...pending.atomArgs,
           target: allCardIds,
@@ -1200,7 +1259,7 @@ export function applyChooseInterceptResponse(
       uid: consumed.pending.source.uid ?? '',
       abilityId: consumed.pending.source.abilityId,
       player: consumed.pending.ownerPlayer ?? consumed.pending.player,
-      area: 'scene' as const,
+      area: consumed.pending.source.area ?? 'scene',
       ...(consumed.pending.source.resolutionKind ? { resolutionKind: consumed.pending.source.resolutionKind } : {}),
     },
     bindings: {},
@@ -1361,7 +1420,7 @@ export function applyChoiceAndContinuation(
       uid: pending.source.uid,
       abilityId: pending.source.abilityId,
       player: sourcePlayer,
-      area: 'scene',
+      area: pending.source.area ?? 'scene',
       ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
     },
     bindings: resumeBindings as EffectCtx['bindings'],
@@ -1444,7 +1503,7 @@ export function applyOptionalAndContinuation(
       uid: pending.source.uid,
       abilityId: pending.source.abilityId,
       player: pending.ownerPlayer ?? pending.player,
-      area: 'scene',
+      area: pending.source.area ?? 'scene',
       ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
     },
     bindings: {},

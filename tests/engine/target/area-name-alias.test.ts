@@ -7,6 +7,7 @@ import { targetFilterToPredicate } from '@/engine/effect/atom-handlers/_shared';
 import { register as registerCardDef, _resetRegistry } from '@/engine/read/def';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { candidates } from '@/engine/target/candidates';
+import { cardOccurrenceUid, cardOccurrenceWitness } from '@/engine/target/card-occurrence';
 import { resolve } from '@/engine/target/resolve';
 import { makeChar, makeCtx } from '../../helpers/fixtures';
 import type { CardDef, TargetQuery } from '@/engine/types';
@@ -51,7 +52,15 @@ describe('area-limited card-name aliases', () => {
     const state = createEmptyGameState();
     state.players.self.remove = [KID, KID_NAME];
     const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'source' }, bindings: {
-      removed: [{ kind: 'card', cardId: KID, area: 'remove', player: 'self' }],
+      removed: [{
+        kind: 'card',
+        uid: cardOccurrenceUid('self', 'remove', KID, 0),
+        cardId: KID,
+        area: 'remove',
+        player: 'self',
+        index: 0,
+        occurrenceWitness: cardOccurrenceWitness(state, 'self', 'remove'),
+      }],
     } });
 
     expect(evalCond(state, { kind: 'removeNameAtLeast', player: 'self', cardName: ALIAS, n: 2 }, ctx)).toBe(true);
@@ -64,22 +73,34 @@ describe('area-limited card-name aliases', () => {
   });
 
   it('blocks duplicate alias selection for human picks and AI picks in remove', () => {
-    const pending = {
+    const pendingFor = (state: ReturnType<typeof createEmptyGameState>) => ({
       player: 'self' as const,
       candidates: [
-        { uid: `${KID}#0`, cardId: KID, player: 'self' as const, kind: 'card' as const, area: 'remove' },
-        { uid: `${KID_NAME}#1`, cardId: KID_NAME, player: 'self' as const, kind: 'card' as const, area: 'remove' },
+        {
+          uid: cardOccurrenceUid('self', 'remove', KID, 0), cardId: KID, player: 'self' as const,
+          kind: 'card' as const, area: 'remove', index: 0, occurrenceWitness: cardOccurrenceWitness(state, 'self', 'remove'),
+        },
+        {
+          uid: cardOccurrenceUid('self', 'remove', KID_NAME, 1), cardId: KID_NAME, player: 'self' as const,
+          kind: 'card' as const, area: 'remove', index: 1, occurrenceWitness: cardOccurrenceWitness(state, 'self', 'remove'),
+        },
       ],
       atomVerb: 'handAddFromRemove', atomArgs: { player: 'self', max: 2 }, nMin: 1, nMax: 2,
       source: { cardId: KID, abilityId: 'a1' }, distinctNames: true,
-    };
+    });
     const human = createEmptyGameState();
     human.players.self.remove = [KID, KID_NAME];
-    expect(() => applyPickAndContinuation(human, pending, `${KID}#0`, [`${KID}#0`, `${KID_NAME}#1`])).toThrow(/distinctNames/);
+    const humanPending = pendingFor(human);
+    expect(() => applyPickAndContinuation(
+      human,
+      humanPending,
+      cardOccurrenceUid('self', 'remove', KID, 0),
+      [cardOccurrenceUid('self', 'remove', KID, 0), cardOccurrenceUid('self', 'remove', KID_NAME, 1)],
+    )).toThrow(/distinctNames/);
 
     const ai = createEmptyGameState();
     ai.players.self.remove = [KID, KID_NAME];
-    _pushPendingEffectPickSideForTest(pending);
+    _pushPendingEffectPickSideForTest(pendingFor(ai));
     drainAiEffectPicks(ai);
     expect(ai.players.self.hand).toEqual([KID]);
     expect(ai.players.self.remove).toEqual([KID_NAME]);

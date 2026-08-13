@@ -257,7 +257,7 @@ describe('public hand reveal window', () => {
     _pushPendingEffectPickSideForTest({
       player: 'self', ownerPlayer: 'self', atomVerb: 'discard', atomArgs: { player: 'opp' }, nMin: 0, nMax: 1,
       source: { cardId: 'SOURCE', abilityId: 'a1' }, publicHandRevealToken: 'public-hand-reveal:stale',
-      candidates: [{ uid: 'hand:opp:0:A', cardId: 'A', player: 'opp', kind: 'card', area: 'hand' }],
+      candidates: [{ uid: 'hand:opp:0:A', cardId: 'A', player: 'opp', kind: 'card', area: 'hand', index: 0 }],
     });
     persistPendingRuntimeState(state);
     expect(useGameStateStore.getState().setGameState(state)).toBe(true);

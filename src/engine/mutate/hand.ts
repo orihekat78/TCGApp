@@ -4,6 +4,7 @@
 
 import type { GameState, CardId } from '@/engine/types';
 import { event } from '../event/index.js';
+import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 
 type Player = 'self' | 'opp';
 
@@ -55,7 +56,10 @@ function discardToRemove(
     }
   }
   remove(s, p, ids);
-  s.players[p].remove.push(...ids);
+  if (ids.length > 0) {
+    s.players[p].remove.push(...ids);
+    advanceIndexedZoneEpoch(s, p, 'remove');
+  }
 }
 
 /**

@@ -4,6 +4,7 @@
 
 import type { GameState, CardId } from '@/engine/types';
 import { event } from '../event/index.js'; // engine additive wave-4: remove:exit emit
+import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 
 type Player = 'self' | 'opp';
 
@@ -27,7 +28,9 @@ function emitExit(s: GameState, p: Player, cardId: CardId): void {
  * リムーブエリアにカードを追加する
  */
 function add(s: GameState, p: Player, ids: CardId[]): void {
+  if (ids.length === 0) return;
   s.players[p].remove.push(...ids);
+  advanceIndexedZoneEpoch(s, p, 'remove');
 }
 
 /**
@@ -39,6 +42,7 @@ function removeFromHere(s: GameState, p: Player, ids: CardId[]): void {
     const idx = s.players[p].remove.indexOf(id);
     if (idx !== -1) {
       s.players[p].remove.splice(idx, 1);
+      advanceIndexedZoneEpoch(s, p, 'remove');
       emitExit(s, p, id);
     }
   }

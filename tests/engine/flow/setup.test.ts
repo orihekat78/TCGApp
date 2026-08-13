@@ -2,12 +2,13 @@
 // rules: 02-deck-construction.md, 04-game-setup.md, 01-victory-conditions.md
 // spec: .claude/specs/engine-api-flow-setup.md
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { produce } from '@/engine/produce';
+import { mutate } from '@/engine/mutate';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { setup, type Deck, type DeckPair } from '@/engine/flow/setup';
-import type { GameState } from '@/engine/types';
-import { register as registerCardDef } from '@/engine/read/def';
+import type { CardDef, GameState } from '@/engine/types';
+import { def as readDef, register as registerCardDef } from '@/engine/read/def';
 import { B09100 } from '@/cards/ct-p09/B09100';
 import { PR158 } from '@/cards/pr-01/PR158';
 import { PR164 } from '@/cards/pr-01/PR164';
@@ -26,8 +27,21 @@ function makeMainDeck(prefix: string): string[] {
   return out;
 }
 
+function registerFixtureCard(id: string, kind: CardDef['kind'] = 'character'): void {
+  registerCardDef({
+    id, no: id, kind, names: [id], colors: ['青'], level: 1, ap: 1000, lp: 1,
+    traits: [], rarity: 'T', imageUrl: '', abilities: [], ruleRefs: [],
+  });
+}
+
+function registerMainCards(cards: readonly string[]): void {
+  for (const id of new Set(cards)) {
+    if (!readDef.card(id)) registerFixtureCard(id);
+  }
+}
+
 function makeDecks(): DeckPair {
-  return {
+  const decks: DeckPair = {
     self: {
       partnerId: 'P-SELF',
       caseId: 'CASE-SELF',
@@ -39,10 +53,50 @@ function makeDecks(): DeckPair {
       mainCards: makeMainDeck('o'),
     },
   };
+  registerFixtureCard('P-SELF', 'partner');
+  registerFixtureCard('P-OPP', 'partner');
+  registerFixtureCard('CASE-SELF', 'case');
+  registerFixtureCard('CASE-OPP', 'case');
+  registerMainCards(decks.self.mainCards);
+  registerMainCards(decks.opp.mainCards);
+  return decks;
 }
 
 describe('engine.flow.setup', () => {
   describe('init', () => {
+    it('fails closed for an unknown main printing before either side mutates', () => {
+      const decks = makeDecks();
+      decks.self.mainCards[0] = 'unknown-printing';
+      const initial = createEmptyGameState();
+
+      expect(() => produce(initial, draft => setup.init(draft, decks)))
+        .toThrow(/self.*MAIN_UNKNOWN/);
+      expect(initial.players.self.partner.cardId).toBe('');
+      expect(initial.players.opp.partner.cardId).toBe('');
+      expect(initial.players.self.deck).toEqual([]);
+      expect(initial.players.opp.deck).toEqual([]);
+    });
+
+    it('validates an invalid opponent before any shuffle or RNG use', () => {
+      const decks = makeDecks();
+      decks.opp.mainCards[0] = 'unknown-opp-printing';
+      const initial = createEmptyGameState();
+      const shuffle = vi.spyOn(mutate.deck, 'shuffle');
+      const random = vi.spyOn(Math, 'random');
+
+      try {
+        expect(() => produce(initial, draft => setup.init(draft, decks)))
+          .toThrow(/opp.*MAIN_UNKNOWN/);
+        expect(shuffle).not.toHaveBeenCalled();
+        expect(random).not.toHaveBeenCalled();
+        expect(initial.players.self.partner.cardId).toBe('');
+        expect(initial.players.self.deck).toEqual([]);
+      } finally {
+        shuffle.mockRestore();
+        random.mockRestore();
+      }
+    });
+
     it('両プレイヤーのパートナー/事件/デッキを配置する', () => {
       const initial = createEmptyGameState();
       const decks = makeDecks();
@@ -65,7 +119,7 @@ describe('engine.flow.setup', () => {
         produce(createEmptyGameState(), draft => {
           setup.init(draft, decks);
         }),
-      ).toThrow(/main deck size/);
+      ).toThrow(/MAIN_COUNT/);
     });
 
     it('デッキ 41 枚なら throw する (rules/02)', () => {
@@ -75,7 +129,7 @@ describe('engine.flow.setup', () => {
         produce(createEmptyGameState(), draft => {
           setup.init(draft, decks);
         }),
-      ).toThrow(/main deck size/);
+      ).toThrow(/MAIN_COUNT/);
     });
 
     it('rejects four copies of an unregistered legacy card id', () => {
@@ -86,7 +140,7 @@ describe('engine.flow.setup', () => {
         produce(createEmptyGameState(), draft => {
           setup.init(draft, decks);
         }),
-      ).toThrow(/copies of/);
+      ).toThrow(/COPY_LIMIT/);
     });
 
     it('rejects a combined four-plus copies across printings of official card ID 0489', () => {
@@ -96,12 +150,13 @@ describe('engine.flow.setup', () => {
       decks.self.mainCards = [
         ...Array(3).fill('D08003'),
         ...Array(3).fill('D08004'),
-        ...Array.from({ length: 34 }, (_, i) => `parallel-fill-${i}`),
+        ...makeMainDeck('parallel').slice(0, 34),
       ];
+      registerMainCards(decks.self.mainCards);
 
       expect(() => produce(createEmptyGameState(), draft => {
         setup.init(draft, decks);
-      })).toThrow(/copies of/);
+      })).toThrow(/COPY_LIMIT/);
     });
 
     it('keeps registered cards with different official IDs independent', () => {
@@ -111,8 +166,9 @@ describe('engine.flow.setup', () => {
       decks.self.mainCards = [
         ...Array(3).fill('D08003'),
         ...Array(3).fill('DIFFERENT-ID'),
-        ...Array.from({ length: 34 }, (_, i) => `different-fill-${i}`),
+        ...makeMainDeck('different').slice(0, 34),
       ];
+      registerMainCards(decks.self.mainCards);
 
       expect(() => produce(createEmptyGameState(), draft => {
         setup.init(draft, decks);
@@ -148,7 +204,7 @@ describe('engine.flow.setup', () => {
         produce(createEmptyGameState(), draft => {
           setup.init(draft, decks);
         }),
-      ).toThrow(/partnerId missing/);
+      ).toThrow(/PARTNER_MISSING/);
     });
 
     it('caseId が空なら throw する', () => {
@@ -158,7 +214,7 @@ describe('engine.flow.setup', () => {
         produce(createEmptyGameState(), draft => {
           setup.init(draft, decks);
         }),
-      ).toThrow(/caseId missing/);
+      ).toThrow(/CASE_MISSING/);
     });
   });
 

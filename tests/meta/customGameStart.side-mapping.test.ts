@@ -4,6 +4,7 @@ import { engine } from '@/engine';
 import { event } from '@/engine/event/index';
 import type { PlayerState } from '@/engine/types/game-state';
 import { SAMPLE_DECK, SAMPLE_DECK_OPP } from '../../meta-app/src/data/sampleDeck';
+import { BUG_274_PARTNER_ID, BUG_274_PUBLIC_DECK } from '../../meta-app/src/data/bug274ValidationDeck';
 import type { DeckRecord } from '../../meta-app/src/data/types';
 import { customGameStart } from '../../meta-app/src/util/customGameStart';
 
@@ -67,5 +68,17 @@ describe('customGameStart P1/P2 binding', () => {
       expect.objectContaining({ eventId: 'meta-session-42:1', sequence: 1 }),
       expect.objectContaining({ eventId: 'meta-session-42:2', sequence: 2 }),
     ]);
+  });
+
+  it('starts the actual BUG-274 public deck after registering its synthetic partner', async () => {
+    const state = await customGameStart(BUG_274_PUBLIC_DECK, SAMPLE_DECK_OPP, {
+      sessionId: 'bug-274-custom-start', spectator: true, firstPlayer: 'self',
+    });
+
+    expect(state.players.self.partner.cardId).toBe(BUG_274_PARTNER_ID);
+    expect(engine.cards.get(BUG_274_PARTNER_ID)?.abilities).toHaveLength(2);
+    expect(mainZoneCards(state.players.self)).toEqual(expanded(BUG_274_PUBLIC_DECK));
+    expect(state.turn.number).toBe(1);
+    expect(state.players.self.hand).toHaveLength(6);
   });
 });

@@ -464,7 +464,30 @@ export function atomBoundToRemove(s: GameState, a: Record<string, unknown>, ctx:
       const p = resolvePlayer(a.player, ctx);
       const bindKey = a.bindKey as string;
       const bound = ctx.bindings[bindKey];
-      if (!bound || bound.length === 0) return;
+      const refreshAfter = a.refreshAfter === true;
+      const refreshAndRecord = (removeBeforeRefresh: number, refreshesBefore: number): void => {
+        mutate.deck.refreshAfterTake(s, p, removeExcludedSourceCardId(ctx, p));
+        const refreshed = (s.refreshCount[p] ?? 0) > refreshesBefore;
+        const returnedFromRemove = removeBeforeRefresh - s.players[p].remove.length;
+        if (refreshed && returnedFromRemove > 0) {
+          recordEffectCausalOperation(s, ctx, {
+            actor: ctx.source.player,
+            kind: 'zone-move',
+            tags: ['refresh'],
+            source: { kind: 'zone', side: p, zone: 'remove' },
+            targets: [{ kind: 'zone', side: p, zone: 'deck' }],
+            outcome: { type: 'move', from: 'remove', to: 'deck', count: returnedFromRemove },
+          });
+        }
+      };
+      if (!bound || bound.length === 0) {
+        if (!refreshAfter) return;
+        const removeBeforeRefresh = s.players[p].remove.length;
+        const refreshesBefore = s.refreshCount[p] ?? 0;
+        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:boundToRemove', result: '0' });
+        refreshAndRecord(removeBeforeRefresh, refreshesBefore);
+        return;
+      }
       const ids = bound.map(c => {
         const cAny = c as unknown as { cardId?: string };
         return cAny.cardId ?? '';
@@ -481,6 +504,9 @@ export function atomBoundToRemove(s: GameState, a: Record<string, unknown>, ctx:
       const removeBeforeRefresh = s.players[p].remove.length;
       const refreshesBefore = s.refreshCount[p] ?? 0;
       mutate.remove.add(s, p, splicedIds);
+      // The cards have left the deck before a zero-card refresh is evaluated.
+      // Keep the observable log in the same causal order as the mutation.
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:boundToRemove', result: String(splicedIds.length) });
       if (splicedIds.length > 0) {
         recordEffectCausalOperation(s, ctx, {
           actor: ctx.source.player,
@@ -489,21 +515,10 @@ export function atomBoundToRemove(s: GameState, a: Record<string, unknown>, ctx:
           targets: [{ kind: 'zone', side: p, zone: 'remove' }],
           outcome: { type: 'move', from: 'deck', to: 'remove', count: splicedIds.length },
         });
-        mutate.deck.refreshAfterTake(s, p, removeExcludedSourceCardId(ctx, p));
-        const refreshed = (s.refreshCount[p] ?? 0) > refreshesBefore;
-        const returnedFromRemove = removeBeforeRefresh + splicedIds.length - s.players[p].remove.length;
-        if (refreshed && returnedFromRemove > 0) {
-          recordEffectCausalOperation(s, ctx, {
-            actor: ctx.source.player,
-            kind: 'zone-move',
-            tags: ['refresh'],
-            source: { kind: 'zone', side: p, zone: 'remove' },
-            targets: [{ kind: 'zone', side: p, zone: 'deck' }],
-            outcome: { type: 'move', from: 'remove', to: 'deck', count: returnedFromRemove },
-          });
-        }
       }
-      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:boundToRemove', result: String(splicedIds.length) });
+      if (splicedIds.length > 0 || refreshAfter) {
+        refreshAndRecord(removeBeforeRefresh + splicedIds.length, refreshesBefore);
+      }
       return;
     }
 

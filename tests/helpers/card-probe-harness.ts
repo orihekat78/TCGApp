@@ -72,6 +72,8 @@ export interface ProbeSetup {
   oppDeckTop?: string[];
   /** self 証拠エリア (flipFaceUpEvidence cost 等) */
   evidence?: { cardId: string; faceUp?: boolean }[];
+  /** 【ヒラメキ】発動不能中に、別能力による効果invokeが貫通する契約用。 */
+  hiramekiSuppressed?: boolean;
 }
 
 export type ProbeDrive =
@@ -190,6 +192,9 @@ function buildState(def: CardDef, fixtures: CardDef[], scenario: ProbeScenario):
       faceUp: e.faceUp ?? false,
       origin: { turn: 1, via: 'effect' as const },
     }));
+  }
+  if (setup.hiramekiSuppressed !== undefined) {
+    s.turnState.self.hiramekiSuppressed = setup.hiramekiSuppressed;
   }
   if (setup.remove) s.players.self.remove = [...setup.remove];
   if (setup.partnerAreaCards) s.players.self.partnerAreaCards = [...setup.partnerAreaCards];

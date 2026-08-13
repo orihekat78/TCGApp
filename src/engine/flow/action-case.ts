@@ -24,6 +24,7 @@ import type { PendingHiramekiSide } from '../listeners/hirameki.js';
 import { def as readDef } from '../read/def.js';
 import { recordActionCausalOperation } from './action/causal.js';
 import { isLegacyReplayHiramekiCompatibilityActive } from './action/legacy-replay-compat.js';
+import { cardOccurrenceUid, cardOccurrenceWitness, isLiveCardOccurrenceWitness } from '../target/card-occurrence.js';
 
 type Player = 'self' | 'opp';
 
@@ -71,7 +72,14 @@ export function removeOpponentEvidenceTop(
       byUid: ax.byUid,
       actionId: ax.id,
       ...(causalCorrelationEventId ? { causalCorrelationEventId } : {}),
-      occurrence: { player, cardId: ev.cardId, removeIndex: state.players[player].remove.length - 1 },
+      occurrence: {
+        uid: cardOccurrenceUid(player, 'remove', ev.cardId, state.players[player].remove.length - 1),
+        player,
+        cardId: ev.cardId,
+        area: 'remove',
+        index: state.players[player].remove.length - 1,
+        occurrenceWitness: cardOccurrenceWitness(state, player, 'remove'),
+      },
     },
     { player: ax.byPlayer, uid: ax.byUid },
     causalCorrelationEventId ? { causalCorrelationEventId } : undefined,
@@ -220,7 +228,16 @@ export function matchesHiramekiCheckpoint(
     || pending.occurrence === undefined
     || pending.occurrence.player !== pending.player
     || pending.occurrence.cardId !== pending.cardId
-    || state.players[pending.player].remove[pending.occurrence.removeIndex] !== pending.cardId
+    || pending.occurrence.area !== 'remove'
+    || pending.occurrence.uid !== cardOccurrenceUid(
+      pending.player,
+      'remove',
+      pending.cardId,
+      pending.occurrence.index,
+    )
+    || typeof pending.occurrence.occurrenceWitness !== 'string'
+    || !isLiveCardOccurrenceWitness(state, pending.player, 'remove', pending.occurrence.occurrenceWitness)
+    || state.players[pending.player].remove[pending.occurrence.index] !== pending.cardId
   ) return false;
 
   const correlationEventId = pending.causalCorrelationEventId;
@@ -246,6 +263,8 @@ export function resolveHiramekiDecision(
   choice: 'fire' | 'skip',
   options: HiramekiDecisionOptions,
 ): void {
+  if (actionContext && pending.causalCorrelationEventId !== undefined
+    && !matchesHiramekiCheckpoint(state, actionContext, pending)) return;
   const decisionEventId = actionContext
     ? recordActionCausalOperation(state, actionContext, choice === 'fire' ? {
       actor: pending.player,
@@ -280,19 +299,21 @@ export function resolveHiramekiDecision(
 
   const ctx: EffectCtx = {
     source: {
-      player: pending.player,
-      cardId: pending.cardId,
+      player: pending.occurrence?.player ?? pending.player,
+      cardId: pending.occurrence?.cardId ?? pending.cardId,
       abilityId: pending.abilityId,
-      area: 'evidence',
+      ...(pending.occurrence ? { uid: pending.occurrence.uid, area: pending.occurrence.area } : { area: 'evidence' }),
       resolutionKind: 'hirameki',
     },
     bindings: pending.occurrence ? {
       occurrence: [{
         kind: 'card',
+        uid: pending.occurrence.uid,
         cardId: pending.occurrence.cardId,
-        area: 'remove',
+        area: pending.occurrence.area,
         player: pending.occurrence.player,
-        index: pending.occurrence.removeIndex,
+        index: pending.occurrence.index,
+        occurrenceWitness: pending.occurrence.occurrenceWitness,
       }],
     } : {},
     ...((decisionEventId ?? pending.causalCorrelationEventId) ? {
@@ -315,7 +336,12 @@ export function resolveHiramekiDecision(
   event.queue(
     state,
     resolved,
-    { player: pending.player, cardId: pending.cardId, resolutionKind: 'hirameki' },
+    {
+      player: pending.occurrence?.player ?? pending.player,
+      cardId: pending.occurrence?.cardId ?? pending.cardId,
+      ...(pending.occurrence ? { uid: pending.occurrence.uid, area: pending.occurrence.area } : {}),
+      resolutionKind: 'hirameki',
+    },
     'evidence:remove-by-action',
     {
       player: pending.player,

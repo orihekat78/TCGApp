@@ -7,7 +7,14 @@ import { sceneCap } from '../../read/scene-cap.js'; // engine E3 P11 (2026-07-02
 import { char as readChar } from '../../read/char.js'; // engine mega-wave W4 (2026-07-03, r1): 保護 rider gate
 import { def as readDef } from '../../read/def.js'; // S2 wave (2026-07-11, PR279): event-source 限定保護の kind 判定
 import { removeExcludedSourceCardId } from '../../read/effect-source.js';
-import { requireField, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait } from './_shared.js';
+import {
+  requireField,
+  resolvePlayer,
+  resolveBindRef,
+  hasNorMax,
+  paShortFormAwait,
+  resolveBoundOccurrenceRef,
+} from './_shared.js';
 import { allCardNameComponentsForDef } from '../../target/card-def-registry.js';
 import {
   pushPendingEffectChoiceSide,
@@ -18,6 +25,8 @@ import {
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, Candidate, Effect, PublicCausalZone } from '../../types/index.js';
 import { recordEffectCausalOperation } from '../../log/effect-causal.js';
+import { advanceIndexedZoneEpoch } from '../../state/indexed-zone-epoch.js';
+import { isLiveCardOccurrenceWitness } from '../../target/card-occurrence.js';
 
 function recordPublicZoneMove(
   s: GameState,
@@ -111,26 +120,59 @@ function rebaseBoundCardIndexes(
   }
 }
 
-function selectedHandOccurrenceIndex(
+type SceneSourceArea = 'remove' | 'partner-area' | 'hand' | 'deck';
+
+interface SelectedSceneOccurrence {
+  cardId: string;
+  area: SceneSourceArea;
+  player: Player;
+  index: number;
+}
+
+function selectedSceneOccurrences(
+  s: GameState,
   a: Record<string, unknown>,
   ctx: EffectCtx,
   player: Player,
-  cardId: string,
-): number | undefined {
+  cardIds: string[],
+  allowedAreas: readonly SceneSourceArea[],
+): SelectedSceneOccurrence[] | null | undefined {
   if (!Object.hasOwn(a, 'selectedCardOccurrences')) return undefined;
   const occurrences = resolveBindRef(a.selectedCardOccurrences, ctx);
-  if (!Array.isArray(occurrences) || occurrences.length !== 1) return -1;
-  const occurrence = occurrences[0];
-  if (occurrence === null || typeof occurrence !== 'object' || Array.isArray(occurrence)) return -1;
-  const value = occurrence as Record<string, unknown>;
-  return value.cardId === cardId
-    && value.area === 'hand'
-    && value.player === player
-    && Number.isInteger(value.index)
-    && typeof value.index === 'number'
-    && value.index >= 0
-    ? value.index
-    : -1;
+  if (!Array.isArray(occurrences) || occurrences.length !== cardIds.length) return null;
+  const selected: SelectedSceneOccurrence[] = [];
+  const seen = new Set<string>();
+  for (const [position, occurrence] of occurrences.entries()) {
+    if (occurrence === null || typeof occurrence !== 'object' || Array.isArray(occurrence)) return null;
+    const value = occurrence as Record<string, unknown>;
+    if (typeof value.cardId !== 'string'
+      || value.cardId !== cardIds[position]
+      || typeof value.area !== 'string'
+      || !allowedAreas.includes(value.area as SceneSourceArea)
+      || value.player !== player
+      || typeof value.index !== 'number'
+      || !Number.isSafeInteger(value.index)
+      || value.index < 0) {
+      return null;
+    }
+    const area = value.area as SceneSourceArea;
+    const key = `${value.player}:${area}:${value.index}`;
+    if (seen.has(key)) return null;
+    seen.add(key);
+    if (area === 'remove') {
+      if (!isLiveCardOccurrenceWitness(s, player, area, value.occurrenceWitness)
+        || s.players[player].remove[value.index] !== value.cardId) {
+        return null;
+      }
+    } else {
+      const cards = area === 'partner-area'
+        ? (s.players[player].partnerAreaCards ?? [])
+        : s.players[player][area];
+      if (cards[value.index] !== value.cardId) return null;
+    }
+    selected.push({ cardId: value.cardId, area, player, index: value.index });
+  }
+  return selected;
 }
 
 export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
@@ -172,7 +214,15 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
             viaEffect: viaEffectM,
             active: a.enterSleep === true ? false : undefined,
           };
-          const srcArea = ((a.target && typeof a.target === 'object') ? (a.target as { query?: { area?: string } }).query?.area : undefined) as 'remove' | 'hand' | 'deck' | undefined;
+          const rawSrcArea = (a.target && typeof a.target === 'object')
+            ? (a.target as { query?: { area?: string | string[] } }).query?.area
+            : undefined;
+          const srcAreas = (Array.isArray(rawSrcArea) ? rawSrcArea : [rawSrcArea])
+            .filter((area): area is SceneSourceArea => area === 'remove'
+              || area === 'partner-area'
+              || area === 'hand'
+              || area === 'deck');
+          const srcArea = srcAreas.length === 1 ? srcAreas[0] : undefined;
           const srcSide = ((a.target && typeof a.target === 'object') ? (a.target as { query?: { side?: string } }).query?.side : undefined) as 'self' | 'opp' | undefined;
           // engine mega-wave W4 (2026-07-03, r83): 同一解決で登場した全キャラを集約 (enter:group 用)
           const enteredGroup: Array<{ kind: 'char'; uid: string; cardId: string; player: Player }> = [];
@@ -180,13 +230,29 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
           const selectedDeckIndexes = Array.isArray((a as { selectedDeckIndexes?: unknown }).selectedDeckIndexes)
             ? (a as { selectedDeckIndexes: unknown[] }).selectedDeckIndexes
             : [];
+          const sourcePlayer = srcSide === 'opp' ? 'opp' : enterP;
+          const selectedOccurrences = selectedSceneOccurrences(s, a, ctx, sourcePlayer, cardIds, srcAreas);
+          if (selectedOccurrences === null) {
+            (ctx.dyn ??= {}).chainStepNoApply = true;
+            if (typeof a.bind === 'string') (ctx.bindings as Record<string, unknown>)[a.bind] = [];
+            mutate.log.append(s, {
+              ts: Date.now(), player: enterP, turn: s.turn.number,
+              action: 'effect:sceneEnter:source-missing-skip',
+            });
+            return;
+          }
           let tookFromDeck = false;
           for (const [cardPosition, cid] of cardIds.entries()) {
             // 単一 path と同じ inline splice (remove/hand/deck のみ)。これがないと remove に残り複製登場 (D11014 a2 class bug)。
-            const fp = srcSide === 'opp' ? 'opp' : enterP;
+            const selectedOccurrence = selectedOccurrences?.[cardPosition];
+            const fp = selectedOccurrence?.player ?? sourcePlayer;
+            const cardSourceArea = selectedOccurrence?.area ?? srcArea;
             let consumedFromSource = false;
-            if (srcArea === 'remove' || srcArea === 'hand' || srcArea === 'deck') {
-              const arr = s.players[fp][srcArea];
+            if (cardSourceArea === 'remove' || cardSourceArea === 'partner-area'
+              || cardSourceArea === 'hand' || cardSourceArea === 'deck') {
+              const arr = cardSourceArea === 'partner-area'
+                ? (s.players[fp].partnerAreaCards ?? [])
+                : s.players[fp][cardSourceArea];
               const originalSelectedIndex = selectedDeckIndexes[cardPosition];
               // Earlier entries in the same multi-pick have already been spliced.
               // Convert the candidate's snapshot index to its current deck index.
@@ -194,20 +260,32 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
                 ? originalSelectedIndex - selectedDeckIndexes.slice(0, cardPosition)
                   .filter((previous): previous is number => typeof previous === 'number' && previous < originalSelectedIndex).length
                 : undefined;
-              const i = srcArea === 'deck'
-                && typeof selectedIndex === 'number'
-                && arr[selectedIndex] === cid
-                ? selectedIndex
-                : arr.indexOf(cid);
+              const exactSelectedIndex = selectedOccurrence === undefined
+                ? undefined
+                : selectedOccurrence.index - selectedOccurrences!.slice(0, cardPosition)
+                  .filter((previous) => previous.player === selectedOccurrence.player
+                    && previous.area === selectedOccurrence.area
+                    && previous.index < selectedOccurrence.index).length;
+              const i = exactSelectedIndex !== undefined
+                ? (arr[exactSelectedIndex] === cid ? exactSelectedIndex : -1)
+                : cardSourceArea === 'deck'
+                  && typeof selectedIndex === 'number'
+                  && arr[selectedIndex] === cid
+                  ? selectedIndex
+                  : arr.indexOf(cid);
               if (i !== -1) {
                 arr.splice(i, 1);
+                if (cardSourceArea === 'remove') {
+                  advanceIndexedZoneEpoch(s, fp, 'remove');
+                  mutate.remove.emitExit(s, fp, cid);
+                }
                 consumedFromSource = true;
                 // S2 deck cluster (2026-07-10, B01022): stale-bind prune — deck を離れたカードの
                 // bound entry を各 bindKey から 1 occurrence ずつ除去する。怠ると後続 deckToBottomBound
                 // (cardId ベース splice) が同 cardId の deep copy (window 外) を誤って底送りする。
                 // deck source の cardIds-multi 経路のみ (shipped 単一 path は bindMatch 除外で stale が
                 // 生じない構成のため触らない)。array は差替え (凍結 bindings shallow-copy と非干渉)。
-                if (srcArea === 'deck') {
+                if (cardSourceArea === 'deck') {
                   tookFromDeck = true;
                   for (const bk of Object.keys(ctx.bindings)) {
                     const bArr = ctx.bindings[bk];
@@ -229,6 +307,16 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
                     });
                   }
                 }
+                if (cardSourceArea === 'remove' || cardSourceArea === 'hand') {
+                  rebaseBoundCardIndexes(ctx, fp, cardSourceArea, i, cid);
+                }
+              } else if (selectedOccurrence !== undefined) {
+                (ctx.dyn ??= {}).chainStepNoApply = true;
+                mutate.log.append(s, {
+                  ts: Date.now(), player: enterP, turn: s.turn.number,
+                  action: 'effect:sceneEnter:source-missing-skip', target: cid,
+                });
+                continue;
               }
             }
             // FIX-B3a: full は **ループ内で都度再計算** (hoist 禁止。enter で scene が伸びるため)。
@@ -252,9 +340,9 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
             if (switched) {
               recordPublicZoneMove(s, ctx, enterP, 'scene', enterP, 'remove', 1);
             }
-            if (consumedFromSource && srcArea !== undefined) {
-              const sourceOwner = srcSide === 'opp' ? 'opp' : enterP;
-              recordPublicZoneMove(s, ctx, sourceOwner, srcArea, enterP, 'scene', 1);
+            if (consumedFromSource && cardSourceArea !== undefined) {
+              const publicSourceArea = cardSourceArea === 'partner-area' ? 'partner' : cardSourceArea;
+              recordPublicZoneMove(s, ctx, fp, publicSourceArea, enterP, 'scene', 1);
             }
             const enterOperation = recordEffectCausalOperation(s, ctx, {
               actor: ctx.source.player,
@@ -277,9 +365,8 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
           // The reveal window remains deck until selected cards actually move.
           // Refresh only after the whole multi-transfer has completed so later
           // selected snapshot indexes are not invalidated by an early shuffle.
-          if (srcArea === 'deck' && tookFromDeck) {
-            const fromPlayer = srcSide === 'opp' ? 'opp' : enterP;
-            if (!refreshDeckForSceneEnter(s, ctx, fromPlayer)) return;
+          if ((srcArea === 'deck' || selectedOccurrences?.some(({ area }) => area === 'deck')) && tookFromDeck) {
+            if (!refreshDeckForSceneEnter(s, ctx, sourcePlayer)) return;
           }
           // M2後半 (2026-07-10, B09019): 実登場キャラ群を bind (「この効果によってキャラが5枚登場した場合」
           // = boundCountCompare が読む)。scene-full-skip 分は enteredGroup に積まれない → 実登場のみ計数。
@@ -403,17 +490,59 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       //   単一 area 文字列 (remove/hand/deck) は従来 branch へ落ちる = byte 互換。
       const rawSrcArea = (a.target && typeof a.target === 'object')
         ? (a.target as { query?: { area?: string | string[] } }).query?.area : undefined;
+      const allowedSourceAreas = (Array.isArray(rawSrcArea) ? rawSrcArea : [sourceArea])
+        .filter((area): area is SceneSourceArea => area === 'remove'
+          || area === 'partner-area'
+          || area === 'hand'
+          || area === 'deck');
+      const selectedSourcePlayer = declaredHandSource
+        ? ctx.source.player
+        : (sourceSide === 'opp' ? 'opp' : enterPlayer);
+      const selectedOccurrences = selectedSceneOccurrences(
+        s, a, ctx, selectedSourcePlayer, [cardId], allowedSourceAreas,
+      );
+      const selectedOccurrence = selectedOccurrences?.[0];
+      const boundRemoveOccurrence = allowedSourceAreas.includes('remove')
+        ? resolveBoundOccurrenceRef(rawCardId, s, ctx, selectedSourcePlayer, 'remove')
+        : { kind: 'unbound' as const };
+      const invalidPhysicalSelection = selectedOccurrences === null
+        || boundRemoveOccurrence.kind === 'invalid'
+        || (boundRemoveOccurrence.kind === 'live'
+          && (boundRemoveOccurrence.cardId !== cardId
+            || (selectedOccurrence !== undefined
+              && (selectedOccurrence.area !== 'remove'
+                || selectedOccurrence.index !== boundRemoveOccurrence.index))));
+      if (invalidPhysicalSelection) {
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+        mutate.log.append(s, {
+          ts: Date.now(), player: enterPlayer, turn: s.turn.number,
+          action: 'effect:sceneEnter:source-missing-skip', target: cardId,
+        });
+        return;
+      }
+      const physicalOccurrence = selectedOccurrence
+        ?? (boundRemoveOccurrence.kind === 'live'
+          ? { cardId, area: 'remove' as const, player: selectedSourcePlayer, index: boundRemoveOccurrence.index }
+          : undefined);
       if (Array.isArray(rawSrcArea) || rawSrcArea === 'partner-area') {
         const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
         const areas = (Array.isArray(rawSrcArea) ? rawSrcArea : [rawSrcArea])
           .filter((x): x is 'remove' | 'partner-area' => x === 'remove' || x === 'partner-area');
         let spliced = false;
-        for (const ar of areas) {
+        const physicalAreas: Array<'remove' | 'partner-area'> = physicalOccurrence === undefined
+          ? areas
+          : physicalOccurrence.area === 'remove' || physicalOccurrence.area === 'partner-area'
+            ? [physicalOccurrence.area]
+            : [];
+        for (const ar of physicalAreas) {
           if (ar === 'remove') {
             const arr = s.players[fromPlayer].remove;
-            const idx = arr.indexOf(cardId);
+            const idx = physicalOccurrence?.area === 'remove'
+              ? (arr[physicalOccurrence.index] === cardId ? physicalOccurrence.index : -1)
+              : arr.indexOf(cardId);
             if (idx !== -1) {
               arr.splice(idx, 1);
+              advanceIndexedZoneEpoch(s, fromPlayer, 'remove');
               mutate.remove.emitExit(s, fromPlayer, cardId);
               movedFromSource = { player: fromPlayer, area: 'remove' };
               spliced = true;
@@ -421,7 +550,9 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
             }
           } else {
             const pa = s.players[fromPlayer].partnerAreaCards;
-            const idx = pa ? pa.indexOf(cardId) : -1;
+            const idx = physicalOccurrence?.area === 'partner-area'
+              ? (pa?.[physicalOccurrence.index] === cardId ? physicalOccurrence.index : -1)
+              : (pa ? pa.indexOf(cardId) : -1);
             if (idx !== -1) {
               pa!.splice(idx, 1);
               movedFromSource = { player: fromPlayer, area: 'partner' };
@@ -431,7 +562,8 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
           }
         }
         // sourceRequired (B05115 型): 解決までに union のどの zone にも無ければ登場中止。
-        if (!spliced && (a as { sourceRequired?: boolean }).sourceRequired === true) {
+        if (!spliced && ((a as { sourceRequired?: boolean }).sourceRequired === true
+          || physicalOccurrence !== undefined)) {
           mutate.log.append(s, { ts: Date.now(), player: enterPlayer, turn: s.turn.number, action: 'effect:sceneEnter:source-missing-skip', target: cardId });
           return;
         }
@@ -440,18 +572,22 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         const arr = s.players[fromPlayer].remove;
         const selectedIndex = resolveBindRef((a as { selectedCardIndex?: unknown }).selectedCardIndex, ctx);
         const exactSelectedIndex = (a as { exactSelectedCardIndex?: unknown }).exactSelectedCardIndex === true;
-        const idx = typeof selectedIndex === 'number'
+        const idx = physicalOccurrence?.area === 'remove'
+          ? (arr[physicalOccurrence.index] === cardId ? physicalOccurrence.index : -1)
+          : typeof selectedIndex === 'number'
           ? (arr[selectedIndex] === cardId ? selectedIndex : (exactSelectedIndex ? -1 : arr.indexOf(cardId)))
           : arr.indexOf(cardId);
         // engine mega-wave W3 (2026-07-03, r17): sourceRequired:true (opt-in) — 対象カードが source area に
         // 無ければ登場自体を中止 (B05115 公式Q&A「解決までにリムーブエリアを離れていた場合、登場できません」)。
         // 既存カードは未宣言 → 従来挙動 (idx===-1 でも enter 続行) byte 等価。
-        if (idx === -1 && (a as { sourceRequired?: boolean }).sourceRequired === true) {
+        if (idx === -1 && ((a as { sourceRequired?: boolean }).sourceRequired === true
+          || physicalOccurrence !== undefined)) {
           mutate.log.append(s, { ts: Date.now(), player: enterPlayer, turn: s.turn.number, action: 'effect:sceneEnter:source-missing-skip', target: cardId });
           return;
         }
         if (idx !== -1) {
           arr.splice(idx, 1);
+          advanceIndexedZoneEpoch(s, fromPlayer, 'remove');
           mutate.remove.emitExit(s, fromPlayer, cardId);
           movedFromSource = { player: fromPlayer, area: 'remove' };
         } // wave-4: remove→登場 離脱 (原因非依存 remove:exit、B05087 1st 能力が観測しうる)
@@ -461,7 +597,7 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
           ? ctx.source.player
           : (sourceSide === 'opp' ? 'opp' : enterPlayer);
         const arr = s.players[fromPlayer].hand;
-        const selectedIndex = selectedHandOccurrenceIndex(a, ctx, fromPlayer, cardId);
+        const selectedIndex = physicalOccurrence?.area === 'hand' ? physicalOccurrence.index : undefined;
         const idx = selectedIndex === undefined ? arr.indexOf(cardId) : selectedIndex;
         if (idx === -1 || arr[idx] !== cardId) {
           if ((a as { sourceRequired?: unknown }).sourceRequired === true || selectedIndex !== undefined) {
@@ -480,7 +616,17 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         // mini-wave #5 review B1 (2026-07-10): fromBottom 公開カードの登場は deckPos:'bottom' を渡す。
         // indexOf (先頭出現) だと同名コピーがデッキ上方にあるとき「見せていない top 側」が抜かれ、
         // 公開した底カードが残る (隠れ順序破壊、rules/02 同名3枚合法なので頻出)。lastIndexOf = 底出現。
-        const idx = a.deckPos === 'bottom' ? arr.lastIndexOf(cardId) : arr.indexOf(cardId);
+        const idx = physicalOccurrence?.area === 'deck'
+          ? (arr[physicalOccurrence.index] === cardId ? physicalOccurrence.index : -1)
+          : a.deckPos === 'bottom' ? arr.lastIndexOf(cardId) : arr.indexOf(cardId);
+        if (idx === -1 && physicalOccurrence !== undefined) {
+          (ctx.dyn ??= {}).chainStepNoApply = true;
+          mutate.log.append(s, {
+            ts: Date.now(), player: enterPlayer, turn: s.turn.number,
+            action: 'effect:sceneEnter:source-missing-skip', target: cardId,
+          });
+          return;
+        }
         if (idx !== -1) {
           arr.splice(idx, 1);
           deckTakeFromPlayer = fromPlayer;

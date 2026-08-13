@@ -11,6 +11,7 @@ import { mutate } from '@/engine/mutate';
 import { candidates, effectiveTraitNames } from '@/engine/target/candidates';
 import { targetFilterToPredicateWithCtx } from '@/engine/effect/atom-handlers/_shared';
 import { evalCond } from '@/engine/cond/eval';
+import { cardOccurrenceWitness } from '@/engine/target/card-occurrence';
 import type { CardDef, Candidate, EffectCtx, GameState } from '@/engine/types';
 
 const TRAIT = '喫茶ポアロ';
@@ -101,8 +102,8 @@ describe('B06095/B06095P all-area character trait grant', () => {
     const s = activate(s0);
     const found = candidates(s, { kind: 'pick', query: { area: 'evidence', side: 'self', filter: { trait: TRAIT } } }, ctx);
     expect(found).toEqual([
-      { kind: 'evidence', player: 'self', index: 0 },
-      { kind: 'evidence', player: 'self', index: 1 },
+      { kind: 'evidence', player: 'self', index: 0, occurrenceWitness: cardOccurrenceWitness(s, 'self', 'evidence') },
+      { kind: 'evidence', player: 'self', index: 1, occurrenceWitness: cardOccurrenceWitness(s, 'self', 'evidence') },
     ]);
   });
 

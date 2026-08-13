@@ -116,6 +116,9 @@ function freshGame(): GameState {
   registerCardDef(makeCard('CASE-OPP', { kind: 'case' }));
   registerCardDef(makeCard('AtkChar', { ap: 1000, lp: 2 }));
   registerCardDef(makeCard('DefChar', { ap: 1000, lp: 1 }));
+  for (const cardId of new Set([...makeMainDeck('s'), ...makeMainDeck('o')])) {
+    registerCardDef(makeCard(cardId));
+  }
 
   return produce(createEmptyGameState(), draft => {
     setup.init(draft, makeDecks());

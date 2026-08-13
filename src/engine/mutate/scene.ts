@@ -10,6 +10,7 @@ import { sceneCap } from '../read/scene-cap.js'; // engine E3 P11 (2026-07-02): 
 import { consultLeaveIntercept } from '../effect/consult-leave-intercept.js'; // W6 step10 (row9): pre-splice consult (純関数 leaf、循環なし)
 import { char as charMutator } from './char.js';
 import { log as logMutator } from './log.js';
+import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 
 type Player = 'self' | 'opp';
 type CharState = 'active' | 'sleep' | 'stun';
@@ -22,12 +23,18 @@ type RemoveOpts = {
   skipSetCardReplacementInstanceIds?: string[];
 };
 
+function addToRemove(s: GameState, player: Player, ids: readonly string[]): void {
+  if (ids.length === 0) return;
+  s.players[player].remove.push(...ids);
+  advanceIndexedZoneEpoch(s, player, 'remove');
+}
+
 function moveStackedCardsToRemove(s: GameState, player: Player, char: SceneCharacter): number {
   if (Array.isArray(char.stackedCards)) {
-    s.players[player].remove.push(...char.stackedCards.map(entry => entry.cardId));
+    addToRemove(s, player, char.stackedCards.map(entry => entry.cardId));
     return char.stackedCards.length;
   }
-  for (let i = 0; i < char.stackedCards; i++) s.players[player].remove.push('back-card');
+  addToRemove(s, player, Array.from({ length: char.stackedCards }, () => 'back-card'));
   return char.stackedCards;
 }
 
@@ -95,7 +102,7 @@ function selfToPartnerArea(s: GameState, owner: Player, uid: string, cardId: str
   const char = s.players[owner].scene[index]!;
   if (char.cardId !== cardId || !def.isMR(char.cardId)) return false;
   charMutator.replaceEligibleSetCardsBeforeHostLeaves(s, uid);
-  if (char.setCards.length > 0) s.players[owner].remove.push(...char.setCards.map(entry => entry.cardId));
+  addToRemove(s, owner, char.setCards.map(entry => entry.cardId));
   moveStackedCardsToRemove(s, owner, char);
   char.setCards = [];
   char.stackedCards = 0;
@@ -127,7 +134,7 @@ function applyMrEntryRemoval(s: GameState, p: Player, enteringCardId: string): b
   // パートナーエリア常駐 MR
   const slot = s.players[p].partnerAreaMR;
   if (slot) {
-    s.players[p].remove.push(slot.cardId);
+    addToRemove(s, p, [slot.cardId]);
     s.players[p].partnerAreaMR = null;
   }
   return mrUids.length > 0; // 現場 MR を除去 = 現場に空きが生まれた
@@ -336,7 +343,7 @@ function removeToRemove(
         const ki = char.setCards.findIndex(e => e.cardId === cid && e.faceUp);
         if (ki === -1) continue;
         char.setCards.splice(ki, 1);
-        s.players[player].remove.push(cid);
+        addToRemove(s, player, [cid]);
         kConsumed.push(cid);
       }
       mutate_logInterceptNote(s, player, 'kept-in-scene', leavingUid);
@@ -356,7 +363,7 @@ function removeToRemove(
       // 対象キャラ: set/stacked は remove へ (rules/16 — redirect されるのはキャラ本体のみ)、本体は手札へ
       charMutator.replaceEligibleSetCardsBeforeHostLeaves(s, uid);
       const hSetCardsRemoved: string[] = char.setCards.map(e => e.cardId);
-      s.players[player].remove.push(...hSetCardsRemoved);
+      addToRemove(s, player, hSetCardsRemoved);
       emitSetCardLeaves(s, char, player, cause); // set-card 自身は正規に離れる (row9 risks(a))
       const hStacked = moveStackedCardsToRemove(s, player, char);
       // hand.push は splice 成功時のみ (混成 review opus NIT: interceptor cost 除去の
@@ -385,7 +392,7 @@ function removeToRemove(
   // setCards のカードをリムーブエリアへ (rules/16 セット解除: リムーブ時表向きに)
   charMutator.replaceEligibleSetCardsBeforeHostLeaves(s, uid);
   const setCardsRemoved: string[] = char.setCards.map(e => e.cardId);
-  s.players[player].remove.push(...setCardsRemoved);
+  addToRemove(s, player, setCardsRemoved);
 
   // engine拡張 wave#2 cluster9: set card 離場 → setcard:leave emit (host splice 前)。
   // rules/30: 現場6枚超過の修正処置 (misplay-overflow) はリムーブ発動能力 不発動 → 除外
@@ -402,7 +409,7 @@ function removeToRemove(
   if (idx !== -1) {
     s.players[player].scene.splice(idx, 1);
   }
-  s.players[player].remove.push(char.cardId);
+  addToRemove(s, player, [char.cardId]);
 
   if (cause === 'contact-ap' && byUid) {
     const attacker = findChar(s, byUid);
@@ -446,6 +453,7 @@ function removeToRemove(
   // (rules/18② 「能力によるリムーブ」= remove へ残す。未解決 #2)。
   if (!opts?.noMrRedirect && shouldRedirectMrToPA(s, char, player)) {
     s.players[player].remove.pop();
+    advanceIndexedZoneEpoch(s, player, 'remove');
     placeMrInPA(s, char, player);
   }
 
@@ -523,7 +531,7 @@ function toDeckBottom(s: GameState, uid: string): void {
   if (shouldRedirectMrToPA(s, char, player)) {
     // 本関数は通常 set/stack を新キャラへ引継ぐ (変装) が、MR① は新キャラ無しで現場離脱 → rules/16 で remove へ。
     charMutator.replaceEligibleSetCardsBeforeHostLeaves(s, uid);
-    if (char.setCards.length > 0) s.players[player].remove.push(...char.setCards.map(e => e.cardId));
+    addToRemove(s, player, char.setCards.map(e => e.cardId));
     moveStackedCardsToRemove(s, player, char);
     placeMrInPA(s, char, player);
     return;
@@ -548,7 +556,7 @@ function toDeck(s: GameState, uid: string, pos: 'bottom' | 'top' = 'bottom'): bo
   // rules/16 setCards / stackedCards は離場時にリムーブされる
   charMutator.replaceEligibleSetCardsBeforeHostLeaves(s, uid);
   if (char.setCards.length > 0) {
-    s.players[player].remove.push(...char.setCards.map(e => e.cardId));
+    addToRemove(s, player, char.setCards.map(e => e.cardId));
   }
   moveStackedCardsToRemove(s, player, char);
 
@@ -589,7 +597,7 @@ function toHand(s: GameState, uid: string): void {
   // rules/16 setCards / stackedCards は離場時にリムーブされる
   charMutator.replaceEligibleSetCardsBeforeHostLeaves(s, uid);
   if (char.setCards.length > 0) {
-    s.players[player].remove.push(...char.setCards.map(e => e.cardId));
+    addToRemove(s, player, char.setCards.map(e => e.cardId));
   }
   moveStackedCardsToRemove(s, player, char);
 
@@ -626,7 +634,7 @@ function toEvidence(s: GameState, uid: string, faceUp: boolean, sourceCardId?: s
   // rules/16 setCards / stackedCards は離場時にリムーブされる
   charMutator.replaceEligibleSetCardsBeforeHostLeaves(s, uid);
   if (char.setCards.length > 0) {
-    s.players[player].remove.push(...char.setCards.map(e => e.cardId));
+    addToRemove(s, player, char.setCards.map(e => e.cardId));
   }
   moveStackedCardsToRemove(s, player, char);
 
@@ -648,6 +656,7 @@ function toEvidence(s: GameState, uid: string, faceUp: boolean, sourceCardId?: s
     faceUp,
     origin: { turn: s.turn.number, via: 'effect', ...(sourceCardId ? { sourceCardId } : {}) },
   });
+  advanceIndexedZoneEpoch(s, player, 'evidence');
 }
 
 /**
@@ -731,7 +740,7 @@ function toStack(s: GameState, uid: string, hostUid: string): boolean {
   // rules/16 setCards / stackedCards は離場時にリムーブされる
   charMutator.replaceEligibleSetCardsBeforeHostLeaves(s, uid);
   if (char.setCards.length > 0) {
-    s.players[player].remove.push(...char.setCards.map(e => e.cardId));
+    addToRemove(s, player, char.setCards.map(e => e.cardId));
   }
   moveStackedCardsToRemove(s, player, char);
   emitSetCardLeaves(s, char, player, 'leave:to-stack');

@@ -34,6 +34,7 @@ import { register as registerCardDef, _resetRegistry as resetDefRegistry } from 
 import { createEmptyGameState } from '@/engine/state-factory';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { makeCtx } from '../helpers/fixtures';
+import { cardOccurrenceUid, cardOccurrenceWitness } from '@/engine/target/card-occurrence';
 import type { CardDef, GameState, Condition, EffectCtx, AbilityDef, Effect } from '@/engine/types';
 
 function ch(id: string, over: Partial<CardDef> = {}): CardDef {
@@ -233,7 +234,15 @@ describe('wave4 #3 remove:exit observer', () => {
     const after = produce(createEmptyGameState(), (d) => {
       obsUid = mutate.scene.enter(d, 'self', 'OBS', {}).uid;
       d.players.self.remove = ['NAGANO'];
-      runAtom(d, 'handAddFromRemove', { player: 'self', fromSelf: true }, makeCtx({ source: { player: 'self', area: 'scene', cardId: 'NAGANO' } }));
+      runAtom(d, 'handAddFromRemove', { player: 'self', fromSelf: true }, makeCtx({
+        source: { player: 'self', area: 'remove', uid: cardOccurrenceUid('self', 'remove', 'NAGANO', 0), cardId: 'NAGANO' },
+        bindings: {
+          occurrence: [{
+            kind: 'card', uid: cardOccurrenceUid('self', 'remove', 'NAGANO', 0), cardId: 'NAGANO', player: 'self', area: 'remove', index: 0,
+            occurrenceWitness: cardOccurrenceWitness(d, 'self', 'remove'),
+          }],
+        },
+      }));
     });
     expect(firedBy(after, 'remove:exit', obsUid)).toBe(true);
   });

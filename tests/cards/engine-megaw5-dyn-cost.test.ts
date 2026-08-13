@@ -14,6 +14,7 @@ import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { applyPickAndContinuation, applyPickSkipAndContinuation, drainAiEffectPicks } from '@/engine/effect/apply-pick';
 import { _clearPendingEffectPickQueue, _drainPendingEffectPickSide, _peekPendingEffectPickQueueLength } from '@/engine/effect/resolve-picks';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
+import { cardOccurrenceWitness } from '@/engine/target/card-occurrence';
 import type { GameState, SceneCharacter, CardDef, EvidenceCard, Effect } from '@/engine/types';
 import { makeChar, makeCtx } from '../helpers/fixtures';
 
@@ -146,7 +147,10 @@ describe('megaw5 step2 — evidenceFlip multi + bind + dyn-max (r38)', () => {
     expect(r.players.self.evidence[0].faceUp).toBe(true);
     expect(r.players.self.evidence[1].faceUp).toBe(true);
     expect(r.players.self.evidence[2].faceUp, 'faceUp decoy 不変').toBe(true);
-    expect(ctx.bindings['$flipped']).toEqual([{ cardId: 'E1' }, { cardId: 'E2' }]);
+    expect(ctx.bindings['$flipped']).toEqual([
+      { kind: 'card', uid: 'evidence:self:0', cardId: 'E1', area: 'evidence', player: 'self', index: 0, occurrenceWitness: cardOccurrenceWitness(r, 'self', 'evidence') },
+      { kind: 'card', uid: 'evidence:self:1', cardId: 'E2', area: 'evidence', player: 'self', index: 1, occurrenceWitness: cardOccurrenceWitness(r, 'self', 'evidence') },
+    ]);
   });
 
   it('runAtom 直接: cardIds 内に裏向き不在 cardId → skip + bind は実 flip 分のみ', () => {
@@ -155,7 +159,9 @@ describe('megaw5 step2 — evidenceFlip multi + bind + dyn-max (r38)', () => {
     const ctx = ctxOf();
     const r = produce(s, d => { runAtom(d, 'evidenceFlip', { player: 'self', cardIds: ['E1', 'NOPE'], bind: '$flipped' }, ctx); });
     expect(r.players.self.evidence[0].faceUp).toBe(true);
-    expect(ctx.bindings['$flipped']).toEqual([{ cardId: 'E1' }]);
+    expect(ctx.bindings['$flipped']).toEqual([
+      { kind: 'card', uid: 'evidence:self:0', cardId: 'E1', area: 'evidence', player: 'self', index: 0, occurrenceWitness: cardOccurrenceWitness(r, 'self', 'evidence') },
+    ]);
   });
 
   it('human 経路: mirror sequence — step1 pick 適用 (2枚) → step2 pick の nMax=2 (mirror-count) → 相手2枚 flip', () => {

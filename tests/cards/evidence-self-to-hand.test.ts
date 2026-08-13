@@ -31,9 +31,11 @@ import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { _drainAllEffectPicksForTest } from '@/engine/effect/apply-pick';
 import { resolveEffectPicks, _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { mutate } from '@/engine/mutate';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _drainPendingHirameki } from '@/engine/listeners/hirameki';
-import { removeOpponentEvidenceTop } from '@/engine/flow/action-case';
+import { removeOpponentEvidenceTop, resolveHiramekiDecision } from '@/engine/flow/action-case';
+import { cardOccurrenceWitness } from '@/engine/target/card-occurrence';
 import { read } from '@/engine/read/index';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { sceneChar } from '../helpers/fixtures';
@@ -43,8 +45,16 @@ import type { ActionContext, CardDef, EffectCtx, EvidenceCard, GameState } from 
 
 const ev = (cardId: string, faceUp = false): EvidenceCard => ({ cardId, faceUp, origin: { turn: 1, via: 'effect' } });
 // hirameki ctx: source = リムーブされた証拠カード (area:'evidence', cardId, player=所有者)
-const hctx = (cardId: string, player: 'self' | 'opp' = 'self'): EffectCtx =>
-  ({ source: { player, area: 'evidence', cardId, abilityId: 'a2', uid: `evidence:${player}` }, bindings: {} } as unknown as EffectCtx);
+const hctx = (state: GameState, cardId: string, player: 'self' | 'opp' = 'self', index = state.players[player].remove.length - 1): EffectCtx =>
+  ({
+    source: { player, area: 'remove', cardId, abilityId: 'a2', uid: `card:${player}:remove:${cardId}#${index}` },
+    bindings: {
+      occurrence: [{
+        kind: 'card', uid: `card:${player}:remove:${cardId}#${index}`, player, cardId, area: 'remove', index,
+        occurrenceWitness: cardOccurrenceWitness(state, player, 'remove'),
+      }],
+    },
+  } as unknown as EffectCtx);
 const ch = (id: string, over: Partial<CardDef> = {}): CardDef => ({
   id, no: `9/${id}`, kind: 'character', names: [id], colors: ['緑'], level: 4, ap: 3000, lp: 1, traits: [], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [], ...over,
 });
@@ -69,7 +79,7 @@ describe('handAddFromRemove fromSelf — runAtom 直接駆動 (§1-3)', () => {
       d.players.self.remove = ['OTHER', 'PR085']; // 末尾 PR085 = 直近リムーブ
     });
     const after = produce(s0, (d) => {
-      runAtom(d, 'handAddFromRemove', { player: 'self', fromSelf: true }, hctx('PR085'));
+      runAtom(d, 'handAddFromRemove', { player: 'self', fromSelf: true }, hctx(s0, 'PR085'));
     });
     expect(after.players.self.hand).toEqual(['PR085']);          // source のみ手札へ
     expect(after.players.self.remove).toEqual(['OTHER']);        // 別 cardId は remove に残る
@@ -81,7 +91,7 @@ describe('handAddFromRemove fromSelf — runAtom 直接駆動 (§1-3)', () => {
       d.players.self.remove = ['PR085', 'DEC', 'PR085']; // idx0=旧コピー / idx2=直近リムーブ
     });
     const after = produce(s0, (d) => {
-      runAtom(d, 'handAddFromRemove', { player: 'self', fromSelf: true }, hctx('PR085'));
+      runAtom(d, 'handAddFromRemove', { player: 'self', fromSelf: true }, hctx(s0, 'PR085'));
     });
     expect(after.players.self.hand).toEqual(['PR085']);          // 1枚だけ手札へ
     expect(after.players.self.remove).toEqual(['PR085', 'DEC']); // 末尾(idx2)が抜け、旧コピーは残る
@@ -93,7 +103,7 @@ describe('handAddFromRemove fromSelf — runAtom 直接駆動 (§1-3)', () => {
       d.players.self.remove = ['X', 'Y'];
     });
     const after = produce(s0, (d) => {
-      runAtom(d, 'handAddFromRemove', { player: 'self', fromSelf: true }, hctx('PR085'));
+      runAtom(d, 'handAddFromRemove', { player: 'self', fromSelf: true }, hctx(s0, 'PR085', 'self', 0));
     });
     expect(after.players.self.hand).toEqual(['HZ']);
     expect(after.players.self.remove).toEqual(['X', 'Y']);
@@ -122,9 +132,9 @@ describe('e2e: action[事件] → removeTop → ヒラメキ resolve (§4)', () 
     expect(pending!.player).toBe('self');
     expect(pending!.abilityId).toBe('a2');
     // ヒラメキ fire: a2 effect を resolve (実 flow の hiramekiResolve と同じ ctx.source)
-    const a2 = def.card('PR085')!.abilities.find((a) => a.id === 'a2')!;
     s = produce(s, (d) => {
-      runEffect(d, a2.effect as never, hctx('PR085', 'self'));
+      resolveHiramekiDecision(d, ax, pending!, 'fire', { humanChooser: false });
+      runAllUntilEmpty(d);
     });
     expect(s.players.self.hand).toContain('PR085');              // PR085 が手札へ
     expect(s.players.self.remove).not.toContain('PR085');        // remove からは消えた
@@ -206,5 +216,28 @@ describe('出荷カード構造 (§7)', () => {
     for (const id of ['PR085', 'PR091']) {
       expect(def.card(id)?.id, id).toBe(id);
     }
+  });
+
+  it('does not retarget an identical remove card after its pending occurrence shifts', () => {
+    let s = createEmptyGameState();
+    s = produce(s, (d) => {
+      d.turn = { number: 3, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+      d.players.self.evidence = [ev('PR085')];
+      d.players.self.remove = ['PR085'];
+      d.players.self.hand = [];
+    });
+    const ax = { id: 'act#duplicate', byUid: 'opp:atk', byPlayer: 'opp', target: { kind: 'case', player: 'self' }, phase: 'resolve', startedAt: { turn: 3, nano: 0 } } as unknown as ActionContext;
+    s = produce(s, (d) => { removeOpponentEvidenceTop(d, ax); });
+    const pending = _drainPendingHirameki();
+    expect(pending?.occurrence?.occurrenceWitness).toBe('occ:v1:self:remove:1');
+
+    s = produce(s, (d) => {
+      mutate.remove.removeFromHere(d, 'self', ['PR085']);
+      resolveHiramekiDecision(d, ax, pending!, 'fire', { humanChooser: false });
+      runAllUntilEmpty(d);
+    });
+
+    expect(s.players.self.hand).toEqual([]);
+    expect(s.players.self.remove).toEqual(['PR085']);
   });
 });

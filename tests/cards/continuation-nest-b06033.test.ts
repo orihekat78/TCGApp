@@ -32,6 +32,7 @@ import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
+import { cardOccurrenceUid, cardOccurrenceWitness } from '@/engine/target/card-occurrence';
 import { B06033 } from '@/cards/ct-p06/B06033';
 import { B06033P } from '@/cards/ct-p06/B06033P';
 import type { CardDef, EffectCtx, GameState } from '@/engine/types';
@@ -167,7 +168,16 @@ describe('B06033 §5 — 【ヒラメキ】self→hand (B05102/PR085 a2 同型)'
     });
     const a2 = def.card('B06033')!.abilities.find((a) => a.id === 'a2')!;
     s = produce(s, (d) => {
-      const ctx = { source: { player: 'self', area: 'evidence', cardId: 'B06033', abilityId: 'a2', uid: 'evidence:self' }, bindings: {} } as unknown as EffectCtx;
+      const index = d.players.self.remove.lastIndexOf('B06033');
+      const ctx = {
+        source: { player: 'self', area: 'remove', cardId: 'B06033', abilityId: 'a2', uid: cardOccurrenceUid('self', 'remove', 'B06033', index) },
+        bindings: {
+          occurrence: [{
+            kind: 'card', uid: cardOccurrenceUid('self', 'remove', 'B06033', index), cardId: 'B06033', player: 'self', area: 'remove', index,
+            occurrenceWitness: cardOccurrenceWitness(d, 'self', 'remove'),
+          }],
+        },
+      } as unknown as EffectCtx;
       runAtom(d, (a2.effect as { verb: string }).verb as never, (a2.effect as { args: unknown }).args, ctx);
       runAllUntilEmpty(d);
     });

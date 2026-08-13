@@ -27,6 +27,7 @@ import {
   readPendingRpsAuthority,
 } from '@/engine/effect/runtime-state.js';
 import { canApplyPendingPickSelection } from '@/engine/effect/pick-selection.js';
+import { cardOccurrenceUid, cardOccurrenceWitness } from '@/engine/target/card-occurrence.js';
 
 // ---- can-check (前段ガード) ----
 
@@ -61,7 +62,16 @@ function matchesHiramekiCheckpoint(state: GameState, pending: PendingHirameki): 
 
   const occurrence = pending.occurrence;
   if (occurrence.player !== pending.player
-    || state.players[occurrence.player].remove[occurrence.removeIndex] !== occurrence.cardId) {
+    || occurrence.area !== 'remove'
+    || occurrence.uid !== cardOccurrenceUid(
+      occurrence.player,
+      'remove',
+      occurrence.cardId,
+      occurrence.index,
+    )
+    || typeof occurrence.occurrenceWitness !== 'string'
+    || cardOccurrenceWitness(state, occurrence.player, 'remove') !== occurrence.occurrenceWitness
+    || state.players[occurrence.player].remove[occurrence.index] !== occurrence.cardId) {
     return false;
   }
 

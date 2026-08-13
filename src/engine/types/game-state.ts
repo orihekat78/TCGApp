@@ -328,6 +328,14 @@ export type GameState = {
     isFirstPlayerFirstTurn: boolean;
   };
   players: { self: PlayerState; opp: PlayerState };
+  /**
+   * Monotonic revisions for indexed physical zones. Optional only for legacy
+   * saves; resumable physical selections fail closed until this exists.
+   */
+  indexedZoneEpochs?: {
+    self: { evidence: number; remove: number };
+    opp: { evidence: number; remove: number };
+  };
   pendingEffects: EffectStackEntry[];
   /** Serializable in-flight action state. Optional only for legacy saves. */
   actionContexts?: Record<string, ActionContext>;

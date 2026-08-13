@@ -49,6 +49,10 @@ export function createEmptyGameState(): GameState {
       self: createEmptyPlayerState(7),
       opp: createEmptyPlayerState(6),
     },
+    indexedZoneEpochs: {
+      self: { evidence: 0, remove: 0 },
+      opp: { evidence: 0, remove: 0 },
+    },
     pendingEffects: [],
     effectTriggerBatchSeq: 0,
     declaredBatchSeq: 0,

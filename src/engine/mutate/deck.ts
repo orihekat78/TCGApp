@@ -5,6 +5,7 @@
 import type { GameState, CardId, RefreshResult } from '@/engine/types';
 import { log as logMut } from './log.js';
 import { gameResult as gameResultMut } from './gameResult.js';
+import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 import { remove as removeMut } from './remove.js'; // engine additive wave-4: remove:exit emit (リフレッシュで remove→deck)
 // engine mega-wave W2 (2026-07-03, P08/r25): refreshEvidence 抑止 aura の read。read→mutate 片方向 import
 // (mutate/partner.ts→read/game・mutate/scene.ts→read/def と同流儀、cycle なし)。
@@ -87,6 +88,7 @@ function removeFromTop(s: GameState, p: Player, n: number): CardId[] {
   const count = Math.min(n, d.length);
   const removed = d.splice(0, count);
   s.players[p].remove.push(...removed);
+  if (removed.length > 0) advanceIndexedZoneEpoch(s, p, 'remove');
   return removed;
 }
 
@@ -135,6 +137,7 @@ function refresh(s: GameState, p: Player, resolvingCardId?: CardId): RefreshResu
   // リムーブ → デッキへ移動してシャッフル
   s.players[p].deck.push(...refreshable);
   s.players[p].remove = preserved === undefined ? [] : [preserved];
+  advanceIndexedZoneEpoch(s, p, 'remove');
   shuffle(s, p);
 
   // engine additive wave-4: 離脱カード毎に remove:exit emit (移動完了後)。観測 = B05087/B05088 (在場キャラ)。
@@ -160,6 +163,7 @@ function refresh(s: GameState, p: Player, resolvingCardId?: CardId): RefreshResu
       faceUp: false,
       origin: { turn: s.turn.number, via: 'refresh-penalty' },
     });
+    advanceIndexedZoneEpoch(s, opp, 'evidence');
   }
 
   // 相手 scratchTrace = '発見済' (rules/13, 26)

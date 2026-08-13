@@ -16,6 +16,7 @@
 import type { GameState, CardId, CardDef } from '../types/index.js';
 import { mutate } from '../mutate/index.js';
 import { def as readDef } from '../read/def.js';
+import { DEFAULT_DECK_LIMIT, validateDeckLegality } from '../../shared/deck-legality.js';
 
 type Player = 'self' | 'opp';
 
@@ -31,8 +32,6 @@ export type DeckPair = {
 };
 
 const OPENING_HAND_SIZE = 5;
-const MAIN_DECK_SIZE = 40;
-const MAX_SAME_ID = 3;
 
 /**
  * デッキ構築の検証 (rules/02)
@@ -41,47 +40,22 @@ const MAX_SAME_ID = 3;
  *   - partnerId / caseId が指定されている
  */
 function validateDeck(deck: Deck, side: Player): void {
-  if (!deck.partnerId) {
-    throw new Error(`setup.init: ${side} partnerId missing`);
-  }
-  if (!deck.caseId) {
-    throw new Error(`setup.init: ${side} caseId missing`);
-  }
-  if (deck.mainCards.length !== MAIN_DECK_SIZE) {
-    throw new Error(
-      `setup.init: ${side} main deck size must be ${MAIN_DECK_SIZE} (got ${deck.mainCards.length}) — rules/02`,
-    );
-  }
-  // 同IDカード制限 (rules/02)
-  const counts = new Map<string, {
-    total: number;
-    printingIds: Set<string>;
-    limits: Set<number | 'unlimited'>;
-  }>();
-  for (const id of deck.mainCards) {
-    const card = readDef.card(id);
-    const slash = card?.no.indexOf('/') ?? -1;
-    const officialId = card && slash > 0 ? card.no.slice(0, slash) : id;
-    const count = counts.get(officialId) ?? {
-      total: 0,
-      printingIds: new Set<string>(),
-      limits: new Set<number | 'unlimited'>(),
+  const result = validateDeckLegality({
+    partner: deck.partnerId,
+    case: deck.caseId,
+    main: deck.mainCards.map((printingId) => ({ printingId, count: 1 })),
+  }, (printingId) => {
+    const card = readDef.card(printingId);
+    if (!card) return undefined;
+    const slash = card.no.indexOf('/');
+    return {
+      printingId,
+      officialId: slash > 0 ? card.no.slice(0, slash) : card.no,
+      kind: card.kind,
+      deckLimit: card.deckLimit ?? DEFAULT_DECK_LIMIT,
     };
-    count.total += 1;
-    count.printingIds.add(id);
-    count.limits.add(card?.deckLimit ?? MAX_SAME_ID);
-    counts.set(officialId, count);
-  }
-  for (const [officialId, count] of counts) {
-    const numericLimits = [...count.limits].filter((limit): limit is number => limit !== 'unlimited');
-    const limit = numericLimits.length === 0 ? 'unlimited' : Math.min(...numericLimits);
-    if (limit !== 'unlimited' && count.total > limit) {
-      const printings = [...count.printingIds].join('+');
-      throw new Error(
-        `setup.init: ${side} contains ${count.total} copies of "${officialId}" (${printings}) — max ${limit} (rules/02)`,
-      );
-    }
-  }
+  });
+  if (!result.ok) throw new Error(`setup.init: ${side} deck invalid: ${result.errors.join(',')}`);
 }
 
 /**

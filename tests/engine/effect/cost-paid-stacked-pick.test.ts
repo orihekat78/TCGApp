@@ -4,6 +4,7 @@ import { register as registerCardDef, _resetRegistry } from '@/engine/read/def';
 import { run } from '@/engine/effect/resolver';
 import { applyPickAndContinuation } from '@/engine/effect/apply-pick';
 import { _clearPendingEffectPickQueue, _drainPendingEffectPickSide } from '@/engine/effect/pending-state';
+import { cardOccurrenceWitness } from '@/engine/target/card-occurrence';
 import type { CardDef, Effect, EffectCtx } from '@/engine/types';
 
 const character = (id: string, level: number, traits: string[] = []): CardDef => ({
@@ -43,8 +44,8 @@ describe('B08003 cost-paid stacked-card chooser', () => {
 
     expect(pending?.player).toBe('opp');
     expect(pending?.candidates).toEqual([
-      { kind: 'card', uid: 'card:self:remove:PAID_A#1', cardId: 'PAID_A', player: 'self', area: 'remove', index: 1 },
-      { kind: 'card', uid: 'card:self:remove:PAID_B#2', cardId: 'PAID_B', player: 'self', area: 'remove', index: 2 },
+      { kind: 'card', uid: 'card:self:remove:PAID_A#1', cardId: 'PAID_A', player: 'self', area: 'remove', index: 1, occurrenceWitness: cardOccurrenceWitness(state, 'self', 'remove') },
+      { kind: 'card', uid: 'card:self:remove:PAID_B#2', cardId: 'PAID_B', player: 'self', area: 'remove', index: 2, occurrenceWitness: cardOccurrenceWitness(state, 'self', 'remove') },
     ]);
     // Legacy selections still resolve when they identify exactly one pending occurrence.
     applyPickAndContinuation(state, pending!, 'PAID_B#2');

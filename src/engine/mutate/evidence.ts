@@ -6,6 +6,7 @@ import { current } from '@/engine/produce';
 import { event } from '../event/index.js'; // engine additive wave-3: evidence:removed emit (mutate/char.ts setcard:enter と同パターン)
 import { remove as removeMut } from './remove.js'; // engine additive wave-4: remove:exit emit (remove→証拠 離脱)
 import { deck as deckMut } from './deck.js';
+import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 import type { GameState, EvidenceCard, EvidenceOrigin, CardId } from '@/engine/types';
 
 type Player = 'self' | 'opp';
@@ -33,6 +34,7 @@ function addFromDeck(
     if (d.length === 0 && !deckMut.refreshAfterTake(s, p, resolvingCardId, (count) => onStep?.({ kind: 'refresh', count }))) break;
     const cardId = d.shift()!;
     s.players[p].evidence.push({ cardId, faceUp, origin });
+    advanceIndexedZoneEpoch(s, p, 'evidence');
     added++;
     onStep?.({ kind: 'move', count: 1 });
     if (!deckMut.refreshAfterTake(s, p, resolvingCardId, (count) => onStep?.({ kind: 'refresh', count }))) break;
@@ -50,6 +52,8 @@ function removeTop(s: GameState, p: Player): EvidenceCard | undefined {
   const snapshot = current(ev[ev.length - 1]) as EvidenceCard;
   ev.pop();
   s.players[p].remove.push(snapshot.cardId);
+  advanceIndexedZoneEpoch(s, p, 'evidence');
+  advanceIndexedZoneEpoch(s, p, 'remove');
   // engine additive wave-3 (2026-06-30): 証拠リムーブ observer (原因非依存、rules/10/14)。push 後に emit。
   event.emit(s, 'evidence:removed', { player: p });
   return snapshot;
@@ -64,6 +68,8 @@ function removeAt(s: GameState, p: Player, idx: number): EvidenceCard | undefine
   const snapshot = current(ev[idx]) as EvidenceCard;
   ev.splice(idx, 1);
   s.players[p].remove.push(snapshot.cardId);
+  advanceIndexedZoneEpoch(s, p, 'evidence');
+  advanceIndexedZoneEpoch(s, p, 'remove');
   // engine additive wave-3 (2026-06-30): 証拠リムーブ observer (removeTop と同観測)。
   event.emit(s, 'evidence:removed', { player: p });
   return snapshot;
@@ -75,7 +81,10 @@ function removeAt(s: GameState, p: Player, idx: number): EvidenceCard | undefine
 function flipFaceUp(s: GameState, p: Player, idx: number): void {
   const ev = s.players[p].evidence;
   if (idx < 0 || idx >= ev.length) return;
-  ev[idx].faceUp = true;
+  if (!ev[idx].faceUp) {
+    ev[idx].faceUp = true;
+    advanceIndexedZoneEpoch(s, p, 'evidence');
+  }
 }
 
 /**
@@ -86,7 +95,10 @@ function flipFaceUp(s: GameState, p: Player, idx: number): void {
 function flipFaceDown(s: GameState, p: Player, idx: number): void {
   const ev = s.players[p].evidence;
   if (idx < 0 || idx >= ev.length) return;
-  ev[idx].faceUp = false;
+  if (ev[idx].faceUp) {
+    ev[idx].faceUp = false;
+    advanceIndexedZoneEpoch(s, p, 'evidence');
+  }
 }
 
 /**
@@ -102,6 +114,8 @@ function toRemove(s: GameState, ev: EvidenceCard): void {
     if (idx !== -1) {
       list.splice(idx, 1);
       s.players[p].remove.push(ev.cardId);
+      advanceIndexedZoneEpoch(s, p, 'evidence');
+      advanceIndexedZoneEpoch(s, p, 'remove');
       // engine additive wave-3 (2026-06-30): 証拠リムーブ observer (ヒラメキ解決後等の remove も観測)。
       event.emit(s, 'evidence:removed', { player: p });
       return;
@@ -135,9 +149,11 @@ function gainCard(
     // 非同期 (キャラの【現場リムーブ時】等、B06026) でのみ idx===-1 が起こりうる。
     if (idx === -1) return;
     list.splice(idx, 1);
+    advanceIndexedZoneEpoch(s, p, 'remove');
     removeMut.emitExit(s, p, cardId); // wave-4: remove→証拠 離脱 (原因非依存 remove:exit)
   }
   s.players[p].evidence.push({ cardId, faceUp, origin });
+  advanceIndexedZoneEpoch(s, p, 'evidence');
 }
 
 /**
@@ -156,6 +172,7 @@ function toDeckTop(s: GameState, p: Player, n: number): number {
   }
   taken.reverse(); // [deck[0], deck[1], ...] 元の deck 順に復元
   s.players[p].deck.unshift(...taken);
+  if (taken.length > 0) advanceIndexedZoneEpoch(s, p, 'evidence');
   return taken.length;
 }
 

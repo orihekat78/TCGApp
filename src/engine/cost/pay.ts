@@ -22,6 +22,8 @@ import { char as readChar } from '@/engine/read/char.js';
 import { _clearPendingSetCardReplacementSide, _peekPendingSetCardReplacementGuard, _peekPendingSetCardReplacementSide, _restorePendingSetCardReplacementSide } from '@/engine/effect/pending-state.js';
 import { _abortEventJournal, _beginEventJournal, _commitEventJournal, _withEventsSuppressed } from '@/engine/event/registry.js';
 import { produce } from '@/engine/produce.js';
+import { cardOccurrenceWitness } from '@/engine/target/card-occurrence.js';
+import { advanceIndexedZoneEpoch } from '@/engine/state/indexed-zone-epoch.js';
 
 /**
  * Pay a Cost. Mutates the draft in place.
@@ -86,6 +88,12 @@ function sourceOccurrenceIndex(ctx: EffectCtx): number | null {
   if (!match) return null;
   const index = Number(match[1]);
   return Number.isInteger(index) && index >= 0 ? index : null;
+}
+
+function addToRemove(state: GameState, player: 'self' | 'opp', ids: readonly string[]): void {
+  if (ids.length === 0) return;
+  state.players[player].remove.push(...ids);
+  advanceIndexedZoneEpoch(state, player, 'remove');
 }
 
 /**
@@ -162,7 +170,7 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       const index = state.players[p].hand.indexOf(id);
       if (index >= 0) {
         state.players[p].hand.splice(index, 1);
-        if (toRemove) state.players[p].remove.push(id);
+        if (toRemove) addToRemove(state, p, [id]);
       }
     }
   };
@@ -173,8 +181,8 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       const [char] = state.players[side].scene.splice(index, 1);
       if (!char) return undefined;
       if (cascade) {
-        state.players[side].remove.push(...char.setCards.map(entry => entry.cardId));
-        state.players[side].remove.push(...(Array.isArray(char.stackedCards)
+        addToRemove(state, side, char.setCards.map(entry => entry.cardId));
+        addToRemove(state, side, (Array.isArray(char.stackedCards)
           ? char.stackedCards.map(entry => entry.cardId)
           : Array.from({ length: char.stackedCards }, () => 'back-card')));
         char.setCards = [];
@@ -227,7 +235,7 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
         if (found.player === p && readDef.isMR(found.char.cardId) && state.turn.player !== p) {
           state.players[p].partnerAreaMR = { ...found.char, uid: `partnerMR:${p}`, isNamed: false, setCards: [], stackedCards: [] };
         } else {
-          state.players[found.player].remove.push(found.char.cardId);
+          addToRemove(state, found.player, [found.char.cardId]);
         }
       }
       return true;
@@ -254,7 +262,7 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
     }
     case 'removeDeckTop': {
       const removed = state.players[cost.player].deck.splice(0, resolveDynNumber(cost.n, state, ctx));
-      state.players[cost.player].remove.push(...removed);
+      addToRemove(state, cost.player, removed);
       const prior = (ctx.costPaid?.['removeDeckTop'] as { ids?: string[] } | undefined)?.ids ?? [];
       recordCostPaid(ctx, 'removeDeckTop', { ids: [...prior, ...removed] });
       if (removed.length > 0) simulateRefreshAfterTake(state, cost.player);
@@ -262,14 +270,15 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
     }
     case 'removeDeckAll': {
       const removed = state.players[cost.player].deck.splice(0);
-      state.players[cost.player].remove.push(...removed);
+      addToRemove(state, cost.player, removed);
       simulateRefreshAfterTake(state, cost.player);
       return true;
     }
     case 'discardEvidence': {
       for (let i = 0; i < cost.n; i++) {
         const evidence = state.players[p].evidence.pop(); if (!evidence) return false;
-        state.players[p].remove.push(evidence.cardId);
+        advanceIndexedZoneEpoch(state, p, 'evidence');
+        addToRemove(state, p, [evidence.cardId]);
       }
       return true;
     }
@@ -285,7 +294,7 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
         const source = state.players[p].scene.find(char => char.uid === ctx.source.uid);
         if (!source || source.cardId !== ctx.source.cardId) return false;
         state.players[p].scene.splice(state.players[p].scene.indexOf(source), 1);
-        state.players[p].remove.push(source.cardId);
+        addToRemove(state, p, [source.cardId]);
         return true;
       }
       const index = sourceOccurrenceIndex(ctx);
@@ -294,14 +303,15 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
         const entry = state.players[p].evidence[index];
         if (!entry || !entry.faceUp || entry.cardId !== ctx.source.cardId) return false;
         state.players[p].evidence.splice(index, 1);
-        state.players[p].remove.push(entry.cardId);
+        advanceIndexedZoneEpoch(state, p, 'evidence');
+        addToRemove(state, p, [entry.cardId]);
         return true;
       }
       if (ctx.source.area === 'file') {
         const entry = state.players[p].file[index];
         if (!entry || entry.type !== 'card-back' || entry.faceUp !== true || entry.cardId !== ctx.source.cardId) return false;
         state.players[p].file.splice(index, 1);
-        state.players[p].remove.push(entry.cardId);
+        addToRemove(state, p, [entry.cardId]);
         return true;
       }
       return false;
@@ -311,8 +321,8 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       const source = state.players[p].scene.find(char => char.uid === ctx.source.uid);
       if (!source || source.cardId !== ctx.source.cardId || !readDef.isMR(source.cardId) || state.players[p].partnerAreaMR) return false;
       state.players[p].scene.splice(state.players[p].scene.indexOf(source), 1);
-      state.players[p].remove.push(...source.setCards.map(entry => entry.cardId));
-      state.players[p].remove.push(...(Array.isArray(source.stackedCards)
+      addToRemove(state, p, source.setCards.map(entry => entry.cardId));
+      addToRemove(state, p, (Array.isArray(source.stackedCards)
         ? source.stackedCards.map(entry => entry.cardId)
         : Array.from({ length: source.stackedCards }, () => 'back-card')));
       source.setCards = [];
@@ -353,7 +363,7 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
         if (index < 0) return false;
         const [removed] = host.setCards.splice(index, 1);
         if (!removed) return false;
-        state.players[p].remove.push(removed.cardId);
+        addToRemove(state, p, [removed.cardId]);
         removedIds.push(removed.cardId);
         return true;
       };
@@ -379,7 +389,7 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       const removeStart = state.players[p].remove.length;
       for (const entry of entries) {
         stacked.splice(stacked.indexOf(entry!), 1);
-        state.players[p].remove.push(entry!.cardId);
+        addToRemove(state, p, [entry!.cardId]);
       }
       recordCostPaid(ctx, 'removeStackedCards', { entries: entries.map((entry, offset) => ({
         cardId: entry!.cardId, instanceId: entry!.instanceId, removeIndex: removeStart + offset,
@@ -390,15 +400,21 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       const indices = hasCostParam(ctx, 'flipFaceUpEvidence') ? readFlipIndices(ctx)
         : state.players[p].evidence.map((entry, index) => ({ entry, index })).filter(x => !x.entry.faceUp).slice(0, cost.n.min).map(x => x.index);
       if (indices.length < cost.n.min || indices.length > cost.n.max) return false;
-      for (const index of indices) { const entry = state.players[p].evidence[index]; if (!entry || entry.faceUp) return false; entry.faceUp = true; }
+      for (const index of indices) {
+        const entry = state.players[p].evidence[index];
+        if (!entry || entry.faceUp) return false;
+        entry.faceUp = true;
+        advanceIndexedZoneEpoch(state, p, 'evidence');
+      }
       const ids = indices.map(index => state.players[p].evidence[index]!.cardId);
       recordCostPaid(ctx, 'flipFaceUpEvidence', { count: indices.length, ids });
-      ctx.bindings['$costFlipped'] = indices.map(index => ({ kind: 'card', cardId: state.players[p].evidence[index]!.cardId, area: 'evidence', player: p, index }));
+      const occurrenceWitness = cardOccurrenceWitness(state, p, 'evidence');
+      ctx.bindings['$costFlipped'] = indices.map(index => ({ kind: 'card', cardId: state.players[p].evidence[index]!.cardId, area: 'evidence', player: p, index, occurrenceWitness }));
       return true;
     }
     case 'removeFromHandDownTo': {
       const ids = state.players[p].hand.splice(0, Math.max(0, state.players[p].hand.length - cost.n));
-      state.players[p].remove.push(...ids);
+      addToRemove(state, p, ids);
       recordCostPaid(ctx, 'removeFromHandDownTo', { ids, levelSum: ids.reduce((sum, id) => sum + (readDef.card(id)?.level ?? 0), 0) });
       return true;
     }
@@ -419,7 +435,7 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
         : selected(cost.target, cost.n).filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card').map(c => c.cardId);
       const allowed = candidates(state, cost.target, ctx).filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card').map(c => c.cardId);
       if (ids.length !== cost.n || !isMultisetSubset(ids, allowed)) return false;
-      for (const id of ids) { const index = state.players[p].remove.indexOf(id); if (index < 0) return false; state.players[p].remove.splice(index, 1); }
+      for (const id of ids) { const index = state.players[p].remove.indexOf(id); if (index < 0) return false; state.players[p].remove.splice(index, 1); advanceIndexedZoneEpoch(state, p, 'remove'); }
       state.players[p].deck.push(...ids); return true;
     }
     case 'partnerAreaRemove': {
@@ -429,12 +445,12 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       const allowed = candidates(state, cost.target, ctx).filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card').map(c => c.cardId);
       if (ids.length !== cost.n || !isMultisetSubset(ids, allowed)) return false;
       const area = state.players[p].partnerAreaCards ?? [];
-      for (const id of ids) { const index = area.indexOf(id); if (index < 0) return false; area.splice(index, 1); state.players[p].remove.push(id); }
+      for (const id of ids) { const index = area.indexOf(id); if (index < 0) return false; area.splice(index, 1); addToRemove(state, p, [id]); }
       return true;
     }
     case 'fileFrom': {
       let paid = 0;
-      while (paid < cost.n) { const index = state.players[p].file.findIndex(entry => entry.type !== 'assisted-partner'); if (index < 0) return false; const [entry] = state.players[p].file.splice(index, 1); if (entry?.cardId) state.players[p].remove.push(entry.cardId); paid++; }
+      while (paid < cost.n) { const index = state.players[p].file.findIndex(entry => entry.type !== 'assisted-partner'); if (index < 0) return false; const [entry] = state.players[p].file.splice(index, 1); if (entry?.cardId) addToRemove(state, p, [entry.cardId]); paid++; }
       return true;
     }
     case 'selfLpDeltaTurn': {
@@ -484,6 +500,7 @@ function simulateRefreshAfterTake(state: GameState, player: 'self' | 'opp'): voi
   }
   state.players[player].deck.push(...state.players[player].remove);
   state.players[player].remove = [];
+  advanceIndexedZoneEpoch(state, player, 'remove');
   state.refreshCount[player] = (state.refreshCount[player] ?? 0) + 1;
   const opponent = player === 'self' ? 'opp' : 'self';
   if (!readChar.restrictsOpponent(state, player, 'refreshEvidence')) {
@@ -491,6 +508,7 @@ function simulateRefreshAfterTake(state: GameState, player: 'self' | 'opp'): voi
       cardId: 'penalty-card', faceUp: false,
       origin: { turn: state.turn.number, via: 'refresh-penalty' },
     });
+    advanceIndexedZoneEpoch(state, opponent, 'evidence');
   }
   state.scratchTrace[opponent] = '発見済';
 }
@@ -619,7 +637,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
         for (const index of [...explicit].sort((a, b) => b - a)) {
           state.players[ctx.source.player].hand.splice(index, 1);
         }
-        state.players[ctx.source.player].remove.push(...ids);
+        addToRemove(state, ctx.source.player, ids);
       } else {
         // W3 (r17): 宣言コスト由来は hand:removed を emit しない (rules/21)
         mutate.hand.discardToRemove(state, ctx.source.player, ids, { viaCost: true });
@@ -904,7 +922,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
       const paidEntries = entries.map((entry, offset) => ({
         cardId: entry.cardId, instanceId: entry.instanceId, removeIndex: removeStart + offset,
       }));
-      state.players[ctx.source.player].remove.push(...paidEntries.map(entry => entry.cardId));
+      addToRemove(state, ctx.source.player, paidEntries.map(entry => entry.cardId));
       acc.paidItems.push({ kind: 'removeStackedCards', details: { hostUid, entries: paidEntries } });
       if (!ctx.costPaid) ctx.costPaid = {};
       ctx.costPaid['removeStackedCards'] = { entries: paidEntries };
@@ -1012,7 +1030,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
         const entry = state.players[ctx.source.player].file[index];
         if (!entry || entry.type !== 'card-back' || entry.faceUp !== true || entry.cardId !== ctx.source.cardId) throw new Error('cost.pay: selfToRemove FILE occurrence is stale');
         state.players[ctx.source.player].file.splice(index, 1);
-        state.players[ctx.source.player].remove.push(entry.cardId);
+        addToRemove(state, ctx.source.player, [entry.cardId]);
         acc.paidItems.push({ kind: 'selfToRemove', details: { uid, area: 'file', index } });
         return;
       }
@@ -1082,14 +1100,23 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
       const flippedIds = indices
         .map(i => state.players[p].evidence[i]?.cardId)
         .filter((id): id is string => typeof id === 'string');
-      ctx.costPaid['flipFaceUpEvidence'] = { count: indices.length, ids: flippedIds };
+      const occurrences = indices
+        .filter(i => typeof state.players[p].evidence[i]?.cardId === 'string')
+        .map(i => ({
+          kind: 'card' as const,
+          uid: `evidence:${p}:${i}`,
+          cardId: state.players[p].evidence[i].cardId,
+          area: 'evidence' as const,
+          player: p,
+          index: i,
+          occurrenceWitness: cardOccurrenceWitness(state, p, 'evidence'),
+        }));
+      ctx.costPaid['flipFaceUpEvidence'] = { count: indices.length, ids: flippedIds, occurrences };
       // S1 wave (2026-07-11, B06036): fromGroupCards 用の bound 集合も書く — 「コストによって表向きに
       // なった〜のカードを1枚まで選び」が pick query {area:'evidence', fromGroupCards:'$costFlipped'}
       // で母集合を「今回 flip した証拠」に限定する (照合キー = player:evidence:index、candidates.ts
       // fromGroupCardKeys と対)。ids (cardId) だけでは同名証拠の位置区別ができないため index を持つ。
-      (ctx.bindings as Record<string, unknown>)['$costFlipped'] = indices
-        .filter(i => typeof state.players[p].evidence[i]?.cardId === 'string')
-        .map(i => ({ kind: 'card', cardId: state.players[p].evidence[i].cardId, area: 'evidence', player: p, index: i }));
+      (ctx.bindings as Record<string, unknown>)['$costFlipped'] = occurrences;
       acc.paidItems.push({ kind: 'flipFaceUpEvidence', details: { count: indices.length, indices } });
       return;
     }

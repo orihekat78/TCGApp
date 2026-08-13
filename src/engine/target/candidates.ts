@@ -14,6 +14,7 @@ import type {
 } from '@/engine/types';
 import { lookupCardDef, allCardNameComponentsForDef, cardNameComponents } from './card-def-registry.js';
 import { defHasKeyword, defHasCutinTextIncludes, defHasNoOriginalAbilityExceptIcons } from '@/engine/read/keyword.js';
+import { cardOccurrenceUid, cardOccurrenceWitness, isLiveCardOccurrenceWitness } from './card-occurrence.js';
 
 // BUG-113: 数値フィルタの有効値に continuousModifier.apDelta/lpDelta (継続効果 dyn) を含める。
 // read/char.ts → cond/eval.ts → candidates.ts の静的 import 循環を避けるため late-binding (register) で注入。
@@ -296,8 +297,39 @@ export function effectiveLevelForCandidate(state: GameState, candidate: Candidat
 /** Rehydrate a binding only when it still names the same live card occurrence. */
 export function boundCandidate(state: GameState, entry: unknown, fallbackPlayer: Side): Candidate | undefined {
   if (!entry || typeof entry !== 'object') return undefined;
-  const bound = entry as { uid?: unknown; cardId?: unknown; player?: unknown; area?: unknown; index?: unknown };
-  if (typeof bound.uid === 'string') {
+  const bound = entry as { uid?: unknown; cardId?: unknown; player?: unknown; area?: unknown; index?: unknown; occurrenceWitness?: unknown };
+  // A physical card occurrence also has a uid.  Do not first interpret every
+  // uid as a scene character: evidence bindings would otherwise silently
+  // disappear between a pick and its conditional consumer.
+  if (bound.area === 'evidence'
+    && typeof bound.cardId === 'string'
+    && (bound.player === 'self' || bound.player === 'opp')
+    && typeof bound.index === 'number'
+    && (bound.uid === undefined || bound.uid === `evidence:${bound.player}:${bound.index}`)
+    && state.players[bound.player].evidence[bound.index]?.cardId === bound.cardId
+    && typeof bound.occurrenceWitness === 'string'
+    && isLiveCardOccurrenceWitness(state, bound.player, 'evidence', bound.occurrenceWitness)) {
+    return {
+      kind: 'card', ...(bound.uid === undefined ? {} : { uid: bound.uid }), cardId: bound.cardId, player: bound.player,
+      area: 'evidence', index: bound.index, occurrenceWitness: bound.occurrenceWitness,
+    };
+  }
+  if (bound.area === 'evidence') return undefined;
+  if (bound.area === 'remove'
+    && typeof bound.cardId === 'string'
+    && (bound.player === 'self' || bound.player === 'opp')
+    && typeof bound.index === 'number'
+    && (bound.uid === undefined || bound.uid === cardOccurrenceUid(bound.player, 'remove', bound.cardId, bound.index))
+    && state.players[bound.player].remove[bound.index] === bound.cardId
+    && typeof bound.occurrenceWitness === 'string'
+    && isLiveCardOccurrenceWitness(state, bound.player, 'remove', bound.occurrenceWitness)) {
+    return {
+      kind: 'card', ...(bound.uid === undefined ? {} : { uid: bound.uid }), cardId: bound.cardId, player: bound.player,
+      area: 'remove', index: bound.index, occurrenceWitness: bound.occurrenceWitness,
+    };
+  }
+  if (bound.area === 'remove') return undefined;
+  if (typeof bound.uid === 'string' && bound.area === undefined) {
     const live = liveCharacter(state, bound.uid);
     if (!live) return undefined;
     return { kind: 'char', uid: live.char.uid, cardId: live.char.cardId, player: live.player };
@@ -355,7 +387,20 @@ export function candidates(state: GameState, ref: TargetingRef, ctx: EffectCtx):
       return enumerateByQuery(state, ref.query, ctx);
     case 'fromBound': {
       const bound = ctx.bindings[ref.bindKey];
-      return bound ?? [];
+      return Array.isArray(bound)
+        ? bound.map((entry) => {
+          if (entry && typeof entry === 'object') {
+            const area = (entry as { area?: unknown }).area;
+            if (area === 'evidence' || area === 'remove') {
+              return boundCandidate(state, entry, ctx.source.player);
+            }
+          }
+          // Historical bindings for characters, partners, files, and generic
+          // card values are semantic snapshots, not indexed-zone authority.
+          // Preserve their established fromBound behavior unchanged.
+          return entry as Candidate;
+        }).filter((entry): entry is Candidate => entry !== undefined)
+        : [];
     }
   }
 }
@@ -531,15 +576,17 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
       }
       case 'remove': {
         const rem = state.players[side].remove;
+        const occurrenceWitness = cardOccurrenceWitness(state, side, 'remove');
         for (let i = 0; i < rem.length; i++) {
           const cardId = rem[i];
-          const cand: Candidate = { kind: 'card', cardId, area: 'remove', player: side, index: i };
+          const cand: Candidate = { kind: 'card', cardId, area: 'remove', player: side, index: i, occurrenceWitness };
           if (matchesFiltersByCardId(state, cardId, query, cand)) out.push(cand);
         }
         break;
       }
       case 'evidence': {
         const ev = state.players[side].evidence;
+        const occurrenceWitness = cardOccurrenceWitness(state, side, 'evidence');
         for (let i = 0; i < ev.length; i++) {
           // engine拡張 wave (2026-06-23): faceDown=true は裏向き(未公開)の証拠のみ候補化。
           // 「裏向きの証拠を選び、表向きにする」(evidenceFlip pick) で既に表向きの証拠を除外。
@@ -551,7 +598,7 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
           // evidence has no referable card information, so it cannot become a
           // legal candidate merely because a turn-scoped trait is granted.
           if ((query.filter || query.filterAny) && !ev[i].faceUp) continue;
-          const cand: Candidate = { kind: 'evidence', player: side, index: i };
+          const cand: Candidate = { kind: 'evidence', player: side, index: i, occurrenceWitness };
           if (matchesFiltersByCardId(state, ev[i].cardId, query, cand)) out.push(cand);
         }
         break;
@@ -941,8 +988,8 @@ export function legalCount(
       return { min: cands.length, max: cands.length };
     }
     case 'fromBound': {
-      const bound = ctx.bindings[ref.bindKey] ?? [];
-      return { min: bound.length, max: bound.length };
+      const count = candidates(state, ref, ctx).length;
+      return { min: count, max: count };
     }
   }
 }

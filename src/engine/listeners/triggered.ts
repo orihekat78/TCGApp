@@ -30,6 +30,7 @@ import { char as charMutator } from '../mutate/char.js'; // W6 step4 (r58/B09090
 import { flag } from '../mutate/flag.js';            // BUG-096: declaredUseCount 流用
 import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from '../effect/resolve-picks.js';
+import { cardOccurrenceUid } from '../target/card-occurrence.js';
 import { _setDeferredEntryPickResolver } from '../resolve/stack.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import type { GameState, AbilityDef, AbilityScope, Effect, EffectCtx, EffectResolutionKind, EffectStackEntry } from '../types/index.js';
@@ -633,7 +634,14 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
     byUid?: string;
     actionId?: string;
     causalCorrelationEventId?: string;
-    occurrence?: { player?: 'self' | 'opp'; cardId?: string; removeIndex?: number };
+    occurrence?: {
+      uid?: string;
+      player?: 'self' | 'opp';
+      cardId?: string;
+      area?: string;
+      index?: number;
+      occurrenceWitness?: string;
+    };
   } | undefined;
   if (!p || !p.player || !p.ev || !p.ev.cardId) return;
   // B06049 cluster8 (2026-06-15): アクション[事件] を行った側が「相手の【ヒラメキ】は発動しない」を
@@ -696,9 +704,24 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
         occurrence: occurrence
           && occurrence.player === p.player
           && occurrence.cardId === p.ev.cardId
-          && typeof occurrence.removeIndex === 'number'
-          && Number.isInteger(occurrence.removeIndex)
-          ? { player: occurrence.player, cardId: occurrence.cardId, removeIndex: occurrence.removeIndex }
+          && occurrence.area === 'remove'
+          && typeof occurrence.index === 'number'
+          && Number.isInteger(occurrence.index)
+          && occurrence.uid === cardOccurrenceUid(
+            occurrence.player,
+            'remove',
+            occurrence.cardId,
+            occurrence.index,
+          )
+          && typeof occurrence.occurrenceWitness === 'string'
+          ? {
+            uid: occurrence.uid,
+            player: occurrence.player,
+            cardId: occurrence.cardId,
+            area: 'remove',
+            index: occurrence.index,
+            occurrenceWitness: occurrence.occurrenceWitness,
+          }
           : undefined,
       });
       return; // 1 イベントで複数 optional は想定せず、最初の 1 件のみ

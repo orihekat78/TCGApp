@@ -2915,6 +2915,12 @@ export const CARD_IDENTITIES = {
     "kind": "case",
     "imagePath": "1782441097699935.jpg"
   },
+  "PR320": {
+    "num": "PR320",
+    "name": "警察学校の風呂掃除",
+    "kind": "case",
+    "imagePath": "1785395500922540.jpg"
+  },
   "TEST-BUG-274-PARTNER": {
     "num": "TEST-BUG-274-PARTNER",
     "name": "BUG-274 検証パートナー",

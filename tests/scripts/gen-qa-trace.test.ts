@@ -432,20 +432,20 @@ describe('gen-qa-trace', () => {
     expect(() => runGenQaTrace({ checkOnly: true }, root)).toThrow(/status source URL and fetchedAt/);
   });
 
-  it('pins the approved 2026-07-18 hash-only official snapshot and rejects body-shaped fields', () => {
+  it('pins the approved 2026-08-12 hash-only official snapshot and rejects body-shaped fields', () => {
     const tracked = JSON.parse(readFileSync(path.resolve('.claude/specs/cards-data/qa-hash-snapshot.json'), 'utf8'));
     const manifest = JSON.parse(readFileSync(path.resolve('.claude/auto/qa-manifest.json'), 'utf8'));
 
     validateQaSnapshot(tracked);
     expect(tracked.source).toEqual({
       url: 'https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/cards',
-      fetchedAt: '2026-07-18T05:51:08.0459736Z',
+      fetchedAt: '2026-08-12T18:02:20.270Z',
     });
-    expect(tracked.normalizedFaqHash).toBe('0457f3e5bd9ce56243f038ca4beb81d0a01c984b4b164000aa265fc2d0d3b3a3');
-    expect(tracked.items).toHaveLength(2912);
+    expect(tracked.normalizedFaqHash).toBe('9a36b5d40860f10a6688bb34d6e52c143b7a996d5f3f561486c6384907b723ec');
+    expect(tracked.items).toHaveLength(2964);
     expect(tracked.conflicts).toEqual([]);
-    expect(manifest.coverage.total).toBe(2912);
-    expect(Object.values(manifest.coverage.statusCounts).reduce((total: number, count: unknown) => total + Number(count), 0)).toBe(2912);
+    expect(manifest.coverage.total).toBe(2964);
+    expect(Object.values(manifest.coverage.statusCounts).reduce((total: number, count: unknown) => total + Number(count), 0)).toBe(2964);
     expect(JSON.stringify(tracked)).not.toMatch(/"(?:question|answer|q_a|qAndA|section)"\s*:/);
   });
 });

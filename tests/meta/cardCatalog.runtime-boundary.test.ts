@@ -39,7 +39,7 @@ describe('meta static card catalog runtime boundary', () => {
   it('retains the exact shipped catalog count and representative metadata', async () => {
     const { CARD_POOL } = await import('../../meta-app/src/data/cardPool');
 
-    expect(CARD_POOL).toHaveLength(2240);
+    expect(CARD_POOL).toHaveLength(2256);
     expect(CARD_POOL.find((card) => card.num === 'D08001')).toMatchObject({
       id: 'P001', name: '江戸川コナン', type: 'partner', color: 'blue',
       colors: ['blue'], lp: 1, rarity: 'D', keywords: ['アシスト'],

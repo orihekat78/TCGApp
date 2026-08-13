@@ -419,7 +419,14 @@ export type PendingHirameki = {
   /** wave-11: アクション[事件] actor uid snapshot ('$trigger.byUid' =「アクション中のキャラ」解決用) */
   actorUid?: string;
   /** Exact remove-area occurrence created by the action evidence removal. */
-  occurrence?: { player: 'self' | 'opp'; cardId: string; removeIndex: number };
+  occurrence?: {
+    uid: string;
+    player: 'self' | 'opp';
+    cardId: string;
+    area: 'remove';
+    index: number;
+    occurrenceWitness: string;
+  };
   /** State-owned action that must still be awaiting this decision. */
   actionId?: string;
   /** Exact public evidence-removal event that opened this decision. */

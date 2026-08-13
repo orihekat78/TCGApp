@@ -29,9 +29,73 @@
 import { def as readDef } from '../read/def.js';
 import { evalCond } from '../cond/eval.js';
 import { event } from '../event/index.js';
-import type { GameState, AbilityDef } from '../types/index.js';
+import { cardOccurrenceUid, isLiveCardOccurrenceWitness } from '../target/card-occurrence.js';
+import type { GameState, AbilityDef, EffectCtx } from '../types/index.js';
 
 type Player = 'self' | 'opp';
+type HiramekiOccurrenceArea = 'evidence' | 'remove' | 'scene' | 'case' | 'partner-area' | 'hand' | 'file';
+const HIRAMEKI_OCCURRENCE_AREAS = new Set<HiramekiOccurrenceArea>([
+  'evidence', 'remove', 'scene', 'case', 'partner-area', 'hand', 'file',
+]);
+
+/** One concrete card occurrence. Invocation must never silently retarget a duplicate cardId. */
+export type HiramekiOccurrence = {
+  uid: string;
+  cardId: string;
+  player: Player;
+  area: HiramekiOccurrenceArea;
+  index?: number;
+  occurrenceWitness?: string;
+};
+
+/** Runtime boundary for untrusted persisted/$pick occurrence data. */
+export function isHiramekiOccurrence(value: unknown): value is HiramekiOccurrence {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
+  const occurrence = value as Record<string, unknown>;
+  if (typeof occurrence.uid !== 'string' || occurrence.uid.length === 0
+    || typeof occurrence.cardId !== 'string' || occurrence.cardId.length === 0
+    || (occurrence.player !== 'self' && occurrence.player !== 'opp')
+    || typeof occurrence.area !== 'string'
+    || !HIRAMEKI_OCCURRENCE_AREAS.has(occurrence.area as HiramekiOccurrenceArea)) return false;
+  const needsIndex = occurrence.area === 'evidence' || occurrence.area === 'remove'
+    || occurrence.area === 'partner-area' || occurrence.area === 'hand' || occurrence.area === 'file';
+  if (needsIndex !== Number.isSafeInteger(occurrence.index)) return false;
+  if (occurrence.area === 'evidence' || occurrence.area === 'remove') {
+    return typeof occurrence.occurrenceWitness === 'string';
+  }
+  return occurrence.occurrenceWitness === undefined || typeof occurrence.occurrenceWitness === 'string';
+}
+
+function occurrenceAreaMatchesKind(cardId: string, area: HiramekiOccurrenceArea): boolean {
+  const kind = readDef.card(cardId)?.kind;
+  if (!kind) return false;
+  if (area === 'scene') return kind === 'character';
+  if (area === 'case') return kind === 'case';
+  return area !== 'partner-area' || kind === 'partner';
+}
+
+export function liveHiramekiOccurrence(state: GameState, occurrence: HiramekiOccurrence): boolean {
+  if (!isHiramekiOccurrence(occurrence) || !occurrenceAreaMatchesKind(occurrence.cardId, occurrence.area)) return false;
+  const { player, area, cardId, index, uid } = occurrence;
+  if (area === 'evidence') {
+    return Number.isInteger(index)
+      && uid === `evidence:${player}:${index}`
+      && isLiveCardOccurrenceWitness(state, player, 'evidence', occurrence.occurrenceWitness)
+      && state.players[player].evidence[index!]?.cardId === cardId;
+  }
+  if (area === 'remove') {
+    return Number.isInteger(index)
+      && uid === cardOccurrenceUid(player, 'remove', cardId, index!)
+      && isLiveCardOccurrenceWitness(state, player, 'remove', occurrence.occurrenceWitness)
+      && state.players[player].remove[index!] === cardId;
+  }
+  if (area === 'scene') return state.players[player].scene.some(card => card.uid === uid && card.cardId === cardId);
+  if (area === 'case') return state.players[player].case?.cardId === cardId;
+  if (area === 'partner-area') return Number.isInteger(index) && state.players[player].partnerAreaCards?.[index!] === cardId;
+  if (area === 'hand') return Number.isInteger(index) && state.players[player].hand[index!] === cardId;
+  if (area === 'file') return Number.isInteger(index) && state.players[player].file[index!]?.cardId === cardId;
+  return false;
+}
 
 /**
  * cardId の CardDef が持つ triggered hook==='evidence:remove-by-action' (=【ヒラメキ】) ability の
@@ -43,25 +107,34 @@ type Player = 'self' | 'opp';
  */
 export function invokeHiramekiOfCard(
   state: GameState,
-  cardId: string,
-  player: Player,
+  source: HiramekiOccurrence | string,
+  player?: Player,
   trait?: string,
 ): void {
+  const occurrence: HiramekiOccurrence = typeof source === 'string'
+    ? { uid: `invokeHir:${player ?? 'self'}:${source}`, cardId: source, player: player ?? 'self', area: 'evidence' }
+    : source;
+  // Compatibility callers may supply only cardId. Every physical DSL path supplies
+  // an occurrence and fails closed if its selected object moved or was replaced.
+  if (typeof source !== 'string' && !liveHiramekiOccurrence(state, occurrence)) return;
+  const { cardId, player: owner, uid, area, index } = occurrence;
   const def = readDef.card(cardId);
   if (!def) return;
   // trait gate — 印字判定 (rules/17 Q&A: 静的印字で「〜を持つ」を判定)。
   if (trait !== undefined && !(def.traits ?? []).includes(trait)) return;
-  const virtualUid = `invokeHir:${player}:${cardId}`;
+  const sourceUid = uid;
   for (const ability of def.abilities as AbilityDef[]) {
     if (ability.type !== 'triggered') continue;
     const trig = ability.trigger;
     if (!trig || trig.hook !== 'evidence:remove-by-action') continue;
     // ヒラメキは scope:'on-evidence'。仮想 area も 'evidence' 相当。
     // payload に byUid を載せない — アクション[事件] actor は存在しないため $trigger.byUid は unbound。
-    const payload = { uid: virtualUid, cardId, player, invoked: true };
-    const baseCtx = {
-      source: { cardId, uid: virtualUid, abilityId: ability.id, player, area: 'evidence' as const },
-      bindings: {},
+    const payload = { uid: sourceUid, cardId, player: owner, area, index, invoked: true };
+    const baseCtx: EffectCtx = {
+      source: { cardId, uid: sourceUid, abilityId: ability.id, player: owner, area },
+      bindings: {
+        occurrence: [{ kind: 'card', uid: sourceUid, cardId, player: owner, area, ...(index === undefined ? {} : { index }), ...(occurrence.occurrenceWitness === undefined ? {} : { occurrenceWitness: occurrence.occurrenceWitness }) }],
+      },
       triggerPayload: payload,
     };
     if (trig.matcher && !trig.matcher(payload, state)) continue;
@@ -72,10 +145,10 @@ export function invokeHiramekiOfCard(
     event.queue(
       state,
       ability.effect,
-      { player, uid: virtualUid, cardId, abilityId: ability.id, description: ability.description },
+      { player: owner, uid: sourceUid, cardId, abilityId: ability.id, area, description: ability.description },
       'evidence:remove-by-action',
       payload,
-      undefined,
+      baseCtx.bindings,
       { deferredPicks: true },
     );
   }

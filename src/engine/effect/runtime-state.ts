@@ -400,15 +400,16 @@ function assertPendingRuntimeMatchesState(
   snapshot: ReadonlyArray<{ key: PendingKey; present: boolean; value: unknown }>,
 ): void {
   const deckPlace = snapshot.find(entry => entry.key === '__pendingDeckPlaceSide' && entry.present);
-  if (!deckPlace || deckPlace.value === null) return;
-  const pending = deckPlace.value as {
-    player: 'self' | 'opp';
-    deckSnapshot: string[];
-  };
-  const deck = state.players[pending.player].deck;
-  if (deck.length !== pending.deckSnapshot.length
-      || deck.some((cardId, index) => cardId !== pending.deckSnapshot[index])) {
-    throw new Error('Invalid pendingDeckPlace: deckSnapshot must match current player deck');
+  if (deckPlace && deckPlace.value !== null) {
+    const pending = deckPlace.value as {
+      player: 'self' | 'opp';
+      deckSnapshot: string[];
+    };
+    const deck = state.players[pending.player].deck;
+    if (deck.length !== pending.deckSnapshot.length
+        || deck.some((cardId, index) => cardId !== pending.deckSnapshot[index])) {
+      throw new Error('Invalid pendingDeckPlace: deckSnapshot must match current player deck');
+    }
   }
 }
 

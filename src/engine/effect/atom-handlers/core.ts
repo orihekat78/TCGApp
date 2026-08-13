@@ -1,7 +1,7 @@
 // engine.effect.atom-handlers/core — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
 import { mutate } from '../../mutate/index.js';
 import { invokeLeaveToRemoveOfCard } from '../invoke-leave-to-remove.js';
-import { invokeHiramekiOfCard } from '../invoke-hirameki.js';
+import { invokeHiramekiOfCard, isHiramekiOccurrence, type HiramekiOccurrence } from '../invoke-hirameki.js';
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js'; // W6 step3 (r63): useEventFromHand の kind guard
 import { eventUseAllowed } from '../../flow/main/hand-use-card.js';
@@ -9,12 +9,14 @@ import { tryRePickFromAtom } from '../resolve-picks.js';
 // WC2b (2026-07-11): invokeHiramekiOfCard atom-level optional prompt 用 (pending-state は leaf — cycle 無し)。
 import { pushPendingEffectOptionalSide, setPendingOptionalResume, setPendingOptionalBindings, setPendingOptionalCostPaid } from '../pending-state.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from '../atom-pick-spec.js';
-import { requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax, resolveDeltaToNumber, publicHandRevealToken, queuePendingPublicHandRevealSide } from './_shared.js';
+import { requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax, resolveDeltaToNumber, publicHandRevealToken, queuePendingPublicHandRevealSide, resolveBoundOccurrenceRef } from './_shared.js';
 import { isDynObject, resolveDynNumber } from '../../dyn/eval.js';
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, FileCard, PublicCausalZone } from '../../types/index.js';
 import { removeExcludedSourceCardId } from '../../read/effect-source.js';
 import { recordEffectCausalOperation } from '../../log/effect-causal.js';
+import { cardOccurrenceUid, cardOccurrenceWitness, isLiveCardOccurrenceWitness } from '../../target/card-occurrence.js';
+import { advanceIndexedZoneEpoch } from '../../state/indexed-zone-epoch.js';
 
 function resolvingEventCardId(ctx: EffectCtx, player: Player): string | undefined {
   return removeExcludedSourceCardId(ctx, player);
@@ -142,10 +144,12 @@ function exactSelectedIndexes(
 }
 
 type SelectedCardOccurrence = {
+  uid: string;
   cardId: string;
-  area: 'remove' | 'partner-area';
+  area: 'remove' | 'partner-area' | 'evidence';
   player: Player;
   index: number;
+  occurrenceWitness?: string;
 };
 
 function exactSelectedCardOccurrences(value: unknown, ctx: EffectCtx): SelectedCardOccurrence[] | null {
@@ -155,12 +159,38 @@ function exactSelectedCardOccurrences(value: unknown, ctx: EffectCtx): SelectedC
     if (!entry || typeof entry !== 'object') return false;
     const candidate = entry as Record<string, unknown>;
     return typeof candidate.cardId === 'string'
-      && (candidate.area === 'remove' || candidate.area === 'partner-area')
+      && (candidate.area === 'remove' || candidate.area === 'partner-area' || candidate.area === 'evidence')
       && (candidate.player === 'self' || candidate.player === 'opp')
       && typeof candidate.index === 'number'
       && Number.isInteger(candidate.index)
-      && candidate.index >= 0;
+      && candidate.index >= 0
+      && typeof candidate.uid === 'string'
+      && candidate.uid === (candidate.area === 'evidence'
+        ? `evidence:${candidate.player}:${candidate.index}`
+        : cardOccurrenceUid(candidate.player as Player, candidate.area as string, candidate.cardId as string, candidate.index as number))
+      && ((candidate.area !== 'remove' && candidate.area !== 'evidence') || typeof candidate.occurrenceWitness === 'string');
   }) ? occurrences : null;
+}
+
+function exactEvidenceOccurrenceIndexes(
+  s: GameState,
+  args: Record<string, unknown>,
+  ctx: EffectCtx,
+  player: Player,
+  cardIds: readonly string[],
+): number[] | null | undefined {
+  if (!Object.hasOwn(args, 'selectedCardOccurrences')) return undefined;
+  const occurrences = exactSelectedCardOccurrences(args.selectedCardOccurrences, ctx);
+  if (occurrences === null || occurrences.length !== cardIds.length) return null;
+  const indexes = occurrences.map((occurrence) => occurrence.index);
+  if (new Set(indexes).size !== indexes.length) return null;
+  return occurrences.every((occurrence, position) => occurrence.area === 'evidence'
+    && occurrence.player === player
+    && occurrence.cardId === cardIds[position]
+    && isLiveCardOccurrenceWitness(s, player, 'evidence', occurrence.occurrenceWitness)
+    && s.players[player].evidence[occurrence.index]?.cardId === occurrence.cardId)
+    ? indexes
+    : null;
 }
 
 /** Limit a useEventFromHand pick to events authorized at selection time. */
@@ -812,6 +842,13 @@ export function atomToPartnerArea(s: GameState, a: Record<string, unknown>, ctx:
           : a;
         const tpaTarget0 = normalizeTargetToString(tpaArgs.target);
         const tpaTarget = typeof tpaTarget0 === 'string' ? resolveBindRef(tpaTarget0, ctx) : tpaTarget0;
+        const tpaBoundOccurrence = resolveBoundOccurrenceRef(tpaTarget0, s, ctx, tpaP, 'remove');
+        if (tpaBoundOccurrence.kind === 'invalid'
+          || (tpaBoundOccurrence.kind === 'live' && tpaTarget !== tpaBoundOccurrence.cardId)) {
+          setCardMoveBinding(ctx, tpaArgs.bind, []);
+          (ctx.dyn ??= {}).chainStepNoApply = true;
+          return;
+        }
         if (typeof tpaTarget !== 'string' || !tpaTarget) {
           tryRePickFromAtom(s, { kind: 'atom', verb, args: tpaArgs }, ctx, { byPlayer: tpaP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
           mutate.log.append(s, { ts: Date.now(), player: tpaP, turn: s.turn.number, action: 'effect:toPartnerArea:awaiting-pick' });
@@ -822,10 +859,15 @@ export function atomToPartnerArea(s: GameState, a: Record<string, unknown>, ctx:
         const exactSelectedIndex = typeof rawSelectedIndex === 'number' && Number.isInteger(rawSelectedIndex) && rawSelectedIndex >= 0
           ? rawSelectedIndex
           : undefined;
+        const tpaPhysicalIndex = tpaBoundOccurrence.kind === 'live' ? tpaBoundOccurrence.index : undefined;
+        const tpaIndexMismatch = tpaPhysicalIndex !== undefined
+          && hasExactSelectedIndex
+          && exactSelectedIndex !== tpaPhysicalIndex;
+        const tpaMoveIndex = tpaPhysicalIndex ?? exactSelectedIndex;
         const partnerIndex = s.players[tpaP].partnerAreaCards?.length ?? 0;
-        const tpaPicked = hasExactSelectedIndex && exactSelectedIndex === undefined
+        const tpaPicked = tpaIndexMismatch || (hasExactSelectedIndex && exactSelectedIndex === undefined)
           ? false
-          : mutate.partner.addAreaCardFromRemove(s, tpaP, tpaTarget, exactSelectedIndex);
+          : mutate.partner.addAreaCardFromRemove(s, tpaP, tpaTarget, tpaMoveIndex);
         setCardMoveBinding(ctx, tpaArgs.bind, tpaPicked
           ? [{ cardId: tpaTarget, area: 'partner-area', player: tpaP, index: partnerIndex }]
           : []);
@@ -955,21 +997,35 @@ export function atomEvidenceFlip(s: GameState, a: Record<string, unknown>, ctx: 
       }
       if (Array.isArray(rawCardIds)) {
         const evl = s.players[flipP].evidence;
-        const flippedIds: string[] = [];
-        for (const cid of rawCardIds as string[]) {
-          if (typeof cid !== 'string') continue;
-          const i = evl.findIndex(e => e.cardId === cid && !e.faceUp);
-          if (i !== -1) { mutate.evidence.flipFaceUp(s, flipP, i); flippedIds.push(cid); }
+        const cardIds = rawCardIds.filter((cardId): cardId is string => typeof cardId === 'string');
+        const exactIndexes = exactEvidenceOccurrenceIndexes(s, aResolved, ctx, flipP, cardIds);
+        if (exactIndexes === null) {
+          if (typeof aResolved.bind === 'string') (ctx.bindings as Record<string, unknown>)[aResolved.bind] = [];
+          mutate.log.append(s, { ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlip', result: 'stale-selection' });
+          return;
         }
+        const flipped: Array<{ kind: 'card'; uid: string; cardId: string; area: 'evidence'; player: Player; index: number; occurrenceWitness?: string }> = [];
+        for (const [position, cid] of cardIds.entries()) {
+          const exactIndex = exactIndexes?.[position];
+          const i = exactIndex === undefined
+            ? evl.findIndex(e => e.cardId === cid && !e.faceUp)
+            : (evl[exactIndex]?.cardId === cid && !evl[exactIndex]!.faceUp ? exactIndex : -1);
+          if (i !== -1) {
+            mutate.evidence.flipFaceUp(s, flipP, i);
+            flipped.push({ kind: 'card', uid: `evidence:${flipP}:${i}`, cardId: cid, area: 'evidence', player: flipP, index: i });
+          }
+        }
+        const occurrenceWitness = cardOccurrenceWitness(s, flipP, 'evidence');
+        for (const occurrence of flipped) occurrence.occurrenceWitness = occurrenceWitness;
         // bind writeback (core.ts 他 atom の a.bind idiom と同一行形): 実際に flip した分のみ。
         // $bound.<key>.count が「この効果によって表向きにした枚数」を正確に映す (B08028)。
         if (typeof aResolved.bind === 'string') {
-          (ctx.bindings as Record<string, unknown>)[aResolved.bind] = flippedIds.map(cardId => ({ cardId }));
+          (ctx.bindings as Record<string, unknown>)[aResolved.bind] = flipped;
         }
-        recordEvidenceFaceChange(s, ctx, flipP, 'face-down', 'face-up', flippedIds.length);
+        recordEvidenceFaceChange(s, ctx, flipP, 'face-down', 'face-up', flipped.length);
         mutate.log.append(s, {
           ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlip',
-          target: flippedIds.join(','), result: rawCardIds.length === 0 ? '0' : (flippedIds.length ? 'ok' : 'not-found'),
+          target: flipped.map(({ cardId }) => cardId).join(','), result: rawCardIds.length === 0 ? '0' : (flipped.length ? 'ok' : 'not-found'),
         });
         return;
       }
@@ -978,7 +1034,19 @@ export function atomEvidenceFlip(s: GameState, a: Record<string, unknown>, ctx: 
       const efArgs = (aResolved.target === undefined && hasNorMax(aResolved))
         ? { ...aResolved, target: buildShortFormPick(ATOM_PICK_SPEC.evidenceFlip.defaultArea, aResolved, ctrl, (aResolved.player as Player) ?? 'opp') }
         : aResolved;
-      const target = normalizeTargetToString(efArgs.target);
+      const target0 = normalizeTargetToString(efArgs.target);
+      const resolvedTarget = typeof target0 === 'string' ? resolveBindRef(target0, ctx) : target0;
+      const target = typeof resolvedTarget === 'string' ? resolvedTarget : undefined;
+      const boundOccurrence = resolveBoundOccurrenceRef(target0, s, ctx, flipP, 'evidence');
+      const exactIndexes = typeof target === 'string'
+        ? exactEvidenceOccurrenceIndexes(s, efArgs, ctx, flipP, [target])
+        : undefined;
+      if (boundOccurrence.kind === 'invalid' || exactIndexes === null
+        || (boundOccurrence.kind === 'live' && (target !== boundOccurrence.cardId
+          || (exactIndexes !== undefined && exactIndexes[0] !== boundOccurrence.index)))) {
+        mutate.log.append(s, { ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlip', result: 'stale-selection' });
+        return;
+      }
       if (!target) {
         tryRePickFromAtom(s, { kind: 'atom', verb, args: efArgs }, ctx, { byPlayer: ctrl, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
         mutate.log.append(s, { ts: Date.now(), player: ctrl, turn: s.turn.number, action: 'effect:evidenceFlip:awaiting-pick' });
@@ -986,7 +1054,10 @@ export function atomEvidenceFlip(s: GameState, a: Record<string, unknown>, ctx: 
       }
       // pick で選ばれた cardId に対応する裏向き証拠を表向きに (同 cardId 複数は等価、evidenceToHand と同型)。
       const list = s.players[flipP].evidence;
-      const idx = list.findIndex(e => e.cardId === target && !e.faceUp);
+      const physicalIndex = exactIndexes?.[0] ?? (boundOccurrence.kind === 'live' ? boundOccurrence.index : undefined);
+      const idx = physicalIndex === undefined
+        ? list.findIndex(e => e.cardId === target && !e.faceUp)
+        : (list[physicalIndex]?.cardId === target && !list[physicalIndex]!.faceUp ? physicalIndex : -1);
       let flipped = false;
       if (idx !== -1) { mutate.evidence.flipFaceUp(s, flipP, idx); flipped = true; }
       recordEvidenceFaceChange(s, ctx, flipP, 'face-down', 'face-up', flipped ? 1 : 0);
@@ -1039,10 +1110,18 @@ export function atomEvidenceFlipDown(s: GameState, a: Record<string, unknown>, c
       //   同 cardId 複数の場合も flipFaceDown で faceUp=false 化されるため次 findIndex が別個体を拾う (index-based uid と整合)。
       if (Array.isArray(rawCardIds)) {
         const list = s.players[flipP].evidence;
+        const cardIds = rawCardIds.filter((cardId): cardId is string => typeof cardId === 'string');
+        const exactIndexes = exactEvidenceOccurrenceIndexes(s, a, ctx, flipP, cardIds);
+        if (exactIndexes === null) {
+          mutate.log.append(s, { ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlipDown', result: 'stale-selection' });
+          return;
+        }
         const flippedIds: string[] = [];
-        for (const cid of rawCardIds as string[]) {
-          if (typeof cid !== 'string') continue;
-          const i = list.findIndex(e => e.cardId === cid && e.faceUp);
+        for (const [position, cid] of cardIds.entries()) {
+          const exactIndex = exactIndexes?.[position];
+          const i = exactIndex === undefined
+            ? list.findIndex(e => e.cardId === cid && e.faceUp)
+            : (list[exactIndex]?.cardId === cid && list[exactIndex]!.faceUp ? exactIndex : -1);
           if (i !== -1) { mutate.evidence.flipFaceDown(s, flipP, i); flippedIds.push(cid); }
         }
         recordEvidenceFaceChange(s, ctx, flipP, 'face-up', 'face-down', flippedIds.length);
@@ -1056,14 +1135,29 @@ export function atomEvidenceFlipDown(s: GameState, a: Record<string, unknown>, c
       const efArgs = (a.target === undefined && hasNorMax(a))
         ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.evidenceFlipDown.defaultArea, a, ctrl, (a.player as Player) ?? 'self') }
         : a;
-      const target = normalizeTargetToString(efArgs.target);
+      const target0 = normalizeTargetToString(efArgs.target);
+      const resolvedTarget = typeof target0 === 'string' ? resolveBindRef(target0, ctx) : target0;
+      const target = typeof resolvedTarget === 'string' ? resolvedTarget : undefined;
+      const boundOccurrence = resolveBoundOccurrenceRef(target0, s, ctx, flipP, 'evidence');
+      const exactIndexes = typeof target === 'string'
+        ? exactEvidenceOccurrenceIndexes(s, efArgs, ctx, flipP, [target])
+        : undefined;
+      if (boundOccurrence.kind === 'invalid' || exactIndexes === null
+        || (boundOccurrence.kind === 'live' && (target !== boundOccurrence.cardId
+          || (exactIndexes !== undefined && exactIndexes[0] !== boundOccurrence.index)))) {
+        mutate.log.append(s, { ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlipDown', result: 'stale-selection' });
+        return;
+      }
       if (!target) {
         tryRePickFromAtom(s, { kind: 'atom', verb, args: efArgs }, ctx, { byPlayer: ctrl, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
         mutate.log.append(s, { ts: Date.now(), player: ctrl, turn: s.turn.number, action: 'effect:evidenceFlipDown:awaiting-pick' });
         return;
       }
       const list = s.players[flipP].evidence;
-      const idx = list.findIndex(e => e.cardId === target && e.faceUp);
+      const physicalIndex = exactIndexes?.[0] ?? (boundOccurrence.kind === 'live' ? boundOccurrence.index : undefined);
+      const idx = physicalIndex === undefined
+        ? list.findIndex(e => e.cardId === target && e.faceUp)
+        : (list[physicalIndex]?.cardId === target && list[physicalIndex]!.faceUp ? physicalIndex : -1);
       let flipped = false;
       if (idx !== -1) { mutate.evidence.flipFaceDown(s, flipP, idx); flipped = true; }
       recordEvidenceFaceChange(s, ctx, flipP, 'face-up', 'face-down', flipped ? 1 : 0);
@@ -1094,6 +1188,7 @@ export function atomEvidenceToHand(s: GameState, a: Record<string, unknown>, ctx
         const top = evList[evList.length - 1]!;
         const topId = top.cardId;
         evList.pop();
+        advanceIndexedZoneEpoch(s, p, 'evidence');
         mutate.hand.add(s, p, [topId]);
         recordEffectCausalOperation(s, ctx, {
           actor: ctx.source.player,
@@ -1112,19 +1207,36 @@ export function atomEvidenceToHand(s: GameState, a: Record<string, unknown>, ctx
       const ethArgs = (a.target === undefined && hasNorMax(a))
         ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.evidenceToHand.defaultArea, a, p, a.player as Player) }
         : a;
-      const target = normalizeTargetToString(ethArgs.target);
+      const target0 = normalizeTargetToString(ethArgs.target);
+      const resolvedTarget = typeof target0 === 'string' ? resolveBindRef(target0, ctx) : target0;
+      const target = typeof resolvedTarget === 'string' ? resolvedTarget : undefined;
+      const boundOccurrence = resolveBoundOccurrenceRef(target0, s, ctx, p, 'evidence');
+      const exactIndexes = typeof target === 'string'
+        ? exactEvidenceOccurrenceIndexes(s, ethArgs, ctx, p, [target])
+        : undefined;
+      if (boundOccurrence.kind === 'invalid' || exactIndexes === null
+        || (boundOccurrence.kind === 'live' && (target !== boundOccurrence.cardId
+          || (exactIndexes !== undefined && exactIndexes[0] !== boundOccurrence.index)))) {
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand', result: 'stale-selection' });
+        return;
+      }
       if (!target) {
         tryRePickFromAtom(s, { kind: 'atom', verb, args: ethArgs }, ctx, { byPlayer: p, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
         mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand:awaiting-pick' });
         return;
       }
       const list = s.players[p].evidence;
-      const idx = list.findIndex(e => e.cardId === target);
+      const physicalIndex = exactIndexes?.[0] ?? (boundOccurrence.kind === 'live' ? boundOccurrence.index : undefined);
+      const idx = physicalIndex === undefined
+        ? list.findIndex(e => e.cardId === target)
+        : (list[physicalIndex]?.cardId === target ? physicalIndex : -1);
       let moved = false;
       let targetAudience: Player | undefined;
       if (idx !== -1) {
         targetAudience = list[idx]!.faceUp ? undefined : p;
         list.splice(idx, 1);
+        advanceIndexedZoneEpoch(s, p, 'evidence');
         mutate.hand.add(s, p, [target]);
         moved = true;
       }
@@ -1298,13 +1410,36 @@ export function atomEvidenceToDeckBottom(s: GameState, a: Record<string, unknown
         mutate.log.append(s, { ts: Date.now(), player: edbP, turn: s.turn.number, action: 'effect:evidenceToDeckBottom:awaiting-pick' });
         return;
       }
-      const edbIds = Array.isArray(edbT) ? (edbT as string[]) : [edbT as string];
+      const edbRawIds = Array.isArray(edbT) ? edbT : [edbT];
+      const edbIds = edbRawIds
+        .map((cardId) => resolveBindRef(cardId, ctx))
+        .filter((cardId): cardId is string => typeof cardId === 'string' && !cardId.startsWith('$'));
+      const exactIndexes = exactEvidenceOccurrenceIndexes(s, edbArgs, ctx, edbP, edbIds);
+      const boundOccurrence = edbRawIds.length === 1
+        ? resolveBoundOccurrenceRef(edbRawIds[0], s, ctx, edbP, 'evidence')
+        : { kind: 'unbound' as const };
+      if (boundOccurrence.kind === 'invalid' || exactIndexes === null
+        || (boundOccurrence.kind === 'live' && (edbIds[0] !== boundOccurrence.cardId
+          || (exactIndexes !== undefined && exactIndexes[0] !== boundOccurrence.index)))) {
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+        mutate.log.append(s, { ts: Date.now(), player: edbP, turn: s.turn.number, action: 'effect:evidenceToDeckBottom', result: 'stale-selection' });
+        return;
+      }
       let edbMoved = 0;
-      for (const cardId of edbIds) {
+      for (const [position, cardId] of edbIds.entries()) {
         const evList = s.players[edbP].evidence;
-        const eIdx = evList.findIndex(e => e.cardId === cardId);
+        const originalIndex = exactIndexes?.[position]
+          ?? (position === 0 && boundOccurrence.kind === 'live' ? boundOccurrence.index : undefined);
+        const priorLowerIndexes = originalIndex === undefined || exactIndexes === undefined
+          ? 0
+          : exactIndexes.slice(0, position).filter((index) => index < originalIndex).length;
+        const currentIndex = originalIndex === undefined ? undefined : originalIndex - priorLowerIndexes;
+        const eIdx = currentIndex === undefined
+          ? evList.findIndex(e => e.cardId === cardId)
+          : (evList[currentIndex]?.cardId === cardId ? currentIndex : -1);
         if (eIdx === -1) continue; // 証拠に無い cardId は no-op
         evList.splice(eIdx, 1);
+        advanceIndexedZoneEpoch(s, edbP, 'evidence');
         mutate.deck.toBottom(s, edbP, [cardId]); // 持ち主のデッキの下 (裏向き)
         edbMoved++;
       }
@@ -1350,7 +1485,7 @@ export function atomInvokeHiramekiOfCard(s: GameState, a: Record<string, unknown
           void _ihOpt;
           pushPendingEffectOptionalSide({
             player: ihCtrl,
-            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '', uid: ctx.source.uid ?? '' },
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '', uid: ctx.source.uid ?? '', area: ctx.source.area },
             triggerPayload: (ctx as { triggerPayload?: unknown }).triggerPayload,
           });
           // resume = optional{atom (flag 除去)} — applyOptionalAndContinuation の walk が
@@ -1365,8 +1500,35 @@ export function atomInvokeHiramekiOfCard(s: GameState, a: Record<string, unknown
         mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:invokeHiramekiOfCard', target: 'optional-skip' });
         return;
       }
+      const resolveOccurrenceValue = (raw: unknown): unknown =>
+        typeof raw === 'string' && raw.startsWith('$') && !raw.includes('.')
+          ? (ctx.bindings as Record<string, unknown>)[raw] ?? raw
+          : resolveBindRef(raw, ctx);
+      const occurrenceFrom = (raw: unknown): HiramekiOccurrence | null => {
+        const value = resolveOccurrenceValue(raw);
+        const entry = Array.isArray(value) ? value[0] : value;
+        if (!entry || typeof entry !== 'object') return null;
+        return isHiramekiOccurrence(entry) ? entry : null;
+      };
+      const occurrences: HiramekiOccurrence[] = [];
       let ihIds: string[] = [];
-      if (a.cardIds !== undefined) {
+      const rawOccurrences = a.occurrences ?? a.occurrence;
+      if (rawOccurrences !== undefined) {
+        const resolved = resolveOccurrenceValue(rawOccurrences);
+        const values = Array.isArray(resolved) ? resolved : [resolved];
+        for (const raw of values) {
+          const occurrence = occurrenceFrom(raw);
+          if (occurrence) occurrences.push(occurrence);
+        }
+        if (occurrences.length === 0 && rawOccurrences === '$pick' && a.target && typeof a.target === 'object') {
+          tryRePickFromAtom(s, { kind: 'atom', verb: 'invokeHiramekiOfCard', args: a }, ctx, {
+            byPlayer: ihP,
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+          });
+          mutate.log.append(s, { ts: Date.now(), player: ihP, turn: s.turn.number, action: 'effect:invokeHiramekiOfCard:awaiting-pick' });
+          return;
+        }
+      } else if (a.cardIds !== undefined) {
         const resolved = resolveBindRef(a.cardIds, ctx);
         if (Array.isArray(resolved)) {
           ihIds = resolved.filter((x): x is string => typeof x === 'string' && !x.startsWith('$'));
@@ -1388,8 +1550,10 @@ export function atomInvokeHiramekiOfCard(s: GameState, a: Record<string, unknown
         const c = resolveBindRef(a.cardId, ctx);
         if (typeof c === 'string' && !c.startsWith('$')) ihIds = [c];
       }
+      for (const occurrence of occurrences) invokeHiramekiOfCard(s, occurrence, undefined, ihTrait);
       for (const cid of ihIds) invokeHiramekiOfCard(s, cid, ihP, ihTrait);
-      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:invokeHiramekiOfCard', target: ihIds.join(',') });
+      const targets = occurrences.map(({ cardId }) => cardId).concat(ihIds);
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:invokeHiramekiOfCard', target: targets.join(',') });
       return;
     }
 
@@ -1459,7 +1623,7 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
         }
         setCardMoveBinding(ctx, a.bind, moved);
         recordPublicZoneMove(s, ctx, hadP, 'deck', 'hand', moved.length);
-        if (moved.length > 0) refreshDeckForEffect(s, hadP, ctx);
+        if (moved.length > 0 && a.deferRefresh !== true) refreshDeckForEffect(s, hadP, ctx);
         mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', result: moved.length ? `moved=${moved.length}` : 'none' });
         return;
       }
@@ -1500,7 +1664,7 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
       }
       setCardMoveBinding(ctx, a.bind, moved ? [{ cardId: hadCardId, area: 'hand', player: hadP, index: handIndex }] : []);
       recordPublicZoneMove(s, ctx, hadP, 'deck', 'hand', moved ? 1 : 0);
-      if (moved) refreshDeckForEffect(s, hadP, ctx);
+      if (moved && a.deferRefresh !== true) refreshDeckForEffect(s, hadP, ctx);
       mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', result: moved ? 'moved=1' : 'not-found' });
       return;
     }
@@ -1547,15 +1711,50 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
       //   remove にあっても末尾優先で正しい1枚を取る。見つからなければ no-op (防御的、通常は必ず存在)。
       //   fromTop (evidenceToHand) 同型: args:unknown ゆえ型/whitelist 同期不要・純 additive。
       if ((a as { fromSelf?: unknown }).fromSelf === true) {
-        const selfCid = ctx.source.cardId;
+        // An invoked Hirameki may name a character still in the scene. Move
+        // that exact uid with the canonical mutator; duplicate cardIds never
+        // select a replacement occurrence.
+        if (ctx.source.area === 'scene' && typeof ctx.source.uid === 'string') {
+          const sourceCard = s.players[p].scene.find((card) =>
+            card.uid === ctx.source.uid && card.cardId === ctx.source.cardId,
+          );
+          if (!sourceCard) {
+            setCardMoveBinding(ctx, a.bind, []);
+            mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', result: 'none' });
+            return;
+          }
+          const handIndex = s.players[p].hand.length;
+          mutate.scene.toHand(s, sourceCard.uid);
+          if (s.players[p].hand.length !== handIndex + 1) {
+            setCardMoveBinding(ctx, a.bind, []);
+            mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', result: 'none' });
+            return;
+          }
+          setCardMoveBinding(ctx, a.bind, [{ cardId: sourceCard.cardId, area: 'hand', player: p, index: handIndex }]);
+          recordPublicZoneMove(s, ctx, p, 'scene', 'hand', 1);
+          mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', target: sourceCard.cardId, result: 'ok' });
+          return;
+        }
+        const occurrence = ctx.bindings.occurrence?.[0] as {
+          uid?: unknown; cardId?: unknown; player?: unknown; area?: unknown; index?: unknown; occurrenceWitness?: unknown;
+        } | undefined;
+        const selfCid = occurrence?.cardId;
         const remSelf = s.players[p].remove;
-        const sIdx = selfCid ? remSelf.lastIndexOf(selfCid) : -1;
-        if (!selfCid || sIdx === -1) {
+        const sIdx = typeof occurrence?.index === 'number' ? occurrence.index : -1;
+        if (typeof selfCid !== 'string'
+          || occurrence?.player !== p
+          || occurrence?.area !== 'remove'
+          || !Number.isInteger(sIdx)
+          || occurrence.uid !== cardOccurrenceUid(p, 'remove', selfCid, sIdx)
+          || typeof occurrence.occurrenceWitness !== 'string'
+          || !isLiveCardOccurrenceWitness(s, p, 'remove', occurrence.occurrenceWitness)
+          || remSelf[sIdx] !== selfCid) {
           setCardMoveBinding(ctx, a.bind, []);
           mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', result: 'none' });
           return;
         }
         remSelf.splice(sIdx, 1);
+        advanceIndexedZoneEpoch(s, p, 'remove');
         mutate.remove.emitExit(s, p, selfCid); // wave-4: remove→hand 離脱 (原因非依存 remove:exit)
         const handIndex = s.players[p].hand.length;
         mutate.hand.add(s, p, [selfCid]);
@@ -1606,10 +1805,12 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
             && selectedOccurrences.length === cardIds.length
             && new Set(occurrenceKeys).size === occurrenceKeys.length
             && selectedOccurrences.every((entry, position) => entry.player === p
+              && (entry.area === 'remove' || entry.area === 'partner-area')
               && hafrAreas.includes(entry.area)
               && entry.cardId === cardIds[position]
               && (entry.area === 'remove'
-                ? s.players[entry.player].remove[entry.index] === entry.cardId
+                ? isLiveCardOccurrenceWitness(s, entry.player, 'remove', entry.occurrenceWitness)
+                  && s.players[entry.player].remove[entry.index] === entry.cardId
                 : s.players[entry.player].partnerAreaCards?.[entry.index] === entry.cardId));
           if (!valid) {
             setCardMoveBinding(ctx, a.bind, []);
@@ -1634,7 +1835,10 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
               return;
             }
             source.splice(currentIndex, 1);
-            if (occurrence.area === 'remove') mutate.remove.emitExit(s, occurrence.player, occurrence.cardId);
+            if (occurrence.area === 'remove') {
+              advanceIndexedZoneEpoch(s, occurrence.player, 'remove');
+              mutate.remove.emitExit(s, occurrence.player, occurrence.cardId);
+            }
             const handIndex = s.players[p].hand.length;
             mutate.hand.add(s, p, [occurrence.cardId]);
             moved.push({ cardId: occurrence.cardId, area: 'hand', player: p, index: handIndex });
@@ -1692,6 +1896,7 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
                 : remM.indexOf(cid);
               if (idx !== -1 && remM[idx] === cid) {
                 remM.splice(idx, 1);
+                advanceIndexedZoneEpoch(s, p, 'remove');
                 mutate.remove.emitExit(s, p, cid);
                 const handIndex = s.players[p].hand.length;
                 mutate.hand.add(s, p, [cid]);
@@ -1736,27 +1941,64 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
       // 同名別 printing 混在で観測差)。非 '$' 文字列は resolveBindRef が素通し = 既存 byte 互換。
       const target0 = normalizeTargetToString(hafrArgs.target);
       const target = typeof target0 === 'string' ? (resolveBindRef(target0, ctx) as string) : target0;
+      const boundOccurrence = resolveBoundOccurrenceRef(target0, s, ctx, p, 'remove');
+      if (boundOccurrence.kind === 'invalid'
+        || (boundOccurrence.kind === 'live' && target !== boundOccurrence.cardId)) {
+        setCardMoveBinding(ctx, hafrArgs.bind, []);
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+        return;
+      }
       if (!target) {
         tryRePickFromAtom(s, { kind: 'atom', verb, args: hafrArgs }, ctx, { byPlayer: p, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
         mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove:awaiting-pick' });
         return;
       }
       const rem = s.players[p].remove;
+      const hasExactOccurrence = Object.hasOwn(hafrArgs, 'selectedCardOccurrences');
+      const selectedOccurrences = hasExactOccurrence
+        ? exactSelectedCardOccurrences((hafrArgs as { selectedCardOccurrences?: unknown }).selectedCardOccurrences, ctx)
+        : undefined;
+      const exactOccurrence = selectedOccurrences?.length === 1 ? selectedOccurrences[0] : undefined;
+      if (hasExactOccurrence && (selectedOccurrences === null
+        || selectedOccurrences === undefined
+        || selectedOccurrences.length !== 1
+        || exactOccurrence?.player !== p
+        || exactOccurrence.area !== 'remove'
+        || exactOccurrence.cardId !== target
+        || !isLiveCardOccurrenceWitness(s, p, 'remove', exactOccurrence.occurrenceWitness)
+        || rem[exactOccurrence.index] !== target)) {
+        setCardMoveBinding(ctx, hafrArgs.bind, []);
+        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', target, result: 'stale-selection' });
+        return;
+      }
       const rawSelectedIndex = resolveBindRef((hafrArgs as { selectedCardIndex?: unknown }).selectedCardIndex, ctx);
       const hasExactSelectedIndex = Object.hasOwn(hafrArgs, 'selectedCardIndex');
-      const idx = hasExactSelectedIndex
+      const boundIndex = boundOccurrence.kind === 'live' ? boundOccurrence.index : undefined;
+      const explicitIndex = typeof rawSelectedIndex === 'number' && Number.isInteger(rawSelectedIndex) && rawSelectedIndex >= 0
+        ? rawSelectedIndex
+        : undefined;
+      const indexMismatch = boundIndex !== undefined && hasExactSelectedIndex && explicitIndex !== boundIndex;
+      const idx = exactOccurrence !== undefined
+        ? exactOccurrence.index
+        : indexMismatch
+        ? -1
+        : boundIndex !== undefined
+          ? (rem[boundIndex] === target ? boundIndex : -1)
+          : hasExactSelectedIndex
         ? (typeof rawSelectedIndex === 'number' && Number.isInteger(rawSelectedIndex) && rawSelectedIndex >= 0 && rem[rawSelectedIndex] === target ? rawSelectedIndex : -1)
         : rem.indexOf(target);
       let moved = false;
       let handIndex = -1;
       if (idx !== -1) {
         rem.splice(idx, 1);
+        advanceIndexedZoneEpoch(s, p, 'remove');
         mutate.remove.emitExit(s, p, target); // wave-4: remove→hand 離脱 (原因非依存 remove:exit)
         handIndex = s.players[p].hand.length;
         mutate.hand.add(s, p, [target]);
         moved = true;
       }
       setCardMoveBinding(ctx, hafrArgs.bind, moved ? [{ cardId: target, area: 'hand', player: p, index: handIndex }] : []);
+      if (!moved && boundOccurrence.kind === 'live') (ctx.dyn ??= {}).chainStepNoApply = true;
       recordPublicZoneMove(s, ctx, p, 'remove', 'hand', moved ? 1 : 0);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', target, result: moved ? 'ok' : 'not-found' });
@@ -1782,17 +2024,42 @@ export function atomRemoveAreaToDeckTop(s: GameState, a: Record<string, unknown>
       const rtdArgs = (a.target === undefined && hasNorMax(a))
         ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.removeAreaToDeckTop!.defaultArea, a, rtdP, a.player as Player) }
         : a;
-      const rtdTarget = normalizeTargetToString(rtdArgs.target);
+      const rtdTarget0 = normalizeTargetToString(rtdArgs.target);
+      const resolvedRtdTarget = typeof rtdTarget0 === 'string' ? resolveBindRef(rtdTarget0, ctx) : rtdTarget0;
+      const rtdTarget = typeof resolvedRtdTarget === 'string' ? resolvedRtdTarget : undefined;
+      const boundOccurrence = resolveBoundOccurrenceRef(rtdTarget0, s, ctx, rtdP, 'remove');
+      const selectedOccurrences = Object.hasOwn(rtdArgs, 'selectedCardOccurrences')
+        ? exactSelectedCardOccurrences(rtdArgs.selectedCardOccurrences, ctx)
+        : undefined;
+      const exactOccurrence = selectedOccurrences?.length === 1 ? selectedOccurrences[0] : undefined;
+      const exactOccurrenceInvalid = selectedOccurrences === null
+        || (selectedOccurrences !== undefined && (selectedOccurrences.length !== 1
+          || exactOccurrence?.area !== 'remove'
+          || exactOccurrence.player !== rtdP
+          || exactOccurrence.cardId !== rtdTarget
+          || !isLiveCardOccurrenceWitness(s, rtdP, 'remove', exactOccurrence.occurrenceWitness)
+          || s.players[rtdP].remove[exactOccurrence.index] !== exactOccurrence.cardId));
+      if (boundOccurrence.kind === 'invalid' || exactOccurrenceInvalid
+        || (boundOccurrence.kind === 'live' && (rtdTarget !== boundOccurrence.cardId
+          || (exactOccurrence !== undefined && exactOccurrence.index !== boundOccurrence.index)))) {
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+        mutate.log.append(s, { ts: Date.now(), player: rtdP, turn: s.turn.number, action: 'effect:removeAreaToDeckTop', result: 'stale-selection' });
+        return;
+      }
       if (!rtdTarget) {
         tryRePickFromAtom(s, { kind: 'atom', verb, args: rtdArgs }, ctx, { byPlayer: rtdP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
         mutate.log.append(s, { ts: Date.now(), player: rtdP, turn: s.turn.number, action: 'effect:removeAreaToDeckTop:awaiting-pick' });
         return;
       }
       const rtdRem = s.players[rtdP].remove;
-      const rtdIdx = rtdRem.indexOf(rtdTarget);
+      const physicalIndex = exactOccurrence?.index ?? (boundOccurrence.kind === 'live' ? boundOccurrence.index : undefined);
+      const rtdIdx = physicalIndex === undefined
+        ? rtdRem.indexOf(rtdTarget)
+        : (rtdRem[physicalIndex] === rtdTarget ? physicalIndex : -1);
       let rtdMoved = false;
       if (rtdIdx !== -1) {
         rtdRem.splice(rtdIdx, 1);
+        advanceIndexedZoneEpoch(s, rtdP, 'remove');
         mutate.remove.emitExit(s, rtdP, rtdTarget); // remove→deck 離脱 (原因非依存 remove:exit)
         // engine defer-unlock mini-wave (2026-07-09): dest:'bottom' = 「デッキの下に移す」(B02076)。
         // 従来 (dest 未指定) は top 固定 (B07014) — 既存 consumer は byte 不変。
@@ -1849,6 +2116,7 @@ export function atomRemoveAreaAllToDeckBottom(s: GameState, a: Record<string, un
         const movedCount = rem.length;
         if (rem.length > 0) {
           const ids = rem.splice(0, rem.length); // ALL — remove を drain
+          advanceIndexedZoneEpoch(s, pp, 'remove');
           mutate.deck.toBottom(s, pp, ids);       // 各自のデッキ下へ
           for (const cid of ids) mutate.remove.emitExit(s, pp, cid); // wave-4: remove→deck下 離脱 emit
         }

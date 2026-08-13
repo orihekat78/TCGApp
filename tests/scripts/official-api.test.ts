@@ -292,6 +292,105 @@ describe("official card API", () => {
     expect(existsSync(cardsDataWriteLockDirectory(baseDir))).toBe(false);
   });
 
+  it("retries a transient candidate install failure when no fixed lock exists", () => {
+    const {
+      acquireCardsDataWriteLock,
+      cardsDataWriteLockDirectory,
+      releaseCardsDataWriteLock,
+    } = require("../../scripts/cards/official-api.cjs");
+    const fs = require("node:fs") as typeof import("node:fs");
+    const baseDir = join(tempDir(), "cards-data");
+    mkdirSync(baseDir);
+    const nativeRename = fs.renameSync;
+    let injected = false;
+    fs.renameSync = ((from: string, to: string) => {
+      if (!injected && to === cardsDataWriteLockDirectory(baseDir)) {
+        injected = true;
+        const error = new Error("transient OneDrive rename contention") as NodeJS.ErrnoException;
+        error.code = "EPERM";
+        throw error;
+      }
+      return nativeRename(from, to);
+    }) as typeof fs.renameSync;
+
+    try {
+      const lock = acquireCardsDataWriteLock(baseDir);
+      expect(injected).toBe(true);
+      expect(releaseCardsDataWriteLock(baseDir, lock)).toBe(true);
+    } finally {
+      fs.renameSync = nativeRename;
+    }
+  });
+
+  it("fails closed after bounded candidate install retries", () => {
+    const {
+      acquireCardsDataWriteLock,
+      cardsDataWriteLockDirectory,
+      transactionDirectory,
+    } = require("../../scripts/cards/official-api.cjs");
+    const fs = require("node:fs") as typeof import("node:fs");
+    const baseDir = join(tempDir(), "cards-data");
+    mkdirSync(baseDir);
+    const nativeRename = fs.renameSync;
+    let attempts = 0;
+    fs.renameSync = ((from: string, to: string) => {
+      if (to === cardsDataWriteLockDirectory(baseDir)) {
+        attempts += 1;
+        const error = new Error("persistent rename denial") as NodeJS.ErrnoException;
+        error.code = "EPERM";
+        throw error;
+      }
+      return nativeRename(from, to);
+    }) as typeof fs.renameSync;
+
+    try {
+      expect(() => acquireCardsDataWriteLock(baseDir)).toThrow(/write lock could not be acquired/);
+      expect(attempts).toBe(8);
+      expect(existsSync(cardsDataWriteLockDirectory(baseDir))).toBe(false);
+      expect(readdirSync(transactionDirectory(baseDir))).toEqual([]);
+    } finally {
+      fs.renameSync = nativeRename;
+    }
+  });
+
+  it("rejects a candidate identity swap between install retries", () => {
+    const {
+      acquireCardsDataWriteLock,
+      cardsDataWriteLockDirectory,
+    } = require("../../scripts/cards/official-api.cjs");
+    const fs = require("node:fs") as typeof import("node:fs");
+    const { randomUUID } = require("node:crypto") as typeof import("node:crypto");
+    const baseDir = join(tempDir(), "cards-data");
+    mkdirSync(baseDir);
+    const nativeRename = fs.renameSync;
+    let replacementPath = "";
+    fs.renameSync = ((from: string, to: string) => {
+      if (!replacementPath && to === cardsDataWriteLockDirectory(baseDir)) {
+        replacementPath = from;
+        const originalPath = `${from}-original`;
+        nativeRename(from, originalPath);
+        mkdirSync(from);
+        writeFileSync(join(from, "owner.json"), `${JSON.stringify({
+          schemaVersion: 1,
+          pid: process.pid,
+          nonce: randomUUID(),
+        })}\n`);
+        const error = new Error("transient rename after candidate replacement") as NodeJS.ErrnoException;
+        error.code = "EPERM";
+        throw error;
+      }
+      return nativeRename(from, to);
+    }) as typeof fs.renameSync;
+
+    try {
+      expect(() => acquireCardsDataWriteLock(baseDir)).toThrow(/candidate identity changed/);
+      expect(existsSync(cardsDataWriteLockDirectory(baseDir))).toBe(false);
+      expect(existsSync(replacementPath)).toBe(true);
+    } finally {
+      fs.renameSync = nativeRename;
+    }
+  });
+
   it("holds the kernel gate across stale-owner inspection and replacement", () => {
     const {
       acquireCardsDataWriteLock,

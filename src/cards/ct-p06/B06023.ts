@@ -50,7 +50,7 @@ const a2: AbilityDef = {
   },
   effect: {
     kind: 'optional',
-    effect: { kind: 'atom', verb: 'invokeHiramekiOfCard', args: { cardIds: '$cost.flipFaceUpEvidence.ids', trait: 'YAIBA', player: 'self' } },
+    effect: { kind: 'atom', verb: 'invokeHiramekiOfCard', args: { occurrences: '$costFlipped', trait: 'YAIBA', player: 'self' } },
   },
   description:
     '【解決編】【宣言】【ターン1】【スリープ】〚裏向きの証拠を1つ表向きにする〛：この【宣言】能力のコストによって【ヒラメキ】を持つ〚特徴［YAIBA］〛のカードが表向きになった場合、その【ヒラメキ】の効果を発動させてもよい。',

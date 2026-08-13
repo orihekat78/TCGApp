@@ -48,7 +48,7 @@ const flipInvoke: Effect = {
     {
       kind: 'conditional',
       if: { kind: 'boundMatchesFilter', bindKey: '$flipped', filter: { trait: 'YAIBA', keyword: 'ヒラメキ' } },
-      then: { kind: 'atom', verb: 'invokeHiramekiOfCard', args: { cardId: '$flipped.cardId', trait: 'YAIBA', player: 'self', optional: true } },
+      then: { kind: 'atom', verb: 'invokeHiramekiOfCard', args: { occurrence: '$flipped', trait: 'YAIBA', player: 'self', optional: true } },
     },
   ],
 };

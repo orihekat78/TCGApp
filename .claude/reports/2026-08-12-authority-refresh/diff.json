@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "url": "https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/cards",
+    "fetchedAt": "2026-08-12T18:02:20.270Z",
+    "officialCardsSha256": "8409a76a2b33dcd65f339b97741ae2e0eaba2fd7175ecd789dc5b9e5e72137c9"
+  },
+  "lineage": {
+    "sourcePacketRelease": "a9855a1672bb5ff6f7fe18aa6b0834a3959212d4",
+    "publicationRelease": "4e68ceddde272656b07f3e4c3b79b4441c9b794b",
+    "sourcePacketSha256": "b02e6216325fce07d3b5a847d6b6d7781217a4b5130999d059cb3f98a164a5d3",
+    "rederivedPacketSha256": "22dc2305a340b834c724f2c4a150c0b36132ee5af8941be2532a5f2d01fa93bd",
+    "priorDigest": "8b057e37b26a0a86937819e0b31b9bb4f580a2919d22d71c322366e4bd95de6b",
+    "reviewDigest": "c722224a810717a1391944f771e87d3615bd85ad9a323241593cd29ae7fec7b6",
+    "approvalSha256": "8e6d305521b789a0e779d4afcaeafb53e328fea188284552eb508a1cd2701bff"
+  },
+  "catalog": {
+    "printingsBefore": 2240,
+    "printingsAfter": 2256,
+    "added": [
+      "PR305", "PR306", "PR307", "PR308", "PR309", "PR310", "PR311", "PR312",
+      "PR313", "PR314", "PR315", "PR316", "PR317", "PR318", "PR319", "PR320"
+    ],
+    "removed": [],
+    "changed": ["B01094", "B01094P", "B04018", "B04018P", "B06103", "B06103P"],
+    "kindsBefore": { "case": 134, "character": 1576, "event": 230, "partner": 300 },
+    "kindsAfter": { "case": 135, "character": 1591, "event": 230, "partner": 300 },
+    "cardNumsSha256Before": "0b802a33dc1d5df3a1c7f8d41a6e6aa23a4ea61ea9877443e7a7ca102cf66245",
+    "cardNumsSha256After": "6f3ca95ca50041ee79478994cde9124cc18a743052d3a5a6fef564c791e95df4"
+  },
+  "qa": {
+    "itemsBefore": 2912,
+    "itemsAfter": 2964,
+    "added": 595,
+    "removed": 543,
+    "answerChanged": 290,
+    "sectionOnlyRemaps": 511,
+    "sectionAndMechanicalRemaps": 32,
+    "stableMechanicalChanges": 289,
+    "semanticChanges": 1,
+    "genuinelyNew": 52,
+    "semanticSingleton": "card:B04018:4d16f7516287f55b78ced475e4adc4829da652ef76dfe1b6cf2919a7fea00ae3",
+    "removedSetSha256": "b40bef9199a9bdcc2b999add3b26bd13e8a865c859b5fd5450c2218eb0b55281",
+    "reassignedAddedSetSha256": "6b518eb03ad63b764b9a1c225ebc5ea9ee471b7d5dc53fcd21f51b70c20e9892",
+    "directChangedSetSha256": "ccfb66d311e6da4212ba9931078c076b41f29047fdb214fe9637d93cb0e4ed75",
+    "genuineSetSha256": "092f75b4783a0b8ed446157ebe866ea92f89e694adb42b73e2147e44b84a8383",
+    "remapSha256": "b5a2ec4b8c0872d454dfea40c72d854216b3e7323ce2ee10d67242f36cb1f6be",
+    "normalizedFaqSha256Before": "0457f3e5bd9ce56243f038ca4beb81d0a01c984b4b164000aa265fc2d0d3b3a3",
+    "normalizedFaqSha256After": "9a36b5d40860f10a6688bb34d6e52c143b7a996d5f3f561486c6384907b723ec",
+    "conflicts": 0,
+    "ambiguousRemaps": 0
+  },
+  "approval": {
+    "total": 1450,
+    "added": 16,
+    "changed": 6,
+    "qa": 1428
+  }
+}

@@ -359,6 +359,8 @@ export function useDeclaredAbility(
   ctx?: {
     costPaid?: Record<string, unknown>;
     dyn?: Record<string, unknown>;
+    /** Cost resolution can bind physical card occurrences for the effect. */
+    bindings?: EffectCtx['bindings'];
     source?: { cardId?: string; uid?: string; abilityId?: string; player?: 'self' | 'opp'; area?: string };
   },
 ): void {
@@ -453,7 +455,7 @@ export function useDeclaredAbility(
       player: found.player,
       area: found.area as EffectCtx['source']['area'],
     },
-    bindings: {},
+    bindings: { ...(ctx?.bindings ?? {}) },
     // BUG-085: cost 支払いで積まれた costPaid / dyn を effect 解決へ引き継ぐ
     // (resolveEffectPicks の dyn-arg 解決が `$cost.*` を参照するため)。
     ...(ctx?.costPaid ? { costPaid: ctx.costPaid } : {}),
@@ -475,7 +477,7 @@ export function useDeclaredAbility(
     { player: found.player, uid, cardId: found.cardId, abilityId: abilId, area: found.area },
     'declaredAbility',
     { kind: 'declaredAbility', uid, abilId },
-    undefined,
+    Object.keys(resolveCtx.bindings).length > 0 ? resolveCtx.bindings : undefined,
     // engine additive wave (2026-06-29d): cost で積んだ costPaid を entry へ永続化 (entryToCtx が復元)。
     // costRemovedMatches cond (conditional STABLE `if` の runtime 再評価) が除去カード snapshot を読むため。
     // BUG-171 (2026-07-04): dyn も同型永続化。declaredName (AbilityCostParams → ctx.dyn) を runtime の

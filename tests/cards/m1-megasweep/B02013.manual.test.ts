@@ -34,6 +34,7 @@ import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/l
 import { _resetRegistry as resetDefRegistry, register as registerCardDef, def } from '@/engine/read/def';
 import { run as runEffect } from '@/engine/effect/resolver';
 import { resolveEffectPicks, _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
+import { cardOccurrenceUid, cardOccurrenceWitness } from '@/engine/target/card-occurrence';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _drainPendingHirameki, _resetPendingHirameki } from '@/engine/listeners/hirameki';
@@ -153,10 +154,18 @@ function fireHirameki(evidenceOwner: Side, removedCardId: string, setup: (s: Gam
     setup(d);
   });
   s = produce(s, (d) => {
+    const index = d.players[evidenceOwner].remove.lastIndexOf(removedCardId);
     event.emit(
       d,
       'evidence:remove-by-action',
-      { player: evidenceOwner, ev: { cardId: removedCardId } },
+      {
+        player: evidenceOwner,
+        ev: { cardId: removedCardId },
+        occurrence: {
+          uid: cardOccurrenceUid(evidenceOwner, 'remove', removedCardId, index), player: evidenceOwner, cardId: removedCardId,
+          area: 'remove', index, occurrenceWitness: cardOccurrenceWitness(d, evidenceOwner, 'remove'),
+        },
+      },
       { player: attacker, uid: `${attacker}-attacker` },
     );
   });
@@ -165,8 +174,11 @@ function fireHirameki(evidenceOwner: Side, removedCardId: string, setup: (s: Gam
   // fire: a3 効果 (handAddFromRemove fromSelf) を production resolver で解決
   const a3 = def.card('B02013')!.abilities.find((a) => a.id === 'a3')!.effect!;
   const ctx = {
-    source: { player: pending.player, cardId: pending.cardId, area: 'evidence', abilityId: pending.abilityId },
-    bindings: {},
+    source: {
+      player: pending.player, cardId: pending.cardId, area: pending.occurrence?.area ?? 'remove',
+      uid: pending.occurrence?.uid, abilityId: pending.abilityId,
+    },
+    bindings: pending.occurrence ? { occurrence: [{ kind: 'card', ...pending.occurrence }] } : {},
   } as unknown as EffectCtx;
   const after = produce(s, (d) => {
     const walked = resolveEffectPicks(d, a3 as never, ctx, { byPlayer: pending.player, humanChooser: false, source: { cardId: 'B02013', abilityId: 'a3' } });

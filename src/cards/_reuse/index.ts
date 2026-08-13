@@ -1335,6 +1335,22 @@ import { B08072 } from '../ct-p08/B08072.js';
 import { B08073 } from '../ct-p08/B08073.js';
 import { B09002 } from '../ct-p09/B09002.js';
 import { PR304 } from '../pr-01/PR304.js';
+import { PR305 } from '../pr-01/PR305.js';
+import { PR306 } from '../pr-01/PR306.js';
+import { PR307 } from '../pr-01/PR307.js';
+import { PR308 } from '../pr-01/PR308.js';
+import { PR309 } from '../pr-01/PR309.js';
+import { PR310 } from '../pr-01/PR310.js';
+import { PR311 } from '../pr-01/PR311.js';
+import { PR312 } from '../pr-01/PR312.js';
+import { PR313 } from '../pr-01/PR313.js';
+import { PR314 } from '../pr-01/PR314.js';
+import { PR315 } from '../pr-01/PR315.js';
+import { PR316 } from '../pr-01/PR316.js';
+import { PR317 } from '../pr-01/PR317.js';
+import { PR318 } from '../pr-01/PR318.js';
+import { PR319 } from '../pr-01/PR319.js';
+import { PR320 } from '../pr-01/PR320.js';
 import { PR290 } from '../pr-01/PR290.js';
 import { PR296 } from '../pr-01/PR296.js';
 import { B05023 } from '../ct-p05/B05023.js';
@@ -2103,7 +2119,8 @@ export const REUSE_CARDS: CardDef[] = [
   // CARD PHASE hybrid-batch4
   PR289, PR295, PR292, PR298, B03047, B03050, B03080, B03134, B04027, B04032, B04077, B05051, B05081, B05086, B05086P, B06063, B06072, B06074, B06084,
   // CARD PHASE hybrid-batch5
-  B07015, B08062, B08064, B08072, B08073, B09002, PR304,
+  B07015, B08062, B08064, B08072, B08073, B09002, PR304, PR305,
+  PR306, PR307, PR308, PR309, PR310, PR311, PR312, PR313, PR314, PR315, PR316, PR317, PR318, PR319, PR320,
   // CARD PHASE hybrid-batch6
   PR290, PR296, B05023, B07005, PR067, B07054,
   // CARD PHASE miniwave-lp consumers

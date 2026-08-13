@@ -10,8 +10,8 @@ const a2: AbilityDef = {
   limit: { kind: 'turn', n: 1 }, cost: { kind: 'flipFaceUpEvidence', n: { min: 2, max: 2 } },
   effect: { kind: 'sequence', steps: [
     { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', chooseMatch: 'upTo', maxN: 2, filter: { kind: 'character', cardName: ['降谷零', '諸伏景光', '伊達航', '萩原研二', '松田陣平'] }, bind: '$revealed', bindMatch: '$matched' } },
-    { kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' }, then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } } },
-    { kind: 'atom', verb: 'boundToRemove', args: { player: 'self', bindKey: '$revealed' } },
+    { kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' }, then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId', deferRefresh: true } } },
+    { kind: 'atom', verb: 'boundToRemove', args: { player: 'self', bindKey: '$revealed', refreshAfter: true } },
   ] },
   description: '裏向きの証拠2つを表向きにし、上から2枚の指定キャラを手札に加え、残りをリムーブする。',
   ruleRefs: ['rules/01-victory-conditions.md', 'rules/14-refresh.md', 'rules/15-abilities-effects.md', 'rules/21-declared-ability-cost.md'],

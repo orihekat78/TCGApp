@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `33749be90c02`
+> Source hash: `a439c8d50c7b`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **183** ファイル（[全体 index](./index.md)）
+このグループ: **185** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (23)
 
@@ -77,7 +77,7 @@
 | [`src/engine/invariant/scratchTraceMonotonic.ts`](../../../src/engine/invariant/scratchTraceMonotonic.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/engine/invariant/stunSemantics.ts`](../../../src/engine/invariant/stunSemantics.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) |
 
-## engine (他) (34)
+## engine (他) (35)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -110,13 +110,14 @@
 | [`src/engine/resolve/stack.ts`](../../../src/engine/resolve/stack.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
 | [`src/engine/rng.ts`](../../../src/engine/rng.ts) | _(参照なし)_ |
 | [`src/engine/state-factory.ts`](../../../src/engine/state-factory.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`03-field-areas.md`](../../rules/03-field-areas.md) / [`04-game-setup.md`](../../rules/04-game-setup.md) |
+| [`src/engine/state/indexed-zone-epoch.ts`](../../../src/engine/state/indexed-zone-epoch.ts) | _(参照なし)_ |
 | [`src/engine/target/candidates.ts`](../../../src/engine/target/candidates.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 | [`src/engine/target/card-def-registry.ts`](../../../src/engine/target/card-def-registry.ts) | _(参照なし)_ |
 | [`src/engine/target/card-occurrence.ts`](../../../src/engine/target/card-occurrence.ts) | _(参照なし)_ |
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (95)
+## その他 (96)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -131,6 +132,7 @@
 | [`src/cloud-data/request-context.ts`](../../../src/cloud-data/request-context.ts) | _(参照なし)_ |
 | [`src/cloud-data/retention.ts`](../../../src/cloud-data/retention.ts) | _(参照なし)_ |
 | [`src/cloud-data/usage-budget.ts`](../../../src/cloud-data/usage-budget.ts) | _(参照なし)_ |
+| [`src/shared/deck-legality.ts`](../../../src/shared/deck-legality.ts) | _(参照なし)_ |
 | [`src/ui/fixtures/bug274PartnerFixture.ts`](../../../src/ui/fixtures/bug274PartnerFixture.ts) | _(参照なし)_ |
 | [`src/ui/fixtures/cutinDemoState.ts`](../../../src/ui/fixtures/cutinDemoState.ts) | [`08-contact.md`](../../rules/08-contact.md) / [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) |
 | [`src/ui/fixtures/hiramekiDemoState.ts`](../../../src/ui/fixtures/hiramekiDemoState.ts) | [`10-action-event.md`](../../rules/10-action-event.md) |

@@ -21,6 +21,7 @@ import type { ContinuationFrame } from './resolve-picks.js';
 import { isDraft } from 'immer';
 import { runAtom } from './atom-handlers.js';
 import { char as charMutator } from '../mutate/char.js'; // W6 step6 (r79): _mrSelectCharUids タグ書込
+import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from './resolve-picks.js';
 import { resolve as resolveTarget } from '../target/resolve.js';
@@ -37,6 +38,7 @@ import {
 
 function decisionSource(ctx: EffectCtx): {
   cardId: string; abilityId: string; uid: string;
+  area?: EffectCtx['source']['area'];
   resolutionKind?: EffectCtx['source']['resolutionKind'];
   triggerBatch?: number; ownerChosenOrder?: number; ownerOrderConfirmed?: boolean;
 } {
@@ -44,6 +46,7 @@ function decisionSource(ctx: EffectCtx): {
     cardId: ctx.source.cardId ?? '',
     abilityId: ctx.source.abilityId ?? '',
     uid: ctx.source.uid ?? '',
+    ...(ctx.source.area ? { area: ctx.source.area } : {}),
     ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}),
     ...(ctx.source.triggerBatch !== undefined ? { triggerBatch: ctx.source.triggerBatch } : {}),
     ...(ctx.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: ctx.source.ownerChosenOrder } : {}),
@@ -634,6 +637,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         const moved = charMutator.takeOneSetCard(state, hostUid, entry.instanceId ?? '');
         if (!moved) { (ctx.dyn ??= {}).chainStepNoApply = true; return; }
         state.players[moved.player].evidence.push({ cardId: moved.cardId, faceUp: true, origin: { turn: state.turn.number, via: 'effect', sourceCardId: ctx.source.cardId } });
+        advanceIndexedZoneEpoch(state, moved.player, 'evidence');
         return;
       }
       const entries = host.char.setCards.map((entry, index) => ({ instanceId: entry.instanceId ?? '', ordinal: index + 1 })).filter((entry) => entry.instanceId !== '');
@@ -678,6 +682,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         if (!moved) { (ctx.dyn ??= {}).chainStepNoApply = true; return; }
         if (destination.area === 'evidence') {
           state.players[moved.player].evidence.push({ cardId: moved.cardId, faceUp: destination.faceUp, origin: { turn: state.turn.number, via: 'effect', sourceCardId: ctx.source.cardId } });
+          advanceIndexedZoneEpoch(state, moved.player, 'evidence');
         } else if (destination.area === 'hand') {
           state.players[moved.player].hand.push(moved.cardId);
         }

@@ -57,6 +57,36 @@
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
   },
   {
+   "id": "B10019",
+   "shippedId": "B10019",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
+   "id": "B10019P",
+   "shippedId": "B10019P",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
+   "id": "B10034P",
+   "shippedId": "B10034P",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
+   "id": "B10075",
+   "shippedId": "B10075",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
+   "id": "B10100",
+   "shippedId": "B10100",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
+   "id": "B10100P",
+   "shippedId": "B10100P",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
    "id": "D04004",
    "shippedId": "D04004",
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
@@ -69,6 +99,16 @@
   {
    "id": "PR099",
    "shippedId": "PR099",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
+   "id": "PR310",
+   "shippedId": "PR310",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
+   "id": "PR316",
+   "shippedId": "PR316",
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
   },
   {

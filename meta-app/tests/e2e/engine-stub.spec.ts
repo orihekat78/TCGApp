@@ -20,3 +20,24 @@ test('localStorage namespace 分離: meta-app は conan.meta.v1.* のみ書き�
     expect(k, `unexpected localStorage key on 5174: ${k}`).toMatch(/^conan\.meta\.v1\./);
   }
 });
+
+test('DeckEditor keeps a valid casual deck playable while showing its competitive restriction warning', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('conan.meta.v1.decks', JSON.stringify({
+      version: 4,
+      state: {
+        activeDeckId: 'competitive-warning',
+        decks: [{
+          id: 'competitive-warning', name: 'competitive warning', partner: 'D08001', case: 'D08026', modified: 0,
+          cards: [{ num: 'B01058', count: 1 }, { num: 'B09100', count: 39 }],
+        }],
+      },
+    }));
+  });
+
+  await page.goto('/#deck');
+
+  await expect(page.getByText('検証 OK')).toBeVisible({ timeout: 6000 });
+  await expect(page.getByText('大会制限の注意')).toBeVisible();
+  await expect(page.getByText('大会制限: 0050 は使用禁止です')).toBeVisible();
+});

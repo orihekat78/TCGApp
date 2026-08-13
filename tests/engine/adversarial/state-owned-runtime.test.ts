@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { advanceIndexedZoneEpoch } from '@/engine/state/indexed-zone-epoch';
+import { cardOccurrenceWitness } from '@/engine/target/card-occurrence';
 import { produce } from '@/engine/produce';
 import { event } from '@/engine/event';
 import { mutate } from '@/engine/mutate';
@@ -504,6 +506,230 @@ describe('adversarial: runtime identity is owned by GameState', () => {
     }
   });
 
+  it('fails closed when a persisted indexed occurrence uses the legacy content witness', () => {
+    const state = createEmptyGameState();
+    state.players.self.remove = ['PUBLIC'];
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingEffectPickQueue',
+        present: true,
+        value: [{
+          player: 'self',
+          candidates: [{
+            uid: 'card:self:remove:PUBLIC#0',
+            kind: 'card',
+            cardId: 'PUBLIC',
+            player: 'self',
+            area: 'remove',
+            index: 0,
+            occurrenceWitness: '["PUBLIC"]',
+          }],
+          atomVerb: 'noop',
+          atomArgs: {},
+          nMin: 0,
+          nMax: 1,
+          source: { cardId: 'SOURCE', abilityId: 'a1' },
+        }],
+      }],
+    };
+
+    expect(() => hydratePendingRuntimeState(state)).toThrow(/occurrenceWitness/i);
+  });
+
+  it('hydrates a structurally valid stale occurrence so its exact consumer can fizzle it', () => {
+    const state = createEmptyGameState();
+    state.players.self.remove = ['PUBLIC'];
+    const occurrenceWitness = cardOccurrenceWitness(state, 'self', 'remove');
+    advanceIndexedZoneEpoch(state, 'self', 'remove');
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingEffectPickQueue',
+        present: true,
+        value: [{
+          player: 'self',
+          candidates: [{
+            uid: 'card:self:remove:PUBLIC#0',
+            kind: 'card', cardId: 'PUBLIC', player: 'self', area: 'remove', index: 0, occurrenceWitness,
+          }],
+          atomVerb: 'noop', atomArgs: {}, nMin: 0, nMax: 1,
+          source: { cardId: 'SOURCE', abilityId: 'a1' },
+        }],
+      }],
+    };
+
+    expect(hydratePendingRuntimeState(state)).toBe(true);
+    expect(_peekPendingEffectPickSide()?.candidates[0]).toMatchObject({
+      cardId: 'PUBLIC',
+      area: 'remove',
+      index: 0,
+      occurrenceWitness,
+    });
+  });
+
+  it.each([
+    [
+      'a non-canonical remove-card UID',
+      [{
+        uid: 'forged:remove:0', kind: 'card', cardId: 'PUBLIC', player: 'self',
+        area: 'remove', index: 0, occurrenceWitness: 'occ:v1:self:remove:0',
+      }],
+      /candidates\[0\]\.uid/,
+    ],
+    [
+      'a non-canonical evidence UID',
+      [{
+        uid: 'forged:evidence:0', kind: 'evidence', cardId: 'PUBLIC', player: 'self',
+        area: 'evidence', index: 0, occurrenceWitness: 'occ:v1:self:evidence:0',
+      }],
+      /candidates\[0\]\.uid/,
+    ],
+    [
+      'a witness owned by another player',
+      [{
+        uid: 'card:self:remove:PUBLIC#0', kind: 'card', cardId: 'PUBLIC', player: 'self',
+        area: 'remove', index: 0, occurrenceWitness: 'occ:v1:opp:remove:0',
+      }],
+      /candidates\[0\]\.occurrenceWitness/,
+    ],
+    [
+      'a witness for another indexed area',
+      [{
+        uid: 'card:self:remove:PUBLIC#0', kind: 'card', cardId: 'PUBLIC', player: 'self',
+        area: 'remove', index: 0, occurrenceWitness: 'occ:v1:self:evidence:0',
+      }],
+      /candidates\[0\]\.occurrenceWitness/,
+    ],
+  ] as const)('rejects a persisted physical pick with %s without changing ambient runtime', (
+    _label,
+    candidates,
+    expectedError,
+  ) => {
+    const probe = globalThis as { __pendingContactStartAxId?: unknown };
+    probe.__pendingContactStartAxId = 'live-action';
+    const state = createEmptyGameState();
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingEffectPickSide',
+        present: true,
+        value: {
+          player: 'self', candidates, atomVerb: 'noop', atomArgs: {}, nMin: 0, nMax: 1,
+          source: { player: 'self', area: 'scene', cardId: 'SOURCE', abilityId: 'a1' },
+        },
+      }],
+    };
+
+    try {
+      expect(() => hydratePendingRuntimeState(state)).toThrow(expectedError);
+      expect(probe.__pendingContactStartAxId).toBe('live-action');
+    } finally {
+      delete probe.__pendingContactStartAxId;
+    }
+  });
+
+  it('rejects duplicate persisted pick candidate UIDs without changing ambient runtime', () => {
+    const probe = globalThis as { __pendingContactStartAxId?: unknown };
+    probe.__pendingContactStartAxId = 'live-action';
+    const duplicate = {
+      uid: 'card:self:remove:PUBLIC#0', kind: 'card', cardId: 'PUBLIC', player: 'self',
+      area: 'remove', index: 0, occurrenceWitness: 'occ:v1:self:remove:0',
+    } as const;
+    const state = createEmptyGameState();
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingEffectPickQueue',
+        present: true,
+        value: [{
+          player: 'self', candidates: [duplicate, { ...duplicate }],
+          atomVerb: 'noop', atomArgs: {}, nMin: 0, nMax: 1,
+          source: { player: 'self', area: 'scene', cardId: 'SOURCE', abilityId: 'a1' },
+        }],
+      }],
+    };
+
+    try {
+      expect(() => hydratePendingRuntimeState(state)).toThrow(/duplicate candidate uid/i);
+      expect(probe.__pendingContactStartAxId).toBe('live-action');
+    } finally {
+      delete probe.__pendingContactStartAxId;
+    }
+  });
+
+  it.each([
+    ['unknown card area', { kind: 'card', area: 'forged-area' }],
+    ['character kind carrying a remove-area card occurrence', { kind: 'char', area: 'remove', index: 0 }],
+    ['witnessless evidence card occurrence', { kind: 'card', area: 'evidence', index: 0 }],
+    ['kind-omitted evidence occurrence', { area: 'evidence', index: 0 }],
+    ['kind-omitted remove occurrence', { area: 'remove', index: 0 }],
+  ])('rejects a persisted pick candidate with %s', (_label, candidate) => {
+    const state = createEmptyGameState();
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingEffectPickSide',
+        present: true,
+        value: {
+          player: 'self',
+          candidates: [{ uid: 'forged:0', cardId: 'FORGED', player: 'self', ...candidate }],
+          atomVerb: 'noop',
+          atomArgs: {},
+          nMin: 0,
+          nMax: 1,
+          source: { player: 'self', area: 'scene', cardId: 'SOURCE', abilityId: 'a1' },
+        },
+      }],
+    };
+
+    expect(() => hydratePendingRuntimeState(state)).toThrow('pendingEffectPick.candidates[0]');
+  });
+
+  it('allows a persisted kindless private deck candidate', () => {
+    const state = createEmptyGameState();
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingEffectPickSide',
+        present: true,
+        value: {
+          player: 'self',
+          candidates: [{ uid: 'deck:self:0', cardId: 'PRIVATE', player: 'self', area: 'deck', index: 0 }],
+          atomVerb: 'noop',
+          atomArgs: {},
+          nMin: 0,
+          nMax: 1,
+          source: { player: 'self', area: 'scene', cardId: 'SOURCE', abilityId: 'a1' },
+        },
+      }],
+    };
+
+    expect(() => hydratePendingRuntimeState(state)).not.toThrow();
+  });
+
+  it('rejects a persisted pick source with an unknown area', () => {
+    const state = createEmptyGameState();
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingEffectPickSide',
+        present: true,
+        value: {
+          player: 'self',
+          candidates: [],
+          atomVerb: 'noop',
+          atomArgs: {},
+          nMin: 0,
+          nMax: 0,
+          source: { player: 'self', area: 'forged-area', cardId: 'SOURCE', abilityId: 'a1' },
+        },
+      }],
+    };
+
+    expect(() => hydratePendingRuntimeState(state)).toThrow('pendingEffectPick.source.area');
+  });
+
   it('rejects duplicate persisted runtime channels before changing live channels', () => {
     const probe = globalThis as { __pendingContactStartAxId?: unknown };
     probe.__pendingContactStartAxId = 'live-action';
@@ -854,6 +1080,54 @@ describe('adversarial: runtime identity is owned by GameState', () => {
               discarded: [{ cardId: 'DISCARDED' }],
               removed: [{ uid: 'REMOVED#1', cardId: 'REMOVED', snapLevel: 4 }],
               declaredTrait: [{ trait: 'CIA' }],
+            },
+          },
+          kind: 'sequence',
+        },
+      }],
+    };
+
+    expect(hydratePendingRuntimeState(state)).toBe(true);
+  });
+
+  it('rejects a persisted physical remove binding without an occurrence witness', () => {
+    const state = createEmptyGameState();
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingRpsContinuation',
+        present: true,
+        value: {
+          remainder: [],
+          ctx: {
+            source: { player: 'self', area: 'scene' },
+            bindings: {
+              picked: [{ kind: 'card', cardId: 'DUP', player: 'self', area: 'remove', index: 0 }],
+            },
+          },
+          kind: 'sequence',
+        },
+      }],
+    };
+
+    expect(() => hydratePendingRuntimeState(state)).toThrow(/bindings\.picked\[0\]\.occurrenceWitness/);
+  });
+
+  it('accepts a persisted hidden evidence binding without exposing a card identity', () => {
+    const state = createEmptyGameState();
+    state.players.self.evidence = [{ cardId: 'HIDDEN', faceUp: false, origin: { turn: 1, via: 'effect' } }];
+    const occurrenceWitness = cardOccurrenceWitness(state, 'self', 'evidence');
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingRpsContinuation',
+        present: true,
+        value: {
+          remainder: [],
+          ctx: {
+            source: { player: 'self', area: 'scene' },
+            bindings: {
+              picked: [{ kind: 'evidence', player: 'self', area: 'evidence', index: 0, occurrenceWitness }],
             },
           },
           kind: 'sequence',

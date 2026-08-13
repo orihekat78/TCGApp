@@ -8,6 +8,7 @@ import { resolvePlayer, resolveBindRef, resolveDeltaToNumber, hasNorMax, paShort
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, CausalOutcome, PublicCausalZone } from '../../types/index.js';
 import { recordEffectCausalOperation } from '../../log/effect-causal.js';
+import { advanceIndexedZoneEpoch } from '../../state/indexed-zone-epoch.js';
 
 function sceneOwnerOf(s: GameState, uid: string): Player | undefined {
   if (s.players.self.scene.some((card) => card.uid === uid)) return 'self';
@@ -494,6 +495,7 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
             const arr = (s.players[fromPlayer] as unknown as Record<string, string[]>)[area];
             const idx = arr.indexOf(cardId);
             arr.splice(idx, 1);
+            if (area === 'remove') advanceIndexedZoneEpoch(s, fromPlayer, 'remove');
             movedFrom.set(area, (movedFrom.get(area) ?? 0) + 1);
             if (area === 'remove') mutate.remove.emitExit(s, fromPlayer, cardId); // remove→set-card 離脱 (wave-4 流儀)
           }
@@ -548,6 +550,7 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
           return;
         }
         removeArr.splice(ridx, 1);
+        advanceIndexedZoneEpoch(s, ownerP, 'remove');
         mutate.remove.emitExit(s, ownerP, selfCid); // wave-4: remove→set-card 離脱 (原因非依存 remove:exit)
         mutate.char.setCard(s, scUid, selfCid, true);
         const setCardOwner = sceneOwnerOf(s, scUid);
@@ -777,7 +780,10 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
           }
           for (const cid of cardIds) {
             const idx = arr?.indexOf(cid) ?? -1;
-            if (idx !== -1) arr.splice(idx, 1);
+            if (idx !== -1) {
+              arr.splice(idx, 1);
+              if (sourceArea === 'remove') advanceIndexedZoneEpoch(s, fromPlayer, 'remove');
+            }
           }
         } else if (typeof a.bind === 'string') {
           (ctx.bindings as Record<string, unknown>)[a.bind] = cardIds.map(cardId => ({ cardId }));

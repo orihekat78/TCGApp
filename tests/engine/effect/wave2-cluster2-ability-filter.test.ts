@@ -11,11 +11,13 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { runAtom } from '@/engine/effect/atom-handlers';
+import { startCausalSession, validateCausalLog } from '@/engine/log/causal';
+import { runOne } from '@/engine/resolve/stack';
 import { evalCond } from '@/engine/cond/eval';
 import { defHasKeyword } from '@/engine/read/keyword';
 import { cards as engineCards } from '@/engine/cards/index';
 import { makeCtx } from '../../helpers/fixtures';
-import type { CardDef, AbilityDef, Candidate, GameState } from '@/engine/types';
+import type { CardDef, AbilityDef, Candidate, EffectStackEntry, GameState } from '@/engine/types';
 
 // ---------------------------------------------------------------------------
 // synthetic defs (正準形状: 現リム時=D05007 / 疾風=D11014 / カットイン=Option C)
@@ -250,7 +252,53 @@ describe('X6: boundToRemove — bound window をリムーブエリアへ', () =>
       runAtom(draft, 'boundToRemove', { player: 'self', bindKey: 'r' }, ctx);
     });
     expect(result.gameResult).toBeUndefined();
+    expect(result.refreshCount.self).toBe(0);
+    expect(result.log.some(entry => entry.action === 'effect:boundToRemove')).toBe(false);
     expect(result.players.opp.evidence).toHaveLength(0);
+  });
+
+  it('refresh ordering flags require literal true', () => {
+    let handAddState = createEmptyGameState();
+    handAddState = { ...handAddState, players: { ...handAddState.players, self: { ...handAddState.players.self, deck: ['A'], remove: ['R'] } } };
+    const handAdd = produce(handAddState, draft => {
+      runAtom(draft, 'handAddFromDeck', { player: 'self', cardId: 'A', deferRefresh: 1 }, makeCtx());
+    });
+    expect(handAdd.players.self.hand).toEqual(['A']);
+    expect(handAdd.players.self.deck).toEqual(['R']);
+    expect(handAdd.refreshCount.self).toBe(1);
+
+    let emptyBoundState = createEmptyGameState();
+    emptyBoundState = { ...emptyBoundState, players: { ...emptyBoundState.players, self: { ...emptyBoundState.players.self, remove: ['R'] } } };
+    const emptyBound = produce(emptyBoundState, draft => {
+      runAtom(draft, 'boundToRemove', { player: 'self', bindKey: 'r', refreshAfter: 1 }, makeCtx({ bindings: { r: [] } }));
+    });
+    expect(emptyBound.players.self.deck).toEqual([]);
+    expect(emptyBound.players.self.remove).toEqual(['R']);
+    expect(emptyBound.refreshCount.self).toBe(0);
+    expect(emptyBound.log.some(entry => entry.action === 'effect:boundToRemove')).toBe(false);
+  });
+
+  it('accepted one-card remainder refresh emits the tagged remove-to-deck causal operation', () => {
+    const state = createEmptyGameState();
+    state.players.self.remove = ['R'];
+    startCausalSession(state, 'bound-remove-accepted-one-card-refresh');
+    const result = produce(state, draft => {
+      runOne(draft, {
+        id: 'bound-remove-accepted-one-card-refresh-entry',
+        source: { player: 'self', cardId: 'PRIVATE-SOURCE', uid: 'private-source', abilityId: 'a1', area: 'scene' },
+        triggeredBy: { hook: 'manual' },
+        triggeredAt: { turn: 1, phase: 'main', nano: 1 },
+        effect: { kind: 'atom', verb: 'boundToRemove', args: { player: 'self', bindKey: '$revealed', refreshAfter: true } },
+        state: 'pending',
+      } satisfies EffectStackEntry);
+    });
+    const graph = validateCausalLog(result.log);
+    expect(graph).toContainEqual(expect.objectContaining({
+      tags: ['refresh'],
+      source: expect.objectContaining({ kind: 'zone', side: 'self', zone: 'remove' }),
+      targets: [expect.objectContaining({ kind: 'zone', side: 'self', zone: 'deck' })],
+      outcome: { type: 'move', from: 'remove', to: 'deck', count: 1 },
+    }));
   });
 });
 

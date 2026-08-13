@@ -82,6 +82,7 @@
     "lint:qa": "tsx scripts/lint-qa-trace.ts",
     "qa:adjudication:bootstrap": "tsx scripts/qa-adjudication.ts --bootstrap",
     "qa:adjudication:queue": "tsx scripts/qa-adjudication.ts --queue",
+    "qa:adjudication:migrate": "tsx scripts/qa-adjudication.ts --migrate",
     "qa:adjudication:merge": "tsx scripts/qa-adjudication.ts --check",
     "qa:adjudication:verify-local": "tsx scripts/qa-adjudication.ts --check --with-local-raw"
   },

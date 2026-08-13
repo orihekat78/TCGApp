@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "snapshot": {
-    "normalizedFaqHash": "0457f3e5bd9ce56243f038ca4beb81d0a01c984b4b164000aa265fc2d0d3b3a3",
-    "itemCount": 2912,
-    "qaIdSetHash": "d6e9b6b71dbe6d82adff0b1285dd3d54bf7beb34edbafcc840b79d552717b839",
-    "itemSetHash": "3a3a846dc7d4ebd96b1e65f33d7173801252f740134f5c99b3521ebefdfb339d",
-    "answerSetHash": "afccf6ddb424d20cd2763302ce3b374e64bdd3af3a13c7d51cf460b0ad1f2902",
+    "normalizedFaqHash": "9a36b5d40860f10a6688bb34d6e52c143b7a996d5f3f561486c6384907b723ec",
+    "itemCount": 2964,
+    "qaIdSetHash": "e6d7109dc15ea7c188321f6eb611b512c9d2c861274d5b721cbc0f297e5bc1ae",
+    "itemSetHash": "e275ab1be2a5d6cccfd351de4c18dfd4d670772eeb643b4dca9da2e4d35f3a98",
+    "answerSetHash": "c23b34a58038897d4c046da2e01579d332dade73dac96f8d62cd88025258da40",
     "conflictSetHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
   },
   "rawPackages": [
@@ -77,7 +77,7 @@
     },
     {
       "file": "ct-p01-api.json",
-      "sha256": "cdf3a847334b9e0d71f4a49bc910aa263a23543c2400d28b81d43e8d64e28751",
+      "sha256": "d5906268be1dc663da7e240558d7bced4058e988fa5e882b299f1f65ed63821a",
       "cardNumHash": "5778a4e7f6c76d9968e9dcb3f746666fe2a8c7a934ed0620ceb03a43f045dfba",
       "cardNumCount": 160
     },
@@ -95,7 +95,7 @@
     },
     {
       "file": "ct-p04-api.json",
-      "sha256": "1ccc9219f03caee752cc5ad9ac80e7a075916ac0df66f511ab11c60e98c46396",
+      "sha256": "c8cffed0e5f66c15f8a291199115d591140de01cf31a4443d464be10f9e5bac3",
       "cardNumHash": "577473f69036c2f638ed125fcddfd3c9fb6489c603f7a69208312066de4e8cdd",
       "cardNumCount": 148
     },
@@ -107,7 +107,7 @@
     },
     {
       "file": "ct-p06-api.json",
-      "sha256": "fedcc418e32f1f9a72bfb8f8b8968fc288c94286e050c8db0207dc9f24de24d8",
+      "sha256": "92fade84ea534b4780654df04c4875d96ad84e31caa777fdd38c6c09eb9edf00",
       "cardNumHash": "794c8899629cd6b2e6801aa2c5fb049de6713ff94e6e534242e686d558070483",
       "cardNumCount": 184
     },
@@ -137,9 +137,9 @@
     },
     {
       "file": "pr-01-api.json",
-      "sha256": "f6a845262131fdf350714f4bcd806b86e3a1ffe02c54007b2016fabef15cf06a",
-      "cardNumHash": "f5033e05dab92139fcd217dd9c58577089b68b9c045c8cbb384fa7f431f0911b",
-      "cardNumCount": 304
+      "sha256": "3b9ecca39cb90b9555fceb28b80c7495fd926c48c79df6a017e94393f7a30f5c",
+      "cardNumHash": "4ad012f034b4ff86dd49eb88d1add8f0c0599516cf54e7de600037ed750ed938",
+      "cardNumCount": 320
     }
   ]
 }

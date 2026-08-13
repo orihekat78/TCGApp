@@ -69,7 +69,7 @@ describe('B06025 ケロ介: action-removed evidence occurrence reentry', () => {
     state.players.self.deck = ['D08005'];
     state.players.opp.scene = [targetChar()];
     const { pending, actorUid } = openCaseHirameki(state, 'B06025');
-    expect(pending.occurrence).toEqual({ player: 'self', cardId: 'B06025', removeIndex: 1 });
+    expect(pending.occurrence).toEqual({ uid: 'card:self:remove:B06025#1', player: 'self', cardId: 'B06025', area: 'remove', index: 1, occurrenceWitness: 'occ:v1:self:remove:1' });
 
     expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' })).toEqual({ ok: true });
     expect(useGameStateStore.getState().pendingEffectPick?.atomVerb).toBe('sceneRemove');
@@ -113,7 +113,7 @@ describe('B06025 ケロ介: action-removed evidence occurrence reentry', () => {
     const current = useGameStateStore.getState().gameState!;
     useGameStateStore.setState({
       gameState: produce(current, draft => {
-        draft.players.self.remove = [];
+        mutate.remove.removeFromHere(draft, 'self', ['B06025', 'B06025']);
       }),
     });
     expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'target' }).ok).toBe(true);

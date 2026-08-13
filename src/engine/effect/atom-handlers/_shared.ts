@@ -8,6 +8,7 @@ import { cards as engineCards } from '../../cards/index.js';
 import { tryRePickFromAtom } from '../resolve-picks.js';
 import { buildShortFormPick } from '../atom-pick-spec.js';
 import { evalDyn } from '../../dyn/eval.js';
+import { cardOccurrenceUid, isLiveCardOccurrenceWitness } from '../../target/card-occurrence.js';
 import { defHasKeyword, defHasNoOriginalAbilityExceptIcons } from '../../read/keyword.js';
 import { allCardNameComponentsForDef } from '../../target/card-def-registry.js';
 import { effectiveKeywordForCard, effectiveTraitNames, printedKeywordForCard } from '../../target/candidates.js';
@@ -544,6 +545,58 @@ export function resolveBindRef(value: unknown, ctx: EffectCtx): unknown {
   const first = binding[0] as Record<string, unknown>;
   const fieldVal = first[field];
   return fieldVal ?? value;
+}
+
+export type BoundOccurrenceRef =
+  | { kind: 'unbound' }
+  | { kind: 'invalid' }
+  | { kind: 'live'; cardId: string; index: number };
+
+/** Resolve an indexed physical bind without treating a duplicate cardId as identity. */
+export function resolveBoundOccurrenceRef(
+  value: unknown,
+  s: GameState,
+  ctx: EffectCtx,
+  player: Player,
+  area: 'remove' | 'evidence',
+): BoundOccurrenceRef {
+  if (typeof value !== 'string' || !value.startsWith('$')) return { kind: 'unbound' };
+  const dot = value.indexOf('.');
+  if (dot < 0) return { kind: 'unbound' };
+  let entries = ctx.bindings[value.slice(1, dot)];
+  if (!Array.isArray(entries) || entries.length === 0) entries = ctx.bindings[value.slice(0, dot)];
+  const entry = Array.isArray(entries) ? entries[0] : undefined;
+  if (!entry || typeof entry !== 'object') return { kind: 'unbound' };
+  const physical = entry as {
+    uid?: unknown;
+    cardId?: unknown;
+    player?: unknown;
+    area?: unknown;
+    index?: unknown;
+    occurrenceWitness?: unknown;
+  };
+  if (physical.area !== 'remove' && physical.area !== 'evidence') return { kind: 'unbound' };
+  if (physical.player !== player
+    || physical.area !== area
+    || typeof physical.cardId !== 'string'
+    || physical.cardId.length === 0
+    || typeof physical.index !== 'number'
+    || !Number.isSafeInteger(physical.index)
+    || physical.index < 0
+    || typeof physical.occurrenceWitness !== 'string'
+    || !isLiveCardOccurrenceWitness(s, player, area, physical.occurrenceWitness)) {
+    return { kind: 'invalid' };
+  }
+  const expectedUid = area === 'evidence'
+    ? `evidence:${player}:${physical.index}`
+    : cardOccurrenceUid(player, area, physical.cardId, physical.index);
+  if (physical.uid !== undefined && physical.uid !== expectedUid) return { kind: 'invalid' };
+  const liveCardId = area === 'remove'
+    ? s.players[player].remove[physical.index]
+    : s.players[player].evidence[physical.index]?.cardId;
+  return liveCardId === physical.cardId
+    ? { kind: 'live', cardId: physical.cardId, index: physical.index }
+    : { kind: 'invalid' };
 }
 
 /**

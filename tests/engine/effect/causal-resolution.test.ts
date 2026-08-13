@@ -33,6 +33,7 @@ import {
 } from '@/engine/log/effect-causal';
 import { runOne } from '@/engine/resolve/stack';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { cardOccurrenceUid } from '@/engine/target/card-occurrence';
 import { produce } from '@/engine/produce';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import type { CardDef, CausalLogEntryV1, EffectCtx, EffectStackEntry, GameState } from '@/engine/types';
@@ -461,8 +462,22 @@ describe('structured causal effect resolution', () => {
         cardIds: ['PRIVATE-A', 'PRIVATE-B'],
         target: { query: { area: 'remove', side: 'opp' } },
         selectedCardOccurrences: [
-          { player: 'opp', area: 'remove', index: 0, cardId: 'PRIVATE-A' },
-          { player: 'opp', area: 'remove', index: 2, cardId: 'PRIVATE-B' },
+          {
+            uid: cardOccurrenceUid('opp', 'remove', 'PRIVATE-A', 0),
+            player: 'opp',
+            area: 'remove',
+            index: 0,
+            cardId: 'PRIVATE-A',
+            occurrenceWitness: 'occ:v1:opp:remove:0',
+          },
+          {
+            uid: cardOccurrenceUid('opp', 'remove', 'PRIVATE-B', 2),
+            player: 'opp',
+            area: 'remove',
+            index: 2,
+            cardId: 'PRIVATE-B',
+            occurrenceWitness: 'occ:v1:opp:remove:0',
+          },
         ],
       },
       setup: (draft: GameState) => {
@@ -478,8 +493,20 @@ describe('structured causal effect resolution', () => {
         cardIds: ['PRIVATE-A', 'PRIVATE-B'],
         target: { query: { area: 'partner-area', side: 'opp' } },
         selectedCardOccurrences: [
-          { player: 'opp', area: 'partner-area', index: 0, cardId: 'PRIVATE-A' },
-          { player: 'opp', area: 'partner-area', index: 2, cardId: 'PRIVATE-B' },
+          {
+            uid: cardOccurrenceUid('opp', 'partner-area', 'PRIVATE-A', 0),
+            player: 'opp',
+            area: 'partner-area',
+            index: 0,
+            cardId: 'PRIVATE-A',
+          },
+          {
+            uid: cardOccurrenceUid('opp', 'partner-area', 'PRIVATE-B', 2),
+            player: 'opp',
+            area: 'partner-area',
+            index: 2,
+            cardId: 'PRIVATE-B',
+          },
         ],
       },
       setup: (draft: GameState) => {

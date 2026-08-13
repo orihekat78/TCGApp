@@ -258,7 +258,7 @@ describe('hiramekiResolve dispatch (Commit 3a)', () => {
     expect(useGameStateStore.getState().pendingHirameki).toMatchObject({
       actionId,
       causalCorrelationEventId: expect.any(String),
-      occurrence: { player: 'opp', cardId: PAUSED_HIRAMEKI_ID, removeIndex: 1 },
+      occurrence: { uid: `card:opp:remove:${PAUSED_HIRAMEKI_ID}#1`, player: 'opp', cardId: PAUSED_HIRAMEKI_ID, area: 'remove', index: 1 },
     });
 
     const fireResult = resolvePendingHirameki('fire');

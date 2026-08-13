@@ -104,4 +104,5 @@ export interface MatchRecord {
 export interface ValidationResult {
   ok: boolean;
   errors: string[];
+  warnings: string[];
 }

@@ -330,7 +330,12 @@ export function DeckEditor({
           />
           <div ref={validationRef} className="deck-validation" data-testid="deck-validation" tabIndex={-1}>
             {validation.ok ? (
-              <WarningBanner tone="info" title="検証 OK" body="40 枚 / カード別枚数上限 / パートナー 1 / 事件 1 を満たしています" />
+              <>
+                <WarningBanner tone="info" title="検証 OK" body="40 枚 / カード別枚数上限 / パートナー 1 / 事件 1 を満たしています" />
+                {validation.warnings.length > 0 && (
+                  <WarningBanner tone="warn" title="大会制限の注意" items={validation.warnings} />
+                )}
+              </>
             ) : (
               <WarningBanner tone="error" title="検証エラー" items={validation.errors} />
             )}

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { relative, resolve } from 'node:path';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import type { QaSnapshot } from './gen-docs/gen-qa-trace.js';
@@ -58,6 +58,21 @@ function compareOrdinal(left: string, right: string): number {
     if (delta) return delta;
   }
   return a.length - b.length;
+}
+
+function canonicalJson(value: unknown): string {
+  const normalize = (candidate: unknown): unknown => {
+    if (Array.isArray(candidate)) return candidate.map(normalize);
+    if (candidate && typeof candidate === 'object') {
+      return Object.fromEntries(
+        Object.entries(candidate as Record<string, unknown>)
+          .sort(([left], [right]) => compareOrdinal(left, right))
+          .map(([key, nested]) => [key, normalize(nested)]),
+      );
+    }
+    return candidate;
+  };
+  return JSON.stringify(normalize(value));
 }
 
 function hash(value: string | Buffer): string {
@@ -381,19 +396,20 @@ function validateLocalRaw(root: string, expected: readonly QaRawPackage[]): void
 function validateLocalRawSnapshot(root: string, snapshot: QaSnapshot): void {
   const { buildQaHashSnapshot } = require('./cards/write-qa-hash-snapshot.cjs') as { buildQaHashSnapshot: (projectRoot: string) => QaSnapshot };
   const rebuilt = buildQaHashSnapshot(root);
-  if (JSON.stringify(rebuilt) !== JSON.stringify(snapshot)) throw new Error('local raw Q&A snapshot drift');
+  if (canonicalJson(rebuilt) !== canonicalJson(snapshot)) throw new Error('local raw Q&A snapshot drift');
 }
 
 type MergeQaAdjudicationResult = { manifest: QaAdjudicationManifest; statuses: Record<string, QaAdjudicationStatus>; results: Record<string, QaAdjudicationResult>; methods: Record<string, QaAdjudicationMethod>; evidence: Record<string, string[]>; allAdjudicated: boolean };
-type MergeQaAdjudicationOptions = { root?: string; check?: boolean; requireReviewed?: boolean; withLocalRaw?: boolean; lockToken?: unknown };
+type MergeQaAdjudicationOptions = { root?: string; check?: boolean; requireReviewed?: boolean; withLocalRaw?: boolean; lockToken?: unknown; adjudicationDir?: string };
 
 function mergeQaAdjudicationUnlocked(root: string, options: MergeQaAdjudicationOptions): MergeQaAdjudicationResult {
+  const fileAt = (...parts: string[]) => resolve(options.adjudicationDir ?? pathAt(root), ...parts);
   const snapshot = readJson(resolve(root, '.claude/specs/cards-data/qa-hash-snapshot.json'));
   validateSnapshot(snapshot);
-  const manifest = readJson(pathAt(root, 'manifest.json'));
+  const manifest = readJson(fileAt('manifest.json'));
   validateQaAdjudicationManifest(manifest);
   const shards = SHARDS.map((name) => {
-    const shard = readJson(pathAt(root, `${name}.json`));
+    const shard = readJson(fileAt(`${name}.json`));
     validateQaAdjudicationShard(shard);
     if (shard.shard !== name) throw new Error(`adjudication shard filename mismatch: ${name}`);
     return shard;
@@ -443,6 +459,140 @@ export function writeQaAdjudicationBootstrap(root: string, force = false, option
   return withQaCardsDataSnapshot(projectRoot, options.lockToken, () => writeQaAdjudicationBootstrapUnlocked(projectRoot, force));
 }
 
+const MIGRATION_KINDS = ['unchanged', 'remapped-answer-same', 'remapped-mechanical-answer-changed', 'stable-mechanical-answer-changed', 'semantic-unreviewed'] as const;
+type QaMigrationKind = (typeof MIGRATION_KINDS)[number];
+export type QaAdjudicationMigrationPlan = {
+  schemaVersion: 1;
+  oldSnapshot: QaAdjudicationManifest['snapshot'];
+  currentSnapshot: QaAdjudicationManifest['snapshot'];
+  counts: { old: number; current: number; preserved: number; unchanged: number; remappedAnswerSame: number; remappedMechanicalAnswerChanged: number; stableMechanicalAnswerChanged: number; unreviewed: number };
+  mappings: Array<{ fromQaId: string; fromAnswerHash: string; toQaId: string; toAnswerHash: string; kind: QaMigrationKind }>;
+  unreviewedQaIds: string[];
+};
+
+function assertQaMigrationPlan(value: unknown): asserts value is QaAdjudicationMigrationPlan {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('invalid Q&A adjudication migration plan');
+  const plan = value as Record<string, unknown>;
+  const typed = value as QaAdjudicationMigrationPlan;
+  assertExactKeys(plan, ['schemaVersion', 'oldSnapshot', 'currentSnapshot', 'counts', 'mappings', 'unreviewedQaIds'], 'Q&A adjudication migration plan');
+  if (plan.schemaVersion !== 1 || !Array.isArray(plan.mappings) || !Array.isArray(plan.unreviewedQaIds)) throw new Error('invalid Q&A adjudication migration plan');
+  validateQaAdjudicationManifest({ schemaVersion: 1, snapshot: plan.oldSnapshot, rawPackages: [] });
+  validateQaAdjudicationManifest({ schemaVersion: 1, snapshot: plan.currentSnapshot, rawPackages: [] });
+  if (!plan.counts || typeof plan.counts !== 'object' || Array.isArray(plan.counts)) throw new Error('invalid Q&A adjudication migration counts');
+  const counts = plan.counts as Record<string, unknown>;
+  const keys = ['old', 'current', 'preserved', 'unchanged', 'remappedAnswerSame', 'remappedMechanicalAnswerChanged', 'stableMechanicalAnswerChanged', 'unreviewed'];
+  assertExactKeys(counts, keys, 'Q&A adjudication migration counts');
+  for (const key of keys) if (!Number.isInteger(counts[key]) || (counts[key] as number) < 0) throw new Error(`invalid Q&A adjudication migration count: ${key}`);
+  const from = new Set<string>();
+  const to = new Set<string>();
+  for (const candidate of typed.mappings) {
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) throw new Error('invalid Q&A adjudication migration mapping');
+    const mapping = candidate as Record<string, unknown>;
+    assertExactKeys(mapping, ['fromQaId', 'fromAnswerHash', 'toQaId', 'toAnswerHash', 'kind'], 'Q&A adjudication migration mapping');
+    if (typeof mapping.fromQaId !== 'string' || !QA_ID.test(mapping.fromQaId) || typeof mapping.toQaId !== 'string' || !QA_ID.test(mapping.toQaId) || from.has(mapping.fromQaId) || to.has(mapping.toQaId) || !MIGRATION_KINDS.includes(mapping.kind as QaMigrationKind)) throw new Error('invalid Q&A adjudication migration mapping identity');
+    assertHash(mapping.fromAnswerHash, 'Q&A adjudication migration source answer hash');
+    assertHash(mapping.toAnswerHash, 'Q&A adjudication migration target answer hash');
+    from.add(mapping.fromQaId); to.add(mapping.toQaId);
+  }
+  const unreviewed = new Set<string>();
+  for (const qaId of typed.unreviewedQaIds) {
+    if (typeof qaId !== 'string' || !QA_ID.test(qaId) || unreviewed.has(qaId) || to.has(qaId)) throw new Error('invalid Q&A adjudication migration unreviewed identity');
+    unreviewed.add(qaId);
+  }
+  const count = (kind: QaMigrationKind) => typed.mappings.filter((mapping) => mapping.kind === kind).length;
+  if (typed.counts.old !== typed.mappings.length || typed.counts.current !== typed.mappings.length + typed.unreviewedQaIds.length || typed.counts.preserved !== typed.counts.old - count('semantic-unreviewed') || typed.counts.unchanged !== count('unchanged') || typed.counts.remappedAnswerSame !== count('remapped-answer-same') || typed.counts.remappedMechanicalAnswerChanged !== count('remapped-mechanical-answer-changed') || typed.counts.stableMechanicalAnswerChanged !== count('stable-mechanical-answer-changed') || typed.counts.unreviewed !== typed.unreviewedQaIds.length + count('semantic-unreviewed')) throw new Error('Q&A adjudication migration counts do not match mappings');
+}
+
+function readQaAdjudicationSource(root: string): { manifest: QaAdjudicationManifest; items: QaAdjudicationItem[] } {
+  const manifest = readJson(pathAt(root, 'manifest.json'));
+  validateQaAdjudicationManifest(manifest);
+  const items = SHARDS.flatMap((shard) => {
+    const value = readJson(pathAt(root, `${shard}.json`));
+    validateQaAdjudicationShard(value);
+    if (value.shard !== shard) throw new Error(`adjudication shard filename mismatch: ${shard}`);
+    return value.items;
+  });
+  return { manifest, items };
+}
+
+function writeMigrationStage(stage: string, built: { manifest: QaAdjudicationManifest; shards: QaAdjudicationShard[] }, workflow?: string): void {
+  writeFileSync(resolve(stage, 'manifest.json'), `${JSON.stringify(built.manifest, null, 2)}\n`, { flag: 'wx' });
+  for (const shard of built.shards) writeFileSync(resolve(stage, `${shard.shard}.json`), `${JSON.stringify(shard, null, 2)}\n`, { flag: 'wx' });
+  if (workflow !== undefined) writeFileSync(resolve(stage, 'WORKFLOW.md'), workflow, { flag: 'wx' });
+}
+
+function replaceQaAdjudicationDirectory(target: string, stage: string): void {
+  const backup = resolve(dirname(target), `.${'qa-adjudication'}.backup-${process.pid}-${Date.now()}`);
+  let moved = false;
+  try {
+    renameSync(target, backup);
+    moved = true;
+    renameSync(stage, target);
+    rmSync(backup, { recursive: true, force: true });
+  } catch (error) {
+    if (moved && !existsSync(target) && existsSync(backup)) renameSync(backup, target);
+    throw error;
+  } finally {
+    if (existsSync(stage)) rmSync(stage, { recursive: true, force: true });
+  }
+}
+
+export function migrateQaAdjudication(options: { root?: string; plan: unknown; apply: boolean; lockToken?: unknown }): { applied: boolean; preserved: number; unreviewed: number; total: number } {
+  const root = resolve(options.root ?? ROOT);
+  assertQaMigrationPlan(options.plan);
+  const plan = options.plan as QaAdjudicationMigrationPlan;
+  return withQaCardsDataSnapshot(root, options.lockToken, ({ lockToken }) => {
+    const current = readJson(resolve(root, '.claude/specs/cards-data/qa-hash-snapshot.json'));
+    validateSnapshot(current);
+    const targetBuilt = buildQaAdjudication({ snapshot: current, rawPackages: rawPackageMetadata(root) });
+    const source = readQaAdjudicationSource(root);
+    if (JSON.stringify(source.manifest.snapshot) !== JSON.stringify(plan.oldSnapshot) || JSON.stringify(targetBuilt.manifest.snapshot) !== JSON.stringify(plan.currentSnapshot)) throw new Error('Q&A adjudication migration snapshot pin drift');
+    const sourceById = new Map(source.items.map((item) => [item.qaId, item]));
+    const targetById = new Map(current.items.map((item) => [item.qaId, item]));
+    if (sourceById.size !== plan.counts.old || targetById.size !== plan.counts.current || source.items.length !== sourceById.size) throw new Error('Q&A adjudication migration item count drift');
+    const output = new Map<string, QaAdjudicationItem>();
+    for (const mapping of plan.mappings) {
+      const sourceItem = sourceById.get(mapping.fromQaId);
+      const targetItem = targetById.get(mapping.toQaId);
+      if (!sourceItem || !targetItem || sourceItem.answerHash !== mapping.fromAnswerHash || targetItem.answerHash !== mapping.toAnswerHash) throw new Error(`Q&A adjudication migration mapping drift: ${mapping.fromQaId}`);
+      output.set(mapping.toQaId, mapping.kind === 'semantic-unreviewed'
+        ? { qaId: mapping.toQaId, answerHash: mapping.toAnswerHash, status: 'legacy-unreviewed', result: 'unreviewed', method: 'unreviewed', evidence: [] }
+        : { ...sourceItem, qaId: mapping.toQaId, answerHash: mapping.toAnswerHash });
+    }
+    for (const qaId of plan.unreviewedQaIds) {
+      const targetItem = targetById.get(qaId);
+      if (!targetItem) throw new Error(`Q&A adjudication migration unreviewed target drift: ${qaId}`);
+      output.set(qaId, { qaId, answerHash: targetItem.answerHash, status: 'legacy-unreviewed', result: 'unreviewed', method: 'unreviewed', evidence: [] });
+    }
+    if (output.size !== targetById.size || [...targetById.keys()].some((qaId) => !output.has(qaId))) throw new Error('Q&A adjudication migration mapping union drift');
+    const built = {
+      manifest: targetBuilt.manifest,
+      shards: targetBuilt.shards.map((shard) => ({ ...shard, items: shard.items.map((item) => output.get(item.qaId)!) })),
+    };
+    if (!options.apply) return { applied: false, preserved: plan.counts.preserved, unreviewed: plan.counts.unreviewed, total: plan.counts.current };
+    const target = pathAt(root);
+    const stage = mkdtempSync(resolve(dirname(target), '.qa-adjudication.stage-'));
+    try {
+      const workflowPath = resolve(target, 'WORKFLOW.md');
+      writeMigrationStage(stage, built, existsSync(workflowPath) ? readFileSync(workflowPath, 'utf8') : undefined);
+      mergeQaAdjudicationUnlocked(root, { check: true, lockToken, adjudicationDir: stage });
+      if (existsSync(resolve(root, '.claude/specs/cards-data/_raw'))) {
+        try {
+          mergeQaAdjudicationUnlocked(root, { check: true, withLocalRaw: true, lockToken, adjudicationDir: stage });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          if (!/^(?:normalized FAQ hash mismatch|local raw Q&A snapshot drift)/.test(message)) throw error;
+        }
+      }
+      replaceQaAdjudicationDirectory(target, stage);
+    } catch (error) {
+      if (existsSync(stage)) rmSync(stage, { recursive: true, force: true });
+      throw error;
+    }
+    return { applied: true, preserved: plan.counts.preserved, unreviewed: plan.counts.unreviewed, total: plan.counts.current };
+  });
+}
+
 function main(): void {
   try {
     const args = process.argv.slice(2);
@@ -461,6 +611,12 @@ function main(): void {
         },
       });
       process.stdout.write(`[qa:adjudication] items=${Object.keys(result.statuses).length} all-adjudicated=${result.allAdjudicated}\n`);
+      return;
+    }
+    if (exact('--migrate') || exact('--migrate', '--apply')) {
+      const plan = readJson(resolve(ROOT, '.claude/specs/qa-adjudication/migrations/2026-08-12-authority-refresh.json'));
+      const result = migrateQaAdjudication({ root: ROOT, plan, apply: args.includes('--apply') });
+      process.stdout.write(`[qa:adjudication:migrate] applied=${result.applied} preserved=${result.preserved} unreviewed=${result.unreviewed} total=${result.total}\n`);
       return;
     }
     if (exact('--check') || exact('--check', '--require-reviewed') || exact('--check', '--with-local-raw') || exact('--check', '--with-local-raw', '--require-reviewed')) {

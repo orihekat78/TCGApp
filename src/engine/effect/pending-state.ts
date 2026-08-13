@@ -15,6 +15,8 @@ export type PendingEffectSource = {
   cardId: string;
   abilityId: string;
   uid?: string;
+  /** Exact source area; needed when a decision resumes an occurrence-bound effect. */
+  area?: EffectCtx['source']['area'];
   /** Resolving-card lifecycle marker. Must survive human decision pauses. */
   resolutionKind?: EffectResolutionKind;
   /** Stack position to resume before the next simultaneous sibling. */
@@ -139,6 +141,7 @@ export type PendingEffectPickSide = {
     index?: number;
     hostUid?: string;
     setCardInstanceId?: string;
+    occurrenceWitness?: string;
     hidden?: boolean;
   }[];
   /** 元 atom の verb (例: 'sceneRemove') */
