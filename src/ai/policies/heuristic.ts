@@ -5,7 +5,7 @@
 //
 // 優先順位 (高→低):
 //   1. solveCase — 勝利が見えるなら必ず取る
-//   2. assist — このアシストで FILE>=7 になる場合 (解決編移行) のみ
+//   2. assist — このアシストで partner-defined FILE threshold に達する場合のみ
 //   3. reasoning — 最も LP の高いソースを選ぶ。LP=0 のソースしかない場合はスキップ (rules/11)
 //   4. actionAgainstCase — 最大 AP のアタッカーを選ぶ
 //   5. actionAgainstChar — 攻撃側 AP >= 対象 AP の候補のみ。攻撃 AP 最大を選ぶ
@@ -79,13 +79,12 @@ export class HeuristicPolicy implements AIPolicy {
     const solve = candidates.find((m): m is Extract<Move, { kind: 'solveCase' }> => m.kind === 'solveCase');
     if (solve) return solve;
 
-    // 優先順位 2: assist — このアシストで FILE が 7 枚以上になる場合のみ採用
-    // (rules/01, 13: FILE 7 枚以上で事件編 → 解決編)
+    // 優先順位 2: assist — このアシストで printed FILE threshold に達する場合のみ採用
     const assist = candidates.find((m): m is Extract<Move, { kind: 'assist' }> => m.kind === 'assist');
     if (assist) {
       const fileLen = state.players[byPlayer].file.length;
       // アシスト時にパートナーが FILE に加わるため +1
-      if (fileLen + 1 >= 7) return assist;
+      if (fileLen + 1 >= engine.read.game.partnerAssistFileThreshold(state, byPlayer)) return assist;
     }
 
     // 優先順位 3 / 4: reasoning vs actionAgainstCase (BUG-044 / user_request #4)
@@ -221,11 +220,11 @@ export class HeuristicPolicy implements AIPolicy {
       return handSwitchCards[0];
     }
 
-    // 優先順位 7: startNextHint (Phase 9-B: fileLen >= 8 の surplus がある時だけ)
-    // NextHint は FILE を消費するため、assist 用 7 枚を確保した上での surplus でのみ使う。
+    // 優先順位 7: startNextHint (Phase 9-B: assist threshold + 1 の surplus がある時だけ)
+    // NextHint は FILE を消費するため、partner-defined assist 閾値を確保した上での surplus でのみ使う。
     // この gate を入れないと FILE 蓄積が NextHint で相殺され assist 閾値に到達しない。
     const nh = candidates.find((m): m is Extract<Move, { kind: 'startNextHint' }> => m.kind === 'startNextHint');
-    if (nh && state.players[byPlayer].file.length >= 8) return nh;
+    if (nh && state.players[byPlayer].file.length >= engine.read.game.partnerAssistFileThreshold(state, byPlayer) + 1) return nh;
 
     // フォールバック: endTurn / startNextHint 以外をランダムに選ぶ
     // (NextHint は priority 7 gate を通らない場合は使用しない)

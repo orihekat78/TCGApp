@@ -1,6 +1,6 @@
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { createConnection } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -247,9 +247,10 @@ describe('cards-data reader CLIs', () => {
     }
   });
 
-  it('rejects ground while a cards-data root swap owns the write lock', () => {
-    const catalog = mkdtempSync(path.join(tmpdir(), 'conan-ground-snapshot-cli-'));
-    fixtures.push(catalog);
+  it('grounds explicit TSV inputs without creating lock or transaction artifacts in the packet source', () => {
+    const fixture = mkdtempSync(path.join(tmpdir(), 'conan-ground-snapshot-cli-'));
+    fixtures.push(fixture);
+    const catalog = path.join(fixture, 'snapshot', '.claude', 'specs', 'cards-data');
     mkdirSync(path.join(catalog, 'ct-p10'), { recursive: true });
     writeFileSync(
       path.join(catalog, 'ct-p10', 'character.tsv'),
@@ -257,12 +258,22 @@ describe('cards-data reader CLIs', () => {
     );
 
     const lock = acquireCardsDataWriteLock(catalog);
+    const output = mkdtempSync(path.join(tmpdir(), 'conan-ground-snapshot-output-'));
+    fixtures.push(output);
     try {
-      expect(() => execFileSync(process.execPath, ['scripts/ground-dossier.cjs', 'B10097'], {
+      const before = readdirSync(fixture, { recursive: true }).sort();
+      const tsv = path.join(catalog, 'ct-p10', 'character.tsv');
+      const digest = createHash('sha256').update(readFileSync(tsv)).digest('hex');
+      const stdout = execFileSync(process.execPath, ['scripts/ground-dossier.cjs', '--out', output, '--tsv', tsv, '--tsv-sha', digest, 'B10097'], {
         cwd: ROOT,
         encoding: 'utf8',
         env: { ...process.env, CONAN_CARDS_DATA_DIR: catalog },
-      })).toThrow(/cards-data write lock is already held/);
+      });
+      expect(stdout).toContain(path.join(output, 'B10097.md'));
+      expect(readdirSync(fixture, { recursive: true }).sort()).toEqual(before);
+      expect(readdirSync(output).sort()).toEqual(['B10097.md', '_capabilities.md']);
+      expect(readFileSync(path.join(output, 'B10097.md'), 'utf8')).toContain(`directory: ${output}`);
+      expect(readFileSync(path.join(output, 'B10097.md'), 'utf8')).toContain(path.join(output, '_capabilities.md'));
     } finally {
       expect(releaseCardsDataWriteLock(catalog, lock)).toBe(true);
     }

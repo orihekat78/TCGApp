@@ -17,6 +17,11 @@ import { useGameStateStore } from '@/ui/state/store';
 import { useConfirmationStore } from '@/ui/hooks/useConfirmation';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { GameState, FileCard } from '@/engine/types/game-state';
+import { GENERATED_PARTNERS } from '@/cards';
+import { _resetRegistry as resetDefRegistry, register as registerCardDef } from '@/engine/read/def';
+
+const PR022 = GENERATED_PARTNERS.find(({ id }) => id === 'PR022');
+if (!PR022) throw new Error('production PR022 is not registered in GENERATED_PARTNERS');
 
 function setupForAssist(): GameState {
   const s = createEmptyGameState();
@@ -57,6 +62,8 @@ async function rejectConfirmation(): Promise<void> {
 
 describe('runAssistFlow', () => {
   beforeEach(() => {
+    resetDefRegistry();
+    registerCardDef(PR022);
     useGameStateStore.setState({ gameState: null });
     useConfirmationStore.getState()._reset();
   });
@@ -86,6 +93,29 @@ describe('runAssistFlow', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toBe('cancelled');
     expect(useGameStateStore.getState().gameState).toBe(before);
+  });
+
+  it('shows PR022 FILE 8 transition copy only when assist reaches 8', async () => {
+    const atSeven = setupForAssist();
+    atSeven.players.self.partner.cardId = PR022.id;
+    atSeven.players.self.file = Array.from({ length: 6 }, (): FileCard => ({ type: 'card-back' }));
+    useGameStateStore.setState({ gameState: atSeven });
+    const belowPromise = runAssistFlow({ player: 'self' });
+    expect(useConfirmationStore.getState().current?.body).toContain('現在 FILE 6 枚 → 7 枚');
+    expect(useConfirmationStore.getState().current?.body).not.toContain('FILE 8 枚以上');
+    await rejectConfirmation();
+    await belowPromise;
+
+    const atEight = setupForAssist();
+    atEight.players.self.partner.cardId = PR022.id;
+    atEight.players.self.file = Array.from({ length: 7 }, (): FileCard => ({ type: 'card-back' }));
+    useGameStateStore.setState({ gameState: atEight });
+    const thresholdPromise = runAssistFlow({ player: 'self' });
+    expect(useConfirmationStore.getState().current?.body).toContain('現在 FILE 7 枚 → 8 枚');
+    expect(useConfirmationStore.getState().current?.body).toContain('FILE 8 枚以上');
+    await acceptConfirmation();
+    expect(await thresholdPromise).toEqual({ ok: true });
+    expect(useGameStateStore.getState().gameState?.players.self.case.status).toBe('解決編');
   });
 
   it('not-allowed when partner is sleep', async () => {

@@ -3,6 +3,8 @@
 // パートナー + 事件 + 40 枚 (num,count) を 1 つのテキストコードに可逆エンコードする。
 
 import type { DeckRecord } from '../data/types';
+import { deckLegalityCatalogResolver } from '../../../src/shared/deck-legality-catalog.generated';
+import { validateDeckLegality } from '../../../src/shared/deck-legality';
 
 const PREFIX = 'CONAN1:';
 
@@ -45,14 +47,31 @@ export function decodeDeck(code: string): DecodedDeck | null {
   try {
     const payload = JSON.parse(b64decode(trimmed.slice(PREFIX.length))) as DeckCodePayload;
     if (!payload || typeof payload.p !== 'string' || !Array.isArray(payload.cards)) return null;
-    return {
+    const seen = new Set<string>();
+    const cards: DecodedDeck['cards'] = [];
+    for (const entry of payload.cards) {
+      if (
+        !Array.isArray(entry)
+        || entry.length !== 2
+        || typeof entry[0] !== 'string'
+        || !Number.isSafeInteger(entry[1])
+        || entry[1] < 1
+        || seen.has(entry[0])
+      ) return null;
+      seen.add(entry[0]);
+      cards.push({ num: entry[0], count: entry[1] });
+    }
+    const decoded: DecodedDeck = {
       name: typeof payload.n === 'string' && payload.n ? payload.n : 'インポートデッキ',
       partner: payload.p,
       case: typeof payload.c === 'string' ? payload.c : '',
-      cards: payload.cards
-        .filter((x) => Array.isArray(x) && typeof x[0] === 'string' && Number.isFinite(x[1]) && x[1] > 0)
-        .map(([num, count]) => ({ num, count })),
+      cards,
     };
+    return validateDeckLegality({
+      partner: decoded.partner,
+      case: decoded.case,
+      main: decoded.cards.map(({ num, count }) => ({ printingId: num, count })),
+    }, deckLegalityCatalogResolver).ok ? decoded : null;
   } catch {
     return null;
   }

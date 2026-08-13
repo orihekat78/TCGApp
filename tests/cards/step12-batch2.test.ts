@@ -47,6 +47,7 @@ const FIXTURES: CardDef[] = [
   mkChar('AP8K', { ap: 8000 }),
   mkChar('AP9K', { ap: 9000 }),
   mkChar('HATTORI', { names: ['服部平次'] }),
+  mkChar('MOURI_KOGORO', { names: ['毛利小五郎'] }),
 ];
 const ALL = [B09108, B09108P, B09003, B09003P, PR105, ...FIXTURES];
 

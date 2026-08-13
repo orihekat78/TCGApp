@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { CloudApiError, createCloudApiClient } from '../../meta-app/src/cloud/apiClient';
 import type { CloudSyncOperation } from '../../meta-app/src/cloud/types';
+import { SAMPLE_DECK } from '../../meta-app/src/data/sampleDeck';
 
 function jsonResponse(body: unknown, status = 200, headers: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), {
@@ -21,9 +22,9 @@ function deckOperation(): CloudSyncOperation {
     payload: {
       deckId: 'deck-1',
       name: '同期デッキ',
-      partnerCardNum: 'D08001',
-      caseCardNum: 'D08026',
-      cards: [{ cardNum: 'D08002', count: 40 }],
+      partnerCardNum: SAMPLE_DECK.partner,
+      caseCardNum: SAMPLE_DECK.case,
+      cards: SAMPLE_DECK.cards.map(({ num, count }) => ({ cardNum: num, count })),
       clientModifiedAt: 900,
       expectedRevision: null,
     },
@@ -67,6 +68,27 @@ describe('same-origin cloud API client', () => {
       code: 'INVALID_RESPONSE',
       retryable: false,
     });
+  });
+
+  it('rejects a structurally valid remote deck with a partner in main', async () => {
+    const { expectedRevision: _expectedRevision, ...remoteDeck } = deckOperation().payload;
+    const invalidDeck = {
+      ...remoteDeck,
+      cards: [{ cardNum: 'D08002', count: 40 }],
+      revision: 1,
+      serverUpdatedAt: 1_100,
+    };
+    const client = createCloudApiClient(async () => jsonResponse({
+      data: {
+        identity: { email: 'family@example.com' },
+        decks: [invalidDeck],
+        deletedDecks: [],
+        activeDeck: null,
+        stats: { matches: 0, wins: 0, losses: 0, winRate: null },
+      },
+    }));
+
+    await expect(client.bootstrap()).rejects.toMatchObject({ code: 'INVALID_RESPONSE' });
   });
 
   it('sends only the stored mutation payload and stable idempotency key', async () => {

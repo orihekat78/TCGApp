@@ -122,10 +122,13 @@ test.describe('BUG-236 card detail modal priority', () => {
     await expect(detail).toBeVisible();
 
     await page.evaluate(async () => {
-      const loadMulligan = new Function('return import("/src/ui/hooks/useMulligan.ts")') as () => Promise<{
-        useMulliganStore: { getState: () => { _setCurrent: (request: unknown) => void } };
-      }>;
-      const { useMulliganStore } = await loadMulligan();
+      const { useMulliganStore } = await (window as unknown as {
+        __game: {
+          testApi: Promise<{
+            useMulliganStore: { getState: () => { _setCurrent: (request: unknown) => void } };
+          }>;
+        };
+      }).__game.testApi;
       useMulliganStore.getState()._setCurrent({ player: 'self', hand: ['D08015'] });
     });
 

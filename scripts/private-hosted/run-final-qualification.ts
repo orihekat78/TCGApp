@@ -21,6 +21,7 @@ import type { ReleaseBasicFinding } from "./audit-release-basics.js";
 export const QUALIFICATION_COMMAND_IDS = [
   "npm-ci",
   "card-identities",
+  "deck-legality",
   "build",
   "dependency-audit",
   "bug-gate",
@@ -517,6 +518,7 @@ function commandInputs(
   return [
     npmInput("npm-ci", ["ci"], paths),
     npmRun("card-identities", "check:meta-card-identities"),
+    npmRun("deck-legality", "check:deck-legality-catalog"),
     npmRun("build", "build:meta"),
     npmInput("dependency-audit", ["audit", "--audit-level=high"], paths),
     npmRun("bug-gate", "private-hosted:bug-gate"),

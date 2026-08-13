@@ -8,30 +8,21 @@ type ReplacementFixture = {
 
 async function openRealSetCardReplacement(page: Page): Promise<ReplacementFixture> {
   return page.evaluate(async () => {
-    const loadMutate = new Function('return import("/src/engine/mutate/index.ts")') as () => Promise<{
-      mutate: {
-        scene: {
-          enter: (state: unknown, player: 'self' | 'opp', cardId: string, opts: Record<string, never>) => { uid: string };
-          removeToRemove: (state: unknown, uid: string, cause: 'effect') => { deferred?: boolean };
-        };
-        char: {
-          setCard: (state: unknown, hostUid: string, cardId: string, faceUp: boolean) => void;
-        };
-      };
-    }>;
-    const loadProduce = new Function('return import("/src/engine/produce.ts")') as () => Promise<{
-      produce: (state: unknown, recipe: (draft: unknown) => void) => unknown;
-    }>;
-    const loadSurface = new Function('return import("/src/ui/state/surface-pending.ts")') as () => Promise<{
-      surfacePendingSideChannels: (getStore: () => unknown) => void;
-    }>;
-    const [{ mutate }, { produce }, { surfacePendingSideChannels }] = await Promise.all([
-      loadMutate(),
-      loadProduce(),
-      loadSurface(),
-    ]);
     const app = (window as unknown as {
       __game: {
+        testApi: Promise<{
+          mutate: {
+            scene: {
+              enter: (state: unknown, player: 'self' | 'opp', cardId: string, opts: Record<string, never>) => { uid: string };
+              removeToRemove: (state: unknown, uid: string, cause: 'effect') => { deferred?: boolean };
+            };
+            char: {
+              setCard: (state: unknown, hostUid: string, cardId: string, faceUp: boolean) => void;
+            };
+          };
+          produce: (state: unknown, recipe: (draft: unknown) => void) => unknown;
+          surfacePendingSideChannels: (getStore: () => unknown) => void;
+        }>;
         createSampleGameState: () => unknown;
         setGameState: (state: unknown) => boolean;
         store: {
@@ -52,6 +43,7 @@ async function openRealSetCardReplacement(page: Page): Promise<ReplacementFixtur
         };
       };
     }).__game;
+    const { mutate, produce, surfacePendingSideChannels } = await app.testApi;
     const store = app.store;
     store.getState().resetMatchSessionState();
     store.getState().setSpectatorMode(false);

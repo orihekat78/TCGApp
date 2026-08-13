@@ -71,7 +71,7 @@
   background: var(--file-accent);
   box-shadow: 0 0 4px color-mix(in oklch, var(--file-accent) 50%, transparent);
 }
-/* Phase 9-E: FILE 7 枚以上で解決編移行可能 (rules/13) のハイライト */
+/* Phase 9-E: printed FILE threshold で解決編移行可能 (rules/13) のハイライト */
 .file-area .file-strip-header .progress-7.complete span.filled {
   background: #d4a425;
   box-shadow: 0 0 6px rgba(212, 164, 37, 0.8);

@@ -168,11 +168,16 @@
     {
       "qaId": "card:B02089:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02089.ts:28"
+        "src:src/cards/ct-p02/B02089.ts:28",
+        "tests:tests/cards/_shared/caseResolvedOpponentDraw.e2e.test.ts:58",
+        "tests:tests/cards/_shared/caseResolvedOpponentDraw.e2e.test.ts:63",
+        "tests:tests/cards/_shared/caseResolvedOpponentDraw.e2e.test.ts:65",
+        "tests:tests/cards/_shared/caseResolvedOpponentDraw.e2e.test.ts:67",
+        "tests:tests/cards/_shared/caseResolvedOpponentDraw.e2e.test.ts:78"
       ]
     },
     {
@@ -540,18 +545,23 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05030.ts:1",
-        "tests:tests/cards/ct-p05/B05030.test.ts:15"
+        "src:src/cards/ct-p05/B05030.ts:27",
+        "tests:tests/cards/ct-p05/B05030.test.ts:182",
+        "tests:tests/cards/ct-p05/B05030.test.ts:188",
+        "tests:tests/cards/ct-p05/B05030.test.ts:189"
       ]
     },
     {
       "qaId": "card:B05030:ba02684ab7e8a9ba96986068b933e491ee063afb6fbcdb462f14c243795eb5b4",
       "answerHash": "b53a5c83fb5ab0a2aa4e5ccb8f0a71e892528d87a9a6661b34fca157e2e77c86",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05030.ts:46"
+        "src:src/cards/ct-p05/B05030.ts:37",
+        "src:src/cards/ct-p05/B05030.ts:40",
+        "tests:tests/cards/ct-p05/B05030.test.ts:104",
+        "tests:tests/cards/ct-p05/B05030.test.ts:108"
       ]
     },
     {
@@ -750,11 +760,14 @@
     {
       "qaId": "card:B06043:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "test-missing",
-      "result": "test-gap",
-      "method": "manual-semantic",
+      "status": "matched",
+      "result": "aligned",
+      "method": "group-equivalent",
       "evidence": [
-        "src:src/cards/ct-p06/B06043.ts:120"
+        "src:src/cards/ct-p06/B06043.ts:120",
+        "tests:tests/integration/dispatch-to-state.test.ts:38",
+        "tests:tests/integration/dispatch-to-state.test.ts:50",
+        "tests:tests/integration/dispatch-to-state.test.ts:54"
       ]
     },
     {
@@ -1425,15 +1438,15 @@
     {
       "qaId": "card:B10082:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "test-missing",
-      "result": "test-gap",
-      "method": "manual-semantic",
+      "status": "matched",
+      "result": "aligned",
+      "method": "group-equivalent",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:20",
-        "src:src/cards/ct-p10/B10082.ts:11"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10082.ts:11",
+        "tests:tests/integration/dispatch-to-state.test.ts:38",
+        "tests:tests/integration/dispatch-to-state.test.ts:50",
+        "tests:tests/integration/dispatch-to-state.test.ts:54"
       ]
     },
     {
@@ -1482,15 +1495,15 @@
     {
       "qaId": "card:B10101:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "test-missing",
-      "result": "test-gap",
-      "method": "manual-semantic",
+      "status": "matched",
+      "result": "aligned",
+      "method": "group-equivalent",
       "evidence": [
         "rules:.claude/rules/21-declared-ability-cost.md:15",
-        "src:src/cards/ct-p10/B10101.ts:41"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10101.ts:41",
+        "tests:tests/integration/dispatch-to-state.test.ts:38",
+        "tests:tests/integration/dispatch-to-state.test.ts:50",
+        "tests:tests/integration/dispatch-to-state.test.ts:54"
       ]
     },
     {

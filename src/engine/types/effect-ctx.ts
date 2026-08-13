@@ -3,6 +3,10 @@
 
 import type { Candidate } from './candidate.js';
 
+export type DeclaredNameDomain =
+  | 'unrestricted'
+  | 'registered-character-card-name';
+
 /**
  * How the source card entered its current effect-resolution window.
  *
@@ -48,6 +52,8 @@ export type EffectCtx = {
   // ctx.bindings とは別の軽量チャネル (rows 49/53/999 の 3-way storage を本形に統一、Candidate 汚染案は棄却)。
   // 読み手: cond boundNameMatchesDeclared / dyn $declared.<key>[.sceneNameCount]。
   declaredNames?: Record<string, string>;
+  /** Domain authority paired with each declared name across resolver pauses. */
+  declaredNameDomains?: Record<string, DeclaredNameDomain>;
   picked?: Candidate[];
   viaCost?: boolean;
   costPaid?: Record<string, unknown>;

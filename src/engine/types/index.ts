@@ -53,6 +53,7 @@ export type {
 
 export type {
   EffectCtx,
+  DeclaredNameDomain,
   ContactCtx,
   CausalEffectTrace,
   EffectResolutionKind,

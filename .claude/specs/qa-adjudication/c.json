@@ -160,14 +160,15 @@
     {
       "qaId": "card:B01080:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa",
       "answerHash": "5883b6d21761d9ad8c88fdadb72d71431e67e38adf4b7a20e2f9fd95c6e3357f",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p01/B01080.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p01/B01080.ts:1",
+        "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:41",
+        "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:43",
+        "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:46",
+        "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:47"
       ]
     },
     {
@@ -522,14 +523,13 @@
     {
       "qaId": "card:B03132:e2f2e95abd482ed3b39e41b21dab18bfdb59f38cdfe18873117af2ef2dc02ced",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03132.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p03/B03132.ts:1",
+        "tests:tests/cards/_shared/shortDeckRevealCommonFlow.e2e.test.ts:162",
+        "tests:tests/cards/_shared/shortDeckRevealCommonFlow.e2e.test.ts:175"
       ]
     },
     {
@@ -675,14 +675,13 @@
     {
       "qaId": "card:B04040:e2f2e95abd482ed3b39e41b21dab18bfdb59f38cdfe18873117af2ef2dc02ced",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04040.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p04/B04040.ts:1",
+        "tests:tests/cards/_shared/shortDeckRevealCommonFlow.e2e.test.ts:162",
+        "tests:tests/cards/_shared/shortDeckRevealCommonFlow.e2e.test.ts:175"
       ]
     },
     {
@@ -739,14 +738,13 @@
     {
       "qaId": "card:B04061:e2f2e95abd482ed3b39e41b21dab18bfdb59f38cdfe18873117af2ef2dc02ced",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04061.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p04/B04061.ts:1",
+        "tests:tests/cards/_shared/shortDeckRevealCommonFlow.e2e.test.ts:162",
+        "tests:tests/cards/_shared/shortDeckRevealCommonFlow.e2e.test.ts:175"
       ]
     },
     {
@@ -1134,14 +1132,12 @@
     {
       "qaId": "card:B06106:4884b70d9b28923ff8aa12110cd31e8a1dbcc3b34ef9dea7cdc81f1a5b856a9b",
       "answerHash": "408b0f7ae3053fdc4833d6e7775a945fc98d62835225940d30d4901c86fcfc46",
-      "status": "test-missing",
-      "result": "test-gap",
-      "method": "manual-semantic",
+      "status": "matched",
+      "result": "aligned",
+      "method": "group-equivalent",
       "evidence": [
-        "src:src/cards/ct-p06/B06106.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p06/B06106.ts:1",
+        "tests:tests/cards/official-qa/B05118-family-nonblack-partner.test.ts:92"
       ]
     },
     {
@@ -1447,14 +1443,14 @@
     {
       "qaId": "card:B08076:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "test-missing",
-      "result": "test-gap",
-      "method": "manual-semantic",
+      "status": "matched",
+      "result": "aligned",
+      "method": "group-equivalent",
       "evidence": [
-        "src:src/cards/ct-p08/B08076.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p08/B08076.ts:1",
+        "tests:tests/integration/dispatch-to-state.test.ts:38",
+        "tests:tests/integration/dispatch-to-state.test.ts:50",
+        "tests:tests/integration/dispatch-to-state.test.ts:54"
       ]
     },
     {
@@ -2007,14 +2003,15 @@
     {
       "qaId": "card:D03001:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa",
       "answerHash": "5883b6d21761d9ad8c88fdadb72d71431e67e38adf4b7a20e2f9fd95c6e3357f",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d03/D03001.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-d03/D03001.ts:1",
+        "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:41",
+        "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:43",
+        "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:46",
+        "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:47"
       ]
     },
     {

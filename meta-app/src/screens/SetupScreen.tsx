@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode, RefObject } from 'react';
 import { CardArt } from '@/ui/components/CardArt';
+import { BUG_274_PARTNER } from '@/ui/fixtures/bug274PartnerFixture.js';
 import { useGameStateStore } from '@/ui/state/store';
 import { useTutorialStore } from '@/ui/state/tutorialStore';
 import {
@@ -8,12 +9,14 @@ import {
   commitMatchSession,
   endMatchSession,
   isCurrentMatchSession,
+  retainMatchSessionCard,
 } from '@/ui/services/matchSession';
 import { CARD_POOL } from '../data/cardPool';
 import {
   BUG_274_PARTNER_CARD,
   BUG_274_PUBLIC_DECK,
   BUG_274_PUBLIC_DECK_ID,
+  isBug274ValidationDeck,
 } from '../data/bug274ValidationDeck';
 import type { DeckRecord } from '../data/types';
 import type { Route } from '../router/routes';
@@ -36,13 +39,19 @@ type DeckSide = 'self' | 'opp';
 export function SetupScreen({ onNav }: Props) {
   const decks = useDecksStore((state) => state.decks);
   const activeDeckId = useDecksStore((state) => state.activeDeckId);
-  const initialSelfDeckId = decks.some((deck) => deck.id === activeDeckId && isPlayable(deck))
+  // User storage may contain this public fixture's ID. Never let its values
+  // shadow the route-owned object that carries fixture authority.
+  const selectableDecks = [
+    ...decks.filter((deck) => deck.id !== BUG_274_PUBLIC_DECK_ID),
+    BUG_274_PUBLIC_DECK,
+  ];
+  const initialSelfDeckId = selectableDecks.some((deck) => deck.id === activeDeckId && isPlayable(deck))
     ? activeDeckId
-    : decks.find((deck) => isPlayable(deck))?.id ?? '';
+    : selectableDecks.find((deck) => isPlayable(deck))?.id ?? '';
   const [mode, setMode] = useState<Mode>('solo');
   const [firstChoice, setFirstChoice] = useState<FirstChoice>('random');
   const [selfDeckId, setSelfDeckId] = useState(initialSelfDeckId);
-  const [oppDeckId, setOppDeckId] = useState(decks[1]?.id ?? decks[0]?.id ?? '');
+  const [oppDeckId, setOppDeckId] = useState(selectableDecks[1]?.id ?? selectableDecks[0]?.id ?? '');
   const [deckDialogSide, setDeckDialogSide] = useState<DeckSide | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   const startInFlightRef = useRef(false);
@@ -51,9 +60,6 @@ export function SetupScreen({ onNav }: Props) {
   const selfChangeRef = useRef<HTMLButtonElement>(null);
   const oppChangeRef = useRef<HTMLButtonElement>(null);
   const readyRef = useRef<HTMLButtonElement>(null);
-  const selectableDecks = decks.some((deck) => deck.id === BUG_274_PUBLIC_DECK_ID)
-    ? decks
-    : [...decks, BUG_274_PUBLIC_DECK];
   const selfDeck = selectableDecks.find((deck) => deck.id === selfDeckId);
   const oppDeck = selectableDecks.find((deck) => deck.id === oppDeckId);
   const ready = isPlayable(selfDeck) && isPlayable(oppDeck);
@@ -105,13 +111,22 @@ export function SetupScreen({ onNav }: Props) {
     useTutorialStore.getState().exit();
     onNav('match');
     const firstPlayer = firstChoice === 'p1' ? 'self' : firstChoice === 'p2' ? 'opp' : undefined;
+    const bug274Fixture = isBug274ValidationDeck(selfDeck)
+      ? selfDeck
+      : isBug274ValidationDeck(oppDeck)
+        ? oppDeck
+        : undefined;
     customGameStart(selfDeck, oppDeck, {
       sessionId,
       spectator: mode === 'observe',
       firstPlayer,
+      bug274Fixture,
       isSessionCurrent: () => isCurrentMatchSession(session),
     })
       .then((gameState) => {
+        if (bug274Fixture && isCurrentMatchSession(session)) {
+          retainMatchSessionCard(session, BUG_274_PARTNER);
+        }
         if (!commitMatchSession(session, gameState) && isCurrentMatchSession(session)) {
           throw new Error('対戦状態を読み込めませんでした。');
         }
@@ -226,7 +241,7 @@ function SetupPlayerPanel({ side, label, deck, triggerRef, onChangeDeck }: {
   triggerRef: RefObject<HTMLButtonElement | null>;
   onChangeDeck: () => void;
 }) {
-  const partner = deck?.id === BUG_274_PUBLIC_DECK_ID
+  const partner = isBug274ValidationDeck(deck)
     ? BUG_274_PARTNER_CARD
     : deck ? CARD_POOL.find((card) => card.num === deck.partner) : undefined;
   const incident = deck ? CARD_POOL.find((card) => card.num === deck.case) : undefined;

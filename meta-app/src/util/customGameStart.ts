@@ -12,7 +12,11 @@ import type { DeckPair } from '@/engine/flow/setup';
 import type { DeckRecord } from '../data/types';
 import { defaultCaseForPartner } from '../data/cardPool';
 import { BUG_274_PARTNER } from '@/ui/fixtures/bug274PartnerFixture.js';
-import { BUG_274_PARTNER_ID } from '../data/bug274ValidationDeck';
+import {
+  BUG_274_PARTNER_ID,
+  BUG_274_PUBLIC_DECK_ID,
+  isBug274ValidationDeck,
+} from '../data/bug274ValidationDeck';
 import { startCausalSession } from '@/engine/log/causal';
 
 /** meta DeckRecord → engine Deck 変換 (mainCards を count 分展開) */
@@ -39,10 +43,24 @@ export async function customGameStart(
     sessionId: string;
     spectator?: boolean;
     firstPlayer?: 'self' | 'opp';
+    /** The route-owned fixture object. Persisted/imported DeckRecord values cannot supply it. */
+    bug274Fixture?: DeckRecord;
     /** False when the route/session owner has cancelled this start. */
     isSessionCurrent?: () => boolean;
   },
 ): Promise<GameState> {
+  const participants = [selfDeck, oppDeck];
+  const isAuthorizedFixture = (deck: DeckRecord): boolean =>
+    opts.bug274Fixture === deck && isBug274ValidationDeck(deck);
+  const hasUnauthorizedFixtureClaim = participants.some((deck) =>
+    (deck.id === BUG_274_PUBLIC_DECK_ID || deck.partner === BUG_274_PARTNER_ID)
+    && !isAuthorizedFixture(deck));
+  if (hasUnauthorizedFixtureClaim) {
+    throw new Error('customGameStart: unauthorized BUG-274 fixture identity');
+  }
+  const authorizedFixture = participants.some(isAuthorizedFixture);
+
+  const run = async (): Promise<GameState> => {
   const assertSessionCurrent = (): void => {
     if (opts.isSessionCurrent?.() === false) {
       throw new Error('customGameStart: match session cancelled');
@@ -54,10 +72,6 @@ export async function customGameStart(
     self: toEngineDeck(selfDeck),
     opp:  toEngineDeck(oppDeck),
   };
-  if (selfDeck.partner === BUG_274_PARTNER_ID || oppDeck.partner === BUG_274_PARTNER_ID) {
-    engine.cards.register(BUG_274_PARTNER);
-  }
-
   // Phase A: init / decideFirstPlayer / dealOpeningHand × 2
   let state = produce(createEmptyGameState(), (draft) => {
     startCausalSession(draft, opts.sessionId);
@@ -96,4 +110,9 @@ export async function customGameStart(
   });
 
   return state;
+  };
+
+  return authorizedFixture
+    ? engine.cards.withTemporary(BUG_274_PARTNER, run)
+    : run();
 }

@@ -19,6 +19,6 @@ const a4: AbilityDef = { id: 'a4', type: 'triggered', scope: 'on-hand',
   trigger: { hook: 'effect:declared', optional: true, selfOnly: true },
   effect: { kind: 'atom', verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: 2000, scope: 'contact' } },
   description: '【カットイン】AP＋2000', ruleRefs: ['rules/09-cutin-disguise.md', 'rules/22-qa-action-contact.md'] };
-export const B10065: CardDef = { id: 'B10065', no: '1121/B10065', kind: 'character', names: ['松田陣平', '萩原研二'], colors: ['黄'], level: 9, ap: 8000, lp: 2, traits: ['警察', '警視庁'], keywords: [], rarity: 'MR', imageUrl: '1783904183356249.jpg', abilities: [a1, a2, a3, a4], ruleRefs: ['rules/09-cutin-disguise.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/18-mr.md', 'rules/21-declared-ability-cost.md', 'rules/22-qa-action-contact.md'] };
+export const B10065: CardDef = { id: 'B10065', no: '1121/B10065', kind: 'character', names: ['松田陣平＆萩原研二', '松田陣平', '萩原研二'], colors: ['黄'], level: 9, ap: 8000, lp: 2, traits: ['警察', '警視庁'], keywords: [], rarity: 'MR', imageUrl: '1783904183356249.jpg', abilities: [a1, a2, a3, a4], ruleRefs: ['rules/09-cutin-disguise.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/18-mr.md', 'rules/21-declared-ability-cost.md', 'rules/22-qa-action-contact.md'] };
 export const B10065P: CardDef = { ...B10065, id: 'B10065P', no: '1121/B10065P', rarity: 'MRP', imageUrl: '1783904183364547.jpg' };
 export const B10065P2: CardDef = { ...B10065, id: 'B10065P2', no: '1121/B10065P2', rarity: 'MRP', imageUrl: '1783904183371978.jpg' };

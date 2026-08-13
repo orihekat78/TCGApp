@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DeckRecord, MatchRecord } from '../../meta-app/src/data/types';
+import { SAMPLE_DECK } from '../../meta-app/src/data/sampleDeck';
 import {
   FIXED_CPU_POLICY_VERSION,
   projectDeckForCloud,
@@ -7,14 +8,14 @@ import {
   stableCloudResourceId,
 } from '../../meta-app/src/cloud/projection';
 
-const cards = [{ num: 'D08002', count: 40 }];
+const cards = SAMPLE_DECK.cards;
 
 function deckFixture(overrides: Partial<DeckRecord> = {}): DeckRecord {
   return {
     id: 'deck-123',
     name: '同期デッキ',
-    partner: 'D08001',
-    case: 'D08026',
+    partner: SAMPLE_DECK.partner,
+    case: SAMPLE_DECK.case,
     cards,
     modified: 1_000,
     ...overrides,
@@ -68,7 +69,7 @@ describe('cloud sync public projections', () => {
         name: '同期デッキ',
         partnerCardNum: 'D08001',
         caseCardNum: 'D08026',
-        cards: [{ cardNum: 'D08002', count: 40 }],
+        cards: SAMPLE_DECK.cards.map(({ num, count }) => ({ cardNum: num, count })),
         clientModifiedAt: 1_000,
         expectedRevision: 4,
       },
@@ -78,6 +79,31 @@ describe('cloud sync public projections', () => {
 
   it('does not upload incomplete local deck drafts', async () => {
     await expect(projectDeckForCloud(deckFixture({ cards: [] }), null))
+      .resolves.toEqual({ ok: false, reason: 'deck-not-playable' });
+  });
+
+  it.each([
+    ['null cards', { cards: null }],
+    ['a missing name', { name: undefined }],
+    ['a null card entry', { cards: [null] }],
+  ])('fails closed without throwing for hydrated decks with %s', async (_label, malformed) => {
+    await expect(projectDeckForCloud({
+      ...deckFixture(),
+      ...malformed,
+    } as unknown as DeckRecord, null)).resolves.toEqual({
+      ok: false,
+      reason: 'deck-not-playable',
+    });
+  });
+
+  it.each([
+    ['a partner placed in the main deck', [{ num: 'D08002', count: 40 }]],
+    ['combined reprints over their official-ID copy limit', [
+      { num: 'D08005', count: 3 },
+      { num: 'D08006', count: 37 },
+    ]],
+  ])('does not upload %s', async (_label, illegalCards) => {
+    await expect(projectDeckForCloud(deckFixture({ cards: illegalCards }), null))
       .resolves.toEqual({ ok: false, reason: 'deck-not-playable' });
   });
 

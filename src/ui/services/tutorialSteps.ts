@@ -113,7 +113,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
   {
     id: 'L5-1',
     title: 'アシスト',
-    body: 'パートナーをスリープして FILE に移動。FILE が 7 枚以上になると事件が「事件編 → 解決編」に進化する。',
+    body: 'パートナーをスリープして FILE に移動。アシスト後の FILE が通常 7 枚以上なら解決編へ。カードに別の数値がある場合は、そのアシスト条件を使う。',
     target: { selector: '.actions-panel', placement: 'top' },
   },
   {

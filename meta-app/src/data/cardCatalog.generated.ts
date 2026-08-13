@@ -20211,7 +20211,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
       "カットイン",
       "宣言"
     ],
-    "effectShort": "【宣言】【ターン1】相手の現場のキャラを1枚までレベル-1 (ターン終了時まで)。\n【カットイン】AP＋2000",
+    "effectShort": "相手の現場にいるキャラがリムーブされたとき、自分のターン中、レベル8以下のキャラを1枚まで選び、リムーブする。\n【宣言】【ターン1】相手の現場のキャラを1枚までレベル-1 (ターン終了時まで)。\n【カットイン】AP＋2000",
     "imagePath": "1742972384125446.jpg"
   },
   {
@@ -20238,7 +20238,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
       "カットイン",
       "宣言"
     ],
-    "effectShort": "【宣言】【ターン1】相手の現場のキャラを1枚までレベル-1 (ターン終了時まで)。\n【カットイン】AP＋2000",
+    "effectShort": "相手の現場にいるキャラがリムーブされたとき、自分のターン中、レベル8以下のキャラを1枚まで選び、リムーブする。\n【宣言】【ターン1】相手の現場のキャラを1枚までレベル-1 (ターン終了時まで)。\n【カットイン】AP＋2000",
     "imagePath": "1747231524182594.jpg"
   },
   {
@@ -33254,7 +33254,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
       "絵描き"
     ],
     "keywords": [],
-    "effectShort": "【相手ターン中】【現場リムーブ時】自分のリムーブエリアにある〚特徴［鈴木財閥］〛のキャラを1枚まで選び、手札に加える。",
+    "effectShort": "現場にいるこのキャラは〚特徴［鈴木財閥］〛を持つ。\n【相手ターン中】【現場リムーブ時】自分のリムーブエリアにある〚特徴［鈴木財閥］〛のキャラを1枚まで選び、手札に加える。",
     "imagePath": "1746628061783068.jpg"
   },
   {
@@ -33274,7 +33274,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "rarity": "C",
     "features": [],
     "keywords": [],
-    "effectShort": "【相手ターン中】【現場リムーブ時】自分のリムーブエリアにあるレベル4以下の【黒】のキャラを1枚まで選び、スリープ状態で登場させる。",
+    "effectShort": "相手がイベントの効果でこのキャラを選べる場合、必ず選ぶ。\n【相手ターン中】【現場リムーブ時】自分のリムーブエリアにあるレベル4以下の【黒】のキャラを1枚まで選び、スリープ状態で登場させる。",
     "imagePath": "1745322246381531.jpg"
   },
   {
@@ -33344,9 +33344,10 @@ export const CARD_CATALOG: readonly CardDef[] = [
       "女優"
     ],
     "keywords": [
-      "突撃"
+      "突撃",
+      "宣言"
     ],
-    "effectShort": "【登場時】自分のデッキのカードを上から1枚裏向きでこのキャラにセットする。ターン終了時までこのキャラは〚突撃［キャラ］〛を持つ。",
+    "effectShort": "【登場時】自分のデッキのカードを上から1枚裏向きでこのキャラにセットする。ターン終了時までこのキャラは〚突撃［キャラ］〛を持つ。\n【宣言】【ターン1】ターン終了時までこのキャラをAP+1000する。キャラのカード名を1つ指定し、ターン終了時までこのキャラのカード名を指定したカード名に書き換えてもよい。",
     "imagePath": "195c3640cfa318.jpg"
   },
   {
@@ -50128,7 +50129,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "num": "B10065",
     "id": "1121",
     "setCode": "CT-P10",
-    "name": "松田陣平",
+    "name": "松田陣平＆萩原研二",
     "type": "character",
     "color": "yellow",
     "colors": [
@@ -50154,7 +50155,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "num": "B10065P",
     "id": "1121",
     "setCode": "CT-P10",
-    "name": "松田陣平",
+    "name": "松田陣平＆萩原研二",
     "type": "character",
     "color": "yellow",
     "colors": [
@@ -50180,7 +50181,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "num": "B10065P2",
     "id": "1121",
     "setCode": "CT-P10",
-    "name": "松田陣平",
+    "name": "松田陣平＆萩原研二",
     "type": "character",
     "color": "yellow",
     "colors": [

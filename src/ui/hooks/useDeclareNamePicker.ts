@@ -18,6 +18,7 @@
 
 import { create } from 'zustand';
 import { areTerminalInteractionsBlocked } from '@/ui/services/terminalInteractionGate.js';
+import type { DeclaredNameDomain } from '@/engine/types';
 
 export type DeclareNameRequest = {
   /** 発動カード名 (banner 表示用) */
@@ -26,6 +27,8 @@ export type DeclareNameRequest = {
   prompt: string;
   /** オートコンプリート候補 (登録済み CardDef 全名) */
   candidateNames: readonly string[];
+  /** Engine-enforced declaration authority; omitted means legacy unrestricted. */
+  domain?: DeclaredNameDomain;
   /** 「してもよい」系 = true (skip ボタンを出す)。「〜する」= false (確定のみ) */
   optional: boolean;
 };

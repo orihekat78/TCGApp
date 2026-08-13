@@ -11,7 +11,7 @@ export const STEP_BOARD_ZONES: Record<string, ZoneHint[]> = {
     { selector: '.scene-area.side-self', label: '現場 — キャラ最大 5 枚' },
     { selector: '.partner-area.side-self', label: 'パートナー' },
     { selector: '.case-area.side-self', label: '事件 (横向きカード)' },
-    { selector: '.file-area.side-self', label: 'FILE — 7 枚で解決編へ' },
+    { selector: '.file-area.side-self', label: 'FILE — 通常追加は 7 枚で解決編' },
     { selector: '.evidence-area.side-self', label: '証拠 — 勝利条件' },
     { selector: '.deck-area.side-self', label: 'デッキ' },
     { selector: '.remove-area.side-self', label: 'リムーブ' },
@@ -60,7 +60,7 @@ export const STEP_BOARD_ZONES: Record<string, ZoneHint[]> = {
   ],
   // ch5-1 事件編 → 解決編
   'ch5-1': [
-    { selector: '.file-area.side-self', label: 'FILE 7 枚以上' },
+    { selector: '.file-area.side-self', label: 'パートナーの FILE 条件' },
     { selector: '.case-area.side-self', label: 'アシストで解決編へ (一方通行)' },
   ],
   // ch5-2 必要証拠数

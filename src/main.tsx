@@ -13,7 +13,7 @@ if (!rootElement) {
   throw new Error('Root element not found');
 }
 
-if (import.meta.env.DEV) {
+if (import.meta.env.DEV || import.meta.env.VITE_E2E_BRIDGE === 'true') {
   (globalThis as unknown as { __game?: unknown }).__game = {
     store: useGameStateStore,
     getState: () => useGameStateStore.getState(),
@@ -24,6 +24,7 @@ if (import.meta.env.DEV) {
     flow: engine.flow,
     read: engine.read,
     cond: engine.cond,
+    testApi: import('./e2e/test-api.js').then(({ e2eTestApi }) => e2eTestApi),
     getActionContext: (id: string) => {
       const state = useGameStateStore.getState().gameState;
       return state ? engine.flow.action._getContext(state, id) : undefined;

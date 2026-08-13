@@ -43,6 +43,9 @@ jobs:
       - name: Validate authority exceptions
         run: npm run cards:authority:exceptions
 
+      - name: Validate compact deck-legality catalog
+        run: npm run check:deck-legality-catalog
+
       - name: Lint chain (規約 8 本)
         run: |
           npm run lint:bugs

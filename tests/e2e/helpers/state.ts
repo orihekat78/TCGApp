@@ -43,17 +43,8 @@ export async function buildCausalGameState<T = void>(
   await page.evaluate(
     async ({ src, a }) => {
       const fn = new Function('return (' + src + ')')() as (gs: unknown, a: unknown) => void;
-      const loadCausal = new Function('return import("/src/engine/log/causal.ts")') as () => Promise<{
-        startCausalSession: (state: unknown, sessionId: string) => void;
-      }>;
-      const loadPresentation = new Function('return import("/src/ui/presentation/coordinator.ts")') as () => Promise<{
-        resetPresentationQueue: (sessionId: string) => void;
-      }>;
-      const [{ startCausalSession }, { resetPresentationQueue }] = await Promise.all([
-        loadCausal(),
-        loadPresentation(),
-      ]);
       const w = window as unknown as GameWindow;
+      const { startCausalSession, resetPresentationQueue } = await w.__game.testApi;
       const gs = w.__game.createSampleGameState();
       fn(gs, a);
       const sessionId = `e2e-causal-${crypto.randomUUID()}`;
@@ -71,22 +62,8 @@ async function surfaceDeckDecision(
   cardIds: string[],
 ): Promise<void> {
   await page.evaluate(async ({ verb, ids }) => {
-    const loadAtom = new Function('return import("/src/engine/effect/atom-handlers.ts")') as () => Promise<{
-      runAtom: (state: unknown, verb: string, args: unknown, ctx: unknown) => void;
-    }>;
-    const loadProduce = new Function('return import("/src/engine/produce.ts")') as () => Promise<{
-      produce: (state: unknown, recipe: (draft: unknown) => void) => unknown;
-    }>;
-    const loadRuntime = new Function('return import("/src/engine/effect/runtime-state.ts")') as () => Promise<{
-      persistPendingRuntimeState: (state: unknown) => void;
-      resetPendingRuntimeState: () => void;
-    }>;
-    const [{ runAtom }, { produce }, { persistPendingRuntimeState, resetPendingRuntimeState }] = await Promise.all([
-      loadAtom(),
-      loadProduce(),
-      loadRuntime(),
-    ]);
     const w = window as unknown as GameWindow;
+    const { runAtom, produce, persistPendingRuntimeState, resetPendingRuntimeState } = await w.__game.testApi;
     const current = w.__game.getState().gameState as {
       players: { self: { deck: string[] } };
     };

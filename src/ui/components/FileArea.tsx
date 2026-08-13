@@ -2,7 +2,7 @@
 // FILE エリア (毎ターン自動的に置かれる横向きカードのスタック + 7枚進捗バー +
 // アシスト中パートナー混在) を静的表示。
 // 操作系 (クリック → モーダル展開) は Phase 8。
-// rules: 13-keywords.md §アシスト, 01-victory-conditions.md (FILE 7 で解決編移行)
+// rules: 13-keywords.md §アシスト, 01-victory-conditions.md (通常FILE追加の進捗は固定7)
 // 視覚: design-mockups/01-board-mockup.html 1394-1405 (opp) / 1520-1531 (self),
 //       CSS 700-748 行 + 587-650 行
 // 由来: Claude Design (Research Preview) — engine 型に接続して取込み

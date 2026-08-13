@@ -70,7 +70,7 @@ export function useLandscapeExperience(): LandscapeExperience {
 
     try {
       await lock.call(screen.orientation, "landscape");
-      setCurrentRequestResult("entered");
+      setCurrentRequestResult(isLandscape() ? "entered" : "rotate");
     } catch {
       setCurrentRequestResult("rotate");
     }

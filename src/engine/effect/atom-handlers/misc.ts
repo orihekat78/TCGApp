@@ -5,6 +5,7 @@ import { resolvePlayer, resolveBindRef, _setPendingContactStartAxId } from './_s
 import type { Player } from './_shared.js';
 import type { GameState, EffectCtx, LogEntry, Effect, Condition } from '../../types/index.js';
 import { recordEffectCausalOperation } from '../../log/effect-causal.js';
+import { declaredNameDomain, resolveDeclaredName } from '../declared-name-domain.js';
 
 export function atomPartnerAssist(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       const paP = resolvePlayer(a.player, ctx);
@@ -413,8 +414,15 @@ export function atomDeclareName(s: GameState, a: Record<string, unknown>, ctx: E
       // 消費側 (boundNameMatchesDeclared / $declared.*.sceneNameCount) が false/0 に落ちるだけで throw しない
       // (AI 未対応・smoke 経路の defensive 契約)。状態変化なし (zone/char 不変)。
       const bindKey = a.bind as string;
+      const domain = declaredNameDomain(a.domain);
       const raw = ctx.dyn?.['declaredName'];
-      const name = typeof raw === 'string' ? raw.trim() : '';
+      const supplied = typeof raw === 'string' ? raw.trim() : '';
+      const resolvedName = supplied === '' ? null : resolveDeclaredName(domain, supplied);
+      if (supplied !== '' && resolvedName === null) {
+        throw new Error(`effect:declareName rejected ${domain} value`);
+      }
+      const name = resolvedName ?? '';
+      (ctx.dyn ??= {}).declaredName = name;
       if (name === '') {
         mutate.log.append(s, {
           ts: Date.now(), player: ctx.source.player, turn: s.turn.number,
@@ -427,6 +435,7 @@ export function atomDeclareName(s: GameState, a: Record<string, unknown>, ctx: E
         });
       }
       (ctx.declaredNames ??= {})[bindKey] = name;
+      (ctx.declaredNameDomains ??= {})[bindKey] = domain;
       if (name !== '') {
         recordEffectCausalOperation(s, ctx, {
           actor: ctx.source.player,

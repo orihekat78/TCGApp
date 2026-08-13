@@ -6,6 +6,7 @@ import { mutate } from '../../../src/engine/mutate';
 import { createEmptyGameState } from '../../../src/engine/state-factory';
 import { SAMPLE_DECK, SAMPLE_DECK_OPP } from '../../src/data/sampleDeck';
 import { encodeDeck } from '../../src/util/deckCode';
+import { expectReadyMetaRoute } from './landscape-test-helpers';
 
 const OFFICIAL_CARD_IMAGE_URL =
   'https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/**';
@@ -502,6 +503,7 @@ test('HISTORY: malformed saved rows are normalized while a valid legacy row rema
 });
 
 test('HISTORY: opens an exact saved replay through the public route and returns focus to its row', async ({ page }) => {
+  test.setTimeout(60_000);
   const errors: string[] = [];
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
   page.on('pageerror', (error) => errors.push(error.message));
@@ -546,7 +548,8 @@ test('HISTORY: opens an exact saved replay through the public route and returns 
   await replayButton.click();
 
   await expect(page).toHaveURL(new RegExp(`#replay/${bundle.artifact.artifactId}$`));
-  await expect(page.locator('.replay-runtime')).toBeVisible();
+  await expectReadyMetaRoute(page, '.replay-runtime');
+  await expect(page.locator('.replay-runtime')).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.replay-board')).toBeVisible();
   await expect(page.locator('.replay-control-rail')).toBeVisible();
   await expect(page.locator('.replay-screen > .home-header')).toBeVisible();

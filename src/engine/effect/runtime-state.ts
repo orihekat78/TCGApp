@@ -19,7 +19,10 @@ import {
   type PendingDeckPlaceSide,
   type PendingDeckReorderSide,
 } from './atom-handlers/_shared.js';
-import { assertPendingRuntimeValue } from './pending-runtime-schema.js';
+import {
+  assertPendingDeclaredNameAuthority,
+  assertPendingRuntimeValue,
+} from './pending-runtime-schema.js';
 import type { GameState } from '../types/game-state.js';
 import { isDraft, original } from '../produce.js';
 
@@ -399,6 +402,11 @@ function assertPendingRuntimeMatchesState(
   state: GameState,
   snapshot: ReadonlyArray<{ key: PendingKey; present: boolean; value: unknown }>,
 ): void {
+  for (const entry of snapshot) {
+    if (entry.present && entry.key !== '__pendingRuntimeStateMarker') {
+      assertPendingDeclaredNameAuthority(state, entry.value, entry.key);
+    }
+  }
   const deckPlace = snapshot.find(entry => entry.key === '__pendingDeckPlaceSide' && entry.present);
   if (deckPlace && deckPlace.value !== null) {
     const pending = deckPlace.value as {

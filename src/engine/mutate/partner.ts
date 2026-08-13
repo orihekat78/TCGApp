@@ -60,8 +60,8 @@ function assist(s: GameState, p: Player): void {
   s.players[p].partner.location = 'file-area';
   fileMutate.insertAssistedPartner(s, p);
   s.turnState[p].assistedThisTurn = true;
-  // rules/01 + rules/25: FILE 7 枚以上 (アシストしたパートナー含む) で必ず解決編へ移行
-  if (s.players[p].case.status === '事件編' && s.players[p].file.length >= 7) {
+  // rules/01 + rules/25: printed FILE threshold (assisted partner included) で必ず解決編へ移行
+  if (s.players[p].case.status === '事件編' && s.players[p].file.length >= readGame.partnerAssistFileThreshold(s, p)) {
     caseOp.toResolved(s, p); // BUG-089: hook 経由で a1 (caseResolvedHandRemove) を発火させる
   }
 }

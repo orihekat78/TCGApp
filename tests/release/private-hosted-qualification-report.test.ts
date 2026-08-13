@@ -31,6 +31,12 @@ function manifest(files: unknown[]): string {
 }
 
 describe("private hosted final qualification", () => {
+  it("checks compact deck legality immediately after card identities", () => {
+    expect(QUALIFICATION_COMMAND_IDS).toContain("deck-legality");
+    expect(QUALIFICATION_COMMAND_IDS.indexOf("deck-legality" as never))
+      .toBe(QUALIFICATION_COMMAND_IDS.indexOf("card-identities") + 1);
+  });
+
   it("never publishes or retains a partial qualification report", async () => {
     for (const failure of ["write", "publish"] as const) {
       const f = await fixture();
@@ -126,6 +132,7 @@ describe("private hosted final qualification", () => {
     > = {
       "npm-ci": ["ci"],
       "card-identities": ["run", "--silent", "check:meta-card-identities"],
+      "deck-legality": ["run", "--silent", "check:deck-legality-catalog"],
       build: ["run", "--silent", "build:meta"],
       "dependency-audit": ["audit", "--audit-level=high"],
       "secret-scan": ["run", "--silent", "private-hosted:scan-secrets"],

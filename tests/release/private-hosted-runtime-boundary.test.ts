@@ -353,6 +353,10 @@ describe("private hosted runtime boundary", () => {
       ["MetaShell.tsx", "./MetaShell"],
       ["screens/CardsScreen.tsx", "./screens/CardsScreen"],
       ["screens/DeckEditor.tsx", "./screens/DeckEditor"],
+      [
+        "screens/tutorial/illustrations.tsx",
+        "./screens/tutorial/illustrations",
+      ],
       ["shared/MetaCard.tsx", "./shared/MetaCard"],
       ["shared/NetworkStatus.tsx", "./shared/NetworkStatus"],
     ] as const;
@@ -5401,6 +5405,8 @@ describe("private hosted runtime boundary", () => {
             "../src/cloud-data/repository.ts",
             "../src/cloud-data/request-context.ts",
             "../src/cloud-data/retention.ts",
+            "../src/shared/deck-legality-catalog.generated.ts",
+            "../src/shared/deck-legality.ts",
             "api/v1/[[path]].ts",
             "../node_modules/jose/dist/webapi/index.js",
             "../node_modules/jose/dist/webapi/jwe/compact/decrypt.js",

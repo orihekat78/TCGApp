@@ -18,6 +18,465 @@ afterEach(() => {
   for (const directory of tempDirs.splice(0)) rmSync(directory, { recursive: true, force: true });
 });
 
+describe('packet-bounded authority grounding', () => {
+  it('grounds against the immutable release prior when the current prior has drifted', () => {
+    const { runGroundAuthorityDiff } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const calls: string[][] = [];
+    const packet = { basis: { releaseCommit: RELEASE_COMMIT }, diff: { added: ['B00002'] } };
+    const historicalPrior = { prior: 'at-release' };
+
+    runGroundAuthorityDiff({
+      projectRoot: 'C:/project',
+      packetPath: 'C:/packet/packet.json',
+      loadPrior: () => { throw new Error('current prior must not be loaded'); },
+      loadPriorAtCommit: (commit: string, root: string) => {
+        expect(commit).toBe(RELEASE_COMMIT);
+        expect(root).toBe(resolve('C:/project'));
+        return historicalPrior;
+      },
+      readPacket: () => packet,
+      validatePacket: (actual: unknown, prior: unknown) => {
+        expect(actual).toBe(packet);
+        expect(prior).toBe(historicalPrior);
+      },
+      capturePacket: () => [],
+      createOutput: () => 'C:/packet/ground-authority-safe',
+      ground: (ids: string[]) => calls.push(ids),
+    });
+
+    expect(calls).toEqual([['B00002']]);
+  });
+
+  it('reconstructs a bootstrap release prior from its catalog when field index did not exist', () => {
+    const { loadPriorAuthorityAtReleaseCommit } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const source = { url: 'https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/cards', fetchedAt: '2026-01-01T00:00:00.000Z' };
+    const cardNums = ['B00001', 'B00002'];
+    const rawHash = createHash('sha256').update(cardNums.join('\n')).digest('hex');
+    const files: Record<string, string> = {
+      '.claude/specs/cards-data/status.json': JSON.stringify({ source, hashes: { rawCardNums: rawHash, tsvCardNums: rawHash, normalizedFaq: 'f'.repeat(64) }, printings: { raw: 2, tsv: 2 } }),
+      '.claude/specs/cards-data/qa-hash-snapshot.json': JSON.stringify({ source, normalizedFaqHash: 'f'.repeat(64), conflicts: [], items: [] }),
+      'meta-app/src/data/cardCatalog.generated.ts': `export const CARD_CATALOG: readonly CardDef[] = ${JSON.stringify(cardNums.map((num) => ({ num })))};`,
+    };
+
+    const prior = loadPriorAuthorityAtReleaseCommit({
+      projectRoot: 'C:/project',
+      releaseCommit: RELEASE_COMMIT,
+      verifyCommit: () => undefined,
+      readGitFile: (_commit: string, relative: string) => {
+        if (!(relative in files)) throw new Error('missing commit file');
+        return files[relative];
+      },
+      gitFileExists: (_commit: string, relative: string) => relative in files,
+    });
+
+    expect(prior.fieldIndex).toMatchObject({ bootstrap: true, cards: [{ cardNum: 'B00001' }, { cardNum: 'B00002' }] });
+  });
+
+  it('reconstructs a regular release prior from its historical field index', () => {
+    const { loadPriorAuthorityAtReleaseCommit } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const { buildAuthorityFieldIndex } = require('../../scripts/cards/authority-refresh.cjs');
+    const source = { url: 'https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/cards', fetchedAt: '2026-01-01T00:00:00.000Z' };
+    const fieldIndex = buildAuthorityFieldIndex([officialCard()], source);
+    const rawHash = createHash('sha256').update('B00001').digest('hex');
+    const files: Record<string, string> = {
+      '.claude/specs/cards-data/status.json': JSON.stringify({ source, hashes: { rawCardNums: rawHash, tsvCardNums: rawHash, normalizedFaq: 'f'.repeat(64) }, printings: { raw: 1, tsv: 1 } }),
+      '.claude/specs/cards-data/qa-hash-snapshot.json': JSON.stringify({ source, normalizedFaqHash: 'f'.repeat(64), conflicts: [], items: [] }),
+      '.claude/specs/cards-data/authority-field-index.json': JSON.stringify(fieldIndex),
+    };
+
+    const prior = loadPriorAuthorityAtReleaseCommit({
+      projectRoot: 'C:/project',
+      releaseCommit: RELEASE_COMMIT,
+      verifyCommit: () => undefined,
+      readGitFile: (_commit: string, relative: string) => files[relative],
+      gitFileExists: (_commit: string, relative: string) => relative in files,
+    });
+
+    expect(prior.fieldIndex).toEqual(fieldIndex);
+  });
+
+  it('rejects malformed authority files from the release commit', () => {
+    const { loadPriorAuthorityAtReleaseCommit } = require('../../scripts/cards/ground-authority-diff.cjs');
+
+    expect(() => loadPriorAuthorityAtReleaseCommit({
+      projectRoot: 'C:/project',
+      releaseCommit: RELEASE_COMMIT,
+      verifyCommit: () => undefined,
+      readGitFile: () => '{',
+      gitFileExists: () => false,
+    })).toThrow(/tracked authority status is invalid JSON/i);
+  });
+
+  it.each([
+    ['a malformed release commit', 'not-a-commit', /releaseCommit is invalid/i],
+    ['a missing release commit', RELEASE_COMMIT, /release commit is unavailable/i],
+    ['a non-ancestor release commit', RELEASE_COMMIT, /release commit is not an ancestor/i],
+  ])('rejects %s before grounding', (_name, releaseCommit, error) => {
+    const { runGroundAuthorityDiff } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const ground = () => { throw new Error('ground must not run'); };
+    const packet = { basis: { releaseCommit }, diff: { added: ['B00002'] } };
+    expect(() => runGroundAuthorityDiff({
+      projectRoot: 'C:/project',
+      packetPath: 'C:/packet/packet.json',
+      readPacket: () => packet,
+      loadPriorAtCommit: () => { throw new Error(_name.includes('malformed') ? 'authority packet releaseCommit is invalid' : _name.includes('missing') ? 'authority packet release commit is unavailable' : 'authority packet release commit is not an ancestor of HEAD'); },
+      ground,
+    })).toThrow(error);
+  });
+
+  it('rejects a tampered packet before grounding', () => {
+    const { runGroundAuthorityDiff } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const ground = () => { throw new Error('ground must not run'); };
+
+    expect(() => runGroundAuthorityDiff({
+      projectRoot: 'C:/project',
+      packetPath: 'C:/packet/packet.json',
+      readPacket: () => ({ basis: { releaseCommit: RELEASE_COMMIT }, diff: { added: [] } }),
+      loadPriorAtCommit: () => ({ prior: 'historical' }),
+      validatePacket: () => { throw new Error('authority packet basis does not match prior authority'); },
+      ground,
+    })).toThrow(/basis does not match prior authority/i);
+  });
+
+  it('validates the external packet and grounds only its exact sorted added printings', () => {
+    const { runGroundAuthorityDiff } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const calls: string[][] = [];
+    const packet = { diff: { added: ['B00002', 'B00010'] } };
+
+    const result = runGroundAuthorityDiff({
+      projectRoot: 'C:/project',
+      packetPath: 'C:/packet/packet.json',
+      loadPriorAtCommit: () => ({ prior: true }),
+      readPacket: () => packet,
+      validatePacket: (actual: unknown, prior: unknown, options: unknown) => {
+        expect(actual).toBe(packet);
+        expect(prior).toEqual({ prior: true });
+        expect(options).toEqual({ packetRoot: resolve('C:/packet'), projectRoot: resolve('C:/project') });
+      },
+      capturePacket: () => [],
+      createOutput: () => 'C:/packet/ground-authority-safe',
+      ground: (ids: string[]) => calls.push(ids),
+    });
+
+    expect(calls).toEqual([['B00002', 'B00010']]);
+    expect(result).toEqual({ ids: ['B00002', 'B00010'], packetPath: resolve('C:/packet/packet.json'), outputPath: 'C:/packet/ground-authority-safe', stagedResiduePath: null, grounded: true });
+  });
+
+  it('returns an explicit no-op receipt for an empty packet delta without creating output or spawning a child', () => {
+    const { runGroundAuthorityDiff } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const createOutput = () => { throw new Error('output must not be created'); };
+    const ground = () => { throw new Error('child must not run'); };
+
+    const result = runGroundAuthorityDiff({
+      projectRoot: 'C:/project', packetPath: 'C:/packet/packet.json',
+      readPacket: () => ({ basis: { releaseCommit: RELEASE_COMMIT }, diff: { added: [] } }),
+      loadPriorAtCommit: () => ({}), validatePacket: () => undefined,
+      capturePacket: () => [], assertUnchanged: () => undefined,
+      createOutput, ground,
+    });
+
+    expect(result).toEqual({ ids: [], packetPath: resolve('C:/packet/packet.json'), outputPath: null, stagedResiduePath: null, grounded: false });
+  });
+
+  it('reports the isolated stage residue on successful grounding', () => {
+    const { runGroundAuthorityDiff } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const result = runGroundAuthorityDiff({
+      projectRoot: 'C:/project', packetPath: 'C:/packet/packet.json',
+      readPacket: () => ({ basis: { releaseCommit: RELEASE_COMMIT }, diff: { added: ['B00002'] } }),
+      loadPriorAtCommit: () => ({}), validatePacket: () => undefined,
+      capturePacket: () => [{ relative: 'snapshot/.claude/specs/cards-data/ct-p01/character.tsv' }],
+      assertUnchanged: () => undefined, captureTree: () => [], assertTreeUnchanged: () => undefined,
+      stageTsv: () => ({ path: 'C:/safe/stage', files: [] }), assertOutput: () => undefined,
+      createOutput: () => ({ path: 'C:/safe/output' }), assertStagedTsv: () => undefined,
+      removeStagedTsv: () => 'C:/safe/.stage.cleanup-1', ground: () => undefined, verifyCommit: () => undefined,
+    });
+    expect(result.stagedResiduePath).toBe('C:/safe/.stage.cleanup-1');
+  });
+
+  it('surfaces the isolated stage residue when setup after staging fails', () => {
+    const { runGroundAuthorityDiff } = require('../../scripts/cards/ground-authority-diff.cjs');
+    let caught: Error & { stagedResiduePath?: string } | undefined;
+    try {
+      runGroundAuthorityDiff({
+        projectRoot: 'C:/project', packetPath: 'C:/packet/packet.json',
+        readPacket: () => ({ basis: { releaseCommit: RELEASE_COMMIT }, diff: { added: ['B00002'] } }),
+        loadPriorAtCommit: () => ({}), validatePacket: () => undefined,
+        capturePacket: () => [{ relative: 'snapshot/.claude/specs/cards-data/ct-p01/character.tsv' }],
+        assertUnchanged: () => undefined, captureTree: () => [], assertTreeUnchanged: () => undefined,
+        stageTsv: () => ({ path: 'C:/safe/stage', files: [] }),
+        createOutput: () => { throw new Error('output setup failed'); },
+        removeStagedTsv: () => 'C:/safe/.stage.cleanup-2',
+      });
+    } catch (error) { caught = error as Error & { stagedResiduePath?: string }; }
+    expect(caught?.message).toContain('staged residue: C:/safe/.stage.cleanup-2');
+    expect(caught?.stagedResiduePath).toBe('C:/safe/.stage.cleanup-2');
+  });
+
+  it('preserves the residue reported by a stage-creation failure without contradictory unavailable text', () => {
+    const { runGroundAuthorityDiff } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const stagedFailure = Object.assign(new Error('stage acquisition failed; staged residue: C:/safe/.stage.cleanup-3'), {
+      stagedResiduePath: 'C:/safe/.stage.cleanup-3',
+    });
+    let caught: (Error & { stagedResiduePath?: string }) | undefined;
+    try {
+      runGroundAuthorityDiff({
+        projectRoot: 'C:/project', packetPath: 'C:/packet/packet.json',
+        readPacket: () => ({ basis: { releaseCommit: RELEASE_COMMIT }, diff: { added: ['B00002'] } }),
+        loadPriorAtCommit: () => ({}), validatePacket: () => undefined,
+        capturePacket: () => [{ relative: 'snapshot/.claude/specs/cards-data/ct-p01/character.tsv' }],
+        assertUnchanged: () => undefined, captureTree: () => [], assertTreeUnchanged: () => undefined,
+        stageTsv: () => { throw stagedFailure; },
+      });
+    } catch (error) { caught = error as Error & { stagedResiduePath?: string }; }
+    expect(caught?.stagedResiduePath).toBe('C:/safe/.stage.cleanup-3');
+    expect(caught?.message).toContain('staged residue: C:/safe/.stage.cleanup-3');
+    expect(caught?.message).not.toContain('unavailable');
+    expect(caught?.cause).toBe(stagedFailure);
+  });
+
+  it('treats distinct inherited and cleanup residue paths as a visible fail-closed conflict', () => {
+    const { residueError } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const incoming = Object.assign(new Error('inner failure'), { stagedResiduePath: 'C:/safe/inner' });
+    const wrapped = residueError(incoming, 'C:/safe/outer');
+    expect(wrapped.stagedResiduePath).toBe('C:/safe/outer');
+    expect(wrapped.stagedResiduePaths).toEqual(['C:/safe/outer', 'C:/safe/inner']);
+    expect(wrapped.message).toContain('staged residue conflict: C:/safe/outer, C:/safe/inner');
+    expect(wrapped.cause).toBe(incoming);
+  });
+
+  it('creates grounding output outside the packet root', () => {
+    const { createGroundOutput } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const packetRoot = tempDir();
+    const output = createGroundOutput(packetRoot);
+    tempDirs.push(output.path);
+    expect(resolve(output.path).startsWith(resolve(packetRoot))).toBe(false);
+  });
+
+  it('rejects a temp-base junction that resolves into the packet root without touching its sentinel', () => {
+    const { createGroundOutput } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const packetRoot = tempDir();
+    const projectRoot = tempDir();
+    const junctionParent = tempDir();
+    const junction = join(junctionParent, 'temp');
+    const sentinel = join(packetRoot, 'sentinel.txt');
+    writeFileSync(sentinel, 'unchanged');
+    symlinkSync(packetRoot, junction, 'junction');
+
+    expect(() => createGroundOutput(packetRoot, projectRoot, { tempBase: junction })).toThrow(/temp base.*unsafe|outside/i);
+    expect(readFileSync(sentinel, 'utf8')).toBe('unchanged');
+    expect(readdirSync(packetRoot).sort()).toEqual(['sentinel.txt']);
+  });
+
+  it('rejects a staged TSV whose bytes do not match the validated packet manifest', () => {
+    const { stageValidatedTsv } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const packetRoot = tempDir();
+    const projectRoot = tempDir();
+    const relative = 'snapshot/.claude/specs/cards-data/ct-p01/character.tsv';
+    const file = join(packetRoot, relative);
+    mkdirSync(join(packetRoot, 'snapshot', '.claude', 'specs', 'cards-data', 'ct-p01'), { recursive: true });
+    writeFileSync(file, 'cardNum\nMALICIOUS\n');
+    const stat = require('node:fs').lstatSync(file);
+    const rootStat = require('node:fs').lstatSync(packetRoot);
+    const directory = join(packetRoot, 'snapshot', '.claude', 'specs', 'cards-data', 'ct-p01');
+    const directoryStat = require('node:fs').lstatSync(directory);
+    expect(() => stageValidatedTsv([{
+      file, relative, dev: stat.dev, ino: stat.ino, size: stat.size, sha256: '0'.repeat(64),
+      ancestors: [{ path: directory, dev: directoryStat.dev, ino: directoryStat.ino }, { path: packetRoot, dev: rootStat.dev, ino: rootStat.ino }],
+    }], { packetRoot, projectRoot, tempBase: tempDir() })).toThrow(/source changed/i);
+  });
+
+  it('rejects staged TSV tampering before a grounding receipt can be accepted', () => {
+    const { assertStagedTsvUnchanged } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const stage = tempDir();
+    const staged = join(stage, '0000.tsv');
+    writeFileSync(staged, 'cardNum\nB00001\n');
+    const stageStat = require('node:fs').lstatSync(stage);
+    const fileStat = require('node:fs').lstatSync(staged);
+    const digest = createHash('sha256').update(readFileSync(staged)).digest('hex');
+    const pin = { path: stage, dev: stageStat.dev, ino: stageStat.ino, files: [{ file: staged, dev: fileStat.dev, ino: fileStat.ino, size: fileStat.size, sha256: digest }] };
+    expect(() => assertStagedTsvUnchanged(pin)).not.toThrow();
+    writeFileSync(staged, 'cardNum\nMALICIOUS\n');
+    expect(() => assertStagedTsvUnchanged(pin)).toThrow(/staged TSV changed/i);
+  });
+
+  it('does not recursively clean a victim directory swapped into a failed TSV stage', () => {
+    const { stageValidatedTsv } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const packetRoot = tempDir();
+    const projectRoot = tempDir();
+    const tempBase = tempDir();
+    const source = join(packetRoot, 'snapshot', '.claude', 'specs', 'cards-data', 'ct-p01', 'character.tsv');
+    mkdirSync(join(packetRoot, 'snapshot', '.claude', 'specs', 'cards-data', 'ct-p01'), { recursive: true });
+    writeFileSync(source, 'cardNum\nB00001\n');
+    const sourceStat = require('node:fs').lstatSync(source);
+    const ancestor = join(packetRoot, 'snapshot', '.claude', 'specs', 'cards-data', 'ct-p01');
+    const ancestorStat = require('node:fs').lstatSync(ancestor);
+    const packetStat = require('node:fs').lstatSync(packetRoot);
+    const stage = join(tempBase, 'stage');
+    const victim = join(tempBase, 'victim');
+    mkdirSync(stage);
+    mkdirSync(victim);
+    writeFileSync(join(victim, 'sentinel.txt'), 'do not delete');
+    const stageStat = require('node:fs').lstatSync(stage);
+    const digest = createHash('sha256').update(readFileSync(source)).digest('hex');
+    const pin = { path: stage, dev: stageStat.dev, ino: stageStat.ino };
+
+    expect(() => stageValidatedTsv([{
+      file: source, relative: 'snapshot/.claude/specs/cards-data/ct-p01/character.tsv', dev: sourceStat.dev, ino: sourceStat.ino, size: sourceStat.size, sha256: digest,
+      ancestors: [{ path: ancestor, dev: ancestorStat.dev, ino: ancestorStat.ino }, { path: packetRoot, dev: packetStat.dev, ino: packetStat.ino }],
+    }], {
+      packetRoot, projectRoot, makeStage: () => pin,
+      writeStaged: () => {
+        rmSync(stage, { recursive: true, force: true });
+        renameSync(victim, stage);
+        throw new Error('injected stage write failure');
+      },
+    })).toThrow(/injected stage write failure|stage changed/i);
+    expect(readFileSync(join(stage, 'sentinel.txt'), 'utf8')).toBe('do not delete');
+  });
+
+  it('never deletes a replacement victim swapped after stage cleanup precheck', () => {
+    const { removeStage } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const parent = tempDir();
+    const stage = join(parent, 'stage');
+    const victim = join(parent, 'victim');
+    mkdirSync(stage);
+    mkdirSync(victim);
+    writeFileSync(join(stage, '0000.tsv'), 'cardNum\nB00001\n');
+    writeFileSync(join(victim, 'sentinel.txt'), 'preserve');
+    const stageStat = require('node:fs').lstatSync(stage);
+    const file = join(stage, '0000.tsv');
+    const fileStat = require('node:fs').lstatSync(file);
+    const digest = createHash('sha256').update(readFileSync(file)).digest('hex');
+    const pin = { path: stage, dev: stageStat.dev, ino: stageStat.ino, files: [{ file, dev: fileStat.dev, ino: fileStat.ino, size: fileStat.size, sha256: digest }] };
+
+    expect(() => removeStage(pin, {
+      rename: (from: string, to: string) => {
+        renameSync(from, `${from}-owned`);
+        renameSync(victim, from);
+        renameSync(`${from}-owned`, to);
+      },
+    })).not.toThrow();
+    expect(readFileSync(join(stage, 'sentinel.txt'), 'utf8')).toBe('preserve');
+  });
+
+  it('fails closed without deleting a victim swapped into the isolated cleanup path', () => {
+    const { removeStage } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const parent = tempDir();
+    const stage = join(parent, 'stage');
+    const victim = join(parent, 'victim');
+    mkdirSync(stage);
+    mkdirSync(victim);
+    writeFileSync(join(stage, '0000.tsv'), 'cardNum\nB00001\n');
+    writeFileSync(join(victim, 'sentinel.txt'), 'preserve');
+    const stageStat = require('node:fs').lstatSync(stage);
+    const file = join(stage, '0000.tsv');
+    const fileStat = require('node:fs').lstatSync(file);
+    const digest = createHash('sha256').update(readFileSync(file)).digest('hex');
+    const pin = { path: stage, dev: stageStat.dev, ino: stageStat.ino, files: [{ file, dev: fileStat.dev, ino: fileStat.ino, size: fileStat.size, sha256: digest }] };
+
+    expect(() => removeStage(pin, {
+      rename: (from: string, to: string) => {
+        renameSync(from, `${from}-owned`);
+        renameSync(victim, to);
+      },
+    })).toThrow(/cleanup identity changed/i);
+    const isolated = readdirSync(parent).find((name) => name.includes('.stage.cleanup-'));
+    expect(isolated).toBeTruthy();
+    expect(readFileSync(join(parent, isolated!, 'sentinel.txt'), 'utf8')).toBe('preserve');
+    expect(readFileSync(join(parent, 'stage-owned', '0000.tsv'), 'utf8')).toContain('B00001');
+  });
+
+  it('does not pass hostile Node loader environment to the grounding child', () => {
+    const { runGroundAuthorityDiff } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const priorNodeOptions = process.env.NODE_OPTIONS;
+    const priorNodePath = process.env.NODE_PATH;
+    process.env.NODE_OPTIONS = '--require C:/attacker.cjs';
+    process.env.NODE_PATH = 'C:/attacker';
+    try {
+      runGroundAuthorityDiff({
+        projectRoot: 'C:/project', packetPath: 'C:/packet/packet.json',
+        readPacket: () => ({ basis: { releaseCommit: RELEASE_COMMIT }, diff: { added: ['B00002'] } }),
+        loadPriorAtCommit: () => ({}), validatePacket: () => undefined,
+        capturePacket: () => [], createOutput: () => 'C:/packet/out',
+        ground: (_ids: string[], options: { env: NodeJS.ProcessEnv }) => {
+          expect(options.env.NODE_OPTIONS).toBeUndefined();
+          expect(options.env.NODE_PATH).toBeUndefined();
+          expect(options.env.CONAN_CARDS_DATA_DIR).toBe(resolve('C:/packet/snapshot/.claude/specs/cards-data'));
+        },
+      });
+    } finally {
+      if (priorNodeOptions === undefined) delete process.env.NODE_OPTIONS; else process.env.NODE_OPTIONS = priorNodeOptions;
+      if (priorNodePath === undefined) delete process.env.NODE_PATH; else process.env.NODE_PATH = priorNodePath;
+    }
+  });
+
+  it('rejects packet artifact injection after validation before the child can run', () => {
+    const { runGroundAuthorityDiff } = require('../../scripts/cards/ground-authority-diff.cjs');
+    let checks = 0;
+    expect(() => runGroundAuthorityDiff({
+      projectRoot: 'C:/project', packetPath: 'C:/packet/packet.json',
+      readPacket: () => ({ basis: { releaseCommit: RELEASE_COMMIT }, diff: { added: [] } }),
+      loadPriorAtCommit: () => ({}), validatePacket: () => undefined,
+      capturePacket: () => [{ file: 'C:/packet/snapshot/.claude/specs/cards-data/ct-p01/character.tsv' }],
+      assertUnchanged: () => {
+        checks += 1;
+        if (checks === 1) throw new Error('authority packet source set changed while grounding');
+      },
+      ground: () => { throw new Error('ground must not run'); },
+    })).toThrow(/source set changed/i);
+  });
+
+  it('detects an unmanifested TSV inserted into the validated packet snapshot', () => {
+    const { assertPacketArtifactsUnchanged, snapshotPacketArtifacts } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const packetRoot = tempDir();
+    const relative = 'snapshot/.claude/specs/cards-data/ct-p01/character.tsv';
+    const file = join(packetRoot, relative);
+    mkdirSync(join(packetRoot, 'snapshot', '.claude', 'specs', 'cards-data', 'ct-p01'), { recursive: true });
+    writeFileSync(file, 'cardNum\nB00001\n');
+    const bytes = readFileSync(file);
+    const packet = { artifacts: [{ path: relative, bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') }] };
+    const snapshot = snapshotPacketArtifacts(packet, packetRoot);
+    expect(() => assertPacketArtifactsUnchanged(snapshot, packetRoot)).not.toThrow();
+    writeFileSync(join(packetRoot, 'snapshot', '.claude', 'specs', 'cards-data', 'ct-p01', 'injected.tsv'), 'cardNum\nPR999\n');
+    expect(() => assertPacketArtifactsUnchanged(snapshot, packetRoot)).toThrow(/source set changed/i);
+  });
+
+  it('rejects output identity changes before the grounding child', () => {
+    const { runGroundAuthorityDiff } = require('../../scripts/cards/ground-authority-diff.cjs');
+    expect(() => runGroundAuthorityDiff({
+      projectRoot: 'C:/project', packetPath: 'C:/packet/packet.json',
+      readPacket: () => ({ basis: { releaseCommit: RELEASE_COMMIT }, diff: { added: ['B00002'] } }),
+      loadPriorAtCommit: () => ({}), validatePacket: () => undefined,
+      capturePacket: () => [], assertUnchanged: () => undefined,
+      createOutput: () => ({ path: 'C:/packet/out', snapshot: { dev: 1, ino: 1 } }),
+      assertOutput: () => { throw new Error('authority grounding output changed before child'); },
+      ground: () => { throw new Error('ground must not run'); },
+    })).toThrow(/output changed before child/i);
+  });
+
+  it('rejects arbitrary IDs beside the packet argument', () => {
+    const { parseGroundAuthorityArgs } = require('../../scripts/cards/ground-authority-diff.cjs');
+    expect(() => parseGroundAuthorityArgs(['--packet', 'C:/packet/packet.json', 'B00001']))
+      .toThrow(/only accepts --packet/i);
+    expect(() => parseGroundAuthorityArgs(['--packet', 'C:/packet/other.json']))
+      .toThrow(/only accepts --packet/i);
+  });
+
+  it('refuses an unsorted packet delta instead of changing the selected printings', () => {
+    const { runGroundAuthorityDiff } = require('../../scripts/cards/ground-authority-diff.cjs');
+    const ground = () => { throw new Error('ground must not run'); };
+
+    expect(() => runGroundAuthorityDiff({
+      projectRoot: 'C:/project',
+      packetPath: 'C:/packet/packet.json',
+      loadPriorAtCommit: () => ({}),
+      readPacket: () => ({ diff: { added: ['B00010', 'B00002'] } }),
+      validatePacket: () => undefined,
+      ground,
+    })).toThrow(/unique and sorted/i);
+  });
+});
+
 function officialCard(overrides: Record<string, unknown> = {}) {
   return {
     id: 1,

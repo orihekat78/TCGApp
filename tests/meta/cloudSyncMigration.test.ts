@@ -12,7 +12,7 @@ function localDeck(overrides: Partial<DeckRecord> = {}): DeckRecord {
     name: 'ローカルデッキ',
     partner: 'D08001',
     case: 'D08026',
-    cards: [{ num: 'D08002', count: 40 }],
+    cards: [{ num: 'B09100', count: 40 }],
     modified: NOW - DAY_MS,
     ...overrides,
   };
@@ -32,7 +32,7 @@ function localMatch(overrides: Partial<MatchRecord> = {}): MatchRecord {
       name: 'ローカルデッキ',
       partner: 'D08001',
       case: 'D08026',
-      cards: [{ num: 'D08002', count: 40 }],
+      cards: [{ num: 'B09100', count: 40 }],
     },
     turns: 8,
     duration: 0,
@@ -107,6 +107,109 @@ describe('initial local data cloud migration plan', () => {
     expect(history).toEqual([localMatch()]);
   });
 
+  it('rejects a malformed hydrated deck before assigning cloud dependencies', async () => {
+    const malformed = {
+      ...localDeck({ id: 'malformed-active' }),
+      cards: null,
+    } as unknown as DeckRecord;
+    const plan = await planInitialCloudMigration({
+      decks: [malformed],
+      activeDeckId: malformed.id,
+      history: [localMatch({
+        id: 'malformed-match',
+        sessionId: 'malformed-match',
+        selfDeckSnapshot: {
+          ...localMatch().selfDeckSnapshot!,
+          deckId: malformed.id,
+        },
+      })],
+      bootstrap: bootstrap(),
+      appVersion: '1.0.0',
+      now: NOW,
+      createIdentity: identityFactory(),
+    });
+
+    expect(plan.operations).toEqual([]);
+    expect(plan.skippedMatches).toEqual([{
+      localMatchId: 'malformed-match',
+      reason: 'deck-not-playable',
+    }]);
+  });
+
+  it('never emits active or match operations for an illegal deck ahead of a legal deck', async () => {
+    const illegal = localDeck({
+      id: 'illegal-active',
+      cards: [{ num: 'D08002', count: 40 }],
+    });
+    const legal = localDeck({ id: 'legal-deck' });
+    const invalidMatch = localMatch({
+      id: 'illegal-match',
+      sessionId: 'illegal-match',
+      selfDeckSnapshot: {
+        ...localMatch().selfDeckSnapshot!,
+        deckId: illegal.id,
+      },
+    });
+    const legalMatch = localMatch({
+      id: 'legal-match',
+      sessionId: 'legal-match',
+      selfDeckSnapshot: {
+        ...localMatch().selfDeckSnapshot!,
+        deckId: legal.id,
+      },
+    });
+
+    const plan = await planInitialCloudMigration({
+      decks: [illegal, legal],
+      activeDeckId: illegal.id,
+      history: [invalidMatch, legalMatch],
+      bootstrap: bootstrap(),
+      appVersion: '1.0.0',
+      now: NOW,
+      createIdentity: identityFactory(),
+    });
+
+    expect(plan.operations.map((operation) => [operation.kind, 'localDeckId' in operation
+      ? operation.localDeckId
+      : null])).toEqual([
+      ['deck-put', legal.id],
+      ['match-post', legal.id],
+    ]);
+    expect(plan.skippedMatches).toContainEqual({
+      localMatchId: 'illegal-match',
+      reason: 'deck-not-playable',
+    });
+  });
+
+  it('quarantines every divergent duplicate deck ID before cloud planning', async () => {
+    const duplicateId = 'duplicate-local';
+    const first = localDeck({ id: duplicateId, name: 'First copy', modified: NOW - 10 });
+    const second = localDeck({ id: duplicateId, name: 'Second copy', modified: NOW - 5 });
+    const plan = await planInitialCloudMigration({
+      decks: [first, second],
+      activeDeckId: duplicateId,
+      history: [localMatch({
+        id: 'duplicate-match',
+        sessionId: 'duplicate-match',
+        selfDeckSnapshot: {
+          ...localMatch().selfDeckSnapshot!,
+          deckId: duplicateId,
+        },
+      })],
+      bootstrap: bootstrap(),
+      appVersion: '1.0.0',
+      now: NOW,
+      createIdentity: identityFactory(),
+    });
+
+    expect(plan.operations).toEqual([]);
+    expect(plan.conflicts).toEqual([]);
+    expect(plan.skippedMatches).toEqual([{
+      localMatchId: 'duplicate-match',
+      reason: 'deck-not-playable',
+    }]);
+  });
+
   it('adopts an equivalent server revision without overwriting a newer local timestamp', async () => {
     const deck = localDeck({ modified: NOW });
     const plan = await planInitialCloudMigration({
@@ -119,7 +222,7 @@ describe('initial local data cloud migration plan', () => {
           name: deck.name,
           partnerCardNum: deck.partner,
           caseCardNum: deck.case,
-          cards: [{ cardNum: 'D08002', count: 40 }],
+          cards: [{ cardNum: 'B09100', count: 40 }],
           clientModifiedAt: NOW - 10_000,
           revision: 7,
           serverUpdatedAt: NOW - 5_000,
@@ -191,7 +294,7 @@ describe('initial local data cloud migration plan', () => {
       name: '別端末で変更',
       partnerCardNum: deck.partner,
       caseCardNum: deck.case,
-      cards: [{ cardNum: 'D08002', count: 40 }],
+      cards: [{ cardNum: 'B09100', count: 40 }],
       clientModifiedAt: NOW,
       revision: 4,
       serverUpdatedAt: NOW,

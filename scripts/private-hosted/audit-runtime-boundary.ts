@@ -106,9 +106,9 @@ const TRUSTED_VENDOR_SHA256 =
 const TRUSTED_RUNTIME_SHA256 =
   "5db5ba82eef00d1dee7e86e663098c9427d01183a88d357437daff295aec3e75";
 const TRUSTED_APP_SHA256 =
-  "b96b4d552b09d0653a6712acd10fe09baeb7f2552293997c5f3fe3abedf4f500";
+  "e46611f62bbb455745f47d4a82135b5560aacfbef3702fe2cfde4382825128f0";
 const TRUSTED_FUNCTIONS_SHA256 =
-  "8f659832b10f36bd102a991c31576e127bf4b06bea1b75723dae57604dec3a04";
+  "c3a54d8b83ff1bd55ed631bbc57b0780309a7fcadad1d70b2f771b1f64d23c15";
 const TRUSTED_BRAND_LOGO_SHA256 =
   "8567c177ecaaf03c8b360dedd8aeea385b58e0bdffe359303f1784ef52e9beff";
 
@@ -207,7 +207,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/DeckEditor-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/DeckEditor.tsx",
     sha256:
-      "02974ad7f33e2665b3a8ee2935cd911e26f050eea4a7393a111af94153db4138",
+      "9abbe224efcfcce9e53de42328ffcb09afaaf509b9a37c647518b96ca5784a08",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed DeckEditor bundle SHA-256 mismatch",
     approvedFindings: markerFindings("persistent storage"),
@@ -216,7 +216,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/historyReplayRepository-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => /^_historyReplayRepository-[A-Za-z0-9_-]+\.js$/.test(key),
     sha256:
-      "44b3917aa12b5c196a25e7f83dcfd54848c1669d0edb93c4da1b423ac2ccc62d",
+      "cf2e71b99f94fff229ae672ed14ca1124453eae5f64acde8cd4f7c3ae2b31373",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed history repository bundle SHA-256 mismatch",
     approvedFindings: [],
@@ -225,7 +225,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/HistoryScreen-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/HistoryScreen.tsx",
     sha256:
-      "21ee75fd33a36ee9e536d99dd5a9344be5c2c6dae4c5bd0c69ac4fbfc3683f85",
+      "f2f8892821969676027a3f65260e909e49990b4740eb5242f15e913e7cd38900",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed HistoryScreen bundle SHA-256 mismatch",
     approvedFindings: markerFindings("network API", "persistent storage"),
@@ -234,7 +234,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/RealMatchView-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/RealMatchView.tsx",
     sha256:
-      "f90abcca828de208a953e5554d7b30402e665cc48cd25562caef3bf485a0e888",
+      "f7b19986a2bb70d81085bcb9c327831fd4d0a9b29d07bdaa2d4a371f1d815e22",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed RealMatchView bundle SHA-256 mismatch",
     approvedFindings: markerFindings("dynamic code execution"),
@@ -243,7 +243,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/ReplayScreen-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/ReplayScreen.tsx",
     sha256:
-      "b1a52af63658fb0be38c2d7df043fae8dca623299b2f8f2c03f43f9cb1a7b42b",
+      "83343beedc7ea71d5f72d9bfdaed5048151bd2154c190e115c7b136b5741e2be",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed ReplayScreen bundle SHA-256 mismatch",
     approvedFindings: markerFindings("network API"),
@@ -252,7 +252,7 @@ const TRUSTED_BUNDLE_POLICIES: readonly TrustedBundlePolicy[] = [
     output: /^assets\/ResultScreen-[A-Za-z0-9_-]+\.js$/,
     owns: (key) => key === "src/screens/ResultScreen.tsx",
     sha256:
-      "6b462ab10a1993109a9680820e429586472f6d3075edc0eb9854b5732e14b7d8",
+      "8d4fcb6b0b07608f4c362d17a51ef2d3ae253c393dc05be9c33cd79a5ac510d5",
     integrityCode: "bundle-capability-integrity",
     integrityDetail: "reviewed ResultScreen bundle SHA-256 mismatch",
     approvedFindings: markerFindings("network API"),
@@ -11890,7 +11890,7 @@ const REVIEWED_META_RUNTIME_STYLE_SHA256 = new Map<string, string>([
   ],
   [
     "meta-app/src/screens/tutorial/illustrations.tsx",
-    "f7ffbf2c728089ea92f96a4dfca22d34bb8f2fcff09099e14665f9853c0df52f",
+    "c720721a2060317d3a2948cd820ee0e83b3426b17221a4929f976eff382b4ac5",
   ],
   [
     "meta-app/src/screens/tutorial/TutorialBoardSnapshot.tsx",
@@ -11972,7 +11972,7 @@ const REVIEWED_META_CAPABILITIES = new Map<
     "meta-app/src/cloud/apiClient.ts",
     {
       sha256:
-        "59ea9b0c036dbcda04ee70298f0f255752dbf3b8176f0e6fe920ef1f27f30989",
+        "16577298b9b4dcbf1845948fddefde110115df7ec03be3219dd9962943f71eb4",
       allowed: new Set(["network-api:fetch"]),
     },
   ],
@@ -12116,7 +12116,7 @@ const REVIEWED_PERSIST_STORES = new Map<
       {
         name: "conan.meta.v1.decks",
         sha256:
-          "04bb140c996290e5ee9ae1e3c0f2814d519c1ef293a0a537326daa77a7565667",
+          "9282e9724175094cfffea5df99738e80c3e625cd05aaea822af36c984ba50c04",
     },
   ],
   [

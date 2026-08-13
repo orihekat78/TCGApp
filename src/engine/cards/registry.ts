@@ -12,6 +12,8 @@ import {
   register as _register,
   _resetRegistry as _resetDefRegistry,
   _allRegistered,
+  registerTemporary,
+  withTemporaryRegistration,
 } from '../read/def.js';
 import { def as defSelectors } from '../read/def.js';
 import { validateCards } from '../effect/validate.js';
@@ -66,6 +68,14 @@ function _resetRegistry(): void {
   _resetDefRegistry();
 }
 
+async function withTemporary<T>(def: CardDef, run: () => Promise<T>): Promise<T> {
+  return withTemporaryRegistration(def, run);
+}
+
+function retainTemporary(def: CardDef): () => void {
+  return registerTemporary(def);
+}
+
 export const cards = {
   register,
   get,
@@ -76,5 +86,7 @@ export const cards = {
   validate,
   validateAll,
   unload,
+  withTemporary,
+  retainTemporary,
   _resetRegistry,
 };

@@ -22,6 +22,8 @@ const sources = [
   "../src/cloud-data/repository.ts",
   "../src/cloud-data/request-context.ts",
   "../src/cloud-data/retention.ts",
+  "../src/shared/deck-legality-catalog.generated.ts",
+  "../src/shared/deck-legality.ts",
   "api/v1/[[path]].ts",
 ];
 const dependencies = [
@@ -263,6 +265,21 @@ describe("private hosted Meta release build", () => {
     expect(() => validateFunctionsBuildEvidence(extraSource)).toThrow(
       /Functions source closure differs/,
     );
+
+    for (const path of [
+      "../src/cards/index.ts",
+      "../meta-app/src/data/cardCatalog.generated.ts",
+    ]) {
+      const fullCatalog = structuredClone(validEvidence());
+      fullCatalog.metafile.inputs[path] = {
+        bytes: 1,
+        imports: [],
+        format: "esm",
+      };
+      expect(() => validateFunctionsBuildEvidence(fullCatalog), path).toThrow(
+        /(?:Functions source closure differs|unexpected Functions bundle input)/,
+      );
+    }
 
     const unreviewedJoseInput = structuredClone(validEvidence());
     unreviewedJoseInput.metafile.inputs[

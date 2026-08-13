@@ -4,6 +4,10 @@ import { readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { DeckInput, MatchInput } from "../../src/cloud-data/contracts";
+import type {
+  D1DatabaseLike,
+  D1PreparedStatementLike,
+} from "../../src/cloud-data/d1-types";
 import {
   appendMatch,
   CLOUD_DATA_LIMITS,
@@ -20,6 +24,32 @@ const now = 1_800_000_000_000;
 
 let sqlite: DatabaseSync;
 let database: SqliteD1Database;
+
+function interceptFirstMatchingRun(
+  delegate: D1DatabaseLike,
+  pattern: RegExp,
+  beforeRun: () => void,
+): D1DatabaseLike {
+  let intercepted = false;
+  const wrap = (
+    statement: D1PreparedStatementLike,
+    query: string,
+  ): D1PreparedStatementLike => ({
+    bind: (...values) => wrap(statement.bind(...values), query),
+    first: <T>() => statement.first<T>(),
+    all: <T>() => statement.all<T>(),
+    run: async () => {
+      if (!intercepted && pattern.test(query)) {
+        intercepted = true;
+        beforeRun();
+      }
+      return statement.run();
+    },
+  });
+  return {
+    prepare: (query) => wrap(delegate.prepare(query), query),
+  };
+}
 
 beforeEach(() => {
   sqlite = new DatabaseSync(":memory:");
@@ -51,10 +81,7 @@ function deck(overrides: Partial<DeckInput> = {}): DeckInput {
     name: "Blue Deck",
     partnerCardNum: "D08001",
     caseCardNum: "D08026",
-    cards: [
-      { cardNum: "D08005", count: 37 },
-      { cardNum: "D08006", count: 3 },
-    ],
+    cards: [{ cardNum: "B09100", count: 40 }],
     clientModifiedAt: now - 1_000,
     expectedRevision: null,
     ...overrides,
@@ -150,6 +177,179 @@ describe("cloud data repository", () => {
     expect(two.decks.map((item) => item.name)).toEqual(["Other"]);
   });
 
+  it("quarantines an illegal legacy deck and repairs its active preference", async () => {
+    await putDeck(database, "user-one", deck(), now);
+    await appendMatch(database, "user-one", match(), now);
+    sqlite.prepare(
+      `INSERT INTO decks
+        (user_id, deck_id, name, partner_card_num, case_card_num, cards_json,
+         revision, client_modified_at, server_updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+    ).run(
+      "user-one",
+      "legacy-illegal",
+      "Legacy illegal",
+      "D08001",
+      "D08026",
+      JSON.stringify([{ cardNum: "D08002", count: 40 }]),
+      now - 500,
+      now + 1,
+    );
+    sqlite.prepare(
+      `INSERT INTO user_preferences
+        (user_id, active_deck_id, revision, server_updated_at)
+       VALUES (?, ?, 1, ?)`,
+    ).run("user-one", "legacy-illegal", now + 2);
+
+    const state = await loadBootstrap(database, "user-one", now + 3);
+
+    expect(state.decks.map(({ deckId }) => deckId)).toEqual(["deck-shared"]);
+    expect(state.activeDeck).toEqual({
+      activeDeckId: null,
+      revision: 2,
+      serverUpdatedAt: now + 3,
+    });
+    expect(state.stats).toEqual({ matches: 1, wins: 1, losses: 0, winRate: 1 });
+    expect(sqlite.prepare(
+      `SELECT active_deck_id, revision, server_updated_at
+       FROM user_preferences WHERE user_id = 'user-one'`,
+    ).get()).toEqual({
+      active_deck_id: null,
+      revision: 2,
+      server_updated_at: now + 3,
+    });
+    expect(sqlite.prepare(
+      `SELECT COUNT(*) AS count FROM decks
+       WHERE user_id = 'user-one' AND deck_id = 'legacy-illegal'`,
+    ).get()).toEqual({ count: 1 });
+    await expect(putDeck(database, "user-one", deck({
+      name: "Still syncing",
+      expectedRevision: 1,
+      clientModifiedAt: now + 4,
+    }), now + 4)).resolves.toMatchObject({
+      replayed: false,
+      deck: { name: "Still syncing", revision: 2 },
+    });
+  });
+
+  it("preserves an active deck that becomes legal before quarantine repair CAS", async () => {
+    const deckId = "legacy-race";
+    sqlite.prepare(
+      `INSERT INTO decks
+        (user_id, deck_id, name, partner_card_num, case_card_num, cards_json,
+         revision, client_modified_at, server_updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+    ).run(
+      "user-one",
+      deckId,
+      "Legacy race",
+      "D08001",
+      "D08026",
+      JSON.stringify([{ cardNum: "D08002", count: 40 }]),
+      now - 2,
+      now - 2,
+    );
+    sqlite.prepare(
+      `INSERT INTO user_preferences
+        (user_id, active_deck_id, revision, server_updated_at)
+       VALUES (?, ?, 1, ?)`,
+    ).run("user-one", deckId, now - 1);
+
+    const racedDatabase = interceptFirstMatchingRun(
+      database,
+      /UPDATE user_preferences\s+SET active_deck_id = NULL/,
+      () => {
+        sqlite.prepare(
+          `UPDATE decks
+           SET cards_json = ?, revision = 2,
+               client_modified_at = ?, server_updated_at = ?
+           WHERE user_id = ? AND deck_id = ? AND revision = 1`,
+        ).run(
+          JSON.stringify([{ cardNum: "B09100", count: 40 }]),
+          now,
+          now,
+          "user-one",
+          deckId,
+        );
+      },
+    );
+
+    const raced = await loadBootstrap(racedDatabase, "user-one", now + 1);
+
+    expect(raced).toMatchObject({
+      decks: [{
+        deckId,
+        name: "Legacy race",
+        cards: [{ cardNum: "B09100", count: 40 }],
+        revision: 2,
+        clientModifiedAt: now,
+        serverUpdatedAt: now,
+      }],
+      activeDeck: { activeDeckId: deckId, revision: 1 },
+    });
+    expect(raced.activeDeck?.activeDeckId).not.toBeNull();
+    expect(raced.decks.some(
+      ({ deckId: responseDeckId }) => responseDeckId === raced.activeDeck?.activeDeckId,
+    )).toBe(true);
+    expect(sqlite.prepare(
+      `SELECT active_deck_id, revision FROM user_preferences
+       WHERE user_id = 'user-one'`,
+    ).get()).toEqual({ active_deck_id: deckId, revision: 1 });
+    await expect(loadBootstrap(database, "user-one", now + 2)).resolves.toMatchObject({
+      decks: [{ deckId, revision: 2 }],
+      activeDeck: { activeDeckId: deckId, revision: 1 },
+    });
+  });
+
+  it("does not count 100 retained illegal legacy rows against the legal deck quota", async () => {
+    const insert = sqlite.prepare(
+      `INSERT INTO decks
+        (user_id, deck_id, name, partner_card_num, case_card_num, cards_json,
+         revision, client_modified_at, server_updated_at)
+       VALUES ('user-one', ?, 'Legacy illegal', 'D08001', 'D08026', ?, 1, ?, ?)`,
+    );
+    const illegalCards = JSON.stringify([{ cardNum: "D08002", count: 40 }]);
+    sqlite.exec("BEGIN");
+    for (let index = 0; index < CLOUD_DATA_LIMITS.decks; index += 1) {
+      insert.run(`legacy-illegal-${index}`, illegalCards, now - index - 1, now - index - 1);
+    }
+    sqlite.exec("COMMIT");
+
+    await expect(putDeck(database, "user-one", deck({
+      deckId: "new-legal",
+      name: "New legal",
+    }), now)).resolves.toMatchObject({
+      replayed: false,
+      deck: { deckId: "new-legal", revision: 1 },
+    });
+
+    expect(sqlite.prepare(
+      `SELECT COUNT(*) AS count FROM decks WHERE user_id = 'user-one'`,
+    ).get()).toEqual({ count: CLOUD_DATA_LIMITS.decks + 1 });
+    await expect(loadBootstrap(database, "user-one", now + 1)).resolves.toMatchObject({
+      decks: [{ deckId: "new-legal" }],
+    });
+  });
+
+  it("still enforces the 100-deck quota for legal rows", async () => {
+    const insert = sqlite.prepare(
+      `INSERT INTO decks
+        (user_id, deck_id, name, partner_card_num, case_card_num, cards_json,
+         revision, client_modified_at, server_updated_at)
+       VALUES ('user-one', ?, 'Legal deck', 'D08001', 'D08026', ?, 1, ?, ?)`,
+    );
+    const legalCards = JSON.stringify([{ cardNum: "B09100", count: 40 }]);
+    sqlite.exec("BEGIN");
+    for (let index = 0; index < CLOUD_DATA_LIMITS.decks; index += 1) {
+      insert.run(`legal-${index}`, legalCards, now - index - 1, now - index - 1);
+    }
+    sqlite.exec("COMMIT");
+
+    await expect(putDeck(database, "user-one", deck({
+      deckId: "over-legal-quota",
+    }), now)).rejects.toThrow("DECK_LIMIT_REACHED");
+  });
+
   it("tombstones deletion and revisions an implicitly cleared active deck", async () => {
     await putDeck(database, "user-one", deck(), now);
     await setActiveDeck(database, "user-one", "deck-shared", null, now + 1);
@@ -227,6 +427,28 @@ describe("cloud data repository", () => {
     await expect(
       setActiveDeck(database, "user-one", "deck-shared", null, now + 2),
     ).resolves.toMatchObject({ replayed: true, activeDeck: { revision: 1 } });
+  });
+
+  it("does not make an illegal legacy row active", async () => {
+    sqlite.prepare(
+      `INSERT INTO decks
+        (user_id, deck_id, name, partner_card_num, case_card_num, cards_json,
+         revision, client_modified_at, server_updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+    ).run(
+      "user-one",
+      "legacy-illegal",
+      "Legacy illegal",
+      "D08001",
+      "D08026",
+      JSON.stringify([{ cardNum: "D08002", count: 40 }]),
+      now - 1,
+      now,
+    );
+
+    await expect(
+      setActiveDeck(database, "user-one", "legacy-illegal", null, now + 1),
+    ).rejects.toThrow("ACTIVE_DECK_INVALID");
   });
 
   it("stores one match per owner and rejects changed replay payloads", async () => {

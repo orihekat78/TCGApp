@@ -1719,6 +1719,7 @@ function PlaymatDeclareNameModal(): JSX.Element | null {
       open
       prompt={current.prompt}
       candidateNames={current.candidateNames}
+      {...(current.domain ? { domain: current.domain } : {})}
       onConfirm={(name) => picker.declare(name)}
       onCancel={() => picker.cancel()}
       {...(current.optional ? { onSkip: () => picker.skip() } : {})}

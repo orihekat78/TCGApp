@@ -4,6 +4,8 @@ import type {
   CloudOperationResult,
   CloudSyncOperation,
 } from './types';
+import { deckLegalityCatalogResolver } from '../../../src/shared/deck-legality-catalog.generated';
+import { validateDeckLegality } from '../../../src/shared/deck-legality';
 
 type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
@@ -95,7 +97,7 @@ function parseCloudDeck(value: unknown): CloudDeck {
   if (cards.reduce((total, card) => total + card.count, 0) !== 40) throw invalidResponse();
   const name = typeof deck.name === 'string' ? deck.name : '';
   if (!name.trim() || name.length > 80) throw invalidResponse();
-  return {
+  const parsed = {
     deckId: requiredString(deck.deckId, RESOURCE_ID, 128),
     name,
     partnerCardNum: requiredString(deck.partnerCardNum, CARD_NUM, 24),
@@ -105,6 +107,12 @@ function parseCloudDeck(value: unknown): CloudDeck {
     revision: safeInteger(deck.revision, 1),
     serverUpdatedAt: safeInteger(deck.serverUpdatedAt),
   };
+  if (!validateDeckLegality({
+    partner: parsed.partnerCardNum,
+    case: parsed.caseCardNum,
+    main: parsed.cards.map(({ cardNum, count }) => ({ printingId: cardNum, count })),
+  }, deckLegalityCatalogResolver).ok) throw invalidResponse();
+  return parsed;
 }
 
 function parseBootstrap(value: unknown): CloudBootstrap {

@@ -2,6 +2,7 @@ import { devices } from '@playwright/test';
 import { describe, expect, it, vi } from 'vitest';
 import config from '../playwright.config.js';
 import { createPlaywrightConfig, resolveE2EPort } from '../playwright.config.js';
+import e2eViteConfig, { createE2EViteConfig } from '../vite.config.e2e.js';
 
 describe('mobile-chromium Playwright project', () => {
   it('uses the Pixel 5 device characteristics in landscape', () => {
@@ -21,6 +22,22 @@ describe('mobile-chromium Playwright project', () => {
 });
 
 describe('Playwright port configuration', () => {
+  it('uses a dedicated production preview without HMR sockets for the long-running E2E suite', () => {
+    expect(e2eViteConfig.define?.['import.meta.env.VITE_E2E_BRIDGE']).toBe(JSON.stringify('true'));
+    expect(e2eViteConfig.build?.outDir).toBe('.tmp/e2e-dist-5173');
+    expect(createE2EViteConfig('5198').build?.outDir).toBe('.tmp/e2e-dist-5198');
+
+    const webServer = createPlaywrightConfig(5198).webServer as {
+      command: string;
+      env: Record<string, string>;
+    };
+    expect(webServer.command).toContain('vite build');
+    expect(webServer.command).toContain('vite preview');
+    expect(webServer.command).toContain('--config vite.config.e2e.ts');
+    expect(webServer.command).not.toContain('npm run dev');
+    expect(webServer.env.PLAYWRIGHT_PORT).toBe('5198');
+  });
+
   it('defaults to loopback port 5173 and refuses a server from another checkout', () => {
     vi.stubEnv('PLAYWRIGHT_PORT', undefined);
     try {

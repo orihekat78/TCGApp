@@ -3,7 +3,7 @@
 // 検証対象 (4 ファイル):
 //   B07069/P 本堂瑛海 — a1:【パートナー赤】declared lv≤8 remove (gate handAtMost2) /
 //     a2:【FILE8】declared pay[sleepSelf,removeFromHand,fileFrom] → リムーブから lv≤7赤キャラ登場。
-//   PR099 工藤有希子 — a1:【登場時】デッキ上端裏向きセット + ターン終了時まで突撃[キャラ] 付与 (a2 DEFER=rename gap)。
+//   PR099 工藤有希子 — a1 登場時セット+突撃、後続waveで a2 制約付きキャラ名置換も解禁。
 //   B05030 遠山銀司郎 — 印字 突撃[キャラ] + a1:【登場時】デッキ上端裏向きセット (a2 DEFER=setCount dyn gap)。
 //
 // engine変更0: charSetCard{fromDeckTop} (B03061/B07034) / sceneEnter from:remove filter (B01076/D11014) /
@@ -137,7 +137,7 @@ describe('wave codegen-handcount-setevent — engine変更0 / 手書き5枚', ()
   });
 
   // ============================================================
-  // PR099 工藤有希子 (a1 のみ出荷)
+  // PR099 工藤有希子 (a1 + a2 fully faithful)
   // ============================================================
   it('PR099 a1: デッキ上端を裏向きでこのキャラにセット + ターン終了時まで突撃[キャラ] 付与', () => {
     let s = selfTurn();
@@ -152,17 +152,24 @@ describe('wave codegen-handcount-setevent — engine変更0 / 手書き5枚', ()
     expect(read.char.keywords(s, 'yukiko#1'), 'ターン終了時まで突撃[キャラ] 付与').toContain('突撃[キャラ]');
   });
 
-  it('PR099 descriptor: a1 のみ (a2 rename DEFER) / enter sequence[charSetCard,charGrantKeyword突撃[キャラ]turn]', () => {
-    expect(PR099.abilities.length, 'a2 (任意card名rewrite) は DEFER → a1 のみ').toBe(1);
+  it('PR099 descriptor: enter sequence + constrained optional name rewrite', () => {
+    expect(PR099.abilities.length).toBe(2);
     const a1 = PR099.abilities[0];
     expect(a1.trigger).toEqual({ hook: 'enter', selfOnly: true });
     const steps = (a1.effect as any).steps;
     expect(steps[0]).toMatchObject({ verb: 'charSetCard', args: { uid: '$self', fromDeckTop: true, faceUp: false } });
     expect(steps[1]).toMatchObject({ verb: 'charGrantKeyword', args: { uid: '$self', kw: '突撃[キャラ]', scope: 'turn' } });
+    const a2Steps = (PR099.abilities[1]!.effect as any).steps;
+    expect(a2Steps[0]).toMatchObject({ verb: 'charModifyAP', args: { delta: 1000, scope: 'turn' } });
+    expect(a2Steps[1]).toMatchObject({
+      verb: 'declareName',
+      args: { optional: true, domain: 'registered-character-card-name' },
+    });
+    expect(a2Steps[2]).toMatchObject({ verb: 'charSetTurnEffect', args: { key: 'nameOverride' } });
   });
 
   // ============================================================
-  // B05030 遠山銀司郎 (partial: 印字突撃[キャラ] + a1 set-facedown / a2 DEFER)
+  // B05030 遠山銀司郎 (fully faithful: 印字突撃[キャラ] + a1 set-facedown + a2 set数AP)
   // ============================================================
   it('B05030 a1: デッキ上端を裏向きでこのキャラにセット / 印字 突撃[キャラ] を持つ', () => {
     let s = selfTurn();

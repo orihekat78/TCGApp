@@ -159,7 +159,7 @@ function Ch1Areas() {
         <SectionLabel accent={T.textMuted}>KEY TERMS</SectionLabel>
         <div style={{ marginTop: 6 }}>
           <TermRow term="現場" desc="キャラを配置。最大 5 枚まで" />
-          <TermRow term="FILE" desc="オートで自動的に置かれる。7 枚以上で解決編が可能に" />
+          <TermRow term="FILE" desc="オートで自動的に置かれる。通常追加は 7 枚で解決編へ。カード固有のアシスト条件とは別" />
           <TermRow term="証拠" desc="勝利条件 (先攻 7 / 後攻 6)。裏向きで重ねる" />
           <TermRow term="リムーブ" desc="使用済 / 失われたカード置き場" />
         </div>
@@ -531,7 +531,7 @@ function Ch5CaseShift() {
           <CaseStateBox label="解決編" accent={T.red} state="RESOLVED" />
         </div>
         <div style={{ textAlign: 'center', marginTop: 10, fontFamily: T.fontMono, fontSize: 9, color: T.gold, letterSpacing: '0.2em' }}>
-          FILE 7 枚以上 + アシスト で移行
+          パートナーの FILE 条件 + アシスト で移行
         </div>
       </div>
       <PointBox>解決編から事件編に戻ることはない (一方通行) (rules/01)。</PointBox>
@@ -590,7 +590,7 @@ function Ch5AssistWarn() {
         </div>
       </div>
       <WarnBox>アシストしたターンは事件解決できない</WarnBox>
-      <PointBox accent={T.red}>FILE 7 を揃える → 翌ターンに事件解決、が定石 (rules/01)。</PointBox>
+      <PointBox accent={T.red}>パートナーの FILE 条件を揃える → 翌ターンに事件解決、が定石 (rules/01)。</PointBox>
     </Panel>
   );
 }
@@ -613,7 +613,7 @@ function Ch5Practice() {
           サンプルデッキで実戦。勝利するとこの章がクリアになります。
         </div>
       </div>
-      <PointBox>FILE 7 枚 → 解決編 → 翌ターン勝利 を実戦で体験しよう。</PointBox>
+      <PointBox>パートナーの FILE 条件 → 解決編 → 翌ターン勝利 を実戦で体験しよう。</PointBox>
     </Panel>
   );
 }

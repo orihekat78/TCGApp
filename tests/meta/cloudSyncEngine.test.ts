@@ -23,7 +23,7 @@ function deck(id = 'deck-1'): DeckRecord {
     name: `Deck ${id}`,
     partner: 'D08001',
     case: 'D08026',
-    cards: [{ num: 'D08002', count: 40 }],
+    cards: [{ num: 'B09100', count: 40 }],
     modified: NOW - 1_000,
   };
 }
@@ -42,7 +42,7 @@ function match(id = 'match-1', deckId = 'deck-1'): MatchRecord {
       name: `Deck ${deckId}`,
       partner: 'D08001',
       case: 'D08026',
-      cards: [{ num: 'D08002', count: 40 }],
+      cards: [{ num: 'B09100', count: 40 }],
     },
     turns: 6,
     duration: 0,

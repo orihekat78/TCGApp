@@ -447,7 +447,7 @@ window4 残 8 rep を per-card certify (opus grounding→敵対 verify)。green 
 | B01057 | yellow: event-self-set (charSetCard は fromDeckTop のみ) + **set-card→host triggered 能力付与** gate + 付与する【現場リムーブ時】が granted-ability validator 棄却 (handleLeaveToRemoveSelf は turnEffects.grantedAbilities 非走査) | set-card→host 能力付与機構 (engine) |
 | B02031 | yellow: event-self-set + **set-card→host へ 突撃[キャラ]+action-target拡張の継続付与** gate (read/char は set card を ability/keyword 付与源に読まない) | set-card→host 付与 + action-eligibility 拡張 |
 | PR263 | yellow: **partner-area structure** gate (ビッグジュエル列挙)。PartnerOnBoard に追加 partner-area card slot 無 / candidates partner-area 枝は partner 1体のみ / `$self.partnerAreaTrait` dyn 不在 (per-card AP scaling 不可) | partner-area slot + candidate 列挙 + trait-count dyn (XL) |
-| PR099 | yellow: ability2「キャラのカード名を1つ指定し…カード名を書き換えてもよい」= **name-designation** gate (指定 UI/condition 不在) + **card-name rewrite** verb 不在 (names() は def 静的のみ)。a1 + AP+1000 半分は green | name-designation UI + card-name override verb (XL) |
+| ~~PR099~~ **✅出荷済 (2026-08-13)** | ability2 の登録済みキャラ名指定とターン中の完全な名前置換を、共有 declared-name domain + `nameOverride` で実装。UI/engine/stack の全境界で不正名を fail-closed | ✅完了 |
 
 ## トリアージ・スイープ window5 certify — refuted/gate5-defer/yellow DEFER (2026-06-16, batch#4)
 
@@ -675,10 +675,10 @@ B05058/B05116 は **partial-ship** (継続 passive a1 を DEFER + a2 leave 出�
 **engine変更0** (charSetCard{fromDeckTop} B03061 / sceneEnter from:remove B01076 / deckRevealUntil maxN:1 upTo + conditional
 then/else B02019/B01050 / charGrantKeyword 突撃[キャラ] scope:turn D09027 / fileFrom cost B05037 / handAtMost gate B07067 の再録)。
 **出荷 4** (ALL_CARDS 1405→1409): B07069/P 本堂瑛海 (a1 declared lv≤8 remove gate handAtMost2 + a2【FILE8】declared
-pay[sleepSelf,removeFromHand,fileFrom]→remove から lv≤7赤キャラ登場) / PR099 工藤有希子 (a1 登場時 set-facedown + 突撃[キャラ]EOT,
-a2 DEFER) / B05030 遠山銀司郎 (印字 突撃[キャラ] + a1 登場時 set-facedown, a2 DEFER)。decoy test 7件 (revive color/level/kind decoy +
+pay[sleepSelf,removeFromHand,fileFrom]→remove から lv≤7赤キャラ登場) / PR099 工藤有希子 (当時 a1 のみ。2026-08-13 に a2 も解禁) /
+B05030 遠山銀司郎 (印字 突撃[キャラ] + a1 登場時 set-facedown、後続 session64 で a2 set数AP も解禁)。decoy test 7件 (revive color/level/kind decoy +
 sceneRemove level decoy + set-facedown host検証 + 突撃[キャラ]付与/印字 + 全 descriptor)
-+ 敵対 faithfulness review (opus 4カード lens + engine-0 lens)。PR099/B05030 は **partial-ship** (先例 B04059 同型)。
++ 敵対 faithfulness review (opus 4カード lens + engine-0 lens)。PR099 は 2026-08-13、B05030 は session64 で fully faithful 化済み。
 B05035 遠山和葉 は当初出荷候補だったが、敵対 review が else-set 経路の **charSetCard host-absent 共有 engine 順序バグ (BUG-153)** =
 公式Q&A『離場時はデッキ上に戻す』違反を検出 → engine変更0 では DSL 修正不可ゆえ DEFER (下表)。
 
@@ -687,7 +687,7 @@ B05035 遠山和葉 は当初出荷候補だったが、敵対 review が else-s
 | B07065 (世良真純＆メアリー, 全体) | MR カード (rules/18 §MR①② が engine 未配線) + 複数名カード名 (rules/19 split-name)。両 hard gap | MR①②配線 (rules/18) + 複数名ルール |
 | B07068 (羽田秀吉, 全体) | a1「登場させたキャラ…をアクティブにする」= sceneEnter で登場した $entered キャラを後続 step で参照する binding token が engine 不在 (実装0件)。主能力ゆえ a2 ヒラメキ単体では薄く全体 DEFER | sceneEnter に entered-char binding ($entered) 追加 (engine) |
 | B07100 (コルン, 全体) | 【登場時】「相手は手札を公開…カットイン持ち lv≤8 を1枚選び相手がリムーブ」= 相手手札の reveal + filter 選択 + 相手手札からの removal 機構が engine 不在 (opponentHand/handReveal verb ゼロ、S12456 確認済) | opp-hand reveal + filtered removal verb (engine) |
-| PR099 a2 | 「キャラのカード名を1つ指定し…書き換えてもよい」= 全カードプールから任意 card 名を指定する rename 機構が engine 不在 (renameCardName 系 verb ゼロ)。汎用 verb で不誠実ゆえ a1 のみ出荷 | 任意 card名 rewrite verb (engine) |
+| ~~PR099 a2~~ **✅出荷済 (2026-08-13)** | 登録済みキャラ CardDef の名前 component を列挙する constrained declaration domain、任意skip、`nameOverride` 完全置換を共有実装。PR105 と同一descriptor | ✅完了 |
 | ~~B05030 a2~~ **✅出荷済 (2026-06-28 session64 setCardCount dyn)** | 【自分ターン中】「セットされているカード1枚につき AP+1000」= set-card 枚数スケールの継続 AP 修飾。`$self.setCardCount` dyn token が engine 不在 (resolveSelf は sceneTrait/faceUpEvidence/fileCount のみ) で a1 のみ partial-ship だった。**session64 で resolveSelf に `setCardCount` 分岐を additive 追加** (`scene.byUid(state,uid).setCards.length`、静的 field ゆえ ap/lp 再帰なし) → a2 解禁し fully faithful 化。D08005 a1 (faceUpEvidence) 同型の継続修飾 | ✅完了 (setCardCount dyn) |
 | ~~B05035 (遠山和葉, 全体)~~ **✅出荷済 (2026-06-23 wave bug153-setcard-host-check)** | 【登場時】reveal-1 + cardName[服部平次/遠山和葉] OR + 任意手札追加 / 加えねば裏向きセット。当初は else-set の `charSetCard{fromDeckTop}` が host 離場時に公開カード消失 (**BUG-153** 共有 engine 順序バグ、公式Q&A『離場時はデッキ上に戻す』違反) で DEFER していたが、**BUG-153 を engine additive 修正** (host 存在チェック→shift 順) し再出荷。ALL_CARDS 1409→1410 | ✅完了 (BUG-153 修正済) |
 

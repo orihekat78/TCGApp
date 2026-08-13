@@ -1,10 +1,15 @@
 // Phase 9-F.2 (Cleanup 6-A) — defaultStateEvaluator tests
 
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, it, expect } from 'vitest';
 import { defaultStateEvaluator } from '@/ai/policies/state-evaluator';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { produce } from '@/engine/produce';
 import { mutate } from '@/engine/mutate';
+import { GENERATED_PARTNERS } from '@/cards';
+import { _resetRegistry as resetDefRegistry, register as registerCardDef } from '@/engine/read/def';
+
+const PR022 = GENERATED_PARTNERS.find(({ id }) => id === 'PR022');
+if (!PR022) throw new Error('production PR022 is not registered in GENERATED_PARTNERS');
 
 function makeBase() {
   return produce(createEmptyGameState(), (draft) => {
@@ -16,6 +21,10 @@ function makeBase() {
 }
 
 describe('defaultStateEvaluator', () => {
+  beforeEach(() => {
+    resetDefRegistry();
+  });
+
   it('returns 0 for symmetric initial state', () => {
     const s = makeBase();
     const v = defaultStateEvaluator(s, 'self');
@@ -48,6 +57,19 @@ describe('defaultStateEvaluator', () => {
     });
     const v = defaultStateEvaluator(s, 'self');
     expect(v).toBeLessThan(0);
+  });
+
+  it('scores FILE progress against each partner-defined threshold', () => {
+    const standard = produce(makeBase(), (d) => {
+      d.players.self.file = Array.from({ length: 7 }, (_, i) => `f${i}`);
+    });
+    const standardScore = defaultStateEvaluator(standard, 'self');
+
+    registerCardDef(PR022);
+    const pr022 = produce(standard, (d) => {
+      d.players.self.partner.cardId = PR022.id;
+    });
+    expect(defaultStateEvaluator(pr022, 'self')).toBeLessThan(standardScore);
   });
 
   it('penalty when own partner is sleep', () => {

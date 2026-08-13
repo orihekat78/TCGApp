@@ -15,11 +15,7 @@ async function primeHumanVsCpu(page: Page, paused: boolean): Promise<void> {
 
 async function readTargetPickerPhase(page: Page): Promise<string | null> {
   return page.evaluate(async () => {
-    const moduleUrl = performance.getEntriesByType('resource')
-      .map((entry) => entry.name)
-      .find((name) => name.includes('/src/ui/hooks/useTargetPicker.ts'));
-    if (!moduleUrl) return null;
-    const { useTargetPickerStore } = await import(/* @vite-ignore */ moduleUrl);
+    const { useTargetPickerStore } = await (window as any).__game.testApi;
     return useTargetPickerStore.getState().phase.phase;
   });
 }
@@ -115,12 +111,8 @@ test.describe('BUG-211/212 actual UI product paths', () => {
     const clean = await page.evaluate(async () => {
       const w = window as any;
       const ui = w.__game.getState();
-      const moduleUrl = performance.getEntriesByType('resource')
-        .map((entry) => entry.name)
-        .find((name) => name.includes('/src/ui/hooks/useTargetPicker.ts'));
-      const picker = moduleUrl
-        ? (await import(/* @vite-ignore */ moduleUrl)).useTargetPickerStore.getState().phase.phase
-        : null;
+      const { useTargetPickerStore } = await w.__game.testApi;
+      const picker = useTargetPickerStore.getState().phase.phase;
       return {
         picker,
         activeActionId: ui.activeActionId,

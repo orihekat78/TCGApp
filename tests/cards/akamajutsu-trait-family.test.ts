@@ -435,6 +435,7 @@ describe('B07038 紅子の執事', () => {
   it('a1 挙動: 赤魔術event(B07055)が出るまで公開→手札へ → 加えたので手札1リムーブ / decoy はデッキ下', () => {
     const s = createEmptyGameState();
     s.players.self.hand = ['keep']; // 既存手札 (discard の対象差分検証用)
+    // qa: card:B07038:84f5c6306b604cda9a50a74bcac18d44657232a0f7b1fc43f094a69f43d05839
     s.players.self.deck = ['decoyChar', 'B07055', 'tail1'];
     registerCardDef(pchar('decoyChar', { colors: ['白'] })); // 名前小泉紅子でも赤魔術eventでもない
     registerCardDef(pchar('keep'));
@@ -445,6 +446,7 @@ describe('B07038 紅子の執事', () => {
     });
     expect(after.players.self.deck, 'B07055 はデッキから抜ける (手札へ)').not.toContain('B07055');
     expect(after.players.self.deck, 'decoyChar はデッキ下に残る').toContain('decoyChar');
+    expect(after.players.self.hand, 'qa:B07038 forced first match enters hand before required discard').toEqual(['B07055']);
     // 1枚加え + 1枚 discard → net hand.length 不変 (1)
     expect(after.players.self.hand.length, '加えた → 手札1リムーブ (net 1)').toBe(1);
   });

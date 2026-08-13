@@ -11,10 +11,11 @@
 import { useState, type JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { useTutorialStore } from '@/ui/state/tutorialStore.js';
-import { performGameStart } from '@/ui/services/gameStarter.js';
+import { BUG_274_GAME_START_AUTHORITY, performGameStart } from '@/ui/services/gameStarter.js';
+import { BUG_274_PARTNER } from '@/ui/fixtures/bug274PartnerFixture.js';
 import { createSampleGameState } from '@/ui/fixtures/sampleGameState.js';
 import { AVAILABLE_DECKS, type DeckId } from '@/ui/services/deckBuilder.js';
-import { beginMatchSession, commitMatchSession, isCurrentLiveMatchSession, matchSessionId } from '@/ui/services/matchSession.js';
+import { beginMatchSession, commitMatchSession, isCurrentLiveMatchSession, matchSessionId, retainMatchSessionCard } from '@/ui/services/matchSession.js';
 import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import './GameSetupModal.css';
 
@@ -60,12 +61,16 @@ export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | n
   if (cutinDemoMode !== 'idle') return null;
 
   const deckSelection = { selfDeckId, oppDeckId };
+  const bug274Authority = selfDeckId === 'TEST-BUG-274' || oppDeckId === 'TEST-BUG-274'
+    ? BUG_274_GAME_START_AUTHORITY
+    : undefined;
 
   const handleStart = async (): Promise<void> => {
     // Round 2: performGameStart は async (マリガン UI await)
     // BUG-042: deckSelection を渡してユーザー選択のデッキで開始
     const session = beginMatchSession('self');
-    const state = await performGameStart(undefined, deckSelection, { sessionId: matchSessionId(session), isSessionCurrent: () => isCurrentLiveMatchSession(session) });
+    const state = await performGameStart(undefined, deckSelection, { sessionId: matchSessionId(session), isSessionCurrent: () => isCurrentLiveMatchSession(session), bug274Authority });
+    if (bug274Authority) retainMatchSessionCard(session, BUG_274_PARTNER);
     commitMatchSession(session, state);
   };
 
@@ -91,7 +96,8 @@ export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | n
   const handleTutorial = async (): Promise<void> => {
     // Round 2: performGameStart は async
     const session = beginMatchSession('self');
-    const state = await performGameStart(undefined, deckSelection, { sessionId: matchSessionId(session), isSessionCurrent: () => isCurrentLiveMatchSession(session) });
+    const state = await performGameStart(undefined, deckSelection, { sessionId: matchSessionId(session), isSessionCurrent: () => isCurrentLiveMatchSession(session), bug274Authority });
+    if (bug274Authority) retainMatchSessionCard(session, BUG_274_PARTNER);
     if (commitMatchSession(session, state)) useTutorialStore.getState().start();
   };
 
@@ -101,7 +107,8 @@ export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | n
     // - 既存 useOppTurnDriver が opp ターンを自動進行 (変更なし)
     // - 勝敗 detect (gameResult set) で両 driver が停止
     const session = beginMatchSession(null);
-    const state = await performGameStart(undefined, deckSelection, { sessionId: matchSessionId(session), isSessionCurrent: () => isCurrentLiveMatchSession(session) });
+    const state = await performGameStart(undefined, deckSelection, { sessionId: matchSessionId(session), isSessionCurrent: () => isCurrentLiveMatchSession(session), bug274Authority });
+    if (bug274Authority) retainMatchSessionCard(session, BUG_274_PARTNER);
     if (commitMatchSession(session, state)) useGameStateStore.getState().setSpectatorMode(true);
   };
 

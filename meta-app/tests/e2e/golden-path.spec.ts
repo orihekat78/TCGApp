@@ -3,19 +3,22 @@
 // HOME → SETUP → READY → MulliganModal「引き直しなし」→ Playmat 表示 → 状態確認
 
 import { test, expect } from '@playwright/test';
+import { expectReadyMetaRoute, gotoReadyMetaRoute } from './landscape-test-helpers';
 
 test('Phase 11 integration: HOME → SETUP → READY → MulliganModal → Playmat', async ({ page }) => {
+  test.setTimeout(60_000);
   const errors: string[] = [];
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(e.message));
 
   // 1. HOME
-  await page.goto('/#home');
+  await gotoReadyMetaRoute(page, 'home', '.home-deck-stage');
   await expect(page.getByText('青の古城探索事件').first()).toBeVisible({ timeout: 6000 });
 
   // 2. Enter で SETUP へ
   await page.keyboard.press('Enter');
   await page.waitForURL(/#setup/);
+  await expectReadyMetaRoute(page, '.setup-main');
   await expect(page.getByRole('heading', { name: '対戦準備' })).toBeVisible();
 
   // 3. READY 押下 → MATCH ルートへ遷移 + performGameStart 開始

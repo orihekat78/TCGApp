@@ -20,12 +20,11 @@ test.describe('BUG-237: presentation strip never intercepts board clicks', () =>
     });
 
     const committed = await page.evaluate(async () => {
-      const loadCausal = new Function('return import("/src/engine/log/causal.ts")') as () => Promise<{
-        appendCausal: (state: unknown, input: unknown) => void;
-      }>;
-      const { appendCausal } = await loadCausal();
       const app = window as unknown as {
         __game: {
+          testApi: Promise<{
+            appendCausal: (state: unknown, input: unknown) => void;
+          }>;
           store: {
             getState: () => {
               gameState: unknown;
@@ -34,6 +33,7 @@ test.describe('BUG-237: presentation strip never intercepts board clicks', () =>
           };
         };
       };
+      const { appendCausal } = await app.__game.testApi;
       const store = app.__game.store.getState();
       const state = structuredClone(store.gameState);
       appendCausal(state, {

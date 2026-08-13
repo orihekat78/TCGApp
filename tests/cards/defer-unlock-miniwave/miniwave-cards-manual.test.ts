@@ -232,6 +232,7 @@ describe('B02006 仮面ヤイバー a1 — contactCharMatches byUid 排他 condi
     expect(read.char.ap(s, atk)).toBe(3000);
   });
   it('自コンタクトキャラ = 警察 (trait 外、相手が少年探偵団でも) → +1000 (B02006 公式QA)', () => {
+    // qa: card:B02006:f3ec718c14d9727f759ff72f61af57b75e6d7fb794305d5a7621e6be378d7584
     const { s, atk } = fire('KEISATSU');
     expect(read.char.ap(s, atk)).toBe(3000);
   });

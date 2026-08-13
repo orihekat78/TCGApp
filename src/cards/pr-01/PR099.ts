@@ -1,17 +1,11 @@
-// cards/pr-01/PR099 工藤有希子 (character) — wave codegen-handcount-setevent (engine変更0, partial-ship)
+// cards/pr-01/PR099 工藤有希子 (character) — fully faithful
 // rules: 13-keywords.md, 15-abilities-effects.md, 16-card-set.md, 17-icons.md, 21-declared-ability-cost.md
 //
 // 公式テキスト:
 //   a1:【登場時】自分のデッキのカードを上から1枚裏向きでこのキャラにセットする。
 //        ターン終了時までこのキャラは〚突撃［キャラ］〛（登場したターンからすぐにキャラを指定してアクションできる）を持つ。
 //   a2:【宣言】【ターン1】ターン終了時までこのキャラをAP＋1000する。キャラのカード名を1つ指定し、
-//        ターン終了時までこのキャラのカード名を指定したカード名に書き換えてもよい。  ← DEFER (下記)
-//
-// 出荷判断: a1 のみ出荷 (engine変更0)。a2 は DEFER。
-//   a2 DEFER 理由: 「キャラのカード名を1つ指定し…カード名を書き換える」= プレイヤーが全カードプール
-//     から任意のカード名を指定する rename 機構が engine に存在しない (renameCardName 系 verb は src/engine に 0 件)。
-//     汎用 verb では「任意カード名指定」を誠実に表現できず over/under-fire の懸念 → DEFERRED-INDEX に記録。
-//   先例: ct-p04/B04059 (継続 passive a1 DEFER + 他能力出荷) と同型の partial-ship。
+//        ターン終了時までこのキャラのカード名を指定したカード名に書き換えてもよい。
 //
 // 句マッピング (a1、全句 既存 verb、engine変更0):
 //   【登場時】=> trigger{hook:'enter', selfOnly:true}, scope:'on-scene' (B03061 a1 同型)。
@@ -20,6 +14,8 @@
 //   「ターン終了時まで〚突撃［キャラ］〛を持つ」=> charGrantKeyword{uid:'$self', kw:'突撃[キャラ]', scope:'turn'}
 //     (D09027 a1 / B01094 が kw:'突撃[キャラ]' scope:'turn' を実出荷。engine action gate src/engine/flow/main/action.ts
 //      が kws.includes('突撃[キャラ]') を honor。scope:'turn'=ターン終了時まで)。
+//   a2: charModifyAP turn + optional declareName。domain は登録済み character CardDef の名前 component のみ。
+//     charSetTurnEffect{nameOverride} は印字名を完全置換し、turn cleanup で元へ戻る。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 
@@ -42,6 +38,31 @@ const a1: AbilityDef = {
   ruleRefs: ['rules/13-keywords.md', 'rules/15-abilities-effects.md', 'rules/16-card-set.md', 'rules/17-icons.md'],
 };
 
+const a2: AbilityDef = {
+  id: 'a2',
+  type: 'declared',
+  scope: 'on-scene',
+  limit: { kind: 'turn', n: 1 },
+  effect: {
+    kind: 'sequence',
+    steps: [
+      { kind: 'atom', verb: 'charModifyAP', args: { uid: '$self', delta: 1000, scope: 'turn' } },
+      {
+        kind: 'atom',
+        verb: 'declareName',
+        args: {
+          bind: 'named',
+          optional: true,
+          domain: 'registered-character-card-name',
+        },
+      },
+      { kind: 'atom', verb: 'charSetTurnEffect', args: { uid: '$self', key: 'nameOverride', val: '$dyn.declaredName' } },
+    ],
+  },
+  description: '【宣言】【ターン1】ターン終了時までこのキャラをAP+1000する。キャラのカード名を1つ指定し、ターン終了時までこのキャラのカード名を指定したカード名に書き換えてもよい。',
+  ruleRefs: ['rules/15-abilities-effects.md', 'rules/19-special-rules.md', 'rules/21-declared-ability-cost.md'],
+};
+
 export const PR099: CardDef = {
   id: 'PR099',
   no: '0486/PR099',
@@ -55,7 +76,7 @@ export const PR099: CardDef = {
   keywords: [],
   rarity: 'PR',
   imageUrl: '195c3640cfa318.jpg',
-  abilities: [a1],
+  abilities: [a1, a2],
   ruleRefs: [
     'rules/13-keywords.md',
     'rules/15-abilities-effects.md',

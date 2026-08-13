@@ -383,7 +383,8 @@ export function atomCharSetTurnEffect(s: GameState, a: Record<string, unknown>, 
       // '$dyn.declaredName' を返した first-consumer probe 検出)。uid の startsWith('$') guard と同 posture で no-op。
       // 空文字も抑止 (review NIT: costParamsToDyn は '' でも積む → guard 素通りで無用な
       // turnEffects key が残る。read 側は falsy-guard 済で benign だが write 側で閉じる)。
-      if (typeof teVal === 'string' && (teVal === '' || teVal.startsWith('$'))) {
+      if (typeof teVal === 'string'
+        && (teVal === '' || teVal.startsWith('$') || (teKey === 'nameOverride' && teVal.trim() === ''))) {
         mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetTurnEffect', target: teUid, result: `${teKey}=unresolved:skip` });
         return;
       }

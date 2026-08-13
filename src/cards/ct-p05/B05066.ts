@@ -18,6 +18,46 @@
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 
+const a1: AbilityDef = {
+  id: 'a1',
+  type: 'triggered',
+  scope: 'on-scene',
+  trigger: {
+    hook: 'leave:to-remove',
+    matcherCondition: {
+      kind: 'removedCharMatches',
+      side: 'opp',
+    },
+  },
+  condition: {
+    kind: 'and',
+    cs: [
+      { kind: 'partnerColor', color: '赤' },
+      { kind: 'turn', player: 'self' },
+    ],
+  },
+  limit: {
+    kind: 'turn',
+    n: 1,
+  },
+  effect: {
+    kind: 'atom',
+    verb: 'sceneRemove',
+    args: {
+      player: 'self',
+      max: 1,
+      side: 'either',
+      cause: 'effect',
+      filter: {
+        kind: 'character',
+        levelMax: 8,
+      },
+    },
+  },
+  description: '相手の現場にいるキャラがリムーブされたとき、自分のターン中、レベル8以下のキャラを1枚まで選び、リムーブする。',
+  ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
+};
+
 const a2: AbilityDef = {
   id: 'a2',
   type: 'declared',
@@ -53,6 +93,6 @@ export const B05066: CardDef = {
   traits: ['FBI', '赤井家', '大学院生'], keywords: [],
   rarity: 'MR',
   imageUrl: '1742972384125446.jpg',
-  abilities: [a2, a3],
+  abilities: [a1, a2, a3],
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/18-mr.md', 'rules/19-special-rules.md'],
 };

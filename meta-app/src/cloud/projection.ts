@@ -1,5 +1,7 @@
 import type { DeckRecord, MatchRecord } from '../data/types';
 import type { CloudDeckPutPayload, CloudMatchDraft } from './types';
+import { deckLegalityCatalogResolver } from '../../../src/shared/deck-legality-catalog.generated';
+import { validateDeckLegality } from '../../../src/shared/deck-legality';
 
 const RESOURCE_ID = /^[A-Za-z0-9_-]{1,128}$/;
 const CARD_NUM = /^[A-Za-z0-9-]{1,24}$/;
@@ -27,30 +29,49 @@ export async function stableCloudResourceId(
   return `${namespace}_${bytesToHex(new Uint8Array(digest))}`;
 }
 
-function validDeck(deck: DeckRecord): boolean {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function validDeck(value: unknown): value is DeckRecord {
+  if (!isRecord(value)) return false;
+  const deck = value as Partial<DeckRecord>;
   if (
-    !deck.name.trim()
+    typeof deck.id !== 'string'
+    || typeof deck.name !== 'string'
+    || !deck.name.trim()
     || deck.name.length > 80
+    || typeof deck.partner !== 'string'
     || !CARD_NUM.test(deck.partner)
+    || typeof deck.case !== 'string'
     || !CARD_NUM.test(deck.case)
     || !Number.isSafeInteger(deck.modified)
-    || deck.modified < 0
+    || (deck.modified as number) < 0
+    || !Array.isArray(deck.cards)
     || deck.cards.length < 1
     || deck.cards.length > 40
   ) return false;
   const seen = new Set<string>();
   let count = 0;
-  for (const card of deck.cards) {
+  for (const rawCard of deck.cards as unknown[]) {
+    if (!isRecord(rawCard)) return false;
+    const card = rawCard as { num?: unknown; count?: unknown };
     if (
-      !CARD_NUM.test(card.num)
+      typeof card.num !== 'string'
+      || !CARD_NUM.test(card.num)
       || seen.has(card.num)
       || !Number.isSafeInteger(card.count)
-      || card.count < 1
+      || (card.count as number) < 1
     ) return false;
     seen.add(card.num);
-    count += card.count;
+    count += card.count as number;
   }
-  return count === 40;
+  if (count !== 40) return false;
+  return validateDeckLegality({
+    partner: deck.partner,
+    case: deck.case,
+    main: deck.cards.map(({ num, count }) => ({ printingId: num, count })),
+  }, deckLegalityCatalogResolver).ok;
 }
 
 export async function projectDeckForCloud(

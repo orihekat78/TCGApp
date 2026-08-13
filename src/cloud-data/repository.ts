@@ -10,6 +10,7 @@ export const CLOUD_DATA_LIMITS = {
   matches: 250,
 } as const;
 const MAX_DECKS = CLOUD_DATA_LIMITS.decks;
+const MAX_STORED_DECK_ROWS = MAX_DECKS * 2;
 const MAX_TOMBSTONES = CLOUD_DATA_LIMITS.tombstones;
 
 export type CloudDeck = Omit<DeckInput, "expectedRevision"> & {
@@ -93,16 +94,85 @@ function parseDeck(row: DeckRow): CloudDeck {
     throw new Error("DECK_STORAGE_INVALID");
   }
   if (!Array.isArray(cards)) throw new Error("DECK_STORAGE_INVALID");
+  let validated: DeckInput;
+  try {
+    validated = validateDeckInput({
+      deckId: row.deck_id,
+      name: row.name,
+      partnerCardNum: row.partner_card_num,
+      caseCardNum: row.case_card_num,
+      cards,
+      clientModifiedAt: row.client_modified_at,
+      expectedRevision: null,
+    });
+  } catch (error) {
+    throw new Error("DECK_STORAGE_INVALID", { cause: error });
+  }
+  if (
+    !Number.isSafeInteger(row.revision) || row.revision < 1
+    || !Number.isSafeInteger(row.server_updated_at) || row.server_updated_at < 0
+  ) throw new Error("DECK_STORAGE_INVALID");
   return {
-    deckId: row.deck_id,
-    name: row.name,
-    partnerCardNum: row.partner_card_num,
-    caseCardNum: row.case_card_num,
-    cards: cards as CloudDeck["cards"],
-    clientModifiedAt: row.client_modified_at,
+    deckId: validated.deckId,
+    name: validated.name,
+    partnerCardNum: validated.partnerCardNum,
+    caseCardNum: validated.caseCardNum,
+    cards: validated.cards,
+    clientModifiedAt: validated.clientModifiedAt,
     revision: row.revision,
     serverUpdatedAt: row.server_updated_at,
   };
+}
+
+function parseBootstrapDeck(row: DeckRow): CloudDeck | null {
+  try {
+    return parseDeck(row);
+  } catch (error) {
+    if (error instanceof Error && error.message === "DECK_STORAGE_INVALID") {
+      return null;
+    }
+    throw error;
+  }
+}
+
+type DeckQuotaSnapshot = {
+  rows: DeckRow[];
+  legalDecks: CloudDeck[];
+  quarantinedRows: DeckRow[];
+};
+
+async function loadDeckQuotaSnapshot(
+  database: D1DatabaseLike,
+  userId: string,
+): Promise<DeckQuotaSnapshot> {
+  const result = await database
+    .prepare(
+      `SELECT deck_id, name, partner_card_num, case_card_num, cards_json,
+              revision, client_modified_at, server_updated_at
+       FROM decks
+       WHERE user_id = ?
+       ORDER BY server_updated_at, deck_id
+       LIMIT ?`,
+    )
+    .bind(userId, MAX_STORED_DECK_ROWS + 1)
+    .all<DeckRow>();
+  const rows = result.results ?? [];
+  const legalDecks: CloudDeck[] = [];
+  const quarantinedRows: DeckRow[] = [];
+  for (const row of rows) {
+    const parsed = parseBootstrapDeck(row);
+    if (parsed) legalDecks.push(parsed);
+    else quarantinedRows.push(row);
+  }
+  return { rows, legalDecks, quarantinedRows };
+}
+
+function quarantineFingerprintJson(rows: readonly DeckRow[]): string {
+  return JSON.stringify(rows.map((row) => ({
+    deckId: row.deck_id,
+    revision: row.revision,
+    serverUpdatedAt: row.server_updated_at,
+  })));
 }
 
 function sameDeck(row: DeckRow, input: DeckInput, cardsJson: string): boolean {
@@ -190,6 +260,92 @@ function mapActiveDeck(row: ActiveDeckRow): ActiveDeckState {
   };
 }
 
+async function repairQuarantinedActiveDeck(
+  database: D1DatabaseLike,
+  userId: string,
+  activeDeck: ActiveDeckRow | null,
+  deckRows: readonly DeckRow[],
+  now: number,
+): Promise<{
+  activeDeck: ActiveDeckRow | null;
+  refreshedDeck: CloudDeck | null;
+}> {
+  // Invalid legacy deck rows stay recoverable in D1, but never cross the public
+  // bootstrap boundary or remain selected as the user's active deck.
+  let candidate = activeDeck;
+  let candidateDeck = candidate?.active_deck_id
+    ? deckRows.find((row) => row.deck_id === candidate?.active_deck_id) ?? null
+    : null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    if (!candidate || candidate.active_deck_id === null) {
+      return { activeDeck: candidate, refreshedDeck: null };
+    }
+    const legalCandidate = candidateDeck ? parseBootstrapDeck(candidateDeck) : null;
+    if (legalCandidate) {
+      return { activeDeck: candidate, refreshedDeck: legalCandidate };
+    }
+
+    const deckGuard = candidateDeck
+      ? `EXISTS (
+           SELECT 1 FROM decks
+           WHERE user_id = ? AND deck_id = ?
+             AND name = ? AND partner_card_num = ? AND case_card_num = ?
+             AND cards_json = ? AND revision = ?
+             AND client_modified_at = ? AND server_updated_at = ?
+         )`
+      : `NOT EXISTS (
+           SELECT 1 FROM decks WHERE user_id = ? AND deck_id = ?
+         )`;
+    const statement = database.prepare(
+      `UPDATE user_preferences
+       SET active_deck_id = NULL, revision = revision + 1, server_updated_at = ?
+       WHERE user_id = ? AND revision = ? AND active_deck_id = ?
+         AND ${deckGuard}`,
+    );
+    const result = await (candidateDeck
+      ? statement.bind(
+        now,
+        userId,
+        candidate.revision,
+        candidate.active_deck_id,
+        userId,
+        candidateDeck.deck_id,
+        candidateDeck.name,
+        candidateDeck.partner_card_num,
+        candidateDeck.case_card_num,
+        candidateDeck.cards_json,
+        candidateDeck.revision,
+        candidateDeck.client_modified_at,
+        candidateDeck.server_updated_at,
+      )
+      : statement.bind(
+        now,
+        userId,
+        candidate.revision,
+        candidate.active_deck_id,
+        userId,
+        candidate.active_deck_id,
+      )).run();
+    if (result.meta?.changes === 1) {
+      return {
+        activeDeck: {
+          active_deck_id: null,
+          revision: candidate.revision + 1,
+          server_updated_at: now,
+        },
+        refreshedDeck: null,
+      };
+    }
+
+    candidate = await findActiveDeck(database, userId);
+    if (!candidate || candidate.active_deck_id === null) {
+      return { activeDeck: candidate, refreshedDeck: null };
+    }
+    candidateDeck = await findDeck(database, userId, candidate.active_deck_id);
+  }
+  throw new Error("ACTIVE_DECK_REPAIR_CONFLICT");
+}
+
 export async function putDeck(
   database: D1DatabaseLike,
   userId: string,
@@ -204,7 +360,8 @@ export async function putDeck(
   if (tombstone) throw new Error("DECK_TOMBSTONED");
 
   const current = await findDeck(database, userId, input.deckId);
-  if (current && sameDeck(current, input, cardsJson)) {
+  const currentIsLegal = current ? parseBootstrapDeck(current) !== null : false;
+  if (current && currentIsLegal && sameDeck(current, input, cardsJson)) {
     return { deck: parseDeck(current), replayed: true };
   }
   if (!current && input.expectedRevision !== null) {
@@ -213,6 +370,16 @@ export async function putDeck(
   if (current && input.expectedRevision !== current.revision) {
     throw new Error("DECK_REVISION_CONFLICT");
   }
+  const quota = !current || !currentIsLegal
+    ? await loadDeckQuotaSnapshot(database, userId)
+    : null;
+  if (quota && quota.rows.length > MAX_STORED_DECK_ROWS) {
+    throw new Error("DECK_LIMIT_REACHED");
+  }
+  if (quota && quota.legalDecks.length >= MAX_DECKS) {
+    throw new Error("DECK_LIMIT_REACHED");
+  }
+  const quarantined = quarantineFingerprintJson(quota?.quarantinedRows ?? []);
 
   try {
     if (!current) {
@@ -223,8 +390,16 @@ export async function putDeck(
              revision, client_modified_at, server_updated_at)
            SELECT ?, ?, ?, ?, ?, ?, 1, ?, ?
            WHERE (
-             SELECT COUNT(*) FROM decks WHERE user_id = ?
-           ) < ?`,
+             SELECT COUNT(*) FROM decks AS stored
+             WHERE stored.user_id = ?
+               AND NOT EXISTS (
+                 SELECT 1 FROM json_each(?) AS quarantined
+                 WHERE json_extract(quarantined.value, '$.deckId') = stored.deck_id
+                   AND json_extract(quarantined.value, '$.revision') = stored.revision
+                   AND json_extract(quarantined.value, '$.serverUpdatedAt') = stored.server_updated_at
+               )
+           ) < ?
+             AND (SELECT COUNT(*) FROM decks WHERE user_id = ?) < ?`,
         )
         .bind(
           userId,
@@ -236,19 +411,34 @@ export async function putDeck(
           input.clientModifiedAt,
           now,
           userId,
+          quarantined,
           MAX_DECKS,
+          userId,
+          MAX_STORED_DECK_ROWS,
         )
         .run();
       if (result.meta?.changes === 0) throw new Error("DECK_LIMIT_REACHED");
     } else {
-      const result = await database
-        .prepare(
-          `UPDATE decks
-           SET name = ?, partner_card_num = ?, case_card_num = ?, cards_json = ?,
-               revision = revision + 1, client_modified_at = ?, server_updated_at = ?
-           WHERE user_id = ? AND deck_id = ? AND revision = ?`,
-        )
-        .bind(
+      const quotaClause = currentIsLegal
+        ? ""
+        : ` AND (
+             SELECT COUNT(*) FROM decks AS stored
+             WHERE stored.user_id = ? AND stored.deck_id != ?
+               AND NOT EXISTS (
+                 SELECT 1 FROM json_each(?) AS quarantined
+                 WHERE json_extract(quarantined.value, '$.deckId') = stored.deck_id
+                   AND json_extract(quarantined.value, '$.revision') = stored.revision
+                   AND json_extract(quarantined.value, '$.serverUpdatedAt') = stored.server_updated_at
+               )
+           ) < ?`;
+      const statement = database.prepare(
+        `UPDATE decks
+         SET name = ?, partner_card_num = ?, case_card_num = ?, cards_json = ?,
+             revision = revision + 1, client_modified_at = ?, server_updated_at = ?
+         WHERE user_id = ? AND deck_id = ? AND revision = ?${quotaClause}`,
+      );
+      const result = await (currentIsLegal
+        ? statement.bind(
           input.name,
           input.partnerCardNum,
           input.caseCardNum,
@@ -259,7 +449,21 @@ export async function putDeck(
           input.deckId,
           current.revision,
         )
-        .run();
+        : statement.bind(
+          input.name,
+          input.partnerCardNum,
+          input.caseCardNum,
+          cardsJson,
+          input.clientModifiedAt,
+          now,
+          userId,
+          input.deckId,
+          current.revision,
+          userId,
+          input.deckId,
+          quarantined,
+          MAX_DECKS,
+        )).run();
       if (result.meta?.changes === 0) {
         throw new Error("DECK_REVISION_CONFLICT");
       }
@@ -362,6 +566,13 @@ export async function setActiveDeck(
   }
   requireNow(now);
 
+  const ownedDeck = activeDeckId === null
+    ? null
+    : await findDeck(database, userId, activeDeckId);
+  if (activeDeckId !== null && (!ownedDeck || !parseBootstrapDeck(ownedDeck))) {
+    throw new Error("ACTIVE_DECK_INVALID");
+  }
+
   const current = await findActiveDeck(database, userId);
   if (current?.active_deck_id === activeDeckId) {
     return { activeDeck: mapActiveDeck(current), replayed: true };
@@ -371,14 +582,6 @@ export async function setActiveDeck(
   }
   if (current && expectedRevision !== current.revision) {
     throw new Error("ACTIVE_DECK_REVISION_CONFLICT");
-  }
-
-  const ownedDeck =
-    activeDeckId === null
-      ? null
-      : await findDeck(database, userId, activeDeckId);
-  if (activeDeckId !== null && !ownedDeck) {
-    throw new Error("ACTIVE_DECK_INVALID");
   }
 
   try {
@@ -411,7 +614,9 @@ export async function setActiveDeck(
     }
     if (activeDeckId !== null) {
       const stillOwned = await findDeck(database, userId, activeDeckId);
-      if (!stillOwned) throw new Error("ACTIVE_DECK_INVALID");
+      if (!stillOwned || !parseBootstrapDeck(stillOwned)) {
+        throw new Error("ACTIVE_DECK_INVALID");
+      }
     }
     throw new Error("ACTIVE_DECK_REVISION_CONFLICT");
   }
@@ -530,18 +735,8 @@ export async function loadBootstrap(
   requireResourceId(userId, "USER_ID_INVALID");
   requireNow(now);
   await cleanupExpiredMatches(database, userId, now);
-  const [deckResult, tombstoneResult, activeDeck, stats] = await Promise.all([
-    database
-      .prepare(
-        `SELECT deck_id, name, partner_card_num, case_card_num, cards_json,
-                revision, client_modified_at, server_updated_at
-         FROM decks
-         WHERE user_id = ?
-         ORDER BY server_updated_at, deck_id
-         LIMIT ?`,
-      )
-      .bind(userId, MAX_DECKS + 1)
-      .all<DeckRow>(),
+  const [deckQuota, tombstoneResult, storedActiveDeck, stats] = await Promise.all([
+    loadDeckQuotaSnapshot(database, userId),
     database
       .prepare(
         `SELECT deck_id, deleted_at
@@ -564,21 +759,42 @@ export async function loadBootstrap(
       .first<StatsRow>(),
   ]);
 
-  const deckRows = deckResult.results ?? [];
   const tombstoneRows = tombstoneResult.results ?? [];
-  if (deckRows.length > MAX_DECKS || tombstoneRows.length > MAX_TOMBSTONES) {
+  if (
+    deckQuota.rows.length > MAX_STORED_DECK_ROWS
+    || deckQuota.legalDecks.length > MAX_DECKS
+    || tombstoneRows.length > MAX_TOMBSTONES
+  ) {
     throw new Error("SYNC_DATA_LIMIT_EXCEEDED");
   }
+  const repairedActive = await repairQuarantinedActiveDeck(
+    database,
+    userId,
+    storedActiveDeck,
+    deckQuota.rows,
+    now,
+  );
+  const decks = [...deckQuota.legalDecks];
+  if (repairedActive.refreshedDeck) {
+    const index = decks.findIndex(
+      ({ deckId }) => deckId === repairedActive.refreshedDeck?.deckId,
+    );
+    if (index === -1) decks.push(repairedActive.refreshedDeck);
+    else decks[index] = repairedActive.refreshedDeck;
+  }
+  if (decks.length > MAX_DECKS) throw new Error("SYNC_DATA_LIMIT_EXCEEDED");
   const matches = stats?.matches ?? 0;
   const wins = stats?.wins ?? 0;
   const losses = stats?.losses ?? 0;
   return {
-    decks: deckRows.map(parseDeck),
+    decks,
     deletedDecks: tombstoneRows.map((row) => ({
       deckId: row.deck_id,
       deletedAt: row.deleted_at,
     })),
-    activeDeck: activeDeck ? mapActiveDeck(activeDeck) : null,
+    activeDeck: repairedActive.activeDeck
+      ? mapActiveDeck(repairedActive.activeDeck)
+      : null,
     stats: {
       matches,
       wins,

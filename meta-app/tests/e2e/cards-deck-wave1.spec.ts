@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { gotoReadyLandscapeRoute } from './landscape-test-helpers';
+import { gotoReadyLandscapeRoute, installPlayableDeckStore } from './landscape-test-helpers';
 
 test.beforeEach(async ({ page }) => {
+  await installPlayableDeckStore(page);
   await page.setViewportSize({ width: 851, height: 393 });
   await page.goto('/');
   await page.evaluate(() => localStorage.removeItem('conan.meta.v1.filters'));
@@ -254,6 +255,90 @@ test('720x393 and exact SE3 landscape keep actionable CARDS and DECK text at 10p
     expect(deckSizes.length).toBeGreaterThan(10);
     expect(deckSizes.every((size) => size >= 10)).toBe(true);
   }
+});
+
+test('CARDS bounds empty, filtered, repeatedly scrolled, and detail-return catalog windows at both compact widths', async ({ page }) => {
+  for (const viewport of [{ width: 851, height: 393 }, { width: 667, height: 375 }]) {
+    await gotoReadyLandscapeRoute(page, 'cards', '.cards-main', viewport);
+    const search = page.locator('.cards-search input');
+    const cards = page.locator('.cards-grid-item');
+    const scroller = page.locator('.cards-grid-scroll');
+    const assertMountedAtMost = async (total: number) => {
+      expect(await cards.count()).toBeLessThanOrEqual(Math.min(total, 96));
+    };
+
+    await search.fill('no-catalog-result-zz');
+    await expect(page.locator('.cards-empty')).toBeVisible();
+    await assertMountedAtMost(0);
+
+    await search.fill('D01001');
+    await expect(cards).toHaveCount(1);
+    await assertMountedAtMost(1);
+
+    await search.fill('');
+    await expect(cards).toHaveCount(48);
+    for (const top of [0.5, 1, 0.25]) {
+      await scroller.evaluate((element, fraction) => {
+        element.scrollTop = element.scrollHeight * fraction;
+        element.dispatchEvent(new Event('scroll'));
+      }, top);
+      await expect.poll(() => cards.count()).toBeLessThanOrEqual(96);
+    }
+
+    await search.fill('D01001');
+    const selected = cards.locator('[role="button"]');
+    await selected.click();
+    const art = page.locator('.cards-selected-art');
+    await art.click();
+    await expect(page.locator('.card-expand-modal-backdrop')).toBeVisible();
+    await page.locator('.card-expand-close').click();
+    await expect(page.locator('.card-expand-modal-backdrop')).toHaveCount(0);
+    await expect(art).toBeFocused();
+    await assertMountedAtMost(1);
+  }
+});
+
+test('DECK compact metadata stays legible and the compact sync marker is exactly 4px', async ({ page }) => {
+  await gotoReadyLandscapeRoute(page, 'deck', '[data-testid="deck-editor"]', { width: 667, height: 375 });
+
+  const metadataSizes = await page.locator([
+    '.deck-pool-surface > div:first-child span:last-child',
+    '.deck-detail-stats > div > div:first-child',
+  ].join(', ')).evaluateAll((elements) => elements.map((element) => (
+    Number.parseFloat(getComputedStyle(element).fontSize)
+  )));
+  expect(metadataSizes.length).toBeGreaterThan(0);
+  expect(metadataSizes.every((size) => size >= 8)).toBe(true);
+
+  const syncDot = await page.locator('.network-status--compact .network-status__dot').evaluate((dot) => {
+    const styles = getComputedStyle(dot);
+    return { width: styles.width, height: styles.height };
+  });
+  expect(syncDot).toEqual({ width: '4px', height: '4px' });
+});
+
+test('CARDS and DECK actionable typography scales from 851px to exact SE3 while retaining 10px minimums', async ({ page }) => {
+  const readSizes = (selector: string) => page.locator(selector).evaluateAll((elements) =>
+    elements.map((element) => Number.parseFloat(getComputedStyle(element).fontSize)),
+  );
+
+  await gotoReadyLandscapeRoute(page, 'cards', '.cards-main', { width: 851, height: 393 });
+  const cardsWide = await readSizes('.cards-search input, .cards-filter-trigger, .cards-sort-control select');
+  await gotoReadyLandscapeRoute(page, 'cards', '.cards-main', { width: 667, height: 375 });
+  const cardsSe = await readSizes('.cards-search input, .cards-filter-trigger, .cards-sort-control select');
+
+  expect(cardsSe).toHaveLength(cardsWide.length);
+  expect(cardsSe.every((size, index) => size < cardsWide[index]!)).toBe(true);
+  expect(cardsSe.every((size) => size >= 10)).toBe(true);
+
+  await gotoReadyLandscapeRoute(page, 'deck', '[data-testid="deck-editor"]', { width: 851, height: 393 });
+  const deckWide = await readSizes('.deck-name-input, .deck-tool-button, .deck-save-button, .deck-search-box input');
+  await gotoReadyLandscapeRoute(page, 'deck', '[data-testid="deck-editor"]', { width: 667, height: 375 });
+  const deckSe = await readSizes('.deck-name-input, .deck-tool-button, .deck-save-button, .deck-search-box input');
+
+  expect(deckSe).toHaveLength(deckWide.length);
+  expect(deckSe.every((size, index) => size < deckWide[index]!)).toBe(true);
+  expect(deckSe.every((size) => size >= 10)).toBe(true);
 });
 
 test('CARDS and DECK tolerate malformed saved filters', async ({ page }) => {

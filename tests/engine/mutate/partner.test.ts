@@ -3,7 +3,12 @@ import { describe, it, expect } from 'vitest';
 import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { partner } from '@/engine/mutate/partner';
+import { register, _resetRegistry } from '@/engine/read/def';
+import { GENERATED_PARTNERS } from '@/cards';
 import type { GameState } from '@/engine/types';
+
+const PR022 = GENERATED_PARTNERS.find(({ id }) => id === 'PR022');
+if (!PR022) throw new Error('production PR022 is not registered in GENERATED_PARTNERS');
 
 function makeState(selfOverrides?: Partial<GameState['players']['self']>): GameState {
   const s = createEmptyGameState();
@@ -47,6 +52,20 @@ describe('engine.mutate.partner', () => {
   });
 
   describe('assist', () => {
+    it('PR022 resolves at FILE 8, not FILE 7', () => {
+      _resetRegistry();
+      register(PR022);
+      const base = makeState({
+        partner: { cardId: 'PR022', state: 'active', location: 'partner-area' },
+        case: { ...createEmptyGameState().players.self.case, status: '事件編' },
+        file: Array.from({ length: 6 }, (_, index) => ({ type: 'card-back' as const, cardId: `F${index}` })),
+      });
+      const pre7 = produce(base, draft => { partner.assist(draft, 'self'); });
+      expect(pre7.players.self.case.status).toBe('事件編');
+      const at8 = produce({ ...base, players: { ...base.players, self: { ...base.players.self, file: [...base.players.self.file, { type: 'card-back', cardId: 'F6' }] } } }, draft => { partner.assist(draft, 'self'); });
+      expect(at8.players.self.case.status).toBe('解決編');
+      _resetRegistry();
+    });
     it('アシスト: パートナーをスリープ化 + FILE へ移動 (rules/13)', () => {
       const s = makeState({ partner: { cardId: 'P001', state: 'active', location: 'partner-area' } });
       const result = produce(s, draft => {

@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { installPlayableDeckStore } from "./landscape-test-helpers";
 
 test("portrait gate defers HOME and preserves MATCH mulligan across rotation", async ({ page }) => {
+  await installPlayableDeckStore(page);
   const errors: string[] = [];
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
@@ -79,4 +81,49 @@ test("unsupported orientation APIs keep an actionable manual-rotation fallback",
     "自動回転を有効にして、端末を横向きにしてください",
   );
   await expect(cta).toBeVisible();
+});
+
+test("375x667 rotation preserves HOME, DECK, SETUP, and MATCH state plus focus without device emulation", async ({ page }) => {
+  await installPlayableDeckStore(page);
+  await page.setViewportSize({ width: 667, height: 375 });
+  await page.goto("/#home");
+
+  const deckNav = page.locator('button[data-route="deck"]');
+  await deckNav.focus();
+  await page.setViewportSize({ width: 375, height: 667 });
+  await expect(page.locator(".landscape-gate")).toBeVisible();
+  await page.setViewportSize({ width: 667, height: 375 });
+  await expect(deckNav).toBeFocused();
+  await deckNav.click();
+  await expect(page).toHaveURL(/#deck$/);
+
+  const deckSearch = page.locator('.deck-search-box input');
+  await deckSearch.fill('D080');
+  await deckSearch.focus();
+  await page.setViewportSize({ width: 375, height: 667 });
+  await expect(page.locator(".landscape-gate")).toBeVisible();
+  await page.setViewportSize({ width: 667, height: 375 });
+  await expect(deckSearch).toHaveValue('D080');
+  await expect(deckSearch).toBeFocused();
+
+  const setupNav = page.locator('button[data-route="setup"]');
+  await setupNav.click();
+  await expect(page).toHaveURL(/#setup$/);
+  const start = page.locator('button.setup-start');
+  await expect(start).toBeVisible({ timeout: 10_000 });
+  await start.focus();
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.setViewportSize({ width: 667, height: 375 });
+  await expect(start).toBeFocused();
+  await start.click({ timeout: 10_000 });
+  await expect(page).toHaveURL(/#match$/);
+
+  const mulligan = page.locator('button.mulligan-skip');
+  await expect(mulligan).toBeVisible({ timeout: 10_000 });
+  await mulligan.focus();
+  await page.setViewportSize({ width: 375, height: 667 });
+  await expect(page.locator(".landscape-gate")).toBeVisible();
+  await page.setViewportSize({ width: 667, height: 375 });
+  await expect(mulligan).toBeVisible();
+  await expect(mulligan).toBeFocused();
 });

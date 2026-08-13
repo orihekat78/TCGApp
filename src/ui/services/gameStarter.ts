@@ -20,7 +20,14 @@ import type { CardId } from '@/engine/types';
 import { startCausalSession } from '@/engine/log/causal';
 
 type Player = 'self' | 'opp';
-type GameStartOptions = { sessionId: string; isSessionCurrent?: () => boolean };
+export const BUG_274_GAME_START_AUTHORITY = Symbol('BUG_274_GAME_START_AUTHORITY');
+
+type GameStartOptions = {
+  sessionId: string;
+  isSessionCurrent?: () => boolean;
+  /** Non-serializable authority held only by the built-in setup fixture route. */
+  bug274Authority?: typeof BUG_274_GAME_START_AUTHORITY;
+};
 
 /**
  * turn-1 開始の GameState を返す (rules/04)。
@@ -77,12 +84,15 @@ export async function performGameStart(
   options?: GameStartOptions,
 ): Promise<GameState> {
   if (!options) throw new Error('performGameStart: sessionId is required');
+  const usesBug274Fixture = deckSelection?.selfDeckId === 'TEST-BUG-274'
+    || deckSelection?.oppDeckId === 'TEST-BUG-274';
+  if (usesBug274Fixture && options.bug274Authority !== BUG_274_GAME_START_AUTHORITY) {
+    throw new Error('performGameStart: BUG-274 fixture authority required');
+  }
+  const run = async (): Promise<GameState> => {
   const decks = deckSelection
     ? buildDeckPair(deckSelection)
     : buildMvpDeckPair();
-  const usesBug274Fixture = deckSelection?.selfDeckId === 'TEST-BUG-274'
-    || deckSelection?.oppDeckId === 'TEST-BUG-274';
-  if (usesBug274Fixture) engine.cards.register(BUG_274_PARTNER);
   // Phase A: init / decideFirstPlayer / dealOpeningHand × 2
   let state = produce(createEmptyGameState(), (draft) => {
     startCausalSession(draft, options.sessionId);
@@ -121,4 +131,9 @@ export async function performGameStart(
   });
 
   return state;
+  };
+
+  return usesBug274Fixture
+    ? engine.cards.withTemporary(BUG_274_PARTNER, run)
+    : run();
 }

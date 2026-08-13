@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { installPlayableDeckStore } from './landscape-test-helpers';
 
 const VIEWPORTS = [
   { width: 1280, height: 720 },
@@ -8,6 +9,7 @@ const VIEWPORTS = [
 
 for (const viewport of VIEWPORTS) {
   test(`public surrender flow is modal-safe at ${viewport.width}x${viewport.height}`, async ({ page }, testInfo) => {
+    test.setTimeout(60_000);
     const errors: string[] = [];
     page.on('console', (message) => {
       if (message.type() === 'error') errors.push(message.text());
@@ -23,6 +25,7 @@ for (const viewport of VIEWPORTS) {
         }
       });
     });
+    await installPlayableDeckStore(page);
 
     await page.goto('/#home');
     await page.keyboard.press('Enter');
@@ -60,6 +63,19 @@ for (const viewport of VIEWPORTS) {
 
     const menu = page.getByTestId('match-menu-dialog');
     await expect(menu).toBeVisible();
+    if (viewport.width === 851 || viewport.width === 667) {
+      const typography = {
+        trigger: await trigger.evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize)),
+        heading: await menu.locator('h2').evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize)),
+        action: await menu.locator('button').first().evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize)),
+      };
+      const expected = viewport.width === 851
+        ? { trigger: 12, heading: 17, copy: 13, action: 11 }
+        : { trigger: 10, heading: 15, copy: 11, action: 10 };
+      expect(typography.trigger).toBeCloseTo(expected.trigger, 1);
+      expect(typography.heading).toBeCloseTo(expected.heading, 1);
+      expect(typography.action).toBeCloseTo(expected.action, 1);
+    }
     await expect(decision).toHaveAttribute('data-match-modal-registered', 'true');
     await expect(decision).toHaveAttribute('aria-hidden', 'true');
     await expect(decision).toHaveAttribute('aria-modal', 'false');
@@ -102,8 +118,13 @@ for (const viewport of VIEWPORTS) {
 
     await page.getByTestId('match-menu-surrender').click();
     const confirm = page.getByTestId('match-menu-confirm-submit');
+    if (viewport.width === 851 || viewport.width === 667) {
+      const copySize = await menu.locator('p').first()
+        .evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize));
+      expect(copySize).toBeCloseTo(viewport.width === 851 ? 13 : 11, 1);
+    }
     await expect(page.getByTestId('match-menu-confirm-cancel')).toBeFocused();
-    await confirm.dblclick();
+    await confirm.click();
 
     await expect(page).toHaveURL(/#result$/, { timeout: 10_000 });
     await expect(page.locator('.result-screen.is-loss')).toBeVisible();

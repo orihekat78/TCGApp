@@ -1,5 +1,7 @@
 import type { GameState } from '@/engine/types/game-state';
+import type { CardDef } from '@/engine/types';
 import { flow, _resetPendingHirameki, _resetPendingMisread } from '@/engine';
+import { cards } from '@/engine/cards';
 import { resetPendingEffectSession } from '@/engine/effect/pending-state';
 import { resetRuntimeAtomTargetPolicySession } from '@/engine/effect/resolve-picks';
 import { resetPendingAtomSession } from '@/engine/effect/atom-handlers';
@@ -24,6 +26,12 @@ export { matchSessionId, type MatchSessionToken } from '@/ui/services/matchSessi
 
 let currentGeneration = 0;
 let matchSessionActive = false;
+let restoreSessionCard: (() => void) | null = null;
+
+function clearSessionCardRegistration(): void {
+  restoreSessionCard?.();
+  restoreSessionCard = null;
+}
 
 // Store owns publication, this live-session service owns whether UI cleanup
 // applies. Replays and orphaned state projections never register as live.
@@ -33,6 +41,7 @@ registerTerminalInteractionPublication(() => {
 
 /** Promise を先に決着させ、その後に対戦の UI/engine 一時状態を破棄する。 */
 export function resetMatchSession(options: { preserveGameState?: boolean } = {}): void {
+  clearSessionCardRegistration();
   const preservedGameState = options.preserveGameState
     ? useGameStateStore.getState().gameState
     : null;
@@ -90,6 +99,7 @@ export function endMatchSession(options: { preserveGameState?: boolean } = {}): 
     // It must never trap a completed match on MATCH or discard its RESULT state.
     if (sessionId !== null) discardLiveReplayRecording(sessionId);
   } finally {
+    clearSessionCardRegistration();
     matchSessionActive = false;
     currentGeneration += 1;
     resetMatchSession(options);
@@ -99,6 +109,13 @@ export function endMatchSession(options: { preserveGameState?: boolean } = {}): 
 /** True only while a setup-owned match session is alive in this runtime. */
 export function isMatchSessionActive(): boolean {
   return matchSessionActive;
+}
+
+/** Bind a trusted synthetic definition to exactly one live match session. */
+export function retainMatchSessionCard(token: MatchSessionToken, card: CardDef): boolean {
+  if (!isCurrentMatchSession(token) || restoreSessionCard !== null) return false;
+  restoreSessionCard = cards.retainTemporary(card);
+  return true;
 }
 
 /** Read-only live-session token for UI actions bound to this exact match. */

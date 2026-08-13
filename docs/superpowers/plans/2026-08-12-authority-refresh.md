@@ -66,11 +66,11 @@
 
 **Files:** Modify QA adjudication shards and approved overrides by review; modify `.claude/auto/**` only through `npm run docs`.
 
-**Interfaces:** Classify every fresh `qaId` as behavior-test-backed or authority-blocked; `removed` and `answerChanged` items require explicit reviewer disposition.
+**Interfaces:** Classify every genuinely new semantic `qaId` as behavior-test-backed or authority-blocked; mechanical ID remaps plus `removed` and `answerChanged` items require explicit reviewer disposition. Historical reviewed `test-gap` rows are a separate closure wave.
 
 - [ ] Run `npm run qa:adjudication:queue`; RED the pinned baseline until every added/removed/changed item has a reviewed disposition.
 - [ ] Add exact linked behavioral tests or strict exception references; do not use one broad test to claim unrelated Q&A semantics.
-- [ ] Run `npm run qa:adjudication:merge`, `npm run qa:adjudication:verify-local`, `npm run lint:qa -- --require-all --require-reviewed`, and `npm run docs`; commit `test(cards): adjudicate refreshed official FAQ`.
+- [ ] Review the exact adjudication improvement diff, then run `npm run lint:qa -- --write-baseline`, `npm run qa:adjudication:merge -- --require-reviewed`, `npm run qa:adjudication:verify-local -- --require-reviewed`, `npm run lint:qa -- --require-reviewed`, and `npm run docs`; commit `test(cards): adjudicate refreshed official FAQ`. Do not use global `--require-all` to misclassify unrelated historical reviewed gaps as authority-refresh failures.
 
 ### Task 6: Authority closeout gate
 

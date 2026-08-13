@@ -3,7 +3,12 @@ import { describe, it, expect } from 'vitest';
 import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { file } from '@/engine/mutate/file';
+import { register, _resetRegistry } from '@/engine/read/def';
+import { GENERATED_PARTNERS } from '@/cards';
 import type { GameState } from '@/engine/types';
+
+const PR022 = GENERATED_PARTNERS.find(({ id }) => id === 'PR022');
+if (!PR022) throw new Error('production PR022 is not registered in GENERATED_PARTNERS');
 
 function makeState(selfOverrides?: Partial<GameState['players']['self']>): GameState {
   const s = createEmptyGameState();
@@ -152,6 +157,22 @@ describe('engine.mutate.file', () => {
   describe('addFromDeckTop — FILE 7+ で 解決編 自動遷移 (rules/01 + rules/13 + rules/25)', () => {
     it('FILE 5 → addFromDeckTop(2) で 7 到達 → 事件編→解決編', () => {
       const s = makeState({
+        deck: ['C001', 'C002'],
+        file: Array.from({ length: 5 }, () => ({ type: 'card-back' as const })),
+        case: { cardId: 'CASE', status: '事件編' as const, requiredEvidence: 7, colors: [], declaredUseCount: {} },
+      });
+      const result = produce(s, draft => {
+        file.addFromDeckTop(draft, 'self', 2);
+      });
+      expect(result.players.self.file).toHaveLength(7);
+      expect(result.players.self.case.status).toBe('解決編');
+    });
+
+    it('PR022でも通常のFILE追加は固定7で解決編へ進む', () => {
+      _resetRegistry();
+      register(PR022);
+      const s = makeState({
+        partner: { cardId: 'PR022', state: 'active', location: 'partner-area' },
         deck: ['C001', 'C002'],
         file: Array.from({ length: 5 }, () => ({ type: 'card-back' as const })),
         case: { cardId: 'CASE', status: '事件編' as const, requiredEvidence: 7, colors: [], declaredUseCount: {} },

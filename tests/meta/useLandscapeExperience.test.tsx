@@ -102,11 +102,24 @@ describe("useLandscapeExperience", () => {
     expect(current.status).toBe("portrait");
   });
 
-  it("requests fullscreen then locks landscape only after a user request", async () => {
+  it("does not report entered when orientation lock resolves before landscape is observed", async () => {
     render();
     await act(async () => { await current.requestLandscape(); });
     expect(requestFullscreen).toHaveBeenCalledTimes(1);
     expect(lock).toHaveBeenCalledWith("landscape");
+    expect(current.status).toBe("portrait");
+    expect(current.requestResult).toBe("rotate");
+  });
+
+  it("reports entered only when landscape is observed after the user request", async () => {
+    lock.mockImplementationOnce(async () => {
+      media.setMatches(true);
+    });
+    render();
+    await act(async () => { await current.requestLandscape(); });
+    expect(requestFullscreen).toHaveBeenCalledTimes(1);
+    expect(lock).toHaveBeenCalledWith("landscape");
+    expect(current.status).toBe("landscape");
     expect(current.requestResult).toBe("entered");
   });
 

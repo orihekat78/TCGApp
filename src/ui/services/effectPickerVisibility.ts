@@ -8,7 +8,6 @@ const AREA_PICK_VERBS = new Set([
   'handAddFromRemove',
   'deckRevealUntil',
   'discard',
-  'sceneRemove',
   'charModifyAP',
   'sceneEnter',
   'charStackCard',

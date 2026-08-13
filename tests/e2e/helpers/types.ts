@@ -17,6 +17,14 @@ export type GameWindow = {
       cutInUsed?: Record<string, boolean>;
     } | null;
     flow: unknown;
+    testApi: Promise<{
+      persistPendingRuntimeState: (state: unknown) => void;
+      produce: (state: unknown, recipe: (draft: unknown) => void) => unknown;
+      resetPendingRuntimeState: () => void;
+      resetPresentationQueue: (sessionId: string) => void;
+      runAtom: (state: unknown, verb: string, args: unknown, ctx: unknown) => void;
+      startCausalSession: (state: unknown, sessionId: string) => void;
+    }>;
     read: {
       char: {
         keywords: (state: unknown, uid: string) => string[];

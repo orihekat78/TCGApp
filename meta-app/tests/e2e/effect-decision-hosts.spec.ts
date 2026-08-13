@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { gotoReadyMetaRoute } from './landscape-test-helpers';
 
 test('MATCH画面で任意効果の決定モーダルを表示する', async ({ page }) => {
-  await page.goto('/#setup');
+  test.setTimeout(60_000);
+  await gotoReadyMetaRoute(page, 'setup', '.setup-main');
   await page.getByLabel('先攻').selectOption('p1');
   await page.locator('.meta-btn-ready').click();
   await page.waitForURL(/#match/);

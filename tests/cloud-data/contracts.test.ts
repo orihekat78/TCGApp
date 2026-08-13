@@ -4,16 +4,14 @@ import {
   validateMatchInput,
 } from "../../src/cloud-data/contracts";
 import { MATCH_RETENTION_MS } from "../../src/cloud-data/retention";
+import { SAMPLE_DECK } from "../../meta-app/src/data/sampleDeck";
 
 const validDeck = {
   deckId: "c94c11bb-cf59-4fc2-855d-bbfb3af70148",
   name: "少年探偵団・標準",
-  partnerCardNum: "D08001",
-  caseCardNum: "D08026",
-  cards: [
-    { cardNum: "D08005", count: 3 },
-    { cardNum: "D08006", count: 37 },
-  ],
+  partnerCardNum: SAMPLE_DECK.partner,
+  caseCardNum: SAMPLE_DECK.case,
+  cards: SAMPLE_DECK.cards.map(({ num, count }) => ({ cardNum: num, count })),
   clientModifiedAt: 1_786_000_000_000,
   expectedRevision: 1,
 };
@@ -45,6 +43,17 @@ describe("cloud deck contract", () => {
         cards: [{ cardNum: "D08005", count: 39 }],
       }),
     ).toThrow("DECK_MAIN_COUNT_INVALID");
+  });
+
+  it.each([
+    ["a partner in main", [{ cardNum: "D08002", count: 40 }]],
+    ["combined reprints above the official-ID copy limit", [
+      { cardNum: "D08005", count: 3 },
+      { cardNum: "D08006", count: 37 },
+    ]],
+  ])("rejects %s after structural validation", (_label, cards) => {
+    expect(() => validateDeckInput({ ...validDeck, cards }))
+      .toThrow("DECK_LEGALITY_INVALID");
   });
 
   it("rejects duplicate print numbers before catalog validation", () => {

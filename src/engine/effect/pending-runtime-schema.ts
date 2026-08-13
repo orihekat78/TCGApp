@@ -1,12 +1,19 @@
-import type { Effect } from '../types/index.js';
+import type { Effect, GameState } from '../types/index.js';
 import type { PendingEffectPickSide } from './pending-state.js';
 import { effectivePendingPickRange } from './pick-selection.js';
 import { ATOM_VERBS, validate } from './validate.js';
+import { def } from '../read/def.js';
 import {
   cardOccurrenceUid,
   isCardOccurrenceWitness,
   isCardOccurrenceWitnessFor,
 } from '../target/card-occurrence.js';
+import {
+  DECLARED_NAME_DOMAINS,
+  findDeclareNameSpec,
+  resolveDeclaredName,
+  type DeclareNameSpec,
+} from './declared-name-domain.js';
 
 type ValidationMode = 'live' | 'persisted';
 
@@ -292,7 +299,34 @@ function effectCtx(value: unknown, path: string, mode: ValidationMode, depth = 0
   }
   if (item.declaredNames !== undefined) {
     const names = record(item.declaredNames, `${path}.declaredNames`);
-    Object.entries(names).forEach(([key, name]) => string(name, `${path}.declaredNames.${key}`));
+    Object.entries(names).forEach(([key, name]) => string(name, `${path}.declaredNames.${key}`, true));
+  }
+  if (item.declaredNameDomains !== undefined) {
+    const domains = record(item.declaredNameDomains, `${path}.declaredNameDomains`);
+    const names = item.declaredNames === undefined
+      ? {}
+      : record(item.declaredNames, `${path}.declaredNames`);
+    for (const [key, rawDomain] of Object.entries(domains)) {
+      if (!Object.prototype.hasOwnProperty.call(names, key)) {
+        fail(`${path}.declaredNameDomains.${key}`, 'does not have a declared name');
+      }
+      const domain = oneOf(
+        rawDomain,
+        new Set(DECLARED_NAME_DOMAINS),
+        `${path}.declaredNameDomains.${key}`,
+      ) as 'unrestricted' | 'registered-character-card-name';
+      const declaredName = names[key];
+      if (typeof declaredName === 'string'
+        && declaredName !== ''
+        && resolveDeclaredName(domain, declaredName) !== declaredName) {
+        fail(`${path}.declaredNames.${key}`, `is not allowed by ${domain}`);
+      }
+    }
+    for (const key of Object.keys(names)) {
+      if (!Object.prototype.hasOwnProperty.call(domains, key)) {
+        fail(`${path}.declaredNameDomains.${key}`, 'is required for the declared name');
+      }
+    }
   }
   if (item.picked !== undefined) {
     array(item.picked, `${path}.picked`)
@@ -333,6 +367,194 @@ function continuation(value: unknown, path: string, mode: ValidationMode, depth 
   effectCtx(item.ctx, `${path}.ctx`, mode);
   oneOf(item.kind, new Set(['sequence', 'chain']), `${path}.kind`);
   if (item.outer !== undefined) continuation(item.outer, `${path}.outer`, mode, depth + 1);
+}
+
+function sameDeclareNameSpec(left: DeclareNameSpec, right: DeclareNameSpec): boolean {
+  return left.bind === right.bind
+    && left.domain === right.domain
+    && left.optional === right.optional;
+}
+
+function matchingDeclaredNameLineage(
+  state: GameState,
+  source: Record<string, unknown>,
+): GameState['pendingEffects'] {
+  const sourceArea = source.area;
+  const entries = state.pendingEffects.filter((entry) => {
+    if (entry.source.player !== source.player
+      || entry.source.cardId !== source.cardId
+      || entry.source.abilityId !== source.abilityId) return false;
+    if (source.uid !== undefined && entry.source.uid !== source.uid) return false;
+    if (sourceArea !== undefined && (entry.source.area ?? 'scene') !== sourceArea) return false;
+    if (source.resolutionKind !== undefined
+      && entry.source.resolutionKind !== source.resolutionKind) return false;
+    if (source.triggerBatch !== undefined && entry.triggerBatch !== source.triggerBatch) return false;
+    if (source.ownerChosenOrder !== undefined
+      && entry.ownerChosenOrder !== source.ownerChosenOrder) return false;
+    if (source.ownerOrderConfirmed !== undefined
+      && entry.ownerOrderConfirmed !== source.ownerOrderConfirmed) return false;
+    if (source.declaredBatch !== undefined && entry.declaredBatch !== source.declaredBatch) return false;
+    return true;
+  });
+  return entries;
+}
+
+function expectedDeclaredNameSpec(
+  state: GameState,
+  source: Record<string, unknown>,
+  path: string,
+): DeclareNameSpec | null {
+  const cardId = string(source.cardId, `${path}.source.cardId`);
+  const abilityId = string(source.abilityId, `${path}.source.abilityId`);
+  let printedSpec: DeclareNameSpec | null = null;
+  try {
+    const printed = def.card(cardId)?.abilities.find((ability) => ability.id === abilityId);
+    printedSpec = findDeclareNameSpec(printed?.effect);
+  } catch {
+    fail(path, 'printed ability has an invalid declared-name descriptor');
+  }
+
+  const queuedSpecs: DeclareNameSpec[] = [];
+  for (const queued of matchingDeclaredNameLineage(state, source)) {
+    let queuedSpec: DeclareNameSpec | null;
+    try {
+      queuedSpec = findDeclareNameSpec(queued.effect);
+    } catch {
+      fail(path, 'queued declaration lineage has an invalid declared-name descriptor');
+    }
+    if (!queuedSpec) continue;
+    if (printedSpec && !sameDeclareNameSpec(queuedSpec, printedSpec)) {
+      fail(path, 'queued declaration lineage does not match the printed ability');
+    }
+    if (queuedSpecs.some((candidate) => !sameDeclareNameSpec(candidate, queuedSpec))) {
+      fail(path, 'queued declaration lineage is ambiguous');
+    }
+    queuedSpecs.push(queuedSpec);
+  }
+  return queuedSpecs[0] ?? null;
+}
+
+function assertExactDeclaredNameKeys(
+  item: Record<string, unknown>,
+  bind: string,
+  path: string,
+): void {
+  const keys = Object.keys(item);
+  if (keys.length !== 1 || keys[0] !== bind) {
+    fail(path, `must contain exactly the queued declaration bind ${bind}`);
+  }
+}
+
+function assertEffectCtxDeclaredNameAuthority(
+  state: GameState,
+  item: Record<string, unknown>,
+  path: string,
+): void {
+  const dyn = item.dyn !== undefined ? record(item.dyn, `${path}.dyn`) : undefined;
+  const hasDynName = dyn !== undefined && Object.prototype.hasOwnProperty.call(dyn, 'declaredName');
+  const hasNames = item.declaredNames !== undefined;
+  const hasDomains = item.declaredNameDomains !== undefined;
+  if (!hasDynName && !hasNames && !hasDomains) return;
+
+  const source = record(item.source, `${path}.source`);
+  const expected = expectedDeclaredNameSpec(state, source, path);
+  if (!expected) {
+    fail(path, 'declared-name state has no matching queued declaration lineage');
+  }
+
+  if (!hasNames || !hasDomains) {
+    if (expected.domain === 'unrestricted') {
+      if (!hasNames && !hasDomains) {
+        if (hasDynName && typeof dyn?.declaredName !== 'string') {
+          fail(`${path}.dyn.declaredName`, 'expected a string');
+        }
+        return;
+      }
+      if (!hasNames || hasDomains) {
+        fail(path, 'legacy unrestricted declaration maps are inconsistent');
+      }
+      const legacyNames = record(item.declaredNames, `${path}.declaredNames`);
+      assertExactDeclaredNameKeys(legacyNames, expected.bind, `${path}.declaredNames`);
+      const legacyName = legacyNames[expected.bind];
+      if (typeof legacyName !== 'string') {
+        fail(`${path}.declaredNames.${expected.bind}`, 'expected a string');
+      }
+      if (!hasDynName || typeof dyn?.declaredName !== 'string') {
+        fail(`${path}.dyn.declaredName`, 'expected a string');
+      }
+      if (dyn.declaredName !== legacyName) {
+        fail(`${path}.dyn.declaredName`, 'must match the legacy declared name');
+      }
+      return;
+    }
+    fail(
+      !hasNames ? `${path}.declaredNames` : `${path}.declaredNameDomains`,
+      `is required by queued ${expected.domain} declaration lineage`,
+    );
+  }
+
+  const names = record(item.declaredNames, `${path}.declaredNames`);
+  const domains = record(item.declaredNameDomains, `${path}.declaredNameDomains`);
+  assertExactDeclaredNameKeys(names, expected.bind, `${path}.declaredNames`);
+  assertExactDeclaredNameKeys(domains, expected.bind, `${path}.declaredNameDomains`);
+  if (!Object.prototype.hasOwnProperty.call(names, expected.bind)) {
+    fail(`${path}.declaredNames.${expected.bind}`, 'is required by queued declaration lineage');
+  }
+  if (domains[expected.bind] !== expected.domain) {
+    fail(
+      `${path}.declaredNameDomains.${expected.bind}`,
+      `must match queued ${expected.domain} declaration lineage`,
+    );
+  }
+
+  const name = names[expected.bind];
+  if (typeof name !== 'string') fail(`${path}.declaredNames.${expected.bind}`, 'expected a string');
+  if (name === '' && !expected.optional) {
+    fail(`${path}.declaredNames.${expected.bind}`, 'mandatory declaration cannot be empty');
+  }
+  if (name !== '' && resolveDeclaredName(expected.domain, name) !== name) {
+    fail(`${path}.declaredNames.${expected.bind}`, `is not canonical for ${expected.domain}`);
+  }
+  if (name !== '') {
+    if (!hasDynName || dyn?.declaredName !== name) {
+      fail(`${path}.dyn.declaredName`, 'must match the canonical declared name');
+    }
+  } else if (!hasDynName || dyn?.declaredName !== '') {
+    fail(`${path}.dyn.declaredName`, 'must match the skipped declaration');
+  }
+}
+
+/** Cross-check persisted declaration data against state-owned queued ability lineage. */
+export function assertPendingDeclaredNameAuthority(
+  state: GameState,
+  value: unknown,
+  path = 'pending runtime',
+): void {
+  const seen = new WeakSet<object>();
+  const visit = (candidate: unknown, candidatePath: string, depth: number): void => {
+    if (candidate === null || typeof candidate !== 'object') return;
+    if (depth > 32) fail(candidatePath, 'declared-name authority depth exceeded');
+    if (seen.has(candidate)) return;
+    seen.add(candidate);
+    if (Array.isArray(candidate)) {
+      candidate.forEach((entry, index) => visit(entry, `${candidatePath}[${index}]`, depth + 1));
+      return;
+    }
+    const item = candidate as Record<string, unknown>;
+    const source = item.source;
+    if (item.bindings !== undefined
+      && source !== null
+      && typeof source === 'object'
+      && !Array.isArray(source)
+      && (source as Record<string, unknown>).player !== undefined
+      && (source as Record<string, unknown>).area !== undefined) {
+      assertEffectCtxDeclaredNameAuthority(state, item, candidatePath);
+    }
+    for (const [key, nested] of Object.entries(item)) {
+      visit(nested, `${candidatePath}.${key}`, depth + 1);
+    }
+  };
+  visit(value, path, 0);
 }
 
 function pendingPick(value: unknown, path: string, mode: ValidationMode): void {

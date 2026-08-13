@@ -41,6 +41,7 @@ const ASSET_HASH = createHash("sha256")
 const COMMANDS = [
   "npm-ci",
   "card-identities",
+  "deck-legality",
   "build",
   "dependency-audit",
   "bug-gate",
@@ -162,6 +163,7 @@ function qualificationArgv(id: string, repoRoot: string, runDir: string) {
   const npm = (...args: string[]) => [process.execPath, npmCli, ...args];
   const scripts: Record<string, string> = {
     "card-identities": "check:meta-card-identities",
+    "deck-legality": "check:deck-legality-catalog",
     build: "build:meta",
     "bug-gate": "private-hosted:bug-gate",
     typecheck: "typecheck",
@@ -391,7 +393,7 @@ async function fixture() {
     commands: records,
     secretFindings: [],
     destinationFindings: [],
-    bugGateSha256: records[4]!.log.sha256,
+    bugGateSha256: records.find(({ id }) => id === "bug-gate")!.log.sha256,
   });
   return { repoRoot, runDir, stagingDir, reportPath, evidenceDir, logsDir };
 }

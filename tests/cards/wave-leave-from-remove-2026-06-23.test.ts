@@ -207,9 +207,9 @@ describe('wave leave-from-remove — 【相手ターン中】【現場リムー�
   });
 
   it('B05058: a1 (継続trait付与) は DEFER ゆえ abilities は a2 のみ', () => {
-    expect(B05058.abilities.length).toBe(1);
-    expect(B05058.abilities[0].id).toBe('a2');
-    expect((B05058.abilities[0].effect as any).verb).toBe('handAddFromRemove');
+    expect(B05058.abilities.map(ability => ability.id)).toEqual(['a1', 'a2']);
+    expect((B05058.abilities[0] as any).continuousModifier).toEqual({ grantTraits: ['鈴木財閥'] });
+    expect((B05058.abilities[1].effect as any).verb).toBe('handAddFromRemove');
   });
 
   // ---------- B05116 火傷の男: a2 color 黒 Lv≤4 sleep登場 (a1 DEFER) ----------
@@ -231,8 +231,8 @@ describe('wave leave-from-remove — 【相手ターン中】【現場リムー�
   });
 
   it('B05116: a1 (forced-target) は DEFER ゆえ abilities は a2 のみ', () => {
-    expect(B05116.abilities.length).toBe(1);
-    expect(B05116.abilities[0].id).toBe('a2');
-    expect((B05116.abilities[0].effect as any).args.filter).toEqual({ color: '黒', levelMax: 4, kind: 'character' });
+    expect(B05116.abilities.map(ability => ability.id)).toEqual(['a1', 'a2']);
+    expect((B05116.abilities[0] as any).continuousModifier).toEqual({ mustBeSelectedByOppEvent: true });
+    expect((B05116.abilities[1].effect as any).args.filter).toEqual({ color: '黒', levelMax: 4, kind: 'character' });
   });
 });

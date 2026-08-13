@@ -15,6 +15,7 @@ import { useStackedCardCostPicker } from '../useStackedCardCostPicker.js';
 import { useSetCardCostPicker } from '../useSetCardCostPicker.js';
 import { useChoicePicker } from '../useChoicePicker.js';
 import { useDeclareNamePicker } from '../useDeclareNamePicker.js';
+import { declaredNameCandidates } from '@/engine/effect/declared-name-domain.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { alternativeCostProviders } from '@/engine/cost/alternative.js';
 import { eligibleRemoveSetCards } from '@/engine/cost/remove-set-card-eligible.js';
@@ -713,12 +714,13 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   //     消費側 (nameOverride / boundNameMatchesDeclared) が no-op/false に落ちる decline 経路。
   const declareSpec = findDeclareNameAtom(effect);
   if (declareSpec && owner === 'self' && cardId) {
-    const candidateNames = [...new Set(engine.cards.all().flatMap((d) => d.names ?? []))];
+    const candidateNames = declaredNameCandidates(declareSpec.domain);
     const declared = await useDeclareNamePicker().ask({
       sourceName,
       prompt: abilityText,
       candidateNames,
       optional: declareSpec.optional,
+      domain: declareSpec.domain,
     });
     if (declared.kind === 'cancel') return { ok: false, reason: 'cancelled' };
     if (declared.kind === 'declare') {
@@ -909,7 +911,7 @@ export async function runHandUseFlow(opts: {
  * - reject → cancelled
  * - accept → dispatchEngineAction assist の戻り値
  *
- * 注: assist 後の FILE 7 枚到達 → 解決編 自動移行は engine 側 (mutate.partner.assist →
+ * 注: assist 後の printed FILE threshold 到達 → 解決編 自動移行は engine 側 (mutate.partner.assist →
  * mutate.file.insertAssistedPartner) で処理されるため UI は気にしない。
  */
 export async function runAssistFlow(opts: { player: Player }): Promise<FlowResult> {
@@ -918,11 +920,12 @@ export async function runAssistFlow(opts: { player: Player }): Promise<FlowResul
   if (!canAssistForUi(state, opts.player)) {
     return { ok: false, reason: 'not-allowed' };
   }
-  // Round 2: spec ui-action-flows.md §③アシスト に従い、FILE 7+ で解決編移行する
+  // Round 2: spec ui-action-flows.md §③アシスト に従い、printed FILE threshold で解決編移行する
   // ことも明示。旧実装は移行情報を欠落していたため、初心者に手順が伝わりにくかった。
   const fileCount = state.players[opts.player].file.length;
   const nextFileCount = fileCount + 1;
-  const willTransition = nextFileCount >= 7;
+  const threshold = engine.read.game.partnerAssistFileThreshold(state, opts.player);
+  const willTransition = nextFileCount >= threshold;
   const accepted = await useConfirmation().ask({
     kind: 'warning',
     title: 'アシスト',
@@ -930,7 +933,7 @@ export async function runAssistFlow(opts: { player: Player }): Promise<FlowResul
       `パートナーをスリープしてFILEへ移動します (現在 FILE ${fileCount} 枚 → ${nextFileCount} 枚)。` +
       'このターン中は事件解決できなくなります。' +
       (willTransition
-        ? '\n※ FILE 7 枚以上になるため、事件カードは「解決編」に移行します。'
+        ? `\n※ FILE ${threshold} 枚以上になるため、事件カードは「解決編」に移行します。`
         : ''),
     okLabel: 'アシスト',
     cancelLabel: 'キャンセル',

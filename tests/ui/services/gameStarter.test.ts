@@ -10,9 +10,17 @@ import { _resetTargetExpanders } from '@/engine/flow/action/target-expander';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { registerAll } from '@/cards/index';
 import { performGameStart } from '@/ui/services/gameStarter';
-import { beginMatchSession, commitMatchSession, isCurrentLiveMatchSession, matchSessionId, resetMatchSession } from '@/ui/services/matchSession';
+import { BUG_274_GAME_START_AUTHORITY } from '@/ui/services/gameStarter';
+import { BUG_274_PARTNER } from '@/ui/fixtures/bug274PartnerFixture';
+import { beginMatchSession, commitMatchSession, isCurrentLiveMatchSession, matchSessionId, resetMatchSession, retainMatchSessionCard } from '@/ui/services/matchSession';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { useMulliganStore } from '@/ui/hooks/useMulligan';
+
+function deferred(): { promise: Promise<void>; release: () => void } {
+  let release!: () => void;
+  const promise = new Promise<void>((resolve) => { release = resolve; });
+  return { promise, release };
+}
 
 beforeEach(() => {
   resetMatchSession();
@@ -77,9 +85,50 @@ describe('performGameStart', () => {
     const s = await performGameStart(skipMulligan, {
       selfDeckId: 'TEST-BUG-274',
       oppDeckId: 'CT-D11',
-    }, { sessionId: 'starter-bug-274' });
+    }, { sessionId: 'starter-bug-274', bug274Authority: BUG_274_GAME_START_AUTHORITY });
 
     expect(s.players.self.partner.cardId).toBe('TEST-BUG-274-PARTNER');
+    expect(engine.cards.get('TEST-BUG-274-PARTNER')).toBeUndefined();
+  });
+
+  it('rejects a BUG-274 DeckId without the non-serializable fixture authority', async () => {
+    await expect(performGameStart(skipMulligan, {
+      selfDeckId: 'TEST-BUG-274', oppDeckId: 'CT-D11',
+    }, { sessionId: 'starter-bug-274-forged' })).rejects.toThrow();
+    expect(engine.cards.get('TEST-BUG-274-PARTNER')).toBeUndefined();
+  });
+
+  it('restores a prior registry entry when a fixture session is reset or replaced', () => {
+    const prior = { ...BUG_274_PARTNER, names: ['prior card'] };
+    engine.cards.register(prior);
+    const first = beginMatchSession('self');
+    expect(retainMatchSessionCard(first, BUG_274_PARTNER)).toBe(true);
+    expect(engine.cards.get(BUG_274_PARTNER.id)).toBe(BUG_274_PARTNER);
+
+    resetMatchSession();
+    expect(engine.cards.get(BUG_274_PARTNER.id)).toBe(prior);
+
+    const second = beginMatchSession('self');
+    expect(retainMatchSessionCard(second, BUG_274_PARTNER)).toBe(true);
+    beginMatchSession('self');
+    expect(engine.cards.get(BUG_274_PARTNER.id)).toBe(prior);
+  });
+
+  it('does not reintroduce a stale setup overlay after its session has ended and a new one begins', async () => {
+    const prior = { ...BUG_274_PARTNER, names: ['prior card'] };
+    engine.cards.register(prior);
+    const staleDone = deferred();
+    const stale = engine.cards.withTemporary(BUG_274_PARTNER, async () => staleDone.promise);
+    const first = beginMatchSession('self');
+    expect(retainMatchSessionCard(first, BUG_274_PARTNER)).toBe(true);
+
+    resetMatchSession();
+    beginMatchSession('self');
+    expect(engine.cards.get(BUG_274_PARTNER.id)).toBe(BUG_274_PARTNER);
+    staleDone.release();
+    await stale;
+
+    expect(engine.cards.get(BUG_274_PARTNER.id)).toBe(prior);
   });
 
   it('initializes the caller-owned causal session before setup runs', async () => {

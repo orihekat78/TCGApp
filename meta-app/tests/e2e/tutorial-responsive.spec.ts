@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoReadyMetaRoute } from './landscape-test-helpers';
 
 const APPROVED_VIEWPORTS = [
   { width: 1440, height: 900, name: 'desktop-wide' },
@@ -16,10 +17,8 @@ test('TUTORIAL: approved desktop and landscape sizes keep the screen and lesson 
   page.on('pageerror', (error) => errors.push(error.message));
 
   for (const viewport of APPROVED_VIEWPORTS) {
-    await page.setViewportSize(viewport);
-    await page.goto('/#tutorial');
+    await gotoReadyMetaRoute(page, 'tutorial', '.tutorial-toolbar', viewport);
 
-    await expect(page.locator('.tutorial-toolbar'), `${viewport.name}: toolbar`).toBeVisible();
     await expect(page.locator('.tutorial-workspace'), `${viewport.name}: workspace`).toBeVisible();
 
     const screen = await page.evaluate(() => ({
@@ -46,8 +45,7 @@ test('TUTORIAL: approved desktop and landscape sizes keep the screen and lesson 
 });
 
 test('TUTORIAL: landscape keeps the shared header and tutorial controls inside the viewport', async ({ page }) => {
-  await page.setViewportSize({ width: 851, height: 393 });
-  await page.goto('/#tutorial');
+  await gotoReadyMetaRoute(page, 'tutorial', '.tutorial-toolbar', { width: 851, height: 393 });
 
   const header = page.locator('.home-header');
   await expect(header).toBeVisible();
@@ -67,8 +65,7 @@ test('TUTORIAL: landscape keeps the shared header and tutorial controls inside t
 
 test('TUTORIAL: viewer traps keyboard focus, keeps 44px controls, and honors reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.setViewportSize({ width: 851, height: 393 });
-  await page.goto('/#tutorial');
+  await gotoReadyMetaRoute(page, 'tutorial', '.tutorial-toolbar', { width: 851, height: 393 });
 
   const trigger = page.locator('.tutorial-step-list button').first();
   await trigger.focus();

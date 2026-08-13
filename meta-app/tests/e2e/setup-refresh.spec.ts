@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { gotoReadyMetaRoute } from './landscape-test-helpers';
 
 const NAV_ORDER = ['ホーム', 'デッキ', 'カード', 'ゲーム開始', 'チュートリアル', '履歴', '設定'];
 
@@ -57,8 +58,7 @@ async function assertSetupFits(page: Page, width: number, height: number) {
 
 test('SETUP shares HOME navigation and keeps the full versus stage usable at both target sizes', async ({ page }) => {
   for (const viewport of [{ width: 1440, height: 900 }, { width: 851, height: 393 }]) {
-    await page.setViewportSize(viewport);
-    await page.goto('/#setup');
+    await gotoReadyMetaRoute(page, 'setup', '.setup-main', viewport);
     const nav = page.getByRole('navigation', { name: 'メインナビゲーション' });
     await expect(nav.getByRole('button')).toHaveText(NAV_ORDER);
     await expect(nav.getByRole('button', { name: 'ゲーム開始' })).toHaveAttribute('aria-current', 'page');
@@ -99,8 +99,7 @@ test('SETUP shares HOME navigation and keeps the full versus stage usable at bot
 });
 
 test('SETUP deck picker updates only the requested side and restores focus after Escape', async ({ page }) => {
-  await page.setViewportSize({ width: 851, height: 393 });
-  await page.goto('/#setup');
+  await gotoReadyMetaRoute(page, 'setup', '.setup-main', { width: 851, height: 393 });
   const self = page.locator('.setup-player-panel--self');
   const opp = page.locator('.setup-player-panel--opp');
   const selfTrigger = page.getByRole('button', { name: '使用デッキを変更（PLAYER）' });
@@ -119,7 +118,7 @@ test('SETUP deck picker updates only the requested side and restores focus after
 });
 
 test('SETUP uses three compact selects and omits the removed auxiliary controls', async ({ page }) => {
-  await page.goto('/#setup');
+  await gotoReadyMetaRoute(page, 'setup', '.setup-main');
   await expect(page.locator('.setup-player-panel--self h2')).toHaveText('PLAYER');
   await page.getByLabel('プレイモード').selectOption('observe');
   await expect(page.getByLabel('プレイモード')).toHaveValue('observe');
@@ -138,7 +137,7 @@ test('SETUP uses three compact selects and omits the removed auxiliary controls'
 });
 
 test('SETUP keyboard order finishes after both deck choices and enabled settings', async ({ page }) => {
-  await page.goto('/#setup');
+  await gotoReadyMetaRoute(page, 'setup', '.setup-main');
   const selfDeck = page.getByRole('button', { name: '使用デッキを変更（PLAYER）' });
   const oppDeck = page.getByRole('button', { name: '使用デッキを変更（CPU）' });
   await selfDeck.focus();

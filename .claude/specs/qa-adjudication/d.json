@@ -1231,15 +1231,12 @@
     {
       "qaId": "card:B07038:84f5c6306b604cda9a50a74bcac18d44657232a0f7b1fc43f094a69f43d05839",
       "answerHash": "796aacb4b372554af8c93018d17748a9641f874021340e5604ab865bb046b721",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07038.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
+        "src:src/cards/ct-p07/B07038.ts:1",
+        "tests:tests/cards/akamajutsu-trait-family.test.ts:449"
       ]
     },
     {

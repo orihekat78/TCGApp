@@ -31,6 +31,16 @@ async function loadImage(page: Page, url: string): Promise<{
 }
 
 test.describe('setupGamePage network hermeticity', () => {
+  test('does not open a Vite HMR WebSocket during E2E runs', async ({ page }) => {
+    const sockets: string[] = [];
+    page.on('websocket', (socket) => sockets.push(socket.url()));
+
+    const { errors } = await setupGamePage(page);
+
+    expect(sockets).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+
   test('fulfills official card images locally while the browser is offline', async ({ page }) => {
     await setupGamePage(page);
     await page.context().setOffline(true);

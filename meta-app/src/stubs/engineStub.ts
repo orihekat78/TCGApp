@@ -43,6 +43,11 @@ function validateDeckWithSharedLegality(
   deck: DeckRecord,
   overlay?: DeckLegalityCardOverlay,
 ): ValidationResult {
+  const mainCount = Array.isArray(deck?.cards)
+    ? deck.cards.reduce((total, entry) => (
+        Number.isSafeInteger(entry?.count) ? total + entry.count : total
+      ), 0)
+    : 0;
   const result = validateDeckLegality({
     partner: deck?.partner,
     case: deck?.case,
@@ -61,7 +66,12 @@ function validateDeckWithSharedLegality(
   });
   return {
     ok: result.ok,
-    errors: result.errors.map((error) => legalityErrorText[error]),
+    errors: result.errors.map((error) => {
+      if (error !== 'MAIN_COUNT') return legalityErrorText[error];
+      const difference = Math.abs(40 - mainCount);
+      const direction = mainCount < 40 ? '不足' : '超過';
+      return `枚数違反: ${mainCount}/40 (${difference} 枚${direction})`;
+    }),
     warnings: result.warnings.map(legalityWarningText),
   };
 }

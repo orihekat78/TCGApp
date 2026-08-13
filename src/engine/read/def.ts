@@ -6,15 +6,61 @@ import type { CardDef } from '@/engine/types';
 
 // 内部レジストリ: Phase 5 で engine.cards.register(def) から登録される
 const _registry = new Map<string, CardDef>();
+const _baseRegistry = new Map<string, CardDef>();
+const _temporaryOverlays = new Map<string, Map<number, CardDef>>();
+let nextTemporaryOverlayId = 0;
+
+function refreshVisibleDefinition(id: string): void {
+  const overlays = _temporaryOverlays.get(id);
+  const newestOverlay = overlays === undefined
+    ? undefined
+    : Array.from(overlays.values()).at(-1);
+  const visible = newestOverlay ?? _baseRegistry.get(id);
+  if (visible === undefined) _registry.delete(id);
+  else _registry.set(id, visible);
+}
 
 // カードを登録する (Phase 5 で TSV ローダが呼ぶ)
 export function register(def: CardDef): void {
-  _registry.set(def.id, def);
+  _baseRegistry.set(def.id, def);
+  refreshVisibleDefinition(def.id);
+}
+
+/**
+ * Make one definition available for an authorized async operation only.
+ * Restore an existing entry exactly; never clear the whole registry.
+ */
+export function registerTemporary(def: CardDef): () => void {
+  const overlayId = nextTemporaryOverlayId++;
+  const overlays = _temporaryOverlays.get(def.id) ?? new Map<number, CardDef>();
+  overlays.set(overlayId, def);
+  _temporaryOverlays.set(def.id, overlays);
+  refreshVisibleDefinition(def.id);
+  let active = true;
+  return () => {
+    if (!active) return;
+    active = false;
+    const activeOverlays = _temporaryOverlays.get(def.id);
+    activeOverlays?.delete(overlayId);
+    if (activeOverlays?.size === 0) _temporaryOverlays.delete(def.id);
+    refreshVisibleDefinition(def.id);
+  };
+}
+
+export async function withTemporaryRegistration<T>(def: CardDef, run: () => Promise<T>): Promise<T> {
+  const restore = registerTemporary(def);
+  try {
+    return await run();
+  } finally {
+    restore();
+  }
 }
 
 // テスト・フェーズ移行時にレジストリをリセット
 export function _resetRegistry(): void {
   _registry.clear();
+  _baseRegistry.clear();
+  _temporaryOverlays.clear();
 }
 
 // engine.cards.all() 用: 全登録カードを取得

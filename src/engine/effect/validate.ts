@@ -218,6 +218,15 @@ function walk(node: unknown, path: string, errors: string[], warnings: string[])
           errors.push(`${path}.args.stopAtFirstMatch: deckRevealUntil requires boolean`);
         }
       }
+      if (verb === 'declareName') {
+        const args = obj['args'] as Record<string, unknown> | undefined;
+        const domain = args?.['domain'];
+        if (domain !== undefined
+          && domain !== 'unrestricted'
+          && domain !== 'registered-character-card-name') {
+          errors.push(`${path}.args.domain: declareName requires unrestricted|registered-character-card-name`);
+        }
+      }
       // args is otherwise treated opaquely here; per-verb arg validation belongs to runAtom.
       return;
     }
@@ -344,6 +353,13 @@ export function validateCards(defs: CardDef[]): ValidationResult {
   const warnings: string[] = [];
 
   for (const def of defs) {
+    if (def.partnerAssistFileThreshold !== undefined) {
+      if (def.kind !== 'partner' || def.standardPartnerActions !== true) {
+        errors.push(`card ${def.id}: partnerAssistFileThreshold requires a standard partner`);
+      } else if (!Number.isSafeInteger(def.partnerAssistFileThreshold) || def.partnerAssistFileThreshold < 1) {
+        errors.push(`card ${def.id}: partnerAssistFileThreshold must be a positive safe integer`);
+      }
+    }
     const seen = new Set<string>();
     const abilities = (def.abilities ?? []) as unknown[];
     abilities.forEach((ab, i) => {

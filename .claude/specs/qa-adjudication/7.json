@@ -591,14 +591,18 @@
     {
       "qaId": "card:B05030:99f0b0d913b46580a670f59061691894914b57219aaed6750f3f6f34a2de4162",
       "answerHash": "ada780e2211d96e25476445143235202591a9a4e81949e19ff7f331d1d6479d0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05030.ts:46"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/16-card-set.md:19",
+        "src:src/cards/ct-p05/B05030.ts:27",
+        "tests:tests/cards/ct-p05/B05030.test.ts:163",
+        "tests:tests/cards/ct-p05/B05030.test.ts:165",
+        "tests:tests/cards/ct-p05/B05030.test.ts:166",
+        "tests:tests/cards/ct-p05/B05030.test.ts:169",
+        "tests:tests/cards/ct-p05/B05030.test.ts:172",
+        "tests:tests/cards/ct-p05/B05030.test.ts:177"
       ]
     },
     {
@@ -634,11 +638,15 @@
     {
       "qaId": "card:B05063:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "test-missing",
-      "result": "test-gap",
-      "method": "manual-semantic",
+      "status": "matched",
+      "result": "aligned",
+      "method": "group-equivalent",
       "evidence": [
-        "src:src/cards/ct-p03/B03111.ts:23"
+        "src:src/cards/ct-p03/B03111.ts:23",
+        "src:src/cards/ct-p05/B05063.ts:84",
+        "tests:tests/integration/dispatch-to-state.test.ts:38",
+        "tests:tests/integration/dispatch-to-state.test.ts:50",
+        "tests:tests/integration/dispatch-to-state.test.ts:54"
       ]
     },
     {
@@ -744,11 +752,14 @@
     {
       "qaId": "card:B06036:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "test-missing",
-      "result": "test-gap",
-      "method": "manual-semantic",
+      "status": "matched",
+      "result": "aligned",
+      "method": "group-equivalent",
       "evidence": [
-        "src:src/cards/ct-p06/B06036.ts:1"
+        "src:src/cards/ct-p06/B06036.ts:1",
+        "tests:tests/integration/dispatch-to-state.test.ts:38",
+        "tests:tests/integration/dispatch-to-state.test.ts:50",
+        "tests:tests/integration/dispatch-to-state.test.ts:54"
       ]
     },
     {
@@ -1050,11 +1061,14 @@
     {
       "qaId": "card:B08030:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "test-missing",
-      "result": "test-gap",
-      "method": "manual-semantic",
+      "status": "matched",
+      "result": "aligned",
+      "method": "group-equivalent",
       "evidence": [
-        "src:src/cards/ct-p08/B08030.ts:1"
+        "src:src/cards/ct-p08/B08030.ts:1",
+        "tests:tests/integration/dispatch-to-state.test.ts:38",
+        "tests:tests/integration/dispatch-to-state.test.ts:50",
+        "tests:tests/integration/dispatch-to-state.test.ts:54"
       ]
     },
     {
@@ -1139,7 +1153,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09003.ts:1",
-        "tests:tests/cards/step12-batch2.test.ts:81"
+        "tests:tests/cards/step12-batch2.test.ts:82"
       ]
     },
     {
@@ -1342,11 +1356,14 @@
     {
       "qaId": "card:B09112:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "test-missing",
-      "result": "test-gap",
-      "method": "manual-semantic",
+      "status": "matched",
+      "result": "aligned",
+      "method": "group-equivalent",
       "evidence": [
-        "src:src/cards/ct-p09/B09112.ts:1"
+        "src:src/cards/ct-p09/B09112.ts:1",
+        "tests:tests/integration/dispatch-to-state.test.ts:38",
+        "tests:tests/integration/dispatch-to-state.test.ts:50",
+        "tests:tests/integration/dispatch-to-state.test.ts:54"
       ]
     },
     {

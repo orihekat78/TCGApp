@@ -20,6 +20,10 @@ export function declaredCostParamsToDyn(costParams?: AbilityCostParams): Record<
   if (costParams.costChoice !== undefined) dyn['costChoice'] = costParams.costChoice;
   if (costParams.costChoicePath !== undefined) dyn['costChoicePath'] = costParams.costChoicePath;
   if (costParams.choiceIndex !== undefined) dyn['choiceIndex'] = costParams.choiceIndex;
-  if (costParams.declaredName !== undefined) dyn['declaredName'] = costParams.declaredName;
+  if (costParams.declaredName !== undefined) {
+    dyn['declaredName'] = typeof costParams.declaredName === 'string'
+      ? costParams.declaredName.trim()
+      : costParams.declaredName;
+  }
   return Object.keys(dyn).length > 0 ? dyn : undefined;
 }

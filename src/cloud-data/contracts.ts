@@ -1,3 +1,6 @@
+import { deckLegalityCatalogResolver } from "../shared/deck-legality-catalog.generated";
+import { validateDeckLegality } from "../shared/deck-legality";
+
 const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 const FUTURE_SKEW_MS = 5 * 60 * 1000;
 const RESOURCE_ID = /^[A-Za-z0-9_-]{1,128}$/;
@@ -150,6 +153,13 @@ export function validateDeckInput(input: unknown): DeckInput {
   });
   if (cards.reduce((total, card) => total + card.count, 0) !== 40) {
     throw new Error("DECK_MAIN_COUNT_INVALID");
+  }
+  if (!validateDeckLegality({
+    partner: partnerCardNum,
+    case: caseCardNum,
+    main: cards.map(({ cardNum, count }) => ({ printingId: cardNum, count })),
+  }, deckLegalityCatalogResolver).ok) {
+    throw new Error("DECK_LEGALITY_INVALID");
   }
   if (
     !Number.isSafeInteger(candidate.clientModifiedAt) ||

@@ -9,8 +9,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 ## サマリ
 
 - **対象ルート**: `.`
-- **ディレクトリ数**: 298
-- **ファイル数**: 5983
+- **ディレクトリ数**: 301
+- **ファイル数**: 6018
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -810,6 +810,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`2026-08-12-authority-refresh/`**
       - `diff.json`
       - `verification.md` — 2026-08-12 card authority refresh verification
+    - **`2026-08-12-iphone-se3-landscape/`**
+      - `visual-qa.md` — iPhone SE 3 Landscape Visual QA
+    - **`2026-08-12-match-surrender/`**
+      - `verification.md` — Wave 1 Surrender Verification
     - **`_archive/`**
       - `smoke-2026-05-17-2.json`
       - `smoke-2026-05-17-2.md` — Smoke 1000戦レポート — smoke-2026-05-17-103950
@@ -1699,6 +1703,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D06021.md` — D06021 服部平次 grounding (2026-07-10, sonnet5)
       - `D06023.md` — D06023 服部平次 grounding (2026-07-10, sonnet5)
       - `D10022.md` — D10022 毛利蘭 grounding (2026-07-10, sonnet5)
+      - `PR022.md` — PR022 江戸川コナン
+      - `PR099.md` — PR099 工藤有希子 grounding
       - `PR234.md` — PR234 毛利蘭 grounding (2026-07-10, fable)
       - `PR240.md` — PR240 毛利蘭 grounding (2026-07-10, fable)
       - `PR265.md` — PR265 風見裕也 grounding (2026-07-10, fable)
@@ -2200,7 +2206,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `ResultScreen.tsx`
       - `SettingsScreen.css`
       - `SettingsScreen.tsx`
-      - `SetupScreen.tsx` — `spectatorAi` is an observe-only preference. Do not leak the previous
+      - `SetupScreen.tsx` — User storage may contain this public fixture's ID. Never let its values
       - `TutorialScreen.css`
       - `TutorialScreen.tsx` — spec: .claude/specs/meta-ui/14-tutorial-complete.md + 15-tutorial-lesson-viewer.…
       - `Wave2Motion.css`
@@ -2255,6 +2261,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bug274-public-fixture.spec.ts`
       - `cards-deck-wave1.spec.ts` — Fractional track rounding can accumulate a few pixels over distant rows.
       - `cards.spec.ts` — spec: .claude/specs/meta-ui/11-cards-rebuild.md
+      - `cloud-sync-webkit.spec.ts` — Runtime glyph sizes prove that WebKit applied the compact declarations
       - `control-density.spec.ts`
       - `deck.spec.ts` — spec: .claude/specs/meta-ui/ (Phase 18: DeckEditor リデザイン + 同 ID 3 枚上限の UI 可視化)
       - `effect-decision-hosts.spec.ts`
@@ -2276,6 +2283,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `visual-gates.spec.ts` — Cross-route visual safety gate. This deliberately uses only the public hash
       - `wave2-responsive.spec.ts`
   - `index.html`
+  - `playwright.cloud-sync-webkit.config.ts`
   - `playwright.config.ts` — spec: .claude/specs/meta-ui/09-phasing-and-verification.md
   - `tsconfig.json`
   - `tsconfig.node.json`
@@ -2317,6 +2325,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `check-official-sync.cjs`
     - `fetch-official.cjs`
     - `generate-case-difficulties.cjs`
+    - `ground-authority-diff.cjs`
     - `official-api.cjs`
     - `publish-authority-packet.cjs`
     - `qa-normalize.cjs`
@@ -2412,6 +2421,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - `codex-quality-core.mjs`
   - `gen-card-probes.cjs`
   - `gen-codex-context.mjs`
+  - `gen-deck-legality-catalog.ts`
   - `gen-meta-card-catalog.ts`
   - `gen-meta-card-identities.ts`
   - `gen-p-spread.cjs`
@@ -3485,7 +3495,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B05055.ts` — cards/ct-p05/B05055 鈴木史郎 (キャラ) — catalog-reuse batch
       - `B05056.ts` — cards/ct-p05/B05056 鈴木次郎吉 (キャラ) — engine#1 leave:to-remove batch #3 (a1 only)
       - `B05057.ts` — cards/ct-p05/B05057 鈴木朋子 (character) — Task A green候補 (engine変更0)
-      - `B05058.ts` — cards/ct-p05/B05058 富沢雄三 (character) — leave-from-remove wave (a2のみ /…
+      - `B05058.ts` — cards/ct-p05/B05058 富沢雄三 (character) — leave-from-remove wave
       - `B05059.ts` — cards/ct-p05/B05059 白馬探 (character) — engine拡張 wave removedFilter (removedCharMa…
       - `B05059P.ts` — cards/ct-p05/B05059P 白馬探 (character, パラレル) — engine拡張 wave removedFilter
       - `B05060.ts` — cards/ct-p05/B05060 ファントム・レディ (character) — Task A green候補 (engine変更0)
@@ -3578,7 +3588,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B05113P.ts` — cards/ct-p05/B05113P ベルモット (キャラ) — auto-generated; B05113 の絵柄違い (同 cardId)
       - `B05114.ts` — cards/ct-p05/B05114 弁崎桐平 (character) — wave reveal-handadd (engine変更0)
       - `B05115.ts` — cards/ct-p05/B05115 弁崎素江 (character) — engine mega-wave W3 exemplar (r17, 2026-0…
-      - `B05116.ts` — cards/ct-p05/B05116 火傷の男 (character) — leave-from-remove wave (a2のみ /…
+      - `B05116.ts` — cards/ct-p05/B05116 火傷の男 (character) — leave-from-remove wave
       - `B05117.ts` — cards/ct-p05/B05117 コンコン (event) — DEFER 解禁: on-set-host rider leave:to-remove w…
       - `B05117P.ts` — cards/ct-p05/B05117P コンコン (イベント パラレル) — B05117 の絵柄違い (同 cardId 0613)
       - `B05118.ts` — cards/ct-p05/B05118 裏切りの制裁 (case) — Task A green候補 (engine変更0)
@@ -4487,7 +4497,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `PR096.ts` — cards/pr-01/PR096 安室透 (character) — Task A green候補 (engine変更0)
       - `PR097.ts` — cards/pr-01/PR097 灰原哀 (キャラ) — auto-generated; B02011 の絵柄違い (同 cardId)
       - `PR098.ts` — cards/pr-01/PR098 遠山和葉 (character) — Task A green候補 (engine変更0)
-      - `PR099.ts` — cards/pr-01/PR099 工藤有希子 (character) — wave codegen-handcount-setevent (engine変更0…
+      - `PR099.ts` — cards/pr-01/PR099 工藤有希子 (character) — fully faithful
       - `PR100.ts` — cards/pr-01/PR100 宮野厚司 (キャラ) — Task D batch (2026-06-12)
       - `PR101.ts` — cards/pr-01/PR101 萩原研二 (キャラ) — catalog-reuse batch
       - `PR102.ts` — cards/pr-01/PR102 毛利蘭 (キャラ) — auto-generated; D08023 の絵柄違い (同 cardId)
@@ -4719,10 +4729,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `idempotency.ts`
     - `identity.ts` — A concurrent first request can win the insert. Re-read and validate it.
     - `rate-limit.ts`
-    - `repository.ts`
+    - `repository.ts` — Invalid legacy deck rows stay recoverable in D1, but never cross the public
     - `request-context.ts`
     - `retention.ts`
     - `usage-budget.ts`
+  - **`e2e/`**
+    - `test-api.ts`
   - **`engine/`** — Engine コア (React 非依存、純関数 + Immer)
     - **`cards/`**
       - `index.ts` — engine/cards barrel export
@@ -4759,6 +4771,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `atom-pick-spec.ts` — engine.effect.ATOM_PICK_SPEC — pick系 atom 短縮形の唯一の権威ソース。
       - `consult-choose-intercept.ts`
       - `consult-leave-intercept.ts` — engine.effect.consult-leave-intercept — 現場離脱の pre-splice consult (mega-wave W6 s…
+      - `declared-name-domain.ts` — Preserve legacy unrestricted AI behavior; constrained mandatory
       - `heuristic-atom-target.ts`
       - `index.ts` — engine.effect namespace barrel
       - `invoke-hirameki.ts` — engine.effect.invoke-hirameki — 別カードの【ヒラメキ】効果を明示的に発動させる (証拠リムーブ契機でない)
@@ -4882,6 +4895,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `rng.ts` — rules: 決定的RNG (mulberry32 + Fisher-Yates)
     - `state-factory.ts` — rules: 04-game-setup.md, 01-victory-conditions.md, 03-field-areas.md
   - **`shared/`**
+    - `deck-legality-catalog.generated.ts` — Generated by scripts/gen-deck-legality-catalog.ts. Do not edit.
     - `deck-legality.ts`
   - **`ui/`** — React UI 層 (Playmat / hooks / drivers / modals / store)
     - **`components/`**
@@ -5116,11 +5130,14 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `caseDeclaredEvidenceFlip.test.ts` — tests/cards/_shared/caseDeclaredEvidenceFlip
       - `caseResolvedHandRemove.e2e.test.ts` — BUG-089 e2e: 事件カードが解決編になったとき a1 (caseResolvedHandRemove) の discard が実際に発火するか
       - `caseResolvedHandRemove.test.ts` — tests/cards/_shared/caseResolvedHandRemove
+      - `caseResolvedOpponentDraw.e2e.test.ts` — Case-resolved opponent-draw semantic cluster.
       - `caseTraitConditioned.test.ts` — tests/cards/_shared/caseTraitConditioned
       - `eventRemoveByAP.test.ts` — tests/cards/_shared/eventRemoveByAP
       - `index.test.ts` — tests/cards/_shared/index — barrel export smoke test
       - `misreadX.test.ts` — Phase 8 完全クローズ Commit 3b: misreadX shared class tests
       - `partnerColorKeyword.test.ts` — tests/cards/_shared/partnerColorKeyword
+      - `shortDeckRevealCommonFlow.e2e.test.ts`
+      - `sleepingPartnerCommonActions.e2e.test.ts` — Official Q&A semantic cluster: a sleeping partner cannot Assist or solve a case.
     - **`ct-d08/`**
       - `D08001.test.ts` — tests/cards/ct-d08/D08001
       - `D08002.test.ts` — tests/cards/ct-d08/D08002
@@ -5409,11 +5426,14 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `invoke-hirameki.test.ts` — tests/cards/night-wC2b/invoke-hirameki
     - **`official-qa/`**
       - `B01025-B01026-partner-abilities.test.ts` — Official Q&A: B01025/B01025P/B01026/B01026P
+      - `B01077-empty-hand-event.test.ts` — qaId=card:B01077:d42cf418c120cd75f5388b9a434fa679d9f97908baa2ffb6eb9152c28dcb8e5…
       - `B03020.test.ts` — Official Q&A B03020: fewer than three cards cannot resolve the effect.
       - `B03023.test.ts` — Official Q&A: B03023 脇田兼則
       - `B04030.test.ts` — The opposing contact character has left, but Kaito remains in the scene.
       - `B04059.test.ts` — B04059 水無怜奈 — official Q&A: scene-only additional card name.
       - `B04074.test.ts`
+      - `B05118-family-nonblack-partner.test.ts` — Official Q&A cluster: these seven cases share the same printed
+      - `B07102-refresh-includes-removed.test.ts` — qaId=card:B07102:99f16dd6a248501c9d63a44dd85b2d6097ef720865e4181d1b451669f04b05d…
     - **`pr-01/`**
       - `PR100.test.ts`
       - `PR158.test.ts` — tests/cards/pr-01/PR158 犯人 (character, cutin remove-name scaling AP)
@@ -5622,6 +5642,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `m2latter-setcard.test.ts` — M2 latter batch カード probe (2026-07-10): PR234/PR240 毛利蘭 + B01057 「最も出会いたくない…」。
     - `multihook-shared-limit-batch.test.ts` — engine-extension multi-hook 共有【ターン1】batch (2026-06-06 タスクC) —
     - `optional-decision-batch.test.ts` — engine-extension optional-decision batch (2026-06-06 タスクC) — 「〜してもよい」(Effect kin…
+    - `partial-partner-b05058-b05116.test.ts`
+    - `partial-partner-b05066.test.ts` — The public dispatcher drops a declined standalone optional atom; it does
+    - `pr099-declared-name-domain.test.ts`
     - `pr305-hirameki-occurrence.test.ts`
     - `pr306-320-official-wave.test.ts`
     - `pr306-320-qa-runtime.test.ts`
@@ -5763,6 +5786,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `night-w0-cost-choice-multipick.spec.ts` — E2E: 夜間 W0 (2026-07-11) — cost kind:'choice' human branch 選択 (B09027 初 consumer)…
     - `opp-turn-contact.spec.ts` — user_request 20260521_01 #3: 相手ターン中の contact 処理
     - `optional-decision-2026-06-06.spec.ts` — E2E: optional-decision (「〜してもよい」= pendingEffectOptional) の実機 text-faithfulness 検…
+    - `pr022-assist-threshold.spec.ts`
+    - `pr099-declare-name-modal.spec.ts`
     - `private-hosted-static.spec.ts`
     - `public-hand-reveal-window.spec.ts` — The reveal stays usable above its linked effect picker. Card detail is
     - `reasoning-hook-2026-06-06.spec.ts` — E2E: engine-extension reasoning-hook (2026-06-06 タスクC) の実機 text-faithfulness 検証。
@@ -5847,9 +5872,11 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `continuation-chain-gate-real-cards.test.ts` — Enter through the runtime atom handler so the first carrier is queued
       - `cost-paid-stacked-pick.test.ts` — Legacy selections still resolve when they identify exactly one pending occurrenc…
       - `cutin-entry-history.test.ts`
+      - `declared-name-domain.test.ts`
       - `discard-random.test.ts` — engine.effect.atom discardRandom — 手札からランダムに n 枚リムーブする verb (B01077「相手は手札を
       - `engine-wave11-hirameki-actor.test.ts` — engine 拡張 wave-11 (2026-07-02) — hirameki actor payload ($trigger.…
       - `exact-occurrence-transfer.test.ts` — The selected physical card leaves; a content-equal duplicate then takes its plac…
+      - `forced-pick-selection.test.ts`
       - `foreach-all.test.ts` — forEach over:{kind:'all'} primitive verification — applies an atom to EACH match…
       - `foreach-pending-pick-continuation.test.ts`
       - `indexed-pattern-b-runtime-order.test.ts`
@@ -5977,6 +6004,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `log.test.ts`
       - `player.test.ts` — アシスト中のパートナーを含む 2 枚
       - `scene.test.ts`
+      - `temporary-registry.test.ts`
       - `turn.test.ts` — スナップショットは gameState.turn を参照するが変更しない
     - **`resolve/`**
       - `deck-place-boundary.test.ts` — A human deckPlace decision is a hard effect-stack boundary, just like deck reord…
@@ -6061,10 +6089,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `cloudSyncIndicator.test.tsx`
     - `cloudSyncMigration.test.ts`
     - `cloudSyncProjection.test.ts`
+    - `cloudSyncRuntime.d1.integration.test.ts` — @vitest-environment jsdom
     - `cloudSyncRuntime.navigation.integration.test.ts`
     - `cloudSyncRuntime.test.ts`
     - `cloudSyncStorage.test.ts`
     - `customGameStart.side-mapping.test.ts`
+    - `deckCode.test.ts`
+    - `deckEligibility.test.ts`
     - `decksStore.test.ts`
     - `engineStub.deck-limit.test.ts` — rules: 02-deck-construction.md
     - `gameRuntime.test.ts`
@@ -6100,9 +6131,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `cards-data-snapshot-cli.test.ts`
     - `check-codex-quality.test.ts`
     - `check-wave-scope.test.ts`
+    - `deck-legality-artifact-pipeline.test.ts`
     - `gen-card-probes.test.ts`
     - `gen-codex-context.test.ts`
+    - `gen-partners.test.ts`
     - `gen-qa-trace.test.ts`
+    - `generated-partner-stub-cleanup.test.ts`
     - `header-source-hash.test.ts`
     - `inventory-remaining.test.ts`
     - `lint-bug-closure.test.ts`
@@ -6118,6 +6152,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `validate-authority-exceptions.test.ts`
     - `you-vs-cpu-validation-loop.test.ts`
   - **`shared/`**
+    - `deck-legality-catalog.generated.test.ts`
     - `deck-legality.test.ts`
   - **`smoke/`** — 1000 戦 AI vs AI smoke テスト
     - `aggregate.test.ts` — tests/smoke/aggregate — Phase 9-A pure aggregation tests
@@ -6141,9 +6176,11 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `DeckPlaceModalHost.test.tsx`
       - `DeckReorderModalHost.reset.test.tsx`
       - `DeckRevealOverlay.card-detail.test.tsx` — The original 3100ms reveal timeline must not run behind the detail modal.
+      - `DeclareCardNameModal.domain.test.tsx`
       - `DemoPickerModal.card-details.test.tsx`
       - `EffectChoiceModalHost.test.tsx`
       - `EffectPickerModal.card-detail.test.tsx`
+      - `EffectPickerModal.forced-selection.test.tsx`
       - `EffectStackPanel.reorder.test.tsx` — Phase 8 完全クローズ Commit 5: EffectStackPanel reorder UI SSR test
       - `EffectStackPanel.test.tsx` — Phase 7 Task 7.14: EffectStackPanel tests
       - `EvidenceArea.test.tsx` — Phase 7 Task 7.9: EvidenceArea tests
@@ -6291,6 +6328,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 - `start-apps.bat`
 - `start.bat`
 - `tsconfig.json` — TypeScript 設定
+- `vite.config.e2e.ts`
 - `vite.config.private-hosted.ts`
 - `vite.config.ts` — Vite ビルド設定
 - `vitest.config.ts` — Vitest 設定

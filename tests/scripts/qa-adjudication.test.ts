@@ -73,7 +73,7 @@ function writeShard(root: string, shard: string, items: QaAdjudicationShard['ite
 }
 
 function runCli(root: string, ...args: string[]) {
-  return spawnSync(process.execPath, [resolve(process.cwd(), 'node_modules/tsx/dist/cli.mjs'), resolve(process.cwd(), 'scripts/qa-adjudication.ts'), ...args], { cwd: root, encoding: 'utf8' });
+  return spawnSync(process.execPath, [require.resolve('tsx/cli'), resolve(process.cwd(), 'scripts/qa-adjudication.ts'), ...args], { cwd: root, encoding: 'utf8' });
 }
 
 describe('Q&A adjudication shards', () => {
@@ -123,7 +123,7 @@ describe('Q&A adjudication shards', () => {
     for (const shard of built.shards) writeShard(root, shard.shard, shard.items);
 
     const valid = runCli(root, '--queue');
-    expect(valid.status).toBe(0);
+    expect(valid.status, valid.stderr).toBe(0);
     expect(() => JSON.parse(valid.stdout)).not.toThrow();
     expect(JSON.parse(valid.stdout)).toEqual(expect.objectContaining({ total: 2, unreviewedCount: 2 }));
     for (const args of [['--queue', '--check'], ['--queue', '--with-local-raw'], ['--bootstrap', '--check'], ['--unknown'], ['--queue', '--queue']]) {

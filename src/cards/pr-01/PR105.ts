@@ -56,7 +56,15 @@ const a2: AbilityDef = {
     kind: 'sequence',
     steps: [
       { kind: 'atom', verb: 'charModifyAP', args: { uid: '$self', delta: 1000, scope: 'turn' } },
-      { kind: 'atom', verb: 'declareName', args: { bind: 'named', optional: true } },
+      {
+        kind: 'atom',
+        verb: 'declareName',
+        args: {
+          bind: 'named',
+          optional: true,
+          domain: 'registered-character-card-name',
+        },
+      },
       { kind: 'atom', verb: 'charSetTurnEffect', args: { uid: '$self', key: 'nameOverride', val: '$dyn.declaredName' } },
     ],
   },

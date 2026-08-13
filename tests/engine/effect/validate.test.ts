@@ -154,6 +154,23 @@ describe('engine.cards.validate', () => {
     }
   });
 
+  it('permits a positive safe FILE threshold only on a standard partner', () => {
+    const valid = newDef({
+      kind: 'partner',
+      lp: 1,
+      standardPartnerActions: true,
+      partnerAssistFileThreshold: 8,
+    });
+    expect(validateCards([valid]).ok).toBe(true);
+
+    const wrongKind = newDef({ partnerAssistFileThreshold: 8 });
+    const invalidNumber = newDef({
+      kind: 'partner', lp: 1, standardPartnerActions: true, partnerAssistFileThreshold: 0,
+    });
+    expect(validateCards([wrongKind]).ok).toBe(false);
+    expect(validateCards([invalidNumber]).ok).toBe(false);
+  });
+
   it('ruleRefs pointing to existing file passes (validateRuleRefs)', async () => {
     // Phase 9-B hotfix: ruleRefs 実在チェックは validate-spec-files に分離。
     // 11-reasoning.md does exist in .claude/rules/

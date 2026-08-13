@@ -6,17 +6,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 12px;
+  overflow-y: auto;
+  box-sizing: border-box;
   z-index: 1000;
 }
 
 .declare-card-name-modal {
   background: #1c2733;
   color: #e8eef4;
-  border: 1px solid #3b4d61;
+  border: 1px solid #748da8;
   border-radius: 8px;
   padding: 20px 24px;
-  min-width: 320px;
-  max-width: 480px;
+  width: min(480px, 100%);
+  min-width: 0;
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .declare-card-name-modal h3 {
@@ -30,13 +36,38 @@
   margin: 0 0 12px;
 }
 
+.declare-card-name-domain-guidance,
+.declare-card-name-resolution,
+.declare-card-name-count,
+.declare-card-name-invalid {
+  font-size: 13px;
+  margin: 0 0 8px;
+}
+
+.declare-card-name-domain-guidance {
+  color: #c7d8e8;
+}
+
+.declare-card-name-resolution {
+  color: #d8eaff;
+}
+
+.declare-card-name-count {
+  color: #a9bccd;
+}
+
+.declare-card-name-invalid {
+  color: #ffc7b9;
+}
+
 .declare-card-name-modal input[type='text'] {
   width: 100%;
   box-sizing: border-box;
+  min-height: 44px;
   padding: 8px 10px;
   font-size: 14px;
   border-radius: 4px;
-  border: 1px solid #3b4d61;
+  border: 1px solid #748da8;
   background: #10171f;
   color: #e8eef4;
 }
@@ -45,25 +76,30 @@
   list-style: none;
   margin: 6px 0 0;
   padding: 0;
-  max-height: 180px;
+  max-height: min(240px, 30dvh);
   overflow-y: auto;
-  border: 1px solid #3b4d61;
+  border: 1px solid #748da8;
   border-radius: 4px;
 }
 
-.declare-card-name-suggestions li button {
-  display: block;
+.declare-card-name-suggestions li {
+  display: flex;
+  align-items: center;
   width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
   text-align: left;
-  padding: 6px 10px;
+  padding: 8px 10px;
   background: transparent;
   border: none;
   color: #e8eef4;
   cursor: pointer;
 }
 
-.declare-card-name-suggestions li button:hover {
-  background: #2a3a4c;
+.declare-card-name-suggestions li:hover,
+.declare-card-name-suggestions li.is-active {
+  background: #59728d;
+  color: #fff;
 }
 
 .declare-card-name-actions {
@@ -74,15 +110,25 @@
 }
 
 .declare-card-name-actions button {
+  min-height: 44px;
   padding: 8px 16px;
   border-radius: 4px;
-  border: 1px solid #3b4d61;
-  background: #2e4257;
-  color: #e8eef4;
+  border: 1px solid #748da8;
+  background: #5c7792;
+  color: #fff;
   cursor: pointer;
 }
 
 .declare-card-name-actions button:disabled {
-  opacity: 0.5;
+  border-color: #6f849a;
+  background: #111922;
+  color: #a9bccd;
+  opacity: 1;
   cursor: not-allowed;
+}
+
+.declare-card-name-modal input[type='text']:focus-visible,
+.declare-card-name-actions button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
 }

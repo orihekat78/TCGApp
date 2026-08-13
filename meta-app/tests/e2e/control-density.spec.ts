@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { gotoReadyMetaRoute } from "./landscape-test-helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 851, height: 393 });
@@ -10,7 +11,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("CARDS: 操作列を連結し、印刷番号を内容幅で詰めて表示する", async ({ page }) => {
-  await page.goto("/#cards");
+  await gotoReadyMetaRoute(page, "cards", ".cards-toolbar");
 
   const toolbarLayout = await page.locator(".cards-toolbar").evaluate((toolbar) => {
     const boxes = [...toolbar.children].map((child) => child.getBoundingClientRect());
@@ -62,8 +63,7 @@ test("CARDS: 操作列を連結し、印刷番号を内容幅で詰めて表示�
 });
 
 test("DECK: 検索・絞り込み・並び替えを隙間のない操作群にする", async ({ page }) => {
-  await page.goto("/#deck");
-  await expect(page.getByTestId("deck-editor")).toBeVisible({ timeout: 6000 });
+  await gotoReadyMetaRoute(page, "deck", '[data-testid="deck-editor"]');
 
   const layout = await page.locator(".deck-pool-controls-stack").evaluate((stack) => {
     const searchRow = stack.querySelector<HTMLElement>(".deck-pool-search-row")!;

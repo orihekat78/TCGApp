@@ -620,7 +620,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05072.ts:56",
-        "tests:tests/cards/defer-unlock-miniwave/miniwave-cards-manual.test.ts:281"
+        "tests:tests/cards/defer-unlock-miniwave/miniwave-cards-manual.test.ts:282"
       ]
     },
     {
@@ -716,11 +716,14 @@
     {
       "qaId": "card:B05119:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "test-missing",
-      "result": "test-gap",
-      "method": "manual-semantic",
+      "status": "matched",
+      "result": "aligned",
+      "method": "group-equivalent",
       "evidence": [
-        "src:src/cards/ct-p05/B05119.ts:50"
+        "src:src/cards/ct-p05/B05119.ts:50",
+        "tests:tests/integration/dispatch-to-state.test.ts:38",
+        "tests:tests/integration/dispatch-to-state.test.ts:50",
+        "tests:tests/integration/dispatch-to-state.test.ts:54"
       ]
     },
     {

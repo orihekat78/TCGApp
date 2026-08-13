@@ -22,6 +22,7 @@ import type {
   EffectCtx,
 } from '../types/index.js';
 import { run as runEffect } from '../effect/resolver.js';
+import { isDeclaredNameValidForEffect } from '../effect/declared-name-domain.js';
 import { evalCond } from '../cond/eval.js';
 import { _getResolutionLock, _setResolutionLock, event } from '../event/registry.js';
 import { _resolveReasoningContinuation } from '../flow/main/reasoning.js';
@@ -290,6 +291,10 @@ export function runOne(state: GameState, entry: EffectStackEntry): void {
     cancelPendingAfterGameEnd(state, {
       preserveCompletedPresentations: ACTIVE_TERMINAL_PRESENTATION_STATES.has(state),
     });
+    return;
+  }
+  if (!isDeclaredNameValidForEffect(entry.effect, entry.dyn?.declaredName)) {
+    entry.state = 'cancelled';
     return;
   }
   const parentBatch = state.effectTriggerBatchContext;

@@ -2,13 +2,13 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `a439c8d50c7b`
+> Source hash: `c4c758d27507`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **185** ファイル（[全体 index](./index.md)）
+このグループ: **188** ファイル（[全体 index](./index.md)）
 
-## engine/effect (23)
+## engine/effect (24)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -23,6 +23,7 @@
 | [`src/engine/effect/atom-pick-spec.ts`](../../../src/engine/effect/atom-pick-spec.ts) | _(参照なし)_ |
 | [`src/engine/effect/consult-choose-intercept.ts`](../../../src/engine/effect/consult-choose-intercept.ts) | _(参照なし)_ |
 | [`src/engine/effect/consult-leave-intercept.ts`](../../../src/engine/effect/consult-leave-intercept.ts) | _(参照なし)_ |
+| [`src/engine/effect/declared-name-domain.ts`](../../../src/engine/effect/declared-name-domain.ts) | _(参照なし)_ |
 | [`src/engine/effect/heuristic-atom-target.ts`](../../../src/engine/effect/heuristic-atom-target.ts) | _(参照なし)_ |
 | [`src/engine/effect/index.ts`](../../../src/engine/effect/index.ts) | _(参照なし)_ |
 | [`src/engine/effect/invoke-hirameki.ts`](../../../src/engine/effect/invoke-hirameki.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
@@ -117,7 +118,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (96)
+## その他 (98)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -132,6 +133,8 @@
 | [`src/cloud-data/request-context.ts`](../../../src/cloud-data/request-context.ts) | _(参照なし)_ |
 | [`src/cloud-data/retention.ts`](../../../src/cloud-data/retention.ts) | _(参照なし)_ |
 | [`src/cloud-data/usage-budget.ts`](../../../src/cloud-data/usage-budget.ts) | _(参照なし)_ |
+| [`src/e2e/test-api.ts`](../../../src/e2e/test-api.ts) | _(参照なし)_ |
+| [`src/shared/deck-legality-catalog.generated.ts`](../../../src/shared/deck-legality-catalog.generated.ts) | _(参照なし)_ |
 | [`src/shared/deck-legality.ts`](../../../src/shared/deck-legality.ts) | _(参照なし)_ |
 | [`src/ui/fixtures/bug274PartnerFixture.ts`](../../../src/ui/fixtures/bug274PartnerFixture.ts) | _(参照なし)_ |
 | [`src/ui/fixtures/cutinDemoState.ts`](../../../src/ui/fixtures/cutinDemoState.ts) | [`08-contact.md`](../../rules/08-contact.md) / [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) |

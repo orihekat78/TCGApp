@@ -21,7 +21,7 @@ describe('declaredCostParamsToDyn', () => {
       removeStackedCards: { instanceIds: ['stack:1'] },
       costChoice: 1,
       choiceIndex: 2,
-      declaredName: '江戸川コナン',
+      declaredName: '  江戸川コナン  ',
     };
 
     expect(declaredCostParamsToDyn(params)).toEqual({

@@ -391,6 +391,8 @@ export type CardDef = {
   abilities: AbilityDef[];                 // 能力定義 (Phase 5 で TSV+merge)
   /** Partner-only marker for the built-in assist / solve-case actions; never a CardDef ability. */
   standardPartnerActions?: true;
+  /** FILE count at which this standard partner's assist resolves the case. */
+  partnerAssistFileThreshold?: number;
   /**
    * Printed "this event may be used if ..." authorization only.  This is
    * deliberately separate from AbilityDef.condition: icon and effect

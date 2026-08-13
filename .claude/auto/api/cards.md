@@ -17,9 +17,11 @@
 - `byTrait`
 - `get`
 - `register`
+- `retainTemporary`
 - `unload`
 - `validate`
 - `validateAll`
+- `withTemporary`
 
 ## 関数
 

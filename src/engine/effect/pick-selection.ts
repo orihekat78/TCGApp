@@ -40,11 +40,10 @@ export function pendingPickMinimumPolicyFromAtomArgs(
   throw new Error('effectPick: invalid minimumPolicy');
 }
 
-function existingForcedUids(pending: PendingEffectPickSide, max: number): string[] {
+function existingForcedUids(pending: PendingEffectPickSide): string[] {
   const candidates = new Set(pending.candidates.map(candidate => candidate.uid));
   return [...new Set(pending.forcedUids ?? [])]
-    .filter(uid => candidates.has(uid))
-    .slice(0, max);
+    .filter(uid => candidates.has(uid));
 }
 
 export function findPendingPickCandidate(
@@ -85,8 +84,10 @@ export function pendingPickSelectionViolation(
   if (new Set(canonical).size !== canonical.length) return 'duplicate candidate uid';
   const exact = canonical.map(uid => candidateFor(pending, uid)) as PickCandidate[];
   if (requireForced) {
-    const forced = existingForcedUids(pending, boundedMax(pending));
-    if (forced.some(uid => !canonical.includes(uid))) return 'required candidate omitted';
+    const forced = existingForcedUids(pending);
+    const requiredCount = Math.min(forced.length, boundedMax(pending));
+    const selectedForcedCount = forced.filter(uid => canonical.includes(uid)).length;
+    if (selectedForcedCount < requiredCount) return 'required candidate omitted';
   }
 
   if (pending.distinctNames === true) {
@@ -139,34 +140,37 @@ export function maximumFeasiblePendingPickSelection(
   preferredUids: readonly string[] = [],
 ): string[] {
   const max = boundedMax(pending);
-  const forced = existingForcedUids(pending, max);
-  if (pendingPickSelectionViolation(pending, forced, false) !== null) {
-    throw new Error('effectPick: required candidates violate selection constraints');
-  }
+  const forced = existingForcedUids(pending);
 
   const orderedUids = [
     ...forced,
     ...preferredUids,
     ...pending.candidates.map(candidate => candidate.uid),
   ].filter((uid, index, all) => all.indexOf(uid) === index && candidateFor(pending, uid) !== undefined);
-  const remaining = orderedUids.filter(uid => !forced.includes(uid));
-  let best = [...forced];
+  let best: string[] = [];
 
   const search = (index: number, selected: string[]): boolean => {
-    if (selected.length > best.length) best = [...selected];
+    if (selected.length > best.length
+      && pendingPickSelectionViolation(pending, selected, true) === null) {
+      best = [...selected];
+    }
     if (best.length === max) return true;
-    if (index >= remaining.length || selected.length + (remaining.length - index) <= best.length) return false;
+    if (index >= orderedUids.length
+      || selected.length + (orderedUids.length - index) <= best.length) return false;
 
-    const uid = remaining[index]!;
+    const uid = orderedUids[index]!;
     if (selected.length < max) {
       const withCandidate = [...selected, uid];
-      if (pendingPickSelectionViolation(pending, withCandidate, true) === null
+      if (pendingPickSelectionViolation(pending, withCandidate, false) === null
         && search(index + 1, withCandidate)) return true;
     }
     return search(index + 1, selected);
   };
 
-  search(0, forced);
+  search(0, []);
+  if (forced.length > 0 && pendingPickSelectionViolation(pending, best, true) !== null) {
+    throw new Error('effectPick: required candidates violate selection constraints');
+  }
   return best;
 }
 

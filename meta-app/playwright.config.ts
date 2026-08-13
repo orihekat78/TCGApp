@@ -25,6 +25,9 @@ export function createMetaPlaywrightConfig(e2ePort = resolveMetaE2EPort()) {
 
   return defineConfig({
     testDir: resolve(__dirname, 'tests/e2e'),
+    // This spec requires the dedicated WebKit project and cloud-enabled Vite
+    // environment from playwright.cloud-sync-webkit.config.ts.
+    testIgnore: 'cloud-sync-webkit.spec.ts',
     timeout: 30_000,
     retries: 0,
     fullyParallel: false,

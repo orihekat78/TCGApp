@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { validateDeckLegality, type DeckCardResolver, type DeckInput } from '../../src/shared/deck-legality';
+import {
+  DECK_LEGALITY_CATALOG,
+  deckLegalityCatalogResolver,
+} from '../../src/shared/deck-legality-catalog.generated';
 
 const input = (overrides: Partial<DeckInput> = {}): DeckInput => ({
   partner: 'partner',
@@ -121,5 +125,51 @@ describe('deck legality', () => {
 
     expect(result.ok).toBe(true);
     expect(result.warnings).toContain('COMPETITIVE_CASE_EVENT_ONLY:0407');
+  });
+});
+
+describe('generated deck-legality catalog', () => {
+  const productionInput = (overrides: Partial<DeckInput> = {}): DeckInput => ({
+    partner: 'D08001',
+    case: 'D08026',
+    main: [{ printingId: 'B09100', count: 40 }],
+    ...overrides,
+  });
+
+  it.each([
+    ['an unknown printing', productionInput({ partner: 'unknown' }), 'PARTNER_UNKNOWN'],
+    ['wrong partner and case slots', productionInput({ partner: 'D08003', case: 'D08001' }), 'PARTNER_KIND'],
+    ['a partner in main', productionInput({ main: [{ printingId: 'D08001', count: 40 }] }), 'MAIN_KIND'],
+    ['combined reprints over a copy limit', productionInput({ main: [
+      { printingId: 'D08005', count: 3 },
+      { printingId: 'D08006', count: 3 },
+      { printingId: 'B09100', count: 34 },
+    ] }), 'COPY_LIMIT'],
+    ['a per-printing copy-limit breach', productionInput({ main: [
+      { printingId: 'D08005', count: 4 },
+      { printingId: 'B09100', count: 36 },
+    ] }), 'COPY_LIMIT'],
+  ])('rejects %s from the compact catalog', (_label, deck, error) => {
+    expect(validateDeckLegality(deck, deckLegalityCatalogResolver).errors).toContain(error);
+  });
+
+  it('preserves unlimited cards from ALL_CARDS', () => {
+    expect(validateDeckLegality(productionInput(), deckLegalityCatalogResolver))
+      .toEqual({ ok: true, errors: [], warnings: [] });
+  });
+
+  it('keeps a catalogued competitive restriction nonblocking', () => {
+    const prohibited = Object.entries(DECK_LEGALITY_CATALOG)
+      .find(([, [officialId]]) => officialId === '0208')?.[0];
+    if (!prohibited) throw new Error('official ID 0208 missing from legality catalog');
+
+    expect(validateDeckLegality(productionInput({ main: [
+      { printingId: prohibited, count: 1 },
+      { printingId: 'B09100', count: 39 },
+    ] }), deckLegalityCatalogResolver)).toMatchObject({
+      ok: true,
+      errors: [],
+      warnings: ['COMPETITIVE_PROHIBITED:0208'],
+    });
   });
 });

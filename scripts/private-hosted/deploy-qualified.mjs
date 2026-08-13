@@ -55,6 +55,7 @@ const CONTENT_TYPES = new Map([
 const QUALIFICATION_COMMAND_IDS = [
   "npm-ci",
   "card-identities",
+  "deck-legality",
   "build",
   "dependency-audit",
   "bug-gate",
@@ -163,6 +164,7 @@ function qualificationArgvContract(repoRoot, runDir) {
   return new Map([
     ["npm-ci", npm("ci")],
     ["card-identities", run("check:meta-card-identities")],
+    ["deck-legality", run("check:deck-legality-catalog")],
     ["build", run("build:meta")],
     ["dependency-audit", npm("audit", "--audit-level=high")],
     ["bug-gate", run("private-hosted:bug-gate")],

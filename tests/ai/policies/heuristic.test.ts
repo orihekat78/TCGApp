@@ -112,6 +112,29 @@ describe('HeuristicPolicy — priority 2: assist (only when FILE+1>=7)', () => {
     // reasoning is preferred (priority 3)
     expect(got?.kind).toBe('reasoning');
   });
+
+  it('uses the partner-defined FILE 8 threshold for PR022-like partners', () => {
+    registerCardDef(makeCard('P-SELF', {
+      kind: 'partner', ap: 1000, lp: 2,
+      standardPartnerActions: true,
+      partnerAssistFileThreshold: 8,
+    }));
+    const policy = new HeuristicPolicy({ seed: 's' });
+    const moves: Move[] = [
+      { kind: 'assist' },
+      { kind: 'reasoning', uid: 'partner:self' },
+      { kind: 'endTurn' },
+    ];
+    const atSix = produce(makeBaseState(), draft => {
+      draft.players.self.file = Array.from({ length: 6 }, (_, i) => `f${i}`);
+    });
+    const atSeven = produce(makeBaseState(), draft => {
+      draft.players.self.file = Array.from({ length: 7 }, (_, i) => `f${i}`);
+    });
+
+    expect(policy.choose(atSix, moves, 'self')?.kind).toBe('reasoning');
+    expect(policy.choose(atSeven, moves, 'self')?.kind).toBe('assist');
+  });
 });
 
 describe('HeuristicPolicy — priority 3: reasoning by max LP', () => {
@@ -417,6 +440,25 @@ describe('HeuristicPolicy — priority 7: startNextHint', () => {
     ];
     const got = policy.choose(state, moves, 'self');
     expect(got?.kind).toBe('endTurn');
+  });
+
+  it('keeps one extra FILE above a partner-defined FILE 8 threshold', () => {
+    registerCardDef(makeCard('P-SELF', {
+      kind: 'partner', ap: 1000, lp: 2,
+      standardPartnerActions: true,
+      partnerAssistFileThreshold: 8,
+    }));
+    const policy = new HeuristicPolicy({ seed: 's' });
+    const moves: Move[] = [{ kind: 'startNextHint' }, { kind: 'endTurn' }];
+    const atEight = produce(makeBaseState(), draft => {
+      draft.players.self.file = Array.from({ length: 8 }, (_, i) => `f${i}`);
+    });
+    const atNine = produce(makeBaseState(), draft => {
+      draft.players.self.file = Array.from({ length: 9 }, (_, i) => `f${i}`);
+    });
+
+    expect(policy.choose(atEight, moves, 'self')?.kind).toBe('endTurn');
+    expect(policy.choose(atNine, moves, 'self')?.kind).toBe('startNextHint');
   });
 });
 

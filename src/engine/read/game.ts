@@ -69,6 +69,13 @@ function canPartnerAct(s: GameState, p: 'self' | 'opp'): boolean {
   return true;
 }
 
+/** Card-defined FILE threshold for the built-in partner assist. */
+function partnerAssistFileThreshold(s: GameState, p: 'self' | 'opp'): number {
+  const cardId = s.players[p].partner.cardId;
+  const threshold = cardId ? def.card(cardId)?.partnerAssistFileThreshold : undefined;
+  return threshold ?? 7;
+}
+
 /** Common 【アシスト】 availability shared by UI, public dispatch, and AI. */
 function canPartnerAssist(s: GameState, p: 'self' | 'opp'): boolean {
   if (!canPartnerAct(s, p)) return false;
@@ -117,6 +124,7 @@ function result(s: GameState): GameResult | null {
 export const game = {
   canWin,
   canPartnerAssist,
+  partnerAssistFileThreshold,
   canPartnerSolveCase,
   cannotSolveCase,
   partnerSolveOverride,

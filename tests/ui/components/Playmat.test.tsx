@@ -331,6 +331,19 @@ describe('Playmat', () => {
     }
   });
 
+  it('keeps the ordinary FILE progress meter at 7 for a FILE-8 assist partner', () => {
+    const state = createEmptyGameState();
+    state.players.self.partner.cardId = 'PR022';
+    state.players.self.file = Array.from({ length: 7 }, () => ({ type: 'card-back' as const }));
+
+    const html = renderToString(<Playmat gameState={state} resolveCard={resolveCard} />);
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    expect(Array.from(container.querySelectorAll('.file-area [role="progressbar"]'))
+      .map((node) => node.getAttribute('aria-valuemax'))
+      .sort()).toEqual(['7', '7']);
+  });
+
   it('does not offer card details from a log entry', () => {
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     const state = createEmptyGameState();

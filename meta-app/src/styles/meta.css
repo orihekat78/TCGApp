@@ -16,6 +16,11 @@ body,
   height: 100%;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   background: #0a1a28;
   color: #e0ecf8;
@@ -1133,7 +1138,7 @@ button {
   .home-navigation button {
     min-width: 0;
     min-height: 44px;
-    font-size: 10px;
+    font-size: clamp(10px, 1.3vw, 11px);
     padding: 0 7px;
     gap: 4px;
     border: 0;
@@ -1171,7 +1176,7 @@ button {
   }
 
   .home-section-heading h2 {
-    font-size: 12px;
+    font-size: clamp(10px, 1.4vw, 12px);
     letter-spacing: 0;
     white-space: nowrap;
   }
@@ -1179,27 +1184,32 @@ button {
   .home-section-heading a,
   .home-section-heading button {
     min-height: 44px;
-    font-size: 10px;
+    font-size: clamp(10px, 1.3vw, 11px);
     white-space: nowrap;
   }
 
   .home-news-list a {
-    min-height: 43px;
-    height: 43px;
+    min-height: 44px;
+    height: 44px;
     padding: 4px 0;
     gap: 1px 4px;
+  }
+
+  .home-news-list li {
+    border-bottom: 0;
+    box-shadow: inset 0 -1px rgba(171, 197, 218, 0.14);
   }
 
   .home-news-category,
   .home-news-list time,
   .home-match-list time {
-    font-size: 7px;
+    font-size: clamp(7px, 0.95vw, 8px);
   }
 
   .home-news-list strong {
     overflow: hidden;
     display: block;
-    font-size: 10px;
+    font-size: clamp(9px, 1.18vw, 10px);
     line-height: 1.25;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -1210,7 +1220,7 @@ button {
     height: 32px;
     grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 4px;
-    font-size: 8px;
+    font-size: clamp(8px, 1.06vw, 9px);
   }
 
   .home-match-result {
@@ -1225,13 +1235,13 @@ button {
     gap: 8px;
   }
   .home-deck-heading h1 {
-    font-size: 18px;
+    font-size: clamp(16px, 2.12vw, 18px);
   }
 
   .home-change-deck {
     min-height: 44px;
     padding: 0 9px;
-    font-size: 9px;
+    font-size: clamp(10px, 1.3vw, 11px);
     white-space: nowrap;
   }
 
@@ -1254,10 +1264,10 @@ button {
   }
 
   .home-identity-card figcaption strong {
-    font-size: 9px;
+    font-size: clamp(8px, 1.06vw, 9px);
   }
   .home-identity-card figcaption span {
-    font-size: 7px;
+    font-size: clamp(7px, 0.95vw, 8px);
   }
 
   .home-deck-dialog {
@@ -2583,12 +2593,12 @@ button {
     gap: 6px;
   }
   .cards-search input {
-    font-size: 10px;
+    font-size: clamp(10px, 1.3vw, 11px);
   }
   .cards-filter-trigger {
     padding: 0 9px;
     gap: 5px;
-    font-size: 10px;
+    font-size: clamp(10px, 1.3vw, 11px);
   }
   .cards-filter-trigger strong {
     min-width: 18px;
@@ -2599,14 +2609,14 @@ button {
   .cards-sort-control select {
     min-width: 84px;
     padding: 0 18px 0 7px;
-    font-size: 10px;
+    font-size: clamp(10px, 1.3vw, 11px);
   }
   .cards-sort-control button {
     min-width: 44px;
   }
   .cards-view-selector button {
     min-width: 44px;
-    font-size: 14px;
+    font-size: clamp(12px, 1.65vw, 14px);
   }
   .cards-workspace {
     grid-template-columns: minmax(0, 1fr) 240px;
@@ -2679,7 +2689,7 @@ button {
     margin-bottom: 2px !important;
   }
   .cards-selected-identity > div:nth-child(2) {
-    font-size: 15px !important;
+    font-size: clamp(13px, 1.76vw, 15px) !important;
     line-height: 18px;
   }
   .cards-selected-identity > div:nth-child(3) {
@@ -2701,7 +2711,7 @@ button {
     min-height: 44px;
   }
   .cards-print-chip-inner {
-    font-size: 10px;
+    font-size: clamp(10px, 1.3vw, 11px);
   }
   .cards-filter-drawer {
     width: min(310px, calc(100vw - 12px));
@@ -2712,14 +2722,14 @@ button {
     padding: 5px 8px 5px 12px;
   }
   .cards-filter-drawer > header h2 {
-    font-size: 14px;
+    font-size: clamp(12px, 1.65vw, 14px);
   }
   .cards-filter-options {
     padding: 6px 8px;
   }
   .cards-filter-options button {
     min-height: 44px;
-    font-size: 10px !important;
+    font-size: clamp(10px, 1.3vw, 11px) !important;
   }
   .cards-filter-scroll {
     padding: 5px 8px;
@@ -3580,16 +3590,16 @@ button {
     width: 134px;
     min-width: 100px;
     padding: 0 7px;
-    font-size: 10px;
+    font-size: clamp(10px, 1.3vw, 11px);
   }
   .deck-change-button {
     min-width: 104px;
     padding: 0 6px;
-    font-size: 10px;
+    font-size: clamp(10px, 1.3vw, 11px);
   }
   .deck-tool-button {
     padding: 0 6px;
-    font-size: 10px;
+    font-size: clamp(10px, 1.3vw, 11px);
   }
   .deck-toolbar-save-group {
     gap: 4px;
@@ -3598,7 +3608,7 @@ button {
   .deck-save-button {
     min-width: 58px;
     padding: 0 5px;
-    font-size: 10px;
+    font-size: clamp(10px, 1.3vw, 11px);
   }
   .deck-workspace {
     padding: 6px 10px 8px;
@@ -3666,7 +3676,7 @@ button {
     font-size: 8px !important;
   }
   .deck-pool-surface > div:first-child span:last-child {
-    font-size: 7px !important;
+    font-size: 8px !important;
   }
   .deck-pool-instruction,
   .deck-pool-sort-label {
@@ -3677,7 +3687,7 @@ button {
     padding: 0 6px;
   }
   .deck-search-box input {
-    font-size: 10px;
+    font-size: clamp(10px, 1.3vw, 11px);
   }
   .deck-pool-sort-row {
     gap: 0 !important;
@@ -3692,7 +3702,7 @@ button {
     min-width: 44px;
     min-height: 44px;
     padding: 0 3px !important;
-    font-size: 10px !important;
+    font-size: clamp(10px, 1.3vw, 11px) !important;
   }
   .deck-pool-grid {
     gap: 5px !important;
@@ -3741,7 +3751,7 @@ button {
     height: 63px !important;
   }
   .deck-detail-identity > strong {
-    font-size: 14px;
+    font-size: clamp(12px, 1.65vw, 14px);
   }
   .deck-detail-stats {
     gap: 3px;
@@ -3750,14 +3760,14 @@ button {
     padding: 4px 2px !important;
   }
   .deck-detail-stats > div > div:first-child {
-    font-size: 7px !important;
+    font-size: 8px !important;
   }
   .deck-detail-stats > div > div:last-child {
     font-size: 12px !important;
   }
   .deck-detail-effect {
     padding: 6px 8px;
-    font-size: 9px;
+    font-size: clamp(8px, 1.06vw, 9px);
     line-height: 1.4;
   }
   .deck-detail-actions {
@@ -3780,6 +3790,8 @@ button {
 /* Persistent shell status: compact enough for iPhone SE landscape. */
 .cloud-sync-indicator {
   position: absolute;
+  display: inline-flex;
+  line-height: 0;
   right: max(6px, env(safe-area-inset-right));
   bottom: max(6px, env(safe-area-inset-bottom));
   z-index: 90;
@@ -3806,6 +3818,11 @@ button {
   border-radius: 8px;
   line-height: 1;
   letter-spacing: 0.08em;
+}
+
+.network-status--compact .network-status__dot {
+  width: 4px;
+  height: 4px;
 }
 
 .network-status__dot {
@@ -3940,16 +3957,22 @@ button {
 }
 
 @media (max-height: 420px) {
+  .match-menu-trigger {
+    font-size: clamp(10px, 1.41vw, 12px);
+  }
+
   .match-menu-panel {
     padding: 14px;
+    font-size: clamp(10px, 1.3vw, 11px);
   }
 
   .match-menu-panel h2 {
     margin-bottom: 8px;
-    font-size: 17px;
+    font-size: clamp(15px, 2vw, 17px);
   }
 
   .match-menu-panel p {
     margin-bottom: 10px;
+    font-size: clamp(11px, 1.53vw, 13px);
   }
 }

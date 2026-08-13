@@ -71,6 +71,7 @@ describe('meta engineStub deck-limit validation', () => {
 
   it('uses the BUG-274 synthetic partner overlay without bypassing other legality checks', () => {
     expect(isPlayable(BUG_274_PUBLIC_DECK)).toBe(true);
+    expect(isPlayable({ ...BUG_274_PUBLIC_DECK })).toBe(false);
     expect(isPlayable({
       ...BUG_274_PUBLIC_DECK,
       id: BUG_274_PUBLIC_DECK_ID,

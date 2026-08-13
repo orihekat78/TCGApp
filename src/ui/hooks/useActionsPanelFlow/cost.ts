@@ -1,6 +1,7 @@
 // useActionsPanelFlow/cost.ts — Phase 3d 分割 (cost-builder / label helpers, body 無改変移送, 2026-06-22)
 import type { Cost, Effect, EffectCtx, GameState } from '@/engine/types';
 import { resolveDynNumber } from '@/engine/dyn/eval.js';
+import { findDeclareNameSpec } from '@/engine/effect/declared-name-domain.js';
 
 
 /**
@@ -226,45 +227,8 @@ export function findChoiceCost(cost: Cost | undefined): ChoiceCost | null {
  */
 export function findDeclareNameAtom(
   effect: Effect | undefined,
-): { bind: string; optional: boolean } | null {
-  if (!effect) return null;
-  switch (effect.kind) {
-    case 'atom': {
-      if (effect.verb !== 'declareName') return null;
-      const args = (effect.args ?? {}) as { bind?: unknown; optional?: unknown };
-      return {
-        bind: typeof args.bind === 'string' ? args.bind : '',
-        optional: args.optional === true,
-      };
-    }
-    case 'sequence':
-    case 'chain': {
-      for (const step of effect.steps) {
-        const found = findDeclareNameAtom(step);
-        if (found) return found;
-      }
-      return null;
-    }
-    case 'conditional': {
-      return findDeclareNameAtom(effect.then) ?? (effect.else ? findDeclareNameAtom(effect.else) : null);
-    }
-    case 'optional': {
-      const found = findDeclareNameAtom(effect.effect);
-      // optional ラッパ内の declareName は「してもよい」扱い (args.optional 未指定でも skip 可)
-      return found ? { ...found, optional: true } : null;
-    }
-    case 'choice': {
-      for (const opt of effect.options) {
-        const found = findDeclareNameAtom(opt);
-        if (found) return found;
-      }
-      return null;
-    }
-    case 'forEach':
-      return findDeclareNameAtom(effect.do);
-    default:
-      return null;
-  }
+): ReturnType<typeof findDeclareNameSpec> {
+  return findDeclareNameSpec(effect);
 }
 
 /**

@@ -5,17 +5,18 @@
     {
       "qaId": "card:B01003:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa",
       "answerHash": "5883b6d21761d9ad8c88fdadb72d71431e67e38adf4b7a20e2f9fd95c6e3357f",
-      "status": "test-missing",
-      "result": "test-gap",
-      "method": "group-equivalent",
+      "status": "matched",
+      "result": "aligned",
+      "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/06-card-types.md:12",
         "src:src/ai/move-enumerator.ts:43",
         "src:src/ai/move-enumerator.ts:63",
-        "src:src/cards/ct-p01/B01003.ts:5"
-      ],
-      "noteCodes": [
-        "PARTNER-SLEEP-CARD-BOUND-TEST-MISSING"
+        "src:src/cards/ct-p01/B01003.ts:5",
+        "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:41",
+        "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:43",
+        "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:46",
+        "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:47"
       ]
     },
     {
@@ -109,11 +110,15 @@
     {
       "qaId": "card:B01043:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa",
       "answerHash": "5883b6d21761d9ad8c88fdadb72d71431e67e38adf4b7a20e2f9fd95c6e3357f",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p01/B01043.ts:1"
+        "src:src/cards/ct-p01/B01043.ts:1",
+        "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:41",
+        "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:43",
+        "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:46",
+        "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:47"
       ]
     },
     {
@@ -171,15 +176,13 @@
     {
       "qaId": "card:B02006:f3ec718c14d9727f759ff72f61af57b75e6d7fb794305d5a7621e6be378d7584",
       "answerHash": "d87573552f1d0a938e5a0efc03c10f45be2b5253289d56de94f787de78214457",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/09-cutin-disguise.md:6",
-        "src:src/cards/ct-p02/B02006.ts:24"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p02/B02006.ts:24",
+        "tests:tests/cards/defer-unlock-miniwave/miniwave-cards-manual.test.ts:237"
       ]
     },
     {
@@ -467,11 +470,16 @@
     {
       "qaId": "card:B03138:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03138.ts:1"
+        "src:src/cards/ct-p03/B03138.ts:1",
+        "tests:tests/cards/_shared/caseResolvedOpponentDraw.e2e.test.ts:58",
+        "tests:tests/cards/_shared/caseResolvedOpponentDraw.e2e.test.ts:63",
+        "tests:tests/cards/_shared/caseResolvedOpponentDraw.e2e.test.ts:65",
+        "tests:tests/cards/_shared/caseResolvedOpponentDraw.e2e.test.ts:67",
+        "tests:tests/cards/_shared/caseResolvedOpponentDraw.e2e.test.ts:78"
       ]
     },
     {
@@ -1340,7 +1348,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09003.ts:118",
-        "tests:tests/cards/step12-batch2.test.ts:343"
+        "tests:tests/cards/step12-batch2.test.ts:344"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -1876,11 +1884,13 @@
     {
       "qaId": "card:D07023:e2f2e95abd482ed3b39e41b21dab18bfdb59f38cdfe18873117af2ef2dc02ced",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d07/D07023.ts:1"
+        "src:src/cards/ct-d07/D07023.ts:1",
+        "tests:tests/cards/_shared/shortDeckRevealCommonFlow.e2e.test.ts:162",
+        "tests:tests/cards/_shared/shortDeckRevealCommonFlow.e2e.test.ts:175"
       ]
     },
     {

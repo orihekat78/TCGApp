@@ -14,6 +14,7 @@ import { PR158 } from '@/cards/pr-01/PR158';
 import { PR164 } from '@/cards/pr-01/PR164';
 import { D08003 } from '@/cards/ct-d08/D08003';
 import { D08004 } from '@/cards/ct-d08/D08004';
+import { D08002 } from '@/cards/ct-d08/D08002';
 
 function makeMainDeck(prefix: string): string[] {
   // 40枚 (rules/02). 3枚x13セット + 1枚 = 40. すべて 3 枚以下になるよう構成。
@@ -157,6 +158,18 @@ describe('engine.flow.setup', () => {
       expect(() => produce(createEmptyGameState(), draft => {
         setup.init(draft, decks);
       })).toThrow(/COPY_LIMIT/);
+    });
+
+    it('rejects a partner placed in main before either side mutates', () => {
+      const decks = makeDecks();
+      registerCardDef(D08002);
+      decks.self.mainCards = Array(40).fill('D08002');
+      const initial = createEmptyGameState();
+
+      expect(() => produce(initial, draft => setup.init(draft, decks)))
+        .toThrow(/MAIN_KIND/);
+      expect(initial.players.self.partner.cardId).toBe('');
+      expect(initial.players.opp.partner.cardId).toBe('');
     });
 
     it('keeps registered cards with different official IDs independent', () => {

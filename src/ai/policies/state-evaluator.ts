@@ -8,7 +8,7 @@
 //
 // 評価項目 (linear sum, 重み調整可):
 //   1. evidence ratio (-1 to +1): (self/required) - (opp/required) で最重要
-//   2. file ratio: assist 閾値 7 への到達度 (0..1 each side)
+//   2. file ratio: partner-defined assist 閾値への到達度 (0..1 each side)
 //   3. scene strength: AP + LP 合計差 (normalize 25000)
 //   4. partner state: パートナーがスリープなら -0.1
 //
@@ -17,6 +17,7 @@
 // Phase 9-F.2 次段階: 評価関数 weight の学習 / opening book / endgame DB
 
 import type { GameState } from '@/engine/types';
+import { game as readGame } from '@/engine/read/game.js';
 
 type Player = 'self' | 'opp';
 
@@ -67,9 +68,9 @@ export function defaultStateEvaluator(state: GameState, byPlayer: Player): numbe
   // 1. evidence ratio
   const evidenceScore = clamp(evSelf / reqSelf - evOpp / reqOpp, -1, 1);
 
-  // 2. file ratio (assist 閾値 7 への到達度)
-  const fileSelf = clamp(state.players[byPlayer].file.length / 7, 0, 1);
-  const fileOpp = clamp(state.players[opp].file.length / 7, 0, 1);
+  // 2. file ratio (partner-defined assist 閾値への到達度)
+  const fileSelf = clamp(state.players[byPlayer].file.length / readGame.partnerAssistFileThreshold(state, byPlayer), 0, 1);
+  const fileOpp = clamp(state.players[opp].file.length / readGame.partnerAssistFileThreshold(state, opp), 0, 1);
   const fileScore = fileSelf - fileOpp;
 
   // 3. scene strength diff

@@ -27,6 +27,7 @@ import { declaredCostParamsToDyn } from './declared-cost-params.js';
 import { parseRemoveSetCardWitness } from '../../cost/remove-set-card-witness.js';
 import { _getResolutionLock } from '../../event/registry.js';
 import { hasPendingHumanPick } from '../../effect/apply-pick.js';
+import { isDeclaredNameValidForEffect } from '../../effect/declared-name-domain.js';
 import { _hasOpenActionContext } from '../action/state-machine.js';
 import {
   completeEffectCausalTrace,
@@ -261,6 +262,7 @@ export function canActivateDeclaredAbility(
   if (!canStartDeclaredAbility(state, found.player)) return false;
   const ability = findDeclaredAbility(state, uid, found.cardId, found.area, abilId);
   if (!ability) return false;
+  if (!isDeclaredNameValidForEffect(ability.effect, costParams?.declaredName)) return false;
   const dyn = declaredCostParamsToDyn(costParams);
   const ctx: EffectCtx = {
     source: { cardId: found.cardId, player: found.player, uid, abilityId: abilId, area: found.area },
@@ -389,6 +391,9 @@ export function useDeclaredAbility(
     if (printed?.type === 'declared'
       && !findDeclaredAbility(state, uid, found.cardId, found.area, abilId)) return;
   }
+  const admissionAbility = findDeclaredAbility(state, uid, found.cardId, found.area, abilId);
+  if (admissionAbility?.type === 'declared'
+    && !isDeclaredNameValidForEffect(admissionAbility.effect, ctx?.dyn?.declaredName)) return;
   const inheritedRootId = currentEffectCausalCorrelationEventId(state);
   const ownTrace = inheritedRootId === undefined
     ? startStandaloneCausalTrace(state, {

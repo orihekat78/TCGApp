@@ -46,7 +46,14 @@ export function EffectPickerModal(): JSX.Element | null {
   const dialogRef = useRef<HTMLDivElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
-    setMultiSelected([]);
+    if (!pending) {
+      setMultiSelected([]);
+      return;
+    }
+    const forced = (pending.forcedUids ?? [])
+      .filter((uid) => pending.candidates.some((candidate) => candidate.uid === uid));
+    const max = effectivePendingPickRange(pending).max;
+    setMultiSelected(max > 1 && forced.length > 0 && forced.length <= max ? forced : []);
   }, [pending]);
 
   // area pick は CardListModal に譲る (Playmat.tsx が auto-open する)
@@ -134,12 +141,19 @@ export function EffectPickerModal(): JSX.Element | null {
   const isMulti = effectiveRange.max > 1;
   const effMin = effectiveRange.min;
   const effMax = effectiveRange.max;
+  const forcedLockable = isMulti && forced.length > 0 && forced.length <= effMax;
   const selectedLevel = multiSelected.reduce(
     (sum, uid) => sum + (readDef.card(pending.candidates.find((c) => c.uid === uid)?.cardId ?? '')?.level ?? 0),
     0,
   );
   const toggleMulti = (uid: string): void => {
-    setMultiSelected((prev) => (prev.includes(uid) ? prev.filter((u) => u !== uid) : [...prev, uid]));
+    setMultiSelected((prev) => {
+      if (prev.includes(uid)) {
+        if (forcedLockable && forced.includes(uid)) return prev;
+        return prev.filter((selectedUid) => selectedUid !== uid);
+      }
+      return [...prev, uid];
+    });
   };
   const multiBlocked = (c: { uid: string; cardId: string; player: 'self' | 'opp' }): boolean => {
     if (multiSelected.includes(c.uid)) return false; // 解除は常に可
@@ -219,7 +233,9 @@ export function EffectPickerModal(): JSX.Element | null {
             // 裏向き証拠 ('(非公開)') は実画像を出さず placeholder にフォールバックさせる。
             const hidden = name === '(非公開)';
             // W2b (P50/r27): forced が居るとき forced 以外は選択不可 (「必ず選ぶ」)
-            const forcedBlocked = forced.length > 0 && !forced.includes(c.uid);
+            const forcedBlocked = !forced.includes(c.uid)
+              && forced.length > 0
+              && (!isMulti || forced.length >= effMax);
             // 夜間 W0: multi mode は quota (effMax / perSideMax) 到達で未選択候補を不可化
             const quotaBlocked = isMulti && multiBlocked(c);
             const selected = isMulti && multiSelected.includes(c.uid);

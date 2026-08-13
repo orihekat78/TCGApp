@@ -32,8 +32,11 @@ export function createPlaywrightConfig(e2ePort = resolveE2EPort()) {
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: `npm run dev -- --host 127.0.0.1 --port ${e2ePort} --strictPort`,
+    command: `npx vite build --config vite.config.e2e.ts && npx vite preview --config vite.config.e2e.ts --host 127.0.0.1 --port ${e2ePort} --strictPort`,
     url: e2eBaseUrl,
+    env: {
+      PLAYWRIGHT_PORT: String(e2ePort),
+    },
     reuseExistingServer: false,
     timeout: 60_000,
   },

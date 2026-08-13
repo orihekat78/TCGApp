@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { SAMPLE_DECK, SAMPLE_DECK_OPP } from '../../src/data/sampleDeck';
-import { gotoReadyLandscapeRoute } from './landscape-test-helpers';
+import { expectReadyMetaRoute, gotoReadyLandscapeRoute, installPlayableDeckStore } from './landscape-test-helpers';
 
 const NAV_ORDER = ['ホーム', 'デッキ', 'カード', 'ゲーム開始', 'チュートリアル', '履歴', '設定'];
 
@@ -13,24 +13,39 @@ const CLOUD_SYNC_CASES = [
 
 async function setCloudSyncPhase(page: Page, phase: (typeof CLOUD_SYNC_CASES)[number]['phase']) {
   await page.waitForFunction(async () => {
+    const statusModulePath = '/src/cloud/statusStore.ts';
+    const decksModulePath = '/src/state/decksStore.ts';
+    const historyModulePath = '/src/state/historyStore.ts';
     const [
       { useCloudSyncStatusStore },
       { useDecksStore },
       { useHistoryStore },
     ] = await Promise.all([
-      import('/src/cloud/statusStore.ts'),
-      import('/src/state/decksStore.ts'),
-      import('/src/state/historyStore.ts'),
+      import(statusModulePath),
+      import(decksModulePath),
+      import(historyModulePath),
     ]);
     const decks = useDecksStore.getState();
     const history = useHistoryStore.getState();
-    return decks._hasHydrated
+    const ready = decks._hasHydrated
       && history._hasHydrated
       && history._hasCanonicalLoaded
       && useCloudSyncStatusStore.getState().status.phase === 'disabled';
+    if (!ready) return false;
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    return useCloudSyncStatusStore.getState().status.phase === 'disabled';
   });
   await page.evaluate(async (nextPhase) => {
-    const { useCloudSyncStatusStore } = await import('/src/cloud/statusStore.ts');
+    const statusModulePath = '/src/cloud/statusStore.ts';
+    const runtimeModulePath = '/src/cloud/runtime.ts';
+    const [{ useCloudSyncStatusStore }, { acquireCloudSyncRuntime }] = await Promise.all([
+      import(statusModulePath),
+      import(runtimeModulePath),
+    ]);
+    const runtimeHolder = globalThis as typeof globalThis & {
+      __homeCloudStatusTestRuntimeRelease?: () => void;
+    };
+    runtimeHolder.__homeCloudStatusTestRuntimeRelease ??= acquireCloudSyncRuntime();
     useCloudSyncStatusStore.getState().setStatus({
       phase: nextPhase,
       email: null,
@@ -99,6 +114,49 @@ test('HOME navigation typography and icons scale down with the viewport', async 
   const compact = await readSize();
   expect(compact.fontSize).toBeLessThan(desktop.fontSize);
   expect(compact.iconWidth).toBeLessThan(desktop.iconWidth);
+});
+
+test('HOME compact typography continues scaling on iPhone SE landscape without Safari inflation', async ({ page }) => {
+  const readTypography = async () => page.evaluate(() => ({
+    navigation: Number.parseFloat(getComputedStyle(document.querySelector<HTMLElement>('.home-navigation button')!).fontSize),
+    deckHeading: Number.parseFloat(getComputedStyle(document.querySelector<HTMLElement>('.home-deck-heading h1')!).fontSize),
+    changeDeck: Number.parseFloat(getComputedStyle(document.querySelector<HTMLElement>('.home-change-deck')!).fontSize),
+    textSizeAdjust: getComputedStyle(document.documentElement).getPropertyValue('text-size-adjust')
+      || getComputedStyle(document.documentElement).getPropertyValue('-webkit-text-size-adjust'),
+  }));
+
+  await installPlayableDeckStore(page);
+  await gotoReadyLandscapeRoute(page, 'home', '.home-deck-heading h1', { width: 851, height: 393 });
+  await expect(page.locator('.home-deck-heading h1')).toBeVisible();
+  await expect(page.locator('.home-change-deck')).toBeVisible();
+  const identityCards = page.locator('.home-identity-art > img.home-card-art');
+  await expect(identityCards).toHaveCount(2);
+  await expect.poll(() => identityCards.evaluateAll((images: HTMLImageElement[]) => (
+    images.every((image) => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0)
+  ))).toBe(true);
+  const wide = await readTypography();
+  if (process.env.MOBILE_TYPOGRAPHY_EVIDENCE_DIR) {
+    await page.screenshot({
+      path: `${process.env.MOBILE_TYPOGRAPHY_EVIDENCE_DIR}/after-851x393.png`,
+      animations: 'disabled',
+    });
+  }
+
+  await page.setViewportSize({ width: 667, height: 375 });
+  const se = await readTypography();
+  if (process.env.MOBILE_TYPOGRAPHY_EVIDENCE_DIR) {
+    await page.screenshot({
+      path: `${process.env.MOBILE_TYPOGRAPHY_EVIDENCE_DIR}/after-667x375.png`,
+      animations: 'disabled',
+    });
+  }
+
+  expect(se.navigation).toBeLessThan(wide.navigation);
+  expect(se.deckHeading).toBeLessThan(wide.deckHeading);
+  expect(se.changeDeck).toBeLessThan(wide.changeDeck);
+  expect(se.navigation).toBeGreaterThanOrEqual(10);
+  expect(se.changeDeck).toBeGreaterThanOrEqual(10);
+  expect(se.textSizeAdjust).toBe('100%');
 });
 
 test('HOME keeps cloud sync status compact and clear on iPhone landscapes', async ({ page }) => {
@@ -212,6 +270,7 @@ test('HOME renders each cloud status through the actual store at both iPhone lan
 
 test('HOME identity cards stay contained after the game card stylesheet loads', async ({ page }) => {
   test.setTimeout(60_000);
+  await installPlayableDeckStore(page);
   for (const viewport of [
     { width: 1440, height: 900 },
     { width: 851, height: 393 },
@@ -293,6 +352,7 @@ test('HOME desktop preserves the 20/80 hierarchy and sole game-start entry', asy
 });
 
 test('HOME confirms a provisional deck and carries it into match setup', async ({ page }) => {
+  test.setTimeout(60_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/#home');
 
@@ -311,6 +371,7 @@ test('HOME confirms a provisional deck and carries it into match setup', async (
 
   await page.getByRole('button', { name: 'ゲーム開始', exact: true }).click();
   await expect(page).toHaveURL(/#setup$/);
+  await expectReadyMetaRoute(page, '.setup-main');
   await expect(page.locator('.setup-player-panel--self')).toHaveAttribute('data-deck-id', 'sample-d11');
 });
 
@@ -496,6 +557,20 @@ test('HOME compact landscape scrolls only the NEWS and recent-match lists', asyn
   await page.goto('/#home');
 
   const newsList = page.locator('.home-news-list');
+  const newsHits = await newsList.locator('a').evaluateAll((links) => links.map((link) => {
+    const box = link.getBoundingClientRect();
+    const style = getComputedStyle(link);
+    return {
+      width: box.width,
+      height: box.height,
+      minHeight: style.minHeight,
+      declaredHeight: style.height,
+    };
+  }));
+  expect(newsHits.length).toBeGreaterThan(0);
+  expect(newsHits.every((hit) => hit.minHeight === '44px' && hit.declaredHeight === '44px')).toBe(true);
+  // Chromium can report a 44px CSS hit as 43.999998px at this DPR.
+  expect(newsHits.every((hit) => hit.width >= 44 && hit.height >= 43.5)).toBe(true);
   const matchList = page.locator('.home-match-list');
   const before = await page.evaluate(() => {
     const newsNode = document.querySelector('.home-news-list')!;
@@ -567,6 +642,7 @@ test('HOME 720x393 keeps the 20/80 rail reachable inside the viewport', async ({
 });
 
 test('HOME iPhone landscapes keep the 54px shell, art, and fixed navigation contained', async ({ page }) => {
+  await installPlayableDeckStore(page);
   for (const viewport of [{ width: 667, height: 375 }, { width: 851, height: 393 }]) {
     await gotoReadyLandscapeRoute(page, 'home', '.home-screen', viewport);
 

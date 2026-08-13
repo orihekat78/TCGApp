@@ -1,8 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { registerAll } from '@/cards/index';
 import { engine } from '@/engine';
 import { event } from '@/engine/event/index';
+import { declaredNameCandidates } from '@/engine/effect/declared-name-domain';
 import type { PlayerState } from '@/engine/types/game-state';
+import { BUG_274_PARTNER } from '@/ui/fixtures/bug274PartnerFixture.js';
+import { _resetMulliganStore, resolveMulligan, useMulliganStore } from '@/ui/hooks/useMulligan';
 import { SAMPLE_DECK, SAMPLE_DECK_OPP } from '../../meta-app/src/data/sampleDeck';
 import { BUG_274_PARTNER_ID, BUG_274_PUBLIC_DECK } from '../../meta-app/src/data/bug274ValidationDeck';
 import type { DeckRecord } from '../../meta-app/src/data/types';
@@ -27,6 +30,7 @@ describe('customGameStart P1/P2 binding', () => {
   beforeEach(() => {
     engine.cards._resetRegistry();
     event._resetRegistry();
+    _resetMulliganStore();
     registerAll();
   });
 
@@ -72,13 +76,76 @@ describe('customGameStart P1/P2 binding', () => {
 
   it('starts the actual BUG-274 public deck after registering its synthetic partner', async () => {
     const state = await customGameStart(BUG_274_PUBLIC_DECK, SAMPLE_DECK_OPP, {
-      sessionId: 'bug-274-custom-start', spectator: true, firstPlayer: 'self',
+      sessionId: 'bug-274-custom-start', spectator: true, firstPlayer: 'self', bug274Fixture: BUG_274_PUBLIC_DECK,
     });
 
     expect(state.players.self.partner.cardId).toBe(BUG_274_PARTNER_ID);
-    expect(engine.cards.get(BUG_274_PARTNER_ID)?.abilities).toHaveLength(2);
+    expect(engine.cards.get(BUG_274_PARTNER_ID)).toBeUndefined();
     expect(mainZoneCards(state.players.self)).toEqual(expanded(BUG_274_PUBLIC_DECK));
     expect(state.turn.number).toBe(1);
     expect(state.players.self.hand).toHaveLength(6);
+  });
+
+  it('restores the registry before a forged start after canonical BUG-274 success', async () => {
+    await customGameStart(BUG_274_PUBLIC_DECK, SAMPLE_DECK_OPP, {
+      sessionId: 'bug-274-scoped-success', spectator: true, firstPlayer: 'self', bug274Fixture: BUG_274_PUBLIC_DECK,
+    });
+
+    expect(engine.cards.get(BUG_274_PARTNER_ID)).toBeUndefined();
+    expect(declaredNameCandidates('unrestricted')).not.toContain(BUG_274_PARTNER.names[0]);
+    await expect(customGameStart({ ...BUG_274_PUBLIC_DECK }, SAMPLE_DECK_OPP, {
+      sessionId: 'bug-274-forged-after-success', spectator: true, firstPlayer: 'self',
+    })).rejects.toThrow();
+  });
+
+  it('restores the registry after canonical BUG-274 cancellation without deleting a prior card', async () => {
+    const prior = { ...BUG_274_PARTNER, names: ['prior registry card'] };
+    engine.cards.register(prior);
+    let checks = 0;
+
+    await expect(customGameStart(BUG_274_PUBLIC_DECK, SAMPLE_DECK_OPP, {
+      sessionId: 'bug-274-scoped-cancel', spectator: true, firstPlayer: 'self', bug274Fixture: BUG_274_PUBLIC_DECK,
+      isSessionCurrent: () => ++checks < 2,
+    })).rejects.toThrow(/cancelled/);
+
+    expect(engine.cards.get(BUG_274_PARTNER_ID)).toBe(prior);
+    expect(declaredNameCandidates('unrestricted')).not.toContain(BUG_274_PARTNER.names[0]);
+  });
+
+  it('does not register the synthetic partner for a persisted BUG-274 identity collision', async () => {
+    await expect(customGameStart({ ...BUG_274_PUBLIC_DECK }, SAMPLE_DECK_OPP, {
+      sessionId: 'bug-274-forged-start', spectator: true, firstPlayer: 'self',
+      bug274Fixture: BUG_274_PUBLIC_DECK,
+    })).rejects.toThrow();
+    expect(engine.cards.get(BUG_274_PARTNER_ID)).toBeUndefined();
+  });
+
+  it('rejects a forged BUG-274 identity while the canonical fixture overlay is active', async () => {
+    const canonicalStart = customGameStart(BUG_274_PUBLIC_DECK, SAMPLE_DECK_OPP, {
+      sessionId: 'bug-274-overlap-canonical', firstPlayer: 'self',
+      bug274Fixture: BUG_274_PUBLIC_DECK,
+    });
+    await vi.waitFor(() => {
+      expect(useMulliganStore.getState().current?.player).toBe('self');
+    });
+
+    try {
+      await expect(customGameStart({ ...BUG_274_PUBLIC_DECK }, SAMPLE_DECK_OPP, {
+        sessionId: 'bug-274-overlap-forged', spectator: true, firstPlayer: 'self',
+      })).rejects.toThrow(/BUG-274 fixture identity/);
+    } finally {
+      resolveMulligan([]);
+      await canonicalStart;
+    }
+    expect(engine.cards.get(BUG_274_PARTNER_ID)).toBeUndefined();
+  });
+
+  it('rejects an illegal main deck through the custom start boundary', async () => {
+    await expect(customGameStart({
+      ...SAMPLE_DECK,
+      cards: [{ num: 'D08001', count: 40 }],
+    }, SAMPLE_DECK_OPP, {
+      sessionId: 'illegal-custom-start', spectator: true, firstPlayer: 'self',
+    })).rejects.toThrow(/MAIN_KIND/);
   });
 });

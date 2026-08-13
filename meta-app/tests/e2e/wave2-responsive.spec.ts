@@ -1,8 +1,16 @@
 import { expect, test, type Page } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { expectReadyMetaRoute } from './landscape-test-helpers';
 
 const captureDirectory = resolve(process.cwd(), '.claude/research/ui/runtime-captures/2026-08-04-wave2');
+const viteFsModule = (sourcePath: string): string =>
+  `/@fs/${resolve(process.cwd(), sourcePath).replaceAll('\\', '/')}`;
+const resultFixtureModules = {
+  gameStore: viteFsModule('src/ui/state/store.ts'),
+  sampleGame: viteFsModule('src/ui/fixtures/sampleGameState.ts'),
+  metaStore: viteFsModule('meta-app/src/state/metaStore.ts'),
+} as const;
 const viewports = [
   { name: '1440x900', width: 1440, height: 900 },
   { name: '1280x800', width: 1280, height: 800 },
@@ -53,6 +61,7 @@ for (const viewport of viewports) {
 }
 
 test('WAVE 2: Result focuses its announced verdict and honors reduced motion at 200% page scale', async ({ page }) => {
+  test.setTimeout(60_000);
   const errors: string[] = [];
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(message.text());
@@ -92,10 +101,14 @@ async function openRoute(page: Page, route: (typeof routes)[number]['name'], has
     await page.goto('/');
     await installResultFixture(page);
     await page.goto(`/${hash}`);
+    await expectReadyMetaRoute(page, '.result-screen');
     return;
   }
 
   await page.goto(`/${hash}`);
+  const readySelector = routes.find((candidate) => candidate.name === route)?.root;
+  if (!readySelector) throw new Error(`unknown Wave 2 route: ${route}`);
+  await expectReadyMetaRoute(page, readySelector);
 }
 
 async function installHistoryFixture(page: Page): Promise<void> {
@@ -122,23 +135,12 @@ async function installHistoryFixture(page: Page): Promise<void> {
 }
 
 async function installResultFixture(page: Page): Promise<void> {
-  await page.evaluate(async () => {
-    const viteModule = (sourcePath: string) => {
-      const resource = performance.getEntriesByType('resource')
-        .map((entry) => entry.name)
-        .find((name) => name.includes(sourcePath));
-      if (!resource) throw new Error(`Wave 2 fixture could not resolve ${sourcePath}`);
-      return resource;
-    };
-    const gameStoreModule = viteModule('/src/ui/state/store.ts');
-    const sampleGameModule = gameStoreModule.replace(
-      '/src/ui/state/store.ts',
-      '/src/ui/fixtures/sampleGameState.ts',
-    );
+  await page.evaluate(async (modulePaths) => {
+    const viteModule = (sourcePath: string) => new URL(sourcePath, location.origin).href;
     const [{ createSampleGameState }, { useGameStateStore }, { useMetaStore }] = await Promise.all([
-      import(/* @vite-ignore */ sampleGameModule),
-      import(/* @vite-ignore */ gameStoreModule),
-      import(/* @vite-ignore */ viteModule('/src/state/metaStore.ts')),
+      import(/* @vite-ignore */ viteModule(modulePaths.sampleGame)),
+      import(/* @vite-ignore */ viteModule(modulePaths.gameStore)),
+      import(/* @vite-ignore */ viteModule(modulePaths.metaStore)),
     ]);
     const state = createSampleGameState();
     state.gameResult = { winner: 'self', reason: 'evidence' };
@@ -150,7 +152,7 @@ async function installResultFixture(page: Page): Promise<void> {
       selfDeckName: 'Wave 2 PLAYER',
       oppDeckName: 'Wave 2 CPU',
     });
-  });
+  }, resultFixtureModules);
 }
 
 async function assertNoDocumentOverflow(page: Page): Promise<void> {

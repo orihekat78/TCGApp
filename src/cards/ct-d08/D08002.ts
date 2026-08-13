@@ -22,5 +22,6 @@ export const D08002: CardDef = {
   rarity: 'D',
   imageUrl: '1743743093429927.jpg',
   abilities: [],
+  standardPartnerActions: true,
   ruleRefs: ['rules/01-victory-conditions.md', 'rules/13-keywords.md'],
 };

@@ -6,6 +6,23 @@ const { compileCard, segment } = require('../../scripts/compiler/compile.cjs');
 const entry = (texts: Record<string, string>, id = 'T001') => ({ id, kind: 'character', texts });
 
 describe('compiler/compile (B0 skeleton)', () => {
+  it('パートナー共通能力は標準FILE 7とPR022のFILE 8だけを定型文として受理する', () => {
+    const partner = (threshold: number) => ({
+      id: threshold === 8 ? 'PR022' : 'B01001',
+      kind: 'partner',
+      texts: {
+        effect: `【解決編】【事件解決】【スリープ】：自分の証拠が事件レベルの数以上ある場合、ゲームに勝利する。\\n【アシスト】【スリープ】：FILEエリアに移動する。自分のFILEエリアにカードが${threshold}枚以上ある場合、事件を解決編にする。`,
+      },
+    });
+
+    expect(compileCard(partner(7))).toMatchObject({ status: 'compiled', abilities: [] });
+    expect(compileCard(partner(8))).toMatchObject({ status: 'compiled', abilities: [] });
+    expect(compileCard(partner(9))).toMatchObject({
+      status: 'refused',
+      refusals: [{ reason: 'unknown-phrase' }],
+    });
+  });
+
   it('production 0 件: effect テキストを持つカードは refuse する', () => {
     const r = compileCard(entry({ effect: '【登場時】カードを1枚引く。' }), []);
     expect(r.status).toBe('refused');

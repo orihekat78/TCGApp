@@ -21,4 +21,10 @@ describe('TutorialScreen canonical curriculum', () => {
     expect(TUTORIAL_STEPS.filter((step) => !hasCanonicalTutorialVisual(step.id)))
       .toEqual([]);
   });
+
+  it('teaches the standard FILE 7 rule without hiding printed partner overrides', () => {
+    const assist = TUTORIAL_STEPS.find(({ id }) => id === 'L5-1');
+    expect(assist?.body).toContain('アシスト後の FILE が通常 7 枚以上');
+    expect(assist?.body).toContain('そのアシスト条件を使う');
+  });
 });

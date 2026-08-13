@@ -1,5 +1,5 @@
 import type { DeckRecord, MatchRecord } from '../data/types';
-import { projectDeckForCloud, projectMatchForCloud, stableCloudResourceId } from './projection';
+import { projectDeckForCloud, projectMatchForCloud } from './projection';
 import type {
   CloudBootstrap,
   CloudDeck,
@@ -59,6 +59,19 @@ function canonicalCards(cards: Array<{ cardNum: string; count: number }>): strin
   return JSON.stringify([...cards].sort((left, right) => left.cardNum.localeCompare(right.cardNum)));
 }
 
+function duplicateDeckIds(decks: readonly DeckRecord[]): Set<string> {
+  const counts = new Map<string, number>();
+  for (const deck of decks) {
+    if (typeof deck?.id !== 'string') continue;
+    counts.set(deck.id, (counts.get(deck.id) ?? 0) + 1);
+  }
+  return new Set(
+    [...counts.entries()]
+      .filter(([, count]) => count > 1)
+      .map(([deckId]) => deckId),
+  );
+}
+
 export function cloudDeckMatchesLocal(local: DeckRecord, remote: CloudDeck): boolean {
   return local.name === remote.name
     && local.partner === remote.partnerCardNum
@@ -104,9 +117,22 @@ export async function planInitialCloudMigration(
   const tombstones = new Map(options.bootstrap.deletedDecks.map((deck) => [deck.deckId, deck]));
   const consumedRemoteIds = new Set<string>();
   const cloudIdByLocalId = new Map<string, string>();
+  const unplayableDeckIds = new Set<string>();
+  const duplicateLocalDeckIds = duplicateDeckIds(options.decks);
 
   for (const local of options.decks) {
-    const cloudId = await stableCloudResourceId('deck', local.id);
+    if (duplicateLocalDeckIds.has(local.id)) {
+      blockedDeckIds.add(local.id);
+      unplayableDeckIds.add(local.id);
+      continue;
+    }
+    const projected = await projectDeckForCloud(local, null);
+    if (!projected.ok) {
+      blockedDeckIds.add(local.id);
+      unplayableDeckIds.add(local.id);
+      continue;
+    }
+    const cloudId = projected.payload.deckId;
     cloudIdByLocalId.set(local.id, cloudId);
     const tombstone = tombstones.get(cloudId);
     if (tombstone) {
@@ -136,8 +162,6 @@ export async function planInitialCloudMigration(
       continue;
     }
 
-    const projected = await projectDeckForCloud(local, null);
-    if (!projected.ok) continue;
     operations.push({
       ...operationBase(options.now, createIdentity),
       kind: 'deck-put',
@@ -187,6 +211,10 @@ export async function planInitialCloudMigration(
   for (const match of options.history) {
     const localMatchId = match.sessionId ?? match.id;
     const localDeckId = match.selfDeckSnapshot?.deckId;
+    if (localDeckId && unplayableDeckIds.has(localDeckId)) {
+      skippedMatches.push({ localMatchId, reason: 'deck-not-playable' });
+      continue;
+    }
     if (localDeckId && blockedDeckIds.has(localDeckId)) {
       skippedMatches.push({ localMatchId, reason: 'deck-conflict' });
       continue;

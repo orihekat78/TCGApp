@@ -77,7 +77,7 @@ const owners: OwnerCase[] = [
       const onCancel = vi.fn();
       return {
         node: <DeclareCardNameModal open prompt="Declare" candidateNames={['Conan']} onConfirm={onConfirm} onCancel={onCancel} />,
-        escapeCalls: noAction(onCancel, onConfirm),
+        escapeCalls: [[onCancel, 1], [onConfirm, 0]],
       };
     },
   },

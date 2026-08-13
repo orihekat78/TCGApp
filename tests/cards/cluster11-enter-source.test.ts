@@ -271,6 +271,7 @@ describe('cluster11 §5 — cluster11 カード e2e (実 atom + pick drain)', ()
     expect(s.players.opp.remove, 'VICT は相手リムーブへ').toContain('VICT');
   });
 
+  // qa: card:B07019:2ac36a628488dd7fcb62f9d2873454623005fcfe75b98f02ac098e2d298e4477
   it('B07019: 緑event だが スリープ状態で登場 → charStateIs gate で self-sleep 不可 = 不発 (公式Q&A)', () => {
     let s = setCaseStatus(createEmptyGameState(), '解決編');
     s.players.self.remove = ['B07019'];

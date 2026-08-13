@@ -257,11 +257,19 @@ function extractCatalogCardNums(source) {
   return cardNums.sort(compareOrdinal);
 }
 
-function loadPriorAuthorityUnlocked(projectRoot) {
-  const root = path.resolve(projectRoot);
-  const cardsDataRoot = path.join(root, '.claude', 'specs', 'cards-data');
-  const status = JSON.parse(fs.readFileSync(path.join(cardsDataRoot, 'status.json'), 'utf8'));
-  const qaSnapshot = JSON.parse(fs.readFileSync(path.join(cardsDataRoot, 'qa-hash-snapshot.json'), 'utf8'));
+function loadPriorAuthorityFromFiles({ readFile, fileExists }) {
+  if (typeof readFile !== 'function' || typeof fileExists !== 'function') {
+    throw new Error('tracked authority file reader is required');
+  }
+  function readJson(relative, label) {
+    try {
+      return JSON.parse(readFile(relative));
+    } catch {
+      throw new Error(`tracked authority ${label} is invalid JSON`);
+    }
+  }
+  const status = readJson('.claude/specs/cards-data/status.json', 'status');
+  const qaSnapshot = readJson('.claude/specs/cards-data/qa-hash-snapshot.json', 'Q&A snapshot');
   if (status.source?.url !== OFFICIAL_CARDS_URL || !isValidOfficialTimestamp(status.source?.fetchedAt)) {
     throw new Error('tracked authority status source is invalid');
   }
@@ -276,9 +284,9 @@ function loadPriorAuthorityUnlocked(projectRoot) {
     throw new Error('tracked authority Q&A source does not match status');
   }
   if (qaSnapshot.conflicts?.length) throw new Error('tracked authority contains a Q&A conflict');
-  const fieldIndexPath = path.join(cardsDataRoot, 'authority-field-index.json');
-  if (fs.existsSync(fieldIndexPath)) {
-    const fieldIndex = JSON.parse(fs.readFileSync(fieldIndexPath, 'utf8'));
+  const fieldIndexPath = '.claude/specs/cards-data/authority-field-index.json';
+  if (fileExists(fieldIndexPath)) {
+    const fieldIndex = readJson(fieldIndexPath, 'field index');
     validateFieldIndex(fieldIndex);
     if (fieldIndex.source.url !== status.source.url || fieldIndex.source.fetchedAt !== status.source.fetchedAt) {
       throw new Error('tracked authority field-index source does not match status');
@@ -289,7 +297,12 @@ function loadPriorAuthorityUnlocked(projectRoot) {
     }
     return { status, fieldIndex, qaSnapshot };
   }
-  const catalog = fs.readFileSync(path.join(root, 'meta-app', 'src', 'data', 'cardCatalog.generated.ts'), 'utf8');
+  let catalog;
+  try {
+    catalog = readFile('meta-app/src/data/cardCatalog.generated.ts');
+  } catch {
+    throw new Error('tracked authority catalog is unavailable');
+  }
   const cardNums = extractCatalogCardNums(catalog);
   if (cardNums.length !== status.printings.raw || cardNumHash(cardNums) !== status.hashes.rawCardNums) {
     throw new Error('tracked catalog card-number hash does not match status');
@@ -304,6 +317,14 @@ function loadPriorAuthorityUnlocked(projectRoot) {
     },
     qaSnapshot,
   };
+}
+
+function loadPriorAuthorityUnlocked(projectRoot) {
+  const root = path.resolve(projectRoot);
+  return loadPriorAuthorityFromFiles({
+    readFile: (relative) => fs.readFileSync(path.join(root, relative), 'utf8'),
+    fileExists: (relative) => fs.existsSync(path.join(root, relative)),
+  });
 }
 
 function loadPriorAuthority(projectRoot, { lockToken } = {}) {
@@ -1079,6 +1100,7 @@ module.exports = {
   buildAuthorityPacket,
   fetchOfficialCardsOnce,
   loadPriorAuthority,
+  loadPriorAuthorityFromFiles,
   rederiveAuthorityPacket,
   stableJson,
   validateAuthorityPacket,

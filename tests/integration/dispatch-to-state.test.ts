@@ -17,43 +17,45 @@ import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { createSampleGameState } from '@/ui/fixtures/sampleGameState';
 import * as engine from '@/engine/index.js';
+import { registerAll } from '@/cards';
 
 describe('integration: dispatch → state (end-to-end 配線テスト)', () => {
   beforeEach(() => {
     engine.flow.action._resetActionContexts();
+    registerAll();
     useGameStateStore.setState({ gameState: createSampleGameState(), activeActionId: null });
   });
 
-  it('BUG-009: assist + FILE 7+ で 事件編 → 解決編 自動遷移する (mutate.partner.assist 内 check)', () => {
-    // mutate.partner.assist を直接呼び、FILE 7+ なら status='解決編' に遷移することを保証
+  it.each([
+    'B05024', 'B08094', 'B09113', 'D10026', 'D11021', 'PR286', 'B10083', 'B07077',
+    'D08026', 'D09027', 'B05118', 'B07062', 'B06013', 'B06106', 'B08044', 'B10061',
+    'B06043', 'B10082', 'B10101', 'B05063', 'B06036', 'B08030', 'B09112', 'B06107',
+    'B06108', 'B06109', 'B10019', 'B06105', 'B10102', 'B05120', 'B07091', 'B09090',
+    'B05119', 'B08076', 'B07061', 'B05083', 'B06065', 'B10034', 'B10100',
+  ])('Q&A assist threshold: %s forces 事件編 → 解決編 through dispatch', (caseCardId) => {
     const state = useGameStateStore.getState().gameState!;
-    // FILE を 6 枚に水増し (assist 後の +1 で 7 枚に)
-    while (state.players.self.file.length < 6) {
-      state.players.self.file.push({ type: 'card-back', cardId: 'placeholder' });
-    }
-    // 事件編 → 解決編 移行前提
-    state.players.self.case.status = '事件編';
-    // partner active 必要
-    state.players.self.partner.state = 'active';
+    const caseDef = engine.read.def.card(caseCardId);
+    expect(caseDef?.kind).toBe('case');
 
-    engine.mutate.partner.assist(state, 'self');
-
-    expect(state.players.self.case.status).toBe('解決編');
-  });
-
-  it('BUG-009: FILE 6+ (アシスト前) で 事件編 → 解決編 にならない (条件達成のみで遷移)', () => {
-    const state = useGameStateStore.getState().gameState!;
-    while (state.players.self.file.length < 5) {
-      state.players.self.file.push({ type: 'card-back', cardId: 'placeholder' });
-    }
+    state.players.self.case.cardId = caseCardId;
     state.players.self.case.status = '事件編';
     state.players.self.partner.state = 'active';
+    state.players.self.partner.location = 'partner-area';
+    const threshold = engine.read.game.partnerAssistFileThreshold(state, 'self');
+    while (state.players.self.file.length < threshold - 1) {
+      state.players.self.file.push({ type: 'card-back', cardId: 'placeholder' });
+    }
 
-    engine.mutate.partner.assist(state, 'self');
+    useGameStateStore.setState({ gameState: state });
+    expect(dispatchEngineAction({ type: 'assist', player: 'self' })).toEqual({ ok: true });
 
-    // アシスト後 FILE は 5+1 = 6 枚、7 未満なので 事件編のまま
-    expect(state.players.self.file.length).toBe(6);
-    expect(state.players.self.case.status).toBe('事件編');
+    const stateAfter = useGameStateStore.getState().gameState!;
+    expect(stateAfter.players.self.file.length).toBe(threshold);
+    expect(stateAfter.players.self.case.status).toBe('解決編');
+    expect(stateAfter.players.self.partner.state).toBe('sleep');
+    expect(stateAfter.players.self.partner.location).toBe('file-area');
+    expect(stateAfter.turnState.self.assistedThisTurn).toBe(true);
+    expect(useGameStateStore.getState().pendingEffectOptional).toBeNull();
   });
 
   // BUG-006: actionDeclareCase + per-step dispatch chain → 相手証拠 -1 / 自証拠 +1

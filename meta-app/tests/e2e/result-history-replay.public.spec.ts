@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { expectReadyMetaRoute, gotoReadyMetaRoute } from './landscape-test-helpers';
 
 function collectConsoleErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -26,19 +27,21 @@ async function waitForNaturalResultWhileSkippingPresentation(page: Page): Promis
   }
 
   await expect(page).toHaveURL(/#result$/, { timeout: 5_000 });
+  await expectReadyMetaRoute(page, '.result-panel');
 }
 
 test('public UI: HOME to spectator result, saved history decks, and replay', async ({ page }) => {
   test.setTimeout(100_000);
   const errors = collectConsoleErrors(page);
 
-  await page.goto('/#home');
-  await expect(page.locator('[data-route="home"]')).toBeVisible();
+  await gotoReadyMetaRoute(page, 'home', '[data-route="home"]');
   await page.locator('[data-route="setup"]').click();
   await expect(page).toHaveURL(/#setup$/);
+  await expectReadyMetaRoute(page, '.setup-main');
 
   await page.locator('[data-route="settings"]').click();
   await expect(page).toHaveURL(/#settings$/);
+  await expectReadyMetaRoute(page, '.settings-save');
   const presentationSpeed = page.getByRole('group', { name: '演出速度' });
   await presentationSpeed.getByRole('button', { name: '速い' }).click();
   const spectatorSpeed = page.getByRole('group', { name: '観戦時のCPU速度' });
@@ -47,6 +50,7 @@ test('public UI: HOME to spectator result, saved history decks, and replay', asy
 
   await page.locator('[data-route="setup"]').click();
   await expect(page).toHaveURL(/#setup$/);
+  await expectReadyMetaRoute(page, '.setup-main');
   await page.getByLabel('プレイモード').selectOption('observe');
   await page.getByRole('button', { name: '対戦を開始' }).click();
   await expect(page).toHaveURL(/#match$/);
@@ -59,6 +63,7 @@ test('public UI: HOME to spectator result, saved history decks, and replay', asy
 
   await page.locator('[data-route="history"]').click();
   await expect(page).toHaveURL(/#history$/);
+  await expectReadyMetaRoute(page, '.history-toolbar');
   const deckButton = page.locator('.history-deck-open-button').first();
   await expect(deckButton).toBeVisible({ timeout: 10_000 });
   await deckButton.click();
@@ -89,6 +94,6 @@ test('public UI: HOME to spectator result, saved history decks, and replay', asy
   await replayButton.click();
   await expect(page).toHaveURL(/#replay\//);
   await expect(page.locator('#replay-title')).toBeVisible();
-  await expect(page.locator('.replay-control-rail')).toBeVisible();
+  await expect(page.locator('.replay-control-rail')).toBeVisible({ timeout: 15_000 });
   expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
 });

@@ -898,31 +898,40 @@
     {
       "qaId": "card:B06107:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "test-missing",
-      "result": "test-gap",
-      "method": "manual-semantic",
+      "status": "matched",
+      "result": "aligned",
+      "method": "group-equivalent",
       "evidence": [
-        "src:src/cards/ct-p06/B06107.ts:1"
+        "src:src/cards/ct-p06/B06107.ts:1",
+        "tests:tests/integration/dispatch-to-state.test.ts:38",
+        "tests:tests/integration/dispatch-to-state.test.ts:50",
+        "tests:tests/integration/dispatch-to-state.test.ts:54"
       ]
     },
     {
       "qaId": "card:B06108:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "test-missing",
-      "result": "test-gap",
-      "method": "manual-semantic",
+      "status": "matched",
+      "result": "aligned",
+      "method": "group-equivalent",
       "evidence": [
-        "src:src/cards/ct-p06/B06108.ts:1"
+        "src:src/cards/ct-p06/B06108.ts:1",
+        "tests:tests/integration/dispatch-to-state.test.ts:38",
+        "tests:tests/integration/dispatch-to-state.test.ts:50",
+        "tests:tests/integration/dispatch-to-state.test.ts:54"
       ]
     },
     {
       "qaId": "card:B06109:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "test-missing",
-      "result": "test-gap",
-      "method": "manual-semantic",
+      "status": "matched",
+      "result": "aligned",
+      "method": "group-equivalent",
       "evidence": [
-        "src:src/cards/ct-p06/B06109.ts:1"
+        "src:src/cards/ct-p06/B06109.ts:1",
+        "tests:tests/integration/dispatch-to-state.test.ts:38",
+        "tests:tests/integration/dispatch-to-state.test.ts:50",
+        "tests:tests/integration/dispatch-to-state.test.ts:54"
       ]
     },
     {
@@ -1386,9 +1395,9 @@
       "evidence": [
         "src:src/cards/ct-p09/B09090.ts:26",
         "src:src/cards/ct-p09/B09090.ts:49",
-        "tests:tests/cards/engine-mega-w6.test.ts:596",
         "tests:tests/cards/engine-mega-w6.test.ts:598",
-        "tests:tests/cards/engine-mega-w6.test.ts:599",
+        "tests:tests/cards/engine-mega-w6.test.ts:600",
+        "tests:tests/cards/engine-mega-w6.test.ts:601",
         "tests:tests/cards/step12-batch1.test.ts:289"
       ]
     },
@@ -1509,12 +1518,15 @@
     {
       "qaId": "card:B10019:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "test-missing",
-      "result": "test-gap",
-      "method": "manual-semantic",
+      "status": "matched",
+      "result": "aligned",
+      "method": "group-equivalent",
       "evidence": [
         "rules:.claude/rules/21-declared-ability-cost.md:15",
-        "src:src/cards/ct-p10/B10019.ts:16"
+        "src:src/cards/ct-p10/B10019.ts:16",
+        "tests:tests/integration/dispatch-to-state.test.ts:38",
+        "tests:tests/integration/dispatch-to-state.test.ts:50",
+        "tests:tests/integration/dispatch-to-state.test.ts:54"
       ]
     },
     {
@@ -1743,11 +1755,13 @@
     {
       "qaId": "card:D03014:e2f2e95abd482ed3b39e41b21dab18bfdb59f38cdfe18873117af2ef2dc02ced",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d03/D03014.ts:1"
+        "src:src/cards/ct-d03/D03014.ts:1",
+        "tests:tests/cards/_shared/shortDeckRevealCommonFlow.e2e.test.ts:162",
+        "tests:tests/cards/_shared/shortDeckRevealCommonFlow.e2e.test.ts:175"
       ]
     },
     {
@@ -1925,8 +1939,8 @@
       "evidence": [
         "src:src/cards/pr-01/PR105.ts:50",
         "src:src/cards/pr-01/PR105.ts:55",
-        "tests:tests/cards/step12-batch2.test.ts:334",
-        "tests:tests/cards/step12-batch2.test.ts:335"
+        "tests:tests/cards/step12-batch2.test.ts:335",
+        "tests:tests/cards/step12-batch2.test.ts:336"
       ]
     },
     {

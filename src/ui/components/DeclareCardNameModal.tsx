@@ -13,9 +13,11 @@
 //     単体配線のみ (MisreadPickerModal と同じ先行 scaffold 運用)。配線時に playwright 実機必須
 //     (新 UI 部品「型」、CLAUDE.md セルフレビュー要件)。
 
-import type { JSX } from 'react';
+import type { JSX, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useState } from 'react';
+import { resolveDeclaredName } from '@/engine/effect/declared-name-domain.js';
 import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
+import type { DeclaredNameDomain } from '@/engine/types';
 import './DeclareCardNameModal.css';
 
 export type DeclareCardNameModalProps = {
@@ -24,6 +26,7 @@ export type DeclareCardNameModalProps = {
   prompt: string;
   /** オートコンプリート候補 (登録済み CardDef 全名、呼出元が engine.cards.all() から供給) */
   candidateNames: readonly string[];
+  domain?: DeclaredNameDomain;
   onConfirm: (name: string) => void;
   /** 「してもよい」系のみ供給 (未指定なら宣言必須 = 確定のみ) */
   onSkip?: () => void;
@@ -32,15 +35,73 @@ export type DeclareCardNameModalProps = {
 };
 
 export function DeclareCardNameModal(props: DeclareCardNameModalProps): JSX.Element | null {
-  const { open, prompt, candidateNames, onConfirm, onSkip, onCancel } = props;
+  const { open, prompt, candidateNames, domain = 'unrestricted', onConfirm, onSkip, onCancel } = props;
   const [name, setName] = useState('');
-  const dialogRef = useModalFocusTrap({ active: open });
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const dialogRef = useModalFocusTrap({
+    active: open,
+    onEscape: onCancel,
+  });
   if (!open) return null;
 
   const trimmed = name.trim();
-  const suggestions = trimmed === ''
-    ? []
-    : candidateNames.filter((n) => n.includes(trimmed)).slice(0, 8);
+  const engineResolvedName = resolveDeclaredName(domain, trimmed);
+  const resolvedName = domain === 'unrestricted'
+    ? trimmed
+    : engineResolvedName !== null && candidateNames.includes(engineResolvedName)
+      ? engineResolvedName
+      : null;
+  const showsCanonicalResolution = domain !== 'unrestricted'
+    && resolvedName !== null
+    && resolvedName !== trimmed;
+  const matchingSuggestions = trimmed === ''
+    ? candidateNames
+    : candidateNames.filter((candidate) => candidate.includes(trimmed));
+  const suggestions = matchingSuggestions.length === 0 && showsCanonicalResolution
+    ? [resolvedName]
+    : matchingSuggestions;
+  const activeName = activeIndex === -1 ? undefined : suggestions[activeIndex];
+  const canSubmit = trimmed !== '' && (
+    domain === 'unrestricted' || resolvedName !== null
+  );
+  const domainGuidanceId = 'declare-card-name-domain-guidance';
+  const resolutionId = 'declare-card-name-resolution';
+  const promptId = 'declare-card-name-prompt';
+  const listboxId = 'declare-card-name-options';
+  const invalid = domain !== 'unrestricted' && trimmed !== '' && resolvedName === null;
+  const describedBy = [
+    promptId,
+    ...(domain === 'unrestricted' ? [] : [domainGuidanceId]),
+    ...(showsCanonicalResolution ? [resolutionId] : []),
+  ].join(' ');
+
+  const selectName = (selectedName: string): void => {
+    setName(selectedName);
+    setActiveIndex(-1);
+  };
+
+  const handleKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>): void => {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      if (suggestions.length === 0) return;
+      event.preventDefault();
+      setActiveIndex((current) => {
+        if (event.key === 'ArrowDown') return current >= suggestions.length - 1 ? 0 : current + 1;
+        return current <= 0 ? suggestions.length - 1 : current - 1;
+      });
+      return;
+    }
+    if (event.key !== 'Enter') return;
+    if (activeName !== undefined) {
+      event.preventDefault();
+      selectName(activeName);
+      onConfirm(activeName);
+      return;
+    }
+    if (canSubmit) {
+      event.preventDefault();
+      onConfirm(domain === 'unrestricted' ? trimmed : resolvedName!);
+    }
+  };
 
   return (
     <div
@@ -54,29 +115,82 @@ export function DeclareCardNameModal(props: DeclareCardNameModalProps): JSX.Elem
     >
       <div className="declare-card-name-modal">
         <h3 id="declare-card-name-title">カード名を1つ指定してください</h3>
-        <p className="declare-card-name-prompt">{prompt}</p>
+        <p id={promptId} className="declare-card-name-prompt" data-testid="declare-card-name-prompt">{prompt}</p>
+        {domain !== 'unrestricted' && (
+          <p
+            id={domainGuidanceId}
+            className="declare-card-name-domain-guidance"
+            data-testid="declare-card-name-domain-guidance"
+            role="status"
+            aria-live="polite"
+          >
+            登録済みのキャラクターカード名から選択してください。{candidateNames.length}件を検索・閲覧できます。
+          </p>
+        )}
         <input
           type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            setName(e.target.value);
+            setActiveIndex(-1);
+          }}
+          onKeyDown={handleKeyDown}
           placeholder="カード名を入力"
           data-testid="declare-card-name-input"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-controls={listboxId}
+          aria-expanded={suggestions.length > 0}
+          aria-activedescendant={activeName === undefined ? undefined : `declare-card-name-option-${activeIndex}`}
+          aria-describedby={describedBy}
+          aria-invalid={invalid || undefined}
           autoFocus
         />
-        {suggestions.length > 0 && (
-          <ul className="declare-card-name-suggestions" data-testid="declare-card-name-suggestions">
-            {suggestions.map((n) => (
-              <li key={n}>
-                <button type="button" onClick={() => setName(n)}>{n}</button>
-              </li>
-            ))}
-          </ul>
+        {showsCanonicalResolution && (
+          <p
+            id={resolutionId}
+            className="declare-card-name-resolution"
+            data-testid="declare-card-name-resolution"
+            role="status"
+            aria-live="polite"
+          >
+            「{resolvedName}」として確定します。
+          </p>
         )}
+        {invalid && (
+          <p className="declare-card-name-invalid" role="alert">
+            登録済みのキャラクターカード名を候補から選択してください。
+          </p>
+        )}
+        <p className="declare-card-name-count" data-testid="declare-card-name-count">
+          {suggestions.length}件の候補
+        </p>
+        <ul
+          id={listboxId}
+          className="declare-card-name-suggestions"
+          data-testid="declare-card-name-suggestions"
+          role="listbox"
+          aria-label="カード名候補"
+        >
+          {suggestions.map((n, index) => (
+            <li
+              key={n}
+              id={`declare-card-name-option-${index}`}
+              role="option"
+              aria-selected={activeIndex === index}
+              className={activeIndex === index ? 'is-active' : undefined}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => selectName(n)}
+            >
+              {n}
+            </li>
+          ))}
+        </ul>
         <div className="declare-card-name-actions">
           <button
             type="button"
-            disabled={trimmed === ''}
-            onClick={() => onConfirm(trimmed)}
+            disabled={!canSubmit}
+            onClick={() => onConfirm(domain === 'unrestricted' ? trimmed : resolvedName!)}
             data-testid="declare-card-name-confirm"
           >
             指定する

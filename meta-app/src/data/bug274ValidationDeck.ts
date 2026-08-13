@@ -16,6 +16,14 @@ export const BUG_274_PUBLIC_DECK: DeckRecord = {
   modified: 0,
 };
 
+/**
+ * The validation deck is route-owned data, not an identity a persisted deck can
+ * claim. JSON hydration/import always creates a different object.
+ */
+export function isBug274ValidationDeck(deck: DeckRecord | undefined): boolean {
+  return deck === BUG_274_PUBLIC_DECK;
+}
+
 export const BUG_274_PARTNER_CARD: CardDef = {
   num: BUG_274_PARTNER_ID,
   id: BUG_274_PARTNER_ID,

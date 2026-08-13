@@ -396,6 +396,7 @@ describe('B05115 exemplar (human optional 経路)', () => {
       runAllUntilEmpty(d);
     });
     // 解決前にリムーブから離す (リフレッシュ相当)
+    // qa: card:B05115:5171672c0eaee3a84dded05fce799e16ccd57911a1397e87474850f57dac45d2
     const gone = produce(mid, (d) => { d.players.self.remove = d.players.self.remove.filter(id => id !== 'B05115'); });
     useGameStateStore.getState().setGameState(gone);
     surfacePendingSideChannels();

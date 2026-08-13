@@ -18,6 +18,7 @@ import { useGameStateStore } from '@/ui/state/store';
 import { useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
 import { useChoicePickerStore } from '@/ui/hooks/useChoicePicker';
 import { useConfirmationStore } from '@/ui/hooks/useConfirmation';
+import { useDeclareNamePickerStore } from '@/ui/hooks/useDeclareNamePicker';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { mutate } from '@/engine/mutate/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
@@ -107,12 +108,55 @@ beforeEach(() => {
   useTargetPickerStore.getState()._reset();
   useChoicePickerStore.getState()._reset();
   useConfirmationStore.getState()._reset();
+  useDeclareNamePickerStore.getState()._reset();
   _resetUidCounter();
   resetDefRegistry();
   registerCardDef(makeCard('PS', { kind: 'partner' }));
 });
 
 describe('runDeclaredAbilityFlow', () => {
+  it('offers only registered character names for a constrained declaration', async () => {
+    registerCardDef(makeCard('Allowed', { names: ['毛利小五郎'] }));
+    registerCardDef(makeCard('EventName', { kind: 'event', names: ['黒の組織の事件'] }));
+    registerCardDef(makeCard('Source', {
+      abilities: [{
+        id: 'a1',
+        type: 'declared',
+        scope: 'on-scene',
+        effect: {
+          kind: 'atom',
+          verb: 'declareName',
+          args: {
+            bind: 'named',
+            optional: true,
+            domain: 'registered-character-card-name',
+          },
+        },
+        description: 'キャラ名を指定',
+        ruleRefs: [],
+      }],
+    }));
+    const state = produce(setupBase(), (draft) => {
+      mutate.scene.enter(draft, 'self', 'Source', { active: true });
+    });
+    useGameStateStore.setState({ gameState: state });
+    const uid = state.players.self.scene.find((card) => card.cardId === 'Source')!.uid;
+
+    const promise = runDeclaredAbilityFlow({ player: 'self' });
+    await pickAndConfirmPicker(uid);
+    await acceptConfirmation();
+
+    const request = useDeclareNamePickerStore.getState().current;
+    expect(request?.domain).toBe('registered-character-card-name');
+    expect(request?.candidateNames).toContain('毛利小五郎');
+    expect(request?.candidateNames).not.toContain('黒の組織の事件');
+    const resolver = useDeclareNamePickerStore.getState()._resolver!;
+    useDeclareNamePickerStore.getState()._setCurrent(null);
+    useDeclareNamePickerStore.getState()._setResolver(null);
+    resolver({ kind: 'declare', name: '毛利小五郎' });
+    expect((await promise).ok).toBe(true);
+  });
+
   it('offers a payable ordinary cost and an alternative-cost provider, then uses the selected provider', async () => {
     registerCardDef(makeCard('AltProvider', {
       traits: ['provider'],

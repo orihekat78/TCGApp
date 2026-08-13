@@ -2,6 +2,7 @@
 // routes and header controls; it never initializes or injects engine state.
 
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expectReadyMetaRoute, gotoReadyMetaRoute } from './landscape-test-helpers';
 
 const VIEWPORTS = [
   { width: 1440, height: 900, name: 'desktop-wide' },
@@ -24,6 +25,11 @@ const ROUTES = [
   { hash: 'tutorial', core: '.tutorial-toolbar' },
   { hash: 'settings', core: '.settings-save' },
 ] as const;
+
+const ROUTE_CORE = Object.fromEntries(ROUTES.map((route) => [route.hash, route.core])) as Record<
+  (typeof ROUTES)[number]['hash'],
+  string
+>;
 
 function captureConsoleErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -60,8 +66,7 @@ for (const viewport of VIEWPORTS) {
   for (const route of ROUTES) {
     test(`visual gate: #${route.hash} at ${viewport.name}`, async ({ page }) => {
       const errors = captureConsoleErrors(page);
-      await page.setViewportSize(viewport);
-      await page.goto(`/#${route.hash}`);
+      await gotoReadyMetaRoute(page, route.hash, route.core, viewport);
 
       await expect(page.locator('#meta-root')).toBeVisible();
       await expectVisibleInViewport(page.locator(route.core).first(), viewport);
@@ -76,7 +81,7 @@ test('visual gate: header navigation uses real public route interactions and key
 
   for (const viewport of [VIEWPORTS[1], VIEWPORTS[3]]) {
     await page.setViewportSize(viewport);
-    await page.goto('/#home');
+    await gotoReadyMetaRoute(page, 'home', ROUTE_CORE.home);
 
     const brand = page.locator('.home-brand');
     const home = page.locator('[data-route="home"]');
@@ -89,12 +94,13 @@ test('visual gate: header navigation uses real public route interactions and key
     await expect(deck).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/#deck$/);
+    await expectReadyMetaRoute(page, ROUTE_CORE.deck);
     await expectVisibleInViewport(page.locator('[data-testid="deck-workspace"]'), viewport);
 
     for (const route of ['cards', 'setup', 'tutorial', 'history', 'settings', 'home'] as const) {
       await page.locator(`[data-route="${route}"]`).click();
       await expect(page).toHaveURL(new RegExp(`#${route}$`));
-      await expect(page.locator('#meta-root')).toBeVisible();
+      await expectReadyMetaRoute(page, ROUTE_CORE[route]);
       await expectNoHorizontalOverflow(page);
     }
   }
@@ -106,7 +112,7 @@ test('visual gate: public filter and lesson dialogs trap focus and restore their
   const errors = captureConsoleErrors(page);
   await page.setViewportSize(VIEWPORTS[3]);
 
-  await page.goto('/#cards');
+  await gotoReadyMetaRoute(page, 'cards', ROUTE_CORE.cards);
   const filterTrigger = page.locator('.cards-filter-trigger');
   await filterTrigger.focus();
   await filterTrigger.click();
@@ -121,7 +127,7 @@ test('visual gate: public filter and lesson dialogs trap focus and restore their
   await expect(filterDialog).toBeHidden();
   await expect(filterTrigger).toBeFocused();
 
-  await page.goto('/#tutorial');
+  await gotoReadyMetaRoute(page, 'tutorial', ROUTE_CORE.tutorial);
   const lessonTrigger = page.locator('.tutorial-step-list button').first();
   await lessonTrigger.focus();
   await lessonTrigger.click();

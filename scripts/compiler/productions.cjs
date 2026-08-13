@@ -30,6 +30,7 @@ const RULES_DIR = path.join(__dirname, 'rules');
 const PARTNER_BOILERPLATE = new Set([
   '【解決編】【事件解決】【スリープ】：自分の証拠が事件レベルの数以上ある場合、ゲームに勝利する。',
   '【アシスト】【スリープ】：FILEエリアに移動する。自分のFILEエリアにカードが7枚以上ある場合、事件を解決編にする。',
+  '【アシスト】【スリープ】：FILEエリアに移動する。自分のFILEエリアにカードが8枚以上ある場合、事件を解決編にする。',
 ]);
 
 const partnerBoilerplateRule = {

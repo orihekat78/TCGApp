@@ -36,6 +36,38 @@ export function registerDeckDeleteJournal(journal: DeckDeleteJournal): () => voi
   };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function normalizePersistedDeck(value: unknown): DeckRecord | null {
+  if (!isRecord(value) || !Array.isArray(value.cards)) return null;
+  if (
+    typeof value.id !== "string"
+    || typeof value.name !== "string"
+    || typeof value.partner !== "string"
+    || typeof value.case !== "string"
+    || !Number.isSafeInteger(value.modified)
+  ) return null;
+  const cards: DeckRecord["cards"] = [];
+  for (const entry of value.cards) {
+    if (
+      !isRecord(entry)
+      || typeof entry.num !== "string"
+      || !Number.isSafeInteger(entry.count)
+    ) return null;
+    cards.push({ num: entry.num, count: entry.count as number });
+  }
+  return {
+    id: value.id,
+    name: value.name,
+    partner: value.partner,
+    case: value.case,
+    cards,
+    modified: value.modified as number,
+  };
+}
+
 function normalizeActiveDeckId(
   decks: DeckRecord[],
   activeDeckId: string | undefined,
@@ -44,6 +76,62 @@ function normalizeActiveDeckId(
   return active && isHomeDeckEligible(active)
     ? active.id
     : (decks.find((deck) => isHomeDeckEligible(deck))?.id ?? "");
+}
+
+function normalizePersistedDecksState(value: unknown): {
+  decks: DeckRecord[];
+  activeDeckId: string;
+} {
+  const persisted = isRecord(value) ? value : {};
+  const rawDecks = Array.isArray(persisted.decks) ? persisted.decks : [];
+  const idCounts = new Map<string, number>();
+  for (const rawDeck of rawDecks) {
+    if (!isRecord(rawDeck) || typeof rawDeck.id !== "string") continue;
+    idCounts.set(rawDeck.id, (idCounts.get(rawDeck.id) ?? 0) + 1);
+  }
+  // A duplicate ID has no trustworthy winner. Quarantine every member instead
+  // of letting input order choose which divergent deck reaches cloud sync.
+  const decks = rawDecks
+    .map(normalizePersistedDeck)
+    .filter((deck): deck is DeckRecord => (
+      deck !== null && idCounts.get(deck.id) === 1
+    ));
+  return {
+    decks,
+    activeDeckId: normalizeActiveDeckId(
+      decks,
+      typeof persisted.activeDeckId === "string" ? persisted.activeDeckId : undefined,
+    ),
+  };
+}
+
+function migrateLegacyPersistedState(value: unknown, fromVersion: number): unknown {
+  if (fromVersion >= 3 || !isRecord(value) || !Array.isArray(value.decks)) return value;
+  const migrated = { ...value };
+  migrated.decks = value.decks.map((rawDeck) => {
+    if (!isRecord(rawDeck)) return rawDeck;
+    const deck = { ...rawDeck };
+    if (fromVersion < 2 && !deck.case && typeof deck.partner === "string") {
+      deck.case = defaultCaseForPartner(deck.partner);
+    }
+    if (deck.id === SAMPLE_DECK.id) {
+      deck.partner = SAMPLE_DECK.partner;
+      deck.case = SAMPLE_DECK.case;
+      deck.cards = structuredClone(SAMPLE_DECK.cards);
+    } else if (deck.id === SAMPLE_DECK_OPP.id) {
+      deck.partner = SAMPLE_DECK_OPP.partner;
+      deck.case = SAMPLE_DECK_OPP.case;
+      deck.cards = structuredClone(SAMPLE_DECK_OPP.cards);
+    } else if (fromVersion < 2 && Array.isArray(deck.cards)) {
+      deck.cards = deck.cards.filter((entry) => (
+        !isRecord(entry)
+        || typeof entry.num !== "string"
+        || !isDeckIdentityCard(entry.num)
+      ));
+    }
+    return deck;
+  });
+  return migrated;
 }
 
 export const useDecksStore = create<DecksState>()(
@@ -107,32 +195,16 @@ export const useDecksStore = create<DecksState>()(
       // カスタムデッキはパートナー/事件カードがデッキ内にあれば除去する (rules/02)。
       // v2 → v3: 標準デッキだけを公式構築済みレシピへ更新し、ユーザーデッキは保持する。
       migrate: (persisted, fromVersion) => {
-        const s = persisted as
-          | { decks?: DeckRecord[]; activeDeckId?: string }
-          | undefined;
-        if (fromVersion < 3 && s?.decks) {
-          for (const d of s.decks) {
-            if (fromVersion < 2 && !d.case)
-              d.case = defaultCaseForPartner(d.partner);
-            if (d.id === SAMPLE_DECK.id) {
-              d.partner = SAMPLE_DECK.partner;
-              d.case = SAMPLE_DECK.case;
-              d.cards = structuredClone(SAMPLE_DECK.cards);
-            } else if (d.id === SAMPLE_DECK_OPP.id) {
-              d.partner = SAMPLE_DECK_OPP.partner;
-              d.case = SAMPLE_DECK_OPP.case;
-              d.cards = structuredClone(SAMPLE_DECK_OPP.cards);
-            } else if (fromVersion < 2) {
-              d.cards = (d.cards ?? []).filter((e) => {
-                return !isDeckIdentityCard(e.num);
-              });
-            }
-          }
-        }
-        if (s?.decks)
-          s.activeDeckId = normalizeActiveDeckId(s.decks, s.activeDeckId);
-        return s as DecksState;
+        return normalizePersistedDecksState(
+          migrateLegacyPersistedState(persisted, fromVersion),
+        ) as DecksState;
       },
+      merge: (persisted, current) => persisted === undefined
+        ? current
+        : {
+          ...current,
+          ...normalizePersistedDecksState(persisted),
+        },
       onRehydrateStorage: () => (state) => {
         state?._setHydrated(true);
       },

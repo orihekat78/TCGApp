@@ -8,7 +8,7 @@ import type { DeckRecord } from '../data/types';
 import {
   BUG_274_PARTNER_CARD,
   BUG_274_PARTNER_ID,
-  BUG_274_PUBLIC_DECK_ID,
+  isBug274ValidationDeck,
 } from '../data/bug274ValidationDeck';
 import { engineStub } from '../stubs/engineStub';
 
@@ -25,7 +25,7 @@ export function toDeckId(deck: DeckRecord | undefined): DeckId | null {
 /** デッキが対戦可能か (Phase 14-A: validateDeck OK なら可、deckId 経路にこだわらない) */
 export function isPlayable(deck: DeckRecord | undefined): boolean {
   if (!deck) return false;
-  const overlay = deck.id === BUG_274_PUBLIC_DECK_ID && deck.partner === BUG_274_PARTNER_ID
+  const overlay = isBug274ValidationDeck(deck)
     ? (printingId: string) => printingId === BUG_274_PARTNER_ID ? BUG_274_PARTNER_CARD : undefined
     : undefined;
   return engineStub.cards.validateDeck(deck, overlay).ok;

@@ -69,6 +69,7 @@ describe('megaw6 step1 — declareName atom (EffectCtx.declaredNames writer)', (
     const ctx = makeCtx();
     expect(() => runAtom(s, 'declareName', { bind: 'named' }, ctx)).not.toThrow();
     expect(ctx.declaredNames?.named).toBe('');
+    expect(ctx.dyn?.declaredName).toBe('');
   });
 
   it('whitespace-only supplied name is trimmed to empty string', () => {
@@ -76,6 +77,7 @@ describe('megaw6 step1 — declareName atom (EffectCtx.declaredNames writer)', (
     const ctx = makeCtx({ dyn: { declaredName: '   ' } });
     runAtom(s, 'declareName', { bind: 'named' }, ctx);
     expect(ctx.declaredNames?.named).toBe('');
+    expect(ctx.dyn?.declaredName).toBe('');
   });
 });
 

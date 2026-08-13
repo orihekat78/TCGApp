@@ -31,6 +31,8 @@ const FUNCTIONS_SOURCE_INPUTS = [
   "../src/cloud-data/repository.ts",
   "../src/cloud-data/request-context.ts",
   "../src/cloud-data/retention.ts",
+  "../src/shared/deck-legality-catalog.generated.ts",
+  "../src/shared/deck-legality.ts",
   "api/v1/[[path]].ts",
 ] as const;
 const FUNCTIONS_JOSE_INPUTS = [

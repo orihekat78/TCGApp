@@ -28,7 +28,7 @@ function deck(id = 'deck-1'): DeckRecord {
     name: `Deck ${id}`,
     partner: 'D08001',
     case: 'D08026',
-    cards: [{ num: 'D08002', count: 40 }],
+    cards: [{ num: 'B09100', count: 40 }],
     modified: NOW,
   };
 }
@@ -47,7 +47,7 @@ function match(id = 'match-1'): MatchRecord {
       name: 'Deck deck-1',
       partner: 'D08001',
       case: 'D08026',
-      cards: [{ num: 'D08002', count: 40 }],
+      cards: [{ num: 'B09100', count: 40 }],
     },
     turns: 6,
     duration: 0,
@@ -151,6 +151,47 @@ describe('cloud sync runtime', () => {
       phase: 'error',
       message: 'CLOUD_SYNC_RUNTIME_FAILED',
     });
+    stop();
+  });
+
+  it('initializes without a runtime failure when malformed hydrated data bypasses the store boundary', async () => {
+    const malformed = { ...deck('malformed'), cards: null } as unknown as DeckRecord;
+    useDecksStore.setState({
+      decks: [malformed],
+      activeDeckId: malformed.id,
+      _hasHydrated: true,
+    });
+    useHistoryStore.setState({
+      history: [match('malformed-match')],
+      _hasHydrated: true,
+      _hasCanonicalLoaded: true,
+    });
+    const execute = vi.fn();
+    const actual = createCloudSyncEngine({
+      api: {
+        bootstrap: async () => ({
+          identity: { email: 'family@example.com' },
+          decks: [],
+          deletedDecks: [],
+          activeDeck: null,
+          stats: { matches: 0, wins: 0, losses: 0, winRate: null },
+        }),
+        execute,
+      },
+      local: createStoreLocalCloudDataPort(),
+      appVersion: '1.0.0',
+      now: () => NOW,
+      onStatus: (status) => useCloudSyncStatusStore.getState().setStatus(status),
+    });
+
+    const stop = startCloudSyncRuntime({ enabled: true, engine: actual, eventTarget: window });
+    await vi.waitFor(() => {
+      expect(useCloudSyncStatusStore.getState().status).toMatchObject({
+        phase: 'online',
+        message: null,
+      });
+    });
+    expect(execute).not.toHaveBeenCalled();
     stop();
   });
 
