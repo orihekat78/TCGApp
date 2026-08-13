@@ -1769,11 +1769,14 @@
     {
       "qaId": "card:D10010:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2f",
       "answerHash": "07a069044d87d5a50559fb46bd5fd90c7fe0c58ed7f82235ce074d9ade043b60",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d10/D10010.ts:1"
+        "rules:.claude/rules/02-deck-construction.md:16",
+        "src:src/cards/ct-d10/D10010.ts:56",
+        "tests:tests/cards/official-qa/D10003-D10010-printing-copy-limit.test.ts:97",
+        "tests:tests/cards/official-qa/D10003-D10010-printing-copy-limit.test.ts:99"
       ]
     },
     {

@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6021
+- **ファイル数**: 6022
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5436,6 +5436,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B04074.test.ts`
       - `B05118-family-nonblack-partner.test.ts` — Official Q&A cluster: these seven cases share the same printed
       - `B07102-refresh-includes-removed.test.ts` — qaId=card:B07102:99f16dd6a248501c9d63a44dd85b2d6097ef720865e4181d1b451669f04b05d…
+      - `D10003-D10010-printing-copy-limit.test.ts` — qaId=card:D10003:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2…
       - `set-card-host-absent.test.ts`
     - **`pr-01/`**
       - `PR100.test.ts`
