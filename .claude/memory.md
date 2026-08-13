@@ -67,3 +67,11 @@
   of every turn, before `turn:start`; `startTurn` owns the canonical boundary.
 - Do not move this reset to `endTurn`: queued end-phase effects may still read the
   ending turn's state before the next turn starts. See `BUG-303`.
+
+## 2026-08-14: Ordered pending-pick provenance
+
+- Every bespoke `preparePendingPickRange` producer must use the canonical
+  `pendingSource` builder. Dropping batch/order provenance can resolve a sibling
+  effect early and leave a surfaced decision without runtime authority.
+- Public guard prechecks must preserve the core ordering: allow a null abort for
+  a missing action target, otherwise enforce the live `mustGuardCandidates` set.

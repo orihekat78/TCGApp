@@ -582,15 +582,15 @@
     {
       "qaId": "card:B05005:4cbc051fc5b2cbaf0d66ef6248bb40e0f4dd2b32529c92f8f7962fe74b8dc125",
       "answerHash": "0b6657e5a8c49ad27b97e004447efbd296f6050d2801c10fa4f1d5527fb20a3c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:41",
-        "src:src/cards/ct-p05/B05005.ts:14"
-      ],
-      "noteCodes": [
-        "B05005-NEXT-HINT-EVENT-ORDER-TEST-MISSING"
+        "src:src/cards/ct-p05/B05005.ts:14",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:257",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:259",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:260"
       ]
     },
     {

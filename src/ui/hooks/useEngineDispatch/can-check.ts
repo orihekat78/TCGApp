@@ -130,9 +130,14 @@ export function isAllowed(
       const ax = flow.action._getContext(state, action.actionId);
       if (!ax) return false;
       if (ax.phase !== 'guard-window') return false;
-      if (action.guarderUid === null) return true; // pass はいつでも可
+      const excludedUid = ax.target.kind === 'char' ? ax.target.uid : undefined;
+      const required = flow.guard.mustGuardCandidates(state, ax.byUid, excludedUid);
+      if (action.guarderUid === null) {
+        return flow.action.isMissingBeforeGuard(state, ax) || required.length === 0;
+      }
       // Task D E4: アクション対象自身はガード不可 (B09028/B09054 Q&A)
-      return flow.guard.canGuard(state, ax.byUid, action.guarderUid, ax.target.kind === 'char' ? ax.target.uid : undefined);
+      return flow.guard.canGuard(state, ax.byUid, action.guarderUid, excludedUid)
+        && (required.length === 0 || required.some(candidate => candidate.uid === action.guarderUid));
     }
     case 'actionContact': {
       const ax = flow.action._getContext(state, action.actionId);
@@ -236,19 +241,19 @@ export function isAllowed(
     }
     case 'choiceResolve': {
       // BUG-121: pendingEffectChoice が set されているときのみ有効
-      const authority = readPendingEffectChoiceAuthority(state);
+      const pendingAuthority = readPendingEffectChoiceAuthority(state);
       return matchesPendingDecision(useGameStateStore.getState().pendingEffectChoice, action)
-        && authority !== null
+        && pendingAuthority !== null
         && Number.isInteger(action.choiceIndex)
-        && authority.options.some((option) => option.index === action.choiceIndex);
+        && pendingAuthority.options.some((option) => option.index === action.choiceIndex);
     }
     case 'effectPickResolve': {
       // BUG-054: pendingEffectPick が set されているときのみ有効
-      const authority = readPendingEffectPickAuthority(state);
+      const pendingAuthority = readPendingEffectPickAuthority(state);
       return matchesPendingDecision(useGameStateStore.getState().pendingEffectPick, action)
-        && authority !== null
+        && pendingAuthority !== null
         && canApplyPendingPickSelection(
-          authority,
+          pendingAuthority,
           action.pickedUid,
           'pickedUids' in action ? action.pickedUids : undefined,
         );

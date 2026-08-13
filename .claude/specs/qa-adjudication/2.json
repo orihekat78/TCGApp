@@ -226,31 +226,30 @@
     {
       "qaId": "card:B03002:23c9bd7209af9bd9d812ae6f4607207f920a91b7b692105dc6b17b3c3d655bf2",
       "answerHash": "547d3539bbb32a41913b887375a93a4c15d3c470de217f9de0e58b6671fd4adc",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:14",
         "src:src/cards/ct-p03/B03002.ts:27",
-        "src:src/engine/listeners/triggered.ts:403"
-      ],
-      "noteCodes": [
-        "TURN1-ZERO-MATCH-CONSUMPTION-TEST-MISSING"
+        "src:src/engine/listeners/triggered.ts:403",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:186",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:188"
       ]
     },
     {
       "qaId": "card:B03002:32dfdf12d183f78c1bf123cbe67660e3b1299585ac3db54acd8020d208b98bee",
       "answerHash": "0b6657e5a8c49ad27b97e004447efbd296f6050d2801c10fa4f1d5527fb20a3c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/25-qa-effects-resolution.md:79",
         "src:src/cards/ct-p03/B03002.ts:13",
-        "src:src/engine/resolve/stack.ts:139"
-      ],
-      "noteCodes": [
-        "NEXT-HINT-EVENT-OWN-EFFECT-ORDER-TEST-MISSING"
+        "src:src/engine/resolve/stack.ts:139",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:199",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:201",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:202"
       ]
     },
     {
@@ -609,15 +608,14 @@
     {
       "qaId": "card:B05005:e95bb3042c0b617f223a250bfd13d058966a85d2f3cb42a92016df93ceba9608",
       "answerHash": "b6bf099ab6b7a5b6635421b4b5a8c7e86ab16dfec77d5fa3905c6c9634838952",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/07-action-flow.md:21",
-        "src:src/cards/ct-p05/B05005.ts:77"
-      ],
-      "noteCodes": [
-        "B05005-MUST-GUARD-SLEEP-CAPABLE-TEST-MISSING"
+        "src:src/cards/ct-p05/B05005.ts:77",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:294",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:295"
       ]
     },
     {

@@ -230,15 +230,17 @@
     {
       "qaId": "card:B03002:bfc5269bff8bf94b5858f537c65f7a799c6d413cd68611be33baf8e15bbe4071",
       "answerHash": "02299c69371256875f1744887632b7795dc9d2923de73ae74d6d3dc22d1a3288",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:41",
-        "src:src/cards/ct-p03/B03002.ts:90"
-      ],
-      "noteCodes": [
-        "DECLARED-ABILITY-OWN-EFFECT-ORDER-TEST-MISSING"
+        "src:src/cards/ct-p03/B03002.ts:90",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:224",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:225",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:228",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:232",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:233"
       ]
     },
     {
@@ -482,15 +484,13 @@
     {
       "qaId": "card:B05005:dcfd322f5b315270bf3c06e56e5acf285ac62a5f5b71d38b148d652df71b8b14",
       "answerHash": "cc43bdfc880e6d177dd0822494c800f75d923e20c7a72a7df56f6f968d9936e4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:41",
-        "src:src/cards/ct-p05/B05005.ts:14"
-      ],
-      "noteCodes": [
-        "B05005-NEXT-HINT-CHARACTER-ENTER-ORDER-TEST-MISSING"
+        "src:src/cards/ct-p05/B05005.ts:14",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:252"
       ]
     },
     {

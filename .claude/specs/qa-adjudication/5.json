@@ -185,16 +185,15 @@
     {
       "qaId": "card:B03002:b1f7b5e6df788275f00be38b6902f95648f0ce080d9a88e3f22c5c940a8af860",
       "answerHash": "7836f7ff44ab351b8d41a45198421e5f7dfc0670c2f3a50be377214395b13020",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:12",
         "src:src/cards/ct-p03/B03002.ts:13",
-        "src:src/engine/flow/main/next-hint.ts:129"
-      ],
-      "noteCodes": [
-        "SELF-NEXT-HINT-ENTRY-TIMING-TEST-MISSING"
+        "src:src/engine/flow/main/next-hint.ts:129",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:218",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:219"
       ]
     },
     {

@@ -505,15 +505,14 @@
     {
       "qaId": "card:B05005:9d12855c9753675d25e0cde7fba3c66cfab4bd9ce9c8a87541021dc19b506665",
       "answerHash": "acf8317ad874c3db5a4906f82ad4587818bc56f6f0f653803a6a7204b86abaf3",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:15",
-        "src:src/cards/ct-p05/B05005.ts:38"
-      ],
-      "noteCodes": [
-        "B05005-FAMILY-TURN-LIMIT-TEST-MISSING"
+        "src:src/cards/ct-p05/B05005.ts:38",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:245",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:246"
       ]
     },
     {

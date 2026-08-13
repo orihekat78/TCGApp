@@ -1,6 +1,6 @@
 // engine.effect.atom-handlers/picks — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
 import { mutate } from '../../mutate/index.js';
-import { pushPendingPickFromAtom, toPlainDeep, resolveFilterDynObj, tryRePickFromAtom } from '../resolve-picks.js';
+import { pendingSource, pushPendingPickFromAtom, toPlainDeep, resolveFilterDynObj, tryRePickFromAtom } from '../resolve-picks.js';
 import { pushPendingEffectPickSide } from '../pending-state.js';
 import { preparePendingPickRange } from '../pick-selection.js';
 import { candidates as targetCandidates } from '../../target/candidates.js';
@@ -66,7 +66,11 @@ export function atomStackedCardPick(s: GameState, a: Record<string, unknown>, ct
     player: resolvePlayer(a.player, ctx), ownerPlayer: ctx.source.player,
     candidates: mutate.char.stackedCardEntries(s, hostUid).map(entry => ({ uid: entry.instanceId, cardId: entry.cardId, player: owner })),
     atomVerb: 'stackedCardPick', atomArgs: toPlainDeep(a), nMin: min, nMax: max,
-    source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '', uid: ctx.source.uid },
+    source: pendingSource(s, ctx, {
+      cardId: ctx.source.cardId ?? '',
+      abilityId: ctx.source.abilityId ?? '',
+      uid: ctx.source.uid,
+    }),
   });
   if (pending === null) {
     (ctx.dyn ??= {}).chainStepNoApply = true;
@@ -221,10 +225,10 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
             atomArgs: toPlainDeep({ ...(a as Record<string, unknown>), __windowIds: [...revealed] }),
             nMin: 0, // 「まで」= 0枚可。候補0でも確認/skip decisionを明示する。
             nMax: 1,
-            source: {
+            source: pendingSource(s, ctx, {
               cardId: ctx.source.cardId ?? '',
               abilityId: (ctx.source as { abilityId?: string }).abilityId ?? '',
-            },
+            }),
             skipResolvesAtom: true,
           });
           if (pendingPick) pushPendingPickFromAtom(pendingPick);

@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6022
+- **ファイル数**: 6023
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5429,6 +5429,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B01025-B01026-partner-abilities.test.ts` — Official Q&A: B01025/B01025P/B01026/B01026P
       - `B01077-empty-hand-event.test.ts` — qaId=card:B01077:d42cf418c120cd75f5388b9a434fa679d9f97908baa2ffb6eb9152c28dcb8e5…
       - `B02008-turn-limit-order-ap.test.ts` — qaId=card:B02008:3240a4626ffa31e953f10ca03af61b33b9d3367feeffa3bc87cd8b3c7be01d9…
+      - `B03002-B05005-next-hint-order-guard.test.ts` — Official Q&A certification: public dispatch paths only.
       - `B03020.test.ts` — Official Q&A B03020: fewer than three cards cannot resolve the effect.
       - `B03023.test.ts` — Official Q&A: B03023 脇田兼則
       - `B04030.test.ts` — The opposing contact character has left, but Kaito remains in the scene.

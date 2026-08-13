@@ -618,15 +618,14 @@
     {
       "qaId": "card:B05005:164b2e66f982e360a525f5b7f90dc085377179475925e450baf48864064033c1",
       "answerHash": "7836f7ff44ab351b8d41a45198421e5f7dfc0670c2f3a50be377214395b13020",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/12-next-hint.md:9",
-        "src:src/cards/ct-p05/B05005.ts:23"
-      ],
-      "noteCodes": [
-        "B05005-NEXT-HINT-NO-USE-THEN-USE-TEST-MISSING"
+        "src:src/cards/ct-p05/B05005.ts:23",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:238",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:239"
       ]
     },
     {

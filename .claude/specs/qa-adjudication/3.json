@@ -304,16 +304,14 @@
     {
       "qaId": "card:B03002:fead5e283504803d65d2dd745e3ca46752d70e3ea03250dc050a23eaefb57626",
       "answerHash": "cc43bdfc880e6d177dd0822494c800f75d923e20c7a72a7df56f6f968d9936e4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:41",
         "src:src/cards/ct-p03/B03002.ts:90",
-        "src:src/engine/flow/main/next-hint.ts:129"
-      ],
-      "noteCodes": [
-        "NEXT-HINT-ENTER-SIMULTANEOUS-ORDER-TEST-MISSING"
+        "src:src/engine/flow/main/next-hint.ts:129",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:194"
       ]
     },
     {

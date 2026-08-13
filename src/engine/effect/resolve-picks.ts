@@ -55,7 +55,7 @@ function containsSceneEnter(effect: Effect): boolean {
   return false;
 }
 
-function pendingSource<T extends { cardId: string; abilityId: string }>(state: GameState, ctx: EffectCtx, source: T) {
+export function pendingSource<T extends { cardId: string; abilityId: string }>(state: GameState, ctx: EffectCtx, source: T) {
   const trace = ensureEffectCausalTrace(state, ctx);
   markEffectCausalAwaitingResume(trace);
   return {

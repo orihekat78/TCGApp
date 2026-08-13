@@ -670,25 +670,26 @@
     {
       "qaId": "card:B05005:68a46ef50ff20d887ed135004d61a329e0a293d011f356d69901362a2d47ed0e",
       "answerHash": "ffe0b792b1620c0d14dd6e2ac0775e67623c57fa1159f9e7ff7978fcb4f8d7d0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05005.ts:77"
+        "src:src/cards/ct-p05/B05005.ts:77",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:286",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:288"
       ]
     },
     {
       "qaId": "card:B05005:e0064498d893cded43d2bddfb89a48bca47cda3d7211eccc52510b0e0d22bde8",
       "answerHash": "5ef29d8beed32593ffe6e357baed57fa108c5a7a19c8bb7824eb3bbe63bc054d",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/12-next-hint.md:24",
-        "src:src/cards/ct-p05/B05005.ts:12"
-      ],
-      "noteCodes": [
-        "B05005-SELF-NEXT-HINT-ENTRY-TIMING-TEST-MISSING"
+        "src:src/cards/ct-p05/B05005.ts:12",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:265",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:266"
       ]
     },
     {

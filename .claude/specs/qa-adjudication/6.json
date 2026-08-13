@@ -183,16 +183,16 @@
     {
       "qaId": "card:B03002:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:16",
         "rules:.claude/rules/25-qa-effects-resolution.md:25",
-        "src:src/cards/ct-p03/B03002.ts:27"
-      ],
-      "noteCodes": [
-        "MULTIPLE-COPY-SIMULTANEOUS-ORDER-TEST-MISSING"
+        "src:src/cards/ct-p03/B03002.ts:27",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:207",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:210",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:213"
       ]
     },
     {
@@ -527,15 +527,16 @@
     {
       "qaId": "card:B05005:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6",
       "answerHash": "8268b668022a014b601e117aef5157e38707e866bee200e2daddd40cf1e0ea32",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/07-action-flow.md:21",
-        "src:src/cards/ct-p05/B05005.ts:77"
-      ],
-      "noteCodes": [
-        "B05005-MUST-GUARD-LEGAL-GUARD-TEST-MISSING"
+        "src:src/cards/ct-p05/B05005.ts:77",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:272",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:273",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:274",
+        "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:278"
       ]
     },
     {
