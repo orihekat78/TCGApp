@@ -1669,14 +1669,19 @@
     {
       "qaId": "card:B09090:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7eb",
       "answerHash": "3f2137d7d1a9b6e165839b2db9c5784ba9ed779a1a1eaa6b8343354f3cdfeb02",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "group-equivalent",
       "evidence": [
-        "src:src/cards/ct-p09/B09090.ts:56"
-      ],
-      "noteCodes": [
-        "GROUP-EQUIVALENT"
+        "src:src/cards/ct-p09/B09090.ts:56",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:120",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:123",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:139",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:145",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:162",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:166",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:177",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:179"
       ]
     },
     {
@@ -2428,14 +2433,19 @@
     {
       "qaId": "card:PR286:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7eb",
       "answerHash": "3f2137d7d1a9b6e165839b2db9c5784ba9ed779a1a1eaa6b8343354f3cdfeb02",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "group-equivalent",
       "evidence": [
-        "src:src/cards/pr-01/PR286.ts:85"
-      ],
-      "noteCodes": [
-        "GROUP-EQUIVALENT"
+        "src:src/cards/pr-01/PR286.ts:85",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:120",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:123",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:139",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:145",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:162",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:166",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:177",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:179"
       ]
     },
     {

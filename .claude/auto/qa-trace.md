@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-qa-trace.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:qa-trace`
-> Source hash: `eace6d2b7d01`
+> Source hash: `0ebc08d688db`
 
 Tracked Q&A identifiers and digests only. Official question and answer bodies are intentionally excluded.
 
@@ -20,8 +20,8 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 ## Coverage classification
 
 - total: 2964
-- matched: 527
-- test-missing: 2437
+- matched: 529
+- test-missing: 2435
 - legacy-unreviewed: 0
 - unmapped: 0
 - mismatch: 0
@@ -2010,7 +2010,7 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 | `card:B09089:edb36e437e8725a0f8298a597f9ab964c8cff099d87ddfe785bf91256d3887ac` | `B09089` | `B09089`, `B09089P` | shipped | matched | aligned | 1 | 1 |
 | `card:B09090:3651e64eedf9e862b41a0be484831446dee1f637b43e35ac632ac295bfaeffbd` | `B09090` | `B09090`, `B09090P`, `B09090P2` | shipped | matched | aligned | 2 | 4 |
 | `card:B09090:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93` | `B09090` | `B09090`, `B09090P`, `B09090P2` | shipped | matched | aligned | 1 | 3 |
-| `card:B09090:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7eb` | `B09090` | `B09090`, `B09090P`, `B09090P2` | shipped | test-missing | test-gap | 1 | 0 |
+| `card:B09090:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7eb` | `B09090` | `B09090`, `B09090P`, `B09090P2` | shipped | matched | aligned | 1 | 8 |
 | `card:B09090:503214a02f4aed5722f530357639b8f16a4d6a9d218eb826b4fa47693c36556e` | `B09090` | `B09090`, `B09090P`, `B09090P2` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B09092:0a7b79351a135f0b5277f183d8028ddc88073d99a54bf083bff74d1b3c1a1358` | `B09092` | `B09092`, `B09092P` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B09092:61f7cb6171a13e222c9bca6a09d3cca6e453562364041127705fd3a83111d391` | `B09092` | `B09092`, `B09092P` | shipped | test-missing | test-gap | 1 | 0 |
@@ -2900,7 +2900,7 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 | `card:PR284:462421c9ffdba47421ba27b3639d48d57a88a15fce79d354ba328545d5b07abf` | `PR284` | `PR284` | shipped | matched | aligned | 1 | 1 |
 | `card:PR285:22aaf9ba5e384ee444adeadb5ffb7b5c97b7a4e75ccbac8c297b8c86d3e85f3f` | `PR285` | `PR285` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:PR286:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93` | `PR286` | `PR286` | shipped | matched | aligned | 1 | 3 |
-| `card:PR286:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7eb` | `PR286` | `PR286` | shipped | test-missing | test-gap | 1 | 0 |
+| `card:PR286:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7eb` | `PR286` | `PR286` | shipped | matched | aligned | 1 | 8 |
 | `card:PR286:503214a02f4aed5722f530357639b8f16a4d6a9d218eb826b4fa47693c36556e` | `PR286` | `PR286` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:PR287:6afacc527edb1f91971747c8e7b4a6281ce88b569f711f8e310a8222bfbc85a1` | `PR287` | `PR287` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:PR288:7e995814959f1317d5d3a0209d1a4fe2bdd07f8bce570f7d1491700501592010` | `PR288` | `PR288` | shipped | test-missing | test-gap | 1 | 0 |
@@ -4620,7 +4620,6 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 - missing-test: `card:B09086:2c83e05699547a122e72d36589adce2d81152f65597bff1f1551047f02568ed9`
 - missing-test: `card:B09086:ee9ce331a55bc2711aef71d24e94f8cd4cad8c33b1ec5e49f98bad15b291ad43`
 - missing-test: `card:B09089:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa`
-- missing-test: `card:B09090:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7eb`
 - missing-test: `card:B09090:503214a02f4aed5722f530357639b8f16a4d6a9d218eb826b4fa47693c36556e`
 - missing-test: `card:B09092:0a7b79351a135f0b5277f183d8028ddc88073d99a54bf083bff74d1b3c1a1358`
 - missing-test: `card:B09092:61f7cb6171a13e222c9bca6a09d3cca6e453562364041127705fd3a83111d391`
@@ -5393,7 +5392,6 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 - missing-test: `card:PR283:7516cd02c9848ddc808d369cd3af22fc7928580f38f6762c35b66bb22678cbcf`
 - missing-test: `card:PR283:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3`
 - missing-test: `card:PR285:22aaf9ba5e384ee444adeadb5ffb7b5c97b7a4e75ccbac8c297b8c86d3e85f3f`
-- missing-test: `card:PR286:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7eb`
 - missing-test: `card:PR286:503214a02f4aed5722f530357639b8f16a4d6a9d218eb826b4fa47693c36556e`
 - missing-test: `card:PR287:6afacc527edb1f91971747c8e7b4a6281ce88b569f711f8e310a8222bfbc85a1`
 - missing-test: `card:PR288:7e995814959f1317d5d3a0209d1a4fe2bdd07f8bce570f7d1491700501592010`
