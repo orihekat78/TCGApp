@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6035
+- **ファイル数**: 6036
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5441,6 +5441,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B04059.test.ts` — B04059 水無怜奈 — official Q&A: scene-only additional card name.
       - `B04074.test.ts`
       - `B05118-family-nonblack-partner.test.ts` — Official Q&A cluster: these seven cases share the same printed
+      - `B06042-effect-contact-public.test.ts` — qa: card:B06042:51624536ab2df37b3ce09f45df7c715d9ac3c8bbb64d8ff36ed28ebcc48829d5
       - `B07066-declared-cost-optional.test.ts` — qa: card:B07066:939f5e30d9e32c8b233a160a6f70ebb932c71ce0971e6f66cfb3701d5fff76cd
       - `B07102-refresh-includes-removed.test.ts` — qaId=card:B07102:99f16dd6a248501c9d63a44dd85b2d6097ef720865e4181d1b451669f04b05d…
       - `B09090-PR286-entry-waiver.test.ts` — qaId=card:B09090:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7e…

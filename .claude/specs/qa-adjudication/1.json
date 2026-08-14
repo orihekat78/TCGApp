@@ -722,7 +722,11 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06042.ts:1",
-        "tests:tests/cards/night-wC/B06042.test.ts:74"
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:190",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:244",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:246",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:255",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:257"
       ]
     },
     {

@@ -853,11 +853,14 @@
     {
       "qaId": "card:B06042:79fac5486ce6718302ee32c449ad60e668c71588f9786bd02f695e6ffca24627",
       "answerHash": "328c56b23a22829e19742f23a3759f8b8286f6fe5d1919bf7b3c20305054928e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06042.ts:1"
+        "src:src/cards/ct-p06/B06042.ts:1",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:284",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:287",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:298"
       ]
     },
     {

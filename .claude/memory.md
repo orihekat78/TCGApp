@@ -55,3 +55,10 @@
 - Compact incident status belongs to the incident header. Candidate incident
   cards hide their detail control so the whole card remains the pick target.
 - Full record: `.claude/sessions/2026-08-14-qa-wave13-match-cost.md`.
+
+## 2026-08-14: B06042 effect-contact evidence
+
+- Bind each qaId to a dedicated public-dispatch test block; file-level markers
+  and cross-row assertion references are false-green evidence.
+- Effect-generated contact must prove target authority, suppressed normal-action
+  hooks, exact contact count, and the zero-contact decline path.
