@@ -289,17 +289,16 @@
     {
       "qaId": "card:B03006:950c4bb98b9fe526a2e73ea5f514307cc73bd2a98b45482770077be4a806d9a6",
       "answerHash": "94de3cab3cc0e3f1154821b105683d7fb232efc11d71afe2a3d7261acba3d2f2",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/20-color-and-switch.md:32",
         "src:src/cards/ct-d08/D08021.ts:30",
-        "src:src/cards/ct-p03/B03006.ts:6"
-      ],
-      "noteCodes": [
-        "SWITCH-REMOVE-CANDIDATE-UNTESTED",
-        "TEST-GAP"
+        "src:src/cards/ct-p03/B03006.ts:6",
+        "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:277",
+        "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:279",
+        "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:280"
       ]
     },
     {
@@ -322,15 +321,20 @@
     {
       "qaId": "card:B03025:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305",
       "answerHash": "701cb228b8bc49836ae72bf565010d617f162e30b6fc598b6b5c8ab1906aad39",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/26-qa-deck-refresh.md:24",
-        "src:src/cards/ct-p03/B03025.ts:91"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/20-color-and-switch.md:11",
+        "rules:.claude/rules/20-color-and-switch.md:15",
+        "src:src/cards/ct-p03/B03025.ts:66",
+        "tests:tests/cards/official-qa/B03025-public-refresh-flow.test.ts:203",
+        "tests:tests/cards/official-qa/B03025-public-refresh-flow.test.ts:204",
+        "tests:tests/cards/official-qa/B03025-public-refresh-flow.test.ts:207",
+        "tests:tests/cards/official-qa/B03025-public-refresh-flow.test.ts:208",
+        "tests:tests/cards/official-qa/B03025-public-refresh-flow.test.ts:209",
+        "tests:tests/cards/official-qa/B03025-public-refresh-flow.test.ts:210",
+        "tests:tests/cards/official-qa/B03025-public-refresh-flow.test.ts:211"
       ]
     },
     {
@@ -908,21 +912,38 @@
     {
       "qaId": "card:B06042:212eda580af7b7e0cb3b2a15d4fd3e9c95279fabf34572a483458fba04673b04",
       "answerHash": "dc855fd02f25482031b43fc023211a789db63d2fce5f42d200012a0842154fc8",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06042.ts:58"
+        "src:src/cards/ct-p06/B06042.ts:58",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:299",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:300",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:305",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:306",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:310",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:316",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:317"
       ]
     },
     {
       "qaId": "card:B06042:e17af004e33c138a7c33cee5a0d3803c15371642fd7c595bb19e5d85c14adcc9",
       "answerHash": "77f71899ce5b1302100b4f50da5360f210c919c28b196f5b84c2581e2dadc488",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06042.ts:58"
+        "src:src/cards/ct-p06/B06042.ts:58",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:257",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:258",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:260",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:261",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:262",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:270",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:273",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:275",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:281",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:283"
       ]
     },
     {
@@ -1902,14 +1923,12 @@
     {
       "qaId": "card:D07023:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d07/D07023.ts:46"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-d07/D07023.ts:46",
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:357"
       ]
     },
     {

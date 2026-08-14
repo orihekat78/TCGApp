@@ -518,15 +518,16 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     if (stackedState === null) return { ok: false, reason: 'no-state' };
     const source = stackedState.players[owner].scene.find((char) => char.uid === sourceUid);
     const entries = source?.stackedCards;
-    if (!Array.isArray(entries) || entries.length < removeStackedCost.n) {
+    const stackedCount = Array.isArray(entries) ? entries.length : (typeof entries === 'number' ? entries : 0);
+    if (stackedCount < removeStackedCost.n) {
       return { ok: false, reason: 'not-allowed' };
     }
     // With exactly n entries no choice exists; omit params so human and AI use
     // the same deterministic engine fallback. Otherwise retain exact identities.
-    if (entries.length > removeStackedCost.n) {
+    if (Array.isArray(entries) && entries.length > removeStackedCost.n) {
       const choice = await useStackedCardCostPicker().ask({
         sourceName,
-        candidates: entries.map(({ instanceId, cardId }) => ({ instanceId, cardId })),
+        candidates: entries.map(({ instanceId }, index) => ({ instanceId, ordinal: index + 1 })),
         nMin: removeStackedCost.n,
         nMax: removeStackedCost.n,
       });

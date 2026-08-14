@@ -675,11 +675,12 @@
     {
       "qaId": "card:B05082:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05082.ts:1"
+        "src:src/cards/ct-p05/B05082.ts:1",
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:345"
       ]
     },
     {
@@ -1679,11 +1680,12 @@
     {
       "qaId": "card:D04014:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305",
       "answerHash": "701cb228b8bc49836ae72bf565010d617f162e30b6fc598b6b5c8ab1906aad39",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d04/D04014.ts:1"
+        "src:src/cards/ct-d04/D04014.ts:1",
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:384"
       ]
     },
     {

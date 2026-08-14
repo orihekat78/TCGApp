@@ -5,6 +5,8 @@ import { register as registerCardDef, _resetRegistry as resetDefRegistry } from 
 import { run } from '@/engine/effect/resolver';
 import { _clearPendingEffectPickQueue, _drainPendingEffectPickSide } from '@/engine/effect/pending-state';
 import { applyPickAndContinuation, applyPickSkipAndContinuation } from '@/engine/effect/apply-pick';
+import { hydratePendingRuntimeState, persistPendingRuntimeState, resetPendingRuntimeState } from '@/engine/effect/runtime-state';
+import { FILE_CARD_BACK_PLACEHOLDER } from '@/engine/types';
 import type { CardDef, Effect, EffectCtx, GameState } from '@/engine/types';
 
 const CARD = (id: string): CardDef => ({ id, no: id, kind: 'character', names: [id], colors: ['青'], level: 1, ap: 0, lp: 1, traits: [], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [] });
@@ -20,7 +22,7 @@ function setup(): { state: GameState; ctx: EffectCtx; sourceUid: string; targetU
   ];
   return {
     state, sourceUid: source.uid, targetUid: target.uid,
-    ctx: { source: { player: 'self', uid: source.uid, cardId: 'SOURCE' }, bindings: { '$target': [{ uid: target.uid }] }, dyn: {} } as EffectCtx,
+    ctx: { source: { player: 'self', area: 'scene', uid: source.uid, cardId: 'SOURCE' }, bindings: { '$target': [{ uid: target.uid }] }, dyn: {} } as EffectCtx,
   };
 }
 
@@ -33,6 +35,7 @@ function effect(sourceUid: string): Effect {
 
 beforeEach(() => {
   resetDefRegistry();
+  resetPendingRuntimeState();
   _clearPendingEffectPickQueue();
   ['SOURCE', 'TARGET', 'A', 'B'].map(CARD).forEach(registerCardDef);
 });
@@ -45,6 +48,31 @@ describe('charTransferStackedCards', () => {
     applyPickAndContinuation(state, pending!, 'stack:source:b');
     expect(state.players.self.scene.find(c => c.uid === sourceUid)!.stackedCards).toEqual([{ cardId: 'A', instanceId: 'stack:source:a' }]);
     expect(state.players.self.scene.find(c => c.uid === targetUid)!.stackedCards).toEqual([{ cardId: 'B', instanceId: 'stack:source:b' }]);
+  });
+
+  it('persists only opaque candidates, then restores the exact selected stack identity', () => {
+    const { state, ctx, sourceUid, targetUid } = setup();
+    run(state, effect(sourceUid), ctx);
+    persistPendingRuntimeState(state);
+    const persisted = structuredClone(state.pendingRuntimeState);
+
+    expect(JSON.stringify(persisted)).not.toContain('"cardId":"A"');
+    expect(JSON.stringify(persisted)).not.toContain('"cardId":"B"');
+
+    resetPendingRuntimeState();
+    state.pendingRuntimeState = persisted;
+    expect(hydratePendingRuntimeState(state)).toBe(true);
+    const pending = _drainPendingEffectPickSide()!;
+    expect(pending.candidates).toEqual([
+      { uid: 'stack:source:a', cardId: FILE_CARD_BACK_PLACEHOLDER, player: 'self', hidden: true },
+      { uid: 'stack:source:b', cardId: FILE_CARD_BACK_PLACEHOLDER, player: 'self', hidden: true },
+    ]);
+
+    applyPickAndContinuation(state, pending, 'stack:source:b');
+    expect(state.players.self.scene.find(c => c.uid === sourceUid)!.stackedCards)
+      .toEqual([{ cardId: 'A', instanceId: 'stack:source:a' }]);
+    expect(state.players.self.scene.find(c => c.uid === targetUid)!.stackedCards)
+      .toEqual([{ cardId: 'B', instanceId: 'stack:source:b' }]);
   });
 
   it('does not transfer after a zero-card choice', () => {

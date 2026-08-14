@@ -261,17 +261,17 @@
     {
       "qaId": "card:B03006:37377467cdad597a6fe6ba04a0d53e632d566c816eaf30883787f18494455515",
       "answerHash": "47d3f424c54fdda218fd6120058f5d1cd53286fb892b7f7225bac77745c6b456",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/16-card-set.md:28",
         "src:src/cards/ct-d08/D08021.ts:22",
         "src:src/cards/ct-p03/B03006.ts:6",
-        "src:src/engine/mutate/scene.ts:691"
-      ],
-      "noteCodes": [
-        "STACK-IS-NOT-SET-TEST-MISSING"
+        "src:src/engine/mutate/scene.ts:691",
+        "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:208",
+        "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:211",
+        "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:212"
       ]
     },
     {
@@ -596,14 +596,12 @@
     {
       "qaId": "card:B04061:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305",
       "answerHash": "701cb228b8bc49836ae72bf565010d617f162e30b6fc598b6b5c8ab1906aad39",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04061.ts:46"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/ct-p04/B04061.ts:46",
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:370"
       ]
     },
     {

@@ -479,7 +479,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p04/B04040.ts:45",
-        "tests:tests/cards/cluster12-nested-filter-dyn.test.ts:176"
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:368"
       ]
     },
     {
@@ -1911,7 +1911,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-d01/D01014.ts:45",
-        "tests:tests/cards/cluster12-nested-filter-dyn.test.ts:176"
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:378"
       ]
     },
     {

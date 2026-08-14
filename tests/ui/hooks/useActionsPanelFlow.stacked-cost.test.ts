@@ -70,6 +70,12 @@ describe('runDeclaredAbilityFlow removeStackedCards', () => {
     await accept();
     expect(useStackedCardCostPickerStore.getState().current?.candidates.map((c) => c.instanceId))
       .toEqual(['stack:agasa:a', 'stack:agasa:b', 'stack:agasa:c', 'stack:agasa:d']);
+    expect(useStackedCardCostPickerStore.getState().current?.candidates).toEqual([
+      { instanceId: 'stack:agasa:a', ordinal: 1 },
+      { instanceId: 'stack:agasa:b', ordinal: 2 },
+      { instanceId: 'stack:agasa:c', ordinal: 3 },
+      { instanceId: 'stack:agasa:d', ordinal: 4 },
+    ]);
     useStackedCardCostPicker().confirm(['stack:agasa:b', 'stack:agasa:c', 'stack:agasa:d']);
     await flush();
     expect((await pending).ok).toBe(true);
@@ -87,5 +93,22 @@ describe('runDeclaredAbilityFlow removeStackedCards', () => {
     const source = useGameStateStore.getState().gameState!.players.self.scene.find((c) => c.uid === 'agasa')!;
     expect(source.state).toBe('active');
     expect(source.stackedCards).toHaveLength(4);
+  });
+
+  it('pays an exact legacy count-only stack without exposing a false identity choice', async () => {
+    const source = useGameStateStore.getState().gameState!.players.self.scene.find((char) => char.uid === 'agasa')!;
+    source.stackedCards = 3;
+
+    const pending = runDeclaredAbilityFlow({ player: 'self' });
+    await pickSource('agasa');
+    await accept();
+
+    expect(useStackedCardCostPickerStore.getState().current).toBeNull();
+    expect(await pending).toMatchObject({ ok: true });
+    const after = useGameStateStore.getState().gameState!;
+    const afterSource = after.players.self.scene.find((char) => char.uid === 'agasa')!;
+    expect(afterSource.state).toBe('sleep');
+    expect(afterSource.stackedCards).toEqual([]);
+    expect(after.players.self.remove).toEqual(['back-card', 'back-card', 'back-card']);
   });
 });

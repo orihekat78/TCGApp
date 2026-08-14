@@ -234,16 +234,16 @@
     {
       "qaId": "card:B03006:4bef6ccb7a3be30a8edea1beddcf56b3c692493ea01d232ff7cb3c66f204829e",
       "answerHash": "73a0f3f8a121372dbba820d7073ccca858ccfc71c61254191bcec921a48c8c8d",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/16-card-set.md:25",
         "src:src/cards/ct-d08/D08021.ts:27",
-        "src:src/cards/ct-p03/B03006.ts:6"
-      ],
-      "noteCodes": [
-        "SELF-REPRINT-REMOVE-CANDIDATE-TEST-MISSING"
+        "src:src/cards/ct-p03/B03006.ts:6",
+        "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:182",
+        "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:188",
+        "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:194"
       ]
     },
     {
@@ -574,11 +574,12 @@
     {
       "qaId": "card:B04083:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305",
       "answerHash": "701cb228b8bc49836ae72bf565010d617f162e30b6fc598b6b5c8ab1906aad39",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04083.ts:1"
+        "src:src/cards/ct-p04/B04083.ts:1",
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:372"
       ]
     },
     {
@@ -1838,11 +1839,12 @@
     {
       "qaId": "card:D05014:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d05/D05014.ts:1"
+        "src:src/cards/ct-d05/D05014.ts:1",
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:355"
       ]
     },
     {

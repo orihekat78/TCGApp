@@ -72,7 +72,9 @@ import { useNextHintPickerStore, useNextHintPicker } from '@/ui/hooks/useNextHin
 import { useSceneSwitchPickerStore } from '../hooks/useSceneSwitchPickerStore.js';
 import { currentInteractionEpoch, isCurrentLiveInteraction } from '../services/terminalInteractionGate.js';
 import { ChoicePickerModal } from './ChoicePickerModal.js';
+import { SelectableCardTile } from './SelectableCardTile.js';
 import { useChoicePicker, useChoicePickerStore } from '../hooks/useChoicePicker.js';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap.js';
 import { DeclareCardNameModal } from './DeclareCardNameModal.js';
 import { useDeclareNamePicker, useDeclareNamePickerStore } from '../hooks/useDeclareNamePicker.js';
 import { useEvidenceFlipPickerStore, useEvidenceFlipPicker } from '../hooks/useEvidenceFlipPicker.js';
@@ -1839,32 +1841,88 @@ function PlaymatHandCostPickerModal(): JSX.Element | null {
 }
 
 function PlaymatStackedCardCostPickerModal(): JSX.Element | null {
-  const expandModal = useCardExpandModal();
   const current = useStackedCardCostPickerStore((s) => s.current);
   if (!current) return null;
-  const pickCands = current.candidates.map((candidate) => ({
-    uid: candidate.instanceId,
-    cardId: candidate.cardId,
-    player: 'self' as const,
-  }));
+  const sessionKey = current.candidates.map((candidate) => candidate.instanceId).join('\u0000');
+  return <PlaymatStackedCardCostPickerDialog key={sessionKey} request={current} />;
+}
+
+function PlaymatStackedCardCostPickerDialog({
+  request,
+}: {
+  request: NonNullable<ReturnType<typeof useStackedCardCostPicker>['current']>;
+}): JSX.Element {
+  const [selected, setSelected] = useState<string[]>([]);
+  const dialogRef = useModalFocusTrap({
+    active: true,
+    onEscape: () => useStackedCardCostPicker().cancel(),
+  });
+  const canConfirm = selected.length >= request.nMin && selected.length <= request.nMax;
+
+  const select = (instanceId: string): void => {
+    setSelected((previous) => previous.includes(instanceId)
+      ? previous.filter((id) => id !== instanceId)
+      : request.nMax === 1
+        ? [instanceId]
+        : previous.length < request.nMax ? [...previous, instanceId] : previous);
+  };
+
   return (
-    <>
-    <CardListModal
-      kind="remove"
-      side="self"
-      cards={current.candidates.map((candidate) => candidate.cardId)}
-      onClose={() => useStackedCardCostPicker().cancel()}
-      onExpand={expandModal.open}
-      pickCands={pickCands}
-      pickSessionKey={current}
-      pickBannerText={`${current.sourceName}: このキャラの下のカードを${current.nMin}枚選んでください`}
-      onPick={(instanceId) => useStackedCardCostPicker().confirm([instanceId])}
-      pickNMin={current.nMin}
-      pickNMax={current.nMax}
-      onPickMulti={(instanceIds) => useStackedCardCostPicker().confirm(instanceIds)}
-    />
-    <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
-    </>
+    <div
+      ref={dialogRef}
+      className="cp-overlay"
+      role="dialog"
+      data-match-modal-registered="true"
+      aria-modal="true"
+      aria-labelledby="stacked-card-cost-title"
+      data-testid="stacked-card-cost-modal"
+    >
+      <div className="cp-modal">
+        <div className="cp-header">
+          <h2 id="stacked-card-cost-title">重ねたカード</h2>
+          <p className="cp-sub">{`${request.sourceName}: 下のカードを${request.nMin}枚選んでください`}</p>
+        </div>
+        <div className="cp-body">
+          <ul className="cp-list">
+            {request.candidates.map((candidate) => (
+              <li
+                key={candidate.instanceId}
+                className={`cp-choice-row${selected.includes(candidate.instanceId) ? ' cp-choice-row--selected' : ''}`}
+              >
+                <SelectableCardTile
+                  cardId=""
+                  instanceId={candidate.instanceId}
+                  hidden
+                  hiddenLabel={`${request.sourceName}の下のカード ${candidate.ordinal}`}
+                  selectTestId={`card-list-pick-${candidate.instanceId}`}
+                  selected={selected.includes(candidate.instanceId)}
+                  onSelect={select}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="cp-actions">
+          <button
+            type="button"
+            className="cp-btn cp-btn-cancel"
+            data-testid="stacked-card-cost-cancel"
+            onClick={() => useStackedCardCostPicker().cancel()}
+          >
+            キャンセル
+          </button>
+          <button
+            type="button"
+            className="cp-btn"
+            data-testid="card-list-pick-confirm"
+            disabled={!canConfirm}
+            onClick={() => useStackedCardCostPicker().confirm(selected)}
+          >
+            {`確定 (${selected.length})`}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

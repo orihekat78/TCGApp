@@ -7,7 +7,7 @@ import { runAtom } from '@/engine/effect/atom-handlers';
 import { _clearPendingEffectPickQueue, _drainPendingEffectPickSide } from '@/engine/effect/pending-state';
 import { applyPickAndContinuation, applyPickSkipAndContinuation, drainAiEffectPicks } from '@/engine/effect/apply-pick';
 import { evalDyn } from '@/engine/dyn/eval';
-import type { CardDef, Effect, EffectCtx, GameState } from '@/engine/types';
+import { FILE_CARD_BACK_PLACEHOLDER, type CardDef, type Effect, type EffectCtx, type GameState } from '@/engine/types';
 
 const CARD = (id: string, level: number): CardDef => ({ id, no: id, kind: 'character', names: [id], colors: ['青'], level, ap: 0, lp: 1, traits: [], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [] });
 
@@ -43,7 +43,10 @@ describe('stackedCardPick', () => {
     start(state, ctx, hostUid);
     const pending = _drainPendingEffectPickSide();
     expect(pending).toMatchObject({ player: 'opp', ownerPlayer: 'self', nMin: 0, nMax: 2 });
-    expect(pending?.candidates.map(c => c.uid)).toEqual(['stack:host:a', 'stack:host:b']);
+    expect(pending?.candidates).toEqual([
+      { uid: 'stack:host:a', cardId: FILE_CARD_BACK_PLACEHOLDER, player: 'opp', hidden: true },
+      { uid: 'stack:host:b', cardId: FILE_CARD_BACK_PLACEHOLDER, player: 'opp', hidden: true },
+    ]);
     applyPickAndContinuation(state, pending!, 'stack:host:a', ['stack:host:a', 'stack:host:b']);
     expect((ctx.bindings as Record<string, unknown>)['$stack']).toEqual([
       { kind: 'stacked', hostUid, cardId: 'STACK2', instanceId: 'stack:host:a' },

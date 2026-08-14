@@ -1,5 +1,9 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
-import { buildGameState, dispatchAction, getGameState, setupGamePage } from './helpers';
+import { buildReplayLogV3 } from '../../src/ai/replay/state-frame';
+import { mutate } from '../../src/engine';
+import { produce } from '../../src/engine/produce';
+import type { GameState } from '../../src/engine/types';
+import { buildCausalGameState, buildGameState, dispatchAction, getGameState, setupGamePage } from './helpers';
 
 async function humanMode(page: Page): Promise<void> {
   await page.evaluate(() => {
@@ -50,6 +54,29 @@ async function closeCardDetails(page: Page): Promise<void> {
   await expect(modal).toBeVisible();
   await modal.locator('.card-expand-close').click();
   await expect(page.locator('.card-expand-modal')).toHaveCount(0);
+}
+
+async function loadReplayFile(page: Page, log: unknown): Promise<void> {
+  await page.locator('[data-testid="game-setup-replay-file"]').setInputFiles({
+    name: 'spectator-private-hand.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(log)),
+  });
+  await expect(page.getByTestId('replay-panel')).toBeVisible({ timeout: 5000 });
+}
+
+async function expectPrivateCardAbsent(
+  page: Page,
+  card: { id: string; name: string; image: string },
+): Promise<void> {
+  const bodyHtml = await page.locator('body').evaluate(element => element.outerHTML);
+  const accessibility = await page.locator('body').ariaSnapshot();
+  for (const secret of [card.id, card.name, card.image]) {
+    expect(bodyHtml).not.toContain(secret);
+    expect(accessibility).not.toContain(secret);
+  }
+  await expect(page.locator(`[data-card-id="${card.id}"]`)).toHaveCount(0);
+  await expect(page.locator(`img[src*="${card.image}"], img[alt*="${card.name}"]`)).toHaveCount(0);
 }
 
 test('BUG-231 log stays text-only while the approved hand magnifier opens card details', async ({ page }) => {
@@ -169,7 +196,7 @@ test('BUG-240 removed fixed HUD cannot cover the card-list close control', async
   expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
 });
 
-test('B04026 completes reveal, reorder, and optional hand sceneEnter in decision order', async ({ page }) => {
+test('B04026 completes reveal, reorder, and a non-leading hand sceneEnter by keyboard', async ({ page }) => {
   const { errors } = await setupGamePage(page);
   await humanMode(page);
   await buildGameState(page, (gs) => {
@@ -181,7 +208,7 @@ test('B04026 completes reveal, reorder, and optional hand sceneEnter in decision
       { type: 'card-back', cardId: 'D08003' },
       { type: 'card-back', cardId: 'D08003' },
     ];
-    gs.players.self.hand = ['B04026'];
+    gs.players.self.hand = ['B04026', 'B04025'];
     gs.players.self.scene = [];
     gs.players.self.deck = ['D08003', 'B04021', 'B04028', 'D08007'];
     gs.players.self.remove = ['D08013'];
@@ -207,10 +234,17 @@ test('B04026 completes reveal, reorder, and optional hand sceneEnter in decision
   await page.getByTestId('deck-reorder-confirm-btn').click();
   await expect(reorder).toHaveCount(0);
 
+  const handPicks = page.locator('.hand-card.hand-card--pickable');
+  await expect(handPicks).toHaveCount(2);
+  await expect(handPicks.nth(0)).toHaveAttribute('data-card-id', 'B04025');
   const handPick = page.locator('.hand-card.hand-card--pickable[data-card-id="B04021"]');
-  await expect(handPick).toBeVisible();
+  await expect(handPick).toHaveRole('button');
+  await expect(handPick).toHaveAttribute('aria-label', /選択$/);
+  await expectTouchTarget(handPick);
   await expect(page.getByTestId('hand-zone-pick-skip')).toBeVisible();
-  await handPick.click();
+  await handPick.focus();
+  await expect(handPick).toBeFocused();
+  await page.keyboard.press('Enter');
 
   await expect.poll(async () => {
     const gs = await getGameState(page);
@@ -218,8 +252,94 @@ test('B04026 completes reveal, reorder, and optional hand sceneEnter in decision
   }).toContain('B04021');
 
   const gs = await getGameState(page);
+  expect(gs.players.self.hand).toContain('B04025');
   expect(gs.players.self.deck.slice(-2)).toEqual(['B04028', 'D08003']);
   expect(gs.players.self.remove).toContain('B04026');
+  expect(errors).toEqual([]);
+});
+
+test('B04026 spectator replay keeps the full-hand scene-entry choice private before and after decline', async ({ page }) => {
+  const { errors } = await setupGamePage(page);
+  await humanMode(page);
+  await buildCausalGameState(page, (gs) => {
+    gs.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    gs.players.self.case = {
+      cardId: 'CASE-GREEN', status: '事件編', requiredEvidence: 7, colors: ['緑'], declaredUseCount: {},
+    };
+    gs.players.self.file = [
+      { type: 'card-back', cardId: 'D08003' },
+      { type: 'card-back', cardId: 'D08003' },
+    ];
+    gs.players.self.hand = ['B04026', 'B04025'];
+    gs.players.self.scene = [];
+    gs.players.self.deck = ['D08003', 'B04021', 'B04028', 'D08007'];
+    gs.players.self.remove = ['D08013'];
+    gs.pendingEffects = [];
+  });
+
+  await dispatchAction(page, { type: 'handUseCard', player: 'self', cardId: 'B04026' });
+  await page.getByTestId('card-list-pick-B04021#1').click();
+  await page.getByTestId('deck-reorder-confirm-btn').click();
+  await expect(page.locator('.hand-card.hand-card--pickable')).toHaveCount(2);
+
+  const pendingState = await getGameState(page) as unknown as GameState;
+  const sessionId = pendingState.causalLog?.sessionId;
+  expect(sessionId).toBeTruthy();
+  const decline = page.getByTestId('hand-zone-pick-skip');
+  await expectTouchTarget(decline);
+  await decline.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.hand-card.hand-card--pickable')).toHaveCount(0);
+  const declinedState = await getGameState(page) as unknown as GameState;
+  expect(declinedState.players.self.hand).toEqual(['B04025', 'B04021']);
+  expect(declinedState.players.self.scene).toEqual([]);
+
+  const terminalState = produce(declinedState, (draft) => {
+    mutate.gameResult.set(draft, 'self', 'concede');
+  });
+  const spectatorReplay = buildReplayLogV3({
+    artifactId: `e2e-${sessionId}`,
+    sessionId: sessionId!,
+    viewerMode: 'spectator',
+    states: [pendingState, declinedState, terminalState],
+  });
+
+  await page.reload();
+  await expect(page.locator('[data-testid="game-setup-replay-file"]')).toBeAttached();
+  await loadReplayFile(page, spectatorReplay);
+
+  const handStrip = page.getByTestId('replay-hand-strip');
+  await expect(handStrip.locator('.replay-hand-card-back')).toHaveCount(2);
+  await expect(page.locator('.hand-card--pickable')).toHaveCount(0);
+  await expect(page.getByTestId('hand-zone-pick-skip')).toHaveCount(0);
+  await expect(page.getByTestId('effect-picker-modal')).toHaveCount(0);
+  await expectPrivateCardAbsent(page, {
+    id: 'B04025',
+    name: '綾小路文麿',
+    image: '1735287737418473.jpg',
+  });
+
+  await page.getByTestId('replay-step').click();
+  await expect(page.getByTestId('replay-progress')).toHaveText(/1 ?\/ ?2/);
+  await expect.poll(async () => {
+    const state = await getGameState(page);
+    return {
+      hiddenHandCount: state.players.self.hand.length,
+      sceneCount: state.players.self.scene.length,
+    };
+  }).toEqual({ hiddenHandCount: 2, sceneCount: 0 });
+  await expectPrivateCardAbsent(page, {
+    id: 'B04025',
+    name: '綾小路文麿',
+    image: '1735287737418473.jpg',
+  });
+  await page.getByTestId('replay-step').click();
+  await expect(page.getByTestId('replay-progress')).toHaveText(/2 ?\/ ?2/);
+  await expectPrivateCardAbsent(page, {
+    id: 'B04025',
+    name: '綾小路文麿',
+    image: '1735287737418473.jpg',
+  });
   expect(errors).toEqual([]);
 });
 

@@ -106,7 +106,8 @@ export function isAllowed(
     case 'handUseCard':
       return flow.canHandUseCard(state, action.player, action.cardId);
     case 'handUseCardSwitch':
-      return flow.canHandUseCardSwitch(state, action.player, action.cardId);
+      return flow.canHandUseCardSwitch(state, action.player, action.cardId)
+        && state.players[action.player].scene.some((char) => char.uid === action.removeUid);
     case 'nextHint':
       return flow.canStartNextHint(state, action.player);
     case 'partnerAbility':

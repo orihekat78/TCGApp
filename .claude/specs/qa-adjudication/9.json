@@ -478,15 +478,13 @@
     {
       "qaId": "card:B04026:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:14",
-        "src:src/cards/ct-p04/B04026.ts:37"
-      ],
-      "noteCodes": [
-        "B04026-OPTIONAL-HAND-SCENE-ENTER-DECLINE-TEST-MISSING"
+        "src:src/cards/ct-p04/B04026.ts:37",
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:337"
       ]
     },
     {

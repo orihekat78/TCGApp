@@ -7,7 +7,7 @@ import { candidates as targetCandidates } from '../../target/candidates.js';
 import { removeExcludedSourceCardId } from '../../read/effect-source.js';
 import { targetFilterToPredicateWithCtx, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait, resolveDeltaToNumber, queuePendingDeckRevealSide } from './_shared.js';
 import type { PendingDeckPlaceSide, PendingDeckReorderSide } from './_shared.js';
-import type { GameState, EffectCtx, Candidate, AtomVerb, TargetingRef } from '../../types/index.js';
+import { FILE_CARD_BACK_PLACEHOLDER, type GameState, type EffectCtx, type Candidate, type AtomVerb, type TargetingRef } from '../../types/index.js';
 import type { TargetFilter } from '../../types/effect.js';
 import { ensureEffectCausalTrace, markEffectCausalAwaitingResume, recordEffectCausalOperation } from '../../log/effect-causal.js';
 
@@ -64,7 +64,12 @@ export function atomStackedCardPick(s: GameState, a: Record<string, unknown>, ct
   if (!owner) return;
   const pending = preparePendingPickRange({
     player: resolvePlayer(a.player, ctx), ownerPlayer: ctx.source.player,
-    candidates: mutate.char.stackedCardEntries(s, hostUid).map(entry => ({ uid: entry.instanceId, cardId: entry.cardId, player: owner })),
+    candidates: mutate.char.stackedCardEntries(s, hostUid).map(entry => ({
+      uid: entry.instanceId,
+      cardId: FILE_CARD_BACK_PLACEHOLDER,
+      player: owner,
+      hidden: true,
+    })),
     atomVerb: 'stackedCardPick', atomArgs: toPlainDeep(a), nMin: min, nMax: max,
     source: pendingSource(s, ctx, {
       cardId: ctx.source.cardId ?? '',

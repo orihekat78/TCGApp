@@ -317,16 +317,15 @@
     {
       "qaId": "card:B03006:151b435edeb61c22d4471596da22371c8592c23c410528efb5e78938a1bb3b54",
       "answerHash": "83d521329e90458d525fb8ebb53e11d58a4adcf35d2cbf475988a0080b4a6e27",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/07-action-flow.md:21",
         "src:src/cards/ct-d08/D08021.ts:62",
-        "src:src/cards/ct-p03/B03006.ts:6"
-      ],
-      "noteCodes": [
-        "ACTION-DECLARE-BEFORE-GUARD-TRIGGER-TEST-MISSING"
+        "src:src/cards/ct-p03/B03006.ts:6",
+        "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:288",
+        "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:291"
       ]
     },
     {
@@ -346,11 +345,17 @@
     {
       "qaId": "card:B03029:4f49c6fb344ba2decc84dcd6321f502294c5c2b218e3c92a50f4785a675772b3",
       "answerHash": "f40c925c8c15f23177eb9aae903cbb9597b035b45133e612054c8e7a370f0db4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03029.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:44",
+        "src:src/cards/ct-p03/B03029.ts:46",
+        "tests:tests/cards/official-qa/B03029-public-event-use.test.ts:208",
+        "tests:tests/cards/official-qa/B03029-public-event-use.test.ts:209",
+        "tests:tests/cards/official-qa/B03029-public-event-use.test.ts:228",
+        "tests:tests/cards/official-qa/B03029-public-event-use.test.ts:231",
+        "tests:tests/cards/official-qa/B03029-public-event-use.test.ts:245"
       ]
     },
     {
@@ -446,11 +451,12 @@
     {
       "qaId": "card:B03132:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305",
       "answerHash": "701cb228b8bc49836ae72bf565010d617f162e30b6fc598b6b5c8ab1906aad39",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03132.ts:1"
+        "src:src/cards/ct-p03/B03132.ts:1",
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:362"
       ]
     },
     {
@@ -481,16 +487,17 @@
     {
       "qaId": "card:B04003:29b8cf6699112a9cca3172f2425ac76e59a7d7337034c7b9985bbdab46e21912",
       "answerHash": "5c8d2c4d68b9bb8262e9b87283e860132c790787785b737ac562d8231daa30b5",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/25-qa-effects-resolution.md:25",
         "src:src/cards/ct-p04/B04003.ts:6",
-        "src:src/engine/effect/consult-choose-intercept.ts:69"
-      ],
-      "noteCodes": [
-        "B04003-CANCEL-REMAINDER-TEST-MISSING"
+        "src:src/engine/effect/consult-choose-intercept.ts:69",
+        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:101",
+        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:102",
+        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:103",
+        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:104"
       ]
     },
     {
@@ -633,11 +640,12 @@
     {
       "qaId": "card:B04083:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04083.ts:1"
+        "src:src/cards/ct-p04/B04083.ts:1",
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:343"
       ]
     },
     {
@@ -1844,11 +1852,12 @@
     {
       "qaId": "card:D05014:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305",
       "answerHash": "701cb228b8bc49836ae72bf565010d617f162e30b6fc598b6b5c8ab1906aad39",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d05/D05014.ts:1"
+        "src:src/cards/ct-d05/D05014.ts:1",
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:386"
       ]
     },
     {

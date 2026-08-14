@@ -8,7 +8,7 @@ import { DeckRevealOverlay } from '@/ui/components/DeckRevealOverlay';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { useGameStateStore, type PendingEffectPick } from '@/ui/state/store';
 import { useEvidenceFlipPickerStore } from '@/ui/hooks/useEvidenceFlipPicker';
-import { useStackedCardCostPickerStore } from '@/ui/hooks/useStackedCardCostPicker';
+import { useStackedCardCostPicker, useStackedCardCostPickerStore } from '@/ui/hooks/useStackedCardCostPicker';
 import { useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
 import type { ResolvedCardMeta } from '@/ui/components/SceneArea';
 import type { HandCardMeta } from '@/ui/components/HandZone';
@@ -308,18 +308,37 @@ describe('Playmat user bug wave', () => {
     expect(container.querySelector('[data-testid="card-list-pick-detail-evidence:self:1"]')).toBeNull();
   });
 
-  it('opens stacked-cost CardList details only through its magnifier', () => {
-    useStackedCardCostPickerStore.setState({
-      current: { sourceName: 'stack', candidates: [{ instanceId: 'stack:0', cardId: 'D08003' }], nMin: 1, nMax: 1 },
-      _resolver: null,
+  it('keeps B03006 stacked identities opaque while selecting an exact non-first occurrence', async () => {
+    const choice = useStackedCardCostPicker().ask({
+      sourceName: 'B03006',
+      candidates: [
+        { instanceId: 'stack:0', ordinal: 1 },
+        { instanceId: 'stack:1', ordinal: 2 },
+      ],
+      nMin: 1,
+      nMax: 1,
     });
     act(() => root.render(<Playmat gameState={createEmptyGameState()} resolveCard={resolveCard} />));
 
-    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-detail-stack:0"]')!).click());
-    expect(container.querySelector('.card-expand-modal')).not.toBeNull();
-    act(() => (container.querySelector<HTMLButtonElement>('.card-expand-close')!).click());
-    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-stack:0"]')!).click());
-    expect(container.querySelector('.card-expand-modal')).toBeNull();
+    const html = container.innerHTML;
+    expect(html).not.toContain('D08003');
+    expect(html).not.toContain('D08015');
+    expect(container.querySelector('[data-testid^="card-list-pick-detail-stack:"]')).toBeNull();
+    const candidates = [...container.querySelectorAll<HTMLButtonElement>('[data-instance-id^="stack:"]')];
+    expect(candidates.map((candidate) => candidate.getAttribute('aria-label'))).toEqual([
+      'B03006の下のカード 1 を選択',
+      'B03006の下のカード 2 を選択',
+    ]);
+    act(() => container.querySelector<HTMLDivElement>('[data-testid="stacked-card-cost-modal"]')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    expect(useStackedCardCostPickerStore.getState().current).not.toBeNull();
+    act(() => candidates[1]!.click());
+    expect(candidates[1]!.getAttribute('aria-pressed')).toBe('true');
+    expect(useStackedCardCostPickerStore.getState().current).not.toBeNull();
+    const confirm = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-confirm"]');
+    expect(confirm).not.toBeNull();
+    act(() => confirm!.click());
+    await expect(choice).resolves.toEqual({ kind: 'confirm', instanceIds: ['stack:1'] });
   });
 
   it('shows only face-up set identities and hides face-down identities from both owners', () => {

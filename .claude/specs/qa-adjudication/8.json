@@ -291,11 +291,17 @@
     {
       "qaId": "card:B03029:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0",
       "answerHash": "ace28d47c654d454586320dc50a9b40679f9f442a52cd20d643581a497ebacce",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03029.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:20",
+        "rules:.claude/rules/16-card-set.md:9",
+        "src:src/cards/ct-p03/B03029.ts:46",
+        "tests:tests/cards/official-qa/B03029-public-event-use.test.ts:156",
+        "tests:tests/cards/official-qa/B03029-public-event-use.test.ts:157",
+        "tests:tests/cards/official-qa/B03029-public-event-use.test.ts:172",
+        "tests:tests/cards/official-qa/B03029-public-event-use.test.ts:174"
       ]
     },
     {
@@ -1710,11 +1716,12 @@
     {
       "qaId": "card:D01014:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d01/D01014.ts:1"
+        "src:src/cards/ct-d01/D01014.ts:1",
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:347"
       ]
     },
     {

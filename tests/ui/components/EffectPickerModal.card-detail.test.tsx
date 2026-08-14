@@ -85,6 +85,33 @@ describe('EffectPickerModal card details', () => {
     expect(hidden.innerHTML).not.toContain('D08003');
   });
 
+  it('keeps stacked-card occurrences opaque even when a legacy pending candidate carries identity', () => {
+    const current = useGameStateStore.getState().pendingEffectPick!;
+    act(() => {
+      useGameStateStore.setState({
+        pendingEffectPick: {
+          ...current,
+          atomVerb: 'stackedCardPick',
+          candidates: [
+            { uid: 'stack:host:a', cardId: 'D08003', player: 'self' },
+            { uid: 'stack:host:b', cardId: 'D08015', player: 'self' },
+          ],
+        },
+      });
+      root.render(<EffectPickerModal />);
+    });
+
+    const candidates = [...container.querySelectorAll<HTMLButtonElement>('[data-testid^="effect-pick-cand-stack:host:"]')];
+    expect(candidates).toHaveLength(2);
+    expect(candidates.map((candidate) => candidate.textContent)).toEqual(['非公開カード 1自', '非公開カード 2自']);
+    expect(candidates.map((candidate) => candidate.getAttribute('aria-label'))).toEqual([
+      '自分の非公開カード 1枚目を選択',
+      '自分の非公開カード 2枚目を選択',
+    ]);
+    expect(candidates.every((candidate) => !candidate.innerHTML.includes('D08003') && !candidate.innerHTML.includes('D08015'))).toBe(true);
+    expect(container.querySelector('[data-testid^="effect-pick-detail-stack:host:"]')).toBeNull();
+  });
+
   it('opens public details from context menu without selecting', () => {
     act(() => root.render(<EffectPickerModal />));
 

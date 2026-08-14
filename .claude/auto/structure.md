@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6036
+- **ファイル数**: 6046
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1479,6 +1479,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-28-you-vs-cpu-human-validation-row-055-attempt-3.md` — YOU-vs-CPU row 055 attempt 3
     - `2026-07-29-engine-adversarial.md` — Session memory
     - `2026-08-09-ui-quality-causal-public-match.md` — UI品質・因果表示プログラム（2026-08-02〜09）
+    - `2026-08-14-qa-engine-public-evidence.md` — QA engine and public-evidence decisions
     - `2026-08-14-qa-wave13-match-cost.md` — QA Wave 13 and memory rotation
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
@@ -5433,8 +5434,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B02008-turn-limit-order-ap.test.ts` — qaId=card:B02008:3240a4626ffa31e953f10ca03af61b33b9d3367feeffa3bc87cd8b3c7be01d9…
       - `B02023-facedown-set-privacy.test.ts` — qa: card:B02023:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b
       - `B03002-B05005-next-hint-order-guard.test.ts` — Official Q&A certification: public dispatch paths only.
+      - `B03006-public-stack-lifecycle.test.ts` — qa: card:B03006:151b435edeb61c22d4471596da22371c8592c23c410528efb5e78938a1bb3b54
       - `B03020.test.ts` — qaId=card:B03020:7e1b89161d4cc08ba1dd9f60c2dd203d56a0d75ebc1fe8ce0ada2bb43af5a27…
       - `B03023.test.ts` — Official Q&A: B03023 脇田兼則
+      - `B03025-public-refresh-flow.test.ts` — qa: card:B03025:51de3c143838c348f32a12d2252063f7ac6b6d884ab75fc3ef24a003df5b1731
+      - `B03029-public-event-use.test.ts` — qa: card:B03029:83d447e04f250f995eb1040561f6f0f992b0be02cc6c13613c214b837568b222
+      - `B04003-choose-intercept-public.test.ts` — qa: card:B04003:29b8cf6699112a9cca3172f2425ac76e59a7d7337034c7b9985bbdab46e21912
       - `B04012-optional-decline.test.ts` — qa: card:B04012:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d
       - `B04015-B04028-action-hirameki.test.ts` — qa: card:B04015:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
       - `B04030.test.ts` — The opposing contact character has left, but Kaito remains in the scene.
@@ -5442,8 +5447,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B04074.test.ts`
       - `B05118-family-nonblack-partner.test.ts` — Official Q&A cluster: these seven cases share the same printed
       - `B06042-effect-contact-public.test.ts` — qa: card:B06042:51624536ab2df37b3ce09f45df7c715d9ac3c8bbb64d8ff36ed28ebcc48829d5
+      - `B06042-grant-lifecycle-public.test.ts` — qa: card:B06042:954b33bfb2a596a7ba88bb1d6476fd34416af93d38e8012a55157693df8c903a
       - `B07066-declared-cost-optional.test.ts` — qa: card:B07066:939f5e30d9e32c8b233a160a6f70ebb932c71ce0971e6f66cfb3701d5fff76cd
       - `B07102-refresh-includes-removed.test.ts` — qaId=card:B07102:99f16dd6a248501c9d63a44dd85b2d6097ef720865e4181d1b451669f04b05d…
+      - `B08087-B08091-leave-evidence-public.test.ts` — qa: card:B08087:1f49f9f42b38c241ebd655d06681a4cb1c6030ffaa8345da75416cb84193fc80
       - `B09090-PR286-entry-waiver.test.ts` — qaId=card:B09090:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7e…
       - `D06003-D06024-public-path.test.ts` — qaId=card:D06003:e918d066190b75a908b8154f185c9c4291e8387cb2fc4797f5744acc49a362d…
       - `D10003-D10010-printing-copy-limit.test.ts` — qaId=card:D10003:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2…
@@ -5451,6 +5458,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `deck-refresh-wave8.test.ts` — qa: card:B04012:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4
       - `set-card-host-absent.test.ts`
       - `set-card-host-owner-wave3.test.ts` — qaId=card:B02018:dc712167e0587386756f5293d40bf1766e89e09669554ebcde8e028749d962d…
+      - `short-deck-reveal-hand-entry-public.test.ts` — rules: 15-abilities-effects.md, 17-icons.md, 20-color-and-switch.…
     - **`pr-01/`**
       - `PR100.test.ts`
       - `PR158.test.ts` — tests/cards/pr-01/PR158 犯人 (character, cutin remove-name scaling AP)
@@ -6205,6 +6213,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `FileArea.test.tsx` — Phase 7 Task 7.8: FileArea tests
       - `GameSetupModal.test.tsx` — Task 8.4: GameSetupModal tests
       - `GuardPickerModal.test.tsx` — Phase 8.6α: GuardPickerModal tests
+      - `HandZone.keyboard.test.tsx` — @vitest-environment jsdom
       - `HandZone.test.tsx` — Phase 7 Task 7.11: HandZone tests
       - `HiramekiDemoBanner.test.tsx`
       - `HiramekiPickerModal.test.tsx` — Phase 8 完全クローズ Commit 3a: HiramekiPickerModal SSR test
@@ -6239,6 +6248,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bug-108-choice-picker.test.ts` — BUG-108: D11012 a1「LP＋1するか / AP＋2000する」の choice 択一 UI フロー統合テスト。
       - `bug-245-declared-ability-cost.test.ts` — Structural declaration discovery intentionally stays timing-agnostic.
       - `bug-250-empty-partner-actions.test.ts` — BUG-250: 未初期化パートナーを共通パートナーactionとして使用できてはならない。
+      - `hand-use-card-switch-authority.test.ts`
       - `match-modal-inventory.txt`
       - `movePresentationDelay.test.ts`
       - `pending-provenance.test.ts`

@@ -1702,7 +1702,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-d02/D02014.ts:1",
-        "tests:tests/cards/cluster12-nested-filter-dyn.test.ts:176"
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:380"
       ]
     },
     {
@@ -1724,7 +1724,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-d03/D03014.ts:1",
-        "tests:tests/cards/cluster12-nested-filter-dyn.test.ts:176"
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:382"
       ]
     },
     {
@@ -1772,7 +1772,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-d07/D07023.ts:1",
-        "tests:tests/cards/cluster12-nested-filter-dyn.test.ts:176"
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:388"
       ]
     },
     {
