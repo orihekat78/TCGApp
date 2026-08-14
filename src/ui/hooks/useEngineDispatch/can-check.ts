@@ -130,6 +130,7 @@ export function isAllowed(
       const ax = flow.action._getContext(state, action.actionId);
       if (!ax) return false;
       if (ax.phase !== 'guard-window') return false;
+      if (hasBlockingResolutionPrompt()) return false;
       const excludedUid = ax.target.kind === 'char' ? ax.target.uid : undefined;
       const required = flow.guard.mustGuardCandidates(state, ax.byUid, excludedUid);
       if (action.guarderUid === null) {

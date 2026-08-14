@@ -1,3 +1,5 @@
+// qaId=card:B03020:7e1b89161d4cc08ba1dd9f60c2dd203d56a0d75ebc1fe8ce0ada2bb43af5a270
+// qaId=card:B03020:9e084cf085f22eef16c2055f8f9232946d3ea27dccdc48e09f6017c75558a781
 // Official Q&A B03020: fewer than three cards cannot resolve the effect.
 // rules: 07-action-flow.md, 14-refresh.md, 15-abilities-effects.md, 26-qa-deck-refresh.md
 
@@ -14,7 +16,13 @@ import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _drainPendingEffectOptionalSide, _clearPendingEffectOptionalSide } from '@/engine/effect/pending-state';
 import { applyOptionalAndContinuation } from '@/engine/effect/apply-pick';
 import { B03020 } from '@/cards/ct-p03/B03020';
+import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import { useGameStateStore } from '@/ui/state/store';
+import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 import type { CardDef, GameState } from '@/engine/types';
+
+const EXACT_THREE_QA_ID = 'card:B03020:7e1b89161d4cc08ba1dd9f60c2dd203d56a0d75ebc1fe8ce0ada2bb43af5a270';
+const DECLARE_BEFORE_GUARD_QA_ID = 'card:B03020:9e084cf085f22eef16c2055f8f9232946d3ea27dccdc48e09f6017c75558a781';
 
 const MATCH: CardDef = {
   id: 'B03020_MATCH', no: 'B03020_MATCH', kind: 'character', names: ['妃英理'],
@@ -51,6 +59,16 @@ function declareAndChoose(s: GameState, uid: string, take: boolean, owner: 'self
   return ax;
 }
 
+function declareAndChooseThroughPublicDispatch(s: GameState, uid: string, take: boolean) {
+  useGameStateStore.getState().resetMatchSessionState();
+  useGameStateStore.setState({ gameState: s, pendingEffectOptional: null });
+  expect(dispatchEngineAction({ type: 'actionDeclareCase', byUid: uid, targetPlayer: 'opp' })).toEqual({ ok: true });
+  const pending = useGameStateStore.getState().pendingEffectOptional;
+  expect(pending, `${EXACT_THREE_QA_ID}: declaration surfaces B03020 optional`).not.toBeNull();
+  expect(dispatchCurrentDecision({ type: 'optionalResolve', run: take })).toEqual({ ok: true });
+  return useGameStateStore.getState().gameState!;
+}
+
 beforeEach(() => {
   event._resetRegistry();
   _resetTriggeredRegistered();
@@ -59,11 +77,33 @@ beforeEach(() => {
   _resetActionContexts();
   _clearPendingEffectOptionalSide();
   _setHumanPlayerSide('self');
+  useGameStateStore.getState().resetMatchSessionState();
+  useGameStateStore.setState({ gameState: null, pendingEffectOptional: null });
   for (const card of [B03020, MATCH, DECOY]) registerCardDef(card);
   registerTriggeredListener();
 });
 
 describe('B03020 official-QA exact-three reveal gate', () => {
+  it(`${DECLARE_BEFORE_GUARD_QA_ID}: public declaration resolves B03020 before guard choice becomes available`, () => {
+    const { s, uid } = setup([MATCH.id, DECOY.id, DECOY.id]);
+    useGameStateStore.getState().resetMatchSessionState();
+    useGameStateStore.setState({ gameState: s, pendingEffectOptional: null });
+
+    expect(dispatchEngineAction({ type: 'actionDeclareCase', byUid: uid, targetPlayer: 'opp' })).toEqual({ ok: true });
+    const store = useGameStateStore.getState();
+    expect(store.pendingEffectOptional?.source.cardId, `${DECLARE_BEFORE_GUARD_QA_ID}: B03020 trigger is surfaced`).toBe(B03020.id);
+    expect(store.gameState?.actionContexts?.[store.activeActionId!]?.phase, `${DECLARE_BEFORE_GUARD_QA_ID}: action has reached the guard window after the trigger`).toBe('guard-window');
+    expect(
+      dispatchEngineAction({ type: 'actionGuard', actionId: store.activeActionId!, guarderUid: null }),
+      `${DECLARE_BEFORE_GUARD_QA_ID}: guard choice is blocked until B03020 resolves`,
+    ).toEqual({ ok: false, reason: 'not-allowed' });
+    expect(dispatchCurrentDecision({ type: 'optionalResolve', run: false })).toEqual({ ok: true });
+    expect(
+      dispatchEngineAction({ type: 'actionGuard', actionId: store.activeActionId!, guarderUid: null }),
+      `${DECLARE_BEFORE_GUARD_QA_ID}: guard choice opens after B03020 resolves`,
+    ).toEqual({ ok: true });
+  });
+
   it('keeps the activation gate after JSON descriptor serialization', () => {
     const revived = JSON.parse(JSON.stringify(B03020)) as CardDef;
     expect(revived.abilities[0]?.effect).toMatchObject({
@@ -94,6 +134,17 @@ describe('B03020 official-QA exact-three reveal gate', () => {
     expect(readChar.ap(s, uid)).toBe(apBefore);
     expect(s.log.some(entry => entry.action === 'effect:deckRevealUntil')).toBe(false);
     expect(s.log.some(entry => entry.action === 'effect:boundToRemove')).toBe(false);
+  });
+
+  it(`${EXACT_THREE_QA_ID}: public dispatch keeps a two-card deck unchanged after accepting B03020`, () => {
+    const { s, uid } = setup([MATCH.id, DECOY.id]);
+    const apBefore = readChar.ap(s, uid);
+    const after = declareAndChooseThroughPublicDispatch(s, uid, true);
+
+    expect(after.players.self.deck, `${EXACT_THREE_QA_ID}: short deck is not revealed or removed`).toEqual([MATCH.id, DECOY.id]);
+    expect(after.players.self.remove, `${EXACT_THREE_QA_ID}: short deck moves no card to remove`).toEqual([]);
+    expect(readChar.ap(after, uid), `${EXACT_THREE_QA_ID}: short deck grants no action AP`).toBe(apBefore);
+    expect(after.log.some(entry => entry.action === 'effect:deckRevealUntil'), `${EXACT_THREE_QA_ID}: reveal atom is skipped`).toBe(false);
   });
 
   it('deck 3 + match: action declaration is before guard, resolves all three, gives action AP, then refreshes', () => {
@@ -148,20 +199,4 @@ describe('B03020 official-QA exact-three reveal gate', () => {
     expect(readChar.ap(s, uid)).toBe(apBefore);
   });
 
-  it('documents the current unresolved ruling as a resolution-time deck-count check', () => {
-    const gained = setup([MATCH.id, DECOY.id]);
-    const gainedPending = beginDeclaration(gained.s, gained.uid);
-    gained.s.players.self.deck.push(DECOY.id);
-    applyOptionalAndContinuation(gained.s, gainedPending.pending, true);
-    runAllUntilEmpty(gained.s);
-    expect(gained.s.log.some(entry => entry.action === 'effect:deckRevealUntil')).toBe(true);
-
-    _clearPendingEffectOptionalSide();
-    const lost = setup([MATCH.id, DECOY.id, DECOY.id]);
-    const lostPending = beginDeclaration(lost.s, lost.uid);
-    lost.s.players.self.deck.pop();
-    applyOptionalAndContinuation(lost.s, lostPending.pending, true);
-    runAllUntilEmpty(lost.s);
-    expect(lost.s.log.some(entry => entry.action === 'effect:deckRevealUntil')).toBe(false);
-  });
 });

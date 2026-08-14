@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-qa-trace.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:qa-trace`
-> Source hash: `0ebc08d688db`
+> Source hash: `cceea9292ba2`
 
 Tracked Q&A identifiers and digests only. Official question and answer bodies are intentionally excluded.
 
@@ -20,8 +20,8 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 ## Coverage classification
 
 - total: 2964
-- matched: 529
-- test-missing: 2435
+- matched: 531
+- test-missing: 2433
 - legacy-unreviewed: 0
 - unmapped: 0
 - mismatch: 0
@@ -372,8 +372,8 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 | `card:B03019:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58` | `B03019` | `B03019` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B03019:409c896d0c2958faf69bd8e6fb7a1d65659dbd905bad76bb65ad1f5c3a1dee17` | `B03019` | `B03019` | shipped | test-missing | test-gap | 3 | 0 |
 | `card:B03019:bdfb7773e5a3e42df1affd514d631eb986d93e31066129e006ce5c03f62733ca` | `B03019` | `B03019` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:B03020:7e1b89161d4cc08ba1dd9f60c2dd203d56a0d75ebc1fe8ce0ada2bb43af5a270` | `B03020` | `B03020` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:B03020:9e084cf085f22eef16c2055f8f9232946d3ea27dccdc48e09f6017c75558a781` | `B03020` | `B03020` | shipped | test-missing | test-gap | 1 | 0 |
+| `card:B03020:7e1b89161d4cc08ba1dd9f60c2dd203d56a0d75ebc1fe8ce0ada2bb43af5a270` | `B03020` | `B03020` | shipped | matched | aligned | 1 | 4 |
+| `card:B03020:9e084cf085f22eef16c2055f8f9232946d3ea27dccdc48e09f6017c75558a781` | `B03020` | `B03020` | shipped | matched | aligned | 1 | 3 |
 | `card:B03022:b2449f35b17353faaf7453e2d3e294ea5173d4f40c10e1e8609f64413224ce04` | `B03022` | `B03022`, `B03022P` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B03023:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9` | `B03023` | `B03023` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B03024:61418c1c52950aa58152bdd95547dee34b552a93d4cbd4956233c44b440fb71a` | `B03024` | `B03024`, `B03024P` | shipped | test-missing | test-gap | 1 | 0 |
@@ -3270,8 +3270,6 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 - missing-test: `card:B03019:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58`
 - missing-test: `card:B03019:409c896d0c2958faf69bd8e6fb7a1d65659dbd905bad76bb65ad1f5c3a1dee17`
 - missing-test: `card:B03019:bdfb7773e5a3e42df1affd514d631eb986d93e31066129e006ce5c03f62733ca`
-- missing-test: `card:B03020:7e1b89161d4cc08ba1dd9f60c2dd203d56a0d75ebc1fe8ce0ada2bb43af5a270`
-- missing-test: `card:B03020:9e084cf085f22eef16c2055f8f9232946d3ea27dccdc48e09f6017c75558a781`
 - missing-test: `card:B03022:b2449f35b17353faaf7453e2d3e294ea5173d4f40c10e1e8609f64413224ce04`
 - missing-test: `card:B03023:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9`
 - missing-test: `card:B03024:61418c1c52950aa58152bdd95547dee34b552a93d4cbd4956233c44b440fb71a`

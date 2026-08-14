@@ -274,15 +274,16 @@
     {
       "qaId": "card:B03020:7e1b89161d4cc08ba1dd9f60c2dd203d56a0d75ebc1fe8ce0ada2bb43af5a270",
       "answerHash": "4c95eb735b3b3b1c2bf66a51654d4c81c639fcdf56d07dcd6e6bf91cf239d5e3",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/26-qa-deck-refresh.md:65",
-        "src:src/cards/ct-p03/B03020.ts:35"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/26-qa-deck-refresh.md:63",
+        "src:src/cards/ct-p03/B03020.ts:36",
+        "tests:tests/cards/official-qa/B03020.test.ts:144",
+        "tests:tests/cards/official-qa/B03020.test.ts:145",
+        "tests:tests/cards/official-qa/B03020.test.ts:146",
+        "tests:tests/cards/official-qa/B03020.test.ts:147"
       ]
     },
     {
