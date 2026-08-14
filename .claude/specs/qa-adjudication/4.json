@@ -123,15 +123,16 @@
     {
       "qaId": "card:B02023:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b",
       "answerHash": "ada780e2211d96e25476445143235202591a9a4e81949e19ff7f331d1d6479d0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/16-card-set.md:19",
-        "src:src/cards/ct-p02/B02023.ts:24"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/ct-p02/B02023.ts:23",
+        "tests:tests/cards/official-qa/B02023-facedown-set-privacy.test.ts:85",
+        "tests:tests/cards/official-qa/B02023-facedown-set-privacy.test.ts:94",
+        "tests:tests/e2e/B02023-facedown-set-privacy.spec.ts:201",
+        "tests:tests/e2e/B02023-facedown-set-privacy.spec.ts:211"
       ]
     },
     {
