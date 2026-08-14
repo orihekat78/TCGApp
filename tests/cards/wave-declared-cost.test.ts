@@ -1,6 +1,6 @@
 // wave-declared-cost — B07066 赤井秀一 / PR194 灰原哀 を実 engine 経路で駆動する挙動テスト。
 // 既存 verb のみ (engine変更0): enter-observer triggerCharMatches{side:self,payloadKey:uid} /
-//   sleepChar cost / removeFromScene self cost / deckRevealUntil{maxN,chooseMatch:upTo|forced} /
+//   sleepChar cost / removeFromScene self cost / deckRevealUntil{maxN,chooseMatch:upTo|exact-one} /
 //   handAddFromDeck / deckToBottomBound / discard / sceneRemove。
 // BUG-117/118 lesson: DSL に filter を書いても engine が実評価する保証はないため、
 //   decoy を盤面/デッキに置いて outcome で 1対1 検証する。
@@ -43,7 +43,7 @@ const AP9000 = 'DEC_AP9000';   // AP9000 → apMax:8000 違反で残る
 const AKAI_CH = 'DEC_AKAI_CH'; // 赤井家 character → match
 const AKAI_EV = 'DEC_AKAI_EV'; // 赤井家 *event*   → kind:character 違反で非該当
 const OTHER = 'DEC_OTHER';     // 警察 character   → trait 違反で非該当
-// PR194 forced-take decoys
+// PR194 exact-one pick decoys
 const TOP = 'DEC_TOP', SECOND = 'DEC_SECOND', FILL1 = 'DEC_FILL1';
 
 function registerDecoys(): void {
@@ -182,9 +182,9 @@ describe('B07066 a2 effect: 上から3枚見て(赤井家×character)1枚まで�
 });
 
 // ============================================================
-// PR194 灰原哀 a1 — 宣言: 自身リムーブ→上から2枚見て1枚(強制top)手札→残りデッキ下
+// PR194 灰原哀 a1 — 宣言: 自身リムーブ→上から2枚見て必ず1枚選択して手札→残りデッキ下
 // ============================================================
-describe('PR194 a1 effect: 上から2枚見て1枚必ず手札(forced top)→残りデッキ下', () => {
+describe('PR194 a1 effect: 上から2枚から必ず1枚選んで手札→残りデッキ下', () => {
   function runEff(deck: string[]): GameState {
     const s = baseTurn5();
     s.players.self.scene = [makeChar({ uid: 'ai#1', cardId: 'PR194', state: 'active' })];
@@ -195,15 +195,15 @@ describe('PR194 a1 effect: 上から2枚見て1枚必ず手札(forced top)→残
     after = produce(after, (d) => _drainAllEffectPicksForTest(d, new HeuristicPolicy()));
     return after;
   }
-  it('filter 無 → 窓先頭(top)を強制取得 / 残り1枚デッキ下 (B01048 同近似)', () => {
+  it('2枚の窓からちょうど1枚を手札へ / 残り1枚をデッキ下へ', () => {
     const after = runEff([TOP, SECOND]);
-    expect(inHand(after, TOP), 'top カードを手札へ (forced first-match)').toBe(true);
-    expect(inHand(after, SECOND), 'SECOND は取得されない').toBe(false);
-    expect(inDeck(after, SECOND), 'SECOND は残り → デッキ下へ').toBe(true);
+    const looked = [TOP, SECOND];
+    expect(looked.filter(cardId => inHand(after, cardId)), '窓内から手札へ入るのは1枚').toHaveLength(1);
+    expect(looked.filter(cardId => inDeck(after, cardId)), '窓内に残るのは1枚').toHaveLength(1);
   });
   it('maxN:2 → 窓外(3枚目)は触れない', () => {
     const after = runEff([TOP, SECOND, FILL1]);
-    expect(inHand(after, TOP), 'top 取得').toBe(true);
+    expect([TOP, SECOND].some(cardId => inHand(after, cardId)), '窓内から1枚取得').toBe(true);
     expect(inDeck(after, FILL1), '窓外 FILL1 は deck に残留 (maxN:2)').toBe(true);
   });
 });
@@ -245,16 +245,30 @@ describe('B07066 descriptor pin', () => {
 });
 
 describe('PR194 descriptor pin', () => {
-  it('a1 = declared + removeFromScene(self) cost + deckRevealUntil{maxN:2, filter 省略} → handAdd → deckToBottomBound', () => {
+  it('a1 = declared + removeFromScene(self) cost + bind-only reveal → exact-one bound pick → deckToBottomBound', () => {
     const a1 = PR194.abilities.find((a) => a.id === 'a1')!;
     expect(a1.type).toBe('declared');
     expect(a1.cost).toMatchObject({ kind: 'removeFromScene', target: { kind: 'self' }, n: 1 });
     const steps = (a1.effect as { steps: unknown[] }).steps as Array<Record<string, unknown>>;
     const dr = steps[0] as { verb: string; args: Record<string, unknown> };
     expect(dr.verb).toBe('deckRevealUntil');
-    expect(dr.args.maxN).toBe(2);
-    expect(dr.args.filter, 'filter は省略 (undefined=全カード一致=forced top)').toBeUndefined();
-    expect(steps[1]).toMatchObject({ kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' }, then: { verb: 'handAddFromDeck', args: { cardId: '$matched.cardId' } } });
+    expect(dr.args).toMatchObject({ player: 'self', maxN: 2, bind: '$revealed' });
+    expect(dr.args).not.toHaveProperty('bindMatch');
+    expect(steps[1]).toMatchObject({
+      kind: 'atom',
+      verb: 'handAddFromDeck',
+      args: {
+        player: 'self',
+        cardId: '$pick.cardId',
+        target: {
+          kind: 'pick',
+          chooser: 'self',
+          n: { min: 1, max: 1 },
+          query: { area: 'deck', side: 'self', fromGroupCards: '$revealed' },
+        },
+      },
+    });
     expect(steps[2]).toMatchObject({ verb: 'deckToBottomBound', args: { bindKey: '$revealed' } });
+    expect(JSON.parse(JSON.stringify(a1.effect))).toEqual(a1.effect);
   });
 });
