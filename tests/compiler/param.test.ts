@@ -9,6 +9,30 @@ const { extractSlots, buildParamRules, instantiate, stripDesc, deepEqual } = req
 
 const ROOT = path.join(__dirname, '..', '..');
 
+describe('compiler/param collision safety', () => {
+  it('rejects distinct slot occurrences that bind the same DSL paths', () => {
+    const rules = [{
+      key: 'character|effect|draw 1 then discard 1',
+      ability: {
+        effect: {
+          kind: 'sequence',
+          steps: [
+            { kind: 'atom', verb: 'draw', args: { n: 1 } },
+            { kind: 'atom', verb: 'discard', args: { n: 1 } },
+          ],
+        },
+      },
+      exemplars: ['X'],
+      origins: ['desc'],
+      count: 1,
+    }];
+
+    const { rules: prs, rejected } = buildParamRules(rules);
+    expect(prs).toHaveLength(0);
+    expect(rejected).toHaveLength(1);
+  });
+});
+
 describe('compiler/param — extractSlots', () => {
   it('数値/色/カード名/特徴 を occurrence 順に slot 化する', () => {
     const { template, slots } = extractSlots(
@@ -46,7 +70,7 @@ describe('compiler/param — extractSlots', () => {
     const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'compiler', 'rules', 'param-rules.json'), 'utf8'));
     const publicRevealRules = data.rules.filter((r: { groupKey: string }) => r.groupKey.includes('相手は手札を公開する。'));
 
-    expect(publicRevealRules).toHaveLength(3);
+    expect(publicRevealRules).toHaveLength(2);
     expect(publicRevealRules.map((r: { skeleton: unknown }) => r.skeleton)).toEqual(expect.arrayContaining([
       expect.objectContaining({
         effect: expect.objectContaining({ steps: expect.arrayContaining([
@@ -127,5 +151,11 @@ describe('compiler/param — checked-in param-rules.json 整合', () => {
   it('deepEqual/stripDesc ヘルパ契約', () => {
     expect(deepEqual({ a: 1, b: [2] }, { b: [2], a: 1 })).toBe(true);
     expect(stripDesc({ description: 'x', type: 'declared' })).toEqual({ type: 'declared' });
+  });
+
+  it('does not mine cards whose distinct text slots collide on one DSL path', () => {
+    const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const collisionExemplars = new Set(['B03034', 'B05066', 'B05066P']);
+    expect(data.rules.some((r: { exemplars: string[] }) => r.exemplars.some((id) => collisionExemplars.has(id)))).toBe(false);
   });
 });

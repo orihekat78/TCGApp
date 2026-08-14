@@ -1,7 +1,7 @@
 {
  "generatedBy": "scripts/compiler/mine.cjs",
  "minedFromShipped": 2256,
- "ruleCount": 1168,
+ "ruleCount": 1172,
  "rules": [
   {
    "key": "case|effect|COLSPAN|自分の【黒】のパートナーの【事件解決】能力を以下の能力に書き換える。\n【解決編】【証拠隠滅】【スリープ】〚証拠を事件レベルの数だけリムーブする〛：相手はゲームに敗北する。",
@@ -2894,8 +2894,9 @@
        "args": {
         "faceUp": false,
         "fromDeckTop": true,
-        "player": "opp",
-        "uid": "$contact.targetUid"
+        "inContact": true,
+        "max": 1,
+        "player": "opp"
        },
        "kind": "atom",
        "verb": "charSetCard"
@@ -4973,41 +4974,6 @@
    ],
    "origins": [
     "colspan-desc"
-   ],
-   "count": 2
-  },
-  {
-   "key": "character|effect|COLSPAN|【パートナー赤】【自分ターン中】【ターン1】相手の現場にいるキャラがリムーブされたとき、レベル8以下のキャラを1枚まで選び、リムーブする。\n【宣言】【ターン1】相手の現場にいるキャラを1枚まで選び、ターン終了時までレベル－1する。この能力はパートナーエリアでも宣言できる。",
-   "ability": {
-    "effect": {
-     "args": {
-      "delta": -1,
-      "max": 1,
-      "player": "self",
-      "scope": "turn",
-      "side": "opp"
-     },
-     "kind": "atom",
-     "verb": "charModifyLevel"
-    },
-    "limit": {
-     "kind": "turn",
-     "n": 1
-    },
-    "ruleRefs": [
-     "rules/15-abilities-effects.md",
-     "rules/17-icons.md",
-     "rules/21-declared-ability-cost.md"
-    ],
-    "scope": "on-partner-area",
-    "type": "declared"
-   },
-   "exemplars": [
-    "B05066",
-    "B05066P"
-   ],
-   "origins": [
-    "colspan-elim"
    ],
    "count": 2
   },
@@ -12955,6 +12921,63 @@
    ],
    "origins": [
     "desc"
+   ],
+   "count": 2
+  },
+  {
+   "key": "character|effect|【パートナー赤】【自分ターン中】【ターン1】相手の現場にいるキャラがリムーブされたとき、レベル8以下のキャラを1枚まで選び、リムーブする。",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "color": "赤",
+       "kind": "partnerColor"
+      },
+      {
+       "kind": "turn",
+       "player": "self"
+      }
+     ],
+     "kind": "and"
+    },
+    "effect": {
+     "args": {
+      "cause": "effect",
+      "filter": {
+       "kind": "character",
+       "levelMax": 8
+      },
+      "max": 1,
+      "player": "self",
+      "side": "either"
+     },
+     "kind": "atom",
+     "verb": "sceneRemove"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "leave:to-remove",
+     "matcherCondition": {
+      "kind": "removedCharMatches",
+      "side": "opp"
+     }
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B05066",
+    "B05066P"
+   ],
+   "origins": [
+    "elim"
    ],
    "count": 2
   },
@@ -29039,6 +29062,7 @@
       {
        "args": {
         "bind": "named",
+        "domain": "registered-character-card-name",
         "optional": true
        },
        "kind": "atom",
@@ -29068,12 +29092,14 @@
     "type": "declared"
    },
    "exemplars": [
+    "PR099",
     "PR105"
    ],
    "origins": [
-    "desc"
+    "desc",
+    "elim"
    ],
-   "count": 1
+   "count": 2
   },
   {
    "key": "character|effect|【宣言】【ターン1】レベル7以下のキャラを1枚まで選び、アクティブにし、AP＋1000し、ターン終了時まで〚突撃〛を与える。カードを1枚引く。この能力は自分の現場に〚カード名［降谷零］〛と〚カード名［諸伏景光］〛と〚カード名［伊達航］〛と〚カード名［萩原研二］〛がいる場合に宣言できる。",
@@ -29294,6 +29320,41 @@
     "desc"
    ],
    "count": 3
+  },
+  {
+   "key": "character|effect|【宣言】【ターン1】相手の現場にいるキャラを1枚まで選び、ターン終了時までレベル－1する。この能力はパートナーエリアでも宣言できる。",
+   "ability": {
+    "effect": {
+     "args": {
+      "delta": -1,
+      "max": 1,
+      "player": "self",
+      "scope": "turn",
+      "side": "opp"
+     },
+     "kind": "atom",
+     "verb": "charModifyLevel"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-partner-area",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B05066",
+    "B05066P"
+   ],
+   "origins": [
+    "elim"
+   ],
+   "count": 2
   },
   {
    "key": "character|effect|【宣言】【ターン1】相手の現場にいるキャラを1枚まで選び、デッキの下に移す。相手のFILEエリアにあるカードを上から1枚表向きにする。",
@@ -37051,6 +37112,7 @@
     },
     "ruleRefs": [
      "rules/13-keywords.md",
+     "rules/15-abilities-effects.md",
      "rules/16-card-set.md",
      "rules/17-icons.md"
     ],
@@ -37062,12 +37124,14 @@
     "type": "triggered"
    },
    "exemplars": [
+    "PR099",
     "PR105"
    ],
    "origins": [
+    "desc",
     "elim"
    ],
-   "count": 1
+   "count": 2
   },
   {
    "key": "character|effect|【登場時】自分のデッキのカードを上から1枚見る。その中から〚特徴［FBI］〛のキャラを1枚まで公開して手札に加え、残りを好きな順番でデッキの下に移す。",
@@ -46408,6 +46472,90 @@
    ],
    "origins": [
     "elim"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【相手ターン中】【現場リムーブ時】自分のリムーブエリアにある〚特徴［鈴木財閥］〛のキャラを1枚まで選び、手札に加える。",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "opp"
+    },
+    "effect": {
+     "args": {
+      "filter": {
+       "kind": "character",
+       "trait": "鈴木財閥"
+      },
+      "max": 1,
+      "player": "self"
+     },
+     "kind": "atom",
+     "verb": "handAddFromRemove"
+    },
+    "ruleRefs": [
+     "rules/03-field-areas.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/19-special-rules.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "leave:to-remove",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B05058"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【相手ターン中】【現場リムーブ時】自分のリムーブエリアにあるレベル4以下の【黒】のキャラを1枚まで選び、スリープ状態で登場させる。",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "opp"
+    },
+    "effect": {
+     "args": {
+      "enterSleep": true,
+      "filter": {
+       "color": "黒",
+       "kind": "character",
+       "levelMax": 4
+      },
+      "from": "remove",
+      "max": 1,
+      "player": "self",
+      "viaEffect": true
+     },
+     "kind": "atom",
+     "verb": "sceneEnter"
+    },
+    "ruleRefs": [
+     "rules/03-field-areas.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/20-color-and-switch.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "leave:to-remove",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B05116"
+   ],
+   "origins": [
+    "desc"
    ],
    "count": 1
   },
@@ -56477,6 +56625,28 @@
    "count": 2
   },
   {
+   "key": "character|effect|現場にいるこのキャラは〚特徴［鈴木財閥］〛を持つ。",
+   "ability": {
+    "continuousModifier": {
+     "grantTraits": [
+      "鈴木財閥"
+     ]
+    },
+    "ruleRefs": [
+     "rules/19-special-rules.md"
+    ],
+    "scope": "on-scene",
+    "type": "continuous"
+   },
+   "exemplars": [
+    "B05058"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|現場にいるこのキャラは〚特徴［長野県警］〛を持つ。",
    "ability": {
     "continuousModifier": {
@@ -56980,19 +57150,21 @@
      "mustBeSelectedByOppEvent": true
     },
     "ruleRefs": [
-     "rules/15-abilities-effects.md",
-     "rules/24-qa-naming-stun.md"
+     "rules/10-action-event.md",
+     "rules/15-abilities-effects.md"
     ],
     "scope": "on-scene",
     "type": "continuous"
    },
    "exemplars": [
+    "B05116",
     "B08087"
    ],
    "origins": [
-    "desc"
+    "desc",
+    "elim"
    ],
-   "count": 1
+   "count": 2
   },
   {
    "key": "character|effect|相手はリフレッシュによって証拠を得られない。",

@@ -85,7 +85,7 @@ function combinationState(): GameState {
   state.players.self.file = Array.from({ length: 5 }, () => ({ type: 'card-back' as const, cardId: 'FILE' }));
   state.players.self.hand = ['B04012'];
   state.players.self.scene = [sceneChar('B03023', 'wakita-combo')];
-  state.players.self.deck = [ENTERING];
+  state.players.self.deck = [ENTERING, NEXT];
   state.players.opp.deck = [TOP, NEXT];
   return state;
 }
@@ -116,18 +116,30 @@ function orderCombination(firstCardId: 'B03023' | 'B04012'): void {
   expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pick!.candidates[0]!.uid })).toEqual({ ok: true });
 
   const afterPickSurface = useGameStateStore.getState().pendingDeckReveal;
-  expect(afterPickSurface?.source?.cardId).toBe('B03023');
-  expect(afterPickSurface).toMatchObject({ visibility: 'public', viewer: 'all', player: 'opp', revealed: [TOP] });
+  if (firstCardId === 'B03023') {
+    expect(afterPickSurface?.source?.cardId).toBe('B03023');
+    expect(afterPickSurface).toMatchObject({ visibility: 'public', viewer: 'all', player: 'opp', revealed: [TOP] });
+  } else {
+    expect(afterPickSurface?.source?.cardId).toBe('B04012');
+    expect(afterPickSurface).toMatchObject({ visibility: 'private', viewer: 'self', player: 'self', matched: ENTERING });
+    expect(afterPickSurface?.awaitingPick).not.toBe(true);
+  }
 
   useGameStateStore.getState().setPendingDeckReveal(null);
   surfacePendingSideChannels();
   const nextSurface = useGameStateStore.getState().pendingDeckReveal;
-  expect(nextSurface?.source?.cardId).toBe('B04012');
-  expect(nextSurface).toMatchObject({ visibility: 'private', viewer: 'self', player: 'self', matched: ENTERING });
+  if (firstCardId === 'B03023') {
+    expect(nextSurface?.source?.cardId).toBe('B04012');
+    expect(nextSurface).toMatchObject({ visibility: 'private', viewer: 'self', player: 'self', matched: ENTERING });
+    expect(nextSurface?.awaitingPick).not.toBe(true);
+  } else {
+    expect(nextSurface?.source?.cardId).toBe('B03023');
+    expect(nextSurface).toMatchObject({ visibility: 'public', viewer: 'all', player: 'opp', revealed: [TOP] });
+  }
 
   const revealLogs = useGameStateStore.getState().gameState!.log.filter(entry => entry.action === 'effect:deckRevealUntil');
-  expect(revealLogs.slice(0, 2).map(entry => entry.player)).toEqual(
-    firstCardId === 'B03023' ? ['opp', 'self'] : ['self', 'opp'],
+  expect(revealLogs.map(entry => entry.player)).toEqual(
+    firstCardId === 'B03023' ? ['opp', 'self', 'self'] : ['self', 'self', 'opp'],
   );
 }
 
