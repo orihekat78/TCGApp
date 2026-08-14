@@ -1200,10 +1200,10 @@ export function Playmat({
             const setCards = host?.setCards ?? [];
             faceDownCount = setCards.length;
             faceUpEvidence = setCards
-              .map((entry, index) => (areaModal.side === 'self' || entry.faceUp
-                ? { index, cardId: entry.cardId, faceState: entry.faceUp ? '表向き' : '裏向き' }
+              .map((entry, index) => (entry.faceUp
+                ? { index, cardId: entry.cardId, faceState: '表向き' as const }
                 : null))
-              .filter((entry): entry is { index: number; cardId: string; faceState: '表向き' | '裏向き' } => entry !== null);
+              .filter((entry): entry is { index: number; cardId: string; faceState: '表向き' } => entry !== null);
           } else if (areaModal.kind === 'selection') {
             cards = declaredSourcePick.length > 0
               ? declaredSourcePick.map((candidate) => candidate.cardId)

@@ -4,13 +4,7 @@
 // 公式テキスト(カットイン): 【カットイン】AP＋1000、相手の現場にいるコンタクト中のキャラを1枚まで選び、
 //   相手のデッキのカードを上から1枚裏向きでセットする（コンタクト中に手札からリムーブして使う）
 //
-// engine変更0 で実装可能 (BUG-114 の「verb 不在」は stale):
-//   - $contact.targetUid (BUG-104) = コンタクト中の相手キャラ (ガード時はガードキャラ)。
-//   - charSetCard{player:'opp', fromDeckTop:true, faceUp:false} = 相手デッキ上端を相手キャラに裏向きセット
-//     (atom-handlers:880-900、deck-source/対象 side とも 'opp')。
-// sequence: AP+1000 (常時) → 相手キャラへセット (targetUid 不在 = 相手キャラ無 → silent no-op = 「1枚まで」の 0 枚)。
-// ※「1枚まで選び」の任意 skip (相手キャラが居るのに敢えてセットしない) は engine 表現外のため常時セット
-//   (相手キャラ不在時は no-op)。微小な近似 (mild disruption ゆえ実プレイ影響は無視可能)。
+// sequence: AP+1000 (必須) → コンタクト相手を0〜1枚選び、相手デッキ上端を裏向きセット。
 import type { CardDef, AbilityDef } from '@/engine/types';
 
 const cutin: AbilityDef = {
@@ -24,7 +18,11 @@ const cutin: AbilityDef = {
     kind: 'sequence',
     steps: [
       { kind: 'atom', verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: 1000, scope: 'contact' } },
-      { kind: 'atom', verb: 'charSetCard', args: { player: 'opp', uid: '$contact.targetUid', fromDeckTop: true, faceUp: false } },
+      {
+        kind: 'atom',
+        verb: 'charSetCard',
+        args: { player: 'opp', fromDeckTop: true, faceUp: false, max: 1, inContact: true },
+      },
     ],
   },
 };

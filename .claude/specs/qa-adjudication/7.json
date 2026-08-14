@@ -1853,11 +1853,12 @@
     {
       "qaId": "card:PR142:cb2b6ed1081ffd2d13be25301f02d68c36004d38d7bbf4c4659ad8a2bdea9521",
       "answerHash": "04e65263ebb2adce9a08bbc627471d2eb48a50d8cc22215217b7c0b32192241c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR142.ts:1"
+        "src:src/cards/pr-01/PR142.ts:1",
+        "tests:tests/cards/official-qa/set-card-host-owner-wave3.test.ts:554"
       ]
     },
     {

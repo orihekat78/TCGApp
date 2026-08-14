@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6023
+- **ファイル数**: 6024
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5184,7 +5184,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B02022.test.ts` — tests/cards/ct-p02/B02022 — 鬼丸猛: action 宣言の一回限り強制指定
       - `B02023.test.ts` — B02023 遠山和葉 — 裏向きセットの宣言コスト。
     - **`ct-p03/`**
-      - `B03034.test.ts` — BUG-114: B03034 稲尾一久 カットイン実装 (engine変更0 — $contact.…
+      - `B03034.test.ts` — BUG-114: B03034 稲尾一久 カットイン実装。
       - `B03039.test.ts` — BUG-114: B03039 長島茂雄 カットイン実装 (task-C charRemoveSetCard + side 分離で engine変更0 化)。
       - `B03066.test.ts` — B03066 赤井秀一 (ct-p03) — ENGINE0 wave 専用 test。
     - **`ct-p05/`**
@@ -5439,6 +5439,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B07102-refresh-includes-removed.test.ts` — qaId=card:B07102:99f16dd6a248501c9d63a44dd85b2d6097ef720865e4181d1b451669f04b05d…
       - `D10003-D10010-printing-copy-limit.test.ts` — qaId=card:D10003:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2…
       - `set-card-host-absent.test.ts`
+      - `set-card-host-owner-wave3.test.ts` — qaId=card:B02018:dc712167e0587386756f5293d40bf1766e89e09669554ebcde8e028749d962d…
     - **`pr-01/`**
       - `PR100.test.ts`
       - `PR158.test.ts` — tests/cards/pr-01/PR158 犯人 (character, cutin remove-name scaling AP)

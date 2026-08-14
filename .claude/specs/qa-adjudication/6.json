@@ -338,11 +338,13 @@
     {
       "qaId": "card:B03034:dc712167e0587386756f5293d40bf1766e89e09669554ebcde8e028749d962d4",
       "answerHash": "04e65263ebb2adce9a08bbc627471d2eb48a50d8cc22215217b7c0b32192241c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03034.ts:33"
+        "src:src/cards/ct-p03/B03034.ts:33",
+        "tests:tests/cards/official-qa/set-card-host-owner-wave3.test.ts:499",
+        "tests:tests/cards/official-qa/set-card-host-owner-wave3.test.ts:630"
       ]
     },
     {

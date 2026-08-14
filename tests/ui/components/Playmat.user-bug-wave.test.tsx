@@ -322,7 +322,7 @@ describe('Playmat user bug wave', () => {
     expect(container.querySelector('.card-expand-modal')).toBeNull();
   });
 
-  it('browses every own set card but hides an opponent face-down set card', () => {
+  it('shows only face-up set identities and hides face-down identities from both owners', () => {
     const state = createEmptyGameState();
     state.players.self.scene = [{
       cardId: 'SELF-HOST', uid: 'self-host', state: 'active', isNamed: false, enterOrder: 0,
@@ -352,17 +352,21 @@ describe('Playmat user bug wave', () => {
     act(() => (container.querySelector<HTMLButtonElement>('.card-expand-close')!).click());
 
     act(() => (container.querySelector<HTMLButtonElement>('[data-testid="scene-set-inspect-self-host"]')!).click());
-    expect(container.textContent).toContain('SELF-FACE-DOWN');
+    expect(container.innerHTML).not.toContain('SELF-FACE-DOWN');
     expect(container.textContent).toContain('SELF-FACE-UP');
-    expect(container.querySelector('[data-testid="card-list-set-state-0"]')?.textContent).toBe('裏向き');
     expect(container.querySelector('[data-testid="card-list-set-state-1"]')?.textContent).toBe('表向き');
-    expect(container.querySelector('[data-testid="card-list-facedown-set-0"]')).toBeNull();
+    const selfHidden = container.querySelector<HTMLElement>('[data-testid="card-list-facedown-set-0"]');
+    expect(selfHidden).not.toBeNull();
+    expect(selfHidden?.getAttribute('aria-label') ?? '').not.toContain('SELF-FACE-DOWN');
+    expect(container.querySelector('[data-testid="card-list-detail-SELF-FACE-DOWN-0"]')).toBeNull();
     act(() => (container.querySelector<HTMLButtonElement>('.card-list-modal-close')!).click());
 
     act(() => (container.querySelector<HTMLButtonElement>('[data-testid="scene-set-inspect-opp-host"]')!).click());
     expect(container.textContent).toContain('OPP-PUBLIC');
-    expect(container.textContent).not.toContain('OPP-SECRET');
+    expect(container.innerHTML).not.toContain('OPP-SECRET');
     expect(container.querySelector('[data-testid="card-list-facedown-set-1"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="card-list-facedown-set-1"]')?.getAttribute('aria-label') ?? '').not.toContain('OPP-SECRET');
+    expect(container.querySelector('[data-testid="card-list-detail-OPP-SECRET-1"]')).toBeNull();
     act(() => (container.querySelector<HTMLButtonElement>('[data-testid="card-list-detail-OPP-PUBLIC-0"]')!).click());
     expect(container.querySelector('.card-expand-modal')).not.toBeNull();
   });

@@ -235,7 +235,8 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p03/B03034.ts:1",
-        "tests:tests/cards/ct-p03/B03034.test.ts:22"
+        "tests:tests/cards/ct-p03/B03034.test.ts:109",
+        "tests:tests/cards/ct-p03/B03034.test.ts:111"
       ]
     },
     {

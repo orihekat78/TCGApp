@@ -36,13 +36,6 @@ async function prepareBrowseFixture(page: Page): Promise<void> {
   });
 }
 
-async function assertTouchTarget(button: ReturnType<Page['getByTestId']>): Promise<void> {
-  const box = await button.boundingBox();
-  expect(box).not.toBeNull();
-  expect(box!.width).toBeGreaterThanOrEqual(44);
-  expect(box!.height).toBeGreaterThanOrEqual(44);
-}
-
 async function expectBrowseIconInArt(card: ReturnType<Page['locator']>): Promise<void> {
   const art = card.locator('.art');
   const icon = card.locator('.scene-card-detail-icon');
@@ -57,7 +50,7 @@ async function expectBrowseIconInArt(card: ReturnType<Page['locator']>): Promise
 }
 
 test.describe('set cards beneath a scene character', () => {
-  test('browse is magnifier-only, preserves own face states, and keeps opponent hidden cards private', async ({ page }) => {
+  test('browse is magnifier-only and keeps every face-down set identity private', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await prepareBrowseFixture(page);
     const setup = await getGameState(page) as unknown as { players: { self: { scene: Array<{ setCards: unknown[] }> } } };
@@ -96,16 +89,14 @@ test.describe('set cards beneath a scene character', () => {
     await expect(ownModal).toBeVisible();
     await expect(ownModal).toHaveText(/2\s*枚/);
     await expect(page.getByTestId('card-list-evidence-faceup-0')).toBeVisible();
-    await expect(page.getByTestId('card-list-evidence-faceup-1')).toBeVisible();
     await expect(page.getByTestId('card-list-set-state-0')).toHaveText(/表向き/);
-    await expect(page.getByTestId('card-list-set-state-1')).toHaveText(/裏向き/);
-
-    const ownFaceDownDetail = page.getByTestId('card-list-detail-D08007-1');
-    await assertTouchTarget(ownFaceDownDetail);
-    await ownFaceDownDetail.click();
-    await expect(page.locator('.card-expand-modal-backdrop')).toBeVisible();
-    await expect(page.locator('.card-expand-modal-backdrop img')).toBeVisible();
-    await page.locator('.card-expand-close').click();
+    const ownHiddenBack = ownModal.getByTestId('card-list-facedown-set-1');
+    await expect(ownHiddenBack).toBeVisible();
+    await expect(ownHiddenBack).not.toHaveAccessibleName(/D08007/);
+    await expect(ownHiddenBack).not.toHaveAttribute('data-card-id');
+    await expect(ownModal).not.toContainText('D08007');
+    await expect(ownModal.locator('[data-testid="card-list-detail-D08007-1"]')).toHaveCount(0);
+    expect(await ownModal.evaluate(element => element.outerHTML)).not.toContain('D08007');
     await ownModal.locator('.card-list-modal-close').click();
 
     const oppBrowse = page.getByTestId('scene-set-inspect-opp-set-host');
@@ -122,6 +113,8 @@ test.describe('set cards beneath a scene character', () => {
     const hiddenBack = opponentModal.getByTestId('card-list-facedown-set-1');
     await expect(hiddenBack.locator('img')).toHaveCount(0);
     await expect(hiddenBack).not.toHaveAttribute('data-card-id');
+    await expect(hiddenBack).not.toHaveAccessibleName(/D08007/);
+    expect(await opponentModal.evaluate(element => element.outerHTML)).not.toContain('D08007');
 
     expectNoConsoleErrors(errors);
   });
