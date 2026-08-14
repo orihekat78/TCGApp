@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `6417c7792b15`
+> Source hash: `7e9fd9e38d8c`
 
 公式ルール [`08-contact.md`](../../../rules/08-contact.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

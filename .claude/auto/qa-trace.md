@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-qa-trace.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:qa-trace`
-> Source hash: `09f3a174a16d`
+> Source hash: `7c0145891840`
 
 Tracked Q&A identifiers and digests only. Official question and answer bodies are intentionally excluded.
 
@@ -20,8 +20,8 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 ## Coverage classification
 
 - total: 2964
-- matched: 549
-- test-missing: 2415
+- matched: 551
+- test-missing: 2413
 - legacy-unreviewed: 0
 - unmapped: 0
 - mismatch: 0
@@ -1470,8 +1470,8 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 | `card:B07063:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9` | `B07063` | `B07063`, `B07063P` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B07064:66836a9d7336e8c5f8383120a4373967890a493426fdb40edbe3ee32366f0116` | `B07064` | `B07064` | shipped | matched | aligned | 1 | 1 |
 | `card:B07065:924a8b39ee3036e70eeeac9c3a5941e4faa4fec3ebc39e19ceb12b4b0f2419af` | `B07065` | `B07065`, `B07065P` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:B07066:939f5e30d9e32c8b233a160a6f70ebb932c71ce0971e6f66cfb3701d5fff76cd` | `B07066` | `B07066`, `B07066P` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:B07066:c2131ef2b4d611ed2fdcba93cb1619157aea6dcc39318ced5a4a6f69bc29faaf` | `B07066` | `B07066`, `B07066P` | shipped | test-missing | test-gap | 1 | 0 |
+| `card:B07066:939f5e30d9e32c8b233a160a6f70ebb932c71ce0971e6f66cfb3701d5fff76cd` | `B07066` | `B07066`, `B07066P` | shipped | matched | aligned | 1 | 5 |
+| `card:B07066:c2131ef2b4d611ed2fdcba93cb1619157aea6dcc39318ced5a4a6f69bc29faaf` | `B07066` | `B07066`, `B07066P` | shipped | matched | aligned | 1 | 6 |
 | `card:B07066:f8f6cc8737bb07a4334459a640a7b7600477d7bfa26bba8ca760517a6601ca7f` | `B07066` | `B07066`, `B07066P` | shipped | matched | aligned | 1 | 1 |
 | `card:B07067:3a8bd4031ff8a75675ea411872d9e566fde4a4d87c718fdc3322b3d179a1ba1e` | `B07067` | `B07067` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B07067:af8822a01561a87d2ab1e21dd52ac12867f116177e9257c6a784645d5e09261a` | `B07067` | `B07067` | shipped | test-missing | test-gap | 1 | 0 |
@@ -4152,8 +4152,6 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 - missing-test: `card:B07063:be9bb7af3ac62c5a59fa84c917cd5a0daca7576b0ffad3bcacd869d093cc183d`
 - missing-test: `card:B07063:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9`
 - missing-test: `card:B07065:924a8b39ee3036e70eeeac9c3a5941e4faa4fec3ebc39e19ceb12b4b0f2419af`
-- missing-test: `card:B07066:939f5e30d9e32c8b233a160a6f70ebb932c71ce0971e6f66cfb3701d5fff76cd`
-- missing-test: `card:B07066:c2131ef2b4d611ed2fdcba93cb1619157aea6dcc39318ced5a4a6f69bc29faaf`
 - missing-test: `card:B07067:3a8bd4031ff8a75675ea411872d9e566fde4a4d87c718fdc3322b3d179a1ba1e`
 - missing-test: `card:B07067:af8822a01561a87d2ab1e21dd52ac12867f116177e9257c6a784645d5e09261a`
 - missing-test: `card:B07067:cbb325dcff012450afb4952c83f39a01b09170f5ef8155ed39e023bd6f5a8b20`

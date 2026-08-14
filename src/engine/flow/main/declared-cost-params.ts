@@ -7,6 +7,8 @@ export function declaredCostParamsToDyn(costParams?: AbilityCostParams): Record<
   const params: Record<string, unknown> = {};
   for (const key of [
     'flipFaceUpEvidence',
+    'sleepChar',
+    'stunChar',
     'removeFromHand',
     'sceneToDeckBottom',
     'removeAreaToDeckBottom',

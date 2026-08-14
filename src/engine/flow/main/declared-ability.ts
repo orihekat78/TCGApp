@@ -254,8 +254,9 @@ export function canActivateDeclaredAbility(
   uid: string,
   abilId: string,
   costParams?: AbilityCostParams,
-  options?: { allowImplicitRemoveSetCard?: boolean },
+  options?: { allowImplicitPhysicalCostSelection?: boolean },
 ): boolean {
+  if (costParams !== undefined && !isPlainRecord(costParams)) return false;
   if (!canDeclaredAbility(state, uid, abilId)) return false;
   const found = findCardOnBoard(state, uid);
   if (!found) return false;
@@ -272,15 +273,21 @@ export function canActivateDeclaredAbility(
   // BUG-248: UI の候補列挙時はコスト在庫だけを確認するが、人間の public dispatch は
   // 裏面 cardId を明かさず選ばれた物理 occurrence (instanceId) を必須にする。
   // 未指定 fallback は AI/smoke の決定戦略だけに限定する。
-  if (!options?.allowImplicitRemoveSetCard
+  const requiresExactHumanSelection = !options?.allowImplicitPhysicalCostSelection
     && costParams?.paymentMode !== 'alternative'
-    && found.player === getHumanPlayerSide()
-    && selectedCostContainsRemoveSetCard(ability.cost, costParams?.costChoice, costParams?.costChoicePath)
-    && !hasExactRemoveSetCardWitness(costParams)) {
-    return false;
+    && found.player === getHumanPlayerSide();
+  if (requiresExactHumanSelection) {
+    const choiceIndex = costParams?.costChoice;
+    const choicePath = costParams?.costChoicePath;
+    if (selectedCostContains(ability.cost, 'removeSetCard', choiceIndex, choicePath)
+      && !hasExactRemoveSetCardWitness(costParams)) return false;
+    for (const kind of ['sleepChar', 'stunChar'] as const) {
+      if (selectedCostContains(ability.cost, kind, choiceIndex, choicePath)
+        && !hasExactCharacterStateCostWitness(costParams, kind)) return false;
+    }
   }
   return resolveDeclaredPaymentPlan(state, ability, ctx, costParams, {
-    allowLegacyInvalidAlternativeFallback: options?.allowImplicitRemoveSetCard === true,
+    allowLegacyInvalidAlternativeFallback: options?.allowImplicitPhysicalCostSelection === true,
   }) !== null;
 }
 
@@ -315,15 +322,16 @@ export function resolveDeclaredPaymentPlan(
   return providers[0] ? { kind: 'alternative', providerUid: providers[0] } : null;
 }
 
-function selectedCostContainsRemoveSetCard(
+function selectedCostContains(
   cost: AbilityDef['cost'] | undefined,
+  kind: 'removeSetCard' | 'sleepChar' | 'stunChar',
   choiceIndex: number | undefined,
   choicePath: readonly number[] | undefined,
 ): boolean {
   const path = choicePath ?? (choiceIndex === undefined ? undefined : [choiceIndex]);
   let cursor = 0;
   const visit = (node: NonNullable<AbilityDef['cost']>): boolean => {
-    if (node.kind === 'removeSetCard') return true;
+    if (node.kind === kind) return true;
     if (node.kind === 'pay') return node.items.some(visit);
     if (node.kind !== 'choice') return false;
     const selected = path?.[cursor++];
@@ -339,6 +347,27 @@ function selectedCostContainsRemoveSetCard(
 function hasExactRemoveSetCardWitness(costParams: AbilityCostParams | undefined): boolean {
   const witness = parseRemoveSetCardWitness(costParams?.removeSetCard);
   return witness.kind === 'valid' && witness.instanceIds !== undefined;
+}
+
+function hasExactCharacterStateCostWitness(
+  costParams: AbilityCostParams | undefined,
+  kind: 'sleepChar' | 'stunChar',
+): boolean {
+  if (costParams === undefined
+    || !isPlainRecord(costParams)
+    || !Object.prototype.hasOwnProperty.call(costParams, kind)) return false;
+  const witness = costParams[kind];
+  return witness !== undefined
+    && isPlainRecord(witness)
+    && Object.prototype.hasOwnProperty.call(witness, 'uids')
+    && Array.isArray(witness.uids)
+    && witness.uids.every(uid => typeof uid === 'string');
+}
+
+function isPlainRecord(value: unknown): boolean {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
 }
 
 /**

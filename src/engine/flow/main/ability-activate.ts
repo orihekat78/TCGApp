@@ -39,6 +39,10 @@ type Player = 'self' | 'opp';
  */
 export interface AbilityCostParams {
   flipFaceUpEvidence?: { indices: number[] };
+  /** Exact public scene character UIDs selected for a sleepChar cost. */
+  sleepChar?: { uids: string[] };
+  /** Exact public scene character UIDs selected for a stunChar cost. */
+  stunChar?: { uids: string[] };
   /** Exact physical hand occurrences selected for a remove-from-hand cost. */
   removeFromHand?: { indices: number[] };
   sceneToDeckBottom?: { uids: string[] };
@@ -89,11 +93,11 @@ export function activateDeclaredAbility(
     return;
   }
   // Public UI dispatch authorizes through `isAllowed` first, where a human
-  // removeSetCard cost must carry an exact physical-instance witness.  This
+  // physical-card cost must carry an exact selected-instance witness.  This
   // low-level mutator is also the deterministic AI/test resolver entrypoint;
   // preserve its established implicit fallback after all normal cost checks.
   // A supplied malformed witness still fails closed in canPayAtomically.
-  if (!canActivateDeclaredAbility(state, uid, abilId, costParams, { allowImplicitRemoveSetCard: true })) {
+  if (!canActivateDeclaredAbility(state, uid, abilId, costParams, { allowImplicitPhysicalCostSelection: true })) {
     return;
   }
   const dyn = declaredCostParamsToDyn(costParams);

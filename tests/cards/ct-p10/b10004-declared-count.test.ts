@@ -42,7 +42,7 @@ function addSetCard(state: GameState, instance: number): void {
 }
 
 function canActivate(state: GameState): boolean {
-  return canActivateDeclaredAbility(state, 'host', 'a2', undefined, { allowImplicitRemoveSetCard: true });
+  return canActivateDeclaredAbility(state, 'host', 'a2', undefined, { allowImplicitPhysicalCostSelection: true });
 }
 
 function activateWithZeroTarget(state: GameState, instance: number): void {

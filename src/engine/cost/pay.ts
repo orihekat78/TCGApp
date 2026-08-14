@@ -199,8 +199,7 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
     case 'sleepChar':
     case 'stunChar': {
       const min = cost.target.kind === 'pick' ? cost.target.n.min : 1;
-      const eligible = selectRangeCostCandidates(state, cost.target, ctx).filter((candidate): candidate is Candidate & { kind: 'char' } =>
-        candidate.kind === 'char' && findChar(state, candidate.uid)?.state === 'active');
+      const eligible = selectActiveCharRangeCostCandidates(state, cost.target, ctx, cost.kind);
       if (eligible.length < min) return false;
       for (const candidate of eligible) {
         findChar(state, candidate.uid)!.state = cost.kind === 'sleepChar' ? 'sleep' : 'stun';
@@ -591,7 +590,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
     //   (2) maxN — ctx.picked 配線後はその選択を優先 (Infinity)、未配線時は pick の n.max ぶんだけ sleep。
     //   「どの active を sleep するか」の player-choice は全 target-pick cost 共通の pre-existing 制約 (別 initiative)。
     case 'sleepChar': {
-      const targets = selectRangeCostCandidates(state, cost.target, ctx);
+      const targets = selectActiveCharRangeCostCandidates(state, cost.target, ctx, cost.kind);
       let slept = 0;
       for (const cand of targets) {
         if (cand.kind !== 'char') continue;
@@ -611,7 +610,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
     //   (2) ctx.picked 未配線 (sleepChar 由来の over-pay = BUG-156) の現状で、pick の n.max ぶんだけ stun し
     //       複数 active 候補の全スタン (「1枚」違反) を防ぐ。ctx.picked 配線後はその選択を優先 (maxN=∞)。
     case 'stunChar': {
-      const targets = selectRangeCostCandidates(state, cost.target, ctx);
+      const targets = selectActiveCharRangeCostCandidates(state, cost.target, ctx, cost.kind);
       let stunned = 0;
       for (const cand of targets) {
         if (cand.kind !== 'char') continue;
@@ -1196,6 +1195,40 @@ function selectRangeCostCandidates(state: GameState, ref: TargetingRef, ctx: Eff
   return allowed.slice(0, max);
 }
 
+/** Sleep/stun costs choose only payable active characters before applying n.max. */
+function selectActiveCharRangeCostCandidates(
+  state: GameState,
+  ref: TargetingRef,
+  ctx: EffectCtx,
+  kind: 'sleepChar' | 'stunChar',
+): Array<Candidate & { kind: 'char' }> {
+  const min = ref.kind === 'pick' ? ref.n.min : 1;
+  const max = ref.kind === 'pick' ? ref.n.max : 1;
+  const allowed = candidates(state, ref, ctx).filter(
+    (candidate): candidate is Candidate & { kind: 'char' } =>
+      candidate.kind === 'char' && findChar(state, candidate.uid)?.state === 'active',
+  );
+  const explicitUids = readCharacterStateCostUids(ctx, kind);
+  if (explicitUids !== undefined) {
+    if (explicitUids === null
+      || explicitUids.length < min
+      || explicitUids.length > max
+      || new Set(explicitUids).size !== explicitUids.length) return [];
+    const allowedByUid = new Map(allowed.map(candidate => [candidate.uid, candidate]));
+    const selected = explicitUids.map(uid => allowedByUid.get(uid));
+    return selected.every((candidate): candidate is Candidate & { kind: 'char' } => candidate !== undefined)
+      ? selected
+      : [];
+  }
+  if (ctx.picked !== undefined) {
+    if (ctx.picked.length < min || ctx.picked.length > max) return [];
+    return candidateMultisetSubset(ctx.picked, allowed)
+      ? ctx.picked.filter((candidate): candidate is Candidate & { kind: 'char' } => candidate.kind === 'char')
+      : [];
+  }
+  return allowed.slice(0, max);
+}
+
 function candidateMultisetSubset(selected: readonly Candidate[], allowed: readonly Candidate[]): boolean {
   const counts = new Map<string, number>();
   for (const candidate of allowed) {
@@ -1328,9 +1361,32 @@ function readRemoveFromHandIndices(ctx: EffectCtx): number[] | undefined {
     : [];
 }
 
+/** Read an explicit human sleep/stun payment witness without falling back on malformed input. */
+function readCharacterStateCostUids(
+  ctx: EffectCtx,
+  kind: 'sleepChar' | 'stunChar',
+): string[] | null | undefined {
+  const rawParams = ctx.dyn?.['costParams'];
+  if (rawParams !== undefined && !isPlainRecord(rawParams)) return null;
+  const params = rawParams as Record<string, unknown> | undefined;
+  if (params === undefined || !Object.prototype.hasOwnProperty.call(params, kind)) return undefined;
+  const selected = params[kind];
+  if (selected === null || typeof selected !== 'object' || Array.isArray(selected)) return null;
+  const uids = (selected as Record<string, unknown>)['uids'];
+  return Array.isArray(uids) && uids.every(uid => typeof uid === 'string') ? uids : null;
+}
+
 function hasCostParam(ctx: EffectCtx, key: string): boolean {
-  const params = ctx.dyn?.['costParams'] as Record<string, unknown> | undefined;
-  return params !== undefined && Object.prototype.hasOwnProperty.call(params, key);
+  const params = ctx.dyn?.['costParams'];
+  if (params === undefined) return false;
+  if (!isPlainRecord(params)) return true;
+  return Object.prototype.hasOwnProperty.call(params, key);
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
 }
 
 function isMultisetSubset(selected: readonly string[], available: readonly string[]): boolean {

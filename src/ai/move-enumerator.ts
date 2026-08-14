@@ -154,7 +154,7 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
   for (const c of state.players[byPlayer].scene) {
     // gap② (2026-07-11, B06042): 印字 declared + charGrantAbility 付与 declared (BUG-084 UI/AI 対称)。
     for (const ab of [...charDeclaredAbilities(c.cardId), ...engine.flow.grantedDeclaredAbilitiesOf(c)]) {
-      if (!engine.flow.canActivateDeclaredAbility(state, c.uid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) continue;
+      if (!engine.flow.canActivateDeclaredAbility(state, c.uid, ab.id, undefined, { allowImplicitPhysicalCostSelection: true })) continue;
       moves.push({ kind: 'declaredAbility', uid: c.uid, abilityId: ab.id });
     }
   }
@@ -167,7 +167,7 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
     if (caseCardId) {
       const caseUid = `case:${byPlayer}`;
       for (const ab of charDeclaredAbilities(caseCardId)) {
-        if (!engine.flow.canActivateDeclaredAbility(state, caseUid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) continue;
+        if (!engine.flow.canActivateDeclaredAbility(state, caseUid, ab.id, undefined, { allowImplicitPhysicalCostSelection: true })) continue;
         moves.push({ kind: 'declaredAbility', uid: caseUid, abilityId: ab.id });
       }
     }
@@ -181,7 +181,7 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
     if (mr) {
       const mrUid = mr.uid;
       for (const ab of charDeclaredAbilities(mr.cardId)) {
-        if (!engine.flow.canActivateDeclaredAbility(state, mrUid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) continue;
+        if (!engine.flow.canActivateDeclaredAbility(state, mrUid, ab.id, undefined, { allowImplicitPhysicalCostSelection: true })) continue;
         moves.push({ kind: 'declaredAbility', uid: mrUid, abilityId: ab.id });
       }
     }
@@ -194,7 +194,7 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
   for (const [index, cardId] of state.players[byPlayer].hand.entries()) {
     const handUid = `hand:${byPlayer}:${index}`;
     for (const ab of charDeclaredAbilities(cardId)) {
-      if (!engine.flow.canActivateDeclaredAbility(state, handUid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) continue;
+      if (!engine.flow.canActivateDeclaredAbility(state, handUid, ab.id, undefined, { allowImplicitPhysicalCostSelection: true })) continue;
       moves.push({ kind: 'declaredAbility', uid: handUid, abilityId: ab.id });
     }
   }
@@ -203,7 +203,7 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
     if (!entry.faceUp) continue;
     const uid = `evidence:${byPlayer}:${index}`;
     for (const ab of charDeclaredAbilities(entry.cardId)) {
-      if (engine.flow.canActivateDeclaredAbility(state, uid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) {
+      if (engine.flow.canActivateDeclaredAbility(state, uid, ab.id, undefined, { allowImplicitPhysicalCostSelection: true })) {
         moves.push({ kind: 'declaredAbility', uid, abilityId: ab.id });
       }
     }
@@ -212,7 +212,7 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
     if (entry.type !== 'card-back' || entry.faceUp !== true) continue;
     const uid = `file:${byPlayer}:${index}`;
     for (const ab of charDeclaredAbilities(entry.cardId)) {
-      if (engine.flow.canActivateDeclaredAbility(state, uid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) {
+      if (engine.flow.canActivateDeclaredAbility(state, uid, ab.id, undefined, { allowImplicitPhysicalCostSelection: true })) {
         moves.push({ kind: 'declaredAbility', uid, abilityId: ab.id });
       }
     }

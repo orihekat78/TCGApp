@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6033
+- **ファイル数**: 6035
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1479,6 +1479,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-28-you-vs-cpu-human-validation-row-055-attempt-3.md` — YOU-vs-CPU row 055 attempt 3
     - `2026-07-29-engine-adversarial.md` — Session memory
     - `2026-08-09-ui-quality-causal-public-match.md` — UI品質・因果表示プログラム（2026-08-02〜09）
+    - `2026-08-14-qa-wave13-match-cost.md` — QA Wave 13 and memory rotation
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -5440,6 +5441,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B04059.test.ts` — B04059 水無怜奈 — official Q&A: scene-only additional card name.
       - `B04074.test.ts`
       - `B05118-family-nonblack-partner.test.ts` — Official Q&A cluster: these seven cases share the same printed
+      - `B07066-declared-cost-optional.test.ts` — qa: card:B07066:939f5e30d9e32c8b233a160a6f70ebb932c71ce0971e6f66cfb3701d5fff76cd
       - `B07102-refresh-includes-removed.test.ts` — qaId=card:B07102:99f16dd6a248501c9d63a44dd85b2d6097ef720865e4181d1b451669f04b05d…
       - `B09090-PR286-entry-waiver.test.ts` — qaId=card:B09090:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7e…
       - `D06003-D06024-public-path.test.ts` — qaId=card:D06003:e918d066190b75a908b8154f185c9c4291e8387cb2fc4797f5744acc49a362d…
@@ -6179,7 +6181,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `CardExpandModal.priority.test.tsx`
       - `CardListModal.pick-detail.test.tsx`
       - `CardListModal.zero-pick.test.tsx`
-      - `CaseArea.stamp.test.tsx` — Phase 8.10h: CaseArea stamp-flip class application
+      - `CaseArea.stamp.test.tsx`
       - `CaseArea.test.tsx` — Phase 7 Task 7.6: CaseArea tests
       - `ConfirmModal.interaction.test.tsx` — @vitest-environment jsdom
       - `ConfirmModal.test.tsx` — Phase 8 Task 8.5: ConfirmModal 描画スナップショット

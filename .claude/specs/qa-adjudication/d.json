@@ -1255,30 +1255,33 @@
     {
       "qaId": "card:B07066:939f5e30d9e32c8b233a160a6f70ebb932c71ce0971e6f66cfb3701d5fff76cd",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07066.ts:1"
+        "src:src/cards/ct-p07/B07066.ts:13",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:104",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:105",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:114",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:115"
       ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B07066:c2131ef2b4d611ed2fdcba93cb1619157aea6dcc39318ced5a4a6f69bc29faaf",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07066.ts:1"
+        "src:src/cards/ct-p07/B07066.ts:15",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:125",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:132",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:144",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:155",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:156"
       ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B07069:cbce41c9b0c72cca046ffb06c2b4ff9c3af679af4bcfb692fac12dc0b5998a23",

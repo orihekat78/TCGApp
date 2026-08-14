@@ -76,7 +76,7 @@ export function enumDeclaredAbilitySources(
     const abilities = [...def.abilities, ...riderDeclaredAbilities(state, c), ...flow.grantedDeclaredAbilitiesOf(c)];
     const hasUsable = abilities.some((a) => {
       if (a.type !== 'declared') return false;
-      if (!flow.canActivateDeclaredAbility(state, c.uid, a.id, undefined, { allowImplicitRemoveSetCard: true })) return false;
+      if (!flow.canActivateDeclaredAbility(state, c.uid, a.id, undefined, { allowImplicitPhysicalCostSelection: true })) return false;
       return true;
     });
     if (hasUsable) sources.push(c.uid);
@@ -89,7 +89,7 @@ export function enumDeclaredAbilitySources(
       const caseUid = `case:${player}`;
       const hasUsable = def.abilities.some((a) => {
         if (a.type !== 'declared') return false;
-        if (!flow.canActivateDeclaredAbility(state, caseUid, a.id, undefined, { allowImplicitRemoveSetCard: true })) return false;
+        if (!flow.canActivateDeclaredAbility(state, caseUid, a.id, undefined, { allowImplicitPhysicalCostSelection: true })) return false;
         return true;
       });
       if (hasUsable) sources.push(caseUid);
@@ -103,7 +103,7 @@ export function enumDeclaredAbilitySources(
     const uid = `hand:${player}:${index}`;
     const hasUsable = def.abilities.some((a) => {
       if (a.type !== 'declared') return false;
-      return flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitRemoveSetCard: true });
+      return flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitPhysicalCostSelection: true });
     });
     if (hasUsable) sources.push(uid);
   }
@@ -112,14 +112,14 @@ export function enumDeclaredAbilitySources(
     const def = engine.cards.get(entry.cardId);
     const uid = `evidence:${player}:${index}`;
     if (def?.abilities.some(a => a.type === 'declared'
-      && flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitRemoveSetCard: true }))) sources.push(uid);
+      && flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitPhysicalCostSelection: true }))) sources.push(uid);
   }
   for (const [index, entry] of state.players[player].file.entries()) {
     if (entry.type !== 'card-back' || entry.faceUp !== true) continue;
     const def = engine.cards.get(entry.cardId);
     const uid = `file:${player}:${index}`;
     if (def?.abilities.some(a => a.type === 'declared'
-      && flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitRemoveSetCard: true }))) sources.push(uid);
+      && flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitPhysicalCostSelection: true }))) sources.push(uid);
   }
   // 4. partnerAreaMR (M3 PA batch, rules/18 §パートナーエリアにいるMRキャラ):
   //    scope on-partner-area / always の宣言能力のみ engine gate (declared-ability.ts:147) を通る。
@@ -132,7 +132,7 @@ export function enumDeclaredAbilitySources(
         const uid = mr.uid;
         const hasUsable = def.abilities.some((a) => {
           if (a.type !== 'declared') return false;
-          return flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitRemoveSetCard: true });
+          return flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitPhysicalCostSelection: true });
         });
         if (hasUsable) sources.push(uid);
       }
@@ -228,7 +228,7 @@ export function enumDeclaredAbilityIdsFor(
   if (!def) return [];
   return [...def.abilities, ...riderAbilities]
     .filter((a) => a.type === 'declared')
-    .filter((a) => flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitRemoveSetCard: true }))
+    .filter((a) => flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitPhysicalCostSelection: true }))
     .map((a) => a.id);
 }
 

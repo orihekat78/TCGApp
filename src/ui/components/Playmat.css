@@ -196,28 +196,38 @@
   border: 1px solid rgba(68, 221, 153, 0.25);
 }
 
-/* Left col: 事件 (1.4fr) + 余白 edition タグ (auto) + 証拠 (1fr)
-   Round 3: 事件↔証拠 の余白に edition tag (事件編/解決編) を独立表示 */
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
+  .mat {
+    /* 44px の事件詳細操作を縦に積まず、事件カードと並べる幅を確保する。 */
+    grid-template-columns: 280px minmax(0, 1fr) 120px;
+  }
+}
+
+/* Left rail: 事件 + 証拠。事件状態は事件ヘッダー内に所有させる。 */
 .mat .left-col {
   display: grid;
-  grid-template-rows: 1.4fr auto 1fr;
-  /* Round 4l (BUG-002): gap 6px → 0 で事件↔edition tag↔証拠 の隙間を消す */
-  gap: 0;
+  grid-template-rows: max-content max-content;
+  align-content: space-between;
+  gap: 6px;
   min-width: 0;
   min-height: 0;
 }
 .mat .left-col > * {
-  min-height: 0; /* grid overflow 防止 */
+  min-width: 0;
+  min-height: 0;
 }
 
-/* Round 3: 事件編/解決編 タグ (事件カード上の case-stamp 削除に伴い独立表示) */
-.mat .case-edition-tag {
+/* 事件編/解決編は事件ヘッダーが所有。
+ * 盤面が等比縮小されても実表示 10px を下回らない寸法でレイアウトする。 */
+.case-area .case-edition-tag {
   text-align: center;
-  font-size: 14px;
+  font-size: calc(10px * var(--playmat-inverse-scale, 1));
   font-weight: 700;
-  letter-spacing: 0.16em;
-  padding: 6px 10px;
-  border-radius: 4px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  padding: calc(1px * var(--playmat-inverse-scale, 1))
+    calc(2px * var(--playmat-inverse-scale, 1));
+  border-radius: 3px;
   background: linear-gradient(180deg, #2a4366 0%, #1a2a44 100%);
   border: 1.5px solid #4a6a90;
   color: #c8d6ec;
@@ -226,7 +236,7 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
   user-select: none;
 }
-.mat .case-edition-tag.resolved {
+.case-area .case-edition-tag.resolved {
   background: linear-gradient(180deg, #5a3a18 0%, #3a2410 100%);
   border-color: #c89a4a;
   color: #ffe2a0;
@@ -246,14 +256,14 @@
   min-width: 0;
   min-height: 0;
 }
-.mat .center-col > * { min-height: 0; }
+.mat .center-col > * { min-width: 0; min-height: 0; }
 .mat .center-col .below-scene {
   display: grid;
   grid-template-columns: 1fr 1.4fr;  /* evidence 狭め、partner 広め */
   gap: 6px;
   min-height: 0;
 }
-.mat .center-col .below-scene > * { min-height: 0; }
+.mat .center-col .below-scene > * { min-width: 0; min-height: 0; }
 
 /* Right col: deck (1fr) + remove (1fr) */
 .mat .right-col {
@@ -263,7 +273,7 @@
   min-width: 0;
   min-height: 0;
 }
-.mat .right-col > * { min-height: 0; }
+.mat .right-col > * { min-width: 0; min-height: 0; }
 
 /* Phase 7.5: KEEP OUT 撤去、case-col の旧 absolute layout も撤去済 */
 

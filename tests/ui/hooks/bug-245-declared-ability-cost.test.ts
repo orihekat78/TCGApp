@@ -439,6 +439,342 @@ describe('BUG-245: declared ability cost authorization', () => {
     expect(canPay(enough, stunTwo, ctx)).toBe(true);
   });
 
+  it.each(['sleepChar', 'stunChar'] as const)(
+    '%s skips an ineligible sleeping match before applying the target cap',
+    (kind) => {
+      const state = produce(stateWith(['SLEEP-COST', 'SLEEP-COST']), (draft) => {
+        draft.players.self.scene[0]!.state = 'sleep';
+      });
+      const sleepingUid = state.players.self.scene[0]!.uid;
+      const activeUid = state.players.self.scene[1]!.uid;
+      const cost: Cost = {
+        kind,
+        target: {
+          kind: 'pick',
+          query: { area: 'scene', side: 'self' },
+          n: { min: 1, max: 1 },
+          chooser: 'self',
+        },
+      };
+      const ctx = {
+        source: {
+          cardId: 'SLEEP-COST',
+          uid: sleepingUid,
+          abilityId: 'a1',
+          player: 'self' as const,
+          area: 'scene' as const,
+        },
+        bindings: {},
+      };
+
+      expect(canPayAtomically(state, cost, ctx)).toBe(true);
+      const after = produce(state, (draft) => { pay(draft, cost, ctx); });
+      expect(after.players.self.scene.find(char => char.uid === sleepingUid)?.state).toBe('sleep');
+      expect(after.players.self.scene.find(char => char.uid === activeUid)?.state).toBe(
+        kind === 'sleepChar' ? 'sleep' : 'stun',
+      );
+    },
+  );
+
+  it.each(['sleepChar', 'stunChar'] as const)(
+    '%s pays with the exact explicit active character UID and rejects a forged UID',
+    (kind) => {
+      const state = stateWith(['SLEEP-COST', 'SLEEP-COST']);
+      const firstUid = state.players.self.scene[0]!.uid;
+      const chosenUid = state.players.self.scene[1]!.uid;
+      const cost: Cost = {
+        kind,
+        target: {
+          kind: 'pick',
+          query: { area: 'scene', side: 'self' },
+          n: { min: 1, max: 1 },
+          chooser: 'self',
+        },
+      };
+      const ctx = {
+        source: {
+          cardId: 'SLEEP-COST',
+          uid: firstUid,
+          abilityId: 'a1',
+          player: 'self' as const,
+          area: 'scene' as const,
+        },
+        bindings: {},
+        dyn: { costParams: { [kind]: { uids: [chosenUid] } } },
+      };
+
+      expect(canPayAtomically(state, cost, ctx)).toBe(true);
+      const after = produce(state, (draft) => { pay(draft, cost, ctx); });
+      expect(after.players.self.scene.find(char => char.uid === firstUid)?.state).toBe('active');
+      expect(after.players.self.scene.find(char => char.uid === chosenUid)?.state).toBe(
+        kind === 'sleepChar' ? 'sleep' : 'stun',
+      );
+
+      const forgedCtx = {
+        ...ctx,
+        dyn: { costParams: { [kind]: { uids: ['forged'] } } },
+      };
+      expect(canPayAtomically(state, cost, forgedCtx)).toBe(false);
+      expect(() => produce(state, (draft) => { pay(draft, cost, forgedCtx); }))
+        .toThrow(`${kind} is not payable`);
+    },
+  );
+
+  it.each(['sleepChar', 'stunChar'] as const)(
+    '%s rejects a malformed outer costParams channel without throwing and preserves legacy ctx.picked selection',
+    (kind) => {
+      const state = stateWith(['SLEEP-COST', 'SLEEP-COST']);
+      const first = state.players.self.scene[0]!;
+      const chosen = state.players.self.scene[1]!;
+      const cost: Cost = {
+        kind,
+        target: {
+          kind: 'pick',
+          query: { area: 'scene', side: 'self' },
+          n: { min: 1, max: 1 },
+          chooser: 'self',
+        },
+      };
+      const baseCtx = {
+        source: {
+          cardId: 'SLEEP-COST', uid: first.uid, abilityId: 'a1', player: 'self' as const, area: 'scene' as const,
+        },
+        bindings: {},
+      };
+
+      for (const rawCostParams of [null, [], 'bad']) {
+        const malformedCtx = { ...baseCtx, dyn: { costParams: rawCostParams } } as never;
+        expect(() => canPayAtomically(state, cost, malformedCtx)).not.toThrow();
+        expect(canPayAtomically(state, cost, malformedCtx)).toBe(false);
+        expect(() => produce(state, (draft) => { pay(draft, cost, malformedCtx); }))
+          .toThrow(`${kind} is not payable`);
+      }
+
+      const legacyPickedCtx = {
+        ...baseCtx,
+        picked: [{ kind: 'char' as const, uid: chosen.uid, cardId: chosen.cardId, player: 'self' as const }],
+      };
+      expect(canPayAtomically(state, cost, legacyPickedCtx)).toBe(true);
+      const after = produce(state, (draft) => { pay(draft, cost, legacyPickedCtx); });
+      expect(after.players.self.scene.find(char => char.uid === first.uid)?.state).toBe('active');
+      expect(after.players.self.scene.find(char => char.uid === chosen.uid)?.state).toBe(
+        kind === 'sleepChar' ? 'sleep' : 'stun',
+      );
+    },
+  );
+
+  it('validates the exact sleepChar UID again at the public declaration boundary', () => {
+    registerCardDef(card('TARGETED-SLEEP', [declared('a1', {
+      kind: 'sleepChar',
+      target: {
+        kind: 'pick',
+        query: { area: 'scene', side: 'self', filter: { trait: 'payer' } },
+        n: { min: 1, max: 1 },
+        chooser: 'self',
+      },
+    })]));
+    registerCardDef(card('PAYER-A', [], ['payer']));
+    registerCardDef(card('PAYER-B', [], ['payer']));
+    const state = stateWith(['TARGETED-SLEEP', 'PAYER-A', 'PAYER-B']);
+    const sourceUid = state.players.self.scene[0]!.uid;
+    const firstUid = state.players.self.scene[1]!.uid;
+    const chosenUid = state.players.self.scene[2]!.uid;
+
+    expect(canActivateDeclaredAbility(state, sourceUid, 'a1', {
+      sleepChar: { uids: ['forged'] },
+    })).toBe(false);
+    useGameStateStore.setState({ gameState: state });
+    expect(dispatchEngineAction({
+      type: 'declaredAbility',
+      uid: sourceUid,
+      abilId: 'a1',
+      costParams: { sleepChar: { uids: ['forged'] } },
+    })).toEqual({ ok: false, reason: 'not-allowed' });
+    expect(useGameStateStore.getState().gameState).toEqual(state);
+
+    expect(canActivateDeclaredAbility(state, sourceUid, 'a1', {
+      sleepChar: { uids: [chosenUid] },
+    })).toBe(true);
+    expect(dispatchEngineAction({
+      type: 'declaredAbility',
+      uid: sourceUid,
+      abilId: 'a1',
+      costParams: { sleepChar: { uids: [chosenUid] } },
+    })).toEqual({ ok: true });
+    const after = useGameStateStore.getState().gameState!;
+    expect(after.players.self.scene.find(char => char.uid === firstUid)?.state).toBe('active');
+    expect(after.players.self.scene.find(char => char.uid === chosenUid)?.state).toBe('sleep');
+  });
+
+  it.each(['sleepChar', 'stunChar'] as const)(
+    '%s fails closed at the public declaration boundary for every malformed or ineligible explicit witness',
+    (kind) => {
+      const sourceId = `TARGETED-${kind}`;
+      registerCardDef(card(sourceId, [declared('a1', {
+        kind,
+        target: {
+          kind: 'pick',
+          query: { area: 'scene', side: 'self', filter: { trait: 'payer' } },
+          n: { min: 1, max: 1 },
+          chooser: 'self',
+        },
+      })]));
+      registerCardDef(card(`PAYER-A-${kind}`, [], ['payer']));
+      registerCardDef(card(`PAYER-B-${kind}`, [], ['payer']));
+      registerCardDef(card(`SLEEPING-PAYER-${kind}`, [], ['payer']));
+      registerCardDef(card(`STUNNED-PAYER-${kind}`, [], ['payer']));
+      const state = produce(stateWith([
+        sourceId, `PAYER-A-${kind}`, `PAYER-B-${kind}`, `SLEEPING-PAYER-${kind}`, `STUNNED-PAYER-${kind}`,
+      ]), (draft) => {
+        draft.players.self.scene[3]!.state = 'sleep';
+        draft.players.self.scene[4]!.state = 'stun';
+      });
+      const sourceUid = state.players.self.scene[0]!.uid;
+      const payerUid = state.players.self.scene[1]!.uid;
+      const secondPayerUid = state.players.self.scene[2]!.uid;
+      const sleepingPayerUid = state.players.self.scene[3]!.uid;
+      const stunnedPayerUid = state.players.self.scene[4]!.uid;
+      const outsiderUid = sourceUid;
+      const malformed: Array<[string, unknown]> = [
+        ['undefined own property', undefined],
+        ['null', null],
+        ['missing uids', {}],
+        ['undefined uids', { uids: undefined }],
+        ['null uids', { uids: null }],
+        ['non-array uids', { uids: payerUid }],
+        ['empty cardinality', { uids: [] }],
+        ['duplicate uids', { uids: [payerUid, payerUid] }],
+        ['too many uids', { uids: [payerUid, secondPayerUid] }],
+        ['already sleeping payer', { uids: [sleepingPayerUid] }],
+        ['already stunned payer', { uids: [stunnedPayerUid] }],
+        ['filter-excluded uid', { uids: [outsiderUid] }],
+      ];
+
+      for (const [label, witness] of malformed) {
+        const costParams = { [kind]: witness } as never;
+        expect(canActivateDeclaredAbility(state, sourceUid, 'a1', costParams), label).toBe(false);
+        const before = JSON.stringify(state);
+        useGameStateStore.setState({ gameState: state });
+        expect(dispatchEngineAction({ type: 'declaredAbility', uid: sourceUid, abilId: 'a1', costParams }), label)
+          .toEqual({ ok: false, reason: 'not-allowed' });
+        expect(JSON.stringify(useGameStateStore.getState().gameState), label).toBe(before);
+      }
+    },
+  );
+
+  it.each([
+    ['sleepChar', 'self'],
+    ['sleepChar', 'opp'],
+    ['stunChar', 'self'],
+    ['stunChar', 'opp'],
+  ] as const)(
+    '%s requires an exact witness for the human %s player at the public declaration boundary',
+    (kind, player) => {
+      const sourceId = `HUMAN-${player}-${kind}`;
+      const firstPayerId = `FIRST-${player}-${kind}`;
+      const chosenPayerId = `CHOSEN-${player}-${kind}`;
+      registerCardDef(card(sourceId, [declared('a1', {
+        kind,
+        target: {
+          kind: 'pick',
+          query: { area: 'scene', side: 'self', filter: { trait: 'payer' } },
+          n: { min: 1, max: 1 },
+          chooser: 'self',
+        },
+      })]));
+      registerCardDef(card(firstPayerId, [], ['payer']));
+      registerCardDef(card(chosenPayerId, [], ['payer']));
+      const state = produce(createEmptyGameState(), (draft) => {
+        draft.turn = { number: 1, player, phase: 'main', isFirstPlayerFirstTurn: false };
+        draft.players[player].partner = { cardId: 'BLUE-PARTNER', state: 'active', location: 'partner-area' };
+        mutate.scene.enter(draft, player, sourceId, { active: true });
+        mutate.scene.enter(draft, player, firstPayerId, { active: true });
+        mutate.scene.enter(draft, player, chosenPayerId, { active: true });
+      });
+      const sourceUid = state.players[player].scene[0]!.uid;
+      const firstPayerUid = state.players[player].scene[1]!.uid;
+      const chosenPayerUid = state.players[player].scene[2]!.uid;
+      (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = player;
+
+      const malformedOuterParams: Array<[string, unknown]> = [
+        ['absent', undefined],
+        ['null', null],
+        ['array', []],
+        ['string', 'bad'],
+      ];
+      for (const [label, rawCostParams] of malformedOuterParams) {
+        const costParams = rawCostParams as never;
+        expect(canActivateDeclaredAbility(state, sourceUid, 'a1', costParams), label).toBe(false);
+        useGameStateStore.setState({ gameState: state });
+        expect(dispatchEngineAction({
+          type: 'declaredAbility',
+          uid: sourceUid,
+          abilId: 'a1',
+          ...(rawCostParams === undefined ? {} : { costParams }),
+        }), label).toEqual({ ok: false, reason: 'not-allowed' });
+        expect(useGameStateStore.getState().gameState, label).toEqual(state);
+      }
+
+      expect(enumerateMoves(state, player)).toContainEqual({
+        kind: 'declaredAbility', uid: sourceUid, abilityId: 'a1',
+      });
+      const implicit = produce(state, (draft) => { activateDeclaredAbility(draft, sourceUid, 'a1'); });
+      expect(implicit.players[player].scene.find(char => char.uid === firstPayerUid)?.state).toBe(
+        kind === 'sleepChar' ? 'sleep' : 'stun',
+      );
+      expect(implicit.players[player].scene.find(char => char.uid === chosenPayerUid)?.state).toBe('active');
+
+      const validCostParams = { [kind]: { uids: [chosenPayerUid] } };
+      expect(canActivateDeclaredAbility(state, sourceUid, 'a1', validCostParams)).toBe(true);
+      useGameStateStore.setState({ gameState: state });
+      expect(dispatchEngineAction({
+        type: 'declaredAbility',
+        uid: sourceUid,
+        abilId: 'a1',
+        costParams: validCostParams,
+      })).toEqual({ ok: true });
+      const after = useGameStateStore.getState().gameState!;
+      expect(after.players[player].scene.find(char => char.uid === firstPayerUid)?.state).toBe('active');
+      expect(after.players[player].scene.find(char => char.uid === chosenPayerUid)?.state).toBe(
+        kind === 'sleepChar' ? 'sleep' : 'stun',
+      );
+    },
+  );
+
+  it.each(['sleepChar', 'stunChar'] as const)(
+    '%s permits an exact alternative payment without a printed-cost witness',
+    (kind) => {
+      const sourceId = `ALT-${kind}`;
+      const payerId = `ALT-PAYER-${kind}`;
+      registerCardDef(card(sourceId, [declared('a1', {
+        kind,
+        target: {
+          kind: 'pick',
+          query: { area: 'scene', side: 'self', filter: { trait: 'payer' } },
+          n: { min: 1, max: 1 },
+          chooser: 'self',
+        },
+      })], ['detective']));
+      registerCardDef(card(payerId, [], ['payer']));
+      const state = stateWith([sourceId, payerId, 'ALT-PROVIDER']);
+      const sourceUid = state.players.self.scene.find(char => char.cardId === sourceId)!.uid;
+      const payerUid = state.players.self.scene.find(char => char.cardId === payerId)!.uid;
+      const providerUid = state.players.self.scene.find(char => char.cardId === 'ALT-PROVIDER')!.uid;
+      const costParams = {
+        paymentMode: 'alternative' as const,
+        alternativeCostProviderUid: providerUid,
+      };
+
+      expect(canActivateDeclaredAbility(state, sourceUid, 'a1', costParams)).toBe(true);
+      useGameStateStore.setState({ gameState: state });
+      expect(dispatchEngineAction({ type: 'declaredAbility', uid: sourceUid, abilId: 'a1', costParams }))
+        .toEqual({ ok: true });
+      const after = useGameStateStore.getState().gameState!;
+      expect(after.players.self.scene.some(char => char.uid === providerUid)).toBe(false);
+      expect(after.players.self.scene.find(char => char.uid === payerUid)?.state).toBe('active');
+    },
+  );
+
   it('rejects direct B01007 dispatch with an empty hand before cost payment or effect resolution', () => {
     const state = stateWith(['B01007']);
     const uid = state.players.self.scene[0]!.uid;

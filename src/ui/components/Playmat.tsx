@@ -270,11 +270,6 @@ function PlayerMat({
           onClick={onCaseClick}
           onExpand={onExpand}
         />
-        {/* Round 3: 事件編/解決編 を 事件↔証拠 余白に独立表示 (事件カード上の case-stamp は削除済)
-            caseInfo null (ゲーム未開始時) は空 placeholder 表示 */}
-        <div className={`case-edition-tag${caseInfo?.status === '解決編' ? ' resolved' : ''}`} aria-label={`事件状態: ${caseInfo?.status ?? '未開始'}`}>
-          {caseInfo?.status ?? '未開始'}
-        </div>
         <EvidenceArea
           count={evidenceCount}
           requiredEvidence={requiredEvidence}

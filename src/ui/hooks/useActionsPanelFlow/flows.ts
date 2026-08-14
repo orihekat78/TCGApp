@@ -24,7 +24,7 @@ import { nextHintColorIgnoreAllowed, effectiveHandLevel } from '@/engine/flow/ma
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
 import type { Candidate, Effect, GameState } from '@/engine/types';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
-import { costToText, findFlipFaceUpCost, findRemoveFromHandCost, findRemoveStackedCardsCost, findRemoveSetCardCost, findChoiceCostAtPath, completeCostChoicePaths, findDeclareNameAtom, choiceOptionLabel, makeAbilityCtx } from './cost.js';
+import { costToText, findFlipFaceUpCost, findRemoveFromHandCost, findRemoveStackedCardsCost, findRemoveSetCardCost, findCharacterStateCost, findChoiceCostAtPath, completeCostChoicePaths, findDeclareNameAtom, choiceOptionLabel, makeAbilityCtx } from './cost.js';
 import type { Player } from './cost.js';
 import {
   ACTION_CASE_TARGET_OPP,
@@ -650,6 +650,63 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
       ...(path.length === 1 ? { costChoice: path[0] } : {}),
       ...(path.length > 1 ? { costChoicePath: path } : {}),
     };
+  }
+
+  // Exact active-character cost selection. Keep this after cost-choice
+  // resolution so only the selected payment branch can open a picker.
+  const characterStateCost = findCharacterStateCost(
+    cost,
+    costParams?.costChoicePath ?? costParams?.costChoice,
+  );
+  if (!useAlternativeCost && characterStateCost && owner === 'self' && cardId) {
+    const characterState = useGameStateStore.getState().gameState;
+    if (characterState === null) return { ok: false, reason: 'no-state' };
+    const min = characterStateCost.target.kind === 'pick' ? characterStateCost.target.n.min : 1;
+    const max = characterStateCost.target.kind === 'pick' ? characterStateCost.target.n.max : 1;
+    // Every shipped sleepChar/stunChar declaration currently pays exactly one.
+    // Preserve legacy engine fallback for other cardinalities until they gain a
+    // dedicated multi-select interaction.
+    if (min === 1 && max === 1) {
+      const characterCtx = makeAbilityCtx({
+        player: owner,
+        uid: sourceUid,
+        cardId,
+        abilityId: chosenAbilId,
+        area: sourceArea,
+      });
+      const active = engine.target.candidates(characterState, characterStateCost.target, characterCtx)
+        .filter((candidate): candidate is Candidate & { kind: 'char' } => {
+          if (candidate.kind !== 'char') return false;
+          return characterState.players[candidate.player].scene
+            .some(char => char.uid === candidate.uid && char.state === 'active');
+        });
+      if (active.length === 0) return { ok: false, reason: 'not-allowed' };
+      const chosen = active.length === 1
+        ? active[0]!
+        : await (async () => {
+          const choice = await useChoicePicker().ask({
+            sourceName,
+            options: active.map((candidate, index) => {
+              const sceneIndex = characterState.players[candidate.player].scene
+                .findIndex(char => char.uid === candidate.uid);
+              const sideLabel = candidate.player === owner
+                ? ''
+                : candidate.player === 'self' ? '自分の' : '相手の';
+              return {
+                index,
+                label: `${uidToDisplayName(characterState, candidate.uid)}（${sideLabel}現場${sceneIndex + 1}）`,
+              };
+            }),
+          });
+          return choice.kind === 'cancel' ? null : active[choice.index];
+        })();
+      if (chosen === null) return { ok: false, reason: 'cancelled' };
+      if (chosen === undefined) return { ok: false, reason: 'not-allowed' };
+      costParams = {
+        ...(costParams ?? {}),
+        [characterStateCost.kind]: { uids: [chosen.uid] },
+      };
+    }
   }
 
   // 3.6b) BUG-248: removeSetCard コストは、host だけでなく物理 set-card occurrence を

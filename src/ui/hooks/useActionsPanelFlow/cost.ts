@@ -135,11 +135,37 @@ export function findRemoveFromHandCost(
 }
 
 type RemoveSetCardCost = Extract<Cost, { kind: 'removeSetCard' }>;
+type CharacterStateCost = Extract<Cost, { kind: 'sleepChar' | 'stunChar' }>;
 type ChoiceCost = Extract<Cost, { kind: 'choice' }>;
 type ChoicePath = readonly number[] | number | undefined;
 
 function normalizedChoicePath(path: ChoicePath): readonly number[] | undefined {
   return typeof path === 'number' ? [path] : path;
+}
+
+/** Return the sleep/stun item on the already selected cost-choice path. */
+export function findCharacterStateCost(
+  cost: Cost | undefined,
+  choicePath?: ChoicePath,
+): CharacterStateCost | null {
+  const choices = normalizedChoicePath(choicePath);
+  let cursor = 0;
+  const visit = (node: Cost): CharacterStateCost | null => {
+    if (node.kind === 'sleepChar' || node.kind === 'stunChar') return node;
+    if (node.kind === 'pay') {
+      for (const item of node.items) {
+        const found = visit(item);
+        if (found) return found;
+      }
+      return null;
+    }
+    if (node.kind !== 'choice') return null;
+    const selected = choices?.[cursor++];
+    return selected !== undefined && Number.isInteger(selected) && selected >= 0 && selected < node.items.length
+      ? visit(node.items[selected]!)
+      : null;
+  };
+  return cost ? visit(cost) : null;
 }
 
 /** Return the next unresolved choice on the exact engine payment path. */
