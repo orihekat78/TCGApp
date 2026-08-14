@@ -82,3 +82,10 @@
   the partner area and the scene; a differently named scene target is a false green.
 - Choose-intercept currently excludes event sources. Do not certify broader
   event semantics without separate official-rules adjudication.
+
+## 2026-08-14: Action-removal Hirameki evidence
+
+- Bind face-up evidence rulings to the public declare, guard, judge, and
+  Hirameki decision path; generic removal tests are insufficient.
+- Keep QA-bound assertions in dedicated files so unrelated test edits do not
+  silently invalidate line-based evidence references.

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-qa-trace.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:qa-trace`
-> Source hash: `e66f2bcd550e`
+> Source hash: `a88a0f7c74a0`
 
 Tracked Q&A identifiers and digests only. Official question and answer bodies are intentionally excluded.
 
@@ -20,8 +20,8 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 ## Coverage classification
 
 - total: 2964
-- matched: 545
-- test-missing: 2419
+- matched: 547
+- test-missing: 2417
 - legacy-unreviewed: 0
 - unmapped: 0
 - mismatch: 0
@@ -626,7 +626,7 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 | `card:B04013:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305` | `B04013` | `B04013` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B04013:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f` | `B04013` | `B04013` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B04013:e2f2e95abd482ed3b39e41b21dab18bfdb59f38cdfe18873117af2ef2dc02ced` | `B04013` | `B04013` | shipped | matched | aligned | 1 | 2 |
-| `card:B04015:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c` | `B04015` | `B04015` | shipped | test-missing | test-gap | 1 | 0 |
+| `card:B04015:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c` | `B04015` | `B04015` | shipped | matched | aligned | 1 | 4 |
 | `card:B04017:34b5e50478a370f3ee9ce8bf309eeb4e4825d1b3115ec9eeab3024bdaf99dfa9` | `B04017` | `B04017`, `B04017P` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B04017:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9` | `B04017` | `B04017`, `B04017P` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B04018:03c22945ddb72e8bee0c6ed62d9d1e822235a880f3b0c85a026121b419cd7c82` | `B04018` | `B04018`, `B04018P` | shipped | matched | aligned | 1 | 1 |
@@ -655,7 +655,7 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 | `card:B04027:3d48fd2885346e1f56efcdd259b31a7a5e33cf94f53ca3cfa08175b86a749f26` | `B04027` | `B04027`, `B04027P` | shipped | test-missing | test-gap | 4 | 0 |
 | `card:B04027:587318296a1e58a97ef2621477e6167ca1ac647c99a965b5e488bb837a198320` | `B04027` | `B04027`, `B04027P` | shipped | matched | aligned | 1 | 1 |
 | `card:B04027:9bafe2020798f633e8f0c109144c9d2df6edaeea89943b94f2424dbc601e886a` | `B04027` | `B04027`, `B04027P` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:B04028:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c` | `B04028` | `B04028` | shipped | test-missing | test-gap | 3 | 0 |
+| `card:B04028:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c` | `B04028` | `B04028` | shipped | matched | aligned | 4 | 4 |
 | `card:B04030:26ec92247fc4dcab111b11e369bcad77f0deafd06bf0be0904b6e0dc6fd32e48` | `B04030` | `B04030`, `B04030P` | shipped | matched | aligned | 1 | 1 |
 | `card:B04030:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58` | `B04030` | `B04030`, `B04030P` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B04030:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333` | `B04030` | `B04030`, `B04030P` | shipped | test-missing | test-gap | 2 | 0 |
@@ -3484,7 +3484,6 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 - missing-test: `card:B04013:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb`
 - missing-test: `card:B04013:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305`
 - missing-test: `card:B04013:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f`
-- missing-test: `card:B04015:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c`
 - missing-test: `card:B04017:34b5e50478a370f3ee9ce8bf309eeb4e4825d1b3115ec9eeab3024bdaf99dfa9`
 - missing-test: `card:B04017:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9`
 - missing-test: `card:B04018:1cff047db42defa99d9c10428e9c621b6c071eac37f84c93bac71452277573e3`
@@ -3505,7 +3504,6 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 - missing-test: `card:B04026:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305`
 - missing-test: `card:B04027:3d48fd2885346e1f56efcdd259b31a7a5e33cf94f53ca3cfa08175b86a749f26`
 - missing-test: `card:B04027:9bafe2020798f633e8f0c109144c9d2df6edaeea89943b94f2424dbc601e886a`
-- missing-test: `card:B04028:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c`
 - missing-test: `card:B04030:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58`
 - missing-test: `card:B04030:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333`
 - missing-test: `card:B04030:5e64c29e1ffcc111dbcccfe71778b02ee324354900b53f8feecdf316419a232c`

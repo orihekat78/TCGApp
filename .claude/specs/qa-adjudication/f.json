@@ -541,15 +541,15 @@
     {
       "qaId": "card:B04015:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c",
       "answerHash": "24c759d28a4ec6639a5e29d0bfe9ecf8ae35c9fef100ec84884250ecbdda798e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/10-action-event.md:39",
-        "src:src/cards/ct-p04/B04015.ts:28"
-      ],
-      "noteCodes": [
-        "B04015-FACEUP-ACTION-HIRAMEKI-TEST-MISSING"
+        "src:src/cards/ct-p04/B04015.ts:28",
+        "tests:tests/cards/official-qa/B04015-B04028-action-hirameki.test.ts:75",
+        "tests:tests/cards/official-qa/B04015-B04028-action-hirameki.test.ts:80",
+        "tests:tests/cards/official-qa/B04015-B04028-action-hirameki.test.ts:81"
       ]
     },
     {
