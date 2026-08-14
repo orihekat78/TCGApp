@@ -70,15 +70,17 @@
     {
       "qaId": "card:B02005:a9e2b55ade434427e86e8e7b1f9b5a0166ea3b0f412c460bdb09e162d8bbc736",
       "answerHash": "0d14d5fb8794f9d6aac1b7f8b0878c8c6fda4cf715079c1cdffe664fd9bb37c3",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:34",
-        "src:src/cards/ct-p02/B02005.ts:29"
-      ],
-      "noteCodes": [
-        "PARTNER-EXCLUSION-UNTESTED"
+        "rules:.claude/rules/15-abilities-effects.md:35",
+        "src:src/cards/ct-p02/B02005.ts:29",
+        "tests:tests/cards/official-qa/bond-partner-exclusion-wave9.test.ts:143",
+        "tests:tests/cards/official-qa/bond-partner-exclusion-wave9.test.ts:156",
+        "tests:tests/cards/official-qa/bond-partner-exclusion-wave9.test.ts:159",
+        "tests:tests/cards/official-qa/bond-partner-exclusion-wave9.test.ts:160"
       ]
     },
     {

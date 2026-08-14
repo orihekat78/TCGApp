@@ -75,3 +75,10 @@
   effect early and leave a surfaced decision without runtime authority.
 - Public guard prechecks must preserve the core ordering: allow a null abort for
   a missing action target, otherwise enforce the live `mustGuardCandidates` set.
+
+## 2026-08-14: Partner-area exclusion evidence
+
+- Prove partner exclusion with paired fixtures using the same printed name in
+  the partner area and the scene; a differently named scene target is a false green.
+- Choose-intercept currently excludes event sources. Do not certify broader
+  event semantics without separate official-rules adjudication.

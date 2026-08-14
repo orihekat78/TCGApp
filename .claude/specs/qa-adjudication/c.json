@@ -565,16 +565,21 @@
     {
       "qaId": "card:B04003:ad9d39118ac40e1d7ecaefd452fddc993c9022604d0e60a2cb9c152955319f63",
       "answerHash": "600fad584e05d84422b7b5df3252ee13f056999f9bae6fec7f255c5536d01c01",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
+        "rules:.claude/rules/17-icons.md:37",
         "rules:.claude/rules/19-special-rules.md:21",
         "src:src/cards/ct-p04/B04003.ts:6",
-        "src:src/engine/effect/consult-choose-intercept.ts:33"
-      ],
-      "noteCodes": [
-        "BOND-PARTNER-NEGATIVE-TEST-MISSING"
+        "src:src/engine/effect/consult-choose-intercept.ts:62",
+        "tests:tests/cards/official-qa/bond-partner-exclusion-wave9.test.ts:196",
+        "tests:tests/cards/official-qa/bond-partner-exclusion-wave9.test.ts:197",
+        "tests:tests/cards/official-qa/bond-partner-exclusion-wave9.test.ts:200",
+        "tests:tests/cards/official-qa/bond-partner-exclusion-wave9.test.ts:201",
+        "tests:tests/cards/official-qa/bond-partner-exclusion-wave9.test.ts:212",
+        "tests:tests/cards/official-qa/bond-partner-exclusion-wave9.test.ts:216",
+        "tests:tests/cards/official-qa/bond-partner-exclusion-wave9.test.ts:220"
       ]
     },
     {
