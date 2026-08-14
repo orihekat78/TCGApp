@@ -11,7 +11,7 @@
 // TopBar, HandZone, LogPanel) は Task 7.5-7.13 で実装するため placeholder。
 // 操作系 (クリック・DnD) は Phase 8。
 
-import { useEffect, useRef, useState, type JSX } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type JSX } from 'react';
 import type { GameState } from '@/engine/types/game-state.js';
 import type { ReplayViewerMode } from '@/ai/replay/state-frame.js';
 import { SceneArea, type ResolvedCardMeta } from './SceneArea.js';
@@ -969,12 +969,17 @@ export function Playmat({
         zoom: 1,
       }
     : { zoom: viewportLayout.scale };
+  const scalerStyle = {
+    '--playmat-inverse-scale': 1 / viewportLayout.scale,
+    '--playmat-control-overlap': `${16 / viewportLayout.scale}px`,
+  } as CSSProperties;
   const effectOrderEntries = gameState ? pendingOwnerOrderGroup(gameState, 'self') : [];
   return (
     <div
       className="scaler"
       id="scaler"
       ref={scalerRef}
+      style={scalerStyle}
       data-stage-scale={viewportLayout.scale}
       data-playmat-layout="desktop"
       data-playmat-fit={viewportLayout.containedLandscape ? 'contained-landscape' : 'fluid-desktop'}

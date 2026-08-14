@@ -414,18 +414,35 @@
 
 .scene-area .card .set-badge {
   position: absolute;
-  bottom: 14px;
-  left: -4px;
-  min-width: 10px;
-  padding: 1px 2px;
+  bottom: 0;
+  left: calc(100% - var(--playmat-control-overlap, 16px));
+  display: grid;
+  width: 45px;
+  min-width: 45px;
+  height: 45px;
+  padding: 0;
+  place-items: center;
   border: 0;
-  border-radius: 7px;
-  background: color-mix(in oklch, var(--color-blue) 70%, white 20%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    color-mix(in oklch, var(--color-blue) 70%, white 20%) 0 8px,
+    transparent 8.5px
+  );
   color: #fff;
   font-size: 7px;
   font-weight: 700;
   line-height: 1.2;
   cursor: pointer;
+  transform: scale(var(--playmat-inverse-scale, 1));
+  transform-origin: left bottom;
+  z-index: 4;
+}
+
+.scene-area .card .set-badge:hover,
+.scene-area .card .set-badge:focus-visible {
+  outline: 2px solid #ffd966;
+  outline-offset: -8px;
 }
 
 .scene-area .card .scene-card-detail-button:hover .scene-card-detail-icon,

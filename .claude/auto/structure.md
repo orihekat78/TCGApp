@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6031
+- **ファイル数**: 6033
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5430,6 +5430,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B01025-B01026-partner-abilities.test.ts` — Official Q&A: B01025/B01025P/B01026/B01026P
       - `B01077-empty-hand-event.test.ts` — qaId=card:B01077:d42cf418c120cd75f5388b9a434fa679d9f97908baa2ffb6eb9152c28dcb8e5…
       - `B02008-turn-limit-order-ap.test.ts` — qaId=card:B02008:3240a4626ffa31e953f10ca03af61b33b9d3367feeffa3bc87cd8b3c7be01d9…
+      - `B02023-facedown-set-privacy.test.ts` — qa: card:B02023:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b
       - `B03002-B05005-next-hint-order-guard.test.ts` — Official Q&A certification: public dispatch paths only.
       - `B03020.test.ts` — qaId=card:B03020:7e1b89161d4cc08ba1dd9f60c2dd203d56a0d75ebc1fe8ce0ada2bb43af5a27…
       - `B03023.test.ts` — Official Q&A: B03023 脇田兼則
@@ -5752,6 +5753,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `hirameki-char-stun.spec.ts` — Round 4k: hiramekiCharStun パターン (アクション[事件] 経由のヒラメキ → キャラを1枚 sleep) を
       - `hirameki-draw.spec.ts` — Round 4j (`4dd2cd8`) + Round 4j-fix: hiramekiDraw パターン (アクション[事件] 経由のヒラメキドロー)
       - `partner-color-keyword.spec.ts` — Round 4f Phase 2: partnerColorKeyword 共通クラスを使う 5 カードを 1 spec で集約検証。
+    - `B02023-facedown-set-privacy.spec.ts` — qa: card:B02023:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b
     - `audit-suspects-coverage.spec.ts` — E2E: 2026-06-05 監査 workflow が「静的には faithful・実機未確認」とした suspect の runtime カバレッジ。
     - `b10094-mixed-source.spec.ts` — Two public equal PA cards prove that the UI retains occurrence identity.
     - `bug-006.spec.ts` — BUG-006: アクション[事件] で証拠が変動しない (rules/10)
