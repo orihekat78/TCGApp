@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-qa-trace.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:qa-trace`
-> Source hash: `a88a0f7c74a0`
+> Source hash: `0b6a72d9fd13`
 
 Tracked Q&A identifiers and digests only. Official question and answer bodies are intentionally excluded.
 
@@ -20,8 +20,8 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 ## Coverage classification
 
 - total: 2964
-- matched: 547
-- test-missing: 2417
+- matched: 548
+- test-missing: 2416
 - legacy-unreviewed: 0
 - unmapped: 0
 - mismatch: 0
@@ -620,7 +620,7 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 | `card:B04007:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa` | `B04007` | `B04007` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B04010:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58` | `B04010` | `B04010` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B04011:fb85c35318daa553893c8d8f4e1e5089b71b47b1ea967fc8e2d044a229530a79` | `B04011` | `B04011` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:B04012:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d` | `B04012` | `B04012` | shipped | test-missing | test-gap | 1 | 0 |
+| `card:B04012:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d` | `B04012` | `B04012` | shipped | matched | aligned | 3 | 8 |
 | `card:B04012:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4` | `B04012` | `B04012` | shipped | matched | aligned | 1 | 5 |
 | `card:B04013:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb` | `B04013` | `B04013` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B04013:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305` | `B04013` | `B04013` | shipped | test-missing | test-gap | 1 | 0 |
@@ -3480,7 +3480,6 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 - missing-test: `card:B04007:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa`
 - missing-test: `card:B04010:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58`
 - missing-test: `card:B04011:fb85c35318daa553893c8d8f4e1e5089b71b47b1ea967fc8e2d044a229530a79`
-- missing-test: `card:B04012:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d`
 - missing-test: `card:B04013:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb`
 - missing-test: `card:B04013:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305`
 - missing-test: `card:B04013:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f`

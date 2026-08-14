@@ -31105,8 +31105,8 @@
   "coverage": {
     "total": 2964,
     "statusCounts": {
-      "matched": 547,
-      "test-missing": 2417,
+      "matched": 548,
+      "test-missing": 2416,
       "legacy-unreviewed": 0,
       "unmapped": 0,
       "mismatch": 0,
@@ -31701,7 +31701,7 @@
       "card:B04007:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa": "test-missing",
       "card:B04010:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58": "test-missing",
       "card:B04011:fb85c35318daa553893c8d8f4e1e5089b71b47b1ea967fc8e2d044a229530a79": "test-missing",
-      "card:B04012:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d": "test-missing",
+      "card:B04012:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d": "matched",
       "card:B04012:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4": "matched",
       "card:B04013:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb": "test-missing",
       "card:B04013:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305": "test-missing",
@@ -34667,7 +34667,7 @@
       "card:B04007:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa": "test-gap",
       "card:B04010:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58": "test-gap",
       "card:B04011:fb85c35318daa553893c8d8f4e1e5089b71b47b1ea967fc8e2d044a229530a79": "test-gap",
-      "card:B04012:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d": "test-gap",
+      "card:B04012:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d": "aligned",
       "card:B04012:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4": "aligned",
       "card:B04013:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb": "test-gap",
       "card:B04013:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305": "test-gap",

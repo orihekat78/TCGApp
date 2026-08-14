@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6030
+- **ファイル数**: 6031
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5433,6 +5433,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B03002-B05005-next-hint-order-guard.test.ts` — Official Q&A certification: public dispatch paths only.
       - `B03020.test.ts` — qaId=card:B03020:7e1b89161d4cc08ba1dd9f60c2dd203d56a0d75ebc1fe8ce0ada2bb43af5a27…
       - `B03023.test.ts` — Official Q&A: B03023 脇田兼則
+      - `B04012-optional-decline.test.ts` — qa: card:B04012:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d
       - `B04015-B04028-action-hirameki.test.ts` — qa: card:B04015:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
       - `B04030.test.ts` — The opposing contact character has left, but Kaito remains in the scene.
       - `B04059.test.ts` — B04059 水無怜奈 — official Q&A: scene-only additional card name.
