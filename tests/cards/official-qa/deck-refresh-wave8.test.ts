@@ -186,6 +186,18 @@ describe('official QA deck refresh: optional entry look', () => {
     expect(useGameStateStore.getState().gameState!.players.self.hand).toContain(alternate.id);
   });
 
+  it('B05057 acquires its one eligible card before refreshing its remove seed', () => {
+    const target = targetFor(B05057);
+    const pick = deploy(B05057, [target.id]);
+    expect(pick.candidates.map(candidate => candidate.cardId)).toEqual([target.id]);
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pick.candidates[0]!.uid })).toEqual({ ok: true });
+    const state = useGameStateStore.getState().gameState!;
+    expect(state.players.self.hand).toContain(target.id);
+    expect(state.players.self.deck).toEqual([B05057.id]);
+    expect(state.players.self.remove).toEqual([]);
+    expect(state.refreshCount.self).toBe(1);
+  });
+
   it('CPU opponent refreshes only its own deck, keeps its private look off the human surface, and redacts it causally', () => {
     const target = targetFor(B04024);
     const state = entryState(B04024, [target.id], 'opp', [B05057.id]);

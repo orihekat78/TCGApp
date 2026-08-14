@@ -779,11 +779,18 @@
     {
       "qaId": "card:B05057:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4",
       "answerHash": "bb85881edd52a7cfd35eb3210f5e76e43e4dd05bf78467d7777740d52aef6998",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05057.ts:23"
+        "src:src/cards/ct-p05/B05057.ts:23",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:121",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:129",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:142",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:157",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:192",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:196",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:198"
       ]
     },
     {
@@ -2181,14 +2188,20 @@
     {
       "qaId": "card:PR194:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4",
       "answerHash": "bb85881edd52a7cfd35eb3210f5e76e43e4dd05bf78467d7777740d52aef6998",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR194.ts:76"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/pr-01/PR194.ts:31",
+        "src:src/cards/pr-01/PR194.ts:47",
+        "src:src/cards/pr-01/PR194.ts:54",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:233",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:234",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:235",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:237",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:250",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:252",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:275"
       ]
     },
     {

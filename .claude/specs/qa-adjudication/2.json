@@ -737,11 +737,15 @@
     {
       "qaId": "card:B05060:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4",
       "answerHash": "bb85881edd52a7cfd35eb3210f5e76e43e4dd05bf78467d7777740d52aef6998",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05060.ts:75"
+        "src:src/cards/ct-p05/B05060.ts:75",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:121",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:129",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:142",
+        "tests:tests/cards/official-qa/deck-refresh-wave8.test.ts:184"
       ]
     },
     {
