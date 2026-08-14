@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6026
+- **ファイル数**: 6027
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5426,6 +5426,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`night-wC2b/`**
       - `invoke-hirameki.test.ts` — tests/cards/night-wC2b/invoke-hirameki
     - **`official-qa/`**
+      - `B01006-B08017-target-protection-public.test.ts` — qa: card:B01006:b4700accb91f4e296c848f701b9e1cbef24d22b2f328348428dff879f61a302b
       - `B01025-B01026-partner-abilities.test.ts` — Official Q&A: B01025/B01025P/B01026/B01026P
       - `B01077-empty-hand-event.test.ts` — qaId=card:B01077:d42cf418c120cd75f5388b9a434fa679d9f97908baa2ffb6eb9152c28dcb8e5…
       - `B02008-turn-limit-order-ap.test.ts` — qaId=card:B02008:3240a4626ffa31e953f10ca03af61b33b9d3367feeffa3bc87cd8b3c7be01d9…

@@ -5,17 +5,17 @@
     {
       "qaId": "card:B01006:b4700accb91f4e296c848f701b9e1cbef24d22b2f328348428dff879f61a302b",
       "answerHash": "ea8aa4d7c8959446afc73689cc341ecd13a46e53cd0dba4525d4087190701efa",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/07-action-flow.md:7",
         "src:src/cards/ct-p01/B01006.ts:3",
         "src:src/engine/flow/action/target-expander.ts:135",
-        "src:src/engine/flow/action/target-expander.ts:74"
-      ],
-      "noteCodes": [
-        "ACTION-EXCEPTION-TEST-MISSING"
+        "src:src/engine/flow/action/target-expander.ts:74",
+        "tests:tests/cards/official-qa/B01006-B08017-target-protection-public.test.ts:129",
+        "tests:tests/cards/official-qa/B01006-B08017-target-protection-public.test.ts:137",
+        "tests:tests/cards/official-qa/B01006-B08017-target-protection-public.test.ts:143"
       ]
     },
     {

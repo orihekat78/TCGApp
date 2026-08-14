@@ -1,8 +1,8 @@
-// qaId=card:B01006:b4700accb91f4e296c848f701b9e1cbef24d22b2f328348428dff879f61a302b
-// qaId=card:B03030:b4700accb91f4e296c848f701b9e1cbef24d22b2f328348428dff879f61a302b
-// qaId=card:B05008:30651b7ee5f0a59b4c20d0e807141d2ea57f534baf2b03bf5e409e462a5b66a8
-// qaId=card:B05048:dd999e26dc327f362b16b4e1a8cf5780f8462b4214f3e38bf3dd502288f4fd84
-// qaId=card:B08017:b4700accb91f4e296c848f701b9e1cbef24d22b2f328348428dff879f61a302b
+// qa: card:B01006:b4700accb91f4e296c848f701b9e1cbef24d22b2f328348428dff879f61a302b
+// qa: card:B03030:b4700accb91f4e296c848f701b9e1cbef24d22b2f328348428dff879f61a302b
+// qa: card:B05008:30651b7ee5f0a59b4c20d0e807141d2ea57f534baf2b03bf5e409e462a5b66a8
+// qa: card:B05048:dd999e26dc327f362b16b4e1a8cf5780f8462b4214f3e38bf3dd502288f4fd84
+// qa: card:B08017:b4700accb91f4e296c848f701b9e1cbef24d22b2f328348428dff879f61a302b
 // Official Q&A: an opponent's effect cannot select the protected character.
 // This exercises the shipped hand-use -> public pending decision route.
 
@@ -180,8 +180,8 @@ describe('B01006 / B03030 / B05008 / B05048 official Q&A target protection', () 
     [B01006, QA.B01006], [B03030, QA.B03030], [B05008, QA.B05008],
   ] as const)('%s bond absent leaves its bearer selectable', (card, qa) => {
     const state = stateFor('self', card);
-  install(state);
-  expect(dispatchD02015(qa).candidates.map((candidate) => candidate.uid), `${qa}: ${card.id}/protected`).toContain('protected');
+    install(state);
+    expect(dispatchD02015(qa).candidates.map((candidate) => candidate.uid), `${qa}: ${card.id}/protected`).toContain('protected');
   });
 
   it(`${QA.B05048}: absent bearer leaves its named character selectable`, () => {
