@@ -30,6 +30,7 @@ import type {
   PrivatePrepareControls,
 } from "../../scripts/private-hosted/prepare-internal.ts";
 import { createHash } from "node:crypto";
+import { acquireRepositoryDistLock } from "./repository-dist-lock";
 
 const roots: string[] = [];
 const externalFiles: string[] = [];
@@ -332,14 +333,19 @@ describe("private hosted release preparation", () => {
       join(tmpdir(), "conan-private-hosted-production-prepare-"),
     );
     roots.push(outputs);
+    const releaseDistLock = await acquireRepositoryDistLock();
 
-    await expect(
-      prepareRelease({
-        repoRoot: process.cwd(),
-        stagingDir: join(outputs, "staging"),
-        evidenceDir: join(outputs, "evidence"),
-      }),
-    ).resolves.toMatchObject({ manifests: expect.any(Object) });
+    try {
+      await expect(
+        prepareRelease({
+          repoRoot: process.cwd(),
+          stagingDir: join(outputs, "staging"),
+          evidenceDir: join(outputs, "evidence"),
+        }),
+      ).resolves.toMatchObject({ manifests: expect.any(Object) });
+    } finally {
+      await releaseDistLock();
+    }
   }, 300_000);
 
   it("fails when the injected build runner fails", async () => {

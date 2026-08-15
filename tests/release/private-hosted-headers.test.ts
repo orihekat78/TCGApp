@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { acquireRepositoryDistLock } from "./repository-dist-lock";
 
 const EXPECTED = `/*
   Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.takaratomy.co.jp; font-src 'self'; connect-src 'self' https://www.takaratomy.co.jp; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; worker-src 'none'
@@ -37,17 +38,29 @@ function isCardImagePayload(path: string, knownStems: Set<string>): boolean {
 
 describe("private hosted security headers", () => {
   let buildOutput = "";
+  let releaseDistLock: (() => Promise<void>) | undefined;
 
-  beforeAll(() => {
-    const npmCli = process.env.npm_execpath;
-    if (!npmCli) throw new Error("npm_execpath is required");
-    const result = spawnSync(process.execPath, [npmCli, "run", "build:meta"], {
-      encoding: "utf8",
-      env: { ...process.env, NODE_ENV: "production" },
-    });
-    if (result.error) throw result.error;
-    buildOutput = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
-    expect(result.status).toBe(0);
+  beforeAll(async () => {
+    releaseDistLock = await acquireRepositoryDistLock();
+    try {
+      const npmCli = process.env.npm_execpath;
+      if (!npmCli) throw new Error("npm_execpath is required");
+      const result = spawnSync(process.execPath, [npmCli, "run", "build:meta"], {
+        encoding: "utf8",
+        env: { ...process.env, NODE_ENV: "production" },
+      });
+      if (result.error) throw result.error;
+      buildOutput = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
+      expect(result.status).toBe(0);
+    } catch (error) {
+      await releaseDistLock();
+      releaseDistLock = undefined;
+      throw error;
+    }
+  }, 300_000);
+
+  afterAll(async () => {
+    await releaseDistLock?.();
   });
 
   it("defines the exact fail-closed policy for every path", () => {

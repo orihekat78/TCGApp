@@ -77,3 +77,10 @@
   sleeping character; active and own-side characters remain illegal targets.
 - Certify this shared rule through public action dispatch plus each card's
   concrete stun-producing contract, not by reusing event cards as scene actors.
+
+## 2026-08-16: Repository dist test isolation
+
+- Release preparation and security-header tests both own the checkout `dist/`.
+  Hold one external temp lock across build plus inspection in parallel Vitest.
+- Keep production release behavior unchanged; the parallel full suite is the
+  acceptance gate for this test-only race fix.

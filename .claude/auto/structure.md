@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6082
+- **ファイル数**: 6083
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -6187,6 +6187,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `private-hosted-qualification-report.test.ts`
     - `private-hosted-release-basics.test.ts`
     - `private-hosted-runtime-boundary.test.ts`
+    - `repository-dist-lock.ts`
   - **`scripts/`**
     - `build-tcg-runtime-packet.test.ts`
     - `cards-authority-refresh.test.ts`
