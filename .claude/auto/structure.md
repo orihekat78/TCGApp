@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6076
+- **ファイル数**: 6077
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -492,6 +492,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-309.md` — 満員現場スイッチの操作権限
     - `BUG-310.md` — 必須順序選択のEscape結果
     - `BUG-311.md` — 強制公開サーチの不要な順序選択
+    - `BUG-312.md` — decision再開時のsource identity欠落
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)

@@ -503,14 +503,7 @@ function handleHook(
       event.queue(
         state,
         resolvedEffect,
-        {
-          player: card.player,
-          uid: card.uid,
-          cardId: card.cardId,
-          abilityId: ability.id,
-          description: ability.description,
-          ...(resolutionKind ? { resolutionKind } : {}),
-        },
+        abilitySource,
         hookName,
         payload,
         sourceBindings,

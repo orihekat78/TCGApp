@@ -61,11 +61,12 @@ function containsSceneEnter(effect: Effect): boolean {
   return false;
 }
 
-export function pendingSource<T extends { cardId: string; abilityId: string }>(state: GameState, ctx: EffectCtx, source: T) {
+export function pendingSource<T extends { uid?: string; cardId: string; abilityId: string }>(state: GameState, ctx: EffectCtx, source: T) {
   const trace = ensureEffectCausalTrace(state, ctx);
   markEffectCausalAwaitingResume(trace);
   return {
     ...source,
+    ...(source.uid === undefined && ctx.source.uid !== undefined ? { uid: ctx.source.uid } : {}),
     ...(ctx.source.area ? { area: ctx.source.area } : {}),
     ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}),
     ...(ctx.source.triggerBatch !== undefined ? { triggerBatch: ctx.source.triggerBatch } : {}),

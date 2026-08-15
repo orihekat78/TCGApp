@@ -53,6 +53,26 @@ function resumedEntryExtras(source: {
   };
 }
 
+function resumedEntrySource(
+  source: {
+    uid?: string;
+    cardId: string;
+    abilityId: string;
+    area?: EffectCtx['source']['area'];
+    resolutionKind?: EffectCtx['source']['resolutionKind'];
+  },
+  player: Player,
+) {
+  return {
+    player,
+    ...(source.uid !== undefined ? { uid: source.uid } : {}),
+    cardId: source.cardId,
+    abilityId: source.abilityId,
+    ...(source.area ? { area: source.area } : {}),
+    ...(source.resolutionKind ? { resolutionKind: source.resolutionKind } : {}),
+  };
+}
+
 import { run as runEffect } from './resolver.js';
 import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 import { cardOccurrenceUid, cardOccurrenceWitness, isLiveCardOccurrenceWitness } from '../target/card-occurrence.js';
@@ -1478,11 +1498,7 @@ export function applyPickAndContinuation(
       // BUG-175: source.player は能力所有者 (chooser を渡すと相対 arg が二重反転 — B04058
       // 「相手は手札を1枚リムーブする」で self 手札を discard する誤り)。ownerPlayer 不在の
       // 旧 pending は player と同値 (chooser==owner) のため fallback で byte 等価。
-      {
-        player: pending.ownerPlayer ?? pending.player,
-        cardId: pending.source.cardId,
-        ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
-      },
+      resumedEntrySource(pending.source, pending.ownerPlayer ?? pending.player),
       'effect:pick-resolved',
       { picked: pickedUid, source: pending.source },
       undefined,
@@ -1617,11 +1633,7 @@ export function applyPickSkipAndContinuation(
         state,
         resolvedAtom as never,
         // BUG-175: decline 経路も同一座標系 (所有者) で再実行する
-        {
-          player: pending.ownerPlayer ?? pending.player,
-          cardId: pending.source.cardId,
-          ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
-        },
+        resumedEntrySource(pending.source, pending.ownerPlayer ?? pending.player),
         'effect:pick-resolved',
         { picked: null, source: pending.source },
         undefined,
@@ -1719,12 +1731,7 @@ export function applyChoiceAndContinuation(
   event.queue(
     state,
     resolved as never,
-    {
-      player: sourcePlayer,
-      uid: pending.source.uid,
-      cardId: pending.source.cardId,
-      ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
-    },
+    resumedEntrySource(pending.source, sourcePlayer),
     'effect:choice-resolved',
     { choiceIndex, source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId } },
     // BUG-114: 復元した contact bindings を queue の bindings 引数 (6th) に渡し、entry → runtime ctx.bindings
@@ -1814,12 +1821,7 @@ export function applyOptionalAndContinuation(
   event.queue(
     state,
     resolved as never,
-    {
-      player: pending.ownerPlayer ?? pending.player,
-      uid: pending.source.uid,
-      cardId: pending.source.cardId,
-      ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
-    },
+    resumedEntrySource(pending.source, pending.ownerPlayer ?? pending.player),
     'effect:optional-resolved',
     optTriggerPayload ?? { run, source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId } },
     // engine wave-18: 復元した contact bindings を queue 6th arg で entry → runtime ctx.contact へ伝達
