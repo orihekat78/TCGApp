@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `df5fbf5143c7`
+> Source hash: `9dfbbf3c38be`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -26,7 +26,7 @@
 | [`11-reasoning.md`](../../rules/11-reasoning.md) | 75 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `cards/ct-d01/D01010.ts` ほか 72 件 |
 | [`12-next-hint.md`](../../rules/12-next-hint.md) | 34 | `ai/policies/heuristic.ts`, `cards/ct-p01/B01005.ts`, `cards/ct-p01/B01009.ts` ほか 31 件 |
 | [`13-keywords.md`](../../rules/13-keywords.md) | 451 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 448 件 |
-| [`14-refresh.md`](../../rules/14-refresh.md) | 370 | `cards/ct-d01/D01003.ts`, `cards/ct-d01/D01006.ts`, `cards/ct-d01/D01012.ts` ほか 367 件 |
+| [`14-refresh.md`](../../rules/14-refresh.md) | 371 | `cards/ct-d01/D01003.ts`, `cards/ct-d01/D01006.ts`, `cards/ct-d01/D01012.ts` ほか 368 件 |
 | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 1304 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 1301 件 |
 | [`15-contact-removal-observer-design.md`](../../rules/15-contact-removal-observer-design.md) | 4 | `cards/ct-d10/D10007.ts`, `cards/ct-d10/D10008.ts`, `cards/ct-p01/B01007.ts`, `cards/ct-p09/B09026.ts` |
 | [`15-workflow.md`](../../rules/15-workflow.md) | 2 | `cards/ct-d08/D08015.ts`, `cards/ct-d08/D08016.ts` |
@@ -43,7 +43,7 @@
 | [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) | 4 | `ui/hooks/useActionsPanelFlow.ts`, `ui/hooks/useConfirmation.ts`, `ui/hooks/useOppTurnDriver.ts`, `ui/hooks/useTargetPicker.ts` |
 | [`26-05-11-ui-game-setup-flows.md`](../../rules/26-05-11-ui-game-setup-flows.md) | 1 | `ui/hooks/useMulligan.ts` |
 | [`26-07-02.md`](../../rules/26-07-02.md) | 1 | `engine/read/scene-cap.ts` |
-| [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) | 223 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/ct-d01/D01012.ts`, `cards/ct-d01/D01013.ts` ほか 220 件 |
+| [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) | 224 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/ct-d01/D01012.ts`, `cards/ct-d01/D01013.ts` ほか 221 件 |
 | [`27-card-restrictions.md`](../../rules/27-card-restrictions.md) | 2 | `cards/ct-p01/B01058.ts`, `cards/pr-01/PR067.ts` |
 | [`28-errata.md`](../../rules/28-errata.md) | 2 | `cards/ct-p01/B01094.ts`, `cards/ct-p01/B01094P.ts` |
 

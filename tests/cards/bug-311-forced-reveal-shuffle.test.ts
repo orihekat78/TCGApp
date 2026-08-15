@@ -50,7 +50,7 @@ const CASES: Array<{ def: CardDef; bindKey?: string; count?: number }> = [
   { def: B06053P }, { def: B07038 }, { def: B07043, count: 3 }, { def: B07052 },
   { def: B07086 }, { def: B08060 }, { def: B08060P },
   { def: B09109, bindKey: 'restRevealed' }, { def: B09109P, bindKey: 'restRevealed' },
-  { def: PR117 }, { def: PR118 }, { def: PR195 },
+  { def: PR117 }, { def: PR118 }, { def: PR135 }, { def: PR141 }, { def: PR195 },
 ];
 
 const ALIASES: Array<{ left: CardDef; right: CardDef }> = [
@@ -58,7 +58,7 @@ const ALIASES: Array<{ left: CardDef; right: CardDef }> = [
   { left: B03062, right: B03062P }, { left: B04051, right: B04051P },
   { left: B06011, right: B06011P }, { left: B06053, right: B06053P },
   { left: B08060, right: B08060P }, { left: B09109, right: B09109P },
-  { left: PR117, right: PR118 },
+  { left: PR117, right: PR118 }, { left: PR135, right: PR141 },
 ];
 
 function isAtom(value: unknown): value is Atom {
@@ -80,12 +80,10 @@ function bottomPairs(value: unknown, out: Pair[] = []): Pair[] {
 describe('BUG-311 forced reveal remainder ordering', () => {
   it('locks the exact grounded family and exclusions', () => {
     const ids = CASES.map(({ def }) => def.id);
-    expect(ids).toHaveLength(32);
-    expect(new Set(ids).size).toBe(32);
-    for (const excluded of [B03018, PR135, PR141]) expect(ids).not.toContain(excluded.id);
+    expect(ids).toHaveLength(34);
+    expect(new Set(ids).size).toBe(34);
+    expect(ids).not.toContain(B03018.id);
     expect(bottomPairs(B03018.abilities).every(({ bottom }) => bottom.args.order !== 'preserve')).toBe(true);
-    expect(bottomPairs(PR135.abilities)).toEqual([]);
-    expect(bottomPairs(PR141.abilities)).toEqual([]);
   });
 
   it.each(CASES)('$def.id preserves every remainder and shuffles immediately', ({ def, bindKey = '$revealed', count = 1 }) => {

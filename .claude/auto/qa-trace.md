@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-qa-trace.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:qa-trace`
-> Source hash: `44b32254335b`
+> Source hash: `a8e41cd4107f`
 
 Tracked Q&A identifiers and digests only. Official question and answer bodies are intentionally excluded.
 
@@ -20,8 +20,8 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 ## Coverage classification
 
 - total: 2964
-- matched: 736
-- test-missing: 2228
+- matched: 742
+- test-missing: 2222
 - legacy-unreviewed: 0
 - unmapped: 0
 - mismatch: 0
@@ -2744,9 +2744,9 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 | `card:PR118:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9` | `PR118` | `PR118` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:PR131:e6ecbe55e30edc0b469639ea9db1edc6e7a8de3f344fc8b4bca9116477e82659` | `PR131` | `PR131` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:PR132:22aaf9ba5e384ee444adeadb5ffb7b5c97b7a4e75ccbac8c297b8c86d3e85f3f` | `PR132` | `PR132` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:PR135:2efc090d6f3d4f57311f555770fddfccfc33613f1353bc5e3a6c03fe4a668740` | `PR135` | `PR135` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:PR135:30ff1e0dbc3cdfdf230e334b5a282ad55a733463373cb3acb4f401a5ba873eec` | `PR135` | `PR135` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:PR135:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58` | `PR135` | `PR135` | shipped | test-missing | test-gap | 1 | 0 |
+| `card:PR135:2efc090d6f3d4f57311f555770fddfccfc33613f1353bc5e3a6c03fe4a668740` | `PR135` | `PR135` | shipped | matched | aligned | 3 | 2 |
+| `card:PR135:30ff1e0dbc3cdfdf230e334b5a282ad55a733463373cb3acb4f401a5ba873eec` | `PR135` | `PR135` | shipped | matched | aligned | 1 | 2 |
+| `card:PR135:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58` | `PR135` | `PR135` | shipped | matched | aligned | 1 | 2 |
 | `card:PR136:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4` | `PR136` | `PR136` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:PR136:cb2b6ed1081ffd2d13be25301f02d68c36004d38d7bbf4c4659ad8a2bdea9521` | `PR136` | `PR136` | shipped | matched | aligned | 1 | 1 |
 | `card:PR136:eae5569655e228acf5ae95649166bd538ea4089bceabe6f055b6f1a2b5a5194d` | `PR136` | `PR136` | shipped | test-missing | test-gap | 1 | 0 |
@@ -2757,9 +2757,9 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 | `card:PR138:4fc223eba7deeec4567bac85262d59863628572e7848c5b5cc2750c25f867bb6` | `PR138` | `PR138` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:PR138:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f` | `PR138` | `PR138` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:PR138:81cdf79a35270afed97b566149037faeb920188be9302342bc5fcc77b775c8d9` | `PR138` | `PR138` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:PR141:2efc090d6f3d4f57311f555770fddfccfc33613f1353bc5e3a6c03fe4a668740` | `PR141` | `PR141` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:PR141:30ff1e0dbc3cdfdf230e334b5a282ad55a733463373cb3acb4f401a5ba873eec` | `PR141` | `PR141` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:PR141:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58` | `PR141` | `PR141` | shipped | test-missing | test-gap | 1 | 0 |
+| `card:PR141:2efc090d6f3d4f57311f555770fddfccfc33613f1353bc5e3a6c03fe4a668740` | `PR141` | `PR141` | shipped | matched | aligned | 3 | 2 |
+| `card:PR141:30ff1e0dbc3cdfdf230e334b5a282ad55a733463373cb3acb4f401a5ba873eec` | `PR141` | `PR141` | shipped | matched | aligned | 1 | 2 |
+| `card:PR141:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58` | `PR141` | `PR141` | shipped | matched | aligned | 1 | 2 |
 | `card:PR142:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4` | `PR142` | `PR142` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:PR142:cb2b6ed1081ffd2d13be25301f02d68c36004d38d7bbf4c4659ad8a2bdea9521` | `PR142` | `PR142` | shipped | matched | aligned | 1 | 1 |
 | `card:PR142:eae5569655e228acf5ae95649166bd538ea4089bceabe6f055b6f1a2b5a5194d` | `PR142` | `PR142` | shipped | matched | aligned | 1 | 1 |
@@ -5053,9 +5053,6 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 - missing-test: `card:PR118:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9`
 - missing-test: `card:PR131:e6ecbe55e30edc0b469639ea9db1edc6e7a8de3f344fc8b4bca9116477e82659`
 - missing-test: `card:PR132:22aaf9ba5e384ee444adeadb5ffb7b5c97b7a4e75ccbac8c297b8c86d3e85f3f`
-- missing-test: `card:PR135:2efc090d6f3d4f57311f555770fddfccfc33613f1353bc5e3a6c03fe4a668740`
-- missing-test: `card:PR135:30ff1e0dbc3cdfdf230e334b5a282ad55a733463373cb3acb4f401a5ba873eec`
-- missing-test: `card:PR135:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58`
 - missing-test: `card:PR136:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4`
 - missing-test: `card:PR136:eae5569655e228acf5ae95649166bd538ea4089bceabe6f055b6f1a2b5a5194d`
 - missing-test: `card:PR137:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3`
@@ -5065,9 +5062,6 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 - missing-test: `card:PR138:4fc223eba7deeec4567bac85262d59863628572e7848c5b5cc2750c25f867bb6`
 - missing-test: `card:PR138:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f`
 - missing-test: `card:PR138:81cdf79a35270afed97b566149037faeb920188be9302342bc5fcc77b775c8d9`
-- missing-test: `card:PR141:2efc090d6f3d4f57311f555770fddfccfc33613f1353bc5e3a6c03fe4a668740`
-- missing-test: `card:PR141:30ff1e0dbc3cdfdf230e334b5a282ad55a733463373cb3acb4f401a5ba873eec`
-- missing-test: `card:PR141:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58`
 - missing-test: `card:PR142:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4`
 - missing-test: `card:PR143:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3`
 - missing-test: `card:PR143:972660377e7a1234e105ec6ca37df38d49a7747a333a6d01109f21f9c5fe3edc`

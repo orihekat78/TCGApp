@@ -335,7 +335,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:11",
         "src:src/cards/ct-p03/B03019.ts:18",
-        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:336"
+        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:365"
       ]
     },
     {

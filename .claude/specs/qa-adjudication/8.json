@@ -1977,11 +1977,12 @@
     {
       "qaId": "card:PR135:30ff1e0dbc3cdfdf230e334b5a282ad55a733463373cb3acb4f401a5ba873eec",
       "answerHash": "a5971c615dc236ff5ee928f6e8f2d73905f43862e0bb78d82bebf268dd2ce1a3",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR135.ts:1"
+        "src:src/cards/pr-01/PR135.ts:51",
+        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:370"
       ]
     },
     {

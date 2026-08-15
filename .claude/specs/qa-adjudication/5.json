@@ -1777,21 +1777,23 @@
     {
       "qaId": "card:PR135:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
       "answerHash": "bd1021263916b76aa59508c6813bbffe73c698f6db8511f6e09c600022e7d446",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR135.ts:1"
+        "src:src/cards/pr-01/PR135.ts:39",
+        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:369"
       ]
     },
     {
       "qaId": "card:PR141:30ff1e0dbc3cdfdf230e334b5a282ad55a733463373cb3acb4f401a5ba873eec",
       "answerHash": "a5971c615dc236ff5ee928f6e8f2d73905f43862e0bb78d82bebf268dd2ce1a3",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR141.ts:1"
+        "src:src/cards/pr-01/PR141.ts:41",
+        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:373"
       ]
     },
     {

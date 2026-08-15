@@ -566,7 +566,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05021.ts:1",
-        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:337"
+        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:366"
       ]
     },
     {
@@ -1937,11 +1937,14 @@
     {
       "qaId": "card:PR135:2efc090d6f3d4f57311f555770fddfccfc33613f1353bc5e3a6c03fe4a668740",
       "answerHash": "8fa6df429995a7c8ce3724b8ce6b54ccb2253d6fdd0f1199f90a37ef25879654",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR135.ts:1"
+        "src:src/cards/pr-01/PR135.ts:51",
+        "src:src/cards/pr-01/PR135.ts:67",
+        "src:src/cards/pr-01/PR135.ts:70",
+        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:371"
       ]
     },
     {

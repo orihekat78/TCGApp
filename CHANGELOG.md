@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `27a8374d3e5d`
+> Source hash: `8ac05704bdf6`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,13 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## BUG-313 — PR135/PR141 現場リムーブ時能力の復元
+
+- PR135/PR141へ、相手ターン中の自己離場で阿笠博士まで公開するa2を追加。
+- 一致カードの強制取得、残りの順序保持、デッキshuffleを公式文どおり実装。
+- public dispatchで発火制約、match/no-match、owner mirror、短いデッキrefreshを回帰。
+- 6件の公式QAをexact evidenceへ接続し、BUG-311静的familyを34定義へ拡張。
 
 ---
 date: 2026-08-09

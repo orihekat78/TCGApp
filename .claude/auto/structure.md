@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6083
+- **ファイル数**: 6084
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -806,6 +806,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-26-02-rule-manual-ver2.5.md`
     - `2026-07-26-03-ct-p10-wave.md`
     - `2026-08-09-01-private-hosted-basic-release-gates.md`
+    - `2026-08-16-01-bug313-pr-leave-reveal.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -4554,13 +4555,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `PR132.ts` — cards/pr-01/PR132 諸伏景光 (character) — Task A green候補 (engine変更0)
       - `PR133.ts` — cards/pr-01/PR133 大和敢助 (キャラ) — auto-generated; B02076 の絵柄違い (同 cardId 0237)
       - `PR134.ts` — cards/pr-01/PR134 ベルモット (キャラ) — auto-generated; B05113 の絵柄違い (同 cardId)
-      - `PR135.ts` — cards/pr-01/PR135 灰原哀 (PR) — bounce batch #2 (a1 only)
+      - `PR135.ts` — cards/pr-01/PR135 灰原哀 (PR) — bounce + leave reveal-until
       - `PR136.ts` — cards/pr-01/PR136 伊織無我 (character) — engine mega-wave W1 exemplar (charSetCard d…
       - `PR137.ts` — cards/pr-01/PR137 工藤優作 (character) — Task A green候補 (engine変更0)
       - `PR138.ts` — cards/pr-01/PR138 ラム (character) — Task A green候補 (engine変更0)
       - `PR139.ts` — cards/pr-01/PR139 高木渉 (キャラ) — auto-generated; D05013 の絵柄違い (同 cardId)
       - `PR140.ts` — cards/pr-01/PR140 世良真純 (キャラ) — auto-generated; B01073 の絵柄違い (同 cardId)
-      - `PR141.ts` — cards/pr-01/PR141 灰原哀 (PR variant) — bounce batch #2 (a1 only)
+      - `PR141.ts` — cards/pr-01/PR141 灰原哀 (PR variant) — bounce + leave reveal-until
       - `PR142.ts` — cards/pr-01/PR142 伊織無我 (character) — PR136 の絵柄違い (同 cardNum 0621、engine mega-wav…
       - `PR143.ts` — cards/pr-01/PR143 工藤優作 (character) — Task A green候補 (engine変更0)
       - `PR144.ts` — cards/pr-01/PR144 ラム (character) — Task A green候補 (engine変更0)

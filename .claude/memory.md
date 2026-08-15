@@ -84,3 +84,10 @@
   Hold one external temp lock across build plus inspection in parallel Vitest.
 - Keep production release behavior unchanged; the parallel full suite is the
   acceptance gate for this test-only race fix.
+
+## 2026-08-16: PR135/PR141 leave reveal
+
+- PR135 and PR141 are printing twins and both own the same opponent-turn
+  self-leave a2; never leave only one printing at a stale `DEFERRED` marker.
+- The match is mandatory, the revealed remainder keeps its order before the
+  full-deck shuffle, and a one-card deck refreshes from the leave source.

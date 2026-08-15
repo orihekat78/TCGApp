@@ -2,6 +2,12 @@
 // qa: card:B03019:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
 // qa: card:B05021:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
 // qa: card:B05094:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
+// qa: card:PR135:2efc090d6f3d4f57311f555770fddfccfc33613f1353bc5e3a6c03fe4a668740
+// qa: card:PR135:30ff1e0dbc3cdfdf230e334b5a282ad55a733463373cb3acb4f401a5ba873eec
+// qa: card:PR135:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
+// qa: card:PR141:2efc090d6f3d4f57311f555770fddfccfc33613f1353bc5e3a6c03fe4a668740
+// qa: card:PR141:30ff1e0dbc3cdfdf230e334b5a282ad55a733463373cb3acb4f401a5ba873eec
+// qa: card:PR141:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
 // Rules: 14-refresh.md, 15-abilities-effects.md, 17-icons.md, 26-qa-deck-refresh.md.
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -13,6 +19,8 @@ import { B05021 } from '@/cards/ct-p05/B05021';
 import { B05094 } from '@/cards/ct-p05/B05094';
 import { B07043 } from '@/cards/ct-p07/B07043';
 import { B10022 } from '@/cards/ct-p10/B10022';
+import { PR135 } from '@/cards/pr-01/PR135';
+import { PR141 } from '@/cards/pr-01/PR141';
 import { event } from '@/engine/event';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { _resetRegistry, register } from '@/engine/read/def';
@@ -23,7 +31,9 @@ import { beginMatchSession, endMatchSession } from '@/ui/services/matchSession';
 import { useGameStateStore } from '@/ui/state/store';
 import { makeChar } from '../../helpers/fixtures';
 
-const QA = '366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58';
+const QA_TRIGGER = '366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58';
+const QA_FORCED_MATCH = '30ff1e0dbc3cdfdf230e334b5a282ad55a733463373cb3acb4f401a5ba873eec';
+const QA_NO_MATCH = '2efc090d6f3d4f57311f555770fddfccfc33613f1353bc5e3a6c03fe4a668740';
 const ATTACKER = 'QA_FORCED_REVEAL_ATTACKER';
 const DECOY_A = 'QA_FORCED_REVEAL_DECOY_A';
 const DECOY_B = 'QA_FORCED_REVEAL_DECOY_B';
@@ -47,6 +57,8 @@ const FAMILIES: Family[] = [
   { card: B03019, abilityId: 'a1', matchId: AGASA, leading: [DECOY_A, DECOY_B] },
   { card: B05021, abilityId: 'a1', matchId: KOGORO, leading: [B05012.id, DECOY_B] },
   { card: B05094, abilityId: 'a1', matchId: NAGANO, leading: [NAGANO_EVENT, DECOY_B] },
+  { card: PR135, abilityId: 'a2', matchId: AGASA, leading: [DECOY_A, DECOY_B] },
+  { card: PR141, abilityId: 'a2', matchId: AGASA, leading: [DECOY_A, DECOY_B] },
 ];
 
 function fixtureCard(
@@ -308,6 +320,23 @@ function expectedFamily(family: Family) {
   };
 }
 
+function proveTriggerContract(family: Family) {
+  return {
+    positive: provePositive(family),
+    wrongTiming: proveWrongTiming(family),
+    otherLeave: proveOtherLeave(family),
+  };
+}
+
+function expectedTriggerContract(family: Family) {
+  const deck = [...family.leading, family.matchId, TAIL];
+  return {
+    positive: expectedFamily(family).positive,
+    wrongTiming: { deck, hand: [], sourceInRemove: true, reveal: null, sourceTriggers: 0 },
+    otherLeave: { deck, hand: [], sourceOnScene: true, victimInRemove: true, reveal: null },
+  };
+}
+
 beforeEach(() => {
   event._resetRegistry();
   _resetRegistry();
@@ -332,10 +361,17 @@ beforeEach(() => {
 afterEach(() => endMatchSession());
 
 describe('forced leave reveal-until abilities through public dispatch', () => {
-  it(`card:B02058:${QA}`, () => expect(proveFamily(FAMILIES[0]!), 'B02058 exact forced reveal and no-match public contract').toEqual(expectedFamily(FAMILIES[0]!)));
-  it(`card:B03019:${QA}`, () => expect(proveFamily(FAMILIES[1]!), 'B03019 exact forced reveal and no-match public contract').toEqual(expectedFamily(FAMILIES[1]!)));
-  it(`card:B05021:${QA}`, () => expect(proveFamily(FAMILIES[2]!), 'B05021 exact forced reveal and no-match public contract').toEqual(expectedFamily(FAMILIES[2]!)));
-  it(`card:B05094:${QA}`, () => expect(proveFamily(FAMILIES[3]!), 'B05094 exact forced reveal and no-match public contract').toEqual(expectedFamily(FAMILIES[3]!)));
+  it(`card:B02058:${QA_TRIGGER}`, () => expect(proveFamily(FAMILIES[0]!), 'B02058 exact forced reveal and no-match public contract').toEqual(expectedFamily(FAMILIES[0]!)));
+  it(`card:B03019:${QA_TRIGGER}`, () => expect(proveFamily(FAMILIES[1]!), 'B03019 exact forced reveal and no-match public contract').toEqual(expectedFamily(FAMILIES[1]!)));
+  it(`card:B05021:${QA_TRIGGER}`, () => expect(proveFamily(FAMILIES[2]!), 'B05021 exact forced reveal and no-match public contract').toEqual(expectedFamily(FAMILIES[2]!)));
+  it(`card:B05094:${QA_TRIGGER}`, () => expect(proveFamily(FAMILIES[3]!), 'B05094 exact forced reveal and no-match public contract').toEqual(expectedFamily(FAMILIES[3]!)));
+
+  it(`card:PR135:${QA_TRIGGER}`, () => expect(proveTriggerContract(FAMILIES[4]!), 'PR135 exact opponent-turn self-leave trigger').toEqual(expectedTriggerContract(FAMILIES[4]!)));
+  it(`card:PR135:${QA_FORCED_MATCH}`, () => expect(provePositive(FAMILIES[4]!), 'PR135 forced 阿笠博士 match').toEqual(expectedFamily(FAMILIES[4]!).positive));
+  it(`card:PR135:${QA_NO_MATCH}`, () => expect(proveNoMatch(FAMILIES[4]!), 'PR135 no-match reveal and shuffle').toEqual(expectedFamily(FAMILIES[4]!).noMatch));
+  it(`card:PR141:${QA_TRIGGER}`, () => expect(proveTriggerContract(FAMILIES[5]!), 'PR141 exact opponent-turn self-leave trigger').toEqual(expectedTriggerContract(FAMILIES[5]!)));
+  it(`card:PR141:${QA_FORCED_MATCH}`, () => expect(provePositive(FAMILIES[5]!), 'PR141 forced 阿笠博士 match').toEqual(expectedFamily(FAMILIES[5]!).positive));
+  it(`card:PR141:${QA_NO_MATCH}`, () => expect(proveNoMatch(FAMILIES[5]!), 'PR141 no-match reveal and shuffle').toEqual(expectedFamily(FAMILIES[5]!).noMatch));
 
   it('applies only to the leaving card during its opponent turn', () => {
     const family = FAMILIES[0]!;
@@ -361,6 +397,46 @@ describe('forced leave reveal-until abilities through public dispatch', () => {
         refreshCount: 1,
         opponentEvidence: 1,
         gameResult: undefined,
+      },
+    });
+  });
+
+  it('keeps PR135 and PR141 mirrored, duplicate, and short-deck behavior identical', () => {
+    expect({
+      PR135: {
+        mirrored: proveMirroredOwner(FAMILIES[4]!),
+        duplicate: proveDuplicateOccurrence(FAMILIES[4]!),
+        shortDeck: proveShortDeckRefresh(FAMILIES[4]!),
+      },
+      PR141: {
+        mirrored: proveMirroredOwner(FAMILIES[5]!),
+        duplicate: proveDuplicateOccurrence(FAMILIES[5]!),
+        shortDeck: proveShortDeckRefresh(FAMILIES[5]!),
+      },
+    }).toEqual({
+      PR135: {
+        mirrored: { oppHand: [AGASA], selfHand: [], oppSourceInRemove: true },
+        duplicate: { handCopies: 1, deckCopies: 1, totalCopies: 2 },
+        shortDeck: {
+          hand: [AGASA],
+          deck: [PR135.id],
+          remove: [],
+          refreshCount: 1,
+          opponentEvidence: 1,
+          gameResult: undefined,
+        },
+      },
+      PR141: {
+        mirrored: { oppHand: [AGASA], selfHand: [], oppSourceInRemove: true },
+        duplicate: { handCopies: 1, deckCopies: 1, totalCopies: 2 },
+        shortDeck: {
+          hand: [AGASA],
+          deck: [PR141.id],
+          remove: [],
+          refreshCount: 1,
+          opponentEvidence: 1,
+          gameResult: undefined,
+        },
       },
     });
   });
