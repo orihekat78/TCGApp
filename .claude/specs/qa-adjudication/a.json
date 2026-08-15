@@ -282,11 +282,12 @@
     {
       "qaId": "card:B03060:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40",
       "answerHash": "e899bcefdec8ce55edb111922af131f7746cbbd98dd953ce0c0a679201bc28ad",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03060.ts:1"
+        "src:src/cards/ct-p03/B03060.ts:1",
+        "tests:tests/cards/official-qa/stun-action-target-public.test.ts:110"
       ]
     },
     {
@@ -317,25 +318,24 @@
     {
       "qaId": "card:B03085:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40",
       "answerHash": "e899bcefdec8ce55edb111922af131f7746cbbd98dd953ce0c0a679201bc28ad",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03085.ts:1"
+        "src:src/cards/ct-p03/B03085.ts:1",
+        "tests:tests/cards/official-qa/stun-action-target-public.test.ts:111"
       ]
     },
     {
       "qaId": "card:B03092:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40",
       "answerHash": "e899bcefdec8ce55edb111922af131f7746cbbd98dd953ce0c0a679201bc28ad",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/24-qa-naming-stun.md:55",
-        "src:src/cards/ct-p03/B03092.ts:40"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p03/B03092.ts:40",
+        "tests:tests/cards/official-qa/stun-action-target-public.test.ts:112"
       ]
     },
     {
@@ -1049,11 +1049,12 @@
     {
       "qaId": "card:B08042:bd2d9135e77cd20272d351740bbc65e757a5096d00d80aecf99990dff33779fe",
       "answerHash": "e899bcefdec8ce55edb111922af131f7746cbbd98dd953ce0c0a679201bc28ad",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08042.ts:1"
+        "src:src/cards/ct-p08/B08042.ts:1",
+        "tests:tests/cards/official-qa/stun-action-target-public.test.ts:125"
       ]
     },
     {
@@ -1660,11 +1661,12 @@
     {
       "qaId": "card:D06013:782fd0f5160159eba91a381169832f1a1f384ccf91d8654acdd24e0633027f2f",
       "answerHash": "e899bcefdec8ce55edb111922af131f7746cbbd98dd953ce0c0a679201bc28ad",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d06/D06013.ts:1"
+        "src:src/cards/ct-d06/D06013.ts:1",
+        "tests:tests/cards/official-qa/stun-action-target-public.test.ts:131"
       ]
     },
     {

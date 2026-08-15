@@ -1,33 +1,20 @@
 # Session memory
 
-## 2026-07-29 Engine adversarial review
+## Prior records
 
-- Full record: `.claude/sessions/2026-07-29-engine-adversarial.md`.
-
-## 2026-08-10: Private-hosted release and UI quality
-
-- Rotated release and UI evidence:
-  `.claude/sessions/2026-08-14-qa-wave13-match-cost.md`.
-- Full UI session:
+- Engine adversarial: `.claude/sessions/2026-07-29-engine-adversarial.md`.
+- Release/UI: `.claude/sessions/2026-08-14-qa-wave13-match-cost.md` and
   `.claude/sessions/2026-08-09-ui-quality-causal-public-match.md`.
-
-## 2026-08-14: QA engine and public-evidence history
-
-- Full record: `.claude/sessions/2026-08-14-qa-engine-public-evidence.md`.
+- QA engine/public evidence: `.claude/sessions/2026-08-14-qa-engine-public-evidence.md`.
 
 ## 2026-08-15: Deck authority and held Hirameki checkpoint
 
-- Deck decisions bind physical occurrences with a deck epoch. Every real deck
-  mutation advances it and rebases all state-owned live binding holders once.
-- Validated reorder/place/pick decisions consume persisted authority before
-  continuation; stale or legacy-incomplete decisions load structurally, then
-  consume and fizzle without executing effects or reviving after reload.
-- Action Hirameki evidence is held by its exact ActionContext while pending.
-  Fire may consume it directly to hand, scene, or partner area; skip, invalid
-  effects, and terminal cleanup commit it to remove exactly once.
-- B06027 full-scene Hirameki requires a current exact victim UID. Human UI uses
-  a focused native scene-card control and blocks cancel while another decision
-  owns input; AI, persisted state, and resolver revalidate the same witness.
+- Deck decisions bind exact occurrences to an epoch; every mutation advances
+  it, rebases state-owned holders once, and consumes validated authority first.
+- Stale or legacy-incomplete decisions load structurally, then consume/fizzle
+  without effects or revival. Hirameki evidence stays ActionContext-owned.
+- Fire consumes held evidence once; skip/invalid/terminal commits it once.
+  B06027 full-scene fire requires a current victim UID across UI, AI, and restore.
 
 ## 2026-08-15: Leave interception and replacement continuation
 
@@ -83,3 +70,10 @@
   hand count or named-character presence into resolution-time predicates.
 - The regression oracle scans all CardDefs and fixes the exact 45-printing
   footprint, including sequence tails and B09013's turn-limit path.
+
+## 2026-08-16: Stunned action targets
+
+- A stunned opposing character remains a legal character-action target, like a
+  sleeping character; active and own-side characters remain illegal targets.
+- Certify this shared rule through public action dispatch plus each card's
+  concrete stun-producing contract, not by reusing event cards as scene actors.
