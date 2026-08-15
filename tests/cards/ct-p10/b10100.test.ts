@@ -5,9 +5,9 @@ import { canPayAtomically, pay } from '@/engine/cost/pay';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { Cost, EffectCtx } from '@/engine/types';
 
-const ctx = (indices: number[]): EffectCtx => ({
+const ctx = (indices: number[], evidenceIndices: number[] = [0]): EffectCtx => ({
   source: { player: 'self', uid: 'case:self', cardId: B10100.id, abilityId: 'a2', area: 'case' },
-  bindings: {}, dyn: { costParams: { flipFaceUpEvidence: { indices: [0] }, removeFromHand: { indices } } },
+  bindings: {}, dyn: { costParams: { flipFaceUpEvidence: { indices: evidenceIndices }, removeFromHand: { indices } } },
 });
 
 describe('B10100 工藤新一NYの事件', () => {
@@ -67,5 +67,23 @@ describe('B10100 工藤新一NYの事件', () => {
     expect(canPayAtomically(opponentOnly, cost, ctx([0]))).toBe(false);
     expect(opponentOnly.players.self.evidence[0]!.faceUp).toBe(false);
     expect(opponentOnly.players.opp.hand).toEqual(['OPP']);
+  });
+
+  it('flips any exact own evidence occurrence without reordering and never spends opponent evidence', () => {
+    const cost = B10100.abilities[1]!.cost as Cost;
+    const own = createEmptyGameState();
+    own.players.self.evidence = ['E0', 'E1', 'E2'].map(cardId => ({ cardId, faceUp: false, origin: { turn: 1, via: 'opening' as const } }));
+    own.players.self.hand = ['PAY'];
+    pay(own, cost, ctx([0], [2]));
+
+    // qa: card:B10100:fa86da58031fb9ac89e29ca33154f7e33fdfcb57011d4dc5c56f55e70a74939f
+    expect(own.players.self.evidence.map(item => [item.cardId, item.faceUp])).toEqual([['E0', false], ['E1', false], ['E2', true]]);
+
+    const opponentOnly = createEmptyGameState();
+    opponentOnly.players.self.hand = ['PAY'];
+    opponentOnly.players.opp.evidence = [{ cardId: 'OPP', faceUp: false, origin: { turn: 1, via: 'opening' } }];
+    // qa: card:B10100:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6
+    expect(canPayAtomically(opponentOnly, cost, ctx([0]))).toBe(false);
+    expect(opponentOnly.players.opp.evidence).toEqual([{ cardId: 'OPP', faceUp: false, origin: { turn: 1, via: 'opening' } }]);
   });
 });

@@ -90,7 +90,8 @@ describe('CT-P10 B10019 プロサッカー選手権大会', () => {
     });
     const pick = _drainPendingEffectPickSide()!;
 
-    expect(result.players.self.evidence.map(item => item.faceUp)).toEqual([true, false, true]);
+    // qa: card:B10019:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a
+    expect(result.players.self.evidence.map(item => [item.cardId, item.faceUp])).toEqual([['E0', true], ['E1', false], ['E2', true]]);
     expect(result.players.opp.evidence.map(item => item.faceUp)).toEqual([false, false]);
     expect(pick.candidates.map(candidate => candidate.cardId)).toEqual([SOCCER.id, GADGET.id]);
     result = produce(result, draft => applyPickAndContinuation(draft, pick, pick.candidates[1]!.uid));
@@ -98,14 +99,25 @@ describe('CT-P10 B10019 プロサッカー選手権大会', () => {
     expect(result.players.self.remove).not.toContain(GADGET.id);
   });
 
-  it('cannot pay with one face-down own evidence and leaves every evidence unchanged', () => {
+  it('cannot supplement its cost with opponent evidence', () => {
     const result = state([evidence('E0')]);
     result.players.opp.evidence = [evidence('OPP0'), evidence('OPP1')];
     const effectCtx = ctx([0]);
 
+    // qa: card:B10019:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2
     expect(canPay(result, B10019.abilities[1]!.cost!, effectCtx)).toBe(false);
     expect(result.players.self.evidence.map(item => item.faceUp)).toEqual([false]);
     expect(result.players.opp.evidence.map(item => item.faceUp)).toEqual([false, false]);
+  });
+
+  it('requires exactly two face-down own evidence', () => {
+    const result = state([evidence('E0')]);
+    const effectCtx = ctx([0]);
+
+    // qa: card:B10019:324a24588d4bb1ddbf561b347a12dcb2d77569ebb134f8d747e7ca53c6a9f570
+    expect(canPay(result, B10019.abilities[1]!.cost!, effectCtx)).toBe(false);
+    expect(result.players.self.evidence.map(item => item.faceUp)).toEqual([false]);
+    expect(result.players.opp.evidence).toEqual([]);
   });
 
   it('requires a self-side soccer-player character before the declared ability is available', () => {

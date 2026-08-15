@@ -1980,13 +1980,15 @@
     {
       "qaId": "card:B10102:98e82fae32a43d9b6de8c7fd8289dcf4565f2dada1498f0760f5ba9d0cf8ae17",
       "answerHash": "18f8e7239b7b3106b53ed65eda0bd0b77b6992397418c002da2da9af7a9502c6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/17-icons.md:53",
-        "src:src/cards/ct-p10/B10102.ts:24"
-      ]
+        "rules:.claude/rules/15-abilities-effects.md:66",
+        "src:src/cards/ct-p10/B10102.ts:7",
+        "tests:tests/cards/official-qa/ct-p10-original-ability-rules.test.ts:71"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B10102:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a",

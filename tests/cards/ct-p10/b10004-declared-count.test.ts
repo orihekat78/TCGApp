@@ -87,6 +87,7 @@ describe('CT-P10 B10004 declared-use evidence threshold', () => {
   it('counts an assisted partner toward FILE5 and requires another soccer player', () => {
     const assisted = stateFor();
     addSetCard(assisted, 1);
+    // qa: card:B10004:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
     expect(canActivate(assisted)).toBe(true);
 
     const noAssist = stateFor(B10004, false);

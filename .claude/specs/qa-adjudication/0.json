@@ -1685,16 +1685,15 @@
     {
       "qaId": "card:B10019:324a24588d4bb1ddbf561b347a12dcb2d77569ebb134f8d747e7ca53c6a9f570",
       "answerHash": "dbbcc5c6f78482d0c89f56018ca32bf80a619f259353e590b01cdc6f62f532b8",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:11",
-        "src:src/cards/ct-p10/B10019.ts:10"
+        "rules:.claude/rules/21-declared-ability-cost.md:31",
+        "src:src/cards/ct-p10/B10019.ts:15",
+        "tests:tests/cards/ct-p10/b10019.test.ts:118"
       ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B10023:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f",

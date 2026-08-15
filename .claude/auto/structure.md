@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6084
+- **ファイル数**: 6085
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5224,10 +5224,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B10018.test.ts`
       - `B10038.test.ts`
       - `b10001-marker.test.ts`
-      - `b10004-declared-count.test.ts`
+      - `b10004-declared-count.test.ts` — qa: card:B10004:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
       - `b10015.test.ts`
       - `b10017-b10022.test.ts`
-      - `b10019.test.ts`
+      - `b10019.test.ts` — qa: card:B10019:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a
       - `b10023-b10024.test.ts` — Keep one card after the draw: an empty deck would immediately refresh
       - `b10024.test.ts`
       - `b10025.test.ts`
@@ -5246,7 +5246,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `b10096.test.ts`
       - `b10098.test.ts`
       - `b10099.test.ts`
-      - `b10100.test.ts`
+      - `b10100.test.ts` — qa: card:B10100:fa86da58031fb9ac89e29ca33154f7e33fdfcb57011d4dc5c56f55e70a74939f
       - `b10101-qa.test.ts`
       - `contact-history-cards.test.ts`
       - `early-cluster.test.ts`
@@ -5476,6 +5476,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D06003-D06024-public-path.test.ts` — qaId=card:D06003:e918d066190b75a908b8154f185c9c4291e8387cb2fc4797f5744acc49a362d…
       - `D10003-D10010-printing-copy-limit.test.ts` — qaId=card:D10003:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2…
       - `bond-partner-exclusion-wave9.test.ts` — qa: card:B02004:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
+      - `ct-p10-original-ability-rules.test.ts` — qa: card:B10050:98e82fae32a43d9b6de8c7fd8289dcf4565f2dada1498f0760f5ba9d0cf8ae17
       - `deck-look-bottom-family-public.test.ts` — qa: card:B01013:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5
       - `deck-refresh-wave8.test.ts` — qa: card:B04012:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4
       - `event-evidence-action-hirameki-public.test.ts` — qa: card:B04041:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
