@@ -716,14 +716,12 @@
     {
       "qaId": "card:B05056:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
       "answerHash": "bd1021263916b76aa59508c6813bbffe73c698f6db8511f6e09c600022e7d446",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05056.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p05/B05056.ts:1",
+        "tests:tests/cards/official-qa/leave-trigger-opponent-turn-public.test.ts:233"
       ]
     },
     {
@@ -1006,14 +1004,14 @@
     {
       "qaId": "card:B06080:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
       "answerHash": "bd1021263916b76aa59508c6813bbffe73c698f6db8511f6e09c600022e7d446",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06080.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p06/B06080.ts:1",
+        "tests:tests/cards/official-qa/leave-trigger-opponent-turn-public.test.ts:269",
+        "tests:tests/cards/official-qa/leave-trigger-opponent-turn-public.test.ts:270",
+        "tests:tests/cards/official-qa/leave-trigger-opponent-turn-public.test.ts:273"
       ]
     },
     {
@@ -1933,14 +1931,12 @@
     {
       "qaId": "card:D03013:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
       "answerHash": "bd1021263916b76aa59508c6813bbffe73c698f6db8511f6e09c600022e7d446",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d03/D03013.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-d03/D03013.ts:1",
+        "tests:tests/cards/official-qa/leave-trigger-opponent-turn-public.test.ts:241"
       ]
     },
     {

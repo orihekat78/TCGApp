@@ -35,11 +35,16 @@
     {
       "qaId": "card:B01065:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
       "answerHash": "bd1021263916b76aa59508c6813bbffe73c698f6db8511f6e09c600022e7d446",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p01/B01065.ts:100"
+        "src:src/cards/ct-p01/B01065.ts:100",
+        "tests:tests/cards/official-qa/leave-trigger-opponent-turn-public.test.ts:342",
+        "tests:tests/cards/official-qa/leave-trigger-opponent-turn-public.test.ts:343",
+        "tests:tests/cards/official-qa/leave-trigger-opponent-turn-public.test.ts:347",
+        "tests:tests/cards/official-qa/leave-trigger-opponent-turn-public.test.ts:348",
+        "tests:tests/cards/official-qa/leave-trigger-opponent-turn-public.test.ts:353"
       ]
     },
     {
