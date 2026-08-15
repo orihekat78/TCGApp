@@ -536,14 +536,12 @@
     {
       "qaId": "card:B04061:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f",
       "answerHash": "9355fd7dda0c715a134dc72073c663d6d48005b194c7a998332be87adf81e091",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04061.ts:46"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/ct-p04/B04061.ts:46",
+        "tests:tests/cards/official-qa/short-deck-reveal-hand-entry-public.test.ts:551"
       ]
     },
     {

@@ -81,3 +81,10 @@
 - Switch UI carries the absolute scene side; parent deck presentation may remain
   while the child picker runs. Status overlays pass pointer input through to
   scene cards. Mandatory deck reorder Escape confirms the untouched original order.
+
+## 2026-08-16: Short-deck optional look and refresh
+
+- A short `deckRevealUntil` window contains every remaining card. Looking alone
+  never refreshes; taking the last card attempts refresh only after it leaves.
+- Decline returns the exact occurrence without refreshing. Persisted duplicate
+  choices retain UID, index, and occurrence witness through public hydration.

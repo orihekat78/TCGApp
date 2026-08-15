@@ -436,3 +436,169 @@ describe('viewer-safe replay boundary', () => {
     }
   });
 });
+
+function installShortDeck(c: FamilyCase, fixture: Fixture, deck: string[]): void {
+  install(c, fixture);
+  const state = structuredClone(current());
+  state.players.self.deck = [...deck];
+  expect(useGameStateStore.getState().setGameState(state)).toBe(true);
+}
+
+function shortDeckRefreshProof(eventId: string) {
+  const c = familyCase(eventId);
+  const fixture = buildFixture(c);
+
+  installShortDeck(c, fixture, [fixture.acquired.id]);
+  expect(dispatchEngineAction({ type: 'handUseCard', player: 'self', cardId: eventId })).toEqual({ ok: true });
+  const finalCardPick = useGameStateStore.getState().pendingEffectPick;
+  expect(finalCardPick).toMatchObject({ atomVerb: 'deckRevealUntil', nMin: 0, nMax: 1 });
+  const finalCard = finalCardPick?.candidates.find(candidate => candidate.cardId === fixture.acquired.id);
+  expect(finalCard).toBeDefined();
+  const beforeFinalTake = structuredClone(current());
+  resolvePick(finalCardPick!, finalCard!.uid);
+  const afterFinalTake = structuredClone(current());
+  const terminalDecisionsCleared = useGameStateStore.getState().pendingEffectPick === null
+    && useGameStateStore.getState().pendingDeckReorder === null;
+
+  installShortDeck(c, fixture, [fixture.acquired.id]);
+  expect(dispatchEngineAction({ type: 'handUseCard', player: 'self', cardId: eventId })).toEqual({ ok: true });
+  const declinePick = useGameStateStore.getState().pendingEffectPick;
+  expect(declinePick).toMatchObject({ atomVerb: 'deckRevealUntil', nMin: 0, nMax: 1 });
+  resolvePick(declinePick!, null);
+  const declineSceneEnter = useGameStateStore.getState().pendingEffectPick;
+  expect(declineSceneEnter).toMatchObject({ atomVerb: 'sceneEnter', nMin: 0, nMax: 1 });
+  resolvePick(declineSceneEnter!, null);
+  const afterDecline = structuredClone(current());
+  const declineDecisionsCleared = useGameStateStore.getState().pendingEffectPick === null
+    && useGameStateStore.getState().pendingDeckReorder === null
+    && afterDecline.pendingRuntimeState === undefined;
+  const declinedCopies = [
+    ...afterDecline.players.self.deck,
+    ...afterDecline.players.self.hand,
+    ...afterDecline.players.self.remove,
+    ...afterDecline.players.self.scene.map(character => character.cardId),
+  ].filter(cardId => cardId === fixture.acquired.id).length;
+
+  installShortDeck(c, fixture, [fixture.acquired.id, fixture.tail.id]);
+  expect(dispatchEngineAction({ type: 'handUseCard', player: 'self', cardId: eventId })).toEqual({ ok: true });
+  const remainderPick = useGameStateStore.getState().pendingEffectPick;
+  expect(remainderPick).toMatchObject({ atomVerb: 'deckRevealUntil', nMin: 0, nMax: 1 });
+  const remainderReveal = useGameStateStore.getState().pendingDeckReveal;
+  expect(remainderReveal).toMatchObject({
+    player: 'self',
+    revealed: [fixture.acquired.id, fixture.tail.id],
+    awaitingPick: true,
+    source: { cardId: eventId },
+  });
+  const selected = remainderPick?.candidates.find(candidate => candidate.cardId === fixture.acquired.id);
+  expect(selected).toBeDefined();
+  resolvePick(remainderPick!, selected!.uid);
+  expect(useGameStateStore.getState().pendingDeckReorder).toBeNull();
+  const remainderSceneEnter = useGameStateStore.getState().pendingEffectPick;
+  expect(remainderSceneEnter).toMatchObject({ atomVerb: 'sceneEnter', nMin: 0, nMax: 1 });
+  resolvePick(remainderSceneEnter!, null);
+  const afterRemainder = structuredClone(current());
+
+  return {
+    lookedCardStayedInDeck: beforeFinalTake.players.self.deck.includes(fixture.acquired.id),
+    noEarlyRefresh: beforeFinalTake.refreshCount.self === 0 && beforeFinalTake.gameResult === undefined,
+    finalCardEnteredHand: afterFinalTake.players.self.hand.includes(fixture.acquired.id),
+    exactExhaustionLost: afterFinalTake.gameResult,
+    failedRefreshDidNotIncrement: afterFinalTake.refreshCount.self === 0,
+    resolvingEventSettledAfterward: afterFinalTake.players.self.remove.includes(eventId),
+    terminalDecisionsCleared,
+    declinedCardReturned: afterDecline.players.self.deck.join(',') === fixture.acquired.id,
+    declinedCardStayedOutOfHand: !afterDecline.players.self.hand.includes(fixture.acquired.id),
+    declinedSceneStayedEmpty: afterDecline.players.self.scene.length === 0,
+    declinedEventSettled: afterDecline.players.self.remove.includes(eventId),
+    declinedCardConserved: declinedCopies === 1,
+    declineDecisionsCleared,
+    declineDidNotRefresh: afterDecline.refreshCount.self === 0 && afterDecline.gameResult === undefined,
+    lookedAllAvailableCards: remainderReveal?.revealed.join(',') === `${fixture.acquired.id},${fixture.tail.id}`,
+    remainderStayedInDeck: afterRemainder.players.self.deck.join(',') === fixture.tail.id,
+    selectedCardEnteredHand: afterRemainder.players.self.hand.includes(fixture.acquired.id),
+    remainderDidNotRefresh: afterRemainder.refreshCount.self === 0 && afterRemainder.gameResult === undefined,
+  };
+}
+
+describe('short-deck reveal families refresh only after the selected final card leaves the deck', () => {
+  const expected = {
+    lookedCardStayedInDeck: true,
+    noEarlyRefresh: true,
+    finalCardEnteredHand: true,
+    exactExhaustionLost: { winner: 'opp', reason: 'deck-out' },
+    failedRefreshDidNotIncrement: true,
+    resolvingEventSettledAfterward: true,
+    terminalDecisionsCleared: true,
+    declinedCardReturned: true,
+    declinedCardStayedOutOfHand: true,
+    declinedSceneStayedEmpty: true,
+    declinedEventSettled: true,
+    declinedCardConserved: true,
+    declineDecisionsCleared: true,
+    declineDidNotRefresh: true,
+    lookedAllAvailableCards: true,
+    remainderStayedInDeck: true,
+    selectedCardEnteredHand: true,
+    remainderDidNotRefresh: true,
+  };
+
+  // qa: card:B04013:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f
+  it('card:B04013:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f', () => expect(shortDeckRefreshProof('B04013'), 'B04013 exact short-deck refresh timing').toEqual(expected));
+  // qa: card:B04040:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f
+  it('card:B04040:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f', () => expect(shortDeckRefreshProof('B04040'), 'B04040 exact short-deck refresh timing').toEqual(expected));
+  // qa: card:B04061:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f
+  it('card:B04061:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f', () => expect(shortDeckRefreshProof('B04061'), 'B04061 exact short-deck refresh timing').toEqual(expected));
+  // qa: card:B04083:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f
+  it('card:B04083:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f', () => expect(shortDeckRefreshProof('B04083'), 'B04083 exact short-deck refresh timing').toEqual(expected));
+});
+
+describe('short-deck reveal occurrence authority', () => {
+  it('rehydrates and resolves the exact non-first B04013 duplicate occurrence', () => {
+    const c = familyCase('B04013');
+    const fixture = buildFixture(c);
+    installShortDeck(c, fixture, [fixture.acquired.id, fixture.tail.id, fixture.acquired.id]);
+
+    expect(dispatchEngineAction({ type: 'handUseCard', player: 'self', cardId: c.eventId })).toEqual({ ok: true });
+    const before = useGameStateStore.getState().pendingEffectPick!;
+    const beforeDuplicates = before.candidates.filter(candidate => candidate.cardId === fixture.acquired.id);
+    expect(beforeDuplicates.map(candidate => candidate.index)).toEqual([0, 2]);
+    const persisted = JSON.parse(JSON.stringify(current())) as GameState;
+    expect(persisted.pendingRuntimeState).toBeDefined();
+
+    useGameStateStore.getState().setPendingEffectPick(null);
+    expect(useGameStateStore.getState().setGameState(persisted)).toBe(true);
+
+    const restored = useGameStateStore.getState().pendingEffectPick!;
+    const restoredDuplicates = restored.candidates.filter(candidate => candidate.cardId === fixture.acquired.id);
+    expect(restoredDuplicates.map(candidate => ({
+      uid: candidate.uid,
+      index: candidate.index,
+      occurrenceWitness: candidate.occurrenceWitness,
+    }))).toEqual(beforeDuplicates.map(candidate => ({
+      uid: candidate.uid,
+      index: candidate.index,
+      occurrenceWitness: candidate.occurrenceWitness,
+    })));
+
+    resolvePick(restored, restoredDuplicates[1]!.uid);
+    expect(useGameStateStore.getState().pendingDeckReorder?.deckSnapshot).toEqual([
+      fixture.acquired.id,
+      fixture.tail.id,
+    ]);
+    resolveDeckOrder();
+    const sceneEnter = useGameStateStore.getState().pendingEffectPick;
+    expect(sceneEnter).toMatchObject({ atomVerb: 'sceneEnter', nMin: 0, nMax: 1 });
+    resolvePick(sceneEnter!, null);
+    expect({
+      handCopies: current().players.self.hand.filter(cardId => cardId === fixture.acquired.id).length,
+      exactRemainder: current().players.self.deck,
+      terminal: useGameStateStore.getState().pendingEffectPick === null
+        && useGameStateStore.getState().pendingDeckReorder === null,
+    }).toEqual({
+      handCopies: 1,
+      exactRemainder: [fixture.acquired.id, fixture.tail.id],
+      terminal: true,
+    });
+  });
+});
