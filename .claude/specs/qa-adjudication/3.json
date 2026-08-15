@@ -29,7 +29,7 @@
         "rules:.claude/rules/12-next-hint.md:10",
         "src:src/cards/ct-p01/B01005.ts:45",
         "src:src/cards/ct-p01/B01009.ts:43",
-        "tests:tests/cards/miniwave2-nexthint/probes.test.ts:207"
+        "tests:tests/cards/miniwave2-nexthint/probes.test.ts:240"
       ],
       "noteCodes": [
         "OVERRIDDEN-HAND-LEVEL-TRIGGER-TEST-MISSING"
@@ -533,16 +533,15 @@
     {
       "qaId": "card:B04030:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333",
       "answerHash": "8e0d706ac67953d21823c296e0443a53b1e87408f357321dccbc01fb210738d4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04030.ts:23",
-        "src:src/engine/effect/atom-handlers/scene.ts:747"
+        "src:src/cards/ct-p04/B04030.ts:47",
+        "src:src/engine/mutate/scene.ts:753",
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:565"
       ],
-      "noteCodes": [
-        "B04030-STUN-STATE-SEMANTICS-TEST-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B04030:b2bb0991c56c38c14055ec3a8e4b107d7c47811f912761d8d1fe387311bfe17e",

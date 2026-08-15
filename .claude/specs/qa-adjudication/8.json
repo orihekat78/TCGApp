@@ -1752,11 +1752,12 @@
     {
       "qaId": "card:D03004:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18",
       "answerHash": "8e0d706ac67953d21823c296e0443a53b1e87408f357321dccbc01fb210738d4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d03/D03004.ts:1"
+        "src:src/cards/ct-d03/D03004.ts:17",
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:576"
       ]
     },
     {

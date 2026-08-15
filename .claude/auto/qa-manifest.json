@@ -125,8 +125,8 @@
         "src/engine/flow/main/next-hint.ts:126"
       ],
       "testRefs": [
-        "tests/cards/miniwave2-nexthint/probes.test.ts:223",
-        "tests/cards/miniwave2-nexthint/probes.test.ts:224"
+        "tests/cards/miniwave2-nexthint/probes.test.ts:256",
+        "tests/cards/miniwave2-nexthint/probes.test.ts:257"
       ]
     },
     {
@@ -165,7 +165,7 @@
         "src/cards/ct-p01/B01009.ts:43"
       ],
       "testRefs": [
-        "tests/cards/miniwave2-nexthint/probes.test.ts:207"
+        "tests/cards/miniwave2-nexthint/probes.test.ts:240"
       ]
     },
     {
@@ -179,13 +179,17 @@
       "questionHash": "b113099d1a029ac901e7d922aef76bbf6b3676e0430fd52ef2a4c6be21436528",
       "sectionHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
         "src/cards/ct-p01/B01005.ts:13",
-        "src/ui/hooks/useEngineDispatch.ts:286"
+        "src/ui/hooks/useEngineDispatch.ts:319"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/miniwave2-nexthint/probes.test.ts:215",
+        "tests/cards/miniwave2-nexthint/probes.test.ts:222",
+        "tests/cards/miniwave2-nexthint/probes.test.ts:225"
+      ]
     },
     {
       "answerHash": "b38556a3b0d73ffc75872defde055c2d635f5354b7caed0b0b2816b748591886",
@@ -6084,8 +6088,8 @@
       ],
       "testRefs": [
         "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:1",
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:479",
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:485"
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:512",
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:518"
       ]
     },
     {
@@ -6122,8 +6126,8 @@
       ],
       "testRefs": [
         "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:2",
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:501",
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:506"
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:534",
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:539"
       ]
     },
     {
@@ -9251,8 +9255,8 @@
       ],
       "testRefs": [
         "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:3",
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:511",
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:516"
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:544",
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:549"
       ]
     },
     {
@@ -10924,8 +10928,8 @@
       ],
       "testRefs": [
         "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:4",
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:521",
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:526"
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:554",
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:559"
       ]
     },
     {
@@ -11360,10 +11364,10 @@
         "src/cards/ct-p04/B04022P.ts:31"
       ],
       "testRefs": [
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:489",
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:491",
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:496",
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:5"
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:5",
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:522",
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:524",
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:529"
       ]
     },
     {
@@ -11695,9 +11699,9 @@
         "src/cards/ct-p04/B04030.ts:19"
       ],
       "testRefs": [
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:530",
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:532",
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:537",
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:563",
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:565",
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:571",
         "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:6"
       ]
     },
@@ -11712,13 +11716,16 @@
       "questionHash": "f1144d9670cd0ccbc485762a37a1459515cc6fde58736e968dbeb9080185b5d3",
       "sectionHash": "f9e3085430781c85a7828f3fd15d972e3603e09f1d7f48bf078918ec2e8bdc8c",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-p04/B04030.ts:23",
-        "src/engine/effect/atom-handlers/scene.ts:747"
+        "src/cards/ct-p04/B04030.ts:47",
+        "src/engine/mutate/scene.ts:753"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:565",
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:8"
+      ]
     },
     {
       "answerHash": "5fad1e7c73ea742ddafdcb6429717444535e5c72713813792940220735e99edb",
@@ -11785,13 +11792,16 @@
       "questionHash": "3e2467b0e9ce6e8c3d1a4b8e4757307f181e60523d0a8744da903b9816c163f8",
       "sectionHash": "f9e3085430781c85a7828f3fd15d972e3603e09f1d7f48bf078918ec2e8bdc8c",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-p04/B04030.ts:23",
-        "src/engine/flow/main/action.ts:96"
+        "src/cards/ct-p04/B04030.ts:47",
+        "src/engine/flow/action/target-expander.ts:74"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:565",
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:9"
+      ]
     },
     {
       "answerHash": "21bdcc2304f02d68a5ac12dfd8d2f974426e4c22a72883f5d76be1f824c6e9ed",
@@ -43450,8 +43460,8 @@
         "src/cards/ct-d03/D03004.ts:1"
       ],
       "testRefs": [
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:542",
-        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:547",
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:576",
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:582",
         "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:7"
       ]
     },
@@ -43465,12 +43475,15 @@
       "questionHash": "f1144d9670cd0ccbc485762a37a1459515cc6fde58736e968dbeb9080185b5d3",
       "sectionHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-d03/D03004.ts:1"
+        "src/cards/ct-d03/D03004.ts:17"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:10",
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:576"
+      ]
     },
     {
       "answerHash": "e899bcefdec8ce55edb111922af131f7746cbbd98dd953ce0c0a679201bc28ad",
@@ -43482,12 +43495,15 @@
       "questionHash": "3e2467b0e9ce6e8c3d1a4b8e4757307f181e60523d0a8744da903b9816c163f8",
       "sectionHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-d03/D03004.ts:48"
+        "src/cards/ct-d03/D03004.ts:17"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:11",
+        "tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:576"
+      ]
     },
     {
       "answerHash": "38b379b1993cd5e2dadea3d1b9f6c9c3e03eeef380d72a7911ad2565af114955",
@@ -54378,10 +54394,6 @@
     },
     {
       "kind": "missing-test",
-      "qaId": "card:B01005:fead5e283504803d65d2dd745e3ca46752d70e3ea03250dc050a23eaefb57626"
-    },
-    {
-      "kind": "missing-test",
       "qaId": "card:B01006:b203c71c5a2ca8e57b36312ceddefe99ca091d50acdc98837bcbc27a0703471a"
     },
     {
@@ -56154,10 +56166,6 @@
     },
     {
       "kind": "missing-test",
-      "qaId": "card:B04030:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333"
-    },
-    {
-      "kind": "missing-test",
       "qaId": "card:B04030:5e64c29e1ffcc111dbcccfe71778b02ee324354900b53f8feecdf316419a232c"
     },
     {
@@ -56167,10 +56175,6 @@
     {
       "kind": "missing-test",
       "qaId": "card:B04030:b2bb0991c56c38c14055ec3a8e4b107d7c47811f912761d8d1fe387311bfe17e"
-    },
-    {
-      "kind": "missing-test",
-      "qaId": "card:B04030:bd2d9135e77cd20272d351740bbc65e757a5096d00d80aecf99990dff33779fe"
     },
     {
       "kind": "missing-test",
@@ -61774,14 +61778,6 @@
     },
     {
       "kind": "missing-test",
-      "qaId": "card:D03004:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18"
-    },
-    {
-      "kind": "missing-test",
-      "qaId": "card:D03004:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40"
-    },
-    {
-      "kind": "missing-test",
       "qaId": "card:D03007:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3"
     },
     {
@@ -63492,8 +63488,8 @@
   "coverage": {
     "total": 2964,
     "statusCounts": {
-      "matched": 685,
-      "test-missing": 2279,
+      "matched": 690,
+      "test-missing": 2274,
       "legacy-unreviewed": 0,
       "unmapped": 0,
       "mismatch": 0,
@@ -63508,7 +63504,7 @@
       "card:B01005:1a10996dd8c0a3a021039cf2bc3af89aa897fe0d5d6c6f2c7bedf7e9e005b707": "matched",
       "card:B01005:79c468be8498ec14d70dccf4aeff3694581017ec97b6ed62a2a0e9e3e637108d": "test-missing",
       "card:B01005:c96c7c48c5f3fa5f6d57fefabb399f644dadc0ac1aa07b88a6434023d324b502": "matched",
-      "card:B01005:fead5e283504803d65d2dd745e3ca46752d70e3ea03250dc050a23eaefb57626": "test-missing",
+      "card:B01005:fead5e283504803d65d2dd745e3ca46752d70e3ea03250dc050a23eaefb57626": "matched",
       "card:B01006:b203c71c5a2ca8e57b36312ceddefe99ca091d50acdc98837bcbc27a0703471a": "test-missing",
       "card:B01006:b4700accb91f4e296c848f701b9e1cbef24d22b2f328348428dff879f61a302b": "matched",
       "card:B01006:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4": "matched",
@@ -64126,11 +64122,11 @@
       "card:B04028:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c": "matched",
       "card:B04030:26ec92247fc4dcab111b11e369bcad77f0deafd06bf0be0904b6e0dc6fd32e48": "matched",
       "card:B04030:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58": "matched",
-      "card:B04030:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333": "test-missing",
+      "card:B04030:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333": "matched",
       "card:B04030:5e64c29e1ffcc111dbcccfe71778b02ee324354900b53f8feecdf316419a232c": "test-missing",
       "card:B04030:76f3670ceb57dfb996531dae5f61c2fefd2e21bed4287242a3866a4218a951c3": "test-missing",
       "card:B04030:b2bb0991c56c38c14055ec3a8e4b107d7c47811f912761d8d1fe387311bfe17e": "test-missing",
-      "card:B04030:bd2d9135e77cd20272d351740bbc65e757a5096d00d80aecf99990dff33779fe": "test-missing",
+      "card:B04030:bd2d9135e77cd20272d351740bbc65e757a5096d00d80aecf99990dff33779fe": "matched",
       "card:B04030:fad7853757782721d17f1370836629352da55429c16b98e21d24597cd3d92889": "matched",
       "card:B04030:fea86e813ffc71be74d68515b98d60749c639a2b001343462c0406961b3b900f": "test-missing",
       "card:B04032:1c06bf42b4f0a4e87e760d612038f4bde5afe72aeb2f69ffba9c046565ef93f3": "test-missing",
@@ -65865,8 +65861,8 @@
       "card:D03002:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40": "test-missing",
       "card:D03002:f411327f3c4736453cfecf12fbbff6ec8e038e8439f21efc99001a2064266eaa": "test-missing",
       "card:D03004:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58": "matched",
-      "card:D03004:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18": "test-missing",
-      "card:D03004:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40": "test-missing",
+      "card:D03004:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18": "matched",
+      "card:D03004:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40": "matched",
       "card:D03007:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3": "test-missing",
       "card:D03009:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5": "matched",
       "card:D03010:b439f52112312a2dc0c944cc0f0aa531a2eda23b876e486679bd42f2af1b71b7": "test-missing",
@@ -66474,7 +66470,7 @@
       "card:B01005:1a10996dd8c0a3a021039cf2bc3af89aa897fe0d5d6c6f2c7bedf7e9e005b707": "aligned",
       "card:B01005:79c468be8498ec14d70dccf4aeff3694581017ec97b6ed62a2a0e9e3e637108d": "test-gap",
       "card:B01005:c96c7c48c5f3fa5f6d57fefabb399f644dadc0ac1aa07b88a6434023d324b502": "aligned",
-      "card:B01005:fead5e283504803d65d2dd745e3ca46752d70e3ea03250dc050a23eaefb57626": "test-gap",
+      "card:B01005:fead5e283504803d65d2dd745e3ca46752d70e3ea03250dc050a23eaefb57626": "aligned",
       "card:B01006:b203c71c5a2ca8e57b36312ceddefe99ca091d50acdc98837bcbc27a0703471a": "test-gap",
       "card:B01006:b4700accb91f4e296c848f701b9e1cbef24d22b2f328348428dff879f61a302b": "aligned",
       "card:B01006:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4": "aligned",
@@ -67092,11 +67088,11 @@
       "card:B04028:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c": "aligned",
       "card:B04030:26ec92247fc4dcab111b11e369bcad77f0deafd06bf0be0904b6e0dc6fd32e48": "aligned",
       "card:B04030:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58": "aligned",
-      "card:B04030:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333": "test-gap",
+      "card:B04030:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333": "aligned",
       "card:B04030:5e64c29e1ffcc111dbcccfe71778b02ee324354900b53f8feecdf316419a232c": "test-gap",
       "card:B04030:76f3670ceb57dfb996531dae5f61c2fefd2e21bed4287242a3866a4218a951c3": "test-gap",
       "card:B04030:b2bb0991c56c38c14055ec3a8e4b107d7c47811f912761d8d1fe387311bfe17e": "test-gap",
-      "card:B04030:bd2d9135e77cd20272d351740bbc65e757a5096d00d80aecf99990dff33779fe": "test-gap",
+      "card:B04030:bd2d9135e77cd20272d351740bbc65e757a5096d00d80aecf99990dff33779fe": "aligned",
       "card:B04030:fad7853757782721d17f1370836629352da55429c16b98e21d24597cd3d92889": "aligned",
       "card:B04030:fea86e813ffc71be74d68515b98d60749c639a2b001343462c0406961b3b900f": "test-gap",
       "card:B04032:1c06bf42b4f0a4e87e760d612038f4bde5afe72aeb2f69ffba9c046565ef93f3": "test-gap",
@@ -68831,8 +68827,8 @@
       "card:D03002:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40": "test-gap",
       "card:D03002:f411327f3c4736453cfecf12fbbff6ec8e038e8439f21efc99001a2064266eaa": "test-gap",
       "card:D03004:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58": "aligned",
-      "card:D03004:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18": "test-gap",
-      "card:D03004:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40": "test-gap",
+      "card:D03004:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18": "aligned",
+      "card:D03004:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40": "aligned",
       "card:D03007:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3": "test-gap",
       "card:D03009:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5": "aligned",
       "card:D03010:b439f52112312a2dc0c944cc0f0aa531a2eda23b876e486679bd42f2af1b71b7": "test-gap",

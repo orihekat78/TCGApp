@@ -28,7 +28,7 @@ import { mutate } from '@/engine/mutate/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { createEmptyGameState } from '@/engine/state-factory';
-import { runAllUntilEmpty } from '@/engine/resolve/index';
+import { pendingOwnerOrderGroup, runAllUntilEmpty } from '@/engine/resolve/index';
 import { runNextHint } from '@/engine/flow/main/next-hint';
 import { handUseCard } from '@/engine/flow/main/hand-use-card';
 import { activateDeclaredAbility } from '@/engine/flow/main/ability-activate';
@@ -50,6 +50,8 @@ import { B01005 } from '@/cards/ct-p01/B01005';
 import { B03002 } from '@/cards/ct-p03/B03002';
 import { B05005 } from '@/cards/ct-p05/B05005';
 import type { AbilityDef, CardDef, GameState, ActionContext } from '@/engine/types';
+import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import { useGameStateStore } from '@/ui/state/store';
 
 // ---- fixtures ----
 function charDef(
@@ -73,7 +75,14 @@ const d1: AbilityDef = {
   effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
 };
 
+const enterDraw: AbilityDef = {
+  id: 'a1', type: 'triggered', scope: 'on-scene',
+  trigger: { hook: 'enter', selfOnly: true },
+  effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+};
+
 const USED4 = charDef('USED4', { colors: ['青'], level: 4, ap: 3000 });         // B01005 next-hint 使用カード (lv4)
+const USED_ENTER4 = charDef('USED_ENTER4', { colors: ['青'], level: 4, ap: 3000, abilities: [enterDraw] });
 const USED_B = charDef('USED_B', { colors: ['青'], level: 1, ap: 2000 });        // 汎用 青 使用カード (lv1)
 const USED_R = charDef('USED_R', { colors: ['赤'], level: 1, ap: 2000 });        // B05005 a1 negative 用 赤 使用カード
 const TGT4 = charDef('TGT4', { level: 4, ap: 2000 });                            // levelMax4 候補
@@ -93,7 +102,7 @@ const PART_B = partnerDef('PART_B', ['青']);
 const PART_R = partnerDef('PART_R', ['赤']);
 
 const FIXTURES = [
-  USED4, USED_B, USED_R, TGT4, DECOY5, TGT_AP8000, DECOY_AP9000, SBD, NONBDS,
+  USED4, USED_ENTER4, USED_B, USED_R, TGT4, DECOY5, TGT_AP8000, DECOY_AP9000, SBD, NONBDS,
   DECLARER_BDS, DECLARER_NON, OPPCHAR, ATK, OPPDEF, MOB, DK, PART_B, PART_R,
 ];
 
@@ -192,6 +201,30 @@ beforeEach(() => {
 //   キャラ1枚まで → デッキの下
 // ============================================================================
 describe('B01005 a1 next-hint → sceneToDeck (levelMax = $trigger.cardLevel)', () => {
+  it('ネクストヒント使用キャラの【登場時】とB01005 a1の解決順を所有者が選べる', () => {
+    let s = base('self');
+    s.players.self.partner.cardId = 'PART_B';
+    mutate.scene.enter(s, 'self', 'B01005', {});
+    mutate.scene.enter(s, 'opp', 'TGT4', {});
+    s.players.self.file = fileBacks(5);
+    s.players.self.hand = ['USED_ENTER4'];
+
+    s = nh(s, 'USED_ENTER4');
+    runAllUntilEmpty(s);
+    const group = pendingOwnerOrderGroup(s, 'self');
+    expect(group.map((entry) => entry.source.cardId).sort(), 'B01005と使用キャラの【登場時】を同じ所有者が任意順で解決できる').toEqual(['B01005', 'USED_ENTER4']);
+
+    const handBeforeOrder = s.players.self.hand.length;
+    useGameStateStore.setState({ gameState: s, pendingEffectPick: null });
+    const enterEntry = group.find((entry) => entry.source.cardId === 'USED_ENTER4')!;
+    expect(dispatchEngineAction({ type: 'setEffectOrder', entryId: enterEntry.id, order: 0, player: 'self' })).toEqual({ ok: true });
+    const ordered = pendingOwnerOrderGroup(useGameStateStore.getState().gameState!, 'self');
+    expect(ordered.map((entry) => entry.source.cardId), 'B01005より後にqueueされた【登場時】を所有者が先に選べる').toEqual(['USED_ENTER4', 'B01005']);
+    expect(dispatchEngineAction({ type: 'resolveEffectOrder', entryIds: ordered.map((entry) => entry.id), player: 'self' })).toEqual({ ok: true });
+    expect(useGameStateStore.getState().gameState!.players.self.hand).toHaveLength(handBeforeOrder + 1);
+    expect(useGameStateStore.getState().pendingEffectPick?.source.cardId).toBe('B01005');
+  });
+
   it('positive: lv4 カードをネクストヒント使用 → levelMax4 pick surface (lv5 decoy 候補外) → TGT4 デッキ下', () => {
     let s = base('self');
     s.players.self.partner.cardId = 'PART_B';

@@ -400,8 +400,8 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p03/B03091.ts:27",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:511",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:516"
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:544",
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:549"
       ]
     },
     {

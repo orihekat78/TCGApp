@@ -254,8 +254,8 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:7",
         "src:src/cards/ct-p03/B03012.ts:21",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:479",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:485"
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:512",
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:518"
       ]
     },
     {

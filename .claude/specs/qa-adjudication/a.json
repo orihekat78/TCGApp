@@ -1618,8 +1618,8 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-d03/D03004.ts:1",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:542",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:547"
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:576",
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:582"
       ]
     },
     {

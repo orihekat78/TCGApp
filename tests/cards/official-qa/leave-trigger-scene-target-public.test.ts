@@ -5,9 +5,14 @@
 // qa: card:B04022:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
 // qa: card:B04030:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
 // qa: card:D03004:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
+// qa: card:B04030:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:B04030:bd2d9135e77cd20272d351740bbc65e757a5096d00d80aecf99990dff33779fe
+// qa: card:D03004:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18
+// qa: card:D03004:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40
 // Rules: 03-field-areas.md, 15-abilities-effects.md, 17-icons.md, 24-qa-naming-stun.md.
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { produce } from 'immer';
 import { B03012 } from '@/cards/ct-p03/B03012';
 import { B03013 } from '@/cards/ct-p03/B03013';
 import { B03091 } from '@/cards/ct-p03/B03091';
@@ -20,6 +25,7 @@ import { B10022 } from '@/cards/ct-p10/B10022';
 import { D03004 } from '@/cards/ct-d03/D03004';
 import { event } from '@/engine/event';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
+import { mutate } from '@/engine/mutate';
 import { _resetRegistry, register } from '@/engine/read/def';
 import { read } from '@/engine/read/index';
 import { createEmptyGameState } from '@/engine/state-factory';
@@ -59,6 +65,7 @@ const D_STUN6_SELF = 'QA_D_STUN6_SELF';
 const D_STUN5_OPP = 'QA_D_STUN5_OPP';
 const D_ACTIVE5_OPP = 'QA_D_ACTIVE5_OPP';
 const D_ALREADY_STUN5_SELF = 'QA_D_ALREADY_STUN5_SELF';
+const D_RULE_ACTOR = 'QA_D_RULE_ACTOR';
 
 const sourceCards = [B03012, B03013, B03091, B04010, B04022, B04030, D03004] as const;
 
@@ -119,6 +126,7 @@ const fixtureCards: CardDef[] = [
   fixtureCard(D_STUN5_OPP, { level: 5, ap: 6000 }),
   fixtureCard(D_ACTIVE5_OPP, { level: 5, ap: 7000 }),
   fixtureCard(D_ALREADY_STUN5_SELF, { level: 5, ap: 3000 }),
+  fixtureCard(D_RULE_ACTOR, { level: 9, ap: 9000 }),
 ];
 
 type LeaveCase = {
@@ -129,6 +137,7 @@ type LeaveCase = {
   excluded: string[];
   setup: (state: GameState) => void;
   capture: (state: GameState) => unknown;
+  stunRuleActorUid?: string;
 };
 
 function qa(card: CardDef): string {
@@ -253,6 +262,23 @@ function effectSnapshot(state: GameState): unknown {
   };
 }
 
+function proveStunRules(spec: LeaveCase): unknown {
+  if (!spec.stunRuleActorUid) return null;
+  const activated = produce(current(), (draft) => {
+    mutate.scene.tryActivate(draft, spec.chosen);
+  });
+  const actionTarget = dispatchEngineAction({
+    type: 'actionDeclareChar',
+    byUid: spec.stunRuleActorUid,
+    targetUid: spec.chosen,
+  });
+  return {
+    activatedState: activated.players.opp.scene.find((char) => char.uid === spec.chosen)?.state,
+    actionTarget,
+    actionTargetUid: useGameStateStore.getState().gameState?.actionContexts[useGameStateStore.getState().activeActionId ?? '']?.target.uid,
+  };
+}
+
 function proveSelfTurnNoTrigger(spec: LeaveCase): unknown {
   restartSession('self');
   install(baseState(spec, 'self'));
@@ -304,6 +330,7 @@ function prove(spec: LeaveCase): unknown {
   resolvePick(spec, spec.chosen);
   const positive = spec.capture(current());
   expectSettled(spec);
+  const stunRules = proveStunRules(spec);
 
   restartSession('self');
   install(baseState(spec, 'opp'));
@@ -317,6 +344,7 @@ function prove(spec: LeaveCase): unknown {
   return {
     publicPick,
     positive,
+    stunRules,
     decline: { before: beforeDecline, after: afterDecline },
     selfTurn: proveSelfTurnNoTrigger(spec),
     otherLeaves: proveOtherLeaveNoTrigger(spec),
@@ -446,6 +474,7 @@ const B04030_CASE: LeaveCase = {
     oppTarget: { cardId: STUN8_OPP, state: 'sleep' }, oppDecoy: { cardId: STUN9_OPP, state: 'active' },
   }),
   capture: targetCapture,
+  stunRuleActorUid: 'self-target',
 };
 
 const D03004_CASE: LeaveCase = {
@@ -453,13 +482,17 @@ const D03004_CASE: LeaveCase = {
   abilityId: 'a1',
   chosen: 'opp-target',
   included: ['self-target', 'opp-target'],
-  excluded: ['self-decoy', 'self-extra', 'opp-decoy'],
-  setup: (state) => setupStateTargets(state, {
-    selfTarget: { cardId: D_STUN5_SELF, state: 'sleep' }, selfDecoy: { cardId: D_STUN6_SELF, state: 'sleep' },
-    oppTarget: { cardId: D_STUN5_OPP, state: 'sleep' }, oppDecoy: { cardId: D_ACTIVE5_OPP, state: 'active' },
-    selfExtra: { cardId: D_ALREADY_STUN5_SELF, state: 'stun' },
-  }),
+  excluded: ['self-decoy', 'self-extra', 'self-rule-actor', 'opp-decoy'],
+  setup: (state) => {
+    setupStateTargets(state, {
+      selfTarget: { cardId: D_STUN5_SELF, state: 'sleep' }, selfDecoy: { cardId: D_STUN6_SELF, state: 'sleep' },
+      oppTarget: { cardId: D_STUN5_OPP, state: 'sleep' }, oppDecoy: { cardId: D_ACTIVE5_OPP, state: 'active' },
+      selfExtra: { cardId: D_ALREADY_STUN5_SELF, state: 'stun' },
+    });
+    state.players.self.scene.push(makeChar({ cardId: D_RULE_ACTOR, uid: 'self-rule-actor', state: 'active' }));
+  },
   capture: targetCapture,
+  stunRuleActorUid: 'self-rule-actor',
 };
 
 beforeEach(() => {
@@ -532,6 +565,7 @@ describe('opponent-turn leave scene effects through public dispatch', () => {
     expect(proof, `${B04030.id}: either-side level-8 target stuns; level-9 decoys stay excluded`).toMatchObject({
       publicPick: { range: [0, 1], chosen: true, inclusions: { 'self-target': true, 'opp-target': true }, exclusions: { 'self-decoy': false, 'opp-decoy': false } },
       positive: { oppTarget: { state: 'stun' }, selfDecoy: { state: 'active' }, oppDecoy: { state: 'active' }, sourceInRemove: true },
+      stunRules: { activatedState: 'sleep', actionTarget: { ok: true }, actionTargetUid: 'opp-target' },
       ...commonNegative(),
     });
     expect(proof).toMatchObject({ decline: { before: (proof as { decline: { before: unknown } }).decline.before, after: (proof as { decline: { before: unknown } }).decline.before }, selfTurn: { effectState: (proof as { selfTurn: { before: unknown } }).selfTurn.before }, otherLeaves: { effectState: (proof as { otherLeaves: { before: unknown } }).otherLeaves.before } });
@@ -542,6 +576,7 @@ describe('opponent-turn leave scene effects through public dispatch', () => {
     expect(proof, `${D03004.id}: only sleeping level-5-or-lower target stuns`).toMatchObject({
       publicPick: { range: [0, 1], chosen: true, inclusions: { 'self-target': true, 'opp-target': true }, exclusions: { 'self-decoy': false, 'self-extra': false, 'opp-decoy': false } },
       positive: { selfTarget: { state: 'sleep' }, oppTarget: { state: 'stun' }, oppDecoy: { state: 'active' }, sourceInRemove: true },
+      stunRules: { activatedState: 'sleep', actionTarget: { ok: true }, actionTargetUid: 'opp-target' },
       ...commonNegative(),
     });
     expect(proof).toMatchObject({ decline: { before: (proof as { decline: { before: unknown } }).decline.before, after: (proof as { decline: { before: unknown } }).decline.before }, selfTurn: { effectState: (proof as { selfTurn: { before: unknown } }).selfTurn.before }, otherLeaves: { effectState: (proof as { otherLeaves: { before: unknown } }).otherLeaves.before } });
