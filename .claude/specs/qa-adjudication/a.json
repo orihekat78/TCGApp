@@ -627,11 +627,12 @@
     {
       "qaId": "card:B05111:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
       "answerHash": "bd1021263916b76aa59508c6813bbffe73c698f6db8511f6e09c600022e7d446",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05111.ts:1"
+        "src:src/cards/ct-p05/B05111.ts:1",
+        "tests:tests/cards/official-qa/leave-trigger-remove-retrieval-public.test.ts:481"
       ]
     },
     {
