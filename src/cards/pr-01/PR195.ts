@@ -44,7 +44,7 @@ const a1: AbilityDef = {
         then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } },
       },
       // 残りの公開分をデッキの下へ
-      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },
+      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed', order: 'preserve' } },
       // デッキをシャッフル
       { kind: 'atom', verb: 'deckShuffle', args: { player: 'self' } },
       // このカードをパートナーエリアに移す (無条件・必ず)

@@ -55,7 +55,7 @@ const a1: AbilityDef = {
         then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } },
       },
       // 残りの公開したカードをデッキの下に移し、デッキをシャッフルする
-      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },
+      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed', order: 'preserve' } },
       { kind: 'atom', verb: 'deckShuffle', args: { player: 'self' } },
       // カードを手札に加えた場合、手札を1枚リムーブする
       {

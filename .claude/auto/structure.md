@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6077
+- **ファイル数**: 6079
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1714,6 +1714,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B10100.md` — B10100 工藤新一NYの事件
       - `B10101.md` — B10101 / B10101P grounding
       - `B10102.md` — B10102 / B10102P grounding
+      - `BUG-311-forced-reveal-shuffle.md` — BUG-311 forced reveal / whole-deck shuffle grounding
       - `D01012.md` — D01012 grounding
       - `D05007.md` — D05007 grounding
       - `D06003.md` — D06003 服部平次 grounding (2026-07-10, fable)
@@ -5612,6 +5613,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `bug-169-face-down-set-card.test.ts`
     - `bug-195-event-remove-by-ap.test.ts` — BUG-195: eventRemoveByAP の単一 choice が sceneRemove pick を二重生成する回帰。
     - `bug-249-b03006-ordering.test.ts`
+    - `bug-311-forced-reveal-shuffle.test.ts` — BUG-311: 「残りをデッキ下へ移し、デッキをシャッフル」は並べ替え権を与えない。
     - `bug155-pick-filter-kind-2026-06-24.test.ts` — BUG-155 水平展開 sweep (2026-06-24, engine変更0) — pick系 atom/query の filter が公式テキストの
     - `bug159-b02010-colornot-2026-06-27.test.ts` — BUG-159 fix — B02010 灰原哀 a1「【青】以外の色を持つキャラ」を custom closure (none説) から
     - `cardphase3-cutin-observer.test.ts` — tests/cards/cardphase3-cutin-observer

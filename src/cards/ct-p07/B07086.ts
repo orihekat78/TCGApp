@@ -43,7 +43,7 @@ const a2: AbilityDef = {
           ],
         },
       },
-      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },
+      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed', order: 'preserve' } },
       { kind: 'atom', verb: 'deckShuffle', args: { player: 'self' } },
     ],
   },

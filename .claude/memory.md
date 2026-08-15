@@ -66,3 +66,10 @@
   `deckToBottomBound(order:'preserve')` before `deckShuffle`.
 - Public certification proves the exact first match, mandatory hand transfer,
   no-match shuffle, self/timing gates, duplicate occurrence, and short refresh.
+
+## 2026-08-16: Resumed effect source identity
+
+- Top-level human pick, skip, choice, and optional resumes must restore the full
+  source tuple: player, uid, cardId, abilityId, area, and resolutionKind.
+- Reconstruct it through one shared helper. Missing legacy fields keep their
+  existing fallback; never rewrite a non-scene source to scene implicitly.

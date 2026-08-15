@@ -566,7 +566,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05021.ts:1",
-        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:334"
+        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:337"
       ]
     },
     {

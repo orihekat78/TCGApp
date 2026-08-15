@@ -197,7 +197,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p02/B02058.ts:58",
-        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:332"
+        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:335"
       ]
     },
     {
@@ -702,7 +702,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05094.ts:1",
-        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:335"
+        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:338"
       ]
     },
     {

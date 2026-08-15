@@ -4379,7 +4379,7 @@
       ],
       "testRefs": [
         "tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:1",
-        "tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:332"
+        "tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:335"
       ]
     },
     {
@@ -6302,7 +6302,7 @@
       ],
       "testRefs": [
         "tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:2",
-        "tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:333"
+        "tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:336"
       ]
     },
     {
@@ -15096,7 +15096,7 @@
       ],
       "testRefs": [
         "tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:3",
-        "tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:334"
+        "tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:337"
       ]
     },
     {
@@ -18010,7 +18010,7 @@
         "src/cards/ct-p05/B05094.ts:1"
       ],
       "testRefs": [
-        "tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:335",
+        "tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:338",
         "tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:4"
       ]
     },
@@ -19513,7 +19513,7 @@
       "coverageStatus": "test-missing",
       "adjudicationResult": "test-gap",
       "sourceRefs": [
-        "src/cards/ct-p06/B06010.ts:81"
+        "src/cards/ct-p06/B06010.ts:82"
       ],
       "testRefs": []
     },

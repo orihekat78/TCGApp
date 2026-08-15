@@ -11,6 +11,7 @@ import { B03019 } from '@/cards/ct-p03/B03019';
 import { B05012 } from '@/cards/ct-p05/B05012';
 import { B05021 } from '@/cards/ct-p05/B05021';
 import { B05094 } from '@/cards/ct-p05/B05094';
+import { B07043 } from '@/cards/ct-p07/B07043';
 import { B10022 } from '@/cards/ct-p10/B10022';
 import { event } from '@/engine/event';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
@@ -32,6 +33,7 @@ const AGASA = 'QA_FORCED_REVEAL_AGASA';
 const KOGORO = 'QA_FORCED_REVEAL_KOGORO';
 const NAGANO = 'QA_FORCED_REVEAL_NAGANO';
 const NAGANO_EVENT = 'QA_FORCED_REVEAL_NAGANO_EVENT';
+const TOICHI = 'QA_FORCED_REVEAL_TOICHI';
 
 type Family = {
   card: CardDef;
@@ -321,6 +323,7 @@ beforeEach(() => {
     fixtureCard(KOGORO, { names: ['毛利小五郎'] }),
     fixtureCard(NAGANO, { traits: ['長野県警'] }),
     fixtureCard(NAGANO_EVENT, { kind: 'event', traits: ['長野県警'] }),
+    fixtureCard(TOICHI, { names: ['黒羽盗一'] }),
   ].forEach(register);
   registerTriggeredListener();
   restartSession('self');
@@ -360,5 +363,26 @@ describe('forced leave reveal-until abilities through public dispatch', () => {
         gameResult: undefined,
       },
     });
+  });
+
+  it('BUG-311 resolves B07043 public name choice without inventing a bottom-order decision', () => {
+    const family: Family = { card: B07043, abilityId: 'a1', matchId: TOICHI, leading: [DECOY_A, DECOY_B] };
+    restartSession('self');
+    install(family, 'opp', [...family.leading, family.matchId, TAIL]);
+    removeThroughPublicContact();
+    const choice = useGameStateStore.getState().pendingEffectChoice;
+    expect(choice).toMatchObject({ player: 'self', source: { cardId: B07043.id, abilityId: 'a1', uid: 'source' } });
+    expect(dispatchEngineAction(bindPendingDecision(choice!, { type: 'choiceResolve', choiceIndex: 0 }))).toEqual({ ok: true });
+    expectCompletedReveal(family, 'self', [...family.leading, family.matchId], family.matchId);
+    expect(current().players.self.hand, 'B07043 forced match enters hand').toEqual([TOICHI]);
+    expect([...current().players.self.deck].sort(), 'B07043 keeps every revealed remainder and untouched tail').toEqual(
+      [DECOY_A, DECOY_B, TAIL].sort(),
+    );
+    const actions = current().log.map(entry => entry.action);
+    expect(actions.lastIndexOf('effect:deckShuffle'), 'B07043 shuffles after moving the remainder').toBeGreaterThan(
+      actions.lastIndexOf('effect:deckToBottomBound'),
+    );
+    expect(useGameStateStore.getState().pendingDeckReorder, 'B07043 grants no reorder modal').toBeNull();
+    settle(family);
   });
 });
