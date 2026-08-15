@@ -154,8 +154,8 @@ describe('B04089 ベルモット — 自分の効果で相手キャラ除去→[
     expect(observerFired(after, obs)).toBe(false);
   });
 
-  // P7 非発火: 既にスリープの observer は「このキャラをスリープさせてもよい」を払えず不発 (BUG-145, Q&A アクティブ必須)
-  it('P7 非発火: observer が既にスリープ → not(charStateIs self sleep) で非発火', () => {
+  // P7 発動済み: 既にスリープでも trigger は積み、解決時の active gate が効果だけを抑止する。
+  it('P7 発動: observer が既にスリープでも mandatory trigger は queue される', () => {
     let obs = '';
     const after = produce(createEmptyGameState(), (d) => {
       d.players.self.partner.cardId = 'BLACKP';
@@ -164,7 +164,7 @@ describe('B04089 ベルモット — 自分の効果で相手キャラ除去→[
       const v = mutate.scene.enter(d, 'opp', 'VIC', {}).uid;
       mutate.scene.removeToRemove(d, v, 'effect', undefined, { byPlayer: 'self' });
     });
-    expect(observerFired(after, obs)).toBe(false);
+    expect(observerFired(after, obs)).toBe(true);
   });
 
   // P8 非発火: 黒以外のパートナー → 【パートナー黒】gate

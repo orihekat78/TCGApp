@@ -9,11 +9,12 @@ const a1: AbilityDef = {
 };
 const a2: AbilityDef = {
   id: 'a2', type: 'triggered', scope: 'on-scene', trigger: { hook: 'enter', selfOnly: true, matcherCondition: { kind: 'enterOrderEquals', n: 1 } },
-  condition: { kind: 'not', c: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'sleep' } },
-  effect: { kind: 'optional', effect: { kind: 'chain', steps: [
-    { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
-    { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', cause: 'effect', filter: { levelMax: 8 } } },
-  ] } },
+  effect: { kind: 'conditional', if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' }, then: {
+    kind: 'optional', effect: { kind: 'chain', steps: [
+      { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
+      { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', cause: 'effect', filter: { levelMax: 8 } } },
+    ] },
+  } },
   description: '【疾風】このキャラをスリープさせてもよい。そうした場合、レベル8以下のキャラを1枚まで選び、リムーブする。', ruleRefs: ['rules/13-keywords.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };
 

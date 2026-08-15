@@ -572,9 +572,9 @@ describe('megaw5 step3 — levelIn/levelInBound + deckRevealUntil dyn filter (r4
     expect(s.players.self.deck.includes('DK_KID5')).toBe(false);
   });
 
-  it('negative control (r47 risk): sequence だと bind が deckRevealUntil dispatch 前に確定するか — 実測記録', async () => {
-    // chain 版と同一 DSL を sequence にした場合の挙動を固定 (壊れるなら card-authoring checklist の
-    // 「chain 必須」根拠、壊れないなら short-form dispatch-time 解決の追加保証)。
+  it('sequence resumes with an isolated binding context after a persisted AI pick', async () => {
+    // Persisted continuations own a plain context copy. The resumed tail must see the binding,
+    // while the caller's pre-pause ctx remains isolated from that state-owned authority.
     regLv('KID5b', 5, 'X2');
     regLv('DKb_KID5', 5, 'X2'); regLv('DKb_L1', 1);
     const s = createEmptyGameState();
@@ -586,6 +586,7 @@ describe('megaw5 step3 — levelIn/levelInBound + deckRevealUntil dyn filter (r4
       steps: [
         { kind: 'atom', verb: 'bindPick', args: { player: 'self', max: 1, filter: { levelMax: 8, kind: 'character' }, side: 'self', bind: 'chosenChar' } },
         { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', filter: { levelMin: { dyn: '$bound.chosenChar.level' }, levelMax: { dyn: '$bound.chosenChar.level' }, cardName: { dyn: '$bound.chosenChar.cardName' } }, bindMatch: 'matchedChar' } },
+        { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matchedChar.cardId' } },
       ],
     } as Effect;
     const ctx = makeCtx({ source: { player: 'self', uid: 'kb#1', cardId: 'KID5b', area: 'scene' } });
@@ -593,10 +594,9 @@ describe('megaw5 step3 — levelIn/levelInBound + deckRevealUntil dyn filter (r4
     runAllUntilEmpty(s);
     drainAiEffectPicks(s, new HeuristicPolicy());
     const matched = (ctx.bindings['matchedChar'] as { cardId: string }[] | undefined)?.[0]?.cardId;
-    // 実測固定 (W5 混成 review で強制失敗 probe により確認): AI 経路では bindPick (PA 短縮形) が
-    // dispatch 時に即時解決されるため、sequence でも bind は次 atom より先に確定する。
-    // この挙動が変わったら chain 必須制約の再評価が要る — 厳密 pin。
-    expect(matched).toBe('DKb_KID5');
+    expect(matched).toBeUndefined();
+    expect(s.players.self.hand).toEqual(['DKb_KID5']);
+    expect(s.players.self.deck).toEqual(['DKb_L1']);
   });
 
   it('deckRevealUntil: dyn filter + 全 deck 不一致 → matched なし・全公開 (既存 no-match path 回帰)', () => {

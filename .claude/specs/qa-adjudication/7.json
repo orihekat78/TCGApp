@@ -313,11 +313,12 @@
     {
       "qaId": "card:B03070:37ef1587bfd096c60d9640a4b438f831c31bd72c00ca99251068d391cbfba449",
       "answerHash": "2577bf30d26dd651ef4f4dbc36f5b6061c20c679fbce759f8cc6899e1245abee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03070.ts:1"
+        "src:src/cards/ct-p03/B03070.ts:57",
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:574"
       ]
     },
     {
@@ -1165,21 +1166,25 @@
     {
       "qaId": "card:B09013:69ca8be8b9721965a589188e1994a458302be6888cbb6c364d8d008028b7ded9",
       "answerHash": "e5a1e0ffc8a86cdff3536e13f146a78bd2dc9514e19c05cd7880043a2b4d43b2",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d02/D02005.ts:9"
+        "rules:.claude/rules/22-qa-action-contact.md:47",
+        "src:src/cards/ct-p09/B09013.ts:58",
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:593"
       ]
     },
     {
       "qaId": "card:B09013:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d02/D02005.ts:9"
+        "rules:.claude/rules/24-qa-naming-stun.md:58",
+        "src:src/cards/ct-p09/B09013.ts:53",
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:567"
       ]
     },
     {

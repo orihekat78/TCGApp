@@ -3,9 +3,9 @@
 //   【ターン1】自分の現場にいるキャラのアクション［事件］によって証拠を得たとき、このキャラを
 //   スリープさせてもよい。そうした場合、相手の現場にいるレベル7以下のキャラを1枚まで選び、
 //   手札に移す。相手は手札を1枚リムーブする。
-// DSL: triggered evidence:gain (triggerCharMatches byUid side:self) + condition charStateIs(self,active)
-//      + limit turn1 + optional{chain[sceneSetState $self sleep, sequence[sceneToHand opp levelMax7,
-//      discard opp 1]]}
+// DSL: triggered evidence:gain (triggerCharMatches byUid side:self) + limit turn1
+//      + conditional(self active){optional{chain[sceneSetState $self sleep,
+//      sequence[sceneToHand opp levelMax7, discard opp 1]]}}
 //
 // production 経路: evidence:gain emit = src/engine/flow/action-case.ts:141
 //   payload {player, byUid, uid, via:'action-case', gained:1} / meta {player, uid} を丸写し。
@@ -33,6 +33,7 @@ import {
 } from '@/engine/effect/resolve-picks';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { _resetUidCounter } from '@/engine/mutate/scene';
+import { char as readChar } from '@/engine/read/char';
 import type { GameState, SceneCharacter, CardDef } from '@/engine/types';
 import { sceneChar as baseScene } from '../../helpers/fixtures';
 
@@ -151,10 +152,17 @@ describe('B03070 メアリー a1 — evidence:gain(action-case) → optional[sel
     expect(_peekPendingEffectOptionalSide(), '相手獲得では surface しない').toBeNull();
   });
 
-  it('negative — mary が sleep 状態 → 発動しない (charStateIs active gate, 公式Q&A)', () => {
+  it.each(['sleep', 'stun'] as const)('%s 中も発動済み・【ターン1】消費、後で active になっても再発動しない', (state) => {
     setHuman('self');
-    gain(board('sleep'), 'actor', 'self');
-    expect(_peekPendingEffectOptionalSide(), 'active でなければ発動しない').toBeNull();
+    const first = gain(board(state), 'actor', 'self');
+    expect(_peekPendingEffectOptionalSide(), `${state} 中は optional を実行不能`).toBeNull();
+    expect(readChar.declaredUseCount(first, 'mary', 'a1'), `${state} 中でも発動済み`).toBe(1);
+
+    const second = gain(produce(first, (d) => {
+      d.players.self.scene.find((c) => c.uid === 'mary')!.state = 'active';
+    }), 'actor', 'self');
+    expect(_peekPendingEffectOptionalSide(), '同ターンの再発動なし').toBeNull();
+    expect(readChar.declaredUseCount(second, 'mary', 'a1')).toBe(1);
   });
 
   it('【ターン1】: NO を選んでも limit 消費 → 同ターン2回目は surface しない (公式Q&A #2)', () => {

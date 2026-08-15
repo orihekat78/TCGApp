@@ -82,14 +82,18 @@ describe('CT-P10 unblocked blue batch', () => {
     });
     expect(B10005.abilities[1]).toMatchObject({
       trigger: { hook: 'enter', selfOnly: true },
-      effect: { kind: 'optional', effect: { kind: 'chain', steps: [
-        { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
-        { kind: 'atom', verb: 'sceneEnter', args: {
-          player: 'self', from: 'hand', viaEffect: true, bind: '$entered',
-          target: { n: { min: 0, max: 1 }, query: { area: 'hand', side: 'self', filter: { kind: 'character', trait: 'サッカー選手', levelMax: 6 } } },
-        } },
-        { kind: 'conditional', if: { kind: 'boundAnyMatchesFilter', bindKey: '$entered', filter: { cardName: '比護隆佑' } } },
-      ] } },
+      effect: {
+        kind: 'conditional',
+        if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+        then: { kind: 'optional', effect: { kind: 'chain', steps: [
+          { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
+          { kind: 'atom', verb: 'sceneEnter', args: {
+            player: 'self', from: 'hand', viaEffect: true, bind: '$entered',
+            target: { n: { min: 0, max: 1 }, query: { area: 'hand', side: 'self', filter: { kind: 'character', trait: 'サッカー選手', levelMax: 6 } } },
+          } },
+          { kind: 'conditional', if: { kind: 'boundAnyMatchesFilter', bindKey: '$entered', filter: { cardName: '比護隆佑' } } },
+        ] } },
+      },
     });
     expect(B10005P).toMatchObject({ id: 'B10005P', rarity: 'RP' });
   });

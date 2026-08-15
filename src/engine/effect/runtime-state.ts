@@ -1066,6 +1066,16 @@ export function persistPendingRuntimeState(state: GameState): void {
     { persisted: true },
   );
   assertPendingRuntimeMatchesState(state, preparedSnapshot);
+  // A paused effect may have originated from an Immer-drafted stack entry.
+  // Persisting already produces plain values for GameState, but the ambient
+  // resolver cache would otherwise retain the original draft reference and
+  // become revoked when the dispatch produce() finishes. Install a separate
+  // plain copy so the live cache remains readable and mutable without sharing
+  // objects that GameState finalization may freeze.
+  applyPendingRuntimeSnapshot(preparedSnapshot.map((entry) => ({
+    ...entry,
+    value: entry.present ? toPlainDeep(entry.value) : undefined,
+  })));
   const persisted: PersistedPendingRuntimeState = {
     token,
     snapshot: preparedSnapshot

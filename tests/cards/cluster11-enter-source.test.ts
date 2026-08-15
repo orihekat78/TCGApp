@@ -272,7 +272,7 @@ describe('cluster11 §5 — cluster11 カード e2e (実 atom + pick drain)', ()
   });
 
   // qa: card:B07019:2ac36a628488dd7fcb62f9d2873454623005fcfe75b98f02ac098e2d298e4477
-  it('B07019: 緑event だが スリープ状態で登場 → charStateIs gate で self-sleep 不可 = 不発 (公式Q&A)', () => {
+  it('B07019: 緑eventでスリープ登場 → triggerはqueue、解決時active gateで効果なし (公式Q&A)', () => {
     let s = setCaseStatus(createEmptyGameState(), '解決編');
     s.players.self.remove = ['B07019'];
     registerCardDef(pchar('VICT', { level: 7 }));
@@ -280,12 +280,13 @@ describe('cluster11 §5 — cluster11 カード e2e (実 atom + pick drain)', ()
     s = produce(s, (d) => {
       // enterSleep:true 相当 = スリープ状態で効果登場
       runEffect(d, { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: 'B07019', viaEffect: true, enterSleep: true, target: { query: { area: 'remove', side: 'self' } } } } as unknown as Effect, srcCtx(E3G));
+      expect(d.pendingEffects.some((p) => p.source?.cardId === 'B07019' && p.triggeredBy?.hook === 'enter')).toBe(true);
       runAllUntilEmpty(d);
       drainAiEffectPicks(d, new HeuristicPolicy());
       runAllUntilEmpty(d);
     });
     expect(s.players.self.scene.find((c) => c.cardId === 'B07019')?.state, 'スリープ状態で登場').toBe('sleep');
-    expect(s.players.opp.scene.find((c) => c.uid === 'v#1'), '既スリープ登場では remove 不発 (charStateIs gate)').toBeTruthy();
+    expect(s.players.opp.scene.find((c) => c.uid === 'v#1'), '解決時active gateで remove 不発').toBeTruthy();
   });
 });
 

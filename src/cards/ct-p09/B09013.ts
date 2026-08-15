@@ -8,7 +8,7 @@
 //   - LP1以上のキャラを1枚まで選び、スリープさせる。 => atom sceneSetState{player:'self',max:1,side:'either',state:'sleep',filter:{lpMin:1}} [sceneSetState short-form (atom-handlers.ts:709-718: uid absent + player + string state + max => buildShortFormPick scene pick side='either'). buildShortFormPick (atom-pick-spec.ts) passes filter into query. lpMin honored by matchOneFilter (target/candidates.ts:291). max:1 => nMin 0,nMax 1 = '1枚まで' (0-pick legal). Exemplar shape: src/cards/ct-d09/D09014.ts a1 (sceneSetState{player:'self',max:1,side:'either',state:'sleep'}).]
 //   - 【ターン1】 => limit:{kind:'turn',n:1} on triggered ability [triggered limit:{kind:'turn',n} enforced per uid+abilityId via declaredUseCount (capability-map hooks §How a triggered ability fires). Exact exemplar: src/cards/ct-p04/B04082.ts a1 (limit turn:1 on action:declare trigger) and src/cards/ct-p04/B04039.ts a1.]
 //   - 自分の現場にいる、〚カード名［毛利小五郎］〛かAP8000以上のキャラがアクションしたとき => trigger:{hook:'action:declare', matcherCondition:{kind:'or',cs:[triggerCharMatches{side:'self',filter:{cardName:'毛利小五郎'}}, triggerCharMatches{side:'self',filter:{apMin:8000}}]}} (NOT selfOnly; bearer reacts to another self-side char's action) [action:declare emits payload {byUid,target,uid:byUid,player:byPlayer} (state-machine.ts). triggerCharMatches (cond/eval.ts:244-258) gates side:'self' (payload.player===owner) then runs full matchOneFilter against the scene char; cardName + apMin both honored (candidates.ts:289 apMin, name-component path). matcherCondition is passed straight to evalCond (triggered.ts:177-189), so an OR tree of two triggerCharMatches over the same payload expresses 'is 毛利小五郎 OR AP>=8000'. Exact exemplar: src/cards/ct-p04/B04082.ts a1 + B04039.ts a1 (action:declare + triggerCharMatches side:'self' filter cardName); single-field filter is AND-only so the OR is built as a top-level 'or' Condition combinator (cond/eval.ts 'or' = .some).]
-//   - このキャラをスリープさせてもよい。そうした場合、… => {kind:'optional',effect:{kind:'chain',steps:[ sceneSetState{uid:'$self',state:'sleep'}, <remove> ]}} [optional wrapper = 「してもよい」 (resolver.ts optional: runs only if ctx.dyn.optionalRun; AI skips). chain = 「そうした場合」 (resolver.ts:59-83: step N executes then N+1; breaks only on __chainStepNoApply set by no-candidate pick path). sceneSetState{uid:'$self',state:'sleep'} is a DIRECT atom (resolved uid, not '$pick'/short-form) so it never enters substituteAtomPick and never sets __chainStepNoApply (resolve-picks.ts:436/480 only set it on empty pick candidates) => chain proceeds to the remove step. Exact $self sceneSetState exemplar: src/cards/ct-d03/D03011.ts a1 (chain steps: discard then sceneSetState{uid:'$self',state:'active'}).]
+//   - このキャラをスリープさせてもよい。そうした場合、… => conditional(self active){optional{chain[sceneSetState self sleep,<remove>]}}。trigger/turn1 は必ず記録し、解決時に active なら optional を開く。
 //   - レベル7以下のスリープ状態のキャラを1枚まで選び、リムーブする。 => atom sceneRemove{player:'self',max:1,side:'either',state:['sleep'],filter:{levelMax:7}} [sceneRemove short-form PA pick (atom-pick-spec.ts sceneRemove defaultArea scene, mode PA; buildShortFormPick passes state[] + filter). levelMax honored by matchOneFilter (candidates.ts:294). side:'either' since '相手/自分' unqualified 'キャラ' = both scenes (rules/15). max:1 = '1枚まで' (0-pick legal, rules/10). Exact exemplar: src/cards/ct-p09/B09006.ts a1 (sceneRemove{player:'self',max:1,side:'either',filter:{apMax:8000},state:['sleep']}) — identical shape, only apMax->levelMax.]
 
 import type { AbilityDef, CardDef } from '@/engine/types';
@@ -50,9 +50,6 @@ const a2: AbilityDef = {
   id: 'a2',
   type: 'triggered',
   scope: 'on-scene',
-  // BUG-145 (2026-06-15): already-sleep なら「このキャラをスリープさせ…てもよい」は行えない (公式qAndA PR138/PR144/B04049)。
-  // ability.condition で gate → self が sleep のとき能力非所持扱い = optional surface も出さない (rules/17)。
-  condition: { kind: 'not', c: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'sleep' } },
   limit: {
     kind: 'turn',
     n: 1
@@ -80,10 +77,13 @@ const a2: AbilityDef = {
     }
   },
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'chain',
-      steps: [
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain',
+        steps: [
         {
           kind: 'atom',
           verb: 'sceneSetState',
@@ -107,7 +107,8 @@ const a2: AbilityDef = {
             }
           }
         }
-      ]
+        ]
+      }
     }
   },
   description: '【ターン1】自分の現場にいる、〚カード名［毛利小五郎］〛かAP8000以上のキャラがアクションしたとき、このキャラをスリープさせてもよい。そうした場合、レベル7以下のスリープ状態のキャラを1枚まで選び、リムーブする。',

@@ -16,25 +16,21 @@ const a1: AbilityDef = {
   type: 'triggered',
   scope: 'on-scene',
   condition: {
-    kind: 'and',
-    // BUG-145 (2026-06-15): 既存条件 AND not{charStateIs self sleep} (already-sleep gate, 公式qAndA B04049)
-    cs: [
-      {
-        kind: 'partnerColor',
-        color: '赤'
-      },
-      { kind: 'not', c: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'sleep' } },
-    ],
+    kind: 'partnerColor',
+    color: '赤'
   },
   trigger: {
     hook: 'enter',
     selfOnly: true
   },
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'chain',
-      steps: [
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain',
+        steps: [
         {
           kind: 'atom',
           verb: 'sceneSetState',
@@ -68,7 +64,8 @@ const a1: AbilityDef = {
             }
           }
         }
-      ]
+        ]
+      }
     }
   },
   description: '【パートナー赤】【登場時】このキャラをスリープさせ、手札から〚特徴［FBI］〛のキャラを1枚リムーブしてもよい。そうした場合、レベル7以下のキャラを1枚まで選び、リムーブする。',

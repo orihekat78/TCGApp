@@ -28,22 +28,32 @@ describe('CT-P10 early existing-DSL cluster', () => {
     expect(B10029.abilities[0]).toMatchObject({
       type: 'triggered',
       trigger: { hook: 'enter', selfOnly: true },
-      condition: {
-        kind: 'sceneHas',
-        query: { area: 'scene', side: 'self', filter: { cardName: ['服部平次', '遠山和葉'] } },
-        nMin: 1,
-      },
       effect: {
-        kind: 'optional',
-        effect: {
-          kind: 'chain',
-          steps: [
-            { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
-            { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { color: '緑', kind: 'event' } } },
+        kind: 'conditional',
+        if: {
+          kind: 'and',
+          cs: [
+            { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+            {
+              kind: 'sceneHas',
+              query: { area: 'scene', side: 'self', filter: { cardName: ['服部平次', '遠山和葉'] } },
+              nMin: 1,
+            },
           ],
+        },
+        then: {
+          kind: 'optional',
+          effect: {
+            kind: 'chain',
+            steps: [
+              { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
+              { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { color: '緑', kind: 'event' } } },
+            ],
+          },
         },
       },
     });
+    expect(B10029.abilities[0]!.condition).toBeUndefined();
   });
 
   it('B10030 sets a card only in 解決編 and restricts its cut-in to green Police', () => {

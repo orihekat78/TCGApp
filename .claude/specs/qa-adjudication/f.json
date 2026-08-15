@@ -581,16 +581,15 @@
     {
       "qaId": "card:B04058:fa780841147e70681c7138d6155bc94c62ff0cca26bab1331784ad16c666e688",
       "answerHash": "aac8cdd406909267c8e727d338247136df07f29eb9b2536d72e8668b6d97f665",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/24-qa-naming-stun.md:58",
-        "src:src/cards/ct-p04/B04058.ts:87"
+        "rules:.claude/rules/24-qa-naming-stun.md:63",
+        "src:src/cards/ct-p04/B04058.ts:26",
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:476"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B04061:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305",
@@ -1220,7 +1219,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p07/B07014.ts:67",
-        "tests:tests/cards/step12-batch1.test.ts:672"
+        "tests:tests/cards/step12-batch1.test.ts:674"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"

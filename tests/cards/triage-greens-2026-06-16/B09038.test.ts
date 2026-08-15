@@ -378,7 +378,14 @@ describe('B09038 黒羽盗一 — gate5 runtime behavior', () => {
     // a2
     expect(a2.type, 'a2 triggered').toBe('triggered');
     expect(a2.trigger, 'a2 enter selfOnly').toMatchObject({ hook: 'enter', selfOnly: true });
-    const opt = a2.effect as { kind: string; effect: { kind: string; steps: Array<Record<string, unknown>> } };
+    const gated = a2.effect as {
+      kind: string;
+      if: unknown;
+      then: { kind: string; effect: { kind: string; steps: Array<Record<string, unknown>> } };
+    };
+    expect(gated.kind, 'a2 resolution-time gate').toBe('conditional');
+    expect(gated.if).toEqual({ kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' });
+    const opt = gated.then;
     expect(opt.kind, 'a2 effect optional').toBe('optional');
     const chain = opt.effect;
     expect(chain.kind, 'a2 inner chain').toBe('chain');

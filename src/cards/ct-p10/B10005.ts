@@ -16,14 +16,18 @@ const a1: AbilityDef = {
 
 const a2: AbilityDef = {
   id: 'a2', type: 'triggered', scope: 'on-scene', trigger: { hook: 'enter', selfOnly: true },
-  effect: { kind: 'optional', effect: { kind: 'chain', steps: [
-    { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
-    { kind: 'atom', verb: 'sceneEnter', args: {
-      player: 'self', cardId: '$pick.cardId', from: 'hand', viaEffect: true, bind: '$entered',
-      target: { kind: 'pick', chooser: 'self', n: { min: 0, max: 1 }, query: { area: 'hand', side: 'self', filter: { kind: 'character', trait: 'サッカー選手', levelMax: 6 } } },
-    } },
-    { kind: 'conditional', if: { kind: 'boundAnyMatchesFilter', bindKey: '$entered', filter: { cardName: '比護隆佑' } }, then: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } } },
-  ] } },
+  effect: {
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: { kind: 'optional', effect: { kind: 'chain', steps: [
+      { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
+      { kind: 'atom', verb: 'sceneEnter', args: {
+        player: 'self', cardId: '$pick.cardId', from: 'hand', viaEffect: true, bind: '$entered',
+        target: { kind: 'pick', chooser: 'self', n: { min: 0, max: 1 }, query: { area: 'hand', side: 'self', filter: { kind: 'character', trait: 'サッカー選手', levelMax: 6 } } },
+      } },
+      { kind: 'conditional', if: { kind: 'boundAnyMatchesFilter', bindKey: '$entered', filter: { cardName: '比護隆佑' } }, then: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } } },
+    ] } },
+  },
   description: '【登場時】このキャラをスリープさせてもよい。そうした場合、手札からレベル6以下の〚特徴［サッカー選手］〛のキャラを1枚まで登場させる。〚カード名［比護隆佑］〛を登場させた場合、カードを1枚引く。',
   ruleRefs: ['rules/03-field-areas.md', 'rules/15-abilities-effects.md', 'rules/20-color-and-switch.md'],
 };

@@ -287,8 +287,9 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03070.ts:82",
-        "tests:tests/cards/hybrid-batch2/B03070.test.ts:111"
+        "rules:.claude/rules/24-qa-naming-stun.md:58",
+        "src:src/cards/ct-p03/B03070.ts:20",
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:561"
       ]
     },
     {
@@ -979,7 +980,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06102.ts:96",
-        "tests:tests/cards/bug-145-self-sleep-gate.test.ts:132"
+        "tests:tests/cards/bug-145-self-sleep-gate.test.ts:407"
       ]
     },
     {
@@ -1433,11 +1434,13 @@
     {
       "qaId": "card:B09013:a00a4fcb627dc02701efb6fdc742f723f5d1af776484e45166ccc74175e2b82f",
       "answerHash": "1e235bd96a5c32834c492b3e0a661b86f75332640a54b7fd4f060ac05c57c350",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09013.ts:123"
+        "rules:.claude/rules/22-qa-action-contact.md:35",
+        "src:src/cards/ct-p09/B09013.ts:58",
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:604"
       ]
     },
     {
@@ -2090,8 +2093,8 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR028.ts:87",
-        "tests:tests/cards/hybrid-pilot-1.test.ts:122"
+        "src:src/cards/pr-01/PR028.ts:26",
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:489"
       ]
     },
     {
@@ -2101,8 +2104,8 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR032.ts:87",
-        "tests:tests/cards/hybrid-pilot-1.test.ts:122"
+        "src:src/cards/pr-01/PR032.ts:26",
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:502"
       ]
     },
     {

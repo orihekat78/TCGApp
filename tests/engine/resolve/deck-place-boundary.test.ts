@@ -443,7 +443,8 @@ describe('deckPlace boundary: effect stack', () => {
     expect(() => applyDeckReorderAndContinuation(state, pending, ['A', 'A']))
       .toThrow(/multiset/i);
     expect(state.pendingRuntimeState).toEqual(persisted);
-    expect(globals.__pendingDeckReorderSide).toBe(pending);
+    expect(globals.__pendingDeckReorderSide).toStrictEqual(pending);
+    expect(globals.__pendingDeckReorderSide).not.toBe(pending);
 
     applyDeckReorderAndContinuation(state, pending, ['B', 'A']);
     expect(state.players.self.hand).toEqual(['OBSERVED']);
@@ -472,7 +473,8 @@ describe('deckPlace boundary: effect stack', () => {
 
     expect(applyDeckPlaceAndContinuation(state, pending, ['A', 'A'], [])).toBe(false);
     expect(state.pendingRuntimeState).toEqual(persisted);
-    expect(globals.__pendingDeckPlaceSide).toBe(pending);
+    expect(globals.__pendingDeckPlaceSide).toStrictEqual(pending);
+    expect(globals.__pendingDeckPlaceSide).not.toBe(pending);
 
     expect(applyDeckPlaceAndContinuation(state, pending, ['B'], ['A'])).toBe(true);
     expect(state.pendingRuntimeState).toBeUndefined();

@@ -369,11 +369,12 @@
     {
       "qaId": "card:B03070:ee39ebda7696f4fa935d1c7bbaf8bcc6eb107b806a8aed39db22233c41f48e4c",
       "answerHash": "9deb68d2e6d383ec9f4012cf0a0d8ea49c61997fe1f40dbbfb11e408a2f8c902",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03070.ts:1"
+        "src:src/cards/ct-p03/B03070.ts:25",
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:516"
       ]
     },
     {
@@ -1878,21 +1879,24 @@
     {
       "qaId": "card:PR028:21664ef6f28c9f0abee7ad3bb6edcdc9ed2b844a329ab2f3ee804cf1be611407",
       "answerHash": "9deb68d2e6d383ec9f4012cf0a0d8ea49c61997fe1f40dbbfb11e408a2f8c902",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR028.ts:1"
+        "src:src/cards/pr-01/PR028.ts:26",
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:489"
       ]
     },
     {
       "qaId": "card:PR028:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR028.ts:1"
+        "rules:.claude/rules/24-qa-naming-stun.md:58",
+        "src:src/cards/pr-01/PR028.ts:26",
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:549"
       ]
     },
     {

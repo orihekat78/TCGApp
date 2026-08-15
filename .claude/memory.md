@@ -73,3 +73,13 @@
   source tuple: player, uid, cardId, abilityId, area, and resolutionKind.
 - Reconstruct it through one shared helper. Missing legacy fields keep their
   existing fallback; never rewrite a non-scene source to scene implicitly.
+
+## 2026-08-16: Mandatory self-sleep options
+
+- A matching triggered ability fires before checking whether its optional
+  self-sleep can resolve. Evaluate `charStateIs(self,active)` inside the effect,
+  not as a listener condition; sleep and stun both suppress the optional tail.
+- Preserve printed listener conditions, but move composite feasibility such as
+  hand count or named-character presence into resolution-time predicates.
+- The regression oracle scans all CardDefs and fixes the exact 45-printing
+  footprint, including sequence tails and B09013's turn-limit path.

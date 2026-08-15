@@ -1065,7 +1065,7 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07019.ts:49",
+        "src:src/cards/ct-p07/B07019.ts:40",
         "tests:tests/cards/cluster11-enter-source.test.ts:288"
       ]
     },

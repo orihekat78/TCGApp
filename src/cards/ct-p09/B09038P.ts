@@ -52,10 +52,13 @@ const a2: AbilityDef = {
     selfOnly: true
   },
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'chain',
-      steps: [
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain',
+        steps: [
         {
           kind: 'atom',
           verb: 'sceneSetState',
@@ -123,8 +126,9 @@ const a2: AbilityDef = {
               }
             }
           ]
-        }
-      ]
+          }
+        ]
+      }
     }
   },
   description: '【登場時】このキャラをスリープさせてもよい。そうした場合、手札からレベル6以下の〚カード名［工藤優作］〛を1枚まで登場させ、自分のデッキのカードを上から1枚裏向きでそのキャラにセットし、カードを1枚引く。',

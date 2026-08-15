@@ -598,15 +598,17 @@ describe('step12 D10005 ハート姫（毛利蘭）', () => {
   const a1 = D10005.abilities!.find(a => a.id === 'a1')!;
   const a2 = D10005.abilities!.find(a => a.id === 'a2')!;
 
-  it('a1 condition: 事件特徴 + 非スリープ gate', () => {
+  it('a1 listener conditionは事件特徴のみ、self activeはeffect解決時に判定', () => {
     const s = baseState();
     const hime = mutateAll.scene.enter(s, 'self', 'D10005', { active: true });
     const ctx = ctxFor('self', hime.uid, 'D10005', 'a1');
     expect(evalCond(s, a1.condition!, ctx), '事件特徴なし = 不成立').toBe(false);
     s.players.self.case.cardId = 'SHUFCASE'; // caseTraits:['シャッフルロマンス'] (CardDef.caseTraits 読み)
-    expect(evalCond(s, a1.condition!, ctx), '特徴あり + active = 成立').toBe(true);
+    expect(evalCond(s, a1.condition!, ctx), '特徴あり = listener成立').toBe(true);
     mutateAll.scene.setState(s, hime.uid, 'sleep');
-    expect(evalCond(s, a1.condition!, ctx), 'スリープ済 = 不成立 (Q&A)').toBe(false);
+    expect(evalCond(s, a1.condition!, ctx), 'sleepでもmandatory trigger成立').toBe(true);
+    const gate = (a1.effect as { if: Condition }).if;
+    expect(evalCond(s, gate, ctx), 'effect解決時はactiveでないためoptional抑止').toBe(false);
   });
 
   it('a1 chain: sleep + discard → リムーブの lv8以下スペイドのみ登場 (lv9 同名 decoy 除外)', () => {
@@ -614,7 +616,7 @@ describe('step12 D10005 ハート姫（毛利蘭）', () => {
     const hime = mutateAll.scene.enter(s, 'self', 'D10005', { active: true });
     s.players.self.hand = ['MOB'];
     s.players.self.remove = ['SPADE8', 'SPADE9', 'MOB2'];
-    const chain = (a1.effect as { kind: string; effect: Effect }).effect; // optional 内 chain
+    const chain = (a1.effect as { then: { effect: Effect } }).then.effect; // conditional → optional 内 chain
     s = produce(s, (d) => {
       runEffect(d, chain, ctxFor('self', hime.uid, 'D10005', 'a1'));
       runAllUntilEmpty(d);

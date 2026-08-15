@@ -17,22 +17,18 @@ const a1: AbilityDef = {
       side: 'self'
     }
   },
-  condition: {
-    kind: 'charStateIs',
-    ref: {
-      kind: 'self'
-    },
-    state: 'active'
-  },
   limit: {
     kind: 'turn',
     n: 1
   },
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'chain',
-      steps: [
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain',
+        steps: [
         {
           kind: 'atom',
           verb: 'sceneSetState',
@@ -66,7 +62,8 @@ const a1: AbilityDef = {
             }
           ]
         }
-      ]
+        ]
+      }
     }
   },
   description: '【ターン1】自分の現場にいるキャラのアクション［事件］によって証拠を得たとき、このキャラをスリープさせてもよい。そうした場合、相手の現場にいるレベル7以下のキャラを1枚まで選び、手札に移す。相手は手札を1枚リムーブする。',

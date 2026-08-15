@@ -15,29 +15,23 @@ const a1: AbilityDef = {
     selfOnly: true
   },
   condition: {
-    kind: 'and',
-    cs: [
-      {
-        kind: 'partnerColor',
-        color: '赤'
-      },
-      {
-        kind: 'not',
-        c: {
-          kind: 'charStateIs',
-          ref: {
-            kind: 'self'
-          },
-          state: 'sleep'
-        }
-      }
-    ]
+    kind: 'partnerColor',
+    color: '赤'
   },
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'chain',
-      steps: [
+    kind: 'conditional',
+    if: {
+      kind: 'charStateIs',
+      ref: {
+        kind: 'self'
+      },
+      state: 'active'
+    },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain',
+        steps: [
         {
           kind: 'atom',
           verb: 'sceneSetState',
@@ -116,7 +110,8 @@ const a1: AbilityDef = {
             }
           ]
         }
-      ]
+        ]
+      }
     }
   },
   description: '【パートナー赤】【登場時】このキャラをスリープさせ、手札を1枚リムーブしてもよい。そうした場合、自分のリムーブエリアにあるレベル5以下の【赤】のキャラを1枚まで選び、スリープ状態で登場させる。自分の手札が2枚以下の場合、登場させたキャラとこのキャラをアクティブにする。',

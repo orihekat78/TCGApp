@@ -140,7 +140,7 @@ function srcCtx(player: Player): EffectCtx {
 // S1 descriptor pin — codegen drift 検出 (a1 enter optional chain / a2 hirameki draw)
 // ============================================================
 describe('B07068 羽田秀𠮷 — shape (descriptor)', () => {
-  it('id/no/色/lv/ap/lp/特徴 + a1 enter selfOnly + partnerColor赤 & self-sleep gate + optional / a2 hirameki draw', () => {
+  it('id/no/色/lv/ap/lp/特徴 + a1 printed partner gate + resolution-time active conditional / a2 hirameki draw', () => {
     expect(B07068.id).toBe('B07068');
     expect(B07068.no).toBe('0797/B07068');
     expect(B07068.kind).toBe('character');
@@ -154,16 +154,12 @@ describe('B07068 羽田秀𠮷 — shape (descriptor)', () => {
     expect(a1.type).toBe('triggered');
     expect(a1.scope).toBe('on-scene');
     expect(a1.trigger).toMatchObject({ hook: 'enter', selfOnly: true });
-    // condition and[ partnerColor 赤, not{charStateIs self sleep} ]
-    const cond = a1.condition as { kind: string; cs: Array<Record<string, unknown>> };
-    expect(cond.kind).toBe('and');
-    expect(cond.cs).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ kind: 'partnerColor', color: '赤' }),
-        expect.objectContaining({ kind: 'not', c: expect.objectContaining({ kind: 'charStateIs', state: 'sleep' }) }),
-      ]),
-    );
-    expect((a1.effect as { kind: string }).kind).toBe('optional');
+    expect(a1.condition).toEqual({ kind: 'partnerColor', color: '赤' });
+    expect(a1.effect).toMatchObject({
+      kind: 'conditional',
+      if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+      then: { kind: 'optional' },
+    });
 
     const a2 = B07068.abilities[1] as AbilityDef;
     expect(a2.type).toBe('triggered');
@@ -293,10 +289,10 @@ describe('B07068 a1 — sceneEnter 0枚 decline (「1枚まで」rules/15)', () 
 });
 
 // ============================================================
-// S5 — a1 condition off (partner非赤 / self-sleep gate) → a1 不発
+// S5 — printed partner gate と resolution-time active gate
 // ============================================================
-describe('B07068 a1 — condition off で a1 不発 (optional 不 surface)', () => {
-  it('partner非赤 (青) → partnerColor赤 false → a1 queue されず / self-sleep 登場 → BUG-145 gate で不発', () => {
+describe('B07068 a1 — listener gateとresolution gateを分離', () => {
+  it('partner非赤は非発火 / partner赤のself-sleep登場は発動後にoptionalを抑止', () => {
     // (a) partner 青
     {
       const base = createEmptyGameState();
@@ -315,7 +311,7 @@ describe('B07068 a1 — condition off で a1 不発 (optional 不 surface)', () 
       _clearPendingEffectOptionalSide();
       _clearPendingEffectPickQueue();
     }
-    // (b) partner 赤 だが self-sleep 状態で登場 → 「スリープさせてもよい」不可 (公式 QA)
+    // (b) partner 赤 + self-sleep: mandatory triggerはqueue、解決時active gateでoptionalなし。
     {
       const base = createEmptyGameState();
       base.players.self.partner = { ...base.players.self.partner, cardId: REDP };
@@ -323,9 +319,10 @@ describe('B07068 a1 — condition off で a1 不発 (optional 不 surface)', () 
       base.players.self.hand = [H1];
       produce(base, (d) => {
         runEffect(d, summon('B07068', { enterSleep: true }), srcCtx('self'));
+        expect(d.pendingEffects.some((p) => p.source?.cardId === 'B07068' && p.triggeredBy?.hook === 'enter')).toBe(true);
         runAllUntilEmpty(d);
       });
-      expect(_peekPendingEffectOptionalSide(), 'self-sleep 登場 → not{charStateIs self sleep} false → optional 不 surface').toBeNull();
+      expect(_peekPendingEffectOptionalSide(), 'self-sleep 登場 → resolution-time active gateでoptional不surface').toBeNull();
       _clearPendingEffectOptionalSide();
       _clearPendingEffectPickQueue();
     }

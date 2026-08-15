@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6079
+- **ファイル数**: 6080
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5488,6 +5488,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `set-card-host-owner-wave3.test.ts` — qaId=card:B02018:dc712167e0587386756f5293d40bf1766e89e09669554ebcde8e028749d962d…
       - `short-deck-reveal-hand-entry-public.test.ts` — rules: 15-abilities-effects.md, 17-icons.md, 20-color-and-switch.…
       - `turn-conditioned-cutin-public.test.ts` — qa: card:B02007:e4a36acb6bbbb1c8b11eac5e65600d839bba033d5a2b7f0e5ecfc84bacd47a4c
+      - `turn1-resolution-time-state-public.test.ts` — rules: 07-action-flow.md, 10-action-event.md, 15-abilities-effects.md, 17-icons.…
     - **`pr-01/`**
       - `PR100.test.ts`
       - `PR158.test.ts` — tests/cards/pr-01/PR158 犯人 (character, cutin remove-name scaling AP)
@@ -5607,7 +5608,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `bug-130-158-live-human-carrier.test.ts`
     - `bug-135-sequence-middle-skip.test.ts` — BUG-135 回帰ガード — sequence 中間の nMin=0 pick を human-decline したとき、後続の必須 remainder が
     - `bug-140-deferred-real-cards.test.ts` — BUG-140 reopened: deferred real-card abilities B05039 / B06035.
-    - `bug-145-self-sleep-gate.test.ts` — BUG-145 self-state micro-cluster (2026-06-15):
+    - `bug-145-self-sleep-gate.test.ts` — BUG-145 self-state micro-cluster (2026-06-15, BUG-313 follow-up):
     - `bug-163-b08079-henso.test.ts` — BUG-163: B08079/B08079P ピンガ — henso 列 (col13)【変装】【事件黒】【FILE7】の grounding 漏れ追補 pr…
     - `bug-165-pb-multipick-collapse.test.ts` — BUG-165 (2026-07-02, wave-10): PB generic multi-pick collapse — n≥2 の Pattern B…
     - `bug-169-face-down-set-card.test.ts`

@@ -175,10 +175,14 @@ describe('Task A certify-harvest + wave3 — novel compositions', () => {
   });
 
   // ---- descriptor 構造 ----
-  it('descriptor: B01069/D05006/PR138 = optional, B02053/B02083 = event-use matcher', () => {
+  it('descriptor: B01069/D05006 = optional, PR138 = active-gated optional, B02053/B02083 = event-use matcher', () => {
     expect((B01069.abilities[0].effect as { kind: string }).kind).toBe('optional');
     expect((D05006.abilities[0].effect as { kind: string }).kind).toBe('optional');
-    expect((PR138.abilities[0].effect as { kind: string }).kind).toBe('optional');
+    expect(PR138.abilities[0].effect).toMatchObject({
+      kind: 'conditional',
+      if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+      then: { kind: 'optional' },
+    });
     expect(typeof (B02053.abilities[0].trigger as { matcher?: unknown }).matcher).toBe('function');
     expect(typeof (B02083.abilities[0].trigger as { matcher?: unknown }).matcher).toBe('function');
   });

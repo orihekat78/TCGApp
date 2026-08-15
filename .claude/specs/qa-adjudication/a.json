@@ -1764,7 +1764,7 @@
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/02-deck-construction.md:16",
-        "src:src/cards/ct-d10/D10005.ts:81",
+        "src:src/cards/ct-d10/D10005.ts:84",
         "tests:tests/cards/official-qa/D10003-D10010-printing-copy-limit.test.ts:86",
         "tests:tests/cards/official-qa/D10003-D10010-printing-copy-limit.test.ts:89"
       ]

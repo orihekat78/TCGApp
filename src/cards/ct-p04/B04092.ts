@@ -19,11 +19,8 @@
 //       しない (state-machine.ts) ので aUid/bUid は常に実在の現場キャラ。
 //   - このキャラをスリープさせてもよい。そうした場合 => effect optional{ chain[ sceneSetState{$self,sleep}, … ] }。
 //       B07019 idiom (self-sleep は cost ではなく effect atom sceneSetState)。「してもよい」= optional (opt-in/out)。
-//       「そうした場合」の gate: 既にスリープなら払えず不発 = condition not(charStateIs self sleep) が発火自体を止める
-//       (BUG-145)。opt-in 後は sceneSetState が self を sleep 化 + AP+ を実行。chain は step 順序保証 (sceneSetState
-//       は現状 no-apply で chainStepNoApply を立てないため break はしない — active な self は必ず sleep 化する)。
-//       ⚠ self が **スタン状態**の場合は condition を通過し sceneSetState は no-op (rules/03) だが chain break せず
-//       AP+ が誤適用される (shipped B07019 と同一既存挙動、BUG-XXX 起票済。第三者 observer の stun 盤面は稀)。
+//       mandatory trigger はsleep/stunでも発動。effect-time charStateIs(self,active) がoptional全体を抑止する (BUG-145)。
+//       opt-in後はsceneSetStateがselfをsleep化し、chain順でAP+へ進む。
 //   - コンタクト中のキャラを1枚まで選び、このコンタクト中、AP+2000 => charModifyAP 短縮形
 //       { delta:2000, max:1, inContact:true, scope:'contact' }。inContact = pick を現コンタクト参加者に限定
 //       (engine wave-18、contact:start emit source.bindings.contact → ctx.contact)。max:1 = 「1枚まで」(0 可)。
@@ -45,16 +42,18 @@ const a1: AbilityDef = {
       ],
     },
   },
-  // BUG-145: 既にスリープなら「このキャラをスリープさせてもよい」が払えず不発 (B07019 idiom)
-  condition: { kind: 'not', c: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'sleep' } },
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'chain', // 「そうした場合」= sleep が適用された場合のみ AP+ へ (chain は no-apply で break)
-      steps: [
-        { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
-        { kind: 'atom', verb: 'charModifyAP', args: { delta: 2000, max: 1, inContact: true, scope: 'contact' } },
-      ],
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain', // 「そうした場合」= sleep が適用された場合のみ AP+ へ (chain は no-apply で break)
+        steps: [
+          { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
+          { kind: 'atom', verb: 'charModifyAP', args: { delta: 2000, max: 1, inContact: true, scope: 'contact' } },
+        ],
+      },
     },
   },
   description: '自分の現場のこのキャラ以外がコンタクトしたとき、このキャラをスリープしてもよい。そうしたらコンタクト中のキャラ1枚までこのコンタクト中AP+2000。',

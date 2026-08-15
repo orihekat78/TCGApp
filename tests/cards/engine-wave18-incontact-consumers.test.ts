@@ -25,7 +25,7 @@ import { _resetUidCounter } from '@/engine/mutate/scene';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { _drainAllEffectPicksForTest, applyOptionalAndContinuation } from '@/engine/effect/apply-pick';
-import { _peekPendingEffectOptionalSide, _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
+import { _peekPendingEffectOptionalSide, _clearPendingEffectOptionalSide, _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import { cutIn, canCutIn, disguise, canDisguise } from '@/engine/flow/contact';
 import { declare, advance, _resetActionContexts } from '@/engine/flow/action/state-machine';
 import { B04075 } from '@/cards/ct-p04/B04075';
@@ -76,7 +76,7 @@ function pick(uid: string) {
 
 beforeEach(() => {
   event._resetRegistry(); _resetTriggeredRegistered(); _resetUidCounter(); resetDefRegistry();
-  _clearPendingEffectPickQueue(); _resetActionContexts();
+  _clearPendingEffectOptionalSide(); _clearPendingEffectPickQueue(); _resetActionContexts();
   registerCardDef(B04075); registerCardDef(B04092);
   registerCardDef(CUT); registerCardDef(DIS); registerCardDef(ATK); registerCardDef(DEF); registerCardDef(MOB);
   registerTriggeredListener();
@@ -177,14 +177,18 @@ describe('B04075 白鳥 behavioral', () => {
 });
 
 describe('B04092 キャンティ shape', () => {
-  it('id/no/色/特徴 + contact:start or-matcher + optional chain', () => {
+  it('id/no/色/特徴 + contact:start or-matcher + resolution-time active conditional', () => {
     expect(B04092.id).toBe('B04092');
     expect(B04092.no).toBe('0474/B04092');
     expect(B04092.colors).toEqual(['黒']);
     expect(B04092.traits).toEqual(['黒ずくめの組織']);
     expect(B04092.abilities[0].trigger?.hook).toBe('contact:start');
     expect(B04092.abilities[0].trigger?.matcherCondition).toMatchObject({ kind: 'or' });
-    expect(B04092.abilities[0].effect?.kind).toBe('optional');
+    expect(B04092.abilities[0].effect).toMatchObject({
+      kind: 'conditional',
+      if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+      then: { kind: 'optional' },
+    });
   });
 });
 
@@ -232,6 +236,20 @@ describe('B04092 キャンティ behavioral', () => {
       for (let i = 0; i < 6; i++) { _drainAllEffectPicksForTest(d, pick(def)); runAllUntilEmpty(d); }
     });
     expect(after.players.self.scene.find((c) => c.uid === kan)!.state).toBe('active');
+    expect(engine.read.char.ap(after, def)).toBe(3000);
+  });
+
+  it('既にsleepでもcontact triggerは解決され、optional/AP変更だけを抑止', () => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    const { s, atk, def, kan } = board();
+    const after = produce(s, (d) => {
+      mutate.scene.setState(d, kan, 'sleep');
+      driveContact(d, atk, def);
+      expect(d.pendingEffects.some((p) => p.source?.uid === kan && p.triggeredBy?.hook === 'contact:start')).toBe(true);
+      runAllUntilEmpty(d);
+    });
+    expect(_peekPendingEffectOptionalSide()).toBeNull();
+    expect(after.players.self.scene.find((c) => c.uid === kan)!.state).toBe('sleep');
     expect(engine.read.char.ap(after, def)).toBe(3000);
   });
 });

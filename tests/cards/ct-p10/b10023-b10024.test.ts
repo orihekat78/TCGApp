@@ -93,13 +93,48 @@ describe('B10023 服部平次', () => {
     expect(canActivateDeclaredAbility(state, uid, 'a2', opponentCtx.dyn!.costParams as never)).toBe(false);
   });
 
-  it('keeps the hand gate outside its optional entry chain and re-enters only eligible police characters', () => {
+  it('checks active state and hand availability at resolution before offering the optional entry chain', () => {
     const a1 = B10023.abilities[0]!;
-    expect(a1.condition).toMatchObject({ kind: 'and' });
-    expect(JSON.stringify(a1.condition)).toContain('handAtLeast');
-    expect(a1.effect).toMatchObject({ kind: 'optional' });
+    expect(a1.condition).toEqual({
+      kind: 'and',
+      cs: [{ kind: 'partnerColor', color: '緑' }, { kind: 'caseStatus', status: '解決編' }],
+    });
+    expect(a1.effect).toMatchObject({
+      kind: 'conditional',
+      if: {
+        kind: 'and',
+        cs: [
+          { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+          { kind: 'handAtLeast', player: 'self', n: 1 },
+        ],
+      },
+      then: { kind: 'optional' },
+    });
     expect(JSON.stringify(a1.effect)).toContain('sceneEnter');
     expect(JSON.stringify(a1.effect)).toContain('levelMax');
+  });
+
+  it.each([
+    { label: '1→0', triggerHand: ['TEST_POLICE'], resolutionHand: [], offered: false },
+    { label: '0→1', triggerHand: [], resolutionHand: ['TEST_POLICE'], offered: true },
+  ])('evaluates hand availability at resolution ($label)', ({ triggerHand, resolutionHand, offered }) => {
+    const state = base();
+    state.players.self.hand = [...triggerHand];
+    event.emit(
+      state,
+      'enter',
+      { uid: 'src', viaEffect: false, enterOrder: 1, enterOrderThisTurn: 1 },
+      { player: 'self', uid: 'src', cardId: 'B10023', abilityId: 'a1' },
+    );
+    expect(state.pendingEffects.filter((entry) => entry.source?.cardId === 'B10023')).toHaveLength(1);
+    state.players.self.hand = [...resolutionHand];
+    runAllUntilEmpty(state);
+    const optional = _drainPendingEffectOptionalSide();
+    expect(Boolean(optional)).toBe(offered);
+    if (optional) {
+      expect(optional.source).toMatchObject({ cardId: 'B10023', abilityId: 'a1', uid: 'src' });
+    }
+    expect(state.players.self.scene.find((char) => char.uid === 'src')?.state).toBe('active');
   });
 
   it('requires exactly two distinct face-down cards on itself, then removes them and draws', () => {

@@ -17,13 +17,17 @@ const a2: AbilityDef = {
   trigger: { hook: 'phase:end:start' },
   condition: { kind: 'turn', player: 'self' },
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'chain',
-      steps: [
-        { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
-        { kind: 'atom', verb: 'discard', args: { player: 'opp', n: 1 } },
-      ],
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain',
+        steps: [
+          { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
+          { kind: 'atom', verb: 'discard', args: { player: 'opp', n: 1 } },
+        ],
+      },
     },
   },
   description: '自分のターン終了時、このキャラをスリープさせてもよい。そうした場合、相手は手札を1枚リムーブする。',
