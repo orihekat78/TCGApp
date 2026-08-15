@@ -28,8 +28,10 @@ export function selectInteractionLocked(s: LockSlice): boolean {
 
 /**
  * Scene switch is a child decision of an effect pick/choice or a Hirameki
- * resolution, so those parent nodes may remain present while its board picker
- * is active. Any other decision owns interaction and suspends the picker.
+ * resolution. A deck reveal may also remain as the presentation parent of a
+ * deck choice that resumes into scene entry. Those parent nodes may remain
+ * present while its board picker is active. Any other decision owns
+ * interaction and suspends the picker.
  */
 export function selectSwitchVictimBlocked(s: AutonomousDecisionSlice): boolean {
   return selectAutonomousDecisionBlocked({
@@ -37,5 +39,6 @@ export function selectSwitchVictimBlocked(s: AutonomousDecisionSlice): boolean {
     pendingEffectPick: null,
     pendingEffectChoice: null,
     pendingHirameki: null,
+    pendingDeckReveal: null,
   });
 }

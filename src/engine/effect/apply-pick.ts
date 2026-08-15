@@ -15,7 +15,14 @@ import type { PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptio
 import { resolveEffectPicks, rememberedRuntimeAtomTargetPolicy, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume, _takePendingOptionalBindings, _takePendingOptionalCostPaid } from './resolve-picks.js';
 import { findChooseIntercept } from './consult-choose-intercept.js';
 import { bindingKeysReadByCondition } from '../cond/binding-keys.js';
-import { withSceneEnterSwitchChoice } from './scene-switch.js';
+import {
+  isSceneEnterSwitchPickArgs,
+  isValidSceneEnterSwitchPickAuthority,
+  resolveSceneEnterSwitchPickArgs,
+  withContinuationSceneEnterSwitchChoice,
+  withSceneEnterSwitchChoice,
+} from './scene-switch.js';
+import { sceneCap } from '../read/scene-cap.js';
 import {
   bindEffectCausalTrace,
   cloneCausalEffectTrace,
@@ -1142,6 +1149,16 @@ export function applyPickAndContinuation(
     },
     bindings: {},
   };
+  const sceneEnterSwitchPick = isSceneEnterSwitchPickArgs(pending.atomArgs);
+  if (sceneEnterSwitchPick
+    && !isValidSceneEnterSwitchPickAuthority(
+      pending.atomArgs,
+      pending.player,
+      pending.ownerPlayer,
+      interceptCtx.source.player,
+    )) {
+    throw new Error('sceneEnter switch pick: invalid authority');
+  }
   // Stacked-card candidates are identities, not card IDs. Revalidate their host
   // before any intercept is consumed or any causal decision is committed.
   let resolvedStackHostUid: string | undefined;
@@ -1218,6 +1235,23 @@ export function applyPickAndContinuation(
       return;
     }
   }
+  if (sceneEnterSwitchPick) {
+    const selected = findPendingPickCandidate(pending, pickedUid);
+    const isLiveVictim = selected?.kind === 'char'
+      && selected.player === pending.player
+      && state.players[pending.player].scene.some((card) => card.uid === selected.uid)
+      && state.players[pending.player].scene.length >= sceneCap(state, pending.player);
+    if (!isLiveVictim) {
+      consumeQueuedPick(state, pending);
+      commitDecision();
+      mutate.log.append(state, {
+        ts: Date.now(), player: pending.player, turn: state.turn.number,
+        action: 'effect:pick', result: 'stale-selection',
+      });
+      completeEffectCausalTrace(state, decisionTrace, interceptCtx.source.player, 'fizzle', { type: 'state', state: 'fizzled' });
+      return;
+    }
+  }
   if (pending.atomVerb === 'charRemoveSetCard') {
     const selected = (pickedUids ?? [pickedUid]).map(uid => findPendingPickCandidate(pending, uid));
     const allCurrent = selected.every(candidate => {
@@ -1236,7 +1270,7 @@ export function applyPickAndContinuation(
   }
     consumeQueuedPick(state, pending);
   commitDecision();
-  if (!skipChooseIntercept) {
+  if (!skipChooseIntercept && !sceneEnterSwitchPick) {
     for (const uid of pickedUids ?? [pickedUid]) {
       const intercept = findChooseIntercept(state, uid, interceptCtx);
       if (intercept.kind === 'cancel') {
@@ -1281,35 +1315,46 @@ export function applyPickAndContinuation(
   };
   let resolvedAtom: Effect;
   if (isPatternA) {
-    const { target: _omit, ...restArgs } = pending.atomArgs;
-    void _omit;
-    // engine-extension #3 (2026-06-05): multi-target Pattern A
-    // pickedUids が複数なら各 uid に atom を per-char 適用する sequence にまとめる。
-    // 単一なら従来通り (sequence wrap せずに atom のまま runEffect / event.queue)。
-    const uids = (pickedUids && pickedUids.length > 1) ? pickedUids : [pickedUid];
-    const setCardSelections = pending.atomVerb === 'charRemoveSetCard'
-      ? uids.map(uid => findPendingPickCandidate(pending, uid))
-      : [];
-    if (setCardSelections.length > 0 && setCardSelections.every(candidate => candidate?.hostUid && candidate.setCardInstanceId)) {
-      const atoms: Effect[] = setCardSelections.map(candidate => ({
-        kind: 'atom' as const,
-        verb: pending.atomVerb as never,
-        args: {
-          ...restArgs,
-          uid: candidate!.hostUid,
-          setCardInstanceId: candidate!.setCardInstanceId,
-        },
-      }));
-      resolvedAtom = atoms.length === 1 ? atoms[0]! : { kind: 'sequence', steps: atoms };
-    } else if (uids.length === 1) {
-      resolvedAtom = { kind: 'atom', verb: pending.atomVerb as never, args: w6TagMr({ ...restArgs, uid: uids[0]! }, [uids[0]!]) };
+    const restoredSwitchArgs = sceneEnterSwitchPick
+      ? resolveSceneEnterSwitchPickArgs(pending.atomArgs, pickedUid)
+      : null;
+    if (sceneEnterSwitchPick) {
+      if (restoredSwitchArgs === null) {
+        completeEffectCausalTrace(state, decisionTrace, interceptCtx.source.player, 'fizzle', { type: 'state', state: 'fizzled' });
+        return;
+      }
+      resolvedAtom = { kind: 'atom', verb: 'sceneEnter', args: restoredSwitchArgs };
     } else {
-      const atoms: Effect[] = uids.map((u) => ({
-        kind: 'atom' as const,
-        verb: pending.atomVerb as never,
-        args: w6TagMr({ ...restArgs, uid: u }, [u]),
-      }));
-      resolvedAtom = { kind: 'sequence', steps: atoms };
+      const { target: _omit, ...restArgs } = pending.atomArgs;
+      void _omit;
+      // engine-extension #3 (2026-06-05): multi-target Pattern A
+      // pickedUids が複数なら各 uid に atom を per-char 適用する sequence にまとめる。
+      // 単一なら従来通り (sequence wrap せずに atom のまま runEffect / event.queue)。
+      const uids = (pickedUids && pickedUids.length > 1) ? pickedUids : [pickedUid];
+      const setCardSelections = pending.atomVerb === 'charRemoveSetCard'
+        ? uids.map(uid => findPendingPickCandidate(pending, uid))
+        : [];
+      if (setCardSelections.length > 0 && setCardSelections.every(candidate => candidate?.hostUid && candidate.setCardInstanceId)) {
+        const atoms: Effect[] = setCardSelections.map(candidate => ({
+          kind: 'atom' as const,
+          verb: pending.atomVerb as never,
+          args: {
+            ...restArgs,
+            uid: candidate!.hostUid,
+            setCardInstanceId: candidate!.setCardInstanceId,
+          },
+        }));
+        resolvedAtom = atoms.length === 1 ? atoms[0]! : { kind: 'sequence', steps: atoms };
+      } else if (uids.length === 1) {
+        resolvedAtom = { kind: 'atom', verb: pending.atomVerb as never, args: w6TagMr({ ...restArgs, uid: uids[0]! }, [uids[0]!]) };
+      } else {
+        const atoms: Effect[] = uids.map((u) => ({
+          kind: 'atom' as const,
+          verb: pending.atomVerb as never,
+          args: w6TagMr({ ...restArgs, uid: u }, [u]),
+        }));
+        resolvedAtom = { kind: 'sequence', steps: atoms };
+      }
     }
   } else {
     const resolvedCardId = resolveCardIdFromPickUid(pickedUid, state, pending);
@@ -1405,7 +1450,9 @@ export function applyPickAndContinuation(
   // ---- continuation (中断中 sequence/chain の残り step) を保存 ctx で実行 ----
   // BUG-111: continuation は pick 本体 (pending.continuation) に同梱されている (別 FIFO peek を廃止)。
   // これにより continuation を持たない pick が他 pick の continuation を誤消費する desync を排除。
-  const chainCont = pending.continuation;
+  const chainCont = pending.continuation && pending.atomVerb !== 'sceneEnter'
+    ? withContinuationSceneEnterSwitchChoice(pending.continuation, switchRemoveUid)
+    : pending.continuation;
   if (chainCont) {
     decisionTrace = restoreEffectCausalTrace(chainCont.ctx, decisionTrace);
     // BUG-107: resolved atom と remainder を同一保存 ctx で runEffect → plain bindings を共有

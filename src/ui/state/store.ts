@@ -249,9 +249,10 @@ export type PendingPublicHandReveal = {
   owner: 'self' | 'opp';
   audience: 'all';
   cardIds: string[];
-  handSnapshot: string[];
+  handSnapshot?: string[];
   lifetime: 'effect' | 'presentation';
   resolutionToken: string;
+  origin?: 'deck-selected-card';
   source: { cardId?: string; abilityId?: string; uid?: string };
 };
 
@@ -292,6 +293,8 @@ export type PendingEffectPick = {
   }[];
   atomVerb: string;
   atomArgs: Record<string, unknown>;
+  /** Absolute side whose full scene needs a switch victim after this pick. */
+  sceneEnterSwitchPlayer?: 'self' | 'opp';
   nMin: number;
   nMax: number;
   requestedNMin?: number;

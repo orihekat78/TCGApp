@@ -1,5 +1,5 @@
 import type { Effect, GameState } from '../types/index.js';
-import type { PendingEffectPickSide } from './pending-state.js';
+import type { ContinuationFrame, PendingEffectPickSide } from './pending-state.js';
 import { effectivePendingPickRange } from './pick-selection.js';
 import { ATOM_VERBS, validate } from './validate.js';
 import { def } from '../read/def.js';
@@ -14,6 +14,11 @@ import {
   resolveDeclaredName,
   type DeclareNameSpec,
 } from './declared-name-domain.js';
+import {
+  continuationMayEnterSceneForPlayer,
+  isSceneEnterSwitchPickArgs,
+  isValidSceneEnterSwitchPickAuthority,
+} from './scene-switch.js';
 
 type ValidationMode = 'live' | 'persisted';
 
@@ -649,7 +654,61 @@ function pendingPick(value: unknown, path: string, mode: ValidationMode): void {
     }
   });
   const atomArgs = record(item.atomArgs, `${path}.atomArgs`);
+  optionalPlayer(item.sceneEnterSwitchPlayer, `${path}.sceneEnterSwitchPlayer`);
   genericData(item.atomArgs, `${path}.atomArgs`, mode);
+  const sceneEnterSwitchPick = isSceneEnterSwitchPickArgs(atomArgs);
+  if (atomArgs.__sceneEnterSwitchPick !== undefined && !sceneEnterSwitchPick) {
+    fail(`${path}.atomArgs.__sceneEnterSwitchPick`, 'must be true when present');
+  }
+  if (sceneEnterSwitchPick) {
+    const switchContinuation = item.continuation !== null
+      && typeof item.continuation === 'object'
+      && !Array.isArray(item.continuation)
+      ? item.continuation as Record<string, unknown>
+      : undefined;
+    const switchCtx = switchContinuation?.ctx !== null
+      && typeof switchContinuation?.ctx === 'object'
+      && !Array.isArray(switchContinuation.ctx)
+      ? switchContinuation.ctx as Record<string, unknown>
+      : undefined;
+    const switchSource = switchCtx?.source !== null
+      && typeof switchCtx?.source === 'object'
+      && !Array.isArray(switchCtx.source)
+      ? switchCtx.source as Record<string, unknown>
+      : undefined;
+    if (verb !== 'sceneEnter'
+      || item.sceneEnterSwitchPlayer !== undefined
+      || !isValidSceneEnterSwitchPickAuthority(
+        atomArgs,
+        item.player as 'self' | 'opp',
+        item.ownerPlayer as 'self' | 'opp' | undefined,
+        switchSource?.player as 'self' | 'opp' | undefined,
+      )) {
+      fail(path, 'scene-enter switch pick must be an unbundled sceneEnter decision');
+    }
+    const originalArgs = record(
+      atomArgs.__sceneEnterSwitchOriginalArgs,
+      `${path}.atomArgs.__sceneEnterSwitchOriginalArgs`,
+    );
+    if (originalArgs.__sceneEnterSwitchPick !== undefined) {
+      fail(`${path}.atomArgs.__sceneEnterSwitchOriginalArgs`, 'must not contain a nested switch pick');
+    }
+    const switchTarget = record(atomArgs.target, `${path}.atomArgs.target`);
+    const switchRange = record(switchTarget.n, `${path}.atomArgs.target.n`);
+    const switchQuery = record(switchTarget.query, `${path}.atomArgs.target.query`);
+    if (switchTarget.kind !== 'pick'
+      || integer(switchRange.min, `${path}.atomArgs.target.n.min`) !== 1
+      || integer(switchRange.max, `${path}.atomArgs.target.n.max`) !== 1
+      || switchQuery.area !== 'scene') {
+      fail(`${path}.atomArgs.target`, 'must select exactly one scene character');
+    }
+    candidates.forEach((raw, index) => {
+      const candidate = record(raw, `${path}.candidates[${index}]`);
+      if (candidate.kind !== 'char' || candidate.player !== item.player) {
+        fail(`${path}.candidates[${index}]`, 'switch candidates must be live characters owned by the decision player');
+      }
+    });
+  }
   if (verb === 'deckRevealUntil') {
     const pendingPlayer = item.player as 'self' | 'opp';
     if (atomArgs.__windowPlayer !== undefined) {
@@ -722,6 +781,9 @@ function pendingPick(value: unknown, path: string, mode: ValidationMode): void {
   const nMin = integer(item.nMin, `${path}.nMin`);
   const nMax = integer(item.nMax, `${path}.nMax`);
   if (nMin > nMax) fail(path, 'nMin must be <= nMax');
+  if (sceneEnterSwitchPick && (nMin !== 1 || nMax !== 1)) {
+    fail(path, 'scene-enter switch pick must require exactly one selection');
+  }
   const requestedNMin = item.requestedNMin === undefined
     ? undefined
     : integer(item.requestedNMin, `${path}.requestedNMin`);
@@ -746,6 +808,20 @@ function pendingPick(value: unknown, path: string, mode: ValidationMode): void {
   optionalInteger(item.perSideMax, `${path}.perSideMax`, 1);
   optionalInteger(item.aggregateLevelMax, `${path}.aggregateLevelMax`);
   if (item.forcedUids !== undefined) stringArray(item.forcedUids, `${path}.forcedUids`);
+  if (sceneEnterSwitchPick
+    && (requestedNMin !== 1
+      || requestedNMax !== 1
+      || item.minimumPolicy !== 'best-effort'
+      || item.continuation === undefined
+      || item.forcedUids !== undefined
+      || item.perSideMax !== undefined
+      || item.aggregateLevelMax !== undefined
+      || item.distinctNames === true
+      || item.distinctLevel === true
+      || item.distinctColors === true
+      || item.skipResolvesAtom === true)) {
+    fail(path, 'scene-enter switch pick carries non-canonical selection authority');
+  }
   const effectiveRange = effectivePendingPickRange(item as unknown as PendingEffectPickSide);
   if (!effectiveRange.feasible) fail(path, 'exact minimum is not feasible');
   if ((requestedNMin !== undefined || requestedNMax !== undefined || item.minimumPolicy !== undefined)
@@ -753,6 +829,16 @@ function pendingPick(value: unknown, path: string, mode: ValidationMode): void {
     fail(path, 'runtime bounds must match the canonical feasible range');
   }
   if (item.continuation !== undefined) continuation(item.continuation, `${path}.continuation`, mode);
+  if (item.sceneEnterSwitchPlayer !== undefined) {
+    const switchPlayer = item.sceneEnterSwitchPlayer as 'self' | 'opp';
+    const otherPlayer = switchPlayer === 'self' ? 'opp' : 'self';
+    if (switchPlayer !== item.player
+      || item.continuation === undefined
+      || !continuationMayEnterSceneForPlayer(item.continuation as ContinuationFrame, switchPlayer)
+      || continuationMayEnterSceneForPlayer(item.continuation as ContinuationFrame, otherPlayer)) {
+      fail(`${path}.sceneEnterSwitchPlayer`, 'must match a future scene-entry continuation');
+    }
+  }
 }
 
 function effectChoice(value: unknown, path: string, mode: ValidationMode): void {
@@ -898,9 +984,24 @@ function publicHandReveal(value: unknown, path: string): void {
   player(item.owner, `${path}.owner`);
   oneOf(item.audience, new Set(['all']), `${path}.audience`);
   stringArray(item.cardIds, `${path}.cardIds`);
-  stringArray(item.handSnapshot, `${path}.handSnapshot`);
   oneOf(item.lifetime, new Set(['effect', 'presentation']), `${path}.lifetime`);
   string(item.resolutionToken, `${path}.resolutionToken`);
+  if (item.origin !== undefined) {
+    oneOf(item.origin, new Set(['deck-selected-card']), `${path}.origin`);
+  }
+  if (item.origin === 'deck-selected-card') {
+    if (array(item.cardIds, `${path}.cardIds`).length !== 1) {
+      fail(`${path}.cardIds`, 'deck-selected-card must expose exactly one selected card');
+    }
+    if (item.lifetime !== 'presentation') {
+      fail(`${path}.lifetime`, 'deck-selected-card must be presentation-only');
+    }
+    if (item.handSnapshot !== undefined) {
+      fail(`${path}.handSnapshot`, 'deck-selected-card must not persist the private hand');
+    }
+  } else {
+    stringArray(item.handSnapshot, `${path}.handSnapshot`);
+  }
   const src = record(item.source, `${path}.source`);
   optionalString(src.cardId, `${path}.source.cardId`);
   optionalString(src.abilityId, `${path}.source.abilityId`);

@@ -765,7 +765,6 @@
         "tests:tests/cards/engine-mega-w6.test.ts:381",
         "tests:tests/cards/engine-mega-w6.test.ts:382",
         "tests:tests/cards/engine-mega-w6.test.ts:384",
-        "tests:tests/cards/step12-batch1.test.ts:544",
         "tests:tests/cards/step12-batch1.test.ts:545"
       ],
       "noteCodes": [
@@ -781,7 +780,6 @@
       "evidence": [
         "src:src/cards/ct-p05/B05042.ts:49",
         "src:src/cards/ct-p05/B05042.ts:54",
-        "tests:tests/cards/step12-batch1.test.ts:544",
         "tests:tests/cards/step12-batch1.test.ts:545",
         "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:154",
         "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:155",
@@ -1222,7 +1220,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p07/B07014.ts:67",
-        "tests:tests/cards/step12-batch1.test.ts:671"
+        "tests:tests/cards/step12-batch1.test.ts:672"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -2043,10 +2041,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-d05/D05007.ts:127",
-        "tests:tests/cards/triage-greens-2026-06-16/B03079.test.ts:203"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION"
+        "tests:tests/cards/official-qa/leave-trigger-top-three-public.test.ts:538"
       ]
     },
     {

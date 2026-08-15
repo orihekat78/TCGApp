@@ -39,6 +39,7 @@ import {
   snapshotPendingRuntimeState,
 } from '@/engine/effect/runtime-state';
 import { advanceDeckEpochAndRebaseBindings } from '@/engine/effect/deck-occurrence-authority';
+import { sceneEnterSwitchPickEffect } from '@/engine/effect/scene-switch';
 import {
   rememberedRuntimeAtomTargetPolicy,
   resetRuntimeAtomTargetPolicySession,
@@ -59,6 +60,47 @@ const effectCtx: EffectCtx = {
   source: { player: 'self', area: 'scene', cardId: 'SOURCE', uid: 'SOURCE#1' },
   bindings: {},
 };
+
+function persistedSceneEnterSwitchPick(): GameState {
+  resetPendingRuntimeState();
+  const state = createEmptyGameState();
+  const marker = sceneEnterSwitchPickEffect({
+    player: 'self',
+    cardId: 'ENTRY',
+    from: 'remove',
+    viaEffect: true,
+    sourceRequired: true,
+    deferSceneSwitchChoice: true,
+    target: { query: { area: 'remove', side: 'self' } },
+  }, 'self', 'self');
+  pushPendingEffectPickSide({
+    player: 'self',
+    ownerPlayer: 'self',
+    candidates: [{
+      kind: 'char', uid: 'target', cardId: 'TARGET', player: 'self',
+    }],
+    atomVerb: 'sceneEnter',
+    atomArgs: marker.args as Record<string, unknown>,
+    nMin: 1,
+    nMax: 1,
+    requestedNMin: 1,
+    requestedNMax: 1,
+    minimumPolicy: 'best-effort',
+    source: { cardId: 'SOURCE', abilityId: 'a1' },
+    continuation: { remainder: [], kind: 'sequence', ctx: effectCtx },
+  });
+  persistPendingRuntimeState(state);
+  resetPendingRuntimeState();
+  return structuredClone(state);
+}
+
+function persistedPickRecord(state: GameState): Record<string, unknown> {
+  const entry = state.pendingRuntimeState?.snapshot.find((item) => item.key === '__pendingEffectPickQueue');
+  expect(entry).toBeDefined();
+  const queue = entry!.value as Record<string, unknown>[];
+  expect(queue).toHaveLength(1);
+  return queue[0]!;
+}
 
 function persistedDeckPlace(
   value: Record<string, unknown>,
@@ -391,6 +433,209 @@ describe('adversarial: runtime identity is owned by GameState', () => {
 
     expect(() => hydratePendingRuntimeState(state)).toThrow(/side must match trusted replacement guard/);
     expect(_peekPendingSetCardReplacementContinuation()).toBeNull();
+  });
+
+  it('round-trips a selected deck-card presentation without persisting the private hand', () => {
+    const state = createEmptyGameState();
+    state.players.self.hand = ['PRIVATE-A', 'SELECTED', 'PRIVATE-B'];
+    queuePendingPublicHandRevealSide({
+      owner: 'self',
+      audience: 'all',
+      cardIds: ['SELECTED'],
+      lifetime: 'presentation',
+      resolutionToken: 'deck-selected:1',
+      origin: 'deck-selected-card',
+      source: { cardId: 'B03079', abilityId: 'a1' },
+    });
+
+    persistPendingRuntimeState(state);
+    const entry = state.pendingRuntimeState?.snapshot.find((item) =>
+      item.key === '__pendingPublicHandRevealSide');
+    expect(entry?.value).toEqual({
+      owner: 'self',
+      audience: 'all',
+      cardIds: ['SELECTED'],
+      lifetime: 'presentation',
+      resolutionToken: 'deck-selected:1',
+      origin: 'deck-selected-card',
+      source: { cardId: 'B03079', abilityId: 'a1' },
+    });
+    expect(JSON.stringify(entry?.value)).not.toContain('PRIVATE-A');
+    expect(JSON.stringify(entry?.value)).not.toContain('PRIVATE-B');
+
+    resetPendingRuntimeState();
+    expect(hydratePendingRuntimeState(structuredClone(state))).toBe(true);
+    expect(_drainPendingPublicHandRevealSide()).toEqual(entry?.value);
+  });
+
+  it('rejects a selected deck-card presentation carrying a private hand snapshot', () => {
+    const state = createEmptyGameState();
+    queuePendingPublicHandRevealSide({
+      owner: 'self',
+      audience: 'all',
+      cardIds: ['SELECTED'],
+      lifetime: 'presentation',
+      resolutionToken: 'deck-selected:forged',
+      origin: 'deck-selected-card',
+      source: { cardId: 'B03079', abilityId: 'a1' },
+    });
+    persistPendingRuntimeState(state);
+    const entry = state.pendingRuntimeState?.snapshot.find((item) =>
+      item.key === '__pendingPublicHandRevealSide');
+    expect(entry).toBeDefined();
+    (entry!.value as { handSnapshot?: string[] }).handSnapshot = ['PRIVATE', 'SELECTED'];
+    resetPendingRuntimeState();
+
+    expect(() => hydratePendingRuntimeState(state)).toThrow(/must not persist the private hand/);
+    expect(_drainPendingPublicHandRevealSide()).toBeNull();
+  });
+
+  it('round-trips only a scene-switch hint backed by the saved continuation', () => {
+    const state = createEmptyGameState();
+    pushPendingEffectPickSide({
+      player: 'self',
+      ownerPlayer: 'self',
+      candidates: [{ uid: 'target', cardId: 'TARGET', player: 'self' }],
+      atomVerb: 'sceneSetState',
+      atomArgs: { uid: '$pick', state: 'sleep' },
+      sceneEnterSwitchPlayer: 'self',
+      nMin: 0,
+      nMax: 1,
+      source: { cardId: 'SOURCE', abilityId: 'a1' },
+      continuation: {
+        remainder: [{ kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: 'ENTRY' } }],
+        kind: 'sequence',
+        ctx: effectCtx,
+      },
+    });
+    persistPendingRuntimeState(state);
+
+    resetPendingRuntimeState();
+    expect(hydratePendingRuntimeState(structuredClone(state))).toBe(true);
+    expect(_peekPendingEffectPickSide()).toMatchObject({
+      atomVerb: 'sceneSetState',
+      sceneEnterSwitchPlayer: 'self',
+    });
+  });
+
+  it('rejects a scene-switch hint for a side absent from the saved continuation', () => {
+    const state = createEmptyGameState();
+    pushPendingEffectPickSide({
+      player: 'self',
+      ownerPlayer: 'self',
+      candidates: [{ uid: 'target', cardId: 'TARGET', player: 'self' }],
+      atomVerb: 'sceneSetState',
+      atomArgs: { uid: '$pick', state: 'sleep' },
+      sceneEnterSwitchPlayer: 'self',
+      nMin: 0,
+      nMax: 1,
+      source: { cardId: 'SOURCE', abilityId: 'a1' },
+      continuation: {
+        remainder: [{ kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: 'ENTRY' } }],
+        kind: 'sequence',
+        ctx: effectCtx,
+      },
+    });
+    persistPendingRuntimeState(state);
+    const entry = state.pendingRuntimeState?.snapshot.find((item) => item.key === '__pendingEffectPickQueue');
+    expect(entry).toBeDefined();
+    const queue = entry!.value as Array<{ sceneEnterSwitchPlayer?: 'self' | 'opp' }>;
+    queue[0]!.sceneEnterSwitchPlayer = 'opp';
+    resetPendingRuntimeState();
+
+    expect(() => hydratePendingRuntimeState(state)).toThrow(/must match a future scene-entry continuation/);
+    expect(_peekPendingEffectPickSide()).toBeNull();
+  });
+
+  it('rejects a scene-switch hint when the saved continuation can enter both sides', () => {
+    const state = createEmptyGameState();
+    pushPendingEffectPickSide({
+      player: 'self',
+      ownerPlayer: 'self',
+      candidates: [{ uid: 'target', cardId: 'TARGET', player: 'self' }],
+      atomVerb: 'sceneSetState',
+      atomArgs: { uid: '$pick', state: 'sleep' },
+      sceneEnterSwitchPlayer: 'self',
+      nMin: 0,
+      nMax: 1,
+      source: { cardId: 'SOURCE', abilityId: 'a1' },
+      continuation: {
+        remainder: [{ kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: 'SELF_ENTRY' } }],
+        kind: 'sequence',
+        ctx: effectCtx,
+      },
+    });
+    persistPendingRuntimeState(state);
+    const entry = state.pendingRuntimeState?.snapshot.find((item) => item.key === '__pendingEffectPickQueue');
+    expect(entry).toBeDefined();
+    const queue = entry!.value as Array<{ continuation?: { remainder: Effect[] } }>;
+    queue[0]!.continuation!.remainder.push({
+      kind: 'atom',
+      verb: 'sceneEnter',
+      args: { player: 'opp', cardId: 'OPP_ENTRY' },
+    });
+    resetPendingRuntimeState();
+
+    expect(() => hydratePendingRuntimeState(state)).toThrow(/must match a future scene-entry continuation/);
+    expect(_peekPendingEffectPickSide()).toBeNull();
+  });
+
+  it('round-trips a canonical second-stage scene-enter switch decision', () => {
+    const state = persistedSceneEnterSwitchPick();
+
+    expect(hydratePendingRuntimeState(state)).toBe(true);
+    expect(_peekPendingEffectPickSide()).toMatchObject({
+      player: 'self',
+      ownerPlayer: 'self',
+      atomVerb: 'sceneEnter',
+      nMin: 1,
+      nMax: 1,
+      requestedNMin: 1,
+      requestedNMax: 1,
+      minimumPolicy: 'best-effort',
+    });
+  });
+
+  it.each([
+    ['missing ownerPlayer', (pending: Record<string, unknown>) => { delete pending.ownerPlayer; }],
+    ['wrong chooser', (pending: Record<string, unknown>) => {
+      ((pending.atomArgs as Record<string, unknown>).target as Record<string, unknown>).chooser = 'opp';
+    }],
+    ['wrong relative scene side', (pending: Record<string, unknown>) => {
+      const target = (pending.atomArgs as Record<string, unknown>).target as Record<string, unknown>;
+      (target.query as Record<string, unknown>).side = 'opp';
+    }],
+    ['wrong original player', (pending: Record<string, unknown>) => {
+      const args = pending.atomArgs as Record<string, unknown>;
+      (args.__sceneEnterSwitchOriginalArgs as Record<string, unknown>).player = 'opp';
+    }],
+    ['missing original source provenance', (pending: Record<string, unknown>) => {
+      const args = pending.atomArgs as Record<string, unknown>;
+      delete (args.__sceneEnterSwitchOriginalArgs as Record<string, unknown>).target;
+    }],
+    ['source provenance replaced with a scene target', (pending: Record<string, unknown>) => {
+      const args = pending.atomArgs as Record<string, unknown>;
+      const original = args.__sceneEnterSwitchOriginalArgs as Record<string, unknown>;
+      original.target = { query: { area: 'scene', side: 'self' } };
+    }],
+    ['saved context owned by the other player', (pending: Record<string, unknown>) => {
+      const continuation = pending.continuation as Record<string, unknown>;
+      const ctx = continuation.ctx as Record<string, unknown>;
+      (ctx.source as Record<string, unknown>).player = 'opp';
+    }],
+    ['pre-authorized victim', (pending: Record<string, unknown>) => {
+      const args = pending.atomArgs as Record<string, unknown>;
+      (args.__sceneEnterSwitchOriginalArgs as Record<string, unknown>).switchRemoveUid = 'forged';
+    }],
+    ['missing saved context', (pending: Record<string, unknown>) => { delete pending.continuation; }],
+    ['selection modifier tunnel', (pending: Record<string, unknown>) => { pending.forcedUids = ['target']; }],
+  ] as const)('rejects a forged scene-enter switch authority: %s', (_label, mutatePending) => {
+    const state = persistedSceneEnterSwitchPick();
+    mutatePending(persistedPickRecord(state));
+    resetPendingRuntimeState();
+
+    expect(() => hydratePendingRuntimeState(state)).toThrow(/scene-enter switch/i);
+    expect(_peekPendingEffectPickSide()).toBeNull();
   });
 
   it('clears persisted and live pending decisions when the game is already over', () => {

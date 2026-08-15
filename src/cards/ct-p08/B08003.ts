@@ -30,6 +30,7 @@ const a2: AbilityDef = {
       kind: 'sequence', steps: [
         { kind: 'atom', verb: 'sceneEnter', args: {
           player: 'self', cardId: '$chosen.cardId', from: 'remove', sourceRequired: true, viaEffect: true,
+          deferSceneSwitchChoice: true,
           selectedCardIndex: '$chosen.index',
           target: { kind: 'pick', chooser: 'self', n: { min: 1, max: 1 }, query: { area: 'remove', side: 'self', fromGroupCards: '$chosen' } },
         } },

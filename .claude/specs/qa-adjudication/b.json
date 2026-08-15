@@ -610,7 +610,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05042.ts:73",
-        "tests:tests/cards/step12-batch1.test.ts:519"
+        "tests:tests/cards/step12-batch1.test.ts:545"
       ]
     },
     {
@@ -2134,7 +2134,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/pr-01/PR046.ts:40",
-        "tests:tests/cards/cluster14-multi-sceneenter.test.ts:222"
+        "tests:tests/cards/cluster14-multi-sceneenter.test.ts:254"
       ]
     },
     {

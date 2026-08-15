@@ -63,36 +63,49 @@ async function surfaceDeckDecision(
 ): Promise<void> {
   await page.evaluate(async ({ verb, ids }) => {
     const w = window as unknown as GameWindow;
-    const { runAtom, produce, persistPendingRuntimeState, resetPendingRuntimeState } = await w.__game.testApi;
+    const {
+      deckOccurrenceAuthority,
+      runAtom,
+      produce,
+      persistPendingRuntimeState,
+      resetPendingRuntimeState,
+      surfacePendingSideChannels,
+    } = await w.__game.testApi;
     const current = w.__game.getState().gameState as {
       players: { self: { deck: string[] } };
     };
     const used = new Set<number>();
-    const occurrences = ids.map((cardId) => {
+    const occurrenceSpecs = ids.map((cardId) => {
       const index = current.players.self.deck.findIndex((deckCardId, deckIndex) => (
         deckCardId === cardId && !used.has(deckIndex)
       ));
       if (index < 0) throw new Error(`deck decision fixture card is absent: ${cardId}`);
       used.add(index);
-      return { kind: 'card', cardId, area: 'deck', player: 'self', index };
+      return { cardId, index };
     });
-    const ctx = {
-      source: {
-        player: 'self',
-        cardId: 'D08020',
-        uid: 'e2e-deck-decision-source',
-        abilityId: 'fixture',
-        area: 'scene',
-      },
-      bindings: { '$e2eDeckCards': occurrences },
-    };
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
     resetPendingRuntimeState();
     const next = produce(current, (draft) => {
+      const occurrences = occurrenceSpecs.map(({ cardId, index }) => {
+        const occurrence = deckOccurrenceAuthority(draft, 'self', index);
+        if (!occurrence) throw new Error(`deck decision fixture authority is stale: ${cardId}`);
+        return occurrence;
+      });
+      const ctx = {
+        source: {
+          player: 'self',
+          cardId: 'D08020',
+          uid: 'e2e-deck-decision-source',
+          abilityId: 'fixture',
+          area: 'scene',
+        },
+        bindings: { '$e2eDeckCards': occurrences },
+      };
       runAtom(draft, verb, { player: 'self', bindKey: '$e2eDeckCards' }, ctx);
       persistPendingRuntimeState(draft);
     });
-    w.__game.setGameState(next);
+    w.__game.setGameState(next, { preserveRuntime: true });
+    surfacePendingSideChannels(w.__game.store.getState);
   }, { verb: atomVerb, ids: cardIds });
 }
 

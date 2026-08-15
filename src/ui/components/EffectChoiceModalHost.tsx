@@ -62,6 +62,7 @@ export function EffectChoiceModalHost(): JSX.Element | null {
       }));
       const switchRemoveUid = await new Promise<string | null>((resolve) => {
         useSceneSwitchPickerStore.getState()._open({
+          player: pending.player,
           cardId: '', newCardName: '登場するキャラ', candidates, resolve,
         });
       });

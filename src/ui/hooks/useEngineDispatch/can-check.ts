@@ -28,6 +28,8 @@ import {
 } from '@/engine/effect/runtime-state.js';
 import { canApplyPendingPickSelection } from '@/engine/effect/pick-selection.js';
 import { cardOccurrenceUid, cardOccurrenceWitness } from '@/engine/target/card-occurrence.js';
+import { sceneCap } from '@/engine/read/scene-cap.js';
+import { isSceneEnterSwitchPickArgs } from '@/engine/effect/scene-switch.js';
 
 // ---- can-check (前段ガード) ----
 
@@ -264,14 +266,64 @@ export function isAllowed(
     }
     case 'effectPickResolve': {
       // BUG-054: pendingEffectPick が set されているときのみ有効
+      const rawAction = action as unknown as Record<string, unknown>;
+      const hasPickedUids = Object.prototype.hasOwnProperty.call(rawAction, 'pickedUids');
+      const hasSwitchRemoveUid = Object.prototype.hasOwnProperty.call(rawAction, 'switchRemoveUid');
+      const hasSwitchRemoveUids = Object.prototype.hasOwnProperty.call(rawAction, 'switchRemoveUids');
+      if ((typeof rawAction.pickedUid !== 'string' && rawAction.pickedUid !== null)
+        || (hasPickedUids && (!Array.isArray(rawAction.pickedUids)
+          || rawAction.pickedUids.length === 0
+          || !rawAction.pickedUids.every((uid) => typeof uid === 'string')))
+        || (rawAction.pickedUid === null && hasPickedUids)
+        || (hasSwitchRemoveUid && hasSwitchRemoveUids)
+        || (hasSwitchRemoveUid && (typeof rawAction.switchRemoveUid !== 'string' || hasPickedUids))
+        || (hasSwitchRemoveUids && (!hasPickedUids
+          || !Array.isArray(rawAction.switchRemoveUids)
+          || rawAction.switchRemoveUids.length === 0
+          || !rawAction.switchRemoveUids.every((uid) => typeof uid === 'string')))) {
+        return false;
+      }
       const pendingAuthority = readPendingEffectPickAuthority(state);
-      return matchesPendingDecision(useGameStateStore.getState().pendingEffectPick, action)
+      const selectionAllowed = matchesPendingDecision(useGameStateStore.getState().pendingEffectPick, action)
         && pendingAuthority !== null
         && canApplyPendingPickSelection(
-          pendingAuthority,
+          pendingAuthority!,
           action.pickedUid,
           'pickedUids' in action ? action.pickedUids : undefined,
         );
+      if (!selectionAllowed || pendingAuthority === null) return false;
+      const isSwitchVictimPick = isSceneEnterSwitchPickArgs(pendingAuthority.atomArgs);
+      const switchPlayer = isSwitchVictimPick
+        ? undefined
+        : pendingAuthority.atomVerb === 'sceneEnter'
+          ? pendingAuthority.player
+          : pendingAuthority.sceneEnterSwitchPlayer === pendingAuthority.player
+            ? pendingAuthority.sceneEnterSwitchPlayer
+            : undefined;
+      const requiredSwitchCount = switchPlayer === undefined || action.pickedUid === null
+        ? 0
+        : pendingAuthority.atomVerb === 'sceneEnter' && 'pickedUids' in action
+          ? Math.max(
+              0,
+              state.players[switchPlayer].scene.length
+                + action.pickedUids.length
+                - sceneCap(state, switchPlayer),
+            )
+          : state.players[switchPlayer].scene.length >= sceneCap(state, switchPlayer) ? 1 : 0;
+      if ('switchRemoveUids' in action) {
+        if (switchPlayer === undefined || requiredSwitchCount < 1) return false;
+        const victims = action.switchRemoveUids;
+        const liveUids = new Set(state.players[switchPlayer].scene.map((character) => character.uid));
+        return victims.length === requiredSwitchCount
+          && new Set(victims).size === victims.length
+          && victims.every((uid) => liveUids.has(uid));
+      }
+      if ('switchRemoveUid' in action) {
+        return switchPlayer !== undefined
+          && requiredSwitchCount === 1
+          && state.players[switchPlayer].scene.some((character) => character.uid === action.switchRemoveUid);
+      }
+      return requiredSwitchCount === 0;
     }
     case 'setEffectOrder': {
       // resolution lock 中は禁止

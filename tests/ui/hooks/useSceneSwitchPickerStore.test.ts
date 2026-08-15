@@ -6,6 +6,7 @@ import type { SceneSwitchPickerOpen } from '@/ui/hooks/useSceneSwitchPickerStore
 
 function makeOpen(overrides: Partial<SceneSwitchPickerOpen> = {}): SceneSwitchPickerOpen {
   return {
+    player: 'self',
     cardId: 'D08003',
     newCardName: '江戸川コナン',
     candidates: [],

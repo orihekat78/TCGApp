@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6058
+- **ファイル数**: 6070
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -485,6 +485,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-302.md` — 観戦時の非公開デッキ公開境界
     - `BUG-303.md` — 【ターン①】の両プレイヤー共通ターン境界
     - `BUG-304.md` — sceneRemoveの実適用とchain gate
+    - `BUG-305.md` — 選択したデッキカードの公開境界
+    - `BUG-306.md` — 公開表示と非公開順序選択の直列化
+    - `BUG-307.md` — 後段登場のスイッチ権限
+    - `BUG-308.md` — デッキ選択occurrenceの後段保持
+    - `BUG-309.md` — 満員現場スイッチの操作権限
+    - `BUG-310.md` — 必須順序選択のEscape結果
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1580,6 +1586,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B03032.md` — B03032 grounding
       - `B03040.md` — B03040 和田進一 grounding (2026-07-10, sonnet5)
       - `B03042.md` — B03042 grounding
+      - `B03079.md` — B03079 grounding
       - `B03111.md` — B03111 バーボン grounding (2026-07-10, sonnet5)
       - `B04003.md` — B04003 工藤新一 grounding (2026-07-10, sonnet5)
       - `B04018.md` — B04018 / B04018P 遠山和葉 grounding (2026-08-13, gpt-5.6-terra high)
@@ -1701,6 +1708,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B10100.md` — B10100 工藤新一NYの事件
       - `B10101.md` — B10101 / B10101P grounding
       - `B10102.md` — B10102 / B10102P grounding
+      - `D01012.md` — D01012 grounding
+      - `D05007.md` — D05007 grounding
       - `D06003.md` — D06003 服部平次 grounding (2026-07-10, fable)
       - `D06004.md` — D06004 服部平次 grounding (2026-07-10, sonnet5)
       - `D06013.md` — D06013 白馬探 grounding (2026-07-10, sonnet 調査 + S2 session 裁定)
@@ -4787,7 +4796,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `resolve-picks.ts` — engine.effect.resolveEffectPicks — Phase 7-2 (BUG-035 fix) + Phase 7-3 (AI polic…
       - `resolver.ts` — engine.effect.run — Effect Descriptor 解釈器 (resolver)
       - `runtime-state.ts` — Public decision admission is fail-closed. Dedicated hydrate/import paths
-      - `scene-switch.ts`
+      - `scene-switch.ts` — Both branches are alternatives. Authorize the first scene entry in each
       - `validate-spec-files.ts` — engine.effect.validate-spec-files — Node 専用 ruleRefs 実在チェック
       - `validate.ts` — engine.effect.validate / engine.cards.validate — static lint pass (pure)
     - **`event/`**
@@ -5466,6 +5475,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `leave-trigger-remove-then-draw-public.test.ts` — qa: card:D07014:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-scene-target-public.test.ts` — qa: card:B03012:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-top-one-public.test.ts` — qa: card:PR084:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
+      - `leave-trigger-top-three-public.test.ts` — qa: card:B03079:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `set-card-host-absent.test.ts`
       - `set-card-host-owner-wave3.test.ts` — qaId=card:B02018:dc712167e0587386756f5293d40bf1766e89e09669554ebcde8e028749d962d…
       - `short-deck-reveal-hand-entry-public.test.ts` — rules: 15-abilities-effects.md, 17-icons.md, 20-color-and-switch.…
@@ -5815,6 +5825,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `full-match-human-vs-cpu.spec.ts` — Area-based selection uses direct manipulation rather than a modal.
     - `full-match.spec.ts`
     - `leave-intercept.spec.ts` — UI が guard 後を action-1 まで進める。以降のコンタクト選択と判定は公開 dispatch を通す。
+    - `leave-trigger-top-three-public.spec.ts`
     - `m3-pa-mr-declared.spec.ts` — E2E: M3 PA batch — パートナーエリア常駐 MR の宣言能力 human 経路 (実機クリック)
     - `match-visual-gates.spec.ts` — 現行の公開入口は段階移行中。どちらも利用者が押す「対戦を開始」操作であり、
     - `miniwave5-deck-place.spec.ts` — E2E: mini-wave #5 P2 — B05047「【登場時】自分のデッキのカードを上から2枚見て、好きな順番で
@@ -5943,6 +5954,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `s2-b08057-primitives.test.ts` — S2 deck cluster (2026-07-10, B08057 宮野エレーナ a2): 3 additive primitive。
       - `s2-deck-window-pick.test.ts` — S2 deck cluster (2026-07-10): B01022「上から6枚見て lv4以下[少年探偵団] 2枚まで登場、残りシャッフルしてデッキ下」。
       - `s2-deckplace-chooser.test.ts` — S2 deck cluster (2026-07-10, B01093): deckPlaceSplitBound の選択者座標系是正。
+      - `scene-switch.test.ts`
       - `set-card-exact-remove.test.ts`
       - `short-form-characterization.test.ts` — 短縮形 characterization test (Phase2 refactor の動作不変オラクル)
       - `short-form-new-verbs.test.ts` — 新規 verb 短縮形 test (Phase2 Task2.4-2.7)

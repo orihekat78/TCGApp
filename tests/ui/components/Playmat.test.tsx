@@ -228,6 +228,7 @@ describe('Playmat', () => {
     let resolved: string | null | undefined;
     useGameStateStore.setState({ gameState: state, pendingPublicHandReveal: null });
     useSceneSwitchPickerStore.getState()._open({
+      player: 'self',
       cardId: 'D08002',
       newCardName: 'New card',
       candidates: [{

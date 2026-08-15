@@ -24,16 +24,23 @@ export type PublicHandRevealSide = {
   audience: 'all';
   /** Ordered occurrences. Duplicate cardIds intentionally remain distinct. */
   cardIds: string[];
-  handSnapshot: string[];
+  /** Required only when the pending authority is tied to the full hand. */
+  handSnapshot?: string[];
   lifetime: 'effect' | 'presentation';
   resolutionToken: string;
+  /** A selected deck card is public without revealing the rest of the hand. */
+  origin?: 'deck-selected-card';
   source: { cardId?: string; abilityId?: string; uid?: string };
 };
 
-export function publicHandRevealToken(s: GameState, ctx: EffectCtx): string {
+export function allocatePublicHandRevealToken(s: GameState): string {
   const next = (s.publicHandRevealSeq ?? 0) + 1;
   s.publicHandRevealSeq = next;
-  const token = `public-hand-reveal:${next}`;
+  return `public-hand-reveal:${next}`;
+}
+
+export function publicHandRevealToken(s: GameState, ctx: EffectCtx): string {
+  const token = allocatePublicHandRevealToken(s);
   (ctx.causal ??= {}).publicHandRevealToken = token;
   return token;
 }

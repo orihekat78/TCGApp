@@ -152,6 +152,25 @@ describe('cluster14 §c/§d — switch victim (explicit resolved)', () => {
     });
     expect(s.players.self.scene.some((c) => c.uid === 'kasa#1'), '阿笠自身が switch で離場').toBe(false);
   });
+
+  it.each([
+    ['forged victim', ['v1', 'forged-victim']],
+    ['duplicate victim', ['v1', 'v1']],
+    ['missing overflow victim', ['v1']],
+  ] as const)('%s は登場元を消費する前に全体を fail-closed', (_label, switchRemoveUids) => {
+    const s = runResolvedEnter([SBT4a, SBT4b], [...switchRemoveUids], (st) => {
+      st.players.self.scene = [
+        sceneChar('B09010', 'kasa#1'),
+        sceneChar(SBT3, 'v1'),
+        sceneChar(SBT3, 'v2'),
+        sceneChar(SBT3, 'v3'),
+        sceneChar(SBT3, 'v4'),
+      ];
+      st.players.self.remove = [SBT4a, SBT4b];
+    });
+    expect(s.players.self.scene.map((c) => c.uid)).toEqual(['kasa#1', 'v1', 'v2', 'v3', 'v4']);
+    expect(s.players.self.remove).toEqual([SBT4a, SBT4b]);
+  });
 });
 
 describe('cluster14 §e — full + victim 無 (AI) → per-card skip (throw 無)', () => {
@@ -163,6 +182,11 @@ describe('cluster14 §e — full + victim 無 (AI) → per-card skip (throw 無)
     });
     expect(s.players.self.scene.length, 'scene=5 維持 (登場できず)').toBe(5);
     expect(s.players.self.scene.filter((c) => c.cardId === SBT4a || c.cardId === SBT4b).length, '0体登場').toBe(0);
+    expect(s.players.self.remove, '登場できない選択カードは残り、後続FILE上1だけリムーブ').toEqual([
+      SBT4a,
+      SBT4b,
+      'D08017',
+    ]);
     expect(s.players.self.file.length, 'FILE上1リムーブは実行').toBe(1);
   });
 });

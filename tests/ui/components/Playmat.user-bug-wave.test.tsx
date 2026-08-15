@@ -10,6 +10,7 @@ import { useGameStateStore, type PendingEffectPick } from '@/ui/state/store';
 import { useEvidenceFlipPickerStore } from '@/ui/hooks/useEvidenceFlipPicker';
 import { useStackedCardCostPicker, useStackedCardCostPickerStore } from '@/ui/hooks/useStackedCardCostPicker';
 import { useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
+import { useSceneSwitchPickerStore } from '@/ui/hooks/useSceneSwitchPickerStore';
 import type { ResolvedCardMeta } from '@/ui/components/SceneArea';
 import type { HandCardMeta } from '@/ui/components/HandZone';
 
@@ -71,6 +72,7 @@ describe('Playmat user bug wave', () => {
   let root: Root;
 
   beforeEach(() => {
+    delete (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide;
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -86,6 +88,7 @@ describe('Playmat user bug wave', () => {
     useEvidenceFlipPickerStore.getState()._reset();
     useStackedCardCostPickerStore.setState({ current: null, _resolver: null });
     useTargetPickerStore.getState()._reset();
+    useSceneSwitchPickerStore.getState()._close();
     dispatchEngineActionMock.mockClear();
     surfacePendingSideChannelsMock.mockClear();
   });
@@ -93,6 +96,8 @@ describe('Playmat user bug wave', () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    useSceneSwitchPickerStore.getState()._close();
+    delete (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide;
   });
 
   it('keeps a manually opened self remove-area browser visible', () => {
@@ -164,6 +169,168 @@ describe('Playmat user bug wave', () => {
 
     expect(container.querySelector('.card-list-modal')).not.toBeNull();
     expect(container.querySelector('[data-testid="deck-reveal-overlay"]')).toBeNull();
+  });
+
+  it('routes a future deck scene-entry choice through the full-scene switch picker', async () => {
+    const state = createEmptyGameState();
+    state.players.self.scene = Array.from({ length: 5 }, (_, index) => ({
+      uid: `full-scene-${index}`,
+      cardId: 'D08001',
+      state: 'active' as const,
+      isNamed: false,
+      enterOrder: index + 1,
+      setCards: [],
+      stackedCards: 0,
+      keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null,
+      lpOverride: null,
+      turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+      declaredUseCount: {},
+    }));
+    const selectedUid = 'card:self:deck:D01012_MATCH#2';
+    useGameStateStore.setState({
+      gameState: state,
+      pendingEffectPick: pending({
+        candidates: [{ uid: selectedUid, cardId: 'D01012_MATCH', player: 'self', kind: 'card', area: 'deck', index: 2 }],
+        sceneEnterSwitchPlayer: 'self',
+      }),
+      pendingDeckReveal: {
+        player: 'self',
+        revealed: ['X1', 'X2', 'D01012_MATCH'],
+        matched: null,
+        awaitingPick: true,
+      },
+    });
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+
+    const selected = container.querySelector<HTMLButtonElement>(`[data-testid="card-list-pick-${selectedUid}"]`);
+    expect(selected).toBeInstanceOf(HTMLButtonElement);
+    await act(async () => {
+      selected!.click();
+      await Promise.resolve();
+    });
+    expect(useSceneSwitchPickerStore.getState().current).toMatchObject({
+      cardId: 'D01012_MATCH',
+      candidates: state.players.self.scene.map(({ uid, cardId }) => ({ uid, cardId })),
+    });
+    expect(dispatchEngineActionMock).not.toHaveBeenCalled();
+
+    const victim = container.querySelector<HTMLElement>('[data-testid="scene-card-pick-full-scene-2"]');
+    expect(victim).not.toBeNull();
+    await act(async () => { victim!.click(); });
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'effectPickResolve',
+      pickedUid: selectedUid,
+      switchRemoveUid: 'full-scene-2',
+    });
+  });
+
+  it('does not ask for an extra switch when the selected sceneRemove creates room before entry', async () => {
+    const state = createEmptyGameState();
+    state.players.self.scene = Array.from({ length: 5 }, (_, index) => ({
+      uid: `remove-before-entry-${index}`,
+      cardId: 'D08001',
+      state: 'active' as const,
+      isNamed: false,
+      enterOrder: index + 1,
+      setCards: [],
+      stackedCards: 0,
+      keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null,
+      lpOverride: null,
+      turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+      declaredUseCount: {},
+    }));
+    const selectedUid = 'remove-before-entry-2';
+    useGameStateStore.setState({
+      gameState: state,
+      pendingEffectPick: pending({
+        atomVerb: 'sceneRemove',
+        candidates: [{ uid: selectedUid, cardId: 'D08001', player: 'self', kind: 'char', area: 'scene' }],
+      }),
+    });
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+
+    const selected = container.querySelector<HTMLElement>(`[data-testid="scene-card-pick-${selectedUid}"]`);
+    expect(selected).not.toBeNull();
+    await act(async () => {
+      selected!.click();
+      await Promise.resolve();
+    });
+    expect(useSceneSwitchPickerStore.getState().current).toBeNull();
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'effectPickResolve',
+      pickedUid: selectedUid,
+    });
+  });
+
+  it('routes a future opponent deck scene-entry choice through the opponent full-scene switch picker', async () => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'opp';
+    const state = createEmptyGameState();
+    state.players.opp.scene = Array.from({ length: 5 }, (_, index) => ({
+      uid: `opponent-switch-victim-${index}`,
+      cardId: 'D08001',
+      state: 'active' as const,
+      isNamed: false,
+      enterOrder: index + 1,
+      setCards: [],
+      stackedCards: 0,
+      keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null,
+      lpOverride: null,
+      turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+      declaredUseCount: {},
+    }));
+    const selectedUid = 'card:opp:deck:D01012_MATCH#2';
+    useGameStateStore.setState({
+      gameState: state,
+      pendingEffectPick: pending({
+        player: 'opp',
+        ownerPlayer: 'opp',
+        candidates: [{
+          uid: selectedUid,
+          cardId: 'D01012_MATCH',
+          player: 'opp',
+          kind: 'card',
+          area: 'deck',
+          index: 2,
+        }],
+        sceneEnterSwitchPlayer: 'opp',
+      }),
+      pendingDeckReveal: {
+        player: 'opp',
+        revealed: ['X1', 'X2', 'D01012_MATCH'],
+        matched: null,
+        awaitingPick: true,
+      },
+    });
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+
+    const selected = container.querySelector<HTMLButtonElement>(`[data-testid="card-list-pick-${selectedUid}"]`);
+    expect(selected).toBeInstanceOf(HTMLButtonElement);
+    await act(async () => {
+      selected!.click();
+      await Promise.resolve();
+    });
+    expect(useSceneSwitchPickerStore.getState().current).toMatchObject({
+      player: 'opp',
+      cardId: 'D01012_MATCH',
+      candidates: state.players.opp.scene.map(({ uid, cardId }) => ({ uid, cardId })),
+    });
+    expect(dispatchEngineActionMock).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(
+      container.querySelector('[data-testid="scene-card-pick-opponent-switch-victim-0"]'),
+    );
+
+    const victim = container.querySelector<HTMLElement>('[data-testid="scene-card-pick-opponent-switch-victim-2"]');
+    expect(victim).not.toBeNull();
+    expect(container.querySelector('[data-testid^="scene-card-pick-full-scene-"]')).toBeNull();
+    await act(async () => { victim!.click(); });
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'effectPickResolve',
+      pickedUid: selectedUid,
+      switchRemoveUid: 'opponent-switch-victim-2',
+    });
   });
 
   it('routes the second duplicate public remove pick through CardListModal to effectPickResolve', () => {

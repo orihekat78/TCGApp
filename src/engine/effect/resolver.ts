@@ -28,6 +28,7 @@ import { resolve as resolveTarget } from '../target/resolve.js';
 import { _attachPendingDeckPlaceContinuation, _attachPendingDeckReorderContinuation, _peekPendingDeckPlaceSide, _peekPendingDeckReorderSide, peekPublicHandRevealToken, resolveBindRef, takePublicHandRevealToken } from './atom-handlers/_shared.js';
 import { _peekPendingEffectChoiceSide, _peekPendingEffectOptionalSide, _peekPendingEffectRepeatOptionalSide, _peekPendingRpsSide, _peekPendingSetCardChoiceSide, appendPendingChoiceContinuation, appendPendingRpsContinuation, pushPendingEffectRepeatOptionalSide, setPendingEffectRepeatOptionalRemainder, pushPendingRpsSide, setPendingRpsResume, pushPendingSetCardChoiceSide, setPendingSetCardChoiceResume, appendPendingSetCardChoiceContinuation, pushPendingEffectChoiceSide, setPendingChoiceBindings, setPendingChoiceResume, type PendingEffectPickSide, type RpsHand } from './pending-state.js';
 import { toPlainDeep } from './pending-state.js';
+import { continuationMayEnterSceneForPlayer } from './scene-switch.js';
 import {
   adoptEffectCausalTrace,
   cloneCausalEffectTrace,
@@ -35,6 +36,8 @@ import {
   handoffPausedEffectCausalTrace,
   markEffectCausalAwaitingResume,
 } from '../log/effect-causal.js';
+
+type Player = 'self' | 'opp';
 
 function decisionSource(ctx: EffectCtx): {
   cardId: string; abilityId: string; uid: string;
@@ -133,18 +136,28 @@ function pauseRuntimeHumanChoice(state: GameState, eff: Extract<Effect, { kind: 
 
 const continuationCtxSnapshots = new WeakMap<object, EffectCtx>();
 
-function attachContinuation(pick: { continuation?: ContinuationFrame }, frame: ContinuationFrame): void {
+function attachContinuation(
+  pick: { player?: Player; continuation?: ContinuationFrame; sceneEnterSwitchPlayer?: Player },
+  frame: ContinuationFrame,
+): void {
   // UI dispatch runs the resolver inside Immer. A continuation that crosses the
   // produce boundary must not retain revoked drafts. Plain engine callers rely on
   // the original ctx/bindings identity, so preserve it when no draft is present.
   const safeFrame = snapshotContinuationFrame(frame);
   if (!pick.continuation) {
     pick.continuation = safeFrame;
-    return;
+  } else {
+    let tail = pick.continuation;
+    while (tail.outer) tail = tail.outer;
+    tail.outer = safeFrame;
   }
-  let tail = pick.continuation;
-  while (tail.outer) tail = tail.outer;
-  tail.outer = safeFrame;
+  const entersSelf = continuationMayEnterSceneForPlayer(pick.continuation, 'self');
+  const entersOpp = continuationMayEnterSceneForPlayer(pick.continuation, 'opp');
+  const switchPlayer = entersSelf !== entersOpp ? (entersSelf ? 'self' : 'opp') : undefined;
+  // One bundled answer can carry a switch victim only when the same player
+  // owns both decisions. Cross-owner entry pauses later as its own scene pick.
+  if (switchPlayer === pick.player) pick.sceneEnterSwitchPlayer = switchPlayer;
+  else delete pick.sceneEnterSwitchPlayer;
 }
 
 function appendSetCardContinuation(remainder: Effect[], ctx: EffectCtx, kind: 'sequence' | 'chain'): void {

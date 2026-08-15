@@ -32,6 +32,7 @@ import {
   advanceDeckEpochAndRebaseBindings,
   isLiveDeckOccurrenceAuthority,
 } from '../deck-occurrence-authority.js';
+import { sceneEnterSwitchPickEffect } from '../scene-switch.js';
 
 function recordPublicZoneMove(
   s: GameState,
@@ -250,6 +251,30 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
             });
             return;
           }
+          // A multi-entry switch is one authority-bearing decision. Validate the
+          // complete victim set before consuming any selected source occurrence;
+          // otherwise a forged/duplicate/stale later victim can partially move
+          // earlier cards and make the answer non-atomic.
+          const switchOverflow = Math.max(
+            0,
+            s.players[enterP].scene.length + cardIds.length - sceneCap(s, enterP),
+          );
+          const switchUidSet = new Set(switchUids);
+          const liveSwitchUids = new Set(s.players[enterP].scene.map((character) => character.uid));
+          const switchAuthorityIsLive = switchUids.length === switchOverflow
+            && switchUidSet.size === switchUids.length
+            && switchUids.every((uid) => typeof uid === 'string'
+              && !uid.startsWith('$')
+              && liveSwitchUids.has(uid));
+          if (!switchAuthorityIsLive) {
+            (ctx.dyn ??= {}).chainStepNoApply = true;
+            if (typeof a.bind === 'string') (ctx.bindings as Record<string, unknown>)[a.bind] = [];
+            mutate.log.append(s, {
+              ts: Date.now(), player: enterP, turn: s.turn.number,
+              action: 'effect:sceneEnter:switch-authority-stale',
+            });
+            return;
+          }
           let tookFromDeck = false;
           const removedDeckOriginalIndexes: number[] = [];
           for (const [cardPosition, cid] of cardIds.entries()) {
@@ -406,27 +431,21 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
           return;
         }
       }
-      // 2026-06-04 switch-on-effect-enter (rules/20 スイッチ): 現場満杯 (5枚) の効果登場の早期分岐。
-      //  - switchRemoveUid 指定済 (UI が満杯時に SceneSwitchPickerModal で退場キャラを収集) → skip せず
-      //    下の解決済 path で switchEnter する。
-      //  - 未指定の AI 経路 (humanSide でない側) → スイッチ選択 UI/heuristic 無しなので skip する
-      //    (rules: 0枚選択=合法な辞退。modal も無駄 pick cycle も出さない、smoke 不変)。
-      //  - 未指定の human 経路 → ここでは skip せず短縮形/await pick を通し、reanimate 対象を選ばせる。
-      //    解決時に UI が現場満杯を検知して switch 対象を収集 → switchRemoveUid 付きで再解決される。
-      {
-        const seFullP = resolvePlayer(a.player, ctx);
-        const seHasSwitch = typeof a.switchRemoveUid === 'string' && !(a.switchRemoveUid as string).startsWith('$');
-        const seHumanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
-        if (s.players[seFullP].scene.length >= sceneCap(s, seFullP) && !seHasSwitch && seFullP !== seHumanSide) {
-          mutate.log.append(s, { ts: Date.now(), player: seFullP, turn: s.turn.number, action: 'effect:sceneEnter:scene-full-skip' });
-          return;
-        }
-      }
       // PA 短縮形 (area からの登場): cardId 不在 + from + n|max で source area pick を構築し、
       // cardId='$pick.cardId' + target を付与して下記 $pick.cardId awaiting-pick 経路に合流させる。
       // sourceSplice (remove/evidence から実体除去) は解決後の本処理が target.query.area を見て行う。
       if (a.cardId === undefined && typeof a.from === 'string' && hasNorMax(a)) {
         const seP0 = resolvePlayer(a.player, ctx);
+        const seHumanSide = (globalThis as {
+          __humanPlayerSide?: 'self' | 'opp' | null;
+        }).__humanPlayerSide ?? null;
+        if (s.players[seP0].scene.length >= sceneCap(s, seP0) && seP0 !== seHumanSide) {
+          mutate.log.append(s, {
+            ts: Date.now(), player: seP0, turn: s.turn.number,
+            action: 'effect:sceneEnter:scene-full-skip',
+          });
+          return;
+        }
         // BUG-186 (夜間 W0 2026-07-11): side は相対値のまま渡す (sidesForQuery が owner 相対解釈)。
         // 旧実装は解決済み絶対値 seP0 を渡しており、owner='opp' で side が反転し候補 0 になっていた
         // (BUG-174 と同族。sceneToDeck/sceneSetState は相対渡しで正しい)。chooser は絶対値のままで正。
@@ -500,7 +519,28 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         && !seSwitchRemoveUid.startsWith('$')
         && s.players[enterPlayer].scene.some(card => card.uid === seSwitchRemoveUid);
       if (seIsFull && !seHasValidSwitch) {
-        mutate.log.append(s, { ts: Date.now(), player: enterPlayer, turn: s.turn.number, action: 'effect:sceneEnter:scene-full-skip', target: cardId });
+        if (a.deferSceneSwitchChoice !== true) {
+          mutate.log.append(s, {
+            ts: Date.now(), player: enterPlayer, turn: s.turn.number,
+            action: 'effect:sceneEnter:scene-full-skip', target: cardId,
+          });
+          return;
+        }
+        // The player whose scene is full owns this second decision.  Do not
+        // attach its victim UID to an earlier cross-owner card selection.
+        tryRePickFromAtom(
+          s,
+          sceneEnterSwitchPickEffect(a, enterPlayer, ctx.source.player),
+          ctx,
+          {
+            byPlayer: enterPlayer,
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+          },
+        );
+        mutate.log.append(s, {
+          ts: Date.now(), player: enterPlayer, turn: s.turn.number,
+          action: 'effect:sceneEnter:awaiting-switch', target: cardId,
+        });
         return;
       }
       // D11014 a2 driver 2026-05-26: pick query で source area が指定されていれば、
@@ -542,13 +582,22 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       const boundRemoveOccurrence = allowedSourceAreas.includes('remove')
         ? resolveBoundOccurrenceRef(rawCardId, s, ctx, selectedSourcePlayer, 'remove')
         : { kind: 'unbound' as const };
+      const boundDeckOccurrence = allowedSourceAreas.includes('deck')
+        ? resolveBoundOccurrenceRef(rawCardId, s, ctx, selectedSourcePlayer, 'deck')
+        : { kind: 'unbound' as const };
       const invalidPhysicalSelection = heldClaim === undefined && (selectedOccurrences === null
         || boundRemoveOccurrence.kind === 'invalid'
+        || boundDeckOccurrence.kind === 'invalid'
         || (boundRemoveOccurrence.kind === 'live'
           && (boundRemoveOccurrence.cardId !== cardId
             || (selectedOccurrence !== undefined
               && (selectedOccurrence.area !== 'remove'
-                || selectedOccurrence.index !== boundRemoveOccurrence.index)))));
+                || selectedOccurrence.index !== boundRemoveOccurrence.index))))
+        || (boundDeckOccurrence.kind === 'live'
+          && (boundDeckOccurrence.cardId !== cardId
+            || (selectedOccurrence !== undefined
+              && (selectedOccurrence.area !== 'deck'
+                || selectedOccurrence.index !== boundDeckOccurrence.index)))));
       if (invalidPhysicalSelection) {
         (ctx.dyn ??= {}).chainStepNoApply = true;
         mutate.log.append(s, {
@@ -560,7 +609,9 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       const physicalOccurrence = selectedOccurrence
         ?? (boundRemoveOccurrence.kind === 'live'
           ? { cardId, area: 'remove' as const, player: selectedSourcePlayer, index: boundRemoveOccurrence.index }
-          : undefined);
+          : boundDeckOccurrence.kind === 'live'
+            ? { cardId, area: 'deck' as const, player: selectedSourcePlayer, index: boundDeckOccurrence.index }
+            : undefined);
       if (heldClaim !== undefined) {
         const evidence = mutate.evidence.takeHeldHiramekiEvidence(s, heldClaim);
         if (!evidence) {

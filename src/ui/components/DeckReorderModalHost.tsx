@@ -19,7 +19,7 @@ import {
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
-import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
+import { cardIdToDisplayName, publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { SelectableCardTile } from './SelectableCardTile.js';
 import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
@@ -28,9 +28,12 @@ import './SouzaReorderModal.css';
 
 export function DeckReorderModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingDeckReorder);
+  const publicPresentationActive = useGameStateStore((s) => (
+    s.pendingPublicHandReveal?.lifetime === 'presentation'
+  ));
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   // pending.cardIds をローカルで並べ替え。pending が変わるたび key で再マウントして初期化する。
-  return pending && isHumanDecisionOwner(pending.player, spectatorMode)
+  return pending && !publicPresentationActive && isHumanDecisionOwner(pending.player, spectatorMode)
     ? <DeckReorderModalInner key={`${pending.decisionId ?? 'legacy'}:${pending.cardIds.join('|')}`} pending={pending} />
     : null;
 }
@@ -50,21 +53,25 @@ function DeckReorderModalInner({
   // order は cardId の配列 (重複カード対応のため index ベースで扱う)。
   const [order, setOrder] = useState<OrderedCard[]>(() => asOrderedCards(cardIds));
   const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [announcement, setAnnouncement] = useState('');
   const expandModal = useCardExpandModal();
-  const dialogRef = useModalFocusTrap({ active: true });
   useEffect(() => {
     setOrder(asOrderedCards(cardIds));
     setDragIdx(null);
+    setAnnouncement('');
   }, [cardIds]);
 
   const move = (from: number, to: number): void => {
     if (to < 0 || to >= order.length || from === to) return;
+    const moved = order[from]!;
+    const occurrenceLabel = publicCardOccurrenceLabel(order.map((item) => item.cardId), moved.cardId, from);
     setOrder((cur) => {
       const next = [...cur];
       const [item] = next.splice(from, 1);
       next.splice(to, 0, item!);
       return next;
     });
+    setAnnouncement(`${cardIdToDisplayName(moved.cardId)}${occurrenceLabel ? ` ${occurrenceLabel}` : ''}を${to + 1}番目へ移動しました`);
   };
 
   const confirm = (): void => {
@@ -73,6 +80,18 @@ function DeckReorderModalInner({
       { type: 'deckReorderResolve', order: order.map((card) => card.cardId) },
     ));
   };
+
+  const confirmOriginal = (): void => {
+    dispatchEngineAction(bindPendingDecision(
+      pending,
+      { type: 'deckReorderResolve', order: [...cardIds] },
+    ));
+  };
+  const dialogRef = useModalFocusTrap({
+    active: true,
+    fallbackFocusSelector: '[data-testid="actions-panel-focus-anchor"]',
+    onEscape: confirmOriginal,
+  });
 
   return (
     <div
@@ -87,7 +106,7 @@ function DeckReorderModalInner({
       <div className="souza-modal">
         <div className="souza-header">
           <h2 id="deckreorder-title">デッキの下へ送る順</h2>
-          <p className="souza-sub">{`${order.length} 枚を好きな順番に並べ替えてデッキの下へ送ります (上が先)`}</p>
+          <p className="souza-sub">{`${order.length} 枚を好きな順番に並べ替えてデッキの下へ送ります (上が先／Escは元の順で確定)`}</p>
         </div>
         <div className="souza-body">
           <ul className="souza-list">
@@ -107,7 +126,6 @@ function DeckReorderModalInner({
                   cardId={card.cardId}
                   instanceId={card.occurrenceId}
                   occurrenceLabel={publicCardOccurrenceLabel(order.map((item) => item.cardId), card.cardId, i)}
-                  onSelect={() => {}}
                   onExpand={expandModal.open}
                 />
                 <div className="souza-row-controls">
@@ -135,8 +153,19 @@ function DeckReorderModalInner({
               </li>
             ))}
           </ul>
+          <p className="souza-live-status" aria-live="polite" data-testid="deck-reorder-live-status">
+            {announcement}
+          </p>
         </div>
         <div className="souza-actions">
+          <button
+            type="button"
+            className="souza-btn souza-btn-cancel"
+            onClick={confirmOriginal}
+            data-testid="deck-reorder-original-btn"
+          >
+            元の順で確定
+          </button>
           <button
             type="button"
             className="souza-btn souza-btn-confirm"

@@ -568,6 +568,7 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
   if (action.type === 'effectPickResolve'
     && publicHandRevealBefore?.lifetime === 'effect'
     && pendingPickBefore?.publicHandRevealToken === publicHandRevealBefore.resolutionToken
+    && publicHandRevealBefore.handSnapshot !== undefined
     && !sameCardMultiset(current.players[publicHandRevealBefore.owner].hand, publicHandRevealBefore.handSnapshot)) {
     // Serialized/stale UI may not apply a selection against a different hand.
     // Drop the exact resolver-owned decision by its stable token, then commit

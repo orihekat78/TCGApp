@@ -1,9 +1,9 @@
 // E2E regression: BUG-136 — deckToBottomBound「残りを好きな順番でデッキの下に移す」順序選択 modal
 //
 // 実機 UI 経路 (modal 表示 → 並べ替え操作 → 確定 → deck 底ブロック再配置) を検証する。
-// engine 側の side-channel set / deckReorderResolve は unit test (bug-136-deck-reorder.test.ts) で
-// カバー済。本 spec は UI → dispatch → engine の経路 (DeckReorderModalHost の ▲▼ 並べ替え +
-// deck-reorder-confirm-btn → deck 反映) を実機で踏む。
+// engine 側の実カード/resolver ownership は user-bug-wave-ui.spec.ts の B04026 公開経路でカバー。
+// 本 spec は engine-owned authority を使い、UI → dispatch → engine の並べ替え操作と重複occurrenceを
+// 独立して実機検証する。
 //
 // rules: 13-keywords.md §捜査X (「好きな順番でデッキの下に移す」), 26-qa-deck-refresh.md
 import { test, expect } from '@playwright/test';
@@ -64,34 +64,39 @@ test.describe('BUG-136 — deckToBottomBound 順序選択 modal (実機)', () =>
   });
 
   test('drag で並べ替え (HTML5 drag): row0 を row2 へ → 末尾へ移動', async ({ page }) => {
-    await setupGamePage(page);
+    const { errors } = await setupGamePage(page);
     await page.evaluate(() => {
       (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
     });
     await buildGameState(page, (gs) => {
       const self = (gs as unknown as { players: { self: { deck: string[] } } }).players.self;
-      self.deck = ['D08001', 'D08003', 'D08007', 'D08013'];
+      self.deck = ['D08001', 'D08003', 'D08013', 'D08007', 'D08003'];
       (gs as unknown as { turn: { number: number; player: string; phase: string; isFirstPlayerFirstTurn: boolean } }).turn =
         { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     });
-    await surfaceDeckReorderDecision(page, ['D08003', 'D08007', 'D08013']);
+    await surfaceDeckReorderDecision(page, ['D08003', 'D08007', 'D08003']);
 
     await expect(page.locator('[data-testid="deck-reorder-modal"]')).toBeVisible();
-    // row0 (D08003) を row2 (D08013) 位置へ drag → [D08007, D08013, D08003]
+    const rows = page.locator('[data-testid^="deck-reorder-row-"]');
+    const instanceOrder = async (): Promise<string[]> => rows.locator('[data-instance-id]').evaluateAll(
+      (nodes) => nodes.map((node) => node.getAttribute('data-instance-id') ?? ''),
+    );
+    expect(await instanceOrder()).toEqual(['D08003#0', 'D08007#1', 'D08003#2']);
+    // 非連続occurrenceの先頭D08003を末尾へ。もう1枚のD08003と区別して並べ替える。
     test.skip(test.info().project.use.isMobile === true,
       'HTML5 drag is a desktop-only enhancement; the mobile landscape path is covered by the 44px arrow controls below.');
     await page.locator('[data-testid="deck-reorder-row-0"]').dragTo(page.locator('[data-testid="deck-reorder-row-2"]'));
+    expect(await instanceOrder()).toEqual(['D08007#1', 'D08003#2', 'D08003#0']);
     await page.locator('[data-testid="deck-reorder-confirm-btn"]').click();
 
     await page.waitForFunction(() => {
       const w = window as unknown as { __game: { getState: () => { gameState: { players: { self: { deck: string[] } } } } } };
       const deck = w.__game.getState().gameState.players.self.deck;
-      return deck.length === 4 && deck[3] === 'D08003';
+      return deck.length === 5 && deck[2] === 'D08007' && deck[4] === 'D08003';
     });
     const gs = await getGameState(page);
     const deck = (gs as unknown as { players: { self: { deck: string[] } } }).players.self.deck;
-    // D08003 が末尾 (最下) へ移動したことを確認 (drag が move() を呼んだ証拠)。
-    expect(deck[3]).toBe('D08003');
-    expect(deck[0]).toBe('D08001'); // rest 不変
+    expect(deck).toEqual(['D08001', 'D08013', 'D08007', 'D08003', 'D08003']);
+    expect(errors).toEqual([]);
   });
 });

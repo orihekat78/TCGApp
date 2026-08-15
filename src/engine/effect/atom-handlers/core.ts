@@ -9,7 +9,7 @@ import { tryRePickFromAtom } from '../resolve-picks.js';
 // WC2b (2026-07-11): invokeHiramekiOfCard atom-level optional prompt 用 (pending-state は leaf — cycle 無し)。
 import { pushPendingEffectOptionalSide, setPendingOptionalResume, setPendingOptionalBindings, setPendingOptionalCostPaid } from '../pending-state.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from '../atom-pick-spec.js';
-import { requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax, resolveDeltaToNumber, publicHandRevealToken, queuePendingPublicHandRevealSide, readHeldHiramekiSelfClaim, resolveBoundOccurrenceRef } from './_shared.js';
+import { allocatePublicHandRevealToken, requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax, resolveDeltaToNumber, publicHandRevealToken, queuePendingPublicHandRevealSide, readHeldHiramekiSelfClaim, resolveBoundOccurrenceRef } from './_shared.js';
 import { isDynObject, resolveDynNumber } from '../../dyn/eval.js';
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, FileCard, PublicCausalZone } from '../../types/index.js';
@@ -131,6 +131,29 @@ function setCardMoveBinding(
 ): void {
   if (typeof bind !== 'string') return;
   (ctx.bindings as Record<string, unknown>)[bind] = cards.map((card) => ({ kind: 'card', ...card }));
+}
+
+function presentPublicSelectedDeckCard(
+  s: GameState,
+  ctx: EffectCtx,
+  owner: Player,
+  cardIds: readonly string[],
+  presentation: unknown,
+): void {
+  if (presentation !== 'public-selected-card' || cardIds.length !== 1) return;
+  queuePendingPublicHandRevealSide({
+    owner,
+    audience: 'all',
+    cardIds: [cardIds[0]!],
+    lifetime: 'presentation',
+    resolutionToken: allocatePublicHandRevealToken(s),
+    origin: 'deck-selected-card',
+    source: {
+      cardId: ctx.source.cardId,
+      abilityId: ctx.source.abilityId,
+      uid: ctx.source.uid,
+    },
+  });
 }
 
 function boundDeckReferenceKeys(
@@ -1666,6 +1689,13 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
         }
         setCardMoveBinding(ctx, a.bind, moved);
         recordPublicZoneMove(s, ctx, hadP, 'deck', 'hand', moved.length);
+        presentPublicSelectedDeckCard(
+          s,
+          ctx,
+          hadP,
+          moved.map((entry) => entry.cardId),
+          a.presentation,
+        );
         if (moved.length > 0 && a.deferRefresh !== true) refreshDeckForEffect(s, hadP, ctx);
         mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', result: moved.length ? `moved=${moved.length}` : 'none' });
         return;
@@ -1718,6 +1748,7 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
       }
       setCardMoveBinding(ctx, a.bind, moved ? [{ cardId: hadCardId, area: 'hand', player: hadP, index: handIndex }] : []);
       recordPublicZoneMove(s, ctx, hadP, 'deck', 'hand', moved ? 1 : 0);
+      presentPublicSelectedDeckCard(s, ctx, hadP, moved ? [hadCardId] : [], a.presentation);
       if (moved && a.deferRefresh !== true) refreshDeckForEffect(s, hadP, ctx);
       mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', result: moved ? 'moved=1' : 'not-found' });
       return;

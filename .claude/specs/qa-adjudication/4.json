@@ -1780,11 +1780,12 @@
     {
       "qaId": "card:D01012:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
       "answerHash": "bd1021263916b76aa59508c6813bbffe73c698f6db8511f6e09c600022e7d446",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d01/D01012.ts:1"
+        "src:src/cards/ct-d01/D01012.ts:1",
+        "tests:tests/cards/official-qa/leave-trigger-top-three-public.test.ts:504"
       ]
     },
     {

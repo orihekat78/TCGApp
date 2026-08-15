@@ -362,6 +362,9 @@
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
   z-index: 100;
+  /* The status surface may overlap scaled scene cards at 851x393. Only its
+     explicit cancel control owns pointer input; card targets remain tappable. */
+  pointer-events: none;
 }
 .scene-pick-skip-banner {
   color: #ffd966;
@@ -378,6 +381,7 @@
   font-size: 12px;
   cursor: pointer;
   transition: background 120ms ease, border-color 120ms ease;
+  pointer-events: auto;
 }
 .scene-pick-skip-btn:hover {
   background: rgba(80, 80, 80, 0.8);

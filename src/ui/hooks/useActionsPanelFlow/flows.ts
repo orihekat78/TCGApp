@@ -940,6 +940,7 @@ export async function runHandUseFlow(opts: {
   const interactionEpoch = currentInteractionEpoch();
   const removeUid = await new Promise<string | null>((resolve) => {
     useSceneSwitchPickerStore.getState()._open({
+      player: opts.player,
       cardId: opts.cardId,
       newCardName,
       candidates: sceneChars,

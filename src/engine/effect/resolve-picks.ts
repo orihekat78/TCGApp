@@ -44,6 +44,12 @@ import {
   recordEffectCausalDecision,
   recordEffectCausalOperation,
 } from '../log/effect-causal.js';
+import {
+  isSceneEnterSwitchPickArgs,
+  isValidSceneEnterSwitchPickAuthority,
+  resolveSceneEnterSwitchPickArgs,
+  sceneEnterOwnsNextPick,
+} from './scene-switch.js';
 
 type Player = 'self' | 'opp';
 
@@ -577,6 +583,16 @@ function substituteAtomPick(
     return { kind: 'atom', verb: atom.verb as never, args: dynResolved } as Effect;
   }
 
+  // A fixed scene-entry card can carry a pick-shaped target solely as exact
+  // source-zone provenance.  It is not another player decision.  Rewriting
+  // that target to an array drops area/side/occurrence authority before the
+  // runtime handler can validate and consume the selected physical card.
+  if (verbStr === 'sceneEnter'
+    && !isSceneEnterSwitchPickArgs(args)
+    && !sceneEnterOwnsNextPick(args)) {
+    return atom as Effect;
+  }
+
   // BUG-065: 2 つの effect 記述形式を区別して解決:
   //   Pattern A: { uid: '$pick', target: {kind:'pick',...} } (sceneRemove / charModifyAP 等)
   //              → uid を picked.uid に置換、target を drop
@@ -842,6 +858,15 @@ function substituteAtomPick(
       // cluster14: atom が skipResolvesAtom:true を持つ場合 (B09010「2枚まで登場」+ 後続 FILE上1リムーブ)、
       //   0枚 decline を applyPickSkipAndContinuation で解決し remainder を実行する (deckRevealUntil と同契約)。
       skipResolvesAtom: (args as { skipResolvesAtom?: boolean }).skipResolvesAtom === true,
+      ...(isSceneEnterSwitchPickArgs(args)
+        ? {
+            continuation: {
+              remainder: [],
+              ctx: toPlainDeep(ctx) as EffectCtx,
+              kind: 'sequence' as const,
+            },
+          }
+        : {}),
       // W2b (P50/r27): mustBeSelectedByOppEvent forced 集合。UI (auto-select+lock/restrict) と
       // chooseAiPick が honor。空なら undefined (従来 pending と byte 等価)。
       ...(forcedUids.length > 0 ? { forcedUids } : {}),
@@ -883,6 +908,25 @@ function substituteAtomPick(
 
   if (isPatternA) {
     if (picked.kind !== 'char') return atom as Effect;
+    if (isSceneEnterSwitchPickArgs(args)) {
+      if (!isValidSceneEnterSwitchPickAuthority(
+        args,
+        byPlayer,
+        ctx.source.player,
+        ctx.source.player,
+      )) {
+        return { kind: 'parallel', steps: [] };
+      }
+      const restored = resolveSceneEnterSwitchPickArgs(args, picked.uid);
+      if (restored === null) return { kind: 'parallel', steps: [] };
+      return {
+        kind: 'atom',
+        verb: 'sceneEnter',
+        args: markAutonomousPick(
+          resolveDynArgs(state, restored, ctx) as Record<string, unknown>,
+        ),
+      };
+    }
     const intercept = findChooseIntercept(state, picked.uid, ctx);
     const decisionTrace = intercept.kind === 'none' ? undefined : ensureEffectCausalTrace(state, ctx);
     if (decisionTrace !== undefined) recordEffectCausalDecision(state, decisionTrace, byPlayer);

@@ -22,13 +22,14 @@
     {
       "qaId": "card:B01005:c96c7c48c5f3fa5f6d57fefabb399f644dadc0ac1aa07b88a6434023d324b502",
       "answerHash": "59098eb436b7ad9dfd8580bc0c2f014c19f3bdad623a366d3feeca80860cf748",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/12-next-hint.md:10",
         "src:src/cards/ct-p01/B01005.ts:45",
-        "src:src/cards/ct-p01/B01009.ts:43"
+        "src:src/cards/ct-p01/B01009.ts:43",
+        "tests:tests/cards/miniwave2-nexthint/probes.test.ts:207"
       ],
       "noteCodes": [
         "OVERRIDDEN-HAND-LEVEL-TRIGGER-TEST-MISSING"
@@ -1830,11 +1831,12 @@
     {
       "qaId": "card:D05007:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
       "answerHash": "bd1021263916b76aa59508c6813bbffe73c698f6db8511f6e09c600022e7d446",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d05/D05007.ts:1"
+        "src:src/cards/ct-d05/D05007.ts:1",
+        "tests:tests/cards/official-qa/leave-trigger-top-three-public.test.ts:527"
       ]
     },
     {

@@ -37,7 +37,7 @@ describe('terminal interaction cleanup', () => {
     const stacked = useStackedCardCostPicker().ask({ sourceName: 'Stacked', candidates: [], nMin: 0, nMax: 0 });
     const mulligan = promptMulligan({ player: 'self', hand: ['M'] });
     let sceneResult: string | null | undefined;
-    useSceneSwitchPickerStore.getState()._open({ cardId: 'C', newCardName: 'Card', candidates: [], resolve: (value) => { sceneResult = value; } });
+    useSceneSwitchPickerStore.getState()._open({ player: 'self', cardId: 'C', newCardName: 'Card', candidates: [], resolve: (value) => { sceneResult = value; } });
     useContactModalStore.getState()._setGuardPicker({ actionId: 'action', candidates: [] });
 
     const terminal = structuredClone(initial);
@@ -85,7 +85,7 @@ describe('terminal interaction cleanup', () => {
     await expect(promptMulligan({ player: 'self', hand: ['M'] })).resolves.toEqual([]);
 
     let sceneResult: string | null | undefined;
-    useSceneSwitchPickerStore.getState()._open({ cardId: 'C', newCardName: 'Card', candidates: [], resolve: (value) => { sceneResult = value; } });
+    useSceneSwitchPickerStore.getState()._open({ player: 'self', cardId: 'C', newCardName: 'Card', candidates: [], resolve: (value) => { sceneResult = value; } });
     useContactModalStore.getState()._setGuardPicker({ actionId: 'late', candidates: [] });
     expect(sceneResult).toBeNull();
     expect(useSceneSwitchPickerStore.getState().current).toBeNull();

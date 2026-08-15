@@ -12,7 +12,7 @@ import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/l
 import { registerReservedEffectListener, _resetReservedEffectsRegistered } from '@/engine/listeners/reserved-effects';
 import { register as registerCardDef, _resetRegistry } from '@/engine/read/def';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
-import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
+import { _clearPendingEffectPickQueue, _peekPendingEffectPickQueueLength } from '@/engine/effect/resolve-picks';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { mutate as mutateAll } from '@/engine/mutate/index';
 import { run as runEffect } from '@/engine/effect/resolver';
@@ -473,6 +473,7 @@ describe('step12 B02088 犯人', () => {
     });
     expect(s2.players.self.scene.some(c => c.cardId === 'B02088'), 'フル = 登場しない').toBe(false);
     expect(s2.players.self.remove, 'リムーブに残る').toContain('B02088');
+    expect(_peekPendingEffectPickQueueLength(), '空きがない場合は switch decision を作らない').toBe(0);
   });
 });
 

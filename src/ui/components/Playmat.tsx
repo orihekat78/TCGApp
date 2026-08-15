@@ -88,6 +88,7 @@ import { getHumanDecisionSide } from '@/ui/services/humanDecisionOwner.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { char as readChar } from '@/engine/read/char.js';
 import { sceneCap } from '@/engine/read/scene-cap.js'; // engine E3 P11 (2026-07-02): 現場登場上限 (既定5、case override 可)
+import { isSceneEnterSwitchPickArgs } from '@/engine/effect/scene-switch.js';
 // D08021 driver 2026-05-26: distinctNames 制約 (rules/19) を multi-pick UI で
 // 適用するため、name component 計算 helper を import。
 import { allCardNameComponentsForDef } from '@/engine/target/card-def-registry.js';
@@ -408,6 +409,8 @@ export function Playmat({
   const pendingPickForArea = useGameStateStore((s) => s.pendingEffectPick);
   const pendingDeckReveal = useGameStateStore((s) => s.pendingDeckReveal);
   const pendingDeckReorder = useGameStateStore((s) => s.pendingDeckReorder);
+  const playmatSpectatorMode = useGameStateStore((s) => s.spectatorMode);
+  const humanDecisionSide = getHumanDecisionSide(playmatSpectatorMode);
   const pickerPhase = useTargetPickerStore((s) => s.phase);
   const { pick: pickTarget, confirm: confirmTarget, cancel: cancelTarget } = useTargetPicker();
   useEffect(() => {
@@ -442,7 +445,7 @@ export function Playmat({
   const activeCardUid = storeActiveCardUid ?? effectCardUid;
   const activeCardLabel = storeActiveCardUid ? storeActiveCardLabel : effectCardUid ? '効果解決' : null;
   const isDiscardPick =
-    pendingPickForArea?.player === 'self' && pendingPickForArea.atomVerb === 'discard';
+    pendingPickForArea?.player === humanDecisionSide && pendingPickForArea.atomVerb === 'discard';
   // 2026-05-28: ネクストヒント step2 pick。useNextHintPicker store に current が
   // set されている間、HandZone を expand + pick mode (FILE-top + 使用可能手札を黄色枠)。
   const nextHintPick = useNextHintPickerStore((s) => s.current);
@@ -482,7 +485,7 @@ export function Playmat({
     dispatchEngineAction({ type: 'actionAdvance', actionId: cur.actionId });
   };
   const pickAreaKind: CardListKind | null = (() => {
-    if (!pendingPickForArea || pendingPickForArea.player !== 'self') return null;
+    if (!pendingPickForArea || pendingPickForArea.player !== humanDecisionSide) return null;
     if (pendingPickForArea.atomVerb === 'deckRevealUntil') return 'deck';
     if (pendingPickForArea.atomVerb === 'evidenceToHand') return 'evidence';
     if (pendingPickForArea.atomVerb === 'handAddFromRemove') {
@@ -573,9 +576,10 @@ export function Playmat({
   const declaredSourceNeedsModal = declaredSourcePick.some((candidate) => candidate.areaLabel === 'Evidence' || candidate.areaLabel === 'FILE');
   const pickModalKind: CardListKind | null = pickAreaKind ?? (declaredSourceNeedsModal ? 'selection' : null);
   const pickModalSide: 'self' | 'opp' = (() => {
-    if (pickAreaKind !== 'partner-area') return 'self';
     const players = [...new Set((pendingPickForArea?.candidates ?? []).map((candidate) => candidate.player))];
-    return players.length === 1 ? players[0]! : 'self';
+    if (players.length === 1) return players[0]!;
+    if (pickAreaKind === 'deck' && pendingDeckReveal) return pendingDeckReveal.player;
+    return pendingPickForArea?.player ?? humanDecisionSide ?? 'self';
   })();
   useEffect(() => {
     if (pickModalKind === null) return;
@@ -615,7 +619,7 @@ export function Playmat({
     if (isCutinPick) setHandExpanded(true);
   }, [isCutinPick]);
   const isHandSceneEnterPick = (() => {
-    if (pendingPickForArea?.player !== 'self' || pendingPickForArea.atomVerb !== 'sceneEnter') return false;
+    if (pendingPickForArea?.player !== humanDecisionSide || pendingPickForArea.atomVerb !== 'sceneEnter') return false;
     const args = pendingPickForArea.atomArgs as { target?: { query?: { area?: string } } };
     return args.target?.query?.area === 'hand';
   })();
@@ -663,14 +667,15 @@ export function Playmat({
       { type: 'effectPickResolve', pickedUid: uid },
     ));
   } : undefined;
-  // rules/20 §スイッチ: switch victim (常に self 現場) も現場直接クリックで収集 (旧 SceneSwitchPickerModal 廃止)。
-  // useSceneSwitchPickerStore.current が active な間、self 現場の候補を effect-pickable 化し
+  // rules/20 §スイッチ: switch victim を対象 player の現場から直接クリックで収集 (旧 SceneSwitchPickerModal 廃止)。
+  // useSceneSwitchPickerStore.current が active な間、対象現場の候補を effect-pickable 化し
   // click で resolve+close。辞退 (キャンセル) = resolve(null)。effect-pick とは構造的に排他
   // (switch 中は pending=null or sceneEnter で isScenePick=false)。
   const switchPicker = useSceneSwitchPickerStore((s) => s.current);
   const switchActive = switchPicker !== null;
   const switchVictimBlocked = useGameStateStore(selectSwitchVictimBlocked);
-  const switchVictimUidsSelf = new Set<string>(switchPicker?.candidates.map((c) => c.uid) ?? []);
+  const switchPlayer = switchPicker?.player;
+  const switchVictimUids = new Set<string>(switchPicker?.candidates.map((c) => c.uid) ?? []);
   const handleSwitchVictim = (uid: string): void => {
     if (selectSwitchVictimBlocked(useGameStateStore.getState())) return;
     const c = useSceneSwitchPickerStore.getState().current;
@@ -699,12 +704,14 @@ export function Playmat({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [replayReadOnly, switchActive]);
-  // MUX (設計 v2): self/opp 現場の pick prop は switch 中なら switch victim を優先 (victim は常に self)。
+  // MUX (設計 v2): self/opp 現場の pick prop は switch 中なら対象 side の switch victim を優先。
   const switchPickEnabled = switchActive && !switchVictimBlocked;
-  const selfScenePickUids = switchPickEnabled ? switchVictimUidsSelf : switchActive ? EMPTY_UID_SET : scenePickUidsSelf;
-  const oppScenePickUids = switchActive ? EMPTY_UID_SET : scenePickUidsOpp;
-  const selfOnPickChar = switchPickEnabled ? handleSwitchVictim : switchActive ? undefined : handleScenePick;
-  const oppOnPickChar = switchActive ? undefined : handleScenePick;
+  const selfSwitchEnabled = switchPickEnabled && switchPlayer === 'self';
+  const oppSwitchEnabled = switchPickEnabled && switchPlayer === 'opp';
+  const selfScenePickUids = selfSwitchEnabled ? switchVictimUids : switchActive ? EMPTY_UID_SET : scenePickUidsSelf;
+  const oppScenePickUids = oppSwitchEnabled ? switchVictimUids : switchActive ? EMPTY_UID_SET : scenePickUidsOpp;
+  const selfOnPickChar = selfSwitchEnabled ? handleSwitchVictim : switchActive ? undefined : handleScenePick;
+  const oppOnPickChar = oppSwitchEnabled ? handleSwitchVictim : switchActive ? undefined : handleScenePick;
 
   // switch-on-effect-enter (rules/20 §スイッチ): リムーブ等からの効果登場 (sceneEnter) で現場が満杯
   // (5枚) のとき、reanimate 対象を選んだ後に SceneSwitchPickerModal で退場キャラを収集してから resolve。
@@ -721,9 +728,16 @@ export function Playmat({
       ? currentPending === pend
       : currentPending?.decisionId === pend.decisionId;
     if (!isCurrent) return;
-    if (pend && pend.atomVerb === 'sceneEnter' && gs && gs.players[pend.player].scene.length >= sceneCap(gs, pend.player)) {
+    const switchPlayer = isSceneEnterSwitchPickArgs(pend.atomArgs)
+      ? undefined
+      : pend.atomVerb === 'sceneEnter'
+        ? pend.player
+        : pend.sceneEnterSwitchPlayer === pend.player
+          ? pend.sceneEnterSwitchPlayer
+          : undefined;
+    if (switchPlayer && gs && gs.players[switchPlayer].scene.length >= sceneCap(gs, switchPlayer)) {
       const reanimateCardId = pend.candidates.find((c) => c.uid === uid)?.cardId ?? '';
-      const sceneChars = gs.players[pend.player].scene.map((c) => ({
+      const sceneChars = gs.players[switchPlayer].scene.map((c) => ({
         uid: c.uid,
         cardId: c.cardId,
         name: readDef.card(c.cardId)?.names?.[0] ?? c.cardId,
@@ -736,7 +750,7 @@ export function Playmat({
       setSwitchSessionActive(true);
       const interactionEpoch = currentInteractionEpoch();
       const removeUid = await new Promise<string | null>((resolve) => {
-        useSceneSwitchPickerStore.getState()._open({ cardId: reanimateCardId, newCardName, candidates: sceneChars, resolve });
+        useSceneSwitchPickerStore.getState()._open({ player: switchPlayer, cardId: reanimateCardId, newCardName, candidates: sceneChars, resolve });
       });
       if (!isCurrentLiveInteraction(interactionEpoch)) {
         setSwitchSessionActive(false);
@@ -1055,6 +1069,9 @@ export function Playmat({
             onSetInspect={replayReadOnly || terminal ? undefined : inspectSetCards}
             pickCharUids={replayReadOnly ? EMPTY_UID_SET : oppScenePickUids}
             onPickChar={replayReadOnly ? undefined : oppOnPickChar}
+            autoFocusPickUid={replayReadOnly || switchPlayer !== 'opp'
+              ? undefined
+              : switchPicker?.candidates[0]?.uid}
             activeCardUid={activeCardUid}
             activeCardLabel={activeCardLabel}
           />
@@ -1081,7 +1098,9 @@ export function Playmat({
             onSetInspect={replayReadOnly || terminal ? undefined : inspectSetCards}
             pickCharUids={replayReadOnly ? EMPTY_UID_SET : selfScenePickUids}
             onPickChar={replayReadOnly ? undefined : selfOnPickChar}
-            autoFocusPickUid={replayReadOnly ? undefined : switchPicker?.candidates[0]?.uid}
+            autoFocusPickUid={replayReadOnly || switchPlayer !== 'self'
+              ? undefined
+              : switchPicker?.candidates[0]?.uid}
             // 2026-05-30: ネクストヒント中は FILE 表示を引いた後の枚数 (-1) にして誤解を防ぐ
             nextHintDrawPreview={replayReadOnly ? false : isNextHintPick}
             activeCardUid={activeCardUid}
@@ -1249,7 +1268,7 @@ export function Playmat({
           // User vision: pending pick が当該 area なら pick mode で開く
           const isPickModeForThisArea =
             (declaredSourcePick.length > 0 && areaModal.kind === 'selection' && areaModal.origin === 'pick') ||
-            (pendingPickForArea?.player === 'self' &&
+            (pendingPickForArea?.player === humanDecisionSide &&
             ((pendingPickForArea.atomVerb === 'evidenceToHand' && areaModal.kind === 'evidence') ||
               (pendingPickForArea.atomVerb === 'handAddFromRemove' && areaModal.kind === pickAreaKind) ||
               (pendingPickForArea.atomVerb === 'deckRevealUntil' && areaModal.kind === 'deck') ||
@@ -1364,6 +1383,7 @@ export function Playmat({
                         .map((c) => ({ uid: c.uid, cardId: c.cardId, name: readDef.card(c.cardId)?.names?.[0] ?? c.cardId, state: c.state, isNamed: c.isNamed }));
                       const v = await new Promise<string | null>((resolve) => {
                         useSceneSwitchPickerStore.getState()._open({
+                          player: pendE.player,
                           cardId: '', newCardName: `登場${uids.length}枚 — 退場 ${i + 1}/${overflow}`, candidates: sceneChars, resolve,
                         });
                       });
@@ -1560,6 +1580,7 @@ function PlaymatHiramekiPickerModal(): JSX.Element | null {
     const interactionEpoch = currentInteractionEpoch();
     const removeUid = await new Promise<string | null>((resolve) => {
       useSceneSwitchPickerStore.getState()._open({
+        player: requirement.player,
         cardId: requirement.cardId,
         newCardName: readDef.card(requirement.cardId)?.names?.[0] ?? requirement.cardId,
         candidates: requirement.candidates.map(card => ({

@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { def as readDef } from '@/engine/read/def.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import { useGameStateStore, type PendingPublicHandReveal } from '@/ui/state/store.js';
 import { surfacePendingSideChannels } from '@/ui/hooks/useEngineDispatch.js';
 import { shouldRenderEffectPicker } from '@/ui/services/effectPickerVisibility.js';
@@ -14,6 +15,7 @@ type PublicHandRevealCardsProps = {
   onOpenCard: (cardId: string) => void;
   embedded?: boolean;
   onClose?: () => void;
+  headingId?: string;
 };
 
 /** Shared card renderer. Linked effect reveals live inside their owning dialog. */
@@ -22,12 +24,17 @@ export function PublicHandRevealCards({
   onOpenCard,
   embedded = false,
   onClose,
+  headingId,
 }: PublicHandRevealCardsProps): JSX.Element {
   const owner = pending.owner === 'self' ? '自分' : '相手';
+  const heading = pending.origin === 'deck-selected-card'
+    ? '公開して手札に加えたカード'
+    : `${owner}の手札を公開`;
   return (
     <aside
       className={`public-hand-reveal-window${embedded ? ' public-hand-reveal-window--embedded' : ''}`}
       data-testid="public-hand-reveal-window"
+      data-origin={pending.origin ?? 'hand-reveal'}
       aria-live="polite"
       onKeyDown={onClose ? (event) => {
         if (event.key !== 'Escape') return;
@@ -37,7 +44,7 @@ export function PublicHandRevealCards({
       } : undefined}
     >
         <div className="public-hand-reveal-heading-row">
-          <div className="public-hand-reveal-heading" data-testid="public-hand-reveal-owner">{owner}の手札を公開</div>
+          <div id={headingId} className="public-hand-reveal-heading" data-testid="public-hand-reveal-owner">{heading}</div>
           {onClose && (
             <button
               type="button"
@@ -62,7 +69,7 @@ export function PublicHandRevealCards({
                 <button
                   type="button"
                   data-testid={`public-hand-reveal-detail-${index}`}
-                  aria-label={`Details for ${name}, occurrence ${index + 1}`}
+                  aria-label={`「${name}」の詳細（${index + 1}枚目）`}
                   onClick={() => onOpenCard(cardId)}
                 >
                   <span aria-hidden="true">🔍</span>
@@ -72,6 +79,39 @@ export function PublicHandRevealCards({
           })}
         </div>
       </aside>
+  );
+}
+
+function PresentationPublicHandReveal({
+  pending,
+  onOpenCard,
+  onClose,
+}: {
+  pending: PendingPublicHandReveal;
+  onOpenCard: (cardId: string) => void;
+  onClose: () => void;
+}): JSX.Element {
+  const dialogRef = useModalFocusTrap({
+    active: true,
+    initialFocusSelector: '.public-hand-reveal-close',
+    onEscape: onClose,
+  });
+  return (
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="public-hand-reveal-title"
+      data-match-modal-registered="true"
+      tabIndex={-1}
+    >
+      <PublicHandRevealCards
+        pending={pending}
+        onOpenCard={onOpenCard}
+        onClose={onClose}
+        headingId="public-hand-reveal-title"
+      />
+    </div>
   );
 }
 
@@ -125,11 +165,15 @@ export function PublicHandRevealWindow(): JSX.Element | null {
     : undefined;
   return (
     <>
-      <PublicHandRevealCards
-        pending={pending}
-        onOpenCard={expandModal.open}
-        onClose={close}
-      />
+      {close ? (
+        <PresentationPublicHandReveal
+          pending={pending}
+          onOpenCard={expandModal.open}
+          onClose={close}
+        />
+      ) : (
+        <PublicHandRevealCards pending={pending} onOpenCard={expandModal.open} />
+      )}
       <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
     </>
   );

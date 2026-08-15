@@ -148,6 +148,8 @@ export type PendingEffectPickSide = {
   atomVerb: string;
   /** atom args (uid='$pick' 含む、resolve 後に上書きされる) */
   atomArgs: Record<string, unknown>;
+  /** Safe UI hint: this pick resumes into a scene entry for this absolute side. */
+  sceneEnterSwitchPlayer?: Player;
   /** 任意効果の min/max (n.min === 0 なら skip 可) */
   nMin: number;
   nMax: number;

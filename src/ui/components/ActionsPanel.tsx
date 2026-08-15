@@ -178,6 +178,8 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
       className={`actions-panel${interactionLocked ? ' locked' : ''}`}
       aria-label="操作パネル"
       aria-busy={interactionLocked || undefined}
+      data-testid="actions-panel-focus-anchor"
+      tabIndex={-1}
     >
       <div className="actions-header">ACTIONS</div>
 

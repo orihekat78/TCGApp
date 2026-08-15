@@ -58,3 +58,26 @@
 - B06027 full-scene Hirameki requires a current exact victim UID. Human UI uses
   a focused native scene-card control and blocks cancel while another decision
   owns input; AI, persisted state, and resolver revalidate the same witness.
+
+## 2026-08-15: Leave interception and replacement continuation
+
+- A leave-intercept accept applies the interceptor cost before the target move.
+  Human set-card replacements serialize by physical occurrence and keep the
+  contact/effect continuation state-owned across JSON restore and stale retries.
+- Chain tails run only after an exact real removal. MR redirect, prevention,
+  stale targets, and same-ID set cards do not satisfy that gate.
+
+## 2026-08-15: Top-three choice, public identity, and switch
+
+- “Reveal and add” exposes only the selected deck-card identity. Never persist
+  the private hand or emit `hand:reveal`; close that presentation before showing
+  the private bottom-order modal.
+- A pick that resumes into `sceneEnter` carries only an absolute destination-side
+  hint derived from its saved continuation. It is valid only when that side is
+  reachable and the opposite side is not. Public dispatch revalidates the
+  continuation, current switch UID, and exact physical deck occurrence.
+- `$matched.cardId` is not physical authority. Deck-to-scene consumers must use
+  the bound UID/index/witness so an unselected same-ID copy remains in “the rest”.
+- Switch UI carries the absolute scene side; parent deck presentation may remain
+  while the child picker runs. Status overlays pass pointer input through to
+  scene cards. Mandatory deck reorder Escape confirms the untouched original order.

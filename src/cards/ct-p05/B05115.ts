@@ -40,6 +40,7 @@ const a1: AbilityDef = {
         cardId: '$trigger.cardId',
         viaEffect: true,
         sourceRequired: true,
+        deferSceneSwitchChoice: true,
         target: { query: { area: 'remove', side: 'self' } },
       },
     },

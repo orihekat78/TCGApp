@@ -7,7 +7,7 @@
 //   【ヒラメキ】（証拠からリムーブされるときに発動する）キャラを1枚まで選び、スリープさせる。
 //
 // a1: 【相手ターン中】【現場リムーブ時】(leave:to-remove selfOnly + condition turn:opp) → look-top-N:
-//   1) deckRevealUntil maxN=3 filter={color:'青', levelMax:4, kind:'character'} → $matched + $revealed
+//   1) deckRevealUntil chooseMatch='upTo' maxN=3 filter={color:'青', levelMax:4, kind:'character'} → $matched + $revealed
 //   2) conditional ($matched) → sceneEnter (from deck, enterSleep:true = スリープ状態で登場)
 //   3) deckToBottomBound $revealed (残りをデッキ下へ)
 // a2: 【ヒラメキ】キャラを1枚まで選び、スリープさせる (D08019 a2 同型 hirameki char-pick)。
@@ -29,7 +29,7 @@ const a1: AbilityDef = {
       {
         kind: 'atom',
         verb: 'deckRevealUntil',
-        args: { player: 'self', filter: { color: '青', levelMax: 4, kind: 'character' }, maxN: 3, bind: '$revealed', bindMatch: '$matched' },
+        args: { chooseMatch: 'upTo', player: 'self', filter: { color: '青', levelMax: 4, kind: 'character' }, maxN: 3, bind: '$revealed', bindMatch: '$matched' },
       },
       // 該当があれば スリープ状態で登場 (enterSleep:true)
       {
