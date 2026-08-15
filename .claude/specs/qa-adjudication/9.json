@@ -1788,14 +1788,13 @@
     {
       "qaId": "card:PR084:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR084.ts:103"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/pr-01/PR084.ts:103",
+        "tests:tests/cards/official-qa/leave-trigger-top-one-public.test.ts:294",
+        "tests:tests/cards/official-qa/leave-trigger-top-one-public.test.ts:303"
       ]
     },
     {
