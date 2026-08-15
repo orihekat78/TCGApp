@@ -31,7 +31,7 @@
 // Rules: 07-action-flow.md.
 
 import { ALL_CARDS, registerAll } from '@/cards';
-import { event } from '@/engine/event';
+import { engine } from '@/engine';
 import { _resetTargetExpanders } from '@/engine/flow/action/target-expander';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { _resetRegistry, register } from '@/engine/read/def';
@@ -95,7 +95,7 @@ const PROOF = {
 } as const;
 
 beforeEach(() => {
-  event._resetRegistry(); _resetRegistry(); _resetTriggeredRegistered(); _resetTargetExpanders(); registerAll(); register(character(ACTOR)); register(character(TARGET)); registerTriggeredListener();
+  engine.event._resetRegistry(); _resetRegistry(); _resetTriggeredRegistered(); _resetTargetExpanders(); registerAll(); register(character(ACTOR)); register(character(TARGET)); registerTriggeredListener();
   endMatchSession(); beginMatchSession('self'); useGameStateStore.getState().resetMatchSessionState();
 });
 
@@ -131,4 +131,77 @@ describe('official QA stunned-character public action targeting', () => {
   it('card:D06013:782fd0f5160159eba91a381169832f1a1f384ccf91d8654acdd24e0633027f2f', () => { expect(prove('D06013'), 'D06013').toEqual(PROOF); });
   it('card:PR157:bd2d9135e77cd20272d351740bbc65e757a5096d00d80aecf99990dff33779fe', () => { expect(prove('PR157'), 'PR157').toEqual(PROOF); });
   it('card:PR163:bd2d9135e77cd20272d351740bbc65e757a5096d00d80aecf99990dff33779fe', () => { expect(prove('PR163'), 'PR163').toEqual(PROOF); });
+});
+
+// qa: card:B04042:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:B04071:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:B04085:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:B06071:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:B06075:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:B07041:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:B07054:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:B08004:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:B08035:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:B08042:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:B09027:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:B09046:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:B09047:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:B09050:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:B09082:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:PR157:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+// qa: card:PR163:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333
+
+function proveStunLifecycle(cardId: string): unknown {
+  const initial = createEmptyGameState();
+  initial.turn = { number: 4, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+  initial.players.self.deck = [ACTOR, TARGET, ACTOR];
+  initial.players.self.scene = [sceneChar(TARGET, 'target', { state: 'active' })];
+  const stunned = structuredClone(initial);
+  engine.mutate.scene.setState(stunned, 'target', 'stun');
+  const sleepRequested = structuredClone(stunned);
+  engine.mutate.scene.setState(sleepRequested, 'target', 'sleep');
+  const stunRequested = structuredClone(stunned);
+  engine.mutate.scene.setState(stunRequested, 'target', 'stun');
+  const effectActivated = structuredClone(stunned);
+  engine.mutate.scene.tryActivate(effectActivated, 'target');
+  const autoActivated = structuredClone(stunned);
+  engine.flow.runAutoPhase(autoActivated, 'self');
+  const targetState = (value: GameState) => value.players.self.scene.find(char => char.uid === 'target')?.state;
+  return {
+    contract: hasStunContract(card(cardId)),
+    applied: targetState(stunned),
+    sleepRequest: targetState(sleepRequested),
+    stunRequest: targetState(stunRequested),
+    effectActivation: targetState(effectActivated),
+    autoActivation: targetState(autoActivated),
+  };
+}
+
+const STUN_LIFECYCLE_PROOF = {
+  contract: true,
+  applied: 'stun',
+  sleepRequest: 'stun',
+  stunRequest: 'stun',
+  effectActivation: 'sleep',
+  autoActivation: 'sleep',
+} as const;
+
+describe('official QA stun state lifecycle', () => {
+  it('card:B04042:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('B04042'), 'B04042').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B04071:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('B04071'), 'B04071').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B04085:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('B04085'), 'B04085').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B06071:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('B06071'), 'B06071').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B06075:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('B06075'), 'B06075').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B07041:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('B07041'), 'B07041').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B07054:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('B07054'), 'B07054').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B08004:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('B08004'), 'B08004').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B08035:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('B08035'), 'B08035').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B08042:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('B08042'), 'B08042').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B09027:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('B09027'), 'B09027').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B09046:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('B09046'), 'B09046').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B09047:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('B09047'), 'B09047').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B09050:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('B09050'), 'B09050').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B09082:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('B09082'), 'B09082').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:PR157:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('PR157'), 'PR157').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:PR163:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('PR163'), 'PR163').toEqual(STUN_LIFECYCLE_PROOF); });
 });
