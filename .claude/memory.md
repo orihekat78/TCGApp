@@ -15,36 +15,6 @@
 
 - Full record: `.claude/sessions/2026-08-14-qa-engine-public-evidence.md`.
 
-## 2026-08-14: Exact declared-cost selection and compact MATCH
-
-- Human `sleepChar` and `stunChar` costs use exact UID witnesses and reject
-  malformed, stale, duplicate, wrong-filter, or wrong-count claims.
-- Compact incident status belongs to the incident header. Candidate incident
-  cards hide their detail control so the whole card remains the pick target.
-- Full record: `.claude/sessions/2026-08-14-qa-wave13-match-cost.md`.
-
-## 2026-08-14: B06042 effect-contact evidence
-
-- Bind each qaId to a dedicated public-dispatch test block; file-level markers
-  and cross-row assertion references are false-green evidence.
-- Effect-generated contact must prove target authority, suppressed normal-action
-  hooks, exact contact count, and the zero-contact decline path.
-
-## 2026-08-14: B06042 lifecycle and B04003 interception
-
-- Multiple B06042 grants require public use of distinct physical event copies;
-  assert hand depletion, remove accumulation, independent IDs, and Turn1 use.
-- A B04003 discard decline cancels the selected target, remaining selected
-  targets, and the saved later sequence; assert both board and deck/hand state.
-
-## 2026-08-14: B03025 and B03029 public QA
-
-- B03025 deck and hand filters need same-trait, in-level event decoys to prove
-  `kind: character`, plus refresh-before-continuation and both optional declines.
-- B03029 proves exact cost order, event lifecycle/set, FILE bypass, commit-time
-  use-condition recheck, and observer ordering/null through public dispatch.
-- Its hidden deck-bottom order row stays a gap until occurrence-safe owner UI.
-
 ## 2026-08-15: Deck authority and held Hirameki checkpoint
 
 - Deck decisions bind physical occurrences with a deck epoch. Every real deck
@@ -88,3 +58,11 @@
   never refreshes; taking the last card attempts refresh only after it leaves.
 - Decline returns the exact occurrence without refreshing. Persisted duplicate
   choices retain UID, index, and occurrence witness through public hydration.
+
+## 2026-08-16: Forced leave reveal and shuffle
+
+- Forced reveal-until abilities never ask for a bottom-order decision when the
+  printed sequence immediately shuffles the whole deck. Use
+  `deckToBottomBound(order:'preserve')` before `deckShuffle`.
+- Public certification proves the exact first match, mandatory hand transfer,
+  no-match shuffle, self/timing gates, duplicate occurrence, and short refresh.

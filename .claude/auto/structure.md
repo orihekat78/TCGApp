@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6070
+- **ファイル数**: 6076
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -491,6 +491,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-308.md` — デッキ選択occurrenceの後段保持
     - `BUG-309.md` — 満員現場スイッチの操作権限
     - `BUG-310.md` — 必須順序選択のEscape結果
+    - `BUG-311.md` — 強制公開サーチの不要な順序選択
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1579,7 +1580,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B02022.md` — B02022 鬼丸猛 grounding (2026-07-10, sonnet5)
       - `B02023.md` — B02023 遠山和葉 grounding
       - `B02039.md` — B02039 工藤優作 grounding (2026-07-10, fable)
+      - `B02058.md` — B02058 / B02058P grounding
       - `B02067.md` — B02067 チョーカー型変声機 grounding (2026-07-10, sonnet5)
+      - `B03019.md` — B03019 grounding
       - `B03020.md` — B03020 毛利蘭 grounding
       - `B03023.md` — B03023 脇田兼則 grounding
       - `B03030.md` — B03030 / B03030P grounding
@@ -1600,11 +1603,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B04073.md` — B04073 千葉和伸 grounding (2026-07-10, sonnet5)
       - `B05008.md` — B05008 / B05008P grounding
       - `B05009.md` — B05009 毛利蘭 grounding (2026-07-10, sonnet5)
+      - `B05021.md` — B05021 grounding
       - `B05028P.md` — B05028P grounding
       - `B05048.md` — B05048 grounding
       - `B05063.md` — B05063/B05063P 園子のアブない夏物語 (事件) grounding (2026-07-10, fable)
       - `B05080.md` — B05080 timing grounding
       - `B05086P.md` — grounding dossier: B05086P (自動生成 2026-07-13)
+      - `B05094.md` — B05094 grounding
       - `B06003.md` — B06003/B06003P 毛利蘭＆江戸川コナン (MR キャラ) grounding (2026-07-10, fable)
       - `B06005.md` — B06005 阿笠博士 (R/RP) grounding (2026-07-10, sonnet5)
       - `B06020.md` — B06020 佐々木小次郎 grounding (2026-07-10, sonnet5)
@@ -5470,6 +5475,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `deck-look-bottom-family-public.test.ts` — qa: card:B01013:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5
       - `deck-refresh-wave8.test.ts` — qa: card:B04012:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4
       - `event-evidence-action-hirameki-public.test.ts` — qa: card:B04041:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
+      - `leave-reveal-until-forced-public.test.ts` — qa: card:B02058:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-opponent-turn-public.test.ts` — qa: card:B01065:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-remove-retrieval-public.test.ts` — qa: card:B02004:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-remove-then-draw-public.test.ts` — qa: card:D07014:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58

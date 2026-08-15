@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d6c4c5dde40c`
+> Source hash: `c6e5fff60f40`
 
 公式ルール [`01-victory-conditions.md`](../../../rules/01-victory-conditions.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
