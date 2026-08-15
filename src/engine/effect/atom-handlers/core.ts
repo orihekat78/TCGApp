@@ -9,7 +9,7 @@ import { tryRePickFromAtom } from '../resolve-picks.js';
 // WC2b (2026-07-11): invokeHiramekiOfCard atom-level optional prompt 用 (pending-state は leaf — cycle 無し)。
 import { pushPendingEffectOptionalSide, setPendingOptionalResume, setPendingOptionalBindings, setPendingOptionalCostPaid } from '../pending-state.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from '../atom-pick-spec.js';
-import { requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax, resolveDeltaToNumber, publicHandRevealToken, queuePendingPublicHandRevealSide, resolveBoundOccurrenceRef } from './_shared.js';
+import { requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax, resolveDeltaToNumber, publicHandRevealToken, queuePendingPublicHandRevealSide, readHeldHiramekiSelfClaim, resolveBoundOccurrenceRef } from './_shared.js';
 import { isDynObject, resolveDynNumber } from '../../dyn/eval.js';
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, FileCard, PublicCausalZone } from '../../types/index.js';
@@ -17,6 +17,7 @@ import { removeExcludedSourceCardId } from '../../read/effect-source.js';
 import { recordEffectCausalOperation } from '../../log/effect-causal.js';
 import { cardOccurrenceUid, cardOccurrenceWitness, isLiveCardOccurrenceWitness } from '../../target/card-occurrence.js';
 import { advanceIndexedZoneEpoch } from '../../state/indexed-zone-epoch.js';
+import { advanceDeckEpochAndRebaseBindings } from '../deck-occurrence-authority.js';
 
 function resolvingEventCardId(ctx: EffectCtx, player: Player): string | undefined {
   return removeExcludedSourceCardId(ctx, player);
@@ -130,6 +131,43 @@ function setCardMoveBinding(
 ): void {
   if (typeof bind !== 'string') return;
   (ctx.bindings as Record<string, unknown>)[bind] = cards.map((card) => ({ kind: 'card', ...card }));
+}
+
+function boundDeckReferenceKeys(
+  ctx: EffectCtx,
+  ref: unknown,
+  player: Player,
+  index: number,
+  cardId: string,
+): string[] {
+  if (typeof ref !== 'string' || !ref.startsWith('$')) return [];
+  const dot = ref.indexOf('.');
+  if (dot < 0) return [];
+  const keys = [ref.slice(0, dot), ref.slice(1, dot)];
+  return keys.filter((key, position) => {
+    if (keys.indexOf(key) !== position) return false;
+    const binding = ctx.bindings[key];
+    if (!Array.isArray(binding) || binding.length === 0) return false;
+    const first = binding[0];
+    return first.kind === 'card'
+      && first.area === 'deck'
+      && first.player === player
+      && first.index === index
+      && first.cardId === cardId;
+  });
+}
+
+function restoreMovedDeckReferenceInHand(
+  ctx: EffectCtx,
+  keys: readonly string[],
+  player: Player,
+  cardId: string,
+  handIndex: number,
+): void {
+  for (const key of keys) {
+    const surviving = Array.isArray(ctx.bindings[key]) ? ctx.bindings[key] : [];
+    ctx.bindings[key] = [{ kind: 'card', cardId, area: 'hand', player, index: handIndex }, ...surviving];
+  }
 }
 
 function exactSelectedIndexes(
@@ -409,6 +447,9 @@ function hdMove(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, hdP: '
         hdHand.splice(i, 1);
         s.players[hdP].deck.push(cid);
         movedIds.push(cid);
+      }
+      if (movedIds.length > 0) {
+        advanceDeckEpochAndRebaseBindings(s, ctx, hdP, []);
       }
       if (typeof a.bind === 'string' && movedIds.length > 0) {
         (ctx.bindings as Record<string, unknown>)[a.bind] = movedIds.map((cardId) => ({ cardId }));
@@ -877,14 +918,25 @@ export function atomToPartnerArea(s: GameState, a: Record<string, unknown>, ctx:
         mutate.log.append(s, { ts: Date.now(), player: tpaP, turn: s.turn.number, action: 'effect:toPartnerArea', target: tpaTarget, result: tpaPicked ? 'ok' : 'not-found' });
         return;
       }
-      const tpaCardId = ctx.source.cardId;
+      const heldClaim = readHeldHiramekiSelfClaim(ctx, tpaP);
+      if (heldClaim.kind === 'invalid') {
+        setCardMoveBinding(ctx, a.bind, []);
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+        mutate.log.append(s, { ts: Date.now(), player: tpaP, turn: s.turn.number, action: 'effect:toPartnerArea', result: 'invalid-held-authority' });
+        return;
+      }
+      const tpaCardId = heldClaim.kind === 'claim' ? heldClaim.claim.cardId : ctx.source.cardId;
       if (typeof tpaCardId !== 'string' || tpaCardId.length === 0) return;
       const partnerIndex = s.players[tpaP].partnerAreaCards?.length ?? 0;
-      const moved = mutate.partner.addAreaCardFromRemove(s, tpaP, tpaCardId);
+      const moved = heldClaim.kind === 'claim'
+        ? mutate.evidence.takeHeldHiramekiEvidence(s, heldClaim.claim) !== undefined
+        : mutate.partner.addAreaCardFromRemove(s, tpaP, tpaCardId);
+      if (moved && heldClaim.kind === 'claim') mutate.partner.addAreaCard(s, tpaP, tpaCardId);
       setCardMoveBinding(ctx, a.bind, moved
         ? [{ cardId: tpaCardId, area: 'partner-area', player: tpaP, index: partnerIndex }]
         : []);
-      recordPublicZoneMove(s, ctx, tpaP, 'remove', 'partner', moved ? 1 : 0);
+      recordPublicZoneMove(s, ctx, tpaP, heldClaim.kind === 'claim' ? 'evidence' : 'remove', 'partner', moved ? 1 : 0);
+      if (!moved) (ctx.dyn ??= {}).chainStepNoApply = true;
       if (moved) {
         mutate.log.append(s, { ts: Date.now(), player: tpaP, turn: s.turn.number, action: 'effect:toPartnerArea', target: tpaCardId });
       }
@@ -1581,6 +1633,7 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
       if (Array.isArray(rawHadCardIds)) {
         const cardIds = rawHadCardIds.filter((id): id is string => typeof id === 'string');
         const deck = s.players[hadP].deck;
+        const originalDeck = [...deck];
         const hasExactIndexes = Object.hasOwn(a, 'selectedDeckIndexes');
         const originalIndexes = exactSelectedIndexes((a as { selectedDeckIndexes?: unknown }).selectedDeckIndexes, ctx);
         if (hasExactIndexes && (
@@ -1596,30 +1649,20 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
         const moved: Array<{ cardId: string; area: 'hand'; player: Player; index: number }> = [];
         const movedOriginalDeckIndexes: number[] = [];
         for (const [position, cardId] of cardIds.entries()) {
-          const originalIndex = originalIndexes?.[position];
+          const originalIndex = originalIndexes?.[position]
+            ?? originalDeck.findIndex((entry, index) => entry === cardId && !movedOriginalDeckIndexes.includes(index));
           const idx = typeof originalIndex === 'number'
-            ? originalIndex - originalIndexes!.slice(0, position).filter((previous) => previous < originalIndex).length
-            : deck.indexOf(cardId);
+            ? originalIndex - movedOriginalDeckIndexes.filter((previous) => previous < originalIndex).length
+            : -1;
           if (idx === -1 || deck[idx] !== cardId) continue;
           deck.splice(idx, 1);
           const handIndex = s.players[hadP].hand.length;
           mutate.hand.add(s, hadP, [cardId]);
           moved.push({ cardId, area: 'hand', player: hadP, index: handIndex });
-          if (originalIndex !== undefined) movedOriginalDeckIndexes.push(originalIndex);
+          if (originalIndex >= 0) movedOriginalDeckIndexes.push(originalIndex);
         }
         if (movedOriginalDeckIndexes.length > 0) {
-          const movedIndexes = new Set(movedOriginalDeckIndexes);
-          for (const bindKey of Object.keys(ctx.bindings)) {
-            const bound = ctx.bindings[bindKey];
-            if (!Array.isArray(bound)) continue;
-            ctx.bindings[bindKey] = bound.flatMap((candidate) => {
-              if (candidate.kind !== 'card' || candidate.area !== 'deck' || candidate.player !== hadP || typeof candidate.index !== 'number') return [candidate];
-              const candidateIndex = candidate.index;
-              if (movedIndexes.has(candidateIndex)) return [];
-              const shift = movedOriginalDeckIndexes.filter((index) => index < candidateIndex).length;
-              return shift === 0 ? [candidate] : [{ ...candidate, index: candidateIndex - shift }];
-            });
-          }
+          advanceDeckEpochAndRebaseBindings(s, ctx, hadP, movedOriginalDeckIndexes);
         }
         setCardMoveBinding(ctx, a.bind, moved);
         recordPublicZoneMove(s, ctx, hadP, 'deck', 'hand', moved.length);
@@ -1649,17 +1692,28 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
         return;
       }
       const deck = s.players[hadP].deck;
+      const boundOccurrence = resolveBoundOccurrenceRef(rawHadCardId, s, ctx, hadP, 'deck');
+      if (boundOccurrence.kind === 'invalid') {
+        setCardMoveBinding(ctx, a.bind, []);
+        mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', result: 'stale-selection' });
+        return;
+      }
       const rawSelectedIndex = resolveBindRef((a as { selectedCardIndex?: unknown }).selectedCardIndex, ctx);
       const hasExactSelectedIndex = Object.hasOwn(a, 'selectedCardIndex');
-      const idx = hasExactSelectedIndex
+      const idx = boundOccurrence.kind === 'live'
+        ? boundOccurrence.index
+        : hasExactSelectedIndex
         ? (typeof rawSelectedIndex === 'number' && Number.isInteger(rawSelectedIndex) && rawSelectedIndex >= 0 && deck[rawSelectedIndex] === hadCardId ? rawSelectedIndex : -1)
         : deck.indexOf(hadCardId);
       let moved = false;
       let handIndex = -1;
       if (idx !== -1) {
+        const movedReferenceKeys = boundDeckReferenceKeys(ctx, rawHadCardId, hadP, idx, hadCardId);
         deck.splice(idx, 1);
+        advanceDeckEpochAndRebaseBindings(s, ctx, hadP, [idx]);
         handIndex = s.players[hadP].hand.length;
         mutate.hand.add(s, hadP, [hadCardId]);
+        restoreMovedDeckReferenceInHand(ctx, movedReferenceKeys, hadP, hadCardId, handIndex);
         moved = true;
       }
       setCardMoveBinding(ctx, a.bind, moved ? [{ cardId: hadCardId, area: 'hand', player: hadP, index: handIndex }] : []);
@@ -1688,7 +1742,9 @@ export function atomHandAddFromDeckBottom(s: GameState, a: Record<string, unknow
         mutate.log.append(s, { ts: Date.now(), player: hadbP, turn: s.turn.number, action: 'effect:handAddFromDeckBottom', result: 'none' });
         return;
       }
+      const bottomIndex = deck.length - 1;
       deck.pop();
+      advanceDeckEpochAndRebaseBindings(s, ctx, hadbP, [bottomIndex]);
       mutate.hand.add(s, hadbP, [bottomId]);
       recordPublicZoneMove(s, ctx, hadbP, 'deck', 'hand', 1);
       // take でデッキが空になったら即リフレッシュ (rules/14 即座 / B03051 Q&A: 残1枚→手札→リフレッシュ)。
@@ -1733,6 +1789,35 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
           setCardMoveBinding(ctx, a.bind, [{ cardId: sourceCard.cardId, area: 'hand', player: p, index: handIndex }]);
           recordPublicZoneMove(s, ctx, p, 'scene', 'hand', 1);
           mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', target: sourceCard.cardId, result: 'ok' });
+          return;
+        }
+        const heldClaim = readHeldHiramekiSelfClaim(ctx, p);
+        if (heldClaim.kind !== 'absent') {
+          const evidence = heldClaim.kind === 'claim'
+            ? mutate.evidence.takeHeldHiramekiEvidence(s, heldClaim.claim)
+            : undefined;
+          if (!evidence) {
+            setCardMoveBinding(ctx, a.bind, []);
+            mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', result: 'none' });
+            return;
+          }
+          const handIndex = s.players[p].hand.length;
+          mutate.hand.add(s, p, [evidence.cardId]);
+          setCardMoveBinding(ctx, a.bind, [{
+            cardId: evidence.cardId,
+            area: 'hand',
+            player: p,
+            index: handIndex,
+          }]);
+          recordPublicZoneMove(s, ctx, p, 'evidence', 'hand', 1);
+          mutate.log.append(s, {
+            ts: Date.now(),
+            player: p,
+            turn: s.turn.number,
+            action: 'effect:handAddFromRemove',
+            target: evidence.cardId,
+            result: 'ok',
+          });
           return;
         }
         const occurrence = ctx.bindings.occurrence?.[0] as {

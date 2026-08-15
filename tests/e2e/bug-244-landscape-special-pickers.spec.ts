@@ -247,4 +247,85 @@ test.describe('BUG-244 special picker landscape containment', () => {
     expect((state.players.self as { hand: string[] }).hand).toHaveLength(0);
     expectNoConsoleErrors(errors);
   });
+
+  test('Hirameki: B06027 full scene selects the exact human switch victim and commits the public result', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await primeHuman(page);
+    const survivorUids = ['hirameki-switch-0', 'hirameki-switch-1', 'hirameki-switch-3', 'hirameki-switch-4'];
+    await buildCausalGameState(page, (gs: GameStateLike) => {
+      const g = gs as unknown as AnyState;
+      const players = g.players as { self: AnyState; opp: AnyState };
+      const makeCharacter = (uid: string) => ({
+        cardId: 'D08005',
+        uid,
+        state: 'active',
+        isNamed: false,
+        enterOrder: Number(uid.at(-1)) + 1,
+        setCards: [],
+        stackedCards: 0,
+        keywordOverrides: { granted: [], disabledOriginal: false },
+        apOverride: null,
+        lpOverride: null,
+        turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+        declaredUseCount: {},
+      });
+      players.opp.partner = { cardId: 'D11001', state: 'active', location: 'partner-area' };
+      players.self.case = { cardId: 'D08026', status: '解決編', requiredEvidence: 7, colors: ['blue'], declaredUseCount: {} };
+      players.self.evidence = [{ cardId: 'B06027', faceUp: false, origin: { turn: 1, via: 'reasoning' } }];
+      players.self.scene = Array.from({ length: 5 }, (_, index) => makeCharacter(`hirameki-switch-${index}`));
+      players.self.remove = [];
+      g.pendingEffects = [];
+    });
+
+    const actionId = await dispatchUnguardedCaseAction(page, 'partner:opp', 'self');
+    await expect(page.getByTestId('hirameki-picker-modal')).toBeVisible();
+    await page.getByTestId('hirameki-fire-btn').click();
+
+    await expect(page.getByTestId('scene-card-pick-hirameki-switch-0')).toBeFocused();
+    const cancel = page.getByTestId('switch-victim-cancel');
+    const cancelBox = await cancel.boundingBox();
+    expect(cancelBox?.width ?? 0).toBeGreaterThanOrEqual(43.5);
+    expect(cancelBox?.height ?? 0).toBeGreaterThanOrEqual(43.5);
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('hirameki-picker-modal')).toBeVisible();
+    await expect.poll(() => page.evaluate(() => (
+      window as unknown as { __game: { getState: () => { pendingHirameki: unknown } } }
+    ).__game.getState().pendingHirameki)).not.toBeNull();
+
+    await page.getByTestId('hirameki-fire-btn').click();
+    await expect(page.getByTestId('scene-card-pick-hirameki-switch-0')).toBeFocused();
+    const victim = page.locator('.mat.self .scene-area .card[data-uid="hirameki-switch-2"]');
+    await expect(victim).toHaveClass(/effect-pickable/);
+    const keyboardVictim = page.getByTestId('scene-card-pick-hirameki-switch-2');
+    await expect(keyboardVictim).toHaveAttribute('aria-label', /現場3枚目/);
+    await keyboardVictim.focus();
+    await page.keyboard.press('Space');
+    await expect(page.getByTestId('hirameki-picker-modal')).toBeHidden();
+    await expect.poll(() => page.evaluate(() => (
+      window as unknown as { __game: { getState: () => { pendingHirameki: unknown } } }
+    ).__game.getState().pendingHirameki)).toBeNull();
+
+    for (let step = 0; step < 2; step += 1) {
+      const activeActionId = await page.evaluate(() => (
+        window as unknown as { __game: { getState: () => { activeActionId: string | null } } }
+      ).__game.getState().activeActionId);
+      if (activeActionId !== actionId) break;
+      expect(await dispatchAction(page, { type: 'actionAdvance', actionId })).toEqual({ ok: true });
+    }
+    await waitForActionEnd(page);
+
+    const state = await getGameState(page);
+    const self = state.players.self as {
+      scene: Array<{ cardId: string; uid: string; state: string }>;
+      remove: string[];
+      evidence: Array<{ cardId: string }>;
+    };
+    expect(self.scene).toHaveLength(5);
+    expect(self.scene.some((character) => character.uid === 'hirameki-switch-2')).toBe(false);
+    expect(self.scene.filter((character) => character.cardId === 'D08005').map((character) => character.uid)).toEqual(survivorUids);
+    expect(self.scene.at(-1)).toMatchObject({ cardId: 'B06027', state: 'sleep' });
+    expect(self.remove).toEqual(['D08005']);
+    expect(self.evidence).toHaveLength(0);
+    expectNoConsoleErrors(errors);
+  });
 });

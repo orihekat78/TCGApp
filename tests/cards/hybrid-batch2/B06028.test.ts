@@ -23,18 +23,17 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
-import { removeOpponentEvidenceTop } from '@/engine/flow/action-case';
-import { register as registerCardDef, _resetRegistry as resetDefRegistry, def as readDef } from '@/engine/read/def';
+import { removeOpponentEvidenceTop, resolveHiramekiDecision } from '@/engine/flow/action-case';
+import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { event } from '@/engine/event/index';
 import { mutate } from '@/engine/mutate/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { _drainPendingHirameki, _resetPendingHirameki } from '@/engine/listeners/hirameki';
-import { resolveEffectPicks } from '@/engine/effect/resolve-picks';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
-import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { B06028 } from '@/cards/ct-p06/B06028';
-import type { GameState, EffectCtx, ActionContext, CardDef } from '@/engine/types';
+import type { PendingHiramekiSide } from '@/engine/listeners/hirameki';
+import type { GameState, ActionContext, CardDef } from '@/engine/types';
 
 // 事件 def (caseTrait 判定は CardDef.caseTraits を参照 — cond/eval.ts:106)
 function pcase(id: string, caseTraits: string[]): CardDef {
@@ -89,7 +88,11 @@ function driveActionCase(s: GameState, atkUid: string) {
       id: 'ax', byUid: atkUid, byPlayer: 'opp',
       target: { kind: 'case', player: 'self' }, phase: 'judge', startedAt: { turn: 0, nano: 0 },
     };
-    removeOpponentEvidenceTop(draft, ax);
+    draft.actionContexts = { [ax.id]: ax };
+    const owned = draft.actionContexts[ax.id]!;
+    removeOpponentEvidenceTop(draft, owned);
+    owned.judgeResolved = true;
+    owned.deferredCaseEvidenceGain = true;
   });
 }
 
@@ -97,29 +100,13 @@ function driveActionCase(s: GameState, atkUid: string) {
 // pending の effect を解決し queue → runAllUntilEmpty で actor を sceneRemove。
 function resolveHiramekiLikeUi(
   s: GameState,
-  pending: { player: 'self' | 'opp'; cardId: string; abilityId: string; actorUid?: string },
+  pending: PendingHiramekiSide,
 ): GameState {
   return produce(s, draft => {
-    const def = readDef.card(pending.cardId);
-    if (!def) throw new Error(`def not found: ${pending.cardId}`);
-    const ability = def.abilities.find(a => a.id === pending.abilityId)!;
-    const ctx: EffectCtx = {
-      source: { player: pending.player, cardId: pending.cardId, area: 'evidence' },
-      bindings: {},
-      triggerPayload: { player: pending.player, ev: { cardId: pending.cardId }, byUid: pending.actorUid },
-    } as EffectCtx;
-    const aiPolicy = new HeuristicPolicy();
-    const resolved = resolveEffectPicks(draft, ability.effect as never, ctx, {
-      chooseAtomTarget: aiPolicy.chooseAtomTarget?.bind(aiPolicy),
-      byPlayer: pending.player,
-    });
-    event.queue(
-      draft,
-      resolved as never,
-      { player: pending.player, cardId: pending.cardId, area: 'evidence' },
-      'evidence:remove-by-action',
-      { player: pending.player, ev: { cardId: pending.cardId }, byUid: pending.actorUid },
-    );
+    const actionContext = pending.actionId
+      ? draft.actionContexts?.[pending.actionId]
+      : undefined;
+    resolveHiramekiDecision(draft, actionContext, pending, 'fire', { humanChooser: false });
     runAllUntilEmpty(draft);
   });
 }

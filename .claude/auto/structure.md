@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6047
+- **ファイル数**: 6051
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -4774,6 +4774,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `atom-pick-spec.ts` — engine.effect.ATOM_PICK_SPEC — pick系 atom 短縮形の唯一の権威ソース。
       - `consult-choose-intercept.ts`
       - `consult-leave-intercept.ts` — engine.effect.consult-leave-intercept — 現場離脱の pre-splice consult (mega-wave W6 s…
+      - `deck-occurrence-authority.ts`
       - `declared-name-domain.ts` — Preserve legacy unrestricted AI behavior; constrained mandatory
       - `heuristic-atom-target.ts`
       - `index.ts` — engine.effect namespace barrel
@@ -4785,6 +4786,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `resolve-picks.ts` — engine.effect.resolveEffectPicks — Phase 7-2 (BUG-035 fix) + Phase 7-3 (AI polic…
       - `resolver.ts` — engine.effect.run — Effect Descriptor 解釈器 (resolver)
       - `runtime-state.ts` — Public decision admission is fail-closed. Dedicated hydrate/import paths
+      - `scene-switch.ts`
       - `validate-spec-files.ts` — engine.effect.validate-spec-files — Node 専用 ruleRefs 実在チェック
       - `validate.ts` — engine.effect.validate / engine.cards.validate — static lint pass (pure)
     - **`event/`**
@@ -4837,7 +4839,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `effect-causal.ts`
     - **`mutate/`**
       - `.gitkeep`
-      - `action-scopes.ts`
+      - `action-scopes.ts` — A terminal GameState cannot retain a resumable resolver authority. Direct
       - `case.ts` — engine.mutate.case — 事件カード操作プリミティブ
       - `char.ts` — engine.mutate.char — キャラ修正プリミティブ
       - `deck.ts` — engine.mutate.deck — デッキ操作プリミティブ
@@ -5455,7 +5457,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D06003-D06024-public-path.test.ts` — qaId=card:D06003:e918d066190b75a908b8154f185c9c4291e8387cb2fc4797f5744acc49a362d…
       - `D10003-D10010-printing-copy-limit.test.ts` — qaId=card:D10003:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2…
       - `bond-partner-exclusion-wave9.test.ts` — qa: card:B02004:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
+      - `deck-look-bottom-family-public.test.ts` — qa: card:B01013:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5
       - `deck-refresh-wave8.test.ts` — qa: card:B04012:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4
+      - `event-evidence-action-hirameki-public.test.ts` — qa: card:B04041:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
       - `set-card-host-absent.test.ts`
       - `set-card-host-owner-wave3.test.ts` — qaId=card:B02018:dc712167e0587386756f5293d40bf1766e89e09669554ebcde8e028749d962d…
       - `short-deck-reveal-hand-entry-public.test.ts` — rules: 15-abilities-effects.md, 17-icons.md, 20-color-and-switch.…
@@ -5539,7 +5543,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `B05088.test.ts`
     - `B06005.test.ts`
     - `B06025.test.ts`
-    - `B06027.test.ts`
+    - `B06027.test.ts` — qa: card:B06027:9dd8f52aa8602ce40ade4ab560b3351e1d400f64e03787df0d7e58f0d4c8838a
     - `B06046.test.ts`
     - `B06047.test.ts`
     - `B06103.test.ts`

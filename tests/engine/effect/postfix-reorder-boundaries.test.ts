@@ -6,6 +6,7 @@ import { resolve } from '@/engine/resolve/index';
 import { run as runEffect } from '@/engine/effect/resolver';
 import { applyDeckReorderAndContinuation } from '@/engine/effect/apply-pick';
 import { _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
+import { deckOccurrenceAuthority } from '@/engine/effect/deck-occurrence-authority';
 import type { Candidate, CardDef, Effect, EffectCtx, EffectStackEntry, GameState } from '@/engine/types';
 
 const globals = globalThis as {
@@ -27,6 +28,19 @@ function base(): GameState {
   return state;
 }
 
+function deckCandidates(state: GameState, ids: string[]): Candidate[] {
+  const used = new Set<number>();
+  return ids.map((id) => {
+    const index = state.players.self.deck.findIndex((cardId, candidateIndex) => (
+      cardId === id && !used.has(candidateIndex)
+    ));
+    const occurrence = deckOccurrenceAuthority(state, 'self', index);
+    if (!occurrence) throw new Error(`missing deck occurrence for ${id}`);
+    used.add(index);
+    return occurrence;
+  });
+}
+
 function entry(state: GameState, id: string, bindKey: string, ids: string[]): EffectStackEntry {
   return {
     id,
@@ -35,7 +49,7 @@ function entry(state: GameState, id: string, bindKey: string, ids: string[]): Ef
     triggeredAt: { turn: state.turn.number, phase: state.turn.phase, nano: 0 },
     effect: { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey } },
     bindings: {
-      [bindKey]: ids.map((cardId, index) => ({ kind: 'card', cardId, area: 'deck', player: 'self', index } as Candidate)),
+      [bindKey]: deckCandidates(state, ids),
     },
     state: 'pending',
   };
@@ -132,7 +146,7 @@ describe('reorder boundary: resolver containers', () => {
     const state = base();
     const ctx = ctxWithSource(state);
     state.players.self.deck = ['TAIL', 'P1', 'P2'];
-    ctx.bindings['$moved'] = ['P1', 'P2'].map(cardId => ({ kind: 'card', cardId, area: 'deck', player: 'self' } as Candidate));
+    ctx.bindings['$moved'] = deckCandidates(state, ['P1', 'P2']);
     const effect: Effect = {
       kind: 'parallel',
       steps: [
@@ -159,7 +173,7 @@ describe('reorder boundary: resolver containers', () => {
     ctx.bindings['$targets'] = [first, second].map(char => ({
       kind: 'char', uid: char.uid, cardId: char.cardId, player: 'self', area: 'scene',
     } as Candidate));
-    ctx.bindings['$moved'] = ['P1', 'P2'].map(cardId => ({ kind: 'card', cardId, area: 'deck', player: 'self' } as Candidate));
+    ctx.bindings['$moved'] = deckCandidates(state, ['P1', 'P2']);
     const effect: Effect = {
       kind: 'forEach',
       over: { kind: 'fromBound', bindKey: '$targets' },
@@ -193,9 +207,7 @@ describe('reorder boundary: resolver containers', () => {
     const ctx = ctxWithSource(state);
     state.players.self.deck = ['TAIL', 'P1', 'P2'];
     ctx.bindings.$target = [charCandidate('B', 'outer-b')];
-    ctx.bindings.$moved = ['P1', 'P2'].map((cardId, index) => ({
-      kind: 'card', cardId, area: 'deck', player: 'self', index,
-    } as Candidate));
+    ctx.bindings.$moved = deckCandidates(state, ['P1', 'P2']);
 
     runEffect(state, ctxLossEffect({
       kind: 'atom',

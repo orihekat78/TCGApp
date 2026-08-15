@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { advanceIndexedZoneEpoch } from '@/engine/state/indexed-zone-epoch';
-import { cardOccurrenceWitness } from '@/engine/target/card-occurrence';
+import { cardOccurrenceUid, cardOccurrenceWitness } from '@/engine/target/card-occurrence';
 import { produce } from '@/engine/produce';
 import { event } from '@/engine/event';
 import { mutate } from '@/engine/mutate';
@@ -31,17 +31,24 @@ import {
 import {
   hydratePendingRuntimeState,
   persistPendingRuntimeState,
+  resetPendingRuntimeState,
   resetPendingRuntimeStateAfterGameEnd,
   restorePendingRuntimeState,
   snapshotPendingRuntimeState,
 } from '@/engine/effect/runtime-state';
+import { advanceDeckEpochAndRebaseBindings } from '@/engine/effect/deck-occurrence-authority';
 import {
   rememberedRuntimeAtomTargetPolicy,
   resetRuntimeAtomTargetPolicySession,
   resolveEffectPicks,
   type ResolveEffectPicksOpts,
 } from '@/engine/effect/resolve-picks';
-import { applyRepeatOptionalAndContinuation, drainAiEffectPicks } from '@/engine/effect/apply-pick';
+import {
+  applyPickAndContinuation,
+  applyPickSkipAndContinuation,
+  applyRepeatOptionalAndContinuation,
+  drainAiEffectPicks,
+} from '@/engine/effect/apply-pick';
 import { runAllUntilEmpty } from '@/engine/resolve/stack';
 import type { Candidate, Effect, EffectCtx, GameState } from '@/engine/types';
 
@@ -54,12 +61,68 @@ const effectCtx: EffectCtx = {
 function persistedDeckPlace(
   value: Record<string, unknown>,
   currentDeck: string[] = ['A', 'B'],
+  includeOccurrenceWitness = true,
 ): GameState {
   const state = createEmptyGameState();
   state.players.opp.deck = [...currentDeck];
   state.pendingRuntimeState = {
     token: 1,
-    snapshot: [{ key: '__pendingDeckPlaceSide', present: true, value }],
+    snapshot: [{
+      key: '__pendingDeckPlaceSide',
+      present: true,
+      value: includeOccurrenceWitness
+        ? { occurrenceWitness: cardOccurrenceWitness(state, 'opp', 'deck'), ...value }
+        : value,
+    }],
+  };
+  return state;
+}
+
+function persistedDeckReorder(
+  value: Record<string, unknown>,
+  currentDeck: string[] = ['A', 'B'],
+): GameState {
+  const state = createEmptyGameState();
+  state.players.self.deck = [...currentDeck];
+  state.pendingRuntimeState = {
+    token: 1,
+    snapshot: [{
+      key: '__pendingDeckReorderSide',
+      present: true,
+      value: {
+        occurrenceWitness: cardOccurrenceWitness(state, 'self', 'deck'),
+        ...value,
+      },
+    }],
+  };
+  return state;
+}
+
+function heldHiramekiState(): GameState {
+  const state = createEmptyGameState();
+  state.actionContexts = {
+    'action-1': {
+      id: 'action-1',
+      byUid: 'ACTOR#1',
+      byPlayer: 'self',
+      target: { kind: 'case', player: 'opp' },
+      phase: 'judge',
+      judgeResolved: true,
+      deferredCaseEvidenceGain: true,
+      pendingHiramekiEvidenceRemoval: {
+        token: 'hirameki:action-1:opp',
+        player: 'opp',
+        abilityId: 'a1',
+        effectValid: true,
+        decisionResolved: false,
+        evidence: {
+          cardId: 'HIRAMEKI',
+          faceUp: true,
+          origin: { turn: 1, via: 'action-case' },
+        },
+      },
+      startedAt: { turn: 1, nano: 1 },
+    },
   };
   return state;
 }
@@ -708,6 +771,432 @@ describe('adversarial: runtime identity is owned by GameState', () => {
     expect(() => hydratePendingRuntimeState(state)).not.toThrow();
   });
 
+  it('persists and hydrates a Hirameki card held by the exact ActionContext', () => {
+    const probe = globalThis as { __pendingHirameki?: unknown };
+    const state = heldHiramekiState();
+    probe.__pendingHirameki = {
+      player: 'opp',
+      cardId: 'HIRAMEKI',
+      abilityId: 'a1',
+      effectValid: true,
+      actorUid: 'ACTOR#1',
+      actionId: 'action-1',
+      heldEvidence: {
+        token: 'hirameki:action-1:opp',
+        player: 'opp',
+        cardId: 'HIRAMEKI',
+      },
+      gainDeferred: true,
+    };
+
+    try {
+      persistPendingRuntimeState(state);
+      const restored = JSON.parse(JSON.stringify(state)) as GameState;
+      resetPendingRuntimeState();
+
+      expect(hydratePendingRuntimeState(restored)).toBe(true);
+      expect(probe.__pendingHirameki).toMatchObject({
+        actionId: 'action-1',
+        heldEvidence: {
+          token: 'hirameki:action-1:opp',
+          player: 'opp',
+          cardId: 'HIRAMEKI',
+        },
+      });
+      expect(restored.actionContexts?.['action-1']?.pendingHiramekiEvidenceRemoval)
+        .toMatchObject({ token: 'hirameki:action-1:opp', player: 'opp' });
+    } finally {
+      resetPendingRuntimeState();
+    }
+  });
+
+  it.each([
+    {
+      label: 'a forged ability id',
+      pending: { abilityId: 'forged-a2', effectValid: true },
+      resolved: false,
+    },
+    {
+      label: 'a forged effect-valid bit',
+      pending: { abilityId: 'a1', effectValid: false },
+      resolved: false,
+    },
+    {
+      label: 'an already-resolved held decision',
+      pending: { abilityId: 'a1', effectValid: true },
+      resolved: true,
+    },
+  ])('rejects persisted held Hirameki authority with $label', ({ pending, resolved }) => {
+    const probe = globalThis as { __pendingHirameki?: unknown };
+    probe.__pendingHirameki = { player: 'self', cardId: 'LIVE', abilityId: 'a1' };
+    const state = heldHiramekiState();
+    state.actionContexts!['action-1']!.pendingHiramekiEvidenceRemoval!.decisionResolved = resolved;
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingHirameki',
+        present: true,
+        value: {
+          player: 'opp',
+          cardId: 'HIRAMEKI',
+          actorUid: 'ACTOR#1',
+          actionId: 'action-1',
+          heldEvidence: {
+            token: 'hirameki:action-1:opp',
+            player: 'opp',
+            cardId: 'HIRAMEKI',
+          },
+          ...pending,
+        },
+      }],
+    };
+
+    try {
+      expect(() => hydratePendingRuntimeState(state))
+        .toThrow('Invalid pendingHirameki: held evidence must match its ActionContext');
+      expect(probe.__pendingHirameki)
+        .toEqual({ player: 'self', cardId: 'LIVE', abilityId: 'a1' });
+    } finally {
+      resetPendingRuntimeState();
+    }
+  });
+
+  it('rejects a persisted held Hirameki that is not owned by its ActionContext', () => {
+    const probe = globalThis as { __pendingHirameki?: unknown };
+    probe.__pendingHirameki = { player: 'self', cardId: 'LIVE', abilityId: 'a1' };
+    const state = heldHiramekiState();
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingHirameki',
+        present: true,
+        value: {
+          player: 'opp',
+          cardId: 'HIRAMEKI',
+          abilityId: 'a1',
+          effectValid: true,
+          actorUid: 'ACTOR#1',
+          actionId: 'action-1',
+          heldEvidence: {
+            token: 'forged-token',
+            player: 'opp',
+            cardId: 'HIRAMEKI',
+          },
+          gainDeferred: true,
+        },
+      }],
+    };
+
+    try {
+      expect(() => hydratePendingRuntimeState(state))
+        .toThrow('Invalid pendingHirameki: held evidence must match its ActionContext');
+      expect(probe.__pendingHirameki)
+        .toEqual({ player: 'self', cardId: 'LIVE', abilityId: 'a1' });
+    } finally {
+      resetPendingRuntimeState();
+    }
+  });
+
+  it('rejects a persisted held Hirameki with a causal correlation before changing live channels', () => {
+    const probe = globalThis as { __pendingHirameki?: unknown };
+    probe.__pendingHirameki = { player: 'self', cardId: 'LIVE', abilityId: 'a1' };
+    const state = heldHiramekiState();
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingHirameki',
+        present: true,
+        value: {
+          player: 'opp',
+          cardId: 'HIRAMEKI',
+          abilityId: 'a1',
+          effectValid: true,
+          actorUid: 'ACTOR#1',
+          actionId: 'action-1',
+          causalCorrelationEventId: 'evidence-remove',
+          heldEvidence: {
+            token: 'hirameki:action-1:opp',
+            player: 'opp',
+            cardId: 'HIRAMEKI',
+          },
+          gainDeferred: true,
+        },
+      }],
+    };
+
+    try {
+      expect(() => hydratePendingRuntimeState(state))
+        .toThrow('pendingHirameki.causalCorrelationEventId');
+      expect(probe.__pendingHirameki)
+        .toEqual({ player: 'self', cardId: 'LIVE', abilityId: 'a1' });
+    } finally {
+      resetPendingRuntimeState();
+    }
+  });
+
+  it('rejects malformed held Hirameki metadata before changing live channels', () => {
+    const probe = globalThis as { __pendingHirameki?: unknown };
+    probe.__pendingHirameki = { player: 'self', cardId: 'LIVE', abilityId: 'a1' };
+    const state = heldHiramekiState();
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingHirameki',
+        present: true,
+        value: {
+          player: 'opp',
+          cardId: 'HIRAMEKI',
+          abilityId: 'a1',
+          actionId: 'action-1',
+          heldEvidence: {
+            token: '',
+            player: 'opp',
+            cardId: 'HIRAMEKI',
+          },
+        },
+      }],
+    };
+
+    try {
+      expect(() => hydratePendingRuntimeState(state))
+        .toThrow('pendingHirameki.heldEvidence.token');
+      expect(probe.__pendingHirameki)
+        .toEqual({ player: 'self', cardId: 'LIVE', abilityId: 'a1' });
+    } finally {
+      resetPendingRuntimeState();
+    }
+  });
+
+  it.each([
+    {
+      label: 'a non-canonical UID',
+      candidate: {
+        uid: 'forged:deck:0', kind: 'card', cardId: 'PRIVATE', player: 'self',
+        area: 'deck', index: 0, occurrenceWitness: 'occ:v1:self:deck:0',
+      },
+      error: /candidates\[0\]\.uid/,
+    },
+    {
+      label: 'no deck occurrence witness',
+      candidate: {
+        uid: 'card:self:deck:PRIVATE#0', kind: 'card', cardId: 'PRIVATE', player: 'self',
+        area: 'deck', index: 0,
+      },
+      error: /candidates\[0\]\.occurrenceWitness/,
+    },
+    {
+      label: 'a stale deck occurrence witness',
+      candidate: {
+        uid: 'card:self:deck:PRIVATE#0', kind: 'card', cardId: 'PRIVATE', player: 'self',
+        area: 'deck', index: 0, occurrenceWitness: 'occ:v1:self:deck:1',
+      },
+      error: /deckRevealUntil.*current deck|occurrenceWitness/i,
+    },
+  ] as const)('rejects a persisted deckRevealUntil pick with $label before changing ambient runtime', ({
+    candidate,
+    error,
+  }) => {
+    const probe = globalThis as { __pendingContactStartAxId?: unknown };
+    probe.__pendingContactStartAxId = 'live-action';
+    const state = createEmptyGameState();
+    state.players.self.deck = ['PRIVATE'];
+    const windowOccurrence = {
+      uid: 'card:self:deck:PRIVATE#0', kind: 'card', cardId: 'PRIVATE', player: 'self',
+      area: 'deck', index: 0, occurrenceWitness: 'occ:v1:self:deck:0',
+    } as const;
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingEffectPickSide',
+        present: true,
+        value: {
+          player: 'self',
+          candidates: [candidate],
+          atomVerb: 'deckRevealUntil',
+          atomArgs: {
+            player: 'self',
+            __windowIds: ['PRIVATE'],
+            __windowWitness: 'occ:v1:self:deck:0',
+            __windowOccurrences: [windowOccurrence],
+          },
+          nMin: 0,
+          nMax: 1,
+          source: { player: 'self', area: 'scene', cardId: 'SOURCE', abilityId: 'a1' },
+        },
+      }],
+    };
+
+    try {
+      expect(() => hydratePendingRuntimeState(state)).toThrow(error);
+      expect(probe.__pendingContactStartAxId).toBe('live-action');
+    } finally {
+      delete probe.__pendingContactStartAxId;
+    }
+  });
+
+  it.each([
+    {
+      answer: 'selection',
+      apply: (state: GameState, pending: NonNullable<ReturnType<typeof _peekPendingEffectPickSide>>) =>
+        applyPickAndContinuation(state, pending, pending.candidates[0]!.uid),
+    },
+    {
+      answer: 'decline',
+      apply: (state: GameState, pending: NonNullable<ReturnType<typeof _peekPendingEffectPickSide>>) =>
+        applyPickSkipAndContinuation(state, pending),
+    },
+  ])('consumes a structurally valid stale deckRevealUntil $answer clone without reviving it', ({ apply }) => {
+    const state = createEmptyGameState();
+    state.players.self.deck = ['PRIVATE'];
+    const occurrenceWitness = cardOccurrenceWitness(state, 'self', 'deck');
+    const occurrence = {
+      uid: cardOccurrenceUid('self', 'deck', 'PRIVATE', 0),
+      kind: 'card' as const,
+      cardId: 'PRIVATE',
+      player: 'self' as const,
+      area: 'deck' as const,
+      index: 0,
+      occurrenceWitness,
+    };
+    const pending = {
+      player: 'self' as const,
+      candidates: [occurrence],
+      atomVerb: 'deckRevealUntil',
+      atomArgs: {
+        player: 'self',
+        __windowPlayer: 'self',
+        __windowIds: ['PRIVATE'],
+        __windowWitness: occurrenceWitness,
+        __windowOccurrences: [occurrence],
+      },
+      nMin: 0,
+      nMax: 1,
+      source: { player: 'self' as const, area: 'scene' as const, cardId: 'SOURCE', abilityId: 'a1' },
+    };
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{ key: '__pendingEffectPickQueue', present: true, value: [pending] }],
+    };
+
+    advanceIndexedZoneEpoch(state, 'self', 'deck');
+    expect(hydratePendingRuntimeState(state)).toBe(true);
+    const publicClone = structuredClone(_peekPendingEffectPickSide()!);
+    apply(state, publicClone);
+
+    expect(_peekPendingEffectPickSide()).toBeNull();
+    resetPendingRuntimeState();
+    expect(hydratePendingRuntimeState(structuredClone(state))).toBe(true);
+    expect(_peekPendingEffectPickSide()).toBeNull();
+    expect(state.players.self.deck).toEqual(['PRIVATE']);
+    expect(state.players.self.hand).toEqual([]);
+    expect(state.log).toContainEqual(expect.objectContaining({ action: 'effect:pick', result: 'stale-selection' }));
+  });
+
+  it.each([
+    {
+      answer: 'selection',
+      apply: (state: GameState, pending: NonNullable<ReturnType<typeof _peekPendingEffectPickSide>>) =>
+        applyPickAndContinuation(state, pending, pending.candidates[0]!.uid),
+    },
+    {
+      answer: 'decline',
+      apply: (state: GameState, pending: NonNullable<ReturnType<typeof _peekPendingEffectPickSide>>) =>
+        applyPickSkipAndContinuation(state, pending),
+    },
+  ])('resolves a live legacy same-side deckRevealUntil $answer without __windowPlayer', ({ apply }) => {
+    const state = createEmptyGameState();
+    state.players.self.deck = ['PRIVATE'];
+    const occurrenceWitness = cardOccurrenceWitness(state, 'self', 'deck');
+    const occurrence = {
+      uid: cardOccurrenceUid('self', 'deck', 'PRIVATE', 0),
+      kind: 'card' as const,
+      cardId: 'PRIVATE',
+      player: 'self' as const,
+      area: 'deck' as const,
+      index: 0,
+      occurrenceWitness,
+    };
+    const pending = {
+      player: 'self' as const,
+      candidates: [occurrence],
+      atomVerb: 'deckRevealUntil',
+      atomArgs: {
+        player: 'self',
+        maxN: 1,
+        chooseMatch: 'upTo',
+        filter: { cardId: 'PRIVATE' },
+        bind: '$revealed',
+        bindMatch: '$matched',
+        __windowIds: ['PRIVATE'],
+        __windowWitness: occurrenceWitness,
+        __windowOccurrences: [occurrence],
+      },
+      nMin: 0,
+      nMax: 1,
+      source: { player: 'self' as const, area: 'scene' as const, cardId: 'SOURCE', abilityId: 'a1' },
+    };
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{ key: '__pendingEffectPickQueue', present: true, value: [pending] }],
+    };
+
+    expect(hydratePendingRuntimeState(state)).toBe(true);
+    apply(state, structuredClone(_peekPendingEffectPickSide()!));
+
+    expect(_peekPendingEffectPickSide()).toBeNull();
+    expect(state.log).not.toContainEqual(expect.objectContaining({ action: 'effect:pick', result: 'stale-selection' }));
+    expect(state.log).toContainEqual(expect.objectContaining({
+      action: 'effect:deckRevealUntil',
+      result: expect.stringContaining('matched=hidden'),
+    }));
+    resetPendingRuntimeState();
+    expect(hydratePendingRuntimeState(structuredClone(state))).toBe(false);
+    expect(_peekPendingEffectPickSide()).toBeNull();
+  });
+
+  it('hydrates and safely resolves a deckRevealUntil chosen by the other player', () => {
+    const state = createEmptyGameState();
+    state.players.opp.deck = ['PRIVATE'];
+    const occurrenceWitness = cardOccurrenceWitness(state, 'opp', 'deck');
+    const occurrence = {
+      uid: cardOccurrenceUid('opp', 'deck', 'PRIVATE', 0),
+      kind: 'card' as const,
+      cardId: 'PRIVATE',
+      player: 'opp' as const,
+      area: 'deck' as const,
+      index: 0,
+      occurrenceWitness,
+    };
+    const pending = {
+      player: 'self' as const,
+      ownerPlayer: 'opp' as const,
+      candidates: [occurrence],
+      atomVerb: 'deckRevealUntil',
+      atomArgs: {
+        player: 'opp',
+        __windowPlayer: 'opp',
+        __windowIds: ['PRIVATE'],
+        __windowWitness: occurrenceWitness,
+        __windowOccurrences: [occurrence],
+      },
+      nMin: 0,
+      nMax: 1,
+      source: { player: 'opp' as const, area: 'scene' as const, cardId: 'SOURCE', abilityId: 'a1' },
+    };
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{ key: '__pendingEffectPickQueue', present: true, value: [pending] }],
+    };
+
+    expect(hydratePendingRuntimeState(state)).toBe(true);
+    advanceIndexedZoneEpoch(state, 'opp', 'deck');
+    applyPickSkipAndContinuation(state, structuredClone(_peekPendingEffectPickSide()!));
+
+    expect(_peekPendingEffectPickSide()).toBeNull();
+    expect(state.players.opp.deck).toEqual(['PRIVATE']);
+    expect(state.log).toContainEqual(expect.objectContaining({ action: 'effect:pick', result: 'stale-selection' }));
+  });
+
   it('rejects a persisted pick source with an unknown area', () => {
     const state = createEmptyGameState();
     state.pendingRuntimeState = {
@@ -1020,6 +1509,57 @@ describe('adversarial: runtime identity is owned by GameState', () => {
     expect(state.pendingRuntimeState).toBeUndefined();
   });
 
+  it('does not rebase live pending bindings owned by a different GameState', () => {
+    resetPendingRuntimeState();
+    const runtime = globalThis as { __pendingRpsBindings?: Record<string, unknown> | null };
+    const owner = createEmptyGameState();
+    owner.players.self.deck = ['A', 'X'];
+    runtime.__pendingRpsBindings = {
+      picked: [{
+        kind: 'card', cardId: 'X', player: 'self', area: 'deck', index: 1,
+        uid: cardOccurrenceUid('self', 'deck', 'X', 1),
+        occurrenceWitness: cardOccurrenceWitness(owner, 'self', 'deck'),
+      }],
+    };
+    persistPendingRuntimeState(owner);
+    const before = structuredClone(runtime.__pendingRpsBindings);
+
+    const unrelated = createEmptyGameState();
+    unrelated.players.self.deck = ['B', 'X'];
+    unrelated.players.self.deck.shift();
+    advanceDeckEpochAndRebaseBindings(unrelated, effectCtx, 'self', [0]);
+
+    expect(runtime.__pendingRpsBindings).toEqual(before);
+    resetPendingRuntimeState();
+  });
+
+  it('rebases live pending bindings owned by the mutated GameState', () => {
+    resetPendingRuntimeState();
+    const runtime = globalThis as { __pendingRpsBindings?: Record<string, unknown> | null };
+    const state = createEmptyGameState();
+    state.players.self.deck = ['A', 'X'];
+    runtime.__pendingRpsBindings = {
+      picked: [{
+        kind: 'card', cardId: 'X', player: 'self', area: 'deck', index: 1,
+        uid: cardOccurrenceUid('self', 'deck', 'X', 1),
+        occurrenceWitness: cardOccurrenceWitness(state, 'self', 'deck'),
+      }],
+    };
+    persistPendingRuntimeState(state);
+
+    state.players.self.deck.shift();
+    advanceDeckEpochAndRebaseBindings(state, effectCtx, 'self', [0]);
+
+    expect(runtime.__pendingRpsBindings).toEqual({
+      picked: [{
+        kind: 'card', cardId: 'X', player: 'self', area: 'deck', index: 0,
+        uid: cardOccurrenceUid('self', 'deck', 'X', 0),
+        occurrenceWitness: 'occ:v1:self:deck:1',
+      }],
+    });
+    resetPendingRuntimeState();
+  });
+
   it('does not persist runtime-only rng functions inside continuations', () => {
     (globalThis as { __pendingRpsContinuation?: unknown }).__pendingRpsContinuation = {
       remainder: [],
@@ -1113,6 +1653,37 @@ describe('adversarial: runtime identity is owned by GameState', () => {
     expect(() => hydratePendingRuntimeState(state)).toThrow(/bindings\.picked\[0\]\.occurrenceWitness/);
   });
 
+  it('rejects a persisted physical deck binding without an occurrence witness', () => {
+    const state = createEmptyGameState();
+    state.players.self.deck = ['DUP'];
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingRpsContinuation',
+        present: true,
+        value: {
+          remainder: [],
+          ctx: {
+            source: { player: 'self', area: 'scene' },
+            bindings: {
+              picked: [{
+                kind: 'card',
+                cardId: 'DUP',
+                uid: cardOccurrenceUid('self', 'deck', 'DUP', 0),
+                player: 'self',
+                area: 'deck',
+                index: 0,
+              }],
+            },
+          },
+          kind: 'sequence',
+        },
+      }],
+    };
+
+    expect(() => hydratePendingRuntimeState(state)).toThrow(/bindings\.picked\[0\]\.occurrenceWitness/);
+  });
+
   it('accepts a persisted hidden evidence binding without exposing a card identity', () => {
     const state = createEmptyGameState();
     state.players.self.evidence = [{ cardId: 'HIDDEN', faceUp: false, origin: { turn: 1, via: 'effect' } }];
@@ -1158,6 +1729,39 @@ describe('adversarial: runtime identity is owned by GameState', () => {
         .toThrow('deckSnapshot and occurrences must be provided together');
     } finally {
       delete (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide;
+    }
+  });
+
+  it('rejects a deck reorder snapshot with duplicate occurrence indexes', () => {
+    const state = persistedDeckReorder({
+      player: 'self',
+      cardIds: ['A', 'A'],
+      deckSnapshot: ['A', 'A'],
+      occurrences: [{ cardId: 'A', index: 0 }, { cardId: 'A', index: 0 }],
+      ctx: effectCtx,
+    }, ['A', 'A']);
+
+    try {
+      expect(() => hydratePendingRuntimeState(state)).toThrow('must be unique');
+    } finally {
+      resetPendingRuntimeState();
+    }
+  });
+
+  it('rejects a deck reorder snapshot that no longer matches the target deck', () => {
+    const state = persistedDeckReorder({
+      player: 'self',
+      cardIds: ['A'],
+      deckSnapshot: ['A'],
+      occurrences: [{ cardId: 'A', index: 0 }],
+      ctx: effectCtx,
+    }, ['B']);
+
+    try {
+      expect(() => hydratePendingRuntimeState(state))
+        .toThrow('deckSnapshot must match current player deck');
+    } finally {
+      resetPendingRuntimeState();
     }
   });
 
@@ -1225,6 +1829,7 @@ describe('adversarial: runtime identity is owned by GameState', () => {
           cardIds: ['CARD'],
           deckSnapshot: ['CARD'],
           occurrences: [{ cardId: 'CARD', index: 0 }],
+          occurrenceWitness: 'occ:v1:opp:deck:0',
         },
       }],
     };
@@ -1234,6 +1839,26 @@ describe('adversarial: runtime identity is owned by GameState', () => {
         .toThrow('ctx is required');
     } finally {
       delete (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide;
+    }
+  });
+
+  it('rejects a persisted deck placement authority without an occurrence witness transactionally', () => {
+    const probe = globalThis as { __pendingContactStartAxId?: unknown };
+    probe.__pendingContactStartAxId = 'live-action';
+    const state = persistedDeckPlace({
+      player: 'opp',
+      ownerPlayer: 'self',
+      cardIds: ['A'],
+      deckSnapshot: ['A'],
+      occurrences: [{ cardId: 'A', index: 0 }],
+      ctx: effectCtx,
+    }, ['A'], false);
+
+    try {
+      expect(() => hydratePendingRuntimeState(state)).toThrow(/occurrenceWitness/);
+      expect(probe.__pendingContactStartAxId).toBe('live-action');
+    } finally {
+      delete probe.__pendingContactStartAxId;
     }
   });
 

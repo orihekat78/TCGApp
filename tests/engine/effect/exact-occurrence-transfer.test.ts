@@ -253,27 +253,29 @@ describe('exact occurrence transfer', () => {
   });
 
   it('prunes only the moved duplicate deck binding and rebases later deck indices', () => {
+    const state = createEmptyGameState();
+    state.players.self.deck = ['DUP', 'X', 'DUP'];
+    const occurrenceWitness = cardOccurrenceWitness(state, 'self', 'deck');
     const ctx = makeCtx({
       bindings: {
         $revealed: [
-          { kind: 'card', cardId: 'DUP', area: 'deck', player: 'self', index: 0 },
-          { kind: 'card', cardId: 'X', area: 'deck', player: 'self', index: 1 },
-          { kind: 'card', cardId: 'DUP', area: 'deck', player: 'self', index: 2 },
+          { kind: 'card', uid: cardOccurrenceUid('self', 'deck', 'DUP', 0), cardId: 'DUP', area: 'deck', player: 'self', index: 0, occurrenceWitness },
+          { kind: 'card', uid: cardOccurrenceUid('self', 'deck', 'X', 1), cardId: 'X', area: 'deck', player: 'self', index: 1, occurrenceWitness },
+          { kind: 'card', uid: cardOccurrenceUid('self', 'deck', 'DUP', 2), cardId: 'DUP', area: 'deck', player: 'self', index: 2, occurrenceWitness },
         ],
       },
     });
-    const state = createEmptyGameState();
-    state.players.self.deck = ['DUP', 'X', 'DUP'];
 
-    produce(state, (draft) => {
+    const after = produce(state, (draft) => {
       runAtom(draft, 'handAddFromDeck', {
         player: 'self', cardIds: ['DUP'], selectedDeckIndexes: [2], bind: '$moved',
       }, ctx);
     });
 
+    const renewedWitness = cardOccurrenceWitness(after, 'self', 'deck');
     expect(ctx.bindings.$revealed).toEqual([
-      { kind: 'card', cardId: 'DUP', area: 'deck', player: 'self', index: 0 },
-      { kind: 'card', cardId: 'X', area: 'deck', player: 'self', index: 1 },
+      { kind: 'card', uid: cardOccurrenceUid('self', 'deck', 'DUP', 0), cardId: 'DUP', area: 'deck', player: 'self', index: 0, occurrenceWitness: renewedWitness },
+      { kind: 'card', uid: cardOccurrenceUid('self', 'deck', 'X', 1), cardId: 'X', area: 'deck', player: 'self', index: 1, occurrenceWitness: renewedWitness },
     ]);
   });
 

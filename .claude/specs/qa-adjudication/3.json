@@ -37,16 +37,13 @@
     {
       "qaId": "card:B01016:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:37",
-        "src:src/cards/ct-p01/B01016.ts:14"
-      ],
-      "noteCodes": [
-        "RAW-READ",
-        "TEST-GAP"
+        "src:src/cards/ct-p01/B01016.ts:14",
+        "tests:tests/cards/official-qa/deck-look-bottom-family-public.test.ts:398"
       ]
     },
     {
@@ -1842,11 +1839,12 @@
     {
       "qaId": "card:D05012:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d05/D05012.ts:1"
+        "src:src/cards/ct-d05/D05012.ts:1",
+        "tests:tests/cards/official-qa/deck-look-bottom-family-public.test.ts:410"
       ]
     },
     {

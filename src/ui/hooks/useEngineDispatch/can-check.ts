@@ -42,9 +42,7 @@ function matchesPendingDecision(
 
 function matchesHiramekiCheckpoint(state: GameState, pending: PendingHirameki): boolean {
   if (!pending.actionId
-    || !pending.causalCorrelationEventId
-    || !pending.actorUid
-    || !pending.occurrence) return false;
+    || !pending.actorUid) return false;
 
   const ax = flow.action._getContext(state, pending.actionId);
   if (!ax
@@ -55,10 +53,19 @@ function matchesHiramekiCheckpoint(state: GameState, pending: PendingHirameki): 
     || ax.byUid !== pending.actorUid
     || ax.byPlayer === pending.player
     || ax.deferredCaseEvidenceGain !== true
-    || pending.gainDeferred !== true
-    || ax.causalTrace?.tailEventId !== pending.causalCorrelationEventId) {
+    || pending.gainDeferred !== true) {
     return false;
   }
+
+  if (pending.heldEvidence !== undefined) {
+    return pending.occurrence === undefined
+      && pending.causalCorrelationEventId === undefined
+      && flow.actionCase.matchesHiramekiCheckpoint(state, ax, pending);
+  }
+
+  if (!pending.causalCorrelationEventId
+    || ax.causalTrace?.tailEventId !== pending.causalCorrelationEventId
+    || !pending.occurrence) return false;
 
   const occurrence = pending.occurrence;
   if (occurrence.player !== pending.player
@@ -183,7 +190,13 @@ export function isAllowed(
       // pendingHirameki が set されているときのみ有効
       const pending = useGameStateStore.getState().pendingHirameki;
       return matchesPendingDecision(pending, action)
-        && matchesHiramekiCheckpoint(state, pending!);
+        && matchesHiramekiCheckpoint(state, pending!)
+        && flow.actionCase.isValidHiramekiSceneSwitchChoice(
+          state,
+          pending!,
+          action.choice,
+          'switchRemoveUid' in action ? action.switchRemoveUid : undefined,
+        );
     }
     case 'misreadResolve': {
       const pending = useGameStateStore.getState().pendingMisread;

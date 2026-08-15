@@ -1,6 +1,6 @@
 import type { GameState } from '../types/game-state.js';
 
-export type IndexedZone = 'evidence' | 'remove';
+export type IndexedZone = 'deck' | 'evidence' | 'remove';
 export type IndexedZoneEpochs = {
   self: Record<IndexedZone, number>;
   opp: Record<IndexedZone, number>;
@@ -13,15 +13,24 @@ export function ensureIndexedZoneEpochs(
 ): IndexedZoneEpochs {
   const current = state.indexedZoneEpochs;
   if (current) {
-    if (indexedZoneEpoch(state, 'self', 'evidence') !== undefined
+    const legacyFieldsAreValid = indexedZoneEpoch(state, 'self', 'evidence') !== undefined
       && indexedZoneEpoch(state, 'self', 'remove') !== undefined
       && indexedZoneEpoch(state, 'opp', 'evidence') !== undefined
-      && indexedZoneEpoch(state, 'opp', 'remove') !== undefined) return current;
+      && indexedZoneEpoch(state, 'opp', 'remove') !== undefined;
+    if (!legacyFieldsAreValid) throw new Error('Invalid indexed zone epochs');
+    const selfDeck = indexedZoneEpoch(state, 'self', 'deck');
+    const oppDeck = indexedZoneEpoch(state, 'opp', 'deck');
+    if (selfDeck === undefined && oppDeck === undefined) {
+      (current.self as Record<string, number>).deck = 0;
+      (current.opp as Record<string, number>).deck = 0;
+      return current;
+    }
+    if (selfDeck !== undefined && oppDeck !== undefined) return current;
     throw new Error('Invalid indexed zone epochs');
   }
   const initialized: IndexedZoneEpochs = {
-    self: { evidence: 0, remove: 0 },
-    opp: { evidence: 0, remove: 0 },
+    self: { deck: 0, evidence: 0, remove: 0 },
+    opp: { deck: 0, evidence: 0, remove: 0 },
   };
   state.indexedZoneEpochs = initialized;
   return initialized;

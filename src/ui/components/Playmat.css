@@ -384,3 +384,9 @@
   border-color: #ccc;
   color: #fff;
 }
+
+.switch-victim-cancel {
+  min-width: calc(44px * var(--playmat-inverse-scale, 1));
+  min-height: calc(44px * var(--playmat-inverse-scale, 1));
+  font-size: calc(12px * var(--playmat-inverse-scale, 1));
+}

@@ -26,6 +26,7 @@ import {
   _takePendingSetCardChoiceResume,
 } from '@/engine/effect/pending-state';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks';
+import { deckOccurrenceAuthority } from '@/engine/effect/deck-occurrence-authority';
 import { appendCausal, startCausalSession, validateCausalLog } from '@/engine/log/causal';
 import {
   ensureEffectCausalTrace,
@@ -1602,8 +1603,8 @@ describe('structured causal effect resolution', () => {
       },
       bindings: {
         $moved: [
-          { kind: 'card', cardId: 'P1', area: 'deck', player: 'self', index: 0 },
-          { kind: 'card', cardId: 'P2', area: 'deck', player: 'self', index: 1 },
+          deckOccurrenceAuthority(state, 'self', 0)!,
+          deckOccurrenceAuthority(state, 'self', 1)!,
         ],
       },
       state: 'pending',
@@ -1651,8 +1652,8 @@ describe('structured causal effect resolution', () => {
       },
       bindings: {
         $moved: [
-          { kind: 'card', cardId: 'P1', area: 'deck', player: 'self', index: 1 },
-          { kind: 'card', cardId: 'P2', area: 'deck', player: 'self', index: 2 },
+          deckOccurrenceAuthority(state, 'self', 1)!,
+          deckOccurrenceAuthority(state, 'self', 2)!,
         ],
       },
       state: 'pending',
@@ -1849,6 +1850,7 @@ describe('structured causal effect resolution', () => {
       ['game-result', 'effect-terminal:1'],
     ]);
     expect(state.gameResult).toEqual({ winner: 'self', reason: 'alt-lose' });
+    expect(entry.state).toBe('resolved');
   });
 
   it('converts a child correlation into one idempotent trace', () => {

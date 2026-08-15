@@ -52,7 +52,8 @@ export type EngineAction =
   | BoundDecision<{ type: 'setCardChoiceResolve'; instanceId: string }>
   | BoundDecision<{ type: 'setCardReplacementResolve'; targetUid: string | null }>
   // Phase 8 完全クローズ Commit 3a: ヒラメキ発動 / スキップ決定
-  | BoundDecision<{ type: 'hiramekiResolve'; choice: 'fire' | 'skip' }>
+  | BoundDecision<{ type: 'hiramekiResolve'; choice: 'skip' }>
+  | BoundDecision<{ type: 'hiramekiResolve'; choice: 'fire'; switchRemoveUid?: string }>
   // Phase 8 完全クローズ Commit 3b: ミスリード発動キャラ複数選択
   | BoundDecision<{ type: 'misreadResolve'; picks: ReadonlyArray<{ uid: string; x: number }> }>
   // user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択結果

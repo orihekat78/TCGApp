@@ -21,6 +21,8 @@ import { _clearPendingEffectChoiceSide, _peekPendingEffectChoiceSide, pushPendin
 import { _clearPendingEffectPickQueue, _peekPendingEffectPickSide, _pushPendingEffectPickSideForTest, type PendingEffectPickSide } from '@/engine/effect/resolve-picks';
 import { registerAll } from '@/cards';
 import type { PendingDeckPlaceSide } from '@/engine/effect/atom-handlers/_shared';
+import { cardOccurrenceWitness } from '@/engine/target/card-occurrence';
+import { deckOccurrenceAuthority } from '@/engine/effect/deck-occurrence-authority';
 
 type HumanSide = 'self' | 'opp' | null;
 const g = globalThis as {
@@ -56,9 +58,13 @@ function cpuReorderCard(): CardDef {
       effect: {
         kind: 'custom',
         fn: (state, ctx) => {
-          ctx.bindings['$humanWindow'] = ['H-A', 'H-B'].map((cardId, index) => ({
-            kind: 'card', cardId, area: 'deck', player: 'self', index,
-          }));
+          ctx.bindings['$humanWindow'] = ['H-A', 'H-B'].map((cardId, index) => {
+            const authority = deckOccurrenceAuthority(state, 'self', index);
+            if (!authority || authority.cardId !== cardId) {
+              throw new Error(`missing deck occurrence authority for ${cardId} at ${index}`);
+            }
+            return authority;
+          });
           // Source is opp, so relative opp is the human self player's deck.
           runAtom(state, 'deckToBottomBound', { player: 'opp', bindKey: '$humanWindow' }, ctx);
         },
@@ -288,6 +294,7 @@ describe('CPU pause for human-owned deck decisions', () => {
       cardIds: ['X', 'Y'],
       deckSnapshot: ['X', 'Y'],
       occurrences: [{ cardId: 'X', index: 0 }, { cardId: 'Y', index: 1 }],
+      occurrenceWitness: cardOccurrenceWitness(state, 'opp', 'deck'),
       ctx: {
         source: { player: 'self', area: 'scene', cardId: 'TEST', abilityId: 'a1' },
         bindings: {},

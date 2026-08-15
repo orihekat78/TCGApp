@@ -58,6 +58,13 @@ function kerChar() {
   return { ...targetChar(), uid: 'ker', cardId: 'B06025' };
 }
 
+function finishCaseAction(actionId: string): void {
+  for (let step = 0; step < 2 && useGameStateStore.getState().activeActionId === actionId; step += 1) {
+    expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
+  }
+  expect(useGameStateStore.getState().activeActionId).toBeNull();
+}
+
 describe('B06025 ケロ介: action-removed evidence occurrence reentry', () => {
   beforeEach(reset);
 
@@ -67,13 +74,16 @@ describe('B06025 ケロ介: action-removed evidence occurrence reentry', () => {
     const state = createEmptyGameState();
     state.players.self.remove = ['B06025'];
     state.players.self.deck = ['D08005'];
+    state.players.opp.deck = ['D08017', 'D08017'];
     state.players.opp.scene = [targetChar()];
-    const { pending, actorUid } = openCaseHirameki(state, 'B06025');
-    expect(pending.occurrence).toEqual({ uid: 'card:self:remove:B06025#1', player: 'self', cardId: 'B06025', area: 'remove', index: 1, occurrenceWitness: 'occ:v1:self:remove:1' });
+    const { actionId, pending, actorUid } = openCaseHirameki(state, 'B06025');
+    expect(pending.occurrence).toBeUndefined();
+    expect(pending.heldEvidence).toEqual(expect.objectContaining({ player: 'self', cardId: 'B06025' }));
 
     expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' })).toEqual({ ok: true });
     expect(useGameStateStore.getState().pendingEffectPick?.atomVerb).toBe('sceneRemove');
     expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'target' }).ok).toBe(true);
+    finishCaseAction(actionId);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene.map(c => c.uid)).toEqual([actorUid]);
     expect(after.players.self.scene.map(c => c.cardId)).toEqual(['B06025']);
@@ -85,9 +95,10 @@ describe('B06025 ケロ介: action-removed evidence occurrence reentry', () => {
     const state = createEmptyGameState();
     state.players.self.remove = ['B06025'];
     state.players.opp.scene = [targetChar()];
-    const { actorUid } = openCaseHirameki(state, 'B06025');
+    const { actionId, actorUid } = openCaseHirameki(state, 'B06025');
 
     expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'skip' }).ok).toBe(true);
+    finishCaseAction(actionId);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene.map(c => c.uid)).toEqual(['target', actorUid]);
     expect(after.players.self.scene).toHaveLength(0);
@@ -96,31 +107,37 @@ describe('B06025 ケロ介: action-removed evidence occurrence reentry', () => {
 
   it('does not enter when zero targets are selected', () => {
     const state = createEmptyGameState();
-    const { actorUid } = openCaseHirameki(state, 'B06025');
+    const { actionId, actorUid } = openCaseHirameki(state, 'B06025');
 
     expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' })).toEqual({ ok: true });
+    expect(useGameStateStore.getState().pendingEffectPick?.atomVerb).toBe('sceneRemove');
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null })).toEqual({ ok: true });
+    finishCaseAction(actionId);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene).toHaveLength(0);
     expect(after.players.self.remove).toEqual(['B06025']);
   });
 
-  it('does not enter a stale occurrence even when target removal succeeds', () => {
+  it('does not retarget an identical remove card when held authority becomes stale', () => {
     const state = createEmptyGameState();
+    state.players.self.remove = ['B06025'];
     state.players.opp.scene = [targetChar()];
-    const { actorUid } = openCaseHirameki(state, 'B06025');
+    state.players.opp.deck = ['D08017', 'D08017'];
+    const { actionId, actorUid } = openCaseHirameki(state, 'B06025');
 
     expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
     const current = useGameStateStore.getState().gameState!;
     useGameStateStore.setState({
       gameState: produce(current, draft => {
-        mutate.remove.removeFromHere(draft, 'self', ['B06025', 'B06025']);
+        draft.actionContexts![actionId]!.pendingHiramekiEvidenceRemoval!.token = 'stale-held-token';
       }),
     });
     expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'target' }).ok).toBe(true);
+    finishCaseAction(actionId);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene.map(c => c.uid)).toEqual([actorUid]);
     expect(after.players.self.scene).toHaveLength(0);
-    expect(after.players.self.remove).toEqual([]);
+    expect(after.players.self.remove).toEqual(['B06025', 'B06025']);
     expect(after.players.opp.remove).toEqual(['D08005']);
   });
 

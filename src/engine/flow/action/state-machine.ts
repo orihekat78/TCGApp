@@ -20,7 +20,7 @@ import { def as readDef } from '../../read/def.js';
 import { canActionAgainstChar, canActionAgainstCase } from '../main/action.js';
 import { canGuard, mustGuardCandidates } from '../guard.js';
 import { buildContactBindings } from '../contact.js';
-import { gainSelfEvidence } from '../action-case.js';
+import { finalizePendingHiramekiEvidenceRemoval, gainSelfEvidence } from '../action-case.js';
 import { computeOrder } from './order.js';
 import { contextForState } from './context-registry.js';
 import { withStructuredCausalResolution } from '../../log/effect-causal.js';
@@ -625,6 +625,15 @@ export function advance(state: GameState, ax: ActionContext): void {
   }
 
   if (phase === 'contact-end') {
+    if (ax.pendingHiramekiEvidenceRemoval?.decisionResolved === false) return;
+    // An optional Hirameki keeps the removed evidence card owned by this
+    // ActionContext until its effect (including nested public decisions) has
+    // finished. Commit that exact card before the normal case evidence gain.
+    withStructuredCausalResolution(
+      state,
+      () => finalizePendingHiramekiEvidenceRemoval(state, ax),
+      ax.causalTrace,
+    );
     if (ax.deferredCaseEvidenceGain) {
       withStructuredCausalResolution(state, () => gainSelfEvidence(state, ax), ax.causalTrace);
       delete ax.deferredCaseEvidenceGain;

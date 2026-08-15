@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { evidence } from '@/engine/mutate/evidence';
-import type { GameState, EvidenceOrigin } from '@/engine/types';
+import type { ActionContext, GameState, EvidenceOrigin } from '@/engine/types';
 
 function makeState(overrides?: Partial<GameState['players']['self']>): GameState {
   const s = createEmptyGameState();
@@ -18,6 +18,37 @@ function makeState(overrides?: Partial<GameState['players']['self']>): GameState
 }
 
 const baseOrigin: EvidenceOrigin = { turn: 1, via: 'reasoning' };
+
+function heldHiramekiState(): GameState {
+  const state = createEmptyGameState();
+  state.actionContexts = {
+    'action-1': {
+      id: 'action-1',
+      byUid: 'attacker',
+      byPlayer: 'opp',
+      target: { kind: 'case', player: 'self' },
+      phase: 'judge',
+      startedAt: { turn: 1, nano: 1 },
+      pendingHiramekiEvidenceRemoval: {
+        token: 'hirameki:action-1:self',
+        player: 'self',
+        evidence: { cardId: 'EV001', faceUp: false, origin: baseOrigin },
+        decisionResolved: true,
+        abilityId: 'a2',
+        effectValid: true,
+      },
+    } as ActionContext,
+  };
+  return state;
+}
+
+const validHeldClaim: Parameters<typeof evidence.takeHeldHiramekiEvidence>[1] = {
+  actionId: 'action-1',
+  token: 'hirameki:action-1:self',
+  player: 'self',
+  cardId: 'EV001',
+  abilityId: 'a2',
+};
 
 describe('engine.mutate.evidence', () => {
   describe('addFromDeck', () => {
@@ -190,6 +221,55 @@ describe('engine.mutate.evidence', () => {
       });
       expect(result.players.self.evidence).toHaveLength(0);
       expect(result.players.self.remove).toContain('EV001');
+    });
+  });
+
+  describe('takeHeldHiramekiEvidence', () => {
+    it('consumes the exact action-owned held evidence once', () => {
+      const state = heldHiramekiState();
+      let firstCardId: string | undefined;
+      let second: ReturnType<typeof evidence.takeHeldHiramekiEvidence>;
+      const result = produce(state, draft => {
+        firstCardId = evidence.takeHeldHiramekiEvidence(draft, validHeldClaim)?.cardId;
+        second = evidence.takeHeldHiramekiEvidence(draft, validHeldClaim);
+      });
+
+      expect(firstCardId).toBe('EV001');
+      expect(second!).toBeUndefined();
+      expect(result.actionContexts['action-1']?.pendingHiramekiEvidenceRemoval).toBeUndefined();
+      expect(result.players.self.remove).toEqual([]);
+    });
+
+    it.each([
+      ['missing action', { ...validHeldClaim, actionId: 'missing' }],
+      ['wrong token', { ...validHeldClaim, token: 'hirameki:forged:self' }],
+      ['wrong player', { ...validHeldClaim, player: 'opp' as const }],
+      ['wrong card', { ...validHeldClaim, cardId: 'EV002' }],
+      ['wrong ability', { ...validHeldClaim, abilityId: 'a1' }],
+    ])('rejects a %s claim without consuming the held evidence', (_label, claim) => {
+      const state = heldHiramekiState();
+      let taken: ReturnType<typeof evidence.takeHeldHiramekiEvidence>;
+      const result = produce(state, draft => {
+        taken = evidence.takeHeldHiramekiEvidence(draft, claim);
+      });
+
+      expect(taken!).toBeUndefined();
+      expect(result.actionContexts['action-1']?.pendingHiramekiEvidenceRemoval?.evidence.cardId).toBe('EV001');
+    });
+
+    it.each([
+      ['unresolved decision', { decisionResolved: false }],
+      ['invalid effect', { effectValid: false }],
+    ])('rejects %s authority without consuming it', (_label, heldPatch) => {
+      const state = heldHiramekiState();
+      Object.assign(state.actionContexts['action-1']!.pendingHiramekiEvidenceRemoval!, heldPatch);
+      let taken: ReturnType<typeof evidence.takeHeldHiramekiEvidence>;
+      const result = produce(state, draft => {
+        taken = evidence.takeHeldHiramekiEvidence(draft, validHeldClaim);
+      });
+
+      expect(taken!).toBeUndefined();
+      expect(result.actionContexts['action-1']?.pendingHiramekiEvidenceRemoval).toBeDefined();
     });
   });
 });

@@ -1626,9 +1626,10 @@
       "evidence": [
         "src:src/cards/ct-p09/B09081.ts:24",
         "src:src/cards/ct-p09/B09081.ts:35",
-        "tests:tests/cards/night-wC/hirameki-optional.test.ts:100",
         "tests:tests/cards/night-wC/hirameki-optional.test.ts:101",
-        "tests:tests/cards/night-wC/hirameki-optional.test.ts:102",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:105",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:108",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:109",
         "tests:tests/cards/night-wC/hirameki-optional.test.ts:97"
       ],
       "noteCodes": [
@@ -1832,15 +1833,13 @@
     {
       "qaId": "card:B10031:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c",
       "answerHash": "24c759d28a4ec6639a5e29d0bfe9ecf8ae35c9fef100ec84884250ecbdda798e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/10-action-event.md:18",
-        "src:src/cards/ct-p10/B10031.ts:10"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10031.ts:10",
+        "tests:tests/cards/official-qa/event-evidence-action-hirameki-public.test.ts:308"
       ]
     },
     {
@@ -2215,27 +2214,23 @@
     {
       "qaId": "card:PR016:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c",
       "answerHash": "24c759d28a4ec6639a5e29d0bfe9ecf8ae35c9fef100ec84884250ecbdda798e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR016.ts:6"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/pr-01/PR016.ts:6",
+        "tests:tests/cards/official-qa/event-evidence-action-hirameki-public.test.ts:297"
       ]
     },
     {
       "qaId": "card:PR020:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c",
       "answerHash": "24c759d28a4ec6639a5e29d0bfe9ecf8ae35c9fef100ec84884250ecbdda798e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR020.ts:6"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/pr-01/PR020.ts:6",
+        "tests:tests/cards/official-qa/event-evidence-action-hirameki-public.test.ts:301"
       ]
     },
     {

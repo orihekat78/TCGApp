@@ -427,6 +427,12 @@ export type PendingHirameki = {
     index: number;
     occurrenceWitness: string;
   };
+  /** Exact evidence card held by the owning ActionContext during resolution. */
+  heldEvidence?: {
+    token: string;
+    player: 'self' | 'opp';
+    cardId: string;
+  };
   /** State-owned action that must still be awaiting this decision. */
   actionId?: string;
   /** Exact public evidence-removal event that opened this decision. */

@@ -7,6 +7,7 @@ import type { GameState, FileCard } from '@/engine/types';
 import { caseOp } from './case.js';
 import { deck as deckMut } from './deck.js';
 import type { CardId } from '@/engine/types';
+import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 
 type Player = 'self' | 'opp';
 export type DeckToFileStep = { kind: 'move' | 'refresh'; count: number };
@@ -31,6 +32,7 @@ function addFromDeckTop(
     // Round 3: ネクストヒント時に表向きで手札に渡せるよう cardId を保持
     const cardId = d.shift();
     if (cardId === undefined) break;
+    advanceIndexedZoneEpoch(s, p, 'deck');
     const card: FileCard = { type: 'card-back', cardId };
     s.players[p].file.push(card);
     added++;

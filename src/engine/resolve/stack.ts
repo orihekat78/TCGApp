@@ -69,6 +69,7 @@ function cancelPendingAfterGameEnd(
   }
   delete state.pendingTurnTransition;
   delete state.pendingReasoningContinuation;
+  state.reservedEffects = [];
   clearPersistedPendingRuntimeState(state);
   resetPendingRuntimeStateAfterGameEnd(options);
   if (options.preserveCompletedPresentations) ACTIVE_TERMINAL_PRESENTATION_STATES.add(state);

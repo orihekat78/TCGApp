@@ -302,6 +302,7 @@ function runEngineAction(
           chooseAtomTarget: isHumanHirameki ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
           runtimeAtomTargetPolicyKey: isHumanHirameki ? undefined : 'heuristic',
           humanChooser: isHumanHirameki,
+          switchRemoveUid: 'switchRemoveUid' in action ? action.switchRemoveUid : undefined,
         },
       );
       // The ActionContext remains open while the queued Hirameki effect resolves.
@@ -698,6 +699,13 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     const contactStartAxId = _drainPendingContactStartAxId();
     if (contactStartAxId) {
       store.setActiveActionId(contactStartAxId);
+    }
+    const committedAfterAction = useGameStateStore.getState().gameState;
+    const activeActionId = useGameStateStore.getState().activeActionId;
+    if (activeActionId
+      && committedAfterAction
+      && !flow.action._getContext(committedAfterAction, activeActionId)) {
+      store.setActiveActionId(null);
     }
     // Commit 3a: evidence:remove-by-action listener が側チャネルにセットしていれば
     // Zustand pendingHirameki に転送。

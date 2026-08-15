@@ -17,6 +17,8 @@ import { evalCond } from '@/engine/cond/eval';
 import { defHasKeyword } from '@/engine/read/keyword';
 import { cards as engineCards } from '@/engine/cards/index';
 import { makeCtx } from '../../helpers/fixtures';
+import { deckOccurrenceAuthority } from '@/engine/effect/deck-occurrence-authority';
+import { mutate } from '@/engine/mutate';
 import type { CardDef, AbilityDef, Candidate, EffectStackEntry, GameState } from '@/engine/types';
 
 // ---------------------------------------------------------------------------
@@ -217,12 +219,12 @@ describe('X6: boundToRemove — bound window をリムーブエリアへ', () =>
     registerSynthetics();
   });
 
-  const cand = (cardId: string): Candidate => ({ kind: 'card', cardId, area: 'deck', player: 'self' });
+  const deckCand = (state: GameState, index: number): Candidate => deckOccurrenceAuthority(state, 'self', index)!;
 
   it('bound の cardId 群をデッキから splice してリムーブエリアへ', () => {
     let s = createEmptyGameState();
     s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['A', 'B', 'BASE'] } } };
-    const ctx = makeCtx({ bindings: { r: [cand('A'), cand('B')] } });
+    const ctx = makeCtx({ bindings: { r: [deckCand(s, 0), deckCand(s, 1)] } });
     const result = produce(s, draft => {
       runAtom(draft, 'boundToRemove', { player: 'self', bindKey: 'r' }, ctx);
     });
@@ -233,7 +235,7 @@ describe('X6: boundToRemove — bound window をリムーブエリアへ', () =>
   it('移送完了でデッキ 0 → refresh (移したカード自身も shuffle 対象, B09073 qAndA / rules/26)', () => {
     let s = createEmptyGameState();
     s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['A', 'B'], remove: ['C'] } } };
-    const ctx = makeCtx({ bindings: { r: [cand('A'), cand('B')] } });
+    const ctx = makeCtx({ bindings: { r: [deckCand(s, 0), deckCand(s, 1)] } });
     const result = produce(s, draft => {
       runAtom(draft, 'boundToRemove', { player: 'self', bindKey: 'r' }, ctx);
     });
@@ -255,6 +257,30 @@ describe('X6: boundToRemove — bound window をリムーブエリアへ', () =>
     expect(result.refreshCount.self).toBe(0);
     expect(result.log.some(entry => entry.action === 'effect:boundToRemove')).toBe(false);
     expect(result.players.opp.evidence).toHaveLength(0);
+  });
+
+  it('moves the exact duplicate occurrence and rejects an ABA-restored stale witness', () => {
+    const duplicateState = createEmptyGameState();
+    duplicateState.players.self.deck = ['DUP', 'KEEP', 'DUP'];
+    const secondDuplicate = deckCand(duplicateState, 2);
+    const moved = produce(duplicateState, draft => {
+      runAtom(draft, 'boundToRemove', { player: 'self', bindKey: 'r' }, makeCtx({ bindings: { r: [secondDuplicate] } }));
+    });
+    expect(moved.players.self.deck).toEqual(['DUP', 'KEEP']);
+    expect(moved.players.self.remove).toEqual(['DUP']);
+
+    const staleState = createEmptyGameState();
+    staleState.players.self.deck = ['DUP', 'KEEP'];
+    const stale = deckCand(staleState, 0);
+    mutate.deck.draw(staleState, 'self', 1);
+    staleState.players.self.hand.pop();
+    mutate.deck.toTop(staleState, 'self', ['DUP']);
+    expect(staleState.players.self.deck).toEqual(['DUP', 'KEEP']);
+    const unchanged = produce(staleState, draft => {
+      runAtom(draft, 'boundToRemove', { player: 'self', bindKey: 'r' }, makeCtx({ bindings: { r: [stale] } }));
+    });
+    expect(unchanged.players.self.deck).toEqual(['DUP', 'KEEP']);
+    expect(unchanged.players.self.remove).toEqual([]);
   });
 
   it('refresh ordering flags require literal true', () => {

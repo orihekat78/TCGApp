@@ -318,6 +318,12 @@ describe('engine.resolve.stack', () => {
       const result = produce(s, draft => {
         draft.pendingEffects.push(pending, resolving, resolved, cancelled);
         draft.pendingReasoningContinuation = { token: 7, uid: 'A#1', player: 'self' };
+        draft.reservedEffects.push({
+          id: 'reserved-next-match',
+          trigger: { hook: 'contact:start', mode: 'next-match', player: 'self', armedTurn: 1 },
+          effect: { kind: 'atom', verb: 'noop', args: {} },
+          source: { player: 'self', cardId: 'RESERVED' },
+        });
         draft.gameResult = { winner: 'opp', reason: 'deck-out' };
         resolve.runAllUntilEmpty(draft);
       });
@@ -329,6 +335,7 @@ describe('engine.resolve.stack', () => {
         { id: 'cancelled', state: 'cancelled' },
       ]);
       expect(result.pendingReasoningContinuation).toBeUndefined();
+      expect(result.reservedEffects).toEqual([]);
       expect(result.players.self.scene[0].turnEffects['apMod_turn']).toBeUndefined();
     });
 

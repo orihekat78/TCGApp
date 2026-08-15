@@ -30,18 +30,20 @@ import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/l
 import { _resetRegistry as resetDefRegistry, register as registerCardDef, def } from '@/engine/read/def';
 import { registerAll } from '@/cards/index';
 import { runAtom } from '@/engine/effect/atom-handlers';
-import { run as runEffect } from '@/engine/effect/resolver';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { _drainAllEffectPicksForTest, applyPickSkipAndContinuation } from '@/engine/effect/apply-pick';
 import { _drainPendingEffectPickSide, _clearPendingEffectPickQueue } from '@/engine/effect/pending-state';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _drainPendingHirameki } from '@/engine/listeners/hirameki';
-import { removeOpponentEvidenceTop } from '@/engine/flow/action-case';
 import { handUseCard } from '@/engine/flow/main/hand-use-card';
 import { runNextHint } from '@/engine/flow/main/next-hint';
 import { candidates } from '@/engine/target/candidates';
+import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import { useGameStateStore } from '@/ui/state/store';
 import { sceneChar } from '../helpers/fixtures';
+import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
+import { openCaseHirameki } from '../helpers/open-case-hirameki';
 import { B07059 } from '@/cards/ct-p07/B07059';
 import { B07059P } from '@/cards/ct-p07/B07059P';
 import { B07060 } from '@/cards/ct-p07/B07060';
@@ -54,8 +56,6 @@ const ev = (cardId: string, faceUp = false): EvidenceCard => ({ cardId, faceUp, 
 // event-use / hirameki の ctx.source: cardId = 当該イベント自身、player = 使用者/証拠所有者
 const ectx = (cardId: string, player: 'self' | 'opp' = 'self'): EffectCtx =>
   ({ source: { player, cardId, abilityId: 'a1', uid: `event:${player}` }, bindings: {} } as unknown as EffectCtx);
-const hctx = (cardId: string, player: 'self' | 'opp' = 'self'): EffectCtx =>
-  ({ source: { player, area: 'evidence', cardId, abilityId: 'a2', uid: `evidence:${player}` }, bindings: {} } as unknown as EffectCtx);
 const ch = (id: string, over: Partial<CardDef> = {}): CardDef => ({
   id, no: `9/${id}`, kind: 'character', names: [id], colors: ['白'], level: 2, ap: 3000, lp: 1, traits: [], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [], ...over,
 });
@@ -80,6 +80,7 @@ beforeEach(() => {
   registerCardDef(ch('OTHER', { colors: ['緑'] }));
   registerTriggeredListener();
   _drainPendingHirameki();
+  useGameStateStore.setState({ gameState: null, pendingHirameki: null });
 });
 
 afterEach(() => {
@@ -95,6 +96,45 @@ function baseState(partnerId: string = 'PW'): GameState {
     d.players.self.file = [FB, FB, FB, FB, FB]; // FILE5 ≥ B07059 lv5
   });
   return s;
+}
+
+function heldHiramekiState(): GameState {
+  const state = createEmptyGameState();
+  state.players.self.remove = ['B07059'];
+  state.actionContexts = {
+    'action-1': {
+      id: 'action-1',
+      byUid: 'attacker',
+      byPlayer: 'opp',
+      target: { kind: 'case', player: 'self' },
+      phase: 'judge',
+      startedAt: { turn: 1, nano: 1 },
+      pendingHiramekiEvidenceRemoval: {
+        token: 'hirameki:action-1:self',
+        player: 'self',
+        evidence: ev('B07059'),
+        decisionResolved: true,
+        abilityId: 'a2',
+        effectValid: true,
+      },
+    } as ActionContext,
+  };
+  return state;
+}
+
+function heldHiramekiCtx(triggerPayload?: unknown): EffectCtx {
+  return {
+    source: {
+      player: 'self',
+      area: 'evidence',
+      cardId: 'B07059',
+      abilityId: 'a2',
+      uid: 'hirameki:action-1:self',
+      resolutionKind: 'hirameki',
+    },
+    bindings: {},
+    ...(triggerPayload === undefined ? {} : { triggerPayload }),
+  } as unknown as EffectCtx;
 }
 
 describe('§A toPartnerArea — runAtom 直接駆動', () => {
@@ -155,6 +195,20 @@ describe('§A toPartnerArea — runAtom 直接駆動', () => {
     });
     expect(after.players.self.partnerAreaCards).toEqual(['B07059', 'B07059']);
     expect(after.players.self.remove).toEqual([]);
+  });
+
+  it.each([
+    ['trigger payload missing', undefined],
+    ['held evidence omitted', { player: 'self', actionId: 'action-1' }],
+  ])('A6 held Hirameki %s は同名 remove カードへ fallback しない', (_label, triggerPayload) => {
+    const after = produce(heldHiramekiState(), (draft) => {
+      runAtom(draft, 'toPartnerArea', {}, heldHiramekiCtx(triggerPayload));
+    });
+
+    expect(after.players.self.partnerAreaCards ?? []).toEqual([]);
+    expect(after.players.self.remove).toEqual(['B07059']);
+    expect(after.actionContexts['action-1']?.pendingHiramekiEvidenceRemoval?.evidence.cardId).toBe('B07059');
+    expect(after.log.some((entry) => 'kind' in entry && entry.kind === 'zone-move')).toBe(false);
   });
 });
 
@@ -265,43 +319,39 @@ describe('§B B07059 赤い涙 — event-use e2e', () => {
   });
 });
 
-describe('§C B07059 — 【ヒラメキ】 e2e (action[事件] → removeTop → resolve)', () => {
+function finishCaseAction(actionId: string): void {
+  for (let step = 0; step < 2 && useGameStateStore.getState().activeActionId === actionId; step += 1) {
+    expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
+  }
+  expect(useGameStateStore.getState().activeActionId).toBeNull();
+}
+
+describe('§C B07059 — 【ヒラメキ】 e2e (public CASE action)', () => {
   it('C1 accept: 証拠から action リムーブ → ヒラメキ発動 → remove→PA', () => {
-    let s = createEmptyGameState();
-    s = produce(s, (d) => {
-      d.turn = { number: 3, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
-      d.players.self.evidence = [ev('DECOY_EV'), ev('B07059')]; // B07059 が証拠 top (末尾)
-    });
-    const ax = { id: 'act#1', byUid: 'opp:atk', byPlayer: 'opp', target: { kind: 'case', player: 'self' }, phase: 'resolve', startedAt: { turn: 3, nano: 0 } } as unknown as ActionContext;
-    s = produce(s, (d) => {
-      removeOpponentEvidenceTop(d, ax);
-    });
-    expect(s.players.self.remove).toContain('B07059');
-    const pending = _drainPendingHirameki();
-    expect(pending).not.toBeNull();
-    expect(pending!.cardId).toBe('B07059');
-    const a2 = def.card('B07059')!.abilities.find((a) => a.id === 'a2')!;
-    s = produce(s, (d) => {
-      runEffect(d, a2.effect as never, hctx('B07059', 'self'));
-    });
-    expect(s.players.self.partnerAreaCards).toEqual(['B07059']);
-    expect(s.players.self.remove).not.toContain('B07059');
-    expect(s.players.self.evidence.map((e) => e.cardId)).toEqual(['DECOY_EV']);
+    const state = createEmptyGameState();
+    state.players.self.evidence = [ev('DECOY_EV'), ev('B07059')];
+    state.players.self.remove = ['B07059'];
+    const { actionId, pending } = openCaseHirameki(state, 'B07059');
+    expect(pending.occurrence).toBeUndefined();
+    expect(pending.heldEvidence).toEqual(expect.objectContaining({ player: 'self', cardId: 'B07059' }));
+
+    expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' })).toEqual({ ok: true });
+    finishCaseAction(actionId);
+    const after = useGameStateStore.getState().gameState!;
+    expect(after.players.self.partnerAreaCards).toEqual(['B07059']);
+    expect(after.players.self.remove).toEqual(['B07059']);
+    expect(after.players.self.evidence.map((e) => e.cardId)).toEqual(['DECOY_EV']);
   });
 
   it('C2 decline: 発動させない → そのまま remove 残留 (公式Q&A)', () => {
-    let s = createEmptyGameState();
-    s = produce(s, (d) => {
-      d.turn = { number: 3, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
-      d.players.self.evidence = [ev('B07059')];
-    });
-    const ax = { id: 'act#2', byUid: 'opp:atk', byPlayer: 'opp', target: { kind: 'case', player: 'self' }, phase: 'resolve', startedAt: { turn: 3, nano: 0 } } as unknown as ActionContext;
-    s = produce(s, (d) => {
-      removeOpponentEvidenceTop(d, ax);
-    });
-    _drainPendingHirameki(); // decline = resolve しない
-    expect(s.players.self.remove).toContain('B07059');
-    expect(s.players.self.partnerAreaCards ?? []).toEqual([]);
+    const state = createEmptyGameState();
+    const { actionId } = openCaseHirameki(state, 'B07059');
+
+    expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'skip' })).toEqual({ ok: true });
+    finishCaseAction(actionId);
+    const after = useGameStateStore.getState().gameState!;
+    expect(after.players.self.remove).toEqual(['B07059']);
+    expect(after.players.self.partnerAreaCards ?? []).toEqual([]);
   });
 });
 

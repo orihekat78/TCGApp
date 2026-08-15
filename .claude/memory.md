@@ -44,3 +44,17 @@
 - B03029 proves exact cost order, event lifecycle/set, FILE bypass, commit-time
   use-condition recheck, and observer ordering/null through public dispatch.
 - Its hidden deck-bottom order row stays a gap until occurrence-safe owner UI.
+
+## 2026-08-15: Deck authority and held Hirameki checkpoint
+
+- Deck decisions bind physical occurrences with a deck epoch. Every real deck
+  mutation advances it and rebases all state-owned live binding holders once.
+- Validated reorder/place/pick decisions consume persisted authority before
+  continuation; stale or legacy-incomplete decisions load structurally, then
+  consume and fizzle without executing effects or reviving after reload.
+- Action Hirameki evidence is held by its exact ActionContext while pending.
+  Fire may consume it directly to hand, scene, or partner area; skip, invalid
+  effects, and terminal cleanup commit it to remove exactly once.
+- B06027 full-scene Hirameki requires a current exact victim UID. Human UI uses
+  a focused native scene-card control and blocks cancel while another decision
+  owns input; AI, persisted state, and resolver revalidate the same witness.

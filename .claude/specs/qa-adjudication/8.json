@@ -35,11 +35,12 @@
     {
       "qaId": "card:B01053:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p01/B01053.ts:1"
+        "src:src/cards/ct-p01/B01053.ts:1",
+        "tests:tests/cards/official-qa/deck-look-bottom-family-public.test.ts:400"
       ]
     },
     {
@@ -77,11 +78,12 @@
     {
       "qaId": "card:B01072:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p01/B01072.ts:1"
+        "src:src/cards/ct-p01/B01072.ts:1",
+        "tests:tests/cards/official-qa/deck-look-bottom-family-public.test.ts:402"
       ]
     },
     {
@@ -1737,11 +1739,12 @@
     {
       "qaId": "card:D02011:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d02/D02011.ts:1"
+        "src:src/cards/ct-d02/D02011.ts:1",
+        "tests:tests/cards/official-qa/deck-look-bottom-family-public.test.ts:407"
       ]
     },
     {

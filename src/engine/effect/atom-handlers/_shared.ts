@@ -169,6 +169,8 @@ export type PendingDeckReorderSide = {
   deckSnapshot?: string[];
   /** snapshot上の物理occurrence。重複cardIdを別コピーとして保持。 */
   occurrences?: Array<{ cardId: string; index: number }>;
+  /** Deck epoch at the decision boundary. Missing legacy authorities fail closed. */
+  occurrenceWitness: string;
   /** 後続効果と共有する保存ctx。 */
   ctx?: EffectCtx;
   /** resolverが同梱するsequence/chain remainder。 */
@@ -228,6 +230,8 @@ export type PendingDeckPlaceSide = {
   deckSnapshot: string[];
   /** Exact deck occurrences shown by the effect, including duplicate card IDs. */
   occurrences: Array<{ cardId: string; index: number }>;
+  /** Deck epoch at the decision boundary. Missing legacy authorities fail closed. */
+  occurrenceWitness: string;
   /** Effect authority retained until the human answer resumes resolution. */
   ctx: EffectCtx;
   /** Saved sequence/chain remainder owned by this decision. */
@@ -436,6 +440,66 @@ export function targetFilterToPredicateWithCtx(state: GameState | undefined, fil
 
 export type Player = 'self' | 'opp';
 
+export type HeldHiramekiSelfClaim = {
+  actionId: string;
+  token: string;
+  player: Player;
+  cardId: string;
+  abilityId: string;
+};
+
+export type HeldHiramekiSelfClaimRead =
+  | { kind: 'absent' }
+  | { kind: 'invalid' }
+  | { kind: 'claim'; claim: HeldHiramekiSelfClaim };
+
+/**
+ * Read the exact ActionContext-owned evidence card used by a Hirameki effect.
+ * Only a non-held source may use the legacy remove-area fallback.  A source
+ * that already claims Hirameki evidence authority must fail closed when its
+ * payload is missing or malformed, so an equal remove-area card cannot be used.
+ */
+export function readHeldHiramekiSelfClaim(
+  ctx: EffectCtx,
+  expectedPlayer: Player,
+): HeldHiramekiSelfClaimRead {
+  const isHeldSource = ctx.source.resolutionKind === 'hirameki'
+    && ctx.source.area === 'evidence';
+  const payload = ctx.triggerPayload;
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) {
+    return { kind: isHeldSource ? 'invalid' : 'absent' };
+  }
+  const record = payload as Record<string, unknown>;
+  const held = record.heldEvidence;
+  if (held === undefined) return { kind: isHeldSource ? 'invalid' : 'absent' };
+  if (held === null || typeof held !== 'object' || Array.isArray(held)) {
+    return { kind: 'invalid' };
+  }
+  const heldRecord = held as Record<string, unknown>;
+  const actionId = record.actionId;
+  const token = heldRecord.token;
+  const player = heldRecord.player;
+  const cardId = heldRecord.cardId;
+  const abilityId = ctx.source.abilityId;
+  if (typeof actionId !== 'string'
+    || typeof token !== 'string'
+    || player !== expectedPlayer
+    || record.player !== expectedPlayer
+    || typeof cardId !== 'string'
+    || typeof abilityId !== 'string'
+    || ctx.source.player !== expectedPlayer
+    || ctx.source.area !== 'evidence'
+    || ctx.source.resolutionKind !== 'hirameki'
+    || ctx.source.uid !== token
+    || ctx.source.cardId !== cardId) {
+    return { kind: 'invalid' };
+  }
+  return {
+    kind: 'claim',
+    claim: { actionId, token, player: expectedPlayer, cardId, abilityId },
+  };
+}
+
 /**
  * 必須スカラーフィールドの実行時検証。
  * 呼び出し元が typo などで undefined を渡した場合に mutate 層へ伝搬する前に検知する。
@@ -558,7 +622,7 @@ export function resolveBoundOccurrenceRef(
   s: GameState,
   ctx: EffectCtx,
   player: Player,
-  area: 'remove' | 'evidence',
+  area: 'deck' | 'remove' | 'evidence',
 ): BoundOccurrenceRef {
   if (typeof value !== 'string' || !value.startsWith('$')) return { kind: 'unbound' };
   const dot = value.indexOf('.');
@@ -575,7 +639,9 @@ export function resolveBoundOccurrenceRef(
     index?: unknown;
     occurrenceWitness?: unknown;
   };
-  if (physical.area !== 'remove' && physical.area !== 'evidence') return { kind: 'unbound' };
+  if (physical.area !== 'deck' && physical.area !== 'remove' && physical.area !== 'evidence') {
+    return { kind: 'unbound' };
+  }
   if (physical.player !== player
     || physical.area !== area
     || typeof physical.cardId !== 'string'
@@ -593,7 +659,9 @@ export function resolveBoundOccurrenceRef(
   if (physical.uid !== undefined && physical.uid !== expectedUid) return { kind: 'invalid' };
   const liveCardId = area === 'remove'
     ? s.players[player].remove[physical.index]
-    : s.players[player].evidence[physical.index]?.cardId;
+    : area === 'deck'
+      ? s.players[player].deck[physical.index]
+      : s.players[player].evidence[physical.index]?.cardId;
   return liveCardId === physical.cardId
     ? { kind: 'live', cardId: physical.cardId, index: physical.index }
     : { kind: 'invalid' };

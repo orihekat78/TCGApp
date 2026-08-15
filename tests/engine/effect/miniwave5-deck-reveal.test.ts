@@ -10,6 +10,7 @@ import { register as registerCardDef, _resetRegistry as resetDefRegistry } from 
 import { mutate } from '@/engine/mutate/index';
 import { runAtom } from '@/engine/effect/atom-handlers';
 import { _drainPendingDeckPlaceSide } from '@/engine/effect/atom-handlers/_shared';
+import { deckOccurrenceAuthority } from '@/engine/effect/deck-occurrence-authority';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import type { CardDef, GameState, EffectCtx, Candidate } from '@/engine/types';
 
@@ -76,13 +77,22 @@ describe('P3: deckRevealUntil fromBottom (miniwave5)', () => {
 });
 
 describe('P2: deckPlaceSplitBound (miniwave5)', () => {
-  function bindWindow(ctx: EffectCtx, ids: string[]): void {
-    (ctx.bindings as Record<string, Candidate[]>)['$revealed'] = ids.map(id => ({ kind: 'card', cardId: id, area: 'deck', player: 'self' } as unknown as Candidate));
+  function bindWindow(state: GameState, ctx: EffectCtx, ids: string[]): void {
+    const used = new Set<number>();
+    (ctx.bindings as Record<string, Candidate[]>)['$revealed'] = ids.map((id) => {
+      const index = state.players.self.deck.findIndex((cardId, candidateIndex) => (
+        cardId === id && !used.has(candidateIndex)
+      ));
+      const occurrence = deckOccurrenceAuthority(state, 'self', index);
+      if (!occurrence) throw new Error(`missing deck occurrence for ${id}`);
+      used.add(index);
+      return occurrence;
+    });
   }
   it('AI (human でない) は全カード元順で top = デッキ恒等 (smoke 不変)', () => {
     const s = base(); const ctx = ctxFor(s);
     s.players.self.deck = ['RD', 'WH', 'RD'];
-    bindWindow(ctx, ['RD', 'WH']); // 上 2 枚を見た想定
+    bindWindow(s, ctx, ['RD', 'WH']); // 上 2 枚を見た想定
     runAtom(s, 'deckPlaceSplitBound' as never, { player: 'self', bindKey: '$revealed' }, ctx);
     expect(s.players.self.deck, 'デッキ不変 (恒等)').toEqual(['RD', 'WH', 'RD']);
     expect(_drainPendingDeckPlaceSide(), 'pending 立たない').toBeNull();
@@ -91,7 +101,7 @@ describe('P2: deckPlaceSplitBound (miniwave5)', () => {
     const s = base(); const ctx = ctxFor(s);
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
     s.players.self.deck = ['RD', 'WH', 'RD'];
-    bindWindow(ctx, ['RD', 'WH']);
+    bindWindow(s, ctx, ['RD', 'WH']);
     runAtom(s, 'deckPlaceSplitBound' as never, { player: 'self', bindKey: '$revealed' }, ctx);
     const pending = _drainPendingDeckPlaceSide();
     expect(pending, 'pending あり').not.toBeNull();
@@ -103,7 +113,7 @@ describe('P2: deckPlaceSplitBound (miniwave5)', () => {
     const s = base(); const ctx = ctxFor(s);
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'opp';
     s.players.self.deck = ['RD', 'WH'];
-    bindWindow(ctx, ['RD']);
+    bindWindow(s, ctx, ['RD']);
     runAtom(s, 'deckPlaceSplitBound' as never, { player: 'self', bindKey: '$revealed' }, ctx);
     expect(_drainPendingDeckPlaceSide()).toBeNull();
     expect(s.players.self.deck).toEqual(['RD', 'WH']);

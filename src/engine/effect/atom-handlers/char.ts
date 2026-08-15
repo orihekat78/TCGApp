@@ -9,6 +9,7 @@ import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, CausalOutcome, PublicCausalZone } from '../../types/index.js';
 import { recordEffectCausalOperation } from '../../log/effect-causal.js';
 import { advanceIndexedZoneEpoch } from '../../state/indexed-zone-epoch.js';
+import { advanceDeckEpochAndRebaseBindings } from '../deck-occurrence-authority.js';
 
 function sceneOwnerOf(s: GameState, uid: string): Player | undefined {
   if (s.players.self.scene.some((card) => card.uid === uid)) return 'self';
@@ -614,6 +615,7 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
           });
         }
         scCardId = s.players[sscP].deck.shift()!;
+        advanceDeckEpochAndRebaseBindings(s, ctx, sscP, [0]);
         if (setCardOwner !== undefined) deckSetSides = { deck: sscP, setCard: setCardOwner };
         // Keep the transfer atomic to observers: setCard emits setcard:enter,
         // then the completed take may refresh and emit remove:exit.

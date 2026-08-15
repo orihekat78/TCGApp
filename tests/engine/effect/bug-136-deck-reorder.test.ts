@@ -13,14 +13,30 @@ import { dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/use
 import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types';
 import { useGameStateStore } from '@/ui/state/store';
 import type { EffectCtx, GameState } from '@/engine/types';
+import { cardOccurrenceUid, cardOccurrenceWitness } from '@/engine/target/card-occurrence';
+import { mutate } from '@/engine/mutate';
 
 const g = globalThis as { __humanPlayerSide?: 'self' | 'opp' | null; __pendingDeckReorderSide?: unknown };
 const setHuman = (s: 'self' | 'opp' | null) => { g.__humanPlayerSide = s; };
 
-function ctxWithRest(cardIds: string[]): EffectCtx {
+function ctxWithRest(state: GameState, cardIds: string[], player: 'self' | 'opp' = 'self'): EffectCtx {
+  const witness = cardOccurrenceWitness(state, player, 'deck');
+  const deck = state.players[player].deck;
+  const usedIndexes = new Set<number>();
   return {
-    source: { cardId: 'SRC', uid: 'src#0', abilityId: 'a1', player: 'self', area: 'scene' },
-    bindings: { $rest: cardIds.map((cardId) => ({ kind: 'card', cardId, area: 'deck', player: 'self' })) },
+    source: { cardId: 'SRC', uid: 'src#0', abilityId: 'a1', player, area: 'scene' },
+    bindings: { $rest: cardIds.map((cardId) => {
+      const index = deck.findIndex((value, candidateIndex) => (
+        value === cardId && !usedIndexes.has(candidateIndex)
+      ));
+      if (index < 0) throw new Error(`missing exact deck occurrence: ${cardId}`);
+      usedIndexes.add(index);
+      return {
+        kind: 'card', cardId, area: 'deck', player, index,
+        uid: cardOccurrenceUid(player, 'deck', cardId, index),
+        occurrenceWitness: witness,
+      };
+    }) },
   } as unknown as EffectCtx;
 }
 
@@ -46,7 +62,7 @@ describe('BUG-136 — deckToBottomBound 順序選択 side-channel', () => {
       d.players.self.deck = ['C', 'D', 'E', 'A', 'B']; // C,D,E が「残り」、A,B が既存底
     });
     const s1 = produce(s0, (d) => {
-      runAtom(d, 'deckToBottomBound', { player: 'self', bindKey: '$rest' }, ctxWithRest(['C', 'D', 'E']));
+      runAtom(d, 'deckToBottomBound', { player: 'self', bindKey: '$rest' }, ctxWithRest(d, ['C', 'D', 'E']));
     });
     expect(s1.players.self.deck).toEqual(['C', 'D', 'E', 'A', 'B']);
     const side = _drainPendingDeckReorderSide();
@@ -66,14 +82,14 @@ describe('BUG-136 — deckToBottomBound 順序選択 side-channel', () => {
   it('AI / spectator (humanSide=null) → side-channel を set しない (byte-equal)', () => {
     setHuman(null);
     const s0 = produce(createEmptyGameState(), (d) => { d.players.self.deck = ['C', 'D', 'E', 'A', 'B']; });
-    produce(s0, (d) => { runAtom(d, 'deckToBottomBound', { player: 'self', bindKey: '$rest' }, ctxWithRest(['C', 'D', 'E'])); });
+    produce(s0, (d) => { runAtom(d, 'deckToBottomBound', { player: 'self', bindKey: '$rest' }, ctxWithRest(d, ['C', 'D', 'E'])); });
     expect(_drainPendingDeckReorderSide()).toBeNull();
   });
 
   it('1 枚のみ → 順序が無意味なので set しない', () => {
     setHuman('self');
     const s0 = produce(createEmptyGameState(), (d) => { d.players.self.deck = ['C', 'A', 'B']; });
-    produce(s0, (d) => { runAtom(d, 'deckToBottomBound', { player: 'self', bindKey: '$rest' }, ctxWithRest(['C'])); });
+    produce(s0, (d) => { runAtom(d, 'deckToBottomBound', { player: 'self', bindKey: '$rest' }, ctxWithRest(d, ['C'])); });
     expect(_drainPendingDeckReorderSide()).toBeNull();
     setHuman(null);
   });
@@ -82,7 +98,7 @@ describe('BUG-136 — deckToBottomBound 順序選択 side-channel', () => {
     setHuman('self');
     const s0 = produce(createEmptyGameState(), (d) => { d.players.self.deck = ['C', 'D', 'E', 'A', 'B']; });
     const s1 = produce(s0, (d) => {
-      runAtom(d, 'deckToBottomBound', { player: 'self', bindKey: '$rest', order: 'preserve' }, ctxWithRest(['C', 'D', 'E']));
+      runAtom(d, 'deckToBottomBound', { player: 'self', bindKey: '$rest', order: 'preserve' }, ctxWithRest(d, ['C', 'D', 'E']));
     });
 
     expect(s1.players.self.deck).toEqual(['A', 'B', 'C', 'D', 'E']);
@@ -93,11 +109,9 @@ describe('BUG-136 — deckToBottomBound 順序選択 side-channel', () => {
   it('相手所有 (humanSide=self, player=opp) → 自分の並べ替え対象でないので set しない', () => {
     setHuman('self');
     const s0 = produce(createEmptyGameState(), (d) => { d.players.opp.deck = ['C', 'D', 'E', 'A', 'B']; });
-    const ctxOpp = {
-      source: { cardId: 'SRC', uid: 'o#0', abilityId: 'a1', player: 'opp', area: 'scene' },
-      bindings: { $rest: ['C', 'D', 'E'].map((cardId) => ({ kind: 'card', cardId, area: 'deck', player: 'opp' })) },
-    } as unknown as EffectCtx;
-    produce(s0, (d) => { runAtom(d, 'deckToBottomBound', { player: 'opp', bindKey: '$rest' }, ctxOpp); });
+    produce(s0, (d) => {
+      runAtom(d, 'deckToBottomBound', { player: 'opp', bindKey: '$rest' }, ctxWithRest(d, ['C', 'D', 'E'], 'opp'));
+    });
     expect(_drainPendingDeckReorderSide()).toBeNull();
     setHuman(null);
   });
@@ -109,7 +123,7 @@ describe('BUG-136 — deckReorderResolve dispatch', () => {
     const state = createEmptyGameState();
     state.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
     state.players.self.deck = ['A', 'B', 'C', 'D', 'E'];
-    runAtom(state, 'deckToBottomBound', { player: 'self', bindKey: '$rest' }, ctxWithRest(['C', 'D', 'E']));
+    runAtom(state, 'deckToBottomBound', { player: 'self', bindKey: '$rest' }, ctxWithRest(state, ['C', 'D', 'E']));
     const pending = surfaceDeckReorder(state);
     const r = dispatchEngineAction(bindPendingDecision(pending, { type: 'deckReorderResolve', order: ['E', 'D', 'C'] }));
     expect(r.ok).toBe(true);
@@ -123,12 +137,56 @@ describe('BUG-136 — deckReorderResolve dispatch', () => {
     const state = createEmptyGameState();
     state.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
     state.players.self.deck = ['A', 'B', 'C', 'D', 'E'];
-    runAtom(state, 'deckToBottomBound', { player: 'self', bindKey: '$rest' }, ctxWithRest(['C', 'D', 'E']));
+    runAtom(state, 'deckToBottomBound', { player: 'self', bindKey: '$rest' }, ctxWithRest(state, ['C', 'D', 'E']));
     const pending = surfaceDeckReorder(state);
     const result = dispatchEngineAction(bindPendingDecision(pending, { type: 'deckReorderResolve', order: ['X', 'Y', 'Z'] })); // 不正
     const after = useGameStateStore.getState();
     expect(result.ok).toBe(false);
     expect(after.gameState!.players.self.deck).toEqual(['A', 'B', 'C', 'D', 'E']); // 不変
+  });
+
+  it('same-ID deck snapshot restored after an epoch change cannot reuse the stale reorder authority', () => {
+    setHuman('self');
+    const state = createEmptyGameState();
+    state.players.self.deck = ['A', 'B', 'C', 'D', 'E'];
+    runAtom(state, 'deckToBottomBound', { player: 'self', bindKey: '$rest' }, ctxWithRest(state, ['C', 'D', 'E']));
+
+    mutate.deck.draw(state, 'self', 1);
+    expect(state.players.self.hand.pop()).toBe('A');
+    mutate.deck.toTop(state, 'self', ['A']);
+    expect(state.players.self.deck).toEqual(['A', 'B', 'C', 'D', 'E']);
+
+    const pending = surfaceDeckReorder(state);
+    const before = JSON.stringify(useGameStateStore.getState().gameState);
+    const result = dispatchEngineAction(bindPendingDecision(pending, {
+      type: 'deckReorderResolve', order: ['E', 'D', 'C'],
+    }));
+
+    expect(result.ok).toBe(false);
+    expect(JSON.stringify(useGameStateStore.getState().gameState)).toBe(before);
+  });
+});
+
+describe('BUG-136 horizontal — deckBottomReorderBound exact authority', () => {
+  it('pins the current bottom occurrences and deck epoch before surfacing a human reorder', () => {
+    setHuman('self');
+    const state = createEmptyGameState();
+    state.players.self.deck = ['TAIL', 'MOVED', 'MOVED'];
+    const ctx = ctxWithRest(state, ['MOVED', 'MOVED']);
+
+    runAtom(state, 'deckBottomReorderBound', { player: 'self', bindKey: '$rest' }, ctx);
+
+    expect(_drainPendingDeckReorderSide()).toMatchObject({
+      player: 'self',
+      cardIds: ['MOVED', 'MOVED'],
+      deckSnapshot: ['TAIL', 'MOVED', 'MOVED'],
+      occurrences: [
+        { cardId: 'MOVED', index: 1 },
+        { cardId: 'MOVED', index: 2 },
+      ],
+      occurrenceWitness: cardOccurrenceWitness(state, 'self', 'deck'),
+      ctx: { source: ctx.source },
+    });
   });
 });
 
@@ -147,7 +205,18 @@ describe('BUG-136 水平展開 — souza (捜査X) も順序選択を surface', 
     const s1 = produce(s0, (d) => { runAtom(d, 'souza', { player: 'opp', x: 3 }, ctxAiUser); });
     // top 3 (T1,T2,T3) が底へ → deck = [B1, B2, T1, T2, T3]
     expect(s1.players.self.deck).toEqual(['B1', 'B2', 'T1', 'T2', 'T3']);
-    expect(_drainPendingDeckReorderSide()).toEqual({ player: 'self', cardIds: ['T1', 'T2', 'T3'] });
+    expect(_drainPendingDeckReorderSide()).toMatchObject({
+      player: 'self',
+      cardIds: ['T1', 'T2', 'T3'],
+      deckSnapshot: ['B1', 'B2', 'T1', 'T2', 'T3'],
+      occurrences: [
+        { cardId: 'T1', index: 2 },
+        { cardId: 'T2', index: 3 },
+        { cardId: 'T3', index: 4 },
+      ],
+      occurrenceWitness: cardOccurrenceWitness(s1, 'self', 'deck'),
+      ctx: { source: ctxAiUser.source },
+    });
     setHuman(null);
   });
 

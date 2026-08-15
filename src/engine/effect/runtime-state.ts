@@ -14,6 +14,8 @@ import {
   type PendingRpsSide,
 } from './pending-state.js';
 import {
+  _drainPendingDeckPlaceSide,
+  _drainPendingDeckReorderSide,
   _peekPendingDeckPlaceSide,
   _peekPendingDeckReorderSide,
   type PendingDeckPlaceSide,
@@ -309,6 +311,60 @@ export type PendingRuntimeSnapshot = ReadonlyArray<{
   value: unknown;
 }>;
 
+/**
+ * Visit binding records retained by live resolver side channels.
+ *
+ * Deck occurrence epochs are renewed after every sanctioned deck mutation.
+ * Continuations stored outside GameState must therefore be rebased in the
+ * same atomic step as the active EffectCtx. Only properties explicitly named
+ * `bindings` (plus the dedicated *Bindings slots) are surfaced; public
+ * decision candidates and deck snapshots remain immutable stale authorities.
+ */
+export function visitPendingRuntimeBindingRecords(
+  visitor: (bindings: Record<string, unknown>) => void,
+): void {
+  const visited = new WeakSet<object>();
+  const visitedBindings = new WeakSet<object>();
+  const visitBindings = (value: unknown): void => {
+    if (value === null || typeof value !== 'object' || Array.isArray(value)) return;
+    if (visitedBindings.has(value)) return;
+    visitedBindings.add(value);
+    visitor(value as Record<string, unknown>);
+  };
+  const visit = (value: unknown): void => {
+    if (value === null || typeof value !== 'object') return;
+    if (visited.has(value)) return;
+    visited.add(value);
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item);
+      return;
+    }
+    const record = value as Record<string, unknown>;
+    if (Object.prototype.hasOwnProperty.call(record, 'bindings')) {
+      visitBindings(record.bindings);
+    }
+    for (const nested of Object.values(record)) visit(nested);
+  };
+
+  for (const key of TRANSACTIONAL_PENDING_KEYS) {
+    if (key === '__pendingRuntimeStateMarker') continue;
+    const access = pendingGlobalAccess(key);
+    if (!access.present) continue;
+    if (key.endsWith('Bindings')) visitBindings(access.value);
+    visit(access.value);
+  }
+}
+
+/** True only when the ambient resolver cache belongs to this exact GameState. */
+export function ownsLivePendingRuntimeBindings(state: GameState): boolean {
+  const currentMarker = marker();
+  const persisted = state.pendingRuntimeState;
+  if (currentMarker === undefined) return persisted === undefined;
+  return persisted !== undefined
+    && currentMarker.token === persisted.token
+    && currentMarker.owner === persistedOwner(persisted);
+}
+
 /** Capture every module side channel participating in one public dispatch. */
 export function snapshotPendingRuntimeState(): PendingRuntimeSnapshot {
   return TRANSACTIONAL_PENDING_KEYS.map((key) => {
@@ -405,6 +461,63 @@ function assertPendingRuntimeMatchesState(
   for (const entry of snapshot) {
     if (entry.present && entry.key !== '__pendingRuntimeStateMarker') {
       assertPendingDeclaredNameAuthority(state, entry.value, entry.key);
+    }
+  }
+  const hirameki = snapshot.find(entry => entry.key === '__pendingHirameki' && entry.present);
+  if (hirameki && hirameki.value !== null) {
+    const pending = hirameki.value as {
+      player: 'self' | 'opp';
+      cardId: string;
+      abilityId: string;
+      effectValid?: boolean;
+      gainDeferred?: boolean;
+      actorUid?: string;
+      actionId?: string;
+      causalCorrelationEventId?: string;
+      heldEvidence?: {
+        token: string;
+        player: 'self' | 'opp';
+        cardId: string;
+      };
+    };
+    if (pending.heldEvidence !== undefined) {
+      const actionId = pending.actionId;
+      const ax = typeof actionId === 'string'
+        ? state.actionContexts?.[actionId]
+        : undefined;
+      const owned = ax?.pendingHiramekiEvidenceRemoval;
+      if (!ax
+        || !owned
+        || ax.byUid !== pending.actorUid
+        || ax.phase !== 'judge'
+        || ax.judgeResolved !== true
+        || ax.target.kind !== 'case'
+        || ax.target.player !== pending.player
+        || ax.deferredCaseEvidenceGain !== true
+        || pending.gainDeferred !== true
+        || pending.causalCorrelationEventId !== undefined
+        || pending.heldEvidence.player !== pending.player
+        || pending.heldEvidence.cardId !== pending.cardId
+        || owned.token !== pending.heldEvidence.token
+        || owned.player !== pending.heldEvidence.player
+        || owned.evidence.cardId !== pending.heldEvidence.cardId
+        || owned.abilityId !== pending.abilityId
+        || owned.effectValid !== pending.effectValid
+        || owned.decisionResolved !== false) {
+        throw new Error('Invalid pendingHirameki: held evidence must match its ActionContext');
+      }
+    }
+  }
+  const deckReorder = snapshot.find(entry => entry.key === '__pendingDeckReorderSide' && entry.present);
+  if (deckReorder && deckReorder.value !== null) {
+    const pending = deckReorder.value as {
+      player: 'self' | 'opp';
+      deckSnapshot: string[];
+    };
+    const deck = state.players[pending.player].deck;
+    if (deck.length !== pending.deckSnapshot.length
+        || deck.some((cardId, index) => cardId !== pending.deckSnapshot[index])) {
+      throw new Error('Invalid pendingDeckReorder: deckSnapshot must match current player deck');
     }
   }
   const deckPlace = snapshot.find(entry => entry.key === '__pendingDeckPlaceSide' && entry.present);
@@ -597,6 +710,154 @@ export function readPendingDeckPlaceAuthority(
     const pending = _peekPendingDeckPlaceSide();
     return pending === null ? null : toPlainDeep(pending);
   });
+}
+
+function samePlainRuntimeValue(
+  left: unknown,
+  right: unknown,
+  seen = new WeakMap<object, WeakSet<object>>(),
+): boolean {
+  if (Object.is(left, right)) return true;
+  if (left === null || right === null || typeof left !== 'object' || typeof right !== 'object') return false;
+  const previous = seen.get(left);
+  if (previous?.has(right)) return true;
+  if (previous) previous.add(right);
+  else seen.set(left, new WeakSet([right]));
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return Array.isArray(left)
+      && Array.isArray(right)
+      && left.length === right.length
+      && left.every((value, index) => samePlainRuntimeValue(value, right[index], seen));
+  }
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  return leftKeys.length === rightKeys.length
+    && leftKeys.every(key => Object.prototype.hasOwnProperty.call(right, key)
+      && samePlainRuntimeValue(
+        (left as Record<string, unknown>)[key],
+        (right as Record<string, unknown>)[key],
+        seen,
+      ));
+}
+
+/**
+ * Consume the exact persisted FIFO head represented by an engine-owned pick.
+ * Public projections are deep clones, so reference identity is insufficient.
+ */
+export function consumePersistedEffectPickAuthority(
+  state: GameState,
+  pending: PendingEffectPickSide,
+): boolean {
+  const persisted = state.pendingRuntimeState;
+  if (!persisted) return false;
+  const queueEntry = persisted.snapshot.find(candidate => candidate.key === '__pendingEffectPickQueue');
+  const sideEntry = persisted.snapshot.find(candidate => candidate.key === '__pendingEffectPickSide');
+  const queue = queueEntry?.present && Array.isArray(queueEntry.value)
+    ? queueEntry.value
+    : undefined;
+  const queueMatches = queue !== undefined
+    && queue.length > 0
+    && samePlainRuntimeValue(queue[0], pending);
+  const sideMatches = sideEntry?.present === true
+    && samePlainRuntimeValue(sideEntry.value, pending);
+  if (!queueMatches && !sideMatches) return false;
+  if (queueMatches && sideEntry?.present === true && !sideMatches) return false;
+
+  const remaining = queueMatches ? queue!.slice(1) : [];
+  const currentMarker = marker();
+  const ownsLiveRuntime = currentMarker?.token === persisted.token
+    && currentMarker.owner === persistedOwner(persisted);
+  if (ownsLiveRuntime && samePlainRuntimeValue(_peekPendingEffectPickSide(), pending)) {
+    _drainPendingEffectPickSide();
+  }
+
+  const next: PersistedPendingRuntimeState = {
+    token: persisted.token,
+    snapshot: persisted.snapshot.map(entry => {
+      if (entry.key === '__pendingEffectPickQueue' && queueMatches) {
+        return { ...entry, present: true, value: remaining };
+      }
+      if (entry.key === '__pendingEffectPickSide' && entry.present && sideMatches) {
+        return { ...entry, present: true, value: remaining[0] ?? null };
+      }
+      return entry;
+    }),
+  };
+  state.pendingRuntimeState = next;
+  if (ownsLiveRuntime) setMarker({ token: next.token, owner: persistedOwner(next) });
+  return true;
+}
+
+type PersistedDeckDecision = PendingDeckReorderSide | PendingDeckPlaceSide;
+type PersistedDeckDecisionKey = '__pendingDeckReorderSide' | '__pendingDeckPlaceSide';
+
+function sameStringArray(left: readonly string[] | undefined, right: readonly string[] | undefined): boolean {
+  return left !== undefined
+    && right !== undefined
+    && left.length === right.length
+    && left.every((value, index) => value === right[index]);
+}
+
+function sameDeckOccurrences(
+  left: readonly { cardId: string; index: number }[] | undefined,
+  right: readonly { cardId: string; index: number }[] | undefined,
+): boolean {
+  return left !== undefined
+    && right !== undefined
+    && left.length === right.length
+    && left.every((value, index) => value.cardId === right[index]?.cardId && value.index === right[index]?.index);
+}
+
+function samePersistedDeckDecision(
+  key: PersistedDeckDecisionKey,
+  value: unknown,
+  pending: PersistedDeckDecision,
+): boolean {
+  if (value === null || typeof value !== 'object') return false;
+  const current = value as Partial<PersistedDeckDecision> & { ownerPlayer?: unknown };
+  if (current.player !== pending.player
+    || current.occurrenceWitness !== pending.occurrenceWitness
+    || !sameStringArray(current.cardIds, pending.cardIds)
+    || !sameStringArray(current.deckSnapshot, pending.deckSnapshot)
+    || !sameDeckOccurrences(current.occurrences, pending.occurrences)) return false;
+  return key !== '__pendingDeckPlaceSide'
+    || current.ownerPlayer === (pending as PendingDeckPlaceSide).ownerPlayer;
+}
+
+/**
+ * Consume one resolver-owned deck decision after its response has passed every
+ * live-state check. Invalid answers leave the exact persisted prompt retryable.
+ */
+export function consumePersistedDeckDecisionAuthority(
+  state: GameState,
+  key: PersistedDeckDecisionKey,
+  pending: PersistedDeckDecision,
+): boolean {
+  const persisted = state.pendingRuntimeState;
+  if (!persisted) return false;
+  const entry = persisted.snapshot.find(candidate => candidate.key === key);
+  if (!entry?.present || !samePersistedDeckDecision(key, entry.value, pending)) return false;
+
+  const currentMarker = marker();
+  const ownsLiveRuntime = currentMarker?.token === persisted.token
+    && currentMarker.owner === persistedOwner(persisted);
+  if (ownsLiveRuntime) {
+    const live = key === '__pendingDeckReorderSide'
+      ? _peekPendingDeckReorderSide()
+      : _peekPendingDeckPlaceSide();
+    if (samePersistedDeckDecision(key, live, pending)) {
+      if (key === '__pendingDeckReorderSide') _drainPendingDeckReorderSide();
+      else _drainPendingDeckPlaceSide();
+    }
+  }
+
+  const next: PersistedPendingRuntimeState = {
+    token: persisted.token,
+    snapshot: persisted.snapshot.filter(candidate => candidate.key !== key),
+  };
+  state.pendingRuntimeState = next;
+  if (ownsLiveRuntime) setMarker({ token: next.token, owner: persistedOwner(next) });
+  return true;
 }
 
 function marker(): PendingRuntimeMarker {

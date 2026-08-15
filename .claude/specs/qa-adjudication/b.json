@@ -5,12 +5,13 @@
     {
       "qaId": "card:B01013:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:37",
-        "src:src/cards/ct-p01/B01013.ts:25"
+        "src:src/cards/ct-p01/B01013.ts:25",
+        "tests:tests/cards/official-qa/deck-look-bottom-family-public.test.ts:397"
       ]
     },
     {
@@ -827,8 +828,10 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06027.ts:28",
-        "tests:tests/cards/B06027.test.ts:7"
+        "src:src/cards/ct-p06/B06027.ts:14",
+        "tests:tests/cards/B06027.test.ts:112",
+        "tests:tests/cards/B06027.test.ts:115",
+        "tests:tests/cards/B06027.test.ts:116"
       ]
     },
     {
@@ -839,7 +842,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06028.ts:45",
-        "tests:tests/cards/hybrid-batch2/B06028.test.ts:144"
+        "tests:tests/cards/hybrid-batch2/B06028.test.ts:147"
       ]
     },
     {
@@ -863,10 +866,11 @@
         "src:src/cards/ct-p06/B06032.ts:36",
         "src:src/cards/ct-p06/B06032.ts:42",
         "src:src/cards/ct-p06/B06032.ts:45",
-        "tests:tests/cards/night-wC/hirameki-optional.test.ts:147",
-        "tests:tests/cards/night-wC/hirameki-optional.test.ts:151",
-        "tests:tests/cards/night-wC/hirameki-optional.test.ts:152",
-        "tests:tests/cards/night-wC/hirameki-optional.test.ts:153"
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:149",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:150",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:154",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:155",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:156"
       ]
     },
     {
@@ -1089,9 +1093,10 @@
       "evidence": [
         "src:src/cards/ct-p07/B07059.ts:48",
         "src:src/cards/ct-p07/B07059.ts:50",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:202",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:204",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:205"
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:208",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:209",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:210",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:211"
       ]
     },
     {
@@ -1103,8 +1108,8 @@
       "evidence": [
         "src:src/cards/ct-p07/B07059.ts:61",
         "src:src/cards/ct-p07/B07059.ts:62",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:303",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:304"
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:316",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:318"
       ]
     },
     {
@@ -1121,9 +1126,10 @@
         "tests:tests/cards/bug-135-sequence-middle-skip.test.ts:110",
         "tests:tests/cards/bug-135-sequence-middle-skip.test.ts:111",
         "tests:tests/cards/bug-135-sequence-middle-skip.test.ts:98",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:385",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:386",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:494"
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:387",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:389",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:517",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:519"
       ]
     },
     {
@@ -1134,9 +1140,8 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p07/B07060.ts:41",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:156",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:157",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:494"
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:517",
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:519"
       ]
     },
     {
@@ -1579,7 +1584,11 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09081.ts:61",
-        "tests:tests/cards/night-wC/hirameki-optional.test.ts:198",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:201",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:202",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:204",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:205",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:207",
         "tests:tests/engine/mutate/scene.test.ts:264",
         "tests:tests/engine/mutate/scene.test.ts:302"
       ]
@@ -2184,9 +2193,7 @@
         "src:src/cards/pr-01/PR195.ts:39",
         "src:src/cards/pr-01/PR195.ts:44",
         "src:src/cards/pr-01/PR196.ts:7",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:410",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:411",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:484"
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:527"
       ]
     },
     {
@@ -2199,9 +2206,7 @@
         "src:src/cards/pr-01/PR195.ts:39",
         "src:src/cards/pr-01/PR195.ts:44",
         "src:src/cards/pr-01/PR196.ts:7",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:436",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:437",
-        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:484"
+        "tests:tests/cards/engine-wave12-partner-area-cards.test.ts:534"
       ]
     },
     {

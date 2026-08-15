@@ -50,8 +50,8 @@ export function createEmptyGameState(): GameState {
       opp: createEmptyPlayerState(6),
     },
     indexedZoneEpochs: {
-      self: { evidence: 0, remove: 0 },
-      opp: { evidence: 0, remove: 0 },
+      self: { deck: 0, evidence: 0, remove: 0 },
+      opp: { deck: 0, evidence: 0, remove: 0 },
     },
     pendingEffects: [],
     effectTriggerBatchSeq: 0,

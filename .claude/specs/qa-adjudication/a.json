@@ -100,15 +100,13 @@
     {
       "qaId": "card:B02019:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/26-qa-deck-refresh.md:65",
-        "src:src/cards/ct-p02/B02019.ts:29"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/ct-p02/B02019.ts:29",
+        "tests:tests/cards/official-qa/deck-look-bottom-family-public.test.ts:404"
       ]
     },
     {
@@ -607,11 +605,12 @@
     {
       "qaId": "card:B05078:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05078.ts:1"
+        "src:src/cards/ct-p05/B05078.ts:1",
+        "tests:tests/cards/official-qa/deck-look-bottom-family-public.test.ts:405"
       ]
     },
     {
@@ -1602,11 +1601,12 @@
     {
       "qaId": "card:D01013:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d01/D01013.ts:1"
+        "src:src/cards/ct-d01/D01013.ts:1",
+        "tests:tests/cards/official-qa/deck-look-bottom-family-public.test.ts:406"
       ]
     },
     {
@@ -1996,10 +1996,11 @@
       "evidence": [
         "src:src/cards/pr-01/PR237.ts:53",
         "src:src/cards/pr-01/PR237.ts:61",
-        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:284",
-        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:285",
-        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:290",
-        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:291"
+        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:286",
+        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:287",
+        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:293",
+        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:299",
+        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:302"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"

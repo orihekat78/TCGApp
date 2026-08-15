@@ -135,14 +135,22 @@ function a2State(): GameState {
 }
 
 // ヒラメキ fire/skip ドライブ (bug-140-hirameki-batch.test.ts と同一ハーネス)。
+function finishCaseAction(actionId: string): void {
+  for (let i = 0; i < 2 && useGameStateStore.getState().activeActionId === actionId; i++) {
+    expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
+  }
+  expect(useGameStateStore.getState().activeActionId).toBeNull();
+}
+
 function emitHirameki(s: GameState, choice: 'fire' | 'skip'): GameState {
-  const { pending } = openCaseHirameki(s, 'B02025', { humanPlayer: null });
+  const { actionId, pending } = openCaseHirameki(s, 'B02025', { humanPlayer: null });
   expect(pending, 'ヒラメキ pending が side-channel に set される').not.toBeNull();
   expect(pending.cardId).toBe('B02025');
   expect(pending.abilityId).toBe('a2');
   const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice });
   expect(r.ok, `hiramekiResolve ${choice} ok`).toBe(true);
   expect(useGameStateStore.getState().pendingHirameki, 'pending クリア').toBeNull();
+  finishCaseAction(actionId);
   return useGameStateStore.getState().gameState!;
 }
 

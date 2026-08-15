@@ -2,9 +2,9 @@ import { ensureIndexedZoneEpochs, indexedZoneEpoch } from '../state/indexed-zone
 
 type Player = 'self' | 'opp';
 
-type WitnessArea = 'evidence' | 'remove';
+type WitnessArea = 'deck' | 'evidence' | 'remove';
 
-const OCCURRENCE_WITNESS = /^occ:v1:(self|opp):(evidence|remove):(\d+)$/;
+const OCCURRENCE_WITNESS = /^occ:v1:(self|opp):(deck|evidence|remove):(\d+)$/;
 
 /**
  * Opaque serializable revision of an indexed physical zone at selection time.
@@ -16,12 +16,12 @@ export function cardOccurrenceWitness(
   area: WitnessArea,
 ): string {
   ensureIndexedZoneEpochs(state as { indexedZoneEpochs?: {
-    self: { evidence: number; remove: number };
-    opp: { evidence: number; remove: number };
+    self: { deck: number; evidence: number; remove: number };
+    opp: { deck: number; evidence: number; remove: number };
   } });
   const epoch = indexedZoneEpoch(state as { indexedZoneEpochs?: {
-    self: { evidence: number; remove: number };
-    opp: { evidence: number; remove: number };
+    self: { deck: number; evidence: number; remove: number };
+    opp: { deck: number; evidence: number; remove: number };
   } }, player, area)!;
   return `occ:v1:${player}:${area}:${epoch}`;
 }

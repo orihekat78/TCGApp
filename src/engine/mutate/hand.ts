@@ -78,6 +78,7 @@ function emitReveal(s: GameState, p: Player, ids: CardId[], attribution?: { byPl
 function toDeckBottom(s: GameState, p: Player, ids: CardId[]): void {
   remove(s, p, ids);
   s.players[p].deck.push(...ids);
+  if (ids.length > 0) advanceIndexedZoneEpoch(s, p, 'deck');
 }
 
 export const hand = {

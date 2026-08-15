@@ -155,8 +155,15 @@ function a2State(deckN = 8): GameState {
 }
 
 // ヒラメキ fire/skip ドライブ (B02025.test.ts emitHirameki と同一ハーネス)。
-function emitHirameki(s: GameState, choice: 'fire' | 'skip'): GameState {
-  const { pending } = openCaseHirameki(s, 'PR237');
+function finishCaseAction(actionId: string): void {
+  for (let i = 0; i < 2 && useGameStateStore.getState().activeActionId === actionId; i++) {
+    expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
+  }
+  expect(useGameStateStore.getState().activeActionId).toBeNull();
+}
+
+function emitHirameki(s: GameState, choice: 'fire' | 'skip'): { actionId: string; state: GameState } {
+  const { actionId, pending } = openCaseHirameki(s, 'PR237');
   expect(pending, 'ヒラメキ pending が side-channel に set される (a2 実発火)').not.toBeNull();
   expect(pending.cardId).toBe('PR237');
   expect(pending.abilityId).toBe('a2');
@@ -164,7 +171,7 @@ function emitHirameki(s: GameState, choice: 'fire' | 'skip'): GameState {
   const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice });
   expect(r.ok, `hiramekiResolve ${choice} ok`).toBe(true);
   expect(useGameStateStore.getState().pendingHirameki, 'pending クリア').toBeNull();
-  return useGameStateStore.getState().gameState!;
+  return { actionId, state: useGameStateStore.getState().gameState! };
 }
 
 describe('PR237 犯人 — gate5 runtime behavior', () => {
@@ -272,22 +279,26 @@ describe('PR237 犯人 — gate5 runtime behavior', () => {
     const s0 = a2State(8);
     const beforeDeck = s0.players.self.deck.length;
     const beforeRemove = s0.players.self.remove.length;
-    const after = emitHirameki(s0, 'fire');
+    const { actionId } = emitHirameki(s0, 'fire');
+    finishCaseAction(actionId);
+    const after = useGameStateStore.getState().gameState!;
 
     expect(after.players.self.deck.length, 'デッキ -5 (8→3)').toBe(beforeDeck - 5);
     expect(after.players.self.remove.length, 'action removed evidence + mill 5').toBe(beforeRemove + 6);
   });
 
   it('a2 short deck: refresh excludes the resolving PR237 Hirameki card', () => {
-    const after = emitHirameki(a2State(3), 'fire');
+    const { actionId, state: interim } = emitHirameki(a2State(3), 'fire');
 
-    expect(after.refreshCount.self, 'empty short deck refreshes exactly once').toBe(1);
-    expect(after.players.self.deck, 'only the three milled fillers return to deck').toEqual([
+    expect(interim.refreshCount.self, 'empty short deck refreshes exactly once').toBe(1);
+    expect(interim.players.self.deck, 'only the three milled fillers return to deck').toEqual([
       MILLFILL,
       MILLFILL,
       MILLFILL,
     ]);
-    expect(after.players.self.deck, 'the resolving Hirameki card is excluded from refresh').not.toContain('PR237');
+    expect(interim.players.self.deck, 'the resolving Hirameki card is excluded from refresh').not.toContain('PR237');
+    finishCaseAction(actionId);
+    const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.remove, 'PR237 enters remove only after its effect resolves').toEqual(['PR237']);
   });
 
@@ -296,7 +307,9 @@ describe('PR237 犯人 — gate5 runtime behavior', () => {
     const s0 = a2State(8);
     const beforeDeck = s0.players.self.deck.length;
     const beforeRemove = s0.players.self.remove.length;
-    const after = emitHirameki(s0, 'skip');
+    const { actionId } = emitHirameki(s0, 'skip');
+    finishCaseAction(actionId);
+    const after = useGameStateStore.getState().gameState!;
 
     expect(after.players.self.deck.length, 'skip → デッキ不変').toBe(beforeDeck);
     expect(after.players.self.remove.length, 'skip → action removed evidence のみ追加').toBe(beforeRemove + 1);

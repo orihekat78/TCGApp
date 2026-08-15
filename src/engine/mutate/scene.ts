@@ -538,6 +538,7 @@ function toDeckBottom(s: GameState, uid: string): void {
   }
   // デッキの下へ
   s.players[player].deck.push(char.cardId);
+  advanceIndexedZoneEpoch(s, player, 'deck');
 }
 
 /**
@@ -579,6 +580,7 @@ function toDeck(s: GameState, uid: string, pos: 'bottom' | 'top' = 'bottom'): bo
   } else {
     s.players[player].deck.push(char.cardId);
   }
+  advanceIndexedZoneEpoch(s, player, 'deck');
   return true;
 }
 

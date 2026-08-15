@@ -15,6 +15,7 @@ import type { PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptio
 import { resolveEffectPicks, rememberedRuntimeAtomTargetPolicy, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume, _takePendingOptionalBindings, _takePendingOptionalCostPaid } from './resolve-picks.js';
 import { findChooseIntercept } from './consult-choose-intercept.js';
 import { bindingKeysReadByCondition } from '../cond/binding-keys.js';
+import { withSceneEnterSwitchChoice } from './scene-switch.js';
 import {
   bindEffectCausalTrace,
   cloneCausalEffectTrace,
@@ -27,23 +28,6 @@ import {
 } from '../log/effect-causal.js';
 
 type Player = 'self' | 'opp';
-
-function withChoiceSwitch(effect: Effect, switchRemoveUid: string | undefined): Effect {
-  if (!switchRemoveUid) return effect;
-  if (effect.kind === 'atom') {
-    return effect.verb === 'sceneEnter'
-      ? { ...effect, args: { ...(effect.args as Record<string, unknown>), switchRemoveUid } }
-      : effect;
-  }
-  if (effect.kind === 'sequence' || effect.kind === 'parallel') {
-    return { ...effect, steps: effect.steps.map(step => withChoiceSwitch(step, switchRemoveUid)) };
-  }
-  if (effect.kind === 'conditional') {
-    return { ...effect, then: withChoiceSwitch(effect.then, switchRemoveUid), ...(effect.else ? { else: withChoiceSwitch(effect.else, switchRemoveUid) } : {}) };
-  }
-  if (effect.kind === 'optional') return { ...effect, effect: withChoiceSwitch(effect.effect, switchRemoveUid) };
-  return effect;
-}
 
 function resumedEntryExtras(source: {
   triggerBatch?: number;
@@ -65,6 +49,15 @@ function resumedEntryExtras(source: {
 import { run as runEffect } from './resolver.js';
 import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 import { cardOccurrenceUid, cardOccurrenceWitness, isLiveCardOccurrenceWitness } from '../target/card-occurrence.js';
+import {
+  advanceDeckEpochAndRebaseBindings,
+  deckOccurrenceRelocations,
+  isLiveDeckWindowAuthority,
+} from './deck-occurrence-authority.js';
+import {
+  consumePersistedDeckDecisionAuthority,
+  consumePersistedEffectPickAuthority,
+} from './runtime-state.js';
 import { mutate } from '../mutate/index.js';
 import {
   _takePendingChooseInterceptResume,
@@ -106,7 +99,8 @@ import {
   type PendingSetCardReplacementSide,
 } from './pending-state.js';
 
-function consumeQueuedPick(pending: PendingEffectPickSide): void {
+function consumeQueuedPick(state: GameState, pending: PendingEffectPickSide): void {
+  consumePersistedEffectPickAuthority(state, pending);
   if (_peekPendingEffectPickSide() === pending) _drainPendingEffectPickSide();
 }
 
@@ -121,10 +115,17 @@ function consumeQueuedOptional(pending: PendingEffectOptionalSide): void {
 function consumeQueuedRepeatOptional(pending: PendingEffectRepeatOptionalSide): void {
   if (_peekPendingEffectRepeatOptionalSide() === pending) _drainPendingEffectRepeatOptionalSide();
 }
+
+function isLiveDeckRevealWindow(state: GameState, pending: PendingEffectPickSide): boolean {
+  if (pending.atomVerb !== 'deckRevealUntil') return true;
+  const args = pending.atomArgs as Record<string, unknown>;
+  const player = args.__windowPlayer ?? pending.player;
+  return (player === 'self' || player === 'opp')
+    && isLiveDeckWindowAuthority(state, player, args);
+}
 import { hand } from '../mutate/hand.js';
 import { char as charMutator } from '../mutate/char.js';
 import { scene as sceneMutator } from '../mutate/scene.js';
-import { deck as deckMutator } from '../mutate/deck.js';
 import {
   _attachPendingDeckPlaceContinuation,
   _attachPendingDeckReorderContinuation,
@@ -820,6 +821,32 @@ function hasSameCardMultiset(expected: readonly string[], actual: readonly strin
   return true;
 }
 
+function advanceDeckDecisionEpochAndRebaseContexts(
+  state: GameState,
+  pendingCtx: EffectCtx,
+  continuation: ContinuationFrame | undefined,
+  player: Player,
+  occurrences: readonly { cardId: string; index: number }[],
+  placements: readonly { cardId: string; index: number }[],
+  insertedBeforeSurvivors = 0,
+): void {
+  const additionalContexts: EffectCtx[] = [];
+  for (let frame = continuation; frame; frame = frame.outer) {
+    additionalContexts.push(frame.ctx);
+  }
+  advanceDeckEpochAndRebaseBindings(
+    state,
+    pendingCtx,
+    player,
+    occurrences.map(occurrence => occurrence.index),
+    {
+      insertedBeforeSurvivors,
+      relocatedOccurrences: deckOccurrenceRelocations(occurrences, placements),
+      additionalContexts,
+    },
+  );
+}
+
 /** Confirm a human deck-bottom order, then resume the saved effect continuation. */
 export function applyDeckReorderAndContinuation(
   state: GameState,
@@ -829,49 +856,53 @@ export function applyDeckReorderAndContinuation(
   if (stopIfGameAlreadyEnded(state)) return;
   assertSameCardMultiset(pending.cardIds, order);
   const deck = state.players[pending.player].deck;
-  const legacyBottomBlock = !pending.deckSnapshot || !pending.occurrences;
 
   // Validate the untrusted response and current deck before emitting a causal decision.
-  if (legacyBottomBlock) {
-    const n = pending.cardIds.length;
-    if (n < 2 || deck.length < n) throw new Error('deckReorderResolve: stale bottom block');
-    const bottom = deck.slice(deck.length - n);
-    assertSameCardMultiset(pending.cardIds, bottom);
-  } else {
-    if (deck.length !== pending.deckSnapshot!.length
-      || deck.some((cardId, index) => cardId !== pending.deckSnapshot![index])) {
-      throw new Error('deckReorderResolve: stale deck snapshot');
+  if (!pending.deckSnapshot || !pending.occurrences || !pending.ctx
+    || typeof pending.occurrenceWitness !== 'string'
+    || !isLiveCardOccurrenceWitness(state, pending.player, 'deck', pending.occurrenceWitness)) {
+    throw new Error('deckReorderResolve: stale deck occurrence authority');
+  }
+  const occurrences = pending.occurrences;
+  const pendingCtx = pending.ctx;
+  if (deck.length !== pending.deckSnapshot.length
+    || deck.some((cardId, index) => cardId !== pending.deckSnapshot![index])) {
+    throw new Error('deckReorderResolve: stale deck snapshot');
+  }
+  if (occurrences.length !== pending.cardIds.length) {
+    throw new Error('deckReorderResolve: stale occurrence count');
+  }
+  const indexes = new Set<number>();
+  for (const occurrence of occurrences) {
+    if (!Number.isInteger(occurrence.index)
+      || occurrence.index < 0
+      || occurrence.index >= deck.length
+      || indexes.has(occurrence.index)
+      || deck[occurrence.index] !== occurrence.cardId) {
+      throw new Error('deckReorderResolve: stale or duplicate occurrence');
     }
-    if (pending.occurrences!.length !== pending.cardIds.length) {
-      throw new Error('deckReorderResolve: stale occurrence count');
-    }
-    const indexes = new Set<number>();
-    for (const occurrence of pending.occurrences!) {
-      if (!Number.isInteger(occurrence.index)
-        || occurrence.index < 0
-        || occurrence.index >= deck.length
-        || indexes.has(occurrence.index)
-        || deck[occurrence.index] !== occurrence.cardId) {
-        throw new Error('deckReorderResolve: stale or duplicate occurrence');
-      }
-      indexes.add(occurrence.index);
-    }
+    indexes.add(occurrence.index);
   }
 
   const causalCtx = pending.continuation?.ctx ?? pending.ctx;
   const storedTrace = pending.ctx?.causal?.trace ?? pending.continuation?.ctx.causal?.trace;
   const decisionTrace = causalCtx ? restoreEffectCausalTrace(causalCtx, storedTrace) : undefined;
+  consumePersistedDeckDecisionAuthority(state, '__pendingDeckReorderSide', pending);
   recordEffectCausalDecision(state, decisionTrace, pending.player);
   withStructuredCausalResolution(state, () => {
-    if (legacyBottomBlock) {
-      const n = pending.cardIds.length;
-      for (let i = 0; i < n; i++) deck[deck.length - n + i] = order[i]!;
-    } else {
-      for (const occurrence of [...pending.occurrences!].sort((a, b) => b.index - a.index)) {
-        deck.splice(occurrence.index, 1);
-      }
-      deckMutator.toBottom(state, pending.player, [...order]);
+    for (const occurrence of [...occurrences].sort((a, b) => b.index - a.index)) {
+      deck.splice(occurrence.index, 1);
     }
+    deck.push(...order);
+    const firstPlacedIndex = deck.length - order.length;
+    advanceDeckDecisionEpochAndRebaseContexts(
+      state,
+      pendingCtx,
+      pending.continuation,
+      pending.player,
+      occurrences,
+      order.map((cardId, offset) => ({ cardId, index: firstPlacedIndex + offset })),
+    );
     if (pending.continuation) runContinuationChain(state, pending.continuation, decisionTrace);
     else runAllUntilEmpty(state);
   }, decisionTrace);
@@ -887,7 +918,9 @@ export function applyDeckPlaceAndContinuation(
 ): boolean {
   if (stopIfGameAlreadyEnded(state)) return false;
   if (!hasSameCardMultiset(pending.cardIds, [...top, ...bottom])) return false;
-  if (!pending.deckSnapshot || !pending.occurrences || !pending.ctx) return false;
+  if (!pending.deckSnapshot || !pending.occurrences || !pending.ctx
+    || typeof pending.occurrenceWitness !== 'string'
+    || !isLiveCardOccurrenceWitness(state, pending.player, 'deck', pending.occurrenceWitness)) return false;
 
   const deck = state.players[pending.player].deck;
   if (deck.length !== pending.deckSnapshot.length
@@ -908,13 +941,27 @@ export function applyDeckPlaceAndContinuation(
   const causalCtx = pending.continuation?.ctx ?? pending.ctx;
   const storedTrace = pending.ctx.causal?.trace ?? pending.continuation?.ctx.causal?.trace;
   const decisionTrace = restoreEffectCausalTrace(causalCtx, storedTrace);
+  consumePersistedDeckDecisionAuthority(state, '__pendingDeckPlaceSide', pending);
   recordEffectCausalDecision(state, decisionTrace, pending.ownerPlayer);
   withStructuredCausalResolution(state, () => {
     for (const occurrence of [...pending.occurrences!].sort((a, b) => b.index - a.index)) {
       deck.splice(occurrence.index, 1);
     }
-    deckMutator.toTop(state, pending.player, [...top]);
-    deckMutator.toBottom(state, pending.player, [...bottom]);
+    deck.unshift(...top);
+    deck.push(...bottom);
+    const bottomStart = deck.length - bottom.length;
+    advanceDeckDecisionEpochAndRebaseContexts(
+      state,
+      pending.ctx,
+      pending.continuation,
+      pending.player,
+      pending.occurrences,
+      [
+        ...top.map((cardId, index) => ({ cardId, index })),
+        ...bottom.map((cardId, offset) => ({ cardId, index: bottomStart + offset })),
+      ],
+      top.length,
+    );
     if (pending.continuation) runContinuationChain(state, pending.continuation, decisionTrace);
     else runAllUntilEmpty(state);
   }, decisionTrace);
@@ -971,20 +1018,34 @@ export function applyPickAndContinuation(
   const commitDecision = (): void => {
     if (!causalDecisionAlreadyRecorded) recordEffectCausalDecision(state, decisionTrace, pending.player);
   };
+  if (!isLiveDeckRevealWindow(state, pending)) {
+    consumeQueuedPick(state, pending);
+    commitDecision();
+    mutate.log.append(state, {
+      ts: Date.now(), player: pending.player, turn: state.turn.number,
+      action: 'effect:pick', result: 'stale-selection',
+    });
+    completeEffectCausalTrace(state, decisionTrace, interceptCtx.source.player, 'fizzle', { type: 'state', state: 'fizzled' });
+    return;
+  }
   const selectedIndexedOccurrencesAreLive = (pickedUids ?? [pickedUid]).every((uid) => {
     const candidate = findPendingPickCandidate(pending, uid);
-    if (!candidate || (candidate.area !== 'evidence' && candidate.area !== 'remove')) return candidate !== undefined;
+    if (!candidate || (candidate.area !== 'deck' && candidate.area !== 'evidence' && candidate.area !== 'remove')) {
+      return candidate !== undefined;
+    }
     const index = candidate.index;
     if (typeof index !== 'number' || !Number.isInteger(index)
       || !isLiveCardOccurrenceWitness(state, candidate.player, candidate.area, candidate.occurrenceWitness)) return false;
     return candidate.area === 'evidence'
       ? state.players[candidate.player].evidence[index]?.cardId === candidate.cardId
-      : state.players[candidate.player].remove[index] === candidate.cardId;
+      : candidate.area === 'deck'
+        ? state.players[candidate.player].deck[index] === candidate.cardId
+        : state.players[candidate.player].remove[index] === candidate.cardId;
   });
   if (!selectedIndexedOccurrencesAreLive) {
     // Resolve only the stale decision.  Never let a replacement occurrence
     // reach choose-intercept, atom execution, or a paused continuation.
-    consumeQueuedPick(pending);
+    consumeQueuedPick(state, pending);
     commitDecision();
     mutate.log.append(state, {
       ts: Date.now(), player: pending.player, turn: state.turn.number,
@@ -996,7 +1057,7 @@ export function applyPickAndContinuation(
   if (isStaleEffectEventUsePick(state, pending, pickedUid, pickedUids)) {
     // Consume only the stale UI decision.  In particular, do not create
     // bindings, logs, hooks, queued atoms, or continuation-side effects.
-    consumeQueuedPick(pending);
+    consumeQueuedPick(state, pending);
     commitDecision();
     completeEffectCausalTrace(state, decisionTrace, interceptCtx.source.player, 'fizzle', { type: 'state', state: 'fizzled' });
     return;
@@ -1008,7 +1069,7 @@ export function applyPickAndContinuation(
     const selected = findPendingPickCandidate(pending, pickedUid);
     if (selected?.kind === 'card' && selected.area === 'hand'
       && !state.players[selected.player].hand.includes(selected.cardId)) {
-      consumeQueuedPick(pending);
+    consumeQueuedPick(state, pending);
       commitDecision();
       completeEffectCausalTrace(state, decisionTrace, interceptCtx.source.player, 'fizzle', { type: 'state', state: 'fizzled' });
       return;
@@ -1024,13 +1085,13 @@ export function applyPickAndContinuation(
         && ((pending.atomArgs as { faceDownOnly?: boolean }).faceDownOnly !== true || !entry.faceUp);
     });
     if (!allCurrent) {
-      consumeQueuedPick(pending);
+    consumeQueuedPick(state, pending);
       commitDecision();
       completeEffectCausalTrace(state, decisionTrace, interceptCtx.source.player, 'fizzle', { type: 'state', state: 'fizzled' });
       return;
     }
   }
-  consumeQueuedPick(pending);
+    consumeQueuedPick(state, pending);
   commitDecision();
   if (!skipChooseIntercept) {
     for (const uid of pickedUids ?? [pickedUid]) {
@@ -1321,9 +1382,19 @@ export function applyPickSkipAndContinuation(
   if (pending.nMin > 0) {
     throw new Error(`${pending.atomVerb}: below-minimum selection`);
   }
-  consumeQueuedPick(pending);
   const head = pending.continuation;
   let decisionTrace = cloneCausalEffectTrace(pending.source.causalTrace);
+  if (!isLiveDeckRevealWindow(state, pending)) {
+    consumeQueuedPick(state, pending);
+    recordEffectCausalDecision(state, decisionTrace, pending.player);
+    mutate.log.append(state, {
+      ts: Date.now(), player: pending.player, turn: state.turn.number,
+      action: 'effect:pick', result: 'stale-selection',
+    });
+    completeEffectCausalTrace(state, decisionTrace, pending.ownerPlayer ?? pending.player, 'fizzle', { type: 'state', state: 'fizzled' });
+    return;
+  }
+    consumeQueuedPick(state, pending);
   recordEffectCausalDecision(state, decisionTrace, pending.player);
   if (head) decisionTrace = restoreEffectCausalTrace(head.ctx, decisionTrace);
   // BUG-111 #2 (2026-06-16): runDeclinedAtom で declined head atom を再実行するか分岐する。
@@ -1436,7 +1507,7 @@ export function applyChoiceAndContinuation(
   const decisionTrace = restoreEffectCausalTrace(ctx, pending.source.causalTrace);
   recordEffectCausalDecision(state, decisionTrace, pending.player);
   const pendingBeforeResolve = snapshotContinuationPending();
-  const resolved = withChoiceSwitch(resolveEffectPicks(state, resumeEffect, ctx, {
+  const resolved = withSceneEnterSwitchChoice(resolveEffectPicks(state, resumeEffect, ctx, {
     byPlayer: pending.player,
     humanChooser: true,
     source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId },

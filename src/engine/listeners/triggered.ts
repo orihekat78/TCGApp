@@ -28,6 +28,7 @@ import { effectiveCutinAbilities } from '../read/hand-cutin.js';
 import { effectiveTriggeredAuraAbilities } from '../read/triggered-aura.js';
 import { char as charMutator } from '../mutate/char.js'; // W6 step4 (r58/B09090): per-char 疾風 flag + waive 消費
 import { flag } from '../mutate/flag.js';            // BUG-096: declaredUseCount 流用
+import { evidence as evidenceMutator } from '../mutate/evidence.js';
 import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from '../effect/resolve-picks.js';
 import { cardOccurrenceUid } from '../target/card-occurrence.js';
@@ -634,6 +635,11 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
     byUid?: string;
     actionId?: string;
     causalCorrelationEventId?: string;
+    heldEvidence?: {
+      token?: string;
+      player?: 'self' | 'opp';
+      cardId?: string;
+    };
     occurrence?: {
       uid?: string;
       player?: 'self' | 'opp';
@@ -688,6 +694,28 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
 
     if (trig.optional) {
       const occurrence = p.occurrence;
+      const heldEvidence = p.heldEvidence;
+      const exactHeldEvidence = heldEvidence
+        && typeof heldEvidence.token === 'string'
+        && heldEvidence.player === p.player
+        && heldEvidence.cardId === p.ev.cardId
+        ? {
+          token: heldEvidence.token,
+          player: heldEvidence.player,
+          cardId: heldEvidence.cardId,
+        }
+        : undefined;
+      if (heldEvidence !== undefined) {
+        if (!exactHeldEvidence
+          || typeof p.actionId !== 'string'
+          || !evidenceMutator.bindHeldHiramekiAuthority(
+            state,
+            p.actionId,
+            exactHeldEvidence.token,
+            ability.id,
+            effectValid,
+          )) continue;
+      }
       // ヒラメキ semantics: fire/skip 選択を UI に委譲
       // (旧 hirameki.ts listener と同等の動作)
       pushPendingHirameki({
@@ -701,6 +729,7 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
         actorUid: p.byUid,
         actionId: p.actionId,
         causalCorrelationEventId: p.causalCorrelationEventId,
+        heldEvidence: exactHeldEvidence,
         occurrence: occurrence
           && occurrence.player === p.player
           && occurrence.cardId === p.ev.cardId

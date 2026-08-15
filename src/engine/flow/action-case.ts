@@ -10,7 +10,7 @@
 //                                  移行済。本関数は legacy log 専用で外部呼び出しなし)
 //   - gainSelfEvidence:          自分の証拠+1 (LP無関係) — byUid 不在でも進める
 
-import type { ActionContext, CausalEffectTrace, EffectCtx, EvidenceCard, GameState } from '../types/index.js';
+import type { ActionContext, CausalEffectTrace, Effect, EffectCtx, EvidenceCard, GameState } from '../types/index.js';
 import { mutate } from '../mutate/index.js';
 import { event } from '../event/index.js';
 import { resolveEffectPicks, type ChooseAtomTargetFn } from '../effect/resolve-picks.js';
@@ -20,13 +20,42 @@ import {
   recordCausalTraceOperation,
   withStructuredCausalResolution,
 } from '../log/effect-causal.js';
-import type { PendingHiramekiSide } from '../listeners/hirameki.js';
+import { _peekPendingHirameki, type PendingHiramekiSide } from '../listeners/hirameki.js';
 import { def as readDef } from '../read/def.js';
 import { recordActionCausalOperation } from './action/causal.js';
 import { isLegacyReplayHiramekiCompatibilityActive } from './action/legacy-replay-compat.js';
 import { cardOccurrenceUid, cardOccurrenceWitness, isLiveCardOccurrenceWitness } from '../target/card-occurrence.js';
+import { sceneCap } from '../read/scene-cap.js';
+import { withSceneEnterSwitchChoice } from '../effect/scene-switch.js';
 
 type Player = 'self' | 'opp';
+
+function hasOptionalActionHirameki(cardId: string): boolean {
+  return readDef.card(cardId)?.abilities.some(ability =>
+    ability.type === 'triggered'
+    && ability.trigger?.hook === 'evidence:remove-by-action'
+    && ability.trigger.optional === true,
+  ) === true;
+}
+
+/** Commit an ActionContext-owned evidence card after its Hirameki finishes. */
+export function finalizePendingHiramekiEvidenceRemoval(
+  state: GameState,
+  ax: ActionContext,
+): EvidenceCard | undefined {
+  const held = ax.pendingHiramekiEvidenceRemoval;
+  if (!held) return undefined;
+  const ev = mutate.evidence.finalizeHeldHiramekiEvidence(state, ax);
+  if (!ev) return undefined;
+  recordActionCausalOperation(state, ax, {
+    actor: ax.byPlayer,
+    kind: 'zone-move',
+    source: { kind: 'zone', side: held.player, zone: 'evidence' },
+    targets: [{ kind: 'zone', side: held.player, zone: 'remove' }],
+    outcome: { type: 'move', from: 'evidence', to: 'remove', count: 1 },
+  });
+  return ev;
+}
 
 /**
  * removeOpponentEvidenceTop — 相手証拠最上部1枚をリムーブ
@@ -47,6 +76,32 @@ export function removeOpponentEvidenceTop(
     throw new Error('flow.actionCase.removeOpponentEvidenceTop: target is not case');
   }
   const player: Player = ax.target.player;
+  const top = state.players[player].evidence.at(-1);
+  if (top && hasOptionalActionHirameki(top.cardId)) {
+    const held = mutate.evidence.holdTopForHirameki(state, player, ax);
+    if (!held) return undefined;
+    const ev = held.evidence;
+    event.emit(
+      state,
+      'evidence:remove-by-action',
+      {
+        player,
+        ev,
+        byUid: ax.byUid,
+        actionId: ax.id,
+        heldEvidence: {
+          token: held.token,
+          player: held.player,
+          cardId: held.evidence.cardId,
+        },
+      },
+      { player: ax.byPlayer, uid: ax.byUid },
+    );
+    if (_peekPendingHirameki()?.heldEvidence?.token !== held.token) {
+      finalizePendingHiramekiEvidenceRemoval(state, ax);
+    }
+    return ev;
+  }
   const ev = mutate.evidence.removeTop(state, player);
   if (!ev) return undefined;
   const causalCorrelationEventId = recordActionCausalOperation(state, ax, {
@@ -212,7 +267,61 @@ export type HiramekiDecisionOptions = {
   chooseAtomTarget?: ChooseAtomTargetFn;
   runtimeAtomTargetPolicyKey?: 'heuristic';
   humanChooser: boolean;
+  switchRemoveUid?: string;
 };
+
+export type HiramekiSceneSwitchRequirement = {
+  player: Player;
+  cardId: string;
+  candidates: ReadonlyArray<GameState['players']['self']['scene'][number]>;
+};
+
+function directSceneEnterEffect(effect: Effect | undefined): Extract<Effect, { kind: 'atom' }> | null {
+  return effect?.kind === 'atom' && effect.verb === 'sceneEnter' ? effect : null;
+}
+
+/** Return the exact switch choice required before a direct Hirameki scene entry can fire. */
+export function readHiramekiSceneSwitchRequirement(
+  state: GameState,
+  pending: PendingHiramekiSide,
+): HiramekiSceneSwitchRequirement | null {
+  if (pending.effectValid === false) return null;
+  const ability = readDef.card(pending.cardId)?.abilities.find(candidate => candidate.id === pending.abilityId);
+  const effect = directSceneEnterEffect(ability?.effect);
+  if (!effect) return null;
+
+  const args = effect.args as Record<string, unknown>;
+  const relativePlayer = args.player;
+  if (relativePlayer !== 'self' && relativePlayer !== 'opp') return null;
+  const player = relativePlayer === 'self'
+    ? pending.player
+    : pending.player === 'self' ? 'opp' : 'self';
+  if (state.players[player].scene.length < sceneCap(state, player)) return null;
+
+  const rawCardId = args.cardId;
+  const cardId = typeof rawCardId === 'string' && !rawCardId.startsWith('$')
+    ? rawCardId
+    : rawCardId === '$occurrence.cardId'
+      ? pending.heldEvidence?.cardId ?? pending.occurrence?.cardId
+      : undefined;
+  if (!cardId) return null;
+
+  return { player, cardId, candidates: state.players[player].scene };
+}
+
+/** Validate that fire/skip carries exactly the switch witness required by current state. */
+export function isValidHiramekiSceneSwitchChoice(
+  state: GameState,
+  pending: PendingHiramekiSide,
+  choice: 'fire' | 'skip',
+  switchRemoveUid: string | undefined,
+): boolean {
+  if (choice === 'skip') return switchRemoveUid === undefined;
+  const requirement = readHiramekiSceneSwitchRequirement(state, pending);
+  if (!requirement) return switchRemoveUid === undefined;
+  return typeof switchRemoveUid === 'string'
+    && requirement.candidates.some(candidate => candidate.uid === switchRemoveUid);
+}
 
 /** Exact state-owned checkpoint opened by this case action's evidence removal. */
 export function matchesHiramekiCheckpoint(
@@ -220,7 +329,31 @@ export function matchesHiramekiCheckpoint(
   ax: ActionContext,
   pending: PendingHiramekiSide,
 ): boolean {
-  if (
+  const held = pending.heldEvidence;
+  if (held !== undefined) {
+    const owned = ax.pendingHiramekiEvidenceRemoval;
+    const ability = readDef.card(pending.cardId)?.abilities.find(candidate =>
+      candidate.id === pending.abilityId
+      && candidate.type === 'triggered'
+      && candidate.trigger?.hook === 'evidence:remove-by-action'
+      && candidate.trigger.optional === true,
+    );
+    if (
+      ax.target.kind !== 'case'
+      || pending.actionId !== ax.id
+      || pending.actorUid !== ax.byUid
+      || pending.player !== ax.target.player
+      || held.player !== pending.player
+      || held.cardId !== pending.cardId
+      || owned?.token !== held.token
+      || owned.player !== held.player
+      || owned.evidence.cardId !== held.cardId
+      || owned.abilityId !== pending.abilityId
+      || owned.effectValid !== pending.effectValid
+      || owned.decisionResolved !== false
+      || !ability?.effect
+    ) return false;
+  } else if (
     ax.target.kind !== 'case'
     || pending.actionId !== ax.id
     || pending.actorUid !== ax.byUid
@@ -250,6 +383,8 @@ export function matchesHiramekiCheckpoint(
   }
   if (correlationEventId !== undefined) return false;
 
+  if (held !== undefined) return true;
+
   return isLegacyReplayHiramekiCompatibilityActive()
     && state.causalLog === undefined
     && !state.log.some(isCausalLogEntry);
@@ -263,21 +398,31 @@ export function resolveHiramekiDecision(
   choice: 'fire' | 'skip',
   options: HiramekiDecisionOptions,
 ): void {
-  if (actionContext && pending.causalCorrelationEventId !== undefined
-    && !matchesHiramekiCheckpoint(state, actionContext, pending)) return;
+  if ((pending.heldEvidence !== undefined || pending.causalCorrelationEventId !== undefined)
+    && (!actionContext || !matchesHiramekiCheckpoint(state, actionContext, pending))) return;
+  if (!isValidHiramekiSceneSwitchChoice(
+    state,
+    pending,
+    choice,
+    options.switchRemoveUid,
+  )) return;
+  const held = pending.heldEvidence;
+  if (held && actionContext?.pendingHiramekiEvidenceRemoval) {
+    actionContext.pendingHiramekiEvidenceRemoval.decisionResolved = true;
+  }
   const decisionEventId = actionContext
     ? recordActionCausalOperation(state, actionContext, choice === 'fire' ? {
       actor: pending.player,
       kind: 'activate',
       tags: ['hirameki'],
-      source: { kind: 'zone', side: pending.player, zone: 'remove' },
+      source: { kind: 'zone', side: pending.player, zone: held ? 'evidence' : 'remove' },
       targets: [{ kind: 'player', side: pending.player }],
       outcome: { type: 'state', state: 'active' },
     } : {
       actor: pending.player,
       kind: 'cancel',
       tags: ['hirameki'],
-      source: { kind: 'zone', side: pending.player, zone: 'remove' },
+      source: { kind: 'zone', side: pending.player, zone: held ? 'evidence' : 'remove' },
       targets: [{ kind: 'player', side: pending.player }],
       outcome: { type: 'state', state: 'cancelled' },
     })
@@ -299,10 +444,14 @@ export function resolveHiramekiDecision(
 
   const ctx: EffectCtx = {
     source: {
-      player: pending.occurrence?.player ?? pending.player,
-      cardId: pending.occurrence?.cardId ?? pending.cardId,
+      player: held?.player ?? pending.occurrence?.player ?? pending.player,
+      cardId: held?.cardId ?? pending.occurrence?.cardId ?? pending.cardId,
       abilityId: pending.abilityId,
-      ...(pending.occurrence ? { uid: pending.occurrence.uid, area: pending.occurrence.area } : { area: 'evidence' }),
+      ...(held
+        ? { uid: held.token, area: 'evidence' as const }
+        : pending.occurrence
+          ? { uid: pending.occurrence.uid, area: pending.occurrence.area }
+          : { area: 'evidence' as const }),
       resolutionKind: 'hirameki',
     },
     bindings: pending.occurrence ? {
@@ -323,23 +472,35 @@ export function resolveHiramekiDecision(
       player: pending.player,
       ev: { cardId: pending.cardId },
       byUid: pending.actorUid,
+      actionId: pending.actionId,
+      heldEvidence: held,
       occurrence: pending.occurrence,
     },
   };
-  const resolved = resolveEffectPicks(state, ability.effect, ctx, {
-    chooseAtomTarget: options.chooseAtomTarget,
-    runtimeAtomTargetPolicyKey: options.runtimeAtomTargetPolicyKey,
-    byPlayer: pending.player,
-    humanChooser: options.humanChooser,
-    source: { cardId: pending.cardId, abilityId: pending.abilityId },
-  });
+  const resolved = resolveEffectPicks(
+    state,
+    withSceneEnterSwitchChoice(ability.effect, options.switchRemoveUid),
+    ctx,
+    {
+      chooseAtomTarget: options.chooseAtomTarget,
+      runtimeAtomTargetPolicyKey: options.runtimeAtomTargetPolicyKey,
+      byPlayer: pending.player,
+      humanChooser: options.humanChooser,
+      source: { cardId: pending.cardId, abilityId: pending.abilityId },
+    },
+  );
   event.queue(
     state,
     resolved,
     {
-      player: pending.occurrence?.player ?? pending.player,
-      cardId: pending.occurrence?.cardId ?? pending.cardId,
-      ...(pending.occurrence ? { uid: pending.occurrence.uid, area: pending.occurrence.area } : {}),
+      player: held?.player ?? pending.occurrence?.player ?? pending.player,
+      cardId: held?.cardId ?? pending.occurrence?.cardId ?? pending.cardId,
+      abilityId: pending.abilityId,
+      ...(held
+        ? { uid: held.token, area: 'evidence' as const }
+        : pending.occurrence
+          ? { uid: pending.occurrence.uid, area: pending.occurrence.area }
+          : {}),
       resolutionKind: 'hirameki',
     },
     'evidence:remove-by-action',
@@ -349,6 +510,7 @@ export function resolveHiramekiDecision(
       byUid: pending.actorUid,
       actionId: pending.actionId,
       causalCorrelationEventId: decisionEventId ?? pending.causalCorrelationEventId,
+      heldEvidence: held,
       occurrence: pending.occurrence,
     },
     ctx.bindings,
@@ -362,8 +524,11 @@ export function resolveHiramekiDecision(
 
 export const actionCase = {
   removeOpponentEvidenceTop,
+  finalizePendingHiramekiEvidenceRemoval,
   flashWindow,
   gainSelfEvidence,
   matchesHiramekiCheckpoint,
+  readHiramekiSceneSwitchRequirement,
+  isValidHiramekiSceneSwitchChoice,
   resolveHiramekiDecision,
 };

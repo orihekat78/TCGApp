@@ -992,9 +992,9 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p08/B08006.ts:49",
-        "tests:tests/cards/night-wC/hirameki-optional.test.ts:221",
-        "tests:tests/cards/night-wC/hirameki-optional.test.ts:228",
-        "tests:tests/cards/night-wC/hirameki-optional.test.ts:231"
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:230",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:243",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:245"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -1008,8 +1008,8 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p08/B08006.ts:49",
-        "tests:tests/cards/night-wC/hirameki-optional.test.ts:231",
-        "tests:tests/cards/night-wC/hirameki-optional.test.ts:246"
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:245",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:260"
       ]
     },
     {
@@ -1815,11 +1815,12 @@
     {
       "qaId": "card:PR017:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c",
       "answerHash": "24c759d28a4ec6639a5e29d0bfe9ecf8ae35c9fef100ec84884250ecbdda798e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR017.ts:1"
+        "src:src/cards/pr-01/PR017.ts:1",
+        "tests:tests/cards/official-qa/event-evidence-action-hirameki-public.test.ts:298"
       ]
     },
     {

@@ -72,6 +72,13 @@ function emitAndFire(s: GameState, cardId: string): GameState {
   return useGameStateStore.getState().gameState!;
 }
 
+function finishCaseAction(actionId: string): void {
+  for (let step = 0; step < 2 && useGameStateStore.getState().activeActionId === actionId; step += 1) {
+    expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
+  }
+  expect(useGameStateStore.getState().activeActionId).toBeNull();
+}
+
 describe('BUG-140 補修 hirameki 挙動 (テンプレ代表 4 枚)', () => {
   beforeAll(() => {
     registerAll();
@@ -119,9 +126,11 @@ describe('BUG-140 補修 hirameki 挙動 (テンプレ代表 4 枚)', () => {
     s.players.self.remove = ['D11003', 'D08015', 'B01094P'];
     const startHand = s.players.self.hand.length;
     emitAndFire(s, 'B01094');
+    const actionId = useGameStateStore.getState().activeActionId!;
     const pick = useGameStateStore.getState().pendingEffectPick;
     expect(pick?.candidates).toHaveLength(1);
     expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pick!.candidates[0]!.uid }).ok).toBe(true);
+    finishCaseAction(actionId);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.hand.length).toBe(startHand + 1);
     expect(after.players.self.hand).toContain('D11003');

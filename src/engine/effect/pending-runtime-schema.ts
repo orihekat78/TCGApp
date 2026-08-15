@@ -73,7 +73,7 @@ function boundOccurrenceWitness(
   value: unknown,
   path: string,
   player: 'self' | 'opp',
-  area: 'evidence' | 'remove',
+  area: 'deck' | 'evidence' | 'remove',
 ): void {
   occurrenceWitness(value, path);
   if (!isCardOccurrenceWitnessFor(value, player, area)) {
@@ -279,7 +279,22 @@ function effectCtx(value: unknown, path: string, mode: ValidationMode, depth = 0
         const entryPath = `${path}.bindings.${key}[${index}]`;
         const binding = record(entry, entryPath);
         genericData(entry, entryPath, mode);
-        if (binding.area === 'remove' || binding.area === 'evidence') {
+        if (binding.area === 'deck') {
+          player(binding.player, `${entryPath}.player`);
+          const bindingPlayer = binding.player as 'self' | 'opp';
+          const bindingIndex = integer(binding.index, `${entryPath}.index`);
+          const cardId = string(binding.cardId, `${entryPath}.cardId`);
+          boundOccurrenceWitness(
+            binding.occurrenceWitness,
+            `${entryPath}.occurrenceWitness`,
+            bindingPlayer,
+            'deck',
+          );
+          const uid = string(binding.uid, `${entryPath}.uid`);
+          if (uid !== cardOccurrenceUid(bindingPlayer, 'deck', cardId, bindingIndex)) {
+            fail(`${entryPath}.uid`, 'does not match the indexed deck occurrence');
+          }
+        } else if (binding.area === 'remove' || binding.area === 'evidence') {
           player(binding.player, `${entryPath}.player`);
           const bindingPlayer = binding.player as 'self' | 'opp';
           const bindingIndex = integer(binding.index, `${entryPath}.index`);
@@ -561,6 +576,8 @@ function pendingPick(value: unknown, path: string, mode: ValidationMode): void {
   const item = record(value, path);
   player(item.player, `${path}.player`);
   optionalPlayer(item.ownerPlayer, `${path}.ownerPlayer`);
+  const verb = string(item.atomVerb, `${path}.atomVerb`);
+  if (!ATOM_VERBS.has(verb)) fail(`${path}.atomVerb`, 'unknown atom verb');
   const candidates = array(item.candidates, `${path}.candidates`);
   const candidateUids = new Set<string>();
   candidates.forEach((raw, index) => {
@@ -588,7 +605,7 @@ function pendingPick(value: unknown, path: string, mode: ValidationMode): void {
       } else if (candidateItem.index !== undefined) {
         fail(`${path}.candidates[${index}].index`, 'not allowed for this area');
       }
-      if (area === 'evidence' || area === 'remove') {
+      if (area === 'evidence' || area === 'remove' || (area === 'deck' && verb === 'deckRevealUntil')) {
         if (candidateUid !== cardOccurrenceUid(candidatePlayer, area, candidateCardId, candidateIndex!)) {
           fail(`${path}.candidates[${index}].uid`, 'does not match the indexed card occurrence');
         }
@@ -631,10 +648,74 @@ function pendingPick(value: unknown, path: string, mode: ValidationMode): void {
       fail(`${path}.candidates[${index}].hidden`, 'expected a boolean');
     }
   });
-  const verb = string(item.atomVerb, `${path}.atomVerb`);
-  if (!ATOM_VERBS.has(verb)) fail(`${path}.atomVerb`, 'unknown atom verb');
   const atomArgs = record(item.atomArgs, `${path}.atomArgs`);
   genericData(item.atomArgs, `${path}.atomArgs`, mode);
+  if (verb === 'deckRevealUntil') {
+    const pendingPlayer = item.player as 'self' | 'opp';
+    if (atomArgs.__windowPlayer !== undefined) {
+      player(atomArgs.__windowPlayer, `${path}.atomArgs.__windowPlayer`);
+    }
+    const windowPlayer = (atomArgs.__windowPlayer ?? pendingPlayer) as 'self' | 'opp';
+    const windowWitness = string(atomArgs.__windowWitness, `${path}.atomArgs.__windowWitness`);
+    boundOccurrenceWitness(
+      windowWitness,
+      `${path}.atomArgs.__windowWitness`,
+      windowPlayer,
+      'deck',
+    );
+    const windowIds = array(atomArgs.__windowIds, `${path}.atomArgs.__windowIds`)
+      .map((value, index) => string(value, `${path}.atomArgs.__windowIds[${index}]`));
+    const windowOccurrences = array(
+      atomArgs.__windowOccurrences,
+      `${path}.atomArgs.__windowOccurrences`,
+    );
+    if (windowIds.length !== windowOccurrences.length) {
+      fail(`${path}.atomArgs`, 'deckRevealUntil window IDs and occurrences must have the same length');
+    }
+    const windowUids = new Set<string>();
+    windowOccurrences.forEach((raw, index) => {
+      const occurrence = record(raw, `${path}.atomArgs.__windowOccurrences[${index}]`);
+      if (occurrence.kind !== 'card') {
+        fail(`${path}.atomArgs.__windowOccurrences[${index}].kind`, 'deck occurrences require kind card');
+      }
+      if (occurrence.player !== windowPlayer || occurrence.area !== 'deck') {
+        fail(`${path}.atomArgs.__windowOccurrences[${index}]`, 'must match the reveal window player and deck area');
+      }
+      const cardId = string(
+        occurrence.cardId,
+        `${path}.atomArgs.__windowOccurrences[${index}].cardId`,
+      );
+      const occurrenceIndex = integer(
+        occurrence.index,
+        `${path}.atomArgs.__windowOccurrences[${index}].index`,
+      );
+      const uid = string(occurrence.uid, `${path}.atomArgs.__windowOccurrences[${index}].uid`);
+      if (uid !== cardOccurrenceUid(windowPlayer, 'deck', cardId, occurrenceIndex)) {
+        fail(`${path}.atomArgs.__windowOccurrences[${index}].uid`, 'does not match the indexed card occurrence');
+      }
+      if (occurrence.occurrenceWitness !== windowWitness) {
+        fail(`${path}.atomArgs.__windowOccurrences[${index}].occurrenceWitness`, 'must match the reveal window witness');
+      }
+      if (windowIds[index] !== cardId) {
+        fail(`${path}.atomArgs.__windowOccurrences[${index}].cardId`, 'must match the reveal window card ID');
+      }
+      if (windowUids.has(uid)) {
+        fail(`${path}.atomArgs.__windowOccurrences[${index}].uid`, 'duplicate reveal window occurrence');
+      }
+      windowUids.add(uid);
+    });
+    candidates.forEach((raw, index) => {
+      const candidate = record(raw, `${path}.candidates[${index}]`);
+      if (candidate.kind !== 'card'
+        || candidate.player !== windowPlayer
+        || candidate.area !== 'deck'
+        || candidate.occurrenceWitness !== windowWitness
+        || typeof candidate.uid !== 'string'
+        || !windowUids.has(candidate.uid)) {
+        fail(`${path}.candidates[${index}].occurrenceWitness`, 'must belong to the exact reveal window');
+      }
+    });
+  }
   if (atomArgs.minimumPolicy !== undefined) {
     oneOf(atomArgs.minimumPolicy, new Set(['best-effort', 'exact']), `${path}.atomArgs.minimumPolicy`);
   }
@@ -880,6 +961,31 @@ export function assertPendingRuntimeValue(
         optionalString(item.actionId, `${entryPath}.actionId`);
         optionalString(item.causalCorrelationEventId, `${entryPath}.causalCorrelationEventId`);
         optionalBool(item.gainDeferred, `${entryPath}.gainDeferred`);
+        if (item.heldEvidence !== undefined) {
+          const held = record(item.heldEvidence, `${entryPath}.heldEvidence`);
+          string(held.token, `${entryPath}.heldEvidence.token`);
+          player(held.player, `${entryPath}.heldEvidence.player`);
+          string(held.cardId, `${entryPath}.heldEvidence.cardId`);
+          if (item.actionId === undefined) {
+            fail(`${entryPath}.actionId`, 'required for held evidence');
+          }
+          if (item.actorUid === undefined) {
+            fail(`${entryPath}.actorUid`, 'required for held evidence');
+          }
+          bool(item.effectValid, `${entryPath}.effectValid`);
+          if (held.player !== item.player) {
+            fail(`${entryPath}.heldEvidence.player`, 'must match pending player');
+          }
+          if (held.cardId !== item.cardId) {
+            fail(`${entryPath}.heldEvidence.cardId`, 'must match pending cardId');
+          }
+          if (item.occurrence !== undefined) {
+            fail(entryPath, 'heldEvidence and occurrence are mutually exclusive');
+          }
+          if (item.causalCorrelationEventId !== undefined) {
+            fail(`${entryPath}.causalCorrelationEventId`, 'held evidence has no remove-event correlation');
+          }
+        }
         if (item.occurrence !== undefined) {
           const occurrence = record(item.occurrence, `${entryPath}.occurrence`);
           string(occurrence.uid, `${entryPath}.occurrence.uid`);
@@ -994,15 +1100,52 @@ export function assertPendingRuntimeValue(
         if ((item.deckSnapshot === undefined) !== (item.occurrences === undefined)) {
           fail(entryPath, 'deckSnapshot and occurrences must be provided together');
         }
+        if (item.deckSnapshot === undefined) {
+          fail(entryPath, 'deckSnapshot and occurrences are required');
+        }
         if (item.deckSnapshot !== undefined) stringArray(item.deckSnapshot, `${entryPath}.deckSnapshot`);
+        if (item.occurrenceWitness === undefined) fail(entryPath, 'occurrenceWitness is required');
+        boundOccurrenceWitness(
+          item.occurrenceWitness,
+          `${entryPath}.occurrenceWitness`,
+          item.player as 'self' | 'opp',
+          'deck',
+        );
+        const validatedOccurrences: Array<{ cardId: string; index: number }> = [];
         if (item.occurrences !== undefined) {
           array(item.occurrences, `${entryPath}.occurrences`).forEach((raw, index) => {
             const occurrence = record(raw, `${entryPath}.occurrences[${index}]`);
-            string(occurrence.cardId, `${entryPath}.occurrences[${index}].cardId`);
-            integer(occurrence.index, `${entryPath}.occurrences[${index}].index`);
+            validatedOccurrences.push({
+              cardId: string(occurrence.cardId, `${entryPath}.occurrences[${index}].cardId`),
+              index: integer(occurrence.index, `${entryPath}.occurrences[${index}].index`),
+            });
           });
         }
-        if (item.ctx !== undefined) effectCtx(item.ctx, `${entryPath}.ctx`, mode);
+        if (item.deckSnapshot !== undefined && item.occurrences !== undefined) {
+          const cardIds = item.cardIds as string[];
+          const deckSnapshot = item.deckSnapshot as string[];
+          if (validatedOccurrences.length !== cardIds.length) {
+            fail(`${entryPath}.occurrences`, 'count must match cardIds');
+          }
+          if (!hasSameStringMultiset(cardIds, validatedOccurrences.map(occurrence => occurrence.cardId))) {
+            fail(`${entryPath}.occurrences`, 'card multiset must match cardIds');
+          }
+          const indexes = new Set<number>();
+          validatedOccurrences.forEach((occurrence, index) => {
+            if (occurrence.index >= deckSnapshot.length) {
+              fail(`${entryPath}.occurrences[${index}].index`, 'must reference deckSnapshot');
+            }
+            if (indexes.has(occurrence.index)) {
+              fail(`${entryPath}.occurrences[${index}].index`, 'must be unique');
+            }
+            indexes.add(occurrence.index);
+            if (deckSnapshot[occurrence.index] !== occurrence.cardId) {
+              fail(`${entryPath}.occurrences[${index}]`, 'must match deckSnapshot occurrence');
+            }
+          });
+        }
+        if (item.ctx === undefined) fail(entryPath, 'ctx is required');
+        effectCtx(item.ctx, `${entryPath}.ctx`, mode);
         if (item.continuation !== undefined) continuation(item.continuation, `${entryPath}.continuation`, mode);
       });
       return;
@@ -1021,6 +1164,13 @@ export function assertPendingRuntimeValue(
           fail(entryPath, 'deckSnapshot and occurrences are required');
         }
         if (hasSnapshot) stringArray(item.deckSnapshot, `${entryPath}.deckSnapshot`);
+        if (item.occurrenceWitness === undefined) fail(entryPath, 'occurrenceWitness is required');
+        boundOccurrenceWitness(
+          item.occurrenceWitness,
+          `${entryPath}.occurrenceWitness`,
+          item.player as 'self' | 'opp',
+          'deck',
+        );
         const validatedOccurrences: Array<{ cardId: string; index: number }> = [];
         if (hasOccurrences) {
           array(item.occurrences, `${entryPath}.occurrences`).forEach((raw, index) => {

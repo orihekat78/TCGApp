@@ -790,5 +790,5 @@ export type Effect =
 export type DeckToBottomBoundArgs = {
   player?: unknown;
   bindKey?: string;
-  order?: 'arbitrary' | 'preserve';
+  order?: 'arbitrary' | 'preserve' | 'shuffle';
 };

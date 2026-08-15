@@ -95,9 +95,10 @@ describe('selectInteractionLocked', () => {
     expect(selectAutonomousDecisionBlocked(presentationState)).toBe(false);
   });
 
-  it('allows the effect pick or choice that owns a switch victim picker', () => {
+  it('allows the effect pick, choice, or Hirameki decision that owns a switch victim picker', () => {
     expect(selectSwitchVictimBlocked(base({ pendingEffectPick: {} as never }))).toBe(false);
     expect(selectSwitchVictimBlocked(base({ pendingEffectChoice: {} as never }))).toBe(false);
+    expect(selectSwitchVictimBlocked(base({ pendingHirameki: {} as never }))).toBe(false);
   });
 
   it('suspends a switch victim picker for a competing decision', () => {

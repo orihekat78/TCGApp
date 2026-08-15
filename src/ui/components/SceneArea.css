@@ -500,6 +500,25 @@
   box-shadow: 0 0 18px rgba(255, 217, 102, 0.9);
 }
 
+.scene-area .card .scene-card-pick-button {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.scene-area .card .scene-card-pick-button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(255, 217, 102, 0.7);
+}
+
 /* Task2: アクティブカード「ぴこんポップ」(MasterDuel風 — 効果発動 / CPU 操作中のカードがその場で軽く浮く)。
    base .card の transition: transform で滑らかにスケール。sleep/stun は回転を保ったまま拡大 (compound selector で合成)。 */
 .scene-area .card.is-active-pop {

@@ -224,7 +224,10 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
     case 'revealHandToDeckTop': {
       const ids = selected(cost.target, cost.n).filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card').map(c => c.cardId);
       if (ids.length !== cost.n) return false;
-      removeHand(ids); state.players[p].deck.unshift(...ids); return true;
+      removeHand(ids);
+      state.players[p].deck.unshift(...ids);
+      if (ids.length > 0) advanceIndexedZoneEpoch(state, p, 'deck');
+      return true;
     }
     case 'removeFromScene': {
       const uids = selected(cost.target, cost.n).filter((c): c is Candidate & { kind: 'char' } => c.kind === 'char').map(c => c.uid);
@@ -262,6 +265,7 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
     case 'removeDeckTop': {
       const removed = state.players[cost.player].deck.splice(0, resolveDynNumber(cost.n, state, ctx));
       addToRemove(state, cost.player, removed);
+      if (removed.length > 0) advanceIndexedZoneEpoch(state, cost.player, 'deck');
       const prior = (ctx.costPaid?.['removeDeckTop'] as { ids?: string[] } | undefined)?.ids ?? [];
       recordCostPaid(ctx, 'removeDeckTop', { ids: [...prior, ...removed] });
       if (removed.length > 0) simulateRefreshAfterTake(state, cost.player);
@@ -270,6 +274,7 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
     case 'removeDeckAll': {
       const removed = state.players[cost.player].deck.splice(0);
       addToRemove(state, cost.player, removed);
+      if (removed.length > 0) advanceIndexedZoneEpoch(state, cost.player, 'deck');
       simulateRefreshAfterTake(state, cost.player);
       return true;
     }
@@ -285,7 +290,10 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       const found = detachScene(ctx.source.uid!, true); if (!found) return false;
       if (readDef.isMR(found.char.cardId) && state.turn.player !== found.player) {
         state.players[found.player].partnerAreaMR = { ...found.char, uid: `partnerMR:${found.player}`, isNamed: false, setCards: [], stackedCards: [] };
-      } else state.players[found.player].deck.push(found.char.cardId);
+      } else {
+        state.players[found.player].deck.push(found.char.cardId);
+        advanceIndexedZoneEpoch(state, found.player, 'deck');
+      }
       return true;
     }
     case 'selfToRemove': {
@@ -425,6 +433,7 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       if (uids.length !== cost.n || new Set(uids).size !== uids.length || uids.some(uid => !allowed.has(uid))) return false;
       const ids: string[] = [];
       for (const uid of uids) { const found = detachScene(uid); if (!found || found.player !== p) return false; state.players[p].deck.push(found.char.cardId); ids.push(found.char.cardId); }
+      if (ids.length > 0) advanceIndexedZoneEpoch(state, p, 'deck');
       recordCostPaid(ctx, 'sceneToDeckBottom', { ids, level: readDef.card(ids[0])?.level });
       return true;
     }
@@ -435,7 +444,9 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       const allowed = candidates(state, cost.target, ctx).filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card').map(c => c.cardId);
       if (ids.length !== cost.n || !isMultisetSubset(ids, allowed)) return false;
       for (const id of ids) { const index = state.players[p].remove.indexOf(id); if (index < 0) return false; state.players[p].remove.splice(index, 1); advanceIndexedZoneEpoch(state, p, 'remove'); }
-      state.players[p].deck.push(...ids); return true;
+      state.players[p].deck.push(...ids);
+      if (ids.length > 0) advanceIndexedZoneEpoch(state, p, 'deck');
+      return true;
     }
     case 'partnerAreaRemove': {
       const explicit = readPartnerAreaRemoveIds(ctx);
@@ -498,6 +509,7 @@ function simulateRefreshAfterTake(state: GameState, player: 'self' | 'opp'): voi
     return;
   }
   state.players[player].deck.push(...state.players[player].remove);
+  advanceIndexedZoneEpoch(state, player, 'deck');
   state.players[player].remove = [];
   advanceIndexedZoneEpoch(state, player, 'remove');
   state.refreshCount[player] = (state.refreshCount[player] ?? 0) + 1;

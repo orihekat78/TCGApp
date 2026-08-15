@@ -1,5 +1,6 @@
 import type { GameState } from '@/engine/types';
 import { char } from './char.js';
+import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 
 /** Clears effects whose lifetime cannot outlive the action that granted them. */
 export function clearActionScopedState(state: GameState): void {
@@ -29,5 +30,21 @@ export function clearContactScopedState(state: GameState): void {
 export function clearTerminalActionState(state: GameState): void {
   clearActionScopedState(state);
   clearContactScopedState(state);
+  for (const entry of state.pendingEffects) {
+    if (entry.state === 'pending' || entry.state === 'resolving') entry.state = 'cancelled';
+  }
+  for (const context of Object.values(state.actionContexts ?? {})) {
+    const held = context.pendingHiramekiEvidenceRemoval;
+    if (!held) continue;
+    state.players[held.player].remove.push(held.evidence.cardId);
+    advanceIndexedZoneEpoch(state, held.player, 'remove');
+    delete context.pendingHiramekiEvidenceRemoval;
+  }
   state.actionContexts = {};
+  // A terminal GameState cannot retain a resumable resolver authority. Direct
+  // terminal writers do not necessarily pass through the stack cleanup path.
+  delete state.pendingRuntimeState;
+  delete state.pendingTurnTransition;
+  delete state.pendingReasoningContinuation;
+  state.reservedEffects = [];
 }

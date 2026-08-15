@@ -19,6 +19,7 @@ src/ui/components/LeaveInterceptModalHost.tsx
 src/ui/components/LogPanel.tsx
 src/ui/components/MisreadPickerModal.tsx
 src/ui/components/MulliganModal.tsx
+src/ui/components/Playmat.tsx
 src/ui/components/RpsModalHost.tsx
 src/ui/components/SetCardChoiceModalHost.tsx
 src/ui/components/SetCardReplacementModalHost.tsx

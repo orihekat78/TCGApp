@@ -258,9 +258,16 @@ describe('Playmat', () => {
         },
       }));
 
-      const victim = container.querySelector<HTMLElement>('[data-uid="switch-victim-1"]');
-      expect(victim).not.toBeNull();
-      act(() => victim?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+      const victim = container.querySelector<HTMLElement>('[data-testid="scene-card-pick-switch-victim-1"]');
+      const cancel = container.querySelector<HTMLButtonElement>('[data-testid="switch-victim-cancel"]');
+      expect(victim).toBeNull();
+      expect(cancel?.disabled).toBe(true);
+      act(() => cancel?.click());
+
+      expect(resolved).toBeUndefined();
+      expect(useSceneSwitchPickerStore.getState().current).not.toBeNull();
+
+      act(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })));
 
       expect(resolved).toBeUndefined();
       expect(useSceneSwitchPickerStore.getState().current).not.toBeNull();
@@ -536,6 +543,65 @@ describe('Playmat', () => {
       expect(container.querySelector('[data-testid="hirameki-source-card-detail"]')).not.toBeNull();
     } finally {
       act(() => root.unmount());
+      humanSide.__humanPlayerSide = previousHumanSide;
+      useGameStateStore.setState({ gameState: null, pendingHirameki: null, spectatorMode: false });
+    }
+  });
+
+  it('moves a full-scene Hirameki fire into direct switch selection and restores the decision on cancel', async () => {
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    const humanSide = globalThis as { __humanPlayerSide?: 'self' | 'opp' | null };
+    const previousHumanSide = humanSide.__humanPlayerSide;
+    humanSide.__humanPlayerSide = 'self';
+    const state = createEmptyGameState();
+    state.players.self.scene = Array.from({ length: 5 }, (_, index) => ({
+      uid: `hirameki-switch-${index}`,
+      cardId: 'D08005',
+      state: 'active' as const,
+      isNamed: false,
+      enterOrder: index + 1,
+      setCards: [],
+      stackedCards: 0,
+      keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null,
+      lpOverride: null,
+      turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+      declaredUseCount: {},
+    }));
+    useGameStateStore.setState({
+      gameState: state,
+      pendingHirameki: {
+        player: 'self',
+        cardId: 'B06027',
+        abilityId: 'a2',
+        heldEvidence: { token: 'hirameki:full-scene:self', player: 'self', cardId: 'B06027' },
+      },
+      spectatorMode: false,
+    });
+    useSceneSwitchPickerStore.getState()._close();
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    try {
+      act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+      await act(async () => {
+        container.querySelector<HTMLButtonElement>('[data-testid="hirameki-fire-btn"]')!.click();
+      });
+
+      expect(useSceneSwitchPickerStore.getState().current?.candidates.map(card => card.uid)).toEqual(
+        state.players.self.scene.map(card => card.uid),
+      );
+      expect(container.querySelector('[data-testid="hirameki-picker-modal"]')).toBeNull();
+
+      await act(async () => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })));
+      expect(useSceneSwitchPickerStore.getState().current).toBeNull();
+      expect(container.querySelector('[data-testid="hirameki-picker-modal"]')).not.toBeNull();
+      expect(useGameStateStore.getState().pendingHirameki?.cardId).toBe('B06027');
+    } finally {
+      act(() => root.unmount());
+      container.remove();
+      useSceneSwitchPickerStore.getState()._close();
       humanSide.__humanPlayerSide = previousHumanSide;
       useGameStateStore.setState({ gameState: null, pendingHirameki: null, spectatorMode: false });
     }

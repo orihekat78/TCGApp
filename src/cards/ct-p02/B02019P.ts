@@ -58,14 +58,8 @@ const a1: AbilityDef = {
         verb: 'deckToBottomBound',
         args: {
           player: 'self',
-          bindKey: '$revealed'
-        }
-      },
-      {
-        kind: 'atom',
-        verb: 'deckShuffle',
-        args: {
-          player: 'self'
+          bindKey: '$revealed',
+          order: 'shuffle'
         }
       }
     ]

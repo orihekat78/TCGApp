@@ -90,7 +90,12 @@ describe('standalone App presentation ownership', () => {
       cardId: 'B04028',
       abilityId: 'a2',
       gainDeferred: true,
-      causalCorrelationEventId: expect.any(String),
+      causalCorrelationEventId: undefined,
+      heldEvidence: {
+        token: `hirameki:${actionId}:self`,
+        player: 'self',
+        cardId: 'B04028',
+      },
     });
     expect(flow.action._getContext(store.gameState!, actionId!)).toMatchObject({
       phase: 'judge',

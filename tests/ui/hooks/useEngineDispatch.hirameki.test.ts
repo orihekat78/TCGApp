@@ -238,7 +238,7 @@ describe('hiramekiResolve dispatch (Commit 3a)', () => {
   });
 
   it('hiramekiResolve は解決中の証拠カードを refresh 対象から除外する', () => {
-    openActionHirameki('D08013', (state) => {
+    const { actionId } = openActionHirameki('D08013', (state) => {
       state.players.opp.deck = [];
     });
 
@@ -247,6 +247,7 @@ describe('hiramekiResolve dispatch (Commit 3a)', () => {
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.hand).toEqual([]);
     expect(after.players.opp.remove).toEqual(['D08013']);
+    expect(flow.action._getContext(after, actionId)).toBeUndefined();
     expect(after.gameResult).toMatchObject({ winner: 'self', reason: 'deck-out' });
   });
 
@@ -257,8 +258,11 @@ describe('hiramekiResolve dispatch (Commit 3a)', () => {
     });
     expect(useGameStateStore.getState().pendingHirameki).toMatchObject({
       actionId,
-      causalCorrelationEventId: expect.any(String),
-      occurrence: { uid: `card:opp:remove:${PAUSED_HIRAMEKI_ID}#1`, player: 'opp', cardId: PAUSED_HIRAMEKI_ID, area: 'remove', index: 1 },
+      causalCorrelationEventId: undefined,
+      occurrence: undefined,
+      heldEvidence: {
+        token: `hirameki:${actionId}:opp`, player: 'opp', cardId: PAUSED_HIRAMEKI_ID,
+      },
     });
 
     const fireResult = resolvePendingHirameki('fire');
@@ -274,10 +278,15 @@ describe('hiramekiResolve dispatch (Commit 3a)', () => {
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene.find((c) => c.uid === pickUid)?.state, 'pause 前の選択効果').toBe('sleep');
     expect(after.players.opp.hand, 'resume 後の draw').toEqual(['DRAW']);
-    expect(after.players.opp.remove, '解決中ヒラメキは refresh 対象外').toEqual([PAUSED_HIRAMEKI_ID]);
+    expect(after.players.opp.remove, '解決中ヒラメキは refresh 対象外').toEqual([]);
     expect(after.players.opp.deck, '通常 remove カードだけ refresh').toEqual(['REFRESHABLE']);
     expect(after.refreshCount.opp).toBe(1);
-    expect(flow.action._getContext(after, actionId)).toMatchObject({ phase: 'judge' });
+    expect(flow.action._getContext(after, actionId)).toMatchObject({
+      phase: 'judge',
+      pendingHiramekiEvidenceRemoval: {
+        token: `hirameki:${actionId}:opp`, evidence: { cardId: PAUSED_HIRAMEKI_ID }, decisionResolved: true,
+      },
+    });
   });
 
   it('hiramekiResolve skip → 効果適用なし、pendingHirameki クリアのみ', () => {
@@ -372,7 +381,11 @@ describe('hiramekiResolve dispatch (Commit 3a)', () => {
       .map((entry) => ({ kind: entry.kind, eventId: entry.eventId, source: entry.source })))
       .toEqual([{ kind: 'declare', eventId: `${sessionId}:1`, source: expect.any(Object) }]);
     const actionGain = causal.find((entry) => entry.kind === 'evidence' && entry.actor === 'self');
-    expect(actionGain?.parentEventId).toBe(decision?.eventId);
+    expect(causal.find((entry) => entry.eventId === actionGain?.parentEventId)).toMatchObject({
+      kind: 'zone-move',
+      source: { kind: 'zone', side: 'opp', zone: 'evidence' },
+      outcome: { type: 'move', from: 'evidence', to: 'remove', count: 1 },
+    });
     expect(causal.at(-1)).toMatchObject({ kind: 'summary', parentEventId: actionGain?.eventId });
     expect(causal.at(-1)?.tags ?? []).not.toContain('contact');
   });
@@ -401,7 +414,13 @@ describe('hiramekiResolve dispatch (Commit 3a)', () => {
     expect(decision).toBeDefined();
     expect(causal.some((entry) => entry.correlationEventId === decision?.eventId)).toBe(false);
     const actionGain = causal.find((entry) => entry.kind === 'evidence' && entry.actor === 'self');
-    expect(actionGain?.parentEventId).toBe(decision?.eventId);
+    const heldRemoval = causal.find((entry) => entry.eventId === actionGain?.parentEventId);
+    expect(heldRemoval).toMatchObject({
+      kind: 'zone-move',
+      parentEventId: decision?.eventId,
+      source: { kind: 'zone', side: 'opp', zone: 'evidence' },
+      outcome: { type: 'move', from: 'evidence', to: 'remove', count: 1 },
+    });
   });
 
   it('pendingHirameki なし状態で hiramekiResolve dispatch → not-allowed', () => {

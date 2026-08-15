@@ -139,6 +139,7 @@ type PlayerMatProps = CandidateProps & {
   /** User vision (拡張 4): scene キャラ pick mode (sceneRemove 等の effect 対象選択) */
   pickCharUids?: ReadonlySet<string>;
   onPickChar?: (uid: string) => void;
+  autoFocusPickUid?: string;
   /**
    * 2026-05-30 user_request: ネクストヒントのピッカー表示中、FILE 表示枚数を -1 して
    * 「step1 で引いた後」の実効枚数を見せる (self のみ true)。
@@ -219,7 +220,7 @@ function PlayerMat({
   candidateUids, onUnitClick, isPartnerCandidate, onPartnerClick,
   isPartnerMRCandidate, onPartnerMRClick,
   isCaseCandidate, onCaseClick, onAreaClick, onExpand, onSetInspect,
-  pickCharUids, onPickChar, nextHintDrawPreview = false,
+  pickCharUids, onPickChar, autoFocusPickUid, nextHintDrawPreview = false,
   activeCardUid, activeCardLabel,
 }: PlayerMatProps & {
   isCaseCandidate?: boolean;
@@ -290,6 +291,7 @@ function PlayerMat({
           onSetInspect={(character) => onSetInspect?.(side, character.uid)}
           pickCharUids={pickCharUids}
           onPickChar={onPickChar}
+          autoFocusPickUid={autoFocusPickUid}
           resolveKeywords={(uid) => (state ? readChar.keywords(state, uid) : [])}
           resolveCharStats={(uid) => (state ? { ap: readChar.ap(state, uid), lp: readChar.lp(state, uid) } : undefined)}
           activeCardUid={activeCardUid}
@@ -677,6 +679,7 @@ export function Playmat({
     c.resolve(uid);
   };
   const handleSwitchCancel = (): void => {
+    if (selectSwitchVictimBlocked(useGameStateStore.getState())) return;
     const c = useSceneSwitchPickerStore.getState().current;
     if (!c) return;
     useSceneSwitchPickerStore.getState()._close();
@@ -686,6 +689,7 @@ export function Playmat({
     if (replayReadOnly || !switchActive) return;
     const onKeyDown = (event: KeyboardEvent): void => {
       if (event.key !== 'Escape') return;
+      if (selectSwitchVictimBlocked(useGameStateStore.getState())) return;
       event.preventDefault();
       const current = useSceneSwitchPickerStore.getState().current;
       if (!current) return;
@@ -1077,6 +1081,7 @@ export function Playmat({
             onSetInspect={replayReadOnly || terminal ? undefined : inspectSetCards}
             pickCharUids={replayReadOnly ? EMPTY_UID_SET : selfScenePickUids}
             onPickChar={replayReadOnly ? undefined : selfOnPickChar}
+            autoFocusPickUid={replayReadOnly ? undefined : switchPicker?.candidates[0]?.uid}
             // 2026-05-30: ネクストヒント中は FILE 表示を引いた後の枚数 (-1) にして誤解を防ぐ
             nextHintDrawPreview={replayReadOnly ? false : isNextHintPick}
             activeCardUid={activeCardUid}
@@ -1452,8 +1457,9 @@ export function Playmat({
             </span>
             <button
               type="button"
-              className="scene-pick-skip-btn"
+              className="scene-pick-skip-btn switch-victim-cancel"
               onClick={handleSwitchCancel}
+              disabled={switchVictimBlocked}
               data-testid="switch-victim-cancel"
             >
               キャンセル
@@ -1519,6 +1525,7 @@ function PlaymatGuardPickerModal(): JSX.Element | null {
 function PlaymatHiramekiPickerModal(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingHirameki);
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
+  const switchPicker = useSceneSwitchPickerStore((s) => s.current);
   const humanPlayer = getHumanDecisionSide(spectatorMode);
   if (!pending || pending.player !== humanPlayer) {
     return (
@@ -1532,6 +1539,51 @@ function PlaymatHiramekiPickerModal(): JSX.Element | null {
       />
     );
   }
+  const fire = async (): Promise<void> => {
+    const store = useGameStateStore.getState();
+    const currentPending = store.pendingHirameki;
+    const state = store.gameState;
+    const isCurrent = pending.decisionId === undefined
+      ? currentPending === pending
+      : currentPending?.decisionId === pending.decisionId;
+    if (!state || !currentPending || !isCurrent) return;
+
+    const requirement = engineFlow.actionCase.readHiramekiSceneSwitchRequirement(state, currentPending);
+    if (!requirement) {
+      dispatchEngineAction(bindPendingDecision(
+        currentPending,
+        { type: 'hiramekiResolve', choice: 'fire' },
+      ));
+      return;
+    }
+
+    const interactionEpoch = currentInteractionEpoch();
+    const removeUid = await new Promise<string | null>((resolve) => {
+      useSceneSwitchPickerStore.getState()._open({
+        cardId: requirement.cardId,
+        newCardName: readDef.card(requirement.cardId)?.names?.[0] ?? requirement.cardId,
+        candidates: requirement.candidates.map(card => ({
+          uid: card.uid,
+          cardId: card.cardId,
+          name: readDef.card(card.cardId)?.names?.[0] ?? card.cardId,
+          state: card.state,
+          isNamed: card.isNamed,
+        })),
+        resolve,
+      });
+    });
+    if (!isCurrentLiveInteraction(interactionEpoch) || removeUid === null) return;
+
+    const latestPending = useGameStateStore.getState().pendingHirameki;
+    const isStillCurrent = currentPending.decisionId === undefined
+      ? latestPending === currentPending
+      : latestPending?.decisionId === currentPending.decisionId;
+    if (!latestPending || !isStillCurrent) return;
+    dispatchEngineAction(bindPendingDecision(
+      latestPending,
+      { type: 'hiramekiResolve', choice: 'fire', switchRemoveUid: removeUid },
+    ));
+  };
   const def = readDef.card(pending.cardId);
   const cardName = def?.names?.[0] ?? pending.cardId;
   const ability = def?.abilities.find(
@@ -1540,14 +1592,11 @@ function PlaymatHiramekiPickerModal(): JSX.Element | null {
   const abilityText = ability?.description ?? 'ヒラメキ能力';
   return (
     <HiramekiPickerModal
-      open={true}
+      open={switchPicker === null}
       cardId={pending.cardId}
       cardName={cardName}
       abilityText={abilityText}
-      onFire={() => dispatchEngineAction(bindPendingDecision(
-        pending,
-        { type: 'hiramekiResolve', choice: 'fire' },
-      ))}
+      onFire={() => { void fire(); }}
       onSkip={() => dispatchEngineAction(bindPendingDecision(
         pending,
         { type: 'hiramekiResolve', choice: 'skip' },
