@@ -1322,11 +1322,12 @@
     {
       "qaId": "card:B09074:fd46e3e8955490f444afdb47fbaa606489da5b870cf6d88ae747987457e8c002",
       "answerHash": "88b539d2f128438f8b6437ecf299f862444710db3e1cb7ca3f9da2c2b66a0728",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09074.ts:1"
+        "src:src/cards/ct-p09/B09074.ts:1",
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:328"
       ]
     },
     {
@@ -1699,11 +1700,12 @@
     {
       "qaId": "card:D11009:fd46e3e8955490f444afdb47fbaa606489da5b870cf6d88ae747987457e8c002",
       "answerHash": "88b539d2f128438f8b6437ecf299f862444710db3e1cb7ca3f9da2c2b66a0728",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d11/D11009.ts:58"
+        "src:src/cards/ct-d11/D11009.ts:58",
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:334"
       ]
     },
     {

@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6085
+- **ファイル数**: 6086
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5489,6 +5489,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `leave-trigger-top-three-public.test.ts` — qa: card:B03079:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `set-card-host-absent.test.ts`
       - `set-card-host-owner-wave3.test.ts` — qaId=card:B02018:dc712167e0587386756f5293d40bf1766e89e09669554ebcde8e028749d962d…
+      - `shippu-effect-entry-public.test.ts` — qa: card:B09070:fd46e3e8955490f444afdb47fbaa606489da5b870cf6d88ae747987457e8c002
       - `short-deck-reveal-hand-entry-public.test.ts` — rules: 15-abilities-effects.md, 17-icons.md, 20-color-and-switch.…
       - `stun-action-target-public.test.ts` — qa: card:B01058:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40
       - `turn-conditioned-cutin-public.test.ts` — qa: card:B02007:e4a36acb6bbbb1c8b11eac5e65600d839bba033d5a2b7f0e5ecfc84bacd47a4c
