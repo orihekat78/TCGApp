@@ -545,16 +545,16 @@
     {
       "qaId": "card:B04022:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
       "answerHash": "bd1021263916b76aa59508c6813bbffe73c698f6db8511f6e09c600022e7d446",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/17-icons.md:10",
         "src:src/cards/ct-p04/B04022.ts:31",
-        "src:src/cards/ct-p04/B04022P.ts:31"
-      ],
-      "noteCodes": [
-        "B04022-B04022P-EFFECT-ENTER-TRIGGER-PARITY-TEST-MISSING"
+        "src:src/cards/ct-p04/B04022P.ts:31",
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:489",
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:491",
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:496"
       ]
     },
     {
