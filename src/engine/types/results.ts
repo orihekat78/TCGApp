@@ -18,6 +18,8 @@ export type RemoveResult = {
    */
   prevented?: boolean;
   redirectedTo?: 'hand' | 'kept-in-scene';
+  /** The leaving MR character entered its partner area instead of its requested destination. */
+  redirectedToPartner?: boolean;
   /** A human optional leave intercept is awaiting a decision; no removal happened. */
   deferred?: boolean;
   pendingLeaveIntercept?: { player: 'self' | 'opp'; targetUid: string; interceptorUid: string };
@@ -86,6 +88,20 @@ export type ActionContext = {
     player: 'self' | 'opp';
     targetUid: string;
     interceptorUid: string;
+  };
+  /**
+   * Engine-owned continuation for a B02052 replacement opened while a public
+   * leave-intercept contact answer is resolving. Never surface this directly.
+   */
+  pendingLeaveInterceptReplacement?: {
+    targetUid: string;
+    targetCardId: string;
+    interceptorUid: string;
+    interceptorCardId?: string;
+    interceptorAbilityId?: string;
+    byUid?: string;
+    accept: boolean;
+    stage: 'interceptor-cost' | 'target-leave';
   };
   /** 1コンタクト1枚 (rules/09): プレイヤー単位で cutIn 使用済みフラグ */
   cutInUsed?: { self?: boolean; opp?: boolean };

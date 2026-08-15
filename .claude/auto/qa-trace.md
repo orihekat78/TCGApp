@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-qa-trace.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:qa-trace`
-> Source hash: `f50519db9381`
+> Source hash: `0416fd9404b4`
 
 Tracked Q&A identifiers and digests only. Official question and answer bodies are intentionally excluded.
 
@@ -20,8 +20,8 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 ## Coverage classification
 
 - total: 2964
-- matched: 669
-- test-missing: 2295
+- matched: 671
+- test-missing: 2293
 - legacy-unreviewed: 0
 - unmapped: 0
 - mismatch: 0
@@ -2470,8 +2470,8 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 | `card:D07010:95aa118b9ac115cdf1e10daf406c4e4974cb6e5e7f94fc3a8113fe2653e3b7a9` | `D07010` | `D07010` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:D07011:26a288541a34ebb3575133183ec65669424c4c62a11a46270cae3c734ccbf8a5` | `D07011` | `D07011` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:D07011:95aa118b9ac115cdf1e10daf406c4e4974cb6e5e7f94fc3a8113fe2653e3b7a9` | `D07011` | `D07011` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:D07014:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58` | `D07014` | `D07014` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:D07015:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58` | `D07015` | `D07015` | shipped | test-missing | test-gap | 1 | 0 |
+| `card:D07014:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58` | `D07014` | `D07014` | shipped | matched | aligned | 1 | 2 |
+| `card:D07015:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58` | `D07015` | `D07015` | shipped | matched | aligned | 1 | 3 |
 | `card:D07016:b439f52112312a2dc0c944cc0f0aa531a2eda23b876e486679bd42f2af1b71b7` | `D07016` | `D07016` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:D07016:c43d44228555c6f52877b10cd4fc1e477898170ca1d8b5e1675225ab8ca0b4f4` | `D07016` | `D07016` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:D07017:b439f52112312a2dc0c944cc0f0aa531a2eda23b876e486679bd42f2af1b71b7` | `D07017` | `D07017` | shipped | test-missing | test-gap | 1 | 0 |
@@ -4906,8 +4906,6 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 - missing-test: `card:D07010:95aa118b9ac115cdf1e10daf406c4e4974cb6e5e7f94fc3a8113fe2653e3b7a9`
 - missing-test: `card:D07011:26a288541a34ebb3575133183ec65669424c4c62a11a46270cae3c734ccbf8a5`
 - missing-test: `card:D07011:95aa118b9ac115cdf1e10daf406c4e4974cb6e5e7f94fc3a8113fe2653e3b7a9`
-- missing-test: `card:D07014:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58`
-- missing-test: `card:D07015:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58`
 - missing-test: `card:D07016:b439f52112312a2dc0c944cc0f0aa531a2eda23b876e486679bd42f2af1b71b7`
 - missing-test: `card:D07016:c43d44228555c6f52877b10cd4fc1e477898170ca1d8b5e1675225ab8ca0b4f4`
 - missing-test: `card:D07017:b439f52112312a2dc0c944cc0f0aa531a2eda23b876e486679bd42f2af1b71b7`

@@ -14,7 +14,8 @@ import { mutate } from '../mutate/index.js';
 import { event } from '../event/index.js';
 import { def as readDef } from '../read/def.js';
 import { char as readChar } from '../read/char.js';
-import { toPlainDeep } from '../effect/pending-state.js';
+import { _peekPendingSetCardReplacementSide, toPlainDeep } from '../effect/pending-state.js';
+import { findLiveHandLeaveInterceptor } from '../effect/consult-leave-intercept.js';
 import { effectiveCutinAbilities } from '../read/hand-cutin.js';
 import { evalCond } from '../cond/eval.js';
 import { matchOneFilter } from '../target/candidates.js'; // engine A3 wave (2026-07-11): B05007 filtered action-scoped cutin ban
@@ -501,6 +502,216 @@ export function judge(
 }
 
 /**
+ * Apply the public B01092 answer. The contact context, rather than the UI,
+ * owns a nested B02052 pause opened by either the guardian cost or target
+ * leave. This is intentionally separate from the resolver continuation.
+ */
+export function resolveLeaveIntercept(
+  state: GameState,
+  ax: ActionContext,
+  accept: boolean,
+): JudgeResult {
+  ax = contextForState(state, ax);
+  const ownership = pendingLeaveInterceptContactOwner(state, ax);
+  if (!ownership || !canResolveLeaveIntercept(state, ax, accept)) {
+    throw new Error('flow.contact.resolveLeaveIntercept: stale leave-intercept authority');
+  }
+  const { pending, target } = ownership;
+  const snapshot = ax.apSnapshot!;
+  const interceptorWitness = accept
+    ? findLiveHandLeaveInterceptor(state, target, pending.player, pending.interceptorUid, snapshot.aUid)
+    : null;
+  if (accept && !interceptorWitness) {
+    throw new Error('flow.contact.resolveLeaveIntercept: interceptor is no longer a legal hand redirect');
+  }
+  const removal = mutate.scene.resolveLeaveIntercept(
+    state,
+    pending.targetUid,
+    'contact-ap',
+    snapshot.aUid,
+    ax.byPlayer,
+    pending.interceptorUid,
+    accept,
+  );
+  if (removal.deferred) {
+    const replacement = _peekPendingSetCardReplacementSide();
+    if (!replacement) {
+      throw new Error('flow.contact.resolveLeaveIntercept: deferred removal lacks replacement authority');
+    }
+    const stage = replacement.fromUid === pending.interceptorUid
+      ? 'interceptor-cost'
+      : replacement.fromUid === pending.targetUid
+        ? 'target-leave'
+        : null;
+    if (!stage) {
+      throw new Error('flow.contact.resolveLeaveIntercept: replacement authority belongs to neither contact character');
+    }
+    ax.pendingLeaveInterceptReplacement = {
+      targetUid: pending.targetUid,
+      targetCardId: target.cardId,
+      interceptorUid: pending.interceptorUid,
+      ...(interceptorWitness ? {
+        interceptorCardId: interceptorWitness.cardId,
+        interceptorAbilityId: interceptorWitness.abilityId,
+      } : {}),
+      byUid: snapshot.aUid,
+      accept,
+      stage,
+    };
+    delete ax.pendingLeaveIntercept;
+    return {
+      attackerAP: snapshot.aAP,
+      defenderAP: snapshot.bAP,
+      defenderRemoved: false,
+      attackerRemoved: false,
+      deferred: true,
+    };
+  }
+  delete ax.pendingLeaveIntercept;
+  const result = judge(state, ax, removal);
+  ax.judgeResolved = true;
+  return result;
+}
+
+/** State-owned admission check for one public leave-intercept answer. */
+export function canResolveLeaveIntercept(state: GameState, ax: ActionContext, accept: boolean): boolean {
+  ax = contextForState(state, ax);
+  const ownership = pendingLeaveInterceptContactOwner(state, ax);
+  if (!ownership) return false;
+  const { pending, target } = ownership;
+  if (!accept) return true;
+  return findLiveHandLeaveInterceptor(state, target, pending.player, pending.interceptorUid, ax.apSnapshot!.aUid) !== null;
+}
+
+/**
+ * A persisted leave decision belongs only to its exact unresolved contact.
+ * Do not let an imported target/player turn a decline into removal of a
+ * different scene character.
+ */
+function pendingLeaveInterceptContactOwner(
+  state: GameState,
+  ax: ActionContext,
+): { pending: NonNullable<ActionContext['pendingLeaveIntercept']>; target: SceneCharacter } | null {
+  const pending = ax.pendingLeaveIntercept;
+  if (!pending) return null;
+  const owner = contactTargetOwner(state, ax, pending.targetUid);
+  return owner?.player === pending.player && owner.target ? { pending, target: owner.target } : null;
+}
+
+/** Exact unresolved contact target, including the guard substitution. */
+function contactTargetOwner(
+  state: GameState,
+  ax: ActionContext,
+  targetUid: string,
+  allowRemovedTarget = false,
+): { player: Player; target?: SceneCharacter } | null {
+  const snapshot = ax.apSnapshot;
+  const owners = Object.values(state.actionContexts ?? {})
+    .filter((candidate) => candidate.pendingLeaveIntercept !== undefined
+      || candidate.pendingLeaveInterceptReplacement !== undefined);
+  const defenderUid = ax.guardUid ?? (ax.target.kind === 'char' ? ax.target.uid : undefined);
+  if (!snapshot || owners.length !== 1 || owners[0] !== ax
+    || ax.phase !== 'judge' || ax.judgeResolved === true
+    || snapshot.aUid !== ax.byUid || snapshot.bUid !== targetUid
+    || defenderUid !== snapshot.bUid) return null;
+  const selfTarget = state.players.self.scene.find((char) => char.uid === targetUid);
+  const oppTarget = state.players.opp.scene.find((char) => char.uid === targetUid);
+  if (selfTarget) return ax.byPlayer === 'self' ? null : { player: 'self', target: selfTarget };
+  if (oppTarget) return ax.byPlayer === 'opp' ? null : { player: 'opp', target: oppTarget };
+  return allowRemovedTarget ? { player: ax.byPlayer === 'self' ? 'opp' : 'self' } : null;
+}
+
+type ContactReplacementGuard = {
+  fromUid: string;
+  source: { cardId: string };
+};
+
+/** Public replacement admission is state-owned; accepted guardian costs cannot reappear. */
+export function canAdvanceLeaveInterceptReplacement(
+  state: GameState,
+  guard: ContactReplacementGuard,
+): boolean {
+  const owners = Object.values(state.actionContexts ?? {}).filter((candidate) =>
+    candidate.pendingLeaveInterceptReplacement !== undefined);
+  if (owners.length === 0) return true;
+  if (owners.length !== 1) return false;
+  const ax = owners[0]!;
+  const pending = ax.pendingLeaveInterceptReplacement!;
+  const expectedUid = pending.stage === 'interceptor-cost'
+    ? pending.interceptorUid
+    : pending.targetUid;
+  if (!contactTargetOwner(state, ax, pending.targetUid) || guard.fromUid !== expectedUid) return false;
+  return pending.stage !== 'target-leave' || pending.accept !== true
+    || !state.players.self.scene.concat(state.players.opp.scene)
+      .some((char) => char.uid === pending.interceptorUid);
+}
+
+/** Validate the exact action that owns this resolver answer before resume. */
+export function advanceLeaveInterceptReplacement(
+  state: GameState,
+  guard: ContactReplacementGuard,
+): { actionId: string; stage: 'interceptor-cost' | 'target-leave' } | null {
+  const owners = Object.values(state.actionContexts ?? {}).filter((candidate) =>
+    candidate.pendingLeaveInterceptReplacement !== undefined);
+  if (owners.length === 0) return null;
+  if (owners.length !== 1) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: exactly one ActionContext owner is required');
+  }
+  const ax = owners[0]!;
+  const pending = ax.pendingLeaveInterceptReplacement!;
+  if (!contactTargetOwner(state, ax, pending.targetUid)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: replacement does not own its unresolved contact');
+  }
+  const expectedUid = pending.stage === 'interceptor-cost'
+    ? pending.interceptorUid
+    : pending.targetUid;
+  if (guard.fromUid !== expectedUid) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: replacement guard does not match its current stage');
+  }
+  if (pending.stage === 'target-leave' && pending.accept === true
+    && state.players.self.scene.concat(state.players.opp.scene)
+      .some((char) => char.uid === pending.interceptorUid)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: accepted interceptor cost must remain paid');
+  }
+  return { actionId: ax.id, stage: pending.stage };
+}
+
+/** Move guardian cost -> target leave only after the guardian really left. */
+export function advanceLeaveInterceptReplacementAfterResume(
+  state: GameState,
+  actionId: string,
+  guardianRemoval: RemoveResult,
+): boolean {
+  const pending = state.actionContexts?.[actionId]?.pendingLeaveInterceptReplacement;
+  const ax = state.actionContexts?.[actionId];
+  if (!pending || !ax || !contactTargetOwner(state, ax, pending.targetUid)
+    || pending.stage !== 'interceptor-cost' || guardianRemoval.deferred
+    || guardianRemoval.prevented || guardianRemoval.removed.uid !== pending.interceptorUid
+    || guardianRemoval.removed.cardId === '') return false;
+  pending.stage = 'target-leave';
+  return true;
+}
+
+/** Finalize the contact only after its target actually left the scene. */
+export function finalizeLeaveInterceptReplacement(
+  state: GameState,
+  actionId: string,
+  targetRemoval: RemoveResult | null,
+): boolean {
+  const ax = state.actionContexts?.[actionId];
+  const pending = ax?.pendingLeaveInterceptReplacement;
+  if (!ax || !pending || pending.stage !== 'target-leave' || !ax.apSnapshot
+    || !targetRemoval || targetRemoval.deferred
+    || targetRemoval.removed.uid !== pending.targetUid
+    || targetRemoval.removed.cardId !== pending.targetCardId
+    || !contactTargetOwner(state, ax, pending.targetUid, true)) return false;
+  delete ax.pendingLeaveInterceptReplacement;
+  judge(state, ax, targetRemoval);
+  ax.judgeResolved = true;
+  return true;
+}
+
+/**
  * 最終 AP 判定用の side format。state-machine.ts の formatContactSide と同形だが
  * (1) contact.ts が partner uid を受け取らない (snapshotAP 経由で uid を保持)、
  * (2) judge 時点の最終 AP を引数で受け取る、点が異なる。
@@ -545,5 +756,11 @@ export const contact = {
   disguise,
   pass,
   judge,
+  canResolveLeaveIntercept,
+  resolveLeaveIntercept,
+  canAdvanceLeaveInterceptReplacement,
+  advanceLeaveInterceptReplacement,
+  advanceLeaveInterceptReplacementAfterResume,
+  finalizeLeaveInterceptReplacement,
   computeOrder,
 };

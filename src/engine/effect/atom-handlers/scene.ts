@@ -875,6 +875,7 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
         if (srCause === 'effect') {
           const srOwner: Player = s.players.self.scene.some(c => c.uid === srUid) ? 'self' : 'opp';
           if (ctx.source.player !== srOwner && readChar.charProtectedFrom(s, srUid, 'remove')) {
+            (ctx.dyn ??= {}).chainStepNoApply = true;
             mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid, result: 'blocked-protected' });
             return;
           }
@@ -884,6 +885,7 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
           if (ctx.source.player !== srOwner
             && readDef.card(ctx.source.cardId ?? '')?.kind === 'event'
             && readChar.charProtectedFromOppEvent(s, srUid, 'remove')) {
+            (ctx.dyn ??= {}).chainStepNoApply = true;
             mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid, result: 'blocked-event-protected' });
             return;
           }
@@ -909,8 +911,52 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
         ? {
             interceptorUid: (rawLeaveInterceptDecision as { interceptorUid: string }).interceptorUid,
             accept: (rawLeaveInterceptDecision as { accept: boolean }).accept,
+            ...((rawLeaveInterceptDecision as Record<string, unknown>).interceptorCostPaid === true
+              ? { interceptorCostPaid: true }
+              : {}),
           }
         : undefined;
+      const skipSetCardReplacementInstanceIds = Array.isArray(a.skipSetCardReplacementInstanceIds)
+        && a.skipSetCardReplacementInstanceIds.every((instanceId) => typeof instanceId === 'string')
+        ? [...a.skipSetCardReplacementInstanceIds] as string[]
+        : undefined;
+      const rawAfterSceneRemove = a.afterSceneRemove;
+      const afterSceneRemove = rawAfterSceneRemove !== null
+        && typeof rawAfterSceneRemove === 'object'
+        && !Array.isArray(rawAfterSceneRemove)
+        && typeof (rawAfterSceneRemove as Record<string, unknown>).uid === 'string'
+        && ['contact-ap', 'effect', 'switch', 'cost', 'misplay-overflow'].includes(
+          (rawAfterSceneRemove as Record<string, unknown>).cause as string,
+        )
+        ? (() => {
+            const after = rawAfterSceneRemove as Record<string, unknown>;
+            const rawDecision = after.leaveInterceptDecision;
+            const leaveIntercept = rawDecision !== null
+              && typeof rawDecision === 'object'
+              && !Array.isArray(rawDecision)
+              && typeof (rawDecision as Record<string, unknown>).interceptorUid === 'string'
+              && typeof (rawDecision as Record<string, unknown>).accept === 'boolean'
+              ? {
+                  interceptorUid: (rawDecision as { interceptorUid: string }).interceptorUid,
+                  accept: (rawDecision as { accept: boolean }).accept,
+                  ...((rawDecision as Record<string, unknown>).interceptorCostPaid === true
+                    ? { interceptorCostPaid: true }
+                    : {}),
+                }
+              : undefined;
+            const byPlayer: Player | undefined = after.byPlayer === 'self' || after.byPlayer === 'opp'
+              ? after.byPlayer
+              : undefined;
+            return {
+              uid: after.uid as string,
+              cause: after.cause as RemoveCause,
+              ...(typeof after.byUid === 'string' ? { byUid: after.byUid } : {}),
+              ...(byPlayer ? { byPlayer } : {}),
+              ...(leaveIntercept ? { leaveInterceptDecision: leaveIntercept } : {}),
+            };
+          })()
+        : undefined;
+      const srByUid = typeof a.byUid === 'string' ? a.byUid : undefined;
       const srOwner: Player | undefined = s.players.self.scene.some((card) => card.uid === srUid)
         ? 'self'
         : s.players.opp.scene.some((card) => card.uid === srUid)
@@ -919,16 +965,17 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
       const srCardId = srOwner === undefined
         ? undefined
         : s.players[srOwner].scene.find((card) => card.uid === srUid)?.cardId;
-      const srRemoveCopiesBefore = srOwner !== undefined && srCardId !== undefined
-        ? s.players[srOwner].remove.filter((cardId) => cardId === srCardId).length
-        : 0;
-      const srPartnerAreaBefore = srOwner === undefined ? undefined : partnerAreaMrSignature(s, srOwner);
       const removeResult = mutate.scene.removeToRemove(
         s,
         srUid,
         (a.cause as RemoveCause) ?? 'effect',
-        undefined,
-        { byPlayer: ctx.source.player, leaveInterceptDecision },
+        srByUid,
+        {
+          byPlayer: ctx.source.player,
+          leaveInterceptDecision,
+          skipSetCardReplacementInstanceIds,
+          ...(afterSceneRemove ? { afterSceneRemove } : {}),
+        },
       );
       if (removeResult.deferred && removeResult.pendingLeaveIntercept) {
         const pending = removeResult.pendingLeaveIntercept;
@@ -969,19 +1016,21 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
         return;
       }
       if (removeResult.deferred) return;
-      if (
+      const removedToRemove = (
         srOwner !== undefined
         && srCardId !== undefined
+        && !removeResult.deferred
         && !removeResult.prevented
+        && removeResult.removed.uid === srUid
+        && removeResult.removed.cardId === srCardId
         && !s.players[srOwner].scene.some((card) => card.uid === srUid)
-        && s.players[srOwner].remove.filter((cardId) => cardId === srCardId).length === srRemoveCopiesBefore + 1
-      ) {
+        && removeResult.redirectedToPartner !== true
+      );
+      const redirectedToPartner = removeResult.redirectedToPartner === true;
+      if (!removedToRemove) (ctx.dyn ??= {}).chainStepNoApply = true;
+      if (removedToRemove) {
         recordPublicZoneMove(s, ctx, srOwner, 'scene', srOwner, 'remove', 1);
-      } else if (
-        srOwner !== undefined
-        && !removeResult.prevented
-        && redirectedSceneCardToPartnerArea(s, srOwner, srCardId, srPartnerAreaBefore)
-      ) {
+      } else if (redirectedToPartner && srOwner !== undefined) {
         recordPublicZoneMove(s, ctx, srOwner, 'scene', srOwner, 'partner', 1);
       }
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid });

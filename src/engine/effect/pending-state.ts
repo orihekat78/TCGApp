@@ -484,7 +484,21 @@ export type PendingSetCardReplacementSide = {
   candidates: { uid: string; cardId: string }[];
   source: PendingEffectSource & { uid: string };
   resume?:
-    | { kind: 'scene-remove'; cause: 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow'; byUid?: string; byPlayer?: Player }
+    | {
+        kind: 'scene-remove';
+        cause: 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow';
+        byUid?: string;
+        byPlayer?: Player;
+        leaveInterceptDecision?: { interceptorUid: string; accept: boolean; interceptorCostPaid?: boolean };
+        /** Complete this nested removal, then resume the intercepted host removal. */
+        afterSceneRemove?: {
+          uid: string;
+          cause: 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow';
+          byUid?: string;
+          byPlayer?: Player;
+          leaveInterceptDecision?: { interceptorUid: string; accept: boolean; interceptorCostPaid?: boolean };
+        };
+      }
     | { kind: 'scene-to-deck'; pos: 'bottom' | 'top' }
     | { kind: 'scene-to-hand' }
     | { kind: 'scene-to-evidence'; faceUp: boolean; sourceCardId?: string }
@@ -494,7 +508,10 @@ export function pushPendingSetCardReplacementSide(v: PendingSetCardReplacementSi
   const g = globalThis as {
     __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null;
     __pendingSetCardReplacementGuard?: PendingSetCardReplacementSide | null;
+    __pendingSetCardReplacementContinuation?: ContinuationFrame | null;
   };
+  // A newly-minted prompt never inherits an older decision's continuation.
+  g.__pendingSetCardReplacementContinuation = null;
   g.__pendingSetCardReplacementSide = v;
   g.__pendingSetCardReplacementGuard = toPlainDeep(v) as PendingSetCardReplacementSide;
 }
@@ -508,6 +525,19 @@ export function _peekPendingSetCardReplacementSide(): PendingSetCardReplacementS
 /** Resolver-owned authorization snapshot. The UI projection is never authoritative. */
 export function _peekPendingSetCardReplacementGuard(): PendingSetCardReplacementSide | null {
   return (globalThis as { __pendingSetCardReplacementGuard?: PendingSetCardReplacementSide | null }).__pendingSetCardReplacementGuard ?? null;
+}
+/** Engine-only continuation owned by the suspended host-leave atom. */
+export function setPendingSetCardReplacementContinuation(frame: ContinuationFrame): void {
+  (globalThis as { __pendingSetCardReplacementContinuation?: ContinuationFrame | null }).__pendingSetCardReplacementContinuation = frame;
+}
+export function _peekPendingSetCardReplacementContinuation(): ContinuationFrame | null {
+  return (globalThis as { __pendingSetCardReplacementContinuation?: ContinuationFrame | null }).__pendingSetCardReplacementContinuation ?? null;
+}
+export function _takePendingSetCardReplacementContinuation(): ContinuationFrame | null {
+  const g = globalThis as { __pendingSetCardReplacementContinuation?: ContinuationFrame | null };
+  const value = g.__pendingSetCardReplacementContinuation ?? null;
+  g.__pendingSetCardReplacementContinuation = null;
+  return value;
 }
 /** Consume the exact trusted replacement and its presentation side together. */
 export function _takePendingSetCardReplacementGuard(): PendingSetCardReplacementSide | null {
@@ -539,9 +569,11 @@ export function _clearPendingSetCardReplacementSide(): void {
   const g = globalThis as {
     __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null;
     __pendingSetCardReplacementGuard?: PendingSetCardReplacementSide | null;
+    __pendingSetCardReplacementContinuation?: ContinuationFrame | null;
   };
   g.__pendingSetCardReplacementSide = null;
   g.__pendingSetCardReplacementGuard = null;
+  g.__pendingSetCardReplacementContinuation = null;
 }
 export type PendingSetCardChoiceSide = {
   player: Player;
@@ -778,6 +810,7 @@ export function resetPendingEffectSession(): void {
     __pendingSetCardChoiceContinuation?: ContinuationFrame | null;
     __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null;
     __pendingSetCardReplacementGuard?: PendingSetCardReplacementSide | null;
+    __pendingSetCardReplacementContinuation?: ContinuationFrame | null;
   };
   g.__pendingEffectOptionalCostPaid = null;
   g.__pendingSetCardChoiceSide = null;
@@ -787,6 +820,7 @@ export function resetPendingEffectSession(): void {
   g.__pendingSetCardChoiceContinuation = null;
   g.__pendingSetCardReplacementSide = null;
   g.__pendingSetCardReplacementGuard = null;
+  g.__pendingSetCardReplacementContinuation = null;
   delete (globalThis as { __pendingRuntimeStateMarker?: unknown }).__pendingRuntimeStateMarker;
 }
 

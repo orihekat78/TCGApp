@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6055
+- **ファイル数**: 6058
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -484,6 +484,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-301.md` — 手札使用とswitch対象選択のTOCTOU
     - `BUG-302.md` — 観戦時の非公開デッキ公開境界
     - `BUG-303.md` — 【ターン①】の両プレイヤー共通ターン境界
+    - `BUG-304.md` — sceneRemoveの実適用とchain gate
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -5462,6 +5463,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `event-evidence-action-hirameki-public.test.ts` — qa: card:B04041:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
       - `leave-trigger-opponent-turn-public.test.ts` — qa: card:B01065:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-remove-retrieval-public.test.ts` — qa: card:B02004:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
+      - `leave-trigger-remove-then-draw-public.test.ts` — qa: card:D07014:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-scene-target-public.test.ts` — qa: card:B03012:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-top-one-public.test.ts` — qa: card:PR084:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `set-card-host-absent.test.ts`
@@ -5892,6 +5894,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bug-190-191-b04026-flow.test.ts`
       - `bug-214-opp-owner-production.test.ts`
       - `bug-249-continuation-priority.test.ts`
+      - `bug-304-scene-remove-chain-gate.test.ts` — BUG-304 — a protected sceneRemove must gate a 「リムーブした場合」 chain.
       - `causal-bound-remove.test.ts`
       - `causal-char-mutations.test.ts`
       - `causal-core-zone-moves.test.ts`

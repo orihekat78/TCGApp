@@ -10,7 +10,7 @@
 //   - `drainAiEffectPicks` は __pendingEffectPickQueue を heuristic で順次解決する (CPU 経路には
 //     human modal が無いため、PA 短縮形 atom の pick が drain されず no-op になる BUG-109 を解消)。
 
-import type { CausalEffectTrace, GameState, Effect, EffectCtx, Candidate, Condition } from '../types/index.js';
+import type { CausalEffectTrace, GameState, Effect, EffectCtx, Candidate, Condition, RemoveResult } from '../types/index.js';
 import type { PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide, ContinuationFrame } from './resolve-picks.js';
 import { resolveEffectPicks, rememberedRuntimeAtomTargetPolicy, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume, _takePendingOptionalBindings, _takePendingOptionalCostPaid } from './resolve-picks.js';
 import { findChooseIntercept } from './consult-choose-intercept.js';
@@ -60,6 +60,12 @@ import {
 } from './runtime-state.js';
 import { mutate } from '../mutate/index.js';
 import {
+  canAdvanceLeaveInterceptReplacement,
+  advanceLeaveInterceptReplacement,
+  advanceLeaveInterceptReplacementAfterResume,
+  finalizeLeaveInterceptReplacement,
+} from '../flow/contact.js';
+import {
   _takePendingChooseInterceptResume,
   _peekPendingChooseInterceptResume,
   _takePendingEffectRepeatOptionalResume,
@@ -91,10 +97,14 @@ import {
   _takePendingSetCardChoiceResume,
   _peekPendingSetCardChoiceSide,
   _peekPendingSetCardChoiceResume,
+  _peekPendingSetCardReplacementSide,
+  _peekPendingSetCardReplacementContinuation,
   _peekPendingSetCardReplacementGuard,
   _restorePendingSetCardReplacementSide,
+  _takePendingSetCardReplacementContinuation,
   _takePendingSetCardReplacementGuard,
   appendPendingSetCardChoiceContinuation,
+  setPendingSetCardReplacementContinuation,
   type PendingSetCardChoiceSide,
   type PendingSetCardReplacementSide,
 } from './pending-state.js';
@@ -371,22 +381,121 @@ function matchesSetCardReplacementGuard(
   return JSON.stringify(projected) === JSON.stringify(project(pending));
 }
 
-export function applySetCardReplacement(state: GameState, pending: PendingSetCardReplacementSide, toUid: string | null): boolean {
-  if (stopIfGameAlreadyEnded(state) || !canApplySetCardReplacement(state, pending, toUid)) return false;
+export type ApplySetCardReplacementResult = {
+  applied: boolean;
+  contactActionId?: string;
+  contactFinalized?: boolean;
+};
+
+/** Apply one replacement and report any engine-owned contact continuation. */
+export function applySetCardReplacementDetailed(
+  state: GameState,
+  pending: PendingSetCardReplacementSide,
+  toUid: string | null,
+): ApplySetCardReplacementResult {
+  if (stopIfGameAlreadyEnded(state) || !canApplySetCardReplacement(state, pending, toUid)) return { applied: false };
+  const prospectiveGuard = _peekPendingSetCardReplacementGuard();
+  if (!prospectiveGuard || !canAdvanceLeaveInterceptReplacement(state, prospectiveGuard)) return { applied: false };
   const guard = _takePendingSetCardReplacementGuard();
-  if (!guard) return false;
+  if (!guard) return { applied: false };
   const applied = charMutator.resolveSetCardRemovalReplacement(state, guard, toUid);
   if (!applied) {
     _restorePendingSetCardReplacementSide(null, guard);
-    return false;
+    return { applied: false };
   }
+  // The contact owns stage admission; a guardian stage can advance only after
+  // the resumed removal reports that the guardian actually left.
+  const contact = advanceLeaveInterceptReplacement(state, guard);
+  const finishContact = (targetRemoval: RemoveResult | null = null): ApplySetCardReplacementResult => ({
+    applied: true,
+    ...(contact ? { contactActionId: contact.actionId } : {}),
+    ...(contact && targetRemoval !== null
+      ? { contactFinalized: finalizeLeaveInterceptReplacement(state, contact.actionId, targetRemoval) }
+      : {}),
+  });
+  const continuation = _takePendingSetCardReplacementContinuation();
+  if (guard.resume?.kind === 'scene-remove' && continuation) {
+    // Persistence breaks the original shared-ctx object identity between the
+    // paused atom and its enclosing chain. Re-link only the chain-gate dyn so
+    // a resumed no-op still suppresses that chain tail after JSON hydration.
+    if (continuation.outer?.kind === 'chain') {
+      const sharedDyn = {
+        ...(continuation.outer.ctx.dyn ?? {}),
+        ...(continuation.ctx.dyn ?? {}),
+      };
+      continuation.ctx.dyn = sharedDyn;
+      continuation.outer.ctx.dyn = sharedDyn;
+    }
+    const resumeAtom: Effect = {
+      kind: 'atom',
+      verb: 'sceneRemove',
+      args: {
+        uid: guard.fromUid,
+        cause: guard.resume.cause,
+        ...(guard.resume.byUid ? { byUid: guard.resume.byUid } : {}),
+        ...(guard.resume.leaveInterceptDecision
+          ? { leaveInterceptDecision: guard.resume.leaveInterceptDecision }
+          : {}),
+        ...(guard.resume.afterSceneRemove
+          ? { afterSceneRemove: guard.resume.afterSceneRemove }
+          : {}),
+        skipSetCardReplacementInstanceIds: [guard.setCardInstanceId],
+      },
+    };
+    const afterSceneRemove = guard.resume.afterSceneRemove;
+    const outer = afterSceneRemove
+      ? {
+          remainder: [{
+            kind: 'atom' as const,
+            verb: 'sceneRemove' as const,
+            args: {
+              uid: afterSceneRemove.uid,
+              cause: afterSceneRemove.cause,
+              ...(afterSceneRemove.byUid ? { byUid: afterSceneRemove.byUid } : {}),
+              ...(afterSceneRemove.leaveInterceptDecision
+                ? { leaveInterceptDecision: afterSceneRemove.leaveInterceptDecision }
+                : {}),
+            },
+          }],
+          ctx: continuation.ctx,
+          kind: 'sequence' as const,
+          outer: continuation.outer,
+        }
+      : continuation.outer;
+    runContinuationChain(state, {
+      remainder: [resumeAtom],
+      ctx: continuation.ctx,
+      kind: 'sequence',
+      outer,
+    });
+    return finishContact();
+  }
+  const replacementBeforeResume = _peekPendingSetCardReplacementSide();
+  let targetRemoval: RemoveResult | null = null;
   if (guard.resume) {
     switch (guard.resume.kind) {
       case 'scene-remove':
-        sceneMutator.removeToRemove(state, guard.fromUid, guard.resume.cause, guard.resume.byUid, {
+        {
+          const resumed = sceneMutator.removeToRemove(state, guard.fromUid, guard.resume.cause, guard.resume.byUid, {
           byPlayer: guard.resume.byPlayer,
+          leaveInterceptDecision: guard.resume.leaveInterceptDecision,
+          afterSceneRemove: guard.resume.afterSceneRemove,
           skipSetCardReplacementInstanceIds: [guard.setCardInstanceId],
-        });
+          });
+          if (contact?.stage === 'interceptor-cost') {
+            advanceLeaveInterceptReplacementAfterResume(state, contact.actionId, resumed);
+          }
+          // Direct mutation callers have no effect-chain outer frame. Preserve
+          // the guardian-cost continuation explicitly in that path too.
+          const after = guard.resume.afterSceneRemove;
+          if (after && !resumed.deferred && !resumed.prevented && resumed.removed.cardId !== '') {
+            targetRemoval = sceneMutator.removeToRemove(state, after.uid, after.cause, after.byUid, {
+              byPlayer: after.byPlayer,
+              leaveInterceptDecision: after.leaveInterceptDecision,
+            });
+          }
+          if (contact?.stage === 'target-leave') targetRemoval = resumed;
+        }
         break;
       case 'scene-to-deck':
         sceneMutator.toDeck(state, guard.fromUid, guard.resume.pos);
@@ -402,8 +511,29 @@ export function applySetCardReplacement(state: GameState, pending: PendingSetCar
         break;
     }
   }
-  runAllUntilEmpty(state);
-  return true;
+  const replacementAfterResume = _peekPendingSetCardReplacementSide();
+  // A completed target removal settles the contact synchronously. contact:judge
+  // listeners must enter the queue before this resolver drains it, otherwise a
+  // direct public replacement leaves those observers behind (or observes an
+  // unresolved contact).
+  const contactResult = finishContact(targetRemoval);
+  if (continuation && replacementAfterResume && replacementAfterResume !== replacementBeforeResume) {
+    setPendingSetCardReplacementContinuation(continuation);
+    runAllUntilEmpty(state);
+    return contactResult;
+  }
+  if (continuation) runContinuationChain(state, continuation.outer);
+  else runAllUntilEmpty(state);
+  return contactResult;
+}
+
+/** Compatibility API for existing engine callers. */
+export function applySetCardReplacement(
+  state: GameState,
+  pending: PendingSetCardReplacementSide,
+  toUid: string | null,
+): boolean {
+  return applySetCardReplacementDetailed(state, pending, toUid).applied;
 }
 
 /**
@@ -625,6 +755,7 @@ type ContinuationPendingBaseline = {
   choice: ReturnType<typeof _peekPendingEffectChoiceSide>;
   rps: ReturnType<typeof _peekPendingRpsSide>;
   setCard: ReturnType<typeof _peekPendingSetCardChoiceSide>;
+  setCardReplacement: ReturnType<typeof _peekPendingSetCardReplacementSide>;
   optional: ReturnType<typeof _peekPendingEffectOptionalSide>;
   repeat: ReturnType<typeof _peekPendingEffectRepeatOptionalSide>;
 };
@@ -638,6 +769,7 @@ function snapshotContinuationPending(): ContinuationPendingBaseline {
     choice: _peekPendingEffectChoiceSide(),
     rps: _peekPendingRpsSide(),
     setCard: _peekPendingSetCardChoiceSide(),
+    setCardReplacement: _peekPendingSetCardReplacementSide(),
     optional: _peekPendingEffectOptionalSide(),
     repeat: _peekPendingEffectRepeatOptionalSide(),
   };
@@ -674,6 +806,7 @@ function runContinuationChain(
     const choiceBefore = before.choice;
     const rpsBefore = before.rps;
     const setCardBefore = before.setCard;
+    const setCardReplacementBefore = before.setCardReplacement;
     const optionalBefore = before.optional;
     const repeatBefore = before.repeat;
     let nextFrame = f.outer;
@@ -717,6 +850,7 @@ function runContinuationChain(
     const choiceAfter = _peekPendingEffectChoiceSide();
     const rpsAfter = _peekPendingRpsSide();
     const setCardAfter = _peekPendingSetCardChoiceSide();
+    const setCardReplacementAfter = _peekPendingSetCardReplacementSide();
     const optionalAfter = _peekPendingEffectOptionalSide();
     const repeatAfter = _peekPendingEffectRepeatOptionalSide();
     if (reorderAfter && reorderAfter !== reorderBefore) {
@@ -758,6 +892,15 @@ function runContinuationChain(
     if (setCardAfter && setCardAfter !== setCardBefore) {
       if (nextFrame) appendPendingSetCardChoiceContinuation(nextFrame);
       delete (f.ctx.dyn as Record<string, unknown> | undefined)?.['setCardChoicePending'];
+      return;
+    }
+    if (setCardReplacementAfter && setCardReplacementAfter !== setCardReplacementBefore) {
+      setPendingSetCardReplacementContinuation({
+        remainder: [],
+        ctx: f.ctx,
+        kind: 'sequence',
+        ...(nextFrame ? { outer: nextFrame } : {}),
+      });
       return;
     }
     f = nextFrame;
@@ -1268,10 +1411,17 @@ export function applyPickAndContinuation(
     // BUG-107: resolved atom と remainder を同一保存 ctx で runEffect → plain bindings を共有
     // (event.queue 経由は entry.bindings が Immer draft に取り込まれ bind が消えるため不可)。
     withStructuredCausalResolution(state, () => {
-      runEffect(state, resolvedAtom as never, chainCont.ctx);
+      // The selected atom can itself open a human decision. Wrap it so the
+      // continuation boundary snapshots before that atom and pauses the saved
+      // tail behind the newly-created decision.
+      runContinuationChain(state, {
+        remainder: [resolvedAtom],
+        ctx: chainCont.ctx,
+        kind: 'sequence',
+        outer: chainCont,
+      }, decisionTrace);
     // BUG-111 #2: multi-step remainder の wrap は origin kind で行う (sequence は chain-gate を持たない)。
     // BUG-111 family (nest): head → outer の順に frame 連鎖を実行 (再 pause は新 pick へ引継ぎ)。
-      runContinuationChain(state, chainCont, decisionTrace);
     }, decisionTrace);
     completeEffectCausalTrace(state, decisionTrace, chainCont.ctx.source.player);
   } else {

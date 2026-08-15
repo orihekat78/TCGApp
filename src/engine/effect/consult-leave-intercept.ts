@@ -47,6 +47,44 @@ function destinationOf(ability: AbilityDef): string | undefined {
   return undefined;
 }
 
+/** Definition-level identity check for a persisted optional hand redirect. */
+export function isOptionalHandLeaveInterceptAbility(cardId: string, abilityId: string): boolean {
+  const ability = readDef.card(cardId)?.abilities.find((candidate) => candidate.id === abilityId);
+  if (!ability || ability.type !== 'triggered') return false;
+  const trigger = ability.trigger;
+  return trigger?.hook === 'leave:intercept'
+    && trigger.optional === true
+    && (ability.scope === undefined || ability.scope === 'on-scene' || ability.scope === 'always')
+    && destinationOf(ability) === 'hand';
+}
+
+/** Recompute one exact live optional interceptor before accepting its public answer. */
+export function findLiveHandLeaveInterceptor(
+  state: GameState,
+  target: SceneCharacter,
+  player: Player,
+  interceptorUid: string,
+  byUid?: string,
+): { cardId: string; abilityId: string } | null {
+  const interceptor = state.players[player].scene.find((char) => char.uid === interceptorUid);
+  if (!interceptor || interceptor.uid === target.uid || readChar.originalAbilitiesDisabled(state, interceptor.uid)) return null;
+  const def = readDef.card(interceptor.cardId);
+  if (!def) return null;
+  const payload = { uid: target.uid, cause: 'contact-ap', byUid, ownerPlayer: player };
+  for (const ability of def.abilities as AbilityDef[]) {
+    if (!isOptionalHandLeaveInterceptAbility(interceptor.cardId, ability.id)) continue;
+    const baseCtx = {
+      source: { cardId: interceptor.cardId, uid: interceptor.uid, abilityId: ability.id, player, area: 'scene' as const },
+      bindings: {},
+      triggerPayload: payload,
+    };
+    if (ability.trigger?.matcherCondition && !evalCond(state, ability.trigger.matcherCondition, baseCtx as never)) continue;
+    if (ability.condition && !evalCond(state, ability.condition, baseCtx as never)) continue;
+    return { cardId: interceptor.cardId, abilityId: ability.id };
+  }
+  return null;
+}
+
 export function consultLeaveIntercept(
   state: GameState,
   char: SceneCharacter,

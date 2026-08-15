@@ -498,11 +498,21 @@ function maybeReplaceSetCardRemoval(s: GameState, player: Player, fromUid: strin
   return moveSetCardEntry(s, fromUid, eligible.candidates[0]!.uid, entry.instanceId, eligible.ability.id);
 }
 
+/** Read-only batch admission check: would this host open a human replacement? */
+function wouldDeferSetCardReplacementForHostLeave(s: GameState, uid: string): boolean {
+  const found = findChar(s, uid);
+  if (!found) return false;
+  const human = (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide ?? null;
+  if (human !== found.player) return false;
+  return found.char.setCards.some((entry) => eligibleSetCardReplacement(s, found.player, uid, entry) !== null);
+}
+
 /** Suspend a human-owned replacement before the host itself is removed. */
 function deferSetCardReplacementForHostLeave(
   s: GameState,
   uid: string,
   resume: NonNullable<PendingSetCardReplacementSide['resume']>,
+  excludedInstanceIds: readonly string[] = [],
 ): boolean {
   ensureSetCardInstanceIds(s);
   const found = findChar(s, uid);
@@ -510,6 +520,7 @@ function deferSetCardReplacementForHostLeave(
   const human = (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide ?? null;
   if (human !== found.player) return false;
   for (const entry of found.char.setCards) {
+    if (entry.instanceId && excludedInstanceIds.includes(entry.instanceId)) continue;
     const eligible = eligibleSetCardReplacement(s, found.player, uid, entry);
     if (!eligible || !entry.instanceId) continue;
     pushPendingSetCardReplacementSide({ player: found.player, fromUid: uid, setCardInstanceId: entry.instanceId, candidates: eligible.candidates, source: { cardId: entry.cardId, abilityId: eligible.ability.id, uid }, resume });
@@ -836,6 +847,7 @@ export const char = {
   removeAllSetAndStacked,
   removeOneSetCard,
   replaceEligibleSetCardsBeforeHostLeaves,
+  wouldDeferSetCardReplacementForHostLeave,
   deferSetCardReplacementForHostLeave,
   canResolveSetCardRemovalReplacement,
   resolveSetCardRemovalReplacement,

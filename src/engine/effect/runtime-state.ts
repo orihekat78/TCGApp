@@ -13,6 +13,7 @@ import {
   type PendingEffectPickSide,
   type PendingRpsSide,
 } from './pending-state.js';
+import { findLiveHandLeaveInterceptor, isOptionalHandLeaveInterceptAbility } from './consult-leave-intercept.js';
 import {
   _drainPendingDeckPlaceSide,
   _drainPendingDeckReorderSide,
@@ -60,6 +61,7 @@ const TRANSACTIONAL_PENDING_KEYS = [
   '__pendingSetCardChoiceGuard',
   '__pendingSetCardChoiceResume',
   '__pendingSetCardChoiceSide',
+  '__pendingSetCardReplacementContinuation',
   '__pendingSetCardReplacementGuard',
   '__pendingSetCardReplacementSide',
   '__pendingRuntimeStateMarker',
@@ -275,6 +277,12 @@ const PENDING_GLOBAL_ACCESS: Record<PendingKey, PendingGlobalAccess> = {
     get value() { return Object.getOwnPropertyDescriptor(pendingGlobals, "__pendingSetCardChoiceSide")?.value; },
     set value(value) { Object.defineProperty(pendingGlobals, "__pendingSetCardChoiceSide", ownPendingData(value)); },
     remove() { delete pendingGlobals.__pendingSetCardChoiceSide; },
+  },
+  __pendingSetCardReplacementContinuation: {
+    get present() { return hasOwnPendingGlobal("__pendingSetCardReplacementContinuation"); },
+    get value() { return Object.getOwnPropertyDescriptor(pendingGlobals, "__pendingSetCardReplacementContinuation")?.value; },
+    set value(value) { Object.defineProperty(pendingGlobals, "__pendingSetCardReplacementContinuation", ownPendingData(value)); },
+    remove() { delete pendingGlobals.__pendingSetCardReplacementContinuation; },
   },
   __pendingSetCardReplacementGuard: {
     get present() { return hasOwnPendingGlobal("__pendingSetCardReplacementGuard"); },
@@ -531,6 +539,146 @@ function assertPendingRuntimeMatchesState(
         || deck.some((cardId, index) => cardId !== pending.deckSnapshot[index])) {
       throw new Error('Invalid pendingDeckPlace: deckSnapshot must match current player deck');
     }
+  }
+  const replacementContinuation = snapshot.find(entry =>
+    entry.key === '__pendingSetCardReplacementContinuation' && entry.present && entry.value !== null);
+  if (replacementContinuation) {
+    const replacementSide = snapshot.find(entry =>
+      entry.key === '__pendingSetCardReplacementSide' && entry.present && entry.value !== null);
+    const replacementGuard = snapshot.find(entry =>
+      entry.key === '__pendingSetCardReplacementGuard' && entry.present && entry.value !== null);
+    if (!replacementSide || !replacementGuard) {
+      throw new Error('Invalid pendingSetCardReplacementContinuation: matching side and trusted guard are required');
+    }
+    if (!samePlainRuntimeValue(replacementSide.value, replacementGuard.value)) {
+      throw new Error('Invalid pendingSetCardReplacementContinuation: side must match trusted replacement guard');
+    }
+  }
+  const contactOwners = Object.values(state.actionContexts ?? {}).filter((context) =>
+    context.pendingLeaveIntercept !== undefined || context.pendingLeaveInterceptReplacement !== undefined);
+  const contactReplacementOwners = contactOwners.filter((context) =>
+    context.pendingLeaveInterceptReplacement !== undefined);
+  if (contactReplacementOwners.length === 0) return;
+  if (contactReplacementOwners.length !== 1 || contactOwners.length !== 1) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: exactly one ActionContext owner is required');
+  }
+  const contact = contactReplacementOwners[0]!;
+  const pending = contact.pendingLeaveInterceptReplacement!;
+  const defenderUid = contact.guardUid ?? (contact.target.kind === 'char' ? contact.target.uid : undefined);
+  const targetPlayer = state.players.self.scene.some((char) => char.uid === pending.targetUid) ? 'self'
+    : state.players.opp.scene.some((char) => char.uid === pending.targetUid) ? 'opp' : null;
+  if (contact.phase !== 'judge' || contact.judgeResolved === true
+    || !contact.apSnapshot || contact.apSnapshot.aUid !== contact.byUid
+    || contact.apSnapshot.bUid !== pending.targetUid || defenderUid !== contact.apSnapshot.bUid
+    || targetPlayer === null || targetPlayer === contact.byPlayer) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: replacement does not own its unresolved contact');
+  }
+  const replacementSide = snapshot.find((entry) =>
+    entry.key === '__pendingSetCardReplacementSide' && entry.present && entry.value !== null);
+  const replacementGuard = snapshot.find((entry) =>
+    entry.key === '__pendingSetCardReplacementGuard' && entry.present && entry.value !== null);
+  if (!replacementSide || !replacementGuard) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: matching replacement side and guard are required');
+  }
+  if (!samePlainRuntimeValue(replacementSide.value, replacementGuard.value)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: side must match trusted replacement guard');
+  }
+  if (replacementContinuation) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: effect continuation cannot share contact replacement authority');
+  }
+  const guard = replacementGuard.value as {
+    fromUid?: unknown;
+    resume?: {
+      kind?: unknown;
+      cause?: unknown;
+      byUid?: unknown;
+      byPlayer?: unknown;
+      leaveInterceptDecision?: {
+        interceptorUid?: unknown;
+        accept?: unknown;
+        interceptorCostPaid?: unknown;
+      };
+      afterSceneRemove?: {
+        uid?: unknown;
+        cause?: unknown;
+        byUid?: unknown;
+        byPlayer?: unknown;
+        leaveInterceptDecision?: {
+          interceptorUid?: unknown;
+          accept?: unknown;
+          interceptorCostPaid?: unknown;
+        };
+      };
+    };
+  };
+  const expectedUid = pending.stage === 'interceptor-cost'
+    ? pending.interceptorUid
+    : pending.targetUid;
+  if (guard.fromUid !== expectedUid) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: replacement guard does not match its current stage');
+  }
+  const resume = guard.resume;
+  type ContactDecision = {
+    interceptorUid?: unknown;
+    accept?: unknown;
+    interceptorCostPaid?: unknown;
+  } | undefined;
+  const exactDecision = (
+    decision: ContactDecision,
+    accept: boolean,
+    costPaid: boolean,
+  ): boolean => decision?.interceptorUid === pending.interceptorUid
+    && decision.accept === accept
+    && (decision.interceptorCostPaid === true) === costPaid;
+  if (!resume || resume.kind !== 'scene-remove') {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: replacement resume must remain a contact scene removal');
+  }
+  const contactAttacker = contact.apSnapshot?.aUid;
+  if (typeof contactAttacker !== 'string' || pending.byUid !== contactAttacker) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: replacement owner must retain the contact attacker');
+  }
+  if (pending.stage === 'interceptor-cost') {
+    const after = resume.afterSceneRemove;
+    const target = state.players[targetPlayer].scene.find((char) => char.uid === pending.targetUid);
+    const witness = target
+      ? findLiveHandLeaveInterceptor(state, target, targetPlayer, pending.interceptorUid, contactAttacker)
+      : null;
+    if (pending.accept !== true
+      || typeof pending.interceptorCardId !== 'string'
+      || typeof pending.interceptorAbilityId !== 'string'
+      || witness?.cardId !== pending.interceptorCardId
+      || witness?.abilityId !== pending.interceptorAbilityId
+      || resume.cause !== 'cost'
+      || resume.byUid !== undefined
+      || resume.byPlayer !== undefined
+      || resume.leaveInterceptDecision !== undefined
+      || !after
+      || after.uid !== pending.targetUid
+      || after.cause !== 'contact-ap'
+      || after.byUid !== contactAttacker
+      || after.byPlayer !== contact.byPlayer
+      || !exactDecision(after.leaveInterceptDecision, true, true)) {
+      throw new Error('Invalid pendingLeaveInterceptReplacement: guardian resume no longer matches its accepted contact cost');
+    }
+    return;
+  }
+  if (resume.cause !== 'contact-ap'
+    || resume.byUid !== contactAttacker
+    || resume.byPlayer !== contact.byPlayer
+    || resume.afterSceneRemove !== undefined
+    || !exactDecision(resume.leaveInterceptDecision, pending.accept, pending.accept)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: target resume no longer matches its contact decision');
+  }
+  if (pending.accept === true
+    && (typeof pending.interceptorCardId !== 'string'
+      || typeof pending.interceptorAbilityId !== 'string'
+      || !isOptionalHandLeaveInterceptAbility(pending.interceptorCardId, pending.interceptorAbilityId))) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: persisted interceptor witness is not an optional hand redirect');
+  }
+  if (pending.accept === true
+    && state.players.self.scene.concat(state.players.opp.scene)
+      .some((char) => char.uid === pending.interceptorUid)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: accepted interceptor cost must remain paid');
   }
 }
 

@@ -554,10 +554,11 @@ function latestOpenActionContext(
 }
 
 function assertPendingLeaveIntercept(
+  state: GameState,
   context: NonNullable<GameState['actionContexts']>[string] | undefined,
 ): void {
   const pending = context?.pendingLeaveIntercept as unknown;
-  if (pending === undefined) return;
+  if (!context || pending === undefined) return;
   if (pending === null || typeof pending !== 'object' || Array.isArray(pending)) {
     throw new Error('Invalid pendingLeaveIntercept: expected an object');
   }
@@ -574,6 +575,82 @@ function assertPendingLeaveIntercept(
   if (typeof context?.id !== 'string' || context.id.trim().length === 0) {
     throw new Error('Invalid pendingLeaveIntercept.actionId');
   }
+  const owners = Object.values(state.actionContexts ?? {}).filter((candidate) =>
+    candidate.pendingLeaveIntercept !== undefined || candidate.pendingLeaveInterceptReplacement !== undefined);
+  const defenderUid = context.guardUid ?? (context.target.kind === 'char' ? context.target.uid : undefined);
+  const snapshot = context.apSnapshot;
+  const target = state.players[value.player as 'self' | 'opp'].scene
+    .find((char) => char.uid === value.targetUid);
+  if (owners.length !== 1 || owners[0] !== context
+    || context.phase !== 'judge' || context.judgeResolved === true
+    || !snapshot || snapshot.aUid !== context.byUid
+    || snapshot.bUid !== value.targetUid || defenderUid !== snapshot.bUid
+    || value.player === context.byPlayer || !target) {
+    throw new Error('Invalid pendingLeaveIntercept: invalid contact ownership');
+  }
+}
+
+function assertPendingLeaveInterceptReplacement(
+  state: GameState,
+  context: NonNullable<GameState['actionContexts']>[string],
+): void {
+  const pending = context.pendingLeaveInterceptReplacement as unknown;
+  if (pending === undefined) return;
+  if (pending === null || typeof pending !== 'object' || Array.isArray(pending)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: expected an object');
+  }
+  const value = pending as Record<string, unknown>;
+  for (const field of ['targetUid', 'targetCardId', 'interceptorUid'] as const) {
+    if (typeof value[field] !== 'string' || value[field].trim().length === 0) {
+      throw new Error(`Invalid pendingLeaveInterceptReplacement.${field}`);
+    }
+  }
+  if (value.byUid !== undefined && (typeof value.byUid !== 'string' || value.byUid.trim().length === 0)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement.byUid');
+  }
+  if (typeof value.accept !== 'boolean'
+    || (value.stage !== 'interceptor-cost' && value.stage !== 'target-leave')
+    || context.pendingLeaveIntercept !== undefined
+    || context.phase !== 'judge'
+    || context.judgeResolved === true
+    || !context.apSnapshot) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: invalid ActionContext ownership');
+  }
+  const owners = Object.values(state.actionContexts ?? {}).filter((candidate) =>
+    candidate.pendingLeaveIntercept !== undefined || candidate.pendingLeaveInterceptReplacement !== undefined);
+  const defenderUid = context.guardUid ?? (context.target.kind === 'char' ? context.target.uid : undefined);
+  const targetPlayer = state.players.self.scene.some((char) => char.uid === value.targetUid) ? 'self'
+    : state.players.opp.scene.some((char) => char.uid === value.targetUid) ? 'opp' : null;
+  if (owners.length !== 1 || owners[0] !== context
+    || context.apSnapshot.aUid !== context.byUid
+    || context.apSnapshot.bUid !== value.targetUid
+    || defenderUid !== context.apSnapshot.bUid
+    || targetPlayer === null || targetPlayer === context.byPlayer) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: invalid contact ownership');
+  }
+  if (value.byUid !== context.apSnapshot.aUid
+    || (value.stage === 'interceptor-cost' && value.accept !== true)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: invalid contact stage authority');
+  }
+  if (value.accept === true
+    && (typeof value.interceptorCardId !== 'string' || value.interceptorCardId.trim().length === 0
+      || typeof value.interceptorAbilityId !== 'string' || value.interceptorAbilityId.trim().length === 0)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: accepted redirect requires an interceptor witness');
+  }
+  const target = state.players.self.scene.concat(state.players.opp.scene)
+    .find((char) => char.uid === value.targetUid);
+  if (!target || target.cardId !== value.targetCardId) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: target must remain in scene');
+  }
+  const interceptorPresent = state.players.self.scene.concat(state.players.opp.scene)
+    .some((char) => char.uid === value.interceptorUid);
+  if (value.stage === 'interceptor-cost') {
+    if (!interceptorPresent) {
+      throw new Error('Invalid pendingLeaveInterceptReplacement: interceptor cost target must remain in scene');
+    }
+  } else if (value.accept === true && interceptorPresent) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: accepted interceptor cost must remain paid');
+  }
 }
 
 export function prepareGameStateForStore(state: GameState): {
@@ -582,7 +659,10 @@ export function prepareGameStateForStore(state: GameState): {
 } {
   const gameState = produce(state, (draft) => mutate.char.ensureSetCardInstanceIds(draft));
   const openAction = latestOpenActionContext(gameState);
-  assertPendingLeaveIntercept(openAction);
+  for (const context of Object.values(gameState.actionContexts ?? {})) {
+    assertPendingLeaveIntercept(gameState, context);
+    assertPendingLeaveInterceptReplacement(gameState, context);
+  }
   const humanSideGlobal = globalThis as {
     __humanPlayerSide?: 'self' | 'opp' | null;
   };

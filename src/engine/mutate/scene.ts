@@ -15,12 +15,26 @@ import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 type Player = 'self' | 'opp';
 type CharState = 'active' | 'sleep' | 'stun';
 type RemoveCause = 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow';
+type LeaveInterceptDecision = {
+  interceptorUid: string;
+  accept: boolean;
+  /** Engine-owned resume marker: the B01092 cost already completed. */
+  interceptorCostPaid?: boolean;
+};
+type DeferredSceneRemove = {
+  uid: string;
+  cause: RemoveCause;
+  byUid?: string;
+  byPlayer?: Player;
+  leaveInterceptDecision?: LeaveInterceptDecision;
+};
 type RemoveOpts = {
   noMrRedirect?: boolean;
   byPlayer?: Player;
   triggeredAuraAbilities?: AbilityDef[];
-  leaveInterceptDecision?: { interceptorUid: string; accept: boolean };
+  leaveInterceptDecision?: LeaveInterceptDecision;
   skipSetCardReplacementInstanceIds?: string[];
+  afterSceneRemove?: DeferredSceneRemove;
 };
 
 function addToRemove(s: GameState, player: Player, ids: readonly string[]): void {
@@ -314,6 +328,16 @@ function removeToRemove(
   // rules/17 §【現場リムーブ時】 emit 用に離場カードの識別子を splice 前に捕捉
   const leavingUid = char.uid;
   const leavingCardId = char.cardId;
+  const deferSetCardReplacement = (
+    leaveInterceptDecision = opts?.leaveInterceptDecision,
+  ): boolean => charMutator.deferSetCardReplacementForHostLeave(s, uid, {
+    kind: 'scene-remove',
+    cause,
+    byUid,
+    byPlayer: opts?.byPlayer,
+    ...(leaveInterceptDecision ? { leaveInterceptDecision } : {}),
+    ...(opts?.afterSceneRemove ? { afterSceneRemove: opts.afterSceneRemove } : {}),
+  }, opts?.skipSetCardReplacementInstanceIds ?? []);
 
   // mega-wave W6 step10 (2026-07-04, row9): pre-splice leave:intercept consult (B01092/B01039)。
   // 「相手の能力や効果、コンタクトによって現場から離れるとき、代わりに〜」— splice 前に判定し、
@@ -357,9 +381,54 @@ function removeToRemove(
       };
     }
     if (intercept && intercept.kind === 'hand') {
-      // B01092: interceptor 自身をコストでリムーブ (rules/17「リムーブ方法は問わない」→ 通常経路 =
-      // 【現場リムーブ時】発火。cause='cost' は consult 帰属外なので再入しない)
-      removeToRemove(s, intercept.interceptorUid, 'cost');
+      // B01092: interceptor 自身をコストでリムーブ。対象キャラの B02052
+      // 差し替え選択より先に確定させる。guardian にB02052があれば、その解決後に
+      // この対象の離場を再開するまで host 側のB02052を作らない。
+      const paidDecision: LeaveInterceptDecision = {
+        interceptorUid: intercept.interceptorUid,
+        accept: true,
+        interceptorCostPaid: true,
+      };
+      if (!opts?.leaveInterceptDecision?.interceptorCostPaid) {
+        const guardianResult = removeToRemove(s, intercept.interceptorUid, 'cost', undefined, {
+          afterSceneRemove: {
+            uid,
+            cause,
+            ...(byUid ? { byUid } : {}),
+            ...(opts?.byPlayer ? { byPlayer: opts.byPlayer } : {}),
+            leaveInterceptDecision: paidDecision,
+          },
+        });
+        if (guardianResult.deferred) {
+          return {
+            removed: { uid: '', cardId: '' },
+            setCardsRemoved: [],
+            stackedCardsRemoved: 0,
+            triggeredHooks: [],
+            deferred: true,
+          };
+        }
+        // Do not infer payment from a later absent-guardian no-op. A stale or
+        // prevented cost leaves the intercepted host in the scene and ends it.
+        if (guardianResult.prevented || guardianResult.removed.cardId === '') {
+          return {
+            removed: { uid: '', cardId: '' },
+            setCardsRemoved: [],
+            stackedCardsRemoved: 0,
+            triggeredHooks: [],
+            prevented: true,
+          };
+        }
+      }
+      if (deferSetCardReplacement(paidDecision)) {
+        return {
+          removed: { uid: '', cardId: '' },
+          setCardsRemoved: [],
+          stackedCardsRemoved: 0,
+          triggeredHooks: [],
+          deferred: true,
+        };
+      }
       // 対象キャラ: set/stacked は remove へ (rules/16 — redirect されるのはキャラ本体のみ)、本体は手札へ
       charMutator.replaceEligibleSetCardsBeforeHostLeaves(s, uid);
       const hSetCardsRemoved: string[] = char.setCards.map(e => e.cardId);
@@ -385,7 +454,7 @@ function removeToRemove(
     }
   }
 
-  if (!(opts?.skipSetCardReplacementInstanceIds?.length) && charMutator.deferSetCardReplacementForHostLeave(s, uid, { kind: 'scene-remove', cause, byUid, byPlayer: opts?.byPlayer })) {
+  if (deferSetCardReplacement()) {
     return { removed: { uid: '', cardId: '' }, setCardsRemoved: [], stackedCardsRemoved: 0, triggeredHooks: [], deferred: true };
   }
 
@@ -451,17 +520,19 @@ function removeToRemove(
   // char.cardId は L158 で remove 末尾に push 済 + emit 中に remove へ追加 push は無い → pop で正確に除去
   // (refresh 二重計上防止)。MR能力②による除去 (cause='effect' + opts.noMrRedirect) は本 redirect を抑止
   // (rules/18② 「能力によるリムーブ」= remove へ残す。未解決 #2)。
-  if (!opts?.noMrRedirect && shouldRedirectMrToPA(s, char, player)) {
+  const redirectedToPartner = !opts?.noMrRedirect && shouldRedirectMrToPA(s, char, player);
+  if (redirectedToPartner) {
     s.players[player].remove.pop();
     advanceIndexedZoneEpoch(s, player, 'remove');
     placeMrInPA(s, char, player);
   }
 
   return {
-    removed: { uid: char.uid, cardId: char.cardId },
+    removed: { uid: leavingUid, cardId: leavingCardId },
     setCardsRemoved,
     stackedCardsRemoved,
     triggeredHooks: [],
+    ...(redirectedToPartner ? { redirectedToPartner: true } : {}),
   };
 }
 
@@ -490,6 +561,12 @@ function removeToRemoveBatch(
   opts?: Omit<RemoveOpts, 'triggeredAuraAbilities'>,
 ): RemoveResult[] {
   const uniqueUids = [...new Set(uids)];
+  // A simultaneous group cannot preserve a resumable human B02052 choice.
+  // Admit or reject before aura collection or any zone mutation, never leave a
+  // half-applied batch behind a single global pending prompt.
+  if (uniqueUids.some((uid) => charMutator.wouldDeferSetCardReplacementForHostLeave(s, uid))) {
+    throw new Error('unsupported-human-deferred-batch');
+  }
   const auraByUid = new Map<string, AbilityDef[]>();
   for (const uid of uniqueUids) {
     const found = findChar(s, uid);

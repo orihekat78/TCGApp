@@ -21,11 +21,13 @@ import {
   _peekPendingEffectOptionalSide,
   _peekPendingEffectPickSide,
   _peekPendingSetCardReplacementGuard,
+  _peekPendingSetCardReplacementContinuation,
   _peekPendingSetCardReplacementSide,
   pushPendingEffectOptionalSide,
   pushPendingEffectPickSide,
   pushPendingEffectRepeatOptionalSide,
   pushPendingSetCardReplacementSide,
+  setPendingSetCardReplacementContinuation,
   resetPendingEffectSession,
 } from '@/engine/effect/pending-state';
 import {
@@ -294,7 +296,7 @@ describe('adversarial: runtime identity is owned by GameState', () => {
     expect(hydratePendingRuntimeState(stateB)).toBe(false);
   });
 
-  it('persists the trusted set-card replacement guard after its presentation is drained', () => {
+  it('persists one matching set-card replacement side, guard, and continuation', () => {
     const state = createEmptyGameState();
     const pending = {
       player: 'self' as const,
@@ -305,18 +307,90 @@ describe('adversarial: runtime identity is owned by GameState', () => {
       resume: { kind: 'scene-to-hand' as const },
     };
     pushPendingSetCardReplacementSide(pending);
+    const continuation = { remainder: [] as Effect[], ctx: effectCtx, kind: 'sequence' as const };
+    setPendingSetCardReplacementContinuation(continuation);
 
-    expect(_drainPendingSetCardReplacementSide()).toEqual(pending);
-    expect(_peekPendingSetCardReplacementSide()).toBeNull();
+    expect(_peekPendingSetCardReplacementSide()).toEqual(pending);
     expect(_peekPendingSetCardReplacementGuard()).toEqual(pending);
+    expect(_peekPendingSetCardReplacementContinuation()).toEqual(continuation);
 
     persistPendingRuntimeState(state);
     resetPendingEffectSession();
     expect(_peekPendingSetCardReplacementGuard()).toBeNull();
+    expect(_peekPendingSetCardReplacementContinuation()).toBeNull();
 
     expect(hydratePendingRuntimeState(state)).toBe(true);
+    expect(_drainPendingSetCardReplacementSide()).toEqual(pending);
     expect(_peekPendingSetCardReplacementSide()).toBeNull();
     expect(_peekPendingSetCardReplacementGuard()).toEqual(pending);
+    expect(_peekPendingSetCardReplacementContinuation()).toEqual(continuation);
+  });
+
+  it('rejects a malformed persisted set-card replacement continuation', () => {
+    const state = createEmptyGameState();
+    pushPendingSetCardReplacementSide({
+      player: 'self',
+      fromUid: 'HOST#1',
+      setCardInstanceId: 'set:HOST#1:CARD#1',
+      candidates: [{ uid: 'TARGET#1', cardId: 'TARGET' }],
+      source: { cardId: 'CARD', uid: 'HOST#1', abilityId: 'replace' },
+      resume: { kind: 'scene-to-hand' },
+    });
+    setPendingSetCardReplacementContinuation({ remainder: [], ctx: effectCtx, kind: 'sequence' });
+    persistPendingRuntimeState(state);
+    const entry = state.pendingRuntimeState?.snapshot.find((item) =>
+      item.key === '__pendingSetCardReplacementContinuation');
+    expect(entry).toBeDefined();
+    (entry!.value as { kind: string }).kind = 'parallel';
+    resetPendingEffectSession();
+
+    expect(() => hydratePendingRuntimeState(state)).toThrow(/kind/);
+    expect(_peekPendingSetCardReplacementContinuation()).toBeNull();
+  });
+
+  it('rejects a persisted set-card replacement continuation without its side authority', () => {
+    const state = createEmptyGameState();
+    pushPendingSetCardReplacementSide({
+      player: 'self',
+      fromUid: 'HOST#1',
+      setCardInstanceId: 'set:HOST#1:CARD#1',
+      candidates: [{ uid: 'TARGET#1', cardId: 'TARGET' }],
+      source: { cardId: 'CARD', uid: 'HOST#1', abilityId: 'replace' },
+      resume: { kind: 'scene-to-hand' },
+    });
+    setPendingSetCardReplacementContinuation({ remainder: [], ctx: effectCtx, kind: 'sequence' });
+    persistPendingRuntimeState(state);
+    const side = state.pendingRuntimeState?.snapshot.find((entry) =>
+      entry.key === '__pendingSetCardReplacementSide');
+    expect(side).toBeDefined();
+    side!.present = false;
+    side!.value = undefined;
+    resetPendingEffectSession();
+
+    expect(() => hydratePendingRuntimeState(state)).toThrow(/matching side and trusted guard are required/);
+    expect(_peekPendingSetCardReplacementContinuation()).toBeNull();
+  });
+
+  it('rejects a persisted replacement side that differs from its trusted guard', () => {
+    const state = createEmptyGameState();
+    pushPendingSetCardReplacementSide({
+      player: 'self',
+      fromUid: 'HOST#1',
+      setCardInstanceId: 'set:HOST#1:CARD#1',
+      candidates: [{ uid: 'TARGET#1', cardId: 'TARGET' }],
+      source: { cardId: 'CARD', uid: 'HOST#1', abilityId: 'replace' },
+      resume: { kind: 'scene-to-hand' },
+    });
+    setPendingSetCardReplacementContinuation({ remainder: [], ctx: effectCtx, kind: 'sequence' });
+    persistPendingRuntimeState(state);
+    const side = state.pendingRuntimeState?.snapshot.find((entry) =>
+      entry.key === '__pendingSetCardReplacementSide');
+    expect(side).toBeDefined();
+    (side!.value as { fromUid: string }).fromUid = 'FORGED-HOST';
+    resetPendingEffectSession();
+
+    expect(() => hydratePendingRuntimeState(state)).toThrow(/side must match trusted replacement guard/);
+    expect(_peekPendingSetCardReplacementContinuation()).toBeNull();
   });
 
   it('clears persisted and live pending decisions when the game is already over', () => {

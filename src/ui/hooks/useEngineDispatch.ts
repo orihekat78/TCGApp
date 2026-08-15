@@ -15,7 +15,7 @@ import { produce } from 'immer';
 import * as flow from '@/engine/flow/index.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { pendingOwnerOrderGroup, runAllUntilEmpty } from '@/engine/resolve/index.js';
-import { applyChooseInterceptResponse, applyDeckPlaceAndContinuation, applyDeckReorderAndContinuation, applyPickAndContinuation, applyPickSkipAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation, applyRepeatOptionalAndContinuation, applyRpsAndContinuation, applySetCardChoiceAndContinuation, applySetCardReplacement } from '@/engine/effect/apply-pick.js';
+import { applyChooseInterceptResponse, applyDeckPlaceAndContinuation, applyDeckReorderAndContinuation, applyPickAndContinuation, applyPickSkipAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation, applyRepeatOptionalAndContinuation, applyRpsAndContinuation, applySetCardChoiceAndContinuation, applySetCardReplacementDetailed } from '@/engine/effect/apply-pick.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import type { GameState } from '@/engine/types/game-state.js';
 import { resolveActionAgainstChar, resolveActionAgainstCase } from '@/ai/action-resolution.js';
@@ -270,18 +270,10 @@ function runEngineAction(
       const ax = flow.action._getContext(draft, pending.actionId);
       const stateOwnedPending = ax?.pendingLeaveIntercept;
       if (!ax?.apSnapshot || !stateOwnedPending) return;
-      const removal = mutate.scene.resolveLeaveIntercept(
-        draft,
-        stateOwnedPending.targetUid,
-        'contact-ap',
-        ax.apSnapshot.aUid,
-        undefined,
-        stateOwnedPending.interceptorUid,
-        action.accept,
-      );
-      delete ax.pendingLeaveIntercept;
-      flow.contact.judge(draft, ax, removal);
-      ax.judgeResolved = true;
+      if (!flow.contact.canResolveLeaveIntercept(draft, ax, action.accept)) {
+        throw new RejectedDecisionError();
+      }
+      flow.contact.resolveLeaveIntercept(draft, ax, action.accept);
       return;
     }
     case 'hiramekiResolve': {
@@ -432,7 +424,7 @@ function runEngineAction(
     case 'setCardReplacementResolve': {
       const pending = useGameStateStore.getState().pendingSetCardReplacement;
       if (!pending) return;
-      if (!applySetCardReplacement(draft, toPendingSetCardReplacementSide(pending), action.targetUid)) {
+      if (!applySetCardReplacementDetailed(draft, toPendingSetCardReplacementSide(pending), action.targetUid).applied) {
         throw new RejectedDecisionError();
       }
       return;

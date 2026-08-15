@@ -847,6 +847,25 @@ function setCardReplacement(value: unknown, path: string): void {
     oneOf(resume.cause, new Set(['contact-ap', 'effect', 'switch', 'cost', 'misplay-overflow']), `${path}.resume.cause`);
     optionalString(resume.byUid, `${path}.resume.byUid`);
     optionalPlayer(resume.byPlayer, `${path}.resume.byPlayer`);
+    if (resume.leaveInterceptDecision !== undefined) {
+      const decision = record(resume.leaveInterceptDecision, `${path}.resume.leaveInterceptDecision`);
+      string(decision.interceptorUid, `${path}.resume.leaveInterceptDecision.interceptorUid`);
+      bool(decision.accept, `${path}.resume.leaveInterceptDecision.accept`);
+      optionalBool(decision.interceptorCostPaid, `${path}.resume.leaveInterceptDecision.interceptorCostPaid`);
+    }
+    if (resume.afterSceneRemove !== undefined) {
+      const after = record(resume.afterSceneRemove, `${path}.resume.afterSceneRemove`);
+      string(after.uid, `${path}.resume.afterSceneRemove.uid`);
+      oneOf(after.cause, new Set(['contact-ap', 'effect', 'switch', 'cost', 'misplay-overflow']), `${path}.resume.afterSceneRemove.cause`);
+      optionalString(after.byUid, `${path}.resume.afterSceneRemove.byUid`);
+      optionalPlayer(after.byPlayer, `${path}.resume.afterSceneRemove.byPlayer`);
+      if (after.leaveInterceptDecision !== undefined) {
+        const decision = record(after.leaveInterceptDecision, `${path}.resume.afterSceneRemove.leaveInterceptDecision`);
+        string(decision.interceptorUid, `${path}.resume.afterSceneRemove.leaveInterceptDecision.interceptorUid`);
+        bool(decision.accept, `${path}.resume.afterSceneRemove.leaveInterceptDecision.accept`);
+        optionalBool(decision.interceptorCostPaid, `${path}.resume.afterSceneRemove.leaveInterceptDecision.interceptorCostPaid`);
+      }
+    }
   } else if (kind === 'scene-to-deck') {
     oneOf(resume.pos, new Set(['bottom', 'top']), `${path}.resume.pos`);
   } else if (kind === 'scene-to-evidence') {
@@ -1058,6 +1077,7 @@ export function assertPendingRuntimeValue(
     case '__pendingEffectOptionalContinuation':
     case '__pendingRpsContinuation':
     case '__pendingSetCardChoiceContinuation':
+    case '__pendingSetCardReplacementContinuation':
       nullable(value, path, (entry, entryPath) => continuation(entry, entryPath, mode));
       return;
     case '__pendingEffectOptionalBindings':
