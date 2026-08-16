@@ -1722,29 +1722,27 @@
     {
       "qaId": "card:B10023:b28b7e81f684a02f22f62ec571f745928832a0832a16216b7f2c8646fe2fb9b7",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:11",
-        "src:src/cards/ct-p10/B10023.ts:8"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "rules:.claude/rules/21-declared-ability-cost.md:37",
+        "src:src/cards/ct-p10/B10023.ts:31",
+        "tests:tests/cards/ct-p10/b10023-b10024.test.ts:94"
       ]
     },
     {
       "qaId": "card:B10037:493f9def1e5c5cf3dd006d9db402e0eaf8b16963ea72011060c09a7e794c6d90",
       "answerHash": "0ac1694e83cfa9d43b950b75ef42f8685f94b3ed3a853e64bddc78d385fa2e95",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/08-contact.md:35",
-        "src:src/cards/ct-p10/B10037.ts:6"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10037.ts:6",
+        "src:src/engine/target/candidates.ts:902",
+        "tests:tests/cards/ct-p10/contact-history-cards.test.ts:132",
+        "tests:tests/cards/ct-p10/contact-history-cards.test.ts:133"
       ]
     },
     {
@@ -1820,15 +1818,15 @@
     {
       "qaId": "card:B10094:95ec3884ba49f8e60c1e269a3273f9f94a4dffd72b44a5d9e4d15746b4058866",
       "answerHash": "b0edbacc1a756f89576caae46a0bd5b4ba2d478887463970f650eea3fc3b6f3c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/21-declared-ability-cost.md:15",
-        "src:src/cards/ct-p10/B10094.ts:11"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10094.ts:11",
+        "src:src/engine/cost/pay.ts:1032",
+        "src:src/engine/cost/pay.ts:1040",
+        "tests:tests/cards/ct-p10/b10094.test.ts:79"
       ]
     },
     {

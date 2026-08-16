@@ -1881,15 +1881,14 @@
     {
       "qaId": "card:B10047:18485b08aaf71c37dce1f7952b7f4382610c83a5c07f19db06d8ede4d712d9e5",
       "answerHash": "49f919a91252ddf11bb00d20109ff0833f8b8c747c3dd9fe32b31e9275331b11",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:11",
-        "src:src/cards/ct-p10/B10047.ts:6"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "rules:.claude/rules/20-color-and-switch.md:5",
+        "src:src/cards/ct-p10/B10047.ts:7",
+        "src:src/engine/flow/main/hand-use-card.ts:82",
+        "tests:tests/cards/ct-p10/b10047-case-name.test.ts:49"
       ]
     },
     {

@@ -1716,29 +1716,28 @@
     {
       "qaId": "card:B10072:2db8ec1f638c08e23b42d65f6f30eefe718d29bc0803d402cea6f45014edb6fa",
       "answerHash": "8fa6df429995a7c8ce3724b8ce6b54ccb2253d6fdd0f1199f90a37ef25879654",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/21-declared-ability-cost.md:15",
-        "src:src/cards/ct-p10/B10072.ts:10"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "rules:.claude/rules/26-qa-deck-refresh.md:74",
+        "src:src/cards/ct-p10/B10072.ts:16",
+        "src:src/cards/ct-p10/B10072.ts:29",
+        "src:src/cards/ct-p10/B10072.ts:30",
+        "tests:tests/cards/ct-p10/yellow-deck-cluster.test.ts:120"
       ]
     },
     {
       "qaId": "card:B10075:d49adc01f3ee4f568669b0e92c791822263b294d4e096979c9d328964c094c25",
       "answerHash": "e47fee061eab2568f3f9bf798a1451e7841dbd11247f2efad2ba0b94ece558f6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:11",
-        "src:src/cards/ct-p10/B10075.ts:8"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "rules:.claude/rules/15-abilities-effects.md:7",
+        "src:src/cards/ct-p10/B10075.ts:18",
+        "src:src/cards/ct-p10/B10075.ts:20",
+        "tests:tests/cards/ct-p10/yellow-combat-cluster.test.ts:147"
       ]
     },
     {

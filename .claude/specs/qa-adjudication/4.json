@@ -1673,7 +1673,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:32",
         "src:src/cards/ct-p10/B10077.ts:30",
-        "tests:tests/cards/ct-p10/yellow-deck-cluster.test.ts:237"
+        "tests:tests/cards/ct-p10/yellow-deck-cluster.test.ts:246"
       ]
     },
     {

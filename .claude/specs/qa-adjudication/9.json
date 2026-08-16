@@ -1399,15 +1399,13 @@
     {
       "qaId": "card:B10006:7e173f555d64430aabbf7aa5f215faef06d20d2da879f79a7bb3ce7495b43e61",
       "answerHash": "9a119509ead489d1dba564d0f7a8985ff446464db46bdbdd0274e28d1093c538",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/03-field-areas.md:23",
-        "src:src/cards/ct-p10/B10006.ts:5"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "rules:.claude/rules/03-field-areas.md:42",
+        "src:src/cards/ct-p10/B10006.ts:5",
+        "tests:tests/cards/ct-p10/B10006.test.ts:90"
       ]
     },
     {

@@ -142,6 +142,8 @@ describe('CT-P10 B10075 佐藤美和子', () => {
 
     const noBond = stateFor('self');
     noBond.players.self.scene = noBond.players.self.scene.filter(c => c.uid !== 'takagi');
+    noBond.players.opp.scene = [sceneChar('B10075_TAKAGI', 'opp-takagi')];
+    // qa: card:B10075:d49adc01f3ee4f568669b0e92c791822263b294d4e096979c9d328964c094c25
     expect(canAction(noBond, 'sato'), '絆なしは突撃なし').toBe(false);
     expect(read.char.ap(noBond, 'valid')).toBe(3000);
 

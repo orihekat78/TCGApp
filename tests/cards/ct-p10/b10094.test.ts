@@ -75,6 +75,7 @@ describe('B10094 犯人', () => {
     for (const [state, uid] of [[scene, 'scene-src'], [evidence, 'evidence:self:0'], [file, 'file:self:0']] as const) {
       expect(canActivateDeclaredAbility(state, uid, 'a1')).toBe(true);
       const { activated, pick } = activateAndGetPick(state, uid);
+      // qa: card:B10094:95ec3884ba49f8e60c1e269a3273f9f94a4dffd72b44a5d9e4d15746b4058866
       expect(activated.players.self.remove).toContain('B10094');
       expect(pick?.source).toMatchObject({ cardId: 'B10094', abilityId: 'a1' });
     }

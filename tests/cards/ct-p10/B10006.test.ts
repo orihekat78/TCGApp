@@ -86,6 +86,7 @@ describe('B10006', () => {
     runAutoPhase(state, 'self');
     expect(c.state).toBe('sleep');
     mutate.scene.setState(state, c.uid, 'active');
+    // qa: card:B10006:7e173f555d64430aabbf7aa5f215faef06d20d2da879f79a7bb3ce7495b43e61
     expect(c.state).toBe('active');
   });
 

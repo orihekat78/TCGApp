@@ -90,6 +90,7 @@ describe('B10023 服部平次', () => {
       dyn: { costParams: { removeSetCard: { hostUids: [uid, opponentUid], instanceIds: [sourceId, opponentId] } } },
     } as EffectCtx;
     expect(canPayAtomically(state, B10023.abilities[1]!.cost!, opponentCtx)).toBe(false);
+    // qa: card:B10023:b28b7e81f684a02f22f62ec571f745928832a0832a16216b7f2c8646fe2fb9b7
     expect(canActivateDeclaredAbility(state, uid, 'a2', opponentCtx.dyn!.costParams as never)).toBe(false);
   });
 

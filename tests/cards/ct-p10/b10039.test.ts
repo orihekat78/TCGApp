@@ -112,6 +112,7 @@ describe('CT-P10 B10039 白馬探', () => {
     const reorder = _drainPendingDeckReorderSide()!;
     result = produce(result, draft => applyDeckReorderAndContinuation(draft, reorder, [TAIL.id, WHITE.id, DECOY.id, GREEN.id]));
 
+    // qa: card:B10039:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd
     expect(result.players.self.hand).toEqual([]);
     expect(result.players.self.remove).toEqual([]);
     expect(result.players.self.deck).toEqual([TAIL.id, WHITE.id, DECOY.id, GREEN.id]);
