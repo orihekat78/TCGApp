@@ -30,6 +30,16 @@ function bottomPairs(value: unknown, out: Pair[] = []): Pair[] {
   return out;
 }
 
+function atomVerbs(value: unknown, out: string[] = []): string[] {
+  if (Array.isArray(value)) {
+    value.forEach(item => atomVerbs(item, out));
+  } else if (typeof value === 'object' && value !== null) {
+    if (isAtom(value)) out.push(value.verb);
+    Object.values(value as Record<string, unknown>).forEach(item => atomVerbs(item, out));
+  }
+  return out;
+}
+
 describe('BUG-314 shuffled revealed remainder stays below the untouched deck', () => {
   it('locks the exact printed-text family', () => {
     expect(CASES.map(card => card.id)).toEqual(['B01022', 'B02019', 'B02019P', 'B03018', 'B03042', 'B08026']);
@@ -38,7 +48,10 @@ describe('BUG-314 shuffled revealed remainder stays below the untouched deck', (
   it.each(CASES)('$id randomizes only each bound remainder', card => {
     const pairs = bottomPairs(card.abilities);
     expect(pairs, card.id).toHaveLength(1);
-    expect(pairs[0]!.bottom.args, card.id).toMatchObject({ player: 'self', order: 'shuffle' });
+    expect(pairs[0]!.bottom.args, card.id).toMatchObject({
+      player: 'self', bindKey: '$revealed', order: 'shuffle',
+    });
     expect(isAtom(pairs[0]!.next) && pairs[0]!.next.verb === 'deckShuffle', card.id).toBe(false);
+    expect(atomVerbs(card.abilities), card.id).not.toContain('deckShuffle');
   });
 });

@@ -573,3 +573,138 @@ describe('official QA: representative positive and no-match continuations stay c
     });
   });
 });
+
+const BUG314_TAIL_A = 'BUG314-TAIL-A';
+const BUG314_TAIL_B = 'BUG314-TAIL-B';
+const BUG314_REMAINDER_1 = 'BUG314-REMAINDER-1';
+const BUG314_REMAINDER_2 = 'BUG314-REMAINDER-2';
+const BUG314_REMAINDER_3 = 'BUG314-REMAINDER-3';
+const BUG314_REMAINDER_4 = 'BUG314-REMAINDER-4';
+
+function registerBug314Fixtures(extra: readonly CardDef[]): void {
+  [
+    fixtureCard(BUG314_TAIL_A), fixtureCard(BUG314_TAIL_B),
+    fixtureCard(BUG314_REMAINDER_1), fixtureCard(BUG314_REMAINDER_2),
+    fixtureCard(BUG314_REMAINDER_3), fixtureCard(BUG314_REMAINDER_4),
+    ...extra,
+  ].forEach(register);
+}
+
+function expectPublicPick(atomVerb: string) {
+  const pending = useGameStateStore.getState().pendingEffectPick;
+  expect(pending?.atomVerb).toBe(atomVerb);
+  if (!pending) throw new Error(`missing ${atomVerb} pick`);
+  return pending;
+}
+
+function resolvePublicMultiPick(atomVerb: string, cardIds: readonly string[]): void {
+  const pending = expectPublicPick(atomVerb);
+  const selected = cardIds.map(cardId => {
+    const candidate = pending.candidates.find(item => item.cardId === cardId);
+    if (!candidate) throw new Error(`${atomVerb}: missing ${cardId}`);
+    return candidate.uid;
+  });
+  expect(dispatchEngineAction(bindPendingDecision(pending, {
+    type: 'effectPickResolve', pickedUid: selected[0]!, pickedUids: selected,
+  }))).toEqual({ ok: true });
+}
+
+function expectBug314Settled(expectedDeck: readonly string[]): void {
+  expect(useGameStateStore.getState().pendingDeckReorder).toBeNull();
+  expect(current().players.self.deck).toEqual(expectedDeck);
+  settle();
+  expect(terminalCleared()).toBe(true);
+}
+
+describe('BUG-314: public flows shuffle only the selected reveal remainder', () => {
+  it('B01022 multi-enter prunes both chosen occurrences and preserves the untouched tail', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const chosenA = { ...fixtureCard('BUG314-B01022-A'), level: 3, traits: ['少年探偵団'] };
+    const chosenB = { ...fixtureCard('BUG314-B01022-B'), level: 4, traits: ['少年探偵団'] };
+    const partner: CardDef = {
+      id: 'BUG314-BLUE-PARTNER', no: 'BUG314-BLUE-PARTNER', kind: 'partner',
+      names: ['BUG314-BLUE-PARTNER'], colors: ['青'], level: 0, ap: 0, lp: 3,
+      traits: [], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [],
+    };
+    registerBug314Fixtures([chosenA, chosenB, partner]);
+    const state = createEmptyGameState();
+    state.turn = { number: 6, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    state.players.self.case.colors = ['青'];
+    state.players.self.file = Array.from({ length: 10 }, () => ({ type: 'card-back' as const, cardId: 'FILE' }));
+    state.players.self.partner = { cardId: partner.id, state: 'active', location: 'partner-area' };
+    state.players.self.hand = ['B01022', SENTINEL];
+    state.players.self.deck = [
+      chosenA.id, BUG314_REMAINDER_1, chosenB.id, BUG314_REMAINDER_2,
+      BUG314_REMAINDER_3, BUG314_REMAINDER_4, BUG314_TAIL_A, BUG314_TAIL_B,
+    ];
+    install(state, 'bug-314-B01022-public');
+
+    expect(dispatchEngineAction({ type: 'handUseCard', player: 'self', cardId: 'B01022' })).toEqual({ ok: true });
+    const discard = expectPublicPick('discard');
+    const discardUid = discard.candidates.find(candidate => candidate.cardId === SENTINEL)?.uid;
+    expect(discardUid).toBeTruthy();
+    expect(dispatchEngineAction(bindPendingDecision(discard, {
+      type: 'effectPickResolve', pickedUid: discardUid!,
+    }))).toEqual({ ok: true });
+    resolvePublicMultiPick('sceneEnter', [chosenA.id, chosenB.id]);
+
+    expect(current().players.self.scene.map(card => card.cardId)).toEqual([chosenA.id, chosenB.id]);
+    expect(current().players.self.remove).toEqual(expect.arrayContaining(['B01022', SENTINEL]));
+    expectBug314Settled([
+      BUG314_TAIL_A, BUG314_TAIL_B, BUG314_REMAINDER_2,
+      BUG314_REMAINDER_3, BUG314_REMAINDER_4, BUG314_REMAINDER_1,
+    ]);
+  });
+
+  it('B03042 multi-pick removes both distinct-color detectives before shuffling its remainder', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const red = { ...fixtureCard('BUG314-B03042-RED'), colors: ['赤'], traits: ['探偵'] };
+    const blue = { ...fixtureCard('BUG314-B03042-BLUE'), colors: ['青'], traits: ['探偵'] };
+    registerBug314Fixtures([red, blue]);
+    const state = createEmptyGameState();
+    state.turn = { number: 6, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    state.players.self.case.colors = ['緑'];
+    state.players.self.file = Array.from({ length: 10 }, () => ({ type: 'card-back' as const, cardId: 'FILE' }));
+    state.players.self.hand = ['B03042'];
+    state.players.self.deck = [
+      red.id, BUG314_REMAINDER_1, blue.id, BUG314_REMAINDER_2,
+      BUG314_REMAINDER_3, BUG314_TAIL_A, BUG314_TAIL_B,
+    ];
+    install(state, 'bug-314-B03042-public');
+
+    expect(dispatchEngineAction({ type: 'handUseCard', player: 'self', cardId: 'B03042' })).toEqual({ ok: true });
+    resolvePublicMultiPick('handAddFromDeck', [red.id, blue.id]);
+
+    expect(current().players.self.hand).toEqual(expect.arrayContaining([red.id, blue.id]));
+    expect(current().players.self.remove).toContain('B03042');
+    expectBug314Settled([
+      BUG314_TAIL_A, BUG314_TAIL_B,
+      BUG314_REMAINDER_2, BUG314_REMAINDER_3, BUG314_REMAINDER_1,
+    ]);
+  });
+
+  it('B03018 leave trigger prunes the recruited event and preserves the untouched tail', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const card = readDef.card('B03018')!;
+    const args = asObj(findAtom(card.abilities[0]!.effect, 'deckRevealUntil')!.args)!;
+    const selected = matchingCard('BUG314-B03018-EVENT', args);
+    registerBug314Fixtures([selected]);
+    installDeckLook(card, selected.id, [
+      selected.id, BUG314_REMAINDER_1, BUG314_REMAINDER_2,
+      BUG314_REMAINDER_3, BUG314_REMAINDER_4, BUG314_TAIL_A, BUG314_TAIL_B,
+    ]);
+    const pending = deckLookPending(card.id);
+    const selectedUid = pending.candidates.find(candidate => candidate.cardId === selected.id)?.uid;
+    expect(selectedUid).toBeTruthy();
+    expect(dispatchEngineAction(bindPendingDecision(pending, {
+      type: 'effectPickResolve', pickedUid: selectedUid!,
+    }))).toEqual({ ok: true });
+
+    expect(current().players.self.hand).toContain(selected.id);
+    expect(current().players.self.remove).toContain(card.id);
+    expectBug314Settled([
+      BUG314_TAIL_A, BUG314_TAIL_B, BUG314_REMAINDER_2,
+      BUG314_REMAINDER_3, BUG314_REMAINDER_4, BUG314_REMAINDER_1,
+    ]);
+  });
+});

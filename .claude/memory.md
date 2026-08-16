@@ -91,3 +91,10 @@
   self-leave a2; never leave only one printing at a stale `DEFERRED` marker.
 - The match is mandatory, the revealed remainder keeps its order before the
   full-deck shuffle, and a one-card deck refreshes from the leave source.
+
+## 2026-08-16: Shuffled revealed remainder scope
+
+- 「残りをシャッフルしてデッキの下に移す」は、公開した残りだけをshuffleする。
+  `deckToBottomBound(bindKey:'$revealed',order:'shuffle')`を使い、後続`deckShuffle`を置かない。
+- 完全一致6定義を静的に固定し、public選択あり/なし、複数取得、複数登場、離場後rebaseで
+  未公開tailの順序不変を検証する。デッキ全体shuffleを明記する別句は混ぜない。
