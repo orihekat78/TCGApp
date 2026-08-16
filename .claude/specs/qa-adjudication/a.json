@@ -40,11 +40,13 @@
     {
       "qaId": "card:B01058:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18",
       "answerHash": "8e0d706ac67953d21823c296e0443a53b1e87408f357321dccbc01fb210738d4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p01/B01058.ts:1"
+        "src:src/cards/ct-p01/B01058.ts:1",
+        "src:src/engine/mutate/scene.ts:753",
+        "tests:tests/cards/official-qa/stun-action-target-public.test.ts:223"
       ]
     },
     {
@@ -202,11 +204,13 @@
     {
       "qaId": "card:B02083:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18",
       "answerHash": "8e0d706ac67953d21823c296e0443a53b1e87408f357321dccbc01fb210738d4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02083.ts:1"
+        "src:src/cards/ct-p02/B02083.ts:1",
+        "src:src/engine/mutate/scene.ts:753",
+        "tests:tests/cards/official-qa/stun-action-target-public.test.ts:226"
       ]
     },
     {
@@ -272,11 +276,13 @@
     {
       "qaId": "card:B03054:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18",
       "answerHash": "8e0d706ac67953d21823c296e0443a53b1e87408f357321dccbc01fb210738d4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03054.ts:1"
+        "src:src/cards/ct-p03/B03054.ts:1",
+        "src:src/engine/mutate/scene.ts:753",
+        "tests:tests/cards/official-qa/stun-action-target-public.test.ts:229"
       ]
     },
     {

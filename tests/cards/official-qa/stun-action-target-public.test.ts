@@ -205,3 +205,31 @@ describe('official QA stun state lifecycle', () => {
   it('card:PR157:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('PR157'), 'PR157').toEqual(STUN_LIFECYCLE_PROOF); });
   it('card:PR163:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333', () => { expect(proveStunLifecycle('PR163'), 'PR163').toEqual(STUN_LIFECYCLE_PROOF); });
 });
+
+// qa: card:B01058:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18
+// qa: card:B01095:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18
+// qa: card:B02052:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18
+// qa: card:B02083:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18
+// qa: card:B03046:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18
+// qa: card:B03048:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18
+// qa: card:B03054:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18
+// qa: card:B03060:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18
+// qa: card:B03085:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18
+// qa: card:B03092:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18
+// qa: card:B03103:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18
+// qa: card:B05032:b358181e7fb698606f1cdf3a8cbb96db5309131066a98e55cb22bc9ec4a62e74
+
+describe('official QA stun state lifecycle for early products', () => {
+  it('card:B01058:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18', () => { expect(proveStunLifecycle('B01058'), 'B01058').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B01095:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18', () => { expect(proveStunLifecycle('B01095'), 'B01095').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B02052:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18', () => { expect(proveStunLifecycle('B02052'), 'B02052').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B02083:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18', () => { expect(proveStunLifecycle('B02083'), 'B02083').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B03046:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18', () => { expect(proveStunLifecycle('B03046'), 'B03046').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B03048:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18', () => { expect(proveStunLifecycle('B03048'), 'B03048').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B03054:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18', () => { expect(proveStunLifecycle('B03054'), 'B03054').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B03060:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18', () => { expect(proveStunLifecycle('B03060'), 'B03060').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B03085:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18', () => { expect(proveStunLifecycle('B03085'), 'B03085').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B03092:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18', () => { expect(proveStunLifecycle('B03092'), 'B03092').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B03103:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18', () => { expect(proveStunLifecycle('B03103'), 'B03103').toEqual(STUN_LIFECYCLE_PROOF); });
+  it('card:B05032:b358181e7fb698606f1cdf3a8cbb96db5309131066a98e55cb22bc9ec4a62e74', () => { expect(proveStunLifecycle('B05032'), 'B05032').toEqual(STUN_LIFECYCLE_PROOF); });
+});

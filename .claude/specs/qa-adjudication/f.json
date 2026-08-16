@@ -416,15 +416,14 @@
     {
       "qaId": "card:B03092:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18",
       "answerHash": "8e0d706ac67953d21823c296e0443a53b1e87408f357321dccbc01fb210738d4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/24-qa-naming-stun.md:55",
-        "src:src/cards/ct-p03/B03092.ts:40"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p03/B03092.ts:40",
+        "src:src/engine/mutate/scene.ts:753",
+        "tests:tests/cards/official-qa/stun-action-target-public.test.ts:232"
       ]
     },
     {
@@ -443,14 +442,13 @@
     {
       "qaId": "card:B03103:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18",
       "answerHash": "8e0d706ac67953d21823c296e0443a53b1e87408f357321dccbc01fb210738d4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03103.ts:45"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/ct-p03/B03103.ts:45",
+        "src:src/engine/mutate/scene.ts:753",
+        "tests:tests/cards/official-qa/stun-action-target-public.test.ts:233"
       ]
     },
     {
