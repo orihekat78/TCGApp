@@ -1281,8 +1281,14 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08085.ts:43",
-        "tests:tests/cards/wave-evidence-flip-2026-06-23.test.ts:211"
+        "rules:.claude/rules/09-cutin-disguise.md:23",
+        "rules:.claude/rules/15-abilities-effects.md:63",
+        "src:src/cards/ct-p08/B08085.ts:45",
+        "src:src/cards/ct-p08/B08085.ts:47",
+        "src:src/engine/flow/contact.ts:162",
+        "src:src/engine/listeners/triggered.ts:437",
+        "tests:tests/cards/official-qa/f026-cutin-public.test.ts:262",
+        "tests:tests/cards/official-qa/f026-cutin-public.test.ts:269"
       ]
     },
     {

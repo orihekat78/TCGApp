@@ -1822,16 +1822,23 @@
     {
       "qaId": "card:B10091:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7",
       "answerHash": "dfec8d4a353c5f72789e4cab1cddae208c3b39c51edd2a5fbae1af29683b420f",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/09-cutin-disguise.md:9",
-        "src:src/cards/ct-p10/B10091.ts:28"
+        "rules:.claude/rules/09-cutin-disguise.md:23",
+        "rules:.claude/rules/15-abilities-effects.md:63",
+        "src:src/cards/ct-p10/B10091.ts:24",
+        "src:src/cards/ct-p10/B10091.ts:27",
+        "src:src/engine/flow/contact.ts:162",
+        "src:src/engine/listeners/triggered.ts:437",
+        "tests:tests/cards/official-qa/f026-cutin-public.test.ts:297",
+        "tests:tests/cards/official-qa/f026-cutin-public.test.ts:319",
+        "tests:tests/cards/official-qa/f026-cutin-public.test.ts:338",
+        "tests:tests/cards/official-qa/f026-cutin-public.test.ts:347",
+        "tests:tests/cards/official-qa/f026-cutin-public.test.ts:368"
       ],
-      "noteCodes": [
-        "IMPLEMENTED-CARD-TEST-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B10094:ac6deca54abb40e5febfb9c134935a67110fe6ce124bd3a654a18364afaf1ff1",

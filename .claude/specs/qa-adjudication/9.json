@@ -1229,12 +1229,15 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08086.ts:56",
-        "tests:tests/cards/wave17-b08086-tequila.test.ts:43"
+        "rules:.claude/rules/09-cutin-disguise.md:23",
+        "rules:.claude/rules/15-abilities-effects.md:63",
+        "src:src/cards/ct-p08/B08086.ts:44",
+        "src:src/cards/ct-p08/B08086.ts:49",
+        "src:src/engine/flow/contact.ts:162",
+        "src:src/engine/listeners/triggered.ts:437",
+        "tests:tests/cards/official-qa/f026-cutin-public.test.ts:279"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B08093:701cfbd7877307922c55f555756e02ed66d7a8aa95b750733732866aa911b091",

@@ -1848,22 +1848,31 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR158.ts:31",
-        "tests:tests/cards/pr-01/PR158.test.ts:19"
+        "rules:.claude/rules/09-cutin-disguise.md:23",
+        "rules:.claude/rules/15-abilities-effects.md:63",
+        "src:src/cards/pr-01/PR158.ts:23",
+        "src:src/cards/pr-01/PR158.ts:25",
+        "src:src/engine/flow/contact.ts:162",
+        "src:src/engine/listeners/triggered.ts:437",
+        "tests:tests/cards/official-qa/f026-cutin-public.test.ts:377"
       ]
     },
     {
       "qaId": "card:PR164:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7",
       "answerHash": "8d47d0847574599f92a2e0e401222d622f86bbf6c9137cf25b24230dafdaec38",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR164.ts:1"
+        "rules:.claude/rules/09-cutin-disguise.md:23",
+        "rules:.claude/rules/15-abilities-effects.md:63",
+        "src:src/cards/pr-01/PR164.ts:18",
+        "src:src/cards/pr-01/PR164.ts:19",
+        "src:src/engine/flow/contact.ts:162",
+        "src:src/engine/listeners/triggered.ts:437",
+        "tests:tests/cards/official-qa/f026-cutin-public.test.ts:383"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:PR196:94d4fbcb6d6b527d8e1d1c0eaa9b309fe2198ea03d499bf7e02c1d5a00121143",
