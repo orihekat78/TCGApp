@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6089
+- **ファイル数**: 6090
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5497,6 +5497,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `turn-conditioned-cutin-expansion-public.test.ts` — qa: card:B05095:3ebc71d3fe967142af371f16682581bf9d44ac0db1c409f0d2a20d11ffeeae41
       - `turn-conditioned-cutin-public.test.ts` — qa: card:B02007:e4a36acb6bbbb1c8b11eac5e65600d839bba033d5a2b7f0e5ecfc84bacd47a4c
       - `turn1-resolution-time-state-public.test.ts` — rules: 07-action-flow.md, 10-action-event.md, 15-abilities-effects.md, 17-icons.…
+      - `up-to-one-zero-choice-public.test.ts` — qa: card:B03007:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d
     - **`pr-01/`**
       - `PR100.test.ts`
       - `PR158.test.ts` — tests/cards/pr-01/PR158 犯人 (character, cutin remove-name scaling AP)
