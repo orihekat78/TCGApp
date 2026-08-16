@@ -2011,15 +2011,17 @@
     {
       "qaId": "card:B10090:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7",
       "answerHash": "ffd29dd2b3a9717ba7136cea5055ccdda44f40880914e6babc5934d495c6669b",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/09-cutin-disguise.md:23",
-        "src:src/cards/ct-p10/B10090.ts:24"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/15-abilities-effects.md:63",
+        "src:src/cards/ct-p10/B10090.ts:23",
+        "src:src/cards/ct-p10/B10090.ts:25",
+        "src:src/engine/flow/contact.ts:162",
+        "src:src/engine/listeners/triggered.ts:437",
+        "tests:tests/cards/official-qa/ctp10-opponent-turn-cutin-public.test.ts:191"
       ]
     },
     {

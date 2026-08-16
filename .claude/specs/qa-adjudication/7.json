@@ -1576,26 +1576,32 @@
     {
       "qaId": "card:B10088:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7",
       "answerHash": "ffd29dd2b3a9717ba7136cea5055ccdda44f40880914e6babc5934d495c6669b",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/09-cutin-disguise.md:24",
-        "src:src/cards/ct-p10/B10088.ts:9"
+        "rules:.claude/rules/09-cutin-disguise.md:23",
+        "rules:.claude/rules/15-abilities-effects.md:63",
+        "src:src/cards/ct-p10/B10088.ts:25",
+        "src:src/cards/ct-p10/B10088.ts:27",
+        "src:src/engine/flow/contact.ts:162",
+        "src:src/engine/listeners/triggered.ts:437",
+        "tests:tests/cards/official-qa/ctp10-opponent-turn-cutin-public.test.ts:181"
       ]
     },
     {
       "qaId": "card:B10089:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7",
       "answerHash": "ffd29dd2b3a9717ba7136cea5055ccdda44f40880914e6babc5934d495c6669b",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/21-declared-ability-cost.md:15",
-        "src:src/cards/ct-p10/B10089.ts:6"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "rules:.claude/rules/09-cutin-disguise.md:23",
+        "rules:.claude/rules/15-abilities-effects.md:63",
+        "src:src/cards/ct-p10/B10089.ts:11",
+        "src:src/engine/flow/contact.ts:162",
+        "src:src/engine/listeners/triggered.ts:437",
+        "tests:tests/cards/official-qa/ctp10-opponent-turn-cutin-public.test.ts:186"
       ]
     },
     {
