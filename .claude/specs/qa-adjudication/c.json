@@ -2173,7 +2173,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:37",
         "src:src/cards/pr-01/PR065.ts:1",
-        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:428"
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:492"
       ]
     },
     {

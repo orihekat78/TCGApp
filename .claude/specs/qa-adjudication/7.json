@@ -331,7 +331,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:37",
         "src:src/cards/ct-p03/B03086.ts:1",
-        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:414"
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:478"
       ]
     },
     {

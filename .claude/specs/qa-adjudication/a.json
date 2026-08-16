@@ -248,7 +248,7 @@
         "rules:.claude/rules/15-abilities-effects.md:37",
         "src:src/cards/ct-p03/B03018.ts:31",
         "src:src/engine/effect/atom-handlers/picks.ts:158",
-        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:406"
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:470"
       ]
     },
     {

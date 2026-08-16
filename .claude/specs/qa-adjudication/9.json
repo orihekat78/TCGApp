@@ -1349,7 +1349,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:37",
         "src:src/cards/ct-p09/B09079.ts:51",
-        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:424"
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:488"
       ]
     },
     {

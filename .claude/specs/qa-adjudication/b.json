@@ -268,7 +268,7 @@
         "rules:.claude/rules/13-keywords.md:25",
         "rules:.claude/rules/15-abilities-effects.md:37",
         "src:src/cards/ct-p03/B03053.ts:65",
-        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:408"
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:472"
       ]
     },
     {
@@ -389,7 +389,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:37",
         "src:src/cards/ct-p03/B03115.ts:67",
-        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:415"
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:479"
       ]
     },
     {
@@ -411,7 +411,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:37",
         "src:src/cards/ct-p03/B03122.ts:6",
-        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:416"
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:480"
       ]
     },
     {
@@ -446,7 +446,7 @@
         "rules:.claude/rules/15-abilities-effects.md:37",
         "rules:.claude/rules/26-qa-deck-refresh.md:65",
         "src:src/cards/ct-p04/B04024.ts:25",
-        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:417"
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:481"
       ]
     },
     {
@@ -1178,15 +1178,13 @@
     {
       "qaId": "card:B07073:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07073.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-p07/B07073.ts:1",
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:498"
       ]
     },
     {
@@ -1534,11 +1532,13 @@
     {
       "qaId": "card:B09062:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09062.ts:113"
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-p09/B09062.ts:113",
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:503"
       ]
     },
     {

@@ -18,9 +18,8 @@
 //   - 「その中から…2枚まで登場」 => sceneEnter cardIds:'$pick.cardIds' + query{area:'deck',
 //     fromGroupCards:'$revealed', filter{kind:'character', trait:'少年探偵団', levelMax:4}} n{0,2}
 //     (B09010 multi-enter 契約 + fromGroupCards window 制限。skipResolvesAtom: 0枚でも後続解決)。
-//   - 「残りをシャッフルしてデッキの下に移す」 => deckToBottomBound $revealed → deckShuffle
-//     (established convention D11019/B02019/B03018 — デッキ非公開のため bottom 後の全体 shuffle で
-//     隠れ順を無作為化。登場分は sceneEnter の stale-bind prune 済で二重移動しない)。
+//   - 「残りをシャッフルしてデッキの下に移す」 => deckToBottomBound{order:'shuffle'}
+//     (公開した残りだけを無作為化し、未公開のデッキ本体はシャッフルしない。)
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 
@@ -58,9 +57,8 @@ const a1: AbilityDef = {
           },
         },
       },
-      // 残り (登場分 prune 済) をデッキの下へ → シャッフル
-      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },
-      { kind: 'atom', verb: 'deckShuffle', args: { player: 'self' } },
+      // 登場分 prune 後の残りだけをシャッフルしてデッキの下へ
+      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed', order: 'shuffle' } },
     ],
   },
   description:

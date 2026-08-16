@@ -883,7 +883,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:37",
         "src:src/cards/ct-p05/B05082.ts:51",
-        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:421"
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:485"
       ]
     },
     {
@@ -1365,14 +1365,13 @@
     {
       "qaId": "card:B08016:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08016.ts:117"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-p08/B08016.ts:117",
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:499"
       ]
     },
     {
@@ -1906,7 +1905,7 @@
         "rules:.claude/rules/15-abilities-effects.md:11",
         "rules:.claude/rules/15-abilities-effects.md:37",
         "src:src/cards/ct-p10/B10054.ts:7",
-        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:425"
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:489"
       ]
     },
     {

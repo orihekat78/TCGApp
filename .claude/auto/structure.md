@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6090
+- **ファイル数**: 6096
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1577,14 +1577,18 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`grounding/`**
       - `B01006.md` — B01006 / B01006P grounding
       - `B01020.md` — B01020 毛利小五郎 grounding (2026-07-10, sonnet5)
+      - `B01022.md` — B01022 grounding
       - `B01057.md` — B01057 「最も出会いたくない…恋人ってトコロかな？」 grounding (2026-07-10, fable)
       - `B01070.md` — B01070 アンドレ・キャメル grounding (2026-07-10, sonnet5)
       - `B01092.md` — B01092 松田陣平 grounding (2026-07-10, sonnet5)
+      - `B02019.md` — B02019 grounding
+      - `B02019P.md` — B02019P grounding
       - `B02022.md` — B02022 鬼丸猛 grounding (2026-07-10, sonnet5)
       - `B02023.md` — B02023 遠山和葉 grounding
       - `B02039.md` — B02039 工藤優作 grounding (2026-07-10, fable)
       - `B02058.md` — B02058 / B02058P grounding
       - `B02067.md` — B02067 チョーカー型変声機 grounding (2026-07-10, sonnet5)
+      - `B03018.md` — B03018 grounding
       - `B03019.md` — B03019 grounding
       - `B03020.md` — B03020 毛利蘭 grounding
       - `B03023.md` — B03023 脇田兼則 grounding
@@ -1628,6 +1632,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08003.md` — B08003 阿笠博士 (SR/SRP) grounding (2026-07-10, sonnet5)
       - `B08017.md` — B08017 / B08017P grounding
       - `B08019.md` — B08019 大岡紅葉＆伊織無我 (MR/MRP) grounding (2026-07-10, sonnet5)
+      - `B08026.md` — B08026 grounding
       - `B08047.md` — B08047/B08047P 沖矢昴 grounding (2026-07-10, fable)
       - `B08074.md` — B08074 降谷零 grounding
       - `B08081.md` — B08081 広田雅美 grounding (2026-07-10, sonnet5)
@@ -5624,6 +5629,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `bug-195-event-remove-by-ap.test.ts` — BUG-195: eventRemoveByAP の単一 choice が sceneRemove pick を二重生成する回帰。
     - `bug-249-b03006-ordering.test.ts`
     - `bug-311-forced-reveal-shuffle.test.ts` — BUG-311: 「残りをデッキ下へ移し、デッキをシャッフル」は並べ替え権を与えない。
+    - `bug-314-shuffled-remainder-only.test.ts` — BUG-314: 「残りをシャッフルしてデッキの下」は公開した残りだけを無作為化する。
     - `bug155-pick-filter-kind-2026-06-24.test.ts` — BUG-155 水平展開 sweep (2026-06-24, engine変更0) — pick系 atom/query の filter が公式テキストの
     - `bug159-b02010-colornot-2026-06-27.test.ts` — BUG-159 fix — B02010 灰原哀 a1「【青】以外の色を持つキャラ」を custom closure (none説) から
     - `cardphase3-cutin-observer.test.ts` — tests/cards/cardphase3-cutin-observer

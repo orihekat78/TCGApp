@@ -527,7 +527,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:37",
         "src:src/cards/ct-p05/B05060.ts:1",
-        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:420"
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:484"
       ]
     },
     {
@@ -1592,7 +1592,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:37",
         "src:src/cards/ct-d07/D07019.ts:1",
-        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:426"
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:490"
       ]
     },
     {

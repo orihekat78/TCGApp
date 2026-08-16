@@ -149,7 +149,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:37",
         "src:src/cards/ct-p03/B03007.ts:27",
-        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:405"
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:469"
       ]
     },
     {
@@ -245,7 +245,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:37",
         "src:src/cards/ct-p03/B03036.ts:1",
-        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:407"
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:471"
       ]
     },
     {
@@ -1067,14 +1067,13 @@
     {
       "qaId": "card:B08050:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08050.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-p08/B08050.ts:1",
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:502"
       ]
     },
     {
@@ -1440,15 +1439,13 @@
     {
       "qaId": "card:B10010:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:11",
-        "src:src/cards/ct-p10/B10010.ts:6"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-p10/B10010.ts:6",
+        "tests:tests/cards/official-qa/up-to-one-zero-choice-public.test.ts:505"
       ]
     },
     {

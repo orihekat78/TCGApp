@@ -18,15 +18,27 @@
 // qa: card:D07019:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d
 // qa: card:PR061:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d
 // qa: card:PR065:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d
+// qa: card:B05016:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd
+// qa: card:B06048:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd
+// qa: card:B07073:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd
+// qa: card:B08016:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd
+// qa: card:B08020:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd
+// qa: card:B08026:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd
+// qa: card:B08050:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd
+// qa: card:B09062:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd
+// qa: card:B09074:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd
+// qa: card:B10010:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd
+// qa: card:PR271:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd
 // Rules: 15-abilities-effects.md, 26-qa-deck-refresh.md.
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { registerAll } from '@/cards';
 import { event } from '@/engine/event';
 import { startCausalSession } from '@/engine/log/causal';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _resetRegistry, def as readDef, register } from '@/engine/read/def';
+import { pendingOwnerOrderGroup } from '@/engine/resolve';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { CardDef, GameState } from '@/engine/types';
 import { bindPendingDecision, dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
@@ -36,6 +48,7 @@ import { useGameStateStore } from '@/ui/state/store';
 import { makeChar } from '../../helpers/fixtures';
 
 const QA = '3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d';
+const QA_ENTER = '3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd';
 const ATTACKER = 'QA-UP-TO-ATTACKER';
 const SENTINEL = 'QA-UP-TO-SENTINEL';
 const DECOY = 'QA-UP-TO-DECOY';
@@ -134,8 +147,15 @@ function installDeckLook(card: CardDef, targetId: string, deck = [targetId]) {
   const isLeave = card.id === 'B03018' || card.id === 'B05020';
   state.turn = { number: 6, player: isLeave ? 'opp' : 'self', phase: 'main', isFirstPlayerFirstTurn: false };
   state.players.self.case.colors = card.id === 'B10054' ? ['赤', '黄'] : [...card.colors];
+  if (card.id === 'B08016') {
+    state.players.self.case.colors = ['青', '黒'];
+    state.players.self.case.status = '事件編';
+  }
+  if (card.id === 'B06048') state.players.self.case.status = '解決編';
   state.players.self.file = Array.from({ length: 10 }, () => ({ type: 'card-back' as const, cardId: 'FILE' }));
-  state.players.self.deck = [...deck];
+  state.players.self.deck = card.id === 'B09074' && deck.length === 1
+    ? [`${DECOY}-DRAW`, deck[0]!, DECOY, `${DECOY}-2`, `${DECOY}-3`]
+    : [...deck];
   state.players.self.hand = [card.id, SENTINEL];
   if (card.id === 'B07035') state.players.self.case.status = '解決編';
   if (isLeave) {
@@ -156,18 +176,37 @@ function installDeckLook(card: CardDef, targetId: string, deck = [targetId]) {
   }
   const entered = current().players.self.scene.find(sceneCard => sceneCard.cardId === card.id);
   if (!entered) throw new Error(`${card.id}: used character did not enter the scene`);
+  if (card.id === 'B09074') {
+    const entries = current().pendingEffects.filter(entry =>
+      entry.state === 'pending' && entry.source.uid === entered.uid && entry.source.cardId === card.id);
+    expect(entries.map(entry => entry.source.abilityId).sort(), 'B09074 simultaneous enter effects').toEqual(['a1', 'a2']);
+    const deckLook = entries.find(entry => entry.source.abilityId === 'a2')!;
+    expect(dispatchEngineAction({ type: 'setEffectOrder', entryId: deckLook.id, order: 0, player: 'self' })).toEqual({ ok: true });
+    const ordered = pendingOwnerOrderGroup(current(), 'self');
+    expect(dispatchEngineAction({
+      type: 'resolveEffectOrder', player: 'self', entryIds: ordered.map(entry => entry.id),
+    })).toEqual({ ok: true });
+  }
   return { uid: entered.uid, area: 'scene' as const };
 }
 
 function deckLookPending(cardId: string) {
-  for (let index = 0; index < 3; index += 1) {
+  for (let index = 0; index < 6; index += 1) {
+    const optional = useGameStateStore.getState().pendingEffectOptional;
+    if (optional) {
+      expect(optional.source.cardId, `${cardId}: preceding optional source`).toBe(cardId);
+      expect(dispatchEngineAction(bindPendingDecision(optional, { type: 'optionalResolve', run: true }))).toEqual({ ok: true });
+      continue;
+    }
     const pending = useGameStateStore.getState().pendingEffectPick;
     if (!pending) throw new Error(`${cardId}: missing pending pick`);
     if (pending.atomVerb === 'deckRevealUntil') return pending;
-    expect(pending.nMin, `${cardId}: preceding up-to choice`).toBe(0);
+    expect(pending.nMin, `${cardId}: preceding choice minimum`).toBe(cardId === 'B07073' ? 1 : 0);
     const preceding = cardId === 'B03115'
       ? pending.candidates.find(candidate => candidate.uid === 'prior-target')?.uid ?? null
-      : null;
+      : cardId === 'B07073'
+        ? pending.candidates.find(candidate => candidate.cardId === SENTINEL)?.uid ?? null
+        : null;
     expect(dispatchEngineAction(bindPendingDecision(pending, { type: 'effectPickResolve', pickedUid: preceding }))).toEqual({ ok: true });
   }
   throw new Error(`${cardId}: deck look was not reached`);
@@ -182,6 +221,12 @@ function settle(preferredCardIds: readonly string[] = []): void {
     expect(dispatchEngineAction(bindPendingDecision(pending, {
       type: 'effectPickResolve',
       pickedUid: preferred?.uid ?? null,
+    }))).toEqual({ ok: true });
+  }
+  const reorder = useGameStateStore.getState().pendingDeckReorder;
+  if (reorder) {
+    expect(dispatchEngineAction(bindPendingDecision(reorder, {
+      type: 'deckReorderResolve', order: [...reorder.cardIds],
     }))).toEqual({ ok: true });
   }
   const actionId = useGameStateStore.getState().activeActionId;
@@ -336,6 +381,21 @@ function expectedDeckLook(cardId: string) {
   };
 }
 
+function expectedEnterDeckLook(cardId: string, abilityId: string) {
+  return {
+    contract: 'upTo',
+    source: { cardId, abilityId, area: 'scene', uidMatchesOrigin: true },
+    range: [0, 1],
+    candidates: [`QA-UP-TO-${cardId}`],
+    targetInHand: false,
+    targetCopies: 1,
+    sameCardSiblingInHand: 1,
+    sentinelInHand: cardId !== 'B07073',
+    priorResolved: true,
+    terminalCleared: true,
+  };
+}
+
 function proveRemovePick() {
   const card = readDef.card('B03053')!;
   const ability = card.abilities.find(item => findAtom(item.effect, 'handAddFromRemove'))!;
@@ -388,6 +448,9 @@ beforeEach(() => {
   register(fixtureCard(ATTACKER, 9000));
   register(fixtureCard(SENTINEL));
   register(fixtureCard(DECOY));
+  register(fixtureCard(`${DECOY}-2`));
+  register(fixtureCard(`${DECOY}-3`));
+  register(fixtureCard(`${DECOY}-DRAW`));
   register(fixtureCard(PRIOR_TARGET));
   registerTriggeredListener();
   endMatchSession();
@@ -396,6 +459,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   endMatchSession();
   useGameStateStore.getState().setGameState(null);
   delete (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide;
@@ -426,6 +490,42 @@ describe('official QA: an up-to-one match may be declined through public dispatc
   it(`card:D07019:${QA}`, () => expect(proveDeckLook('D07019'), 'D07019 public zero choice').toEqual(expectedDeckLook('D07019')));
   it(`card:PR061:${QA}`, () => expect(proveDeckLook('PR061'), 'PR061 public zero choice').toEqual(expectedDeckLook('PR061')));
   it(`card:PR065:${QA}`, () => expect(proveDeckLook('PR065'), 'PR065 public zero choice').toEqual(expectedDeckLook('PR065')));
+});
+
+describe('official QA: enter-triggered up-to-one matches may also be declined', () => {
+  it(`card:B05016:${QA_ENTER}`, () => expect(proveDeckLook('B05016'), 'B05016 public enter zero choice').toEqual(expectedEnterDeckLook('B05016', 'a1')));
+  it(`card:B06048:${QA_ENTER}`, () => expect(proveDeckLook('B06048'), 'B06048 public enter zero choice').toEqual(expectedEnterDeckLook('B06048', 'a1')));
+  it(`card:B07073:${QA_ENTER}`, () => expect(proveDeckLook('B07073'), 'B07073 public enter zero choice').toEqual(expectedEnterDeckLook('B07073', 'a2')));
+  it(`card:B08016:${QA_ENTER}`, () => expect(proveDeckLook('B08016'), 'B08016 public enter zero choice').toEqual(expectedEnterDeckLook('B08016', 'a1')));
+  it(`card:B08020:${QA_ENTER}`, () => expect(proveDeckLook('B08020'), 'B08020 public enter zero choice').toEqual(expectedEnterDeckLook('B08020', 'a1')));
+  it(`card:B08026:${QA_ENTER}`, () => expect(proveDeckLook('B08026'), 'B08026 public enter zero choice').toEqual(expectedEnterDeckLook('B08026', 'a1')));
+  it(`card:B08050:${QA_ENTER}`, () => expect(proveDeckLook('B08050'), 'B08050 public enter zero choice').toEqual(expectedEnterDeckLook('B08050', 'a2')));
+  it(`card:B09062:${QA_ENTER}`, () => expect(proveDeckLook('B09062'), 'B09062 public enter zero choice').toEqual(expectedEnterDeckLook('B09062', 'a1')));
+  it(`card:B09074:${QA_ENTER}`, () => expect(proveDeckLook('B09074'), 'B09074 public enter zero choice').toEqual(expectedEnterDeckLook('B09074', 'a2')));
+  it(`card:B10010:${QA_ENTER}`, () => expect(proveDeckLook('B10010'), 'B10010 public enter zero choice').toEqual(expectedEnterDeckLook('B10010', 'a2')));
+  it(`card:PR271:${QA_ENTER}`, () => expect(proveDeckLook('PR271'), 'PR271 public enter zero choice').toEqual(expectedEnterDeckLook('PR271', 'a1')));
+
+  it('B08026 shuffles only the five looked cards below the untouched deck tail', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const card = readDef.card('B08026')!;
+    const args = asObj(findAtom(card.abilities[0]!.effect, 'deckRevealUntil')!.args)!;
+    const targetId = 'QA-UP-TO-B08026-SHUFFLED';
+    register(matchingCard(targetId, args));
+    installDeckLook(card, targetId, [
+      targetId, DECOY, `${DECOY}-2`, `${DECOY}-3`, `${DECOY}-DRAW`, SENTINEL, PRIOR_TARGET,
+    ]);
+    const pending = deckLookPending(card.id);
+    expect(dispatchEngineAction(bindPendingDecision(pending, {
+      type: 'effectPickResolve', pickedUid: null,
+    }))).toEqual({ ok: true });
+
+    expect(useGameStateStore.getState().pendingDeckReorder).toBeNull();
+    expect(current().players.self.deck).toEqual([
+      SENTINEL, PRIOR_TARGET, DECOY, `${DECOY}-2`, `${DECOY}-3`, `${DECOY}-DRAW`, targetId,
+    ]);
+    settle();
+    expect(terminalCleared()).toBe(true);
+  });
 });
 
 function expectDeckRepresentative(cardId: string, options: { discard?: boolean; enter?: boolean } = {}): void {
