@@ -1136,14 +1136,18 @@
     {
       "qaId": "card:B07090:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa",
       "answerHash": "39e7b67e851b57fbcf7d5323aaed28d21788d921007116b97444dc1cce21d746",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07090.ts:64"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/15-abilities-effects.md:41",
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-p07/B07090.ts:41",
+        "src:src/engine/effect/apply-pick.ts:47",
+        "src:src/engine/effect/atom-handlers/scene.ts:807",
+        "src:src/engine/listeners/triggered.ts:503",
+        "src:src/engine/resolve/stack.ts:227",
+        "tests:tests/cards/official-qa/effect-entry-trigger-order-public.test.ts:217"
       ]
     },
     {
@@ -1714,14 +1718,19 @@
     {
       "qaId": "card:D11019:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa",
       "answerHash": "39e7b67e851b57fbcf7d5323aaed28d21788d921007116b97444dc1cce21d746",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d11/D11019.ts:71"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/15-abilities-effects.md:41",
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-d11/D11019.ts:38",
+        "src:src/cards/ct-d11/D11019.ts:47",
+        "src:src/engine/effect/apply-pick.ts:47",
+        "src:src/engine/effect/atom-handlers/scene.ts:807",
+        "src:src/engine/listeners/triggered.ts:503",
+        "src:src/engine/resolve/stack.ts:227",
+        "tests:tests/cards/official-qa/effect-entry-trigger-order-public.test.ts:279"
       ]
     },
     {
