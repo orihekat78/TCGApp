@@ -698,12 +698,14 @@
     {
       "qaId": "card:B05023:e2eb7c1b2a34a64cff5afde3981f9c512081cb8c7bf57b64a4ba5774678e31c9",
       "answerHash": "70c22dd8d132664d149dc62dcade3d910308c9cb15f7f5577523647e9c474c74",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05023.ts:1"
-      ]
+        "src:src/cards/ct-p05/B05023.ts:1",
+        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:148"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B05032:0dd408dcc0047e0a74d73621e0719a67f2842fc764bd17aba1bb5b5aa322c3b9",

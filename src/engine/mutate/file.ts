@@ -2,7 +2,7 @@
 // rules: 05-turn-phases.md, 12-next-hint.md, 13-keywords.md (アシスト)
 // ⚠ 各関数は Immer draft 前提 (produce 内部で呼び出す)
 
-import { current } from '@/engine/produce';
+import { current, isDraft } from '@/engine/produce';
 import type { GameState, FileCard } from '@/engine/types';
 import { caseOp } from './case.js';
 import { deck as deckMut } from './deck.js';
@@ -60,7 +60,8 @@ function popTop(s: GameState, p: Player): FileCard | undefined {
   // "最上部" = 配列の末尾 (push したものが最新)
   for (let i = file.length - 1; i >= 0; i--) {
     if (file[i].type !== 'assisted-partner') {
-      const snapshot = current(file[i]) as FileCard;
+      const entry = file[i]!;
+      const snapshot = (isDraft(entry) ? current(entry) : { ...entry }) as FileCard;
       file.splice(i, 1);
       return snapshot;
     }

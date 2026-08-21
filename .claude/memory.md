@@ -31,3 +31,17 @@
 - Gates: focused 89/89, full Vitest 10386/10386, typecheck/lint/docs/QA/build,
   smoke 1000, public full-match Playwright, and engine/test reviews pass.
 - Wave23 should audit choice symmetry, persistence, and public UI integration.
+
+## 2026-08-21: QA runtime Wave23 decision persistence
+- Wave23 certifies 31 decision/continuation QA across 20 printings; coverage is
+  1049 matched/1915 test-missing.
+- Persisted decisions always surface; one public driver resolves a non-human
+  owner through authority-bound actions while the first human decision blocks later work.
+- `App` and `RealMatchView` each own one replay-gated decision driver; shared
+  `Playmat` owns none, and tutorial/replay compositions pass `replayReadOnly`.
+- `stepTurn` activates its supplied GameState before ambient runtime reads;
+  markerless new channels remain live, but marker-owned foreign caches are cleared.
+- Choice continuations append sibling tails instead of replacing nested work;
+  file mutation handles both Immer drafts and plain restored arrays.
+- B07013 requires an active Conan; B10060 opens child decisions only after an
+  actual entry. RPS, set-card, reorder, placement, and replacement use the same owner boundary.

@@ -15,14 +15,15 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { drainAiEffectPicks } from '@/engine/effect/apply-pick';
 import {
   _pushPendingEffectPickSideForTest,
-  _clearPendingEffectPickQueue,
   _peekPendingEffectPickQueueLength,
 } from '@/engine/effect/resolve-picks';
+import { run } from '@/engine/effect/resolver';
+import { persistPendingRuntimeState, resetPendingRuntimeState } from '@/engine/effect/runtime-state';
 import type { PendingEffectPickSide } from '@/engine/effect/resolve-picks';
 import { _setHumanPlayerSide } from '@/engine/listeners/triggered';
 import { playTurn } from '@/ai/policy';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
-import type { GameState } from '@/engine/types';
+import type { EffectCtx, GameState } from '@/engine/types';
 
 function pendingFor(player: 'self' | 'opp'): PendingEffectPickSide {
   return {
@@ -40,13 +41,41 @@ function queue(): PendingEffectPickSide[] {
   return (globalThis as { __pendingEffectPickQueue?: PendingEffectPickSide[] }).__pendingEffectPickQueue ?? [];
 }
 
+function queueHumanPickFromResolver(state: GameState): void {
+  state.players.self.remove = ['T-X', 'T-Y'];
+  run(state, {
+    kind: 'sequence',
+    steps: [
+      {
+        kind: 'atom',
+        verb: 'bindPick',
+        args: {
+          player: 'self',
+          cardIds: '$pick.cardIds',
+          bind: '$picked',
+          target: {
+            kind: 'pick',
+            query: { area: 'remove', side: 'self' },
+            n: { min: 0, max: 1 },
+            chooser: 'self',
+          },
+        },
+      },
+      { kind: 'atom', verb: 'noop', args: {} },
+    ],
+  } as never, {
+    source: { player: 'self', area: 'remove', cardId: 'T-X' },
+    bindings: {},
+  } as EffectCtx);
+}
+
 describe('BUG-138: drainAiEffectPicks の pick 所有権 (X8)', () => {
   beforeEach(() => {
-    _clearPendingEffectPickQueue();
+    resetPendingRuntimeState();
     _setHumanPlayerSide(null);
   });
   afterEach(() => {
-    _clearPendingEffectPickQueue();
+    resetPendingRuntimeState();
     _setHumanPlayerSide(null);
   });
 
@@ -81,13 +110,20 @@ describe('BUG-138: drainAiEffectPicks の pick 所有権 (X8)', () => {
 
   it('playTurn: human 所有 pending が残っている間は move を打たず paused:{humanPick} を返す', () => {
     _setHumanPlayerSide('self');
-    _pushPendingEffectPickSideForTest(pendingFor('self'));
     let s: GameState = createEmptyGameState();
     s = { ...s, turn: { ...s.turn, player: 'opp' } };
+    queueHumanPickFromResolver(s);
+    expect(_peekPendingEffectPickQueueLength()).toBe(1);
+    persistPendingRuntimeState(s);
+    expect(s.pendingRuntimeState?.snapshot.find(entry => entry.key === '__pendingEffectPickQueue')).toMatchObject({ present: true });
+
+    resetPendingRuntimeState();
+    expect(_peekPendingEffectPickQueueLength()).toBe(0);
     const result = playTurn(s, new HeuristicPolicy(), 'opp', { pauseOnAction: true });
     expect(result.paused?.humanPick).toBe(true);
     expect(result.moves).toHaveLength(0);
     expect(_peekPendingEffectPickQueueLength()).toBe(1); // 横取りされていない
+    expect(result.finalState.pendingRuntimeState?.snapshot.find(entry => entry.key === '__pendingEffectPickQueue')).toMatchObject({ present: true });
   });
 
   it('playTurn 回帰: humanSide=null なら humanPick pause しない', () => {

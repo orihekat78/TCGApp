@@ -834,15 +834,14 @@
     {
       "qaId": "card:B05062:c44c3fbc3b30726e43189fc6b3744cc5f4eb22ccdbf7f10d66fc9b4e3b8a1be4",
       "answerHash": "2c94c173ace3775618d9817557d6c19c6bf120675aabe1034156bcbe91a935b1",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05062.ts:42"
+        "src:src/cards/ct-p05/B05062.ts:42",
+        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:171"
       ],
-      "noteCodes": [
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B05063:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610",
@@ -1204,28 +1203,26 @@
     {
       "qaId": "card:B07013:347ad10ce8061b4cbdccdb0860e1752fd4f879c7162d529a4fd4020eee21824c",
       "answerHash": "5cad85e10a8815ce64468e50d87bcd91992522b10ef74dcb3f21b9b601419155",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07013.ts:30"
+        "src:src/cards/ct-p07/B07013.ts:31",
+        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:197"
       ],
-      "noteCodes": [
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B07013:f7ad053b1ba9f9a6ca978b64c95cdb72f331a8e1febd8e94bcd06e69fd340d1d",
       "answerHash": "9deb68d2e6d383ec9f4012cf0a0d8ea49c61997fe1f40dbbfb11e408a2f8c902",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07013.ts:30"
+        "src:src/cards/ct-p07/B07013.ts:31",
+        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:197"
       ],
-      "noteCodes": [
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B07014:af84d7964146220e14e3b56463100a6a4216c4bd3bbc0b2501fb3f86615e84ae",

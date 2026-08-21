@@ -109,6 +109,7 @@ export function TutorialBoardSnapshot({ zones, activeKey, paneWidth }: Props) {
       >
         <Playmat
           gameState={getSnapshot()}
+          replayReadOnly
           resolveCard={resolveCard}
           resolveCase={resolveCase}
           resolveHandCard={resolveHandCard}

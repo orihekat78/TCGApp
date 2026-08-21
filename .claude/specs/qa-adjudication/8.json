@@ -1092,12 +1092,14 @@
     {
       "qaId": "card:B07076:2a847275894e970eb2d0e6e92f53d03b8a8c24915cbb770001ba6734a00cf260",
       "answerHash": "a45e80ab5a4eaf6f1ff03ee3b0c5aef52ceadcae6bd6403c1d4787aa8a4850ff",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07076.ts:1"
-      ]
+        "src:src/cards/ct-p07/B07076.ts:1",
+        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:259"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B07103:b385cc0ffa2c4f468ffbbff448fb7cd0afda5502f9a01f3e95a0a9b2e793b8a9",
@@ -1682,13 +1684,15 @@
     {
       "qaId": "card:B10060:5677e0ec7d635aec71e9eadc6367fc1ebc0e2d875c9a3482ea83518dd549ef9d",
       "answerHash": "b49d8986e8f18bfeb9f3a78993f96b5c4ab991af0429302ccabb7cfcf106ecd1",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:14",
-        "src:src/cards/ct-p10/B10060.ts:9"
-      ]
+        "src:src/cards/ct-p10/B10060.ts:9",
+        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:359"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B10060:778f2ec6d361908c4a67f350b59be3fb6673daac7dd65787323343b2748e3208",

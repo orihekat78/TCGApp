@@ -18,8 +18,43 @@ import { resolveActionAgainstChar, resolveActionAgainstCase } from './action-res
 import { HeuristicPolicy } from './policies/heuristic.js';
 import { makeDeclaredAbilCtx } from './ability-ctx.js';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
-import { applyChoiceAndContinuation, drainAiEffectPicks, hasPendingHumanPick } from '@/engine/effect/apply-pick.js';
-import { _peekPendingEffectChoiceSide } from '@/engine/effect/pending-state.js';
+import {
+  applyChoiceAndContinuation,
+  applyChooseInterceptResponse,
+  applyDeckPlaceAndContinuation,
+  applyDeckReorderAndContinuation,
+  applyOptionalAndContinuation,
+  applyRepeatOptionalAndContinuation,
+  applyRpsAndContinuation,
+  applySetCardChoiceAndContinuation,
+  applySetCardReplacementDetailed,
+  drainAiEffectPicks,
+  hasPendingHumanPick,
+} from '@/engine/effect/apply-pick.js';
+import {
+  _peekPendingChooseInterceptSide,
+  _peekPendingEffectChoiceSide,
+  _peekPendingEffectOptionalSide,
+  _peekPendingEffectPickSide,
+  _peekPendingEffectRepeatOptionalSide,
+  _peekPendingRpsSide,
+  _peekPendingSetCardChoiceSide,
+  _peekPendingSetCardReplacementSide,
+} from '@/engine/effect/pending-state.js';
+import {
+  _peekPendingDeckPlaceSide,
+  _peekPendingDeckReorderSide,
+} from '@/engine/effect/atom-handlers/_shared.js';
+import {
+  autonomousDeckPlacement,
+  autonomousDeckReorder,
+  chooseAutonomousReplacementTarget,
+  chooseAutonomousRpsHand,
+  chooseAutonomousSetCardInstance,
+} from '@/engine/effect/autonomous-decision.js';
+import {
+  activatePendingRuntimeState,
+} from '@/engine/effect/runtime-state.js';
 
 type Player = 'self' | 'opp';
 
@@ -142,22 +177,111 @@ export interface AIPolicy {
  */
 const PLAY_TURN_SAFETY_CAP = 200;
 
-/**
- * CPU-owned choice has no UI surface. Resolve it here before control returns to
- * the opponent driver; otherwise the surfaced side-channel locks that driver
- * indefinitely. Later target picks are drained in the same resolution cycle.
- */
-function drainAiEffectChoices(state: GameState): void {
-  const humanSide = (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide ?? null;
+/** Resolve restored or newly-opened non-human decisions before another move. */
+function reconcileAutonomousDecisions(state: GameState): void {
+  const targetPolicy = new HeuristicPolicy();
   for (let resolved = 0; resolved < PLAY_TURN_SAFETY_CAP; resolved++) {
-    const pending = _peekPendingEffectChoiceSide();
-    if (!pending || pending.player === humanSide) return;
-    const choiceIndex = pending.options[0]?.index;
-    if (choiceIndex === undefined) return;
-    applyChoiceAndContinuation(state, pending, choiceIndex);
+    // Rebind this GameState before consulting ambient pending globals.
     engine.resolve.runAllUntilEmpty(state);
-    drainAiEffectPicks(state, new HeuristicPolicy());
+    if (state.gameResult !== undefined || hasPendingHumanPick(state)) return;
+
+    const choice = _peekPendingEffectChoiceSide();
+    if (choice) {
+      const choiceIndex = choice.options[0]?.index;
+      if (choiceIndex === undefined) throw new Error('AI decision reconciliation: empty choice');
+      applyChoiceAndContinuation(state, choice, choiceIndex);
+      if (_peekPendingEffectChoiceSide() === choice) {
+        throw new Error('AI decision reconciliation: choice authority did not advance');
+      }
+      continue;
+    }
+
+    const optional = _peekPendingEffectOptionalSide();
+    if (optional) {
+      applyOptionalAndContinuation(state, optional, false);
+      if (_peekPendingEffectOptionalSide() === optional) {
+        throw new Error('AI decision reconciliation: optional authority did not advance');
+      }
+      continue;
+    }
+
+    const repeatOptional = _peekPendingEffectRepeatOptionalSide();
+    if (repeatOptional) {
+      applyRepeatOptionalAndContinuation(state, repeatOptional, false);
+      if (_peekPendingEffectRepeatOptionalSide() === repeatOptional) {
+        throw new Error('AI decision reconciliation: repeat authority did not advance');
+      }
+      continue;
+    }
+
+    const intercept = _peekPendingChooseInterceptSide();
+    if (intercept) {
+      const discardIndex = state.players[intercept.player].hand.length > 0 ? 0 : null;
+      applyChooseInterceptResponse(state, intercept, discardIndex);
+      if (_peekPendingChooseInterceptSide() === intercept) {
+        throw new Error('AI decision reconciliation: intercept authority did not advance');
+      }
+      continue;
+    }
+
+    const rps = _peekPendingRpsSide();
+    if (rps) {
+      applyRpsAndContinuation(state, rps, chooseAutonomousRpsHand(rps.aiHand));
+      if (_peekPendingRpsSide() === rps) {
+        throw new Error('AI decision reconciliation: RPS authority did not advance');
+      }
+      continue;
+    }
+
+    const setCardChoice = _peekPendingSetCardChoiceSide();
+    if (setCardChoice) {
+      const instanceId = chooseAutonomousSetCardInstance(setCardChoice.entries);
+      if (instanceId === null
+        || !applySetCardChoiceAndContinuation(state, setCardChoice, instanceId)) {
+        throw new Error('AI decision reconciliation: set-card choice was rejected');
+      }
+      continue;
+    }
+
+    const replacement = _peekPendingSetCardReplacementSide();
+    if (replacement) {
+      const targetUid = chooseAutonomousReplacementTarget(replacement.candidates);
+      if (!applySetCardReplacementDetailed(state, replacement, targetUid).applied) {
+        throw new Error('AI decision reconciliation: set-card replacement was rejected');
+      }
+      continue;
+    }
+
+    const reorder = _peekPendingDeckReorderSide();
+    if (reorder) {
+      applyDeckReorderAndContinuation(state, reorder, autonomousDeckReorder(reorder.cardIds));
+      if (_peekPendingDeckReorderSide() === reorder) {
+        throw new Error('AI decision reconciliation: deck reorder authority did not advance');
+      }
+      continue;
+    }
+
+    const placement = _peekPendingDeckPlaceSide();
+    if (placement) {
+      const { top, bottom } = autonomousDeckPlacement(placement.cardIds);
+      if (!applyDeckPlaceAndContinuation(state, placement, top, bottom)) {
+        throw new Error('AI decision reconciliation: deck placement was rejected');
+      }
+      continue;
+    }
+
+    const pick = _peekPendingEffectPickSide();
+    if (pick) {
+      drainAiEffectPicks(state, targetPolicy);
+      if (_peekPendingEffectPickSide() === pick) {
+        throw new Error('AI decision reconciliation: target pick did not advance');
+      }
+      continue;
+    }
+
+    return;
   }
+  throw new Error(`AI decision reconciliation: ${PLAY_TURN_SAFETY_CAP}-decision safety cap exceeded`);
 }
 
 /**
@@ -425,38 +549,41 @@ export function stepTurn(
   byPlayer: Player,
   opts?: PlayTurnOptions,
 ): StepTurnResult {
-  // BUG-138 (X8): human 所有の未解決 pick が残っている間は次の move に移れない (rules/05)。
-  // __humanPlayerSide 未設定 (smoke / spectator) では常に false → 従来挙動不変。
-  if (hasPendingHumanPick(state)) {
-    return { move: null, nextState: state, done: false, paused: { humanPick: true } };
+  // stepTurn can switch between independent simulations, replay branches, or
+  // UI sessions. Install the supplied GameState as the sole runtime authority
+  // before any resolver/global pending channel is consulted.
+  activatePendingRuntimeState(state);
+  const prepared = produce(state, draft => {
+    reconcileAutonomousDecisions(draft);
+  });
+  if (hasPendingHumanPick(prepared)) {
+    return { move: null, nextState: prepared, done: false, paused: { humanPick: true } };
   }
-  const candidates = enumerateMoves(state, byPlayer);
-  const chosen = policy.choose(state, candidates, byPlayer);
+  if (prepared.gameResult !== undefined) {
+    return { move: null, nextState: prepared, done: true };
+  }
+  const candidates = enumerateMoves(prepared, byPlayer);
+  const chosen = policy.choose(prepared, candidates, byPlayer);
   if (chosen === null) {
     // 候補が無い (起こり得ない — endTurn が常にある)。安全側で終了する。
-    return { move: null, nextState: state, done: true };
+    return { move: null, nextState: prepared, done: true };
   }
   if (chosen.kind === 'endTurn') {
-    return { move: chosen, nextState: state, done: true };
+    return { move: chosen, nextState: prepared, done: true };
   }
   // Commit 2.5: action move pause — applyMove せず paused で返す (UI が contact FSM へ委譲)。
   if (
     opts?.pauseOnAction &&
     (chosen.kind === 'actionAgainstChar' || chosen.kind === 'actionAgainstCase')
   ) {
-    return { move: null, nextState: state, done: false, paused: { move: chosen } };
+    return { move: null, nextState: prepared, done: false, paused: { move: chosen } };
   }
-  let s = produce(state, draft => {
+  let s = produce(prepared, draft => {
     applyMove(draft, chosen, byPlayer);
   });
   // pendingEffects があれば解消する
   s = produce(s, draft => {
-    engine.resolve.runAllUntilEmpty(draft);
-    // BUG-109: CPU には human modal が無いため、PA 短縮形 atom 等が runtime に
-    // __pendingEffectPickQueue へ積んだ pick が drain されず no-op になる。heuristic で順次解決する
-    // (chooseAtomTarget は walk と同じ HeuristicPolicy を使用。continuation も BUG-107 機構で進む)。
-    drainAiEffectPicks(draft, new HeuristicPolicy());
-    drainAiEffectChoices(draft);
+    reconcileAutonomousDecisions(draft);
   });
   const pausedForHuman = hasPendingHumanPick(s);
   return {

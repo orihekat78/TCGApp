@@ -1240,12 +1240,14 @@
     {
       "qaId": "card:B08029:0bcbb181ef2cf2a48d13e2a78537e164803e7f0ef97a2a8ca772d8ce2b5aae8c",
       "answerHash": "4c841d1b76d006731ad003d01b0fc8997dc9fa08374cccc9cef5b91843fac70d",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08029.ts:1"
-      ]
+        "src:src/cards/ct-p08/B08029.ts:1",
+        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:277"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B08036:d52596199be14d625d7776309eeaca145097a31eecca550237262ad7075cb2f4",
@@ -1792,16 +1794,15 @@
     {
       "qaId": "card:B10096:5b16212aa597d2f97c4bc97c7904b2ca496da7752c5ea79d5dbb4ef907fe083f",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/09-cutin-disguise.md:23",
-        "src:src/cards/ct-p10/B10096.ts:52"
+        "src:src/cards/ct-p10/B10096.ts:52",
+        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:377"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B10097:97f468074f3eae1ef823d35c6e825898add698ecc35c8841e1a766b3c6d8c508",

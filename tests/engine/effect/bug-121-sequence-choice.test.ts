@@ -2,9 +2,9 @@
 // 正しく pause → choiceResolve 再開で option + post-choice step のみ実行されることを engine レベルで検証。
 //
 // 設計 (resolve-picks.ts / apply-pick.ts):
-//   - resolveEffectPicks sequence case が choice pause を検知したら remainder を再開 holder
-//     (__pendingEffectChoiceResume) に {sequence:[choice, ...remainder]} で wrap し walk を打ち切る。
-//   - 初回 runtime は pre-choice step のみ実行。choiceResolve で holder を再 walk し option + remainder 実行。
+//   - resolveEffectPicks sequence case が choice pause を検知したら choice 本体を再開 holder、
+//     remainder を continuation に分離して walk を打ち切る。
+//   - 初回 runtime は pre-choice step のみ実行。choiceResolve で option を実行してから remainder を再開。
 //
 // rules: 15-abilities-effects.md
 
@@ -57,7 +57,7 @@ describe('BUG-121 残課題: sequence 内 human choice (pre-step 二重実行な
     ],
   };
 
-  it('初回 walk+run は pre-choice (draw1) のみ実行し choice で pause、resume holder に remainder 保持', () => {
+  it('初回 walk+run は pre-choice (draw1) のみ実行し choice で pause、continuation に remainder 保持', () => {
     const s = stateWithDeck(30);
     const walked = resolveEffectPicks(s, eff as never, ctxSelf(), {
       humanChooser: true, byPlayer: 'self', source: { cardId: 'SEQX', abilityId: 'a1' },

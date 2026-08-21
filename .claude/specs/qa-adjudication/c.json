@@ -907,15 +907,14 @@
     {
       "qaId": "card:B05062:5e1d46e3fb96189bbfa298fc91a279db5d6b911f52375d384b0d11c5a6b8bffc",
       "answerHash": "168ba8a02e9f94b74f0cbe640e71f907ca7b4bed6329581068e45861b9980160",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05062.ts:41"
+        "src:src/cards/ct-p05/B05062.ts:41",
+        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:171"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B05062:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa",
@@ -1362,15 +1361,14 @@
     {
       "qaId": "card:B08029:82ba236a1affc9a48d48c8b59711d42b7d6ee9be7c4c72589983ce1d899477a1",
       "answerHash": "61cdf54364f38b97c0dd49ba69257ef455d82604b308bf824a04f9b7155c4120",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08029.ts:1"
+        "src:src/cards/ct-p08/B08029.ts:1",
+        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:277"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B08033:4785304193e3d6050fab9e20bbeb9ff17ea702ee22abfe3cfd5cce4db0ff3238",
@@ -1625,15 +1623,14 @@
     {
       "qaId": "card:B09019:0ae3329b249fa56d9f5b74d8cc5763d116f5816852e8f6c82c9f8b3f7ef24ac4",
       "answerHash": "d5bfe6aec9aa427a606d26ccedc68d2293fa218037451e07e64b0f8f1f987576",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09019.ts:1"
+        "src:src/cards/ct-p09/B09019.ts:1",
+        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:288"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B09032:2dbdc98972f09762697ca53ba1cef0efe3e3089d3f2fc4fef8179b95d65e7beb",

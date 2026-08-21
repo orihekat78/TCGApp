@@ -397,8 +397,9 @@ function runtimeHumanDecisionPlayer(ctx: EffectCtx, opts: ResolveEffectPicksOpts
 }
 
 import {
-  pushPendingEffectPickSide, toPlainDeep, _peekPendingEffectChoiceSide, getPendingChoiceResume,
+  pushPendingEffectPickSide, toPlainDeep, _peekPendingEffectChoiceSide,
   setPendingChoiceResume, pushPendingEffectChoiceSide, setPendingChoiceBindings,
+  appendPendingChoiceContinuation,
   pushPendingEffectOptionalSide, _peekPendingEffectOptionalSide, appendPendingOptionalContinuation,
   setPendingOptionalResume, setPendingOptionalBindings,
   setPendingOptionalCostPaid,
@@ -1245,11 +1246,10 @@ export function resolveEffectPicks(
     case 'atom':
       return substituteAtomPick(state, effect, ctx, opts);
     case 'sequence': {
-      // BUG-121 (残課題解消): sequence 内で human choice が pause したら、後続 step (remainder) を
-      // 再開 holder に wrap して walk を打ち切る。これにより runtime では pre-choice step のみ実行され、
-      // choiceResolve 再開時に holder (= {sequence:[choice, ...remainder]}) を再 walk して
-      // option + remainder を実行する (pre-choice step の二重実行を防ぐ)。任意深度のネストに対応
-      // (内側 sequence が holder を更新済 → 外側はさらに自身の remainder を wrap)。
+      // sequence 内で human choice が pause したら、後続 step は continuation に保存して walk を
+      // 打ち切る。choice 本体だけを resume holder に残すことで、選択 option を実行してから次の
+      // decision を surface する。holder に remainder まで wrap すると再 walk が次の choice を先に
+      // publish し、stack が選択 option の実行前に pause する。
       const seqOut: Effect[] = [];
       for (let i = 0; i < effect.steps.length; i++) {
         const runtimePickPause = opts._runtimePickPause ?? { encountered: false };
@@ -1280,8 +1280,7 @@ export function resolveEffectPicks(
         if (!choiceBefore && choiceAfter) {
           const remainder = effect.steps.slice(i + 1);
           if (remainder.length > 0) {
-            const cur = getPendingChoiceResume();
-            if (cur) setPendingChoiceResume({ kind: 'sequence', steps: [cur, ...remainder] });
+            appendPendingChoiceContinuation({ remainder, ctx, kind: 'sequence' });
           }
           return { kind: 'sequence', steps: seqOut };
         }

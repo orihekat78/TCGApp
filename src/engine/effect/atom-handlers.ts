@@ -15,6 +15,7 @@
 // 外部 API (runAtom + _drainPending*Side + Pending*Side 型) は本 barrel が再 export して不変。
 import type { GameState, AtomVerb, EffectCtx } from '../types/index.js';
 import { takePublicHandRevealToken } from './atom-handlers/_shared.js';
+import { def as readDef } from '../read/def.js';
 export {
   _drainPendingDeckRevealSide,
   _peekPendingDeckRevealSide,
@@ -145,7 +146,13 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       const bindings = ctx.bindings as Record<string, unknown[]>;
       const arr = Array.isArray(bindings[a.bind]) ? bindings[a.bind]! : (bindings[a.bind] = []);
       if (!arr.some(e => (e as { uid?: string }).uid === bindUid)) {
-        arr.push({ kind: 'char', uid: bindUid, cardId: found.c.cardId, player: found.p });
+        const nameOverride = found.c.turnEffects?.['nameOverride'];
+        arr.push({
+          kind: 'char', uid: bindUid, cardId: found.c.cardId, player: found.p,
+          cardName: typeof nameOverride === 'string' && nameOverride.length > 0
+            ? nameOverride
+            : readDef.card(found.c.cardId)?.names[0],
+        });
       }
     }
   }

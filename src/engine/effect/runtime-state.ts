@@ -1109,6 +1109,23 @@ export function hydratePendingRuntimeState(state: GameState): boolean {
   return true;
 }
 
+/**
+ * Make one GameState the active resolver authority.
+ *
+ * An unmarked live channel was created by the current resolver call and must
+ * remain available until its first pause is persisted. A marker, however,
+ * proves that the live cache belongs to a previously persisted GameState; a
+ * clean authority must not inherit that cache.
+ */
+export function activatePendingRuntimeState(state: GameState): void {
+  if (state.pendingRuntimeState !== undefined) {
+    hydratePendingRuntimeState(state);
+    return;
+  }
+  assertPendingRuntimeSequence(state.pendingRuntimeSeq);
+  if (marker() !== undefined) resetPendingRuntimeState();
+}
+
 /** Remove a completed continuation from both GameState and the live cache. */
 export function clearPersistedPendingRuntimeState(state: GameState): void {
   const persisted = state.pendingRuntimeState;

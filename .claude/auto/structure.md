@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6116
+- **ファイル数**: 6124
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -2153,6 +2153,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-08-12-authority-refresh.md` — Official Authority Refresh Implementation Plan
       - `2026-08-12-iphone-se3-landscape-implementation.md` — iPhone SE 3 Landscape UI Implementation Plan
       - `2026-08-12-match-surrender-implementation.md` — MATCH Surrender Implementation Plan
+      - `2026-08-21-qa-wave23-decision-persistence.md` — QA Wave 23 Decision Persistence Implementation Plan
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
@@ -4804,6 +4805,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `apply-pick.ts` — engine.effect.apply-pick — pending effect-pick の解決 + continuation 実行を一箇所に集約。
       - `atom-handlers.ts` — engine.effect.runAtom — Atom Verb dispatcher
       - `atom-pick-spec.ts` — engine.effect.ATOM_PICK_SPEC — pick系 atom 短縮形の唯一の権威ソース。
+      - `autonomous-decision.ts`
       - `consult-choose-intercept.ts`
       - `consult-leave-intercept.ts` — engine.effect.consult-leave-intercept — 現場離脱の pre-splice consult (mega-wave W6 s…
       - `deck-occurrence-authority.ts`
@@ -5057,7 +5059,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useCutinDemoDriver.ts` — 2026-05-27 カットイン効果検証 demo の完了検知 driver
       - `useDeckCount.ts` — Phase 7 Task 7.7: DeckArea selector hook
       - `useDeclareNamePicker.ts` — CARD PHASE step12 batch2 (2026-07-04): declareName verb (「カード名を1つ指定し」B09108/…
-      - `useEffectPickFlowDriver.ts` — user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択 driver
+      - `useEffectPickFlowDriver.ts` — 公開UIの保留decisionをresolver順に監視するdriver。
       - `useEffectStack.ts` — Phase 7 Task 7.14: EffectStackPanel selector hook
       - `useEngineDispatch.ts` — Phase 8 Task 8.1: UI → engine action ディスパッチ基盤
       - `useEvidence.ts` — Phase 7 Task 7.9: EvidenceArea selector hook
@@ -5492,6 +5494,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bond-partner-exclusion-wave9.test.ts` — qa: card:B02004:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
       - `ct-p10-original-ability-rules.test.ts` — qa: card:B10050:98e82fae32a43d9b6de8c7fd8289dcf4565f2dada1498f0760f5ba9d0cf8ae17
       - `ctp10-opponent-turn-cutin-public.test.ts` — qa: card:B10017:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
+      - `decision-persistence-wave23.test.ts` — qa: card:B03080:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
       - `deck-look-bottom-family-public.test.ts` — qa: card:B01013:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5
       - `deck-refresh-wave8.test.ts` — qa: card:B04012:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4
       - `effect-entry-action-public.test.ts` — qa: card:B02004:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
@@ -5929,6 +5932,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `atom-souza.test.ts` — tests/engine/effect/atom-souza.test.ts — Phase 5 advance Souza atom unit test
       - `atom-target-normalize.test.ts` — BUG-074: evidenceToHand / handAddFromRemove の target が BUG-065 array 化と不整合で
       - `audit-leave-suspects.test.ts` — 監査 suspect (leave:to-remove family) の候補フィルタ text-faithfulness を engine レベルで検証。
+      - `autonomous-decision.test.ts`
       - `b04055-trigger-removed-trait-filter.test.ts` — B04055 engine primitive: a deck-reveal filter may compare the revealed
       - `bug-077-evidence-to-hand-e2e.test.ts` — BUG-077: D08013 a1 step 2 evidenceToHand end-to-end simulation
       - `bug-083-multi-entry-switch.test.ts` — BUG-083 characterization: 効果で複数キャラを同時登場させ現場上限 (5) を超える場合の挙動。
@@ -6173,6 +6177,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `ReplayScreen.artifact-load-race.test.tsx`
     - `ResultScreen.mvp.test.tsx`
     - `SetupScreen.lifecycle.test.tsx`
+    - `TutorialBoardSnapshot.read-only.test.tsx`
     - `TutorialScreen.accessibility.test.tsx`
     - `TutorialScreen.canonical.test.ts`
     - `cardCatalog.runtime-boundary.test.ts`
@@ -6318,6 +6323,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bug-108-choice-picker.test.ts` — BUG-108: D11012 a1「LP＋1するか / AP＋2000する」の choice 択一 UI フロー統合テスト。
       - `bug-245-declared-ability-cost.test.ts` — Structural declaration discovery intentionally stays timing-agnostic.
       - `bug-250-empty-partner-actions.test.ts` — BUG-250: 未初期化パートナーを共通パートナーactionとして使用できてはならない。
+      - `bug-wave23-decision-owner-persistence.test.ts`
+      - `bug-wave23-side-channel-persistence.test.ts`
       - `hand-use-card-switch-authority.test.ts`
       - `match-modal-inventory.txt`
       - `movePresentationDelay.test.ts`
@@ -6343,6 +6350,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useCutinDemoDriver.test.tsx`
       - `useEffectPickFlowDriver.integration.test.tsx`
       - `useEffectPickFlowDriver.owner.test.tsx`
+      - `useEffectPickFlowDriver.public-ownership.test.ts`
       - `useEngineDispatch.action-fsm.test.ts` — Phase 8 完全クローズ Commit 2: per-step action dispatch tests
       - `useEngineDispatch.choice-rps-authority.test.ts`
       - `useEngineDispatch.decision-identity.test.ts`

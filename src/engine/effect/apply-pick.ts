@@ -117,7 +117,7 @@ import {
   pushPendingRpsSide,
   setPendingRpsResume,
   appendPendingRpsContinuation,
-  setPendingChoiceContinuation,
+  appendPendingChoiceContinuation,
   appendPendingOptionalContinuation,
   setPendingEffectRepeatOptionalContinuation,
   getPendingChoiceResume,
@@ -765,7 +765,7 @@ function appendDecisionContinuation(
 ): void {
   if (!continuation) return;
   if (kind === 'choice') {
-    setPendingChoiceContinuation(continuation);
+    appendPendingChoiceContinuation(continuation);
     return;
   }
   if (kind === 'optional') {

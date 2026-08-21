@@ -7,14 +7,23 @@ const a1: AbilityDef = {
   condition: { kind: 'caseColor', color: ['赤', '黄'], combine: 'and' },
   trigger: { hook: 'effect:declared', selfOnly: true, matcher: (p: unknown) => (p as { kind?: unknown })?.kind === 'event-use' },
   effect: { kind: 'sequence', steps: [
-    { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', from: 'remove', viaEffect: true, max: 1, bind: '$entered', filter: { kind: 'character', color: ['赤', '黄'], hasNoOriginalAbilityExceptIcons: ['カットイン', 'ヒラメキ'] } } },
-    { kind: 'choice', chooser: 'self', options: [
-      { kind: 'optional', effect: { kind: 'chain', steps: [
-        { kind: 'atom', verb: 'sceneSetState', args: { uid: '$entered.uid', state: 'sleep' } },
-        { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', side: 'either', max: 1, cause: 'effect', filter: { kind: 'character', levelMaxBound: { bindKey: '$entered' } } } },
-      ] } },
-      { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$entered.uid', kw: '突撃[事件]', scope: 'turn' } },
-    ] },
+    { kind: 'atom', verb: 'sceneEnter', args: {
+      player: 'self', cardId: '$pick.cardId', from: 'remove', viaEffect: true, bind: '$entered',
+      target: {
+        kind: 'pick', chooser: 'self',
+        query: { area: 'remove', side: 'self', filter: { kind: 'character', color: ['赤', '黄'], hasNoOriginalAbilityExceptIcons: ['カットイン', 'ヒラメキ'] } },
+        n: { min: 0, max: 1 },
+      },
+    } },
+    { kind: 'conditional', if: { kind: 'bound', key: '$entered', presence: 'exists' }, then: {
+      kind: 'choice', chooser: 'self', options: [
+        { kind: 'optional', effect: { kind: 'chain', steps: [
+          { kind: 'atom', verb: 'sceneSetState', args: { uid: '$entered.uid', state: 'sleep' } },
+          { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', side: 'either', max: 1, cause: 'effect', filter: { kind: 'character', levelMaxBound: { bindKey: '$entered' } } } },
+        ] } },
+        { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$entered.uid', kw: '突撃[事件]', scope: 'turn' } },
+      ],
+    } },
   ] },
   description: '【事件赤＆黄】自分のリムーブエリアにある【カットイン】と【ヒラメキ】以外の元の能力を持たない【赤】か【黄】のキャラを1枚まで選び、登場させる。以下から1つ選んで行う。',
   ruleRefs: ['rules/13-keywords.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md'],

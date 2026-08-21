@@ -545,12 +545,14 @@
     {
       "qaId": "card:B05062:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398",
       "answerHash": "b79af84d1269cf62ae85ac95d41ce067c3c3dd661890d73e47e4fb451572fe70",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05062.ts:1"
-      ]
+        "src:src/cards/ct-p05/B05062.ts:1",
+        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:171"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B05063:06c268952b83e0a0d17589d4907b18c2b819a312009bc70cc73530576f1cece8",
@@ -1099,12 +1101,14 @@
     {
       "qaId": "card:B09019:94230fa7173ff6d4f486143e4b3bc389c9523e5a672a9cb74422dc537b6a8dc2",
       "answerHash": "c9ac15291c3ebebd405c3f1cf16f6a1bc22d1bbe0ba4edb0c697a5c7a27fcd66",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09019.ts:1"
-      ]
+        "src:src/cards/ct-p09/B09019.ts:1",
+        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:288"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B09026:3b40e4f1bfa97db36362fad681b7510cb4024f54c57fd8fed3c92833f80261a0",
@@ -1158,15 +1162,14 @@
     {
       "qaId": "card:B09052:45a28272794215b6465b92629940788c48e8cb3de486869a26a5a34e1a4f6a73",
       "answerHash": "2818fdd5a6774029d339e10e4777a5eb614b989d1d530f76ea66008b4ba4f201",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09052.ts:34"
+        "src:src/cards/ct-p09/B09052.ts:34",
+        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:325"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B09058:7124f41d3267d0e2df2692070acfdd9e66fca11edbbbfb6b64ada8bee4c94b79",

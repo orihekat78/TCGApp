@@ -334,22 +334,26 @@
     {
       "qaId": "card:B03080:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a",
       "answerHash": "dd31d3e39e49fa24ff58040bbd1ff101d032e6c4c0045d36c2670aba52bb0ebe",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03080.ts:84"
-      ]
+        "src:src/cards/ct-p03/B03080.ts:84",
+        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:130"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B03080:3a8d218cc62bb0a90cf4d3932980a110db913b930175abf41908b0bb956f43b5",
       "answerHash": "b6fd32038538616cd0787b40b771be0312aed151931af766bb60d7ac33163f77",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03080.ts:84"
-      ]
+        "src:src/cards/ct-p03/B03080.ts:84",
+        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:130"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B03085:d80f04fd9ed2fa2cc2d120f6086e1121f6342b9135da0bfe0abfeb59a2967713",
