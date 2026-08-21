@@ -1,3 +1,13 @@
+// qa: card:B09070:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
+// qa: card:B09071:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
+// qa: card:B09074:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
+// qa: card:B09075:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
+// qa: card:B09076:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
+// qa: card:B09084:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
+// qa: card:B10070:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
+// qa: card:D11003:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
+// qa: card:D11004:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
+// qa: card:D11014:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
 // qa: card:B09070:fd46e3e8955490f444afdb47fbaa606489da5b870cf6d88ae747987457e8c002
 // qa: card:B09071:fd46e3e8955490f444afdb47fbaa606489da5b870cf6d88ae747987457e8c002
 // qa: card:B09074:fd46e3e8955490f444afdb47fbaa606489da5b870cf6d88ae747987457e8c002
@@ -22,6 +32,8 @@ import { B09074P } from '@/cards/ct-p09/B09074P';
 import { B09074P2 } from '@/cards/ct-p09/B09074P2';
 import { B09075 } from '@/cards/ct-p09/B09075';
 import { B09075P } from '@/cards/ct-p09/B09075P';
+import { B09076 } from '@/cards/ct-p09/B09076';
+import { B09076P } from '@/cards/ct-p09/B09076P';
 import { B09084 } from '@/cards/ct-p09/B09084';
 import { B10070, B10070P } from '@/cards/ct-p10/B10070';
 import { D11003 } from '@/cards/ct-d11/D11003';
@@ -41,7 +53,8 @@ import { useGameStateStore } from '@/ui/state/store';
 import { sceneChar } from '../../helpers/fixtures';
 
 const QA = 'fd46e3e8955490f444afdb47fbaa606489da5b870cf6d88ae747987457e8c002';
-const CARDS = [B09070, B09071, B09074, B09075, B09084, B10070, D11003, D11004, D11009, D11014] as const;
+const QA_FIRST_ENTRY = 'c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb';
+const CARDS = [B09070, B09071, B09074, B09075, B09076, B09084, B10070, D11003, D11004, D11009, D11014] as const;
 const ENTRY_SOURCE = 'QA_SHIPPU_ENTRY_SOURCE';
 const ENTRY_SOURCE_UID = 'qa-entry-source';
 const ELIGIBLE = 'QA_SHIPPU_ELIGIBLE';
@@ -197,6 +210,22 @@ function proveB09075() {
   return settled(B09075.id, { cardId: B09075.id, scene: current().players.self.scene.map((entry) => entry.cardId), fired: shippuFired(B09075.id) });
 }
 
+function proveB09076() {
+  const state = base(B09076);
+  state.players.opp.evidence = [
+    { cardId: ELIGIBLE, faceUp: false, origin: { turn: 1, via: 'opening' } },
+    { cardId: PLAIN, faceUp: false, origin: { turn: 1, via: 'opening' } }, { cardId: DRAW, faceUp: true, origin: { turn: 1, via: 'opening' } },
+  ];
+  install(state);
+  enter(B09076);
+  expect(useGameStateStore.getState().pendingEffectPick?.candidates.map((entry) => entry.cardId), 'B09076: only face-down evidence is selectable').toEqual([ELIGIBLE, PLAIN]);
+  pick(ELIGIBLE);
+  return settled(B09076.id, {
+    cardId: B09076.id, evidence: current().players.opp.evidence.map(({ cardId, faceUp }) => [cardId, faceUp]),
+    fired: shippuFired(B09076.id),
+  });
+}
+
 function proveB09084() {
   install(base(B09084, '事件編'));
   enter(B09084);
@@ -323,19 +352,22 @@ beforeEach(() => {
 });
 
 describe('Shippu triggered by effect-driven scene entry', () => {
-  it(`${QA}: B09070 effect entry fires the real remove-to-hand Shippu`, () => expect(proveB09070()).toEqual({ cardId: 'B09070', hand: [ELIGIBLE], fired: true }));
-  it(`${QA}: B09071 effect entry grants its real action-target text`, () => expect(proveB09071()).toEqual({ cardId: 'B09071', actionTargetsActive: true, fired: true }));
-  it(`${QA}: B09074 effect entry fires its real draw Shippu`, () => expect(proveB09074()).toEqual({ cardId: 'B09074', hand: [DRAW], fired: true }));
-  it(`${QA}: B09075 effect entry fires its real Police re-entry Shippu`, () => expect(proveB09075()).toEqual({ cardId: 'B09075', scene: [ENTRY_SOURCE, 'B09075', ELIGIBLE], fired: true }));
-  it(`${QA}: B09084 effect entry grants its real incident assault keyword`, () => expect(proveB09084()).toEqual({ cardId: 'B09084', keywords: ['突撃[事件]'], fired: true }));
-  it(`${QA}: B10070 effect entry opens and resolves its real optional Shippu`, () => expect(proveB10070()).toEqual({ cardId: 'B10070', state: 'sleep', removed: [ELIGIBLE], fired: true }));
-  it(`${QA}: D11003 effect entry fires its real evidence gain`, () => expect(proveEvidence(D11003)).toEqual({ cardId: 'D11003', evidence: [DRAW], fired: true }));
-  it(`${QA}: D11004 effect entry fires its shared real evidence gain`, () => expect(proveEvidence(D11004)).toEqual({ cardId: 'D11004', evidence: [DRAW], fired: true }));
+  it(`${QA}/${QA_FIRST_ENTRY}: B09070 effect entry fires the real remove-to-hand Shippu`, () => expect(proveB09070()).toEqual({ cardId: 'B09070', hand: [ELIGIBLE], fired: true }));
+  it(`${QA}/${QA_FIRST_ENTRY}: B09071 effect entry grants its real action-target text`, () => expect(proveB09071()).toEqual({ cardId: 'B09071', actionTargetsActive: true, fired: true }));
+  it(`${QA}/${QA_FIRST_ENTRY}: B09074 effect entry fires its real draw Shippu`, () => expect(proveB09074()).toEqual({ cardId: 'B09074', hand: [DRAW], fired: true }));
+  it(`${QA}/${QA_FIRST_ENTRY}: B09075 effect entry fires its real Police re-entry Shippu`, () => expect(proveB09075()).toEqual({ cardId: 'B09075', scene: [ENTRY_SOURCE, 'B09075', ELIGIBLE], fired: true }));
+  it(`${QA_FIRST_ENTRY}: B09076 effect entry flips only the selected face-down evidence`, () => expect(proveB09076()).toEqual({
+    cardId: 'B09076', evidence: [[ELIGIBLE, true], [PLAIN, false], [DRAW, true]], fired: true,
+  }));
+  it(`${QA}/${QA_FIRST_ENTRY}: B09084 effect entry grants its real incident assault keyword`, () => expect(proveB09084()).toEqual({ cardId: 'B09084', keywords: ['突撃[事件]'], fired: true }));
+  it(`${QA}/${QA_FIRST_ENTRY}: B10070 effect entry opens and resolves its real optional Shippu`, () => expect(proveB10070()).toEqual({ cardId: 'B10070', state: 'sleep', removed: [ELIGIBLE], fired: true }));
+  it(`${QA}/${QA_FIRST_ENTRY}: D11003 effect entry fires its real evidence gain`, () => expect(proveEvidence(D11003)).toEqual({ cardId: 'D11003', evidence: [DRAW], fired: true }));
+  it(`${QA}/${QA_FIRST_ENTRY}: D11004 effect entry fires its shared real evidence gain`, () => expect(proveEvidence(D11004)).toEqual({ cardId: 'D11004', evidence: [DRAW], fired: true }));
   it(`${QA}: D11009 effect entry opens and resolves its real sleep Shippu`, () => expect(proveD11009()).toEqual({ cardId: 'D11009', state: 'sleep', fired: true }));
-  it(`${QA}: D11014 effect entry opens and resolves its real AP reduction Shippu`, () => expect(proveD11014()).toEqual({ cardId: 'D11014', apMod: -1000, fired: true }));
-  it(`${QA}: effect entry still requires the first self entry of the turn`, () => expect(proveSecondEntryDoesNotFire()).toEqual({ evidence: 0, enterOrder: 2, fired: false }));
-  it(`${QA}: effect entry also fires for the owner during the opponent turn`, () => expect(proveOpponentTurnOwnerMirror()).toEqual({ ownerEvidence: [DRAW], otherGotDraw: false, fired: true }));
-  it(`${QA}: every target CardDef uses the exact first-entry Shippu condition`, () => expect(CARDS.map((definition) => [definition.id, shippuMatcher(definition)])).toEqual(CARDS.map((definition) => [definition.id, { kind: 'enterOrderEquals', n: 1 }])));
+  it(`${QA}/${QA_FIRST_ENTRY}: D11014 effect entry opens and resolves its real AP reduction Shippu`, () => expect(proveD11014()).toEqual({ cardId: 'D11014', apMod: -1000, fired: true }));
+  it(`${QA}/${QA_FIRST_ENTRY}: effect entry still requires the first self entry of the turn`, () => expect(proveSecondEntryDoesNotFire()).toEqual({ evidence: 0, enterOrder: 2, fired: false }));
+  it(`${QA}/${QA_FIRST_ENTRY}: effect entry also fires for the owner during the opponent turn`, () => expect(proveOpponentTurnOwnerMirror()).toEqual({ ownerEvidence: [DRAW], otherGotDraw: false, fired: true }));
+  it(`${QA}/${QA_FIRST_ENTRY}: every target CardDef uses the exact first-entry Shippu condition`, () => expect(CARDS.map((definition) => [definition.id, shippuMatcher(definition)])).toEqual(CARDS.map((definition) => [definition.id, { kind: 'enterOrderEquals', n: 1 }])));
   it(`${QA}: case-gated Shippu effects do not fire in the other case status`, () => expect(proveCaseGates()).toEqual({
     wrongB09075: { fired: false, pending: false, eligibleStillRemoved: true },
     wrongB09084: { fired: false, keywords: undefined, otherEnterAbility: 'a2' },
@@ -344,7 +376,8 @@ describe('Shippu triggered by effect-driven scene entry', () => {
     [B09070P.id, B09070P.abilities, B09070.abilities],
     [B09071P.id, B09071P.abilities, B09071.abilities], [B09071P2.id, B09071P2.abilities, B09071.abilities],
     [B09074P.id, B09074P.abilities, B09074.abilities], [B09074P2.id, B09074P2.abilities, B09074.abilities],
-    [B09075P.id, B09075P.abilities, B09075.abilities], [B10070P.id, B10070P.abilities, B10070.abilities],
+    [B09075P.id, B09075P.abilities, B09075.abilities], [B09076P.id, [B09076P.abilities[0]], [B09076.abilities[0]]],
+    [B10070P.id, B10070P.abilities, B10070.abilities],
     [D11010.id, D11010.abilities, D11009.abilities],
   ].every(([, variant, baseAbilities]) => variant === baseAbilities || JSON.stringify(variant) === JSON.stringify(baseAbilities))).toBe(true));
 });

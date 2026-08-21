@@ -1621,7 +1621,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09070.ts:97",
-        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:326"
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:355"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -1654,7 +1654,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09084.ts:101",
-        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:330"
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:362"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"

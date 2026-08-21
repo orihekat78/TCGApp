@@ -1448,7 +1448,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09075.ts:83",
-        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:329"
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:358"
       ]
     },
     {

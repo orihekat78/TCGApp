@@ -1503,7 +1503,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09071.ts:62",
-        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:327"
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:356"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -1537,27 +1537,27 @@
     {
       "qaId": "card:B09075:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb",
       "answerHash": "88b539d2f128438f8b6437ecf299f862444710db3e1cb7ca3f9da2c2b66a0728",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09075.ts:83"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/17-icons.md:13",
+        "rules:.claude/rules/17-icons.md:16",
+        "src:src/cards/ct-p09/B09075.ts:83",
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:358"
       ]
     },
     {
       "qaId": "card:B09076:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb",
       "answerHash": "88b539d2f128438f8b6437ecf299f862444710db3e1cb7ca3f9da2c2b66a0728",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09076.ts:42"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/17-icons.md:13",
+        "rules:.claude/rules/17-icons.md:16",
+        "src:src/cards/ct-p09/B09076.ts:42",
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:359"
       ]
     },
     {
@@ -2054,7 +2054,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-d11/D11003.ts:59",
-        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:332"
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:364"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
