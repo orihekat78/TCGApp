@@ -873,11 +873,12 @@
     {
       "qaId": "card:B06074:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06074.ts:1"
+        "src:src/cards/ct-p06/B06074.ts:30",
+        "tests:tests/cards/official-qa/effect-entry-trigger-public-wave28.test.ts:282"
       ]
     },
     {
@@ -1214,11 +1215,12 @@
     {
       "qaId": "card:B08091:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02006.ts:8"
+        "src:src/cards/ct-p08/B08091.ts:34",
+        "tests:tests/cards/official-qa/effect-entry-trigger-public-wave28.test.ts:314"
       ]
     },
     {

@@ -96,5 +96,5 @@
   test-missing where the additional printed effect is not completely proved.
 - BUG-323 records B09016's separate trigger-time versus resolution-time condition defect.
 
-## 2026-08-22: QA runtime Wave27 effect-driven entry
-- Wave27 certifies 8 official QA records through public declared dispatch and advances coverage to 1142 matched/1822 test-missing; entered triggers resolve once after sceneEnter, B04018 proves the selected same-owner effect resolves first, and optional entry proves both explicit decline and zero-candidate auto-skip. BUG-324 adds explicit character filters to B08056 and the B09055/P/P2 union-entry mirrors after same-name event RED probes; an AST horizontal scan found no remaining same-class sceneEnter filters.
+## 2026-08-22: QA runtime Waves27-28 effect-driven entry
+- Wave27 certifies 8 declared-entry QA and fixes BUG-324's character-filter gaps; Wave28 certifies 8 triggered-entry QA, advancing coverage to 1150 matched/1814 test-missing. Entered hooks resolve once after sceneEnter with source continuation order preserved. Empty optional hand entry intentionally surfaces a zero-pick decision when continuation needs a bound absence; remove-area no-candidate paths can auto-skip. The Wave27 AST sweep remains current because Wave28 changes no production card or engine code.

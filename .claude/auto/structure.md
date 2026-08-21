@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6147
+- **ファイル数**: 6150
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -819,6 +819,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-09-01-private-hosted-basic-release-gates.md`
     - `2026-08-16-01-bug313-pr-leave-reveal.md`
     - `2026-08-22-01-qa-wave27-effect-entry.md`
+    - `2026-08-22-02-qa-wave28-effect-entry.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -2163,6 +2164,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-08-21-qa-wave25-immediate-effects-public.md` — QA Wave 25 Immediate-Effect Public Verification Plan
       - `2026-08-22-qa-wave26-misread-authority-public.md` — QA Wave 26 — Misread authority / public runtime
       - `2026-08-22-qa-wave27-effect-entry-declared-public.md` — QA Wave 27 Effect-Entry Public Verification Plan
+      - `2026-08-22-qa-wave28-effect-entry-trigger-public.md` — QA Wave 28 Effect-Entry Trigger Public Plan
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
@@ -5523,6 +5525,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `effect-entry-public-wave3.test.ts` — qa: card:B02077:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-trigger-order-public.test.ts` — qa: card:B07058:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-trigger-public-wave2.test.ts` — qa: card:B04064:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effect-entry-trigger-public-wave28.test.ts` — qa: card:B03068:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `event-evidence-action-hirameki-public.test.ts` — qa: card:B04041:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
       - `f026-cutin-public.test.ts` — qa: card:B08085:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
       - `leave-reveal-until-forced-public.test.ts` — qa: card:B02058:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58

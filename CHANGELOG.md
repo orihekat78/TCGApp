@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `1a42d03f7f8d`
+> Source hash: `81af25ff21e7`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,13 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## QA Wave 28 — triggered effect-entry verification
+
+- Added public-runtime witnesses for eight triggered abilities that enter characters from hand or remove.
+- Proved each entered target's normal entry trigger, exact source ownership, state, filter decoys, source splice, causal log order, and authority cleanup.
+- Covered explicit decline, draw-created candidates, required continuations, and the distinct hand/remove zero-candidate contracts without production changes.
+- Advanced exact official-QA coverage from 1,142 to 1,150 matched records.
 
 ## QA Wave 27 — effect-driven entry verification
 

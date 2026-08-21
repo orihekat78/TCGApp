@@ -1509,11 +1509,12 @@
     {
       "qaId": "card:B09075:27ff073e2f3b9eb933819c4bcbc76e3c6001c105e035c2ff1bcd753e249ade16",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09075.ts:1"
+        "src:src/cards/ct-p09/B09075.ts:32",
+        "tests:tests/cards/official-qa/effect-entry-trigger-public-wave28.test.ts:322"
       ]
     },
     {
