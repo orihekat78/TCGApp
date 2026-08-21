@@ -11,7 +11,7 @@ import { event } from '@/engine/event';
 import { startCausalSession } from '@/engine/log/causal';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { _resetUidCounter } from '@/engine/mutate/scene';
-import { _resetRegistry as resetDefRegistry } from '@/engine/read/def';
+import { _resetRegistry as resetDefRegistry, def as readDef } from '@/engine/read/def';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { resetPresentationQueue } from '@/ui/presentation/coordinator';
@@ -95,3 +95,79 @@ describe('B02023 facedown set-card privacy', () => {
     expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
   });
 });
+
+function faceDownSetAtoms(value: unknown): Record<string, unknown>[] {
+  if (Array.isArray(value)) return value.flatMap(faceDownSetAtoms);
+  if (value === null || typeof value !== 'object') return [];
+  const record = value as Record<string, unknown>;
+  const args = record.args;
+  const own = record.verb === 'charSetCard'
+    && args !== null
+    && typeof args === 'object'
+    && (args as Record<string, unknown>).faceUp === false
+    ? [record]
+    : [];
+  return own.concat(Object.values(record).flatMap(faceDownSetAtoms));
+}
+
+const FACE_DOWN_SET_SOURCE_IDS = [
+  'B02018', 'B02018P', 'B02020', 'B02020P', 'B02030', 'B02040', 'B02040P',
+  'B03032', 'B03032P', 'B03034', 'B03061', 'B05029', 'B05029P', 'B05031',
+  'B05031P', 'B05035', 'B05075', 'PR099', 'PR105', 'PR136',
+] as const;
+
+describe('face-down set-card Q&A source binding', () => {
+  it.each(FACE_DOWN_SET_SOURCE_IDS)('%s owns an explicit face-down set operation', (cardId) => {
+    const card = readDef.card(cardId);
+    expect(card).toBeDefined();
+    expect(faceDownSetAtoms(card!.abilities)).not.toHaveLength(0);
+  });
+});
+
+describe('face-down set-card public classification', () => {
+  it('keeps the set card outside character/event candidates and hides its public identity', async () => {
+    const { candidates } = await import('@/engine/target/candidates');
+    const { FILE_CARD_BACK_PLACEHOLDER } = await import('@/engine/types');
+    const { projectReplayStateForViewer } = await import('@/ui/services/replayViewerProjection');
+    const queryCandidates = (area: 'scene' | 'set-card', kind: 'character' | 'event') => candidates(
+      useGameStateStore.getState().gameState!,
+      {
+        kind: 'all',
+        query: { area, side: 'self', filter: { kind } },
+      },
+      {
+        source: { cardId: B02023.id, abilityId: 'a1', player: 'self', area: 'scene' },
+        bindings: {},
+      },
+    );
+
+    deployB02023();
+    const sceneCharactersBefore = queryCandidates('scene', 'character');
+    expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'target' }))
+      .toEqual({ ok: true });
+
+    expect(queryCandidates('scene', 'character')).toEqual(sceneCharactersBefore);
+    expect(queryCandidates('scene', 'event')).toEqual([]);
+    expect(queryCandidates('set-card', 'character')).toEqual([]);
+    expect(queryCandidates('set-card', 'event')).toEqual([]);
+    const publicState = projectReplayStateForViewer(useGameStateStore.getState().gameState!, 'solo-self');
+    expect(publicState.players.self.scene.find(char => char.uid === 'target')!.setCards)
+      .toEqual([{ cardId: FILE_CARD_BACK_PLACEHOLDER, faceUp: false, instanceId: 'hidden-set:0' }]);
+    expect(JSON.stringify(publicState)).not.toContain(D08013.id);
+  });
+});
+
+// qa: card:B02018:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b
+// qa: card:B02020:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b
+// qa: card:B02030:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b
+// qa: card:B02040:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b
+// qa: card:B03032:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b
+// qa: card:B03034:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b
+// qa: card:B03061:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b
+// qa: card:B05029:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b
+// qa: card:B05031:99f0b0d913b46580a670f59061691894914b57219aaed6750f3f6f34a2de4162
+// qa: card:B05035:99f0b0d913b46580a670f59061691894914b57219aaed6750f3f6f34a2de4162
+// qa: card:B05075:8b7bcabca268273e462f32584d43665c09fa58a0e7552c81b57da97570c83363
+// qa: card:PR099:99f0b0d913b46580a670f59061691894914b57219aaed6750f3f6f34a2de4162
+// qa: card:PR105:99f0b0d913b46580a670f59061691894914b57219aaed6750f3f6f34a2de4162
+// qa: card:PR136:eae5569655e228acf5ae95649166bd538ea4089bceabe6f055b6f1a2b5a5194d

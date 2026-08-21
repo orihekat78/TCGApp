@@ -93,8 +93,8 @@
 - If an after-sleep effect removes the reasoner, cancel its continuation and causal trace before evidence; keep wrong-player/non-sleep throws.
 - B05062 is white; its four-card count has no level cap, while the reanimate target remains level 7 or lower.
 
-## 2026-08-21: QA runtime Waves17-19
+## 2026-08-21: QA runtime Waves17-20
 - Wave17 owner-order certifies 24; production `enter` has `uid`, so B02088/B09003 use `payloadKey:'uid'`.
 - B07063 grants use base/`#N` IDs; B04003 still loses a copy through `choose-intercept`, then regress B08081/P and B02067.
 - Wave18 public reasoning plus decision certifies 33 actual Misread cards; no production change; coverage is 949 matched/2015 test-missing. Promos and BUG-319 remain excluded.
-- Wave19 public effect-entry Shippu certifies 10; B09076 flips only selected face-down evidence; coverage is 959 matched/2005 test-missing.
+- Wave19 effect-entry Shippu certifies 10. Wave20 binds all 20 printings for 14 face-down set QA and directly guards hidden set-card queries; coverage is 973 matched/1991 test-missing.
