@@ -20161,7 +20161,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
       "科学者"
     ],
     "keywords": [],
-    "effectShort": "【登場時】自陣 lv6+ 阿笠博士で 相手 level≤8 を 1枚 bounce。",
+    "effectShort": "【登場時】自陣 lv6+ 阿笠博士で 相手 level≤8 を 1枚 bounce。\n【相手ターン中】【現場リムーブ時】自分のデッキのカードを上から〚カード名［阿笠博士］〛が出るまで1枚ずつ公開し、それを手札に加える。残りの公開したカードをデッキの下に移し、デッキをシャッフルする。",
     "imagePath": "1747874027837907.jpg"
   },
   {
@@ -20184,7 +20184,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
       "科学者"
     ],
     "keywords": [],
-    "effectShort": "【登場時】自陣 lv6+ 阿笠博士で 相手 level≤8 を 1枚 bounce。",
+    "effectShort": "【登場時】自陣 lv6+ 阿笠博士で 相手 level≤8 を 1枚 bounce。\n【相手ターン中】【現場リムーブ時】自分のデッキのカードを上から〚カード名［阿笠博士］〛が出るまで1枚ずつ公開し、それを手札に加える。残りの公開したカードをデッキの下に移し、デッキをシャッフルする。",
     "imagePath": "1747874027875756.jpg"
   },
   {
@@ -22345,10 +22345,9 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "setCode": "CT-P05",
     "name": "鈴木家と京極真",
     "type": "event",
-    "color": "black",
+    "color": "white",
     "colors": [
-      "black",
-      "yellow"
+      "white"
     ],
     "cost": 7,
     "level": 7,
@@ -47696,7 +47695,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "level": 6,
     "rarity": "C",
     "features": [
-      "怪盗"
+      "怪人"
     ],
     "keywords": [],
     "effectShort": "このキャラが推理かアクションしたとき、以下から1つ選んで行う。",

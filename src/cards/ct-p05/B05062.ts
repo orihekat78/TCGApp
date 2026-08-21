@@ -1,4 +1,10 @@
+// rules: 03-field-areas.md, 10-action-event.md, 14-refresh.md, 15-abilities-effects.md, 19-special-rules.md, 20-color-and-switch.md
 import type { AbilityDef, CardDef, Effect } from '@/engine/types';
+
+const fourCardGateFilters = [
+  { kind: 'character' as const, cardName: '京極真' },
+  { kind: 'character' as const, trait: '鈴木財閥' },
+];
 
 const reanimateFilter = [
   { kind: 'character' as const, cardName: '京極真', levelMax: 7 },
@@ -30,7 +36,7 @@ const a1: AbilityDef = {
   trigger: { hook: 'effect:declared', selfOnly: true, matcher: (p: unknown) => (p as { kind?: unknown })?.kind === 'event-use' },
   effect: {
     kind: 'conditional',
-    if: { kind: 'removeFilterAtLeast', player: 'self', filters: reanimateFilter, n: 4 },
+    if: { kind: 'removeFilterAtLeast', player: 'self', filters: fourCardGateFilters, n: 4 },
     then: { kind: 'sequence', steps: [drawAndRemoveHand, reanimate, sleep] },
     else: { kind: 'choice', chooser: 'self', options: [drawAndRemoveHand, reanimate, sleep] },
   },
@@ -39,7 +45,7 @@ const a1: AbilityDef = {
 };
 
 export const B05062: CardDef = {
-  id: 'B05062', no: '0564/B05062', kind: 'event', names: ['鈴木家と京極真'], colors: ['黒', '黄'], level: 7,
+  id: 'B05062', no: '0564/B05062', kind: 'event', names: ['鈴木家と京極真'], colors: ['白'], level: 7,
   traits: [], rarity: 'C', imageUrl: '1746628061798819.jpg', abilities: [a1],
   ruleRefs: ['rules/03-field-areas.md', 'rules/10-action-event.md', 'rules/14-refresh.md', 'rules/15-abilities-effects.md', 'rules/19-special-rules.md', 'rules/20-color-and-switch.md'],
 };

@@ -160,15 +160,14 @@
     {
       "qaId": "card:B02004:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3",
       "answerHash": "1c75b7dbe0fb59339eac67d0f852ddea810607a33ee366fef7a879158a0c55c7",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/22-qa-action-contact.md:12",
-        "src:src/cards/ct-p02/B02004.ts:23"
-      ],
-      "noteCodes": [
-        "B02004-ACTION-TIMING-UNTESTED"
+        "src:src/cards/ct-p02/B02004.ts:23",
+        "tests:tests/cards/official-qa/multihook-timing-public.test.ts:122",
+        "tests:tests/cards/official-qa/multihook-timing-public.test.ts:190"
       ]
     },
     {

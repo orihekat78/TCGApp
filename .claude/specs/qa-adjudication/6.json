@@ -145,12 +145,15 @@
     {
       "qaId": "card:B02077:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02077.ts:64"
-      ]
+        "src:src/cards/ct-p02/B02077.ts:18",
+        "src:src/cards/ct-p02/B02077.ts:39",
+        "tests:tests/cards/official-qa/effect-entry-public-wave3.test.ts:206"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B02083:12d56922ac94e77d7ce7b7d2d7ff6c185065a32f7f91af0ec3483941263df031",
@@ -1548,11 +1551,13 @@
     {
       "qaId": "card:D03007:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3",
       "answerHash": "38b379b1993cd5e2dadea3d1b9f6c9c3e03eeef380d72a7911ad2565af114955",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d03/D03007.ts:27"
+        "src:src/cards/ct-d03/D03007.ts:27",
+        "tests:tests/cards/official-qa/multihook-timing-public.test.ts:151",
+        "tests:tests/cards/official-qa/multihook-timing-public.test.ts:94"
       ]
     },
     {

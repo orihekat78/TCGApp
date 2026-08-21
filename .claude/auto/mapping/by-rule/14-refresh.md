@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `3737f35622e5`
+> Source hash: `c8f55c242108`
 
 公式ルール [`14-refresh.md`](../../../rules/14-refresh.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -23,7 +23,7 @@
 - [`B09033P`](../by-spec/grounding--B09033P.md)
 - [`PR265`](../by-spec/grounding--PR265.md)
 
-## 📄 参照ソース (371)
+## 📄 参照ソース (372)
 
 - [`src/cards/ct-d01/D01003.ts`](../../../../src/cards/ct-d01/D01003.ts)
 - [`src/cards/ct-d01/D01006.ts`](../../../../src/cards/ct-d01/D01006.ts)
@@ -45,4 +45,4 @@
 - [`src/cards/ct-d05/D05004.ts`](../../../../src/cards/ct-d05/D05004.ts)
 - [`src/cards/ct-d05/D05005.ts`](../../../../src/cards/ct-d05/D05005.ts)
 - [`src/cards/ct-d05/D05007.ts`](../../../../src/cards/ct-d05/D05007.ts)
-- _...ほか 351 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 352 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

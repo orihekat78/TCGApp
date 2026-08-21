@@ -93,8 +93,8 @@
 - 完全一致6定義を静的に固定し、public選択あり/なし、複数取得、複数登場、離場後rebaseで
   未公開tailの順序不変を検証する。デッキ全体shuffleを明記する別句は混ぜない。
 
-## 2026-08-21: Effect-enter QA boundaries
-- d8dc certifies each real source through public trigger, filter, origin move, printed state, entered character's selfOnly enter ability, and terminal cleanup.
-- B09025 scene entry must filter `kind:'character'`; a same-name event is the negative regression.
-- B03030 may switch out its acting source; the next public `actionGuard(null)` aborts and clears the action without guard/contact.
-- B02004 d8dc covers its action path only. Its `reasoning:end` hook conflicts with the printed post-sleep/pre-guard timing; track separately and do not call the whole card green.
+## 2026-08-21: Effect entry and after-sleep closure
+- d8dc public coverage now certifies B02077/B03049/B04084/B05062/B09047 through entered-character trigger and cleanup.
+- Exact 「推理かアクションしたとき」 family uses `reasoning:after-sleep`; B02004 variants share the base definition.
+- If an after-sleep effect removes the reasoner, cancel its continuation and causal trace before evidence; keep wrong-player/non-sleep throws.
+- B05062 is white; its four-card count has no level cap, while the reanimate target remains level 7 or lower.

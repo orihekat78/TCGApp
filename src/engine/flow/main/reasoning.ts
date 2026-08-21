@@ -185,7 +185,22 @@ export function _resolveReasoningContinuation(
     throw new Error('reasoning continuation: invalid or consumed token');
   }
   const target = findTarget(state, continuation.uid);
-  if (!target || target.player !== continuation.player || (target.kind === 'char' ? target.char.state : target.partner.state) !== 'sleep') {
+  // An after-sleep reaction can legally switch/remove the reasoner itself.
+  // The exact state-owned token still authenticates this continuation; when
+  // its original target no longer exists, reasoning ends here without the
+  // before-add window, evidence, log, or reasoning:end hook.
+  if (!target) {
+    delete state.pendingReasoningContinuation;
+    completeEffectCausalTrace(
+      state,
+      causalTrace,
+      continuation.player,
+      'cancel',
+      { type: 'state', state: 'cancelled' },
+    );
+    return;
+  }
+  if (target.player !== continuation.player || (target.kind === 'char' ? target.char.state : target.partner.state) !== 'sleep') {
     throw new Error('reasoning continuation: target is not the sleeping reasoner');
   }
   delete state.pendingReasoningContinuation;

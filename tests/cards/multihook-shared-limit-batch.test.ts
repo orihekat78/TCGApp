@@ -1,5 +1,5 @@
 // engine-extension multi-hook 共有【ターン1】batch (2026-06-06 タスクC) —
-// 「推理かアクションしたとき」(reasoning:end + action:declare) を 1 ability の hooks で購読し、
+// 「推理かアクションしたとき」(reasoning:after-sleep + action:declare) を 1 ability の hooks で購読し、
 // limit:{kind:'turn'} が ability.id 単位のため 2 hook を跨いだ共有【ターン1】が成立することを検証。
 //   D03007 (selfOnly) / B04039 (triggerCharMatches on action:declare) / B02004 (bond + enter-from-remove)。
 
@@ -40,8 +40,8 @@ describe('engine-extension multi-hook 共有【ターン1】batch (2026-06-06)',
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   });
 
-  it('card def: D03007 trigger=reasoning:end + hooks[action:declare] + selfOnly + limit turn1', () => {
-    expect(D03007.abilities[0].trigger).toMatchObject({ hook: 'reasoning:end', hooks: ['action:declare'], selfOnly: true });
+  it('card def: D03007 trigger=reasoning:after-sleep + hooks[action:declare] + selfOnly + limit turn1', () => {
+    expect(D03007.abilities[0].trigger).toMatchObject({ hook: 'reasoning:after-sleep', hooks: ['action:declare'], selfOnly: true });
     expect(D03007.abilities[0].limit).toMatchObject({ kind: 'turn', n: 1 });
   });
 
@@ -49,12 +49,12 @@ describe('engine-extension multi-hook 共有【ターン1】batch (2026-06-06)',
     let s: GameState = createEmptyGameState();
     s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     s.players.self.scene = [sceneChar('D03007', 'sh#1')];
-    s.players.self.deck = ['c1', 'c2', 'c3', 'c4']; // 推理 LP1 で c1 証拠化 + a1 で c2 ドロー
+    s.players.self.deck = ['c1', 'c2', 'c3', 'c4']; // a1 で c1 ドロー後、推理 LP1 で c2 証拠化
     s = produce(s, (d) => {
       doReasoning(d, 'sh#1'); runAllUntilEmpty(d);   // 推理 → a1 draw (counter=1)
       emitAction(d, 'sh#1', 'self'); runAllUntilEmpty(d); // アクション → a1 は limit で skip
     });
-    expect(s.players.self.hand, '推理で1ドローのみ (c2)、アクションでは追加なし').toEqual(['c2']);
+    expect(s.players.self.hand, '推理で1ドローのみ (c1)、アクションでは追加なし').toEqual(['c1']);
   });
 
   it('D03007: 先にアクションで1ドロー → 同ターンの推理では追加ドローしない (逆順でも共有)', () => {

@@ -1629,16 +1629,19 @@
     {
       "qaId": "card:B09047:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09047.ts:1"
+        "src:src/cards/ct-p09/B09047.ts:18",
+        "src:src/cards/ct-p09/B09047.ts:6",
+        "src:src/engine/flow/main/reasoning.ts:188",
+        "tests:tests/cards/official-qa/effect-entry-public-wave3.test.ts:331",
+        "tests:tests/cards/official-qa/effect-entry-public-wave3.test.ts:364",
+        "tests:tests/cards/official-qa/effect-entry-public-wave3.test.ts:388",
+        "tests:tests/cards/official-qa/effect-entry-public-wave3.test.ts:424"
       ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B09052:ee061ffcf4652d834b2aa83508fd512dedb3e0a2d8251c3d26d6ef0844a5fe36",

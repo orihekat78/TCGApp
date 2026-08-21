@@ -1391,11 +1391,13 @@
     {
       "qaId": "card:B09047:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3",
       "answerHash": "38b379b1993cd5e2dadea3d1b9f6c9c3e03eeef380d72a7911ad2565af114955",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09047.ts:18"
+        "src:src/cards/ct-p09/B09047.ts:18",
+        "tests:tests/cards/official-qa/effect-entry-public-wave3.test.ts:331",
+        "tests:tests/cards/official-qa/effect-entry-public-wave3.test.ts:380"
       ]
     },
     {

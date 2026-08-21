@@ -369,11 +369,13 @@
     {
       "qaId": "card:B04039:2f88f1f8690a3760b8d4c020c17dc0c623c0174bb3f83930ecfae2064ebdb74a",
       "answerHash": "1c75b7dbe0fb59339eac67d0f852ddea810607a33ee366fef7a879158a0c55c7",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04039.ts:1"
+        "src:src/cards/ct-p04/B04039.ts:19",
+        "tests:tests/cards/official-qa/multihook-timing-public.test.ts:108",
+        "tests:tests/cards/official-qa/multihook-timing-public.test.ts:170"
       ]
     },
     {
