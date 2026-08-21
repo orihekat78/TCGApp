@@ -18,11 +18,33 @@
 //   - mislead 等は Phase 5 で reasoning:before-add listener として実装される
 //     → Phase 4 は emit のみ、解決待機状態を作らない (呼出元が runAllUntilEmpty を回す)
 
-import type { CausalEffectTrace, GameState, SceneCharacter, PartnerOnBoard, ReasoningContinuation } from '../../types/index.js';
+import type {
+  CausalEffectTrace,
+  GameState,
+  MisreadCandidate,
+  PartnerOnBoard,
+  PendingMisreadAuthority,
+  ReasoningContinuation,
+  SceneCharacter,
+} from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { char as readChar } from '../../read/char.js';
-import { _peekPendingMisread } from '../../listeners/misread.js';
+import {
+  _applyValidatedMisreadPicks,
+  _authenticatePendingMisread,
+  _peekPendingMisread,
+  _validateMisreadPicks,
+} from '../../listeners/misread.js';
+import {
+  assertPendingMisreadAuthority,
+  checkpointLiveMisreadLease,
+  clonePendingMisreadAuthority,
+  matchesPendingMisreadAuthority,
+  mintLiveMisreadLease,
+  rollbackLiveMisreadLease,
+} from '../../state/misread-authority.js';
+import { consumePersistedMisreadAuthority } from '../../effect/runtime-state.js';
 import {
   cloneCausalEffectTrace,
   completeEffectCausalTrace,
@@ -162,7 +184,10 @@ export function doReasoning(state: GameState, uid: string): void {
     { uid, player },
     undefined,
     {
-      reasoningContinuation: continuation,
+      // GameState must remain a unidirectional tree. The public continuation
+      // anchor and its stack witness carry equal data but must not share a
+      // mutable object across two paths; Immer finalization may split aliases.
+      reasoningContinuation: { ...continuation },
       ...(causalTrace
         ? { causalTrace: cloneCausalEffectTrace(causalTrace), resumesCurrentEffect: true }
         : {}),
@@ -203,8 +228,13 @@ export function _resolveReasoningContinuation(
   if (target.player !== continuation.player || (target.kind === 'char' ? target.char.state : target.partner.state) !== 'sleep') {
     throw new Error('reasoning continuation: target is not the sleeping reasoner');
   }
-  delete state.pendingReasoningContinuation;
-  _continueReasoningAfterSleep(state, continuation.uid, continuation.player, causalTrace);
+  _continueReasoningAfterSleep(
+    state,
+    continuation.uid,
+    continuation.player,
+    continuation.token,
+    causalTrace,
+  );
 }
 
 /** Runs only after all reasoning:after-sleep reactions have settled. */
@@ -212,6 +242,7 @@ export function _continueReasoningAfterSleep(
   state: GameState,
   uid: string,
   player: 'self' | 'opp',
+  continuationToken: number,
   causalTrace?: CausalEffectTrace,
 ): void {
   // reasoning:before-add — spec: { uid, lpUsed } (lpUsed は pre-clamp 生値 — mislead listener が参照)
@@ -225,23 +256,55 @@ export function _continueReasoningAfterSleep(
     pendingMisread?.reasoningUid === uid &&
     pendingMisread.reasoningPlayer === player
   ) {
-    pendingMisread.causalTrace = cloneCausalEffectTrace(causalTrace);
+    if (state.pendingMisreadAuthority !== undefined) {
+      throw new Error('Invalid pendingMisread: unresolved GameState authority already exists');
+    }
     markEffectCausalAwaitingResume(causalTrace);
+    const authority = _authenticatePendingMisread(
+      uid,
+      player,
+      continuationToken,
+      cloneCausalEffectTrace(causalTrace),
+    );
+    if (authority === null) {
+      throw new Error('Invalid pendingMisread: runtime projection disappeared before authentication');
+    }
+    assertPendingMisreadAuthority(state, authority);
+    state.pendingMisreadAuthority = clonePendingMisreadAuthority(authority);
+    mintLiveMisreadLease(state, authority);
     return;
   }
 
+  delete state.pendingReasoningContinuation;
   completeReasoning(state, uid, player, causalTrace);
 }
 
-/** Human のミスリード決定後に、保留した推理後半を実行する。 */
-export function _resumeDeferredReasoning(
+/** Consume one authenticated human Misread decision and resume reasoning once. */
+export function _resolveDeferredMisread(
   state: GameState,
-  uid: string,
-  player: 'self' | 'opp',
-  causalTrace?: CausalEffectTrace,
+  pending: PendingMisreadAuthority,
+  requestedPicks: ReadonlyArray<MisreadCandidate>,
 ): void {
-  completeReasoning(state, uid, player, causalTrace);
-  completeEffectCausalTrace(state, causalTrace, player);
+  const owned = state.pendingMisreadAuthority;
+  if (owned === undefined || !matchesPendingMisreadAuthority(owned, pending)) {
+    throw new Error('Invalid pendingMisread: consumed or mismatched GameState authority');
+  }
+  assertPendingMisreadAuthority(state, owned);
+  const picks = _validateMisreadPicks(state, owned, requestedPicks);
+  const leaseCheckpoint = checkpointLiveMisreadLease();
+  try {
+    if (!consumePersistedMisreadAuthority(state, pending)) {
+      throw new Error('Invalid pendingMisread: persisted authority was consumed or mismatched');
+    }
+    delete state.pendingMisreadAuthority;
+    delete state.pendingReasoningContinuation;
+    _applyValidatedMisreadPicks(state, owned, picks);
+    completeReasoning(state, owned.reasoningUid, owned.reasoningPlayer, owned.causalTrace);
+    completeEffectCausalTrace(state, owned.causalTrace, owned.reasoningPlayer);
+  } catch (error) {
+    rollbackLiveMisreadLease(leaseCheckpoint);
+    throw error;
+  }
 }
 
 function completeReasoning(

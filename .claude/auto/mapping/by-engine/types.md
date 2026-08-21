@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `02841637ba76`
+> Source hash: `e84cfa758ef8`
 
 `src/engine/types/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -32,7 +32,7 @@
 - [`engine-api-card-shape`](../by-spec/engine-api-card-shape.md)
 - [`engine-api-resolver`](../by-spec/engine-api-resolver.md)
 
-## 📄 ソース (10)
+## 📄 ソース (11)
 
 - [`src/engine/types/candidate.ts`](../../../../src/engine/types/candidate.ts)
 - [`src/engine/types/card-def.ts`](../../../../src/engine/types/card-def.ts)
@@ -42,5 +42,6 @@
 - [`src/engine/types/game-state.ts`](../../../../src/engine/types/game-state.ts)
 - [`src/engine/types/hooks.ts`](../../../../src/engine/types/hooks.ts)
 - [`src/engine/types/index.ts`](../../../../src/engine/types/index.ts)
+- [`src/engine/types/misread.ts`](../../../../src/engine/types/misread.ts)
 - [`src/engine/types/reserved-effect.ts`](../../../../src/engine/types/reserved-effect.ts)
 - [`src/engine/types/results.ts`](../../../../src/engine/types/results.ts)

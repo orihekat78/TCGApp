@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6137
+- **ファイル数**: 6143
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -503,6 +503,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-320.md` — triggered付与のID衝突
     - `BUG-321.md` — 短縮形sceneEnterの満杯現場スイッチ欠落
     - `BUG-322.md` — cutin使用反応の解決順逆転
+    - `BUG-323.md` — B09016の「いる場合」を解決時評価できない
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -2158,6 +2159,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-08-21-qa-wave23-decision-persistence.md` — QA Wave 23 Decision Persistence Implementation Plan
       - `2026-08-21-qa-wave24-sleep-cost-public.md` — QA Wave 24 Sleep-Cost Public Verification Plan
       - `2026-08-21-qa-wave25-immediate-effects-public.md` — QA Wave 25 Immediate-Effect Public Verification Plan
+      - `2026-08-22-qa-wave26-misread-authority-public.md` — QA Wave 26 — Misread authority / public runtime
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
@@ -4825,7 +4827,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `pick-selection.ts`
       - `resolve-picks.ts` — engine.effect.resolveEffectPicks — Phase 7-2 (BUG-035 fix) + Phase 7-3 (AI polic…
       - `resolver.ts` — engine.effect.run — Effect Descriptor 解釈器 (resolver)
-      - `runtime-state.ts` — Public decision admission is fail-closed. Dedicated hydrate/import paths
+      - `runtime-state.ts` — A headless/replay branch may reach terminal cleanup. Restore the
       - `scene-switch.ts` — Both branches are alternatives. Authorize the first scene entry in each
       - `validate-spec-files.ts` — engine.effect.validate-spec-files — Node 専用 ruleRefs 実在チェック
       - `validate.ts` — engine.effect.validate / engine.cards.validate — static lint pass (pure)
@@ -4871,7 +4873,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `stunSemantics.ts` — engine.invariant.stunSemantics — スタン状態のセマンティクス確認
     - **`listeners/`**
       - `hirameki.ts` — Phase 8 完全クローズ Commit 3a: ヒラメキ listener
-      - `misread.ts`
+      - `misread.ts` — state:change listeners must see the whole simultaneous Misread commit.
       - `reserved-effects.ts` — reserved-effects listener — 離場後予約効果の発火 (mega-wave W6 step8, 2026-07-04, row75)
       - `triggered.ts` — Round 4b: triggered ability の汎用 listener
     - **`log/`**
@@ -4915,6 +4917,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `stack.ts` — engine.resolve.* — Effect Stack
     - **`state/`**
       - `indexed-zone-epoch.ts`
+      - `misread-authority.ts` — The stack entry snapshots the trace before the human pause marks its live
     - **`target/`**
       - `.gitkeep`
       - `candidates.ts` — engine.target.candidates — enumerate target candidates per TargetingRef/…
@@ -4932,6 +4935,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `game-state.ts` — GameState 型定義
       - `hooks.ts` — HookName union 型定義
       - `index.ts` — engine/types barrel export
+      - `misread.ts`
       - `reserved-effect.ts` — ReservedEffectEntry — 離場後予約効果 (mega-wave W6 step8, 2026-07-04, row75)
       - `results.ts` — 戻り値型定義
     - `AGENTS.md` — Engine Instructions
@@ -5525,6 +5529,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `leave-trigger-top-one-public.test.ts` — qa: card:PR084:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-top-three-public.test.ts` — qa: card:B03079:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `misread-public-runtime-wave18.test.ts` — qa: card:B04079:c61cc842e775e8f40c3ccc90d41e595b2e2e02184cc4d243534b3c2fdf721fdb
+      - `misread-public-runtime-wave26.test.ts` — qa: card:B04038:6d5a65b9e083c8565478cceec3269781a67a936789441e6c196e107f90e2e8c8
+      - `misread-reaction-order-wave26.test.ts` — qa: card:B05015:32589b2605a57e1fe89295b9b2340e6874cd6600ca6756e790b5fbcad58bae18
       - `multihook-timing-public.test.ts` — qa: card:D03007:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3
       - `same-card-multicopy-order-wave17.test.ts` — qaId=card:B02020:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c…
       - `set-card-host-absent.test.ts`

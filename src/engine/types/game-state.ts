@@ -316,6 +316,7 @@ export type CausalLogStateV1 = {
 // 単なる Effect ではなく、発火元・発火タイミング・解決状態を含むラッパー。
 // spec: .claude/specs/engine-api-resolver.md
 import type { EffectStackEntry, ReasoningContinuation } from './effect-stack.js';
+import type { PendingMisreadAuthority } from './misread.js';
 import type { ReservedEffectEntry } from './reserved-effect.js';
 import type { TargetFilter } from './effect.js'; // engine A3 wave (2026-07-11): actionCutinBanOppFilter (B05007)
 import type { ActionContext } from './results.js';
@@ -357,8 +358,9 @@ export type GameState = {
   /** Monotonic identity for a serializable human-decision continuation. */
   pendingRuntimeSeq?: number;
   /**
-   * Human-decision side channels paused by the resolver. The runtime globals
-   * are only a live-process cache; this snapshot is the save/replay authority.
+   * Human-decision side channels paused by the resolver. Most channels are
+   * serializable authority. A paused Misread additionally requires its exact
+   * process-local live lease, so JSON/replay/cross-session restore fails closed.
    */
   pendingRuntimeState?: {
     token: number;
@@ -376,10 +378,12 @@ export type GameState = {
   effectTriggerBatchSeq?: number;
   /** Persisted declaration-causality sequence; survives save/reload. */
   declaredBatchSeq?: number;
-  /** Engine-only single-use authority for the current reasoning continuation. */
+  /** Physical reasoning anchor retained until its paused Misread is consumed. */
   pendingReasoningContinuation?: ReasoningContinuation;
   /** Monotonic token allocator for reasoning continuations. */
   reasoningContinuationSeq?: number;
+  /** Single-use authority transferred from a paused reasoning continuation. */
+  pendingMisreadAuthority?: PendingMisreadAuthority;
   /**
    * Transient nesting context while a hook listener is running.  This is
    * deliberately state-owned (rather than a module singleton) so nested

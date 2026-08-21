@@ -4,6 +4,7 @@ import { game as readGame } from '@/engine/read/game.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { _getResolutionLock } from '@/engine/event/registry.js';
 import type { GameState } from '@/engine/types/game-state.js';
+import type { PendingMisreadAuthority } from '@/engine/types/misread.js';
 import type { EngineAction } from './types.js';
 import { canEndTurnByContract } from '../useActionsPanelFlow/end-turn-contract.js';
 import { _canResolveMisreadPicks } from '@/engine/listeners/misread.js';
@@ -30,6 +31,7 @@ import { canApplyPendingPickSelection } from '@/engine/effect/pick-selection.js'
 import { cardOccurrenceUid, cardOccurrenceWitness } from '@/engine/target/card-occurrence.js';
 import { sceneCap } from '@/engine/read/scene-cap.js';
 import { isSceneEnterSwitchPickArgs } from '@/engine/effect/scene-switch.js';
+import { matchesPendingMisreadAuthority } from '@/engine/state/misread-authority.js';
 
 // ---- can-check (前段ガード) ----
 
@@ -103,7 +105,10 @@ export type ConcedeAuthority = { allowed: boolean };
 export function isAllowed(
   state: GameState,
   action: EngineAction,
-  authority?: { concede?: ConcedeAuthority },
+  authority?: {
+    concede?: ConcedeAuthority;
+    misread?: PendingMisreadAuthority | null;
+  },
 ): boolean {
   if (state.gameResult !== undefined) return false;
   if (isNewPrimaryAction(action) && hasExclusivePublicActionContext(state)) return false;
@@ -202,8 +207,12 @@ export function isAllowed(
     }
     case 'misreadResolve': {
       const pending = useGameStateStore.getState().pendingMisread;
+      const owned = authority?.misread;
       return matchesPendingDecision(pending, action)
-        && _canResolveMisreadPicks(state, pending!, action.picks);
+        && owned !== null
+        && owned !== undefined
+        && matchesPendingMisreadAuthority(pending!, owned)
+        && _canResolveMisreadPicks(state, owned, action.picks);
     }
     case 'optionalResolve': {
       // 2026-06-06 タスクC: pendingEffectOptional が set されているときのみ有効

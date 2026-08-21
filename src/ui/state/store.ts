@@ -11,7 +11,7 @@ import { create } from 'zustand';
 import { produce } from '@/engine/produce';
 import { mutate } from '@/engine/mutate';
 import type { GameState } from '@/engine/types/game-state';
-import type { CausalEffectTrace, EffectCtx } from '@/engine/types';
+import type { EffectCtx, PendingMisreadAuthority } from '@/engine/types';
 import type { ContinuationFrame, PendingEffectSource } from '@/engine/effect/pending-state';
 import { isCausalLogEntry } from '@/engine/log/causal.js';
 import {
@@ -22,6 +22,13 @@ import {
   snapshotPendingRuntimeState,
   withIsolatedPendingRuntimeState,
 } from '@/engine/effect/runtime-state.js';
+import {
+  checkpointLiveMisreadLease,
+  isLiveMisreadLeaseCheckpointCurrent,
+  resetLiveMisreadLease,
+  rollbackLiveMisreadLease,
+  type LiveMisreadLeaseCheckpoint,
+} from '@/engine/state/misread-authority.js';
 import { _drainPendingDeckRevealSide, _drainPendingPublicHandRevealSide } from '@/engine/effect/atom-handlers.js';
 import {
   collectPendingSideChannels,
@@ -38,17 +45,28 @@ import {
   areStoreRollbackParticipantsCurrent,
   checkpointStoreRollbackParticipants,
   markStoreRollbackHandled,
+  registerStoreRollbackParticipant,
   rollbackStoreRollbackParticipants,
   runStoreRollbackPublication,
   StoreRollbackHandledError,
 } from '@/ui/services/storeTransaction.js';
 import { notifyTerminalInteractionPublication } from '@/ui/services/terminalInteractionPublication.js';
 
+registerStoreRollbackParticipant({
+  checkpoint: checkpointLiveMisreadLease,
+  isCurrent: (checkpoint) => isLiveMisreadLeaseCheckpointCurrent(
+    checkpoint as LiveMisreadLeaseCheckpoint,
+  ),
+  rollback: (checkpoint) => rollbackLiveMisreadLease(
+    checkpoint as LiveMisreadLeaseCheckpoint,
+  ),
+});
+
 export type GameStateMutator = (state: GameState) => GameState;
 export type PendingDecisionIdentity = { decisionId: string };
 type PendingDecision<T> = T & PendingDecisionIdentity;
 export type SetGameStateOptions = {
-  /** Keep live resolver channels while committing the next state of one session. */
+  /** Keep exact live resolver channels while committing the next state of one process/session. */
   preserveRuntime?: boolean;
 };
 
@@ -454,19 +472,8 @@ export type PendingHirameki = {
   gainDeferred?: boolean;
 };
 
-/** ミスリード保留 (Commit 3b) */
-export type PendingMisread = {
-  /** Player who chooses which misread abilities to activate. */
-  player: 'self' | 'opp';
-  /** 推理側 (LP-X 対象) の uid */
-  reasoningUid: string;
-  /** 推理側プレイヤー */
-  reasoningPlayer: 'self' | 'opp';
-  /** 発動候補 (反対側 active misread 持ち) */
-  candidates: { uid: string; x: number }[];
-  /** Causal graph paused while this decision is surfaced. */
-  causalTrace?: CausalEffectTrace;
-};
+/** ミスリード保留 (Commit 3b)。engine-owned authorityのpublic projection。 */
+export type PendingMisread = PendingMisreadAuthority;
 
 function setPendingDecision<T extends object>(
   set: (updater: (state: GameStateStore) => Partial<GameStateStore>) => void,
@@ -757,15 +764,18 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
         : {}),
     };
     const previousRuntime = snapshotPendingRuntimeState();
+    const previousMisreadLease = checkpointLiveMisreadLease();
+    const replaceRuntime = options?.preserveRuntime !== true;
     let pendingSurface = surfaceSeed;
     try {
-      if (options?.preserveRuntime !== true) resetPendingRuntimeState();
+      if (replaceRuntime) resetPendingRuntimeState();
       if (gameState !== null && gameState.gameResult === undefined) {
         hydratePendingRuntimeState(gameState);
         pendingSurface = collectPendingSideChannels(surfaceSeed);
       }
     } catch (error) {
       restorePendingRuntimeState(previousRuntime);
+      rollbackLiveMisreadLease(previousMisreadLease);
       throw error;
     }
     set({
@@ -774,6 +784,7 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
       activeActionId: gameState?.gameResult === undefined ? openAction?.id ?? null : null,
     });
     if (gameState !== null) admitCommittedPresentation(gameState);
+    if (replaceRuntime) resetLiveMisreadLease();
     return true;
   },
   commitTerminalState: (state) => {
@@ -826,10 +837,12 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
     if (storeBefore.gameState?.gameResult === undefined) {
       notifyTerminalInteractionPublication();
     }
+    resetLiveMisreadLease();
     return true;
   },
   setReplayGameState: (state) => {
     if (state !== null && !validatePresentationCommit(state)) return;
+    resetLiveMisreadLease();
     set({
       ...MATCH_SESSION_RESET_STATE,
       gameState: state,
@@ -837,6 +850,7 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   },
   resetMatchSessionState: () => {
     resetPendingRuntimeState();
+    resetLiveMisreadLease();
     set(MATCH_SESSION_RESET_STATE);
   },
   dispatch: (mutator) => {

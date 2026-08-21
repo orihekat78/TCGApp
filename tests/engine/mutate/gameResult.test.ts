@@ -95,6 +95,13 @@ describe('engine.mutate.gameResult', () => {
         startNextTurn: true,
       };
       s.pendingReasoningContinuation = { token: 7, uid: 'ACTOR#1', player: 'self' };
+      s.pendingMisreadAuthority = {
+        continuationToken: 7,
+        player: 'opp',
+        reasoningUid: 'ACTOR#1',
+        reasoningPlayer: 'self',
+        candidates: [{ uid: 'PROTECTOR#1', x: 1 }],
+      };
       s.pendingEffects = (['pending', 'resolving'] as const).map((state, index) => ({
         id: `terminal-${state}`,
         source: { player: 'self' as const, cardId: 'SOURCE', abilityId: 'a1' },
@@ -128,6 +135,7 @@ describe('engine.mutate.gameResult', () => {
       expect(s.pendingRuntimeState).toBeUndefined();
       expect(s.pendingTurnTransition).toBeUndefined();
       expect(s.pendingReasoningContinuation).toBeUndefined();
+      expect(s.pendingMisreadAuthority).toBeUndefined();
       expect(s.pendingEffects.map(entry => entry.state)).toEqual(['cancelled', 'cancelled']);
       expect(s.reservedEffects).toEqual([]);
       expect(s.players.self.partner.turnEffects).toEqual({});

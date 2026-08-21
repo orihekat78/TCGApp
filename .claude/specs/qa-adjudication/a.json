@@ -959,7 +959,7 @@
         "src:src/engine/effect/apply-pick.ts:47",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
         "src:src/engine/listeners/triggered.ts:503",
-        "src:src/engine/resolve/stack.ts:227",
+        "src:src/engine/resolve/stack.ts:228",
         "tests:tests/cards/official-qa/effect-entry-trigger-order-public.test.ts:198"
       ]
     },

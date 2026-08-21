@@ -466,28 +466,26 @@ describe('Playmat', () => {
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     const state = createEmptyGameState();
     state.players.self.scene.push({
-      cardId: 'SELF-REASONER', uid: 'self-reasoner#1', state: 'active',
+      cardId: 'D01010', uid: 'self-reasoner#1', state: 'sleep',
       isNamed: false, enterOrder: 0,
       setCards: [], stackedCards: [], keywordOverrides: { granted: [], disabledOriginal: false },
       apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false },
       declaredUseCount: {},
     });
     state.players.opp.scene.push({
-      cardId: 'OPP-MISREAD', uid: 'opp-misread#1', state: 'active',
+      cardId: 'D01010', uid: 'opp-misread#1', state: 'active',
       isNamed: false, enterOrder: 0,
       setCards: [], stackedCards: [], keywordOverrides: { granted: [], disabledOriginal: false },
       apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false },
       declaredUseCount: {},
     });
-    useGameStateStore.setState({
-      gameState: state,
-      pendingMisread: {
-        player: 'opp',
-        reasoningUid: 'self-reasoner#1',
-        reasoningPlayer: 'self',
-        candidates: [{ uid: 'opp-misread#1', x: 1 }],
-      },
-    });
+    const authority = {
+      continuationToken: 1,
+      player: 'opp' as const,
+      reasoningUid: 'self-reasoner#1',
+      reasoningPlayer: 'self' as const,
+      candidates: [{ uid: 'opp-misread#1', x: 1 }],
+    };
     const humanSide = globalThis as { __humanPlayerSide?: 'self' | 'opp' | null };
     const previousHumanSide = humanSide.__humanPlayerSide;
     const container = document.createElement('div');
@@ -495,27 +493,22 @@ describe('Playmat', () => {
 
     try {
       humanSide.__humanPlayerSide = 'opp';
+      useGameStateStore.setState({
+        gameState: state,
+        pendingMisread: { ...authority, decisionId: 'decision:misread-ui-projection' },
+      });
       act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
       expect(container.querySelector('[data-testid="misread-picker-modal"]')).not.toBeNull();
-      expect(container.textContent).toContain('OPP-MISREAD');
+      expect(container.textContent).toContain('円谷光彦');
       expect(container.querySelector('[data-testid="misread-card-opp-misread#1"] img')).not.toBeNull();
       expect(container.querySelector('[data-testid="misread-detail-opp-misread#1"]')).not.toBeNull();
 
       humanSide.__humanPlayerSide = null;
       act(() => {
-        useGameStateStore.setState({
-          spectatorMode: true,
-          pendingMisread: {
-            player: 'opp',
-            reasoningUid: 'self-reasoner#1',
-            reasoningPlayer: 'self',
-            candidates: [],
-          },
-        });
+        useGameStateStore.setState({ spectatorMode: true });
         root.render(<Playmat gameState={state} resolveCard={resolveCard} />);
       });
       expect(container.querySelector('[data-testid="misread-picker-modal"]')).toBeNull();
-      expect(useGameStateStore.getState().pendingMisread).toBeNull();
     } finally {
       act(() => root.unmount());
       humanSide.__humanPlayerSide = previousHumanSide;

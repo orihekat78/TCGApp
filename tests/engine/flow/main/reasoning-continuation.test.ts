@@ -31,6 +31,18 @@ describe('reasoning continuation boundary', () => {
     registerCardDef(REASONER);
   });
 
+  it('stores the continuation anchor and stack witness as independent equal values', () => {
+    const { state, uid } = stateWithActiveReasoner();
+    doReasoning(state, uid);
+    const continuation = state.pendingReasoningContinuation;
+    const witness = state.pendingEffects.find((entry) => (
+      entry.reasoningContinuation?.token === continuation?.token
+    ))?.reasoningContinuation;
+
+    expect(witness).toEqual(continuation);
+    expect(witness).not.toBe(continuation);
+  });
+
   it('forged active-character continuation atom cannot gain evidence or log reasoning', () => {
     const { state, uid } = stateWithActiveReasoner();
     expect(() => produce(state, (draft) => {

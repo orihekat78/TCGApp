@@ -27,6 +27,7 @@ import {
   assertPendingRuntimeValue,
 } from './pending-runtime-schema.js';
 import type { GameState } from '../types/game-state.js';
+import type { PendingMisreadAuthority } from '../types/misread.js';
 import { isDraft, original } from '../produce.js';
 import { def as readDef } from '../read/def.js';
 import {
@@ -35,6 +36,17 @@ import {
   readChooseInterceptBatchCancellation,
   readChooseInterceptBatchSelection,
 } from './choose-intercept-authority.js';
+import {
+  assertLiveMisreadLease,
+  assertPendingMisreadAuthority,
+  bindLiveMisreadLeaseRuntime,
+  checkpointLiveMisreadLease,
+  clearLiveMisreadLease,
+  consumeLiveMisreadLease,
+  isLiveMisreadLeaseCheckpointCurrent,
+  matchesPendingMisreadAuthority,
+  rollbackLiveMisreadLease,
+} from '../state/misread-authority.js';
 
 const TRANSACTIONAL_PENDING_KEYS = [
   '__pendingActionExpansion',
@@ -631,6 +643,30 @@ function assertPersistedChooseInterceptAuthority(
   }
 }
 
+function assertPendingMisreadRuntimeMatchesState(
+  state: GameState,
+  snapshot: ReadonlyArray<{ key: PendingKey; present: boolean; value: unknown }>,
+): void {
+  const misreadEntry = snapshot.find(entry => entry.key === '__pendingMisread' && entry.present);
+  const misreadSide = misreadEntry?.value !== null && misreadEntry?.value !== undefined
+    ? misreadEntry.value as PendingMisreadAuthority
+    : null;
+  const misreadAuthority = state.pendingMisreadAuthority;
+  if (misreadSide !== null && misreadAuthority === undefined) {
+    throw new Error('Invalid pendingMisread: GameState authority required');
+  }
+  if (misreadSide === null && misreadAuthority !== undefined) {
+    throw new Error('Invalid pendingMisread: persisted runtime projection required');
+  }
+  if (misreadSide !== null && misreadAuthority !== undefined) {
+    if (!samePlainRuntimeValue(misreadSide, misreadAuthority)
+      || !matchesPendingMisreadAuthority(misreadSide, misreadAuthority)) {
+      throw new Error('Invalid pendingMisread: runtime projection must exactly match GameState authority');
+    }
+    assertPendingMisreadAuthority(state, misreadAuthority);
+  }
+}
+
 function assertPendingRuntimeMatchesState(
   state: GameState,
   snapshot: ReadonlyArray<{ key: PendingKey; present: boolean; value: unknown }>,
@@ -725,6 +761,7 @@ function assertPendingRuntimeMatchesState(
       chooseInterceptResume.value as PersistedChooseInterceptResume,
     );
   }
+  assertPendingMisreadRuntimeMatchesState(state, snapshot);
   const replacementContinuation = snapshot.find(entry =>
     entry.key === '__pendingSetCardReplacementContinuation' && entry.present && entry.value !== null);
   if (replacementContinuation) {
@@ -876,8 +913,11 @@ export function restorePendingRuntimeState(
 }
 
 /** Clear every live resolver side channel before installing another authority. */
-export function resetPendingRuntimeState(): void {
+export function resetPendingRuntimeState(
+  options: { preserveLiveMisreadLease?: boolean } = {},
+): void {
   for (const key of TRANSACTIONAL_PENDING_KEYS) pendingGlobalAccess(key).remove();
+  if (options.preserveLiveMisreadLease !== true) clearLiveMisreadLease();
 }
 
 function recordValue(value: unknown): Record<string, unknown> | null {
@@ -929,12 +969,21 @@ export function withIsolatedPendingRuntimeState<T>(
   run: () => T,
 ): T {
   const callerRuntime = snapshotPendingRuntimeState();
+  const callerMisreadLease = checkpointLiveMisreadLease();
   try {
-    resetPendingRuntimeState();
+    resetPendingRuntimeState({ preserveLiveMisreadLease: true });
     hydratePendingRuntimeState(authority);
     return run();
   } finally {
-    restorePendingRuntimeState(callerRuntime);
+    try {
+      restorePendingRuntimeState(callerRuntime);
+    } finally {
+      // A headless/replay branch may reach terminal cleanup. Restore the
+      // caller's live lease unless that branch crossed a real epoch boundary.
+      if (isLiveMisreadLeaseCheckpointCurrent(callerMisreadLease)) {
+        rollbackLiveMisreadLease(callerMisreadLease);
+      }
+    }
   }
 }
 
@@ -1043,6 +1092,51 @@ export function readPendingDeckPlaceAuthority(
     const pending = _peekPendingDeckPlaceSide();
     return pending === null ? null : toPlainDeep(pending);
   });
+}
+
+/** Read one Misread prompt only while its exact GameState authority exists. */
+export function readPendingMisreadAuthority(
+  state: GameState,
+): PendingMisreadAuthority | null {
+  return readPendingAuthority(state, () => {
+    const access = pendingGlobalAccess('__pendingMisread');
+    if (!access.present || access.value === null || access.value === undefined) return null;
+    return toPlainDeep(access.value) as PendingMisreadAuthority;
+  });
+}
+
+/** Consume the exact persisted Misread projection paired with GameState authority. */
+export function consumePersistedMisreadAuthority(
+  state: GameState,
+  pending: PendingMisreadAuthority,
+): boolean {
+  const persisted = state.pendingRuntimeState;
+  const owned = state.pendingMisreadAuthority;
+  if (!persisted || !owned || !matchesPendingMisreadAuthority(owned, pending)) return false;
+  const entry = persisted.snapshot.find(candidate => candidate.key === '__pendingMisread');
+  if (!entry?.present || !samePlainRuntimeValue(entry.value, pending)) return false;
+  consumeLiveMisreadLease(
+    state,
+    owned,
+    persisted.token,
+    persistedOwner(persisted),
+  );
+
+  const currentMarker = marker();
+  const ownsLiveRuntime = currentMarker?.token === persisted.token
+    && currentMarker.owner === persistedOwner(persisted);
+  if (ownsLiveRuntime) {
+    const access = pendingGlobalAccess('__pendingMisread');
+    if (access.present && samePlainRuntimeValue(access.value, pending)) access.value = null;
+  }
+
+  const next: PersistedPendingRuntimeState = {
+    token: persisted.token,
+    snapshot: persisted.snapshot.filter(candidate => candidate.key !== '__pendingMisread'),
+  };
+  state.pendingRuntimeState = next;
+  if (ownsLiveRuntime) setMarker({ token: next.token, owner: persistedOwner(next) });
+  return true;
 }
 
 function samePlainRuntimeValue(
@@ -1270,6 +1364,14 @@ export function persistPendingRuntimeState(state: GameState): void {
   state.pendingRuntimeSeq = Math.max(state.pendingRuntimeSeq ?? 0, token);
   state.pendingRuntimeState = persisted;
   setMarker({ token, owner: persistedOwner(persisted) });
+  if (state.pendingMisreadAuthority !== undefined) {
+    bindLiveMisreadLeaseRuntime(
+      state,
+      state.pendingMisreadAuthority,
+      token,
+      persistedOwner(persisted),
+    );
+  }
 }
 
 /**
@@ -1280,12 +1382,30 @@ export function hydratePendingRuntimeState(state: GameState): boolean {
   const persisted = state.pendingRuntimeState;
   assertPendingRuntimeSequence(state.pendingRuntimeSeq);
   if (persisted !== undefined) assertPendingRuntimeToken(persisted.token);
-  if (!persisted) return false;
+  if (!persisted) {
+    if (state.pendingMisreadAuthority !== undefined) {
+      throw new Error('Invalid pendingMisread: persisted runtime projection required');
+    }
+    return false;
+  }
   const preparedSnapshot = preparePendingRuntimeSnapshot(
     persisted.snapshot as PendingRuntimeSnapshot,
     { persisted: true },
   );
   const currentMarker = marker();
+  // A same-owner live resolver can legitimately mutate its ActionContext
+  // before the next pause replaces the persisted snapshot. Preserve that
+  // transition while always authenticating Misread, whose resume lease is
+  // intentionally stricter than the legacy runtime marker.
+  assertPendingMisreadRuntimeMatchesState(state, preparedSnapshot);
+  if (state.pendingMisreadAuthority !== undefined) {
+    assertLiveMisreadLease(
+      state,
+      state.pendingMisreadAuthority,
+      persisted.token,
+      persistedOwner(persisted),
+    );
+  }
   if (currentMarker?.token === persisted.token
       && currentMarker.owner === persistedOwner(persisted)) return false;
   assertPendingRuntimeMatchesState(state, preparedSnapshot);

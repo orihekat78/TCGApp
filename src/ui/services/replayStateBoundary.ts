@@ -11,6 +11,7 @@ export function cloneReplayStateAtCommit(state: GameState): GameState {
   const {
     pendingRuntimeState: _pendingRuntimeState,
     pendingReasoningContinuation: _pendingReasoningContinuation,
+    pendingMisreadAuthority: _pendingMisreadAuthority,
     pendingTurnTransition: _pendingTurnTransition,
     effectTriggerBatchContext: _effectTriggerBatchContext,
     effectTriggerBatchConfirmedContext: _effectTriggerBatchConfirmedContext,

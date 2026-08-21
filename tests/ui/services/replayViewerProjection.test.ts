@@ -76,6 +76,14 @@ function privateState() {
     token: 1,
     snapshot: [{ key: '__privateReplayDecision', present: true, value: 'RUNTIME-SECRET' }],
   };
+  state.pendingReasoningContinuation = { token: 1, uid: 'scene:self:1', player: 'self' };
+  state.pendingMisreadAuthority = {
+    continuationToken: 1,
+    player: 'opp',
+    reasoningUid: 'scene:self:1',
+    reasoningPlayer: 'self',
+    candidates: [{ uid: 'scene:opp:1', x: 1 }],
+  };
   state.pendingEffects.push({
     id: 'runtime-custom-effect',
     source: { player: 'opp', cardId: 'D11005' },
@@ -166,6 +174,7 @@ describe('projectReplayStateForViewer', () => {
     expect(projected.actionContexts).toEqual({});
     expect(projected.pendingRuntimeState).toBeUndefined();
     expect(projected.pendingReasoningContinuation).toBeUndefined();
+    expect(projected.pendingMisreadAuthority).toBeUndefined();
   });
 
   it('keeps only the solo owner hand and owner-private legacy detail', () => {

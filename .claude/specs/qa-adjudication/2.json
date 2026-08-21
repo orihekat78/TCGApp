@@ -259,7 +259,7 @@
       "evidence": [
         "rules:.claude/rules/25-qa-effects-resolution.md:79",
         "src:src/cards/ct-p03/B03002.ts:13",
-        "src:src/engine/resolve/stack.ts:139",
+        "src:src/engine/resolve/stack.ts:143",
         "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:199",
         "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:201",
         "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:202"
@@ -678,7 +678,7 @@
         "rules:.claude/rules/11-reasoning.md:11",
         "src:src/cards/ct-p05/B05011.ts:18",
         "src:src/engine/flow/main/reasoning.ts:157",
-        "src:src/engine/flow/main/reasoning.ts:273",
+        "src:src/engine/flow/main/reasoning.ts:322",
         "src:src/engine/listeners/triggered.ts:85"
       ],
       "noteCodes": [

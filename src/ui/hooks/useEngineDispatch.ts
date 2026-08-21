@@ -32,6 +32,7 @@ import {
   readPendingEffectChoiceAuthority,
   readPendingEffectOptionalAuthority,
   readPendingEffectPickAuthority,
+  readPendingMisreadAuthority,
   readPendingRpsAuthority,
   rebindPendingRuntimeStateOwner,
   restorePendingRuntimeState,
@@ -54,8 +55,8 @@ import {
   surfacePublicHandReveal as surfacePublicHandRevealFromStore,
 } from '@/ui/state/surface-pending.js';
 import { isAllowed } from './useEngineDispatch/can-check.js';
-import { _resumeDeferredReasoning } from '@/engine/flow/main/reasoning.js';
-import { _resolveMisreadPicks } from '@/engine/listeners/misread.js';
+import { _resolveDeferredMisread } from '@/engine/flow/main/reasoning.js';
+import type { PendingMisreadAuthority } from '@/engine/types/misread.js';
 import type { EngineAction, DispatchResult } from './useEngineDispatch/types.js';
 import { isReplayOwnedState } from '@/ui/services/replayOwnership';
 import {
@@ -132,6 +133,7 @@ function runEngineAction(
     rps: PendingRpsSide | null;
     deckReorder: PendingDeckReorderSide | null;
     deckPlace: PendingDeckPlaceSide | null;
+    misread: PendingMisreadAuthority | null;
   },
 ): void {
   switch (action.type) {
@@ -304,15 +306,9 @@ function runEngineAction(
       return;
     }
     case 'misreadResolve': {
-      const pending = useGameStateStore.getState().pendingMisread;
-      if (!pending) return;
-      _resolveMisreadPicks(draft, pending, action.picks);
-      _resumeDeferredReasoning(
-        draft,
-        pending.reasoningUid,
-        pending.reasoningPlayer,
-        pending.causalTrace,
-      );
+      const pending = authorities.misread;
+      if (!pending) throw new RejectedDecisionError();
+      _resolveDeferredMisread(draft, pending, action.picks);
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }
@@ -571,6 +567,9 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     deckPlace: action.type === 'deckPlaceResolve'
       ? readPendingDeckPlaceAuthority(current)
       : null,
+    misread: action.type === 'misreadResolve'
+      ? readPendingMisreadAuthority(current)
+      : null,
   };
   if (action.type === 'effectPickResolve'
     && publicHandRevealBefore?.lifetime === 'effect'
@@ -598,7 +597,10 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
   if (action.type === 'effectPickResolve' && authorities.effectPick === null) {
     return { ok: false, reason: 'not-allowed' };
   }
-  if (!isAllowed(current, action, { concede: concedeAuthority })) return { ok: false, reason: 'not-allowed' };
+  if (!isAllowed(current, action, {
+    concede: concedeAuthority,
+    misread: authorities.misread,
+  })) return { ok: false, reason: 'not-allowed' };
 
   if (action.type === 'concede') {
     const pendingRuntimeBefore = snapshotPendingRuntimeState();

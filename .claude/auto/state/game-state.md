@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-state.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:state`
-> Source hash: `ab6f19c22fb4`
+> Source hash: `49e2c26dfd61`
 
 `src/engine/types/game-state.ts` から抽出した GameState の構造図。
 
@@ -28,6 +28,7 @@ classDiagram
     +declaredBatchSeq?: number
     +pendingReasoningContinuation?: ReasoningContinuation
     +reasoningContinuationSeq?: number
+    +pendingMisreadAuthority?: PendingMisreadAuthority
     +effectTriggerBatchContext?: number
     +effectTriggerBatchConfirmedContext?: boolean
     +setCardInstanceSeq?: number

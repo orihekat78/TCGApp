@@ -572,7 +572,7 @@
         "src:src/engine/effect/apply-pick.ts:47",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
         "src:src/engine/listeners/triggered.ts:503",
-        "src:src/engine/resolve/stack.ts:227",
+        "src:src/engine/resolve/stack.ts:228",
         "tests:tests/cards/official-qa/effect-entry-trigger-public-wave2.test.ts:145"
       ]
     },
@@ -690,7 +690,9 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05015.ts:22",
-        "tests:tests/cards/m1-megasweep/B05015.manual.test.ts:127"
+        "tests:tests/cards/m1-megasweep/B05015.manual.test.ts:127",
+        "tests:tests/cards/official-qa/misread-reaction-order-wave26.test.ts:88",
+        "tests:tests/cards/official-qa/misread-reaction-order-wave26.test.ts:93"
       ],
       "noteCodes": [
         "B05015-PER-MISREAD-AP-TESTED"
@@ -1169,7 +1171,7 @@
         "src:src/engine/effect/apply-pick.ts:47",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
         "src:src/engine/listeners/triggered.ts:503",
-        "src:src/engine/resolve/stack.ts:227",
+        "src:src/engine/resolve/stack.ts:228",
         "tests:tests/cards/official-qa/effect-entry-trigger-order-public.test.ts:217"
       ]
     },
@@ -1757,7 +1759,7 @@
         "src:src/engine/effect/apply-pick.ts:47",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
         "src:src/engine/listeners/triggered.ts:503",
-        "src:src/engine/resolve/stack.ts:227",
+        "src:src/engine/resolve/stack.ts:228",
         "tests:tests/cards/official-qa/effect-entry-trigger-order-public.test.ts:279"
       ]
     },

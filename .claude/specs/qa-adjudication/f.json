@@ -294,7 +294,7 @@
         "rules:.claude/rules/13-keywords.md:28",
         "rules:.claude/rules/13-keywords.md:29",
         "src:src/cards/ct-p03/B03009.ts:44",
-        "src:src/engine/listeners/misread.ts:152",
+        "src:src/engine/listeners/misread.ts:157",
         "tests:tests/cards/official-qa/misread-public-runtime-wave18.test.ts:131",
         "tests:tests/cards/official-qa/misread-public-runtime-wave18.test.ts:135",
         "tests:tests/cards/official-qa/misread-public-runtime-wave18.test.ts:138",
@@ -1006,14 +1006,12 @@
     {
       "qaId": "card:B06030:6d5a65b9e083c8565478cceec3269781a67a936789441e6c196e107f90e2e8c8",
       "answerHash": "9774db2bba11e1d8d8eb55ecaab030d2da5bec33b33e7ee366cc4ddf59c1cdc0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06030.ts:38"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/ct-p06/B06030.ts:38",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave26.test.ts:110"
       ]
     },
     {
@@ -2363,14 +2361,17 @@
     {
       "qaId": "card:PR247:6d5a65b9e083c8565478cceec3269781a67a936789441e6c196e107f90e2e8c8",
       "answerHash": "9774db2bba11e1d8d8eb55ecaab030d2da5bec33b33e7ee366cc4ddf59c1cdc0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR247.ts:7"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/pr-01/PR247.ts:5",
+        "src:src/cards/pr-01/PR247.ts:6",
+        "src:src/cards/pr-01/PR247.ts:7",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave26.test.ts:149",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave26.test.ts:150",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave26.test.ts:152",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave26.test.ts:153"
       ]
     },
     {

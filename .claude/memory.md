@@ -77,3 +77,21 @@
   and the chosen removed character emits its effect-entry hook.
 - `cutin:used` carries the declared batch so B10087 observes the current cut-in
   before the batch is consumed; B04003/B08081 physical-copy ordering remains covered.
+
+## 2026-08-22: QA runtime Wave26 Misread authority and atomic reactions
+- Wave26 certifies 34 Misread QA; coverage is 1134 matched/1830 test-missing.
+- A public Misread decision needs both exact GameState fields and its nonserialized,
+  process-local live lease; owner, reasoner, candidates, token, trace, runtime object
+  identity, and a graph-aware typed snapshot of the finalized pause-time full GameState must match.
+  JSON/replay, cross-session restore, shared-runtime UID aliases, non-finite number aliases,
+  unsupported descriptors, cycles, changed object aliases, and semantic state edits fail closed.
+- Side-channel data is projection, never authority. Forged, cloned, stale, foreign,
+  reordered, duplicated, or replayed selections reject transactionally.
+- Multi-Misread commits every sleep and the aggregate LP reduction before emitting
+  one `misread:performed` event per physical UID; B05015 sees the full committed state.
+- Terminal, replay, and transient-runtime boundaries clear the authority.
+- Same-owner hydration rechecks Misread before its runtime-marker fast path, while
+  other live decisions retain their valid pre-snapshot transitions (notably Hirameki).
+- PR247 generic Misread evidence is aligned; bundled PR247/PR262/PR268 QA remains
+  test-missing where the additional printed effect is not completely proved.
+- BUG-323 records B09016's separate trigger-time versus resolution-time condition defect.

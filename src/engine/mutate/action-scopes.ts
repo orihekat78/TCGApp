@@ -48,5 +48,6 @@ export function clearTerminalActionState(state: GameState): void {
   delete state.pendingRuntimeState;
   delete state.pendingTurnTransition;
   delete state.pendingReasoningContinuation;
+  delete state.pendingMisreadAuthority;
   state.reservedEffects = [];
 }

@@ -1140,6 +1140,7 @@ export function assertPendingRuntimeValue(
     case '__pendingMisread':
       nullable(value, 'pendingMisread', (entry, entryPath) => {
         const item = record(entry, entryPath);
+        integer(item.continuationToken, `${entryPath}.continuationToken`, 1);
         player(item.player, `${entryPath}.player`);
         string(item.reasoningUid, `${entryPath}.reasoningUid`);
         player(item.reasoningPlayer, `${entryPath}.reasoningPlayer`);

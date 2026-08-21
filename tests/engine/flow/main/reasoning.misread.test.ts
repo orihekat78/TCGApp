@@ -8,8 +8,8 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { engine } from '@/engine';
-import { registerMisreadListener, _drainPendingMisread, _resetMisreadRegistered, _resetPendingMisread, _resolveMisreadPicks } from '@/engine/listeners/misread';
-import { _resumeDeferredReasoning } from '@/engine/flow/main/reasoning';
+import { registerMisreadListener, _drainPendingMisread, _resetMisreadRegistered, _resetPendingMisread } from '@/engine/listeners/misread';
+import { _resolveDeferredMisread } from '@/engine/flow/main/reasoning';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { misreadX } from '@/cards/_shared/misreadX';
 import type { CardDef } from '@/engine/types/card-def';
@@ -60,8 +60,8 @@ function makeChar(uid: string, cardId: string): SceneCharacter {
 function resolveAllPendingMisread(state: GameState): void {
   const pending = _drainPendingMisread();
   expect(pending).not.toBeNull();
-  _resolveMisreadPicks(state, pending!, pending!.candidates);
-  _resumeDeferredReasoning(state, pending!.reasoningUid, pending!.reasoningPlayer);
+  _resolveDeferredMisread(state, pending!, pending!.candidates);
+  runAllUntilEmpty(state);
 }
 
 describe('reasoning × misread integration (Commit 3b)', () => {

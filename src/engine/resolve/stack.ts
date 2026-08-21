@@ -69,6 +69,7 @@ function cancelPendingAfterGameEnd(
   }
   delete state.pendingTurnTransition;
   delete state.pendingReasoningContinuation;
+  delete state.pendingMisreadAuthority;
   state.reservedEffects = [];
   clearPersistedPendingRuntimeState(state);
   resetPendingRuntimeStateAfterGameEnd(options);

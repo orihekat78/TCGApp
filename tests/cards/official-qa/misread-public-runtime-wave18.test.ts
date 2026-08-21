@@ -110,15 +110,15 @@ describe('official QA Wave 18: Misread through the public dispatcher', () => {
   beforeEach(resetRuntime);
 
   // Card-bound matrix: B04079 B05012 B05073 B05080 B06007 B06030 B06056 B06093 B07045 B07073 B08011 B09016 B09063 B10016 B10040 B10045 B10071.
-  it.each(SINGLE_CASES)('%s exposes its printed X and applies it for only this reasoning', (cardId, x) => {
-    install([cardId]);
+  it.each(SINGLE_CASES)('%s exposes its printed X and combines within one reasoning', (cardId, x) => {
+    install([cardId, 'B06093']);
     const pending = beginReasoning();
-    expect(pending.candidates).toEqual([{ uid: 'misread-0', x }]);
+    expect(pending.candidates).toEqual([{ uid: 'misread-0', x }, { uid: 'misread-1', x: 2 }]);
     expect(dispatchCurrentDecision({ type: 'misreadResolve', picks: pending.candidates })).toEqual({ ok: true });
 
     const after = useGameStateStore.getState();
-    expect(after.gameState?.players.self.scene[0].state).toBe('sleep');
-    expect(after.gameState?.players.opp.evidence).toHaveLength(5 - x);
+    expect(after.gameState?.players.self.scene.map((card) => card.state)).toEqual(['sleep', 'sleep']);
+    expect(after.gameState?.players.opp.evidence).toHaveLength(3 - x);
     expect(after.gameState?.players.opp.scene[0].lpOverride).toBeNull();
     expect(after.gameState?.players.opp.scene[0].turnEffects.lpMod_reasoning).toBeUndefined();
     expect(after.pendingMisread).toBeNull();
