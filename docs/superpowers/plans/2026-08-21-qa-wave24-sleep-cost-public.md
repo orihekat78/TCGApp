@@ -61,8 +61,8 @@
 - [x] Run focused tests, typecheck, lint, build, smoke, and relevant isolated Playwright.
 - [x] Obtain Sol semantic/adversarial and Terra test review; resolve every BLOCK.
 - [x] Investigate structurally similar sleep-cost and entry consumers.
-- [ ] Run full Vitest, `git diff --check`, complete diff review, and clean release-preparation test.
-- [ ] Commit one coherent Wave 24 candidate and re-prove the clean worktree.
+- [x] Run full Vitest, `git diff --check`, complete diff review, and clean release-preparation test.
+- [x] Commit one coherent Wave 24 candidate and re-prove the clean worktree.
 
 ## Acceptance
 

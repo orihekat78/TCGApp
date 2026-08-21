@@ -59,3 +59,5 @@
   and filter-decoy UIDs atomically while preserving exact valid selection.
 - Entry/continuation coverage closes B07002, B07016, B07067, and B09058;
   Sol engine and Terra test reviews report no BLOCK.
+- Final clean gates: release preparation file 1/1 (113 passed, 1 skipped) and
+  full Vitest 1096 files/10471 tests pass (3 files/178 tests skipped).
