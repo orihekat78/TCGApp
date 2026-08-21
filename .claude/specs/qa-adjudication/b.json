@@ -1566,15 +1566,18 @@
     {
       "qaId": "card:B09070:5183b8cdd403d09101a0c94ec18dd1f75311c707e255dd1dfc2ba97f30ae50ed",
       "answerHash": "936b37c03225115718d37125a92c209f67d4cc89ea29eaa07cd60540ce273702",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09070.ts:97"
+        "rules:.claude/rules/03-field-areas.md:35",
+        "rules:.claude/rules/24-qa-naming-stun.md:49",
+        "src:src/cards/ct-p09/B09070.ts:79",
+        "src:src/engine/effect/atom-handlers/scene.ts:1340",
+        "src:src/engine/mutate/scene.ts:754",
+        "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:359"
       ],
-      "noteCodes": [
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B09072:faf400843f5e8be98311f8e61c3b482c976b0b76fc94b765fb9539a132338f65",
@@ -2238,12 +2241,18 @@
     {
       "qaId": "card:PR199:be9bb7af3ac62c5a59fa84c917cd5a0daca7576b0ffad3bcacd869d093cc183d",
       "answerHash": "76b859f15adb439639eb10a33e8176e4149d07f983cb8e53779f6d9cc4d44b3c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR199.ts:135"
-      ]
+        "rules:.claude/rules/03-field-areas.md:35",
+        "rules:.claude/rules/24-qa-naming-stun.md:49",
+        "src:src/cards/pr-01/PR199.ts:85",
+        "src:src/engine/effect/atom-handlers/scene.ts:1340",
+        "src:src/engine/mutate/scene.ts:754",
+        "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:409"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:PR243:79b5f759d0ad2071f3618dd6d9719f809e5dae0cc3bb3b8b7d2ef6584e2d9cf2",

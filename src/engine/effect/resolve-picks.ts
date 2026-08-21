@@ -399,7 +399,8 @@ function runtimeHumanDecisionPlayer(ctx: EffectCtx, opts: ResolveEffectPicksOpts
 import {
   pushPendingEffectPickSide, toPlainDeep, _peekPendingEffectChoiceSide, getPendingChoiceResume,
   setPendingChoiceResume, pushPendingEffectChoiceSide, setPendingChoiceBindings,
-  pushPendingEffectOptionalSide, setPendingOptionalResume, setPendingOptionalBindings,
+  pushPendingEffectOptionalSide, _peekPendingEffectOptionalSide, appendPendingOptionalContinuation,
+  setPendingOptionalResume, setPendingOptionalBindings,
   setPendingOptionalCostPaid,
   type ContinuationFrame,
   type PendingEffectPickSide,
@@ -1258,6 +1259,7 @@ export function resolveEffectPicks(
         }).__pendingEffectPickQueue;
         const pickCountBefore = pendingQueue?.length ?? 0;
         const choiceBefore = _peekPendingEffectChoiceSide() !== null;
+        const optionalBefore = _peekPendingEffectOptionalSide() !== null;
         seqOut.push(resolveEffectPicks(state, effect.steps[i]!, ctx, {
           ...opts,
           _hasPriorSequenceStep: opts._hasPriorSequenceStep === true || i > 0,
@@ -1280,6 +1282,14 @@ export function resolveEffectPicks(
           if (remainder.length > 0) {
             const cur = getPendingChoiceResume();
             if (cur) setPendingChoiceResume({ kind: 'sequence', steps: [cur, ...remainder] });
+          }
+          return { kind: 'sequence', steps: seqOut };
+        }
+        const optionalAfter = _peekPendingEffectOptionalSide() !== null;
+        if (!optionalBefore && optionalAfter) {
+          const remainder = effect.steps.slice(i + 1);
+          if (remainder.length > 0) {
+            appendPendingOptionalContinuation({ remainder, ctx, kind: 'sequence' });
           }
           return { kind: 'sequence', steps: seqOut };
         }

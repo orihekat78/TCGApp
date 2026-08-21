@@ -118,7 +118,7 @@ import {
   setPendingRpsResume,
   appendPendingRpsContinuation,
   setPendingChoiceContinuation,
-  setPendingOptionalContinuation,
+  appendPendingOptionalContinuation,
   setPendingEffectRepeatOptionalContinuation,
   getPendingChoiceResume,
   _takePendingSetCardChoiceResume,
@@ -769,7 +769,7 @@ function appendDecisionContinuation(
     return;
   }
   if (kind === 'optional') {
-    setPendingOptionalContinuation(continuation);
+    appendPendingOptionalContinuation(continuation);
     return;
   }
   setPendingEffectRepeatOptionalContinuation(continuation);

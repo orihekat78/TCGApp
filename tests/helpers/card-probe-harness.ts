@@ -8,10 +8,13 @@
 //   - declared   : activateDeclaredAbility + runAllUntilEmpty (B07032 慣行)
 //   - enter      : event.emit('enter', …) + runAllUntilEmpty (B07036 の登場 hook payload shape)
 //   - event-use  : handUseCard + runAllUntilEmpty (B09089 慣行)
+//   - phase-end  : production phase:end:start emit + triggered listener
+//   - cut-in     : contact cutIn flow + effect:declared listener
+//   - scene-remove: production scene removal + leave:to-remove listener
 //   - cost-gate  : public declared activation gate (state/queue unchanged を pin)
 //
-// pick / optional は 2 本の別 queue に surface する (pending-state)。harness は毎反復
-//   「pick 先・無ければ optional」順で drain し (B07032/B07036/B09089 実測順)、script を 1 対 1 で適用する。
+// choice / pick / optional は別 queue に surface する (pending-state)。harness は毎反復
+//   「choice → pick → optional」順で drain し、script を 1 対 1 で適用する。
 //   surface した pick 毎に候補 (uid+cardId) を記録し、candidatesExclude で decoy 除外を実証する。
 
 import { expect } from 'vitest';
@@ -22,14 +25,18 @@ import { register as registerCardDef, _resetRegistry as resetDefRegistry } from 
 import { handUseCard } from '@/engine/flow/main/hand-use-card';
 import { activateDeclaredAbility } from '@/engine/flow/main/ability-activate';
 import { canActivateDeclaredAbility } from '@/engine/flow/main/declared-ability';
+import { canCutIn, cutIn } from '@/engine/flow/contact';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
 import {
+  _drainPendingEffectChoiceSide,
   _drainPendingEffectPickSide,
   _drainPendingEffectOptionalSide,
+  _clearPendingEffectChoiceSide,
   _clearPendingEffectPickQueue,
   _clearPendingEffectOptionalSide,
 } from '@/engine/effect/pending-state';
 import {
+  applyChoiceAndContinuation,
   applyPickAndContinuation,
   applyPickSkipAndContinuation,
   applyOptionalAndContinuation,
@@ -37,8 +44,9 @@ import {
 } from '@/engine/effect/apply-pick';
 import { _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
 import { _resetUidCounter } from '@/engine/mutate/scene';
+import { mutate } from '@/engine/mutate/index';
 import { char as readChar } from '@/engine/read/char';
-import type { GameState, CardDef, SceneCharacter } from '@/engine/types';
+import type { ActionContext, GameState, CardDef, SceneCharacter } from '@/engine/types';
 import type { AbilityCostParams } from '@/engine/flow/main/ability-activate';
 
 type Side = 'self' | 'opp';
@@ -50,6 +58,7 @@ export interface ProbeSceneChar {
   state?: CharState;
   setCards?: Array<{ cardId: string; faceUp: boolean; instanceId: string }>;
   stackedCards?: Array<{ cardId: string; instanceId: string }>;
+  shippuFiredCharThisTurn?: boolean;
 }
 
 export interface ProbeSetup {
@@ -64,6 +73,7 @@ export interface ProbeSetup {
   deckSize?: number;
   oppDeckSize?: number;
   remove?: string[];
+  partnerAreaMR?: ProbeSceneChar;
   partnerAreaCards?: string[];
   fileCount?: number;
   /** デッキ最上部に明示 cardId を積む (removeDeckTop cost / deckRevealUntil の内容依存シナリオ用) */
@@ -80,12 +90,16 @@ export type ProbeDrive =
   | { kind: 'declared'; uid: string; abilityId: string; costParams?: AbilityCostParams }
   | { kind: 'enter'; cardId: string; uid: string; side?: Side }
   | { kind: 'event-use'; cardId: string }
+  | { kind: 'phase-end'; player?: Side }
+  | { kind: 'cut-in'; cardId: string; player?: Side; byUid: string; byPlayer: Side; targetUid: string; cutinAbilityId?: string }
+  | { kind: 'scene-remove'; uid: string; byPlayer?: Side }
   | { kind: 'cost-gate'; uid: string; abilityId: string; expectCanPay: boolean; costParams?: AbilityCostParams };
 
 export type ProbeScriptAction =
   | 'optional:take'
   | 'optional:decline'
   | 'pick:skip'
+  | { choiceIndex: number }
   | { pickUid: string }
   | { pickCardId: string }
   // S2 B01022 (2026-07-10): multi-pick (nMax>1) を 1 prompt で複数解決する。cardId 指定で
@@ -129,7 +143,11 @@ function mkSceneChar(c: ProbeSceneChar): SceneCharacter {
     keywordOverrides: { granted: [], disabledOriginal: false },
     apOverride: null,
     lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+    turnEffects: {
+      contactImmune: false,
+      removeOnTurnEnd: false,
+      ...(c.shippuFiredCharThisTurn ? { shippuFiredCharThisTurn: true } : {}),
+    },
     declaredUseCount: {},
   } as SceneCharacter;
 }
@@ -139,6 +157,7 @@ function resetAll(): void {
   _resetTriggeredRegistered();
   resetDefRegistry();
   _resetUidCounter();
+  _clearPendingEffectChoiceSide();
   _clearPendingEffectPickQueue();
   _clearPendingEffectOptionalSide();
   const g = globalThis as {
@@ -197,6 +216,7 @@ function buildState(def: CardDef, fixtures: CardDef[], scenario: ProbeScenario):
     s.turnState.self.hiramekiSuppressed = setup.hiramekiSuppressed;
   }
   if (setup.remove) s.players.self.remove = [...setup.remove];
+  if (setup.partnerAreaMR) s.players.self.partnerAreaMR = mkSceneChar(setup.partnerAreaMR);
   if (setup.partnerAreaCards) s.players.self.partnerAreaCards = [...setup.partnerAreaCards];
   if (setup.fileCount != null) {
     s.players.self.file = Array.from({ length: setup.fileCount }, () => ({ type: 'card-back' as const, cardId: '__FILE__' }));
@@ -244,6 +264,38 @@ function driveAndScript(
   } else if (drive.kind === 'event-use') {
     handUseCard(s, 'self', drive.cardId);
     runAllUntilEmpty(s);
+  } else if (drive.kind === 'phase-end') {
+    event.emit(s, 'phase:end:start', { player: drive.player ?? s.turn.player }, undefined);
+    runAllUntilEmpty(s);
+  } else if (drive.kind === 'cut-in') {
+    const player = drive.player ?? 'self';
+    const by = [...s.players.self.scene, ...s.players.opp.scene].find((candidate) => candidate.uid === drive.byUid);
+    const target = [...s.players.self.scene, ...s.players.opp.scene].find((candidate) => candidate.uid === drive.targetUid);
+    if (!by || !target) throw new Error('[harness] cut-in drive: contact character missing from scene');
+    const action: ActionContext = {
+      id: 'probe-contact',
+      byUid: drive.byUid,
+      byPlayer: drive.byPlayer,
+      target: { kind: 'char', uid: drive.targetUid },
+      phase: 'action-1',
+      cutInUsed: {},
+      startedAt: { turn: s.turn.number, nano: 0 },
+      apSnapshot: {
+        aUid: drive.byUid,
+        aAP: readChar.ap(s, drive.byUid),
+        bUid: drive.targetUid,
+        bAP: readChar.ap(s, drive.targetUid),
+      },
+      contactImmune: false,
+    };
+    expect(canCutIn(s, action, player, drive.cardId), `[${scenario.name}] cut-in must be legal`).toBe(true);
+    cutIn(s, action, player, drive.cardId, drive.cutinAbilityId);
+    runAllUntilEmpty(s);
+  } else if (drive.kind === 'scene-remove') {
+    const found = [...s.players.self.scene, ...s.players.opp.scene].find((candidate) => candidate.uid === drive.uid);
+    if (!found) throw new Error(`[harness] scene-remove drive: uid=${drive.uid} missing from scene`);
+    mutate.scene.removeToRemove(s, drive.uid, 'effect', undefined, { byPlayer: drive.byPlayer ?? 'opp' });
+    runAllUntilEmpty(s);
   }
 
   // pick-first / optional-second drain loop (実測 surfacing order)
@@ -254,6 +306,16 @@ function driveAndScript(
       // Probe scenarios do not assert a particular legal permutation. Confirm
       // identity order without consuming a script action, then continue draining.
       applyDeckReorderAndContinuation(s, reorder, reorder.cardIds);
+      continue;
+    }
+    const choice = _drainPendingEffectChoiceSide();
+    if (choice) {
+      promptCount++;
+      const action = script[scriptIdx++];
+      if (typeof action !== 'object' || !('choiceIndex' in action)) {
+        throw new Error(`[harness] choice surfaced but script action is "${JSON.stringify(action)}" (expected choiceIndex)`);
+      }
+      applyChoiceAndContinuation(s, choice, action.choiceIndex);
       continue;
     }
     const pick = _drainPendingEffectPickSide();
@@ -268,6 +330,9 @@ function driveAndScript(
       if (action === 'pick:skip') {
         applyPickSkipAndContinuation(s, pick, false);
       } else if (typeof action === 'object' && 'pickUid' in action) {
+        if (!cands.some((candidate) => candidate.uid === action.pickUid)) {
+          throw new Error(`[harness] pickUid "${action.pickUid}" not among candidates of "${pick.atomVerb}" (got: ${cands.map((candidate) => `${candidate.uid}:${candidate.cardId}`).join(',') || '∅'})`);
+        }
         applyPickAndContinuation(s, pick, action.pickUid);
       } else if (typeof action === 'object' && 'pickCardId' in action) {
         const hit = cands.find((c) => c.cardId === action.pickCardId);
@@ -328,7 +393,7 @@ function zoneContains(s: GameState, side: Side, zone: string, cardId: string): b
     case 'hand': return p.hand.includes(cardId);
     case 'deck': return p.deck.includes(cardId);
     case 'scene': return p.scene.some((c) => c.cardId === cardId);
-    case 'partner-area': return (p.partnerAreaCards ?? []).includes(cardId);
+    case 'partner-area': return p.partnerAreaMR?.cardId === cardId || (p.partnerAreaCards ?? []).includes(cardId);
     default: throw new Error(`[harness] unknown zone "${zone}"`);
   }
 }

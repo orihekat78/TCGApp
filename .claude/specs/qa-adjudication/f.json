@@ -726,15 +726,18 @@
     {
       "qaId": "card:B05027:be9bb7af3ac62c5a59fa84c917cd5a0daca7576b0ffad3bcacd869d093cc183d",
       "answerHash": "29601dd83813ef62086079d26b5e7d7713c9f9a5ccfcf2f3467f61bea2686884",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05027.ts:153"
+        "rules:.claude/rules/03-field-areas.md:35",
+        "rules:.claude/rules/24-qa-naming-stun.md:49",
+        "src:src/cards/ct-p05/B05027.ts:30",
+        "src:src/engine/effect/atom-handlers/scene.ts:1340",
+        "src:src/engine/mutate/scene.ts:754",
+        "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:141"
       ],
-      "noteCodes": [
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B05031:66bdc617b3738eb67c09245f9af51faf6bffe85703797a9dcdd7d5ef898b0c08",
@@ -1241,12 +1244,18 @@
     {
       "qaId": "card:B07045:5183b8cdd403d09101a0c94ec18dd1f75311c707e255dd1dfc2ba97f30ae50ed",
       "answerHash": "76b859f15adb439639eb10a33e8176e4149d07f983cb8e53779f6d9cc4d44b3c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07045.ts:42"
-      ]
+        "rules:.claude/rules/03-field-areas.md:35",
+        "rules:.claude/rules/24-qa-naming-stun.md:49",
+        "src:src/cards/ct-p07/B07045.ts:35",
+        "src:src/engine/effect/atom-handlers/scene.ts:1340",
+        "src:src/engine/mutate/scene.ts:754",
+        "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:231"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B07047:dcf72f7ad683c115b3f581b518e42b1c728f361ea984bfb38ac165c79eb83ce4",
@@ -1873,16 +1882,18 @@
     {
       "qaId": "card:B10036:5183b8cdd403d09101a0c94ec18dd1f75311c707e255dd1dfc2ba97f30ae50ed",
       "answerHash": "76b859f15adb439639eb10a33e8176e4149d07f983cb8e53779f6d9cc4d44b3c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:11",
-        "src:src/cards/ct-p10/B10036.ts:6"
+        "rules:.claude/rules/03-field-areas.md:35",
+        "rules:.claude/rules/24-qa-naming-stun.md:49",
+        "src:src/cards/ct-p10/B10036.ts:9",
+        "src:src/engine/effect/atom-handlers/scene.ts:1340",
+        "src:src/engine/mutate/scene.ts:754",
+        "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:372"
       ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B10043:15ed0fc61eff44c27005645722fcef5b05ef2d4b2c607fe5113d22269d54bb5f",

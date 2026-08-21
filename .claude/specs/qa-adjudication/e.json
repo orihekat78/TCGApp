@@ -1173,15 +1173,18 @@
     {
       "qaId": "card:B07072:872de2079dce9150e76a70314a5d20400e542df72be79f07c2daed17f80158c3",
       "answerHash": "76b859f15adb439639eb10a33e8176e4149d07f983cb8e53779f6d9cc4d44b3c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07072.ts:1"
+        "rules:.claude/rules/03-field-areas.md:35",
+        "rules:.claude/rules/24-qa-naming-stun.md:49",
+        "src:src/cards/ct-p07/B07072.ts:43",
+        "src:src/engine/effect/atom-handlers/scene.ts:1340",
+        "src:src/engine/mutate/scene.ts:754",
+        "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:254"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B07079:924a8b39ee3036e70eeeac9c3a5941e4faa4fec3ebc39e19ceb12b4b0f2419af",

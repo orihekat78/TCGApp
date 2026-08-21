@@ -765,12 +765,18 @@
     {
       "qaId": "card:B06066:d2016ba7f0daf47c893c7ab352ac82c315db3c48660a8b9ff4b29b8b9f8f973b",
       "answerHash": "a30af59a912912e9b06cc64ca08eb4788bac545494064ae525b0f2ae93764f37",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06066.ts:87"
-      ]
+        "rules:.claude/rules/03-field-areas.md:35",
+        "rules:.claude/rules/24-qa-naming-stun.md:49",
+        "src:src/cards/ct-p06/B06066.ts:88",
+        "src:src/engine/effect/atom-handlers/scene.ts:1340",
+        "src:src/engine/mutate/scene.ts:754",
+        "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:193"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B06067:28660457e46b234b8eda0f8ef2c6f3353a37a1739cfebe4112b7bfffed415436",
@@ -865,12 +871,18 @@
     {
       "qaId": "card:B07023:872de2079dce9150e76a70314a5d20400e542df72be79f07c2daed17f80158c3",
       "answerHash": "76b859f15adb439639eb10a33e8176e4149d07f983cb8e53779f6d9cc4d44b3c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07023.ts:1"
-      ]
+        "rules:.claude/rules/03-field-areas.md:35",
+        "rules:.claude/rules/24-qa-naming-stun.md:49",
+        "src:src/cards/ct-p07/B07023.ts:43",
+        "src:src/engine/effect/atom-handlers/scene.ts:1340",
+        "src:src/engine/mutate/scene.ts:754",
+        "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:219"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B07023:e95274eddf61476e68accaf6348cb07eefb9d8074484ed06055f5022530a1706",

@@ -783,6 +783,17 @@ export function getPendingOptionalResume(): Effect | null {
 export function setPendingOptionalContinuation(continuation: ContinuationFrame): void {
   (globalThis as { __pendingEffectOptionalContinuation?: ContinuationFrame | null }).__pendingEffectOptionalContinuation = continuation;
 }
+/** Append an outer composite frame without replacing an inner optional continuation. */
+export function appendPendingOptionalContinuation(continuation: ContinuationFrame): void {
+  const g = globalThis as { __pendingEffectOptionalContinuation?: ContinuationFrame | null };
+  if (!g.__pendingEffectOptionalContinuation) {
+    g.__pendingEffectOptionalContinuation = continuation;
+    return;
+  }
+  let tail = g.__pendingEffectOptionalContinuation;
+  while (tail.outer) tail = tail.outer;
+  tail.outer = continuation;
+}
 export function _takePendingOptionalContinuation(): ContinuationFrame | null {
   const g = globalThis as { __pendingEffectOptionalContinuation?: ContinuationFrame | null };
   const value = g.__pendingEffectOptionalContinuation ?? null;

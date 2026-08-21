@@ -38,8 +38,7 @@
 ## スタン状態の特殊挙動 — rules: [03](../rules/03-field-areas.md), [24](../rules/24-qa-naming-stun.md)
 
 ```text
-スタン状態のキャラに「アクティブにする」効果適用 → 代わりに「スリープ状態」になる
-スタン状態は明示的なスタン解除効果でのみ解除
+スタン状態のキャラに「アクティブにする」効果適用 → スタンを解除し、代わりに「スリープ状態」になる
 スリープさせる効果・スタンさせる効果を受けても、状態は「スタンのまま」
 ```
 
@@ -47,7 +46,7 @@
 
 ```typescript
 function applyMakeActive(char) {
-  if (char.state === 'stun') char.state = 'sleep';  // スタン特殊挙動
+  if (char.state === 'stun') char.state = 'sleep';  // 単一 state: スタン解除後、代わりにスリープ
   else char.state = 'active';
 }
 function applyMakeSleep(char) {
@@ -56,10 +55,6 @@ function applyMakeSleep(char) {
 }
 function applyMakeStun(char) {
   char.state = 'stun';
-}
-function applyRemoveStun(char) {
-  // 明示的なスタン解除効果でのみ呼ぶ
-  char.state = 'active';
 }
 ```
 

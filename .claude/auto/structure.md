@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6113
+- **ファイル数**: 6116
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1499,6 +1499,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-09-ui-quality-causal-public-match.md` — UI品質・因果表示プログラム（2026-08-02〜09）
     - `2026-08-14-qa-engine-public-evidence.md` — QA engine and public-evidence decisions
     - `2026-08-14-qa-wave13-match-cost.md` — QA Wave 13 and memory rotation
+    - `2026-08-21-engine-memory-rotation.md` — Engine memory rotation — 2026-08-21
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -5516,6 +5517,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `shippu-effect-entry-public.test.ts` — qa: card:B09070:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
       - `short-deck-reveal-hand-entry-public.test.ts` — rules: 15-abilities-effects.md, 17-icons.md, 20-color-and-switch.…
       - `stun-action-target-public.test.ts` — qa: card:B01058:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40
+      - `stun-activation-to-sleep-wave22.test.ts` — qa: card:B04080:872de2079dce9150e76a70314a5d20400e542df72be79f07c2daed17f80158c3
       - `turn-conditioned-cutin-expansion-public.test.ts` — qa: card:B05095:3ebc71d3fe967142af371f16682581bf9d44ac0db1c409f0d2a20d11ffeeae41
       - `turn-conditioned-cutin-public.test.ts` — qa: card:B02007:e4a36acb6bbbb1c8b11eac5e65600d839bba033d5a2b7f0e5ecfc84bacd47a4c
       - `turn1-resolution-time-state-public.test.ts` — rules: 07-action-flow.md, 10-action-event.md, 15-abilities-effects.md, 17-icons.…
@@ -5948,6 +5950,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bug-214-opp-owner-production.test.ts`
       - `bug-249-continuation-priority.test.ts`
       - `bug-304-scene-remove-chain-gate.test.ts` — BUG-304 — a protected sceneRemove must gate a 「リムーブした場合」 chain.
+      - `bug-wave22-sequence-optional.test.ts`
       - `causal-bound-remove.test.ts`
       - `causal-char-mutations.test.ts`
       - `causal-core-zone-moves.test.ts`
