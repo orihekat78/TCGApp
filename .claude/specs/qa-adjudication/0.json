@@ -557,16 +557,18 @@
     {
       "qaId": "card:B04022:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/17-icons.md:11",
-        "src:src/cards/ct-p04/B04022.ts:26",
-        "src:src/cards/ct-p04/B04022P.ts:26"
-      ],
-      "noteCodes": [
-        "B04022-B04022P-LEAVE-TRIGGER-PARITY-TEST-MISSING"
+        "rules:.claude/rules/15-abilities-effects.md:41",
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-p04/B04022.ts:31",
+        "src:src/cards/ct-p04/B04022P.ts:31",
+        "src:src/engine/effect/apply-pick.ts:47",
+        "src:src/engine/effect/atom-handlers/scene.ts:807",
+        "src:src/engine/listeners/triggered.ts:503",
+        "tests:tests/cards/official-qa/effect-entry-leave-public.test.ts:238"
       ]
     },
     {
