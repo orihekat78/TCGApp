@@ -24,6 +24,7 @@ import { _abortEventJournal, _beginEventJournal, _commitEventJournal, _withEvent
 import { produce } from '@/engine/produce.js';
 import { cardOccurrenceWitness } from '@/engine/target/card-occurrence.js';
 import { advanceIndexedZoneEpoch } from '@/engine/state/indexed-zone-epoch.js';
+import { resolveCostPlayer } from './player.js';
 
 /**
  * Pay a Cost. Mutates the draft in place.
@@ -263,19 +264,21 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       stacked.push({ cardId: 'back-card', instanceId: `auth:hand:${card.cardId}` }); host.stackedCards = stacked; return true;
     }
     case 'removeDeckTop': {
-      const removed = state.players[cost.player].deck.splice(0, resolveDynNumber(cost.n, state, ctx));
-      addToRemove(state, cost.player, removed);
-      if (removed.length > 0) advanceIndexedZoneEpoch(state, cost.player, 'deck');
+      const player = resolveCostPlayer(cost.player, ctx);
+      const removed = state.players[player].deck.splice(0, resolveDynNumber(cost.n, state, ctx));
+      addToRemove(state, player, removed);
+      if (removed.length > 0) advanceIndexedZoneEpoch(state, player, 'deck');
       const prior = (ctx.costPaid?.['removeDeckTop'] as { ids?: string[] } | undefined)?.ids ?? [];
       recordCostPaid(ctx, 'removeDeckTop', { ids: [...prior, ...removed] });
-      if (removed.length > 0) simulateRefreshAfterTake(state, cost.player);
+      if (removed.length > 0) simulateRefreshAfterTake(state, player);
       return true;
     }
     case 'removeDeckAll': {
-      const removed = state.players[cost.player].deck.splice(0);
-      addToRemove(state, cost.player, removed);
-      if (removed.length > 0) advanceIndexedZoneEpoch(state, cost.player, 'deck');
-      simulateRefreshAfterTake(state, cost.player);
+      const player = resolveCostPlayer(cost.player, ctx);
+      const removed = state.players[player].deck.splice(0);
+      addToRemove(state, player, removed);
+      if (removed.length > 0) advanceIndexedZoneEpoch(state, player, 'deck');
+      simulateRefreshAfterTake(state, player);
       return true;
     }
     case 'discardEvidence': {
@@ -942,7 +945,8 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
     case 'removeDeckTop': {
       // mega-wave W5 (r37): n は number | {dyn} — canPay と同一式で解決 (evaluate.ts と対)。
       const rdN = resolveDynNumber(cost.n, state, ctx);
-      const removed = mutate.deck.removeFromTop(state, cost.player, rdN);
+      const player = resolveCostPlayer(cost.player, ctx);
+      const removed = mutate.deck.removeFromTop(state, player, rdN);
       acc.paidItems.push({ kind: 'removeDeckTop', details: { removed } });
       // engine additive wave (2026-06-29d): costRemovedMatches cond (B03003/B04077/B06078
       // 「コストによって〚X〛がリムーブされた場合」) が参照する除去 cardId を ctx.costPaid へ記録。
@@ -953,7 +957,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
       // BUG-180: exact payment has no next deck operation to trigger the old
       // pre-take guard. The paid cards are already in remove and participate in
       // this immediate refresh (rules/14, rules/21, rules/26).
-      if (removed.length > 0) mutate.deck.refreshAfterTake(state, cost.player);
+      if (removed.length > 0) mutate.deck.refreshAfterTake(state, player);
       return;
     }
     // engine A3 wave (2026-07-11, B09107): デッキ全部リムーブ。removeFromTop(deck.length) で全除去。
@@ -963,7 +967,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
     //   なるため rules/14 の refresh をここで即時発火する (mill の BUG-137 guard と同 idiom)。
     //   リムーブエリア 0 (=支払前の deck が空で removed も 0) なら refresh 不能 → 支払者敗北 (rules/14)。
     case 'removeDeckAll': {
-      const p = ctx.source.player;
+      const p = resolveCostPlayer(cost.player, ctx);
       const removed = mutate.deck.removeFromTop(state, p, state.players[p].deck.length);
       acc.paidItems.push({ kind: 'removeDeckAll', details: { removed } });
       mutate.deck.refreshAfterTake(state, p);

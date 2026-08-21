@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6124
+- **ファイル数**: 6128
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -2154,6 +2154,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-08-12-iphone-se3-landscape-implementation.md` — iPhone SE 3 Landscape UI Implementation Plan
       - `2026-08-12-match-surrender-implementation.md` — MATCH Surrender Implementation Plan
       - `2026-08-21-qa-wave23-decision-persistence.md` — QA Wave 23 Decision Persistence Implementation Plan
+      - `2026-08-21-qa-wave24-sleep-cost-public.md` — QA Wave 24 Sleep-Cost Public Verification Plan
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
@@ -4788,6 +4789,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `evaluate.ts` — engine.cost.canPay — Cost feasibility check (read-only)
       - `index.ts` — engine.cost — Cost evaluator barrel
       - `pay.ts` — engine.cost.pay — Cost payment (mutates draft)
+      - `player.ts`
       - `remove-set-card-eligible.ts` — An identity-dependent filter is intentionally never evaluated for hidden entries…
       - `remove-set-card-witness.ts`
     - **`dyn/`**
@@ -5497,6 +5499,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `decision-persistence-wave23.test.ts` — qa: card:B03080:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
       - `deck-look-bottom-family-public.test.ts` — qa: card:B01013:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5
       - `deck-refresh-wave8.test.ts` — qa: card:B04012:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4
+      - `declared-sleep-cost-public-wave24.test.ts` — qa: card:B01063:f97b21e9e16f570fd0da6acab0a9cb6e819a6e4a010e86dddb5ff82c6d33902e
       - `effect-entry-action-public.test.ts` — qa: card:B02004:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-declared-public.test.ts` — qa: card:B04019:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-leave-public.test.ts` — qa: card:B02066:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
@@ -5519,6 +5522,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `set-card-host-owner-wave3.test.ts` — qaId=card:B02018:dc712167e0587386756f5293d40bf1766e89e09669554ebcde8e028749d962d…
       - `shippu-effect-entry-public.test.ts` — qa: card:B09070:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
       - `short-deck-reveal-hand-entry-public.test.ts` — rules: 15-abilities-effects.md, 17-icons.md, 20-color-and-switch.…
+      - `sleep-cost-related-entry-public-wave24.test.ts` — qa: card:B07002:18266db4732b9571ebae419afbd36f26fb54fb836c7752251e64e6dad817b4d1
       - `stun-action-target-public.test.ts` — qa: card:B01058:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40
       - `stun-activation-to-sleep-wave22.test.ts` — qa: card:B04080:872de2079dce9150e76a70314a5d20400e542df72be79f07c2daed17f80158c3
       - `turn-conditioned-cutin-expansion-public.test.ts` — qa: card:B05095:3ebc71d3fe967142af371f16682581bf9d44ac0db1c409f0d2a20d11ffeeae41

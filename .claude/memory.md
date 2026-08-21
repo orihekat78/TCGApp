@@ -47,3 +47,15 @@
   actual entry. RPS, set-card, reorder, placement, and replacement use the same owner boundary.
 - Final clean gates: release preparation 1/1 and full Vitest 10438/10438 pass;
   Sol engine and Terra test reviews report no BLOCK.
+
+## 2026-08-21: QA runtime Wave24 sleep-cost authority
+- Wave24 certifies 24 declared sleep-cost and related-entry QA; coverage is
+  1073 matched/1891 test-missing.
+- Cost DSL `self`/`opp` sides resolve relative to the source controller;
+  B06078 exposed fixed-`self` deck payment for opponent-owned sources.
+- `removeDeckTop` can-pay/dry/live and horizontal `removeDeckAll` dry/live paths
+  share the controller-relative resolver.
+- Explicit payer tests reject forged, foreign, sleeping, stunned, excluded,
+  and filter-decoy UIDs atomically while preserving exact valid selection.
+- Entry/continuation coverage closes B07002, B07016, B07067, and B09058;
+  Sol engine and Terra test reviews report no BLOCK.

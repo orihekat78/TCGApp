@@ -9,6 +9,7 @@ import { candidates } from '@/engine/target/candidates.js';
 import { resolveDynNumber } from '@/engine/dyn/eval.js';
 import { canPayAtomically, isWellFormedCost } from './pay.js';
 import { eligibleRemoveSetCards } from './remove-set-card-eligible.js';
+import { resolveCostPlayer } from './player.js';
 import { def as readDef } from '@/engine/read/def.js';
 
 // refactor 2b (2026-06-12): Cost union の kind 一覧を value として単一ソース化。
@@ -142,7 +143,8 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
       // mega-wave W5 (r37): n は number | {dyn} — dispatch 時に解決 (B04088 .oppSceneCount*2)。
       // 非有限/非数値は 0 扱い (resolveDynNumber guard) = deck.length >= 0 (n=0 コストは vacuous に true)。
       const rdN = resolveDynNumber(cost.n, state, ctx);
-      return state.players[cost.player].deck.length >= rdN;
+      const player = resolveCostPlayer(cost.player, ctx);
+      return state.players[player].deck.length >= rdN;
     }
     // engine A3 wave (2026-07-11, B09107): デッキ全部リムーブ — 恒真 (0 枚でも宣言可)。
     case 'removeDeckAll': {

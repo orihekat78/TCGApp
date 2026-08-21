@@ -680,7 +680,7 @@ export type Cost =
   // engine A3 wave (2026-07-11, B09107 犯人たちの犯行): 〚デッキのカードをすべてリムーブする〛コスト。
   //   n 固定でない全部リムーブ (removeDeckTop の n=deck.length を宣言時に評価できないため専用 kind)。
   //   canPay = 恒真 (0 枚でも宣言可、公式Q&A「決めた枚数の残りはリムーブしない」の全部版)。
-  //   refresh は removeDeckTop と同 posture (即時 refresh せず、draw 時 lazy) — 本カード効果は deck 非参照。
+  //   公式Q&Aに従い、全除去直後・能力効果の解決前に即時 refresh する。
   | { kind: 'removeDeckAll'; player: 'self' }
   | { kind: 'discardEvidence'; n: number }
   | { kind: 'selfToDeckBottom' }

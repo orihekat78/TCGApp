@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `15d8670036aa`
+> Source hash: `5d88ea14c98c`
 
 `src/engine/cost/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -16,11 +16,12 @@
 - [`25-qa-effects-resolution.md`](../by-rule/25-qa-effects-resolution.md)
 - [`26-qa-deck-refresh.md`](../by-rule/26-qa-deck-refresh.md)
 
-## 📄 ソース (6)
+## 📄 ソース (7)
 
 - [`src/engine/cost/alternative.ts`](../../../../src/engine/cost/alternative.ts)
 - [`src/engine/cost/evaluate.ts`](../../../../src/engine/cost/evaluate.ts)
 - [`src/engine/cost/index.ts`](../../../../src/engine/cost/index.ts)
 - [`src/engine/cost/pay.ts`](../../../../src/engine/cost/pay.ts)
+- [`src/engine/cost/player.ts`](../../../../src/engine/cost/player.ts)
 - [`src/engine/cost/remove-set-card-eligible.ts`](../../../../src/engine/cost/remove-set-card-eligible.ts)
 - [`src/engine/cost/remove-set-card-witness.ts`](../../../../src/engine/cost/remove-set-card-witness.ts)

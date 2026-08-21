@@ -824,11 +824,13 @@
     {
       "qaId": "card:B07002:1326a9294ee6a8f8fb160e25680fb9eadb1af57c1a38f516b058d52eecea0875",
       "answerHash": "d312e659a83b5c574f5b30e380cea2851c581ef81cd45343a2b0711038dcc222",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07002.ts:1"
+        "src:src/cards/ct-p07/B07002.ts:75",
+        "tests:tests/cards/official-qa/declared-sleep-cost-public-wave24.test.ts:383",
+        "tests:tests/cards/official-qa/declared-sleep-cost-public-wave24.test.ts:389"
       ]
     },
     {

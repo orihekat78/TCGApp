@@ -1096,11 +1096,13 @@
     {
       "qaId": "card:B07016:34b5e50478a370f3ee9ce8bf309eeb4e4825d1b3115ec9eeab3024bdaf99dfa9",
       "answerHash": "acf8317ad874c3db5a4906f82ad4587818bc56f6f0f653803a6a7204b86abaf3",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07016.ts:1"
+        "src:src/cards/ct-p07/B07016.ts:17",
+        "tests:tests/cards/official-qa/sleep-cost-related-entry-public-wave24.test.ts:183",
+        "tests:tests/cards/official-qa/sleep-cost-related-entry-public-wave24.test.ts:190"
       ]
     },
     {

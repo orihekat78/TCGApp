@@ -551,11 +551,12 @@
     {
       "qaId": "card:B04070:12fec323efcfb63a8fd99154204513c7e8a0a7dd8b2137035f673abe939b7329",
       "answerHash": "29601dd83813ef62086079d26b5e7d7713c9f9a5ccfcf2f3467f61bea2686884",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04070.ts:1"
+        "src:src/cards/ct-p04/B04070.ts:36",
+        "tests:tests/cards/official-qa/declared-sleep-cost-public-wave24.test.ts:262"
       ]
     },
     {
@@ -1485,11 +1486,13 @@
     {
       "qaId": "card:B09058:ee4ff12ae2f5d9aaa25b2b03a760a31f15b0d141c59c71aebf70ad2269611e12",
       "answerHash": "2b75118ceacac4e718b32e0691cfdf6b5c3e3695e894e1542974bbfaf1956de0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09058.ts:1"
+        "src:src/cards/ct-p09/B09058.ts:26",
+        "tests:tests/cards/official-qa/sleep-cost-related-entry-public-wave24.test.ts:242",
+        "tests:tests/cards/official-qa/sleep-cost-related-entry-public-wave24.test.ts:243"
       ]
     },
     {
