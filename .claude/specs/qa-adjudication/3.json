@@ -297,11 +297,16 @@
     {
       "qaId": "card:B02080:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02080.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:16",
+        "rules:.claude/rules/24-qa-naming-stun.md:55",
+        "src:src/cards/ct-p02/B02080.ts:1",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
       ]
     },
     {
@@ -1362,8 +1367,8 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09003.ts:118",
-        "tests:tests/cards/step12-batch2.test.ts:344"
+        "src:src/cards/ct-p09/B09003.ts:119",
+        "tests:tests/cards/step12-batch2.test.ts:349"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -1372,11 +1377,19 @@
     {
       "qaId": "card:B09003:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09003.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:16",
+        "rules:.claude/rules/24-qa-naming-stun.md:55",
+        "src:src/cards/ct-p09/B09003.ts:65",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:447",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:452",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:459"
       ]
     },
     {

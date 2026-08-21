@@ -49,14 +49,12 @@
   no-match shuffle, self/timing gates, duplicate occurrence, and short refresh.
 
 ## 2026-08-16: Resumed effect source identity
-
 - Top-level human pick, skip, choice, and optional resumes must restore the full
   source tuple: player, uid, cardId, abilityId, area, and resolutionKind.
 - Reconstruct it through one shared helper. Missing legacy fields keep their
   existing fallback; never rewrite a non-scene source to scene implicitly.
 
 ## 2026-08-16: Mandatory self-sleep options
-
 - A matching triggered ability fires before checking whether its optional
   self-sleep can resolve. Evaluate `charStateIs(self,active)` inside the effect,
   not as a listener condition; sleep and stun both suppress the optional tail.
@@ -66,28 +64,24 @@
   footprint, including sequence tails and B09013's turn-limit path.
 
 ## 2026-08-16: Stunned action targets
-
 - A stunned opposing character remains a legal character-action target, like a
   sleeping character; active and own-side characters remain illegal targets.
 - Certify this shared rule through public action dispatch plus each card's
   concrete stun-producing contract, not by reusing event cards as scene actors.
 
 ## 2026-08-16: Repository dist test isolation
-
 - Release preparation and security-header tests both own the checkout `dist/`.
   Hold one external temp lock across build plus inspection in parallel Vitest.
 - Keep production release behavior unchanged; the parallel full suite is the
   acceptance gate for this test-only race fix.
 
 ## 2026-08-16: PR135/PR141 leave reveal
-
 - PR135 and PR141 are printing twins and both own the same opponent-turn
   self-leave a2; never leave only one printing at a stale `DEFERRED` marker.
 - The match is mandatory, the revealed remainder keeps its order before the
   full-deck shuffle, and a one-card deck refreshes from the leave source.
 
 ## 2026-08-16: Shuffled revealed remainder scope
-
 - 「残りをシャッフルしてデッキの下に移す」は、公開した残りだけをshuffleする。
   `deckToBottomBound(bindKey:'$revealed',order:'shuffle')`を使い、後続`deckShuffle`を置かない。
 - 完全一致6定義を静的に固定し、public選択あり/なし、複数取得、複数登場、離場後rebaseで
@@ -98,3 +92,9 @@
 - Exact 「推理かアクションしたとき」 family uses `reasoning:after-sleep`; B02004 variants share the base definition.
 - If an after-sleep effect removes the reasoner, cancel its continuation and causal trace before evidence; keep wrong-player/non-sleep throws.
 - B05062 is white; its four-card count has no level cap, while the reanimate target remains level 7 or lower.
+
+## 2026-08-21: Same-CardDef multi-copy order Wave17
+- Public owner-order coverage certifies 24 cards; QA coverage is 916 matched and 2048 test-missing.
+- Production `enter` has `uid`, not payload player; B02088/B09003 require `triggerCharMatches.payloadKey:'uid'`.
+- B04003 stays test-missing: `choose-intercept` keeps one copy. Batch-fix it, then regress B08081/P and B02067.
+- Triggered grants need per-grant IDs. B07063 uses base/`#N`, queues both, and keeps separate turn limits.

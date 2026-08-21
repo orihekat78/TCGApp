@@ -281,7 +281,7 @@
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/10-action-event.md:42",
-        "src:src/cards/ct-p02/B02088.ts:97"
+        "src:src/cards/ct-p02/B02088.ts:98"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION-MISSING"
@@ -1282,7 +1282,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p08/B08026.ts:67",
-        "tests:tests/cards/step12-batch1.test.ts:589"
+        "tests:tests/cards/step12-batch1.test.ts:599"
       ]
     },
     {
@@ -1473,7 +1473,7 @@
       "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09003.ts:118"
+        "src:src/cards/ct-p09/B09003.ts:119"
       ]
     },
     {

@@ -498,11 +498,16 @@
     {
       "qaId": "card:B04091:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04091.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:16",
+        "rules:.claude/rules/24-qa-naming-stun.md:55",
+        "src:src/cards/ct-p04/B04091.ts:1",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
       ]
     },
     {
@@ -535,17 +540,16 @@
     {
       "qaId": "card:B05011:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:16",
+        "rules:.claude/rules/24-qa-naming-stun.md:55",
         "src:src/cards/ct-p05/B05011.ts:17",
-        "src:src/engine/event/registry.ts:235",
-        "src:src/engine/resolve/stack.ts:207"
-      ],
-      "noteCodes": [
-        "B05011-SIMULTANEOUS-ORDER-TEST-MISSING"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
       ]
     },
     {
@@ -1889,11 +1893,16 @@
     {
       "qaId": "card:PR036:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR036.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:16",
+        "rules:.claude/rules/24-qa-naming-stun.md:55",
+        "src:src/cards/pr-01/PR036.ts:1",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
       ]
     },
     {

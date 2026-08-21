@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6107
+- **ファイル数**: 6111
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -498,6 +498,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-315.md` — 推理・アクション共通能力の推理側発動時点
     - `BUG-316.md` — 推理キャラ離場後のcontinuation終了
     - `BUG-317.md` — B05062の色・条件filter誤り
+    - `BUG-318.md` — 登場監視のplayer導出漏れ
+    - `BUG-319.md` — choose-intercept複数コピー欠落
+    - `BUG-320.md` — triggered付与のID衝突
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -5505,6 +5508,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `leave-trigger-top-one-public.test.ts` — qa: card:PR084:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-top-three-public.test.ts` — qa: card:B03079:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `multihook-timing-public.test.ts` — qa: card:D03007:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3
+      - `same-card-multicopy-order-wave17.test.ts` — qaId=card:B02020:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c…
       - `set-card-host-absent.test.ts`
       - `set-card-host-owner-wave3.test.ts` — qaId=card:B02018:dc712167e0587386756f5293d40bf1766e89e09669554ebcde8e028749d962d…
       - `shippu-effect-entry-public.test.ts` — qa: card:B09070:fd46e3e8955490f444afdb47fbaa606489da5b870cf6d88ae747987457e8c002

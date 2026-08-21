@@ -11,7 +11,7 @@
 //
 // 句マッピング:
 //   - 「このキャラ以外の〚カード名［犯人］〛が自分の現場に登場したとき、このキャラをリムーブ」=>
-//     trigger{hook:'enter', matcherCondition:triggerCharMatches{side:'self', excludeSource:true,
+//     trigger{hook:'enter', matcherCondition:triggerCharMatches{payloadKey:'uid', side:'self', excludeSource:true,
 //     filter:{cardName:'犯人'}}} + sceneRemove{uid:'$self', cause:'effect'} (PR117/PR118 a2 の
 //     filter trait→cardName 差替のみ)。
 //   - 「自分か相手のターン終了時」=> trigger{hook:'phase:end:start'} matcher 無し = 両者のターン終了で発動。
@@ -36,6 +36,7 @@ const a1: AbilityDef = {
     hook: 'enter',
     matcherCondition: {
       kind: 'triggerCharMatches',
+      payloadKey: 'uid',
       side: 'self',
       excludeSource: true,
       filter: { cardName: '犯人' },

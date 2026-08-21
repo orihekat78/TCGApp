@@ -150,15 +150,16 @@
     {
       "qaId": "card:B02020:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:16",
-        "src:src/cards/ct-p02/B02020.ts:35"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/24-qa-naming-stun.md:55",
+        "src:src/cards/ct-p02/B02020.ts:35",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
       ]
     },
     {
@@ -655,14 +656,16 @@
     {
       "qaId": "card:B04094:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04094.ts:49"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/15-abilities-effects.md:16",
+        "rules:.claude/rules/24-qa-naming-stun.md:55",
+        "src:src/cards/ct-p04/B04094.ts:49",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
       ]
     },
     {
@@ -762,7 +765,7 @@
         "tests:tests/cards/engine-mega-w6.test.ts:381",
         "tests:tests/cards/engine-mega-w6.test.ts:382",
         "tests:tests/cards/engine-mega-w6.test.ts:384",
-        "tests:tests/cards/step12-batch1.test.ts:545"
+        "tests:tests/cards/step12-batch1.test.ts:555"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -777,7 +780,7 @@
       "evidence": [
         "src:src/cards/ct-p05/B05042.ts:49",
         "src:src/cards/ct-p05/B05042.ts:54",
-        "tests:tests/cards/step12-batch1.test.ts:545",
+        "tests:tests/cards/step12-batch1.test.ts:555",
         "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:154",
         "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:155",
         "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:156",
@@ -1216,7 +1219,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p07/B07014.ts:67",
-        "tests:tests/cards/step12-batch1.test.ts:674"
+        "tests:tests/cards/step12-batch1.test.ts:684"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"

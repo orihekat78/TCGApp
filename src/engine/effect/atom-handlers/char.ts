@@ -342,11 +342,11 @@ export function atomCharGrantAbility(s: GameState, a: Record<string, unknown>, c
       const baseGrantedId = typeof spec.id === 'string'
         ? spec.id
         : `granted:${ctx.source.cardId ?? '?'}:${ctx.source.abilityId ?? '?'}`;
-      // gap③ (2026-07-11): declared grant のみ、同一 host へ base id 衝突で複数付与された場合に
-      // #N suffix を付し【ターン1】(declaredUseCount) を独立カウントさせる (公式Q&A B06042「同じキャラに
-      // 2回使用 → それぞれ1回ずつ計2回使える」)。triggered grant は従来 id 維持 (byte 不変)。
+      // gap③ / BUG-320: declared/triggered grant は、同一 host へ base id 衝突で複数付与された場合に
+      // #N suffix を付ける。宣言と発動の【ターン1】はどちらも host uid + ability id で記録されるため、
+      // 付与ごとの runtime identity が必要。continuous grant は回数identityを消費しないため従来idを維持。
       let grantedId = baseGrantedId;
-      if (grantedType === 'declared') {
+      if (grantedType === 'declared' || grantedType === 'triggered') {
         let existingGranted: unknown;
         for (const pl of ['self', 'opp'] as const) {
           const host = s.players[pl].scene.find((c) => c.uid === cgaUid);

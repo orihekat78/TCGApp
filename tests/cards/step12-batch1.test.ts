@@ -412,14 +412,24 @@ describe('step12 B02088 犯人', () => {
     const han = mutateAll.scene.enter(s, 'self', 'B02088', {});
     const mob = mutateAll.scene.enter(s, 'self', 'MOB', {});
     s = produce(s, (d) => {
-      event.emit(d, 'enter', { uid: mob.uid, player: 'self', enterOrder: 1, enterOrderThisTurn: 1 }, { player: 'self', cardId: 'MOB', uid: mob.uid });
+      event.emit(
+        d,
+        'enter',
+        { uid: mob.uid, viaEffect: false, enterOrder: 1, enterOrderThisTurn: 1 },
+        { player: 'self', cardId: 'MOB', uid: mob.uid },
+      );
       runAllUntilEmpty(d);
     });
     expect(s.players.self.scene.some(c => c.uid === han.uid), '他名 = 残る').toBe(true);
     // B03126 も names ['犯人'] — 同名 enter
     const han2 = produce(s, (d) => {
       const c = mutateAll.scene.enter(d, 'self', 'B03126', {});
-      event.emit(d, 'enter', { uid: c.uid, player: 'self', enterOrder: 2, enterOrderThisTurn: 2 }, { player: 'self', cardId: 'B03126', uid: c.uid });
+      event.emit(
+        d,
+        'enter',
+        { uid: c.uid, viaEffect: false, enterOrder: 2, enterOrderThisTurn: 2 },
+        { player: 'self', cardId: 'B03126', uid: c.uid },
+      );
       runAllUntilEmpty(d);
     });
     expect(han2.players.self.scene.some(c => c.uid === han.uid), '同名〚犯人〛登場 = 自身リムーブ').toBe(false);

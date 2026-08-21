@@ -60,7 +60,12 @@ function baseState(): GameState {
 }
 
 function emitEnter(d: GameState, c: SceneCharacter, player: 'self' | 'opp'): void {
-  event.emit(d, 'enter', { uid: c.uid, player, enterOrder: 1, enterOrderThisTurn: 1 }, { player, cardId: c.cardId, uid: c.uid });
+  event.emit(
+    d,
+    'enter',
+    { uid: c.uid, viaEffect: false, enterOrder: 1, enterOrderThisTurn: 1 },
+    { player, cardId: c.cardId, uid: c.uid },
+  );
 }
 
 beforeEach(() => {

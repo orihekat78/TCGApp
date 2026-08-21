@@ -22,7 +22,7 @@
 //     rules/17 §「&」=全色) / 【自分ターン中】=> turn{player:'self'} / 【ターン1】=> limit{turn,1}
 //     (発動選択不可・解決できなくても発動済カウント rules/24)。
 //   - a2「このキャラ以外のレベル7以下の【青】か【緑】のキャラが自分の現場に登場したとき」=>
-//     trigger{hook:'enter', matcherCondition: triggerCharMatches{side:'self', excludeSource:true,
+//     trigger{hook:'enter', matcherCondition: triggerCharMatches{payloadKey:'uid', side:'self', excludeSource:true,
 //     filter:{levelMax:7, color:['青','緑'], kind:'character'}}} (B02088 a1 同型。color 配列 =
 //     any-match (candidates.ts wants.some) = 「【青】か【緑】」。効果/ネクストヒント登場でも
 //     enter hook 発火 = rules/17【登場時】と同機序)。
@@ -65,6 +65,7 @@ const a2: AbilityDef = {
     hook: 'enter',
     matcherCondition: {
       kind: 'triggerCharMatches',
+      payloadKey: 'uid',
       side: 'self',
       excludeSource: true,
       filter: { levelMax: 7, color: ['青', '緑'], kind: 'character' },

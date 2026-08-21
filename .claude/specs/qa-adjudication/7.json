@@ -1175,7 +1175,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09003.ts:1",
-        "tests:tests/cards/step12-batch2.test.ts:82"
+        "tests:tests/cards/step12-batch2.test.ts:87"
       ]
     },
     {
@@ -1409,15 +1409,16 @@
     {
       "qaId": "card:B10025:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:11",
-        "src:src/cards/ct-p10/B10025.ts:7"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "rules:.claude/rules/15-abilities-effects.md:16",
+        "rules:.claude/rules/24-qa-naming-stun.md:55",
+        "src:src/cards/ct-p10/B10025.ts:25",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
       ]
     },
     {
