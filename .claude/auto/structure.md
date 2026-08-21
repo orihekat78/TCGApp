@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6143
+- **ファイル数**: 6147
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -504,6 +504,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-321.md` — 短縮形sceneEnterの満杯現場スイッチ欠落
     - `BUG-322.md` — cutin使用反応の解決順逆転
     - `BUG-323.md` — B09016の「いる場合」を解決時評価できない
+    - `BUG-324.md` — キャラ限定sceneEnterの対象種別漏れ
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -817,6 +818,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-26-03-ct-p10-wave.md`
     - `2026-08-09-01-private-hosted-basic-release-gates.md`
     - `2026-08-16-01-bug313-pr-leave-reveal.md`
+    - `2026-08-22-01-qa-wave27-effect-entry.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -2160,6 +2162,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-08-21-qa-wave24-sleep-cost-public.md` — QA Wave 24 Sleep-Cost Public Verification Plan
       - `2026-08-21-qa-wave25-immediate-effects-public.md` — QA Wave 25 Immediate-Effect Public Verification Plan
       - `2026-08-22-qa-wave26-misread-authority-public.md` — QA Wave 26 — Misread authority / public runtime
+      - `2026-08-22-qa-wave27-effect-entry-declared-public.md` — QA Wave 27 Effect-Entry Public Verification Plan
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
@@ -5514,6 +5517,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `deck-refresh-wave8.test.ts` — qa: card:B04012:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4
       - `declared-sleep-cost-public-wave24.test.ts` — qa: card:B01063:f97b21e9e16f570fd0da6acab0a9cb6e819a6e4a010e86dddb5ff82c6d33902e
       - `effect-entry-action-public.test.ts` — qa: card:B02004:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effect-entry-declared-public-wave27.test.ts` — qa: card:B04018:a96985ed96d005b04cd0c44c2dadf206fac63c8bd49e8c42cef6ea4c73808dae
       - `effect-entry-declared-public.test.ts` — qa: card:B04019:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-leave-public.test.ts` — qa: card:B02066:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-public-wave3.test.ts` — qa: card:B02077:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa

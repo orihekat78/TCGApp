@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `8ac05704bdf6`
+> Source hash: `1a42d03f7f8d`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,14 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## QA Wave 27 — effect-driven entry verification
+
+- Added public-runtime witnesses for eight declared abilities that enter characters from hand or remove.
+- Proved the entered character's normal entry trigger, real costs and filters, decoy exclusion, and complete authority cleanup.
+- Fixed `B08056` and `B09055/P/P2` so same-name events cannot enter through character-only effects (`BUG-324`).
+- Covered explicit decline, zero-candidate auto-skip, and same-owner simultaneous trigger ordering.
+- Advanced exact official-QA coverage from 1,134 to 1,142 matched records.
 
 ## BUG-313 — PR135/PR141 現場リムーブ時能力の復元
 

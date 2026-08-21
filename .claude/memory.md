@@ -95,3 +95,6 @@
 - PR247 generic Misread evidence is aligned; bundled PR247/PR262/PR268 QA remains
   test-missing where the additional printed effect is not completely proved.
 - BUG-323 records B09016's separate trigger-time versus resolution-time condition defect.
+
+## 2026-08-22: QA runtime Wave27 effect-driven entry
+- Wave27 certifies 8 official QA records through public declared dispatch and advances coverage to 1142 matched/1822 test-missing; entered triggers resolve once after sceneEnter, B04018 proves the selected same-owner effect resolves first, and optional entry proves both explicit decline and zero-candidate auto-skip. BUG-324 adds explicit character filters to B08056 and the B09055/P/P2 union-entry mirrors after same-name event RED probes; an AST horizontal scan found no remaining same-class sceneEnter filters.
