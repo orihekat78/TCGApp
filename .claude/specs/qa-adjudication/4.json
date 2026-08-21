@@ -248,15 +248,16 @@
     {
       "qaId": "card:B03030:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/07-action-flow.md:7",
-        "src:src/cards/ct-p03/B03030.ts:5"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/15-abilities-effects.md:41",
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-p03/B03030.ts:4",
+        "src:src/engine/effect/atom-handlers/scene.ts:807",
+        "src:src/engine/listeners/triggered.ts:503",
+        "tests:tests/cards/official-qa/effect-entry-action-public.test.ts:191"
       ]
     },
     {

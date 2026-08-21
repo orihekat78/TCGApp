@@ -1,14 +1,12 @@
 # Session memory
 
 ## Prior records
-
 - Engine adversarial: `.claude/sessions/2026-07-29-engine-adversarial.md`.
 - Release/UI: `.claude/sessions/2026-08-14-qa-wave13-match-cost.md` and
   `.claude/sessions/2026-08-09-ui-quality-causal-public-match.md`.
 - QA engine/public evidence: `.claude/sessions/2026-08-14-qa-engine-public-evidence.md`.
 
 ## 2026-08-15: Deck authority and held Hirameki checkpoint
-
 - Deck decisions bind exact occurrences to an epoch; every mutation advances
   it, rebases state-owned holders once, and consumes validated authority first.
 - Stale or legacy-incomplete decisions load structurally, then consume/fizzle
@@ -17,7 +15,6 @@
   B06027 full-scene fire requires a current victim UID across UI, AI, and restore.
 
 ## 2026-08-15: Leave interception and replacement continuation
-
 - A leave-intercept accept applies the interceptor cost before the target move.
   Human set-card replacements serialize by physical occurrence and keep the
   contact/effect continuation state-owned across JSON restore and stale retries.
@@ -25,7 +22,6 @@
   stale targets, and same-ID set cards do not satisfy that gate.
 
 ## 2026-08-15: Top-three choice, public identity, and switch
-
 - “Reveal and add” exposes only the selected deck-card identity. Never persist
   the private hand or emit `hand:reveal`; close that presentation before showing
   the private bottom-order modal.
@@ -40,14 +36,12 @@
   scene cards. Mandatory deck reorder Escape confirms the untouched original order.
 
 ## 2026-08-16: Short-deck optional look and refresh
-
 - A short `deckRevealUntil` window contains every remaining card. Looking alone
   never refreshes; taking the last card attempts refresh only after it leaves.
 - Decline returns the exact occurrence without refreshing. Persisted duplicate
   choices retain UID, index, and occurrence witness through public hydration.
 
 ## 2026-08-16: Forced leave reveal and shuffle
-
 - Forced reveal-until abilities never ask for a bottom-order decision when the
   printed sequence immediately shuffles the whole deck. Use
   `deckToBottomBound(order:'preserve')` before `deckShuffle`.
@@ -98,3 +92,9 @@
   `deckToBottomBound(bindKey:'$revealed',order:'shuffle')`を使い、後続`deckShuffle`を置かない。
 - 完全一致6定義を静的に固定し、public選択あり/なし、複数取得、複数登場、離場後rebaseで
   未公開tailの順序不変を検証する。デッキ全体shuffleを明記する別句は混ぜない。
+
+## 2026-08-21: Effect-enter QA boundaries
+- d8dc certifies each real source through public trigger, filter, origin move, printed state, entered character's selfOnly enter ability, and terminal cleanup.
+- B09025 scene entry must filter `kind:'character'`; a same-name event is the negative regression.
+- B03030 may switch out its acting source; the next public `actionGuard(null)` aborts and clears the action without guard/contact.
+- B02004 d8dc covers its action path only. Its `reasoning:end` hook conflicts with the printed post-sleep/pre-guard timing; track separately and do not call the whole card green.

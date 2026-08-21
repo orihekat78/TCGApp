@@ -23,7 +23,7 @@ const a1: AbilityDef = {
         verb: 'sceneEnter',
         args: {
           player: 'self', cardId: '$pick.cardId', from: 'hand', viaEffect: true,
-          target: { kind: 'pick', query: { area: 'hand', side: 'self', filter: { cardName: 'マロちゃん' } }, n: { min: 0, max: 1 }, chooser: 'self' },
+          target: { kind: 'pick', query: { area: 'hand', side: 'self', filter: { cardName: 'マロちゃん', kind: 'character' } }, n: { min: 0, max: 1 }, chooser: 'self' },
         },
       },
     ],
