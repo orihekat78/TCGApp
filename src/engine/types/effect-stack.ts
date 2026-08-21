@@ -115,7 +115,8 @@ export type EffectStackEntry = {
    */
   declaredBatch?: number | string;
   /**
-   * BUG-132 GAP-2: 第三者反応マーカー (own = trigger.selfOnly===true 以外に付与)。
+   * BUG-132 GAP-2: 第三者反応マーカー。effect/ability declaration の observer と、
+   * cutin:used observer に付与する。
    * - stack.next(): 同 batch の own entry が pending の間は選択不可 (pairwise gate。
    *   他 entry との所有者任意順 rules/15 §未解決 は不変 — 敵対レビュー rules lens 反映)
    * - stack.runOne(): pick/dyn 候補を解決時に substitute (rules/15 §解決時参照。

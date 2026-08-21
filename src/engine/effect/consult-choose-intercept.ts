@@ -6,10 +6,22 @@ import type { AbilityDef, EffectCtx, GameState } from '../types/index.js';
 type Player = 'self' | 'opp';
 type InterceptTarget = { cardName?: string; excludeSelf?: boolean; requiresNonBlackSceneChar?: boolean };
 
+export type ChooseInterceptProtector = {
+  responder: Player;
+  ownerPlayer: Player;
+  protectorUid: string;
+  protectorCardId: string;
+  abilityId: string;
+};
+
+export type ChooseInterceptReaction = ChooseInterceptProtector & {
+  resolution: 'cancel' | 'discard-or-cancel';
+};
+
 export type ChooseInterceptResult =
   | { kind: 'none' }
   | { kind: 'cancel' }
-  | { kind: 'discard-or-cancel'; responder: Player; protectorUid: string; protectorCardId: string; abilityId: string };
+  | ({ kind: 'discard-or-cancel'; remainingProtectors: ChooseInterceptProtector[] } & ChooseInterceptProtector);
 
 function findSceneChar(state: GameState, uid: string): { player: Player; char: GameState['players']['self']['scene'][number] } | undefined {
   return (['self', 'opp'] as const)
@@ -24,11 +36,17 @@ function consumeLimit(char: GameState['players']['self']['scene'][number], abili
   return true;
 }
 
-/** Finds and consumes one immediate selection reaction. Caller owns cancel/resume mechanics. */
-export function findChooseIntercept(state: GameState, targetUid: string, ctx: EffectCtx): ChooseInterceptResult {
-  if (readDef.card(ctx.source.cardId ?? '')?.kind !== 'character') return { kind: 'none' };
+/** Finds and consumes every simultaneous immediate selection reaction for one selected character. */
+export function findChooseInterceptReactions(
+  state: GameState,
+  targetUid: string,
+  ctx: EffectCtx,
+): ChooseInterceptReaction[] {
+  if (readDef.card(ctx.source.cardId ?? '')?.kind !== 'character') return [];
   const target = findSceneChar(state, targetUid);
-  if (!target || target.player === ctx.source.player) return { kind: 'none' };
+  if (!target || target.player === ctx.source.player) return [];
+
+  const reactions: ChooseInterceptReaction[] = [];
 
   for (const entry of target.char.setCards) {
     if (!entry.faceUp) continue;
@@ -40,7 +58,14 @@ export function findChooseIntercept(state: GameState, targetUid: string, ctx: Ef
         && ability.trigger?.hook === ('effect:choose-intercept' as never)
         && consumeLimit(target.char, ability)
       ) {
-        return { kind: 'cancel' };
+        reactions.push({
+          resolution: 'cancel',
+          responder: ctx.source.player,
+          ownerPlayer: target.player,
+          protectorUid: target.char.uid,
+          protectorCardId: entry.cardId,
+          abilityId: ability.id,
+        });
       }
     }
   }
@@ -67,9 +92,33 @@ export function findChooseIntercept(state: GameState, targetUid: string, ctx: Ef
       };
       if (ability.condition && !evalCond(state, ability.condition, protectorCtx)) continue;
       if (consumeLimit(protector, ability)) {
-        return { kind: 'discard-or-cancel', responder: ctx.source.player, protectorUid: protector.uid, protectorCardId: protector.cardId, abilityId: ability.id };
+        reactions.push({
+          resolution: 'discard-or-cancel',
+          responder: ctx.source.player,
+          ownerPlayer: target.player,
+          protectorUid: protector.uid,
+          protectorCardId: protector.cardId,
+          abilityId: ability.id,
+        });
       }
     }
+  }
+  return reactions;
+}
+
+/** Compatibility facade for callers that only need one target's legacy result shape. */
+export function findChooseIntercept(state: GameState, targetUid: string, ctx: EffectCtx): ChooseInterceptResult {
+  const reactions = findChooseInterceptReactions(state, targetUid, ctx);
+  if (reactions.some(reaction => reaction.resolution === 'cancel')) return { kind: 'cancel' };
+  const protectors = reactions.filter(reaction => reaction.resolution === 'discard-or-cancel');
+  if (protectors.length > 0) {
+    const [first, ...remainingProtectors] = protectors;
+    const { resolution: _resolution, ...legacyFirst } = first!;
+    return {
+      kind: 'discard-or-cancel',
+      ...legacyFirst,
+      remainingProtectors: remainingProtectors.map(({ resolution: _kind, ...protector }) => protector),
+    };
   }
   return { kind: 'none' };
 }

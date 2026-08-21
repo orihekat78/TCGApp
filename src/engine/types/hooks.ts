@@ -47,7 +47,8 @@ export type HookName =
   // engine additive wave-3 (2026-06-30): カットインを使用したとき (rules/09 §カットイン)。
   // flow/contact.cutIn が effect:declared(自効果) の直後に per-use emit。第三者キャラ (在場 observer) が
   // 「(自分/相手が)カットインを使用したとき」を観測する用 (B02080/B09086/B04090)。
-  //   payload: { player(=cutin 使用側), cardId(=使用カットイン) }
+  //   payload: { player(=cutin 使用側), cardId(=使用カットイン),
+  //              declaredBatch(=先行するカットイン自効果との順序 gate) }
   //   source : { player, cardId, bindings(=contact bindings、$contact.byUid 用) }
   // 既存 effect:declared(optional=cutin 自効果ゲート) とは別 hook = 自効果と第三者観測を分離。
   | 'cutin:used'

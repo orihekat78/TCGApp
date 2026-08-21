@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `cfbb9070c249`
+> Source hash: `95f7547011d9`
 
 `src/engine/effect/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -26,7 +26,7 @@
 - [`engine-api-resolver`](../by-spec/engine-api-resolver.md)
 - [`phase-3b-design`](../by-spec/refactor-plan--phase-3b-design.md)
 
-## 📄 ソース (27)
+## 📄 ソース (28)
 
 - [`src/engine/effect/apply-pick.ts`](../../../../src/engine/effect/apply-pick.ts)
 - [`src/engine/effect/atom-handlers.ts`](../../../../src/engine/effect/atom-handlers.ts)
@@ -38,6 +38,7 @@
 - [`src/engine/effect/atom-handlers/scene.ts`](../../../../src/engine/effect/atom-handlers/scene.ts)
 - [`src/engine/effect/atom-pick-spec.ts`](../../../../src/engine/effect/atom-pick-spec.ts)
 - [`src/engine/effect/autonomous-decision.ts`](../../../../src/engine/effect/autonomous-decision.ts)
+- [`src/engine/effect/choose-intercept-authority.ts`](../../../../src/engine/effect/choose-intercept-authority.ts)
 - [`src/engine/effect/consult-choose-intercept.ts`](../../../../src/engine/effect/consult-choose-intercept.ts)
 - [`src/engine/effect/consult-leave-intercept.ts`](../../../../src/engine/effect/consult-leave-intercept.ts)
 - [`src/engine/effect/deck-occurrence-authority.ts`](../../../../src/engine/effect/deck-occurrence-authority.ts)
@@ -47,5 +48,4 @@
 - [`src/engine/effect/invoke-hirameki.ts`](../../../../src/engine/effect/invoke-hirameki.ts)
 - [`src/engine/effect/invoke-leave-to-remove.ts`](../../../../src/engine/effect/invoke-leave-to-remove.ts)
 - [`src/engine/effect/pending-runtime-schema.ts`](../../../../src/engine/effect/pending-runtime-schema.ts)
-- [`src/engine/effect/pending-state.ts`](../../../../src/engine/effect/pending-state.ts)
-- _...ほか 7 件_
+- _...ほか 8 件_

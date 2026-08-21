@@ -1524,15 +1524,12 @@
     {
       "qaId": "card:B08058:8a293cda8d6b4c898d58ed3beb7a7bcbac944230a73525f8c210fbbe999f3190",
       "answerHash": "383ca87325e8c02e2cff0e52d44e32f54baa7e6944cab5883fd53b73079d32a6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08058.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
+        "src:src/cards/ct-p08/B08058.ts:1",
+        "tests:tests/cards/official-qa/B08058-resolution-public-wave25.test.ts:136"
       ]
     },
     {
@@ -1998,15 +1995,14 @@
     {
       "qaId": "card:B10087:0e4e42e4ae6216fb7c06cd07c5665d923e192e6f375dabc5f91cb4647586ac8a",
       "answerHash": "1d1c972eaeaebf8a1d31e00b751c96d9330f55742731eda48f16214993941505",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/09-cutin-disguise.md:9",
-        "src:src/cards/ct-p10/B10087.ts:26"
-      ],
-      "noteCodes": [
-        "IMPLEMENTED-CARD-TEST-MISSING"
+        "src:src/cards/ct-p10/B10087.ts:26",
+        "tests:tests/cards/official-qa/B10087-public-wave25.test.ts:277",
+        "tests:tests/cards/official-qa/B10087-public-wave25.test.ts:290"
       ]
     },
     {

@@ -439,7 +439,9 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         const seHumanSide = (globalThis as {
           __humanPlayerSide?: 'self' | 'opp' | null;
         }).__humanPlayerSide ?? null;
-        if (s.players[seP0].scene.length >= sceneCap(s, seP0) && seP0 !== seHumanSide) {
+        if (s.players[seP0].scene.length >= sceneCap(s, seP0)
+          && seP0 !== seHumanSide
+          && a.deferSceneSwitchChoice !== true) {
           mutate.log.append(s, {
             ts: Date.now(), player: seP0, turn: s.turn.number,
             action: 'effect:sceneEnter:scene-full-skip',

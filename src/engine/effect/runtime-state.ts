@@ -28,6 +28,13 @@ import {
 } from './pending-runtime-schema.js';
 import type { GameState } from '../types/game-state.js';
 import { isDraft, original } from '../produce.js';
+import { def as readDef } from '../read/def.js';
+import {
+  chooseInterceptReactionKey,
+  readChooseInterceptBatchAuthority,
+  readChooseInterceptBatchCancellation,
+  readChooseInterceptBatchSelection,
+} from './choose-intercept-authority.js';
 
 const TRANSACTIONAL_PENDING_KEYS = [
   '__pendingActionExpansion',
@@ -462,6 +469,168 @@ function applyPendingRuntimeSnapshot(
   }
 }
 
+type PersistedChooseInterceptResponse = {
+  kind?: 'response';
+  resolution?: 'cancel' | 'discard-or-cancel';
+  player: 'self' | 'opp';
+  ownerPlayer?: 'self' | 'opp';
+  publicHandRevealToken?: string;
+  protector: { uid: string; cardId: string; abilityId: string };
+  targetUid: string;
+};
+
+type PersistedChooseInterceptSide = PersistedChooseInterceptResponse | {
+  kind: 'order';
+  player: 'self' | 'opp';
+  publicHandRevealToken?: string;
+  choices: PersistedChooseInterceptResponse[];
+};
+
+type PersistedChooseInterceptResume = {
+  pending: PendingEffectPickSide;
+  pickedUid: string;
+  pickedUids?: string[];
+  batchToken?: number;
+  effectCancelled?: boolean;
+  guard?: PersistedChooseInterceptSide;
+  remainingGuards?: PersistedChooseInterceptResponse[];
+};
+
+function invalidChooseIntercept(message: string): never {
+  throw new Error(`Invalid pendingChooseIntercept: ${message}`);
+}
+
+function persistedChooseInterceptOwner(
+  response: PersistedChooseInterceptResponse,
+): 'self' | 'opp' {
+  return response.ownerPlayer ?? (response.player === 'self' ? 'opp' : 'self');
+}
+
+function assertPersistedChooseInterceptResponse(
+  state: GameState,
+  resume: PersistedChooseInterceptResume,
+  response: PersistedChooseInterceptResponse,
+): void {
+  const owner = persistedChooseInterceptOwner(response);
+  if (owner === response.player) invalidChooseIntercept('response owner must oppose the responder');
+  const pickedUids = resume.pickedUids ?? [resume.pickedUid];
+  if (!pickedUids.includes(response.targetUid)) {
+    invalidChooseIntercept('target must belong to the persisted selected set');
+  }
+  const candidate = resume.pending.candidates.find(item => (
+    item.uid === response.targetUid && item.player === owner
+  ));
+  const target = state.players[owner].scene.find(char => char.uid === response.targetUid);
+  if (!candidate || !target || target.cardId !== candidate.cardId) {
+    invalidChooseIntercept('target must match a current selected scene candidate');
+  }
+
+  const resolution = response.resolution ?? 'discard-or-cancel';
+  if (resolution === 'cancel') {
+    const setCardPresent = response.protector.uid === target.uid
+      && target.setCards.some(entry => entry.faceUp && entry.cardId === response.protector.cardId);
+    const ability = readDef.card(response.protector.cardId)?.abilities.find(item => (
+      item.id === response.protector.abilityId
+      && item.type === 'triggered'
+      && item.scope === 'on-set-host'
+      && item.trigger?.hook === ('effect:choose-intercept' as never)
+    ));
+    if (!setCardPresent || !ability || (target.declaredUseCount[ability.id] ?? 0) < 1) {
+      invalidChooseIntercept('cancel witness must match a used face-up set-card ability');
+    }
+    return;
+  }
+
+  const protector = state.players[owner].scene.find(char => (
+    char.uid === response.protector.uid && char.cardId === response.protector.cardId
+  ));
+  const ability = readDef.card(response.protector.cardId)?.abilities.find(item => (
+    item.id === response.protector.abilityId
+    && item.type === 'triggered'
+    && item.scope === 'on-scene'
+    && item.trigger?.hook === ('effect:choose-intercept-discard' as never)
+  ));
+  if (!protector || !ability || (protector.declaredUseCount[ability.id] ?? 0) < 1) {
+    invalidChooseIntercept('protector witness must match a used scene interception ability');
+  }
+}
+
+function assertPersistedChooseInterceptAuthority(
+  state: GameState,
+  side: PersistedChooseInterceptSide,
+  resume: PersistedChooseInterceptResume,
+): void {
+  if (!resume.guard || !samePlainRuntimeValue(side, resume.guard)) {
+    invalidChooseIntercept('side must match its trusted resume guard');
+  }
+  const remaining = resume.remainingGuards;
+  if (!remaining) {
+    invalidChooseIntercept('the simultaneous reaction batch is required');
+  }
+  if (typeof resume.batchToken !== 'number'
+    || !Number.isSafeInteger(resume.batchToken)
+    || resume.batchToken < 1) {
+    invalidChooseIntercept('a physical batch authority token is required');
+  }
+  const selectedUids = resume.pickedUids ?? [resume.pickedUid];
+  const authoritativeSelection = readChooseInterceptBatchSelection(state, resume.batchToken);
+  if (selectedUids.length === 0
+    || selectedUids[0] !== resume.pickedUid
+    || new Set(selectedUids).size !== selectedUids.length
+    || authoritativeSelection === undefined
+    || authoritativeSelection.length !== selectedUids.length
+    || authoritativeSelection.some((uid, index) => uid !== selectedUids[index])) {
+    invalidChooseIntercept('selected targets must exactly match the physical batch authority');
+  }
+  const unresolved = side.kind === 'order' ? remaining : [side, ...remaining];
+  const authoritative = readChooseInterceptBatchAuthority(state, resume.batchToken);
+  const unresolvedKeys = unresolved.map(chooseInterceptReactionKey).sort();
+  const authoritativeKeys = authoritative.map(chooseInterceptReactionKey).sort();
+  if (authoritativeKeys.length === 0
+    || authoritativeKeys.length !== unresolvedKeys.length
+    || authoritativeKeys.some((key, index) => key !== unresolvedKeys[index])) {
+    invalidChooseIntercept('unresolved reactions must exactly match the physical batch authority');
+  }
+  const authoritativeCancellation = readChooseInterceptBatchCancellation(state, resume.batchToken);
+  if (authoritativeCancellation === undefined
+    || authoritativeCancellation !== (resume.effectCancelled === true)) {
+    invalidChooseIntercept('source cancellation must exactly match the physical batch authority');
+  }
+  remaining.forEach(response => assertPersistedChooseInterceptResponse(state, resume, response));
+
+  if (side.kind === 'order') {
+    if (remaining.length < 2) {
+      invalidChooseIntercept('order authority requires at least two reactions');
+    }
+    const turnOwnerPresent = remaining.some(response => (
+      persistedChooseInterceptOwner(response) === state.turn.player
+    ));
+    const expectedOwner = turnOwnerPresent
+      ? state.turn.player
+      : persistedChooseInterceptOwner(remaining[0]!);
+    const expectedChoices = remaining.filter(response => (
+      persistedChooseInterceptOwner(response) === expectedOwner
+    ));
+    if (side.player !== expectedOwner || !samePlainRuntimeValue(side.choices, expectedChoices)) {
+      invalidChooseIntercept('order choices must match the priority owner reaction batch');
+    }
+    return;
+  }
+
+  assertPersistedChooseInterceptResponse(state, resume, side);
+  const available = [side, ...remaining];
+  const turnOwnerPresent = available.some(response => (
+    persistedChooseInterceptOwner(response) === state.turn.player
+  ));
+  const expectedOwner = turnOwnerPresent
+    ? state.turn.player
+    : persistedChooseInterceptOwner(available[0]!);
+  if (persistedChooseInterceptOwner(side) !== expectedOwner
+    || remaining.some(response => samePlainRuntimeValue(response, side))) {
+    invalidChooseIntercept('response must be the selected priority reaction');
+  }
+}
+
 function assertPendingRuntimeMatchesState(
   state: GameState,
   snapshot: ReadonlyArray<{ key: PendingKey; present: boolean; value: unknown }>,
@@ -539,6 +708,22 @@ function assertPendingRuntimeMatchesState(
         || deck.some((cardId, index) => cardId !== pending.deckSnapshot[index])) {
       throw new Error('Invalid pendingDeckPlace: deckSnapshot must match current player deck');
     }
+  }
+  const chooseInterceptSide = snapshot.find(entry => (
+    entry.key === '__pendingChooseInterceptSide' && entry.present && entry.value !== null
+  ));
+  const chooseInterceptResume = snapshot.find(entry => (
+    entry.key === '__pendingChooseInterceptResume' && entry.present && entry.value !== null
+  ));
+  if (Boolean(chooseInterceptSide) !== Boolean(chooseInterceptResume)) {
+    invalidChooseIntercept('side and resume must exist together');
+  }
+  if (chooseInterceptSide && chooseInterceptResume) {
+    assertPersistedChooseInterceptAuthority(
+      state,
+      chooseInterceptSide.value as PersistedChooseInterceptSide,
+      chooseInterceptResume.value as PersistedChooseInterceptResume,
+    );
   }
   const replacementContinuation = snapshot.find(entry =>
     entry.key === '__pendingSetCardReplacementContinuation' && entry.present && entry.value !== null);

@@ -872,15 +872,35 @@ function effectOptional(value: unknown, path: string, mode: ValidationMode): voi
   if (item.triggerPayload !== undefined) genericData(item.triggerPayload, `${path}.triggerPayload`, mode);
 }
 
-function chooseIntercept(value: unknown, path: string): void {
+function chooseInterceptResponse(value: unknown, path: string): void {
   const item = record(value, path);
+  if (item.kind !== undefined && item.kind !== 'response') fail(`${path}.kind`, 'expected response');
+  if (item.resolution !== undefined
+    && item.resolution !== 'cancel'
+    && item.resolution !== 'discard-or-cancel') {
+    fail(`${path}.resolution`, 'expected cancel or discard-or-cancel');
+  }
   player(item.player, `${path}.player`);
+  optionalPlayer(item.ownerPlayer, `${path}.ownerPlayer`);
   optionalString(item.publicHandRevealToken, `${path}.publicHandRevealToken`);
   const protector = record(item.protector, `${path}.protector`);
   string(protector.uid, `${path}.protector.uid`);
   string(protector.cardId, `${path}.protector.cardId`);
   string(protector.abilityId, `${path}.protector.abilityId`);
   string(item.targetUid, `${path}.targetUid`);
+}
+
+function chooseIntercept(value: unknown, path: string): void {
+  const item = record(value, path);
+  if (item.kind !== 'order') {
+    chooseInterceptResponse(value, path);
+    return;
+  }
+  player(item.player, `${path}.player`);
+  optionalString(item.publicHandRevealToken, `${path}.publicHandRevealToken`);
+  const choices = array(item.choices, `${path}.choices`);
+  if (choices.length < 2) fail(`${path}.choices`, 'order prompt requires at least two choices');
+  choices.forEach((choice, index) => chooseInterceptResponse(choice, `${path}.choices[${index}]`));
 }
 
 function setCardChoice(value: unknown, path: string): void {
@@ -1157,7 +1177,14 @@ export function assertPendingRuntimeValue(
         if (item.pickedUids !== undefined) stringArray(item.pickedUids, `${entryPath}.pickedUids`);
         optionalString(item.switchRemoveUid, `${entryPath}.switchRemoveUid`);
         if (item.switchRemoveUids !== undefined) stringArray(item.switchRemoveUids, `${entryPath}.switchRemoveUids`);
+        if (item.batchToken !== undefined) integer(item.batchToken, `${entryPath}.batchToken`, 1);
+        optionalBool(item.effectCancelled, `${entryPath}.effectCancelled`);
         if (item.guard !== undefined) chooseIntercept(item.guard, `${entryPath}.guard`);
+        if (item.remainingGuards !== undefined) {
+          array(item.remainingGuards, `${entryPath}.remainingGuards`).forEach((guard, index) => {
+            chooseInterceptResponse(guard, `${entryPath}.remainingGuards[${index}]`);
+          });
+        }
       });
       return;
     case '__pendingEffectRepeatOptionalResume':

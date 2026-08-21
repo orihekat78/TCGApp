@@ -1342,14 +1342,13 @@
     {
       "qaId": "card:B08058:685833a68d06da220456d118eeeaaa41518d2442d24ee467eb174be91fd6a023",
       "answerHash": "6b6328febf0d5e01872a4d34aa670b1b6b91e7e46b2c808fa89e7317bb2d3237",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08058.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p08/B08058.ts:1",
+        "tests:tests/cards/official-qa/B08058-resolution-public-wave25.test.ts:121",
+        "tests:tests/cards/official-qa/B08058-resolution-public-wave25.test.ts:126"
       ]
     },
     {
@@ -1885,29 +1884,27 @@
     {
       "qaId": "card:B10087:e181ecc5ff42276b972552333d25f166d75ed1e16e91c22bc84ec257d6f2d8ae",
       "answerHash": "dea3e0f8d0ca4278f91753541888921935d4f3750da6bdf9530a8bb9a72da9a9",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/09-cutin-disguise.md:23",
-        "src:src/cards/ct-p10/B10087.ts:11"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10087.ts:11",
+        "tests:tests/cards/official-qa/B10087-public-wave25.test.ts:248",
+        "tests:tests/cards/official-qa/B10087-public-wave25.test.ts:249"
       ]
     },
     {
       "qaId": "card:B10088:f0e393b3a47afbeb95a14a91a8c573bd540fb08877f11528e5ae7dcd501b1a98",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/26-qa-deck-refresh.md:65",
-        "src:src/cards/ct-p10/B10088.ts:13"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10088.ts:13",
+        "tests:tests/cards/official-qa/B10088-effect-entry-public-wave25.test.ts:199",
+        "tests:tests/cards/official-qa/B10088-effect-entry-public-wave25.test.ts:200"
       ]
     },
     {

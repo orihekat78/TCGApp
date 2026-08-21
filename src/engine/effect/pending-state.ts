@@ -219,12 +219,25 @@ export type PendingEffectPickSide = {
   skipResolvesAtom?: boolean;
 };
 
-export type PendingChooseInterceptSide = {
+export type PendingChooseInterceptResponseSide = {
+  kind?: 'response';
+  /** B02067 cancels unconditionally; B04003/B08081 let the responder pay. */
+  resolution?: 'cancel' | 'discard-or-cancel';
   player: Player;
+  ownerPlayer?: Player;
   publicHandRevealToken?: string;
   protector: { uid: string; cardId: string; abilityId: string };
   targetUid: string;
 };
+
+export type PendingChooseInterceptOrderSide = {
+  kind: 'order';
+  player: Player;
+  publicHandRevealToken?: string;
+  choices: PendingChooseInterceptResponseSide[];
+};
+
+export type PendingChooseInterceptSide = PendingChooseInterceptResponseSide | PendingChooseInterceptOrderSide;
 
 export type ChooseInterceptResume = {
   pending: PendingEffectPickSide;
@@ -232,12 +245,33 @@ export type ChooseInterceptResume = {
   pickedUids?: string[];
   switchRemoveUid?: string;
   switchRemoveUids?: string[];
+  /** Physical GameState witness token for the exact unresolved reaction batch. */
+  batchToken?: number;
+  /** The original selecting effect is negated; already-triggered siblings still resolve. */
+  effectCancelled?: boolean;
   guard?: PendingChooseInterceptSide;
+  remainingGuards?: PendingChooseInterceptResponseSide[];
 };
+
+function cloneChooseInterceptSide(side: PendingChooseInterceptSide): PendingChooseInterceptSide {
+  if (side.kind === 'order') {
+    return {
+      ...side,
+      choices: side.choices.map(choice => ({ ...choice, protector: { ...choice.protector } })),
+    };
+  }
+  return { ...side, protector: { ...side.protector } };
+}
 
 export function pushPendingChooseInterceptSide(v: PendingChooseInterceptSide, resume: ChooseInterceptResume): void {
   globalThis.__pendingChooseInterceptSide = v;
-  globalThis.__pendingChooseInterceptResume = { ...resume, guard: { ...v, protector: { ...v.protector } } };
+  globalThis.__pendingChooseInterceptResume = {
+    ...resume,
+    guard: cloneChooseInterceptSide(v),
+    ...(resume.remainingGuards
+      ? { remainingGuards: resume.remainingGuards.map(guard => ({ ...guard, protector: { ...guard.protector } })) }
+      : {}),
+  };
 }
 
 export function _drainPendingChooseInterceptSide(): PendingChooseInterceptSide | null {
@@ -248,6 +282,7 @@ export function _drainPendingChooseInterceptSide(): PendingChooseInterceptSide |
 
 export function _takePendingChooseInterceptResume(): ChooseInterceptResume | null {
   const v = globalThis.__pendingChooseInterceptResume ?? null;
+  globalThis.__pendingChooseInterceptSide = null;
   globalThis.__pendingChooseInterceptResume = null;
   return v;
 }

@@ -1813,43 +1813,42 @@
     {
       "qaId": "card:B10087:0c9d0e7ac8e1aeccc9186815ebf6f4fcbc776e2193db1d43e5cd7294a9e3a664",
       "answerHash": "09ac3974741d3f1b11af49f9784152184c91bbaa96972834da09effd62d3f59f",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/09-cutin-disguise.md:9",
-        "src:src/cards/ct-p10/B10087.ts:26"
-      ],
-      "noteCodes": [
-        "IMPLEMENTED-CARD-TEST-MISSING"
+        "src:src/cards/ct-p10/B10087.ts:26",
+        "tests:tests/cards/official-qa/B10087-public-wave25.test.ts:307",
+        "tests:tests/cards/official-qa/B10087-public-wave25.test.ts:308",
+        "tests:tests/cards/official-qa/B10087-public-wave25.test.ts:309"
       ]
     },
     {
       "qaId": "card:B10088:00139d4a04a7b6b8457670c965d9b2c6ee827110a2321d40b2ba641c9a01b896",
       "answerHash": "b224b606f8fc34f02bcbd2792e156388486d6469c478c49a07fe2816784668c6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/08-contact.md:35",
-        "src:src/cards/ct-p10/B10088.ts:7"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10088.ts:7",
+        "tests:tests/cards/official-qa/B10088-effect-entry-public-wave25.test.ts:226",
+        "tests:tests/cards/official-qa/B10088-effect-entry-public-wave25.test.ts:228",
+        "tests:tests/cards/official-qa/B10088-effect-entry-public-wave25.test.ts:229"
       ]
     },
     {
       "qaId": "card:B10088:214c8fef10f4fc75d77ef453127d09f8c8d76ef13c75ba7fcb6719af6e497b46",
       "answerHash": "6f732edb6339b010cff31f1b08dbce5bb0266b58350255b0b72e355e1d0952ae",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/08-contact.md:35",
-        "src:src/cards/ct-p10/B10088.ts:7"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10088.ts:7",
+        "tests:tests/cards/official-qa/B10088-effect-entry-public-wave25.test.ts:216",
+        "tests:tests/cards/official-qa/B10088-effect-entry-public-wave25.test.ts:227"
       ]
     },
     {

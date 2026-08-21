@@ -152,9 +152,9 @@ function runCutIn(card: CardDef, owner: Player, turnPlayer: Player, copies = 1):
 }
 
 function proveTurnCondition(card: CardDef, owner: Player = 'self') {
-  const used: Array<{ player: Player; cardId: string }> = [];
+  const used: Array<{ player: Player; cardId: string; declaredBatch: number }> = [];
   event.on('cutin:used', (_state, payload) => {
-    used.push(payload as { player: Player; cardId: string });
+    used.push(payload as { player: Player; cardId: string; declaredBatch: number });
   });
   return {
     onTurn: runCutIn(card, owner, owner),
@@ -183,8 +183,8 @@ const expectedProof = (cardId: string, owner: Player = 'self') => ({
     openEffects: 0,
   },
   used: [
-    { player: owner, cardId },
-    { player: owner, cardId },
+    { player: owner, cardId, declaredBatch: 1 },
+    { player: owner, cardId, declaredBatch: 1 },
   ],
 });
 

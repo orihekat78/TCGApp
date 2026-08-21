@@ -1,6 +1,7 @@
 import type { GameState } from '@/engine/types';
 import { char } from './char.js';
 import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
+import { clearAllChooseInterceptBatchAuthorities } from '../effect/choose-intercept-authority.js';
 
 /** Clears effects whose lifetime cannot outlive the action that granted them. */
 export function clearActionScopedState(state: GameState): void {
@@ -30,6 +31,7 @@ export function clearContactScopedState(state: GameState): void {
 export function clearTerminalActionState(state: GameState): void {
   clearActionScopedState(state);
   clearContactScopedState(state);
+  clearAllChooseInterceptBatchAuthorities(state);
   for (const entry of state.pendingEffects) {
     if (entry.state === 'pending' || entry.state === 'resolving') entry.state = 'cancelled';
   }

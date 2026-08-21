@@ -62,12 +62,23 @@ export function useEffectPickFlowDriver(enabled = true): void {
 
     if (pendingChooseIntercept) {
       if (!isHumanDecisionOwner(pendingChooseIntercept.player, spectatorMode)) {
-        const hand = useGameStateStore.getState().gameState
-          ?.players[pendingChooseIntercept.player].hand ?? [];
-        dispatchEngineAction(bindPendingDecision(
-          pendingChooseIntercept,
-          { type: 'chooseInterceptResolve', discardIndex: hand.length > 0 ? 0 : null },
-        ));
+        if (pendingChooseIntercept.kind === 'order') {
+          const first = pendingChooseIntercept.choices[0];
+          if (first) {
+            dispatchEngineAction(bindPendingDecision(pendingChooseIntercept, {
+              type: 'chooseInterceptOrderResolve',
+              protectorUid: first.protector.uid,
+              targetUid: first.targetUid,
+            }));
+          }
+        } else {
+          const hand = useGameStateStore.getState().gameState
+            ?.players[pendingChooseIntercept.player].hand ?? [];
+          dispatchEngineAction(bindPendingDecision(
+            pendingChooseIntercept,
+            { type: 'chooseInterceptResolve', discardIndex: hand.length > 0 ? 0 : null },
+          ));
+        }
       }
       return;
     }

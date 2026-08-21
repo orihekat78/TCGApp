@@ -4,6 +4,8 @@ import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { gameResult } from '@/engine/mutate/gameResult';
 import { startCausalSession } from '@/engine/log/causal';
+import { createChooseInterceptBatchAuthority } from '@/engine/effect/choose-intercept-authority';
+import { makeChar } from '../../helpers/fixtures';
 
 describe('engine.mutate.gameResult', () => {
   describe('set', () => {
@@ -29,6 +31,16 @@ describe('engine.mutate.gameResult', () => {
         gameResult.set(draft, 'self', 'concede');
       });
       expect(result.gameResult).toEqual({ winner: 'self', reason: 'concede' });
+    });
+
+    it('terminal cleanup accepts legacy scene fixtures without turnEffects', () => {
+      const s = createEmptyGameState();
+      s.players.self.scene = [{
+        uid: 'LEGACY#1', cardId: 'LEGACY', state: 'active',
+      } as never];
+
+      expect(() => gameResult.set(s, 'opp', 'deck-out')).not.toThrow();
+      expect(s.gameResult).toEqual({ winner: 'opp', reason: 'deck-out' });
     });
 
     it('direct terminal write clears resumable action/contact state before its causal result', () => {
@@ -98,6 +110,13 @@ describe('engine.mutate.gameResult', () => {
         source: { player: 'self' as const, cardId: `RESERVED-${index}` },
       }));
       s.players.self.partner.turnEffects = { apMod_contact: 2, granted_action: true };
+      s.players.self.scene = [makeChar({ uid: 'PROTECTOR#1', cardId: 'PROTECTOR' })];
+      createChooseInterceptBatchAuthority(s, [{
+        player: 'opp',
+        ownerPlayer: 'self',
+        protector: { uid: 'PROTECTOR#1', cardId: 'PROTECTOR', abilityId: 'a1' },
+        targetUid: 'TARGET#1',
+      }], ['TARGET#1']);
       s.turnState.self.hiramekiSuppressed = true;
       startCausalSession(s, 'terminal-scopes');
 
@@ -112,6 +131,7 @@ describe('engine.mutate.gameResult', () => {
       expect(s.pendingEffects.map(entry => entry.state)).toEqual(['cancelled', 'cancelled']);
       expect(s.reservedEffects).toEqual([]);
       expect(s.players.self.partner.turnEffects).toEqual({});
+      expect(s.players.self.scene[0]?.turnEffects.chooseInterceptBatchWitnesses).toBeUndefined();
       expect(s.turnState.self.hiramekiSuppressed).toBe(false);
       expect(s.log.at(-1)).toMatchObject({ kind: 'game-result', actor: 'opp' });
     });

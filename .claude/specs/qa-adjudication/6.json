@@ -475,10 +475,9 @@
       "evidence": [
         "rules:.claude/rules/25-qa-effects-resolution.md:25",
         "src:src/cards/ct-p04/B04003.ts:6",
-        "src:src/engine/effect/consult-choose-intercept.ts:69",
-        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:100",
-        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:101",
-        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:102"
+        "src:src/engine/effect/consult-choose-intercept.ts:96",
+        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:102",
+        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:103"
       ]
     },
     {
@@ -1204,11 +1203,15 @@
     {
       "qaId": "card:B08081:6b3d06f3573c39d85fe728b4613bf4458ef9a1849c52f036ac9bf48314a44dd7",
       "answerHash": "89e894eec2535b3ada6cdcd1321f4eda45aa55188c39a43a604c6a154df4cbfb",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08081.ts:22"
+        "src:src/cards/ct-p08/B08081.ts:16",
+        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:117",
+        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:118",
+        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:120",
+        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:127"
       ]
     },
     {

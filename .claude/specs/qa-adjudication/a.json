@@ -1604,15 +1604,13 @@
     {
       "qaId": "card:B10087:aa5ae6d3fafba3a39ab31b8d9a6c77fa48ffe0250bcc2f7f0fa80f888a0f9ad6",
       "answerHash": "fc9d2445b3834712106ad6326cf203d366ec53fcb7825cccab30b052371ae6a0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/08-contact.md:22",
-        "src:src/cards/ct-p10/B10087.ts:23"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10087.ts:23",
+        "tests:tests/cards/official-qa/B10087-public-wave25.test.ts:279"
       ]
     },
     {

@@ -13,7 +13,13 @@
 import type { CausalEffectTrace, GameState, Effect, EffectCtx, Candidate, Condition, RemoveResult } from '../types/index.js';
 import type { PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide, ContinuationFrame } from './resolve-picks.js';
 import { resolveEffectPicks, rememberedRuntimeAtomTargetPolicy, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume, _takePendingOptionalBindings, _takePendingOptionalCostPaid } from './resolve-picks.js';
-import { findChooseIntercept } from './consult-choose-intercept.js';
+import { findChooseInterceptReactions } from './consult-choose-intercept.js';
+import {
+  clearChooseInterceptBatchAuthority,
+  consumeChooseInterceptBatchAuthority,
+  createChooseInterceptBatchAuthority,
+  markChooseInterceptBatchCancelled,
+} from './choose-intercept-authority.js';
 import { bindingKeysReadByCondition } from '../cond/binding-keys.js';
 import {
   isSceneEnterSwitchPickArgs,
@@ -98,6 +104,7 @@ import {
   _takePendingEffectRepeatOptionalResume,
   _drainPendingEffectChoiceSide,
   _drainPendingEffectPickSide,
+  removePendingEffectPickSide,
   _drainPendingEffectOptionalSide,
   _drainPendingEffectRepeatOptionalSide,
   _peekPendingEffectChoiceSide,
@@ -108,6 +115,8 @@ import {
   _takePendingOptionalContinuation,
   pushPendingChooseInterceptSide,
   type PendingChooseInterceptSide,
+  type PendingChooseInterceptResponseSide,
+  type ChooseInterceptResume,
   type PendingEffectRepeatOptionalSide,
   type PendingRpsSide,
   type RpsHand,
@@ -1291,31 +1300,46 @@ export function applyPickAndContinuation(
     consumeQueuedPick(state, pending);
   commitDecision();
   if (!skipChooseIntercept && !sceneEnterSwitchPick) {
+    const guards: PendingChooseInterceptResponseSide[] = [];
     for (const uid of pickedUids ?? [pickedUid]) {
-      const intercept = findChooseIntercept(state, uid, interceptCtx);
-      if (intercept.kind === 'cancel') {
-        completeEffectCausalTrace(state, decisionTrace, interceptCtx.source.player, 'cancel', { type: 'state', state: 'negated' });
-        return;
-      }
-      if (intercept.kind === 'discard-or-cancel') {
-        markEffectCausalAwaitingResume(decisionTrace);
-        const resumedPending: PendingEffectPickSide = decisionTrace
-          ? {
-            ...pending,
-            source: { ...pending.source, causalTrace: cloneCausalEffectTrace(decisionTrace) },
-          }
-          : pending;
-        pushPendingChooseInterceptSide(
-          {
-            player: intercept.responder,
-            ...(pending.publicHandRevealToken ? { publicHandRevealToken: pending.publicHandRevealToken } : {}),
-            protector: { uid: intercept.protectorUid, cardId: intercept.protectorCardId, abilityId: intercept.abilityId },
-            targetUid: uid,
+      const reactions = findChooseInterceptReactions(state, uid, interceptCtx);
+      if (reactions.length > 0) {
+        guards.push(...reactions.map(reaction => ({
+          kind: 'response' as const,
+          resolution: reaction.resolution,
+          player: reaction.responder,
+          ownerPlayer: reaction.ownerPlayer,
+          ...(pending.publicHandRevealToken ? { publicHandRevealToken: pending.publicHandRevealToken } : {}),
+          protector: {
+            uid: reaction.protectorUid,
+            cardId: reaction.protectorCardId,
+            abilityId: reaction.abilityId,
           },
-          { pending: resumedPending, pickedUid, pickedUids, switchRemoveUid, switchRemoveUids },
-        );
-        return;
+          targetUid: uid,
+        })));
       }
+    }
+    if (guards.length > 0) {
+      const resumedPending: PendingEffectPickSide = decisionTrace
+        ? { ...pending, source: { ...pending.source, causalTrace: cloneCausalEffectTrace(decisionTrace) } }
+        : pending;
+      const interceptResume: ChooseInterceptResume = {
+        pending: resumedPending,
+        pickedUid,
+        pickedUids,
+        switchRemoveUid,
+        switchRemoveUids,
+        batchToken: createChooseInterceptBatchAuthority(state, guards, pickedUids ?? [pickedUid]),
+        remainingGuards: guards,
+      };
+      const surfaceResult = surfaceNextChooseIntercept(state, interceptResume);
+      if (surfaceResult === 'pending') {
+        markEffectCausalAwaitingResume(decisionTrace);
+        markEffectCausalAwaitingResume(resumedPending.source.causalTrace);
+      } else {
+        cancelChooseIntercept(state, interceptResume);
+      }
+      return;
     }
   }
   // ---- resolved atom を build (Pattern A: uid='$pick' → uid 置換 / Pattern B: cardId(s)/target 置換) ----
@@ -1508,6 +1532,141 @@ export function applyPickAndContinuation(
   }
 }
 
+function chooseInterceptOwner(guard: PendingChooseInterceptResponseSide): Player {
+  return guard.ownerPlayer ?? (guard.player === 'self' ? 'opp' : 'self');
+}
+
+function chooseInterceptResolution(
+  guard: PendingChooseInterceptResponseSide,
+): 'cancel' | 'discard-or-cancel' {
+  return guard.resolution ?? 'discard-or-cancel';
+}
+
+function chooseInterceptCausalContext(resume: ChooseInterceptResume): EffectCtx {
+  return resume.pending.continuation?.ctx ?? {
+    source: {
+      cardId: resume.pending.source.cardId,
+      uid: resume.pending.source.uid ?? '',
+      abilityId: resume.pending.source.abilityId,
+      player: resume.pending.ownerPlayer ?? resume.pending.player,
+      area: resume.pending.source.area ?? 'scene',
+      ...(resume.pending.source.resolutionKind
+        ? { resolutionKind: resume.pending.source.resolutionKind }
+        : {}),
+    },
+    bindings: {},
+  };
+}
+
+function cancelChooseIntercept(
+  state: GameState,
+  resume: ChooseInterceptResume,
+): void {
+  clearChooseInterceptBatchAuthority(state, resume.batchToken);
+  const causalCtx = chooseInterceptCausalContext(resume);
+  const decisionTrace = restoreEffectCausalTrace(
+    causalCtx,
+    resume.pending.source.causalTrace ?? causalCtx.causal?.trace,
+  );
+  completeEffectCausalTrace(
+    state,
+    decisionTrace,
+    causalCtx.source.player,
+    'cancel',
+    { type: 'state', state: 'negated' },
+  );
+}
+
+type ChooseInterceptSurfaceResult = 'none' | 'pending';
+
+function surfaceNextChooseIntercept(
+  state: GameState,
+  resume: ChooseInterceptResume,
+): ChooseInterceptSurfaceResult {
+  while (true) {
+    const guards = resume.remainingGuards ?? [];
+    if (guards.length === 0) return 'none';
+    const turnOwner = guards.find(guard => chooseInterceptOwner(guard) === state.turn.player);
+    const ownerPlayer = turnOwner ? state.turn.player : chooseInterceptOwner(guards[0]!);
+    const ownerChoices = guards.filter(guard => chooseInterceptOwner(guard) === ownerPlayer);
+    if (ownerChoices.length === 1) {
+      const next = ownerChoices[0]!;
+      if (chooseInterceptResolution(next) === 'cancel') {
+        markChooseInterceptBatchCancelled(state, resume.batchToken);
+        consumeChooseInterceptBatchAuthority(state, resume.batchToken, next);
+        resume.remainingGuards = guards.filter(guard => guard !== next);
+        resume.effectCancelled = true;
+        continue;
+      }
+      pushPendingChooseInterceptSide(next, {
+        ...resume,
+        remainingGuards: guards.filter(guard => guard !== next),
+      });
+      return 'pending';
+    }
+    pushPendingChooseInterceptSide({
+      kind: 'order',
+      player: ownerPlayer,
+      choices: ownerChoices,
+    }, resume);
+    return 'pending';
+  }
+}
+
+/** Choose which same-owner simultaneous immediate reaction resolves next. */
+export function applyChooseInterceptOrder(
+  state: GameState,
+  pending: PendingChooseInterceptSide,
+  protectorUid: string,
+  targetUid: string,
+): void {
+  if (stopIfGameAlreadyEnded(state)) return;
+  if (pending.kind !== 'order') throw new Error('chooseIntercept: expected order decision');
+  const resume = _peekPendingChooseInterceptResume();
+  if (!resume || !resume.guard || !sameChooseInterceptSide(resume.guard, pending)) {
+    throw new Error('chooseIntercept: stale order');
+  }
+  const visible = pending.choices.find(choice => (
+    choice.protector.uid === protectorUid && choice.targetUid === targetUid
+  ));
+  const selected = (resume.remainingGuards ?? []).find(guard => (
+    visible !== undefined && sameChooseInterceptResponse(guard, visible)
+  ));
+  if (!selected) throw new Error('chooseIntercept: invalid order choice');
+  const consumed = _takePendingChooseInterceptResume();
+  if (!consumed) return;
+  const causalCtx = chooseInterceptCausalContext(consumed);
+  const decisionTrace = restoreEffectCausalTrace(
+    causalCtx,
+    consumed.pending.source.causalTrace ?? causalCtx.causal?.trace,
+  );
+  recordEffectCausalDecision(state, decisionTrace, pending.player);
+  const resumedPending: PendingEffectPickSide = decisionTrace
+    ? { ...consumed.pending, source: { ...consumed.pending.source, causalTrace: cloneCausalEffectTrace(decisionTrace) } }
+    : consumed.pending;
+  const nextResume: ChooseInterceptResume = {
+    ...consumed,
+    pending: resumedPending,
+    remainingGuards: (consumed.remainingGuards ?? []).filter(guard => guard !== selected),
+  };
+  if (chooseInterceptResolution(selected) === 'cancel') {
+    markChooseInterceptBatchCancelled(state, consumed.batchToken);
+    consumeChooseInterceptBatchAuthority(state, consumed.batchToken, selected);
+    nextResume.effectCancelled = true;
+    const surfaceResult = surfaceNextChooseIntercept(state, nextResume);
+    if (surfaceResult === 'pending') {
+      markEffectCausalAwaitingResume(decisionTrace);
+      markEffectCausalAwaitingResume(resumedPending.source.causalTrace);
+    } else {
+      cancelChooseIntercept(state, nextResume);
+    }
+    return;
+  }
+  markEffectCausalAwaitingResume(decisionTrace);
+  markEffectCausalAwaitingResume(resumedPending.source.causalTrace);
+  pushPendingChooseInterceptSide(selected, nextResume);
+}
+
 /** Resolve the dedicated discard-or-cancel response. Not discarding cancels the selected effect. */
 export function applyChooseInterceptResponse(
   state: GameState,
@@ -1515,33 +1674,44 @@ export function applyChooseInterceptResponse(
   discardIndex: number | null,
 ): void {
   if (stopIfGameAlreadyEnded(state)) return;
+  if (pending.kind === 'order') throw new Error('chooseIntercept: expected response decision');
   const resume = _peekPendingChooseInterceptResume();
   if (!resume) return;
-  const cards = state.players[pending.player].hand;
   if (resume.guard && !sameChooseInterceptSide(resume.guard, pending)) {
     throw new Error('chooseIntercept: stale response');
   }
+  if (chooseInterceptResolution(pending) === 'cancel' && discardIndex !== null) {
+    throw new Error('chooseIntercept: unconditional cancel cannot discard');
+  }
+  const cards = state.players[pending.player].hand;
   if (discardIndex !== null
     && (!Number.isInteger(discardIndex) || discardIndex < 0 || discardIndex >= cards.length)) {
     throw new Error('chooseIntercept: invalid discard occurrence');
   }
   const consumed = _takePendingChooseInterceptResume();
   if (!consumed) return;
-  const causalCtx = consumed.pending.continuation?.ctx ?? {
-    source: {
-      cardId: consumed.pending.source.cardId,
-      uid: consumed.pending.source.uid ?? '',
-      abilityId: consumed.pending.source.abilityId,
-      player: consumed.pending.ownerPlayer ?? consumed.pending.player,
-      area: consumed.pending.source.area ?? 'scene',
-      ...(consumed.pending.source.resolutionKind ? { resolutionKind: consumed.pending.source.resolutionKind } : {}),
-    },
-    bindings: {},
-  };
+  const cancelsEffect = chooseInterceptResolution(pending) === 'cancel' || discardIndex === null;
+  if (cancelsEffect) markChooseInterceptBatchCancelled(state, consumed.batchToken);
+  consumeChooseInterceptBatchAuthority(state, consumed.batchToken, pending);
+  const causalCtx = chooseInterceptCausalContext(consumed);
   const decisionTrace = restoreEffectCausalTrace(causalCtx, consumed.pending.source.causalTrace ?? causalCtx.causal?.trace);
   recordEffectCausalDecision(state, decisionTrace, pending.player);
-  if (discardIndex === null) {
-    completeEffectCausalTrace(state, decisionTrace, causalCtx.source.player, 'cancel', { type: 'state', state: 'negated' });
+  const resumedPending: PendingEffectPickSide = decisionTrace
+    ? { ...consumed.pending, source: { ...consumed.pending.source, causalTrace: cloneCausalEffectTrace(decisionTrace) } }
+    : consumed.pending;
+  if (cancelsEffect) {
+    const nextResume: ChooseInterceptResume = {
+      ...consumed,
+      pending: resumedPending,
+      effectCancelled: true,
+    };
+    const surfaceResult = surfaceNextChooseIntercept(state, nextResume);
+    if (surfaceResult === 'pending') {
+      markEffectCausalAwaitingResume(decisionTrace);
+      markEffectCausalAwaitingResume(resumedPending.source.causalTrace);
+    } else {
+      cancelChooseIntercept(state, nextResume);
+    }
     return;
   }
   const cardId = cards[discardIndex]!;
@@ -1554,12 +1724,27 @@ export function applyChooseInterceptResponse(
       targets: [{ kind: 'zone', side: pending.player, zone: 'remove' }],
       outcome: { type: 'move', from: 'hand', to: 'remove', count: 1 },
     });
-    const resumedPending: PendingEffectPickSide = decisionTrace
+    const paymentPending: PendingEffectPickSide = decisionTrace
       ? { ...consumed.pending, source: { ...consumed.pending.source, causalTrace: cloneCausalEffectTrace(decisionTrace) } }
       : consumed.pending;
+    const nextResume: ChooseInterceptResume = {
+      ...consumed,
+      pending: paymentPending,
+    };
+    const surfaceResult = surfaceNextChooseIntercept(state, nextResume);
+    if (surfaceResult === 'pending') {
+      markEffectCausalAwaitingResume(decisionTrace);
+      markEffectCausalAwaitingResume(paymentPending.source.causalTrace);
+      return;
+    }
+    if (nextResume.effectCancelled === true) {
+      cancelChooseIntercept(state, nextResume);
+      return;
+    }
+    clearChooseInterceptBatchAuthority(state, nextResume.batchToken);
     applyPickAndContinuation(
       state,
-      resumedPending,
+      paymentPending,
       consumed.pickedUid,
       consumed.pickedUids,
       consumed.switchRemoveUid,
@@ -1570,13 +1755,29 @@ export function applyChooseInterceptResponse(
   }, decisionTrace);
 }
 
-function sameChooseInterceptSide(left: PendingChooseInterceptSide, right: PendingChooseInterceptSide): boolean {
+function sameChooseInterceptResponse(
+  left: PendingChooseInterceptResponseSide,
+  right: PendingChooseInterceptResponseSide,
+): boolean {
   return left.player === right.player
+    && chooseInterceptResolution(left) === chooseInterceptResolution(right)
+    && chooseInterceptOwner(left) === chooseInterceptOwner(right)
     && left.targetUid === right.targetUid
     && left.publicHandRevealToken === right.publicHandRevealToken
     && left.protector.uid === right.protector.uid
     && left.protector.cardId === right.protector.cardId
     && left.protector.abilityId === right.protector.abilityId;
+}
+
+function sameChooseInterceptSide(left: PendingChooseInterceptSide, right: PendingChooseInterceptSide): boolean {
+  if (left.kind === 'order' || right.kind === 'order') {
+    return left.kind === 'order'
+      && right.kind === 'order'
+      && left.player === right.player
+      && left.choices.length === right.choices.length
+      && left.choices.every((choice, index) => sameChooseInterceptResponse(choice, right.choices[index]!));
+  }
+  return sameChooseInterceptResponse(left, right);
 }
 
 /**
@@ -1963,7 +2164,9 @@ export function drainAiEffectPicks(
       i++; // human 所有 → 温存 (同一所有者内の FIFO 順は維持される)
       continue;
     }
-    q.splice(i, 1); // 解決対象を queue から取り出す (humanSide null なら i=0 のままで従来 shift と同一)
+    // Exact removal also synchronizes the legacy single-slot mirror.  Direct
+    // splice left a false persisted pending after the final autonomous pick.
+    removePendingEffectPickSide(pending);
     const { pickedUid, pickedUids } = chooseAiPick(state, pending, policy);
     if (pickedUid === null) {
       // cluster14: skipResolvesAtom 付き pending (0枚=「〜まで」で必須 continuation あり、B09010 の

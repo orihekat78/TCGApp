@@ -20,6 +20,7 @@ import { makeDeclaredAbilCtx } from './ability-ctx.js';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
 import {
   applyChoiceAndContinuation,
+  applyChooseInterceptOrder,
   applyChooseInterceptResponse,
   applyDeckPlaceAndContinuation,
   applyDeckReorderAndContinuation,
@@ -216,8 +217,14 @@ function reconcileAutonomousDecisions(state: GameState): void {
 
     const intercept = _peekPendingChooseInterceptSide();
     if (intercept) {
-      const discardIndex = state.players[intercept.player].hand.length > 0 ? 0 : null;
-      applyChooseInterceptResponse(state, intercept, discardIndex);
+      if (intercept.kind === 'order') {
+        const first = intercept.choices[0];
+        if (!first) throw new Error('AI decision reconciliation: empty intercept order');
+        applyChooseInterceptOrder(state, intercept, first.protector.uid, first.targetUid);
+      } else {
+        const discardIndex = state.players[intercept.player].hand.length > 0 ? 0 : null;
+        applyChooseInterceptResponse(state, intercept, discardIndex);
+      }
       if (_peekPendingChooseInterceptSide() === intercept) {
         throw new Error('AI decision reconciliation: intercept authority did not advance');
       }

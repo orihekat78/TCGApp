@@ -219,7 +219,7 @@
       "evidence": [
         "src:src/cards/ct-p02/B02067.ts:4",
         "src:src/cards/ct-p02/B02067.ts:6",
-        "tests:tests/cards/choose-intercept.test.ts:121"
+        "tests:tests/cards/choose-intercept.test.ts:148"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -1961,15 +1961,13 @@
     {
       "qaId": "card:B10087:d85a5d9b20bb3e792c9123f9d16b94f2b131bdf46624605a33275e28740109c6",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:11",
-        "src:src/cards/ct-p10/B10087.ts:7"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10087.ts:7",
+        "tests:tests/cards/official-qa/B10087-public-wave25.test.ts:257"
       ]
     },
     {

@@ -61,3 +61,19 @@
   Sol engine and Terra test reviews report no BLOCK.
 - Final clean gates: release preparation file 1/1 (113 passed, 1 skipped) and
   full Vitest 1096 files/10471 tests pass (3 files/178 tests skipped).
+
+## 2026-08-21: QA runtime Wave25 immediate reactions and effect entry
+- Wave25 certifies 27 QA across B08058/B08081/B10071/B10087/B10088; coverage is
+  1100 matched/1864 test-missing.
+- Choose-intercept freezes every mandatory same-timing physical copy, lets the
+  ability owner order them, and consumes each turn limit independently.
+- Any cancellation stops only the original selecting effect; already-triggered
+  siblings still resolve. The source resumes once after all payments, otherwise zero.
+- Physical batch witnesses bind the exact ordered selected UIDs and cancellation;
+  add/delete/duplicate/reorder/flag forgeries reject transactionally after restore.
+- A B02067-first mixed batch drains three payments, emits one terminal causal cancel,
+  produces no source sleep/draw/summary, and clears every physical witness.
+- B10088 defers full-scene switching after remove selection; short decks stay inert,
+  and the chosen removed character emits its effect-entry hook.
+- `cutin:used` carries the declared batch so B10087 observes the current cut-in
+  before the batch is consumed; B04003/B08081 physical-copy ordering remains covered.

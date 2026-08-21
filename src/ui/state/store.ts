@@ -387,12 +387,22 @@ export type PendingSetCardReplacement = {
   source: PendingEffectSource & { uid: string };
 };
 
-/** Opponent may discard one hand occurrence to cancel the already-selected effect. */
-export type PendingChooseIntercept = {
+export type PendingChooseInterceptResponse = {
+  kind?: 'response';
+  resolution?: 'cancel' | 'discard-or-cancel';
   player: 'self' | 'opp';
+  ownerPlayer?: 'self' | 'opp';
   publicHandRevealToken?: string;
   protector: { uid: string; cardId: string; abilityId: string };
   targetUid: string;
+};
+
+/** Owner orders simultaneous reactions; responder then chooses whether to discard. */
+export type PendingChooseIntercept = PendingChooseInterceptResponse | {
+  kind: 'order';
+  player: 'self' | 'opp';
+  publicHandRevealToken?: string;
+  choices: PendingChooseInterceptResponse[];
 };
 
 /** Human decision window for B01092-style leave interception. */

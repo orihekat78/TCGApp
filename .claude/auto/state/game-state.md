@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-state.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:state`
-> Source hash: `51e45e02858b`
+> Source hash: `ab6f19c22fb4`
 
 `src/engine/types/game-state.ts` から抽出した GameState の構造図。
 
@@ -33,6 +33,7 @@ classDiagram
     +setCardInstanceSeq?: number
     +reservedEffectSeq?: number
     +publicHandRevealSeq?: number
+    +chooseInterceptBatchSeq?: number
     +reservedEffects: ReservedEffectEntry[]
     +scratchTrace: «object×2»
     +turnState: «object×2»

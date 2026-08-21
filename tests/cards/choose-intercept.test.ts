@@ -102,6 +102,33 @@ describe('choose-intercept — B02067 representative', () => {
     })).toBeDefined();
   });
 
+  it('collects every physical B04003 copy into one simultaneous response batch', () => {
+    const state = produce(createEmptyGameState(), (d) => {
+      d.turn.player = 'opp';
+      d.players.self.scene.push(
+        sceneChar('RAN', 'ran'),
+        sceneChar('B04003', 'shinichi-1'),
+        sceneChar('B04003', 'shinichi-2'),
+      );
+      d.players.opp.scene.push(sceneChar('OPP-SOURCE', 'opp-source'));
+    });
+    const ctx: EffectCtx = {
+      source: { cardId: 'OPP-SOURCE', uid: 'opp-source', abilityId: 'a1', player: 'opp', area: 'scene' },
+      bindings: {},
+    };
+
+    const after = produce(state, (d) => {
+      expect(findChooseIntercept(d, 'ran', ctx)).toMatchObject({
+        kind: 'discard-or-cancel',
+        protectorUid: 'shinichi-1',
+        remainingProtectors: [{ protectorUid: 'shinichi-2' }],
+      });
+    });
+
+    expect(after.players.self.scene.find((char) => char.uid === 'shinichi-1')?.declaredUseCount.a1).toBe(1);
+    expect(after.players.self.scene.find((char) => char.uid === 'shinichi-2')?.declaredUseCount.a1).toBe(1);
+  });
+
   it('B08081 excludes itself and requires a non-black ally', () => {
     const ctx: EffectCtx = { source: { cardId: 'OPP-SOURCE', uid: 'opp-source', abilityId: 'a1', player: 'opp', area: 'scene' }, bindings: {} };
     const noAlly = produce(createEmptyGameState(), (d) => {
@@ -207,6 +234,46 @@ describe('choose-intercept — B02067 representative', () => {
       ['select', 'choose-ai-unable:2'],
       ['cancel', 'choose-ai-unable:3'],
     ]);
+  });
+
+  it('has AI resolve every simultaneous response even when one response cancels the selected effect', () => {
+    const state = produce(createEmptyGameState(), (d) => {
+      d.turn.player = 'opp';
+      d.players.self.scene.push(
+        sceneChar('RAN', 'ran', { setCards: [{ cardId: 'B02067', faceUp: true }] }),
+        sceneChar('B04003', 'shinichi'),
+      );
+      d.players.opp.scene.push(sceneChar('OPP-SOURCE', 'opp-source'));
+      d.players.opp.hand = ['payment'];
+      d.players.opp.deck = ['drawn'];
+      startCausalSession(d, 'choose-ai-mixed');
+    });
+    const effect = {
+      kind: 'sequence' as const,
+      steps: [
+        { kind: 'atom' as const, verb: 'sceneSetState' as never, args: {
+          uid: '$pick', state: 'sleep', target: { kind: 'pick', query: { area: 'scene', side: 'opp', filter: { cardName: '毛利蘭' } }, n: { min: 1, max: 1 } },
+        } },
+        { kind: 'atom' as const, verb: 'draw' as never, args: { player: 'self', n: 1 } },
+      ],
+    };
+
+    const after = produce(state, (d) => {
+      runOne(d, { ...causalInterceptEntry(), id: 'choose-ai-mixed-entry', deferredPicks: true, effect: effect as never });
+    });
+
+    expect(after.players.self.scene.find((char) => char.uid === 'ran')?.state).toBe('active');
+    expect(after.players.self.scene.find((char) => char.uid === 'ran')?.declaredUseCount.a1).toBe(1);
+    expect(after.players.self.scene.find((char) => char.uid === 'shinichi')?.declaredUseCount.a1).toBe(1);
+    expect(after.players.opp.hand).toEqual([]);
+    expect(after.players.opp.remove).toEqual(['payment']);
+    expect(after.players.opp.deck).toEqual(['drawn']);
+    const causalKinds = validateCausalLog(after.log as CausalLogEntryV1[]).map((node) => node.kind);
+    expect(causalKinds).toContain('discard');
+    expect(causalKinds.at(-1)).toBe('cancel');
+    expect(causalKinds).not.toContain('sleep');
+    expect(causalKinds).not.toContain('draw');
+    expect(causalKinds).not.toContain('summary');
   });
 
   it('links a terminal AI remainder to both synchronous choose-intercept decisions', () => {

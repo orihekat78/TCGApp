@@ -394,6 +394,8 @@ export type GameState = {
   reservedEffectSeq?: number;
   /** Persisted allocator for public-hand reveal resolution tokens. */
   publicHandRevealSeq?: number;
+  /** Persisted allocator for physical choose-intercept reaction witnesses. */
+  chooseInterceptBatchSeq?: number;
   /**
    * 離場後予約効果 queue (mega-wave W6 step8, row75)。コストで源カードが盤面を離れる
    * 「ターン終了時〜」(B08069) /「このターン中、次に〜したとき」(B01058) をカード位置非依存で保持。

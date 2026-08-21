@@ -290,12 +290,12 @@ function handleHook(
   // Hook-owned names win over an emitter-provided binding.  An enter event
   // cannot spoof the live entrant that gates and later resolves its effect.
   const queuedBindings = { ...inheritedBindings, ...hookBindings } as EffectCtx['bindings'];
-  const abilityDeclaredBatch = (payload as { declaredBatch?: unknown } | undefined)?.declaredBatch;
+  const observerDeclaredBatch = (payload as { declaredBatch?: unknown } | undefined)?.declaredBatch;
   const declaredBatch = hookName === 'effect:declared'
     ? nextDeclaredBatch(state)
-    : hookName === 'ability:declared'
-      && (typeof abilityDeclaredBatch === 'number' || typeof abilityDeclaredBatch === 'string')
-      ? abilityDeclaredBatch
+    : (hookName === 'ability:declared' || hookName === 'cutin:used')
+      && (typeof observerDeclaredBatch === 'number' || typeof observerDeclaredBatch === 'string')
+      ? observerDeclaredBatch
       : undefined;
   // mega-wave W6 step4 (2026-07-04, B09090/P16): 疾風条件 waive の消費。
   // 「このターン中、**次に**自分の現場に登場したキャラは【疾風】の条件を無視できる」— armed 中の
@@ -495,8 +495,10 @@ function handleHook(
       // resolveDeferredEntryPicks) で解決時盤面の候補を参照する (rules/15 §解決時参照、
       // B07016/B08020 a2「（イベントを解決してからキャラを選ぶ）」)。selfOnly entry
       // (イベント自効果 / カットイン自効果 / scene rider) は従来通り queue 時解決。
-      const isDeclaredReaction = (hookName === 'effect:declared' || hookName === 'ability:declared')
-        && trig.selfOnly !== true;
+      const isDeclaredReaction = (
+        (hookName === 'effect:declared' || hookName === 'ability:declared')
+          && trig.selfOnly !== true
+      ) || (hookName === 'cutin:used' && declaredBatch !== undefined);
       const resolvedEffect = ability.effect;
       // queue (side-channel set されていても skip しない、pre-pick step 実行のため)。
       // sourceBindings (contact bindings) は上で算出済 → entry に永続化 (runtime $contact.byUid 解決)。

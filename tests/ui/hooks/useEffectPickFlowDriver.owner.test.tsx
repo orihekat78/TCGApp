@@ -75,6 +75,29 @@ describe('useEffectPickFlowDriver decision ownership', () => {
     act(() => root.unmount());
   });
 
+  it('auto-resolves a non-human simultaneous intercept order before any response', () => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    act(() => useGameStateStore.getState().setPendingChooseIntercept({
+      kind: 'order',
+      player: 'opp',
+      choices: [{
+        protector: { uid: 'protector-1', cardId: 'B08081', abilityId: 'a2' },
+        targetUid: 'target-1',
+      }],
+    }));
+    const root = createRoot(document.createElement('div'));
+
+    act(() => root.render(<Harness />));
+
+    expect(dispatchEngineAction).toHaveBeenCalledWith({
+      type: 'chooseInterceptOrderResolve',
+      protectorUid: 'protector-1',
+      targetUid: 'target-1',
+      decisionId: 'decision:1',
+    });
+    act(() => root.unmount());
+  });
+
   it.each([
     {
       name: 'RPS',

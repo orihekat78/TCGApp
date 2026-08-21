@@ -2,13 +2,13 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `0a46213b1c98`
+> Source hash: `f095774a598d`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **192** ファイル（[全体 index](./index.md)）
+このグループ: **193** ファイル（[全体 index](./index.md)）
 
-## engine/effect (27)
+## engine/effect (28)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -22,6 +22,7 @@
 | [`src/engine/effect/atom-handlers/scene.ts`](../../../src/engine/effect/atom-handlers/scene.ts) | _(参照なし)_ |
 | [`src/engine/effect/atom-pick-spec.ts`](../../../src/engine/effect/atom-pick-spec.ts) | _(参照なし)_ |
 | [`src/engine/effect/autonomous-decision.ts`](../../../src/engine/effect/autonomous-decision.ts) | _(参照なし)_ |
+| [`src/engine/effect/choose-intercept-authority.ts`](../../../src/engine/effect/choose-intercept-authority.ts) | _(参照なし)_ |
 | [`src/engine/effect/consult-choose-intercept.ts`](../../../src/engine/effect/consult-choose-intercept.ts) | _(参照なし)_ |
 | [`src/engine/effect/consult-leave-intercept.ts`](../../../src/engine/effect/consult-leave-intercept.ts) | _(参照なし)_ |
 | [`src/engine/effect/deck-occurrence-authority.ts`](../../../src/engine/effect/deck-occurrence-authority.ts) | _(参照なし)_ |

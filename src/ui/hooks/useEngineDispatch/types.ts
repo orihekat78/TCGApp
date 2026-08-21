@@ -77,6 +77,7 @@ export type EngineAction =
   | BoundDecision<{ type: 'choiceResolve'; choiceIndex: number; switchRemoveUid: string }>
   // 2026-06-06 タスクC: optional (「〜してもよい」) の決定。pendingEffectOptional を解決する。
   | BoundDecision<{ type: 'optionalResolve'; run: boolean }>
+  | BoundDecision<{ type: 'chooseInterceptOrderResolve'; protectorUid: string; targetUid: string }>
   | BoundDecision<{ type: 'chooseInterceptResolve'; discardIndex: number | null }>
   | BoundDecision<{ type: 'repeatOptionalResolve'; run: boolean }>
   // BUG-136: deckToBottomBound「好きな順番でデッキの下に移す」の順序確定。order = 底ブロックの新順 (cardId 列)。

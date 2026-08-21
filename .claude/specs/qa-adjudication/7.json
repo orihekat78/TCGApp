@@ -1165,21 +1165,24 @@
     {
       "qaId": "card:B08058:2b4e49ff7d67dddeddd1fff86f17cd8814f42adc4f55ce818ce3626a24b4cdcf",
       "answerHash": "f082f147cef2fc30b4f5a5740516660d0c3b203dfb8563ab839c3f8f308e595b",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p01/B01044.ts:14"
+        "src:src/cards/ct-p08/B08058.ts:1",
+        "tests:tests/cards/official-qa/B08058-resolution-public-wave25.test.ts:152",
+        "tests:tests/cards/official-qa/B08058-resolution-public-wave25.test.ts:153"
       ]
     },
     {
       "qaId": "card:B08058:9eb8457683623fd1c276da0ccb881608e23831760aac2a46be5ceda7e1066007",
       "answerHash": "10bdec466c4ffcebefacf3540efa4f14767db16e354f6e08e927911868d78690",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p01/B01044.ts:14"
+        "src:src/cards/ct-p08/B08058.ts:1",
+        "tests:tests/cards/official-qa/B08058-resolution-public-wave25.test.ts:122"
       ]
     },
     {
@@ -1605,15 +1608,15 @@
     {
       "qaId": "card:B10071:816d7965a6d1b8124bc6be2098194d8f3f19a88be3cdc253bf643cfdff0e1e69",
       "answerHash": "32846bc1e9b89390298687c9bb46a56a75314aa92a2f44d4f4a526a54f4ce6f4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:20",
-        "src:src/cards/ct-p10/B10071.ts:9"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10071.ts:9",
+        "tests:tests/cards/official-qa/B10071-public-wave25.test.ts:212",
+        "tests:tests/cards/official-qa/B10071-public-wave25.test.ts:213",
+        "tests:tests/cards/official-qa/B10071-public-wave25.test.ts:214"
       ]
     },
     {

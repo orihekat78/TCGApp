@@ -28,7 +28,7 @@ import { char as readChar } from '../read/char.js';
 import type { GameState, Effect, EffectCtx, TargetingRef, Condition } from '../types/index.js';
 import type { Candidate } from '../types/candidate.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from './atom-pick-spec.js';
-import { findChooseIntercept } from './consult-choose-intercept.js';
+import { findChooseInterceptReactions } from './consult-choose-intercept.js';
 import { hand } from '../mutate/hand.js';
 import { run as runEffect } from './resolver.js';
 import { eventUseAllowed } from '../flow/main/hand-use-card.js';
@@ -930,10 +930,37 @@ function substituteAtomPick(
         ),
       };
     }
-    const intercept = findChooseIntercept(state, picked.uid, ctx);
-    const decisionTrace = intercept.kind === 'none' ? undefined : ensureEffectCausalTrace(state, ctx);
+    const interceptReactions = findChooseInterceptReactions(state, picked.uid, ctx);
+    const decisionTrace = interceptReactions.length === 0 ? undefined : ensureEffectCausalTrace(state, ctx);
     if (decisionTrace !== undefined) recordEffectCausalDecision(state, decisionTrace, byPlayer);
-    if (intercept.kind === 'cancel') {
+    let effectCancelled = false;
+    for (const reaction of interceptReactions) {
+      if (reaction.resolution === 'cancel') {
+        // Simultaneous mandatory reactions have already triggered.  Cancelling
+        // the selected effect must not erase sibling response resolutions.
+        effectCancelled = true;
+        continue;
+      }
+      recordEffectCausalDecision(state, decisionTrace, reaction.responder);
+      const card = state.players[reaction.responder].hand[0];
+      if (!card) {
+        // Only declining (or being unable to pay) negates the selected effect.
+        // Continue so every already-triggered sibling response still resolves.
+        effectCancelled = true;
+        continue;
+      }
+      // Paying the printed cost protects the selected effect: remove one
+      // hand occurrence.  Another simultaneous response may still cancel it.
+      hand.discardToRemove(state, reaction.responder, [card], { byPlayer: reaction.responder });
+      recordEffectCausalOperation(state, ctx, {
+        actor: reaction.responder,
+        kind: 'discard',
+        source: { kind: 'zone', side: reaction.responder, zone: 'hand' },
+        targets: [{ kind: 'zone', side: reaction.responder, zone: 'remove' }],
+        outcome: { type: 'move', from: 'hand', to: 'remove', count: 1 },
+      });
+    }
+    if (effectCancelled) {
       (ctx.dyn ??= {}).chooseIntercepted = true;
       completeEffectCausalTrace(
         state,
@@ -944,40 +971,13 @@ function substituteAtomPick(
       );
       return { kind: 'parallel', steps: [] };
     }
-    if (intercept.kind === 'discard-or-cancel') {
-      recordEffectCausalDecision(state, decisionTrace, intercept.responder);
-      const card = state.players[intercept.responder].hand[0];
-      if (card) {
-        // Paying the printed cost protects the selected effect: remove one
-        // hand occurrence, then continue resolving the original atom.
-        hand.discardToRemove(state, intercept.responder, [card], { byPlayer: intercept.responder });
-        recordEffectCausalOperation(state, ctx, {
-          actor: intercept.responder,
-          kind: 'discard',
-          source: { kind: 'zone', side: intercept.responder, zone: 'hand' },
-          targets: [{ kind: 'zone', side: intercept.responder, zone: 'remove' }],
-          outcome: { type: 'move', from: 'hand', to: 'remove', count: 1 },
-        });
-      } else {
-        // Only declining (or being unable to pay) negates the selected effect.
-        (ctx.dyn ??= {}).chooseIntercepted = true;
-        completeEffectCausalTrace(
-          state,
-          decisionTrace,
-          ctx.source.player,
-          'cancel',
-          { type: 'state', state: 'negated' },
-        );
-        return { kind: 'parallel', steps: [] };
-      }
-    }
     const { target: _omit, ...restArgs } = args;
     void _omit;
     return {
       kind: 'atom',
       verb: atom.verb as never,
       // BUG-085: AI / heuristic 経路 (human-pick 境界なし) でも { dyn } を literal 化する。
-      args: intercept.kind === 'none'
+      args: interceptReactions.length === 0
         ? markAutonomousPick(w6TagMr(resolveDynArgs(state, { ...restArgs, uid: picked.uid }, ctx) as Record<string, unknown>, [picked.uid]))
         : w6TagMr(resolveDynArgs(state, { ...restArgs, uid: picked.uid }, ctx) as Record<string, unknown>, [picked.uid]),
     } as Effect;

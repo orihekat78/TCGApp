@@ -136,6 +136,38 @@ describe('decision modal hosts', () => {
     unmount(root, container);
   });
 
+  it('lets the ability owner choose which simultaneous intercept resolves first', () => {
+    useGameStateStore.setState({
+      pendingChooseIntercept: {
+        kind: 'order',
+        player: 'self',
+        choices: [
+          {
+            protector: { uid: 'protector-1', cardId: 'B01001', abilityId: 'a1' },
+            targetUid: 'target-1',
+          },
+          {
+            protector: { uid: 'protector-2', cardId: 'B01001', abilityId: 'a1' },
+            targetUid: 'target-2',
+          },
+        ],
+      },
+    });
+    const { container, root } = renderHost(ChooseInterceptModalHost);
+
+    expect(container.querySelector('[data-testid="choose-intercept-order-modal"]')).not.toBeNull();
+    expect(container.textContent).toContain('同時に発動した能力の解決順を選んでください');
+    const second = container.querySelector<HTMLButtonElement>(
+      '[data-testid="choose-intercept-order-protector-2-target-2"]',
+    );
+    expect(second).toBeInstanceOf(HTMLButtonElement);
+    act(() => second!.click());
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'chooseInterceptOrderResolve', protectorUid: 'protector-2', targetUid: 'target-2',
+    });
+    unmount(root, container);
+  });
+
   it('resolves a set-card replacement from its native candidate selector and keeps details in the pending modal', () => {
     useGameStateStore.setState({
       pendingSetCardReplacement: {

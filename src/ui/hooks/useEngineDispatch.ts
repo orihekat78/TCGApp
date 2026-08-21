@@ -15,7 +15,7 @@ import { produce } from 'immer';
 import * as flow from '@/engine/flow/index.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { pendingOwnerOrderGroup, runAllUntilEmpty } from '@/engine/resolve/index.js';
-import { applyChooseInterceptResponse, applyDeckPlaceAndContinuation, applyDeckReorderAndContinuation, applyPickAndContinuation, applyPickSkipAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation, applyRepeatOptionalAndContinuation, applyRpsAndContinuation, applySetCardChoiceAndContinuation, applySetCardReplacementDetailed } from '@/engine/effect/apply-pick.js';
+import { applyChooseInterceptOrder, applyChooseInterceptResponse, applyDeckPlaceAndContinuation, applyDeckReorderAndContinuation, applyPickAndContinuation, applyPickSkipAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation, applyRepeatOptionalAndContinuation, applyRpsAndContinuation, applySetCardChoiceAndContinuation, applySetCardReplacementDetailed } from '@/engine/effect/apply-pick.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import type { GameState } from '@/engine/types/game-state.js';
 import { resolveActionAgainstChar, resolveActionAgainstCase } from '@/ai/action-resolution.js';
@@ -435,6 +435,12 @@ function runEngineAction(
       applyChooseInterceptResponse(draft, pending, action.discardIndex);
       return;
     }
+    case 'chooseInterceptOrderResolve': {
+      const pending = useGameStateStore.getState().pendingChooseIntercept;
+      if (!pending) return;
+      applyChooseInterceptOrder(draft, pending, action.protectorUid, action.targetUid);
+      return;
+    }
     case 'repeatOptionalResolve': {
       const pending = useGameStateStore.getState().pendingEffectRepeatOptional;
       if (!pending) return;
@@ -531,7 +537,8 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     action.type === 'effectPickResolve' ? pendingPickBefore?.publicHandRevealToken
     : action.type === 'choiceResolve' ? store.pendingEffectChoice?.publicHandRevealToken
     : action.type === 'optionalResolve' ? store.pendingEffectOptional?.publicHandRevealToken
-    : action.type === 'chooseInterceptResolve' ? store.pendingChooseIntercept?.publicHandRevealToken
+    : action.type === 'chooseInterceptResolve' && store.pendingChooseIntercept?.kind !== 'order'
+      ? store.pendingChooseIntercept?.publicHandRevealToken
     : undefined;
   if (current === null) return { ok: false, reason: 'no-state' };
   if (isReplayOwnedState(current)) return { ok: false, reason: 'not-allowed' };
@@ -763,7 +770,7 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
       store.setPendingSetCardReplacement(setCardReplacementSide);
     }
     const chooseInterceptSide = _drainPendingChooseInterceptSide();
-    if (action.type === 'chooseInterceptResolve') {
+    if (action.type === 'chooseInterceptResolve' || action.type === 'chooseInterceptOrderResolve') {
       store.setPendingChooseIntercept(chooseInterceptSide);
     } else if (chooseInterceptSide) {
       store.setPendingChooseIntercept(chooseInterceptSide);

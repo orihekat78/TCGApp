@@ -555,12 +555,12 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:5",
         "src:src/cards/ct-p04/B04003.ts:3",
-        "src:src/engine/effect/consult-choose-intercept.ts:31",
-        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:127",
-        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:128",
+        "src:src/engine/effect/consult-choose-intercept.ts:96",
+        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:123",
         "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:129",
         "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:130",
-        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:131"
+        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:131",
+        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:132"
       ]
     },
     {
@@ -573,8 +573,8 @@
         "rules:.claude/rules/22-qa-action-contact.md:10",
         "src:src/cards/ct-p04/B04003.ts:6",
         "src:src/engine/effect/resolve-picks.ts:31",
-        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:144",
-        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:145"
+        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:146",
+        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:147"
       ]
     },
     {
@@ -587,7 +587,7 @@
         "rules:.claude/rules/17-icons.md:37",
         "rules:.claude/rules/19-special-rules.md:21",
         "src:src/cards/ct-p04/B04003.ts:6",
-        "src:src/engine/effect/consult-choose-intercept.ts:62",
+        "src:src/engine/effect/consult-choose-intercept.ts:87",
         "tests:tests/cards/official-qa/bond-partner-exclusion-wave9.test.ts:196",
         "tests:tests/cards/official-qa/bond-partner-exclusion-wave9.test.ts:197",
         "tests:tests/cards/official-qa/bond-partner-exclusion-wave9.test.ts:200",
@@ -1399,14 +1399,13 @@
     {
       "qaId": "card:B08058:cbce41c9b0c72cca046ffb06c2b4ff9c3af679af4bcfb692fac12dc0b5998a23",
       "answerHash": "9a850b0aa69167d50fe9b35374145bd3a1f7c6ca2159ee4d9315b205401b53c5",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08058.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p08/B08058.ts:1",
+        "tests:tests/cards/official-qa/B08058-resolution-public-wave25.test.ts:173",
+        "tests:tests/cards/official-qa/B08058-resolution-public-wave25.test.ts:177"
       ]
     },
     {

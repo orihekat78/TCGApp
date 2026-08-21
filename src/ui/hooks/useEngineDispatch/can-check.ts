@@ -241,7 +241,16 @@ export function isAllowed(
         );
     }
     case 'chooseInterceptResolve': {
-      return matchesPendingDecision(useGameStateStore.getState().pendingChooseIntercept, action);
+      const pending = useGameStateStore.getState().pendingChooseIntercept;
+      return pending?.kind !== 'order' && matchesPendingDecision(pending, action);
+    }
+    case 'chooseInterceptOrderResolve': {
+      const pending = useGameStateStore.getState().pendingChooseIntercept;
+      return pending?.kind === 'order'
+        && matchesPendingDecision(pending, action)
+        && pending.choices.some(choice => (
+          choice.protector.uid === action.protectorUid && choice.targetUid === action.targetUid
+        ));
     }
     case 'repeatOptionalResolve': {
       return matchesPendingDecision(useGameStateStore.getState().pendingEffectRepeatOptional, action);
