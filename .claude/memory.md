@@ -45,3 +45,5 @@
   file mutation handles both Immer drafts and plain restored arrays.
 - B07013 requires an active Conan; B10060 opens child decisions only after an
   actual entry. RPS, set-card, reorder, placement, and replacement use the same owner boundary.
+- Final clean gates: release preparation 1/1 and full Vitest 10438/10438 pass;
+  Sol engine and Terra test reviews report no BLOCK.

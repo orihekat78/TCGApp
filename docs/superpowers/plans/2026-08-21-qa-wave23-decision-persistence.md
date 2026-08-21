@@ -77,7 +77,7 @@
 - [x] Run isolated-port Playwright for optional decisions and the full public match flow.
 - [x] Obtain Sol engine/adversarial review and Terra test review; resolve every BLOCK.
 - [x] Run `git diff --check` and inspect the complete diff for unrelated changes.
-- [ ] Create one coherent clean candidate commit, then pass the release-preparation test and full `npm test` with the worktree still clean.
+- [x] Create one coherent clean candidate commit, then pass the release-preparation test and full `npm test` with the worktree still clean.
 
 ## Acceptance Evidence
 
