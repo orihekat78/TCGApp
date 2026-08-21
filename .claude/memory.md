@@ -96,5 +96,5 @@
   test-missing where the additional printed effect is not completely proved.
 - BUG-323 records B09016's separate trigger-time versus resolution-time condition defect.
 
-## 2026-08-22: QA runtime Waves27-28 effect-driven entry
-- Wave27 certifies 8 declared-entry QA and fixes BUG-324's character-filter gaps; Wave28 certifies 8 triggered-entry QA, advancing coverage to 1150 matched/1814 test-missing. Entered hooks resolve once after sceneEnter with source continuation order preserved. Empty optional hand entry intentionally surfaces a zero-pick decision when continuation needs a bound absence; remove-area no-candidate paths can auto-skip. The Wave27 AST sweep remains current because Wave28 changes no production card or engine code.
+## 2026-08-22: QA runtime Waves27-29 effect-driven entry
+- Waves27-29 certify 24 effect-entry QA, reaching 1158 matched/1806 test-missing. Wave29 covers action-declare/end entry through public dispatch and fixes BUG-325: B04030/P accept only printed `怪盗キッド`, not pure `黒羽快斗`. Enter hooks resolve once after sceneEnter; FILE/zero/decline/source-left/draw-created candidates and cleanup are covered. A 52-file/61-array cardName sweep found no alias recurrence.

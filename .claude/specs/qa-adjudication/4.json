@@ -483,7 +483,7 @@
       "evidence": [
         "rules:.claude/rules/20-color-and-switch.md:34",
         "src:src/cards/ct-p04/B04030.ts:27",
-        "tests:tests/cards/official-qa/B04030.test.ts:127"
+        "tests:tests/cards/official-qa/B04030.test.ts:120"
       ]
     },
     {

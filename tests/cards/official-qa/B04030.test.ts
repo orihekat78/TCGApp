@@ -21,7 +21,8 @@ const KID: CardDef = {
 };
 const DECOY: CardDef = { ...KID, id: 'QA_B04030_DECOY', no: 'QA/B04030/DECOY', names: ['decoy'], level: 9 };
 const TARGET: CardDef = { ...KID, id: 'QA_B04030_TARGET', no: 'QA/B04030/TARGET', names: ['target'], ap: 1000 };
-const SOURCE_COPY: CardDef = { ...B04030, id: 'QA_B04030_SOURCE_COPY', no: 'QA/B04030/SOURCE-COPY', abilities: [] };
+const KID_COPY: CardDef = { ...B04030, id: 'QA_B04030_KID_COPY', no: 'QA/B04030/KID-COPY', names: ['怪盗キッド'], abilities: [] };
+const KUROBA_COPY: CardDef = { ...B04030, id: 'QA_B04030_KUROBA_COPY', no: 'QA/B04030/KUROBA-COPY', abilities: [] };
 
 function state(deck: string[] = [DECOY.id, KID.id]): GameState {
   const s = createEmptyGameState();
@@ -47,7 +48,7 @@ beforeEach(() => {
   event._resetRegistry(); _resetTriggeredRegistered(); _resetRegistry(); _resetUidCounter(); _resetActionContexts();
   _clearPendingEffectPickQueue(); _clearPendingEffectChoiceSide();
   (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
-  for (const def of [B04030, KID, DECOY, TARGET, SOURCE_COPY]) registerCardDef(def);
+  for (const def of [B04030, KID, DECOY, TARGET, KID_COPY, KUROBA_COPY]) registerCardDef(def);
   registerTriggeredListener();
 });
 
@@ -81,9 +82,9 @@ describe('B04030 official-QA action-end reveal', () => {
     expect(s.players.self.deck).toEqual([DECOY.id, KID.id]);
   });
 
-  it('allows a copy with the action source name to be revealed, entered, and to remove only the original source', () => {
-    const s = state([SOURCE_COPY.id, KID.id]);
-    expect(s.players.self.deck).toEqual([SOURCE_COPY.id, KID.id]);
+  it('does not treat the action source name 黒羽快斗 as the printed 怪盗キッド filter', () => {
+    const s = state([KUROBA_COPY.id, KID.id]);
+    expect(s.players.self.deck).toEqual([KUROBA_COPY.id, KID.id]);
     const a1 = B04030.abilities.find(ability => ability.id === 'a1')!;
     runEffect(s, a1.effect, {
       source: { player: 'self', area: 'scene', cardId: 'B04030', uid: 'kaito', abilityId: 'a1' },
@@ -91,25 +92,16 @@ describe('B04030 official-QA action-end reveal', () => {
     } as never);
     runAllUntilEmpty(s);
 
-    expect(s.players.self.deck).toEqual([SOURCE_COPY.id, KID.id]);
+    expect(s.players.self.deck).toEqual([KUROBA_COPY.id, KID.id]);
     const reveal = _drainPendingEffectPickSide()!;
-    expect(reveal.candidates.map(candidate => candidate.cardId)).toEqual([SOURCE_COPY.id, KID.id]);
-    applyPickAndContinuation(s, reveal, reveal.candidates.find(candidate => candidate.cardId === SOURCE_COPY.id)!.uid);
-
-    const choice = _drainPendingEffectChoiceSide()!;
-    expect(choice.source.uid).toBe('kaito');
-    applyChoiceAndContinuation(s, choice, 1);
-
-    expect(s.players.self.scene.some(character => character.uid === 'kaito')).toBe(false);
-    expect(s.players.self.scene.filter(character => character.cardId === SOURCE_COPY.id)).toHaveLength(1);
-    expect(s.players.self.deck).toEqual([KID.id]);
+    expect(reveal.candidates.map(candidate => candidate.cardId)).toEqual([KID.id]);
   });
 
   it.each([
     ['source', 'kaito'],
     ['another character', 'self-fill-1'],
   ])('at a full scene, switching the %s enters the deck card once before removing the original source', (_label, switchRemoveUid) => {
-    const s = state([SOURCE_COPY.id, KID.id]);
+    const s = state([KID_COPY.id, KID.id]);
     for (let index = 1; index <= 4; index += 1) {
       s.players.self.scene.push(makeChar({ uid: `self-fill-${index}`, cardId: TARGET.id, state: 'active' }));
     }
@@ -120,19 +112,19 @@ describe('B04030 official-QA action-end reveal', () => {
     } as never);
     runAllUntilEmpty(s);
     const reveal = _drainPendingEffectPickSide()!;
-    applyPickAndContinuation(s, reveal, reveal.candidates.find(candidate => candidate.cardId === SOURCE_COPY.id)!.uid);
+    applyPickAndContinuation(s, reveal, reveal.candidates.find(candidate => candidate.cardId === KID_COPY.id)!.uid);
 
     applyChoiceAndContinuation(s, _drainPendingEffectChoiceSide()!, 1, switchRemoveUid);
 
     expect(s.players.self.scene).toHaveLength(switchRemoveUid === 'kaito' ? 5 : 4);
-    expect(s.players.self.scene.filter(character => character.cardId === SOURCE_COPY.id)).toHaveLength(1);
+    expect(s.players.self.scene.filter(character => character.cardId === KID_COPY.id)).toHaveLength(1);
     expect(s.players.self.deck).toEqual([KID.id]);
     expect(s.players.self.scene.some(character => character.uid === switchRemoveUid)).toBe(false);
     expect(s.players.self.scene.some(character => character.uid === 'kaito')).toBe(false);
   });
 
   it('at a full scene, cancelling the enter switch leaves the original source and deck entry intact', () => {
-    const s = state([SOURCE_COPY.id, KID.id]);
+    const s = state([KID_COPY.id, KID.id]);
     for (let index = 1; index <= 4; index += 1) {
       s.players.self.scene.push(makeChar({ uid: `self-fill-${index}`, cardId: TARGET.id, state: 'active' }));
     }
@@ -143,13 +135,13 @@ describe('B04030 official-QA action-end reveal', () => {
     } as never);
     runAllUntilEmpty(s);
     const reveal = _drainPendingEffectPickSide()!;
-    applyPickAndContinuation(s, reveal, reveal.candidates.find(candidate => candidate.cardId === SOURCE_COPY.id)!.uid);
+    applyPickAndContinuation(s, reveal, reveal.candidates.find(candidate => candidate.cardId === KID_COPY.id)!.uid);
 
     applyChoiceAndContinuation(s, _drainPendingEffectChoiceSide()!, 1);
 
     expect(s.players.self.scene.some(character => character.uid === 'kaito')).toBe(true);
-    expect(s.players.self.scene.some(character => character.cardId === SOURCE_COPY.id)).toBe(false);
-    expect(s.players.self.deck).toEqual([SOURCE_COPY.id, KID.id]);
+    expect(s.players.self.scene.some(character => character.cardId === KID_COPY.id)).toBe(false);
+    expect(s.players.self.deck).toEqual([KID_COPY.id, KID.id]);
   });
 
   it('with zero eligible cards, surfaces the standard optional-reveal confirmation before returning the look to deck bottom', () => {

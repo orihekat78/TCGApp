@@ -559,15 +559,13 @@
     {
       "qaId": "card:B04030:b2bb0991c56c38c14055ec3a8e4b107d7c47811f912761d8d1fe387311bfe17e",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:11",
-        "src:src/cards/ct-p04/B04030.ts:19"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "src:src/cards/ct-p04/B04030.ts:23",
+        "tests:tests/cards/official-qa/effect-entry-action-public-wave29.test.ts:356"
       ]
     },
     {
@@ -627,11 +625,12 @@
     {
       "qaId": "card:B04068:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04068.ts:1"
+        "src:src/cards/ct-p04/B04068.ts:43",
+        "tests:tests/cards/official-qa/effect-entry-action-public-wave29.test.ts:357"
       ]
     },
     {

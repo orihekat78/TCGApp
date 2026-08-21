@@ -1003,14 +1003,12 @@
     {
       "qaId": "card:B06077:b2bb0991c56c38c14055ec3a8e4b107d7c47811f912761d8d1fe387311bfe17e",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06077.ts:75"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/ct-p06/B06077.ts:48",
+        "tests:tests/cards/official-qa/effect-entry-action-public-wave29.test.ts:360"
       ]
     },
     {

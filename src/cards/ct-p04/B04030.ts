@@ -20,7 +20,7 @@ const a1: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', maxN: 4, chooseMatch: 'upTo', visibility: 'private', viewer: 'self', filter: { cardName: ['怪盗キッド', '黒羽快斗'], levelMax: 8, kind: 'character' }, bind: '$revealed', bindMatch: '$matched' } },
+      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', maxN: 4, chooseMatch: 'upTo', visibility: 'private', viewer: 'self', filter: { cardName: '怪盗キッド', levelMax: 8, kind: 'character' }, bind: '$revealed', bindMatch: '$matched' } },
       { kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' }, then: { kind: 'choice', chooser: 'self', options: [
         { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } },
         { kind: 'sequence', steps: [

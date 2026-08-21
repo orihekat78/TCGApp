@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `81af25ff21e7`
+> Source hash: `c4e618214621`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,13 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## QA Wave 29 — action-triggered effect-entry verification
+
+- Added public-runtime witnesses for eight action-triggered abilities that enter characters from deck or hand.
+- Proved normal entry triggers, exact source costs and disposition, filter boundaries, zero/decline branches, causal order, and authority cleanup.
+- Fixed B04030/P so its printed `怪盗キッド` filter no longer accepts a pure `黒羽快斗` card.
+- Advanced exact official-QA coverage from 1,150 to 1,158 matched records.
 
 ## QA Wave 28 — triggered effect-entry verification
 

@@ -584,7 +584,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:14",
         "src:src/cards/ct-p04/B04030.ts:23",
-        "tests:tests/cards/official-qa/B04030.test.ts:61"
+        "tests:tests/cards/official-qa/B04030.test.ts:64"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION-MISSING"
@@ -695,14 +695,12 @@
     {
       "qaId": "card:B05048:0527d3a5875b73026cd5b7444b01f9623fe27836b1fdaccf6f52940e88673d38",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05048.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p05/B05048.ts:4",
+        "tests:tests/cards/official-qa/effect-entry-action-public-wave29.test.ts:358"
       ]
     },
     {
