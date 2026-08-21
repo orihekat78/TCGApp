@@ -93,8 +93,7 @@
 - If an after-sleep effect removes the reasoner, cancel its continuation and causal trace before evidence; keep wrong-player/non-sleep throws.
 - B05062 is white; its four-card count has no level cap, while the reanimate target remains level 7 or lower.
 
-## 2026-08-21: Same-CardDef multi-copy order Wave17
-- Public owner-order coverage certifies 24 cards; QA coverage is 916 matched and 2048 test-missing.
-- Production `enter` has `uid`, not payload player; B02088/B09003 require `triggerCharMatches.payloadKey:'uid'`.
-- B04003 stays test-missing: `choose-intercept` keeps one copy. Batch-fix it, then regress B08081/P and B02067.
-- Triggered grants need per-grant IDs. B07063 uses base/`#N`, queues both, and keeps separate turn limits.
+## 2026-08-21: QA runtime Waves17-18
+- Wave17 owner-order certifies 24; production `enter` has `uid`, so B02088/B09003 use `payloadKey:'uid'`.
+- B07063 grants use base/`#N` IDs; B04003 still loses a copy through `choose-intercept`, then regress B08081/P and B02067.
+- Wave18 public reasoning plus decision certifies 33 actual Misread cards; no production change; coverage is 949 matched/2015 test-missing. Promos and BUG-319 remain excluded.

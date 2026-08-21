@@ -67,14 +67,21 @@
     {
       "qaId": "card:B01045:c43d44228555c6f52877b10cd4fc1e477898170ca1d8b5e1675225ab8ca0b4f4",
       "answerHash": "9774db2bba11e1d8d8eb55ecaab030d2da5bec33b33e7ee366cc4ddf59c1cdc0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p01/B01045.ts:93"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/13-keywords.md:25",
+        "rules:.claude/rules/13-keywords.md:26",
+        "rules:.claude/rules/13-keywords.md:28",
+        "rules:.claude/rules/13-keywords.md:29",
+        "src:src/cards/ct-p01/B01045.ts:93",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave18.test.ts:131",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave18.test.ts:135",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave18.test.ts:138",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave18.test.ts:139",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave18.test.ts:140",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave18.test.ts:141"
       ]
     },
     {
@@ -278,17 +285,22 @@
     {
       "qaId": "card:B03009:c43d44228555c6f52877b10cd4fc1e477898170ca1d8b5e1675225ab8ca0b4f4",
       "answerHash": "9774db2bba11e1d8d8eb55ecaab030d2da5bec33b33e7ee366cc4ddf59c1cdc0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/13-keywords.md:25",
+        "rules:.claude/rules/13-keywords.md:26",
+        "rules:.claude/rules/13-keywords.md:28",
+        "rules:.claude/rules/13-keywords.md:29",
         "src:src/cards/ct-p03/B03009.ts:44",
-        "src:src/engine/listeners/misread.ts:152"
-      ],
-      "noteCodes": [
-        "MISREAD-ONE-EXACT-OUTCOME-UNTESTED",
-        "TEST-GAP"
+        "src:src/engine/listeners/misread.ts:152",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave18.test.ts:131",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave18.test.ts:135",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave18.test.ts:138",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave18.test.ts:139",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave18.test.ts:140",
+        "tests:tests/cards/official-qa/misread-public-runtime-wave18.test.ts:141"
       ]
     },
     {

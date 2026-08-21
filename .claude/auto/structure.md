@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6111
+- **ファイル数**: 6112
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5507,6 +5507,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `leave-trigger-scene-target-public.test.ts` — qa: card:B03012:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-top-one-public.test.ts` — qa: card:PR084:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-top-three-public.test.ts` — qa: card:B03079:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
+      - `misread-public-runtime-wave18.test.ts` — qa: card:B04079:c61cc842e775e8f40c3ccc90d41e595b2e2e02184cc4d243534b3c2fdf721fdb
       - `multihook-timing-public.test.ts` — qa: card:D03007:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3
       - `same-card-multicopy-order-wave17.test.ts` — qaId=card:B02020:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c…
       - `set-card-host-absent.test.ts`
