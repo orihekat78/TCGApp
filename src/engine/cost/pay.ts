@@ -753,7 +753,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
       if (!cardCand || !hostCand) throw new Error('cost.pay: handStackUnder is not payable');
       mutate.hand.emitReveal(state, ctx.source.player, [cardCand.cardId], { byPlayer: ctx.source.player, cause: 'cost' });
       mutate.hand.remove(state, ctx.source.player, [cardCand.cardId]);
-      mutate.char.stackCard(state, hostCand.uid, 1);
+      mutate.char.stackCard(state, hostCand.uid, 1, [cardCand.cardId]);
       acc.paidItems.push({ kind: 'handStackUnder', details: { cardId: cardCand.cardId, hostUid: hostCand.uid } });
       return;
     }

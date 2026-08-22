@@ -662,7 +662,7 @@ function transferStackedCards(
 /**
  * setCards と stackedCards のクリーンアップ (離場時)
  * setCards → リムーブエリアへ
- * stackedCards → 枚数分の back-card としてリムーブエリアへ
+ * stackedCards → 実カードIDをリムーブエリアへ（旧count形式だけback-card）
  */
 function removeAllSetAndStacked(s: GameState, uid: string): void {
   const found = findChar(s, uid);
@@ -676,7 +676,7 @@ function removeAllSetAndStacked(s: GameState, uid: string): void {
   if (char.setCards.length > 0) advanceIndexedZoneEpoch(s, player, 'remove');
   char.setCards = [];
 
-  // stackedCards 分の back-card をリムーブエリアへ
+  // stackedCards は実カードIDをリムーブエリアへ（旧count形式だけback-card）
   if (Array.isArray(char.stackedCards)) {
     s.players[player].remove.push(...char.stackedCards.map(entry => entry.cardId));
     if (char.stackedCards.length > 0) advanceIndexedZoneEpoch(s, player, 'remove');

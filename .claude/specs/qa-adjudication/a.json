@@ -670,11 +670,16 @@
     {
       "qaId": "card:B06005:199a933934b344f7715091799edd9442eca983c85cb7953418d8f7e9f0d4f2a6",
       "answerHash": "25fb29e6478548c7c2dc58a1724457131afaff84212eb156c8aab87600b6307c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06005.ts:1"
+        "rules:.claude/rules/16-card-set.md:30",
+        "rules:.claude/rules/16-card-set.md:31",
+        "src:src/cards/ct-p06/B06005.ts:1",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:217",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:224",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:225"
       ]
     },
     {

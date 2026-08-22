@@ -299,7 +299,7 @@ function emitSetCardLeaves(s: GameState, char: SceneCharacter, player: Player, c
 
 /**
  * キャラをリムーブエリアへ移動 (rules/03, 16)
- * setCards → リムーブ、stackedCards → back-card でリムーブ
+ * setCards → リムーブ、stackedCards → 保持中の実カードIDでリムーブ（旧count形式だけ互換用back-card）
  */
 function removeToRemove(
   s: GameState,
@@ -470,7 +470,7 @@ function removeToRemove(
     emitSetCardLeaves(s, char, player, cause);
   }
 
-  // stackedCards 分も back-card としてリムーブ
+  // stackedCards は保持中の実カードIDでリムーブ（旧count形式だけback-card）
   const stackedCardsRemoved = moveStackedCardsToRemove(s, player, char);
 
   // キャラ本体をリムーブエリアへ

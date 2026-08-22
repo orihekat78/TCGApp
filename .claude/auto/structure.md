@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6179
+- **ファイル数**: 6182
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -506,6 +506,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-323.md` — B09016の「いる場合」を解決時評価できない
     - `BUG-324.md` — キャラ限定sceneEnterの対象種別漏れ
     - `BUG-325.md` — B04030の怪盗キッド候補へ黒羽快斗が混入
+    - `BUG-326.md` — B08006の重なったカードの同一性喪失
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -825,6 +826,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-22-04-qa-wave30-deck-look-zero-choice.md`
     - `2026-08-22-05-qa-wave31-effect-entry.md`
     - `2026-08-22-06-qa-wave32-shuffle-romance.md`
+    - `2026-08-22-07-qa-wave33-stacked-card-semantics.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -5574,6 +5576,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `short-deck-reveal-hand-entry-public.test.ts` — rules: 15-abilities-effects.md, 17-icons.md, 20-color-and-switch.…
       - `shuffle-romance-public-wave32.test.ts` — qa: card:B01023:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
       - `sleep-cost-related-entry-public-wave24.test.ts` — qa: card:B07002:18266db4732b9571ebae419afbd36f26fb54fb836c7752251e64e6dad817b4d1
+      - `stacked-card-semantics-public-wave33.test.ts` — qa: card:B06005:199a933934b344f7715091799edd9442eca983c85cb7953418d8f7e9f0d4f2a6
       - `stun-action-target-public.test.ts` — qa: card:B01058:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40
       - `stun-activation-to-sleep-wave22.test.ts` — qa: card:B04080:872de2079dce9150e76a70314a5d20400e542df72be79f07c2daed17f80158c3
       - `turn-conditioned-cutin-expansion-public.test.ts` — qa: card:B05095:3ebc71d3fe967142af371f16682581bf9d44ac0db1c409f0d2a20d11ffeeae41

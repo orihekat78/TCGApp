@@ -983,8 +983,18 @@ describe('W4 step4 r7: handStackUnder cost (B08006 型)', () => {
     }]);
     expect(after.players.self.hand, '公開した少年探偵団が手札を離れる').toEqual([]);
     expect(Array.isArray(host.stackedCards) ? host.stackedCards.length : host.stackedCards, '公開したカードを B08006 自身の下へ重ねる').toBe(1);
+    expect(host.stackedCards, '公開した実カードの同一性を重なり先で保持する').toEqual([
+      expect.objectContaining({ cardId: 'SB_HAND', instanceId: expect.any(String) }),
+    ]);
     expect(host.state, 'コストで B08006 自身をスリープする').toBe('sleep');
     expect(evalCond(after, hasStack, ctx), '重ねた直後から stack 数条件を満たす').toBe(true);
+    const departed = produce(after, (draft) => {
+      mutate.scene.removeToRemove(draft, 'b08006#1', 'effect');
+    });
+    expect(departed.players.self.remove, 'host 離場時も公開した実カードIDで移動する').toEqual([
+      'SB_HAND',
+      'B08006',
+    ]);
   });
 });
 

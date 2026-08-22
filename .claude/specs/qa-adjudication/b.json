@@ -1320,7 +1320,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p08/B08006.ts:27",
-        "tests:tests/cards/engine-mega-w4.test.ts:987"
+        "tests:tests/cards/engine-mega-w4.test.ts:990"
       ]
     },
     {
@@ -1540,9 +1540,9 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09048.ts:64",
-        "tests:tests/cards/engine-mega-w4.test.ts:1112",
-        "tests:tests/cards/engine-mega-w4.test.ts:1113",
-        "tests:tests/cards/engine-mega-w4.test.ts:1114"
+        "tests:tests/cards/engine-mega-w4.test.ts:1122",
+        "tests:tests/cards/engine-mega-w4.test.ts:1123",
+        "tests:tests/cards/engine-mega-w4.test.ts:1124"
       ]
     },
     {

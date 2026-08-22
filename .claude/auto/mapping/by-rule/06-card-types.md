@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `12c7897b0582`
+> Source hash: `05b930c601a5`
 
 公式ルール [`06-card-types.md`](../../../rules/06-card-types.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

@@ -1324,9 +1324,9 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09048.ts:64",
-        "tests:tests/cards/engine-mega-w4.test.ts:1120",
-        "tests:tests/cards/engine-mega-w4.test.ts:1121",
-        "tests:tests/cards/engine-mega-w4.test.ts:1122"
+        "tests:tests/cards/engine-mega-w4.test.ts:1130",
+        "tests:tests/cards/engine-mega-w4.test.ts:1131",
+        "tests:tests/cards/engine-mega-w4.test.ts:1132"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"

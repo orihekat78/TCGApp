@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `28a286bd2fe9`
+> Source hash: `f1714099c978`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,18 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## QA Wave 33 — stacked-card semantics and physical identity
+
+- Certified twelve official QA records across sixteen printings through fourteen public-dispatch regression cases.
+- Proved stacked cards remain outside the scene-character population and expose only their count to rules evaluation.
+- Proved stacked names, traits, colors, abilities, enter hooks, and leave hooks do not participate in gameplay.
+- Covered partner-area declaration, hand-use entry, declared costs, normal action completion, and end-phase removal routes.
+- Preserved exact selected card IDs through JSON round-trip and host departure while keeping legacy count-only stacks compatible.
+- Fixed `handStackUnder` so a revealed hand card no longer becomes `back-card` in authoritative GameState.
+- Kept B08002's distinct answer hash as an independent manual-semantic adjudication despite sharing the question family.
+- Deferred authorization-clone identity hardening, multi-candidate stack-cost selection, and public stacked-card UI/replay visibility to separate follow-up work.
+- Advanced exact official-QA coverage from 1,194 to 1,206 matched records; test-missing falls from 1,770 to 1,758.
 
 ## QA Wave 32 — Shuffle Romance and contact-host direction
 

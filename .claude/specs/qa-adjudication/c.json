@@ -1291,15 +1291,17 @@
     {
       "qaId": "card:B08002:68d445866ed87d221a9315fc087e0d32239a90ec310f21e941fa4d351c217273",
       "answerHash": "d59ba5cffadd7fc8f6c9ab99426311f9672b19a26cfa160529da149858a741c7",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08002.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
+        "rules:.claude/rules/16-card-set.md:30",
+        "rules:.claude/rules/16-card-set.md:31",
+        "src:src/cards/ct-p08/B08002.ts:1",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:191",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:199",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:200",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:203"
       ]
     },
     {
