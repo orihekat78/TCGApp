@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6215
+- **ファイル数**: 6231
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -836,6 +836,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-03-qa-wave37-self-only-evidence.md`
     - `2026-08-23-04-qa-wave38-file-assist-continuous.md`
     - `2026-08-23-05-qa-wave39-file-assist-enter.md`
+    - `2026-08-23-06-qa-wave40-file-assist-action.md`
+    - `2026-08-23-07-qa-wave41-file-assist-declared.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1526,6 +1528,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-qa-wave35.md` — QA runtime Wave35 physical ability occurrence identity
     - `2026-08-23-qa-waves36-37.md` — QA runtime Waves36-37 self-only evidence costs
     - `2026-08-23-qa-waves38-39.md` — QA runtime Waves38-39 assisting partners in FILE conditions
+    - `2026-08-23-qa-waves40-41.md` — QA runtime Waves40-41 assisted FILE action and declared paths
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1648,6 +1651,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B04048.md` — B04048/B04048P 羽田秀𠮷 grounding (2026-07-10, fable)
       - `B04055.md` — B04055 grounding
       - `B04059.md` — B04059 水無怜奈 grounding
+      - `B04068.md` — B04068 安室透 grounding
       - `B04073.md` — B04073 千葉和伸 grounding (2026-07-10, sonnet5)
       - `B05008.md` — B05008 / B05008P grounding
       - `B05009.md` — B05009 毛利蘭 grounding (2026-07-10, sonnet5)
@@ -1658,6 +1662,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B05080.md` — B05080 timing grounding
       - `B05086P.md` — grounding dossier: B05086P (自動生成 2026-07-13)
       - `B05094.md` — B05094 grounding
+      - `B05108.md` — B05108 バーボン grounding
       - `B06003.md` — B06003/B06003P 毛利蘭＆江戸川コナン (MR キャラ) grounding (2026-07-10, fable)
       - `B06005.md` — B06005 阿笠博士 (R/RP) grounding (2026-07-10, sonnet5)
       - `B06012.md` — B06012 grounding
@@ -1680,13 +1685,16 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08019.md` — B08019 大岡紅葉＆伊織無我 (MR/MRP) grounding (2026-07-10, sonnet5)
       - `B08026.md` — B08026 grounding
       - `B08047.md` — B08047/B08047P 沖矢昴 grounding (2026-07-10, fable)
+      - `B08056.md` — B08056 宮野厚司 grounding
       - `B08065.md` — B08065 大和敢助 grounding
       - `B08074.md` — B08074 降谷零 grounding
       - `B08081.md` — B08081 広田雅美 grounding (2026-07-10, sonnet5)
+      - `B09010.md` — B09010 阿笠博士 grounding
       - `B09019.md` — B09019/B09019P 「くさるなよ！」 (イベント) grounding (2026-07-10, fable)
       - `B09024.md` — grounding dossier: B09024（世良真純）
       - `B09033.md` — grounding dossier: B09033
       - `B09033P.md` — grounding dossier: B09033P
+      - `B09036.md` — B09036 怪盗キッド grounding
       - `B09047.md` — B09047 grounding
       - `B09048.md` — B09048 grounding
       - `B09052.md` — B09052 grounding
@@ -1763,6 +1771,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B10090.md` — B10090 grounding
       - `B10091.md` — B10091 grounding
       - `B10094.md` — B10094 grounding
+      - `B10095.md` — B10095 ベルモット grounding
       - `B10096.md` — B10096 / B10096P 「何の真似だ…」
       - `B10097.md` — B10097 grounding
       - `B10098.md` — B10098 / B10098P grounding
@@ -1782,6 +1791,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D09009.md` — D09009 上原由衣 grounding
       - `D09014.md` — D09014 大和敢助 grounding
       - `D09015.md` — D09015 大和敢助 grounding
+      - `D09016.md` — D09016 諸伏高明 grounding
+      - `D09017.md` — D09017 諸伏高明 grounding
+      - `D10011.md` — D10011 毛利小五郎 grounding
       - `D10022.md` — D10022 毛利蘭 grounding (2026-07-10, sonnet5)
       - `D10024.md` — D10024 grounding
       - `PR022.md` — PR022 江戸川コナン
@@ -1794,6 +1806,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `PR240.md` — PR240 毛利蘭 grounding (2026-07-10, fable)
       - `PR265.md` — PR265 風見裕也 grounding (2026-07-10, fable)
       - `PR283.md` — PR283 上原由衣 grounding
+      - `PR289.md` — PR289 円谷光彦 grounding
+      - `PR295.md` — PR295 円谷光彦 grounding
       - `PR305.md` — PR305 萩原研二 grounding
       - `PR306.md` — PR306 grounding
       - `PR307.md` — PR307 grounding
@@ -5584,7 +5598,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `effect-entry-trigger-public-wave28.test.ts` — qa: card:B03068:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `event-evidence-action-hirameki-public.test.ts` — qa: card:B04041:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
       - `f026-cutin-public.test.ts` — qa: card:B08085:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
+      - `file-assist-action-public-wave40.test.ts` — qa: card:B04068:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
       - `file-assist-continuous-public-wave38.test.ts` — qa: card:B02063:cbce41c9b0c72cca046ffb06c2b4ff9c3af679af4bcfb692fac12dc0b5998a23
+      - `file-assist-declared-public-wave41.test.ts` — qa: card:B08056:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
       - `file-assist-enter-public-wave39.test.ts` — qa: card:B04023:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3
       - `leave-reveal-until-forced-public.test.ts` — qa: card:B02058:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-opponent-turn-public.test.ts` — qa: card:B01065:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58

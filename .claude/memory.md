@@ -47,3 +47,9 @@
 - Waves38-39 certify ten generic FILE(X) Q&A records and reach 1249 matched/1715 test-missing. Public assist plus continuous reads or hand entry proves threshold-minus-two stays off, threshold-minus-one plus partner activates, and a sufficient opponent FILE is ignored.
 - Grounding corrects the prior label: the hash pair covers varied FILE4-8 thresholds, with 41 total QA, not only FILE8. Six were pre-matched; 25 remain after these waves. B07093's printed FILE7 a1 is still deferred.
 - NEXT Wave40: public action lifecycle for B04068/B05108/D09016/D09017/PR289/PR295; keep action-declare and action-end timing distinct while sharing the assist threshold matrix.
+
+## 2026-08-23: QA runtime Waves40-41 assisted FILE action/declared paths
+
+- Waves40-41 certify eleven shared FILE(X) Q&A records and reach 1260 matched/1704 test-missing. Public assist now covers action-declare, action-end, declared rejection, costs, bound discard, stacked gate, source movement, and entry continuations with wrong-owner controls.
+- Eleven pinned grounding decisions find no engine gap. B09010 removes an ordinary FILE card while the assisted partner remains; B10095 and D10011 preserve exact source cost movement.
+- NEXT Wave42: remaining declared group B07069/B08004/B08007/B09055/B09060/PR179/PR185/PR199/PR205. Fourteen shared-Q&A records remain including deferred B07093 and four non-declared routes.

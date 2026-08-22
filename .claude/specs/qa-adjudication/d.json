@@ -2247,15 +2247,13 @@
     {
       "qaId": "card:D09016:fe489ff3199dbdf91d8a4404721956da51ba17ccb819450ceed5b301f31fe7be",
       "answerHash": "9a850b0aa69167d50fe9b35374145bd3a1f7c6ca2159ee4d9315b205401b53c5",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d09/D09016.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
+        "rules:.claude/rules/17-icons.md:36",
+        "src:src/cards/ct-d09/D09016.ts:25",
+        "tests:tests/cards/official-qa/file-assist-action-public-wave40.test.ts:242"
       ]
     },
     {

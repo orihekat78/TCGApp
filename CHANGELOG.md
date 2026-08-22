@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `807c07afaaa9`
+> Source hash: `4cb002839bc0`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,28 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## QA Wave 41 — assisting partners in declared FILE gates
+
+- Certified five official QA records for B08056, B09010, B09036, B10095, and D10011.
+- Proved public declared dispatch rejects transactionally below each assist-derived threshold.
+- Completed named hand entry, zero-candidate multi-entry plus FILE removal, and same-name picker paths.
+- Completed B10095 self-removal/re-entry and D10011 deck-bottom/re-entry costs through public picks.
+- Preserved the assisted partner when B09010 removed the top ordinary FILE card.
+- Added pinned grounding decisions, including the current resolved B09036 implementation and SHA-pinned CT-P10 source.
+- No engine or card-definition change was required.
+- Advanced coverage from 1,255 to 1,260 matched records; test-missing falls from 1,709 to 1,704.
+
+## QA Wave 40 — assisting partners across action lifecycle FILE gates
+
+- Certified six official QA records for B04068, B05108, D09016, D09017, PR289, and PR295.
+- Used public assist, action declaration, guard, contact, judge, and action-end dispatches.
+- Separated action-declare prompts from action-end prompts.
+- Proved threshold-minus-two plus partner stays inactive and threshold-minus-one activates exactly.
+- Exercised optional, mandatory discard, stacked-count, AP-binding, and turn-one paths.
+- Kept the opponent at a sufficient FILE count to detect wrong-owner reads.
+- Added pinned grounding decisions for all six cards; no production change found.
+- Advanced coverage from 1,249 to 1,255 matched records; test-missing falls from 1,715 to 1,709.
 
 ## QA Wave 39 — assisting partners in FILE-gated enter effects
 
