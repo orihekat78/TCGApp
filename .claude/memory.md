@@ -95,6 +95,6 @@
 - PR247 generic Misread evidence is aligned; bundled PR247/PR262/PR268 QA remains
   test-missing where the additional printed effect is not completely proved.
 - BUG-323 records B09016's separate trigger-time versus resolution-time condition defect.
+## 2026-08-22: QA runtime Waves27-30 public effect paths
 
-## 2026-08-22: QA runtime Waves27-29 effect-driven entry
-- Waves27-29 certify 24 effect-entry QA, reaching 1158 matched/1806 test-missing. Wave29 covers action-declare/end entry through public dispatch and fixes BUG-325: B04030/P accept only printed `怪盗キッド`, not pure `黒羽快斗`. Enter hooks resolve once after sceneEnter; FILE/zero/decline/source-left/draw-created candidates and cleanup are covered. A 52-file/61-array cardName sweep found no alias recurrence.
+- Waves27-29 certify 24 effect-entry QA; Wave29 fixes BUG-325 so B04030/P accept only printed `怪盗キッド`. Wave30 certifies 17 deck-look zero-choice QA, reaching 1175 matched/1789 test-missing: eligible-match decline, no hand add, mandatory tails, real public routes, and full cleanup. Adversarial review also fixes the sole same-shape B10068/B10101 leak: looked cards stay private; only a selected card is public. A 52-file/61-array cardName sweep found no alias recurrence.

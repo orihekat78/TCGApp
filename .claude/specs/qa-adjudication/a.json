@@ -1630,15 +1630,13 @@
     {
       "qaId": "card:B10101:10a900367f7fe2bb97f89519de6c2707375ecf532cb3d2dc8e368059e8f5470e",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:11",
-        "src:src/cards/ct-p10/B10101.ts:41"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-p10/B10101.ts:33",
+        "tests:tests/cards/official-qa/B10101-granted-search-public-wave30.test.ts:189"
       ]
     },
     {

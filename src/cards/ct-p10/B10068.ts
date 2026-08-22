@@ -10,8 +10,8 @@ const a1: AbilityDef = {
 const a2: AbilityDef = {
   id: 'a2', type: 'triggered', scope: 'on-scene', trigger: { hook: 'phase:end:start' }, condition: { kind: 'and', cs: [{ kind: 'bond', cardName: '降谷零' }, { kind: 'turn', player: 'self' }] },
   effect: { kind: 'sequence', steps: [
-    { kind: 'atom', verb: 'deckRevealUntil', args: { chooseMatch: 'upTo', visibility: 'public', viewer: 'all', player: 'self', maxN: 2, filterAny: [{ cardName: '降谷零' }, { cardName: '諸伏景光' }, { cardName: '伊達航' }, { cardName: '萩原研二' }, { cardName: '松田陣平' }], bind: '$revealed', bindMatch: '$matched' } },
-    { kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' }, then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } } },
+    { kind: 'atom', verb: 'deckRevealUntil', args: { chooseMatch: 'upTo', player: 'self', maxN: 2, filterAny: [{ cardName: '降谷零' }, { cardName: '諸伏景光' }, { cardName: '伊達航' }, { cardName: '萩原研二' }, { cardName: '松田陣平' }], bind: '$revealed', bindMatch: '$matched' } },
+    { kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' }, then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId', presentation: 'public-selected-card' } } },
     { kind: 'atom', verb: 'boundToRemove', args: { player: 'self', bindKey: '$revealed' } },
   ] },
   description: '【絆降谷零】自分のターン終了時、自分のデッキのカードを上から2枚見る。その中から【カード名［降谷零］】か【［諸伏景光］】か【［伊達航］】か【［萩原研二］】か【［松田陣平］】を1枚まで公開して手札に加え、残りをリムーブエリアに移す。',

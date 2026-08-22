@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6154
+- **ファイル数**: 6158
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -822,6 +822,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-22-01-qa-wave27-effect-entry.md`
     - `2026-08-22-02-qa-wave28-effect-entry.md`
     - `2026-08-22-03-qa-wave29-effect-entry.md`
+    - `2026-08-22-04-qa-wave30-deck-look-zero-choice.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -2168,6 +2169,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-08-22-qa-wave27-effect-entry-declared-public.md` — QA Wave 27 Effect-Entry Public Verification Plan
       - `2026-08-22-qa-wave28-effect-entry-trigger-public.md` — QA Wave 28 Effect-Entry Trigger Public Plan
       - `2026-08-22-qa-wave29-effect-entry-action-public.md` — QA Wave 29 Action-Entry Public Plan
+      - `2026-08-22-qa-wave30-deck-look-zero-choice-public.md` — QA Wave 30 Deck-Look Zero-Choice Public Plan
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
@@ -5511,6 +5513,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B10071-public-wave25.test.ts` — qa: card:B10071:816d7965a6d1b8124bc6be2098194d8f3f19a88be3cdc253bf643cfdff0e1e69
       - `B10087-public-wave25.test.ts` — qa: card:B10087:0c9d0e7ac8e1aeccc9186815ebf6f4fcbc776e2193db1d43e5cd7294a9e3a664
       - `B10088-effect-entry-public-wave25.test.ts` — qa: card:B10088:00139d4a04a7b6b8457670c965d9b2c6ee827110a2321d40b2ba641c9a01b896
+      - `B10101-granted-search-public-wave30.test.ts` — qa: card:B10101:10a900367f7fe2bb97f89519de6c2707375ecf532cb3d2dc8e368059e8f5470e
       - `D06003-D06024-public-path.test.ts` — qaId=card:D06003:e918d066190b75a908b8154f185c9c4291e8387cb2fc4797f5744acc49a362d…
       - `D10003-D10010-printing-copy-limit.test.ts` — qaId=card:D10003:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2…
       - `bond-partner-exclusion-wave21.test.ts` — qa: card:B01087:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
@@ -5519,6 +5522,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `ctp10-opponent-turn-cutin-public.test.ts` — qa: card:B10017:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
       - `decision-persistence-wave23.test.ts` — qa: card:B03080:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
       - `deck-look-bottom-family-public.test.ts` — qa: card:B01013:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5
+      - `deck-look-zero-choice-public-wave30.test.ts` — qa: card:B04048:c2131ef2b4d611ed2fdcba93cb1619157aea6dcc39318ced5a4a6f69bc29faaf
       - `deck-refresh-wave8.test.ts` — qa: card:B04012:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4
       - `declared-sleep-cost-public-wave24.test.ts` — qa: card:B01063:f97b21e9e16f570fd0da6acab0a9cb6e819a6e4a010e86dddb5ff82c6d33902e
       - `effect-entry-action-public-wave29.test.ts` — qa: card:B03073:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa

@@ -1624,15 +1624,13 @@
     {
       "qaId": "card:B10068:ab95854e7cd23f7bf1f7ed620d4e6b5b95c4d1e008dd5b63ba100a8632121099",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:14",
-        "src:src/cards/ct-p10/B10068.ts:17"
-      ],
-      "noteCodes": [
-        "IMPLEMENTED-CARD-TEST-MISSING"
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-p10/B10068.ts:17",
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:434"
       ]
     },
     {
@@ -1666,16 +1664,14 @@
     {
       "qaId": "card:B10082:c2131ef2b4d611ed2fdcba93cb1619157aea6dcc39318ced5a4a6f69bc29faaf",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/01-victory-conditions.md:28",
         "src:src/cards/_shared/caseResolvedHandRemove.ts:35",
-        "src:src/cards/ct-p10/B10082.ts:6"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10082.ts:6",
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:435"
       ]
     },
     {

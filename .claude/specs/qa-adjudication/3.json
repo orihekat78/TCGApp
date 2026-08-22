@@ -2101,11 +2101,12 @@
     {
       "qaId": "card:PR186:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd",
       "answerHash": "8f55ea3d50075e5991aaa8d07bc09b0c9ac33e52999590247b596414873a34dd",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR186.ts:109"
+        "src:src/cards/pr-01/PR186.ts:109",
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:439"
       ]
     },
     {

@@ -2,7 +2,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { produce } from 'immer';
 import { B10101 } from '@/cards/ct-p10/B10101';
 import { applyDeckReorderAndContinuation, applyPickAndContinuation, applyPickSkipAndContinuation } from '@/engine/effect/apply-pick';
-import { _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
+import {
+  _drainPendingDeckReorderSide,
+  _drainPendingDeckRevealSide,
+  _drainPendingPublicHandRevealSide,
+} from '@/engine/effect/atom-handlers';
 import { run as runEffect } from '@/engine/effect/resolver';
 import { _resetRegistry, register } from '@/engine/read/def';
 import { createEmptyGameState } from '@/engine/state-factory';
@@ -14,6 +18,7 @@ const globals = globalThis as {
   __pendingEffectPickQueue?: PendingEffectPickSide[];
   __pendingDeckReorderSide?: unknown;
   __pendingDeckRevealSide?: unknown;
+  __pendingPublicHandRevealSide?: unknown;
 };
 
 function character(id: string, extra: Partial<CardDef> = {}): CardDef {
@@ -43,9 +48,9 @@ function searchEffect(): Effect {
   return effect;
 }
 
-function effectCtx(): EffectCtx {
+function effectCtx(player: 'self' | 'opp' = 'self'): EffectCtx {
   return {
-    source: { cardId: 'B10101', abilityId: 'b10101-granted-assault-search', uid: 'giver', player: 'self', area: 'scene' },
+    source: { cardId: 'B10101', abilityId: 'b10101-granted-assault-search', uid: 'giver', player, area: 'scene' },
     bindings: {}, dyn: { runtimePickOwnerKnown: true, runtimeHumanPlayer: 'self' },
   };
 }
@@ -70,6 +75,7 @@ beforeEach(() => {
   globals.__pendingEffectPickQueue = [];
   globals.__pendingDeckReorderSide = null;
   globals.__pendingDeckRevealSide = null;
+  globals.__pendingPublicHandRevealSide = null;
   _resetRegistry();
   [B10101, ASSAULT, BRACKET_ASSAULT, TEXT_GRANTED_ASSAULT, FILLER, TAIL, REFRESH].forEach(register);
 });
@@ -80,11 +86,21 @@ describe('CT-P10 B10101 granted assault search Q&A', () => {
     const pick = queue()[0]!;
     expect(pick.atomVerb).toBe('deckRevealUntil');
     expect(pick.candidates.map(candidate => candidate.cardId)).toEqual([ASSAULT.id]);
+    expect(_drainPendingDeckRevealSide()).toMatchObject({
+      player: 'self', visibility: 'private', viewer: 'self',
+      revealed: [FILLER.id, ASSAULT.id, TAIL.id], awaitingPick: true,
+    });
     globals.__pendingEffectPickQueue = [];
 
     result = produce(result, draft => applyPickAndContinuation(draft, pick, pick.candidates[0]!.uid));
     const reorder = _drainPendingDeckReorderSide();
+    const publicReveal = _drainPendingPublicHandRevealSide();
     expect(result.players.self.hand).toEqual([ASSAULT.id]);
+    expect(publicReveal).toMatchObject({
+      owner: 'self', audience: 'all', cardIds: [ASSAULT.id], lifetime: 'presentation',
+      origin: 'deck-selected-card', source: { cardId: 'B10101', abilityId: 'b10101-granted-assault-search' },
+    });
+    expect(publicReveal?.cardIds).not.toEqual(expect.arrayContaining([FILLER.id, TAIL.id]));
     expect(reorder?.cardIds).toEqual([FILLER.id, TAIL.id]);
 
     result = produce(result, draft => applyDeckReorderAndContinuation(draft, reorder!, [TAIL.id, FILLER.id]));
@@ -96,15 +112,38 @@ describe('CT-P10 B10101 granted assault search Q&A', () => {
     const pick = queue()[0]!;
     expect(pick.nMin).toBe(0);
     expect(pick.candidates.map(candidate => candidate.cardId)).toEqual([ASSAULT.id]);
+    expect(_drainPendingDeckRevealSide()).toMatchObject({
+      visibility: 'private', viewer: 'self', revealed: [ASSAULT.id, FILLER.id, TAIL.id], awaitingPick: true,
+    });
     globals.__pendingEffectPickQueue = [];
 
     result = produce(result, draft => applyPickSkipAndContinuation(draft, pick));
     const reorder = _drainPendingDeckReorderSide();
     expect(result.players.self.hand).toEqual([]);
+    expect(_drainPendingPublicHandRevealSide()).toBeNull();
     expect(reorder?.cardIds).toEqual([ASSAULT.id, FILLER.id, TAIL.id]);
 
     result = produce(result, draft => applyDeckReorderAndContinuation(draft, reorder!, [TAIL.id, FILLER.id, ASSAULT.id]));
     expect(result.players.self.deck).toEqual([TAIL.id, FILLER.id, ASSAULT.id]);
+  });
+
+  it('keeps a CPU look off the human surface and publishes only its selected assault', () => {
+    const initial = createEmptyGameState();
+    initial.turn = { number: 4, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    initial.players.opp.deck = [FILLER.id, ASSAULT.id, TAIL.id];
+
+    const result = produce(initial, draft => runEffect(draft, searchEffect(), effectCtx('opp')));
+    expect(_drainPendingDeckRevealSide()).toBeNull();
+    expect(queue()).toEqual([]);
+    expect(_drainPendingDeckReorderSide()).toBeNull();
+    const publicReveal = _drainPendingPublicHandRevealSide();
+    expect(publicReveal).toMatchObject({
+      owner: 'opp', audience: 'all', cardIds: [ASSAULT.id], lifetime: 'presentation',
+      origin: 'deck-selected-card', source: { cardId: 'B10101', abilityId: 'b10101-granted-assault-search' },
+    });
+    expect(publicReveal?.cardIds).not.toEqual(expect.arrayContaining([FILLER.id, TAIL.id]));
+    expect(result.players.opp.hand).toEqual([ASSAULT.id]);
+    expect(result.players.opp.deck).toEqual([FILLER.id, TAIL.id]);
   });
 
   it('refreshes only after a one-card deck target is taken', () => {

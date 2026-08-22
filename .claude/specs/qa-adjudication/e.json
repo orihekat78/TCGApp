@@ -867,11 +867,12 @@
     {
       "qaId": "card:B06013:c2131ef2b4d611ed2fdcba93cb1619157aea6dcc39318ced5a4a6f69bc29faaf",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06013.ts:1"
+        "src:src/cards/ct-p06/B06013.ts:1",
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:425"
       ]
     },
     {
@@ -1288,14 +1289,12 @@
     {
       "qaId": "card:B08024:c2131ef2b4d611ed2fdcba93cb1619157aea6dcc39318ced5a4a6f69bc29faaf",
       "answerHash": "3503af7ec739f54fa33d52d88de1e97753683e6ce0612b4235e3e748db3389e1",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08024.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p08/B08024.ts:1",
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:429"
       ]
     },
     {
@@ -2172,14 +2171,12 @@
     {
       "qaId": "card:PR104:6f90cb127af1c12c8a5b08b830d7a2d32066a401549fe855e6fd4d5d8bd1edeb",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR104.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/pr-01/PR104.ts:1",
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:437"
       ]
     },
     {
