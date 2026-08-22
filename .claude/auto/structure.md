@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6195
+- **ファイル数**: 6200
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -832,6 +832,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-22-07-qa-wave33-stacked-card-semantics.md`
     - `2026-08-22-08-qa-wave34-set-card-lifecycle.md`
     - `2026-08-23-01-qa-wave35-ability-occurrences.md`
+    - `2026-08-23-02-qa-wave36-self-only-evidence.md`
+    - `2026-08-23-03-qa-wave37-self-only-evidence.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1520,6 +1522,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-21-engine-memory-rotation.md` — Engine memory rotation — 2026-08-21
     - `2026-08-22-qa-waves17-26.md` — QA runtime Waves 17-26
     - `2026-08-23-qa-wave35.md` — QA runtime Wave35 physical ability occurrence identity
+    - `2026-08-23-qa-waves36-37.md` — QA runtime Waves36-37 self-only evidence costs
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -5547,6 +5550,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D10003-D10010-printing-copy-limit.test.ts` — qaId=card:D10003:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2…
       - `bond-partner-exclusion-wave21.test.ts` — qa: card:B01087:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
       - `bond-partner-exclusion-wave9.test.ts` — qa: card:B02004:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
+      - `case-flip-two-complex-public-wave37.test.ts` — qa: card:B06095:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2
+      - `case-flip-two-declared-public-wave36.test.ts` — qa: card:B06013:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2
       - `ct-p10-original-ability-rules.test.ts` — qa: card:B10050:98e82fae32a43d9b6de8c7fd8289dcf4565f2dada1498f0760f5ba9d0cf8ae17
       - `ctp10-opponent-turn-cutin-public.test.ts` — qa: card:B10017:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
       - `decision-persistence-wave23.test.ts` — qa: card:B03080:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a

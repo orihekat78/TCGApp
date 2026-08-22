@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `2011c6cb4d79`
+> Source hash: `13ca6206219c`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,28 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## QA Wave 37 — self-only evidence costs, complex cases
+
+- Certified six official QA records for B06095, B09111, B09112, B10082, B10101, and B10102.
+- Reused the public self-only evidence-cost matrix across cards with declaration, reveal, refresh, grant, and dynamic-count tails.
+- Kept the Q&A claim narrow: the matched ruling is the inability to pay a declared cost with opponent evidence.
+- Recorded rejection states transactionally: evidence faces, printed ability count, and pending decisions remain unchanged.
+- Proved exact-two payment and a turn-one repeat rejection while two unused self evidence cards remain payable.
+- Cleared the initial independent-review BLOCK by adding the missing owner/opponent asymmetric boundary.
+- Advanced official-QA coverage from 1,233 to 1,239 matched records; test-missing falls from 1,731 to 1,725.
+
+## QA Wave 36 — self-only evidence costs
+
+- Certified six official QA records for B06013, B06065, B07062, B08094, B10034, and D10026.
+- Exercised each printed case ability through the public `declaredAbility` dispatcher.
+- Proved incident-side rejection and resolved-side acceptance for the printed `a2` ability.
+- Added asymmetric fixtures where the opponent has two facedown evidence cards.
+- Proved one self evidence plus two opponent evidence cannot pay the cost.
+- Rejected three selected evidence indices without paying a partial cost or consuming the ability.
+- Flipped exactly two of four self evidence cards and left every opponent evidence card facedown.
+- Rejected a second valid two-card payment after the turn-one limit without changing state.
+- Advanced official-QA coverage from 1,227 to 1,233 matched records; test-missing falls from 1,737 to 1,731.
 
 ## QA Wave 35 — physical ability occurrences
 

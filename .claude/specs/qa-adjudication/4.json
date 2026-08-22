@@ -1363,11 +1363,12 @@
     {
       "qaId": "card:B08094:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08094.ts:1"
+        "src:src/cards/ct-p08/B08094.ts:1",
+        "tests:tests/cards/official-qa/case-flip-two-declared-public-wave36.test.ts:262"
       ]
     },
     {

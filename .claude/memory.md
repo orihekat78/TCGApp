@@ -35,3 +35,9 @@
 
 - Wave35 certifies nine QA and reaches 1227 matched/1737 test-missing. B01057/P and B05117/P triggered riders plus B07014/P and B10017/P declared riders retain exact physical origin through engine, AI, replay, JSON, public UI, payment, and turn limits.
 - BUG-329 makes legacy and malformed use counts fail-closed, rejects forged pending lineage, backfills AI legacy set-card IDs, preserves physical-UID PA-MR counters, and suppresses legacy leave hooks without an instance ID. Full serialized Vitest, smoke/baseline, focused desktop/mobile E2E, horizontal review, and three adversarial lenses pass.
+
+## 2026-08-23: QA runtime Waves36-37 self-only evidence costs
+
+- Waves36-37 certify twelve shared-Q&A case abilities and reach 1239 matched/1725 test-missing. Public dispatch proves incident/insufficient/overpayment rejection, exact-two self payment, opponent evidence isolation, transactional rejection, and turn-one repeat rejection.
+- Independent review first BLOCKed self-only fixtures; asymmetric self/opp evidence and rejection snapshots cleared it. No production change. Full Vitest, smoke/baseline, representative desktop/mobile evidence-picker E2E, QA/docs gates, and review pass.
+- NEXT Wave38: inspect the 35-card FILE(8) group (`questionHash 83f99d...`, `answerHash 9a850b...`) and prove whether an assisting partner counts through the public action/assist lifecycle before certifying any subgroup.
