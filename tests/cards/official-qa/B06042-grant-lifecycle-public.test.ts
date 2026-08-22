@@ -243,7 +243,11 @@ describe('B06042 public granted-ability lifecycle', () => {
     finishNormalAction(openAction);
 
     declareAndDecline();
-    expect(currentState().players.self.scene.find((card) => card.uid === 'actor')?.declaredUseCount[GRANTED_ID]).toBe(1);
+    expect(readChar.declaredUseCount(currentState(), 'actor', GRANTED_ID, {
+      abilityOrigin: 'granted', abilityIndex: 0,
+    })).toBe(1);
+    expect(currentState().players.self.scene.find((card) => card.uid === 'actor')?.declaredUseCount[GRANTED_ID])
+      .toBeUndefined();
     expect(useGameStateStore.getState().activeActionId).toBeNull();
     expect(currentState().log.filter((entry) => entry.action === 'effect:startContact')).toHaveLength(0);
     expect(dispatchEngineAction({ type: 'declaredAbility', uid: 'actor', abilId: GRANTED_ID }))

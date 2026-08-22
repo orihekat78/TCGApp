@@ -4,19 +4,22 @@ import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
+import { effectSourceDisplayName } from '@/ui/services/uidNames.js';
 import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import './ChoicePickerModal.css';
 
 /** repeatOptional の一回分。選ぶまで outer continuation を再開しない。 */
 export function EffectRepeatOptionalModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingEffectRepeatOptional);
+  const gameState = useGameStateStore((s) => s.gameState);
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const isOpen = pending !== null && isHumanDecisionOwner(pending.player, spectatorMode);
   const dialogRef = useModalFocusTrap({ active: isOpen });
   if (!isOpen || !pending) return null;
 
-  const card = pending.source.cardId ? readDef.card(pending.source.cardId) : undefined;
-  const sourceName = card?.names?.[0] ?? pending.source.cardId ?? '能力';
+  const sourceCardId = pending.source.setCardId ?? pending.source.cardId;
+  const card = sourceCardId ? readDef.card(sourceCardId) : undefined;
+  const sourceName = effectSourceDisplayName(pending.source, { gameState });
   const desc = card?.abilities?.find((ability) => ability.id === pending.source.abilityId)?.description ?? '';
 
   return (

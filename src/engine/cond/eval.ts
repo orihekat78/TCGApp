@@ -302,14 +302,20 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       return v === cond.v;
     }
     case 'declaredUseUnder': {
-      const used = charRead.declaredUseCount(state, cond.uid, cond.abilityId);
+      const used = charRead.declaredUseCount(state, cond.uid, cond.abilityId, {
+        abilityOrigin: cond.abilityOrigin,
+        abilityIndex: cond.abilityIndex,
+      });
       return used < cond.max;
     }
     case 'sourceDeclaredUseCount': {
       const uid = ctx.source.uid;
       const abilityId = ctx.source.abilityId;
       if (typeof uid !== 'string' || typeof abilityId !== 'string') return false;
-      const used = charRead.declaredUseCount(state, uid, abilityId);
+      const used = charRead.declaredUseCount(state, uid, abilityId, {
+        abilityOrigin: ctx.source.abilityOrigin,
+        abilityIndex: ctx.source.abilityIndex,
+      });
       return cond.cmp === 'eq' ? used === cond.n : used >= cond.n;
     }
     case 'bound': {

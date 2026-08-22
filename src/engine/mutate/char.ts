@@ -9,6 +9,10 @@ import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 import { evalCond } from '../cond/eval.js';
 import { matchOneFilter } from '../target/candidates.js';
 import { pushPendingSetCardReplacementSide, type PendingSetCardReplacementSide } from '../effect/pending-state.js';
+import {
+  incrementTurnScopedUseCount,
+  readTurnScopedUseCount,
+} from '../effect/source-identity.js';
 
 type Player = 'self' | 'opp';
 // engine拡張 wave#2 cluster3 (2026-06-13): 'action' = 「アクション終了時まで」(rules/08 §6-7)。
@@ -362,22 +366,44 @@ function grantAbility(s: GameState, uid: string, ability: object): void {
 function ensureSetCardInstanceIds(s: GameState): void {
   const used = new Set<string>();
   let seq = s.setCardInstanceSeq ?? 1;
+  const reserve = (id: unknown): void => {
+    if (typeof id !== 'string' || id.length === 0) return;
+    used.add(id);
+    const match = /^set:(\d+)$/.exec(id);
+    if (match) seq = Math.max(seq, Number(match[1]) + 1);
+  };
   for (const player of ['self', 'opp'] as const) {
     for (const char of s.players[player].scene) {
+      if (!Array.isArray(char.setCards)) char.setCards = [];
       for (const entry of char.setCards) {
         const id = entry.instanceId;
         if (typeof id !== 'string' || id.length === 0 || used.has(id)) {
           entry.instanceId = undefined;
           continue;
         }
-        used.add(id);
-        const match = /^set:(\d+)$/.exec(id);
-        if (match) seq = Math.max(seq, Number(match[1]) + 1);
+        reserve(id);
       }
     }
   }
+  const seen = new WeakSet<object>();
+  const reserveReferencedIds = (value: unknown): void => {
+    if (value === null || typeof value !== 'object' || seen.has(value)) return;
+    seen.add(value);
+    if (Array.isArray(value)) {
+      for (const item of value) reserveReferencedIds(item);
+      return;
+    }
+    for (const [key, item] of Object.entries(value)) {
+      if (key === 'setCardInstanceId') reserve(item);
+      else reserveReferencedIds(item);
+    }
+  };
+  reserveReferencedIds(s.pendingEffects);
+  reserveReferencedIds(s.reservedEffects);
+  reserveReferencedIds(s.pendingRuntimeState);
   for (const player of ['self', 'opp'] as const) {
     for (const char of s.players[player].scene) {
+      if (!Array.isArray(char.setCards)) char.setCards = [];
       for (const entry of char.setCards) {
         if (entry.instanceId) continue;
         let id = `set:${seq++}`;
@@ -406,7 +432,7 @@ function setCard(s: GameState, uid: string, cardId: string, faceUp: boolean): vo
     s,
     'setcard:enter',
     { player, hostUid: char.uid, hostCardId: char.cardId, setCardId: cardId, setCardInstanceId: instanceId, faceUp, cause: 'effect' },
-    { player, uid: char.uid, cardId: char.cardId },
+    { player, uid: char.uid, cardId: char.cardId, setCardId: cardId, setCardInstanceId: instanceId },
   );
 }
 
@@ -446,9 +472,20 @@ function eligibleSetCardReplacement(s: GameState, player: Player, fromUid: strin
   if (!card) return null;
   for (const ability of card.abilities as AbilityDef[]) {
     if (ability.type !== 'triggered' || ability.scope !== 'on-set-self' || ability.trigger?.hook !== 'setcard:leave' || !ability.setCardRemovalReplacement) continue;
-    const used = entry.replacementUseCounts?.[ability.id];
-    if (ability.limit?.kind === 'turn' && used?.turn === s.turn.number && used.count >= ability.limit.n) continue;
-    const ctx = { source: { cardId: entry.cardId, uid: fromUid, abilityId: ability.id, player, area: 'scene' as const }, bindings: {} };
+    const used = readTurnScopedUseCount(entry.replacementUseCounts?.[ability.id], s.turn.number);
+    if (ability.limit?.kind === 'turn' && used >= ability.limit.n) continue;
+    const ctx = {
+      source: {
+        cardId: entry.cardId,
+        uid: fromUid,
+        abilityId: ability.id,
+        player,
+        area: 'scene' as const,
+        setCardId: entry.cardId,
+        setCardInstanceId: entry.instanceId,
+      },
+      bindings: {},
+    };
     if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
     const candidates = replacementCandidates(s, player, fromUid, ability);
     if (candidates.length > 0) return { ability, candidates };
@@ -468,8 +505,7 @@ function findActorTurnEffects(s: GameState, uid: string): Record<string, unknown
 
 function markSetCardReplacementUsed(s: GameState, entry: SetCardReplacementEntry, abilityId: string): void {
   const counts = (entry.replacementUseCounts ??= {});
-  const previous = counts[abilityId];
-  counts[abilityId] = { turn: s.turn.number, count: previous?.turn === s.turn.number ? previous.count + 1 : 1 };
+  counts[abilityId] = incrementTurnScopedUseCount(counts[abilityId], s.turn.number);
 }
 
 function moveSetCardEntry(s: GameState, fromUid: string, toUid: string, instanceId: string, abilityId: string): boolean {
@@ -483,7 +519,7 @@ function moveSetCardEntry(s: GameState, fromUid: string, toUid: string, instance
   if (!entry) return false;
   markSetCardReplacementUsed(s, entry, abilityId);
   to.char.setCards.push(entry);
-  event.emit(s, 'setcard:enter', { player: from.player, hostUid: to.char.uid, hostCardId: to.char.cardId, setCardId: entry.cardId, setCardInstanceId: entry.instanceId, faceUp: entry.faceUp, cause: 'replacement' }, { player: from.player, uid: to.char.uid, cardId: to.char.cardId });
+  event.emit(s, 'setcard:enter', { player: from.player, hostUid: to.char.uid, hostCardId: to.char.cardId, setCardId: entry.cardId, setCardInstanceId: entry.instanceId, faceUp: entry.faceUp, cause: 'replacement' }, { player: from.player, uid: to.char.uid, cardId: to.char.cardId, setCardId: entry.cardId, setCardInstanceId: entry.instanceId });
   return true;
 }
 
@@ -492,10 +528,41 @@ function maybeReplaceSetCardRemoval(s: GameState, player: Player, fromUid: strin
   if (!eligible || !entry.instanceId) return false;
   const human = (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide ?? null;
   if (human === player && allowHuman) {
-    pushPendingSetCardReplacementSide({ player, fromUid, setCardInstanceId: entry.instanceId, candidates: eligible.candidates, source: { cardId: entry.cardId, abilityId: eligible.ability.id, uid: fromUid } });
+    pushPendingSetCardReplacementSide({
+      player,
+      fromUid,
+      setCardInstanceId: entry.instanceId,
+      candidates: eligible.candidates,
+      source: {
+        cardId: entry.cardId,
+        abilityId: eligible.ability.id,
+        uid: fromUid,
+        setCardId: entry.cardId,
+        setCardInstanceId: entry.instanceId,
+      },
+    });
     return true;
   }
   return moveSetCardEntry(s, fromUid, eligible.candidates[0]!.uid, entry.instanceId, eligible.ability.id);
+}
+
+/** Record use against one exact physical set-card occurrence. */
+function incrSetCardAbilityUseCount(
+  s: GameState,
+  hostUid: string,
+  setCardInstanceId: string,
+  abilityId: string,
+): boolean {
+  ensureSetCardInstanceIds(s);
+  const found = findChar(s, hostUid);
+  const entry = found?.char.setCards.find((candidate) => candidate.instanceId === setCardInstanceId);
+  if (!entry) return false;
+  entry.abilityUseCounts ??= {};
+  entry.abilityUseCounts[abilityId] = incrementTurnScopedUseCount(
+    entry.abilityUseCounts[abilityId],
+    s.turn.number,
+  );
+  return true;
 }
 
 /** Read-only batch admission check: would this host open a human replacement? */
@@ -523,7 +590,20 @@ function deferSetCardReplacementForHostLeave(
     if (entry.instanceId && excludedInstanceIds.includes(entry.instanceId)) continue;
     const eligible = eligibleSetCardReplacement(s, found.player, uid, entry);
     if (!eligible || !entry.instanceId) continue;
-    pushPendingSetCardReplacementSide({ player: found.player, fromUid: uid, setCardInstanceId: entry.instanceId, candidates: eligible.candidates, source: { cardId: entry.cardId, abilityId: eligible.ability.id, uid }, resume });
+    pushPendingSetCardReplacementSide({
+      player: found.player,
+      fromUid: uid,
+      setCardInstanceId: entry.instanceId,
+      candidates: eligible.candidates,
+      source: {
+        cardId: entry.cardId,
+        abilityId: eligible.ability.id,
+        uid,
+        setCardId: entry.cardId,
+        setCardInstanceId: entry.instanceId,
+      },
+      resume,
+    });
     return true;
   }
   return false;
@@ -554,6 +634,9 @@ function canResolveSetCardRemovalReplacement(
     candidate.instanceId === pending.setCardInstanceId
     && candidate.cardId === pending.source.cardId);
   if (!entry) return false;
+  if ((pending.source.setCardId !== undefined || pending.source.setCardInstanceId !== undefined)
+    && (pending.source.setCardId !== entry.cardId
+      || pending.source.setCardInstanceId !== entry.instanceId)) return false;
   const eligible = eligibleSetCardReplacement(s, found.player, pending.fromUid, entry);
   if (!eligible || eligible.ability.id !== pending.source.abilityId) return false;
   if (eligible.candidates.length !== pending.candidates.length) return false;
@@ -737,7 +820,7 @@ function removeOneSetCard(
     s,
     'setcard:leave',
     { player, hostUid: char.uid, hostCardId: char.cardId, setCardId: entry.cardId, setCardInstanceId: entry.instanceId, faceUp: entry.faceUp, cause },
-    { player, uid: char.uid, cardId: char.cardId },
+    { player, uid: char.uid, cardId: char.cardId, setCardId: entry.cardId, setCardInstanceId: entry.instanceId },
   );
   return entry.cardId;
 }
@@ -794,7 +877,7 @@ function moveOneSetCard(
         cause: 'move',
         destination,
       },
-      { player: from.player, uid: from.char.uid, cardId: from.char.cardId },
+      { player: from.player, uid: from.char.uid, cardId: from.char.cardId, setCardId: moved.cardId, setCardInstanceId: moved.instanceId },
     );
   }
   return { cardId: moved.cardId, player: from.player };
@@ -854,5 +937,6 @@ export const char = {
   takeOneSetCard,
   moveOneSetCard,
   ensureSetCardInstanceIds,
+  incrSetCardAbilityUseCount,
   disguiseInto,
 };

@@ -3,6 +3,7 @@ import * as flow from '@/engine/flow/index.js';
 import { engine } from '@/engine';
 import { makeAbilityCtx } from './cost.js';
 import type { Player } from './cost.js';
+import type { DeclaredAbilityHostOrigin } from '@/engine/types';
 
 /**
  * 推理対象の uid 候補を engine.canReason で列挙する。
@@ -70,16 +71,7 @@ export function enumDeclaredAbilitySources(
   // 1. scene chars (W6 step11 row999 item4: faceUp set-card rider の on-set-host declared も列挙 —
   //    B07014「セットされているキャラは『【宣言】〜』を持つ」)
   for (const c of state.players[player].scene) {
-    const def = engine.cards.get(c.cardId);
-    if (!def) continue;
-    // gap② (2026-07-11, B06042): charGrantAbility 付与の declared も列挙 (findDeclaredAbility と対称)。
-    const abilities = [...def.abilities, ...riderDeclaredAbilities(state, c), ...flow.grantedDeclaredAbilitiesOf(c)];
-    const hasUsable = abilities.some((a) => {
-      if (a.type !== 'declared') return false;
-      if (!flow.canActivateDeclaredAbility(state, c.uid, a.id, undefined, { allowImplicitPhysicalCostSelection: true })) return false;
-      return true;
-    });
-    if (hasUsable) sources.push(c.uid);
+    if (enumDeclaredAbilityChoicesFor(state, c.uid).length > 0) sources.push(c.uid);
   }
   // 2. case card (user_request 20260522_01 #5 fix)
   const caseCardId = state.players[player].case.cardId;
@@ -87,12 +79,7 @@ export function enumDeclaredAbilitySources(
     const def = engine.cards.get(caseCardId);
     if (def) {
       const caseUid = `case:${player}`;
-      const hasUsable = def.abilities.some((a) => {
-        if (a.type !== 'declared') return false;
-        if (!flow.canActivateDeclaredAbility(state, caseUid, a.id, undefined, { allowImplicitPhysicalCostSelection: true })) return false;
-        return true;
-      });
-      if (hasUsable) sources.push(caseUid);
+      if (enumDeclaredAbilityChoicesFor(state, caseUid).length > 0) sources.push(caseUid);
     }
   }
   // 3. hand cards (W6 step11 row999 item3: scope:'on-hand' declared — B06103「この能力はこのカードが
@@ -101,25 +88,19 @@ export function enumDeclaredAbilitySources(
     const def = engine.cards.get(cardId);
     if (!def) continue;
     const uid = `hand:${player}:${index}`;
-    const hasUsable = def.abilities.some((a) => {
-      if (a.type !== 'declared') return false;
-      return flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitPhysicalCostSelection: true });
-    });
-    if (hasUsable) sources.push(uid);
+    if (enumDeclaredAbilityChoicesFor(state, uid).length > 0) sources.push(uid);
   }
   for (const [index, entry] of state.players[player].evidence.entries()) {
     if (!entry.faceUp) continue;
     const def = engine.cards.get(entry.cardId);
     const uid = `evidence:${player}:${index}`;
-    if (def?.abilities.some(a => a.type === 'declared'
-      && flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitPhysicalCostSelection: true }))) sources.push(uid);
+    if (def && enumDeclaredAbilityChoicesFor(state, uid).length > 0) sources.push(uid);
   }
   for (const [index, entry] of state.players[player].file.entries()) {
     if (entry.type !== 'card-back' || entry.faceUp !== true) continue;
     const def = engine.cards.get(entry.cardId);
     const uid = `file:${player}:${index}`;
-    if (def?.abilities.some(a => a.type === 'declared'
-      && flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitPhysicalCostSelection: true }))) sources.push(uid);
+    if (def && enumDeclaredAbilityChoicesFor(state, uid).length > 0) sources.push(uid);
   }
   // 4. partnerAreaMR (M3 PA batch, rules/18 §パートナーエリアにいるMRキャラ):
   //    scope on-partner-area / always の宣言能力のみ engine gate (declared-ability.ts:147) を通る。
@@ -130,37 +111,21 @@ export function enumDeclaredAbilitySources(
       const def = engine.cards.get(mr.cardId);
       if (def) {
         const uid = mr.uid;
-        const hasUsable = def.abilities.some((a) => {
-          if (a.type !== 'declared') return false;
-          return flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitPhysicalCostSelection: true });
-        });
-        if (hasUsable) sources.push(uid);
+        if (enumDeclaredAbilityChoicesFor(state, uid).length > 0) sources.push(uid);
       }
     }
   }
   return sources;
 }
 
-/**
- * W6 step11 (row999 item4): host キャラの faceUp setCards から type:'declared' + scope:'on-set-host'
- * の rider abilities を列挙 (engine 側 findDeclaredAbility と同じ walk の enumerator 版)。
- */
-function riderDeclaredAbilities(
-  state: import('@/engine/types/game-state.js').GameState,
-  c: { setCards: { cardId: string; faceUp: boolean }[] },
-): import('@/engine/types/card-def.js').AbilityDef[] {
-  void state;
-  const out: import('@/engine/types/card-def.js').AbilityDef[] = [];
-  for (const entry of c.setCards) {
-    if (!entry.faceUp) continue;
-    const rdef = engine.cards.get(entry.cardId);
-    if (!rdef) continue;
-    for (const a of rdef.abilities) {
-      if (a.type === 'declared' && a.scope === 'on-set-host') out.push(a);
-    }
-  }
-  return out;
-}
+export type DeclaredAbilityChoice = {
+  abilId: string;
+  description: string;
+  setCardId?: string;
+  setCardInstanceId?: string;
+  abilityOrigin?: DeclaredAbilityHostOrigin;
+  abilityIndex?: number;
+};
 
 /**
  * 指定 uid の使用可能 declared ability ids を列挙 (Phase 8.8b)。
@@ -169,11 +134,18 @@ export function enumDeclaredAbilityIdsFor(
   state: import('@/engine/types/game-state.js').GameState,
   uid: string,
 ): string[] {
+  return enumDeclaredAbilityChoicesFor(state, uid).map((choice) => choice.abilId);
+}
+
+/** Enumerate exact declaration occurrences, including duplicate set-card copies. */
+export function enumDeclaredAbilityChoicesFor(
+  state: import('@/engine/types/game-state.js').GameState,
+  uid: string,
+): DeclaredAbilityChoice[] {
   // uid から cardId / owner player / area を引く (user_request 20260522_01 #5: case 対応)
   let cardId: string | null = null;
   let owner: Player | null = null;
   let area: 'scene' | 'case' | 'hand' | 'partner-area' | 'evidence' | 'file' = 'scene';
-  let riderAbilities: import('@/engine/types/card-def.js').AbilityDef[] = [];
   if (uid === 'case:self' || uid === 'case:opp') {
     owner = uid === 'case:self' ? 'self' : 'opp';
     cardId = state.players[owner].case.cardId ?? null;
@@ -216,20 +188,30 @@ export function enumDeclaredAbilityIdsFor(
       if (c) {
         cardId = c.cardId;
         owner = p;
-        // W6 step11 item4: on-set-host rider 込み + gap② (2026-07-11, B06042): charGrantAbility 付与 declared 込み。
-        riderAbilities = [...riderDeclaredAbilities(state, c), ...flow.grantedDeclaredAbilitiesOf(c)];
         break;
       }
     }
   }
   if (!cardId || !owner) return [];
-  void area;
-  const def = engine.cards.get(cardId);
-  if (!def) return [];
-  return [...def.abilities, ...riderAbilities]
-    .filter((a) => a.type === 'declared')
-    .filter((a) => flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitPhysicalCostSelection: true }))
-    .map((a) => a.id);
+  const occurrences = flow.findDeclaredAbilityOccurrences(state, uid, cardId, area);
+  return occurrences
+    .filter((occurrence) => flow.canActivateDeclaredAbility(state, uid, occurrence.ability.id, undefined, {
+      allowImplicitPhysicalCostSelection: true,
+      sourceRef: {
+        setCardId: occurrence.setCardId,
+        setCardInstanceId: occurrence.setCardInstanceId,
+        abilityOrigin: occurrence.origin === 'set-card' ? undefined : occurrence.origin,
+        abilityIndex: occurrence.abilityIndex,
+      },
+    }))
+    .map((occurrence) => ({
+      abilId: occurrence.ability.id,
+      description: occurrence.ability.description,
+      ...(occurrence.setCardId ? { setCardId: occurrence.setCardId } : {}),
+      ...(occurrence.setCardInstanceId ? { setCardInstanceId: occurrence.setCardInstanceId } : {}),
+      ...(occurrence.origin !== 'set-card' ? { abilityOrigin: occurrence.origin } : {}),
+      ...(occurrence.abilityIndex !== undefined ? { abilityIndex: occurrence.abilityIndex } : {}),
+    }));
 }
 
 /**

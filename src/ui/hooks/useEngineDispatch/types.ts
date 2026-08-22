@@ -1,5 +1,6 @@
 // useEngineDispatch/types.ts — Phase 3d 分割 (EngineAction / ContactChoice / DispatchResult / Player, verbatim, 2026-06-22)
 import type { AbilityCostParams } from '@/engine/flow/index.js';
+import type { DeclaredAbilityHostOrigin } from '@/engine/types';
 import type { MatchSessionToken } from '@/ui/services/matchSessionId.js';
 
 export type Player = 'self' | 'opp';
@@ -33,7 +34,17 @@ export type EngineAction =
   // Phase 2c (BUG-116 構造解消): cost+ctx は dispatcher 内 (engine.flow.activateXxx) で構築する。
   // 呼出元は picker 選択値 (costParams) のみ渡す — cost/ctx の caller 構築契約は廃止。
   | { type: 'partnerAbility'; player: Player; abilId: string; costParams?: AbilityCostParams }
-  | { type: 'declaredAbility'; uid: string; abilId: string; costParams?: AbilityCostParams }
+  | {
+      type: 'declaredAbility';
+      uid: string;
+      abilId: string;
+      /** Required when the declaration is granted by a physical set card. */
+      setCardId?: string;
+      setCardInstanceId?: string;
+      abilityOrigin?: DeclaredAbilityHostOrigin;
+      abilityIndex?: number;
+      costParams?: AbilityCostParams;
+    }
   | { type: 'assist'; player: Player }
   | { type: 'solveCase'; player: Player }
   | { type: 'actionAgainstChar'; byUid: string; targetUid: string }
@@ -77,7 +88,14 @@ export type EngineAction =
   | BoundDecision<{ type: 'choiceResolve'; choiceIndex: number; switchRemoveUid: string }>
   // 2026-06-06 タスクC: optional (「〜してもよい」) の決定。pendingEffectOptional を解決する。
   | BoundDecision<{ type: 'optionalResolve'; run: boolean }>
-  | BoundDecision<{ type: 'chooseInterceptOrderResolve'; protectorUid: string; targetUid: string; setCardInstanceId?: string }>
+  | BoundDecision<{
+      type: 'chooseInterceptOrderResolve';
+      protectorUid: string;
+      targetUid: string;
+      abilityOrigin?: DeclaredAbilityHostOrigin;
+      abilityIndex?: number;
+      setCardInstanceId?: string;
+    }>
   | BoundDecision<{ type: 'chooseInterceptResolve'; discardIndex: number | null }>
   | BoundDecision<{ type: 'repeatOptionalResolve'; run: boolean }>
   // BUG-136: deckToBottomBound「好きな順番でデッキの下に移す」の順序確定。order = 底ブロックの新順 (cardId 列)。

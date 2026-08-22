@@ -223,7 +223,7 @@
         "src:src/cards/ct-p02/B02062.ts:69",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {
@@ -461,7 +461,7 @@
         "src:src/cards/ct-p03/B03096.ts:73",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {
@@ -519,7 +519,7 @@
         "src:src/cards/ct-p04/B04017.ts:37",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {
@@ -1355,10 +1355,9 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p08/B08081.ts:17",
-        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:265",
         "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:266",
-        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:270",
-        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:272"
+        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:271",
+        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:273"
       ]
     },
     {
@@ -1669,10 +1668,10 @@
       "evidence": [
         "rules:.claude/rules/26-qa-deck-refresh.md:65",
         "src:src/cards/ct-p10/B10088.ts:13",
-        "tests:tests/cards/official-qa/B10088-effect-entry-public-wave25.test.ts:190",
-        "tests:tests/cards/official-qa/B10088-effect-entry-public-wave25.test.ts:195",
+        "tests:tests/cards/official-qa/B10088-effect-entry-public-wave25.test.ts:191",
         "tests:tests/cards/official-qa/B10088-effect-entry-public-wave25.test.ts:196",
-        "tests:tests/cards/official-qa/B10088-effect-entry-public-wave25.test.ts:197"
+        "tests:tests/cards/official-qa/B10088-effect-entry-public-wave25.test.ts:197",
+        "tests:tests/cards/official-qa/B10088-effect-entry-public-wave25.test.ts:198"
       ]
     },
     {
@@ -1970,7 +1969,7 @@
         "src:src/cards/pr-01/PR117.ts:149",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {

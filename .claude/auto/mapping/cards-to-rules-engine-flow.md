@@ -2,13 +2,13 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `4c30f8b95523`
+> Source hash: `6a4312b54140`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **195** ファイル（[全体 index](./index.md)）
+このグループ: **196** ファイル（[全体 index](./index.md)）
 
-## engine/effect (28)
+## engine/effect (29)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -38,6 +38,7 @@
 | [`src/engine/effect/resolver.ts`](../../../src/engine/effect/resolver.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
 | [`src/engine/effect/runtime-state.ts`](../../../src/engine/effect/runtime-state.ts) | _(参照なし)_ |
 | [`src/engine/effect/scene-switch.ts`](../../../src/engine/effect/scene-switch.ts) | _(参照なし)_ |
+| [`src/engine/effect/source-identity.ts`](../../../src/engine/effect/source-identity.ts) | _(参照なし)_ |
 | [`src/engine/effect/validate-spec-files.ts`](../../../src/engine/effect/validate-spec-files.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/effect/validate.ts`](../../../src/engine/effect/validate.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 

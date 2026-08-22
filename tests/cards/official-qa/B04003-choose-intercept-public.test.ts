@@ -9,6 +9,7 @@ import { B02067 } from '@/cards/ct-p02/B02067';
 import { B08081 } from '@/cards/ct-p08/B08081';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { _resetRegistry, register } from '@/engine/read/def';
+import { declaredAbilityUseCountKey } from '@/engine/effect/source-identity';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { CardDef, GameState } from '@/engine/types';
 import { bindPendingDecision, dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
@@ -189,9 +190,9 @@ describe('B04003 official-QA choose-intercept public dispatch', () => {
     const firstTarget = pickedUids[0]!;
     expect(order?.kind === 'order' ? order.choices.map(reactionKey).sort() : []).toEqual([
       `cancel:${B02067.id}:ran-one:ran-one:${CHOKER_SET_INSTANCE_ID}`,
-      `discard-or-cancel:${B04003.id}:shinichi:${firstTarget}`,
-      `discard-or-cancel:${B08081.id}:hirota-1:${firstTarget}`,
-      `discard-or-cancel:${B08081.id}:hirota-2:${firstTarget}`,
+      `discard-or-cancel:${B04003.id}:shinichi:${firstTarget}:printed:0`,
+      `discard-or-cancel:${B08081.id}:hirota-1:${firstTarget}:printed:1`,
+      `discard-or-cancel:${B08081.id}:hirota-2:${firstTarget}:printed:1`,
     ].sort());
     expect(currentUseCounts()).toEqual({ choker: 1, shinichi: 1, hirota1: 1, hirota2: 1 });
 
@@ -365,12 +366,20 @@ const CHOKER_SET_INSTANCE_ID = 'qa-b02067-set';
 
 function reactionKey(reaction: {
   resolution?: string;
-  protector: { cardId: string; uid: string; setCardInstanceId?: string };
+  protector: {
+    cardId: string;
+    uid: string;
+    setCardInstanceId?: string;
+    abilityOrigin?: 'printed' | 'granted';
+    abilityIndex?: number;
+  };
   targetUid: string;
 }): string {
   const occurrence = reaction.protector.setCardInstanceId
     ? `:${reaction.protector.setCardInstanceId}`
-    : '';
+    : reaction.protector.abilityOrigin !== undefined && reaction.protector.abilityIndex !== undefined
+      ? `:${reaction.protector.abilityOrigin}:${reaction.protector.abilityIndex}`
+      : '';
   return `${reaction.resolution ?? 'discard-or-cancel'}:${reaction.protector.cardId}:${reaction.protector.uid}:${reaction.targetUid}${occurrence}`;
 }
 
@@ -380,9 +389,15 @@ function currentUseCounts(): { choker: number; shinichi: number; hirota1: number
     .find(entry => entry.instanceId === CHOKER_SET_INSTANCE_ID);
   return {
     choker: chokerEntry?.abilityUseCounts?.a1?.count ?? 0,
-    shinichi: scene.find(card => card.uid === 'shinichi')?.declaredUseCount.a1 ?? 0,
-    hirota1: scene.find(card => card.uid === 'hirota-1')?.declaredUseCount.a2 ?? 0,
-    hirota2: scene.find(card => card.uid === 'hirota-2')?.declaredUseCount.a2 ?? 0,
+    shinichi: scene.find(card => card.uid === 'shinichi')?.declaredUseCount[
+      declaredAbilityUseCountKey('a1', { abilityOrigin: 'printed', abilityIndex: 0 })
+    ] ?? 0,
+    hirota1: scene.find(card => card.uid === 'hirota-1')?.declaredUseCount[
+      declaredAbilityUseCountKey('a2', { abilityOrigin: 'printed', abilityIndex: 1 })
+    ] ?? 0,
+    hirota2: scene.find(card => card.uid === 'hirota-2')?.declaredUseCount[
+      declaredAbilityUseCountKey('a2', { abilityOrigin: 'printed', abilityIndex: 1 })
+    ] ?? 0,
   };
 }
 

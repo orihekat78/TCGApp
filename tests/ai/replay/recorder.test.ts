@@ -123,6 +123,49 @@ describe('ScriptedPolicy', () => {
     expect(() => p.choose({} as GameState, [legal], 'self'))
       .toThrow('recorded replay move is not legal');
   });
+
+  it('maps a witness-free legacy declared move to the earliest exact host occurrence', () => {
+    const recorded = {
+      kind: 'declaredAbility', uid: 'host', abilityId: 'a1',
+    } as const;
+    const candidates: Move[] = [
+      {
+        ...recorded,
+        abilityOrigin: 'printed',
+        abilityIndex: 0,
+      },
+      {
+        ...recorded,
+        abilityOrigin: 'granted',
+        abilityIndex: 0,
+      },
+    ];
+    const p = new ScriptedPolicy('legacy-declared-host', [recorded]);
+
+    expect(p.choose({} as GameState, candidates, 'self')).toEqual(candidates[0]);
+  });
+
+  it('maps a witness-free legacy move to a granted host occurrence but never a set-card rider', () => {
+    const recorded = {
+      kind: 'declaredAbility', uid: 'host', abilityId: 'a1',
+    } as const;
+    const granted: Move = {
+      ...recorded,
+      abilityOrigin: 'granted',
+      abilityIndex: 2,
+    };
+    const rider: Move = {
+      ...recorded,
+      setCardId: 'SET-CARD',
+      setCardInstanceId: 'set:legacy:1',
+    };
+
+    expect(new ScriptedPolicy('legacy-declared-granted', [recorded])
+      .choose({} as GameState, [granted], 'self')).toEqual(granted);
+    expect(() => new ScriptedPolicy('legacy-declared-rider', [recorded])
+      .choose({} as GameState, [rider], 'self'))
+      .toThrow('recorded replay move is not legal');
+  });
 });
 
 describe('replay nondeterminism boundary', () => {

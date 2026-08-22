@@ -43,6 +43,7 @@ import {
   applyDeckReorderAndContinuation,
 } from '@/engine/effect/apply-pick';
 import { _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
+import { resetPendingRuntimeState } from '@/engine/effect/runtime-state';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { mutate } from '@/engine/mutate/index';
 import { char as readChar } from '@/engine/read/char';
@@ -153,6 +154,7 @@ function mkSceneChar(c: ProbeSceneChar): SceneCharacter {
 }
 
 function resetAll(): void {
+  resetPendingRuntimeState();
   event._resetRegistry();
   _resetTriggeredRegistered();
   resetDefRegistry();

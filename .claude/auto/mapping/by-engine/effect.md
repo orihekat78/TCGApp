@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `eb76bb8d29e1`
+> Source hash: `38a5cf1628ba`
 
 `src/engine/effect/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -26,7 +26,7 @@
 - [`engine-api-resolver`](../by-spec/engine-api-resolver.md)
 - [`phase-3b-design`](../by-spec/refactor-plan--phase-3b-design.md)
 
-## 📄 ソース (28)
+## 📄 ソース (29)
 
 - [`src/engine/effect/apply-pick.ts`](../../../../src/engine/effect/apply-pick.ts)
 - [`src/engine/effect/atom-handlers.ts`](../../../../src/engine/effect/atom-handlers.ts)
@@ -48,4 +48,4 @@
 - [`src/engine/effect/invoke-hirameki.ts`](../../../../src/engine/effect/invoke-hirameki.ts)
 - [`src/engine/effect/invoke-leave-to-remove.ts`](../../../../src/engine/effect/invoke-leave-to-remove.ts)
 - [`src/engine/effect/pending-runtime-schema.ts`](../../../../src/engine/effect/pending-runtime-schema.ts)
-- _...ほか 8 件_
+- _...ほか 9 件_

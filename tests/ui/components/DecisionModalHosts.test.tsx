@@ -209,6 +209,51 @@ describe('decision modal hosts', () => {
     unmount(root, container);
   });
 
+  it('keeps same-host declared reactions occurrence-distinct and dispatches the exact definition index', () => {
+    useGameStateStore.setState({
+      pendingChooseIntercept: {
+        kind: 'order',
+        player: 'self',
+        choices: [
+          {
+            protector: {
+              uid: 'protector-1', cardId: 'B01001', abilityId: 'a1',
+              abilityOrigin: 'printed', abilityIndex: 0,
+            },
+            targetUid: 'target-1',
+          },
+          {
+            protector: {
+              uid: 'protector-1', cardId: 'B01001', abilityId: 'a1',
+              abilityOrigin: 'printed', abilityIndex: 1,
+            },
+            targetUid: 'target-1',
+          },
+        ],
+      },
+    });
+    const { container, root } = renderHost(ChooseInterceptModalHost);
+
+    expect([...container.querySelectorAll<HTMLElement>('[data-instance-id]')]
+      .map((tile) => tile.dataset.instanceId)).toEqual([
+        'protector-1:printed:0',
+        'protector-1:printed:1',
+      ]);
+    const second = container.querySelector<HTMLButtonElement>(
+      '[data-testid="choose-intercept-order-protector-1-target-1-printed:1"]',
+    );
+    expect(second).toBeInstanceOf(HTMLButtonElement);
+    act(() => second!.click());
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'chooseInterceptOrderResolve',
+      protectorUid: 'protector-1',
+      targetUid: 'target-1',
+      abilityOrigin: 'printed',
+      abilityIndex: 1,
+    });
+    unmount(root, container);
+  });
+
   it('resolves a set-card replacement from its native candidate selector and keeps details in the pending modal', () => {
     useGameStateStore.setState({
       pendingSetCardReplacement: {

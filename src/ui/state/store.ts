@@ -11,7 +11,7 @@ import { create } from 'zustand';
 import { produce } from '@/engine/produce';
 import { mutate } from '@/engine/mutate';
 import type { GameState } from '@/engine/types/game-state';
-import type { EffectCtx, PendingMisreadAuthority } from '@/engine/types';
+import type { DeclaredAbilityHostOrigin, EffectCtx, PendingMisreadAuthority } from '@/engine/types';
 import type { ContinuationFrame, PendingEffectSource } from '@/engine/effect/pending-state';
 import { isCausalLogEntry } from '@/engine/log/causal.js';
 import {
@@ -260,7 +260,15 @@ export type PendingDeckReveal = {
   awaitingPick?: boolean;
   /** Pure reveal which returns every card to its original deck position. */
   presentation?: 'reveal-return';
-  source?: { cardId?: string; abilityId?: string; uid?: string };
+  source?: {
+    cardId?: string;
+    abilityId?: string;
+    uid?: string;
+    setCardId?: string;
+    setCardInstanceId?: string;
+    abilityOrigin?: 'printed' | 'granted';
+    abilityIndex?: number;
+  };
 };
 
 export type PendingPublicHandReveal = {
@@ -271,7 +279,15 @@ export type PendingPublicHandReveal = {
   lifetime: 'effect' | 'presentation';
   resolutionToken: string;
   origin?: 'deck-selected-card';
-  source: { cardId?: string; abilityId?: string; uid?: string };
+  source: {
+    cardId?: string;
+    abilityId?: string;
+    uid?: string;
+    setCardId?: string;
+    setCardInstanceId?: string;
+    abilityOrigin?: 'printed' | 'granted';
+    abilityIndex?: number;
+  };
 };
 
 export type PendingDeckReorder = {
@@ -411,7 +427,14 @@ export type PendingChooseInterceptResponse = {
   player: 'self' | 'opp';
   ownerPlayer?: 'self' | 'opp';
   publicHandRevealToken?: string;
-  protector: { uid: string; cardId: string; abilityId: string; setCardInstanceId?: string };
+  protector: {
+    uid: string;
+    cardId: string;
+    abilityId: string;
+    abilityOrigin?: DeclaredAbilityHostOrigin;
+    abilityIndex?: number;
+    setCardInstanceId?: string;
+  };
   targetUid: string;
 };
 

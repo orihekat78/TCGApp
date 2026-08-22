@@ -12,6 +12,7 @@
 
 import type { GameState, EffectCtx, Cost } from '@/engine/types';
 import { engine } from '@/engine';
+import { char as mutateChar } from '@/engine/mutate/char';
 import { produce } from 'immer';
 import { enumerateMoves, type Move } from './move-enumerator.js';
 import { resolveActionAgainstChar, resolveActionAgainstCase } from './action-resolution.js';
@@ -220,7 +221,15 @@ function reconcileAutonomousDecisions(state: GameState): void {
       if (intercept.kind === 'order') {
         const first = intercept.choices[0];
         if (!first) throw new Error('AI decision reconciliation: empty intercept order');
-        applyChooseInterceptOrder(state, intercept, first.protector.uid, first.targetUid);
+        applyChooseInterceptOrder(
+          state,
+          intercept,
+          first.protector.uid,
+          first.targetUid,
+          first.protector.setCardInstanceId,
+          first.protector.abilityOrigin,
+          first.protector.abilityIndex,
+        );
       } else {
         const discardIndex = state.players[intercept.player].hand.length > 0 ? 0 : null;
         applyChooseInterceptResponse(state, intercept, discardIndex);
@@ -399,13 +408,38 @@ export function applyMove(state: GameState, move: Move, byPlayer: Player): void 
       const probe = makeDeclaredAbilCtx(state, move.uid, move.abilityId);
       let costParams: AbilityCostParams | undefined;
       if (probe?.source.cardId) {
-        const def = engine.cards.get(probe.source.cardId);
-        const ab = def?.abilities.find((a) => a.id === move.abilityId);
+        const occurrence = probe.source.area === 'remove'
+          ? undefined
+          : engine.flow.findDeclaredAbilityOccurrence(
+              state,
+              move.uid,
+              probe.source.cardId,
+              probe.source.area,
+              move.abilityId,
+              {
+                setCardId: move.setCardId,
+                setCardInstanceId: move.setCardInstanceId,
+                abilityOrigin: move.abilityOrigin,
+                abilityIndex: move.abilityIndex,
+              },
+            );
+        const ab = occurrence?.ability;
         if (ab?.cost) {
           costParams = computeAiCostParams(state, probe.source.player as Player, ab.cost);
         }
       }
-      engine.flow.activateDeclaredAbility(state, move.uid, move.abilityId, costParams);
+      engine.flow.activateDeclaredAbility(
+        state,
+        move.uid,
+        move.abilityId,
+        costParams,
+        {
+          setCardId: move.setCardId,
+          setCardInstanceId: move.setCardInstanceId,
+          abilityOrigin: move.abilityOrigin,
+          abilityIndex: move.abilityIndex,
+        },
+      );
       return;
     }
     case 'reasoning': {
@@ -561,6 +595,7 @@ export function stepTurn(
   // before any resolver/global pending channel is consulted.
   activatePendingRuntimeState(state);
   const prepared = produce(state, draft => {
+    mutateChar.ensureSetCardInstanceIds(draft);
     reconcileAutonomousDecisions(draft);
   });
   if (hasPendingHumanPick(prepared)) {

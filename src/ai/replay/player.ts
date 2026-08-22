@@ -63,8 +63,48 @@ function canonical(value: unknown): unknown {
   return value;
 }
 
+type DeclaredAbilityMove = Extract<Move, { kind: 'declaredAbility' }>;
+
+function isWitnessFreeLegacyDeclaredMove(move: DeclaredAbilityMove): boolean {
+  return move.setCardId === undefined
+    && move.setCardInstanceId === undefined
+    && move.abilityOrigin === undefined
+    && move.abilityIndex === undefined;
+}
+
+function isExactHostDeclaredMove(move: DeclaredAbilityMove): boolean {
+  return move.setCardId === undefined
+    && move.setCardInstanceId === undefined
+    && (move.abilityOrigin === 'printed' || move.abilityOrigin === 'granted')
+    && Number.isSafeInteger(move.abilityIndex)
+    && (move.abilityIndex as number) >= 0;
+}
+
+function withoutDeclaredOccurrence(move: DeclaredAbilityMove): Omit<
+  DeclaredAbilityMove,
+  'setCardId' | 'setCardInstanceId' | 'abilityOrigin' | 'abilityIndex'
+> {
+  const {
+    setCardId: _setCardId,
+    setCardInstanceId: _setCardInstanceId,
+    abilityOrigin: _abilityOrigin,
+    abilityIndex: _abilityIndex,
+    ...base
+  } = move;
+  return base;
+}
+
 function movesEqual(a: Move, b: Move): boolean {
-  return JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
+  if (JSON.stringify(canonical(a)) === JSON.stringify(canonical(b))) return true;
+  if (a.kind !== 'declaredAbility' || b.kind !== 'declaredAbility') return false;
+  const legacyHostPair = (
+    isWitnessFreeLegacyDeclaredMove(a) && isExactHostDeclaredMove(b)
+  ) || (
+    isWitnessFreeLegacyDeclaredMove(b) && isExactHostDeclaredMove(a)
+  );
+  if (!legacyHostPair) return false;
+  return JSON.stringify(canonical(withoutDeclaredOccurrence(a)))
+    === JSON.stringify(canonical(withoutDeclaredOccurrence(b)));
 }
 
 /**

@@ -10,6 +10,7 @@ import { event } from '@/engine/event';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { produce } from '@/engine/produce';
 import { _resetRegistry, register } from '@/engine/read/def';
+import { char as readChar } from '@/engine/read/char';
 import { run as runEffect } from '@/engine/effect/resolver';
 import { drainAiEffectPicks } from '@/engine/effect/apply-pick';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks';
@@ -180,7 +181,7 @@ describe('B10088 official-QA full-scene effect entry public dispatch', () => {
 
     expect(current().players.opp.scene).toEqual([]);
     expect(current().players.opp.remove).toEqual([FILLER]);
-    expect(current().players.self.scene.find(card => card.uid === 'bourbon')?.declaredUseCount.a1).toBe(1);
+    expect(readChar.declaredUseCount(current(), 'bourbon', 'a1')).toBe(1);
     const optional = useGameStateStore.getState().pendingEffectOptional;
     expect(optional).toMatchObject({ source: { cardId: B10088.id, uid: 'bourbon', abilityId: 'a1' } });
     expect(dispatchEngineAction(bindPendingDecision(optional!, { type: 'optionalResolve', run: true }))).toEqual({ ok: true });

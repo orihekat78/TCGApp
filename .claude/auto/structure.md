@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6187
+- **ファイル数**: 6195
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -509,6 +509,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-326.md` — B08006の重なったカードの同一性喪失
     - `BUG-327.md` — B02067/Pのイベント使用時セット能力欠落
     - `BUG-328.md` — B02067/P複数セット時の能力個体識別欠落
+    - `BUG-329.md` — 旧セーブの能力使用回数を見失う
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -830,6 +831,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-22-06-qa-wave32-shuffle-romance.md`
     - `2026-08-22-07-qa-wave33-stacked-card-semantics.md`
     - `2026-08-22-08-qa-wave34-set-card-lifecycle.md`
+    - `2026-08-23-01-qa-wave35-ability-occurrences.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1517,6 +1519,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-14-qa-wave13-match-cost.md` — QA Wave 13 and memory rotation
     - `2026-08-21-engine-memory-rotation.md` — Engine memory rotation — 2026-08-21
     - `2026-08-22-qa-waves17-26.md` — QA runtime Waves 17-26
+    - `2026-08-23-qa-wave35.md` — QA runtime Wave35 physical ability occurrence identity
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -4862,6 +4865,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `resolver.ts` — engine.effect.run — Effect Descriptor 解釈器 (resolver)
       - `runtime-state.ts` — A headless/replay branch may reach terminal cleanup. Restore the
       - `scene-switch.ts` — Both branches are alternatives. Authorize the first scene entry in each
+      - `source-identity.ts`
       - `validate-spec-files.ts` — engine.effect.validate-spec-files — Node 専用 ruleRefs 実在チェック
       - `validate.ts` — engine.effect.validate / engine.cards.validate — static lint pass (pure)
     - **`event/`**
@@ -5574,6 +5578,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `misread-reaction-order-wave26.test.ts` — qa: card:B05015:32589b2605a57e1fe89295b9b2340e6874cd6600ca6756e790b5fbcad58bae18
       - `multihook-timing-public.test.ts` — qa: card:D03007:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3
       - `same-card-multicopy-order-wave17.test.ts` — qaId=card:B02020:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c…
+      - `set-card-ability-occurrence-public-wave35.test.ts` — qa: card:B01057:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `set-card-host-absent.test.ts`
       - `set-card-host-owner-wave3.test.ts` — qaId=card:B02018:dc712167e0587386756f5293d40bf1766e89e09669554ebcde8e028749d962d…
       - `set-card-lifecycle-public-wave34.test.ts` — qa: card:B01039:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
@@ -5965,6 +5970,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `task5-flip-reflow.spec.ts` — E2E (Task5): 現場カードの reflow 移動トゥイーン (FLIP) の実機検証。
     - `triggerchar-target-2026-06-06.spec.ts` — E2E: triggerChar→target ($trigger.uid) の実機 text-faithfulness 検証。
     - `user-bug-wave-ui.spec.ts`
+    - `wave35-set-card-source-identity.spec.ts`
   - **`engine/`** — Engine ユニットテスト
     - **`adversarial/`**
       - `state-owned-runtime.test.ts`
@@ -6345,6 +6351,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `EffectChoiceModalHost.test.tsx`
       - `EffectPickerModal.card-detail.test.tsx`
       - `EffectPickerModal.forced-selection.test.tsx`
+      - `EffectSourceIdentity.wave35.test.tsx`
+      - `EffectSourceLifecycle.wave35.test.tsx`
       - `EffectStackPanel.reorder.test.tsx` — Phase 8 完全クローズ Commit 5: EffectStackPanel reorder UI SSR test
       - `EffectStackPanel.test.tsx` — Phase 7 Task 7.14: EffectStackPanel tests
       - `EvidenceArea.test.tsx` — Phase 7 Task 7.9: EvidenceArea tests

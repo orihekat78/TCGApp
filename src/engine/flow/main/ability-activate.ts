@@ -14,7 +14,15 @@
 import type { GameState, AbilityDef, EffectCtx } from '../../types/index.js';
 import { cost as engineCost } from '../../cost/index.js';
 import { def as readDef } from '../../read/def.js';
-import { canActivateDeclaredAbility, findCardOnBoard, useDeclaredAbility, findDeclaredAbility, resolveDeclaredPaymentPlan } from './declared-ability.js';
+import {
+  canActivateDeclaredAbility,
+  findCardOnBoard,
+  useDeclaredAbility,
+  findDeclaredAbilityOccurrence,
+  declaredAbilityOccurrenceSourceRef,
+  resolveDeclaredPaymentPlan,
+  type DeclaredAbilitySourceRef,
+} from './declared-ability.js';
 import { canPartnerAbility, usePartnerAbility } from './partner-ability.js';
 import { mutate } from '../../mutate/index.js';
 import { declaredCostParamsToDyn } from './declared-cost-params.js';
@@ -84,6 +92,7 @@ export function activateDeclaredAbility(
   uid: string,
   abilId: string,
   costParams?: AbilityCostParams,
+  sourceRef?: DeclaredAbilitySourceRef,
 ): void {
   const found = findCardOnBoard(state, uid);
   if (!found) {
@@ -92,18 +101,30 @@ export function activateDeclaredAbility(
     useDeclaredAbility(state, uid, abilId);
     return;
   }
-  // Public UI dispatch authorizes through `isAllowed` first, where a human
-  // physical-card cost must carry an exact selected-instance witness.  This
-  // low-level mutator is also the deterministic AI/test resolver entrypoint;
-  // preserve its established implicit fallback after all normal cost checks.
-  // A supplied malformed witness still fails closed in canPayAtomically.
-  if (!canActivateDeclaredAbility(state, uid, abilId, costParams, { allowImplicitPhysicalCostSelection: true })) {
+  // Physical cost selection may use the deterministic engine fallback, but a
+  // set-card ability source is never inferred: its exact physical IDs are part
+  // of the public authorization witness.
+  if (!canActivateDeclaredAbility(state, uid, abilId, costParams, {
+    allowImplicitPhysicalCostSelection: true,
+    sourceRef,
+  })) {
     return;
   }
+  const occurrence = findDeclaredAbilityOccurrence(
+    state,
+    uid,
+    found.cardId,
+    found.area,
+    abilId,
+    sourceRef,
+  );
+  if (!occurrence) return;
+  const occurrenceSource = declaredAbilityOccurrenceSourceRef(occurrence);
   const dyn = declaredCostParamsToDyn(costParams);
   const ctx: EffectCtx = {
     source: {
       cardId: found.cardId,
+      ...occurrenceSource,
       uid,
       abilityId: abilId,
       player: found.player,
@@ -113,7 +134,7 @@ export function activateDeclaredAbility(
     ...(dyn ? { dyn } : {}),
   };
   // W6 step11 (row999 item4): rider declared (on-set-host) の cost も解決できるよう共有 helper 経由
-  const ability = findDeclaredAbility(state, uid, found.cardId, found.area, abilId);
+  const ability = occurrence.ability;
   const plan = ability?.cost
     ? resolveDeclaredPaymentPlan(state, ability, ctx, costParams, { allowLegacyInvalidAlternativeFallback: true })
     : undefined;

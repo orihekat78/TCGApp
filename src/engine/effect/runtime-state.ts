@@ -27,9 +27,14 @@ import {
   assertPendingRuntimeValue,
 } from './pending-runtime-schema.js';
 import type { GameState } from '../types/game-state.js';
+import type { DeclaredAbilityHostOrigin } from '../types/effect-ctx.js';
 import type { PendingMisreadAuthority } from '../types/misread.js';
 import { isDraft, original } from '../produce.js';
 import { def as readDef } from '../read/def.js';
+import {
+  hasValidTurnScopedUse,
+  readDeclaredAbilityUseCountRecord,
+} from './source-identity.js';
 import {
   chooseInterceptReactionKey,
   readChooseInterceptBatchAuthority,
@@ -487,7 +492,14 @@ type PersistedChooseInterceptResponse = {
   player: 'self' | 'opp';
   ownerPlayer?: 'self' | 'opp';
   publicHandRevealToken?: string;
-  protector: { uid: string; cardId: string; abilityId: string; setCardInstanceId?: string };
+  protector: {
+    uid: string;
+    cardId: string;
+    abilityId: string;
+    abilityOrigin?: DeclaredAbilityHostOrigin;
+    abilityIndex?: number;
+    setCardInstanceId?: string;
+  };
   targetUid: string;
 };
 
@@ -556,8 +568,7 @@ function assertPersistedChooseInterceptResponse(
     const use = ability ? setCard?.abilityUseCounts?.[ability.id] : undefined;
     if (!setCard
       || !ability
-      || use?.turn !== state.turn.number
-      || use.count < 1) {
+      || !hasValidTurnScopedUse(use, state.turn.number)) {
       invalidChooseIntercept('cancel witness must match a used face-up set-card ability');
     }
     return;
@@ -566,13 +577,23 @@ function assertPersistedChooseInterceptResponse(
   const protector = state.players[owner].scene.find(char => (
     char.uid === response.protector.uid && char.cardId === response.protector.cardId
   ));
-  const ability = readDef.card(response.protector.cardId)?.abilities.find(item => (
-    item.id === response.protector.abilityId
-    && item.type === 'triggered'
-    && item.scope === 'on-scene'
-    && item.trigger?.hook === ('effect:choose-intercept-discard' as never)
-  ));
-  if (!protector || !ability || (protector.declaredUseCount[ability.id] ?? 0) < 1) {
+  const abilities = readDef.card(response.protector.cardId)?.abilities ?? [];
+  const hasExactAbility = response.protector.abilityOrigin !== undefined
+    && response.protector.abilityIndex !== undefined;
+  const ability = hasExactAbility
+    ? response.protector.abilityOrigin === 'printed'
+      ? abilities[response.protector.abilityIndex!]
+      : undefined
+    : abilities.find(item => item.id === response.protector.abilityId);
+  const validAbility = ability?.id === response.protector.abilityId
+    && ability.type === 'triggered'
+    && ability.scope === 'on-scene'
+    && ability.trigger?.hook === ('effect:choose-intercept-discard' as never);
+  const used = protector ? readDeclaredAbilityUseCountRecord(protector.declaredUseCount, response.protector.abilityId, {
+    abilityOrigin: response.protector.abilityOrigin,
+    abilityIndex: response.protector.abilityIndex,
+  }) : 0;
+  if (!protector || !validAbility || used < 1) {
     invalidChooseIntercept('protector witness must match a used scene interception ability');
   }
 }
@@ -677,6 +698,88 @@ function assertPendingMisreadRuntimeMatchesState(
   }
 }
 
+function pendingSourceMatchesEffectEntry(
+  entry: GameState['pendingEffects'][number],
+  source: Record<string, unknown>,
+  includeAbilityOccurrenceIdentity: boolean,
+): boolean {
+  if (typeof source.cardId !== 'string' || typeof source.abilityId !== 'string') return false;
+  if (entry.source.cardId !== source.cardId || entry.source.abilityId !== source.abilityId) return false;
+  if (source.player !== undefined && entry.source.player !== source.player) return false;
+  if (source.uid !== undefined && entry.source.uid !== source.uid) return false;
+  if (source.area !== undefined && (entry.source.area ?? 'scene') !== source.area) return false;
+  if (source.resolutionKind !== undefined && entry.source.resolutionKind !== source.resolutionKind) return false;
+  if (source.triggerBatch !== undefined && entry.triggerBatch !== source.triggerBatch) return false;
+  if (source.ownerChosenOrder !== undefined && entry.ownerChosenOrder !== source.ownerChosenOrder) return false;
+  if (source.ownerOrderConfirmed !== undefined
+    && entry.ownerOrderConfirmed !== source.ownerOrderConfirmed) return false;
+  if (source.declaredBatch !== undefined && entry.declaredBatch !== source.declaredBatch) return false;
+  if (source.causalTrace !== undefined
+    && !samePlainRuntimeValue(entry.causalTrace, source.causalTrace)) return false;
+  if (!includeAbilityOccurrenceIdentity) return true;
+  return entry.source.setCardId === source.setCardId
+    && entry.source.setCardInstanceId === source.setCardInstanceId
+    && entry.source.abilityOrigin === source.abilityOrigin
+    && entry.source.abilityIndex === source.abilityIndex;
+}
+
+/**
+ * A persisted public source may be standalone (low-level/runtime probes), but
+ * once its non-occurrence lineage identifies a queued/resolving effect, its
+ * exact set-card pair or host-origin/index witness must identify that same
+ * authority. This rejects a complete witness swapped to a simultaneous sibling
+ * while preserving legacy saves that predate a direct stack link.
+ */
+function assertPendingAbilitySourceAuthority(
+  state: GameState,
+  value: unknown,
+  key: PendingKey,
+): void {
+  const visited = new WeakSet<object>();
+  const visit = (candidate: unknown): void => {
+    if (candidate === null || typeof candidate !== 'object') return;
+    if (visited.has(candidate)) return;
+    visited.add(candidate);
+    if (Array.isArray(candidate)) {
+      candidate.forEach(visit);
+      return;
+    }
+    const record = candidate as Record<string, unknown>;
+    const rawSource = record.source;
+    if (rawSource !== null && typeof rawSource === 'object' && !Array.isArray(rawSource)) {
+      const source = rawSource as Record<string, unknown>;
+      const hasSetCardWitness = typeof source.setCardId === 'string'
+        && source.setCardId.length > 0
+        && typeof source.setCardInstanceId === 'string'
+        && source.setCardInstanceId.length > 0;
+      const hasHostWitness = typeof source.abilityOrigin === 'string'
+        && typeof source.abilityIndex === 'number';
+      if (hasSetCardWitness || hasHostWitness) {
+        const active = state.pendingEffects.filter(entry => (
+          entry.state === 'pending' || entry.state === 'resolving'
+        ));
+        let lineage = active.filter(entry => pendingSourceMatchesEffectEntry(entry, source, false));
+        if (lineage.length === 0) {
+          lineage = state.pendingEffects.filter(entry => pendingSourceMatchesEffectEntry(entry, source, false));
+        }
+        const resolving = lineage.filter(entry => entry.state === 'resolving');
+        const authority = resolving.length > 0 ? resolving : lineage;
+        if (authority.length === 0 && active.length > 0) {
+          const identity = hasSetCardWitness ? 'set-card' : 'declared-ability host';
+          throw new Error(`Invalid ${key}: ${identity} source has no GameState authority`);
+        }
+        if (authority.length > 0
+          && !authority.some(entry => pendingSourceMatchesEffectEntry(entry, source, true))) {
+          const identity = hasSetCardWitness ? 'set-card' : 'declared-ability host';
+          throw new Error(`Invalid ${key}: ${identity} source does not match GameState authority`);
+        }
+      }
+    }
+    Object.values(record).forEach(visit);
+  };
+  visit(value);
+}
+
 function assertPendingRuntimeMatchesState(
   state: GameState,
   snapshot: ReadonlyArray<{ key: PendingKey; present: boolean; value: unknown }>,
@@ -684,6 +787,7 @@ function assertPendingRuntimeMatchesState(
   for (const entry of snapshot) {
     if (entry.present && entry.key !== '__pendingRuntimeStateMarker') {
       assertPendingDeclaredNameAuthority(state, entry.value, entry.key);
+      assertPendingAbilitySourceAuthority(state, entry.value, entry.key);
     }
   }
   const hirameki = snapshot.find(entry => entry.key === '__pendingHirameki' && entry.present);

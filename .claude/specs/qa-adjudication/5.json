@@ -138,7 +138,7 @@
         "src:src/cards/ct-p02/B02049.ts:1",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {
@@ -278,7 +278,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p03/B03070.ts:25",
-        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:516"
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:544"
       ]
     },
     {
@@ -415,7 +415,7 @@
       "evidence": [
         "rules:.claude/rules/24-qa-naming-stun.md:58",
         "src:src/cards/ct-p04/B04058.ts:26",
-        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:476"
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:504"
       ],
       "noteCodes": []
     },
@@ -759,7 +759,7 @@
         "src:src/cards/ct-p06/B06057.ts:1",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {
@@ -870,7 +870,7 @@
         "src:src/cards/ct-p07/B07016.ts:1",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {
@@ -1054,10 +1054,10 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p08/B08081.ts:17",
-        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:244",
         "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:245",
-        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:249",
-        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:251"
+        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:246",
+        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:250",
+        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:252"
       ]
     },
     {
@@ -1246,7 +1246,7 @@
         "src:src/cards/ct-p09/B09078.ts:30",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {
@@ -1889,7 +1889,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/pr-01/PR135.ts:39",
-        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:369"
+        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:377"
       ]
     },
     {

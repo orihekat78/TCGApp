@@ -24,6 +24,7 @@ import { char as charMutator } from '../mutate/char.js'; // W6 step6 (r79): _mrS
 import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from './resolve-picks.js';
+import { assertCompleteSetCardSource } from './source-identity.js';
 import { resolve as resolveTarget } from '../target/resolve.js';
 import { _attachPendingDeckPlaceContinuation, _attachPendingDeckReorderContinuation, _peekPendingDeckPlaceSide, _peekPendingDeckReorderSide, peekPublicHandRevealToken, resolveBindRef, takePublicHandRevealToken } from './atom-handlers/_shared.js';
 import { _peekPendingEffectChoiceSide, _peekPendingEffectOptionalSide, _peekPendingEffectRepeatOptionalSide, _peekPendingRpsSide, _peekPendingSetCardChoiceSide, appendPendingChoiceContinuation, appendPendingRpsContinuation, pushPendingEffectRepeatOptionalSide, setPendingEffectRepeatOptionalRemainder, pushPendingRpsSide, setPendingRpsResume, pushPendingSetCardChoiceSide, setPendingSetCardChoiceResume, appendPendingSetCardChoiceContinuation, pushPendingEffectChoiceSide, setPendingChoiceBindings, setPendingChoiceResume, type PendingEffectPickSide, type RpsHand } from './pending-state.js';
@@ -41,6 +42,8 @@ type Player = 'self' | 'opp';
 
 function decisionSource(ctx: EffectCtx): {
   cardId: string; abilityId: string; uid: string;
+  setCardId?: string; setCardInstanceId?: string;
+  abilityOrigin?: EffectCtx['source']['abilityOrigin']; abilityIndex?: number;
   area?: EffectCtx['source']['area'];
   resolutionKind?: EffectCtx['source']['resolutionKind'];
   triggerBatch?: number; ownerChosenOrder?: number; ownerOrderConfirmed?: boolean;
@@ -49,6 +52,10 @@ function decisionSource(ctx: EffectCtx): {
     cardId: ctx.source.cardId ?? '',
     abilityId: ctx.source.abilityId ?? '',
     uid: ctx.source.uid ?? '',
+    ...(ctx.source.setCardId !== undefined ? { setCardId: ctx.source.setCardId } : {}),
+    ...(ctx.source.setCardInstanceId !== undefined ? { setCardInstanceId: ctx.source.setCardInstanceId } : {}),
+    ...(ctx.source.abilityOrigin !== undefined ? { abilityOrigin: ctx.source.abilityOrigin } : {}),
+    ...(ctx.source.abilityIndex !== undefined ? { abilityIndex: ctx.source.abilityIndex } : {}),
     ...(ctx.source.area ? { area: ctx.source.area } : {}),
     ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}),
     ...(ctx.source.triggerBatch !== undefined ? { triggerBatch: ctx.source.triggerBatch } : {}),
@@ -59,12 +66,24 @@ function decisionSource(ctx: EffectCtx): {
 }
 
 function sameDecisionSource(
-  side: { source: { cardId: string; abilityId: string; uid?: string } },
+  side: { source: {
+    cardId: string;
+    abilityId: string;
+    uid?: string;
+    setCardId?: string;
+    setCardInstanceId?: string;
+    abilityOrigin?: EffectCtx['source']['abilityOrigin'];
+    abilityIndex?: number;
+  } },
   ctx: EffectCtx,
 ): boolean {
   return side.source.cardId === (ctx.source.cardId ?? '')
     && side.source.abilityId === (ctx.source.abilityId ?? '')
-    && (side.source.uid ?? '') === (ctx.source.uid ?? '');
+    && (side.source.uid ?? '') === (ctx.source.uid ?? '')
+    && side.source.setCardId === ctx.source.setCardId
+    && side.source.setCardInstanceId === ctx.source.setCardInstanceId
+    && side.source.abilityOrigin === ctx.source.abilityOrigin
+    && side.source.abilityIndex === ctx.source.abilityIndex;
 }
 
 /** Causal display state belongs to one branch only; sibling branches never inherit it. */
@@ -207,6 +226,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
   // A terminal result takes effect immediately, including in the middle of a
   // sequence. Recursive calls for later steps must therefore become no-ops.
   if (state.gameResult !== undefined) return;
+  assertCompleteSetCardSource(ctx.source);
 
   switch (eff.kind) {
     case 'sequence': {

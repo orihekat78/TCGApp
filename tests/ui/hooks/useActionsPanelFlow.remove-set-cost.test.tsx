@@ -14,6 +14,7 @@ import { B09027 } from '@/cards/ct-p09/B09027';
 import { PR234 } from '@/cards/pr-01/PR234';
 import { PR240 } from '@/cards/pr-01/PR240';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
+import { char as readChar } from '@/engine/read/char';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { CardDef } from '@/engine/types';
 import { runDeclaredAbilityFlow } from '@/ui/hooks/useActionsPanelFlow';
@@ -158,7 +159,9 @@ describe('runDeclaredAbilityFlow — removeSetCard cost', () => {
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.remove).toContain('SECRET-A');
     expect(after.players.self.scene.find((char) => char.uid === 'host')!.setCards.map((entry) => entry.cardId)).toEqual(['SECRET-B', 'PUBLIC-C']);
-    expect(after.players.self.scene.find((char) => char.uid === 'kazuha')!.declaredUseCount.a2).toBe(1);
+    expect(readChar.declaredUseCount(after, 'kazuha', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    })).toBe(1);
 
     await act(async () => root.unmount());
     container.remove();
@@ -239,7 +242,9 @@ describe('runDeclaredAbilityFlow — removeSetCard cost', () => {
     const after = useGameStateStore.getState().gameState!;
     expect(after.pendingEffects.at(-1)?.costPaid).toMatchObject({ removeSetCard: { ids: ['SECRET-NESTED'] } });
     expect(after.players.self.remove).toContain('SECRET-NESTED');
-    expect(after.players.self.scene.find((char) => char.uid === 'source')!.declaredUseCount.a1).toBe(1);
+    expect(readChar.declaredUseCount(after, 'source', 'a1', {
+      abilityOrigin: 'printed', abilityIndex: 0,
+    })).toBe(1);
   });
 
   it('hydrates missing and duplicate occurrence IDs before presenting the public picker', async () => {

@@ -348,13 +348,17 @@ describe('B09013 a2 — 非activeでも発動済み・【ターン1】消費', (
 
     const first = declare(initial);
     expect(_peekPendingEffectOptionalSide(), `${state} 中は optional を実行不能`).toBeNull();
-    expect(readChar.declaredUseCount(first, 'eri', 'a2'), `${state} 中でも発動済み`).toBe(1);
+    expect(readChar.declaredUseCount(first, 'eri', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    }), `${state} 中でも発動済み`).toBe(1);
 
     const second = declare(produce(first, (draft) => {
       draft.players.self.scene.find((c) => c.uid === 'eri')!.state = 'active';
     }));
     expect(_peekPendingEffectOptionalSide(), '同ターンの再発動なし').toBeNull();
-    expect(readChar.declaredUseCount(second, 'eri', 'a2')).toBe(1);
+    expect(readChar.declaredUseCount(second, 'eri', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    })).toBe(1);
   });
 });
 

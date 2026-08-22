@@ -266,6 +266,10 @@ export function makeAbilityCtx(opts: {
   cardId: string;
   abilityId: string;
   area: 'scene' | 'partner-area' | 'case' | 'hand' | 'evidence' | 'file';
+  setCardId?: string;
+  setCardInstanceId?: string;
+  abilityOrigin?: EffectCtx['source']['abilityOrigin'];
+  abilityIndex?: number;
 }): EffectCtx {
   return {
     source: {
@@ -274,6 +278,10 @@ export function makeAbilityCtx(opts: {
       abilityId: opts.abilityId,
       player: opts.player,
       area: opts.area,
+      ...(opts.setCardId ? { setCardId: opts.setCardId } : {}),
+      ...(opts.setCardInstanceId ? { setCardInstanceId: opts.setCardInstanceId } : {}),
+      ...(opts.abilityOrigin ? { abilityOrigin: opts.abilityOrigin } : {}),
+      ...(opts.abilityIndex !== undefined ? { abilityIndex: opts.abilityIndex } : {}),
     },
     bindings: {},
   };

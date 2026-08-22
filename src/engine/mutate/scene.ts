@@ -278,23 +278,31 @@ function mutate_logInterceptNote(s: GameState, player: Player, dest: 'hand' | 'k
   });
 }
 
+function emitSetCardLeave(
+  s: GameState,
+  char: SceneCharacter,
+  player: Player,
+  entry: SceneCharacter['setCards'][number],
+  cause: string,
+): void {
+  event.emit(
+    s,
+    'setcard:leave',
+    {
+      player,
+      hostUid: char.uid,
+      hostCardId: char.cardId,
+      setCardId: entry.cardId,
+      setCardInstanceId: entry.instanceId,
+      faceUp: entry.faceUp,
+      cause,
+    },
+    { player, uid: char.uid, cardId: char.cardId, setCardId: entry.cardId, setCardInstanceId: entry.instanceId },
+  );
+}
+
 function emitSetCardLeaves(s: GameState, char: SceneCharacter, player: Player, cause: string): void {
-  for (const entry of char.setCards) {
-    event.emit(
-      s,
-      'setcard:leave',
-      {
-        player,
-        hostUid: char.uid,
-        hostCardId: char.cardId,
-        setCardId: entry.cardId,
-        setCardInstanceId: entry.instanceId,
-        faceUp: entry.faceUp,
-        cause,
-      },
-      { player, uid: char.uid, cardId: char.cardId },
-    );
-  }
+  for (const entry of char.setCards) emitSetCardLeave(s, char, player, entry, cause);
 }
 
 /**
@@ -324,6 +332,9 @@ function removeToRemove(
     };
   }
 
+  // Leave-trigger snapshots must carry stable physical set-card provenance.
+  // Invalid uids remain an atomic no-op for legacy states.
+  charMutator.ensureSetCardInstanceIds(s);
   const { char, player } = found;
   // rules/17 §【現場リムーブ時】 emit 用に離場カードの識別子を splice 前に捕捉
   const leavingUid = char.uid;
@@ -363,12 +374,18 @@ function removeToRemove(
     if (intercept && intercept.kind === 'kept-in-scene') {
       // B01039: rider set-card をコストとしてリムーブ (faceUp 先頭一致順)、キャラは現場に残る
       const kConsumed: string[] = [];
-      for (const cid of intercept.consumedSetCards) {
-        const ki = char.setCards.findIndex(e => e.cardId === cid && e.faceUp);
+      for (const consumed of intercept.consumedSetCards) {
+        const ki = char.setCards.findIndex(e => (
+          e.cardId === consumed.cardId
+          && e.instanceId === consumed.setCardInstanceId
+          && e.faceUp
+        ));
         if (ki === -1) continue;
-        char.setCards.splice(ki, 1);
-        addToRemove(s, player, [cid]);
-        kConsumed.push(cid);
+        const entry = char.setCards.splice(ki, 1)[0];
+        if (!entry) continue;
+        addToRemove(s, player, [entry.cardId]);
+        emitSetCardLeave(s, char, player, entry, cause);
+        kConsumed.push(entry.cardId);
       }
       mutate_logInterceptNote(s, player, 'kept-in-scene', leavingUid);
       return {

@@ -228,7 +228,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p02/B02058.ts:58",
-        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:364"
+        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:372"
       ]
     },
     {
@@ -359,7 +359,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p03/B03070.ts:57",
-        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:574"
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:602"
       ]
     },
     {
@@ -770,7 +770,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05094.ts:1",
-        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:367"
+        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:375"
       ]
     },
     {
@@ -1271,7 +1271,7 @@
       "evidence": [
         "rules:.claude/rules/22-qa-action-contact.md:47",
         "src:src/cards/ct-p09/B09013.ts:58",
-        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:593"
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:621"
       ]
     },
     {
@@ -1283,7 +1283,7 @@
       "evidence": [
         "rules:.claude/rules/24-qa-naming-stun.md:58",
         "src:src/cards/ct-p09/B09013.ts:53",
-        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:567"
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:595"
       ]
     },
     {
@@ -1506,7 +1506,7 @@
         "src:src/cards/ct-p10/B10025.ts:25",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {
@@ -1637,8 +1637,8 @@
         "rules:.claude/rules/15-abilities-effects.md:20",
         "src:src/cards/ct-p10/B10071.ts:9",
         "tests:tests/cards/official-qa/B10071-public-wave25.test.ts:212",
-        "tests:tests/cards/official-qa/B10071-public-wave25.test.ts:213",
-        "tests:tests/cards/official-qa/B10071-public-wave25.test.ts:214"
+        "tests:tests/cards/official-qa/B10071-public-wave25.test.ts:221",
+        "tests:tests/cards/official-qa/B10071-public-wave25.test.ts:222"
       ]
     },
     {

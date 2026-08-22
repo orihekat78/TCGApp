@@ -256,6 +256,68 @@ describe('engine.mutate.char', () => {
   });
 
   describe('setCard', () => {
+    it('does not reuse occurrence IDs retained by pending, reserved, or runtime state', () => {
+      const state = makeState(makeChar({
+        setCards: [{ cardId: 'LEGACY', faceUp: true }],
+      }));
+      state.setCardInstanceSeq = 1;
+      state.pendingEffects.push({
+        id: 'fx_1',
+        source: {
+          player: 'self',
+          cardId: 'HOST-OLD',
+          abilityId: 'a1',
+          setCardId: 'SET-PENDING',
+          setCardInstanceId: 'set:1',
+        },
+        triggeredBy: { hook: 'test' },
+        triggeredAt: { turn: 1, phase: 'main', nano: 1 },
+        effect: { kind: 'atom', verb: 'noop', args: {} },
+        state: 'resolved',
+      });
+      state.reservedEffects.push({
+        id: 're_1',
+        trigger: {
+          hook: 'phase:end:start',
+          mode: 'turn-end',
+          player: 'self',
+          armedTurn: 1,
+        },
+        effect: { kind: 'atom', verb: 'noop', args: {} },
+        source: {
+          player: 'self',
+          cardId: 'HOST-RESERVED',
+          abilityId: 'a1',
+          setCardId: 'SET-RESERVED',
+          setCardInstanceId: 'set:2',
+        },
+      });
+      state.pendingRuntimeState = {
+        token: 1,
+        snapshot: [{
+          key: '__pendingEffectOptionalSide',
+          present: true,
+          value: {
+            player: 'self',
+            source: {
+              cardId: 'HOST-RUNTIME',
+              abilityId: 'a1',
+              uid: 'gone-host',
+              setCardId: 'SET-RUNTIME',
+              setCardInstanceId: 'set:3',
+            },
+          },
+        }],
+      };
+
+      const hydrated = produce(state, draft => {
+        char.ensureSetCardInstanceIds(draft);
+      });
+
+      expect(hydrated.players.self.scene[0]?.setCards[0]?.instanceId).toBe('set:4');
+      expect(hydrated.setCardInstanceSeq).toBe(5);
+    });
+
     it('setCards にカードを追加する (faceUp 付き)', () => {
       const c = makeChar();
       const s = makeState(c);

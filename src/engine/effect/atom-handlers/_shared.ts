@@ -12,11 +12,36 @@ import { cardOccurrenceUid, isLiveCardOccurrenceWitness } from '../../target/car
 import { defHasKeyword, defHasNoOriginalAbilityExceptIcons } from '../../read/keyword.js';
 import { allCardNameComponentsForDef } from '../../target/card-def-registry.js';
 import { effectiveKeywordForCard, effectiveTraitNames, printedKeywordForCard } from '../../target/candidates.js';
+import { assertCompleteSetCardSource } from '../source-identity.js';
 
 declare global {
 
   var __pendingDeckRevealSide: PendingDeckRevealSide | PendingDeckRevealSide[] | null | undefined;
   var __pendingPublicHandRevealSide: PublicHandRevealSide | PublicHandRevealSide[] | null | undefined;
+}
+
+export type PublicEffectSource = {
+  cardId?: string;
+  abilityId?: string;
+  uid?: string;
+  setCardId?: string;
+  setCardInstanceId?: string;
+  abilityOrigin?: EffectCtx['source']['abilityOrigin'];
+  abilityIndex?: number;
+};
+
+/** Preserve exact public effect provenance at presentation/persistence boundaries. */
+export function publicEffectSource(ctx: EffectCtx): PublicEffectSource {
+  assertCompleteSetCardSource(ctx.source);
+  return {
+    ...(ctx.source.cardId !== undefined ? { cardId: ctx.source.cardId } : {}),
+    ...(ctx.source.abilityId !== undefined ? { abilityId: ctx.source.abilityId } : {}),
+    ...(ctx.source.uid !== undefined ? { uid: ctx.source.uid } : {}),
+    ...(ctx.source.setCardId !== undefined ? { setCardId: ctx.source.setCardId } : {}),
+    ...(ctx.source.setCardInstanceId !== undefined ? { setCardInstanceId: ctx.source.setCardInstanceId } : {}),
+    ...(ctx.source.abilityOrigin !== undefined ? { abilityOrigin: ctx.source.abilityOrigin } : {}),
+    ...(ctx.source.abilityIndex !== undefined ? { abilityIndex: ctx.source.abilityIndex } : {}),
+  };
 }
 
 export type PublicHandRevealSide = {
@@ -30,7 +55,7 @@ export type PublicHandRevealSide = {
   resolutionToken: string;
   /** A selected deck card is public without revealing the rest of the hand. */
   origin?: 'deck-selected-card';
-  source: { cardId?: string; abilityId?: string; uid?: string };
+  source: PublicEffectSource;
 };
 
 export function allocatePublicHandRevealToken(s: GameState): string {
@@ -102,7 +127,7 @@ export type PendingDeckRevealSide = {
   /** A plain reveal returns every card to its original deck position. */
   presentation?: 'reveal-return';
   /** Stable resolver source identity; prevents an unrelated reveal replacing this one. */
-  source?: { cardId?: string; abilityId?: string; uid?: string };
+  source?: PublicEffectSource;
 };
 
 export function _drainPendingDeckRevealSide(): PendingDeckRevealSide | null {
@@ -145,7 +170,11 @@ export function queuePendingDeckRevealSide(next: PendingDeckRevealSide): void {
     && candidate.awaitingPick === true
     && candidate.source?.cardId === next.source?.cardId
     && candidate.source?.abilityId === next.source?.abilityId
-    && candidate.source?.uid === next.source?.uid;
+    && candidate.source?.uid === next.source?.uid
+    && candidate.source?.setCardId === next.source?.setCardId
+    && candidate.source?.setCardInstanceId === next.source?.setCardInstanceId
+    && candidate.source?.abilityOrigin === next.source?.abilityOrigin
+    && candidate.source?.abilityIndex === next.source?.abilityIndex;
   if (!current) {
     root.__pendingDeckRevealSide = next;
   } else if (Array.isArray(current)) {

@@ -10,6 +10,7 @@ import { SelectableCardTile } from './SelectableCardTile.js';
 import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
 import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import { LinkedPublicHandReveal } from './PublicHandRevealWindow.js';
+import type { DeclaredAbilityHostOrigin } from '@/engine/types';
 import './ChoicePickerModal.css';
 
 /** Dedicated responder prompt. This is intentionally separate from generic optional choices. */
@@ -27,11 +28,14 @@ export function ChooseInterceptModalHost(): JSX.Element | null {
       protectorUid: string,
       targetUid: string,
       setCardInstanceId?: string,
+      abilityOrigin?: DeclaredAbilityHostOrigin,
+      abilityIndex?: number,
     ): void => {
       dispatchEngineAction(bindPendingDecision(pending, {
         type: 'chooseInterceptOrderResolve',
         protectorUid,
         targetUid,
+        ...(abilityOrigin !== undefined ? { abilityOrigin, abilityIndex } : {}),
         ...(setCardInstanceId ? { setCardInstanceId } : {}),
       }));
     };
@@ -54,8 +58,14 @@ export function ChooseInterceptModalHost(): JSX.Element | null {
             <ul className="cp-list">
               {pending.choices.map((choice, index) => {
                 const setCardInstanceId = choice.protector.setCardInstanceId;
-                const occurrenceId = setCardInstanceId ?? choice.protector.uid;
-                const occurrenceTestId = setCardInstanceId ? `-${setCardInstanceId}` : '';
+                const abilityOccurrence = choice.protector.abilityOrigin !== undefined
+                  ? `${choice.protector.abilityOrigin}:${choice.protector.abilityIndex}`
+                  : undefined;
+                const occurrenceId = setCardInstanceId
+                  ?? (abilityOccurrence ? `${choice.protector.uid}:${abilityOccurrence}` : choice.protector.uid);
+                const occurrenceTestId = setCardInstanceId
+                  ? `-${setCardInstanceId}`
+                  : abilityOccurrence ? `-${abilityOccurrence}` : '';
                 return (
                 <li key={`${choice.protector.uid}-${choice.targetUid}-${occurrenceId}`}>
                   <SelectableCardTile
@@ -68,6 +78,8 @@ export function ChooseInterceptModalHost(): JSX.Element | null {
                       choice.protector.uid,
                       choice.targetUid,
                       setCardInstanceId,
+                      choice.protector.abilityOrigin,
+                      choice.protector.abilityIndex,
                     )}
                     onExpand={expandModal.open}
                   />

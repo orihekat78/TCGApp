@@ -7,6 +7,7 @@ import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/l
 import { _drainPendingEffectPickSide, _clearPendingEffectPickQueue } from '@/engine/effect/pending-state';
 import { _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
 import { _resetRegistry, register } from '@/engine/read/def';
+import { char as readChar } from '@/engine/read/char';
 import { runAllUntilEmpty } from '@/engine/resolve';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { applyPickAndContinuation } from '@/engine/effect/apply-pick';
@@ -30,7 +31,7 @@ function state(deck: string[] = []): GameState {
 }
 
 function ctx(): EffectCtx {
-  return { source: { cardId: B10025.id, abilityId: 'a2', uid: 'kogoro', player: 'self', area: 'scene' }, bindings: {} };
+  return { source: { cardId: B10025.id, abilityId: 'a2', abilityOrigin: 'printed', abilityIndex: 1, uid: 'kogoro', player: 'self', area: 'scene' }, bindings: {} };
 }
 
 beforeEach(() => {
@@ -96,10 +97,14 @@ describe('CT-P10 B10025 鬼丸猛', () => {
     const copy = (uid: string, enterOrder: number) => ({ cardId: B10025.id, uid, state: 'active' as const, isNamed: false, enterOrder, enterOrderThisTurn: enterOrder, setCards: [], stackedCards: 0, keywordOverrides: { granted: [], disabledOriginal: false }, apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {} });
     s.players.self.scene = [copy('kogoro-1', 1), copy('kogoro-2', 2)];
     event.emit(s, 'evidence:gain', { player: 'self', gained: 1 }, { player: 'self', cardId: 'ACTION' });
-    expect(s.players.self.scene.map(char => char.declaredUseCount.a3)).toEqual([1, 1]);
+    expect(s.players.self.scene.map(char => readChar.declaredUseCount(s, char.uid, 'a3', {
+      abilityOrigin: 'printed', abilityIndex: 2,
+    }))).toEqual([1, 1]);
 
     event.emit(s, 'evidence:gain', { player: 'self', gained: 1 }, { player: 'self', cardId: 'ACTION' });
-    expect(s.players.self.scene.map(char => char.declaredUseCount.a3)).toEqual([1, 1]);
+    expect(s.players.self.scene.map(char => readChar.declaredUseCount(s, char.uid, 'a3', {
+      abilityOrigin: 'printed', abilityIndex: 2,
+    }))).toEqual([1, 1]);
   });
 
   it('has the sole printed metadata and no B10025P TSV printing', () => {

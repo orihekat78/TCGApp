@@ -74,8 +74,8 @@ test('BUG-252 actual B03023+B04012 order UI works in desktop and landscape mobil
   await expect(panel).toBeVisible();
   const entries = panel.locator('.effect-stack-entry');
   await expect(entries).toHaveCount(2);
-  await expect(entries.filter({ hasText: '[B03023]' })).toHaveCount(1);
-  await expect(entries.filter({ hasText: '[B04012]' })).toHaveCount(1);
+  await expect(entries.filter({ hasText: '[脇田兼則]' })).toHaveCount(1);
+  await expect(entries.filter({ hasText: '[毛利蘭]' })).toHaveCount(1);
 
   const box = await panel.boundingBox();
   const viewport = page.viewportSize();
@@ -91,15 +91,17 @@ test('BUG-252 actual B03023+B04012 order UI works in desktop and landscape mobil
   const down = entries.first().locator('button[data-testid^="reorder-down-"]');
   expect((await down.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await down.click();
-  await expect(entries.first()).toContainText(secondBefore.includes('B03023') ? 'B03023' : 'B04012');
+  const secondCard = secondBefore.includes('脇田兼則')
+    ? { id: 'B03023', label: '脇田兼則' }
+    : { id: 'B04012', label: '毛利蘭' };
+  await expect(entries.first()).toContainText(secondCard.label);
   await panel.locator('.effect-stack-confirm').click();
 
-  const expectedFirst = secondBefore.includes('B03023') ? 'B03023' : 'B04012';
   const surfacedFirst = await page.evaluate(() => (window as unknown as {
     __game: { getState: () => { pendingDeckReveal: { source?: { cardId?: string } } | null } };
   }).__game.getState().pendingDeckReveal?.source?.cardId ?? null);
-  expect(surfacedFirst).toBe(expectedFirst);
-  expect(firstBefore).not.toContain(expectedFirst);
+  expect(surfacedFirst).toBe(secondCard.id);
+  expect(firstBefore).not.toContain(secondCard.label);
 
   const pickedUid = await page.evaluate(() => (window as unknown as {
     __game: { getState: () => { pendingEffectPick: { candidates: { uid: string }[] } | null } };

@@ -11,6 +11,7 @@ import { canActivateDeclaredAbility } from '@/engine/flow/main/declared-ability'
 import { activateDeclaredAbility } from '@/engine/flow/main/ability-activate';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { register, _resetRegistry } from '@/engine/read/def';
+import { char as readChar } from '@/engine/read/char';
 import { run as runEffect } from '@/engine/effect/resolver';
 import { runAllUntilEmpty } from '@/engine/resolve';
 import { createEmptyGameState } from '@/engine/state-factory';
@@ -19,7 +20,7 @@ import { mutate } from '@/engine/mutate';
 import type { CardDef, EffectCtx, GameState } from '@/engine/types';
 
 const POLICE: CardDef = { id: 'TEST_POLICE', no: 'TEST_POLICE', kind: 'character', names: ['\u8b66\u5bdf'], colors: ['\u7dd1'], level: 6, ap: 1000, lp: 1, traits: ['\u8b66\u5bdf'], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [] };
-const ctx = (sourceUid: string, ids: string[]): EffectCtx => ({ source: { cardId: 'B10023', uid: sourceUid, abilityId: 'a2', player: 'self', area: 'scene' }, bindings: {}, dyn: { costParams: { removeSetCard: { hostUids: [sourceUid, sourceUid], instanceIds: ids } } } } as EffectCtx);
+const ctx = (sourceUid: string, ids: string[]): EffectCtx => ({ source: { cardId: 'B10023', uid: sourceUid, abilityId: 'a2', abilityOrigin: 'printed', abilityIndex: 1, player: 'self', area: 'scene' }, bindings: {}, dyn: { costParams: { removeSetCard: { hostUids: [sourceUid, sourceUid], instanceIds: ids } } } } as EffectCtx);
 
 function base(): GameState {
   const state = createEmptyGameState();
@@ -74,7 +75,7 @@ describe('B10023 服部平次', () => {
     const secondId = state.players.self.scene.find((char) => char.uid === secondUid)!.setCards[0]!.instanceId!;
     const opponentId = state.players.opp.scene.find((char) => char.uid === opponentUid)!.setCards[0]!.instanceId!;
     const ownCtx: EffectCtx = {
-      source: { cardId: 'B10023', uid, abilityId: 'a2', player: 'self', area: 'scene' },
+      source: { cardId: 'B10023', uid, abilityId: 'a2', abilityOrigin: 'printed', abilityIndex: 1, player: 'self', area: 'scene' },
       bindings: {},
       dyn: { costParams: { removeSetCard: { hostUids: [uid, secondUid], instanceIds: [sourceId, secondId] } } },
     } as EffectCtx;
@@ -150,7 +151,7 @@ describe('B10023 服部平次', () => {
     });
     expect(paid.players.self.remove).toEqual(['X', 'Y']);
     const after = produce(paid, (draft) => {
-      runEffect(draft, B10023.abilities[1]!.effect!, { source: { cardId: 'B10023', uid, abilityId: 'a2', player: 'self', area: 'scene' }, bindings: {} });
+      runEffect(draft, B10023.abilities[1]!.effect!, { source: { cardId: 'B10023', uid, abilityId: 'a2', abilityOrigin: 'printed', abilityIndex: 1, player: 'self', area: 'scene' }, bindings: {} });
     });
     expect(after.players.self.hand).toEqual(['DRAW']);
   });
@@ -176,7 +177,9 @@ describe('B10023 服部平次', () => {
 
     expect(activated.players.self.remove).toEqual(['SOURCE-SET', 'SECOND-SET']);
     expect(activated.players.self.hand).toEqual(['DRAW']);
-    expect(activated.players.self.scene.find((char) => char.uid === uid)!.declaredUseCount.a2).toBe(1);
+    expect(readChar.declaredUseCount(activated, uid, 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    })).toBe(1);
   });
 
   it('rejects duplicate, face-up, and insufficient declared-cost picks without mutation', () => {

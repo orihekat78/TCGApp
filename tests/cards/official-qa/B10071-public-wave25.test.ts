@@ -168,23 +168,31 @@ describe('B10071 official QA through public actions', () => {
     install(opponentTurnState('active'));
     let actionId = declareCase('case-actor-a');
     resolveWake(true);
-    expect(readChar.declaredUseCount(current(), 'yamamura', 'a2')).toBe(1);
+    expect(readChar.declaredUseCount(current(), 'yamamura', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    })).toBe(1);
     finishCaseAction(actionId);
     actionId = declareCase('case-actor-b');
     surfacePendingSideChannels();
     expect(useGameStateStore.getState().pendingEffectOptional).toBeNull();
-    expect(readChar.declaredUseCount(current(), 'yamamura', 'a2')).toBe(1);
+    expect(readChar.declaredUseCount(current(), 'yamamura', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    })).toBe(1);
     finishCaseAction(actionId);
 
     install(opponentTurnState('sleep'));
     actionId = declareCase('case-actor-a');
     resolveWake(false);
-    expect(readChar.declaredUseCount(current(), 'yamamura', 'a2')).toBe(1);
+    expect(readChar.declaredUseCount(current(), 'yamamura', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    })).toBe(1);
     finishCaseAction(actionId);
     actionId = declareCase('case-actor-b');
     surfacePendingSideChannels();
     expect(useGameStateStore.getState().pendingEffectOptional).toBeNull();
-    expect(readChar.declaredUseCount(current(), 'yamamura', 'a2')).toBe(1);
+    expect(readChar.declaredUseCount(current(), 'yamamura', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    })).toBe(1);
     finishCaseAction(actionId);
   });
 

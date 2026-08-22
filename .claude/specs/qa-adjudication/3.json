@@ -305,7 +305,7 @@
         "src:src/cards/ct-p02/B02080.ts:1",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {
@@ -344,7 +344,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:11",
         "src:src/cards/ct-p03/B03019.ts:18",
-        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:365"
+        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:373"
       ]
     },
     {
@@ -504,12 +504,12 @@
         "rules:.claude/rules/25-qa-effects-resolution.md:25",
         "src:src/cards/ct-p04/B04003.ts:6",
         "src:src/engine/effect/consult-choose-intercept.ts:96",
-        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:102",
         "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:103",
         "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:104",
         "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:105",
         "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:106",
-        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:96"
+        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:107",
+        "tests:tests/cards/official-qa/B04003-choose-intercept-public.test.ts:97"
       ]
     },
     {
@@ -1377,10 +1377,10 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p08/B08081.ts:14",
-        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:117",
         "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:118",
-        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:120",
-        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:127"
+        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:119",
+        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:121",
+        "tests:tests/cards/official-qa/B08081-multi-intercept-public-wave25.test.ts:128"
       ]
     },
     {
@@ -1419,10 +1419,10 @@
         "src:src/cards/ct-p09/B09003.ts:65",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:447",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:452",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:459"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:463",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:468",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:475"
       ]
     },
     {
@@ -1778,9 +1778,9 @@
         "rules:.claude/rules/07-action-flow.md:21",
         "src:src/cards/ct-p10/B10071.ts:9",
         "tests:tests/cards/official-qa/B10071-public-wave25.test.ts:171",
-        "tests:tests/cards/official-qa/B10071-public-wave25.test.ts:176",
-        "tests:tests/cards/official-qa/B10071-public-wave25.test.ts:182",
-        "tests:tests/cards/official-qa/B10071-public-wave25.test.ts:187"
+        "tests:tests/cards/official-qa/B10071-public-wave25.test.ts:178",
+        "tests:tests/cards/official-qa/B10071-public-wave25.test.ts:186",
+        "tests:tests/cards/official-qa/B10071-public-wave25.test.ts:193"
       ]
     },
     {

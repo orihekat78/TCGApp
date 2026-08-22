@@ -3,7 +3,7 @@
 // rules: 11-reasoning.md, 13-keywords.md, 14-refresh.md, 21-declared-ability-cost.md
 
 import type { GameState, TurnScopedFlags } from './game-state.js';
-import type { EffectCtx } from './effect-ctx.js';
+import type { DeclaredAbilityHostOrigin, EffectCtx } from './effect-ctx.js';
 
 // ---------- Condition ----------
 
@@ -74,7 +74,14 @@ export type Condition =
   | { kind: 'triggerPlayerIs'; side: 'self' | 'opp' }
   | { kind: 'scratchTrace'; player: 'self' | 'opp'; v: '発見済' | '未発見' }
   | { kind: 'flag'; player: 'self' | 'opp'; key: keyof TurnScopedFlags; v: boolean }
-  | { kind: 'declaredUseUnder'; uid: string; abilityId: string; max: number }
+  | {
+      kind: 'declaredUseUnder';
+      uid: string;
+      abilityId: string;
+      abilityOrigin?: DeclaredAbilityHostOrigin;
+      abilityIndex?: number;
+      max: number;
+    }
   | { kind: 'sourceDeclaredUseCount'; cmp: 'eq' | 'ge'; n: number }
   | { kind: 'bound'; key: string; presence?: 'exists' | 'matched' }
   // Triggered observers can queue before their source leaves.  Resolution-time

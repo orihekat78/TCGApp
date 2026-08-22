@@ -1447,15 +1447,18 @@
     {
       "qaId": "card:B10017:f9459c0f71b39b92ee72f7da065dd07e95384fc9c934c2c2fa4c4b6ebde69031",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:14",
-        "src:src/cards/ct-p10/B10017.ts:10"
-      ],
-      "noteCodes": [
-        "IMPLEMENTED-CARD-TEST-MISSING"
+        "src:src/cards/ct-p10/B10017.ts:10",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1413",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1419",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1430",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1442",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1450",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1451"
       ]
     },
     {
@@ -1899,7 +1902,7 @@
         "src:src/cards/pr-01/PR118.ts:149",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {

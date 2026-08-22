@@ -282,14 +282,14 @@ describe('effect entry official Q&A — event body finishes before the entered a
     expect(useGameStateStore.getState().pendingDeckReveal).toMatchObject({
       player: 'self', visibility: 'public', viewer: 'all',
       revealed: [NONMATCH, D05004.id], matched: D05004.id,
-      source: { cardId: D11019.id, abilityId: 'a1' },
+      source: { cardId: D11019.id, abilityId: 'a1', abilityOrigin: 'printed', abilityIndex: 0 },
     });
     dismissReveal();
     const entered = current().players.self.scene.find(item => item.cardId === D05004.id)!;
     expect(useGameStateStore.getState().pendingPublicHandReveal).toEqual({
       owner: 'opp', audience: 'all', cardIds: [OPP_HAND], handSnapshot: [OPP_HAND],
       lifetime: 'presentation', resolutionToken: expect.any(String),
-      source: { cardId: D05004.id, abilityId: 'a1', uid: entered.uid },
+      source: { cardId: D05004.id, abilityId: 'a1', abilityOrigin: 'printed', abilityIndex: 0, uid: entered.uid },
     });
     useGameStateStore.getState().setPendingPublicHandReveal(null);
     surfacePendingSideChannels();

@@ -25,9 +25,11 @@ import { currentInteractionEpoch, isCurrentLiveInteraction } from '@/ui/services
 import { ChoicePickerModal } from './ChoicePickerModal.js';
 import { LinkedPublicHandReveal } from './PublicHandRevealWindow.js';
 import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
+import { effectSourceDisplayName } from '@/ui/services/uidNames.js';
 
 export function EffectChoiceModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingEffectChoice);
+  const gameState = useGameStateStore((s) => s.gameState);
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const switchPicker = useSceneSwitchPickerStore((s) => s.current);
   // The switch surface is a direct-manipulation layer in Playmat. Suspend this
@@ -35,9 +37,7 @@ export function EffectChoiceModalHost(): JSX.Element | null {
   // catches every pointer event above the scene cards.
   if (!pending || !isHumanDecisionOwner(pending.player, spectatorMode) || switchPicker) return null;
 
-  const sourceName = pending.source.cardId
-    ? readDef.card(pending.source.cardId)?.names?.[0] ?? pending.source.cardId
-    : '効果';
+  const sourceName = effectSourceDisplayName(pending.source, { gameState });
 
   const options = pending.options.map((o) => ({
     index: o.index,

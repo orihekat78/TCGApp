@@ -164,7 +164,12 @@ function runEngineAction(
       return;
     case 'declaredAbility':
       // BUG-085 の costPaid/dyn 伝播は activateDeclaredAbility 内で維持される。
-      flow.activateDeclaredAbility(draft, action.uid, action.abilId, action.costParams);
+      flow.activateDeclaredAbility(draft, action.uid, action.abilId, action.costParams, {
+        setCardId: action.setCardId,
+        setCardInstanceId: action.setCardInstanceId,
+        abilityOrigin: action.abilityOrigin,
+        abilityIndex: action.abilityIndex,
+      });
       return;
     case 'assist':
       // flow.assist 未提供のため mutate を直叩き (src/ai/policy.ts:117 と同じ)
@@ -440,6 +445,8 @@ function runEngineAction(
         action.protectorUid,
         action.targetUid,
         action.setCardInstanceId,
+        action.abilityOrigin,
+        action.abilityIndex,
       );
       return;
     }

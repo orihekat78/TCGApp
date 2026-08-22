@@ -19,6 +19,7 @@ import { _clearPendingSetCardReplacementSide, _drainPendingSetCardReplacementSid
 import { mutate } from '@/engine/mutate';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { produce } from '@/engine/produce';
+import { read } from '@/engine/read';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { AbilityDef, CardDef, Cost, GameState } from '@/engine/types';
@@ -717,6 +718,7 @@ describe('BUG-245: declared ability cost authorization', () => {
 
       expect(enumerateMoves(state, player)).toContainEqual({
         kind: 'declaredAbility', uid: sourceUid, abilityId: 'a1',
+        abilityOrigin: 'printed', abilityIndex: 0,
       });
       const implicit = produce(state, (draft) => { activateDeclaredAbility(draft, sourceUid, 'a1'); });
       expect(implicit.players[player].scene.find(char => char.uid === firstPayerUid)?.state).toBe(
@@ -833,7 +835,9 @@ describe('BUG-245: declared ability cost authorization', () => {
       expect(canDeclaredAbility(state, uid, 'a1')).toBe(true);
       expect(canActivateDeclaredAbility(state, uid, 'a1')).toBe(false);
       expect(enumDeclaredAbilityIdsFor(state, uid)).toEqual([]);
-      expect(enumerateMoves(state, player)).not.toContainEqual({ kind: 'declaredAbility', uid, abilityId: 'a1' });
+      expect(enumerateMoves(state, player).some(move => (
+        move.kind === 'declaredAbility' && move.uid === uid && move.abilityId === 'a1'
+      ))).toBe(false);
       expect(isAllowed(state, { type: 'declaredAbility', uid, abilId: 'a1' })).toBe(false);
       useGameStateStore.setState({ gameState: state });
       expect(dispatchEngineAction({ type: 'declaredAbility', uid, abilId: 'a1' })).toEqual({ ok: false, reason: 'not-allowed' });
@@ -850,7 +854,10 @@ describe('BUG-245: declared ability cost authorization', () => {
     expect(canDeclaredAbility(base, selfUid, 'a1')).toBe(true);
     expect(canActivateDeclaredAbility(base, selfUid, 'a1')).toBe(true);
     expect(enumDeclaredAbilityIdsFor(base, selfUid)).toEqual(['a1']);
-    expect(enumerateMoves(base, 'self')).toContainEqual({ kind: 'declaredAbility', uid: selfUid, abilityId: 'a1' });
+    expect(enumerateMoves(base, 'self')).toContainEqual({
+      kind: 'declaredAbility', uid: selfUid, abilityId: 'a1',
+      abilityOrigin: 'printed', abilityIndex: 0,
+    });
     useGameStateStore.setState({ gameState: base });
     expect(dispatchEngineAction({ type: 'declaredAbility', uid: selfUid, abilId: 'a1' })).toEqual({ ok: true });
   });
@@ -897,7 +904,9 @@ describe('BUG-245: declared ability cost authorization', () => {
     expect(canActivateDeclaredAbility(insufficient, handUid, 'a1')).toBe(false);
     expect(enumDeclaredAbilitySources(insufficient, 'self')).not.toContain(handUid);
     expect(enumDeclaredAbilityIdsFor(insufficient, handUid)).toEqual([]);
-    expect(declaredMoves(insufficient)).not.toContainEqual({ kind: 'declaredAbility', uid: handUid, abilityId: 'a1' });
+    expect(declaredMoves(insufficient).some(move => (
+      move.kind === 'declaredAbility' && move.uid === handUid && move.abilityId === 'a1'
+    ))).toBe(false);
     useGameStateStore.setState({ gameState: insufficient });
     expect(dispatchEngineAction({ type: 'declaredAbility', uid: handUid, abilId: 'a1' })).toEqual({ ok: false, reason: 'not-allowed' });
     expect(useGameStateStore.getState().gameState).toBe(insufficient);
@@ -923,7 +932,9 @@ describe('BUG-245: declared ability cost authorization', () => {
     const sleepingUid = sleeping.players.self.scene[0]!.uid;
     expect(canActivateDeclaredAbility(sleeping, sleepingUid, 'a1')).toBe(false);
     expect(enumDeclaredAbilitySources(sleeping, 'self')).not.toContain(sleepingUid);
-    expect(declaredMoves(sleeping)).not.toContainEqual({ kind: 'declaredAbility', uid: sleepingUid, abilityId: 'a1' });
+    expect(declaredMoves(sleeping).some(move => (
+      move.kind === 'declaredAbility' && move.uid === sleepingUid && move.abilityId === 'a1'
+    ))).toBe(false);
     useGameStateStore.setState({ gameState: sleeping });
     expect(dispatchEngineAction({ type: 'declaredAbility', uid: sleepingUid, abilId: 'a1' }))
       .toEqual({ ok: false, reason: 'not-allowed' });
@@ -949,7 +960,10 @@ describe('BUG-245: declared ability cost authorization', () => {
 
     expect(canActivateDeclaredAbility(state, uid, 'a1')).toBe(true);
     expect(enumDeclaredAbilitySources(state, 'self')).toContain(uid);
-    expect(declaredMoves(state)).toContainEqual({ kind: 'declaredAbility', uid, abilityId: 'a1' });
+    expect(declaredMoves(state)).toContainEqual({
+      kind: 'declaredAbility', uid, abilityId: 'a1',
+      abilityOrigin: 'printed', abilityIndex: 0,
+    });
     useGameStateStore.setState({ gameState: state });
     expect(dispatchEngineAction({ type: 'declaredAbility', uid, abilId: 'a1' })).toEqual({ ok: true });
     const after = useGameStateStore.getState().gameState!;
@@ -966,7 +980,10 @@ describe('BUG-245: declared ability cost authorization', () => {
     expect(canActivateDeclaredAbility(state, targetUid, 'a1')).toBe(true);
     expect(enumDeclaredAbilitySources(state, 'self')).toContain(targetUid);
     expect(enumDeclaredAbilityIdsFor(state, targetUid)).toContain('a1');
-    expect(declaredMoves(state)).toContainEqual({ kind: 'declaredAbility', uid: targetUid, abilityId: 'a1' });
+    expect(declaredMoves(state)).toContainEqual({
+      kind: 'declaredAbility', uid: targetUid, abilityId: 'a1',
+      abilityOrigin: 'printed', abilityIndex: 0,
+    });
 
     useGameStateStore.setState({ gameState: state });
     expect(dispatchEngineAction({ type: 'declaredAbility', uid: targetUid, abilId: 'a1', costParams: { alternativeCostProviderUid: 'not-a-provider' } }))
@@ -1007,14 +1024,24 @@ describe('BUG-245: declared ability cost authorization', () => {
       .toEqual({ ok: false, reason: 'not-allowed' });
     expect(JSON.stringify(useGameStateStore.getState().gameState)).toBe(before);
     expect(useGameStateStore.getState().gameState!.players.self.scene.some((entry) => entry.uid === providerUid)).toBe(true);
-    expect(useGameStateStore.getState().gameState!.players.self.scene.find((entry) => entry.uid === sourceUid)?.declaredUseCount.a2).toBeUndefined();
+    expect(read.char.declaredUseCount(
+      useGameStateStore.getState().gameState!,
+      sourceUid,
+      'a2',
+      { abilityOrigin: 'printed', abilityIndex: 1 },
+    )).toBe(0);
 
     expect(dispatchEngineAction({
       type: 'declaredAbility', uid: sourceUid, abilId: 'a2',
       costParams: { paymentMode: 'alternative', alternativeCostProviderUid: providerUid },
     })).toEqual({ ok: true });
     expect(useGameStateStore.getState().gameState!.players.self.scene.some((entry) => entry.uid === providerUid)).toBe(false);
-    expect(useGameStateStore.getState().gameState!.players.self.scene.find((entry) => entry.uid === sourceUid)?.declaredUseCount.a2).toBe(1);
+    expect(read.char.declaredUseCount(
+      useGameStateStore.getState().gameState!,
+      sourceUid,
+      'a2',
+      { abilityOrigin: 'printed', abilityIndex: 1 },
+    )).toBe(1);
   });
 
   it('rejects an explicitly selected unpayable B09027 choice before changing state, then accepts its payable branch', () => {

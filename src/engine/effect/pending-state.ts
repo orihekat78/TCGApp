@@ -7,7 +7,13 @@
 //   getter/setter/drain/peek/clear/take。walk (resolve-picks) と continuation (apply-pick) の共有状態。
 //   本ファイルは leaf (resolve-picks/apply-pick/resolver を import しない)。
 
-import type { CausalEffectTrace, Effect, EffectCtx, EffectResolutionKind } from '../types/index.js';
+import type {
+  CausalEffectTrace,
+  DeclaredAbilityHostOrigin,
+  Effect,
+  EffectCtx,
+  EffectResolutionKind,
+} from '../types/index.js';
 
 type Player = 'self' | 'opp';
 
@@ -15,6 +21,12 @@ export type PendingEffectSource = {
   cardId: string;
   abilityId: string;
   uid?: string;
+  /** Exact face-up set-card occurrence that supplied this ability. */
+  setCardId?: string;
+  setCardInstanceId?: string;
+  /** Stable definition witness for a host-owned declared ability. */
+  abilityOrigin?: DeclaredAbilityHostOrigin;
+  abilityIndex?: number;
   /** Exact source area; needed when a decision resumes an occurrence-bound effect. */
   area?: EffectCtx['source']['area'];
   /** Resolving-card lifecycle marker. Must survive human decision pauses. */
@@ -226,7 +238,14 @@ export type PendingChooseInterceptResponseSide = {
   player: Player;
   ownerPlayer?: Player;
   publicHandRevealToken?: string;
-  protector: { uid: string; cardId: string; abilityId: string; setCardInstanceId?: string };
+  protector: {
+    uid: string;
+    cardId: string;
+    abilityId: string;
+    abilityOrigin?: DeclaredAbilityHostOrigin;
+    abilityIndex?: number;
+    setCardInstanceId?: string;
+  };
   targetUid: string;
 };
 
@@ -687,11 +706,16 @@ export function setPendingSetCardChoiceRemainder(remainder: Effect[], kind: 'seq
         uid: source?.uid ?? '',
         abilityId: source?.abilityId ?? '',
         player: g.__pendingSetCardChoiceGuard?.player ?? 'self',
-        area: 'scene',
+        area: source?.area ?? 'scene',
+        ...(source?.setCardId !== undefined ? { setCardId: source.setCardId } : {}),
+        ...(source?.setCardInstanceId !== undefined ? { setCardInstanceId: source.setCardInstanceId } : {}),
+        ...(source?.abilityOrigin ? { abilityOrigin: source.abilityOrigin } : {}),
+        ...(source?.abilityIndex !== undefined ? { abilityIndex: source.abilityIndex } : {}),
         ...(source?.resolutionKind ? { resolutionKind: source.resolutionKind } : {}),
         ...(source?.triggerBatch !== undefined ? { triggerBatch: source.triggerBatch } : {}),
         ...(source?.ownerChosenOrder !== undefined ? { ownerChosenOrder: source.ownerChosenOrder } : {}),
         ...(source?.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: source.ownerOrderConfirmed } : {}),
+        ...(source?.declaredBatch !== undefined ? { declaredBatch: source.declaredBatch } : {}),
       },
       bindings: {},
     },

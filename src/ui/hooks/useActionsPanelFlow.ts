@@ -7,12 +7,14 @@ export {
   enumPartnerAbilityIds,
   enumDeclaredAbilitySources,
   enumDeclaredAbilityIdsFor,
+  enumDeclaredAbilityChoicesFor,
   enumActionSourceCandidates,
   enumActionTargetCandidates,
   canAssistForUi,
   canSolveCaseForUi,
   ACTION_CASE_TARGET_OPP,
 } from './useActionsPanelFlow/enumerators.js';
+export type { DeclaredAbilityChoice } from './useActionsPanelFlow/enumerators.js';
 export {
   runEndTurnFlow,
   useCanEndTurnForUi,

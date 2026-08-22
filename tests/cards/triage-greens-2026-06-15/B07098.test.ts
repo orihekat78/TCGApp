@@ -223,7 +223,7 @@ describe('B07098 キャンティ — gate5 runtime behavior', () => {
     s0.players.self.case.status = '解決編';
     const a2 = B07098.abilities.find((a) => a.id === 'a2')!;
     const ctx: EffectCtx = {
-      source: { cardId: 'B07098', uid: 'kanti#1', abilityId: 'a2', player: 'self', area: 'scene' },
+      source: { cardId: 'B07098', uid: 'kanti#1', abilityId: 'a2', abilityOrigin: 'printed', abilityIndex: 1, player: 'self', area: 'scene' },
       bindings: {},
     };
 
@@ -291,7 +291,9 @@ describe('B07098 キャンティ — gate5 runtime behavior', () => {
     });
     // cost を 1 枚しか消費していない (= 1 回だけ宣言した)
     expect(removeCount(s, CUTIN_BLK), '1回宣言: cost 黒カットイン 1 枚消費').toBe(1);
-    expect(read.char.declaredUseCount(s, 'kanti#1', 'a2'), 'declaredUseCount a2 = 1').toBe(1);
+    expect(read.char.declaredUseCount(s, 'kanti#1', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    }), 'declaredUseCount a2 = 1').toBe(1);
     // 【ターン1】 → 2回目は宣言不可 (cost は払える手札が残っていても)
     expect(inHand(s, CUTIN_BLK), '2回目分の cost 手札はまだ残っている').toBe(true);
     expect(canDeclaredAbility(s, 'kanti#1', 'a2'), '2回目: 【ターン1】で宣言不可').toBe(false);

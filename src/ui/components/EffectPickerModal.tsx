@@ -18,6 +18,7 @@ import { CardExpandModal } from './CardExpandModal.js';
 import { PublicHandRevealCards } from './PublicHandRevealWindow.js';
 import { shouldRenderEffectPicker } from '@/ui/services/effectPickerVisibility.js';
 import { effectivePendingPickRange, pendingPickSelectionViolation } from '@/engine/effect/pick-selection.js';
+import { effectSourceDisplayName } from '@/ui/services/uidNames.js';
 import {
   canRestoreModalFocus,
   isTopmostMatchModalRoot,
@@ -125,9 +126,7 @@ export function EffectPickerModal(): JSX.Element | null {
     ? publicHandReveal
     : null;
 
-  const sourceName = pending.source.cardId
-    ? readDef.card(pending.source.cardId)?.names?.[0] ?? pending.source.cardId
-    : '効果';
+  const sourceName = effectSourceDisplayName(pending.source, { gameState });
   // W2b (P50/r27): mustBeSelectedByOppEvent forced 集合 — forced 以外は click 不可、skip 封じ。
   const forced = (pending.forcedUids ?? []).filter((u) => pending.candidates.some((c) => c.uid === u));
   const effectiveRange = effectivePendingPickRange(pending);

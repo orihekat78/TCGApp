@@ -22,6 +22,7 @@ import {
   currentEffectCausalCorrelationEventId,
   withEffectCausalCorrelation,
 } from '../log/effect-causal.js';
+import { assertAbilitySourceIdentity } from '../effect/source-identity.js';
 
 export type Listener = (state: GameState, payload: unknown, source: unknown) => Effect | void;
 
@@ -99,10 +100,15 @@ export function _setResolutionLock(locked: boolean, reason: string | null): void
 function normalizeSource(raw: unknown): EffectStackEntrySource {
   if (raw && typeof raw === 'object') {
     const r = raw as Partial<EffectStackEntrySource> & Record<string, unknown>;
+    assertAbilitySourceIdentity(r);
     const player: 'self' | 'opp' = r.player === 'opp' ? 'opp' : 'self';
     const src: EffectStackEntrySource = { player };
     if (typeof r.uid === 'string') src.uid = r.uid;
     if (typeof r.cardId === 'string') src.cardId = r.cardId;
+    if (typeof r.setCardId === 'string') src.setCardId = r.setCardId;
+    if (typeof r.setCardInstanceId === 'string') src.setCardInstanceId = r.setCardInstanceId;
+    if (r.abilityOrigin === 'printed' || r.abilityOrigin === 'granted') src.abilityOrigin = r.abilityOrigin;
+    if (typeof r.abilityIndex === 'number') src.abilityIndex = r.abilityIndex;
     if (typeof r.abilityId === 'string') src.abilityId = r.abilityId;
     if (typeof r.description === 'string') src.description = r.description;
     if (r.area === 'scene' || r.area === 'partner-area' || r.area === 'hand' || r.area === 'evidence'
@@ -137,12 +143,15 @@ export function buildEntry(
     inheritCausalCorrelation?: boolean;
   } = {},
 ): EffectStackEntry {
+  // Validate public occurrence provenance before consuming the stack sequence.
+  // A rejected source must leave GameState byte-identical.
+  const source = normalizeSource(opts.source);
   const causalCorrelationEventId = opts.inheritCausalCorrelation === false
     ? opts.causalCorrelationEventId
     : opts.causalCorrelationEventId ?? currentEffectCausalCorrelationEventId(state);
   return {
     id: nextEntryId(state),
-    source: normalizeSource(opts.source),
+    source,
     triggeredBy: { hook: opts.hook ?? 'manual', payload: opts.payload },
     triggeredAt: {
       turn: state.turn.number,
@@ -195,6 +204,10 @@ function emit(
   source?: unknown,
   options?: EmitOptions,
 ): void {
+  // Public source authority is validated before suppression, journaling,
+  // listener lookup, or any GameState/listener mutation. Keep the raw object
+  // for hook-specific fields; normalizeSource is the shared boundary check.
+  normalizeSource(source);
   if (suppressedEventDepth > 0) return;
   const causalCorrelationEventId = options?.causalCorrelationEventId
     ?? currentEffectCausalCorrelationEventId(state);

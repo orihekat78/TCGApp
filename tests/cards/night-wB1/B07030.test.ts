@@ -145,7 +145,11 @@ describe('B07030 — a2/a3 構造 (M3 PA batch / cutin 既存 primitive)', () =>
     })).toBe(false);
     expect(enumDeclaredAbilitySources(s, 'self')).not.toContain('partnerMR:self');
     expect(enumDeclaredAbilityIdsFor(s, 'partnerMR:self')).not.toContain('a2');
-    expect(enumerateMoves(s, 'self')).not.toContainEqual({ kind: 'declaredAbility', uid: 'partnerMR:self', abilityId: 'a2' });
+    expect(enumerateMoves(s, 'self').some(move => (
+      move.kind === 'declaredAbility'
+      && move.uid === 'partnerMR:self'
+      && move.abilityId === 'a2'
+    ))).toBe(false);
 
     useGameStateStore.setState({ gameState: s });
     expect(dispatchEngineAction({

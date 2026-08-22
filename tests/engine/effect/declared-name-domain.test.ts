@@ -761,6 +761,54 @@ describe('registered character declared-name domain', () => {
     expect(() => hydratePendingRuntimeState(state)).not.toThrow();
   });
 
+  it('does not borrow constrained declaration authority from a different set-card occurrence', () => {
+    const constrainedEffect: Effect = {
+      kind: 'atom',
+      verb: 'declareName',
+      args: { bind: 'named', domain: 'registered-character-card-name' },
+    };
+    register(card('HOST', 'character', ['Host']));
+    const state = createEmptyGameState();
+    event.queue(state, constrainedEffect, {
+      player: 'self',
+      area: 'scene',
+      cardId: 'HOST',
+      abilityId: 'set-rider',
+      uid: 'host',
+      setCardId: 'SET',
+      setCardInstanceId: 'set:1',
+    }, 'test');
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingRpsContinuation',
+        present: true,
+        value: {
+          remainder: [],
+          ctx: {
+            source: {
+              player: 'self',
+              area: 'scene',
+              cardId: 'HOST',
+              abilityId: 'set-rider',
+              uid: 'host',
+              setCardId: 'SET',
+              setCardInstanceId: 'set:2',
+            },
+            bindings: {},
+            dyn: { declaredName: '毛利小五郎' },
+            declaredNames: { named: '毛利小五郎' },
+            declaredNameDomains: { named: 'registered-character-card-name' },
+          },
+          kind: 'sequence',
+        },
+      }],
+    };
+
+    expect(() => hydratePendingRuntimeState(state))
+      .toThrow(/no matching queued declaration lineage/i);
+  });
+
   it('rejects printed constrained state when the only exact-source queued entry is a resumed remainder', () => {
     _resetRegistry();
     registerAll();

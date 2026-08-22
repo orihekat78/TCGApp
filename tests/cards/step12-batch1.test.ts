@@ -695,9 +695,22 @@ describe('step12 B07014 弁当型携帯FAX', () => {
     s = produce(s, (d) => { d.players.self.remove = ['MOB', 'GEV5']; });
     const found = findDeclaredAbility(s, hostUid, 'BLUEHOST', 'scene', 'a3');
     expect(found, 'rider a3 が host から見える').toBeTruthy();
-    expect(canDeclaredAbility(s, hostUid, 'a3')).toBe(true);
+    const setCard = s.players.self.scene
+      .find(c => c.uid === hostUid)!
+      .setCards.find(entry => entry.cardId === B07014.id)!;
+    const sourceRef = {
+      setCardId: setCard.cardId,
+      setCardInstanceId: setCard.instanceId!,
+    };
+    expect(canDeclaredAbility(s, hostUid, 'a3')).toBe(false);
+    expect(canDeclaredAbility(s, hostUid, 'a3', sourceRef)).toBe(true);
     s = produce(s, (d) => {
-      useDeclaredAbility(d, hostUid, 'a3');
+      useDeclaredAbility(d, hostUid, 'a3', {
+        source: {
+          player: 'self', uid: hostUid, cardId: 'BLUEHOST', abilityId: 'a3', area: 'scene',
+          ...sourceRef,
+        },
+      });
       runAllUntilEmpty(d);
       drainAiEffectPicks(d, new HeuristicPolicy());
       runAllUntilEmpty(d);

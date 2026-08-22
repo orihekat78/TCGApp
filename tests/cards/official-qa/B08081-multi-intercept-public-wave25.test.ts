@@ -9,6 +9,7 @@ import { B08081 } from '@/cards/ct-p08/B08081';
 import { B08081P } from '@/cards/ct-p08/B08081P';
 import { stepTurn, type AIPolicy } from '@/ai/policy';
 import { _resetRegistry, register } from '@/engine/read/def';
+import { char as readChar } from '@/engine/read/char';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { CardDef, GameState } from '@/engine/types';
 import { bindPendingDecision, dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
@@ -95,7 +96,7 @@ function roundTrip(): void {
 }
 
 function useCount(uid: string): number {
-  return current().players.self.scene.find(card => card.uid === uid)?.declaredUseCount.a2 ?? 0;
+  return readChar.declaredUseCount(current(), uid, 'a2');
 }
 
 beforeAll(() => {
@@ -312,8 +313,12 @@ describe('B08081 official-QA multi-copy choose intercept public dispatch', () =>
     expect(order).toMatchObject({
       kind: 'order',
       choices: expect.arrayContaining([
-        expect.objectContaining({ protector: { uid: 'hirota-1', cardId: B08081.id, abilityId: 'a2' } }),
-        expect.objectContaining({ protector: { uid: 'hirota-2', cardId: B08081P.id, abilityId: 'a2' } }),
+        expect.objectContaining({ protector: expect.objectContaining({
+          uid: 'hirota-1', cardId: B08081.id, abilityId: 'a2', abilityOrigin: 'printed', abilityIndex: 1,
+        }) }),
+        expect.objectContaining({ protector: expect.objectContaining({
+          uid: 'hirota-2', cardId: B08081P.id, abilityId: 'a2', abilityOrigin: 'printed', abilityIndex: 1,
+        }) }),
       ]),
     });
     expect(dispatchEngineAction(bindPendingDecision(order!, {

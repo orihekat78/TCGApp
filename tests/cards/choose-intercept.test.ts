@@ -2,12 +2,15 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { engine } from '@/engine';
 import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { char as readChar } from '@/engine/read/char';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { runAllUntilEmpty } from '@/engine/resolve';
 import { event } from '@/engine/event';
 import { _drainPendingEffectPickSide, resolveEffectPicks } from '@/engine/effect/resolve-picks';
 import { applyChooseInterceptResponse, applyPickAndContinuation } from '@/engine/effect/apply-pick';
 import { consultChooseIntercept, findChooseIntercept, findChooseInterceptReactions } from '@/engine/effect/consult-choose-intercept';
+import { declaredAbilityUseCountKey } from '@/engine/effect/source-identity';
+import { persistPendingRuntimeState } from '@/engine/effect/runtime-state';
 import { _clearPendingChooseInterceptSide, _drainPendingChooseInterceptSide, _peekPendingChooseInterceptResume } from '@/engine/effect/pending-state';
 import { run as runEffect } from '@/engine/effect/resolver';
 import { runOne } from '@/engine/resolve/stack';
@@ -18,6 +21,7 @@ import { B04003 } from '@/cards/ct-p04/B04003';
 import { B04003P } from '@/cards/ct-p04/B04003P';
 import { B08081 } from '@/cards/ct-p08/B08081';
 import { B08081P } from '@/cards/ct-p08/B08081P';
+import { stepTurn, type AIPolicy } from '@/ai/policy';
 import type { CardDef, CausalLogEntryV1, EffectCtx, EffectStackEntry } from '@/engine/types';
 import { sceneChar } from '../helpers/fixtures';
 
@@ -40,13 +44,22 @@ const RESPONSE_PROTECTOR: CardDef = {
     description: '',
   }],
 };
+const DUPLICATE_RESPONSE_PROTECTOR: CardDef = {
+  ...RESPONSE_PROTECTOR,
+  id: 'DUPLICATE-RESPONSE-PROTECTOR',
+  no: 'test/DUPLICATE-RESPONSE-PROTECTOR',
+  abilities: [
+    { ...RESPONSE_PROTECTOR.abilities[0]! },
+    { ...RESPONSE_PROTECTOR.abilities[0]! },
+  ],
+};
 
 beforeEach(() => {
   event._resetRegistry();
   _resetTriggeredRegistered();
   _clearPendingChooseInterceptSide();
   engine.cards._resetRegistry();
-  [HOST, B02067, B02067P, B04003, B04003P, B08081, B08081P, OPP_SOURCE, OPP_EVENT, RAN, RESPONSE_PROTECTOR].forEach((card) => engine.cards.register(card));
+  [HOST, B02067, B02067P, B04003, B04003P, B08081, B08081P, OPP_SOURCE, OPP_EVENT, RAN, RESPONSE_PROTECTOR, DUPLICATE_RESPONSE_PROTECTOR].forEach((card) => engine.cards.register(card));
   registerTriggeredListener();
 });
 
@@ -125,8 +138,96 @@ describe('choose-intercept — B02067 representative', () => {
       });
     });
 
-    expect(after.players.self.scene.find((char) => char.uid === 'shinichi-1')?.declaredUseCount.a1).toBe(1);
-    expect(after.players.self.scene.find((char) => char.uid === 'shinichi-2')?.declaredUseCount.a1).toBe(1);
+    expect(readChar.declaredUseCount(after, 'shinichi-1', 'a1', {
+      abilityOrigin: 'printed', abilityIndex: 0,
+    })).toBe(1);
+    expect(readChar.declaredUseCount(after, 'shinichi-2', 'a1', {
+      abilityOrigin: 'printed', abilityIndex: 0,
+    })).toBe(1);
+  });
+
+  it('keeps colliding printed intercept abilities occurrence-distinct', () => {
+    const state = produce(createEmptyGameState(), (draft) => {
+      draft.turn.player = 'opp';
+      draft.players.self.scene.push(
+        sceneChar('RAN', 'ran'),
+        sceneChar(DUPLICATE_RESPONSE_PROTECTOR.id, 'protector'),
+      );
+      draft.players.opp.scene.push(sceneChar('OPP-SOURCE', 'opp-source'));
+    });
+    const ctx: EffectCtx = {
+      source: { cardId: 'OPP-SOURCE', uid: 'opp-source', abilityId: 'a1', player: 'opp', area: 'scene' },
+      bindings: {},
+    };
+
+    const after = produce(state, (draft) => {
+      expect(findChooseInterceptReactions(draft, 'ran', ctx)).toMatchObject([
+        { abilityId: 'a1', abilityOrigin: 'printed', abilityIndex: 0 },
+        { abilityId: 'a1', abilityOrigin: 'printed', abilityIndex: 1 },
+      ]);
+      expect(findChooseInterceptReactions(draft, 'ran', ctx)).toEqual([]);
+    });
+    const protector = after.players.self.scene.find((char) => char.uid === 'protector')!;
+    expect(protector.declaredUseCount).toMatchObject({
+      [declaredAbilityUseCountKey('a1', { abilityOrigin: 'printed', abilityIndex: 0 })]: 1,
+      [declaredAbilityUseCountKey('a1', { abilityOrigin: 'printed', abilityIndex: 1 })]: 1,
+    });
+  });
+
+  it('lets autonomous policy drain colliding printed intercept occurrences from one host', () => {
+    const state = produce(createEmptyGameState(), (draft) => {
+      draft.turn = { number: 3, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+      draft.players.self.scene.push(
+        sceneChar('RAN', 'ran'),
+        sceneChar(DUPLICATE_RESPONSE_PROTECTOR.id, 'protector'),
+      );
+      draft.players.opp.scene.push(sceneChar('OPP-SOURCE', 'opp-source'));
+      draft.players.opp.hand = ['payment-a', 'payment-b'];
+      draft.players.opp.deck = ['drawn', 'tail'];
+    });
+    const ctx: EffectCtx = {
+      source: { cardId: 'OPP-SOURCE', uid: 'opp-source', abilityId: 'a1', player: 'opp', area: 'scene' },
+      bindings: {},
+    };
+    const pending = {
+      player: 'self',
+      ownerPlayer: 'opp',
+      source: { cardId: 'OPP-SOURCE', abilityId: 'a1', uid: 'opp-source' },
+      atomVerb: 'sceneSetState',
+      atomArgs: { uid: '$pick', state: 'sleep' },
+      candidates: [{ uid: 'ran', cardId: 'RAN', player: 'self' }],
+      nMin: 1,
+      nMax: 1,
+      continuation: {
+        kind: 'sequence',
+        remainder: [{ kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } }],
+        ctx,
+      },
+    } as never;
+    const awaiting = produce(state, (draft) => {
+      applyPickAndContinuation(draft, pending, 'ran');
+      persistPendingRuntimeState(draft);
+    });
+    expect(awaiting.pendingRuntimeState).toBeDefined();
+
+    const endAfterDecisions: AIPolicy = {
+      name: 'end-after-duplicate-intercepts',
+      choose: (_state, candidates) => candidates.find(candidate => candidate.kind === 'endTurn') ?? null,
+    };
+    const restored = JSON.parse(JSON.stringify(awaiting));
+    const result = stepTurn(restored, endAfterDecisions, 'opp');
+
+    expect(result.move?.kind).toBe('endTurn');
+    expect(result.nextState.players.self.scene.find(char => char.uid === 'ran')?.state).toBe('sleep');
+    expect(result.nextState.players.opp.remove).toEqual(['payment-a', 'payment-b']);
+    expect(result.nextState.players.opp.hand).toEqual(['drawn']);
+    expect(result.nextState.players.opp.deck).toEqual(['tail']);
+    expect(result.nextState.players.self.scene.find(char => char.uid === 'protector')?.declaredUseCount)
+      .toMatchObject({
+        [declaredAbilityUseCountKey('a1', { abilityOrigin: 'printed', abilityIndex: 0 })]: 1,
+        [declaredAbilityUseCountKey('a1', { abilityOrigin: 'printed', abilityIndex: 1 })]: 1,
+      });
+    expect(result.nextState.pendingRuntimeState).toBeUndefined();
   });
 
   it('B08081 excludes itself and requires a non-black ally', () => {
@@ -239,7 +340,9 @@ describe('choose-intercept — B02067 representative', () => {
       });
       expect(findChooseIntercept(d, 'ran', ctx)).toEqual({ kind: 'none' });
     });
-    expect(after.players.self.scene.find((char) => char.uid === 'shinichi')?.declaredUseCount.a1).toBe(1);
+    expect(readChar.declaredUseCount(after, 'shinichi', 'a1', {
+      abilityOrigin: 'printed', abilityIndex: 0,
+    })).toBe(1);
   });
 
   it('has AI discard one exact hand occurrence and continue the selected atom', () => {
@@ -341,7 +444,9 @@ describe('choose-intercept — B02067 representative', () => {
     expect(after.players.self.scene.find((char) => char.uid === 'ran')?.state).toBe('active');
     expect(after.players.self.scene.find((char) => char.uid === 'ran')?.setCards[0]?.abilityUseCounts?.a1)
       .toEqual({ turn: after.turn.number, count: 1 });
-    expect(after.players.self.scene.find((char) => char.uid === 'shinichi')?.declaredUseCount.a1).toBe(1);
+    expect(readChar.declaredUseCount(after, 'shinichi', 'a1', {
+      abilityOrigin: 'printed', abilityIndex: 0,
+    })).toBe(1);
     expect(after.players.opp.hand).toEqual([]);
     expect(after.players.opp.remove).toEqual(['payment']);
     expect(after.players.opp.deck).toEqual(['drawn']);

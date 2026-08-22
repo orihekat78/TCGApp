@@ -12,7 +12,12 @@
 //   - cost は呼出元の responsibility (engine.cost.canPay/pay を ctx に渡す)
 //   - 実際の Effect 実行は Phase 5 のカード登録で listener が pendingEffects に積む
 
-import type { GameState, AbilityDef, EffectCtx } from '../../types/index.js';
+import type {
+  GameState,
+  AbilityDef,
+  DeclaredAbilityHostOrigin,
+  EffectCtx,
+} from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js';
@@ -109,6 +114,40 @@ export function findCardOnBoard(
   return null;
 }
 
+/** Optional public provenance for an ability granted by a physical set card. */
+export type DeclaredAbilitySourceRef = {
+  setCardId?: string;
+  setCardInstanceId?: string;
+  abilityOrigin?: DeclaredAbilityHostOrigin;
+  abilityIndex?: number;
+};
+
+/** One usable declaration occurrence. Duplicate set printings stay distinct. */
+export type DeclaredAbilityOccurrence = {
+  ability: AbilityDef;
+  origin: 'printed' | 'granted' | 'set-card';
+  /** Original index inside printed abilities or grantedAbilities. */
+  abilityIndex?: number;
+  setCardId?: string;
+  setCardInstanceId?: string;
+};
+
+/** Canonical public witness for one enumerated declaration occurrence. */
+export function declaredAbilityOccurrenceSourceRef(
+  occurrence: DeclaredAbilityOccurrence,
+): DeclaredAbilitySourceRef {
+  if (occurrence.origin === 'set-card') {
+    return {
+      setCardId: occurrence.setCardId,
+      setCardInstanceId: occurrence.setCardInstanceId,
+    };
+  }
+  return {
+    abilityOrigin: occurrence.origin,
+    abilityIndex: occurrence.abilityIndex,
+  };
+}
+
 /**
  * 宣言能力の【ターン①/②】判定。
  *   - Phase 4 では maxPerTurn を引数で受けず、abilId が登録時に持つ前提で
@@ -119,32 +158,25 @@ export function findCardOnBoard(
  */
 
 /**
- * findDeclaredAbility — uid/area を考慮した宣言能力 lookup の共有 helper
- * (mega-wave W6 step11, row999 item4)。
- *
- * ① カード自身の印字 abilities を優先。
- * ② area='scene' の場合のみ、host キャラの **faceUp** setCards (rules/16 — 裏向きセットは
- *    イベントとして扱われない) を走査し、type:'declared' + scope:'on-set-host' の rider を探す
- *    (listeners/triggered.ts の riderAbilities walk と同型を declared 用に再利用)。
- *    B07014 弁当型携帯FAX「このイベントがセットされているキャラは『【宣言】【ターン1】〜』を持つ」。
- *
- * canDeclaredAbility / useDeclaredAbility / activateDeclaredAbility / UI enumerators の
- * 呼出点は必ず本関数を共有すること — 個別複製は triggered 側 walk との 2 経路 non-sync
- * drift を生む (cluster2「filter-eval 3経路 sync」教訓と同種)。
- * ⚠ rider の ability.id は host 印字 abilities や他 rider と衝突しうる (card-def.ts の
- * authoring hazard 注記と同じ — rider 側 id は card-unique 命名を徹底)。先勝ち。
+ * Enumerate declared ability occurrences for one public host/area.
+ * Printed, granted, and each face-up on-set-host rider are retained separately;
+ * duplicate ability IDs never collapse physical set-card occurrences. Admission
+ * and activation must resolve the selected occurrence again with both set IDs.
  */
-export function findDeclaredAbility(
+export function findDeclaredAbilityOccurrences(
   state: GameState,
   uid: string,
   cardId: string,
   area: 'scene' | 'case' | 'partner-area' | 'hand' | 'evidence' | 'file',
-  abilId: string,
-): AbilityDef | undefined {
-  const printed = readChar.originalAbilitiesDisabled(state, uid)
-    ? undefined
-    : readDef.card(cardId)?.abilities?.find((a: AbilityDef) => a.id === abilId);
-  if (printed) return printed;
+  abilId?: string,
+): DeclaredAbilityOccurrence[] {
+  const occurrences: DeclaredAbilityOccurrence[] = [];
+  if (!readChar.originalAbilitiesDisabled(state, uid)) {
+    for (const [abilityIndex, ability] of (readDef.card(cardId)?.abilities ?? []).entries()) {
+      if (ability.type !== 'declared' || (abilId !== undefined && ability.id !== abilId)) continue;
+      occurrences.push({ ability, origin: 'printed', abilityIndex });
+    }
+  }
   for (const p of ['self', 'opp'] as const) {
     const host = area === 'scene'
       ? state.players[p].scene.find((c) => c.uid === uid)
@@ -155,22 +187,77 @@ export function findDeclaredAbility(
     // gap② (2026-07-11, B06042): charGrantAbility で付与された declared ability
     // (turnEffects.grantedAbilities[] の type:'declared') を宿主キャラの宣言能力として解決する。
     // rider (on-set-host) walk と同順で、印字 abilities に無い abilId をここで拾う。
-    const granted = host.turnEffects['grantedAbilities'];
+    const granted = host.turnEffects?.['grantedAbilities'];
     if (Array.isArray(granted)) {
-      const g = (granted as AbilityDef[]).find((a) => a.id === abilId && a.type === 'declared');
-      if (g) return g;
+      for (const [abilityIndex, ability] of (granted as AbilityDef[]).entries()) {
+        if (ability.type !== 'declared' || (abilId !== undefined && ability.id !== abilId)) continue;
+        occurrences.push({ ability, origin: 'granted', abilityIndex });
+      }
     }
-    if (area !== 'scene') return undefined;
-    for (const entry of host.setCards) {
+    if (area !== 'scene') return occurrences;
+    for (const entry of host.setCards ?? []) {
       if (!entry.faceUp) continue;
-      const rider = readDef.card(entry.cardId)?.abilities?.find(
-        (a: AbilityDef) => a.id === abilId && a.type === 'declared' && a.scope === 'on-set-host',
+      const riders = (readDef.card(entry.cardId)?.abilities ?? []).filter(
+        (ability: AbilityDef) => ability.type === 'declared'
+          && ability.scope === 'on-set-host'
+          && (abilId === undefined || ability.id === abilId),
       );
-      if (rider) return rider;
+      occurrences.push(...riders.map((ability: AbilityDef) => ({
+        ability,
+        origin: 'set-card' as const,
+        setCardId: entry.cardId,
+        ...(entry.instanceId ? { setCardInstanceId: entry.instanceId } : {}),
+      })));
     }
-    return undefined;
+    return occurrences;
   }
+  return occurrences;
+}
+
+/** Resolve one declaration against an exact public source. Set-card riders require both physical IDs. */
+export function findDeclaredAbilityOccurrence(
+  state: GameState,
+  uid: string,
+  cardId: string,
+  area: 'scene' | 'case' | 'partner-area' | 'hand' | 'evidence' | 'file',
+  abilId: string,
+  sourceRef?: DeclaredAbilitySourceRef,
+): DeclaredAbilityOccurrence | undefined {
+  const occurrences = findDeclaredAbilityOccurrences(state, uid, cardId, area, abilId);
+  const carriesSetSource = sourceRef?.setCardId !== undefined || sourceRef?.setCardInstanceId !== undefined;
+  const carriesHostSource = sourceRef?.abilityOrigin !== undefined || sourceRef?.abilityIndex !== undefined;
+  if (carriesSetSource && carriesHostSource) return undefined;
+  if (carriesSetSource) {
+    if (!sourceRef?.setCardId || !sourceRef.setCardInstanceId) return undefined;
+    return occurrences.find((occurrence) => occurrence.origin === 'set-card'
+      && occurrence.setCardId === sourceRef.setCardId
+      && occurrence.setCardInstanceId === sourceRef.setCardInstanceId);
+  }
+  if (carriesHostSource) {
+    if ((sourceRef?.abilityOrigin !== 'printed' && sourceRef?.abilityOrigin !== 'granted')
+      || !Number.isSafeInteger(sourceRef.abilityIndex)
+      || sourceRef.abilityIndex! < 0) return undefined;
+    return occurrences.find((occurrence) => occurrence.origin === sourceRef.abilityOrigin
+      && occurrence.abilityIndex === sourceRef.abilityIndex);
+  }
+  const hostOwned = occurrences.find((occurrence) => occurrence.origin !== 'set-card');
+  if (hostOwned) return hostOwned;
   return undefined;
+}
+
+/**
+ * Read-only legacy definition lookup for low-level tests/tools. It does not
+ * authorize, pay for, count, or activate a set-card occurrence. Every action
+ * path must use findDeclaredAbilityOccurrence with both physical source IDs.
+ */
+export function findDeclaredAbility(
+  state: GameState,
+  uid: string,
+  cardId: string,
+  area: 'scene' | 'case' | 'partner-area' | 'hand' | 'evidence' | 'file',
+  abilId: string,
+): AbilityDef | undefined {
+  return findDeclaredAbilityOccurrences(state, uid, cardId, area, abilId)[0]?.ability;
 }
 
 /**
@@ -197,15 +284,28 @@ export function grantedDeclaredAbilitiesOf(
  *   - 'game' kind は declaredUseCount がターン境界で reset されるため将来仕様、
  *     現状未使用 (cards/_shared / cards/ct-* で全 turn:n=1)
  */
-export function canDeclaredAbility(state: GameState, uid: string, abilId: string): boolean {
+export function canDeclaredAbility(
+  state: GameState,
+  uid: string,
+  abilId: string,
+  sourceRef?: DeclaredAbilitySourceRef,
+): boolean {
   const found = findCardOnBoard(state, uid);
   if (!found) return false;
   // ability.limit enforcement
   // W6 step11 (row999 item4): 印字 abilities → faceUp set-card rider (on-set-host declared) の順で解決。
   // 解決不能 (存在しない abilId / faceDown rider) は使用不可 — 旧実装は「不明 abilId → true 素通り」
   // だったが、rider 導入で faceDown セットの宣言が誤って許可されるため fail-closed 化 (rules/16)。
-  const ability = findDeclaredAbility(state, uid, found.cardId, found.area, abilId);
-  if (!ability) return false;
+  const occurrence = findDeclaredAbilityOccurrence(
+    state,
+    uid,
+    found.cardId,
+    found.area,
+    abilId,
+    sourceRef,
+  );
+  const ability = occurrence?.ability;
+  if (!occurrence || !ability) return false;
   // MR partner-area (rules/18:38, engine/mr-partner-area-core 2026-06-23): PA 常駐カード (PA-MR) の宣言能力は
   // scope on-partner-area / always のみ使用可。現場前提の on-scene 宣言能力は PA からは使えない。
   // scene/case の宣言能力 (area≠'partner-area') は不変。real partner (partner:self) は DSL 宣言能力を持たない。
@@ -220,15 +320,29 @@ export function canDeclaredAbility(state: GameState, uid: string, abilId: string
   if (ability && ability.scope === 'on-hand' && found.area !== 'hand') return false;
   if (ability && (found.area === 'evidence' || found.area === 'file') && ability.scope !== 'on-evidence-file') return false;
   if (ability?.limit?.kind === 'turn') {
-    const used = readChar.declaredUseCount(state, uid, abilId);
+    const used = occurrence.origin === 'set-card' && occurrence.setCardInstanceId
+      ? readChar.setCardAbilityUseCount(state, uid, occurrence.setCardInstanceId, abilId)
+      : readChar.declaredUseCount(
+          state,
+          uid,
+          abilId,
+          declaredAbilityOccurrenceSourceRef(occurrence),
+        );
     if (used >= ability.limit.n) return false;
   }
   // BUG-099: ability.condition gate (rules/17 §条件アイコン: 条件未達なら能力を持たない扱い=使用不可)。
   // triggered は triggered.ts:172 で評価済だが declared は未配線だった (canDeclaredAbility が
   // 存在+limit のみ判定)。UI/AI 列挙は canDeclaredAbility で gate するため修正で自動波及する。
   if (ability?.condition) {
+    const occurrenceSource = declaredAbilityOccurrenceSourceRef(occurrence);
     const ctx = {
-      source: { player: found.player, uid, abilityId: abilId, area: found.area },
+      source: {
+        player: found.player,
+        uid,
+        abilityId: abilId,
+        area: found.area,
+        ...occurrenceSource,
+      },
       bindings: {},
     } as EffectCtx;
     if (!evalCond(state, ability.condition, ctx)) return false;
@@ -254,19 +368,38 @@ export function canActivateDeclaredAbility(
   uid: string,
   abilId: string,
   costParams?: AbilityCostParams,
-  options?: { allowImplicitPhysicalCostSelection?: boolean },
+  options?: {
+    allowImplicitPhysicalCostSelection?: boolean;
+    sourceRef?: DeclaredAbilitySourceRef;
+  },
 ): boolean {
   if (costParams !== undefined && !isPlainRecord(costParams)) return false;
-  if (!canDeclaredAbility(state, uid, abilId)) return false;
+  if (!canDeclaredAbility(state, uid, abilId, options?.sourceRef)) return false;
   const found = findCardOnBoard(state, uid);
   if (!found) return false;
   if (!canStartDeclaredAbility(state, found.player)) return false;
-  const ability = findDeclaredAbility(state, uid, found.cardId, found.area, abilId);
-  if (!ability) return false;
+  const occurrence = findDeclaredAbilityOccurrence(
+    state,
+    uid,
+    found.cardId,
+    found.area,
+    abilId,
+    options?.sourceRef,
+  );
+  const ability = occurrence?.ability;
+  if (!occurrence || !ability) return false;
   if (!isDeclaredNameValidForEffect(ability.effect, costParams?.declaredName)) return false;
   const dyn = declaredCostParamsToDyn(costParams);
+  const occurrenceSource = declaredAbilityOccurrenceSourceRef(occurrence);
   const ctx: EffectCtx = {
-    source: { cardId: found.cardId, player: found.player, uid, abilityId: abilId, area: found.area },
+    source: {
+      cardId: found.cardId,
+      player: found.player,
+      uid,
+      abilityId: abilId,
+      area: found.area,
+      ...occurrenceSource,
+    },
     bindings: {},
     ...(dyn ? { dyn } : {}),
   };
@@ -392,7 +525,17 @@ export function useDeclaredAbility(
     dyn?: Record<string, unknown>;
     /** Cost resolution can bind physical card occurrences for the effect. */
     bindings?: EffectCtx['bindings'];
-    source?: { cardId?: string; uid?: string; abilityId?: string; player?: 'self' | 'opp'; area?: string };
+    source?: {
+      cardId?: string;
+      setCardId?: string;
+      setCardInstanceId?: string;
+      abilityOrigin?: DeclaredAbilityHostOrigin;
+      abilityIndex?: number;
+      uid?: string;
+      abilityId?: string;
+      player?: 'self' | 'opp';
+      area?: string;
+    };
   },
 ): void {
   let found = findCardOnBoard(state, uid);
@@ -411,16 +554,30 @@ export function useDeclaredAbility(
   if (!found) {
     throw new Error(`useDeclaredAbility: card uid=${uid} not on board (scene/case/partner-area/hand)`);
   }
-  // Public entrypoint is callable without canDeclaredAbility. A suppressed printed
-  // declared ability must stop before count/log/hooks, while externally granted or
-  // face-up set-card abilities with the same id remain effective. Preserve the legacy
-  // unknown-id behavior for non-scene callers.
-  if (readChar.originalAbilitiesDisabled(state, uid)) {
-    const printed = readDef.card(found.cardId)?.abilities?.find((entry) => entry.id === abilId);
-    if (printed?.type === 'declared'
-      && !findDeclaredAbility(state, uid, found.cardId, found.area, abilId)) return;
-  }
-  const admissionAbility = findDeclaredAbility(state, uid, found.cardId, found.area, abilId);
+  // Public entrypoint is callable without canDeclaredAbility. Re-resolve the exact
+  // occurrence before count/log/hooks. Set-card riders fail closed unless ctx carries
+  // both physical IDs; printed/granted abilities remain host-owned and need no rider IDs.
+  const sourceRef: DeclaredAbilitySourceRef | undefined = src?.setCardId !== undefined
+    || src?.setCardInstanceId !== undefined
+    || src?.abilityOrigin !== undefined
+    || src?.abilityIndex !== undefined
+    ? {
+        setCardId: src?.setCardId,
+        setCardInstanceId: src?.setCardInstanceId,
+        abilityOrigin: src?.abilityOrigin,
+        abilityIndex: src?.abilityIndex,
+      }
+    : undefined;
+  const admissionOccurrence = findDeclaredAbilityOccurrence(
+    state,
+    uid,
+    found.cardId,
+    found.area,
+    abilId,
+    sourceRef,
+  );
+  if (!admissionOccurrence) return;
+  const admissionAbility = admissionOccurrence?.ability;
   if (admissionAbility?.type === 'declared'
     && !isDeclaredNameValidForEffect(admissionAbility.effect, ctx?.dyn?.declaredName)) return;
   const inheritedRootId = currentEffectCausalCorrelationEventId(state);
@@ -434,25 +591,42 @@ export function useDeclaredAbility(
       })
     : undefined;
   const rootEventId = inheritedRootId ?? ownTrace?.rootEventId;
+  const admissionSource = declaredAbilityOccurrenceSourceRef(admissionOccurrence);
   try {
     withEffectCausalCorrelation(state, rootEventId, () => {
   // BUG-112: found.player を渡すことで、selfToDeckBottom 等で source が場外へ出ている場合も
   // player 単位 turnState fallback に【ターン①】カウントが記録される (off-board silent no-op 解消)。
-  mutate.flag.incrDeclaredUseCount(state, uid, abilId, found.player);
+  if (admissionOccurrence?.origin === 'set-card' && admissionOccurrence.setCardInstanceId) {
+    mutate.char.incrSetCardAbilityUseCount(state, uid, admissionOccurrence.setCardInstanceId, abilId);
+  } else {
+    mutate.flag.incrDeclaredUseCount(state, uid, abilId, found.player, admissionSource);
+  }
   if (rootEventId === undefined) {
     mutate.log.append(state, {
       ts: Date.now(),
       player: found.player,
       turn: state.turn.number,
       action: 'declaredAbility',
-      target: `${uid}:${abilId}`,
+      target: `${uid}:${abilId}${admissionOccurrence?.setCardInstanceId ? `:${admissionOccurrence.setCardInstanceId}` : ''}`,
     });
   }
   event.emit(
     state,
     'effect:declared',
-    { kind: 'declaredAbility', uid, abilId },
-    { player: found.player, uid, cardId: found.cardId, area: found.area },
+    {
+      kind: 'declaredAbility',
+      uid,
+      abilId,
+      ...admissionSource,
+    },
+    {
+      player: found.player,
+      uid,
+      cardId: found.cardId,
+      abilityId: abilId,
+      area: found.area,
+      ...admissionSource,
+    },
   );
 
   // 2026-05-26 fix: type:'declared' ability の effect を直接 queue する。
@@ -460,7 +634,7 @@ export function useDeclaredAbility(
   // effect は engine 側のどこにも実行 path がなかった (D11014 a2 / D11003 a2 /
   // D11012 a1 / D08005 a2 等が silent no-op していた長年バグの根本対応)。
   // W6 step11 (row999 item4): rider declared (on-set-host) もここで初めて実行キューに積める
-  const ability = findDeclaredAbility(state, uid, found.cardId, found.area, abilId);
+  const ability = admissionOccurrence?.ability;
   if (!ability) return;
   if (ability.type !== 'declared' || !ability.effect) return;
 
@@ -484,6 +658,7 @@ export function useDeclaredAbility(
   const resolveCtx: EffectCtx = {
     source: {
       cardId: found.cardId,
+      ...admissionSource,
       uid,
       abilityId: abilId,
       player: found.player,
@@ -503,14 +678,26 @@ export function useDeclaredAbility(
     runtimeAtomTargetPolicyKey: isHumanEffect ? undefined : 'heuristic',
     byPlayer: found.player,
     humanChooser: isHumanEffect,
-    source: { cardId: found.cardId, abilityId: abilId },
+    source: { cardId: found.cardId, abilityId: abilId, ...admissionSource },
   });
   const declaredEntry = event.queue(
     state,
     resolvedEffect,
-    { player: found.player, uid, cardId: found.cardId, abilityId: abilId, area: found.area },
+    {
+      player: found.player,
+      uid,
+      cardId: found.cardId,
+      abilityId: abilId,
+      area: found.area,
+      ...admissionSource,
+    },
     'declaredAbility',
-    { kind: 'declaredAbility', uid, abilId },
+    {
+      kind: 'declaredAbility',
+      uid,
+      abilId,
+      ...admissionSource,
+    },
     Object.keys(resolveCtx.bindings).length > 0 ? resolveCtx.bindings : undefined,
     // engine additive wave (2026-06-29d): cost で積んだ costPaid を entry へ永続化 (entryToCtx が復元)。
     // costRemovedMatches cond (conditional STABLE `if` の runtime 再評価) が除去カード snapshot を読むため。
@@ -546,8 +733,21 @@ export function useDeclaredAbility(
   event.emit(
     state,
     'ability:declared',
-    { uid, cardId: found.cardId, abilityId: abilId, player: found.player, declaredBatch },
-    { player: found.player, uid, cardId: found.cardId },
+    {
+      uid,
+      cardId: found.cardId,
+      abilityId: abilId,
+      player: found.player,
+      declaredBatch,
+      ...admissionSource,
+    },
+    {
+      player: found.player,
+      uid,
+      cardId: found.cardId,
+      abilityId: abilId,
+      ...admissionSource,
+    },
   );
     });
     completeEffectCausalTrace(state, ownTrace, found.player);

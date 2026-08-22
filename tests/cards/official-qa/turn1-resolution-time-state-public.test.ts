@@ -190,7 +190,9 @@ function proveEvidenceGainCard(card: CardDef) {
     cardId: card.id, abilityId: 'a1', uid: 'source', area: 'scene',
   });
   expect(dispatchCurrentDecision({ type: 'optionalResolve', run: false })).toEqual({ ok: true });
-  expect(readChar.declaredUseCount(current(), 'source', 'a1')).toBe(1);
+  expect(readChar.declaredUseCount(current(), 'source', 'a1', {
+    abilityOrigin: 'printed', abilityIndex: 0,
+  })).toBe(1);
   const declineEffect = {
     sourceState: current().players.self.scene.find((candidate) => candidate.uid === 'source')?.state,
     targetStillPresent: current().players.opp.scene.some((candidate) => candidate.uid === 'decline-target'),
@@ -200,7 +202,9 @@ function proveEvidenceGainCard(card: CardDef) {
 
   actionId = judgeUnguardedCase('actor-2');
   const declinedAgain = useGameStateStore.getState().pendingEffectOptional !== null;
-  const countAfterRetry = readChar.declaredUseCount(current(), 'source', 'a1');
+  const countAfterRetry = readChar.declaredUseCount(current(), 'source', 'a1', {
+    abilityOrigin: 'printed', abilityIndex: 0,
+  });
   finishAction(actionId);
 
   const inactive = (['sleep', 'stun'] as const).map((state) => {
@@ -209,7 +213,9 @@ function proveEvidenceGainCard(card: CardDef) {
     const result = {
       state,
       optional: useGameStateStore.getState().pendingEffectOptional !== null,
-      count: readChar.declaredUseCount(current(), 'source', 'a1'),
+      count: readChar.declaredUseCount(current(), 'source', 'a1', {
+        abilityOrigin: 'printed', abilityIndex: 0,
+      }),
     };
     finishAction(inactiveActionId);
     return result;
@@ -236,7 +242,9 @@ function proveB09013() {
   const active = {
     sourceState: current().players.self.scene.find((card) => card.uid === 'source')?.state,
     victimRemoved: current().players.opp.remove.includes(TARGET.id),
-    count: readChar.declaredUseCount(current(), 'source', 'a2'),
+    count: readChar.declaredUseCount(current(), 'source', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    }),
   };
 
   install(b09013State('active'));
@@ -248,7 +256,9 @@ function proveB09013() {
   actionId = declareCase('actor-2');
   const declineRetry = {
     optional: useGameStateStore.getState().pendingEffectOptional !== null,
-    count: readChar.declaredUseCount(current(), 'source', 'a2'),
+    count: readChar.declaredUseCount(current(), 'source', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    }),
   };
   expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: null })).toEqual({ ok: true });
   expect(dispatchEngineAction({ type: 'actionJudge', actionId })).toEqual({ ok: true });
@@ -260,7 +270,9 @@ function proveB09013() {
     const result = {
       state,
       optional: useGameStateStore.getState().pendingEffectOptional !== null,
-      count: readChar.declaredUseCount(current(), 'source', 'a2'),
+      count: readChar.declaredUseCount(current(), 'source', 'a2', {
+        abilityOrigin: 'printed', abilityIndex: 1,
+      }),
     };
     expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: null })).toEqual({ ok: true });
     expect(dispatchEngineAction({ type: 'actionJudge', actionId })).toEqual({ ok: true });
@@ -276,8 +288,16 @@ function proveOwnerOrder(card: CardDef, abilityId: 'a1' | 'a2') {
   const initial = pendingOwnerOrderGroup(current(), 'self').filter((entry) =>
     entry.source.cardId === card.id && entry.source.abilityId === abilityId);
   expect(initial.map((entry) => entry.source.uid)).toEqual(['source-a', 'source-b']);
-  expect(readChar.declaredUseCount(current(), 'source-a', abilityId)).toBe(1);
-  expect(readChar.declaredUseCount(current(), 'source-b', abilityId)).toBe(1);
+  const firstSource = initial.find(entry => entry.source.uid === 'source-a')!.source;
+  const secondSource = initial.find(entry => entry.source.uid === 'source-b')!.source;
+  expect(readChar.declaredUseCount(current(), 'source-a', abilityId, {
+    abilityOrigin: firstSource.abilityOrigin,
+    abilityIndex: firstSource.abilityIndex,
+  })).toBe(1);
+  expect(readChar.declaredUseCount(current(), 'source-b', abilityId, {
+    abilityOrigin: secondSource.abilityOrigin,
+    abilityIndex: secondSource.abilityIndex,
+  })).toBe(1);
 
   const second = initial.find((entry) => entry.source.uid === 'source-b')!;
   expect(dispatchEngineAction({ type: 'setEffectOrder', entryId: second.id, order: 0, player: 'self' })).toEqual({ ok: true });
@@ -369,14 +389,18 @@ function proveB03070HiramekiBeforeGain() {
     sourceState: current().players.self.scene.find((candidate) => candidate.uid === 'source')?.state,
     evidenceGained: current().players.self.evidence.length,
     optional: useGameStateStore.getState().pendingEffectOptional !== null,
-    count: readChar.declaredUseCount(current(), 'source', 'a1'),
+    count: readChar.declaredUseCount(current(), 'source', 'a1', {
+      abilityOrigin: 'printed', abilityIndex: 0,
+    }),
   };
   finishAction(actionId);
   const afterGain = {
     sourceState: current().players.self.scene.find((candidate) => candidate.uid === 'source')?.state,
     evidenceGained: current().players.self.evidence.length,
     optional: useGameStateStore.getState().pendingEffectOptional !== null,
-    count: readChar.declaredUseCount(current(), 'source', 'a1'),
+    count: readChar.declaredUseCount(current(), 'source', 'a1', {
+      abilityOrigin: 'printed', abilityIndex: 0,
+    }),
   };
   return { beforeGain, afterGain };
 }
@@ -398,7 +422,9 @@ function proveResolutionTimeStateAfterQueue() {
   const result = {
     sourceState: current().players.self.scene.find((card) => card.uid === 'source')?.state,
     optional: useGameStateStore.getState().pendingEffectOptional !== null,
-    count: readChar.declaredUseCount(current(), 'source', 'a1'),
+    count: readChar.declaredUseCount(current(), 'source', 'a1', {
+      abilityOrigin: 'printed', abilityIndex: 0,
+    }),
   };
   finishAction(actionId);
   return result;
@@ -446,7 +472,9 @@ function proveB09013DoesNotTriggerAfterApBuff() {
   const result = {
     actorAp: readChar.ap(current(), 'low-actor'),
     optional: useGameStateStore.getState().pendingEffectOptional !== null,
-    count: readChar.declaredUseCount(current(), 'source', 'a2'),
+    count: readChar.declaredUseCount(current(), 'source', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    }),
   };
   expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: null })).toEqual({ ok: true });
   finishCharacterAction(actionId);

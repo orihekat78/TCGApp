@@ -15,6 +15,7 @@ import { _clearPendingEffectOptionalSide, _clearPendingEffectPickQueue } from '@
 import type { PendingEffectPickSide } from '@/engine/effect/resolve-picks';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { mutate } from '@/engine/mutate/index';
+import { char as readChar } from '@/engine/read/char';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { sceneChar } from '../../helpers/fixtures';
@@ -127,7 +128,9 @@ describe('B02023 a2 — source state, optional target, and turn recovery', () =>
     });
     expect(afterDecline.players.self.remove).toContain('SET-A');
     expect(afterDecline.players.self.scene.find((char) => char.uid === 'target')!.state).toBe('active');
-    expect(afterDecline.players.self.scene.find((char) => char.uid === 'kazuha')!.declaredUseCount.a2).toBe(1);
+    expect(readChar.declaredUseCount(afterDecline, 'kazuha', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    })).toBe(1);
   });
 
   it('rejects a second use this turn and clears the limit at next turn start', () => {
@@ -217,6 +220,8 @@ describe('B02023 a2 — 【宣言】裏向きセット1枚をコストにキャ�
     });
     expect(after.players.opp.scene.find((char) => char.uid === 'opp')!.setCards).toHaveLength(1);
     expect(after.players.self.remove).toHaveLength(0);
-    expect(after.players.self.scene.find((char) => char.uid === 'kazuha')!.declaredUseCount['a2'] ?? 0).toBe(0);
+    expect(readChar.declaredUseCount(after, 'kazuha', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    })).toBe(0);
   });
 });

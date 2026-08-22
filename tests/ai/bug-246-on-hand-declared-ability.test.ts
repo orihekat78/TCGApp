@@ -84,7 +84,13 @@ describe('BUG-246: AI on-hand declared ability parity', () => {
     expect(enumDeclaredAbilitySources(state, 'self')).toEqual(exact);
     expect(exact.map(uid => enumDeclaredAbilityIdsFor(state, uid))).toEqual([['a1'], ['a1']]);
     expect(exact.every(uid => canActivateDeclaredAbility(state, uid, 'a1'))).toBe(true);
-    expect(declaredMoves(state, 'self')).toEqual(exact.map(uid => ({ kind: 'declaredAbility', uid, abilityId: 'a1' })));
+    expect(declaredMoves(state, 'self')).toEqual(exact.map(uid => ({
+      kind: 'declaredAbility',
+      uid,
+      abilityId: 'a1',
+      abilityOrigin: 'printed',
+      abilityIndex: 0,
+    })));
 
     // Existing callers may still identify a hand source by cardId.
     expect(canActivateDeclaredAbility(state, handUid('self', payableId), 'a1')).toBe(true);
@@ -98,8 +104,14 @@ describe('BUG-246: AI on-hand declared ability parity', () => {
     expect(enumDeclaredAbilitySources(state, 'self')).toEqual(['hand:self:0', 'hand:self:1']);
     expect(enumDeclaredAbilityIdsFor(state, uid)).toEqual(['a1']);
     expect(declaredMoves(state, 'self')).toEqual([
-      { kind: 'declaredAbility', uid: 'hand:self:0', abilityId: 'a1' },
-      { kind: 'declaredAbility', uid: 'hand:self:1', abilityId: 'a1' },
+      {
+        kind: 'declaredAbility', uid: 'hand:self:0', abilityId: 'a1',
+        abilityOrigin: 'printed', abilityIndex: 0,
+      },
+      {
+        kind: 'declaredAbility', uid: 'hand:self:1', abilityId: 'a1',
+        abilityOrigin: 'printed', abilityIndex: 0,
+      },
     ]);
 
     useGameStateStore.setState({ gameState: state });
@@ -111,7 +123,9 @@ describe('BUG-246: AI on-hand declared ability parity', () => {
       expect(canActivateDeclaredAbility(state, uid, 'a1')).toBe(false);
       expect(enumDeclaredAbilitySources(state, player)).not.toContain(uid);
       expect(enumDeclaredAbilityIdsFor(state, uid)).toEqual([]);
-      expect(declaredMoves(state, player)).not.toContainEqual({ kind: 'declaredAbility', uid, abilityId: 'a1' });
+      expect(declaredMoves(state, player).some(move => (
+        move.kind === 'declaredAbility' && move.uid === uid && move.abilityId === 'a1'
+      ))).toBe(false);
       const before = JSON.stringify(state);
       useGameStateStore.setState({ gameState: state });
       expect(dispatchEngineAction({ type: 'declaredAbility', uid, abilId: 'a1' })).toEqual({ ok: false, reason: 'not-allowed' });
@@ -157,11 +171,15 @@ describe('BUG-246: AI on-hand declared ability parity', () => {
     expect(makeDeclaredAbilCtx(state, uid, 'a1')).toMatchObject({
       source: { cardId: shipped.id, uid, player: 'opp', area: 'hand' },
     });
-    expect(declaredMoves(state, 'opp')).toContainEqual({ kind: 'declaredAbility', uid, abilityId: 'a1' });
+    const expectedMove = {
+      kind: 'declaredAbility', uid, abilityId: 'a1',
+      abilityOrigin: 'printed', abilityIndex: 0,
+    } as const;
+    expect(declaredMoves(state, 'opp')).toContainEqual(expectedMove);
 
     const step = stepTurn(state, new DeclaredFirst(), 'opp');
 
-    expect(step.move).toEqual({ kind: 'declaredAbility', uid, abilityId: 'a1' });
+    expect(step.move).toEqual(expectedMove);
     expect(step.nextState.players.opp.hand).toEqual([shipped.id]);
     expect(step.nextState.players.opp.remove).toEqual([shipped.id]);
     expect(step.nextState.players.opp.scene).toEqual([

@@ -413,7 +413,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p03/B03070.ts:25",
-        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:516"
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:544"
       ]
     },
     {
@@ -481,11 +481,11 @@
         "src:src/cards/ct-p04/B04039.ts:14",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:380",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:414",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:424",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:426"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:430",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:440",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:442"
       ]
     },
     {
@@ -1409,7 +1409,7 @@
         "src:src/cards/ct-p09/B09004.ts:32",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {
@@ -2019,7 +2019,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/pr-01/PR028.ts:26",
-        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:489"
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:517"
       ]
     },
     {
@@ -2031,7 +2031,7 @@
       "evidence": [
         "rules:.claude/rules/24-qa-naming-stun.md:58",
         "src:src/cards/pr-01/PR028.ts:26",
-        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:549"
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:577"
       ]
     },
     {
@@ -2114,7 +2114,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/pr-01/PR135.ts:51",
-        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:370"
+        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:378"
       ]
     },
     {

@@ -69,6 +69,12 @@ export function useEffectPickFlowDriver(enabled = true): void {
               type: 'chooseInterceptOrderResolve',
               protectorUid: first.protector.uid,
               targetUid: first.targetUid,
+              ...(first.protector.abilityOrigin !== undefined
+                ? {
+                    abilityOrigin: first.protector.abilityOrigin,
+                    abilityIndex: first.protector.abilityIndex,
+                  }
+                : {}),
               ...(first.protector.setCardInstanceId
                 ? { setCardInstanceId: first.protector.setCardInstanceId }
                 : {}),

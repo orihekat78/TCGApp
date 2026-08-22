@@ -6,6 +6,10 @@ import { scene } from './scene.js';
 import { def } from './def.js'; import { abilityIsCutin, defHasIconKeyword, defHasKeyword } from './keyword.js';
 import { evalCond } from '../cond/eval.js';
 import { evalDyn } from '../dyn/eval.js';
+import {
+  readDeclaredAbilityUseCountRecord,
+  readTurnScopedUseCount,
+} from '../effect/source-identity.js';
 // BUG-113: candidates.ts の数値フィルタへ continuousDelta を late-binding で注入 (静的循環回避)。
 // candidates は read/char を import しない (read/keyword/def は leaf) ため本 import は循環を作らない。
 // cluster13 (2026-06-15): aura buff も同経路で late-binding (registerAuraDelta) + matchOneFilter で auraFilter 有効値判定。
@@ -841,7 +845,12 @@ function turnEffect(s: GameState, uid: string, key: string): unknown {
 }
 
 // 宣言能力の使用回数 (rules: 15-abilities-effects.md 【ターン①】)
-function declaredUseCount(s: GameState, uid: string, abilityId: string): number {
+function declaredUseCount(
+  s: GameState,
+  uid: string,
+  abilityId: string,
+  source?: { abilityOrigin?: 'printed' | 'granted'; abilityIndex?: number },
+): number {
   // BUG-067: 事件カード (case:self / case:opp) の declared ability にも対応
   // BUG-085: declaredUseCount は BUG-067 で後から case 型に追加されたため、それ以前
   //   形状の state (一部 fixture / 旧 serialize) では未定義のことがある。canDeclaredAbility
@@ -849,18 +858,34 @@ function declaredUseCount(s: GameState, uid: string, abilityId: string): number 
   //   optional chaining で 0 (= 未使用) に倒す。
   if (uid === 'case:self' || uid === 'case:opp') {
     const p = uid === 'case:self' ? 'self' : 'opp';
-    return s.players[p].case.declaredUseCount?.[abilityId] ?? 0;
+    return readDeclaredAbilityUseCountRecord(s.players[p].case.declaredUseCount, abilityId, source);
   }
   const char = scene.byUid(s, uid);
-  if (char) return char.declaredUseCount?.[abilityId] ?? 0;
+  if (char) return readDeclaredAbilityUseCountRecord(char.declaredUseCount, abilityId, source);
   // BUG-112: off-board uid (selfToDeckBottom 等でコスト支払い時に scene 離脱) は
   // player 単位 turnState.declaredAbilityUseCount[uid:abilId] に fallback 記録される。
   // uid は両 player 通じて一意なので self/opp 双方を参照。
-  const key = `${uid}:${abilityId}`;
   for (const p of ['self', 'opp'] as const) {
     const rec = s.turnState[p].declaredAbilityUseCount as Record<string, number> | undefined;
-    const v = rec?.[key];
-    if (typeof v === 'number') return v;
+    const count = readDeclaredAbilityUseCountRecord(rec, abilityId, source, `${uid}:`);
+    if (count > 0) return count;
+  }
+  return 0;
+}
+
+/** Per-turn use count for one exact ability granted by one physical set card. */
+function setCardAbilityUseCount(
+  s: GameState,
+  hostUid: string,
+  setCardInstanceId: string,
+  abilityId: string,
+): number {
+  for (const player of ['self', 'opp'] as const) {
+    const host = s.players[player].scene.find((entry) => entry.uid === hostUid);
+    const setCard = host?.setCards.find((entry) => entry.instanceId === setCardInstanceId);
+    const record = setCard?.abilityUseCounts?.[abilityId];
+    if (!record) continue;
+    return readTurnScopedUseCount(record, s.turn.number);
   }
   return 0;
 }
@@ -954,6 +979,7 @@ export const char = {
   stackedCount,
   turnEffect,
   declaredUseCount,
+  setCardAbilityUseCount,
 };
 
 // BUG-113: module load 時に continuousDelta を candidates へ登録 (数値フィルタの有効値に反映)。

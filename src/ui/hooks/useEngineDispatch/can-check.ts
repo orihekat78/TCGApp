@@ -127,7 +127,14 @@ export function isAllowed(
     case 'partnerAbility':
       return flow.canPartnerAbility(state, action.player, action.abilId);
     case 'declaredAbility':
-      return flow.canActivateDeclaredAbility(state, action.uid, action.abilId, action.costParams);
+      return flow.canActivateDeclaredAbility(state, action.uid, action.abilId, action.costParams, {
+        sourceRef: {
+          setCardId: action.setCardId,
+          setCardInstanceId: action.setCardInstanceId,
+          abilityOrigin: action.abilityOrigin,
+          abilityIndex: action.abilityIndex,
+        },
+      });
     case 'assist':
       return readGame.canPartnerAssist(state, action.player);
     case 'solveCase':
@@ -255,13 +262,24 @@ export function isAllowed(
     }
     case 'chooseInterceptOrderResolve': {
       const pending = useGameStateStore.getState().pendingChooseIntercept;
+      const hasOrigin = action.abilityOrigin !== undefined;
+      const hasIndex = action.abilityIndex !== undefined;
+      const candidates = pending?.kind === 'order'
+        ? pending.choices.filter(choice => (
+            choice.protector.uid === action.protectorUid
+            && choice.targetUid === action.targetUid
+            && choice.protector.setCardInstanceId === action.setCardInstanceId
+          ))
+        : [];
       return pending?.kind === 'order'
         && matchesPendingDecision(pending, action)
-        && pending.choices.some(choice => (
-          choice.protector.uid === action.protectorUid
-          && choice.targetUid === action.targetUid
-          && choice.protector.setCardInstanceId === action.setCardInstanceId
-        ));
+        && hasOrigin === hasIndex
+        && (hasOrigin
+          ? candidates.some(choice => (
+              choice.protector.abilityOrigin === action.abilityOrigin
+              && choice.protector.abilityIndex === action.abilityIndex
+            ))
+          : candidates.length === 1);
     }
     case 'repeatOptionalResolve': {
       return matchesPendingDecision(useGameStateStore.getState().pendingEffectRepeatOptional, action);

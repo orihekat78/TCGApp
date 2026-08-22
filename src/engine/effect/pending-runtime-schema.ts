@@ -28,6 +28,7 @@ export type PendingRuntimeValidationOptions = {
 };
 
 const PLAYERS = new Set(['self', 'opp']);
+const DECLARED_ABILITY_HOST_ORIGINS = new Set(['printed', 'granted']);
 const SOURCE_AREAS = new Set([
   'scene', 'partner-area', 'hand', 'evidence', 'file', 'remove', 'case',
 ]);
@@ -104,6 +105,22 @@ function integer(value: unknown, path: string, min = 0): number {
 
 function optionalInteger(value: unknown, path: string, min = 0): void {
   if (value !== undefined) integer(value, path, min);
+}
+
+function abilitySourceIdentity(item: Record<string, unknown>, path: string): void {
+  const hasOrigin = item.abilityOrigin !== undefined;
+  const hasIndex = item.abilityIndex !== undefined;
+  if (hasOrigin !== hasIndex) {
+    fail(path, 'declared-ability source requires both abilityOrigin and abilityIndex');
+  }
+  if (hasOrigin) {
+    oneOf(item.abilityOrigin, DECLARED_ABILITY_HOST_ORIGINS, `${path}.abilityOrigin`);
+    integer(item.abilityIndex, `${path}.abilityIndex`);
+    string(item.abilityId, `${path}.abilityId`);
+  }
+  if (item.setCardId !== undefined && hasOrigin) {
+    fail(path, 'set-card and host declared-ability source witnesses are mutually exclusive');
+  }
 }
 
 function oneOf(value: unknown, values: ReadonlySet<string>, path: string): string {
@@ -193,6 +210,12 @@ function source(value: unknown, path: string, requireUid = false): void {
   if (item.area !== undefined) oneOf(item.area, SOURCE_AREAS, `${path}.area`);
   if (requireUid) string(item.uid, `${path}.uid`, true);
   else if (item.uid !== undefined) string(item.uid, `${path}.uid`, true);
+  if (item.setCardId !== undefined) string(item.setCardId, `${path}.setCardId`);
+  if (item.setCardInstanceId !== undefined) string(item.setCardInstanceId, `${path}.setCardInstanceId`);
+  if ((item.setCardId === undefined) !== (item.setCardInstanceId === undefined)) {
+    fail(path, 'set-card source requires both setCardId and setCardInstanceId');
+  }
+  abilitySourceIdentity(item, path);
   if (item.resolutionKind !== undefined) oneOf(item.resolutionKind, RESOLUTION_KINDS, `${path}.resolutionKind`);
   optionalInteger(item.triggerBatch, `${path}.triggerBatch`, 1);
   optionalInteger(item.ownerChosenOrder, `${path}.ownerChosenOrder`);
@@ -267,6 +290,12 @@ function effectCtx(value: unknown, path: string, mode: ValidationMode, depth = 0
   if (src.cardId !== undefined) string(src.cardId, `${path}.source.cardId`, true);
   if (src.uid !== undefined) string(src.uid, `${path}.source.uid`, true);
   if (src.abilityId !== undefined) string(src.abilityId, `${path}.source.abilityId`, true);
+  if (src.setCardId !== undefined) string(src.setCardId, `${path}.source.setCardId`);
+  if (src.setCardInstanceId !== undefined) string(src.setCardInstanceId, `${path}.source.setCardInstanceId`);
+  if ((src.setCardId === undefined) !== (src.setCardInstanceId === undefined)) {
+    fail(`${path}.source`, 'set-card source requires both setCardId and setCardInstanceId');
+  }
+  abilitySourceIdentity(src, `${path}.source`);
   if (src.resolutionKind !== undefined) oneOf(src.resolutionKind, RESOLUTION_KINDS, `${path}.source.resolutionKind`);
   optionalInteger(src.triggerBatch, `${path}.source.triggerBatch`, 1);
   optionalInteger(src.ownerChosenOrder, `${path}.source.ownerChosenOrder`);
@@ -404,6 +433,10 @@ function matchingDeclaredNameLineage(
     if (entry.source.player !== source.player
       || entry.source.cardId !== source.cardId
       || entry.source.abilityId !== source.abilityId) return false;
+    if (entry.source.setCardId !== source.setCardId
+      || entry.source.setCardInstanceId !== source.setCardInstanceId) return false;
+    if (entry.source.abilityOrigin !== source.abilityOrigin
+      || entry.source.abilityIndex !== source.abilityIndex) return false;
     if (source.uid !== undefined && entry.source.uid !== source.uid) return false;
     if (sourceArea !== undefined && (entry.source.area ?? 'scene') !== sourceArea) return false;
     if (source.resolutionKind !== undefined
@@ -887,7 +920,11 @@ function chooseInterceptResponse(value: unknown, path: string): void {
   string(protector.uid, `${path}.protector.uid`);
   string(protector.cardId, `${path}.protector.cardId`);
   string(protector.abilityId, `${path}.protector.abilityId`);
+  abilitySourceIdentity(protector, `${path}.protector`);
   optionalString(protector.setCardInstanceId, `${path}.protector.setCardInstanceId`);
+  if (protector.setCardInstanceId !== undefined && protector.abilityOrigin !== undefined) {
+    fail(`${path}.protector`, 'set-card and host ability witnesses are mutually exclusive');
+  }
   string(item.targetUid, `${path}.targetUid`);
 }
 
@@ -993,10 +1030,7 @@ function deckReveal(value: unknown, path: string): void {
   optionalBool(item.awaitingPick, `${path}.awaitingPick`);
   if (item.presentation !== undefined) oneOf(item.presentation, new Set(['reveal-return']), `${path}.presentation`);
   if (item.source !== undefined) {
-    const src = record(item.source, `${path}.source`);
-    optionalString(src.cardId, `${path}.source.cardId`);
-    optionalString(src.abilityId, `${path}.source.abilityId`);
-    optionalString(src.uid, `${path}.source.uid`);
+    source(item.source, `${path}.source`);
   }
 }
 
@@ -1023,10 +1057,7 @@ function publicHandReveal(value: unknown, path: string): void {
   } else {
     stringArray(item.handSnapshot, `${path}.handSnapshot`);
   }
-  const src = record(item.source, `${path}.source`);
-  optionalString(src.cardId, `${path}.source.cardId`);
-  optionalString(src.abilityId, `${path}.source.abilityId`);
-  optionalString(src.uid, `${path}.source.uid`);
+  source(item.source, `${path}.source`);
 }
 
 function singleOrArray(value: unknown, path: string, check: (value: unknown, path: string) => void): void {

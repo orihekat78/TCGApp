@@ -12,11 +12,22 @@
 // resolver 由来のサブ効果) を許容するため string で受ける。
 
 import type { Effect, Condition } from './effect.js';
-import type { CausalEffectTrace, EffectResolutionKind } from './effect-ctx.js';
+import type {
+  CausalEffectTrace,
+  DeclaredAbilityHostOrigin,
+  EffectResolutionKind,
+} from './effect-ctx.js';
 
 export type EffectStackEntrySource = {
   uid?: string;
   cardId?: string;
+  /** Printed identity of the physical set card that granted this ability. */
+  setCardId?: string;
+  /** Runtime identity of that exact set-card occurrence. */
+  setCardInstanceId?: string;
+  /** Stable definition witness for a host-owned declared ability. */
+  abilityOrigin?: DeclaredAbilityHostOrigin;
+  abilityIndex?: number;
   abilityId?: string;
   description?: string;
   player: 'self' | 'opp';

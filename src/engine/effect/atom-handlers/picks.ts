@@ -5,7 +5,7 @@ import { pushPendingEffectPickSide } from '../pending-state.js';
 import { preparePendingPickRange } from '../pick-selection.js';
 import { candidates as targetCandidates } from '../../target/candidates.js';
 import { removeExcludedSourceCardId } from '../../read/effect-source.js';
-import { targetFilterToPredicateWithCtx, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait, resolveDeltaToNumber, queuePendingDeckRevealSide } from './_shared.js';
+import { targetFilterToPredicateWithCtx, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait, publicEffectSource, resolveDeltaToNumber, queuePendingDeckRevealSide } from './_shared.js';
 import type { PendingDeckPlaceSide, PendingDeckReorderSide } from './_shared.js';
 import { FILE_CARD_BACK_PLACEHOLDER, type GameState, type EffectCtx, type Candidate, type AtomVerb, type TargetingRef } from '../../types/index.js';
 import type { TargetFilter } from '../../types/effect.js';
@@ -190,7 +190,7 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
             revealed: [...windowIds],
             matched: chosen,
             presentation: a.presentation === 'reveal-return' ? 'reveal-return' : undefined,
-            source: { cardId: ctx.source.cardId, abilityId: ctx.source.abilityId, uid: ctx.source.uid },
+            source: publicEffectSource(ctx),
           });
         }
         mutate.log.append(s, {
@@ -290,7 +290,7 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
               matched: null,
               awaitingPick: true,
               presentation: a.presentation === 'reveal-return' ? 'reveal-return' : undefined,
-              source: { cardId: ctx.source.cardId, abilityId: ctx.source.abilityId, uid: ctx.source.uid },
+              source: publicEffectSource(ctx),
             });
           }
           mutate.log.append(s, {
@@ -353,7 +353,7 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
           revealed: [...revealed],
           matched,
           presentation: a.presentation === 'reveal-return' ? 'reveal-return' : undefined,
-          source: { cardId: ctx.source.cardId, abilityId: ctx.source.abilityId, uid: ctx.source.uid },
+          source: publicEffectSource(ctx),
         });
       }
       // BUG-073: effect log

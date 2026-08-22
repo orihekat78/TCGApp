@@ -142,6 +142,8 @@ function expectCompletedReveal(
   revealed: string[],
   matched: string | null,
 ): void {
+  const abilityIndex = family.card.abilities.findIndex(ability => ability.id === family.abilityId);
+  expect(abilityIndex, `${family.card.id}: printed ability occurrence`).toBeGreaterThanOrEqual(0);
   expect(useGameStateStore.getState().pendingDeckReveal, `${family.card.id}: forced public reveal completes`).toEqual({
     player,
     visibility: 'public',
@@ -149,7 +151,13 @@ function expectCompletedReveal(
     revealed,
     matched,
     presentation: undefined,
-    source: { cardId: family.card.id, abilityId: family.abilityId, uid: 'source' },
+    source: {
+      cardId: family.card.id,
+      abilityId: family.abilityId,
+      abilityOrigin: 'printed',
+      abilityIndex,
+      uid: 'source',
+    },
   });
   expect(useGameStateStore.getState().pendingEffectPick, `${family.card.id}: matching card is mandatory`).toBeNull();
   expect(useGameStateStore.getState().pendingDeckReorder, `${family.card.id}: printed text grants no reorder choice`).toBeNull();

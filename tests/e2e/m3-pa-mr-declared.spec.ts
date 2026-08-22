@@ -30,6 +30,18 @@ async function prime(page: Page): Promise<void> {
   });
 }
 
+async function declaredUseCount(page: Page, uid: string, abilityId: string): Promise<number> {
+  return page.evaluate(([sourceUid, sourceAbilityId]) => {
+    const game = (window as unknown as {
+      __game: {
+        getState: () => { gameState: unknown };
+        read: { char: { declaredUseCount: (state: unknown, uid: string, abilityId: string) => number } };
+      };
+    }).__game;
+    return game.read.char.declaredUseCount(game.getState().gameState, sourceUid, sourceAbilityId);
+  }, [uid, abilityId] as const);
+}
+
 // 注: buildGameState は modifier を string 化して page 内で実行するため、
 // fixture 内では外部ヘルパ参照不可 — SceneCharacter 形は literal 直書き。
 function applyFixture(gs: GameStateLike): void {
@@ -122,8 +134,7 @@ test.describe('M3 — PA 常駐 MR の宣言能力 (実機クリック)', () => 
 
     // 6) 【ターン1】消費 + log 記録
     const state = await getGameState(page);
-    const paMr = (state.players.self as unknown as { partnerAreaMR: { declaredUseCount: Record<string, number> } }).partnerAreaMR;
-    expect(paMr.declaredUseCount['a2'], '【ターン1】使用回数記録').toBe(1);
+    expect(await declaredUseCount(page, 'partnerMR:self', 'a2'), '【ターン1】使用回数記録').toBe(1);
     // pick 適用後は effect:charModifyLevel が末尾に追記されるため「含む」で assert
     const log = (state as unknown as { log: { action: string; target?: string }[] }).log;
     const decl = log.find((e) => e.action === 'declaredAbility' && (e.target ?? '').includes(':a2'));

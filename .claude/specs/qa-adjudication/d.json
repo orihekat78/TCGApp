@@ -161,9 +161,9 @@
         "src:src/cards/ct-p02/B02026.ts:1",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:360",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:361"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:368",
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:369"
       ]
     },
     {
@@ -401,7 +401,7 @@
       "evidence": [
         "rules:.claude/rules/22-qa-action-contact.md:72",
         "src:src/cards/ct-p03/B03070.ts:25",
-        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:581"
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:609"
       ],
       "noteCodes": []
     },
@@ -1828,15 +1828,18 @@
     {
       "qaId": "card:B10017:5e2a14c083efb30077c2954eb8bea8ebb46fd5b17d94e318b208ecf80a2655c4",
       "answerHash": "d0f8c5bfdf9b2664663bf75d04d94df68b774b7604c709f3eea4b7860299fbe4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/09-cutin-disguise.md:9",
-        "src:src/cards/ct-p10/B10017.ts:10"
-      ],
-      "noteCodes": [
-        "IMPLEMENTED-CARD-TEST-MISSING"
+        "src:src/cards/ct-p10/B10017.ts:10",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1413",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1419",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1430",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1442",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1450",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1451"
       ]
     },
     {

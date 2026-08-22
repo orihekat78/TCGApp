@@ -10,7 +10,7 @@
 //   - `drainAiEffectPicks` は __pendingEffectPickQueue を heuristic で順次解決する (CPU 経路には
 //     human modal が無いため、PA 短縮形 atom の pick が drain されず no-op になる BUG-109 を解消)。
 
-import type { CausalEffectTrace, GameState, Effect, EffectCtx, Candidate, Condition, RemoveResult } from '../types/index.js';
+import type { CausalEffectTrace, DeclaredAbilityHostOrigin, GameState, Effect, EffectCtx, Candidate, Condition, RemoveResult } from '../types/index.js';
 import type { PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide, ContinuationFrame } from './resolve-picks.js';
 import { resolveEffectPicks, rememberedRuntimeAtomTargetPolicy, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume, _takePendingOptionalBindings, _takePendingOptionalCostPaid } from './resolve-picks.js';
 import { findChooseInterceptReactions } from './consult-choose-intercept.js';
@@ -64,6 +64,10 @@ function resumedEntrySource(
     uid?: string;
     cardId: string;
     abilityId: string;
+    setCardId?: string;
+    setCardInstanceId?: string;
+    abilityOrigin?: EffectCtx['source']['abilityOrigin'];
+    abilityIndex?: number;
     area?: EffectCtx['source']['area'];
     resolutionKind?: EffectCtx['source']['resolutionKind'];
   },
@@ -74,6 +78,10 @@ function resumedEntrySource(
     ...(source.uid !== undefined ? { uid: source.uid } : {}),
     cardId: source.cardId,
     abilityId: source.abilityId,
+    ...(source.setCardId !== undefined ? { setCardId: source.setCardId } : {}),
+    ...(source.setCardInstanceId !== undefined ? { setCardInstanceId: source.setCardInstanceId } : {}),
+    ...(source.abilityOrigin !== undefined ? { abilityOrigin: source.abilityOrigin } : {}),
+    ...(source.abilityIndex !== undefined ? { abilityIndex: source.abilityIndex } : {}),
     ...(source.area ? { area: source.area } : {}),
     ...(source.resolutionKind ? { resolutionKind: source.resolutionKind } : {}),
   };
@@ -243,7 +251,7 @@ export function applyRpsAndContinuation(state: GameState, pending: PendingRpsSid
   const resume = _takePendingRpsResume();
   if (!resume || resume.effect.kind !== 'rps') return;
   const ctx: EffectCtx = {
-    source: { cardId: pending.source.cardId, uid: pending.source.uid, abilityId: pending.source.abilityId, player: pending.ownerPlayer, area: pending.source.area ?? 'scene', ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}), ...(pending.source.triggerBatch !== undefined ? { triggerBatch: pending.source.triggerBatch } : {}), ...(pending.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: pending.source.ownerChosenOrder } : {}), ...(pending.source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: pending.source.ownerOrderConfirmed } : {}), ...(pending.source.declaredBatch !== undefined ? { declaredBatch: pending.source.declaredBatch } : {}) },
+    source: { ...resumedEntrySource(pending.source, pending.ownerPlayer), area: pending.source.area ?? 'scene', ...(pending.source.triggerBatch !== undefined ? { triggerBatch: pending.source.triggerBatch } : {}), ...(pending.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: pending.source.ownerChosenOrder } : {}), ...(pending.source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: pending.source.ownerOrderConfirmed } : {}), ...(pending.source.declaredBatch !== undefined ? { declaredBatch: pending.source.declaredBatch } : {}) },
     bindings: resume.bindings as EffectCtx['bindings'],
   };
   const decisionTrace = restoreEffectCausalTrace(ctx, pending.source.causalTrace);
@@ -311,6 +319,16 @@ export function applySetCardChoiceAndContinuation(state: GameState, pending: Pen
       abilityId: canonical.source.abilityId,
       player: canonical.player,
       area: canonical.source.area ?? 'scene',
+      ...(canonical.source.setCardId !== undefined ? { setCardId: canonical.source.setCardId } : {}),
+      ...(canonical.source.setCardInstanceId !== undefined
+        ? { setCardInstanceId: canonical.source.setCardInstanceId }
+        : {}),
+      ...(canonical.source.abilityOrigin !== undefined
+        ? { abilityOrigin: canonical.source.abilityOrigin }
+        : {}),
+      ...(canonical.source.abilityIndex !== undefined
+        ? { abilityIndex: canonical.source.abilityIndex }
+        : {}),
       ...(canonical.source.resolutionKind ? { resolutionKind: canonical.source.resolutionKind } : {}),
       ...(canonical.source.triggerBatch !== undefined ? { triggerBatch: canonical.source.triggerBatch } : {}),
       ...(canonical.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: canonical.source.ownerChosenOrder } : {}),
@@ -1174,6 +1192,10 @@ export function applyPickAndContinuation(
       abilityId: pending.source.abilityId,
       player: pending.player,
       area: pending.source.area ?? 'scene',
+      ...(pending.source.setCardId !== undefined ? { setCardId: pending.source.setCardId } : {}),
+      ...(pending.source.setCardInstanceId !== undefined ? { setCardInstanceId: pending.source.setCardInstanceId } : {}),
+      ...(pending.source.abilityOrigin !== undefined ? { abilityOrigin: pending.source.abilityOrigin } : {}),
+      ...(pending.source.abilityIndex !== undefined ? { abilityIndex: pending.source.abilityIndex } : {}),
       ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
     },
     bindings: {},
@@ -1314,6 +1336,9 @@ export function applyPickAndContinuation(
             uid: reaction.protectorUid,
             cardId: reaction.protectorCardId,
             abilityId: reaction.abilityId,
+            ...(reaction.abilityOrigin !== undefined
+              ? { abilityOrigin: reaction.abilityOrigin, abilityIndex: reaction.abilityIndex }
+              : {}),
             ...(reaction.setCardInstanceId
               ? { setCardInstanceId: reaction.setCardInstanceId }
               : {}),
@@ -1553,6 +1578,16 @@ function chooseInterceptCausalContext(resume: ChooseInterceptResume): EffectCtx 
       abilityId: resume.pending.source.abilityId,
       player: resume.pending.ownerPlayer ?? resume.pending.player,
       area: resume.pending.source.area ?? 'scene',
+      ...(resume.pending.source.setCardId !== undefined ? { setCardId: resume.pending.source.setCardId } : {}),
+      ...(resume.pending.source.setCardInstanceId !== undefined
+        ? { setCardInstanceId: resume.pending.source.setCardInstanceId }
+        : {}),
+      ...(resume.pending.source.abilityOrigin !== undefined
+        ? { abilityOrigin: resume.pending.source.abilityOrigin }
+        : {}),
+      ...(resume.pending.source.abilityIndex !== undefined
+        ? { abilityIndex: resume.pending.source.abilityIndex }
+        : {}),
       ...(resume.pending.source.resolutionKind
         ? { resolutionKind: resume.pending.source.resolutionKind }
         : {}),
@@ -1623,6 +1658,8 @@ export function applyChooseInterceptOrder(
   protectorUid: string,
   targetUid: string,
   setCardInstanceId?: string,
+  abilityOrigin?: DeclaredAbilityHostOrigin,
+  abilityIndex?: number,
 ): void {
   if (stopIfGameAlreadyEnded(state)) return;
   if (pending.kind !== 'order') throw new Error('chooseIntercept: expected order decision');
@@ -1630,11 +1667,20 @@ export function applyChooseInterceptOrder(
   if (!resume || !resume.guard || !sameChooseInterceptSide(resume.guard, pending)) {
     throw new Error('chooseIntercept: stale order');
   }
-  const visible = pending.choices.find(choice => (
+  if ((abilityOrigin === undefined) !== (abilityIndex === undefined)) {
+    throw new Error('chooseIntercept: partial ability occurrence');
+  }
+  const visibleCandidates = pending.choices.filter(choice => (
     choice.protector.uid === protectorUid
     && choice.targetUid === targetUid
     && choice.protector.setCardInstanceId === setCardInstanceId
   ));
+  const visible = abilityOrigin !== undefined
+    ? visibleCandidates.find(choice => (
+        choice.protector.abilityOrigin === abilityOrigin
+        && choice.protector.abilityIndex === abilityIndex
+      ))
+    : visibleCandidates.length === 1 ? visibleCandidates[0] : undefined;
   const selected = (resume.remainingGuards ?? []).find(guard => (
     visible !== undefined && sameChooseInterceptResponse(guard, visible)
   ));
@@ -1773,6 +1819,8 @@ function sameChooseInterceptResponse(
     && left.protector.uid === right.protector.uid
     && left.protector.cardId === right.protector.cardId
     && left.protector.abilityId === right.protector.abilityId
+    && left.protector.abilityOrigin === right.protector.abilityOrigin
+    && left.protector.abilityIndex === right.protector.abilityIndex
     && left.protector.setCardInstanceId === right.protector.setCardInstanceId;
 }
 
@@ -1909,6 +1957,10 @@ export function applyChoiceAndContinuation(
       abilityId: pending.source.abilityId,
       player: sourcePlayer,
       area: pending.source.area ?? 'scene',
+      ...(pending.source.setCardId !== undefined ? { setCardId: pending.source.setCardId } : {}),
+      ...(pending.source.setCardInstanceId !== undefined ? { setCardInstanceId: pending.source.setCardInstanceId } : {}),
+      ...(pending.source.abilityOrigin !== undefined ? { abilityOrigin: pending.source.abilityOrigin } : {}),
+      ...(pending.source.abilityIndex !== undefined ? { abilityIndex: pending.source.abilityIndex } : {}),
       ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
     },
     bindings: resumeBindings as EffectCtx['bindings'],
@@ -1987,6 +2039,10 @@ export function applyOptionalAndContinuation(
       abilityId: pending.source.abilityId,
       player: pending.ownerPlayer ?? pending.player,
       area: pending.source.area ?? 'scene',
+      ...(pending.source.setCardId !== undefined ? { setCardId: pending.source.setCardId } : {}),
+      ...(pending.source.setCardInstanceId !== undefined ? { setCardInstanceId: pending.source.setCardInstanceId } : {}),
+      ...(pending.source.abilityOrigin !== undefined ? { abilityOrigin: pending.source.abilityOrigin } : {}),
+      ...(pending.source.abilityIndex !== undefined ? { abilityIndex: pending.source.abilityIndex } : {}),
       ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
     },
     bindings: {},

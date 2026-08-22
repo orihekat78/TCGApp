@@ -38,7 +38,10 @@ function getHumanPlayerSide(): Player | null {
 export type LeaveInterceptVerdict =
   | { kind: 'hand'; interceptorUid: string }
   | { kind: 'pending'; interceptorUid: string }
-  | { kind: 'kept-in-scene'; consumedSetCards: string[] }
+  | {
+      kind: 'kept-in-scene';
+      consumedSetCards: Array<{ cardId: string; setCardInstanceId: string }>;
+    }
   | null;
 
 function destinationOf(ability: AbilityDef): string | undefined {
@@ -99,9 +102,9 @@ export function consultLeaveIntercept(
   const payload = { uid: char.uid, cause, byUid, ownerPlayer: player };
 
   // (1) 強制 set-card rider (B01039 型、on-set-host) — faceUp のみ (rules/16 裏向きは非イベント)
-  const consumed: string[] = [];
+  const consumed: Array<{ cardId: string; setCardInstanceId: string }> = [];
   for (const entry of char.setCards) {
-    if (!entry.faceUp) continue;
+    if (!entry.faceUp || !entry.instanceId) continue;
     const def = readDef.card(entry.cardId);
     if (!def) continue;
     for (const ability of def.abilities as AbilityDef[]) {
@@ -110,14 +113,22 @@ export function consultLeaveIntercept(
       if (!trig || trig.hook !== 'leave:intercept' || trig.optional) continue;
       if (ability.scope !== 'on-set-host') continue;
       const baseCtx = {
-        source: { cardId: entry.cardId, uid: char.uid, abilityId: ability.id, player, area: 'scene' as const },
+        source: {
+          cardId: entry.cardId,
+          uid: char.uid,
+          abilityId: ability.id,
+          player,
+          area: 'scene' as const,
+          setCardId: entry.cardId,
+          setCardInstanceId: entry.instanceId,
+        },
         bindings: {},
         triggerPayload: payload,
       };
       if (trig.matcherCondition && !evalCond(state, trig.matcherCondition, baseCtx as never)) continue;
       if (ability.condition && !evalCond(state, ability.condition, baseCtx as never)) continue;
       if (destinationOf(ability) !== 'kept-in-scene') continue;
-      consumed.push(entry.cardId);
+      consumed.push({ cardId: entry.cardId, setCardInstanceId: entry.instanceId });
       break; // 1 entry につき 1 判定
     }
   }

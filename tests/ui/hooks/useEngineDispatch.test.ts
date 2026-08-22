@@ -27,6 +27,7 @@ import type {
 import type { EffectStackEntry } from '@/engine/types/effect-stack';
 import { makeChar as baseChar } from '../../helpers/fixtures';
 import { register as engineRegisterCardDef } from '@/engine/read/def';
+import { char as readChar } from '@/engine/read/char';
 import { useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
 import { appendCausal, isCausalLogEntry, startCausalSession } from '@/engine/log/causal';
 import { snapshotPendingRuntimeState } from '@/engine/effect/runtime-state';
@@ -66,7 +67,11 @@ function makeChar(uid: string, cardId = 'cX'): SceneCharacter {
 function makePendingEffect(id: string, state: EffectStackEntry['state']): EffectStackEntry {
   return {
     id,
-    source: { player: 'self' },
+    source: {
+      player: 'self',
+      cardId: 'surrender-test-card',
+      abilityId: 'surrender-test-ability',
+    },
     triggeredBy: { hook: 'surrender-test' },
     triggeredAt: { turn: 1, phase: 'main', nano: id === 'pending' ? 1 : 2 },
     effect: { kind: 'atom', verb: 'noop', args: {} },
@@ -216,7 +221,7 @@ describe('dispatchEngineAction (pure function)', () => {
       });
       expect(result.ok).toBe(true);
       const after = useGameStateStore.getState().gameState!;
-      expect(after.players.self.scene[0]?.declaredUseCount['A1']).toBe(1);
+      expect(readChar.declaredUseCount(after, 'c1', 'A1')).toBe(1);
       expect(after.log.at(-1)?.action).toBe('declaredAbility');
     });
 
@@ -275,7 +280,8 @@ describe('dispatchEngineAction (pure function)', () => {
             present: true,
             value: {
               owner: 'self', audience: 'all', cardIds: ['D08001'], handSnapshot: ['D08001'],
-              lifetime: 'presentation', resolutionToken: 'public-hand-reveal:1', source: {},
+              lifetime: 'presentation', resolutionToken: 'public-hand-reveal:1',
+              source: { cardId: 'surrender-test-card', abilityId: 'surrender-test-ability' },
             },
           },
         ],

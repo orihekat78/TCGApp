@@ -57,6 +57,7 @@ export type {
   ContactCtx,
   CausalEffectTrace,
   EffectResolutionKind,
+  DeclaredAbilityHostOrigin,
 } from './effect-ctx.js';
 
 export type {

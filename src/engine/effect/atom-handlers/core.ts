@@ -5,11 +5,11 @@ import { invokeHiramekiOfCard, isHiramekiOccurrence, type HiramekiOccurrence } f
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js'; // W6 step3 (r63): useEventFromHand の kind guard
 import { eventUseAllowed } from '../../flow/main/hand-use-card.js';
-import { tryRePickFromAtom } from '../resolve-picks.js';
+import { pendingSource, tryRePickFromAtom } from '../resolve-picks.js';
 // WC2b (2026-07-11): invokeHiramekiOfCard atom-level optional prompt 用 (pending-state は leaf — cycle 無し)。
 import { pushPendingEffectOptionalSide, setPendingOptionalResume, setPendingOptionalBindings, setPendingOptionalCostPaid } from '../pending-state.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from '../atom-pick-spec.js';
-import { allocatePublicHandRevealToken, requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax, resolveDeltaToNumber, publicHandRevealToken, queuePendingPublicHandRevealSide, readHeldHiramekiSelfClaim, resolveBoundOccurrenceRef } from './_shared.js';
+import { allocatePublicHandRevealToken, requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax, resolveDeltaToNumber, publicEffectSource, publicHandRevealToken, queuePendingPublicHandRevealSide, readHeldHiramekiSelfClaim, resolveBoundOccurrenceRef } from './_shared.js';
 import { isDynObject, resolveDynNumber } from '../../dyn/eval.js';
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, FileCard, PublicCausalZone } from '../../types/index.js';
@@ -148,11 +148,7 @@ function presentPublicSelectedDeckCard(
     lifetime: 'presentation',
     resolutionToken: allocatePublicHandRevealToken(s),
     origin: 'deck-selected-card',
-    source: {
-      cardId: ctx.source.cardId,
-      abilityId: ctx.source.abilityId,
-      uid: ctx.source.uid,
-    },
+    source: publicEffectSource(ctx),
   });
 }
 
@@ -572,7 +568,7 @@ export function atomHandReveal(s: GameState, a: Record<string, unknown>, ctx: Ef
           handSnapshot: [...s.players[hrP].hand],
           lifetime: publicLifetime,
           resolutionToken: publicHandRevealToken(s, ctx),
-          source: { cardId: ctx.source.cardId, abilityId: ctx.source.abilityId, uid: ctx.source.uid },
+          source: publicEffectSource(ctx),
         });
       }
       // W3 (r18): 公開 observer hook (B09004)。zone 不変のまま emit のみ (mutate.hand.emitReveal 単一ソース)。
@@ -1560,7 +1556,11 @@ export function atomInvokeHiramekiOfCard(s: GameState, a: Record<string, unknown
           void _ihOpt;
           pushPendingEffectOptionalSide({
             player: ihCtrl,
-            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '', uid: ctx.source.uid ?? '', area: ctx.source.area },
+            source: pendingSource(s, ctx, {
+              cardId: ctx.source.cardId ?? '',
+              abilityId: ctx.source.abilityId ?? '',
+              uid: ctx.source.uid ?? '',
+            }),
             triggerPayload: (ctx as { triggerPayload?: unknown }).triggerPayload,
           });
           // resume = optional{atom (flag 除去)} — applyOptionalAndContinuation の walk が

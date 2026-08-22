@@ -368,9 +368,8 @@ export function atomReserveEffect(s: GameState, a: Record<string, unknown>, ctx:
         },
         effect: reEffect,
         source: {
+          ...ctx.source,
           player: reP,
-          ...(ctx.source.uid !== undefined ? { uid: ctx.source.uid } : {}),
-          ...(ctx.source.cardId !== undefined ? { cardId: ctx.source.cardId } : {}),
         },
       });
       mutate.log.append(s, { ts: Date.now(), player: reP, turn: s.turn.number, action: 'effect:reserveEffect', target: reHook });

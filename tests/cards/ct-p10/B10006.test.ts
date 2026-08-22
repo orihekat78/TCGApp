@@ -116,7 +116,9 @@ describe('B10006', () => {
 
     for (const id of ['ran-0', 'ran-1']) {
       expect(charRead.ap(state, id)).toBe(8000);
-      expect(state.players.self.scene.find((char) => char.uid === id)!.declaredUseCount.a3).toBe(2);
+      expect(charRead.declaredUseCount(state, id, 'a3', {
+        abilityOrigin: 'printed', abilityIndex: 2,
+      })).toBe(2);
     }
   });
 
@@ -140,6 +142,8 @@ describe('B10006', () => {
     const original = liveState(['KAITO']);
     reveal(original, 'KAITO');
     expect(charRead.ap(original, 'ran-0')).toBe(6000);
-    expect(original.players.self.scene[0]!.declaredUseCount.a3).toBeUndefined();
+    expect(charRead.declaredUseCount(original, 'ran-0', 'a3', {
+      abilityOrigin: 'printed', abilityIndex: 2,
+    })).toBe(0);
   });
 });

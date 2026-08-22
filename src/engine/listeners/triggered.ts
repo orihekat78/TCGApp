@@ -58,6 +58,24 @@ export function _setHumanPlayerSide(side: 'self' | 'opp' | null): void {
 
 type Player = 'self' | 'opp';
 
+type TriggeredAbilityOccurrence = {
+  ability: AbilityDef;
+  abilityOrigin?: 'printed' | 'granted';
+  abilityIndex?: number;
+  setCardId?: string;
+  setCardInstanceId?: string;
+};
+
+function hostAbilityWitness(occurrence: TriggeredAbilityOccurrence):
+  | { abilityOrigin: 'printed' | 'granted'; abilityIndex: number }
+  | undefined {
+  if (occurrence.abilityOrigin === undefined || occurrence.abilityIndex === undefined) return undefined;
+  return {
+    abilityOrigin: occurrence.abilityOrigin,
+    abilityIndex: occurrence.abilityIndex,
+  };
+}
+
 // refactor 2b (2026-06-12): export 化 — scripts/taskA-validate-specs.cjs HOOKS との同期を
 // tests/engine/sync-taskA-whitelists.test.ts が機械検証するため。
 export const TRIGGERED_HOOKS = [
@@ -285,6 +303,9 @@ function handleHook(
   payload: unknown,
   source: unknown,
 ): void {
+  // Physical set-card identity is part of a triggered occurrence. Legacy and
+  // hand-authored states may not have been hydrated through the normal loader.
+  charMutator.ensureSetCardInstanceIds(state);
   const inheritedBindings = ((source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings ?? {}) as EffectCtx['bindings'];
   const hookBindings = triggerBindingsForHook(hookName, state, payload);
   // Hook-owned names win over an emitter-provided binding.  An enter event
@@ -331,7 +352,7 @@ function handleHook(
     // 「セットされているキャラが…したとき」)。裏向き (faceUp:false) は情報を持たない (rules/16) → 除外。
     // selfOnly は host uid 照合 (selfOnlyMatches が card.uid を使う)。card.area==='scene' のみ (set 先は現場)。
     // gate=scope==='on-set-host' (新 scope、既存カード未宣言 → 回帰0)。set card の on-scene triggered は漏れない。
-    const riderAbilities: AbilityDef[] = [];
+    const riderAbilities: TriggeredAbilityOccurrence[] = [];
     if (card.area === 'scene') {
       const hostChar = state.players[card.player].scene.find(c => c.uid === card.uid);
       for (const entry of hostChar?.setCards ?? []) {
@@ -339,7 +360,13 @@ function handleHook(
         const sd = readDef.card(entry.cardId);
         if (!sd) continue;
         for (const ability of (sd.abilities ?? []) as AbilityDef[]) {
-          if (ability.type === 'triggered' && ability.scope === 'on-set-host') riderAbilities.push(ability);
+          if (ability.type === 'triggered' && ability.scope === 'on-set-host') {
+            riderAbilities.push({
+              ability,
+              setCardId: entry.cardId,
+              ...(entry.instanceId ? { setCardInstanceId: entry.instanceId } : {}),
+            });
+          }
         }
       }
     }
@@ -357,10 +384,24 @@ function handleHook(
     const printedAbilities = readChar.originalAbilitiesDisabled(state, card.uid)
       ? []
       : (def.abilities as AbilityDef[]);
-    const abilityList = ((Array.isArray(grantedRaw) && grantedRaw.length > 0) || riderAbilities.length > 0 || handCutinAbilities.length > 0 || triggeredAuraAbilities.length > 0)
-      ? [...printedAbilities, ...(Array.isArray(grantedRaw) ? (grantedRaw as AbilityDef[]) : []), ...riderAbilities, ...handCutinAbilities, ...triggeredAuraAbilities]
-      : printedAbilities;
-    for (const ability of abilityList) {
+    const abilityList: TriggeredAbilityOccurrence[] = [
+      ...printedAbilities.map((ability, abilityIndex) => ({
+        ability,
+        abilityOrigin: 'printed' as const,
+        abilityIndex,
+      })),
+      ...(Array.isArray(grantedRaw) ? (grantedRaw as AbilityDef[]).map((ability, abilityIndex) => ({
+        ability,
+        abilityOrigin: 'granted' as const,
+        abilityIndex,
+      })) : []),
+      ...riderAbilities,
+      ...handCutinAbilities.map((ability) => ({ ability })),
+      ...triggeredAuraAbilities.map((ability) => ({ ability })),
+    ];
+    for (const occurrence of abilityList) {
+      const ability = occurrence.ability;
+      const abilityWitness = hostAbilityWitness(occurrence);
       if (ability.type !== 'triggered') continue;
       const trig = ability.trigger;
       // multi-hook (2026-06-06 タスクC): trig.hook OR trig.hooks のいずれかが一致で発火。
@@ -402,6 +443,11 @@ function handleHook(
         description: ability.description,
         player: card.player,
         area: card.area,
+        ...(abilityWitness ?? {}),
+        ...(occurrence.setCardId !== undefined ? { setCardId: occurrence.setCardId } : {}),
+        ...(occurrence.setCardInstanceId !== undefined
+          ? { setCardInstanceId: occurrence.setCardInstanceId }
+          : {}),
         ...(resolutionKind ? { resolutionKind } : {}),
       } as const;
       // scope check
@@ -450,7 +496,10 @@ function handleHook(
       // declared フロー (declared-ability.ts:82-84) と同じ declaredUseCount を流用
       // (SceneCharacter.declaredUseCount、resetTurnFlags がターン境界で reset、rules/17)。
       if (ability.limit?.kind === 'turn') {
-        if (readChar.declaredUseCount(state, card.uid, ability.id) >= ability.limit.n) continue;
+        const used = occurrence.setCardInstanceId
+          ? readChar.setCardAbilityUseCount(state, card.uid, occurrence.setCardInstanceId, ability.id)
+          : readChar.declaredUseCount(state, card.uid, ability.id, abilityWitness);
+        if (used >= ability.limit.n) continue;
       }
       // engine additive wave-8 (2026-07-02, P15): 疾風 (enter + enterOrderEquals) が発動した時点で、
       // 発動キャラの owner 側 turnState.shippuFiredThisTurn を立てる。全 gate (selfOnly/matcher/
@@ -522,7 +571,11 @@ function handleHook(
       );
       // BUG-096: 発火を記録 (limit:{turn} のカウント。limit 無しは no-op)
       if (ability.limit?.kind === 'turn') {
-        flag.incrDeclaredUseCount(state, card.uid, ability.id);
+        if (occurrence.setCardInstanceId) {
+          charMutator.incrSetCardAbilityUseCount(state, card.uid, occurrence.setCardInstanceId, ability.id);
+        } else {
+          flag.incrDeclaredUseCount(state, card.uid, ability.id, card.player, abilityWitness);
+        }
       }
     }
   }
@@ -795,14 +848,18 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
   // のため in-play scan (handleHook) からは見えない — payload.removedChar (splice 前 snapshot、
   // setCards 保持) から entry 単位で def を引く (公式Q&A: 2枚セット→2つ発動)。裏向きは不発 (rules/16)。
   // source = host (uid/cardId/player) — rider の「このキャラ (host) がリムーブされたとき」座標系。
-  const riderAbilities: AbilityDef[] = [];
-  const removedChar = (payload as { removedChar?: { setCards?: { cardId: string; faceUp: boolean }[]; turnEffects?: Record<string, unknown>; keywordOverrides?: { disabledOriginal?: boolean } } } | undefined)?.removedChar;
+  const riderAbilities: TriggeredAbilityOccurrence[] = [];
+  const removedChar = (payload as { removedChar?: { setCards?: { cardId: string; faceUp: boolean; instanceId?: string }[]; turnEffects?: Record<string, unknown>; keywordOverrides?: { disabledOriginal?: boolean } } } | undefined)?.removedChar;
   for (const entry of removedChar?.setCards ?? []) {
     if (entry.faceUp !== true) continue;
     const setDef = readDef.card(entry.cardId);
     for (const ab of (setDef?.abilities ?? []) as AbilityDef[]) {
       if (ab.type === 'triggered' && ab.scope === 'on-set-host' && ab.trigger?.hook === 'leave:to-remove') {
-        riderAbilities.push(ab);
+        riderAbilities.push({
+          ability: ab,
+          setCardId: entry.cardId,
+          ...(entry.instanceId ? { setCardInstanceId: entry.instanceId } : {}),
+        });
       }
     }
   }
@@ -813,8 +870,12 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
   // は grantedAbilities を合算するが離場カード自身は collectCardsInPlay に出ないため self-leave grant は
   // この経路でのみ拾える。裏向き/JSON descriptor そのまま (validate が function 不可を静的保証)。
   const grantedSelf = removedChar?.turnEffects?.['grantedAbilities'];
-  const grantedSelfAbilities: AbilityDef[] = Array.isArray(grantedSelf)
-    ? (grantedSelf as AbilityDef[]).filter(ab => ab.type === 'triggered' && ab.trigger?.hook === 'leave:to-remove')
+  const grantedSelfAbilities: TriggeredAbilityOccurrence[] = Array.isArray(grantedSelf)
+    ? (grantedSelf as AbilityDef[]).flatMap((ability, abilityIndex) => (
+      ability.type === 'triggered' && ability.trigger?.hook === 'leave:to-remove'
+        ? [{ ability, abilityOrigin: 'granted' as const, abilityIndex }]
+        : []
+    ))
     : [];
   const batchAuraAbilities = (payload as { triggeredAuraAbilities?: unknown } | undefined)?.triggeredAuraAbilities;
   const auraAbilities = Array.isArray(batchAuraAbilities)
@@ -825,7 +886,19 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
   const printedAbilities = readChar.originalAbilitiesDisabledOn(removedChar)
     ? []
     : (def.abilities as AbilityDef[]);
-  for (const ability of [...printedAbilities, ...riderAbilities, ...grantedSelfAbilities, ...auraAbilities]) {
+  const abilityOccurrences: TriggeredAbilityOccurrence[] = [
+    ...printedAbilities.map((ability, abilityIndex) => ({
+      ability,
+      abilityOrigin: 'printed' as const,
+      abilityIndex,
+    })),
+    ...riderAbilities,
+    ...grantedSelfAbilities,
+    ...auraAbilities.map((ability) => ({ ability })),
+  ];
+  for (const occurrence of abilityOccurrences) {
+    const ability = occurrence.ability;
+    const abilityWitness = hostAbilityWitness(occurrence);
     if (ability.type !== 'triggered') continue;
     const trig = ability.trigger;
     if (!trig || trig.hook !== 'leave:to-remove') continue;
@@ -840,6 +913,11 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
         abilityId: ability.id,
         player: card.player,
         area: card.area,
+        ...(abilityWitness ?? {}),
+        ...(occurrence.setCardId !== undefined ? { setCardId: occurrence.setCardId } : {}),
+        ...(occurrence.setCardInstanceId !== undefined
+          ? { setCardInstanceId: occurrence.setCardInstanceId }
+          : {}),
       },
       bindings: {},
       triggerPayload: payload,
@@ -852,7 +930,18 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
     event.queue(
       state,
       ability.effect,
-      { player: card.player, uid: card.uid, cardId: card.cardId, abilityId: ability.id, description: ability.description },
+      {
+        player: card.player,
+        uid: card.uid,
+        cardId: card.cardId,
+        abilityId: ability.id,
+        description: ability.description,
+        ...(abilityWitness ?? {}),
+        ...(occurrence.setCardId !== undefined ? { setCardId: occurrence.setCardId } : {}),
+        ...(occurrence.setCardInstanceId !== undefined
+          ? { setCardInstanceId: occurrence.setCardInstanceId }
+          : {}),
+      },
       'leave:to-remove',
       payload,
       sourceBindings,
@@ -919,10 +1008,10 @@ function handleDisguiseReplacedSelf(state: GameState, payload: unknown, source: 
 /**
  * engine additive A2 (2026-07-11, B02084 安室の愛車): setcard:leave の **セットカード自身** 用
  * virtual-location handler。handleLeaveToRemoveSelf / handleDisguiseReplacedSelf と同構造。
- * setcard:leave payload = { player, hostUid, hostCardId, setCardId, faceUp, cause }。離場した
+ * setcard:leave payload = { player, hostUid, hostCardId, setCardId, setCardInstanceId, faceUp, cause }。離場した
  * セットカードは collectCardsInPlay に出ない → payload.setCardId から def を引き、scope:'on-set-self' +
  * hook:'setcard:leave' の triggered を発火。faceUp:false は情報を持たない (rules/16 / B02084 Q&A) → 不発。
- * source uid は自己参照しない ability 用に host uid を借りる (line2 は remove-area pick で自 uid 不要)。
+ * source uid は $self の host 参照用。setCardId + setCardInstanceId が物理能力 occurrence を識別する。
  */
 function handleOnSetSelfPhaseEndStart(state: GameState, payload: unknown, source: unknown): void {
   charMutator.ensureSetCardInstanceIds(state);
@@ -938,9 +1027,21 @@ function handleOnSetSelfPhaseEndStart(state: GameState, payload: unknown, source
           if (!trigger || trigger.hook !== 'phase:end:start') continue;
           if (trigger.selfOnly && !selfOnlyMatches({ player, uid: host.uid, cardId: setCard.cardId, area: 'scene' }, payload, source)) continue;
           if (trigger.matcher && !trigger.matcher(payload, state)) continue;
-          const triggerPayload = { ...(payload as Record<string, unknown>), setCardInstanceId: setCard.instanceId };
+          const triggerPayload = {
+            ...(payload as Record<string, unknown>),
+            setCardId: setCard.cardId,
+            setCardInstanceId: setCard.instanceId,
+          };
           const ctx: EffectCtx = {
-            source: { cardId: setCard.cardId, uid: host.uid, abilityId: ability.id, player, area: 'scene' },
+            source: {
+              cardId: setCard.cardId,
+              uid: host.uid,
+              abilityId: ability.id,
+              player,
+              area: 'scene',
+              setCardId: setCard.cardId,
+              setCardInstanceId: setCard.instanceId,
+            },
             bindings: {}, triggerPayload,
           };
           if (trigger.matcherCondition && !evalCond(state, trigger.matcherCondition, ctx)) continue;
@@ -949,7 +1050,15 @@ function handleOnSetSelfPhaseEndStart(state: GameState, payload: unknown, source
           event.queue(
             state,
             ability.effect,
-            { player, uid: host.uid, cardId: setCard.cardId, abilityId: ability.id, description: ability.description },
+            {
+              player,
+              uid: host.uid,
+              cardId: setCard.cardId,
+              abilityId: ability.id,
+              description: ability.description,
+              setCardId: setCard.cardId,
+              setCardInstanceId: setCard.instanceId,
+            },
             'phase:end:start',
             triggerPayload,
             undefined,
@@ -963,10 +1072,11 @@ function handleOnSetSelfPhaseEndStart(state: GameState, payload: unknown, source
 
 function handleSetcardLeaveSelf(state: GameState, payload: unknown, _source: unknown): void {
   const pl = payload as
-    | { player?: Player; setCardId?: string; faceUp?: boolean; hostUid?: string }
+    | { player?: Player; setCardId?: string; setCardInstanceId?: string; faceUp?: boolean; hostUid?: string }
     | undefined;
   if (!pl || !pl.player || !pl.setCardId) return;
   if (pl.faceUp !== true) return; // 裏向きセットは情報を持たない (rules/16, B02084 Q&A)
+  if (typeof pl.setCardInstanceId !== 'string' || pl.setCardInstanceId.length === 0) return;
   const def = readDef.card(pl.setCardId);
   if (!def) return;
   const card: CardLocation = {
@@ -988,6 +1098,8 @@ function handleSetcardLeaveSelf(state: GameState, payload: unknown, _source: unk
         abilityId: ability.id,
         player: card.player,
         area: card.area,
+        setCardId: pl.setCardId,
+        ...(pl.setCardInstanceId ? { setCardInstanceId: pl.setCardInstanceId } : {}),
       },
       bindings: {},
       triggerPayload: payload,
@@ -999,7 +1111,15 @@ function handleSetcardLeaveSelf(state: GameState, payload: unknown, _source: unk
     event.queue(
       state,
       ability.effect,
-      { player: card.player, uid: card.uid, cardId: card.cardId, abilityId: ability.id, description: ability.description },
+      {
+        player: card.player,
+        uid: card.uid,
+        cardId: card.cardId,
+        abilityId: ability.id,
+        description: ability.description,
+        setCardId: pl.setCardId,
+        ...(pl.setCardInstanceId ? { setCardInstanceId: pl.setCardInstanceId } : {}),
+      },
       'setcard:leave',
       payload,
       undefined,

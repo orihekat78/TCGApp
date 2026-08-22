@@ -120,6 +120,82 @@ export function cardIdToDisplayName(cardId: string): string {
   return cardId;
 }
 
+export type PublicEffectSourceRef = {
+  uid?: string;
+  cardId?: string;
+  setCardId?: string;
+  setCardInstanceId?: string;
+};
+
+export type EffectSourceDisplayContext = {
+  gameState?: GameState | null;
+  siblingSources?: readonly PublicEffectSourceRef[];
+};
+
+function sameOfficialPrinting(leftId: string, rightId: string): boolean {
+  const left = readDef.card(leftId);
+  const right = readDef.card(rightId);
+  if (!left || !right) return false;
+  return left.no.split('/')[0] === right.no.split('/')[0]
+    && left.names[0] === right.names[0];
+}
+
+function printingVariantLabel(cardId: string): string | undefined {
+  const isParallel = cardId.endsWith('P');
+  const counterpartId = isParallel ? cardId.slice(0, -1) : `${cardId}P`;
+  if (!sameOfficialPrinting(cardId, counterpartId)) return undefined;
+  return isParallel ? 'パラレル版' : '通常版';
+}
+
+function setCardOccurrenceIds(
+  source: PublicEffectSourceRef,
+  context: EffectSourceDisplayContext,
+): string[] {
+  if (!source.setCardId || !source.setCardInstanceId) return [];
+  const refs: PublicEffectSourceRef[] = [...(context.siblingSources ?? [])];
+  const state = context.gameState;
+  if (state) {
+    for (const player of ['self', 'opp'] as const) {
+      const host = state.players[player].scene.find(card => card.uid === source.uid);
+      if (host) {
+        refs.push(...host.setCards.map(entry => ({
+          setCardId: entry.cardId,
+          setCardInstanceId: entry.instanceId,
+        })));
+      }
+    }
+    refs.push(...state.pendingEffects
+      .filter(entry => entry.state === 'pending' || entry.state === 'resolving')
+      .map(entry => entry.source));
+  }
+  refs.push(source);
+  return [...new Set(refs
+    .filter(ref => ref.setCardId === source.setCardId && typeof ref.setCardInstanceId === 'string')
+    .map(ref => ref.setCardInstanceId!))]
+    .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+}
+
+/** Public source label for host-owned abilities granted by one physical set card. */
+export function effectSourceDisplayName(
+  source: PublicEffectSourceRef,
+  context: EffectSourceDisplayContext = {},
+): string {
+  const displayCardId = source.setCardId ?? source.cardId;
+  if (!displayCardId) return '効果';
+  const name = cardIdToDisplayName(displayCardId);
+  if (!source.setCardId || !source.setCardInstanceId) return name;
+
+  const details: string[] = [];
+  const variant = printingVariantLabel(source.setCardId);
+  if (variant) details.push(variant);
+  const occurrences = setCardOccurrenceIds(source, context);
+  if (occurrences.length >= 2) {
+    const index = occurrences.indexOf(source.setCardInstanceId);
+    if (index >= 0) details.push(`${index + 1}枚目`);
+  }
+  return details.length > 0 ? `${name}（${details.join('・')}）` : name;
+}
+
 /** Gives repeated public cards an assistive-technology-only ordinal, never an internal id. */
 export function publicCardOccurrenceLabel(cardIds: readonly string[], cardId: string, index: number): string | undefined {
   if (cardIds.filter((id) => id === cardId).length < 2) return undefined;

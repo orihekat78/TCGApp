@@ -150,7 +150,7 @@
         "rules:.claude/rules/16-card-set.md:18",
         "rules:.claude/rules/21-declared-ability-cost.md:15",
         "src:src/cards/ct-p02/B02023.ts:34",
-        "tests:tests/cards/ct-p02/B02023.test.ts:177"
+        "tests:tests/cards/ct-p02/B02023.test.ts:180"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION-MISSING"
@@ -530,7 +530,7 @@
         "src:src/cards/ct-p04/B04091.ts:1",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {
@@ -572,7 +572,7 @@
         "src:src/cards/ct-p05/B05011.ts:17",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {
@@ -597,7 +597,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05021.ts:1",
-        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:366"
+        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:374"
       ]
     },
     {
@@ -890,11 +890,18 @@
     {
       "qaId": "card:B07014:bd67dbe9cade0deddafb4cbadad23f58738d4185aa2f881da6e9284c89d2f555",
       "answerHash": "cfa3c372e070cc760a9e1622375347c45c1b2f05342c71656e44de9077adf77b",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07014.ts:1"
+        "src:src/cards/ct-p07/B07014.ts:1",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1118",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1126",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1131",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1133",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1137",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1141",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1146"
       ]
     },
     {
@@ -1989,7 +1996,7 @@
         "src:src/cards/pr-01/PR036.ts:1",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {
@@ -2062,7 +2069,7 @@
         "src:src/cards/pr-01/PR135.ts:51",
         "src:src/cards/pr-01/PR135.ts:67",
         "src:src/cards/pr-01/PR135.ts:70",
-        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:371"
+        "tests:tests/cards/official-qa/leave-reveal-until-forced-public.test.ts:379"
       ]
     },
     {

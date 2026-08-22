@@ -331,8 +331,16 @@ describe('official Q&A same CardDef multi-copy order — Wave17', () => {
 
     const ability = readDef.card(cardId)?.abilities.find((candidate) => candidate.id === abilityId);
     if (ability?.limit?.kind === 'turn') {
-      expect(readChar.declaredUseCount(state, bearerA, abilityId), `${qaId}: first copy limit`).toBe(1);
-      expect(readChar.declaredUseCount(state, bearerB, abilityId), `${qaId}: second copy limit`).toBe(1);
+      const firstSource = initial.find(entry => entry.source.uid === bearerA)!.source;
+      const secondSource = initial.find(entry => entry.source.uid === bearerB)!.source;
+      expect(readChar.declaredUseCount(state, bearerA, abilityId, {
+        abilityOrigin: firstSource.abilityOrigin,
+        abilityIndex: firstSource.abilityIndex,
+      }), `${qaId}: first copy limit`).toBe(1);
+      expect(readChar.declaredUseCount(state, bearerB, abilityId, {
+        abilityOrigin: secondSource.abilityOrigin,
+        abilityIndex: secondSource.abilityIndex,
+      }), `${qaId}: second copy limit`).toBe(1);
     }
 
     useGameStateStore.setState({ gameState: state });
@@ -380,8 +388,16 @@ describe('official Q&A same CardDef multi-copy order — Wave17', () => {
     expect(atOrderBoundary.pendingReasoningContinuation).toBeDefined();
     expect(initial.map((entry) => entry.source.uid)).toEqual([bearerA, bearerB]);
     expect(new Set(initial.map((entry) => entry.triggerBatch)).size).toBe(1);
-    expect(readChar.declaredUseCount(atOrderBoundary, bearerA, 'a1')).toBe(1);
-    expect(readChar.declaredUseCount(atOrderBoundary, bearerB, 'a1')).toBe(1);
+    const firstSource = initial.find(entry => entry.source.uid === bearerA)!.source;
+    const secondSource = initial.find(entry => entry.source.uid === bearerB)!.source;
+    expect(readChar.declaredUseCount(atOrderBoundary, bearerA, 'a1', {
+      abilityOrigin: firstSource.abilityOrigin,
+      abilityIndex: firstSource.abilityIndex,
+    })).toBe(1);
+    expect(readChar.declaredUseCount(atOrderBoundary, bearerB, 'a1', {
+      abilityOrigin: secondSource.abilityOrigin,
+      abilityIndex: secondSource.abilityIndex,
+    })).toBe(1);
 
     const uidByEntryId = new Map(initial.map((entry) => [entry.id, entry.source.uid]));
     const executionLog: string[] = [];
@@ -505,7 +521,10 @@ describe('official Q&A same CardDef multi-copy order — Wave17', () => {
 
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.hand).toHaveLength(2);
-    expect(grantedIds.map((abilityId) => readChar.declaredUseCount(after, 'ap7k', abilityId))).toEqual([1, 1]);
+    expect(reactions.map((entry) => readChar.declaredUseCount(after, 'ap7k', entry.source.abilityId!, {
+      abilityOrigin: entry.source.abilityOrigin,
+      abilityIndex: entry.source.abilityIndex,
+    }))).toEqual([1, 1]);
 
     const afterSecondRemoval = produce(after, (draft) => {
       addOpp(draft, 'W17_VICTIM', 'b07063-victim-2', { state: 'sleep' });

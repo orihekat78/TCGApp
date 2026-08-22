@@ -177,7 +177,7 @@
         "src:src/cards/ct-p03/B03008.ts:37",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {
@@ -1959,7 +1959,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/pr-01/PR032.ts:26",
-        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:502"
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:530"
       ]
     },
     {

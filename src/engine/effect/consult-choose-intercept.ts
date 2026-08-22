@@ -2,7 +2,13 @@ import { def as readDef } from '../read/def.js';
 import { evalCond } from '../cond/eval.js';
 import { char as readChar } from '../read/char.js';
 import { char as mutateChar } from '../mutate/char.js';
-import type { AbilityDef, EffectCtx, GameState } from '../types/index.js';
+import {
+  incrementDeclaredAbilityUseCountRecord,
+  incrementTurnScopedUseCount,
+  readDeclaredAbilityUseCountRecord,
+  readTurnScopedUseCount,
+} from './source-identity.js';
+import type { AbilityDef, DeclaredAbilityHostOrigin, EffectCtx, GameState } from '../types/index.js';
 
 type Player = 'self' | 'opp';
 type InterceptTarget = { cardName?: string; excludeSelf?: boolean; requiresNonBlackSceneChar?: boolean };
@@ -13,6 +19,8 @@ export type ChooseInterceptProtector = {
   protectorUid: string;
   protectorCardId: string;
   abilityId: string;
+  abilityOrigin?: DeclaredAbilityHostOrigin;
+  abilityIndex?: number;
   setCardInstanceId?: string;
 };
 
@@ -31,10 +39,18 @@ function findSceneChar(state: GameState, uid: string): { player: Player; char: G
     .find(({ char }) => char.uid === uid);
 }
 
-function consumeLimit(char: GameState['players']['self']['scene'][number], ability: AbilityDef): boolean {
+function consumeLimit(
+  char: GameState['players']['self']['scene'][number],
+  ability: AbilityDef,
+  abilityIndex: number,
+): boolean {
   if (ability.limit?.kind !== 'turn') return false;
-  if ((char.declaredUseCount[ability.id] ?? 0) >= ability.limit.n) return false;
-  char.declaredUseCount[ability.id] = (char.declaredUseCount[ability.id] ?? 0) + 1;
+  const source = {
+    abilityOrigin: 'printed',
+    abilityIndex,
+  } as const;
+  if (readDeclaredAbilityUseCountRecord(char.declaredUseCount, ability.id, source) >= ability.limit.n) return false;
+  incrementDeclaredAbilityUseCountRecord(char.declaredUseCount, ability.id, source);
   return true;
 }
 
@@ -45,12 +61,9 @@ function consumeSetCardLimit(
 ): boolean {
   if (ability.limit?.kind !== 'turn' || !entry.instanceId) return false;
   const previous = entry.abilityUseCounts?.[ability.id];
-  if (previous?.turn === state.turn.number && previous.count >= ability.limit.n) return false;
+  if (readTurnScopedUseCount(previous, state.turn.number) >= ability.limit.n) return false;
   const counts = (entry.abilityUseCounts ??= {});
-  counts[ability.id] = {
-    turn: state.turn.number,
-    count: previous?.turn === state.turn.number ? previous.count + 1 : 1,
-  };
+  counts[ability.id] = incrementTurnScopedUseCount(previous, state.turn.number);
   return true;
 }
 
@@ -93,7 +106,7 @@ export function findChooseInterceptReactions(
   for (const protector of state.players[target.player].scene) {
     if (readChar.originalAbilitiesDisabled(state, protector.uid)) continue;
     const card = readDef.card(protector.cardId);
-    for (const ability of (card?.abilities ?? []) as AbilityDef[]) {
+    for (const [abilityIndex, ability] of ((card?.abilities ?? []) as AbilityDef[]).entries()) {
       const trigger = ability.trigger as (AbilityDef['trigger'] & { interceptTarget?: InterceptTarget }) | undefined;
       const spec = trigger?.interceptTarget;
       if (
@@ -107,11 +120,19 @@ export function findChooseInterceptReactions(
       if (spec.cardName !== undefined && !targetDef?.names.includes(spec.cardName)) continue;
       if (spec.requiresNonBlackSceneChar === true && !state.players[target.player].scene.some((char) => readDef.card(char.cardId)?.colors.some(color => color !== '黒'))) continue;
       const protectorCtx: EffectCtx = {
-        source: { cardId: protector.cardId, uid: protector.uid, abilityId: ability.id, player: target.player, area: 'scene' },
+        source: {
+          cardId: protector.cardId,
+          uid: protector.uid,
+          abilityId: ability.id,
+          abilityOrigin: 'printed',
+          abilityIndex,
+          player: target.player,
+          area: 'scene',
+        },
         bindings: ctx.bindings,
       };
       if (ability.condition && !evalCond(state, ability.condition, protectorCtx)) continue;
-      if (consumeLimit(protector, ability)) {
+      if (consumeLimit(protector, ability, abilityIndex)) {
         reactions.push({
           resolution: 'discard-or-cancel',
           responder: ctx.source.player,
@@ -119,6 +140,8 @@ export function findChooseInterceptReactions(
           protectorUid: protector.uid,
           protectorCardId: protector.cardId,
           abilityId: ability.id,
+          abilityOrigin: 'printed',
+          abilityIndex,
         });
       }
     }

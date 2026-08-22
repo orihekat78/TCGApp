@@ -2,7 +2,12 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { run as runEffect } from '@/engine/effect/resolver';
 import { applySetCardChoiceAndContinuation } from '@/engine/effect/apply-pick';
-import { _drainPendingSetCardChoiceSide, resetPendingEffectSession, setPendingSetCardChoiceRemainder } from '@/engine/effect/pending-state';
+import {
+  _drainPendingSetCardChoiceSide,
+  _peekPendingSetCardChoiceResume,
+  resetPendingEffectSession,
+  setPendingSetCardChoiceRemainder,
+} from '@/engine/effect/pending-state';
 import { validate } from '@/engine/effect/validate';
 import { event } from '@/engine/event';
 import { sceneChar } from '../../helpers/fixtures';
@@ -67,6 +72,30 @@ describe('moveSetCard', () => {
 
     expect(state.players.self.hand).toEqual(['SECRET', 'DRAW']);
     expect(state.players.self.scene.find((char) => char.uid === 'from')?.setCards.map((entry) => entry.instanceId)).toEqual(['set:up', 'set:down-b']);
+  });
+
+  it('keeps the exact set-card source in the compatibility continuation frame', () => {
+    const state = stateWithHosts();
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    const source = ctx();
+    source.source.setCardId = 'SET-SOURCE';
+    source.source.setCardInstanceId = 'set:source:2';
+
+    runEffect(state, moveSetCard('from', 'down', { area: 'hand' }), source);
+    const pending = _drainPendingSetCardChoiceSide();
+    expect(pending?.source).toMatchObject({
+      setCardId: 'SET-SOURCE',
+      setCardInstanceId: 'set:source:2',
+    });
+
+    setPendingSetCardChoiceRemainder([
+      { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+    ], 'sequence');
+
+    expect(_peekPendingSetCardChoiceResume()?.continuation?.ctx.source).toMatchObject({
+      setCardId: 'SET-SOURCE',
+      setCardInstanceId: 'set:source:2',
+    });
   });
 
   it('moves to another same-owner host without emitting set-card leave or enter and preserves face and instance', () => {

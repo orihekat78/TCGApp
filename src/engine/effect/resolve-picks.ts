@@ -50,6 +50,7 @@ import {
   resolveSceneEnterSwitchPickArgs,
   sceneEnterOwnsNextPick,
 } from './scene-switch.js';
+import { assertCompleteSetCardSource } from './source-identity.js';
 
 type Player = 'self' | 'opp';
 
@@ -67,6 +68,10 @@ export function pendingSource<T extends { uid?: string; cardId: string; abilityI
   return {
     ...source,
     ...(source.uid === undefined && ctx.source.uid !== undefined ? { uid: ctx.source.uid } : {}),
+    ...(ctx.source.setCardId !== undefined ? { setCardId: ctx.source.setCardId } : {}),
+    ...(ctx.source.setCardInstanceId !== undefined ? { setCardInstanceId: ctx.source.setCardInstanceId } : {}),
+    ...(ctx.source.abilityOrigin !== undefined ? { abilityOrigin: ctx.source.abilityOrigin } : {}),
+    ...(ctx.source.abilityIndex !== undefined ? { abilityIndex: ctx.source.abilityIndex } : {}),
     ...(ctx.source.area ? { area: ctx.source.area } : {}),
     ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}),
     ...(ctx.source.triggerBatch !== undefined ? { triggerBatch: ctx.source.triggerBatch } : {}),
@@ -1226,6 +1231,7 @@ export function resolveEffectPicks(
   ctx: EffectCtx,
   opts: ResolveEffectPicksOpts = {},
 ): Effect {
+  assertCompleteSetCardSource(ctx.source);
   if (opts._fromAtomHandler !== true) {
     rememberRuntimeAtomTargetPolicy(
       ctx,

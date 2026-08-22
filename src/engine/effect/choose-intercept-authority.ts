@@ -31,6 +31,8 @@ export function chooseInterceptReactionKey(response: PendingChooseInterceptRespo
     response.protector.uid,
     response.protector.cardId,
     response.protector.abilityId,
+    response.protector.abilityOrigin ?? null,
+    response.protector.abilityIndex ?? null,
     response.protector.setCardInstanceId ?? null,
     response.targetUid,
   ]);

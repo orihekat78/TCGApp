@@ -120,7 +120,13 @@ describe('B10094 source-area declared ability', () => {
     expect(enumDeclaredAbilityIdsFor(state, 'evidence:self:2')).toEqual(['a1']);
     expect(enumDeclaredAbilityIdsFor(state, 'file:self:3')).toEqual(['a1']);
     expect(enumerateMoves(state, 'self').filter(move => move.kind === 'declaredAbility')).toEqual(
-      expected.map(uid => ({ kind: 'declaredAbility', uid, abilityId: 'a1' })),
+      expected.map(uid => ({
+        kind: 'declaredAbility',
+        uid,
+        abilityId: 'a1',
+        abilityOrigin: 'printed',
+        abilityIndex: 0,
+      })),
     );
   });
 

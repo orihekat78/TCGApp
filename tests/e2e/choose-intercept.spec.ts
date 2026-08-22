@@ -127,9 +127,9 @@ test('real simultaneous reactions resolve through owner order at 851x393', async
   const modal = page.getByTestId('choose-intercept-order-modal');
   await expect(modal).toBeVisible();
   await expect(modal.getByRole('heading')).toHaveText('同時に発動した能力の解決順を選んでください');
-  const firstChoice = modal.getByTestId('choose-intercept-order-hirota-1-target-1');
+  const firstChoice = modal.getByTestId('choose-intercept-order-hirota-1-target-1-printed:1');
   await expect(firstChoice).toBeVisible();
-  await expect(modal.getByTestId('choose-intercept-order-hirota-2-target-1')).toBeVisible();
+  await expect(modal.getByTestId('choose-intercept-order-hirota-2-target-1-printed:1')).toBeVisible();
   await expect(firstChoice).toBeFocused();
 
   await page.evaluate(() => {

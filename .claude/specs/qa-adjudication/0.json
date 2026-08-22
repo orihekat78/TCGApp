@@ -638,7 +638,7 @@
       "evidence": [
         "rules:.claude/rules/24-qa-naming-stun.md:58",
         "src:src/cards/ct-p04/B04058.ts:26",
-        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:543"
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:571"
       ],
       "noteCodes": []
     },
@@ -929,13 +929,12 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06042.ts:58",
-        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:299",
-        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:300",
-        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:305",
-        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:306",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:303",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:304",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:309",
         "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:310",
-        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:316",
-        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:317"
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:320",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:321"
       ]
     },
     {
@@ -946,16 +945,14 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06042.ts:58",
-        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:257",
-        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:258",
-        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:260",
         "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:261",
         "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:262",
-        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:270",
-        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:273",
-        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:275",
-        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:281",
-        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:283"
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:264",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:274",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:277",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:279",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:285",
+        "tests:tests/cards/official-qa/B06042-grant-lifecycle-public.test.ts:287"
       ]
     },
     {

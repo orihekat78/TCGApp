@@ -166,7 +166,7 @@
         "src:src/cards/ct-p02/B02020.ts:35",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {
@@ -219,7 +219,7 @@
       "evidence": [
         "src:src/cards/ct-p02/B02067.ts:4",
         "src:src/cards/ct-p02/B02067.ts:6",
-        "tests:tests/cards/choose-intercept.test.ts:149"
+        "tests:tests/cards/choose-intercept.test.ts:250"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -599,7 +599,7 @@
       "evidence": [
         "rules:.claude/rules/24-qa-naming-stun.md:63",
         "src:src/cards/ct-p04/B04058.ts:26",
-        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:476"
+        "tests:tests/cards/official-qa/turn1-resolution-time-state-public.test.ts:504"
       ],
       "noteCodes": []
     },
@@ -678,7 +678,7 @@
         "src:src/cards/ct-p04/B04094.ts:49",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:328",
         "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:329",
-        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:345"
+        "tests:tests/cards/official-qa/same-card-multicopy-order-wave17.test.ts:353"
       ]
     },
     {
@@ -1774,7 +1774,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:36",
         "src:src/cards/ct-p10/B10004.ts:16",
-        "tests:tests/cards/ct-p10/b10004-declared-count.test.ts:91"
+        "tests:tests/cards/ct-p10/b10004-declared-count.test.ts:135"
       ],
       "noteCodes": []
     },
@@ -2020,7 +2020,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-d02/D02001.ts:6",
-        "tests:tests/cards/triage-greens-2026-06-15/B04017.test.ts:253"
+        "tests:tests/cards/triage-greens-2026-06-15/B04017.test.ts:254"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"

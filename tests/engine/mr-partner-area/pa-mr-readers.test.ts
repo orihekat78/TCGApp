@@ -228,8 +228,49 @@ describe('PA-MR reader spine (rules/18)', () => {
       expect(triggered.pendingEffects).toHaveLength(1);
       expect(canDeclaredAbility(s, 'partnerMR:self', 'external-d1')).toBe(true);
       const declared = produce(s, d => useDeclaredAbility(d, 'partnerMR:self', 'external-d1'));
-      expect(declared.players.self.partnerAreaMR?.declaredUseCount['external-d1']).toBe(1);
+      expect(readChar.declaredUseCount(declared, 'partnerMR:self', 'external-d1', {
+        abilityOrigin: 'granted', abilityIndex: 1,
+      })).toBe(1);
+      expect(declared.players.self.partnerAreaMR?.declaredUseCount['external-d1']).toBeUndefined();
       expect(declared.pendingEffects).toHaveLength(1);
+    });
+
+    it('keeps turn-limit authority after restoring a PA-MR with its legacy physical uid', () => {
+      const effect = { kind: 'atom' as const, verb: 'draw', args: { player: 'self', n: 1 } };
+      register(mkDef('LEGACY_UID_MR', { rarity: 'MR', abilities: [{
+        id: 'printed-d1', type: 'declared', scope: 'on-partner-area',
+        limit: { kind: 'turn', n: 1 }, effect, description: '',
+      }] }));
+      event._resetRegistry();
+      _resetTriggeredRegistered();
+      registerTriggeredListener();
+      const state = createEmptyGameState();
+      state.players.self.partnerAreaMR = makeChar({
+        cardId: 'LEGACY_UID_MR', uid: 'legacy-physical-mr',
+        turnEffects: { grantedAbilities: [{
+          id: 'granted-t1', type: 'triggered', scope: 'on-partner-area',
+          trigger: { hook: 'phase:end:start' }, limit: { kind: 'turn', n: 1 },
+          effect, description: '',
+        }] },
+      });
+      const restored = JSON.parse(JSON.stringify(state)) as GameState;
+
+      const declared = produce(restored, draft => {
+        useDeclaredAbility(draft, 'partnerMR:self', 'printed-d1');
+      });
+      expect(readChar.declaredUseCount(declared, 'partnerMR:self', 'printed-d1', {
+        abilityOrigin: 'printed', abilityIndex: 0,
+      })).toBe(1);
+      expect(canDeclaredAbility(declared, 'partnerMR:self', 'printed-d1')).toBe(false);
+
+      const triggered = immerProduce(restored, draft => {
+        event.emit(draft, 'phase:end:start', { player: 'self' });
+        event.emit(draft, 'phase:end:start', { player: 'self' });
+      });
+      expect(triggered.pendingEffects).toHaveLength(1);
+      expect(readChar.declaredUseCount(triggered, 'partnerMR:self', 'granted-t1', {
+        abilityOrigin: 'granted', abilityIndex: 0,
+      })).toBe(1);
     });
   });
 });

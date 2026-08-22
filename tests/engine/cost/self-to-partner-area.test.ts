@@ -105,7 +105,13 @@ describe('Cost.selfToPartnerArea', () => {
     const moved = produce(state(), draft => { pay(draft, COST, ctx()); });
 
     expect(enumDeclaredAbilitySources(moved, 'self')).toContain('mr#original');
-    expect(enumerateMoves(moved, 'self')).toContainEqual({ kind: 'declaredAbility', uid: 'mr#original', abilityId: 'pa' });
+    expect(enumerateMoves(moved, 'self')).toContainEqual({
+      kind: 'declaredAbility',
+      uid: 'mr#original',
+      abilityId: 'pa',
+      abilityOrigin: 'printed',
+      abilityIndex: 0,
+    });
   });
 
   it('does not accept a non-MR own scene character', () => {

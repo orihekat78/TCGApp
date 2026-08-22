@@ -8,6 +8,7 @@ import { event } from '@/engine/event';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { _resetRegistry as resetDefRegistry, register as registerCardDef } from '@/engine/read/def';
+import { char as readChar } from '@/engine/read/char';
 import { runAllUntilEmpty } from '@/engine/resolve';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _drainPendingDeckRevealSide } from '@/engine/effect/atom-handlers';
@@ -187,7 +188,8 @@ describe('B03023 official Q&A — opponent top-card reveal', () => {
     expect(after.players.opp.deck, '複数解決でも2枚目を公開しない').toEqual([TOP, NEXT]);
     expect(reveals).toHaveLength(2);
     expect(reveals.every(entry => entry.player === 'opp' && entry.result === 'revealed=1 matched=QA_B03023_TOP visibility=public viewer=all')).toBe(true);
-    expect(after.players.self.scene.filter(char => char.cardId === 'B03023').map(char => char.declaredUseCount.a1)).toEqual([1, 1]);
+    expect(after.players.self.scene.filter(char => char.cardId === 'B03023')
+      .map(char => readChar.declaredUseCount(after, char.uid, 'a1'))).toEqual([1, 1]);
     expect([useGameStateStore.getState().pendingDeckReveal, _drainPendingDeckRevealSide()]).toEqual([
       expect.objectContaining({ player: 'opp', revealed: [TOP], presentation: 'reveal-return' }),
       expect.objectContaining({ player: 'opp', revealed: [TOP], presentation: 'reveal-return' }),

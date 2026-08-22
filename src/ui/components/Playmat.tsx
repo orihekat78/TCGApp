@@ -16,6 +16,7 @@ import type { GameState } from '@/engine/types/game-state.js';
 import type { ReplayViewerMode } from '@/ai/replay/state-frame.js';
 import { SceneArea, type ResolvedCardMeta } from './SceneArea.js';
 import { isSceneDirectPick } from '@/ui/services/scenePick.js';
+import { effectSourceDisplayName } from '@/ui/services/uidNames.js';
 import { PartnerArea } from './PartnerArea.js';
 import { DeckArea } from './DeckArea.js';
 import { RemoveArea } from './RemoveArea.js';
@@ -214,6 +215,10 @@ function sceneVerbBanner(verb: string | undefined): string {
     case 'sceneToHand':      return '現場のキャラを1枚選んで手札に戻してください';
     default:                 return '現場のキャラを1枚選んでください';
   }
+}
+
+function effectPickBanner(sourceName: string | null, instruction: string): string {
+  return sourceName ? `${sourceName}: ${instruction}` : instruction;
 }
 
 function PlayerMat({
@@ -630,6 +635,9 @@ export function Playmat({
   // verb 白名簿 (旧: sceneRemove/charModifyAP) ではなく候補ベース述語 isSceneDirectPick を
   // EffectPickerModal と **共有** し、sceneSetState/charGrantKeyword/charSetCard/charSetTurnEffect/sceneToHand
   // + 将来 verb を自動被覆 (n.max>1 や非scene混在は false → EffectPickerModal フォールバック)。
+  const pendingPickSourceName = pendingPickForArea
+    ? effectSourceDisplayName(pendingPickForArea.source, { gameState })
+    : null;
   const isScenePick = isSceneDirectPick(pendingPickForArea, gameState);
   // W2b (P50/r27): mustBeSelectedByOppEvent forced 集合 — forced が居る pick では
   // forced 以外を click 不可化し (「必ず選ぶ」)、skip (選ばない) も封じる。
@@ -1137,11 +1145,16 @@ export function Playmat({
             isCutinPick
               ? cutinBannerText
               : isHandSceneEnterPick
-              ? pendingPickForArea?.candidates.length === 0
-                ? '登場できる対象はありません（「登場しない」を選択）'
-                : '手札から条件を満たすキャラを1枚まで登場させてください'
+              ? effectPickBanner(
+                  pendingPickSourceName,
+                  pendingPickForArea?.candidates.length === 0
+                    ? '登場できる対象はありません（「登場しない」を選択）'
+                    : '手札から条件を満たすキャラを1枚まで登場させてください',
+                )
               : isNextHintPick
               ? `使うカードを選択（黄枠 / レベル${nextHintPick!.postPopCount}以下）`
+              : isDiscardPick
+              ? effectPickBanner(pendingPickSourceName, '手札からリムーブするカードを選んでください')
               : undefined
           }
           pickSkipLabel={isCutinPick ? 'パス' : isHandSceneEnterPick ? '登場しない' : isNextHintPick ? '使用しない' : undefined}
@@ -1309,20 +1322,30 @@ export function Playmat({
               pickSessionKey={isPickModeForThisArea ? (declaredSourcePick.length > 0 ? pickerPhase : pendingPickForArea) : undefined}
               pickBannerText={
                 isPickModeForThisArea && pendingPickForArea?.atomVerb === 'deckRevealUntil'
-                  ? pendingPickForArea.candidates.length === 0
-                    ? '公開した3枚に対象カードはありません（「選ばない」を選択）'
-                    : '公開されたカードをすべて確認し、黄色枠の対象を1枚まで選んでください'
+                  ? effectPickBanner(
+                      pendingPickSourceName,
+                      pendingPickForArea.candidates.length === 0
+                        ? '公開した3枚に対象カードはありません（「選ばない」を選択）'
+                        : '公開されたカードをすべて確認し、黄色枠の対象を1枚まで選んでください',
+                    )
                   : isPickModeForThisArea && pendingPickForArea?.atomVerb === 'sceneEnter'
-                  ? (areaModal.kind === 'deck'
-                      // S2 B01022: deck-window 用文言 (公開カードから登場。「〜まで」= 0枚可 rules/15)
-                      ? `公開されたカードから${(pendingPickForArea.nMax ?? 1) > 1 ? `${pendingPickForArea.nMax}枚まで` : '1枚'}選んで現場に登場させてください`
-                      : (pendingPickForArea.nMax ?? 1) > 1
-                      ? `リムーブから${pendingPickForArea.nMax}枚まで選んで現場に登場させてください`
-                      : 'リムーブから1枚選んで現場に登場させてください')
+                  ? effectPickBanner(
+                      pendingPickSourceName,
+                      areaModal.kind === 'deck'
+                        // S2 B01022: deck-window 用文言 (公開カードから登場。「〜まで」= 0枚可 rules/15)
+                        ? `公開されたカードから${(pendingPickForArea.nMax ?? 1) > 1 ? `${pendingPickForArea.nMax}枚まで` : '1枚'}選んで現場に登場させてください`
+                        : (pendingPickForArea.nMax ?? 1) > 1
+                        ? `リムーブから${pendingPickForArea.nMax}枚まで選んで現場に登場させてください`
+                        : 'リムーブから1枚選んで現場に登場させてください',
+                    )
                   : isPickModeForThisArea && pendingPickForArea?.atomVerb === 'charStackCard'
-                  ? `リムーブから${pendingPickForArea.nMax}枚まで選んでこのキャラの下に重ねてください`
+                  ? effectPickBanner(pendingPickSourceName, `リムーブから${pendingPickForArea.nMax}枚まで選んでこのキャラの下に重ねてください`)
                   : isPickModeForThisArea && pendingPickForArea?.atomVerb === 'partnerAreaRemove'
-                  ? `パートナーエリアから${pendingPickForArea.nMax}枚選んでリムーブしてください`
+                  ? effectPickBanner(pendingPickSourceName, `パートナーエリアから${pendingPickForArea.nMax}枚選んでリムーブしてください`)
+                  : isPickModeForThisArea && pendingPickForArea?.atomVerb === 'evidenceToHand'
+                  ? effectPickBanner(pendingPickSourceName, '証拠から1枚選んで手札に加えてください')
+                  : isPickModeForThisArea && pendingPickForArea?.atomVerb === 'handAddFromRemove'
+                  ? effectPickBanner(pendingPickSourceName, '公開エリアから1枚選んで手札に加えてください')
                   : undefined
               }
               onPick={isPickModeForThisArea ? (uid) => {
@@ -1448,6 +1471,7 @@ export function Playmat({
           <div className="scene-pick-skip-overlay" role="status">
             {/* banner は verb 別 (画面処理=カードテキスト文言、設計 v2)。新規5verb は全て nMin=0 → 常時表示 */}
             <span className="scene-pick-skip-banner">
+              {pendingPickSourceName ? `${pendingPickSourceName}: ` : ''}
               {sceneVerbBanner(pendingPickForArea?.atomVerb)}
             </span>
             {(pendingPickForArea?.nMin ?? 1) === 0 && scenePickForced.length === 0 && (

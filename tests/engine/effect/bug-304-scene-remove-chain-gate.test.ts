@@ -2,6 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { B05041 } from '@/cards/ct-p05/B05041';
+import { B05117 } from '@/cards/ct-p05/B05117';
 import { B01092 } from '@/cards/ct-p01/B01092';
 import { B02052 } from '@/cards/ct-p02/B02052';
 import {
@@ -120,6 +121,7 @@ function replacementChainState(setCardCount = 1) {
 beforeEach(() => {
   _resetRegistry();
   register(B05041);
+  register(B05117);
   register(B01092);
   register(B02052);
   register(card('VICTIM'));
@@ -184,6 +186,42 @@ describe('BUG-304 sceneRemove actual-removal chain gate', () => {
     expect(state.players.self.remove).toEqual(expect.arrayContaining([...expectedGuardianRemove, ...expectedVictimRemove]));
     expect(state.players.self.scene.map(char => char.uid)).toEqual(choiceIndex === 0 ? [] : ['guardian']);
     expect(state.players.opp.hand).toEqual(choiceIndex === 0 ? [] : ['DRAW']);
+  });
+
+  it('keeps the exact B05117 set-card occurrence on a deferred leave-intercept choice', () => {
+    const state = patternAState();
+    const ctx = makeCtx({
+      source: {
+        player: 'opp',
+        cardId: 'SOURCE',
+        abilityId: 'b05117_set_t1',
+        uid: 'source-host',
+        area: 'scene',
+        setCardId: B05117.id,
+        setCardInstanceId: 'set:fox:source',
+      },
+      bindings: {},
+      dyn: {},
+    });
+
+    runEffect(state, {
+      kind: 'atom',
+      verb: 'sceneRemove',
+      args: { uid: 'victim', cause: 'effect' },
+    }, ctx);
+
+    const choice = _drainPendingEffectChoiceSide();
+    expect(choice?.source).toMatchObject({
+      cardId: 'SOURCE',
+      abilityId: 'b05117_set_t1',
+      uid: 'source-host',
+      area: 'scene',
+      setCardId: B05117.id,
+      setCardInstanceId: 'set:fox:source',
+    });
+
+    applyChoiceAndContinuation(state, choice!, 1);
+    expect(state.players.self.remove).toContain('VICTIM');
   });
 
   it('gates the chain tail when an MR target redirects to the partner area', () => {

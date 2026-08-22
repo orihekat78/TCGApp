@@ -25,6 +25,7 @@ import { produce } from 'immer';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
+import { char as readChar } from '@/engine/read/char';
 import { handUseCard } from '@/engine/flow/main/hand-use-card';
 import { pendingOwnerOrderGroup, runAllUntilEmpty } from '@/engine/resolve/index';
 import { drainAiEffectPicks, applyPickAndContinuation, applyPickSkipAndContinuation } from '@/engine/effect/apply-pick';
@@ -258,8 +259,7 @@ describe('B04017 服部平次 — gate5 runtime behavior', () => {
     expect(inOppScene(s, TARGET_AP8000), '1体目: opp-t2 はまだ残る').toBe(true);
     expect(s.players.opp.remove.filter((c) => c === TARGET_AP8000).length, '1体目で 1 枚リムーブ').toBe(1);
     // limit カウンタが bearer(hattori) の a1 で 1 に増えたこと = 消費の直接証拠 (declaredUseCount 流用)
-    const hattori = s.players.self.scene.find((c) => c.uid === 'hattori');
-    expect(hattori?.declaredUseCount?.['a1'], '【ターン1】カウンタ = 1 (消費済)').toBe(1);
+    expect(readChar.declaredUseCount(s, 'hattori', 'a1'), '【ターン1】カウンタ = 1 (消費済)').toBe(1);
     // 2体目の前提: bearer も partner も健在 → 再発火を妨げる唯一の要因は limit のみ
     expect(s.players.self.partner.cardId, 'partner 緑 健在').toBe('D02001');
 

@@ -14,6 +14,10 @@ import { register as registerCardDef, _resetRegistry as resetDefRegistry } from 
 import { run as runEffect } from '@/engine/effect/resolver';
 import { resolve, runAllUntilEmpty } from '@/engine/resolve/index';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
+import {
+  _drainPendingEffectOptionalSide,
+  resetPendingEffectSession,
+} from '@/engine/effect/pending-state';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { mutate } from '@/engine/mutate/index';
 import { pay } from '@/engine/cost/pay';
@@ -87,6 +91,7 @@ function baseState(): GameState {
 beforeEach(() => {
   event._resetRegistry(); _resetTriggeredRegistered(); _resetHiramekiRegistered(); _resetPendingHirameki();
   resetDefRegistry(); _resetUidCounter(); _clearPendingEffectPickQueue();
+  resetPendingEffectSession();
   for (const d of [HIR_DRAW, HIR_NONYAIBA, NO_HIR, HIR_KAIKETSU, HIR_TRIGDYN, TARGET, mkChar('PLAIN'), mkChar('D1'), mkChar('D2')]) registerCardDef(d);
   registerCardDef(B06023); registerCardDef(B06034); registerCardDef(B06049); registerCardDef(D03004);
   registerTriggeredListener(); registerHiramekiListener();
@@ -138,6 +143,24 @@ describe('BUG-249 public direct invoke order gate', () => {
 });
 
 describe('invokeHiramekiOfCard verb (直接 runEffect)', () => {
+  it('keeps the exact set-card occurrence on its atom-level optional prompt', () => {
+    setHuman('self');
+    const source = srcCtx();
+    source.source.setCardId = 'SET-SOURCE';
+    source.source.setCardInstanceId = 'set:hirameki:2';
+
+    runEffect(baseState(), invoke({ cardId: HIR_DRAW.id, player: 'self', optional: true }), source);
+
+    expect(_drainPendingEffectOptionalSide()?.source).toMatchObject({
+      cardId: 'PLAIN',
+      abilityId: 'a1',
+      uid: 'src#1',
+      area: 'scene',
+      setCardId: 'SET-SOURCE',
+      setCardInstanceId: 'set:hirameki:2',
+    });
+  });
+
   it.each([
     ['hirameki', B06049.id, 'a3', invoke({ cardId: B06049.id, player: 'self' })],
     ['leave-to-remove', D03004.id, 'a1', invokeLeave({ cardId: D03004.id, player: 'self' })],
