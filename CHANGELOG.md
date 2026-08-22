@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `697eae2f9879`
+> Source hash: `28a286bd2fe9`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,17 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## QA Wave 32 — Shuffle Romance and contact-host direction
+
+- Certified eleven official QA records across B01023/P, D10024, B03041/P, and B06012/P through twenty-five public-dispatch regression cases.
+- Proved private deck looks, zero selection, short-deck and refresh boundaries, mandatory/no-host set branches, face-up attachment, host-leave cleanup, and replay redaction.
+- Fixed set-host contact triggers to match the exact host as either participant, so opponent-caused contacts resolve before cut-in without creating observer-wide matches.
+- Applied the same directional correction to the horizontally equivalent B03041/P and B06012/P printings.
+- Deferred contact action-order confirmation in a GameState phase until every `contact:start` effect drains, including human decision pauses, so post-effect AP determines order.
+- Ended contact immediately without setting action order when a start effect removes either participant, matching the existing B04046/P removal family.
+- Grounded all seven affected printings against pinned official TSV rows without adding a card DSL primitive.
+- Advanced exact official-QA coverage from 1,183 to 1,194 matched records; test-missing falls from 1,781 to 1,770.
 
 ## QA Wave 31 — effect-entry enter triggers
 

@@ -259,6 +259,56 @@ describe('B06042 public effect-generated contact', () => {
     expect(currentState().players.opp.scene.map((card) => card.uid)).toEqual(['target']);
   });
 
+  it('effect-generated contact ends before order and judge when contact:start removes both participants', () => {
+    register(character(ACTOR, 5000, [{
+      id: 'remove-contact-participants',
+      type: 'triggered',
+      scope: 'on-scene',
+      trigger: { hook: 'contact:start', selfOnly: true },
+      effect: {
+        kind: 'sequence',
+        steps: [
+          { kind: 'atom', verb: 'sceneRemove', args: { uid: '$contact.targetUid', cause: 'effect' } },
+          { kind: 'atom', verb: 'sceneRemove', args: { uid: '$contact.byUid', cause: 'effect' } },
+        ],
+      },
+      description: 'Effect-contact participant removal fixture.',
+      ruleRefs: ['rules/08-contact.md'],
+    }]));
+    const hooks = hookCounter();
+    let orderSetCount = 0;
+    let beforeJudgeCount = 0;
+    let judgeCount = 0;
+    event.on('contact:order-set', () => { orderSetCount += 1; });
+    event.on('contact:before-judge', () => { beforeJudgeCount += 1; });
+    event.on('contact:judge', () => { judgeCount += 1; });
+
+    grantContactAbility(baseState());
+    declareGrantedAbility();
+    resolveTarget('target');
+
+    const actionId = useGameStateStore.getState().activeActionId;
+    expect(actionId).toBeTruthy();
+    expect(actionContext(actionId!)).toMatchObject({
+      phase: 'contact-end',
+      generatedByEffect: true,
+    });
+    expect(currentState().players.self.scene.some((card) => card.uid === 'actor')).toBe(false);
+    expect(currentState().players.opp.scene.some((card) => card.uid === 'target')).toBe(false);
+    expect(orderSetCount).toBe(0);
+    expect(beforeJudgeCount).toBe(0);
+    expect(judgeCount).toBe(0);
+    expect(hooks['contact:start']).toBe(1);
+    expect(hooks['contact:end']).toBe(1);
+    expect(hooks['action:end']).toBe(0);
+
+    expect(dispatchEngineAction({ type: 'actionAdvance', actionId: actionId! })).toEqual({ ok: true });
+    expect(actionContext(actionId!)).toBeUndefined();
+    expect(useGameStateStore.getState().activeActionId).toBeNull();
+    expect(hooks['contact:end']).toBe(1);
+    expect(hooks['action:end']).toBe(0);
+  });
+
   it(`${QA.noGuard}: effect contact skips guard selection and all guard hooks`, () => {
     const hooks = hookCounter();
     grantContactAbility(baseState({ includeGuarder: true }));

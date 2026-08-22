@@ -52,7 +52,7 @@ import {
   ensureEffectCausalTrace,
   withStructuredCausalResolution,
 } from '../log/effect-causal.js';
-
+import { continuePendingContactOrder } from '../flow/action/contact-order-continuation.js';
 const SAFETY_CAP = 1000;
 // A resolver continuation may invoke runAllUntilEmpty more than once on the same
 // Immer draft. Remember that this exact live authority already reached terminal
@@ -387,6 +387,7 @@ export function runAllUntilEmpty(
         persistPendingRuntimeState(state);
         return;
       }
+      if (continuePendingContactOrder(state)) continue;
       if (_continueTurnTransition(state)) continue;
       clearPersistedPendingRuntimeState(state);
       return;

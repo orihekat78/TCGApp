@@ -60,7 +60,16 @@ const a3: AbilityDef = {
   id: 'b03041_set_contact_ap',
   type: 'triggered',
   scope: 'on-set-host',
-  trigger: { hook: 'contact:start', selfOnly: true },
+  trigger: {
+    hook: 'contact:start',
+    matcherCondition: {
+      kind: 'or',
+      cs: [
+        { kind: 'triggerCharMatches', payloadKey: 'aUid', requireSource: true },
+        { kind: 'triggerCharMatches', payloadKey: 'bUid', requireSource: true },
+      ],
+    },
+  },
   effect: { kind: 'atom', verb: 'charModifyAP', args: { uid: '$self', delta: 2000, scope: 'contact' } },
   description:
     'このイベントがセットされているキャラは「このキャラがコンタクトしたとき、そのコンタクト中、このキャラをAP＋2000する。」を持つ。',

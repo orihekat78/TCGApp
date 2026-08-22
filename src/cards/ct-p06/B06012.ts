@@ -11,7 +11,16 @@ const a1: AbilityDef = {
 
 const a2: AbilityDef = {
   id: 'a2', type: 'triggered', scope: 'on-set-host',
-  trigger: { hook: 'contact:start', selfOnly: true },
+  trigger: {
+    hook: 'contact:start',
+    matcherCondition: {
+      kind: 'or',
+      cs: [
+        { kind: 'triggerCharMatches', payloadKey: 'aUid', requireSource: true },
+        { kind: 'triggerCharMatches', payloadKey: 'bUid', requireSource: true },
+      ],
+    },
+  },
   condition: { kind: 'charMatches', ref: { kind: 'self' }, filter: { trait: '少年探偵団' } },
   effect: { kind: 'atom', verb: 'charModifyAP', args: { uid: '$self', delta: 2000, scope: 'contact' } },
   description: 'このキャラがコンタクトしたとき、そのコンタクト中、このキャラをAP+2000する。',

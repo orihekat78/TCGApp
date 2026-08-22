@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { resolveActionAgainstChar } from '@/ai/action-resolution';
+import { resolveActionAgainstCase, resolveActionAgainstChar } from '@/ai/action-resolution';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { event } from '@/engine/event';
 import { _resetActionContexts } from '@/engine/flow/action/state-machine';
@@ -164,4 +164,47 @@ describe('AI action resolution queue boundaries', () => {
     expect(after.players.self.scene.find((cardState) => cardState.uid === setup.markerUid)?.state).toBe('sleep');
     expect(unresolvedEffects(after)).toBe(0);
   });
+
+  it.each(['character target', 'guarded case'] as const)(
+    'does not judge after contact:start removes both participants for a %s',
+    (route) => {
+      const setup = contactBoard();
+      const initial = route === 'guarded case'
+        ? produce(setup.state, (draft) => {
+            mutate.scene.setState(draft, setup.defenderUid, 'active');
+            draft.players.opp.evidence.push({
+              cardId: 'QUEUE-EVIDENCE',
+              faceUp: true,
+              origin: { turn: 0, via: 'opening' },
+            });
+          })
+        : setup.state;
+      const observed: string[] = [];
+      event.on('contact:start', () => ({
+        kind: 'custom',
+        fn: (state: GameState) => {
+          mutate.scene.removeToRemove(state, setup.attackerUid, 'effect');
+          mutate.scene.removeToRemove(state, setup.defenderUid, 'effect');
+        },
+      }));
+      event.on('contact:end', () => { observed.push('contact:end'); });
+      event.on('action:end', () => { observed.push('action:end'); });
+      event.on('contact:before-judge', () => { observed.push('contact:before-judge'); });
+      event.on('contact:judge', () => { observed.push('contact:judge'); });
+      const policy = new HeuristicPolicy();
+      policy.chooseGuard = () => route === 'guarded case' ? setup.defenderUid : null;
+
+      const after = produce(initial, (draft) => {
+        if (route === 'guarded case') {
+          resolveActionAgainstCase(draft, setup.attackerUid, 'opp', policy, policy);
+        } else {
+          resolveActionAgainstChar(draft, setup.attackerUid, setup.defenderUid, policy, policy);
+        }
+      });
+
+      expect(observed).toEqual(['contact:end', 'action:end']);
+      expect(Object.keys(after.actionContexts ?? {})).toHaveLength(0);
+      expect(unresolvedEffects(after)).toBe(0);
+    },
+  );
 });

@@ -774,11 +774,15 @@
     {
       "qaId": "card:B06012:ca9af93dc00f754e794b95de64defe36f456e90d9d15cdc984dbda56beabf0a2",
       "answerHash": "cb3a3d971e55a17c7a7860f1bbb4d5e420c0ddf19b227eb25cdf111e51504b0d",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06012.ts:36"
+        "rules:.claude/rules/22-qa-action-contact.md:34",
+        "src:src/cards/ct-p06/B06012.ts:15",
+        "tests:tests/cards/official-qa/shuffle-romance-public-wave32.test.ts:484",
+        "tests:tests/cards/official-qa/shuffle-romance-public-wave32.test.ts:485",
+        "tests:tests/cards/official-qa/shuffle-romance-public-wave32.test.ts:503"
       ]
     },
     {

@@ -2063,11 +2063,17 @@
     {
       "qaId": "card:D10024:40fe7fe9a42e0cc53a2d869e7307b57e578331caf3f51f4d26fa5840acaacc55",
       "answerHash": "cfa3c372e070cc760a9e1622375347c45c1b2f05342c71656e44de9077adf77b",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d10/D10024.ts:128"
+        "rules:.claude/rules/16-card-set.md:13",
+        "src:src/cards/ct-d10/D10024.ts:58",
+        "src:src/engine/effect/atom-handlers/char.ts:405",
+        "tests:tests/cards/official-qa/shuffle-romance-public-wave32.test.ts:192",
+        "tests:tests/cards/official-qa/shuffle-romance-public-wave32.test.ts:204",
+        "tests:tests/cards/official-qa/shuffle-romance-public-wave32.test.ts:299",
+        "tests:tests/cards/official-qa/shuffle-romance-public-wave32.test.ts:300"
       ]
     },
     {

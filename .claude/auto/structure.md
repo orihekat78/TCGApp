@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6169
+- **ファイル数**: 6179
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -824,6 +824,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-22-03-qa-wave29-effect-entry.md`
     - `2026-08-22-04-qa-wave30-deck-look-zero-choice.md`
     - `2026-08-22-05-qa-wave31-effect-entry.md`
+    - `2026-08-22-06-qa-wave32-shuffle-romance.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1597,6 +1598,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B01006.md` — B01006 / B01006P grounding
       - `B01020.md` — B01020 毛利小五郎 grounding (2026-07-10, sonnet5)
       - `B01022.md` — B01022 grounding
+      - `B01023.md` — B01023 grounding
+      - `B01023P.md` — B01023P grounding
       - `B01057.md` — B01057 「最も出会いたくない…恋人ってトコロかな？」 grounding (2026-07-10, fable)
       - `B01070.md` — B01070 アンドレ・キャメル grounding (2026-07-10, sonnet5)
       - `B01092.md` — B01092 松田陣平 grounding (2026-07-10, sonnet5)
@@ -1614,6 +1617,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B03030.md` — B03030 / B03030P grounding
       - `B03032.md` — B03032 grounding
       - `B03040.md` — B03040 和田進一 grounding (2026-07-10, sonnet5)
+      - `B03041.md` — B03041 grounding
+      - `B03041P.md` — B03041P grounding
       - `B03042.md` — B03042 grounding
       - `B03079.md` — B03079 grounding
       - `B03085.md` — B03085 grounding
@@ -1639,6 +1644,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B05094.md` — B05094 grounding
       - `B06003.md` — B06003/B06003P 毛利蘭＆江戸川コナン (MR キャラ) grounding (2026-07-10, fable)
       - `B06005.md` — B06005 阿笠博士 (R/RP) grounding (2026-07-10, sonnet5)
+      - `B06012.md` — B06012 grounding
+      - `B06012P.md` — B06012P grounding
       - `B06018.md` — B06018 grounding
       - `B06020.md` — B06020 佐々木小次郎 grounding (2026-07-10, sonnet5)
       - `B06027.md` — B06027 grounding
@@ -1755,6 +1762,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D06021.md` — D06021 服部平次 grounding (2026-07-10, sonnet5)
       - `D06023.md` — D06023 服部平次 grounding (2026-07-10, sonnet5)
       - `D10022.md` — D10022 毛利蘭 grounding (2026-07-10, sonnet5)
+      - `D10024.md` — D10024 grounding
       - `PR022.md` — PR022 江戸川コナン
       - `PR099.md` — PR099 工藤有希子 grounding
       - `PR138.md` — PR138 grounding
@@ -4858,6 +4866,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`flow/`**
       - **`action/`**
         - `causal.ts`
+        - `contact-order-continuation.ts` — rules/08-contact §6: if either participant left while contact:start effects
         - `context-registry.ts`
         - `legacy-replay-compat.ts`
         - `order.ts` — engine.flow.action.order — computeOrder (rules/08)
@@ -5563,6 +5572,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `set-card-host-owner-wave3.test.ts` — qaId=card:B02018:dc712167e0587386756f5293d40bf1766e89e09669554ebcde8e028749d962d…
       - `shippu-effect-entry-public.test.ts` — qa: card:B09070:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
       - `short-deck-reveal-hand-entry-public.test.ts` — rules: 15-abilities-effects.md, 17-icons.md, 20-color-and-switch.…
+      - `shuffle-romance-public-wave32.test.ts` — qa: card:B01023:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
       - `sleep-cost-related-entry-public-wave24.test.ts` — qa: card:B07002:18266db4732b9571ebae419afbd36f26fb54fb836c7752251e64e6dad817b4d1
       - `stun-action-target-public.test.ts` — qa: card:B01058:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40
       - `stun-activation-to-sleep-wave22.test.ts` — qa: card:B04080:872de2079dce9150e76a70314a5d20400e542df72be79f07c2daed17f80158c3

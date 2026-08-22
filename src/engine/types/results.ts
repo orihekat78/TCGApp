@@ -57,7 +57,7 @@ export type ValidationResult =
 export type GameResult = { winner: 'self' | 'opp'; reason: 'evidence' | 'deck-out' | 'concede' | 'alt-lose' };
 
 export type ActionPhase =
-  | 'declared' | 'guard-window' | 'leave-resolution' | 'contact-pending'
+  | 'declared' | 'guard-window' | 'leave-resolution' | 'contact-pending' | 'contact-order-pending'
   | 'action-1' | 'action-2' | 'action-1-redo' | 'judge' | 'contact-end' | 'action-end';
 
 export type ActionContext = {

@@ -871,9 +871,9 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06042.ts:1",
-        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:284",
-        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:287",
-        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:298"
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:334",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:337",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:348"
       ]
     },
     {

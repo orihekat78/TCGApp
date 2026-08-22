@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-flows.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:flows`
-> Source hash: `7cb3ba5ca04a`
+> Source hash: `08e2fd29ec57`
 
 `flow.action.declare → advance` の 10 フェーズ状態機械（abort 経路含む）。 `flow.action.tryGuard` / `passGuard` で初期分岐し、 `snapshotAP` で AP スナップショットを取って `judge` 段階で勝敗を確定する。
 
@@ -29,7 +29,7 @@ stateDiagram-v2
 
 ## 補足
 
-> ✅ ActionPhase は想定 10 フェーズと完全一致
+> ⚠ Phase ドリフト検知: missing=[] extra=[contact-order-pending]
 
 各フェーズで emit される Hook:
 

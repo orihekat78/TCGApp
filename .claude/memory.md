@@ -16,3 +16,7 @@
 ## 2026-08-22: QA runtime Wave31 effect-entry enter triggers
 
 - Wave31 certifies eight same-QA effect-entry paths across B03085/B06018/B06052/B06090/B09048/B09057/PR138/PR144, reaching 1183 matched/1781 test-missing. Real `handUseCard` routes prove the entered character's normal 【登場時】 trigger, causal order, filters, optional/zero branches, source movement, and cleanup without a production change. Horizontal scan identifies the remaining B01023/D10024 deck-look/set-card family as the highest-coherence Wave32 candidate; retain private look windows and asymmetric-host coverage.
+
+## 2026-08-22: QA runtime Wave32 Shuffle Romance/contact host
+
+- Wave32 certifies eleven QA and reaches 1194 matched/1770 test-missing. Twenty-five public-dispatch cases cover B01023/P and D10024 look/set/privacy/refresh branches plus legal guard, both contact participants, unrelated-observer negatives, and immediate contact termination when a start effect removes a participant. Exact-host `aUid`/`bUid` matching fixes opponent-caused contact on seven printings. RED probes exposed pre-effect AP freezing and missing-participant ordering; `contact-order-pending` now resumes after synchronous or human-paused `contact:start` effects, computes order from post-effect AP, or emits `contact:end` without an action window after participant removal.

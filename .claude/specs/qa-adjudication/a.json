@@ -728,8 +728,8 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06042.ts:1",
-        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:359",
-        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:364"
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:409",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:414"
       ]
     },
     {
@@ -1884,11 +1884,14 @@
     {
       "qaId": "card:D10024:01e64ea9e0d149ca2362d7754c49a44727c3284f0467137dc414ec81443e2891",
       "answerHash": "41189d419cd8777552b58a82b95f911f88878aba990bb637a74822e829d1bcaf",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d10/D10024.ts:1"
+        "src:src/cards/ct-d10/D10024.ts:23",
+        "tests:tests/cards/official-qa/shuffle-romance-public-wave32.test.ts:322",
+        "tests:tests/cards/official-qa/shuffle-romance-public-wave32.test.ts:332",
+        "tests:tests/cards/official-qa/shuffle-romance-public-wave32.test.ts:335"
       ]
     },
     {

@@ -938,12 +938,12 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06042.ts:85",
-        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:270",
-        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:272",
-        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:274",
-        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:276",
-        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:277",
-        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:278"
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:320",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:322",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:324",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:326",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:327",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:328"
       ]
     },
     {

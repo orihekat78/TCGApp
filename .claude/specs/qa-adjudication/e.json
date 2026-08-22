@@ -392,14 +392,14 @@
     {
       "qaId": "card:B03041:f8f92580279cc9760dae09ab4c6c90d61a91bdde20c47a6cb140b1f46bec648a",
       "answerHash": "14f798a4ba48e0198334b13fd303c9de8ee4dd37f8bcb7d18f9b474a5dc0d347",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03041.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/22-qa-action-contact.md:34",
+        "src:src/cards/ct-p03/B03041.ts:64",
+        "tests:tests/cards/official-qa/shuffle-romance-public-wave32.test.ts:457",
+        "tests:tests/cards/official-qa/shuffle-romance-public-wave32.test.ts:458"
       ]
     },
     {
@@ -919,11 +919,11 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06042.ts:1",
-        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:337",
-        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:338",
-        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:345",
-        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:346",
-        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:347"
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:387",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:388",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:395",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:396",
+        "tests:tests/cards/official-qa/B06042-effect-contact-public.test.ts:397"
       ]
     },
     {

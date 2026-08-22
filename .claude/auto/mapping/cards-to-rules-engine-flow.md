@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `e049a851240d`
+> Source hash: `b980d3359e36`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **194** ファイル（[全体 index](./index.md)）
+このグループ: **195** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (28)
 
@@ -41,12 +41,13 @@
 | [`src/engine/effect/validate-spec-files.ts`](../../../src/engine/effect/validate-spec-files.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/effect/validate.ts`](../../../src/engine/effect/validate.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 
-## engine/flow (22)
+## engine/flow (23)
 
 | ソース | 参照ルール |
 | ------ | --------- |
 | [`src/engine/flow/action-case.ts`](../../../src/engine/flow/action-case.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`10-action-event.md`](../../rules/10-action-event.md) |
 | [`src/engine/flow/action/causal.ts`](../../../src/engine/flow/action/causal.ts) | _(参照なし)_ |
+| [`src/engine/flow/action/contact-order-continuation.ts`](../../../src/engine/flow/action/contact-order-continuation.ts) | _(参照なし)_ |
 | [`src/engine/flow/action/context-registry.ts`](../../../src/engine/flow/action/context-registry.ts) | _(参照なし)_ |
 | [`src/engine/flow/action/legacy-replay-compat.ts`](../../../src/engine/flow/action/legacy-replay-compat.ts) | _(参照なし)_ |
 | [`src/engine/flow/action/order.ts`](../../../src/engine/flow/action/order.ts) | [`08-contact.md`](../../rules/08-contact.md) |

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `9317def9749b`
+> Source hash: `a7d242a92f8a`
 
 `src/engine/flow/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -38,10 +38,11 @@
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 - [`engine-api-flow-setup`](../by-spec/engine-api-flow-setup.md)
 
-## 📄 ソース (22)
+## 📄 ソース (23)
 
 - [`src/engine/flow/action-case.ts`](../../../../src/engine/flow/action-case.ts)
 - [`src/engine/flow/action/causal.ts`](../../../../src/engine/flow/action/causal.ts)
+- [`src/engine/flow/action/contact-order-continuation.ts`](../../../../src/engine/flow/action/contact-order-continuation.ts)
 - [`src/engine/flow/action/context-registry.ts`](../../../../src/engine/flow/action/context-registry.ts)
 - [`src/engine/flow/action/legacy-replay-compat.ts`](../../../../src/engine/flow/action/legacy-replay-compat.ts)
 - [`src/engine/flow/action/order.ts`](../../../../src/engine/flow/action/order.ts)
@@ -59,5 +60,4 @@
 - [`src/engine/flow/main/index.ts`](../../../../src/engine/flow/main/index.ts)
 - [`src/engine/flow/main/next-hint.ts`](../../../../src/engine/flow/main/next-hint.ts)
 - [`src/engine/flow/main/partner-ability.ts`](../../../../src/engine/flow/main/partner-ability.ts)
-- [`src/engine/flow/main/reasoning.ts`](../../../../src/engine/flow/main/reasoning.ts)
-- _...ほか 2 件_
+- _...ほか 3 件_

@@ -53,16 +53,14 @@
     {
       "qaId": "card:B01023:a22889ed053728203fe760dba74c1815541efd60230ba9078be35a7501eb8a50",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:37",
-        "src:src/cards/ct-p01/B01023.ts:25"
-      ],
-      "noteCodes": [
-        "RAW-READ",
-        "TEST-GAP"
+        "src:src/cards/ct-p01/B01023.ts:23",
+        "tests:tests/cards/official-qa/shuffle-romance-public-wave32.test.ts:307",
+        "tests:tests/cards/official-qa/shuffle-romance-public-wave32.test.ts:311"
       ]
     },
     {
@@ -1895,14 +1893,14 @@
     {
       "qaId": "card:D10024:ca9af93dc00f754e794b95de64defe36f456e90d9d15cdc984dbda56beabf0a2",
       "answerHash": "cb3a3d971e55a17c7a7860f1bbb4d5e420c0ddf19b227eb25cdf111e51504b0d",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d10/D10024.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/22-qa-action-contact.md:34",
+        "src:src/cards/ct-d10/D10024.ts:85",
+        "tests:tests/cards/official-qa/shuffle-romance-public-wave32.test.ts:385",
+        "tests:tests/cards/official-qa/shuffle-romance-public-wave32.test.ts:407"
       ]
     },
     {

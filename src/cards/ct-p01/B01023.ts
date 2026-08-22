@@ -83,7 +83,13 @@ const a2: AbilityDef = {
   scope: 'on-set-host',
   trigger: {
     hook: 'contact:start',
-    selfOnly: true
+    matcherCondition: {
+      kind: 'or',
+      cs: [
+        { kind: 'triggerCharMatches', payloadKey: 'aUid', requireSource: true },
+        { kind: 'triggerCharMatches', payloadKey: 'bUid', requireSource: true }
+      ]
+    }
   },
   effect: {
     kind: 'atom',
