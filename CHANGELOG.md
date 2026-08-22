@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `13ca6206219c`
+> Source hash: `807c07afaaa9`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,28 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## QA Wave 39 — assisting partners in FILE-gated enter effects
+
+- Certified five official QA records for B04023, D09014, D09015, PR137, and PR143.
+- Ran public `assist` followed by public `handUseCard` at FILE6 and FILE7.
+- B04023 surfaces its optional only at FILE7; D09014/D09015 surface their sleep picker only at FILE7.
+- PR137/PR143 keep choice 0 selectable below threshold as an official no-op and expose its optional only at FILE7.
+- Resolved every choice, optional, and picker through bound public decision actions.
+- Kept B04023's independent next-hint reduction ruling test-missing.
+- Added pinned grounding decisions for all five cards; no production change found.
+- Advanced coverage from 1,244 to 1,249 matched records; test-missing falls from 1,720 to 1,715.
+
+## QA Wave 38 — assisting partners in continuous FILE conditions
+
+- Certified five official QA records for B02063, B08065, D09008, D09009, and PR283.
+- Used the public `assist` dispatcher instead of constructing the acting player's assisted FILE state.
+- Proved threshold-minus-one card backs plus the partner activates each FILE condition.
+- Proved threshold-minus-two plus the partner remains inactive.
+- Kept the opponent at a sufficient FILE count to detect wrong-owner reads.
+- Observed real LP/AP continuous values, including B08065's turn and trait-count gates.
+- Added pinned grounding decisions for all five cards; no engine gap or production change found.
+- Advanced coverage from 1,239 to 1,244 matched records; test-missing falls from 1,725 to 1,720.
 
 ## QA Wave 37 — self-only evidence costs, complex cases
 

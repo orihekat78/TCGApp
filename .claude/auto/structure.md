@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6200
+- **ファイル数**: 6215
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -834,6 +834,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-01-qa-wave35-ability-occurrences.md`
     - `2026-08-23-02-qa-wave36-self-only-evidence.md`
     - `2026-08-23-03-qa-wave37-self-only-evidence.md`
+    - `2026-08-23-04-qa-wave38-file-assist-continuous.md`
+    - `2026-08-23-05-qa-wave39-file-assist-enter.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1523,6 +1525,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-22-qa-waves17-26.md` — QA runtime Waves 17-26
     - `2026-08-23-qa-wave35.md` — QA runtime Wave35 physical ability occurrence identity
     - `2026-08-23-qa-waves36-37.md` — QA runtime Waves36-37 self-only evidence costs
+    - `2026-08-23-qa-waves38-39.md` — QA runtime Waves38-39 assisting partners in FILE conditions
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1620,6 +1623,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B02023.md` — B02023 遠山和葉 grounding
       - `B02039.md` — B02039 工藤優作 grounding (2026-07-10, fable)
       - `B02058.md` — B02058 / B02058P grounding
+      - `B02063.md` — B02063 羽田秀吉 grounding
       - `B02067.md` — B02067 チョーカー型変声機 grounding (2026-07-10, sonnet5)
       - `B03018.md` — B03018 grounding
       - `B03019.md` — B03019 grounding
@@ -1637,6 +1641,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B04003.md` — B04003 工藤新一 grounding (2026-07-10, sonnet5)
       - `B04018.md` — B04018 / B04018P 遠山和葉 grounding (2026-08-13, gpt-5.6-terra high)
       - `B04018P.md` — B04018P 遠山和葉 grounding (2026-07-14, gpt-5.6-terra high)
+      - `B04023.md` — B04023 遠山銀司郎 grounding
       - `B04027.md` — B04027 grounding
       - `B04028.md` — B04028 grounding
       - `B04030.md` — B04030 grounding
@@ -1675,6 +1680,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08019.md` — B08019 大岡紅葉＆伊織無我 (MR/MRP) grounding (2026-07-10, sonnet5)
       - `B08026.md` — B08026 grounding
       - `B08047.md` — B08047/B08047P 沖矢昴 grounding (2026-07-10, fable)
+      - `B08065.md` — B08065 大和敢助 grounding
       - `B08074.md` — B08074 降谷零 grounding
       - `B08081.md` — B08081 広田雅美 grounding (2026-07-10, sonnet5)
       - `B09019.md` — B09019/B09019P 「くさるなよ！」 (イベント) grounding (2026-07-10, fable)
@@ -1772,15 +1778,22 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D06013.md` — D06013 白馬探 grounding (2026-07-10, sonnet 調査 + S2 session 裁定)
       - `D06021.md` — D06021 服部平次 grounding (2026-07-10, sonnet5)
       - `D06023.md` — D06023 服部平次 grounding (2026-07-10, sonnet5)
+      - `D09008.md` — D09008 上原由衣 grounding
+      - `D09009.md` — D09009 上原由衣 grounding
+      - `D09014.md` — D09014 大和敢助 grounding
+      - `D09015.md` — D09015 大和敢助 grounding
       - `D10022.md` — D10022 毛利蘭 grounding (2026-07-10, sonnet5)
       - `D10024.md` — D10024 grounding
       - `PR022.md` — PR022 江戸川コナン
       - `PR099.md` — PR099 工藤有希子 grounding
+      - `PR137.md` — PR137 工藤優作 grounding
       - `PR138.md` — PR138 grounding
+      - `PR143.md` — PR143 工藤優作 grounding
       - `PR144.md` — PR144 grounding
       - `PR234.md` — PR234 毛利蘭 grounding (2026-07-10, fable)
       - `PR240.md` — PR240 毛利蘭 grounding (2026-07-10, fable)
       - `PR265.md` — PR265 風見裕也 grounding (2026-07-10, fable)
+      - `PR283.md` — PR283 上原由衣 grounding
       - `PR305.md` — PR305 萩原研二 grounding
       - `PR306.md` — PR306 grounding
       - `PR307.md` — PR307 grounding
@@ -5571,6 +5584,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `effect-entry-trigger-public-wave28.test.ts` — qa: card:B03068:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `event-evidence-action-hirameki-public.test.ts` — qa: card:B04041:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
       - `f026-cutin-public.test.ts` — qa: card:B08085:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
+      - `file-assist-continuous-public-wave38.test.ts` — qa: card:B02063:cbce41c9b0c72cca046ffb06c2b4ff9c3af679af4bcfb692fac12dc0b5998a23
+      - `file-assist-enter-public-wave39.test.ts` — qa: card:B04023:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3
       - `leave-reveal-until-forced-public.test.ts` — qa: card:B02058:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-opponent-turn-public.test.ts` — qa: card:B01065:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-remove-retrieval-public.test.ts` — qa: card:B02004:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58

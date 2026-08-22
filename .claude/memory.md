@@ -41,3 +41,9 @@
 - Waves36-37 certify twelve shared-Q&A case abilities and reach 1239 matched/1725 test-missing. Public dispatch proves incident/insufficient/overpayment rejection, exact-two self payment, opponent evidence isolation, transactional rejection, and turn-one repeat rejection.
 - Independent review first BLOCKed self-only fixtures; asymmetric self/opp evidence and rejection snapshots cleared it. No production change. Full Vitest, smoke/baseline, representative desktop/mobile evidence-picker E2E, QA/docs gates, and review pass.
 - NEXT Wave38: inspect the 35-card FILE(8) group (`questionHash 83f99d...`, `answerHash 9a850b...`) and prove whether an assisting partner counts through the public action/assist lifecycle before certifying any subgroup.
+
+## 2026-08-23: QA runtime Waves38-39 assisted FILE counting
+
+- Waves38-39 certify ten generic FILE(X) Q&A records and reach 1249 matched/1715 test-missing. Public assist plus continuous reads or hand entry proves threshold-minus-two stays off, threshold-minus-one plus partner activates, and a sufficient opponent FILE is ignored.
+- Grounding corrects the prior label: the hash pair covers varied FILE4-8 thresholds, with 41 total QA, not only FILE8. Six were pre-matched; 25 remain after these waves. B07093's printed FILE7 a1 is still deferred.
+- NEXT Wave40: public action lifecycle for B04068/B05108/D09016/D09017/PR289/PR295; keep action-declare and action-end timing distinct while sharing the assist threshold matrix.

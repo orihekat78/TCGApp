@@ -226,15 +226,13 @@
     {
       "qaId": "card:B02063:cbce41c9b0c72cca046ffb06c2b4ff9c3af679af4bcfb692fac12dc0b5998a23",
       "answerHash": "9a850b0aa69167d50fe9b35374145bd3a1f7c6ca2159ee4d9315b205401b53c5",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/17-icons.md:45",
-        "src:src/cards/ct-p02/B02063.ts:51"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/17-icons.md:36",
+        "src:src/cards/ct-p02/B02063.ts:34",
+        "tests:tests/cards/official-qa/file-assist-continuous-public-wave38.test.ts:133"
       ]
     },
     {
