@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `2ec22bbd45b5`
+> Source hash: `697eae2f9879`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,15 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## QA Wave 31 — effect-entry enter triggers
+
+- Added public-runtime witnesses for eight official QA records covering characters entered by abilities and effects.
+- Proved normal 【登場時】 triggers fire after real `sceneEnter` resolution for remove-area and hand sources.
+- Covered target filters, source ownership/splice, sleep entry, self-sleep, optional decline, zero discard/entry, causal order, and cleanup.
+- Grounded B03085, B06018, B06052, B06090, B09048, B09057, PR138, and PR144 against pinned official TSV rows.
+- No shipped CardDef or engine change was required.
+- Advanced exact official-QA coverage from 1,175 to 1,183 matched records; test-missing falls from 1,789 to 1,781.
 
 ## QA Wave 30 — deck-look zero-choice verification
 

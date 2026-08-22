@@ -448,15 +448,13 @@
     {
       "qaId": "card:B03085:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03085.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-p03/B03085.ts:48",
+        "tests:tests/cards/official-qa/effect-entry-enter-trigger-public-wave31.test.ts:303"
       ]
     },
     {

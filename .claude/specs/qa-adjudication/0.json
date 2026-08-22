@@ -961,11 +961,13 @@
     {
       "qaId": "card:B06052:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06052.ts:35"
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-p06/B06052.ts:35",
+        "tests:tests/cards/official-qa/effect-entry-enter-trigger-public-wave31.test.ts:311"
       ]
     },
     {

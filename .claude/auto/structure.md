@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6158
+- **ファイル数**: 6169
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -823,6 +823,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-22-02-qa-wave28-effect-entry.md`
     - `2026-08-22-03-qa-wave29-effect-entry.md`
     - `2026-08-22-04-qa-wave30-deck-look-zero-choice.md`
+    - `2026-08-22-05-qa-wave31-effect-entry.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1509,6 +1510,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-14-qa-engine-public-evidence.md` — QA engine and public-evidence decisions
     - `2026-08-14-qa-wave13-match-cost.md` — QA Wave 13 and memory rotation
     - `2026-08-21-engine-memory-rotation.md` — Engine memory rotation — 2026-08-21
+    - `2026-08-22-qa-waves17-26.md` — QA runtime Waves 17-26
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1614,6 +1616,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B03040.md` — B03040 和田進一 grounding (2026-07-10, sonnet5)
       - `B03042.md` — B03042 grounding
       - `B03079.md` — B03079 grounding
+      - `B03085.md` — B03085 grounding
       - `B03111.md` — B03111 バーボン grounding (2026-07-10, sonnet5)
       - `B04003.md` — B04003 工藤新一 grounding (2026-07-10, sonnet5)
       - `B04018.md` — B04018 / B04018P 遠山和葉 grounding (2026-08-13, gpt-5.6-terra high)
@@ -1636,10 +1639,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B05094.md` — B05094 grounding
       - `B06003.md` — B06003/B06003P 毛利蘭＆江戸川コナン (MR キャラ) grounding (2026-07-10, fable)
       - `B06005.md` — B06005 阿笠博士 (R/RP) grounding (2026-07-10, sonnet5)
+      - `B06018.md` — B06018 grounding
       - `B06020.md` — B06020 佐々木小次郎 grounding (2026-07-10, sonnet5)
       - `B06027.md` — B06027 grounding
       - `B06042.md` — B06042 ここで会うたが百年目 (イベント) grounding (2026-07-10, sonnet5)
+      - `B06052.md` — B06052 grounding
       - `B06066.md` — B06066/B06066P 怪盗キッド＆白馬探 (MR キャラ) grounding (2026-07-10, fable)
+      - `B06090.md` — B06090 grounding
       - `B07008.md` — B07008 小嶋元太 grounding (2026-07-10, fable)
       - `B07013.md` — B07013 grounding
       - `B07030P.md` — grounding dossier: B07030P (自動生成 2026-07-13)
@@ -1658,8 +1664,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B09033.md` — grounding dossier: B09033
       - `B09033P.md` — grounding dossier: B09033P
       - `B09047.md` — B09047 grounding
+      - `B09048.md` — B09048 grounding
       - `B09052.md` — B09052 grounding
       - `B09052P.md` — B09052P grounding
+      - `B09057.md` — B09057 grounding
       - `B09112.md` — B09112 キッドVS安室 王妃の前髪 (事件) grounding (2026-07-10, sonnet5)
       - `B10001.md` — B10001 grounding
       - `B10002.md` — B10002 grounding
@@ -1749,6 +1757,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D10022.md` — D10022 毛利蘭 grounding (2026-07-10, sonnet5)
       - `PR022.md` — PR022 江戸川コナン
       - `PR099.md` — PR099 工藤有希子 grounding
+      - `PR138.md` — PR138 grounding
+      - `PR144.md` — PR144 grounding
       - `PR234.md` — PR234 毛利蘭 grounding (2026-07-10, fable)
       - `PR240.md` — PR240 毛利蘭 grounding (2026-07-10, fable)
       - `PR265.md` — PR265 風見裕也 grounding (2026-07-10, fable)
@@ -5529,6 +5539,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `effect-entry-action-public.test.ts` — qa: card:B02004:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-declared-public-wave27.test.ts` — qa: card:B04018:a96985ed96d005b04cd0c44c2dadf206fac63c8bd49e8c42cef6ea4c73808dae
       - `effect-entry-declared-public.test.ts` — qa: card:B04019:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effect-entry-enter-trigger-public-wave31.test.ts` — qa: card:B03085:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-leave-public.test.ts` — qa: card:B02066:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-public-wave3.test.ts` — qa: card:B02077:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-trigger-order-public.test.ts` — qa: card:B07058:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
