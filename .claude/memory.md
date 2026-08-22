@@ -53,3 +53,9 @@
 - Waves40-41 certify eleven shared FILE(X) Q&A records and reach 1260 matched/1704 test-missing. Public assist now covers action-declare, action-end, declared rejection, costs, bound discard, stacked gate, source movement, and entry continuations with wrong-owner controls.
 - Eleven pinned grounding decisions find no engine gap. B09010 removes an ordinary FILE card while the assisted partner remains; B10095 and D10011 preserve exact source cost movement.
 - NEXT Wave42: remaining declared group B07069/B08004/B08007/B09055/B09060/PR179/PR185/PR199/PR205. Fourteen shared-Q&A records remain including deferred B07093 and four non-declared routes.
+
+## 2026-08-23: QA runtime Waves42-43 assisted FILE remainder
+
+- Waves42-43 certify thirteen QA and reach 1273 matched/1691 test-missing. Public paths now cover all implemented FILE(X) declarations, contact-removal observers, and cut-ins with transactionality, other-gate, timing, partner-preservation, and legal continuation controls.
+- The exact FILE(X) pair is 40/41 matched. B07093 is the only remainder; current primitives support its a1, but append it after a2/a3 to preserve existing physical ability indices and old saves/replays.
+- NEXT Wave44: implement/certify B07093 a1. NEXT Wave45 candidate: 12 Bond/partner-exclusion QAs (`d8ced3...` / `818541...`) across B05007/B05008/B05009/B05048/B05051/B05052/B05091/D10005/D10006/D10022/PR136/PR142.

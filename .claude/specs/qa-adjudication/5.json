@@ -926,11 +926,13 @@
     {
       "qaId": "card:B08004:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b",
       "answerHash": "9a850b0aa69167d50fe9b35374145bd3a1f7c6ca2159ee4d9315b205401b53c5",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08004.ts:1"
+        "rules:.claude/rules/17-icons.md:36",
+        "src:src/cards/ct-p08/B08004.ts:46",
+        "tests:tests/cards/official-qa/file-assist-declared-remaining-public-wave42.test.ts:289"
       ]
     },
     {

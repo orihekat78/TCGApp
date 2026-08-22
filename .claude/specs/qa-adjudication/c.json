@@ -2212,14 +2212,13 @@
     {
       "qaId": "card:PR100:10c375683e0a24e0734188475895fd0fff2f1c3fe44724cb9d8261ea5d872b68",
       "answerHash": "9a850b0aa69167d50fe9b35374145bd3a1f7c6ca2159ee4d9315b205401b53c5",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR100.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/17-icons.md:36",
+        "src:src/cards/pr-01/PR100.ts:27",
+        "tests:tests/cards/official-qa/file-assist-nondeclared-public-wave43.test.ts:261"
       ]
     },
     {

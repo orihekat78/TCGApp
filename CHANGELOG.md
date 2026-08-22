@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `4cb002839bc0`
+> Source hash: `5bf65b985deb`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,28 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## QA Wave 43 — assisted FILE in contact observers and cut-ins
+
+- Certified B06087 and PR280 through public assist and full contact AP-removal timing.
+- Proved their optional is absent before judgment, appears after contact removal, and completes self-removal plus legal Police entry.
+- Certified PR100 and PR106 through public assist and real cut-in use.
+- Below FILE4, cut-in use remains legal but text does nothing; at FILE4 the optional chain runs.
+- Exact cut-in paths pop only an ordinary FILE card, preserve the assisted partner, and enter a valid level-five 宮野志保.
+- Added pinned grounding decisions for all four cards; no production change found.
+- Shared FILE(X) coverage is now 40 of 41 records; only deferred B07093 remains.
+- Advanced total coverage from 1,269 to 1,273 matched records; test-missing falls from 1,695 to 1,691.
+
+## QA Wave 42 — remaining declared assisted-FILE rulings
+
+- Certified nine official QA records across B07069, B08004, B08007, B09055, B09060, PR179, PR185, PR199, and PR205.
+- Used public assist plus below/exact declared dispatch with a sufficient opponent FILE.
+- Exercised composite costs, stun/bond/remove gates, stack count, union-source entry, cost-paid traits, reveal, and choices.
+- Proved B07069 removes an ordinary FILE card while preserving the assisted partner.
+- Added no-stack, wrong-case, low-remove, wrong-partner, no-student, incomplete-cost, and turn-limit controls.
+- Every rejection preserves player state and opens no decisions.
+- Added pinned grounding decisions for all nine cards; no production change found.
+- Advanced coverage from 1,260 to 1,269 matched records; test-missing falls from 1,704 to 1,695.
 
 ## QA Wave 41 — assisting partners in declared FILE gates
 
