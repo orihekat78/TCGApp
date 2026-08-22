@@ -434,7 +434,13 @@ function runEngineAction(
     case 'chooseInterceptOrderResolve': {
       const pending = useGameStateStore.getState().pendingChooseIntercept;
       if (!pending) return;
-      applyChooseInterceptOrder(draft, pending, action.protectorUid, action.targetUid);
+      applyChooseInterceptOrder(
+        draft,
+        pending,
+        action.protectorUid,
+        action.targetUid,
+        action.setCardInstanceId,
+      );
       return;
     }
     case 'repeatOptionalResolve': {

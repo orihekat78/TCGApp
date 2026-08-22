@@ -7,7 +7,7 @@ import { runAllUntilEmpty } from '@/engine/resolve';
 import { event } from '@/engine/event';
 import { _drainPendingEffectPickSide, resolveEffectPicks } from '@/engine/effect/resolve-picks';
 import { applyChooseInterceptResponse, applyPickAndContinuation } from '@/engine/effect/apply-pick';
-import { consultChooseIntercept, findChooseIntercept } from '@/engine/effect/consult-choose-intercept';
+import { consultChooseIntercept, findChooseIntercept, findChooseInterceptReactions } from '@/engine/effect/consult-choose-intercept';
 import { _clearPendingChooseInterceptSide, _drainPendingChooseInterceptSide, _peekPendingChooseInterceptResume } from '@/engine/effect/pending-state';
 import { run as runEffect } from '@/engine/effect/resolver';
 import { runOne } from '@/engine/resolve/stack';
@@ -46,7 +46,7 @@ beforeEach(() => {
   _resetTriggeredRegistered();
   _clearPendingChooseInterceptSide();
   engine.cards._resetRegistry();
-  [HOST, B02067, B04003, B04003P, B08081, B08081P, OPP_SOURCE, OPP_EVENT, RAN, RESPONSE_PROTECTOR].forEach((card) => engine.cards.register(card));
+  [HOST, B02067, B02067P, B04003, B04003P, B08081, B08081P, OPP_SOURCE, OPP_EVENT, RAN, RESPONSE_PROTECTOR].forEach((card) => engine.cards.register(card));
   registerTriggeredListener();
 });
 
@@ -141,13 +141,89 @@ describe('choose-intercept — B02067 representative', () => {
     })).toBeDefined();
   });
 
-  it('does not intercept an opponent event effect selecting its host', () => {
+  it('intercepts an opponent event effect selecting its host', () => {
     const state = produce(createEmptyGameState(), (d) => {
       d.players.self.scene.push(sceneChar('HOST', 'host', { setCards: [{ cardId: 'B02067', faceUp: true }] }));
     });
-    expect(consultChooseIntercept(state, 'host', {
-      source: { cardId: 'OPP-EVENT', uid: 'event-source', abilityId: 'a1', player: 'opp', area: 'remove' }, bindings: {},
-    })).toBe(false);
+    const after = produce(state, (d) => {
+      expect(consultChooseIntercept(d, 'host', {
+        source: { cardId: 'OPP-EVENT', uid: 'event-source', abilityId: 'a1', player: 'opp', area: 'remove' }, bindings: {},
+      })).toBe(true);
+    });
+    expect((after.players.self.scene[0]?.setCards[0] as { abilityUseCounts?: unknown })?.abilityUseCounts)
+      .toEqual({ a1: { turn: after.turn.number, count: 1 } });
+  });
+
+  it.each([
+    ['B02067 x2', ['B02067', 'B02067']],
+    ['B02067P x2', ['B02067P', 'B02067P']],
+    ['B02067 + B02067P', ['B02067', 'B02067P']],
+  ] as const)(
+    'treats each physical %s set card as an independent mandatory turn-one ability for character and event sources',
+    (_label, setCardIds) => {
+      for (const sourceCardId of ['OPP-SOURCE', 'OPP-EVENT'] as const) {
+        const state = produce(createEmptyGameState(), (d) => {
+          d.turn.number = 7;
+          d.players.self.scene.push(sceneChar('HOST', 'host', {
+            setCards: setCardIds.map((cardId, index) => ({
+              cardId,
+              faceUp: true,
+              instanceId: `set-${index + 1}`,
+            })),
+          }));
+        });
+        const ctx: EffectCtx = {
+          source: {
+            cardId: sourceCardId,
+            uid: sourceCardId === 'OPP-EVENT' ? 'event-source' : 'opp-source',
+            abilityId: 'a1',
+            player: 'opp',
+            area: sourceCardId === 'OPP-EVENT' ? 'remove' : 'scene',
+          },
+          bindings: {},
+        };
+
+        const after = produce(state, (d) => {
+          expect(findChooseInterceptReactions(d, 'host', ctx)).toEqual([
+            expect.objectContaining({ protectorCardId: setCardIds[0], setCardInstanceId: 'set-1' }),
+            expect.objectContaining({ protectorCardId: setCardIds[1], setCardInstanceId: 'set-2' }),
+          ]);
+          expect(findChooseInterceptReactions(d, 'host', ctx)).toEqual([]);
+        });
+
+        expect(after.players.self.scene[0]?.setCards.map((entry) => (
+          (entry as { abilityUseCounts?: unknown }).abilityUseCounts
+        ))).toEqual([
+          { a1: { turn: 7, count: 1 } },
+          { a1: { turn: 7, count: 1 } },
+        ]);
+        expect(after.players.self.scene[0]?.declaredUseCount.a1).toBeUndefined();
+      }
+    },
+  );
+
+  it('backfills legacy set-card identities before collecting independent reactions', () => {
+    const state = produce(createEmptyGameState(), (d) => {
+      d.turn.number = 4;
+      d.players.self.scene.push(sceneChar('HOST', 'host', {
+        setCards: [
+          { cardId: 'B02067', faceUp: true },
+          { cardId: 'B02067', faceUp: true },
+        ],
+      }));
+    });
+    const ctx: EffectCtx = {
+      source: { cardId: 'OPP-SOURCE', uid: 'opp-source', abilityId: 'a1', player: 'opp', area: 'scene' },
+      bindings: {},
+    };
+
+    const after = produce(state, (d) => {
+      const reactions = findChooseInterceptReactions(d, 'host', ctx);
+      expect(reactions).toHaveLength(2);
+      expect(new Set(reactions.map((reaction) => reaction.setCardInstanceId)).size).toBe(2);
+      expect(reactions.every((reaction) => typeof reaction.setCardInstanceId === 'string')).toBe(true);
+    });
+    expect(after.players.self.scene[0]?.setCards.every((entry) => typeof entry.instanceId === 'string')).toBe(true);
   });
 
   it('finds one character-owned discard-or-cancel response and consumes its limit', () => {
@@ -263,7 +339,8 @@ describe('choose-intercept — B02067 representative', () => {
     });
 
     expect(after.players.self.scene.find((char) => char.uid === 'ran')?.state).toBe('active');
-    expect(after.players.self.scene.find((char) => char.uid === 'ran')?.declaredUseCount.a1).toBe(1);
+    expect(after.players.self.scene.find((char) => char.uid === 'ran')?.setCards[0]?.abilityUseCounts?.a1)
+      .toEqual({ turn: after.turn.number, count: 1 });
     expect(after.players.self.scene.find((char) => char.uid === 'shinichi')?.declaredUseCount.a1).toBe(1);
     expect(after.players.opp.hand).toEqual([]);
     expect(after.players.opp.remove).toEqual(['payment']);
@@ -343,7 +420,8 @@ describe('choose-intercept — B02067 representative', () => {
     expect(after.players.self.scene.find((char) => char.uid === 'host')?.state).toBe('active');
     expect(after.players.opp.hand).toEqual([]);
     expect(after.players.opp.deck).toEqual(['drawn']);
-    expect(after.players.self.scene.find((char) => char.uid === 'host')?.declaredUseCount.a1).toBe(1);
+    expect(after.players.self.scene.find((char) => char.uid === 'host')?.setCards[0]?.abilityUseCounts?.a1)
+      .toEqual({ turn: 3, count: 1 });
   });
 
   it('also cancels the human pending-pick atom and its continuation', () => {

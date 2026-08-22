@@ -50,8 +50,8 @@ export type AbilityScope =
   //       (B05117 等)。handleLeaveToRemoveSelf が removedChar snapshot の setCards を走査する追加修正が要。
   //   (3) aura (apDeltaAura*/auraFilter*) / opponentRestrict を rider で付与する形は未 honor (read.char.auraDelta/restrictsOpponent は
   //       setCards を走査しない) → silent no-op。現リダーカードは全て self-buff ゆえ未踏。
-  //   (4) authoring hazard: rider triggered の limit{turn} は (hostUid, ability.id) でキー。host 印字能力や同名 rider 2枚と
-  //       id 衝突するとカウンタ共有。rider ability.id は card-unique に命名すること (例 'set_t1')。
+  //   (4) rider triggered の一般経路は host の declaredUseCount を使う。effect:choose-intercept は同一 rider の物理カードごとに
+  //       SetCardEntry.abilityUseCounts を持ち、同名 rider が複数ある場合も各 occurrence の【ターンN】を独立管理する。
   | 'on-set-host'        // セットされているキャラ (host) に付与 (rules/16, 装備イベント) — READ 側 infra のみ
   // engine additive A2 (2026-07-11, B02084 安室の愛車): セットカード **自身** が、host からリムーブ
   // エリアへ置かれたときに反応する triggered 用 (「キャラにセットされていたこのイベントがリムーブ

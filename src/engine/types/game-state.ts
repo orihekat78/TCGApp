@@ -38,6 +38,8 @@ export type SetCardEntry = {
   faceUp: boolean;
   /** Runtime occurrence identity. Optional for saved states and legacy fixtures. */
   instanceId?: string;
+  /** Per-occurrence ability history. Turn numbers make expiry implicit. */
+  abilityUseCounts?: Record<string, { turn: number; count: number }>;
   /** Per-occurrence replacement history. Turn numbers make expiry implicit. */
   replacementUseCounts?: Record<string, { turn: number; count: number }>;
 };

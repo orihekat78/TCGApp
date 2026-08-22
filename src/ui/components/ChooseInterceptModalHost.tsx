@@ -23,9 +23,16 @@ export function ChooseInterceptModalHost(): JSX.Element | null {
   if (!pending || !isOpen || !gameState) return null;
 
   if (pending.kind === 'order') {
-    const resolveOrder = (protectorUid: string, targetUid: string): void => {
+    const resolveOrder = (
+      protectorUid: string,
+      targetUid: string,
+      setCardInstanceId?: string,
+    ): void => {
       dispatchEngineAction(bindPendingDecision(pending, {
-        type: 'chooseInterceptOrderResolve', protectorUid, targetUid,
+        type: 'chooseInterceptOrderResolve',
+        protectorUid,
+        targetUid,
+        ...(setCardInstanceId ? { setCardInstanceId } : {}),
       }));
     };
     return (
@@ -45,19 +52,28 @@ export function ChooseInterceptModalHost(): JSX.Element | null {
           </div>
           <div className="cp-body">
             <ul className="cp-list">
-              {pending.choices.map((choice, index) => (
-                <li key={`${choice.protector.uid}-${choice.targetUid}`}>
+              {pending.choices.map((choice, index) => {
+                const setCardInstanceId = choice.protector.setCardInstanceId;
+                const occurrenceId = setCardInstanceId ?? choice.protector.uid;
+                const occurrenceTestId = setCardInstanceId ? `-${setCardInstanceId}` : '';
+                return (
+                <li key={`${choice.protector.uid}-${choice.targetUid}-${occurrenceId}`}>
                   <SelectableCardTile
                     cardId={choice.protector.cardId}
-                    instanceId={choice.protector.uid}
+                    instanceId={occurrenceId}
                     occurrenceLabel={`能力 ${index + 1}`}
                     selectLabelSuffix="を先に解決"
-                    selectTestId={`choose-intercept-order-${choice.protector.uid}-${choice.targetUid}`}
-                    onSelect={() => resolveOrder(choice.protector.uid, choice.targetUid)}
+                    selectTestId={`choose-intercept-order-${choice.protector.uid}-${choice.targetUid}${occurrenceTestId}`}
+                    onSelect={() => resolveOrder(
+                      choice.protector.uid,
+                      choice.targetUid,
+                      setCardInstanceId,
+                    )}
                     onExpand={expandModal.open}
                   />
                 </li>
-              ))}
+                );
+              })}
             </ul>
           </div>
         </div>

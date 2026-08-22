@@ -1,6 +1,7 @@
 import { def as readDef } from '../read/def.js';
 import { evalCond } from '../cond/eval.js';
 import { char as readChar } from '../read/char.js';
+import { char as mutateChar } from '../mutate/char.js';
 import type { AbilityDef, EffectCtx, GameState } from '../types/index.js';
 
 type Player = 'self' | 'opp';
@@ -12,6 +13,7 @@ export type ChooseInterceptProtector = {
   protectorUid: string;
   protectorCardId: string;
   abilityId: string;
+  setCardInstanceId?: string;
 };
 
 export type ChooseInterceptReaction = ChooseInterceptProtector & {
@@ -36,15 +38,32 @@ function consumeLimit(char: GameState['players']['self']['scene'][number], abili
   return true;
 }
 
+function consumeSetCardLimit(
+  state: GameState,
+  entry: GameState['players']['self']['scene'][number]['setCards'][number],
+  ability: AbilityDef,
+): boolean {
+  if (ability.limit?.kind !== 'turn' || !entry.instanceId) return false;
+  const previous = entry.abilityUseCounts?.[ability.id];
+  if (previous?.turn === state.turn.number && previous.count >= ability.limit.n) return false;
+  const counts = (entry.abilityUseCounts ??= {});
+  counts[ability.id] = {
+    turn: state.turn.number,
+    count: previous?.turn === state.turn.number ? previous.count + 1 : 1,
+  };
+  return true;
+}
+
 /** Finds and consumes every simultaneous immediate selection reaction for one selected character. */
 export function findChooseInterceptReactions(
   state: GameState,
   targetUid: string,
   ctx: EffectCtx,
 ): ChooseInterceptReaction[] {
-  if (readDef.card(ctx.source.cardId ?? '')?.kind !== 'character') return [];
+  if (!readDef.card(ctx.source.cardId ?? '')) return [];
   const target = findSceneChar(state, targetUid);
   if (!target || target.player === ctx.source.player) return [];
+  if (target.char.setCards.length > 0) mutateChar.ensureSetCardInstanceIds(state);
 
   const reactions: ChooseInterceptReaction[] = [];
 
@@ -56,7 +75,7 @@ export function findChooseInterceptReactions(
         ability.type === 'triggered'
         && ability.scope === 'on-set-host'
         && ability.trigger?.hook === ('effect:choose-intercept' as never)
-        && consumeLimit(target.char, ability)
+        && consumeSetCardLimit(state, entry, ability)
       ) {
         reactions.push({
           resolution: 'cancel',
@@ -65,6 +84,7 @@ export function findChooseInterceptReactions(
           protectorUid: target.char.uid,
           protectorCardId: entry.cardId,
           abilityId: ability.id,
+          setCardInstanceId: entry.instanceId,
         });
       }
     }

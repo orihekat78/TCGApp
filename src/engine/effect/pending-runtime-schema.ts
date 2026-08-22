@@ -887,6 +887,7 @@ function chooseInterceptResponse(value: unknown, path: string): void {
   string(protector.uid, `${path}.protector.uid`);
   string(protector.cardId, `${path}.protector.cardId`);
   string(protector.abilityId, `${path}.protector.abilityId`);
+  optionalString(protector.setCardInstanceId, `${path}.protector.setCardInstanceId`);
   string(item.targetUid, `${path}.targetUid`);
 }
 

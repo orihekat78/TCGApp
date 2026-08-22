@@ -168,6 +168,47 @@ describe('decision modal hosts', () => {
     unmount(root, container);
   });
 
+  it('keeps same-host set-card reactions occurrence-distinct and dispatches the chosen physical ID', () => {
+    useGameStateStore.setState({
+      pendingChooseIntercept: {
+        kind: 'order',
+        player: 'self',
+        choices: [
+          {
+            resolution: 'cancel',
+            protector: {
+              uid: 'host-1', cardId: 'B01001', abilityId: 'a1', setCardInstanceId: 'set:41',
+            },
+            targetUid: 'host-1',
+          },
+          {
+            resolution: 'cancel',
+            protector: {
+              uid: 'host-1', cardId: 'B01001', abilityId: 'a1', setCardInstanceId: 'set:42',
+            },
+            targetUid: 'host-1',
+          },
+        ],
+      },
+    });
+    const { container, root } = renderHost(ChooseInterceptModalHost);
+
+    expect([...container.querySelectorAll<HTMLElement>('[data-instance-id]')]
+      .map((tile) => tile.dataset.instanceId)).toEqual(['set:41', 'set:42']);
+    const second = container.querySelector<HTMLButtonElement>(
+      '[data-testid="choose-intercept-order-host-1-host-1-set:42"]',
+    );
+    expect(second).toBeInstanceOf(HTMLButtonElement);
+    act(() => second!.click());
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'chooseInterceptOrderResolve',
+      protectorUid: 'host-1',
+      targetUid: 'host-1',
+      setCardInstanceId: 'set:42',
+    });
+    unmount(root, container);
+  });
+
   it('resolves a set-card replacement from its native candidate selector and keeps details in the pending modal', () => {
     useGameStateStore.setState({
       pendingSetCardReplacement: {

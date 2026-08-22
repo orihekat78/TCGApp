@@ -487,7 +487,7 @@ type PersistedChooseInterceptResponse = {
   player: 'self' | 'opp';
   ownerPlayer?: 'self' | 'opp';
   publicHandRevealToken?: string;
-  protector: { uid: string; cardId: string; abilityId: string };
+  protector: { uid: string; cardId: string; abilityId: string; setCardInstanceId?: string };
   targetUid: string;
 };
 
@@ -539,15 +539,25 @@ function assertPersistedChooseInterceptResponse(
 
   const resolution = response.resolution ?? 'discard-or-cancel';
   if (resolution === 'cancel') {
-    const setCardPresent = response.protector.uid === target.uid
-      && target.setCards.some(entry => entry.faceUp && entry.cardId === response.protector.cardId);
+    const instanceId = response.protector.setCardInstanceId;
+    const setCard = response.protector.uid === target.uid && instanceId
+      ? target.setCards.find(entry => (
+        entry.faceUp
+        && entry.cardId === response.protector.cardId
+        && entry.instanceId === instanceId
+      ))
+      : undefined;
     const ability = readDef.card(response.protector.cardId)?.abilities.find(item => (
       item.id === response.protector.abilityId
       && item.type === 'triggered'
       && item.scope === 'on-set-host'
       && item.trigger?.hook === ('effect:choose-intercept' as never)
     ));
-    if (!setCardPresent || !ability || (target.declaredUseCount[ability.id] ?? 0) < 1) {
+    const use = ability ? setCard?.abilityUseCounts?.[ability.id] : undefined;
+    if (!setCard
+      || !ability
+      || use?.turn !== state.turn.number
+      || use.count < 1) {
       invalidChooseIntercept('cancel witness must match a used face-up set-card ability');
     }
     return;

@@ -69,6 +69,9 @@ export function useEffectPickFlowDriver(enabled = true): void {
               type: 'chooseInterceptOrderResolve',
               protectorUid: first.protector.uid,
               targetUid: first.targetUid,
+              ...(first.protector.setCardInstanceId
+                ? { setCardInstanceId: first.protector.setCardInstanceId }
+                : {}),
             }));
           }
         } else {

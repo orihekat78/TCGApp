@@ -411,7 +411,7 @@ export type PendingChooseInterceptResponse = {
   player: 'self' | 'opp';
   ownerPlayer?: 'self' | 'opp';
   publicHandRevealToken?: string;
-  protector: { uid: string; cardId: string; abilityId: string };
+  protector: { uid: string; cardId: string; abilityId: string; setCardInstanceId?: string };
   targetUid: string;
 };
 

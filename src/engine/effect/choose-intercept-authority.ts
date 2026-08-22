@@ -31,6 +31,7 @@ export function chooseInterceptReactionKey(response: PendingChooseInterceptRespo
     response.protector.uid,
     response.protector.cardId,
     response.protector.abilityId,
+    response.protector.setCardInstanceId ?? null,
     response.targetUid,
   ]);
 }
@@ -47,6 +48,17 @@ export function createChooseInterceptBatchAuthority(
     const owner = ownerOf(response);
     const witness = state.players[owner].scene.find(char => char.uid === response.protector.uid);
     if (!witness) throw new Error('chooseIntercept: missing physical batch witness');
+    if ((response.resolution ?? 'discard-or-cancel') === 'cancel') {
+      const instanceId = response.protector.setCardInstanceId;
+      const entry = instanceId
+        ? witness.setCards.find(card => (
+          card.instanceId === instanceId
+          && card.cardId === response.protector.cardId
+          && card.faceUp
+        ))
+        : undefined;
+      if (!entry) throw new Error('chooseIntercept: missing physical set-card witness');
+    }
     const current = witnesses(witness.turnEffects[WITNESS_KEY]);
     witness.turnEffects[WITNESS_KEY] = [
       ...current,
@@ -151,6 +163,19 @@ export function consumeChooseInterceptBatchAuthority(
   response: PendingChooseInterceptResponseSide,
 ): void {
   if (token === undefined) return;
+  if ((response.resolution ?? 'discard-or-cancel') === 'cancel') {
+    const owner = ownerOf(response);
+    const host = state.players[owner].scene.find(char => char.uid === response.protector.uid);
+    const instanceId = response.protector.setCardInstanceId;
+    const entry = instanceId
+      ? host?.setCards.find(card => (
+        card.instanceId === instanceId
+        && card.cardId === response.protector.cardId
+        && card.faceUp
+      ))
+      : undefined;
+    if (!entry) throw new Error('chooseIntercept: stale physical set-card witness');
+  }
   const key = chooseInterceptReactionKey(response);
   for (const player of ['self', 'opp'] as const) {
     for (const char of state.players[player].scene) {

@@ -258,7 +258,9 @@ export function isAllowed(
       return pending?.kind === 'order'
         && matchesPendingDecision(pending, action)
         && pending.choices.some(choice => (
-          choice.protector.uid === action.protectorUid && choice.targetUid === action.targetUid
+          choice.protector.uid === action.protectorUid
+          && choice.targetUid === action.targetUid
+          && choice.protector.setCardInstanceId === action.setCardInstanceId
         ));
     }
     case 'repeatOptionalResolve': {

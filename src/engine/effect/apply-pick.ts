@@ -1314,6 +1314,9 @@ export function applyPickAndContinuation(
             uid: reaction.protectorUid,
             cardId: reaction.protectorCardId,
             abilityId: reaction.abilityId,
+            ...(reaction.setCardInstanceId
+              ? { setCardInstanceId: reaction.setCardInstanceId }
+              : {}),
           },
           targetUid: uid,
         })));
@@ -1619,6 +1622,7 @@ export function applyChooseInterceptOrder(
   pending: PendingChooseInterceptSide,
   protectorUid: string,
   targetUid: string,
+  setCardInstanceId?: string,
 ): void {
   if (stopIfGameAlreadyEnded(state)) return;
   if (pending.kind !== 'order') throw new Error('chooseIntercept: expected order decision');
@@ -1627,7 +1631,9 @@ export function applyChooseInterceptOrder(
     throw new Error('chooseIntercept: stale order');
   }
   const visible = pending.choices.find(choice => (
-    choice.protector.uid === protectorUid && choice.targetUid === targetUid
+    choice.protector.uid === protectorUid
+    && choice.targetUid === targetUid
+    && choice.protector.setCardInstanceId === setCardInstanceId
   ));
   const selected = (resume.remainingGuards ?? []).find(guard => (
     visible !== undefined && sameChooseInterceptResponse(guard, visible)
@@ -1766,7 +1772,8 @@ function sameChooseInterceptResponse(
     && left.publicHandRevealToken === right.publicHandRevealToken
     && left.protector.uid === right.protector.uid
     && left.protector.cardId === right.protector.cardId
-    && left.protector.abilityId === right.protector.abilityId;
+    && left.protector.abilityId === right.protector.abilityId
+    && left.protector.setCardInstanceId === right.protector.setCardInstanceId;
 }
 
 function sameChooseInterceptSide(left: PendingChooseInterceptSide, right: PendingChooseInterceptSide): boolean {

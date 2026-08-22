@@ -226,7 +226,7 @@ export type PendingChooseInterceptResponseSide = {
   player: Player;
   ownerPlayer?: Player;
   publicHandRevealToken?: string;
-  protector: { uid: string; cardId: string; abilityId: string };
+  protector: { uid: string; cardId: string; abilityId: string; setCardInstanceId?: string };
   targetUid: string;
 };
 

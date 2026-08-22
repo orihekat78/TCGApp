@@ -25,12 +25,13 @@ const HIGH: CardDef = { ...RAN, id: 'DISPATCH_HIGH', no: 'test/HIGH', names: ['H
 const DISCARD: CardDef = { ...RAN, id: 'DISPATCH_DISCARD', no: 'test/DISCARD', names: ['Discard'] };
 const HOST: CardDef = { ...RAN, id: 'DISPATCH_HOST', no: 'test/HOST', names: ['Host'] };
 const OPP_SOURCE: CardDef = { ...RAN, id: 'DISPATCH_OPP_SOURCE', no: 'test/OPP_SOURCE', names: ['Opponent'] };
+const OPP_EVENT: CardDef = { ...OPP_SOURCE, id: 'DISPATCH_OPP_EVENT', no: 'test/OPP_EVENT', kind: 'event' };
 
 beforeEach(() => {
   event._resetRegistry();
   _resetTriggeredRegistered();
   engine.cards._resetRegistry();
-  [B02067P, B04003, B04003P, B08081, B08081P, RAN, LOW, HIGH, DISCARD, HOST, OPP_SOURCE]
+  [B02067P, B04003, B04003P, B08081, B08081P, RAN, LOW, HIGH, DISCARD, HOST, OPP_SOURCE, OPP_EVENT]
     .forEach((card) => engine.cards.register(card));
   registerTriggeredListener();
 });
@@ -66,15 +67,14 @@ describe('choose-intercept shipped cards — production dispatch probes', () => 
     });
   };
 
-  it('B02067P cancels the selected atom and its continuation through the direct resolver path', () => {
+  it('B02067P cancels an opponent event selection and its continuation through the direct resolver path', () => {
     const state = produce(createEmptyGameState(), (d) => {
       d.turn.number = 3;
       d.players.self.scene.push(sceneChar('DISPATCH_HOST', 'host', { setCards: [{ cardId: 'B02067P', faceUp: true }] }));
-      d.players.opp.scene.push(sceneChar('DISPATCH_OPP_SOURCE', 'opp-source'));
       d.players.opp.deck = ['drawn'];
     });
     const ctx: EffectCtx = {
-      source: { cardId: 'DISPATCH_OPP_SOURCE', uid: 'opp-source', abilityId: 'a1', player: 'opp', area: 'scene' },
+      source: { cardId: 'DISPATCH_OPP_EVENT', uid: 'opp-event', abilityId: 'a1', player: 'opp', area: 'remove' },
       bindings: {},
     };
     const selectingEffect = {
@@ -97,6 +97,8 @@ describe('choose-intercept shipped cards — production dispatch probes', () => 
     });
 
     expect(after.players.self.scene.find((c) => c.uid === 'host')?.state).toBe('active');
+    expect(after.players.self.scene.find((c) => c.uid === 'host')?.setCards[0]?.abilityUseCounts?.a1)
+      .toEqual({ turn: 3, count: 1 });
     expect(after.players.opp.hand).toEqual([]);
     expect(after.players.opp.deck).toEqual(['drawn']);
   });

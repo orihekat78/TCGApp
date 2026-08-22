@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6182
+- **ファイル数**: 6187
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -507,6 +507,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-324.md` — キャラ限定sceneEnterの対象種別漏れ
     - `BUG-325.md` — B04030の怪盗キッド候補へ黒羽快斗が混入
     - `BUG-326.md` — B08006の重なったカードの同一性喪失
+    - `BUG-327.md` — B02067/Pのイベント使用時セット能力欠落
+    - `BUG-328.md` — B02067/P複数セット時の能力個体識別欠落
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -827,6 +829,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-22-05-qa-wave31-effect-entry.md`
     - `2026-08-22-06-qa-wave32-shuffle-romance.md`
     - `2026-08-22-07-qa-wave33-stacked-card-semantics.md`
+    - `2026-08-22-08-qa-wave34-set-card-lifecycle.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -5510,6 +5513,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B01077-empty-hand-event.test.ts` — qaId=card:B01077:d42cf418c120cd75f5388b9a434fa679d9f97908baa2ffb6eb9152c28dcb8e5…
       - `B02008-turn-limit-order-ap.test.ts` — qaId=card:B02008:3240a4626ffa31e953f10ca03af61b33b9d3367feeffa3bc87cd8b3c7be01d9…
       - `B02023-facedown-set-privacy.test.ts` — qa: card:B02023:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b
+      - `B02067-multi-set-intercept-public-wave34.test.ts` — Rules: 15-abilities-effects.md, 16-card-set.md, 17-icons.md.
       - `B03002-B05005-next-hint-order-guard.test.ts` — Official Q&A certification: public dispatch paths only.
       - `B03006-public-stack-lifecycle.test.ts` — qa: card:B03006:151b435edeb61c22d4471596da22371c8592c23c410528efb5e78938a1bb3b54
       - `B03020.test.ts` — qaId=card:B03020:7e1b89161d4cc08ba1dd9f60c2dd203d56a0d75ebc1fe8ce0ada2bb43af5a27…
@@ -5572,6 +5576,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `same-card-multicopy-order-wave17.test.ts` — qaId=card:B02020:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c…
       - `set-card-host-absent.test.ts`
       - `set-card-host-owner-wave3.test.ts` — qaId=card:B02018:dc712167e0587386756f5293d40bf1766e89e09669554ebcde8e028749d962d…
+      - `set-card-lifecycle-public-wave34.test.ts` — qa: card:B01039:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
       - `shippu-effect-entry-public.test.ts` — qa: card:B09070:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
       - `short-deck-reveal-hand-entry-public.test.ts` — rules: 15-abilities-effects.md, 17-icons.md, 20-color-and-switch.…
       - `shuffle-romance-public-wave32.test.ts` — qa: card:B01023:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a

@@ -156,7 +156,11 @@ describe('B04003 official-QA choose-intercept public dispatch', () => {
     state.players.opp.deck = ['QA_B04003_DRAW'];
     state.players.opp.scene = [makeChar({ uid: 'multi-source', cardId: MULTI_SOURCE.id })];
     state.players.self.scene = [
-      makeChar({ uid: 'ran-one', cardId: RAN.id, setCards: [{ cardId: B02067.id, faceUp: true }] }),
+      makeChar({
+        uid: 'ran-one',
+        cardId: RAN.id,
+        setCards: [{ cardId: B02067.id, faceUp: true, instanceId: CHOKER_SET_INSTANCE_ID }],
+      }),
       makeChar({ uid: 'ran-two', cardId: RAN.id }),
       makeChar({ uid: 'shinichi', cardId: B04003.id }),
       makeChar({ uid: 'hirota-1', cardId: B08081.id }),
@@ -171,14 +175,20 @@ describe('B04003 official-QA choose-intercept public dispatch', () => {
       kind: 'order',
       player: 'self',
       choices: expect.arrayContaining([
-        expect.objectContaining({ resolution: 'cancel', protector: expect.objectContaining({ cardId: B02067.id }) }),
+        expect.objectContaining({
+          resolution: 'cancel',
+          protector: expect.objectContaining({
+            cardId: B02067.id,
+            setCardInstanceId: CHOKER_SET_INSTANCE_ID,
+          }),
+        }),
         expect.objectContaining({ resolution: 'discard-or-cancel', protector: expect.objectContaining({ uid: 'hirota-1' }) }),
         expect.objectContaining({ resolution: 'discard-or-cancel', protector: expect.objectContaining({ uid: 'hirota-2' }) }),
       ]),
     });
     const firstTarget = pickedUids[0]!;
     expect(order?.kind === 'order' ? order.choices.map(reactionKey).sort() : []).toEqual([
-      `cancel:${B02067.id}:ran-one:ran-one`,
+      `cancel:${B02067.id}:ran-one:ran-one:${CHOKER_SET_INSTANCE_ID}`,
       `discard-or-cancel:${B04003.id}:shinichi:${firstTarget}`,
       `discard-or-cancel:${B08081.id}:hirota-1:${firstTarget}`,
       `discard-or-cancel:${B08081.id}:hirota-2:${firstTarget}`,
@@ -212,6 +222,7 @@ describe('B04003 official-QA choose-intercept public dispatch', () => {
     expect(dispatchEngineAction(bindPendingDecision(activeOrder, {
       type: 'chooseInterceptOrderResolve',
       protectorUid: cancel!.protector.uid,
+      setCardInstanceId: cancel!.protector.setCardInstanceId,
       targetUid: cancel!.targetUid,
     }))).toEqual({ ok: true });
 
@@ -350,14 +361,25 @@ describe('B04003 official-QA choose-intercept public dispatch', () => {
   });
 });
 
-function reactionKey(reaction: { resolution?: string; protector: { cardId: string; uid: string }; targetUid: string }): string {
-  return `${reaction.resolution ?? 'discard-or-cancel'}:${reaction.protector.cardId}:${reaction.protector.uid}:${reaction.targetUid}`;
+const CHOKER_SET_INSTANCE_ID = 'qa-b02067-set';
+
+function reactionKey(reaction: {
+  resolution?: string;
+  protector: { cardId: string; uid: string; setCardInstanceId?: string };
+  targetUid: string;
+}): string {
+  const occurrence = reaction.protector.setCardInstanceId
+    ? `:${reaction.protector.setCardInstanceId}`
+    : '';
+  return `${reaction.resolution ?? 'discard-or-cancel'}:${reaction.protector.cardId}:${reaction.protector.uid}:${reaction.targetUid}${occurrence}`;
 }
 
 function currentUseCounts(): { choker: number; shinichi: number; hirota1: number; hirota2: number } {
   const scene = useGameStateStore.getState().gameState!.players.self.scene;
+  const chokerEntry = scene.find(card => card.uid === 'ran-one')?.setCards
+    .find(entry => entry.instanceId === CHOKER_SET_INSTANCE_ID);
   return {
-    choker: scene.find(card => card.uid === 'ran-one')?.declaredUseCount.a1 ?? 0,
+    choker: chokerEntry?.abilityUseCounts?.a1?.count ?? 0,
     shinichi: scene.find(card => card.uid === 'shinichi')?.declaredUseCount.a1 ?? 0,
     hirota1: scene.find(card => card.uid === 'hirota-1')?.declaredUseCount.a2 ?? 0,
     hirota2: scene.find(card => card.uid === 'hirota-2')?.declaredUseCount.a2 ?? 0,
@@ -370,7 +392,11 @@ function installAllInterceptors(prepare?: (state: GameState, sessionId: string) 
   state.players.opp.deck = ['QA_B04003_DRAW'];
   state.players.opp.scene = [makeChar({ uid: 'multi-source', cardId: MULTI_SOURCE.id })];
   state.players.self.scene = [
-    makeChar({ uid: 'ran-one', cardId: RAN.id, setCards: [{ cardId: B02067.id, faceUp: true }] }),
+    makeChar({
+      uid: 'ran-one',
+      cardId: RAN.id,
+      setCards: [{ cardId: B02067.id, faceUp: true, instanceId: CHOKER_SET_INSTANCE_ID }],
+    }),
     makeChar({ uid: 'ran-two', cardId: RAN.id }),
     makeChar({ uid: 'shinichi', cardId: B04003.id }),
     makeChar({ uid: 'hirota-1', cardId: B08081.id }),
@@ -396,6 +422,7 @@ function chooseB02067First(): void {
   expect(dispatchEngineAction(bindPendingDecision(order!, {
     type: 'chooseInterceptOrderResolve',
     protectorUid: cancel!.protector.uid,
+    setCardInstanceId: cancel!.protector.setCardInstanceId,
     targetUid: cancel!.targetUid,
   }))).toEqual({ ok: true });
 }

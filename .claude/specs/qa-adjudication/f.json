@@ -219,7 +219,7 @@
       "evidence": [
         "src:src/cards/ct-p02/B02067.ts:4",
         "src:src/cards/ct-p02/B02067.ts:6",
-        "tests:tests/cards/choose-intercept.test.ts:148"
+        "tests:tests/cards/choose-intercept.test.ts:149"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"

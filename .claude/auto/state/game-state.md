@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-state.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:state`
-> Source hash: `49e2c26dfd61`
+> Source hash: `9145115a5b98`
 
 `src/engine/types/game-state.ts` から抽出した GameState の構造図。
 
@@ -109,6 +109,7 @@ classDiagram
     +cardId: string
     +faceUp: boolean
     +instanceId?: string
+    +abilityUseCounts?: Record<string, { turn: number; count: number…
     +replacementUseCounts?: Record<string, { turn: number; count: number…
   }
   class EvidenceOrigin {

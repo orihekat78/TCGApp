@@ -5,11 +5,23 @@
     {
       "qaId": "card:B01039:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a",
       "answerHash": "dd31d3e39e49fa24ff58040bbd1ff101d032e6c4c0045d36c2670aba52bb0ebe",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p01/B01039.ts:1"
+        "rules:.claude/rules/16-card-set.md:13",
+        "rules:.claude/rules/16-card-set.md:14",
+        "rules:.claude/rules/16-card-set.md:9",
+        "src:src/cards/ct-p01/B01039.ts:33",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:196",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:206",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:212",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:216",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:221",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:227",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:228",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:229",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:230"
       ]
     },
     {
@@ -154,11 +166,23 @@
     {
       "qaId": "card:B02031:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a",
       "answerHash": "dd31d3e39e49fa24ff58040bbd1ff101d032e6c4c0045d36c2670aba52bb0ebe",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02031.ts:1"
+        "rules:.claude/rules/16-card-set.md:13",
+        "rules:.claude/rules/16-card-set.md:14",
+        "rules:.claude/rules/16-card-set.md:9",
+        "src:src/cards/ct-p02/B02031.ts:20",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:196",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:206",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:212",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:216",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:221",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:227",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:228",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:229",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:230"
       ]
     },
     {
@@ -715,11 +739,23 @@
     {
       "qaId": "card:B05117:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a",
       "answerHash": "dd31d3e39e49fa24ff58040bbd1ff101d032e6c4c0045d36c2670aba52bb0ebe",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05117.ts:1"
+        "rules:.claude/rules/16-card-set.md:13",
+        "rules:.claude/rules/16-card-set.md:14",
+        "rules:.claude/rules/16-card-set.md:9",
+        "src:src/cards/ct-p05/B05117.ts:53",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:196",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:206",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:212",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:216",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:221",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:227",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:228",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:229",
+        "tests:tests/cards/official-qa/set-card-lifecycle-public-wave34.test.ts:230"
       ]
     },
     {
