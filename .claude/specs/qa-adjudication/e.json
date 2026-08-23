@@ -1401,15 +1401,16 @@
     {
       "qaId": "card:B08074:005e493fba4351e0068829bd845547d2262609dc9387785fd09e678fa32f04ae",
       "answerHash": "9e196328f6aeb787c34a18b38d9333dc32a9b9bdfa148eecb3ea5fb5eff839fa",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08074.ts:1"
+        "rules:.claude/rules/13-keywords.md:36",
+        "src:src/cards/ct-p08/B08074.ts:22",
+        "src:src/engine/effect/atom-handlers/picks.ts:108",
+        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:310"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B08075:08a66550cc5178b9dd1548e89a7ad24ec27bf692e40929f7b46c0ac0a0c13339",

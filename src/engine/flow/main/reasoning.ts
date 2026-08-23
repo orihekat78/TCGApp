@@ -45,6 +45,7 @@ import {
   rollbackLiveMisreadLease,
 } from '../../state/misread-authority.js';
 import { consumePersistedMisreadAuthority } from '../../effect/runtime-state.js';
+import { isMainActionWindow } from './main-action-window.js';
 import {
   cloneCausalEffectTrace,
   completeEffectCausalTrace,
@@ -54,7 +55,6 @@ import {
   withEffectCausalCorrelation,
   withStructuredCausalResolution,
 } from '../../log/effect-causal.js';
-
 /**
  * uid から対象を探す。パートナーは "partner:self" / "partner:opp" の形式で扱う。
  */
@@ -85,7 +85,7 @@ function findTarget(
  */
 export function canReason(state: GameState, uid: string): boolean {
   const t = findTarget(state, uid);
-  if (!t) return false;
+  if (!t || !isMainActionWindow(state, t.player)) return false;
   if (t.kind === 'partner') {
     return t.partner.state === 'active';
   }

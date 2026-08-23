@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { canReason } from '@/engine/flow/main/reasoning';
 import { _resetRegistry, register } from '@/engine/read/def';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../helpers/main-game-state';
 import { sceneChar } from '../helpers/fixtures';
 import type { CardDef } from '@/engine/types';
 

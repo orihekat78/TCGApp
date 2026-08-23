@@ -15,7 +15,7 @@ import type { GameState, Candidate } from '../../types/index.js';
 import { char as readChar } from '../../read/char.js';
 import { matchOneFilter } from '../../target/candidates.js';
 import { candidates as targetCandidates, mustTargetCandidates, mustTargetSelfOnceCandidates } from '../action/target-expander.js';
-
+import { isMainActionWindow } from './main-action-window.js';
 type Player = 'self' | 'opp';
 
 /**
@@ -97,7 +97,7 @@ export function canAction(state: GameState, byUid: string): boolean {
 
 function _canAction(state: GameState, byUid: string, targetKind: ActionTargetKind, targetUid?: string): boolean {
   const actor = findActor(state, byUid);
-  if (!actor) return false;
+  if (!actor || !isMainActionWindow(state, actor.player)) return false;
   if (actor.kind === 'partner') {
     return state.players[actor.player].partner.state === 'active';
   }

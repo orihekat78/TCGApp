@@ -1812,7 +1812,7 @@
         "rules:.claude/rules/15-abilities-effects.md:7",
         "src:src/cards/ct-p10/B10075.ts:18",
         "src:src/cards/ct-p10/B10075.ts:20",
-        "tests:tests/cards/ct-p10/yellow-combat-cluster.test.ts:147"
+        "tests:tests/cards/ct-p10/yellow-combat-cluster.test.ts:148"
       ]
     },
     {

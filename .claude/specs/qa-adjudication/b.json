@@ -247,8 +247,8 @@
       "evidence": [
         "rules:.claude/rules/16-card-set.md:13",
         "src:src/cards/ct-p03/B03032.ts:27",
-        "tests:tests/engine/bug-256-b03032-active-set-target.test.ts:147",
-        "tests:tests/engine/bug-256-b03032-active-set-target.test.ts:148"
+        "tests:tests/engine/bug-256-b03032-active-set-target.test.ts:148",
+        "tests:tests/engine/bug-256-b03032-active-set-target.test.ts:149"
       ]
     },
     {

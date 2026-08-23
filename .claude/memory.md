@@ -65,3 +65,19 @@
 - Wave44 completes B07093/P a1 as `[a2,a3,a1]`, preserving old occurrence indices. Public hand/remove, switch, enter, disguise, early leave, exact deck bottom, PA a2, JSON counts, and V1/V2 replay gates pass.
 - Wave45 certifies twelve scene-only Bond records with partner-only negative controls and real declared, targeting, contact, end-turn, AP, LP, and keyword paths. Coverage reaches 1290 matched/1674 test-missing.
 - NEXT Wave46: screen the 12-record `361a946b...` / `7efec64d...` group by exact official text and route before implementation. Backlog estimate: 140-260 uninterrupted agent hours.
+
+## 2026-08-23: QA runtime Waves46-47 end phase and Investigation
+
+- Wave46 certifies twelve end-phase activation records. BUG-330 adds one
+  turn-owner/main-phase admission gate across reasoning, action, hand use,
+  next hint, declared ability, and partner ability. Real end-turn paths prove
+  no reuse before next self main, plus PA, PA-MR, optional, zero, and stun
+  replacement branches.
+- Wave47 certifies eight Investigation found-card records. BUG-331 exposes the
+  exact Souza top-card occurrence set as public/all presentation, preserves
+  defender reorder through JSON, and adds `reveal-to-bottom` so Souza/B08074
+  never display a false shuffle. Central bottom-operation marking covers 140
+  abilities, including six revealed-remainder randomizers; empty remainders use
+  neutral `reveal-complete`. Coverage reaches 1310 matched/1654 missing.
+- NEXT Wave48: route-screen `027580.../83d521...`, then
+  `96d539.../47d3...` or `5a4907.../89083...`; split overlaps and mixed routes.

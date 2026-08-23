@@ -12,7 +12,7 @@ import { _clearPendingEffectOptionalSide, _clearPendingEffectPickQueue, _drainPe
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { read } from '@/engine/read';
 import { _resetRegistry, register } from '@/engine/read/def';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../../helpers/main-game-state';
 import { sceneChar } from '../../helpers/fixtures';
 import type { CardDef, GameState } from '@/engine/types';
 
@@ -137,7 +137,8 @@ describe('CT-P10 B10075 佐藤美和子', () => {
 
   it('相手ターンではAP補正だけが消え、絆なし・元の能力無効では突撃も消える', () => {
     const oppTurn = stateFor('opp');
-    expect(canAction(oppTurn, 'sato'), '突撃には自分ターン中の条件なし').toBe(true);
+    expect(read.char.hasKeyword(oppTurn, 'sato', '突撃'), '突撃自体は相手ターンにも保持').toBe(true);
+    expect(canAction(oppTurn, 'sato'), '相手ターン中はmain actionを開始できない').toBe(false);
     expect(read.char.ap(oppTurn, 'valid')).toBe(3000);
 
     const noBond = stateFor('self');

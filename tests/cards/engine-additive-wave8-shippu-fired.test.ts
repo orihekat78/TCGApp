@@ -26,7 +26,7 @@ import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../helpers/main-game-state';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { endTurn } from '@/engine/flow/turn';
 import { makeCtx } from '../helpers/fixtures';

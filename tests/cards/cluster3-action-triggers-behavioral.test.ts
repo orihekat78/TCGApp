@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { produce } from '@/engine/produce';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../helpers/main-game-state';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
@@ -42,7 +42,7 @@ function base(): GameState {
   s.players.opp.deck.push('e1', 'e2', 'e3');
   // rules/07: 証拠が1つもない事件は action[事件] の対象外 → case アクションを合法化するため相手証拠を1つ置く
   s.players.opp.evidence.push({ cardId: 'ev-opp', faceUp: false, origin: { turn: 1, via: 'action-case' } });
-  s.turn = { number: 2, player: 'self' } as GameState['turn'];
+  s.turn = { number: 2, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
   return s;
 }
 

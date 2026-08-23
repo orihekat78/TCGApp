@@ -988,15 +988,16 @@
     {
       "qaId": "card:B07088:5cd2136d7cd6a36fa7865674805d871f3b5a22a27b16725f41ce400225b941d1",
       "answerHash": "7efec64def765e211d0d7cddba25d5b455bf9dfe8b4dfc89d1acf7677721e475",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07088.ts:1"
+        "rules:.claude/rules/05-turn-phases.md:44",
+        "src:src/cards/ct-p07/B07088.ts:16",
+        "src:src/engine/flow/main/main-action-window.ts:6",
+        "tests:tests/cards/official-qa/end-phase-reactivation-public-wave46.test.ts:305"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B07099:64abd62dc9d96da5aea6edae3f7c42bf9f7eced5f00110e37e1e1782068f90ae",
@@ -1152,15 +1153,16 @@
     {
       "qaId": "card:B08073:5cd2136d7cd6a36fa7865674805d871f3b5a22a27b16725f41ce400225b941d1",
       "answerHash": "7efec64def765e211d0d7cddba25d5b455bf9dfe8b4dfc89d1acf7677721e475",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08073.ts:1"
+        "rules:.claude/rules/05-turn-phases.md:44",
+        "src:src/cards/ct-p08/B08073.ts:9",
+        "src:src/engine/flow/main/main-action-window.ts:6",
+        "tests:tests/cards/official-qa/end-phase-reactivation-public-wave46.test.ts:319"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B08082:22dcf637e31b77df7c0e0b4b71d5e02397a4154199d9bd4e2241d2e4f059df7d",

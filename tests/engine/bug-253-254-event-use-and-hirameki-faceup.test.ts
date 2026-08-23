@@ -4,7 +4,7 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { produce } from '@/engine/produce';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../helpers/main-game-state';
 import { startCausalSession } from '@/engine/log/causal';
 import { event } from '@/engine/event';
 import { runAtom } from '@/engine/effect/atom-handlers';

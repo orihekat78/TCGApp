@@ -501,12 +501,16 @@
     {
       "qaId": "card:B04074:c6e5391785273827b8dabcd809585155ef42406b996be0913d033b9dcb43cbe6",
       "answerHash": "9e196328f6aeb787c34a18b38d9333dc32a9b9bdfa148eecb3ea5fb5eff839fa",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04074.ts:1"
-      ]
+        "rules:.claude/rules/13-keywords.md:36",
+        "src:src/cards/ct-p04/B04074.ts:44",
+        "src:src/engine/effect/atom-handlers/picks.ts:586",
+        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:285"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B04079:06842c90040967bd542ad22610c2e6ecb688ce4126383ea2baef4df739beb14c",
@@ -924,12 +928,16 @@
     {
       "qaId": "card:B07023:e95274eddf61476e68accaf6348cb07eefb9d8074484ed06055f5022530a1706",
       "answerHash": "7efec64def765e211d0d7cddba25d5b455bf9dfe8b4dfc89d1acf7677721e475",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07023.ts:1"
-      ]
+        "rules:.claude/rules/05-turn-phases.md:44",
+        "src:src/cards/ct-p07/B07023.ts:13",
+        "src:src/engine/flow/main/main-action-window.ts:6",
+        "tests:tests/cards/official-qa/end-phase-reactivation-public-wave46.test.ts:285"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B07025:a1ea0a1b03ae906d9062ba5906497c7178e10970f12b5935b23937f559152d86",
@@ -2139,11 +2147,11 @@
       "evidence": [
         "src:src/cards/pr-01/PR237.ts:53",
         "src:src/cards/pr-01/PR237.ts:61",
+        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:285",
         "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:286",
-        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:287",
         "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:293",
-        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:299",
-        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:302"
+        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:298",
+        "tests:tests/cards/triage-greens-2026-06-16/PR237.test.ts:301"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"

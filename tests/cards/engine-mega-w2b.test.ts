@@ -13,7 +13,7 @@ import { resolveEffectPicks, _clearPendingEffectPickQueue, _drainPendingEffectPi
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../helpers/main-game-state';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { mutate } from '@/engine/mutate/index';
 import { char as readChar } from '@/engine/read/char';

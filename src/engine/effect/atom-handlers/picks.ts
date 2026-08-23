@@ -5,7 +5,7 @@ import { pushPendingEffectPickSide } from '../pending-state.js';
 import { preparePendingPickRange } from '../pick-selection.js';
 import { candidates as targetCandidates } from '../../target/candidates.js';
 import { removeExcludedSourceCardId } from '../../read/effect-source.js';
-import { targetFilterToPredicateWithCtx, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait, publicEffectSource, resolveDeltaToNumber, queuePendingDeckRevealSide } from './_shared.js';
+import { targetFilterToPredicateWithCtx, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait, publicEffectSource, resolveDeltaToNumber, queuePendingDeckRevealSide, markPendingDeckRevealPresentation } from './_shared.js';
 import type { PendingDeckPlaceSide, PendingDeckReorderSide } from './_shared.js';
 import { FILE_CARD_BACK_PLACEHOLDER, type GameState, type EffectCtx, type Candidate, type AtomVerb, type TargetingRef } from '../../types/index.js';
 import type { TargetFilter } from '../../types/effect.js';
@@ -189,7 +189,7 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
             viewer: revealAccess.viewer,
             revealed: [...windowIds],
             matched: chosen,
-            presentation: a.presentation === 'reveal-return' ? 'reveal-return' : undefined,
+            presentation: deckRevealPresentation(a.presentation),
             source: publicEffectSource(ctx),
           });
         }
@@ -289,7 +289,7 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
               revealed: [...revealed],
               matched: null,
               awaitingPick: true,
-              presentation: a.presentation === 'reveal-return' ? 'reveal-return' : undefined,
+              presentation: deckRevealPresentation(a.presentation),
               source: publicEffectSource(ctx),
             });
           }
@@ -352,7 +352,7 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
           viewer: revealAccess.viewer,
           revealed: [...revealed],
           matched,
-          presentation: a.presentation === 'reveal-return' ? 'reveal-return' : undefined,
+          presentation: deckRevealPresentation(a.presentation),
           source: publicEffectSource(ctx),
         });
       }
@@ -369,7 +369,7 @@ export function atomDeckToBottomBound(s: GameState, a: Record<string, unknown>, 
       const p = resolvePlayer(a.player, ctx);
       const bindKey = a.bindKey as string;
       const bound = ctx.bindings[bindKey];
-      if (!bound || bound.length === 0) return;
+      if (!bound || bound.length === 0) { markPendingDeckRevealPresentation(p, publicEffectSource(ctx), 'reveal-complete'); return; }
       // Candidate から cardId を抽出 → デッキ下へ
       const deck = s.players[p].deck;
       // Resolve exact occurrences without mutating. Prefer bound snapshot indexes when
@@ -384,6 +384,7 @@ export function atomDeckToBottomBound(s: GameState, a: Record<string, unknown>, 
       }
       const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
       const order = a.order === 'preserve' || a.order === 'shuffle' ? a.order : 'arbitrary';
+      markPendingDeckRevealPresentation(p, publicEffectSource(ctx), order === 'shuffle' ? 'reveal-to-bottom-randomized' : 'reveal-to-bottom');
       if (order === 'arbitrary' && occurrences.length >= 2 && p === humanSide) {
         const trace = ensureEffectCausalTrace(s, ctx);
         markEffectCausalAwaitingResume(trace);
@@ -419,7 +420,6 @@ export function atomDeckToBottomBound(s: GameState, a: Record<string, unknown>, 
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckToBottomBound', result: String(splicedIds.length) });
       return;
     }
-
 // mini-wave #5 P2 (2026-07-10): 「見た各カードを、好きな順番でデッキの上か下に移す」(B05047)。
 // bound window (deckRevealUntil 公開分、まだ deck 元位置に居る) を対象に:
 // - human 所有: __pendingDeckPlaceSide を立てて await (deckReorder 同型 side-channel)。カードは
@@ -638,6 +638,18 @@ export function atomSouza(s: GameState, a: Record<string, unknown>, ctx: EffectC
       if (souzaBindKey) {
         ctx.bindings[souzaBindKey] = occurrences;
       }
+      const humanSideS = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+      if (humanSideS !== null) {
+        queuePendingDeckRevealSide({
+          player,
+          visibility: 'public',
+          viewer: 'all',
+          revealed: [...top],
+          matched: null,
+          presentation: 'reveal-to-bottom',
+          source: publicEffectSource(ctx),
+        });
+      }
       mutate.log.append(s, {
         ts: Date.now(),
         player,
@@ -648,7 +660,6 @@ export function atomSouza(s: GameState, a: Record<string, unknown>, ctx: EffectC
       });
       // BUG-136 水平展開: 捜査X も「(defender の)好きな順番でデッキの下に移す」(rules/13)。
       // deckToBottomBound と同じく defender が human & 2 枚以上のとき順序選択 modal を surface。
-      const humanSideS = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
       if (count >= 2 && player === humanSideS) {
         const trace = ensureEffectCausalTrace(s, ctx);
         markEffectCausalAwaitingResume(trace);
@@ -719,4 +730,8 @@ export function atomBindPick(s: GameState, a: Record<string, unknown>, ctx: Effe
   if (typeof bpUid !== 'string' || bpUid.startsWith('$')) return;
   // binding は preamble で書込済。可観測性のため log のみ残す。
   mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:bindPick', target: bpUid });
+}
+
+function deckRevealPresentation(value: unknown): 'reveal-return' | 'reveal-to-bottom' | undefined {
+  return value === 'reveal-return' || value === 'reveal-to-bottom' ? value : undefined;
 }

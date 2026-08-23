@@ -1704,13 +1704,16 @@
     {
       "qaId": "card:B10036:5cd2136d7cd6a36fa7865674805d871f3b5a22a27b16725f41ce400225b941d1",
       "answerHash": "7efec64def765e211d0d7cddba25d5b455bf9dfe8b4dfc89d1acf7677721e475",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/07-action-flow.md:31",
-        "src:src/cards/ct-p10/B10036.ts:8"
-      ]
+        "rules:.claude/rules/05-turn-phases.md:44",
+        "src:src/cards/ct-p10/B10036.ts:5",
+        "src:src/engine/flow/main/main-action-window.ts:6",
+        "tests:tests/cards/official-qa/end-phase-reactivation-public-wave46.test.ts:343"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B10046:dd7b1474be7216392ab1546a39bfb5fbfa37ac1a62e01c6b0475dc949c77fa7d",

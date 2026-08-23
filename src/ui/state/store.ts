@@ -258,8 +258,8 @@ export type PendingDeckReveal = {
   matched: string | null;
   /** BUG-132 GAP-1: chooseMatch pick 未解決中は overlay を hold (engine 側 PendingDeckRevealSide と同 shape) */
   awaitingPick?: boolean;
-  /** Pure reveal which returns every card to its original deck position. */
-  presentation?: 'reveal-return';
+  /** Presentation-only destination; does not authorize a deck mutation. */
+  presentation?: 'reveal-complete' | 'reveal-return' | 'reveal-to-bottom' | 'reveal-to-bottom-randomized';
   source?: {
     cardId?: string;
     abilityId?: string;

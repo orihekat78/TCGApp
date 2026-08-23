@@ -27,7 +27,7 @@ import {
   withEffectCausalCorrelation,
 } from '../../log/effect-causal.js';
 import { sceneCap } from '../../read/scene-cap.js'; // engine E3 P11 (2026-07-02): 現場登場上限 (既定5、case override 可)
-
+import { isMainActionWindow } from './main-action-window.js';
 type Player = 'self' | 'opp';
 
 /**
@@ -177,7 +177,7 @@ function levelAllowed(state: GameState, p: Player, cardId: string): boolean {
  */
 function handUseGateCommon(state: GameState, p: Player, cardId: string): boolean {
   // 手札にあるか
-  if (!state.players[p].hand.includes(cardId)) return false;
+  if (!isMainActionWindow(state, p) || !state.players[p].hand.includes(cardId)) return false;
   // 1 ターン 1 回制限 (rules/05)
   if (state.turnState[p].handUseUsed) return false;
   // ネクストヒント済ターンは不可 (rules/05)

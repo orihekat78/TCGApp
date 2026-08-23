@@ -7,8 +7,18 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { produce } from 'immer';
 import { createEmptyGameState } from '@/engine/state-factory';
-import { runAtom, _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
-import { persistPendingRuntimeState, resetPendingRuntimeState } from '@/engine/effect/runtime-state';
+import {
+  runAtom,
+  _drainPendingDeckReorderSide,
+  _drainPendingDeckRevealSide,
+  _peekPendingDeckRevealSide,
+} from '@/engine/effect/atom-handlers';
+import { queuePendingDeckRevealSide } from '@/engine/effect/atom-handlers/_shared';
+import {
+  hydratePendingRuntimeState,
+  persistPendingRuntimeState,
+  resetPendingRuntimeState,
+} from '@/engine/effect/runtime-state';
 import { dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/useEngineDispatch';
 import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types';
 import { useGameStateStore } from '@/ui/state/store';
@@ -205,6 +215,15 @@ describe('BUG-136 水平展開 — souza (捜査X) も順序選択を surface', 
     const s1 = produce(s0, (d) => { runAtom(d, 'souza', { player: 'opp', x: 3 }, ctxAiUser); });
     // top 3 (T1,T2,T3) が底へ → deck = [B1, B2, T1, T2, T3]
     expect(s1.players.self.deck).toEqual(['B1', 'B2', 'T1', 'T2', 'T3']);
+    expect(_drainPendingDeckRevealSide()).toMatchObject({
+      player: 'self',
+      visibility: 'public',
+      viewer: 'all',
+      revealed: ['T1', 'T2', 'T3'],
+      matched: null,
+      presentation: 'reveal-to-bottom',
+      source: { cardId: 'SRC', abilityId: 'a1', uid: 'o#0' },
+    });
     expect(_drainPendingDeckReorderSide()).toMatchObject({
       player: 'self',
       cardIds: ['T1', 'T2', 'T3'],
@@ -224,6 +243,119 @@ describe('BUG-136 水平展開 — souza (捜査X) も順序選択を surface', 
     setHuman(null);
     const s0 = produce(createEmptyGameState(), (d) => { d.players.self.deck = ['T1', 'T2', 'T3', 'B1']; });
     produce(s0, (d) => { runAtom(d, 'souza', { player: 'opp', x: 3 }, ctxAiUser); });
+    expect(_drainPendingDeckRevealSide()).toBeNull();
     expect(_drainPendingDeckReorderSide()).toBeNull();
+  });
+
+  it('JSON roundtrip preserves the public reveal and exact reorder authority together', () => {
+    setHuman('self');
+    const state = structuredClone(produce(createEmptyGameState(), (draft) => {
+      draft.players.self.deck = ['T1', 'T2', 'T3', 'B1', 'B2'];
+      runAtom(draft, 'souza', { player: 'opp', x: 3 }, ctxAiUser);
+    }));
+    persistPendingRuntimeState(state);
+    const restored = JSON.parse(JSON.stringify(state)) as GameState;
+    resetPendingRuntimeState();
+
+    expect(hydratePendingRuntimeState(restored)).toBe(true);
+    expect(_peekPendingDeckRevealSide()).toMatchObject({
+      player: 'self', visibility: 'public', viewer: 'all',
+      revealed: ['T1', 'T2', 'T3'], presentation: 'reveal-to-bottom',
+    });
+    expect(_drainPendingDeckReorderSide()).toMatchObject({
+      player: 'self',
+      cardIds: ['T1', 'T2', 'T3'],
+      occurrences: [
+        { cardId: 'T1', index: 2 },
+        { cardId: 'T2', index: 3 },
+        { cardId: 'T3', index: 4 },
+      ],
+      occurrenceWitness: expect.any(String),
+    });
+  });
+});
+
+describe('BUG-331 — reveal presentation follows the actual bottom operation', () => {
+  it.each([
+    { visibility: 'public' as const, viewer: 'all' as const },
+    { visibility: 'private' as const, viewer: 'self' as const },
+  ])('marks an empty $visibility remainder as reveal-complete', ({ visibility, viewer }) => {
+    setHuman('self');
+    const state = createEmptyGameState();
+    const ctx = {
+      source: { cardId: 'SRC', uid: 'o#0', abilityId: 'a1', player: 'self', area: 'scene' },
+      bindings: { $rest: [] },
+    } as EffectCtx;
+    queuePendingDeckRevealSide({
+      player: 'self', visibility, viewer, revealed: ['MATCH'], matched: 'MATCH',
+      source: { cardId: 'SRC', uid: 'o#0', abilityId: 'a1' },
+    });
+
+    produce(state, (draft) => {
+      runAtom(draft, 'deckToBottomBound', { player: 'self', bindKey: '$rest' }, ctx);
+    });
+
+    expect(_drainPendingDeckRevealSide()).toMatchObject({ presentation: 'reveal-complete' });
+  });
+
+  it.each([
+    { order: 'preserve' as const, presentation: 'reveal-to-bottom' },
+    { order: 'shuffle' as const, presentation: 'reveal-to-bottom-randomized' },
+  ])('$order bottom operation marks the matching reveal as $presentation', ({ order, presentation }) => {
+    setHuman(null);
+    const state = createEmptyGameState();
+    state.players.self.deck = ['A', 'B', 'TAIL'];
+    const ctx = ctxWithRest(state, ['A', 'B']);
+    queuePendingDeckRevealSide({
+      player: 'self', visibility: 'public', viewer: 'all',
+      revealed: ['A', 'B'], matched: null,
+      source: { cardId: 'SRC', uid: 'src#0', abilityId: 'a1' },
+    });
+
+    produce(state, (draft) => {
+      runAtom(draft, 'deckToBottomBound', { player: 'self', bindKey: '$rest', order }, ctx);
+    });
+
+    expect(_drainPendingDeckRevealSide()).toMatchObject({ presentation });
+  });
+
+  it('marks only the newest reveal with the exact player/source identity', () => {
+    setHuman(null);
+    queuePendingDeckRevealSide({
+      player: 'self', visibility: 'public', viewer: 'all', revealed: ['OLD'], matched: null,
+      source: { cardId: 'OTHER', uid: 'other#1', abilityId: 'a1' },
+    });
+    const state = createEmptyGameState();
+    state.players.self.deck = ['A', 'B', 'TAIL'];
+    const ctx = ctxWithRest(state, ['A', 'B']);
+    queuePendingDeckRevealSide({
+      player: 'self', visibility: 'public', viewer: 'all', revealed: ['A', 'B'], matched: null,
+      source: { cardId: 'SRC', uid: 'src#0', abilityId: 'a1' },
+    });
+
+    produce(state, (draft) => {
+      runAtom(draft, 'deckToBottomBound', { player: 'self', bindKey: '$rest', order: 'preserve' }, ctx);
+    });
+
+    expect(_drainPendingDeckRevealSide()?.presentation).toBeUndefined();
+    expect(_drainPendingDeckRevealSide()?.presentation).toBe('reveal-to-bottom');
+  });
+
+  it('restores the legacy full-shuffle presentation when deckShuffle actually runs', () => {
+    setHuman(null);
+    const state = createEmptyGameState();
+    state.players.self.deck = ['A', 'B', 'TAIL'];
+    const ctx = ctxWithRest(state, ['A', 'B']);
+    queuePendingDeckRevealSide({
+      player: 'self', visibility: 'public', viewer: 'all', revealed: ['A', 'B'], matched: null,
+      source: { cardId: 'SRC', uid: 'src#0', abilityId: 'a1' },
+    });
+
+    produce(state, (draft) => {
+      runAtom(draft, 'deckToBottomBound', { player: 'self', bindKey: '$rest', order: 'preserve' }, ctx);
+      runAtom(draft, 'deckShuffle', { player: 'self' }, ctx);
+    });
+
+    expect(_drainPendingDeckRevealSide()?.presentation).toBeUndefined();
   });
 });

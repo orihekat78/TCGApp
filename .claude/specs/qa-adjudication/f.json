@@ -228,15 +228,16 @@
     {
       "qaId": "card:B02072:c6e5391785273827b8dabcd809585155ef42406b996be0913d033b9dcb43cbe6",
       "answerHash": "9e196328f6aeb787c34a18b38d9333dc32a9b9bdfa148eecb3ea5fb5eff839fa",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02072.ts:48"
+        "rules:.claude/rules/13-keywords.md:36",
+        "src:src/cards/ct-p02/B02072.ts:38",
+        "src:src/engine/effect/atom-handlers/picks.ts:586",
+        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:251"
       ],
-      "noteCodes": [
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B02078:e4a36acb6bbbb1c8b11eac5e65600d839bba033d5a2b7f0e5ecfc84bacd47a4c",
@@ -1934,16 +1935,16 @@
     {
       "qaId": "card:B10067:630449828c33e90c09ec2bc7f371af3e19ed0f237da608c4680e0f536e689b73",
       "answerHash": "7efec64def765e211d0d7cddba25d5b455bf9dfe8b4dfc89d1acf7677721e475",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:11",
-        "src:src/cards/ct-p10/B10067.ts:6"
+        "rules:.claude/rules/05-turn-phases.md:44",
+        "src:src/cards/ct-p10/B10067.ts:12",
+        "src:src/engine/flow/main/main-action-window.ts:6",
+        "tests:tests/cards/official-qa/end-phase-reactivation-public-wave46.test.ts:358"
       ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B10070:0e0a980e8bd27d7b1e99856973569ea1d66df41702431455b179d458e108f9fc",

@@ -919,12 +919,16 @@
     {
       "qaId": "card:B07072:e95274eddf61476e68accaf6348cb07eefb9d8074484ed06055f5022530a1706",
       "answerHash": "7efec64def765e211d0d7cddba25d5b455bf9dfe8b4dfc89d1acf7677721e475",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07072.ts:1"
-      ]
+        "rules:.claude/rules/05-turn-phases.md:44",
+        "src:src/cards/ct-p07/B07072.ts:13",
+        "src:src/engine/flow/main/main-action-window.ts:6",
+        "tests:tests/cards/official-qa/end-phase-reactivation-public-wave46.test.ts:295"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B08004:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b",

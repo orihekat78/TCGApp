@@ -32,6 +32,7 @@ function makeCard(id: string, opts: Partial<CardDef> = {}): CardDef {
 function makeState(opts: { caseColors?: string[]; fileCount?: number; hand?: string[] } = {}): GameState {
   const initial = createEmptyGameState();
   return produce(initial, draft => {
+    draft.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     draft.players.self.case.colors = opts.caseColors ?? ['赤'];
     draft.players.self.case.cardId = 'CASE-SELF';
     // FILE 枚数

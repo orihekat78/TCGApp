@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `5189d087f1dd`
+> Source hash: `88c1a04d1d67`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **196** ファイル（[全体 index](./index.md)）
+このグループ: **197** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (29)
 
@@ -42,7 +42,7 @@
 | [`src/engine/effect/validate-spec-files.ts`](../../../src/engine/effect/validate-spec-files.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/effect/validate.ts`](../../../src/engine/effect/validate.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 
-## engine/flow (23)
+## engine/flow (24)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -64,6 +64,7 @@
 | [`src/engine/flow/main/declared-cost-params.ts`](../../../src/engine/flow/main/declared-cost-params.ts) | _(参照なし)_ |
 | [`src/engine/flow/main/hand-use-card.ts`](../../../src/engine/flow/main/hand-use-card.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`17-icons.md`](../../rules/17-icons.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
 | [`src/engine/flow/main/index.ts`](../../../src/engine/flow/main/index.ts) | _(参照なし)_ |
+| [`src/engine/flow/main/main-action-window.ts`](../../../src/engine/flow/main/main-action-window.ts) | _(参照なし)_ |
 | [`src/engine/flow/main/next-hint.ts`](../../../src/engine/flow/main/next-hint.ts) | _(参照なし)_ |
 | [`src/engine/flow/main/partner-ability.ts`](../../../src/engine/flow/main/partner-ability.ts) | [`06-card-types.md`](../../rules/06-card-types.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/engine/flow/main/reasoning.ts`](../../../src/engine/flow/main/reasoning.ts) | _(参照なし)_ |

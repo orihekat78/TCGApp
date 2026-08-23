@@ -3,7 +3,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { produce } from '@/engine/produce';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../../../helpers/main-game-state';
 import {
   declare,
   tryGuard,

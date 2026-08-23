@@ -32,7 +32,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { produce } from '@/engine/produce';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../../helpers/main-game-state';
 import { engine } from '@/engine';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
@@ -224,13 +224,12 @@ describe('PR237 犯人 — gate5 runtime behavior', () => {
     expect(onScene(after, 'self', 'hanin#1'), '攻撃者 PR237 自身は残る').toBe(true);
   });
 
-  // ===== a1 condition NEGATIVE (turn:opp): 【自分ターン中】未達 → 非発火 → コンタクト相手は残る =====
-  it('a1 condition NEGATIVE (turn:opp): 相手ターン中のコンタクトでは a1 非発火 → DEFENDER は残る', () => {
+  // ===== BUG-330 admission: own actor cannot start contact during the opponent turn =====
+  it('相手ターン中はPR237のアクション宣言を効果発火前に拒否する', () => {
     const s0 = a1Base({ turn: 'opp', partner: 'black' });
-    const after = driveContactToStart(s0, 'hanin#1', 'def#1');
-
-    expect(onScene(after, 'opp', 'def#1'), '相手ターン中 → 【自分ターン中】不成立 → DEFENDER 残る').toBe(true);
-    expect(after.players.opp.remove.includes(DEFENDER), 'DEFENDER は remove に入らない').toBe(false);
+    const before = structuredClone(s0);
+    expect(() => driveContactToStart(s0, 'hanin#1', 'def#1')).toThrow(/cannot action/);
+    expect(s0).toEqual(before);
   });
 
   // ===== a1 condition NEGATIVE (partnerColor 非黒): 【パートナー黒】未達 → 非発火 =====

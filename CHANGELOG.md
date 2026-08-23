@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `783fdc4545de`
+> Source hash: `2fa330394aec`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,31 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## QA Wave 47 — Investigation defines the found-card set
+
+- Certified eight official found-card records across CT-P01–P04 and CT-P08.
+- Public routes prove the exact Investigation reveal is the downstream bound set.
+- Threshold, name, level-sum, level-in-bound, and trait-count consumers stay aligned.
+- BUG-331 publishes Souza reveals as public/all without affecting AI-only simulation.
+- Human-defender reveal and exact reorder authorities coexist through JSON restore.
+- `reveal-to-bottom` removes the false shuffle phase from Souza and B08074 UI.
+- Central bottom-operation marking fixes the same presentation on 140 abilities.
+- Six revealed-remainder randomizers use a distinct mode, not whole-deck shuffle.
+- Matched-only empty remainders use `reveal-complete` and claim no destination.
+- Deck-bottom movement and defender-owned order remain authoritative engine state.
+- Advanced coverage from 1,302 to 1,310 matched; test-missing falls to 1,654.
+
+## QA Wave 46 — End-phase activation stays outside main actions
+
+- Certified twelve official end-phase reactivation records across CT-P07–P10.
+- Real public `endTurn` paths cover direct, picked, optional, zero, PA, and PA-MR sources.
+- Active characters cannot reason or act again before their next self main phase.
+- Stun-to-active replacement produces sleep on direct-self and picked-target routes.
+- BUG-330 adds one shared main-action admission boundary for turn owner and phase.
+- Reasoning, action, hand use, next hint, declared, and partner ability share the gate.
+- Opponent-turn and unresolved end-phase decisions reject every covered action unchanged.
+- Advanced coverage from 1,290 to 1,302 matched; test-missing falls to 1,662.
 
 ## QA Wave 45 — Bond excludes the partner area
 

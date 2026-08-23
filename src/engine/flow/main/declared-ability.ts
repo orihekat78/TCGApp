@@ -34,6 +34,7 @@ import { _getResolutionLock } from '../../event/registry.js';
 import { hasPendingHumanPick } from '../../effect/apply-pick.js';
 import { isDeclaredNameValidForEffect } from '../../effect/declared-name-domain.js';
 import { _hasOpenActionContext } from '../action/state-machine.js';
+import { isMainActionWindow } from './main-action-window.js';
 import {
   completeEffectCausalTrace,
   currentEffectCausalCorrelationEventId,
@@ -352,7 +353,7 @@ export function canDeclaredAbility(
 
 /** Common admission boundary for every declared-ability caller. */
 function canStartDeclaredAbility(state: GameState, player: 'self' | 'opp'): boolean {
-  if (state.turn.player !== player || state.turn.phase !== 'main') return false;
+  if (!isMainActionWindow(state, player)) return false;
   if (_getResolutionLock().locked || _hasOpenActionContext(state)) return false;
   if (state.pendingEffects.some((entry) => entry.state === 'pending')) return false;
   return !hasPendingHumanPick(state);

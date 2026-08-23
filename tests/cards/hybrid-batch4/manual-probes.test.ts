@@ -18,7 +18,7 @@ import { register as registerCardDef, _resetRegistry as resetDefRegistry } from 
 import { mutate } from '@/engine/mutate/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { _resetUidCounter } from '@/engine/mutate/scene';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../../helpers/main-game-state';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { canDisguise, disguise, cutIn, canCutIn } from '@/engine/flow/contact';
 import { canActionAgainstCase } from '@/engine/flow/main/action';

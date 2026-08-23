@@ -30,6 +30,12 @@ export type PublicEffectSource = {
   abilityIndex?: number;
 };
 
+export type PendingDeckRevealPresentation =
+  | 'reveal-complete'
+  | 'reveal-return'
+  | 'reveal-to-bottom'
+  | 'reveal-to-bottom-randomized';
+
 /** Preserve exact public effect provenance at presentation/persistence boundaries. */
 export function publicEffectSource(ctx: EffectCtx): PublicEffectSource {
   assertCompleteSetCardSource(ctx.source);
@@ -124,8 +130,8 @@ export type PendingDeckRevealSide = {
    * pick 解決の再入時に確定 matched で再 set される (awaitingPick 無し → 通常演出)。
    */
   awaitingPick?: boolean;
-  /** A plain reveal returns every card to its original deck position. */
-  presentation?: 'reveal-return';
+  /** Presentation-only destination. Investigation moves the public window to deck bottom without shuffling. */
+  presentation?: PendingDeckRevealPresentation;
   /** Stable resolver source identity; prevents an unrelated reveal replacing this one. */
   source?: PublicEffectSource;
 };
@@ -186,6 +192,34 @@ export function queuePendingDeckRevealSide(next: PendingDeckRevealSide): void {
   } else {
     root.__pendingDeckRevealSide = [current, next];
   }
+}
+
+/** Attach presentation semantics only after the matching engine operation is admitted. */
+export function markPendingDeckRevealPresentation(
+  player: 'self' | 'opp',
+  source: PublicEffectSource,
+  presentation: PendingDeckRevealPresentation | undefined,
+): boolean {
+  const channel = (globalThis as {
+    __pendingDeckRevealSide?: PendingDeckRevealSide | PendingDeckRevealSide[] | null;
+  }).__pendingDeckRevealSide;
+  if (!channel || Object.values(source).every((value) => value === undefined)) return false;
+  const entries = Array.isArray(channel) ? channel : [channel];
+  for (let index = entries.length - 1; index >= 0; index -= 1) {
+    const candidate = entries[index]!;
+    if (candidate.player !== player || !candidate.source) continue;
+    if (candidate.source.cardId !== source.cardId
+      || candidate.source.abilityId !== source.abilityId
+      || candidate.source.uid !== source.uid
+      || candidate.source.setCardId !== source.setCardId
+      || candidate.source.setCardInstanceId !== source.setCardInstanceId
+      || candidate.source.abilityOrigin !== source.abilityOrigin
+      || candidate.source.abilityIndex !== source.abilityIndex) continue;
+    if (presentation === undefined) delete candidate.presentation;
+    else candidate.presentation = presentation;
+    return true;
+  }
+  return false;
 }
 
 // BUG-136: deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択 side-channel

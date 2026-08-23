@@ -26,7 +26,7 @@ import { mutate } from '@/engine/mutate/index';
 import { declare as declareAction, _resetActionContexts } from '@/engine/flow/action/state-machine';
 import { event } from '@/engine/event/index';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../helpers/main-game-state';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { makeCtx } from '../helpers/fixtures';
 import { B08049 } from '@/cards/ct-p08/B08049';

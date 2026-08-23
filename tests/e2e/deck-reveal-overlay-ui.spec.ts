@@ -56,3 +56,32 @@ test('DeckRevealOverlay: カード画像 + 登場 badge + phase 進行 (reveal�
 
   expect(errors, 'console error 0').toEqual([]);
 });
+
+test('BUG-331 Investigation: public reveal moves to bottom without a false shuffle phase', async ({ page }) => {
+  const { errors } = await setupGamePage(page);
+  await prime(page);
+  await buildGameState(page, (gs: AnyState) => {
+    const players = gs.players as { self: AnyState; opp: AnyState };
+    players.self.scene = [{
+      cardId: 'B01084', uid: 'souza-source', state: 'sleep', isNamed: false,
+      enterOrder: 1, setCards: [], stackedCards: 0,
+      keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null, lpOverride: null,
+      turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+      declaredUseCount: {},
+    }];
+    players.self.deck = Array.from({ length: 12 }, () => 'D08015');
+    players.opp.deck = Array.from({ length: 12 }, (_value, index) => index === 0 ? 'D08017' : 'D08015');
+    gs.pendingEffects = [];
+    gs.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+  });
+
+  expect(await dispatchAction(page, { type: 'endTurn', player: 'self' })).toEqual({ ok: true });
+  const overlay = page.getByTestId('deck-reveal-overlay');
+  await expect(overlay).toBeVisible();
+  await expect(page.getByTestId('deck-reveal-header')).toContainText('デッキの下', { timeout: 3_000 });
+  await page.waitForTimeout(1_200);
+  await expect(page.getByTestId('deck-reveal-shuffle')).toHaveCount(0);
+  await expect(overlay).toHaveCount(0);
+  expect(errors, 'console error 0').toEqual([]);
+});

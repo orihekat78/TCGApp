@@ -12,7 +12,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { produce } from '@/engine/produce';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../../helpers/main-game-state';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered, TRIGGERED_HOOKS } from '@/engine/listeners/triggered';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
@@ -53,7 +53,7 @@ function makeBoard(): { s: GameState; atkUid: string; tgtUid: string; guardUid: 
   s.players.self.case = { cardId: 'case-self', status: '事件編', requiredEvidence: 7, colors: ['赤'], declaredUseCount: {} };
   s.players.opp.case = { cardId: 'case-opp', status: '事件編', requiredEvidence: 6, colors: ['赤'], declaredUseCount: {} };
   s.players.self.deck.push('D1', 'D2', 'D3', 'D4');
-  s.turn = { number: 1, player: 'self' } as GameState['turn'];
+  s.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
   return { s, atkUid, tgtUid, guardUid };
 }
 

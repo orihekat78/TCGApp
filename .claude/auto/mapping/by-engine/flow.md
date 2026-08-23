@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `af10a8f139f1`
+> Source hash: `4948c3659de2`
 
 `src/engine/flow/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -38,7 +38,7 @@
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 - [`engine-api-flow-setup`](../by-spec/engine-api-flow-setup.md)
 
-## 📄 ソース (23)
+## 📄 ソース (24)
 
 - [`src/engine/flow/action-case.ts`](../../../../src/engine/flow/action-case.ts)
 - [`src/engine/flow/action/causal.ts`](../../../../src/engine/flow/action/causal.ts)
@@ -58,6 +58,6 @@
 - [`src/engine/flow/main/declared-cost-params.ts`](../../../../src/engine/flow/main/declared-cost-params.ts)
 - [`src/engine/flow/main/hand-use-card.ts`](../../../../src/engine/flow/main/hand-use-card.ts)
 - [`src/engine/flow/main/index.ts`](../../../../src/engine/flow/main/index.ts)
+- [`src/engine/flow/main/main-action-window.ts`](../../../../src/engine/flow/main/main-action-window.ts)
 - [`src/engine/flow/main/next-hint.ts`](../../../../src/engine/flow/main/next-hint.ts)
-- [`src/engine/flow/main/partner-ability.ts`](../../../../src/engine/flow/main/partner-ability.ts)
-- _...ほか 3 件_
+- _...ほか 4 件_

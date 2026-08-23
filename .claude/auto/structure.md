@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6263
+- **ファイル数**: 6290
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -510,6 +510,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-327.md` — B02067/Pのイベント使用時セット能力欠落
     - `BUG-328.md` — B02067/P複数セット時の能力個体識別欠落
     - `BUG-329.md` — 旧セーブの能力使用回数を見失う
+    - `BUG-330.md` — main actionのturn/phase admission欠落
+    - `BUG-331.md` — Souza公開snapshot欠落
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -842,6 +844,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-09-qa-wave43-file-assist-nondeclared.md`
     - `2026-08-23-10-qa-wave44-b07093-a1.md`
     - `2026-08-23-11-qa-wave45-bond-partner-exclusion.md`
+    - `2026-08-23-12-qa-wave46-end-phase-main-boundary.md`
+    - `2026-08-23-13-qa-wave47-investigation-found.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1535,6 +1539,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-qa-waves40-41.md` — QA runtime Waves40-41 assisted FILE action and declared paths
     - `2026-08-23-qa-waves42-43.md` — QA runtime Waves42-43 closing implemented assisted-FILE routes
     - `2026-08-23-qa-waves44-45.md` — QA runtime Waves44-45 B07093 and Bond partner exclusion
+    - `2026-08-23-qa-waves46-47.md` — QA runtime Waves46-47 end phase and Investigation
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1625,7 +1630,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B01023P.md` — B01023P grounding
       - `B01057.md` — B01057 「最も出会いたくない…恋人ってトコロかな？」 grounding (2026-07-10, fable)
       - `B01070.md` — B01070 アンドレ・キャメル grounding (2026-07-10, sonnet5)
+      - `B01084.md` — B01084 / B01084P 降谷零 grounding
+      - `B01085.md` — B01085 安室透 grounding
       - `B01092.md` — B01092 松田陣平 grounding (2026-07-10, sonnet5)
+      - `B01095.md` — B01095 「僕の日本から…」 grounding
       - `B02019.md` — B02019 grounding
       - `B02019P.md` — B02019P grounding
       - `B02022.md` — B02022 鬼丸猛 grounding (2026-07-10, sonnet5)
@@ -1634,6 +1642,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B02058.md` — B02058 / B02058P grounding
       - `B02063.md` — B02063 羽田秀吉 grounding
       - `B02067.md` — B02067 チョーカー型変声機 grounding (2026-07-10, sonnet5)
+      - `B02072.md` — B02072 / B02072P 降谷零 grounding
       - `B03018.md` — B03018 grounding
       - `B03019.md` — B03019 grounding
       - `B03020.md` — B03020 毛利蘭 grounding
@@ -1645,6 +1654,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B03041P.md` — B03041P grounding
       - `B03042.md` — B03042 grounding
       - `B03079.md` — B03079 grounding
+      - `B03084.md` — B03084 / B03084P 降谷零 grounding
       - `B03085.md` — B03085 grounding
       - `B03111.md` — B03111 バーボン grounding (2026-07-10, sonnet5)
       - `B04003.md` — B04003 工藤新一 grounding (2026-07-10, sonnet5)
@@ -1654,11 +1664,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B04027.md` — B04027 grounding
       - `B04028.md` — B04028 grounding
       - `B04030.md` — B04030 grounding
+      - `B04032.md` — B04032 / B04032P 白馬探 grounding
       - `B04048.md` — B04048/B04048P 羽田秀𠮷 grounding (2026-07-10, fable)
       - `B04055.md` — B04055 grounding
       - `B04059.md` — B04059 水無怜奈 grounding
       - `B04068.md` — B04068 安室透 grounding
       - `B04073.md` — B04073 千葉和伸 grounding (2026-07-10, sonnet5)
+      - `B04074.md` — B04074 / B04074P 降谷零 grounding
       - `B05007.md` — B05007 妃英理 grounding
       - `B05008.md` — B05008 / B05008P 灰原哀 grounding
       - `B05009.md` — B05009 / B05009P 毛利蘭 grounding
@@ -1687,23 +1699,30 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06090.md` — B06090 grounding
       - `B07008.md` — B07008 小嶋元太 grounding (2026-07-10, fable)
       - `B07013.md` — B07013 grounding
+      - `B07023.md` — B07023 / B07023P 光本兵我 grounding
       - `B07030P.md` — grounding dossier: B07030P (自動生成 2026-07-13)
       - `B07030P2.md` — grounding dossier: B07030P2 (自動生成 2026-07-13)
+      - `B07045.md` — B07045 セリザベス女王 grounding
       - `B07061P.md` — grounding dossier: B07061P (自動生成 2026-07-13)
       - `B07069.md` — B07069 本堂瑛海 grounding
+      - `B07072.md` — B07072 澁谷夏子 grounding
+      - `B07088.md` — B07088 山村ミサオ grounding
       - `B07093.md` — B07093 / B07093P バーボン＆ライ grounding
       - `B07100.md` — B07100 コルン grounding (2026-07-10, fable)
       - `B08003.md` — B08003 阿笠博士 (SR/SRP) grounding (2026-07-10, sonnet5)
       - `B08004.md` — B08004 江戸川コナン grounding
       - `B08007.md` — B08007 円谷光彦 grounding
+      - `B08015.md` — B08015 若狭留美 grounding
       - `B08017.md` — B08017 / B08017P grounding
       - `B08019.md` — B08019 大岡紅葉＆伊織無我 (MR/MRP) grounding (2026-07-10, sonnet5)
       - `B08026.md` — B08026 grounding
       - `B08047.md` — B08047/B08047P 沖矢昴 grounding (2026-07-10, fable)
       - `B08056.md` — B08056 宮野厚司 grounding
       - `B08065.md` — B08065 大和敢助 grounding
+      - `B08073.md` — B08073 高木渉 grounding
       - `B08074.md` — B08074 降谷零 grounding
       - `B08081.md` — B08081 広田雅美 grounding (2026-07-10, sonnet5)
+      - `B09002.md` — B09002 / B09002P 工藤新一&毛利蘭 grounding
       - `B09010.md` — B09010 阿笠博士 grounding
       - `B09019.md` — B09019/B09019P 「くさるなよ！」 (イベント) grounding (2026-07-10, fable)
       - `B09024.md` — grounding dossier: B09024（世良真純）
@@ -1712,11 +1731,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B09036.md` — B09036 怪盗キッド grounding
       - `B09047.md` — B09047 grounding
       - `B09048.md` — B09048 grounding
+      - `B09049.md` — B09049 南條欽治 grounding
       - `B09052.md` — B09052 grounding
       - `B09052P.md` — B09052P grounding
       - `B09055.md` — B09055 世良真純 grounding
       - `B09057.md` — B09057 grounding
       - `B09060.md` — B09060 沖矢昴 grounding
+      - `B09065.md` — B09065 マーク grounding
       - `B09112.md` — B09112 キッドVS安室 王妃の前髪 (事件) grounding (2026-07-10, sonnet5)
       - `B10001.md` — B10001 grounding
       - `B10002.md` — B10002 grounding
@@ -1760,6 +1781,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B10038.md` — B10038
       - `B10039.md` — B10039 白馬探 grounding
       - `B10040.md` — B10040
+      - `B10045.md` — B10045 中森銀三 grounding
       - `B10046.md` — B10046
       - `B10047.md` — B10047 grounding
       - `B10050.md` — B10050 / B10050P grounding
@@ -4946,6 +4968,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
         - `declared-cost-params.ts`
         - `hand-use-card.ts` — engine.flow.main.handUseCard — 手札の使用 (rules/05 01.)
         - `index.ts` — engine.flow.main namespace barrel — メインフェイズ 6 行動 (rules/05)
+        - `main-action-window.ts`
         - `next-hint.ts` — engine.flow.main.runNextHint — ネクストヒント (rules/05 02., rules/12)
         - `partner-ability.ts` — engine.flow.main.usePartnerAbility — パートナー能力使用 (rules/05 03.)
         - `reasoning.ts` — engine.flow.main.doReasoning — 推理 (rules/05 05., rules/11)
@@ -5607,6 +5630,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bond-partner-exclusion-public-wave45.test.ts` — qa: card:B05007:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
       - `bond-partner-exclusion-wave21.test.ts` — qa: card:B01087:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
       - `bond-partner-exclusion-wave9.test.ts` — qa: card:B02004:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
+      - `bug-331-reveal-complete-public.test.ts`
       - `case-flip-two-complex-public-wave37.test.ts` — qa: card:B06095:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2
       - `case-flip-two-declared-public-wave36.test.ts` — qa: card:B06013:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2
       - `ct-p10-original-ability-rules.test.ts` — qa: card:B10050:98e82fae32a43d9b6de8c7fd8289dcf4565f2dada1498f0760f5ba9d0cf8ae17
@@ -5626,6 +5650,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `effect-entry-trigger-order-public.test.ts` — qa: card:B07058:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-trigger-public-wave2.test.ts` — qa: card:B04064:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-trigger-public-wave28.test.ts` — qa: card:B03068:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `end-phase-reactivation-public-wave46.test.ts` — qa: card:B07023:e95274eddf61476e68accaf6348cb07eefb9d8074484ed06055f5022530a1706
       - `event-evidence-action-hirameki-public.test.ts` — qa: card:B04041:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
       - `f026-cutin-public.test.ts` — qa: card:B08085:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
       - `file-assist-action-public-wave40.test.ts` — qa: card:B04068:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
@@ -5654,6 +5679,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `short-deck-reveal-hand-entry-public.test.ts` — rules: 15-abilities-effects.md, 17-icons.md, 20-color-and-switch.…
       - `shuffle-romance-public-wave32.test.ts` — qa: card:B01023:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
       - `sleep-cost-related-entry-public-wave24.test.ts` — qa: card:B07002:18266db4732b9571ebae419afbd36f26fb54fb836c7752251e64e6dad817b4d1
+      - `souza-found-public-wave47.test.ts` — qa: card:B01084:c6e5391785273827b8dabcd809585155ef42406b996be0913d033b9dcb43cbe6
       - `stacked-card-semantics-public-wave33.test.ts` — qa: card:B06005:199a933934b344f7715091799edd9442eca983c85cb7953418d8f7e9f0d4f2a6
       - `stun-action-target-public.test.ts` — qa: card:B01058:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40
       - `stun-activation-to-sleep-wave22.test.ts` — qa: card:B04080:872de2079dce9150e76a70314a5d20400e542df72be79f07c2daed17f80158c3
@@ -6293,6 +6319,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `card-probe-harness.ts` — tests/helpers/card-probe-harness.ts — 汎用 probe scenario runner ("probe compiler"…
     - `dispatch-current-decision.ts`
     - `fixtures.ts` — tests/helpers/fixtures.ts — テスト共通 fixture (refactor Phase 1c, 2026-06-12)
+    - `main-game-state.ts`
     - `open-case-hirameki.ts`
   - **`integration/`** — 統合テスト (engine + UI dispatch)
     - `.gitkeep`

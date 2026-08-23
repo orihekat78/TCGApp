@@ -28,7 +28,7 @@ import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/l
 import { mutate } from '@/engine/mutate';
 import { _resetRegistry, register } from '@/engine/read/def';
 import { read } from '@/engine/read/index';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../../helpers/main-game-state';
 import type { CardDef, GameState, Player } from '@/engine/types';
 import { bindPendingDecision, dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { beginMatchSession, endMatchSession } from '@/ui/services/matchSession';
@@ -565,7 +565,7 @@ describe('opponent-turn leave scene effects through public dispatch', () => {
     expect(proof, `${B04030.id}: either-side level-8 target stuns; level-9 decoys stay excluded`).toMatchObject({
       publicPick: { range: [0, 1], chosen: true, inclusions: { 'self-target': true, 'opp-target': true }, exclusions: { 'self-decoy': false, 'opp-decoy': false } },
       positive: { oppTarget: { state: 'stun' }, selfDecoy: { state: 'active' }, oppDecoy: { state: 'active' }, sourceInRemove: true },
-      stunRules: { activatedState: 'sleep', actionTarget: { ok: true }, actionTargetUid: 'opp-target' },
+      stunRules: { activatedState: 'sleep', actionTarget: { ok: false }, actionTargetUid: undefined },
       ...commonNegative(),
     });
     expect(proof).toMatchObject({ decline: { before: (proof as { decline: { before: unknown } }).decline.before, after: (proof as { decline: { before: unknown } }).decline.before }, selfTurn: { effectState: (proof as { selfTurn: { before: unknown } }).selfTurn.before }, otherLeaves: { effectState: (proof as { otherLeaves: { before: unknown } }).otherLeaves.before } });
@@ -576,7 +576,7 @@ describe('opponent-turn leave scene effects through public dispatch', () => {
     expect(proof, `${D03004.id}: only sleeping level-5-or-lower target stuns`).toMatchObject({
       publicPick: { range: [0, 1], chosen: true, inclusions: { 'self-target': true, 'opp-target': true }, exclusions: { 'self-decoy': false, 'self-extra': false, 'opp-decoy': false } },
       positive: { selfTarget: { state: 'sleep' }, oppTarget: { state: 'stun' }, oppDecoy: { state: 'active' }, sourceInRemove: true },
-      stunRules: { activatedState: 'sleep', actionTarget: { ok: true }, actionTargetUid: 'opp-target' },
+      stunRules: { activatedState: 'sleep', actionTarget: { ok: false }, actionTargetUid: undefined },
       ...commonNegative(),
     });
     expect(proof).toMatchObject({ decline: { before: (proof as { decline: { before: unknown } }).decline.before, after: (proof as { decline: { before: unknown } }).decline.before }, selfTurn: { effectState: (proof as { selfTurn: { before: unknown } }).selfTurn.before }, otherLeaves: { effectState: (proof as { otherLeaves: { before: unknown } }).otherLeaves.before } });

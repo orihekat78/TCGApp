@@ -9,7 +9,7 @@ import { pendingSource, tryRePickFromAtom } from '../resolve-picks.js';
 // WC2b (2026-07-11): invokeHiramekiOfCard atom-level optional prompt 用 (pending-state は leaf — cycle 無し)。
 import { pushPendingEffectOptionalSide, setPendingOptionalResume, setPendingOptionalBindings, setPendingOptionalCostPaid } from '../pending-state.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from '../atom-pick-spec.js';
-import { allocatePublicHandRevealToken, requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax, resolveDeltaToNumber, publicEffectSource, publicHandRevealToken, queuePendingPublicHandRevealSide, readHeldHiramekiSelfClaim, resolveBoundOccurrenceRef } from './_shared.js';
+import { allocatePublicHandRevealToken, requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax, resolveDeltaToNumber, publicEffectSource, publicHandRevealToken, queuePendingPublicHandRevealSide, readHeldHiramekiSelfClaim, resolveBoundOccurrenceRef, markPendingDeckRevealPresentation } from './_shared.js';
 import { isDynObject, resolveDynNumber } from '../../dyn/eval.js';
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, FileCard, PublicCausalZone } from '../../types/index.js';
@@ -2125,6 +2125,7 @@ export function atomDeckShuffle(s: GameState, a: Record<string, unknown>, ctx: E
       // rules/04, 14, 26 — デッキ基本シャッフル (D11019 等で使用)
       const p = resolvePlayer(a.player, ctx);
       mutate.deck.shuffle(s, p, ctx.rng);
+      markPendingDeckRevealPresentation(p, publicEffectSource(ctx), undefined);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckShuffle' });
       return;

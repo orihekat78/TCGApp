@@ -13,7 +13,7 @@ import { register as registerCardDef, _resetRegistry as resetDefRegistry } from 
 import { mutate } from '@/engine/mutate/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { _resetUidCounter } from '@/engine/mutate/scene';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../helpers/main-game-state';
 import { pendingOwnerOrderGroup, runAllUntilEmpty } from '@/engine/resolve/index';
 import { candidates as targetCandidates } from '@/engine/flow/action/target-expander';
 import { canAction, canActionAgainstCase } from '@/engine/flow/main/action';

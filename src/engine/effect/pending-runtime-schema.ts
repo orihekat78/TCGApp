@@ -1028,7 +1028,7 @@ function deckReveal(value: unknown, path: string): void {
   stringArray(item.revealed, `${path}.revealed`);
   if (item.matched !== null) string(item.matched, `${path}.matched`);
   optionalBool(item.awaitingPick, `${path}.awaitingPick`);
-  if (item.presentation !== undefined) oneOf(item.presentation, new Set(['reveal-return']), `${path}.presentation`);
+  if (item.presentation !== undefined) oneOf(item.presentation, new Set(['reveal-complete', 'reveal-return', 'reveal-to-bottom', 'reveal-to-bottom-randomized']), `${path}.presentation`);
   if (item.source !== undefined) {
     source(item.source, `${path}.source`);
   }
