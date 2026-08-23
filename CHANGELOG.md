@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `2fa330394aec`
+> Source hash: `185b8302c515`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,26 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## QA Wave 49 — Pre-guard action decisions
+
+- Certified five official action-trigger timing records with decisions or grants.
+- B02014 grants both Assault[case] and draw-on-action through one public pick.
+- B05048 and D09016/D09017 keep guard blocked through mandatory effect decisions.
+- D08021 resolves its five-stack draw/evidence owner order before guard.
+- BUG-332 blocks guard, contact, advance, and judge while owner order is pending.
+- Effect-order confirmation remains usable and guard succeeds immediately afterward.
+- Advanced coverage from 1,317 to 1,322 matched; test-missing falls to 1,642.
+
+## QA Wave 48 — Direct action-declare timing
+
+- Certified seven official action-trigger timing records.
+- Public declarations prove target selection and actor sleep before each trigger.
+- B01085 Investigation, B02002/D02004 AP, and D02008 cut-in ban settle before guard.
+- D02008 remains effective through the real opponent contact cut-in window.
+- D09008/D09009/PR283 draw before guard independently of their FILE rulings.
+- No card-definition change was required.
+- Advanced coverage from 1,310 to 1,317 matched; test-missing falls to 1,647.
 
 ## QA Wave 47 — Investigation defines the found-card set
 

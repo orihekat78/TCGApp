@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6290
+- **ファイル数**: 6300
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -512,6 +512,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-329.md` — 旧セーブの能力使用回数を見失う
     - `BUG-330.md` — main actionのturn/phase admission欠落
     - `BUG-331.md` — Souza公開snapshot欠落
+    - `BUG-332.md` — 宣言時効果のowner-orderとaction step admission
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -846,6 +847,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-11-qa-wave45-bond-partner-exclusion.md`
     - `2026-08-23-12-qa-wave46-end-phase-main-boundary.md`
     - `2026-08-23-13-qa-wave47-investigation-found.md`
+    - `2026-08-23-14-qa-wave48-action-declare-direct.md`
+    - `2026-08-23-15-qa-wave49-action-decisions.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1540,6 +1543,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-qa-waves42-43.md` — QA runtime Waves42-43 closing implemented assisted-FILE routes
     - `2026-08-23-qa-waves44-45.md` — QA runtime Waves44-45 B07093 and Bond partner exclusion
     - `2026-08-23-qa-waves46-47.md` — QA runtime Waves46-47 end phase and Investigation
+    - `2026-08-23-qa-waves48-49.md` — QA runtime Waves48-49 action declaration timing
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1634,6 +1638,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B01085.md` — B01085 安室透 grounding
       - `B01092.md` — B01092 松田陣平 grounding (2026-07-10, sonnet5)
       - `B01095.md` — B01095 「僕の日本から…」 grounding
+      - `B02002.md` — B02002 江戸川コナン grounding
+      - `B02014.md` — B02014 少年探偵団の活躍 grounding
       - `B02019.md` — B02019 grounding
       - `B02019P.md` — B02019P grounding
       - `B02022.md` — B02022 鬼丸猛 grounding (2026-07-10, sonnet5)
@@ -1820,12 +1826,15 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B10102.md` — B10102 / B10102P grounding
       - `BUG-311-forced-reveal-shuffle.md` — BUG-311 forced reveal / whole-deck shuffle grounding
       - `D01012.md` — D01012 grounding
+      - `D02004.md` — D02004 服部平次 grounding
+      - `D02008.md` — D02008 服部平蔵 grounding
       - `D05007.md` — D05007 grounding
       - `D06003.md` — D06003 服部平次 grounding (2026-07-10, fable)
       - `D06004.md` — D06004 服部平次 grounding (2026-07-10, sonnet5)
       - `D06013.md` — D06013 白馬探 grounding (2026-07-10, sonnet 調査 + S2 session 裁定)
       - `D06021.md` — D06021 服部平次 grounding (2026-07-10, sonnet5)
       - `D06023.md` — D06023 服部平次 grounding (2026-07-10, sonnet5)
+      - `D08021.md` — D08021 結成 少年探偵団 grounding
       - `D09008.md` — D09008 上原由衣 grounding
       - `D09009.md` — D09009 上原由衣 grounding
       - `D09014.md` — D09014 大和敢助 grounding
@@ -5626,6 +5635,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B10101-granted-search-public-wave30.test.ts` — qa: card:B10101:10a900367f7fe2bb97f89519de6c2707375ecf532cb3d2dc8e368059e8f5470e
       - `D06003-D06024-public-path.test.ts` — qaId=card:D06003:e918d066190b75a908b8154f185c9c4291e8387cb2fc4797f5744acc49a362d…
       - `D10003-D10010-printing-copy-limit.test.ts` — qaId=card:D10003:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2…
+      - `action-declare-before-guard-public-wave48.test.ts` — qa: card:B01085:151b435edeb61c22d4471596da22371c8592c23c410528efb5e78938a1bb3b54
       - `b07093-a1-public-wave44.test.ts` — qa: card:B07093:212da49cce2aca6921fdb352e94b610cbdeeebd02d0ab5c66e8200c0164c3a0e
       - `bond-partner-exclusion-public-wave45.test.ts` — qa: card:B05007:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
       - `bond-partner-exclusion-wave21.test.ts` — qa: card:B01087:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4

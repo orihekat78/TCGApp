@@ -152,7 +152,7 @@ export function isAllowed(
       const ax = flow.action._getContext(state, action.actionId);
       if (!ax) return false;
       if (ax.phase !== 'guard-window') return false;
-      if (hasBlockingResolutionPrompt()) return false;
+      if (hasBlockingResolutionPrompt(state)) return false;
       const excludedUid = ax.target.kind === 'char' ? ax.target.uid : undefined;
       const required = flow.guard.mustGuardCandidates(state, ax.byUid, excludedUid);
       if (action.guarderUid === null) {
@@ -165,6 +165,7 @@ export function isAllowed(
     case 'actionContact': {
       const ax = flow.action._getContext(state, action.actionId);
       if (!ax) return false;
+      if (hasBlockingResolutionPrompt(state)) return false;
       if (ax.phase !== 'action-1' && ax.phase !== 'action-2' && ax.phase !== 'action-1-redo') return false;
       const currentUid = ax.phase === 'action-2' ? ax.secondUid : ax.firstUid;
       if (!currentUid || ownerOfUid(state, currentUid) !== action.player) return false;
@@ -175,7 +176,7 @@ export function isAllowed(
     }
     case 'actionAdvance': {
       const ax = flow.action._getContext(state, action.actionId);
-      if (!ax || hasBlockingResolutionPrompt()) return false;
+      if (!ax || hasBlockingResolutionPrompt(state)) return false;
       switch (ax.phase) {
         case 'leave-resolution':
         case 'contact-pending':
@@ -198,7 +199,7 @@ export function isAllowed(
       return !!ax
         && ax.phase === 'judge'
         && ax.judgeResolved !== true
-        && !hasBlockingResolutionPrompt();
+        && !hasBlockingResolutionPrompt(state);
     }
     case 'hiramekiResolve': {
       // pendingHirameki が set されているときのみ有効
@@ -404,9 +405,11 @@ function ownerOfUid(state: GameState, uid: string): 'self' | 'opp' | null {
   return null;
 }
 
-function hasBlockingResolutionPrompt(): boolean {
+function hasBlockingResolutionPrompt(state: GameState): boolean {
   const store = useGameStateStore.getState();
   if (_getResolutionLock().locked) return true;
+  const human = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+  if (pendingOwnerOrderGroup(state, human).length > 0) return true;
   return store.pendingHirameki !== null
     || store.pendingMisread !== null
     || store.pendingEffectPick !== null

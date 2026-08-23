@@ -1851,12 +1851,16 @@
     {
       "qaId": "card:D09009:7516cd02c9848ddc808d369cd3af22fc7928580f38f6762c35b66bb22678cbcf",
       "answerHash": "83d521329e90458d525fb8ebb53e11d58a4adcf35d2cbf475988a0080b4a6e27",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d09/D09009.ts:1"
-      ]
+        "rules:.claude/rules/22-qa-action-contact.md:35",
+        "src:src/cards/ct-d09/D09008.ts:30",
+        "src:src/cards/ct-d09/D09009.ts:5",
+        "tests:tests/cards/official-qa/action-declare-before-guard-public-wave48.test.ts:370"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:D09009:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3",

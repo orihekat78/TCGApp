@@ -81,3 +81,16 @@
   neutral `reveal-complete`. Coverage reaches 1310 matched/1654 missing.
 - NEXT Wave48: route-screen `027580.../83d521...`, then
   `96d539.../47d3...` or `5a4907.../89083...`; split overlaps and mixed routes.
+
+## 2026-08-23: QA runtime Waves48-49 action declaration timing
+
+- Waves48-49 certify twelve same-ruling action triggers through distinct public
+  routes. Target selection and actor sleep precede `action:declare`; direct AP,
+  draw, Investigation, cut-in-ban, granted, pick, and simultaneous effects all
+  settle before guard. Coverage reaches 1322 matched/1642 test-missing.
+- BUG-332 joins state-owned human owner-order to public action-step admission.
+  Guard/contact/advance/judge reject unchanged until set/resolveEffectOrder;
+  AI already drains declaration effects before guard and remains unchanged.
+- NEXT Wave50: ground and route-split `96d539.../47d3...`; do not reuse prior
+  FILE/action tests without the exact QA assertion. Root AGENTS still says manual
+  Ver2.4 while rules INDEX says Ver2.5; reconcile as a separate workflow change.
