@@ -1517,14 +1517,13 @@
     {
       "qaId": "card:B08083:a96985ed96d005b04cd0c44c2dadf206fac63c8bd49e8c42cef6ea4c73808dae",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08083.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-p08/B08083.ts:29",
+        "tests:tests/cards/official-qa/effect-entry-enter-trigger-public-waves52-53.test.ts:215"
       ]
     },
     {

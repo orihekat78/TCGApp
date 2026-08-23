@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6322
+- **ファイル数**: 6335
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -515,6 +515,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-332.md` — 宣言時効果のowner-orderとaction step admission
     - `BUG-333.md` — deck look remainder refresh checkpoint
     - `BUG-334.md` — deck-window public continuation loss
+    - `BUG-335.md` — effect-entry source omissions
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -853,6 +854,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-15-qa-wave49-action-decisions.md`
     - `2026-08-23-16-qa-wave50-stack-vs-set.md` — QA Wave50: stacked cards are not set cards
     - `2026-08-23-17-qa-wave51-refresh-timing.md` — QA Wave51: defer refresh to remainder movement
+    - `2026-08-23-18-qa-wave52-effect-entry-remediation.md` — QA Wave52: restore effect-entry sources
+    - `2026-08-23-19-qa-wave53-evidence-cost.md` — QA Wave53: certify exact-two evidence costs
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1550,6 +1553,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-qa-waves46-47.md` — QA runtime Waves46-47 end phase and Investigation
     - `2026-08-23-qa-waves48-49.md` — QA runtime Waves48-49 action declaration timing
     - `2026-08-23-qa-waves50-51.md` — QA adjudication Waves50-51
+    - `2026-08-23-qa-waves52-53.md` — QA adjudication Waves52-53
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1704,15 +1708,19 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06008.md` — B06008 仮面ヤイバー grounding
       - `B06012.md` — B06012 grounding
       - `B06012P.md` — B06012P grounding
+      - `B06013.md` — B06013 grounding
       - `B06018.md` — B06018 grounding
       - `B06020.md` — B06020 佐々木小次郎 grounding (2026-07-10, sonnet5)
       - `B06027.md` — B06027 grounding
       - `B06042.md` — B06042 ここで会うたが百年目 (イベント) grounding (2026-07-10, sonnet5)
+      - `B06047.md` — B06047 鉄刃 grounding
       - `B06048.md` — B06048 峰さやか grounding
       - `B06052.md` — B06052 grounding
+      - `B06065.md` — B06065 grounding
       - `B06066.md` — B06066/B06066P 怪盗キッド＆白馬探 (MR キャラ) grounding (2026-07-10, fable)
       - `B06087.md` — B06087 萩原千速 grounding
       - `B06090.md` — B06090 grounding
+      - `B06095.md` — B06095 grounding
       - `B06098.md` — B06098 ベルモット＆シェリー grounding
       - `B07008.md` — B07008 小嶋元太 grounding (2026-07-10, fable)
       - `B07013.md` — B07013 grounding
@@ -1743,7 +1751,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08073.md` — B08073 高木渉 grounding
       - `B08074.md` — B08074 降谷零 grounding
       - `B08081.md` — B08081 広田雅美 grounding (2026-07-10, sonnet5)
+      - `B08083.md` — B08083 ラム grounding
       - `B09002.md` — B09002 / B09002P 工藤新一&毛利蘭 grounding
+      - `B09007.md` — B09007 脇田兼則 grounding
       - `B09010.md` — B09010 阿笠博士 grounding
       - `B09019.md` — B09019/B09019P 「くさるなよ！」 (イベント) grounding (2026-07-10, fable)
       - `B09024.md` — grounding dossier: B09024（世良真純）
@@ -1762,7 +1772,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B09073.md` — B09073 萩原研二 grounding
       - `B09078.md` — B09078 榎本梓 grounding
       - `B09079.md` — B09079 佐藤美和子 grounding
-      - `B09112.md` — B09112 キッドVS安室 王妃の前髪 (事件) grounding (2026-07-10, sonnet5)
+      - `B09111.md` — B09111 grounding
+      - `B09112.md` — B09112 grounding
       - `B10001.md` — B10001 grounding
       - `B10002.md` — B10002 grounding
       - `B10003.md` — B10003 工藤新一 grounding
@@ -1828,6 +1839,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B10074.md` — B10074 grounding
       - `B10077.md` — B10077 萩原研二 grounding
       - `B10081.md` — B10081 grounding
+      - `B10082.md` — B10082 grounding
       - `B10084.md` — B10084 grounding
       - `B10086.md` — B10086 grounding
       - `B10087.md` — B10087 grounding
@@ -4277,7 +4289,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08081.ts`
       - `B08081P.ts`
       - `B08082.ts` — cards/ct-p08/B08082 ピスコ (character) — Task A green候補 (engine変更0)
-      - `B08083.ts` — cards/ct-p08/B08083 ラム (キャラ) — engine#1 leave:to-remove batch #3 (a1 only)
+      - `B08083.ts` — cards/ct-p08/B08083 ラム (キャラ)
       - `B08084.ts` — cards/ct-p08/B08084 ウォッカ (キャラ) — engine-extension #1 leave:to-remove batch
       - `B08085.ts` — cards/ct-p08/B08085 シェリー (character) — engine拡張 wave (evidence-flip-faceup 有効化,…
       - `B08086.ts` — cards/ct-p08/B08086 テキーラ (character) — card-authoring wave17 ($self.…
@@ -4304,8 +4316,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B09005.ts` — cards/ct-p09/B09005 本堂瑛祐 (character) — attribution mini-wave ② costPaid (revealF…
       - `B09006.ts` — cards/ct-p09/B09006 毛利小五郎 (キャラ) — catalog-reuse batch
       - `B09006P.ts` — cards/ct-p09/B09006P 毛利小五郎 (キャラ) — catalog-reuse batch
-      - `B09007.ts` — cards/ct-p09/B09007 脇田兼則 (キャラ) — engine-extension #1 leave:to-remove batch #2 (a…
-      - `B09007P.ts` — cards/ct-p09/B09007P 脇田兼則 (キャラ パラレル) — engine-extension #1 leave:to-remove batch…
+      - `B09007.ts` — cards/ct-p09/B09007 脇田兼則 (キャラ)
+      - `B09007P.ts` — cards/ct-p09/B09007P 脇田兼則 (キャラ パラレル)
       - `B09008.ts` — cards/ct-p09/B09008 赤木英雄 (character) — Task A certify-harvest needsManual (engin…
       - `B09009.ts` — cards/ct-p09/B09009 赤木守 (キャラ) — engine拡張 wave#2 cluster13 (aura-grant, 2026-06-1…
       - `B09010.ts` — cards/ct-p09/B09010 阿笠博士 (キャラ) — engine拡張 wave#2 cluster14 (multi-card sceneEnte…
@@ -5677,6 +5689,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `effect-entry-declared-public-wave27.test.ts` — qa: card:B04018:a96985ed96d005b04cd0c44c2dadf206fac63c8bd49e8c42cef6ea4c73808dae
       - `effect-entry-declared-public.test.ts` — qa: card:B04019:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-enter-trigger-public-wave31.test.ts` — qa: card:B03085:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effect-entry-enter-trigger-public-waves52-53.test.ts` — qa: card:B06047:a995d1c10d720a31ed82e873a38fc303c498ee2145d91386e258841a02350580
       - `effect-entry-leave-public.test.ts` — qa: card:B02066:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-public-wave3.test.ts` — qa: card:B02077:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-trigger-order-public.test.ts` — qa: card:B07058:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa

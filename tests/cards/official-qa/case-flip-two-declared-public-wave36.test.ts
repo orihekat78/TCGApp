@@ -276,3 +276,42 @@ describe('official QA Wave36: resolved cases pay exactly two facedown evidence',
     });
   });
 });
+
+// Wave53 exact one-facedown-evidence-insufficient bindings.
+// qa: card:B06013:324a24588d4bb1ddbf561b347a12dcb2d77569ebb134f8d747e7ca53c6a9f570
+// qa: card:B06065:324a24588d4bb1ddbf561b347a12dcb2d77569ebb134f8d747e7ca53c6a9f570
+// qa: card:B10034:324a24588d4bb1ddbf561b347a12dcb2d77569ebb134f8d747e7ca53c6a9f570
+
+describe('Wave53 one facedown evidence is insufficient', () => {
+  it.each(ROWS)('$cardId rejects one down transactionally, then accepts nonadjacent two down', row => {
+    const state = baseState(row, '解決編', 2);
+    state.players.self.evidence[1]!.faceUp = true;
+    install(state, `${row.cardId}:wave53-mixed-recovery`);
+    const before = current();
+    const beforeJson = JSON.stringify(before);
+
+    // Card-bound rows: B06013 B06065 B07062 B08094 B10034 D10026.
+    expect(dispatch(row, [0]), `${row.cardId}: one facedown evidence rejects`)
+      .toEqual({ ok: false, reason: 'not-allowed' });
+    expect(current(), `${row.cardId}: rejected state reference`).toBe(before);
+    expect(JSON.stringify(current()), `${row.cardId}: rejected state semantics`).toBe(beforeJson);
+    expect(openDecisionKinds(), `${row.cardId}: rejected decision surface`).toEqual([]);
+
+    const recovered = JSON.parse(JSON.stringify(current())) as GameState;
+    recovered.players.self.evidence.push({
+      cardId: `W36_RECOVERY_${row.cardId}`, faceUp: false,
+      origin: { turn: recovered.turn.number, via: 'effect' },
+    });
+    expect(useGameStateStore.getState().setGameState(recovered)).toBe(true);
+    expect(dispatch(row, [0, 2]), `${row.cardId}: nonadjacent two facedown evidence accepts`)
+      .toEqual({ ok: true });
+    settlePublicTail();
+    expect(current().players.self.evidence.map(entry => entry.faceUp), `${row.cardId}: exact self payment`)
+      .toEqual([true, true, true]);
+    expect(current().players.opp.evidence.every(entry => !entry.faceUp), `${row.cardId}: opponent evidence isolated`)
+      .toBe(true);
+    expect(readChar.declaredUseCount(current(), 'case:self', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    }), `${row.cardId}: rejected attempt did not consume turn use`).toBe(1);
+  });
+});

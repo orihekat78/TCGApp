@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `19d07001cd21`
+> Source hash: `40f52196d8f9`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -34,7 +34,7 @@
 | [`17-icons.md`](../../rules/17-icons.md) | 1259 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseMonoColor.ts`, `cards/_shared/caseTraitConditioned.ts` ほか 1256 件 |
 | [`18-mr.md`](../../rules/18-mr.md) | 48 | `cards/ct-p05/B05005.ts`, `cards/ct-p05/B05045.ts`, `cards/ct-p05/B05066.ts` ほか 45 件 |
 | [`19-special-rules.md`](../../rules/19-special-rules.md) | 328 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d01/D01003.ts` ほか 325 件 |
-| [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) | 282 | `cards/_shared/caseMonoColor.ts`, `cards/ct-d01/D01004.ts`, `cards/ct-d01/D01008.ts` ほか 279 件 |
+| [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) | 283 | `cards/_shared/caseMonoColor.ts`, `cards/ct-d01/D01004.ts`, `cards/ct-d01/D01008.ts` ほか 280 件 |
 | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) | 414 | `ai/ability-ctx.ts`, `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/ct-d01/D01003.ts` ほか 411 件 |
 | [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) | 304 | `cards/_shared/contactTargetMatches.ts`, `cards/ct-d01/D01009.ts`, `cards/ct-d01/D01010.ts` ほか 301 件 |
 | [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) | 48 | `cards/ct-d11/D11013.ts`, `cards/ct-d11/D11017.ts`, `cards/ct-d11/D11018.ts` ほか 45 件 |

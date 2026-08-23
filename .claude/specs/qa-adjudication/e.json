@@ -1688,14 +1688,14 @@
     {
       "qaId": "card:B09111:324a24588d4bb1ddbf561b347a12dcb2d77569ebb134f8d747e7ca53c6a9f570",
       "answerHash": "dbbcc5c6f78482d0c89f56018ca32bf80a619f259353e590b01cdc6f62f532b8",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09111.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/21-declared-ability-cost.md:32",
+        "src:src/cards/ct-p09/B09111.ts:44",
+        "tests:tests/cards/official-qa/case-flip-two-complex-public-wave37.test.ts:256",
+        "tests:tests/cards/official-qa/case-flip-two-complex-public-wave37.test.ts:308"
       ]
     },
     {

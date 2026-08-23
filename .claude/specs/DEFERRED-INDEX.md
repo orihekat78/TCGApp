@@ -788,7 +788,7 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 | B06023 / B06034 (金棒博士/鬼丸城) | hirameki-trigger-from-flip: cost flipFaceUpEvidence は count のみ記録 (flipカード identity 破棄)、flip契機 hook 不在、別カードの【ヒラメキ】効果を起動する verb 不在 (hirameki は evidence:remove-by-action 専属) | flip-evidence hook + cross-card hirameki invoke verb (engine) |
 | B06026 (コウモリ男) | a1/a3 green。a2 = **✅ gainCard idx===-1 harden 出荷 (2026-06-29, engine/bulk-additive-0629)** (source 不在で証拠化せず return)。残: a2 の character-scoped 【現場リムーブ時】→selfToEvidence 経路 (leave:to-remove self-trigger) を card session で実機検証 (handleLeaveToRemoveSelf は配線済の見込み、未実証) | 残: char-leave selfToEvidence の card-author 検証 |
 | B06027 (カマキリ男等) | hirameki「このキャラをスリープ状態で登場」= 証拠リムーブ中の自身を現場再登場 primitive 不在 (evidence→scene verb 無、replacement 意味論) | evidence-transient self-reenter (engine、B06025 と同族) |
-| B06047 (鉄刃) | (2)「このキャラにカードがセットされたとき」= **✅ setcard:enter hook 出荷 (2026-06-29, engine/bulk-additive-0629)**。残 (1) 手札カードのレベル-1修正 (hand-use level gate は静的 def.level 読み、ContinuousModifier.lvlDelta は scene-char 専用) のため **継続 DEFER** | 残: hand-level modifier (engine) |
+| B06047 (鉄刃) | a2 YAIBA set→remove entry は Wave52/BUG-335 で出荷。残a1は現場sourceが手札の白YAIBAイベントへ与えるcross-hand level auraで、bearer-only hand modifierでは表現不可。誤self減算を除去しa1 slotをfail-closed保持 | 残: filtered cross-hand level aura (engine) |
 | B07008 (小嶋元太) | (1) 手札カードの per-count level 減 (cross-field UNION count[cardName 阿笠博士 + trait 少年探偵団] dyn 無、$self.sceneCardName 無) (2) in-hand level modifier (同上) | per-count union dyn + hand-level modifier (engine) |
 | B07013 (event 予告状) | sequence の chain-gate continuation 内 $picked carrier-reuse (un-stun を同一 picked stun-char に2回) = 最深 nesting。human dispatch path で rider 喪失の既知 false-green class (BUG-130/158)、要 human-path probe (+ event closure) | carrier-reuse human-path 実証 or event closure |
 | B07096 (ウォッカ) | 突撃[レベル4以下のキャラ] = filtered-突撃 variant (namedExceptionAllowed は exact-string only、組込み target filter付き突撃 grant 不可) + removed-char level filter trigger | filtered-keyword grant (engine) |
@@ -1365,7 +1365,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | ID | blocker 要旨 |
 |---|---|
 | B06012 | set event の「このイベントをリムーブしてもよい→登場」= 特定 set card 自己除去 verb 不在 (removeOneSetCard は末尾 pop のみ) |
-| B06047 | (詳細 = _batch6_defers.txt) |
+| B06047 | a2出荷済。a1 filtered cross-hand level auraのみ継続DEFER |
 | B06064 | (同上) |
 | B07033 | (同上) |
 | B09113 | (同上) |

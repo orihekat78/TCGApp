@@ -1280,14 +1280,13 @@
     {
       "qaId": "card:B09007:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09007.ts:26"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-p09/B09007.ts:22",
+        "tests:tests/cards/official-qa/effect-entry-enter-trigger-public-waves52-53.test.ts:329"
       ]
     },
     {
@@ -1481,12 +1480,14 @@
     {
       "qaId": "card:B10034:324a24588d4bb1ddbf561b347a12dcb2d77569ebb134f8d747e7ca53c6a9f570",
       "answerHash": "dbbcc5c6f78482d0c89f56018ca32bf80a619f259353e590b01cdc6f62f532b8",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/21-declared-ability-cost.md:15",
-        "src:src/cards/ct-p10/B10034.ts:17"
+        "rules:.claude/rules/21-declared-ability-cost.md:32",
+        "src:src/cards/ct-p10/B10034.ts:18",
+        "tests:tests/cards/official-qa/case-flip-two-declared-public-wave36.test.ts:268",
+        "tests:tests/cards/official-qa/case-flip-two-declared-public-wave36.test.ts:294"
       ]
     },
     {

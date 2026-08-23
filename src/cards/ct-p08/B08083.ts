@@ -1,4 +1,4 @@
-// cards/ct-p08/B08083 ラム (キャラ) — engine#1 leave:to-remove batch #3 (a1 only)
+// cards/ct-p08/B08083 ラム (キャラ)
 // rules: 15-abilities-effects.md, 17-icons.md, 21-declared-ability-cost.md
 //
 // 公式テキスト:
@@ -6,7 +6,7 @@
 //   【事件青＆黒】【宣言】【スリープ】：手札から【現場リムーブ時】を持つレベル5以下のキャラを1枚まで登場させる。
 //
 // a1: 【相手ターン中】【現場リムーブ時】カードを1枚引く (D03013 a1 同型)
-// a2: DEFERRED (declared 事件青&黒 + sleep cost + sceneEnter from hand with hook filter)
+// a2: 事件青&黒 + sleep cost + printed leave-trigger presence filter.
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 
@@ -21,6 +21,21 @@ const a1: AbilityDef = {
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };
 
+const a2: AbilityDef = {
+  id: 'a2', type: 'declared', scope: 'on-scene',
+  condition: { kind: 'caseColor', color: ['青', '黒'], combine: 'and' },
+  cost: { kind: 'sleepSelf' },
+  effect: {
+    kind: 'atom', verb: 'sceneEnter',
+    args: {
+      player: 'self', from: 'hand', max: 1, viaEffect: true,
+      filter: { kind: 'character', keyword: '現場リムーブ時', levelMax: 5 },
+    },
+  },
+  description: '【事件青＆黒】【宣言】【スリープ】：手札から【現場リムーブ時】を持つレベル5以下のキャラを1枚まで登場させる。',
+  ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/20-color-and-switch.md', 'rules/21-declared-ability-cost.md'],
+};
+
 export const B08083: CardDef = {
   id: 'B08083',
   no: '0919/B08083',
@@ -31,6 +46,6 @@ export const B08083: CardDef = {
   traits: ['黒ずくめの組織'], keywords: [],
   rarity: 'R',
   imageUrl: '1770731255833292.jpg',
-  abilities: [a1],
-  ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
+  abilities: [a1, a2],
+  ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/20-color-and-switch.md', 'rules/21-declared-ability-cost.md'],
 };

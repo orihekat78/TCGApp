@@ -287,3 +287,45 @@ describe('official QA Wave37: complex case cards retain the shared self-only fli
     });
   });
 });
+
+// Wave53 exact one-facedown-evidence-insufficient bindings.
+// qa: card:B06095:324a24588d4bb1ddbf561b347a12dcb2d77569ebb134f8d747e7ca53c6a9f570
+// qa: card:B09111:324a24588d4bb1ddbf561b347a12dcb2d77569ebb134f8d747e7ca53c6a9f570
+// qa: card:B09112:324a24588d4bb1ddbf561b347a12dcb2d77569ebb134f8d747e7ca53c6a9f570
+// qa: card:B10082:324a24588d4bb1ddbf561b347a12dcb2d77569ebb134f8d747e7ca53c6a9f570
+// qa: card:B10101:324a24588d4bb1ddbf561b347a12dcb2d77569ebb134f8d747e7ca53c6a9f570
+// qa: card:B10102:324a24588d4bb1ddbf561b347a12dcb2d77569ebb134f8d747e7ca53c6a9f570
+
+describe('Wave53 complex cases reject one facedown evidence transactionally', () => {
+  it.each(ROWS)('$cardId rejects one down, then accepts nonadjacent exact-two payment', row => {
+    const state = baseState(row, '解決編', 2);
+    state.players.self.evidence[1]!.faceUp = true;
+    install(state, `${row.cardId}:wave53-mixed-recovery`);
+    const before = current();
+    const beforeJson = JSON.stringify(before);
+
+    // Card-bound rows: B06095 B09111 B09112 B10082 B10101 B10102.
+    expect(dispatch(row, [0]), `${row.cardId}: one facedown evidence rejects`)
+      .toEqual({ ok: false, reason: 'not-allowed' });
+    expect(current(), `${row.cardId}: rejected state reference`).toBe(before);
+    expect(JSON.stringify(current()), `${row.cardId}: rejected state semantics`).toBe(beforeJson);
+    expect(openDecisionKinds(), `${row.cardId}: rejected decision surface`).toEqual([]);
+
+    const recovered = JSON.parse(JSON.stringify(current())) as GameState;
+    recovered.players.self.evidence.push({
+      cardId: `W37_RECOVERY_${row.cardId}`, faceUp: false,
+      origin: { turn: recovered.turn.number, via: 'effect' },
+    });
+    expect(useGameStateStore.getState().setGameState(recovered)).toBe(true);
+    expect(dispatch(row, [0, 2]), `${row.cardId}: nonadjacent two facedown evidence accepts`)
+      .toEqual({ ok: true });
+    settlePublicTail();
+    expect(current().players.self.evidence.map(entry => entry.faceUp), `${row.cardId}: exact self payment`)
+      .toEqual([true, true, true]);
+    expect(current().players.opp.evidence.every(entry => !entry.faceUp), `${row.cardId}: opponent evidence isolated`)
+      .toBe(true);
+    expect(readChar.declaredUseCount(current(), 'case:self', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    }), `${row.cardId}: rejected attempt did not consume turn use`).toBe(1);
+  });
+});

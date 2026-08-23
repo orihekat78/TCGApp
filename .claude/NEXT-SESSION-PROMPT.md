@@ -1,39 +1,39 @@
-# Next Task: QA adjudication Wave52 selection
+# Next Task: QA adjudication Waves54-55
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves50-51 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves52-53 commit.
 
 ## Completed
 
-- Wave50 certifies ten stacked-versus-set records.
-- Wave51 certifies ten refresh-timing records, including B08050 recertification.
-- BUG-333/334 fix descriptor checkpoints, decline, and end-turn continuation.
-- Existing untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml` remain protected.
+- Wave52 repairs and certifies B06047, B08083, and B09007/P effect-entry paths.
+- Wave53 certifies nine exact-two face-down evidence costs.
+- Coverage should be 1353 matched / 1611 test-missing after generation.
+- Existing untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml` stay protected.
 
-## Start Wave52
+## Wave54: direct and linear effect entry
 
-1. Confirm branch, HEAD, upstream, and protected status read-only.
-2. Ground exact candidate:
-   - question `2aa7bfa682907fcb41fe1039b77a1bb723458d7f54b272e8e75058a5e2ff943a`
-   - answer `18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee`
-   - exact ruling: a character entered by an ability/effect resolves its normal
-     enter ability.
-3. Twenty current records:
-   `B03062,B04090,B05015,B05077,B06012,B06046,B06047,B06087,B08076,
-   B08083,B09007,B09056,B09106,B10023,B10095,D10023,PR173,PR280,PR291,PR297`.
-4. Split direct enter effects from hirameki, end-phase, choice/grant, declared,
-   and Bond routes before certification. Do not reuse generic Wave31 evidence
-   without a card-bound source→enter→trigger assertion.
-5. Secondary coherent candidate if the 20-card group is too mixed:
-   - question `a0f512e63a35b3d11f3cce14b2f8f753b7cd6951e4eac6237386abb7a2c72418`
-   - answer `dbbcc5c6f78482d0c89f56018ca32bf80a619f259353e590b01cdc6f62f532b8`
-   - nine declared abilities require two face-down evidence; one is insufficient.
-6. Stop after one or two implementation waves.
+1. Confirm branch, HEAD, upstream, and protected files read-only.
+2. Reuse exact Q/A `2aa7bfa6.../18ed0c93...`: a character entered by an
+   ability/effect resolves its normal enter ability.
+3. Certify B03062, B04090, B05015, B05077, B06012, B06046, B08076, B09106,
+   and B10095.
+4. Use real event/deck, contact/cut-in, Hirameki, end-phase/set, declared, and
+   event-branch sources. Generic Wave31 evidence is not card-bound evidence.
+
+## Wave55: nested, Bond, and clone entry
+
+1. Certify B06087, B09056, B10023, D10023, PR173, PR280, PR291, and PR297.
+2. For nested routes, distinguish outer and entered source card/uid.
+3. For clones, execute each physical D10023/PR173 source; array equality with
+   B02004 is insufficient.
+4. Every route proves source dispatch, chosen entrant normal enter, ordering,
+   owner/opponent asymmetry, typed decoys, and zero/decline behavior.
+5. Stop after one or two implementation waves.
 
 ## Records
 
-- `.claude/sessions/2026-08-23-qa-waves50-51.md`
-- `.claude/bugs/BUG-333.md`
-- `.claude/bugs/BUG-334.md`
+- `.claude/sessions/2026-08-23-qa-waves52-53.md`
+- `.claude/bugs/BUG-335.md`
+- `.tmp/_ground/wave52/`
 
-Remaining estimate: about 1,623 records, roughly 140-300 agent hours. Route
+Remaining estimate: about 1,611 records, roughly 138-298 agent hours. Route
 grouping and horizontal fixes may reduce it.

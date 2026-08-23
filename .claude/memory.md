@@ -37,11 +37,22 @@
   B10097 partner-area end paths pass.
 - Coverage after generation should be 1341 matched / 1623 test-missing.
 
+## 2026-08-23: QA runtime Waves52-53
+
+- Wave52 grounds all twenty remaining effect-entry records, then repairs the
+  three real CardDef gaps: B06047, B08083, and B09007/P.
+- Their public routes bind the actual source and prove the chosen entrant's own
+  normal enter ability. B06047's unsupported cross-hand aura stays fail-closed.
+- Wave53 certifies nine declared abilities whose cost is exactly two face-down
+  evidence. Mixed-state rejection is transactional; a later nonadjacent valid
+  selection succeeds in the same turn without using opponent evidence.
+- Coverage after generation should be 1353 matched / 1611 test-missing.
+
 ## Next
 
-- Wave52 route-screens `2aa7bfa6.../18ed0c93...`: effect-entered characters
-  resolve normal enter abilities. Twenty records have mixed public routes.
-- Secondary: nine exact-two evidence-cost records at
-  `a0f512e6.../dbbcc5c6...`.
+- Wave54: B03062, B04090, B05015, B05077, B06012, B06046, B08076, B09106,
+  and B10095 direct/linear effect-entry routes.
+- Wave55: B06087, B09056, B10023, D10023, PR173, PR280, PR291, and PR297
+  nested, Bond, and clone routes.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.
