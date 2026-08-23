@@ -125,10 +125,11 @@ describe('Task A wave1 — look-N→hand cluster', () => {
     expect((lookStep(PR061.abilities[0] as AbilityDef)[0].args as { filter: unknown }).filter).toMatchObject({ trait: ['警察', '怪盗'], kind: 'character' });
   });
 
-  it('PR180: a1 enterSleep + a2 look-3 FBI discard chain', () => {
-    const [a1, a2] = PR180.abilities as AbilityDef[];
-    expect(a1.trigger).toMatchObject({ hook: 'enter', selfOnly: true });
-    expect(a1.effect).toMatchObject({ kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } });
+  it('PR180: inherent enterSleep + sparse a2 look-3 FBI discard chain', () => {
+    expect(PR180.entersSleep).toBe(true);
+    expect(PR180.abilities.map(ability => ability.id)).toEqual(['a2']);
+    const [a2] = PR180.abilities as AbilityDef[];
+    expect(a2.trigger).toMatchObject({ hook: 'enter', selfOnly: true });
     expect((lookStep(a2)[0].args as { maxN: number; filter: unknown }).maxN).toBe(3);
     expect((lookStep(a2)[0].args as { filter: unknown }).filter).toMatchObject({ trait: 'FBI', kind: 'character' });
   });

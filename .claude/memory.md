@@ -52,9 +52,19 @@
   owner symmetry, zero-entry, optional decline, and forged-victim rejection.
 - Coverage after generation is 1431 matched / 1533 test-missing.
 
+## 2026-08-23: QA runtime Waves64-65
+
+- Waves64-65 certify sixteen short-deck look records and correct three grounded
+  horizontal records across thirty-two physical sources. Selected cards become
+  public; private look, decline, no-match, and remainder never expose identities.
+- BUG-339 repairs public selected-card presentation. BUG-340 validates pending
+  continuation by same-root parent ancestry while preserving coherent legacy saves.
+  BUG-341 gives PR180/PR186 inherent sleep entry and sparse printed `a2`.
+- Coverage after generation is 1447 matched / 1517 test-missing.
+
 ## Next
 
-- Wave64: eight records at `c2a2f472.../fec16ced...`.
-- Wave65: eight records at `e3bbd815.../fec16ced...`.
+- Wave66: seven records at `236305893.../13dee7161...`.
+- Wave67: six records at `24edb9585.../dfc687d5b...`.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

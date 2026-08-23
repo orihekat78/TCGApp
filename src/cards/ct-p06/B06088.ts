@@ -45,7 +45,8 @@ const a1: AbilityDef = {
           verb: 'handAddFromDeck',
           args: {
             player: 'self',
-            cardId: '$matched.cardId'
+            cardId: '$matched.cardId',
+            presentation: 'public-selected-card'
           }
         }
       },

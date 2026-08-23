@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6415
+- **ファイル数**: 6437
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -519,6 +519,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-336.md` — B09056 printed choice collapse
     - `BUG-337.md` — contact action slot reuse
     - `BUG-338.md` — B08034 rarity mismatch
+    - `BUG-339.md` — selected deck card publication
+    - `BUG-340.md` — causal continuation authority
+    - `BUG-341.md` — inherent sleep entry
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -869,6 +872,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-27-qa-wave61-full-scene-entry.md` — QA Wave61: certify full-scene effect entry
     - `2026-08-23-28-qa-wave62-set-privacy.md` — QA Wave62: certify face-down set privacy
     - `2026-08-23-29-qa-wave63-full-scene-entry.md` — QA Wave63: certify full-scene effect entry
+    - `2026-08-23-30-qa-wave64-short-deck-three.md` — QA Wave64: certify short top-three deck looks
+    - `2026-08-23-31-qa-wave65-short-deck-four.md` — QA Wave65: certify short top-four deck looks
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1572,6 +1577,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-qa-waves58-59.md` — QA adjudication Waves58-59
     - `2026-08-23-qa-waves60-61.md` — QA adjudication Waves60-61
     - `2026-08-23-qa-waves62-63.md` — QA adjudication Waves62-63
+    - `2026-08-23-qa-waves64-65.md` — QA adjudication Waves64-65
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1750,6 +1756,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06020.md` — B06020 grounding
       - `B06027.md` — B06027 grounding
       - `B06042.md` — B06042 ここで会うたが百年目 (イベント) grounding (2026-07-10, sonnet5)
+      - `B06043.md` — B06043 / B06043P grounding
       - `B06046.md` — B06046 鉄刃 grounding
       - `B06047.md` — B06047 鉄刃 grounding
       - `B06048.md` — B06048 峰さやか grounding
@@ -1757,6 +1764,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06065.md` — B06065 grounding
       - `B06066.md` — B06066/B06066P 怪盗キッド＆白馬探 (MR キャラ) grounding (2026-07-10, fable)
       - `B06087.md` — B06087 萩原千速 grounding
+      - `B06088.md` — B06088 grounding
       - `B06090.md` — B06090 grounding
       - `B06095.md` — B06095 grounding
       - `B06098.md` — B06098 ベルモット＆シェリー grounding
@@ -1774,8 +1782,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B07061P.md` — grounding dossier: B07061P (自動生成 2026-07-13)
       - `B07062.md` — B07062 / B07062P grounding
       - `B07063.md` — B07063 / B07063P grounding
+      - `B07066.md` — B07066 / B07066P grounding
       - `B07069.md` — B07069 本堂瑛海 grounding
       - `B07072.md` — B07072 澁谷夏子 grounding
+      - `B07073.md` — B07073 / B07073P grounding
       - `B07074.md` — B07074 grounding
       - `B07082.md` — B07082 / B07082P grounding
       - `B07088.md` — B07088 山村ミサオ grounding
@@ -1787,8 +1797,11 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08007.md` — B08007 円谷光彦 grounding
       - `B08008.md` — B08008 吉田歩美 grounding
       - `B08015.md` — B08015 若狭留美 grounding
+      - `B08016.md` — B08016 grounding
       - `B08017.md` — B08017 / B08017P grounding
       - `B08019.md` — B08019 大岡紅葉＆伊織無我 (MR/MRP) grounding (2026-07-10, sonnet5)
+      - `B08020.md` — B08020 / B08020P grounding
+      - `B08024.md` — B08024 grounding
       - `B08025.md` — B08025 / B08025P grounding
       - `B08026.md` — B08026 grounding
       - `B08033.md` — B08033 / B08033P grounding
@@ -1798,8 +1811,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08050.md` — B08050 宮野明美 grounding
       - `B08056.md` — B08056 宮野厚司 grounding
       - `B08065.md` — B08065 大和敢助 grounding
+      - `B08071.md` — B08071 grounding
       - `B08073.md` — B08073 高木渉 grounding
       - `B08074.md` — B08074 降谷零 grounding
+      - `B08075.md` — B08075 / B08075P grounding
       - `B08076.md` — B08076 揺れる警視庁 grounding
       - `B08081.md` — B08081 広田雅美 grounding (2026-07-10, sonnet5)
       - `B08083.md` — B08083 ラム grounding
@@ -1824,6 +1839,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B09060.md` — B09060 沖矢昴 grounding
       - `B09065.md` — B09065 マーク grounding
       - `B09073.md` — B09073 萩原研二 grounding
+      - `B09074.md` — B09074 / B09074P / B09074P2 grounding
       - `B09078.md` — B09078 榎本梓 grounding
       - `B09079.md` — B09079 佐藤美和子 grounding
       - `B09106.md` — B09106 暗殺計画 grounding
@@ -1878,6 +1894,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B10050.md` — B10050 / B10050P grounding
       - `B10052.md` — B10052
       - `B10053.md` — B10053
+      - `B10054.md` — B10054 / B10054P grounding
       - `B10056.md` — B10056 勝又水菜
       - `B10057.md` — B10057
       - `B10060.md` — B10060 grounding
@@ -1956,7 +1973,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `PR154.md` — PR154 grounding
       - `PR173.md` — PR173 工藤有希子 grounding
       - `PR179.md` — PR179 京極真 grounding
+      - `PR180.md` — PR180 grounding
       - `PR185.md` — PR185 京極真 grounding
+      - `PR186.md` — PR186 grounding
       - `PR199.md` — PR199 江戸川コナン grounding
       - `PR205.md` — PR205 江戸川コナン grounding
       - `PR234.md` — PR234 毛利蘭 grounding (2026-07-10, fable)
@@ -1992,6 +2011,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `m3-pa-batch.md` — M3 前処理: PA(パートナーエリア) 宣言19+発動5 batch dossier
       - `m3-triage-registered.md` — M3 PA batch triage — 登録済 18 ID (2026-07-10)
       - `m3-triage-unregistered.md` — M3 未登録14 ID triage (2026-07-10, sonnet5)
+      - `waves64-65-authority.md` — Waves64-65 authority manifest
     - **`meta-ui/`**
       - `00-overview.md` — 00 — メタ UI 統合設計 概要
       - `01-project-setup.md` — 01 — meta-app プロジェクト構成
@@ -5751,6 +5771,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `decision-persistence-wave23.test.ts` — qa: card:B03080:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
       - `deck-look-bottom-family-public.test.ts` — qa: card:B01013:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5
       - `deck-look-refresh-timing-public-wave51.test.ts` — qa: card:B05016:e7061b1c3b542622fb32f13182df05bfa258159452eb60cb75a2c492259385d4
+      - `deck-look-short-four-public-wave65.test.ts` — qa: card:B07073:257729bded9735287561b957a296000c9fdd1c284ccc9cac5e5c978452befe69
+      - `deck-look-short-three-public-wave64.test.ts` — qa: card:B06013:f8f6cc8737bb07a4334459a640a7b7600477d7bfa26bba8ca760517a6601ca7f
       - `deck-look-zero-choice-public-wave30.test.ts` — qa: card:B04048:c2131ef2b4d611ed2fdcba93cb1619157aea6dcc39318ced5a4a6f69bc29faaf
       - `deck-refresh-wave8.test.ts` — qa: card:B04012:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4
       - `deck-top-three-self-only-public-wave59.test.ts` — qa: card:B04077:1a92dcdf67120f7d76c881aa12661add73fc79ad2cefe30d1e4fbda6978a4758

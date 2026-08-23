@@ -1380,10 +1380,10 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p07/B07066.ts:13",
-        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:104",
-        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:105",
-        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:114",
-        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:115"
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:111",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:112",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:121",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:122"
       ],
       "noteCodes": []
     },
@@ -1395,11 +1395,11 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p07/B07066.ts:15",
-        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:125",
         "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:132",
-        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:144",
-        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:155",
-        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:156"
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:139",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:151",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:162",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:163"
       ],
       "noteCodes": []
     },
@@ -1693,7 +1693,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p08/B08071.ts:1",
-        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:430"
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:420"
       ]
     },
     {
@@ -1837,14 +1837,18 @@
     {
       "qaId": "card:B09074:257729bded9735287561b957a296000c9fdd1c284ccc9cac5e5c978452befe69",
       "answerHash": "fec16cedeb8683f39fe7ddc9a70fab0a14e5c9217502735c4556a1b181870065",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09074.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p09/B09074.ts:48",
+        "src:src/cards/ct-p09/B09074P.ts:38",
+        "src:src/cards/ct-p09/B09074P2.ts:38",
+        "src:src/engine/effect/runtime-state.ts:725",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:182",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:196",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:224"
       ]
     },
     {
@@ -1927,7 +1931,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09112.ts:1",
-        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:433"
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:423"
       ]
     },
     {
@@ -1967,12 +1971,12 @@
       "evidence": [
         "rules:.claude/rules/09-cutin-disguise.md:9",
         "src:src/cards/ct-p10/B10017.ts:10",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1413",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1419",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1430",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1442",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1450",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1451"
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1551",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1557",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1568",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1580",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1588",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1589"
       ]
     },
     {
@@ -2062,15 +2066,15 @@
     {
       "qaId": "card:B10054:657dafe95083ad08981b7610e34d651ff4ade221a78bb2a0482884c4475c0ff7",
       "answerHash": "fec16cedeb8683f39fe7ddc9a70fab0a14e5c9217502735c4556a1b181870065",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/26-qa-deck-refresh.md:65",
-        "src:src/cards/ct-p10/B10054.ts:17"
-      ],
-      "noteCodes": [
-        "IMPLEMENTED-CARD-TEST-MISSING"
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p10/B10054.ts:12",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:182",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:196",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:224"
       ]
     },
     {
@@ -2585,7 +2589,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/pr-01/PR180.ts:1",
-        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:438"
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:428"
       ]
     },
     {

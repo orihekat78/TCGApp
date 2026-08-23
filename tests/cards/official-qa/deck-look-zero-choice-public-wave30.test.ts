@@ -24,7 +24,6 @@ import { startCausalSession } from '@/engine/log/causal';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _resetRegistry, def as readDef, register } from '@/engine/read/def';
-import { pendingOwnerOrderGroup } from '@/engine/resolve';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { CardDef, GameState } from '@/engine/types';
 import { bindPendingDecision, dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
@@ -221,17 +220,6 @@ function removeThroughPublicContact(): void {
   expect(dispatchEngineAction({ type: 'actionJudge', actionId })).toEqual({ ok: true });
 }
 
-function orderEnterEffects(row: Row, enteredUid: string): void {
-  const group = pendingOwnerOrderGroup(current(), 'self');
-  expect(group.map(entry => entry.source.abilityId).sort(), `${row.cardId}: simultaneous enter effects`).toEqual(['a1', 'a2']);
-  const deckLook = group.find(entry => entry.source.uid === enteredUid && entry.source.abilityId === row.abilityId)!;
-  expect(dispatchEngineAction({ type: 'setEffectOrder', entryId: deckLook.id, order: 0, player: 'self' })).toEqual({ ok: true });
-  const ordered = pendingOwnerOrderGroup(current(), 'self');
-  expect(dispatchEngineAction({
-    type: 'resolveEffectOrder', player: 'self', entryIds: ordered.map(entry => entry.id),
-  })).toEqual({ ok: true });
-}
-
 function trigger(row: Row): { uid: string; area: string } {
   if (row.route === 'scene-declared') {
     const costParams = row.cardId === 'B04048' ? { declaredName: '対象-B04048' } : undefined;
@@ -271,7 +259,9 @@ function trigger(row: Row): { uid: string; area: string } {
     expect(dispatchEngineAction({ type: 'handUseCard', player: 'self', cardId: row.cardId })).toEqual({ ok: true });
     const entered = current().players.self.scene.find(card => card.cardId === row.cardId);
     if (!entered) throw new Error(`${row.cardId}: source did not enter`);
-    if (row.cardId === 'PR180' || row.cardId === 'PR186') orderEnterEffects(row, entered.uid);
+    if (row.cardId === 'PR180' || row.cardId === 'PR186') {
+      expect(entered.state, `${row.cardId}: inherent entry state`).toBe('sleep');
+    }
     return { uid: entered.uid, area: 'scene' };
   }
 

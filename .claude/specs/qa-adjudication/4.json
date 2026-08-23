@@ -58,8 +58,8 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p01/B01057.ts:1",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:617",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:624"
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:618",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:625"
       ]
     },
     {
@@ -1291,21 +1291,29 @@
     {
       "qaId": "card:B08016:26d1831c595c626b286619cd94b54f3aa09111639cd842e8c4e06036ce67c7cf",
       "answerHash": "fec16cedeb8683f39fe7ddc9a70fab0a14e5c9217502735c4556a1b181870065",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08016.ts:1"
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p08/B08016.ts:67",
+        "tests:tests/cards/official-qa/deck-look-short-three-public-wave64.test.ts:273",
+        "tests:tests/cards/official-qa/deck-look-short-three-public-wave64.test.ts:289",
+        "tests:tests/cards/official-qa/deck-look-short-three-public-wave64.test.ts:309"
       ]
     },
     {
       "qaId": "card:B08020:257729bded9735287561b957a296000c9fdd1c284ccc9cac5e5c978452befe69",
       "answerHash": "fec16cedeb8683f39fe7ddc9a70fab0a14e5c9217502735c4556a1b181870065",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08020.ts:1"
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p08/B08020.ts:49",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:182",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:196",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:224"
       ]
     },
     {
@@ -1613,7 +1621,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09073.ts:85",
-        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:432"
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:422"
       ]
     },
     {

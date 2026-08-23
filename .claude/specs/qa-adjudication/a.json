@@ -904,13 +904,13 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p07/B07014.ts:1",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1118",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1126",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1131",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1133",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1137",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1141",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1146"
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1256",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1264",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1269",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1271",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1275",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1279",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1284"
       ]
     },
     {
@@ -1733,7 +1733,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:37",
         "src:src/cards/ct-p10/B10101.ts:33",
-        "tests:tests/cards/official-qa/B10101-granted-search-public-wave30.test.ts:189"
+        "tests:tests/cards/official-qa/B10101-granted-search-public-wave30.test.ts:199"
       ]
     },
     {

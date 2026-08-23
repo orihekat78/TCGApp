@@ -846,10 +846,10 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05117.ts:1",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:640",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:653",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:665",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:667"
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:641",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:654",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:666",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:668"
       ]
     },
     {
@@ -860,10 +860,10 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05117.ts:1",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:640",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:653",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:665",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:667"
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:641",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:654",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:666",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:668"
       ]
     },
     {
@@ -874,7 +874,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06013.ts:1",
-        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:425"
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:415"
       ]
     },
     {
@@ -1297,7 +1297,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p08/B08024.ts:1",
-        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:429"
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:419"
       ]
     },
     {
@@ -1429,11 +1429,16 @@
     {
       "qaId": "card:B08075:59a856a1d72daa0022faa757fb164e31426c4854723043edfe6a1079450740ad",
       "answerHash": "fec16cedeb8683f39fe7ddc9a70fab0a14e5c9217502735c4556a1b181870065",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08075.ts:65"
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p08/B08075.ts:81",
+        "src:src/cards/ct-p08/B08075P.ts:59",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:269",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:277",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:289"
       ]
     },
     {
@@ -2222,7 +2227,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/pr-01/PR104.ts:1",
-        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:437"
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:427"
       ]
     },
     {

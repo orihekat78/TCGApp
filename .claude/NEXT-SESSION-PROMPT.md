@@ -1,44 +1,44 @@
-# Next Task: QA adjudication Waves64-65
+# Next Task: QA adjudication Waves66-67
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves62-63 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves64-65 commit.
 
 ## Completed
 
-- Wave62 certifies nine face-down set-card privacy records across sixteen
-  physical sources, including replay/UI redaction and post-removal disclosure.
-- Wave63 certifies eight full-scene effect-entry records across eleven physical
-  sources, including source-self switch, exact tails, and zero-entry routes.
-- BUG-338 corrects B08034/P rarity from C/CP to official R/RP.
-- Coverage is 1431 matched / 1533 test-missing / 2964 total.
+- Wave64 certifies eight look-up-to-three short-deck records; B07066/P is the
+  grounded horizontal correction.
+- Wave65 certifies eight look-up-to-four short-deck records; B08071 and B10096
+  are grounded horizontal corrections.
+- BUG-339 repairs selected-card publication. BUG-340 repairs causal pending
+  continuation authority and coherent legacy saves. BUG-341 corrects inherent
+  sleeping entry and printed-ability identity for PR180/PR186.
+- Coverage is 1447 matched / 1517 test-missing / 2964 total.
 - Existing untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml` stay protected.
 
 ## Start
 
 1. Read root/nested AGENTS, `conan-router`, `card-wave`, and `conan-verify`.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read `.claude/sessions/2026-08-23-qa-waves62-63.md` and current QA trace.
+3. Read `.claude/sessions/2026-08-23-qa-waves64-65.md` and current QA trace.
 4. Ground exact Q&A before classifying gaps. Do not infer absent rules.
 
-## Wave64: largest remaining exact group
+## Wave66
 
 - Question hash:
-  `c2a2f4725a401741570b95f9e5d006dd5bc4a10c5a40373e903f18cb0cac1639`
+  `23630589318d3034e91553e3fd1d7fe2372aab7408010c8c5457caf6c90da611`
 - Answer hash:
-  `fec16cedeb8683f39fe7ddc9a70fab0a14e5c9217502735c4556a1b181870065`
-- Records: B06013, B06043, B06088, B08016, B08024, B08094, PR180, PR186.
-- Physical sources: B06013/P, B06043/P, B06088, B08016, B08024,
-  B08094/P, PR180, PR186.
+  `13dee71614f2c905921b2ddfef97bebc1511fd57bc103eea3684b5b242c6180c`
+- Records and physical sources: B02021, B02045, B02060, B03013, B03127,
+  D11014, D11021 (seven).
 
-## Wave65: next largest exact group
+## Wave67
 
 - Question hash:
-  `e3bbd8156841a3aa724da9e2ab9b83bec0015916162b53d294a97a12fb4b3c90`
+  `24edb9585cfc938ed4545ee0dbd210da2b78764eb9b030ac0f725c35a1a71156`
 - Answer hash:
-  `fec16cedeb8683f39fe7ddc9a70fab0a14e5c9217502735c4556a1b181870065`
-- Records: B07073, B08020, B08075, B09074, B10010, B10039, B10054,
-  B10101.
-- Physical sources: B07073/P, B08020/P, B08075/P, B09074/P/P2, B10010,
-  B10039/P, B10054/P, B10101/P.
+  `dfc687d5bd704d90cfe7cb905e4b2580b1b16357c920715a87bc2ed21315563a`
+- Records: B06013, B06043, B06065, B06095, B09111, B09112.
+- Physical sources: B06013/P, B06043/P, B06065/P, B06095/P, B09111/P,
+  B09112/P (twelve).
 
 ## Gates and stop
 
@@ -49,5 +49,5 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves62-63 commit.
 - Require rules and adversarial review before commit/push.
 - Stop after one or two implementation waves and write the next handoff.
 
-Remaining estimate: about 1,533 records, roughly 130-281 agent hours before
-future grouping gains.
+Remaining estimate: about 1,517 records, roughly 129-278 agent hours before
+future grouping gains; about 35-79 wall hours with four-way parallel work.

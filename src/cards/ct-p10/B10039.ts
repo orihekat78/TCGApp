@@ -23,7 +23,7 @@ const a1: AbilityDef = {
       {
         kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' }, then: {
           kind: 'sequence', steps: [
-            { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } },
+            { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId', presentation: 'public-selected-card' } },
             { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } },
           ],
         },

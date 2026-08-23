@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `788b9d2935ee`
+> Source hash: `a5ad8b60f055`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,20 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# QA Wave65: certify short top-four deck looks
+
+- Certify eight target records plus B08071/B10096 across nineteen physical sources.
+- Exercise real enter, event-option, self-removal, mill, grant, and contact routes.
+- Preserve private remainder identity while publishing every selected card.
+- Fix BUG-340 continuation authority with active descendant causal traces.
+
+# QA Wave64: certify short top-three deck looks
+
+- Certify eight target records plus B07066 across thirteen physical sources.
+- Keep short look windows private; publish only the selected card and refresh at movement.
+- Cover decline, no-match, two-card remainder, deck-out, and CPU-owner symmetry.
+- Fix BUG-339/341 selected-card presentation and inherent PR180/186 sleep entry.
 
 # QA Wave63: certify full-scene effect entry
 

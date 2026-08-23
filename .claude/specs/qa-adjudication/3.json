@@ -2194,8 +2194,8 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR186.ts:109",
-        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:439"
+        "src:src/cards/pr-01/PR186.ts:86",
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:429"
       ]
     },
     {

@@ -732,7 +732,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p04/B04048.ts:1",
-        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:424"
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:414"
       ]
     },
     {
@@ -995,10 +995,10 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05117.ts:1",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:640",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:653",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:665",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:667"
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:641",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:654",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:666",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:668"
       ]
     },
     {
@@ -1187,7 +1187,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p07/B07010.ts:1",
-        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:427"
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:417"
       ]
     },
     {
@@ -1578,14 +1578,16 @@
     {
       "qaId": "card:B08094:f8f6cc8737bb07a4334459a640a7b7600477d7bfa26bba8ca760517a6601ca7f",
       "answerHash": "fec16cedeb8683f39fe7ddc9a70fab0a14e5c9217502735c4556a1b181870065",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08094.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p08/B08094.ts:94",
+        "src:src/cards/ct-p08/B08094P.ts:72",
+        "tests:tests/cards/official-qa/deck-look-short-three-public-wave64.test.ts:273",
+        "tests:tests/cards/official-qa/deck-look-short-three-public-wave64.test.ts:289",
+        "tests:tests/cards/official-qa/deck-look-short-three-public-wave64.test.ts:309"
       ]
     },
     {

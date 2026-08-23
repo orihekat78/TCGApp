@@ -35,6 +35,7 @@ import { B07014P } from '@/cards/ct-p07/B07014P';
 import { B10017, B10017P } from '@/cards/ct-p10/B10017';
 import { B10018, B10018P } from '@/cards/ct-p10/B10018';
 import { event } from '@/engine/event';
+import { appendCausal, startCausalSession } from '@/engine/log/causal';
 import { applyPickAndContinuation } from '@/engine/effect/apply-pick';
 import { assertPendingRuntimeValue } from '@/engine/effect/pending-runtime-schema';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/pending-state';
@@ -925,6 +926,143 @@ describe('Wave35 physical set-card ability occurrences', () => {
         .toThrow(/declared-ability host source.*authority/i);
       expect(current()).toBe(beforeStore);
     }
+
+    const forgedIndex = JSON.parse(JSON.stringify(restored)) as GameState;
+    persistedWriterSource(forgedIndex, 'optional').abilityIndex = 1;
+    expect(() => useGameStateStore.getState().setGameState(forgedIndex))
+      .toThrow(/declared-ability host source.*authority/i);
+    expect(current()).toBe(beforeStore);
+  });
+
+  it('hydrates and completes a coherent legacy index-1 host but rejects index-0 mixing', () => {
+    const state = createEmptyGameState();
+    const source = {
+      player: 'self' as const,
+      area: 'scene' as const,
+      cardId: HOST.id,
+      uid: 'host',
+      abilityId: 'a2',
+      abilityOrigin: 'printed' as const,
+      abilityIndex: 1,
+    };
+    event.queue(state, { kind: 'atom', verb: 'noop', args: {} }, source);
+    writePendingRuntime('optional', state, { source, bindings: {} });
+    persistPendingRuntimeState(state);
+
+    const restored = JSON.parse(JSON.stringify(state)) as GameState;
+    const mixed = JSON.parse(JSON.stringify(restored)) as GameState;
+    persistedWriterSource(mixed, 'optional').abilityIndex = 0;
+    expect(() => useGameStateStore.getState().setGameState(mixed))
+      .toThrow(/declared-ability host source.*authority/i);
+
+    expect(useGameStateStore.getState().setGameState(restored)).toBe(true);
+    const optional = useGameStateStore.getState().pendingEffectOptional;
+    expect(optional?.source).toMatchObject({
+      cardId: HOST.id, abilityId: 'a2', abilityOrigin: 'printed', abilityIndex: 1,
+    });
+    expect(dispatchEngineAction(bindPendingDecision(optional!, {
+      type: 'optionalResolve', run: false,
+    }))).toEqual({ ok: true });
+    expect(useGameStateStore.getState().pendingEffectOptional).toBeNull();
+    expect(current().pendingEffects.every(entry => entry.state === 'resolved')).toBe(true);
+  });
+
+  it('matches an active descendant tail and rejects same-root sibling or completed traces', () => {
+    const state = createEmptyGameState();
+    const source = {
+      player: 'self' as const,
+      area: 'scene' as const,
+      cardId: HOST.id,
+      uid: 'host',
+      abilityId: 'a2',
+      abilityOrigin: 'granted' as const,
+      abilityIndex: 0,
+    };
+    startCausalSession(state, 'wave64-causal');
+    resetPresentationQueue('wave64-causal');
+    const root = appendCausal(state, {
+      actor: 'self', kind: 'declare', targets: [], outcome: { type: 'state', state: 'active' },
+    });
+    const stackTail = appendCausal(state, {
+      actor: 'self', kind: 'select', parentEventId: root.eventId,
+      targets: [], outcome: { type: 'state', state: 'success' },
+    });
+    const decisionTail = appendCausal(state, {
+      actor: 'self', kind: 'select', parentEventId: stackTail.eventId,
+      targets: [], outcome: { type: 'state', state: 'success' },
+    });
+    const siblingTail = appendCausal(state, {
+      actor: 'self', kind: 'select', parentEventId: root.eventId,
+      targets: [], outcome: { type: 'state', state: 'success' },
+    });
+    const correlatedRoot = appendCausal(state, {
+      actor: 'self', kind: 'declare', correlationEventId: stackTail.eventId,
+      targets: [], outcome: { type: 'state', state: 'active' },
+    });
+    const correlatedTail = appendCausal(state, {
+      actor: 'self', kind: 'select', parentEventId: correlatedRoot.eventId,
+      targets: [], outcome: { type: 'state', state: 'success' },
+    });
+    event.queue(
+      state,
+      { kind: 'atom', verb: 'noop', args: {} },
+      source,
+      'manual',
+      undefined,
+      undefined,
+      { causalTrace: { rootEventId: root.eventId, tailEventId: stackTail.eventId } },
+    );
+    writePendingRuntime('optional', state, {
+      source,
+      bindings: {},
+      causal: {
+        trace: {
+          rootEventId: root.eventId,
+          tailEventId: decisionTail.eventId,
+          awaitingResume: true,
+        },
+      },
+    });
+    const pendingOptional = (globalThis as {
+      __pendingEffectOptionalSide?: { source?: Record<string, unknown> } | null;
+    }).__pendingEffectOptionalSide;
+    if (!pendingOptional?.source) throw new Error('missing causal optional source');
+    pendingOptional.source.causalTrace = {
+      rootEventId: root.eventId,
+      tailEventId: decisionTail.eventId,
+      awaitingResume: true,
+    };
+    persistPendingRuntimeState(state);
+
+    const restored = JSON.parse(JSON.stringify(state)) as GameState;
+    expect(useGameStateStore.getState().setGameState(restored)).toBe(true);
+    expect(persistedWriterSource(restored, 'optional').causalTrace).toMatchObject({
+      rootEventId: root.eventId,
+      tailEventId: decisionTail.eventId,
+    });
+
+    const sibling = JSON.parse(JSON.stringify(restored)) as GameState;
+    const siblingTrace = persistedWriterSource(sibling, 'optional').causalTrace as Record<string, unknown>;
+    siblingTrace.tailEventId = siblingTail.eventId;
+    const beforeStore = current();
+    expect(() => useGameStateStore.getState().setGameState(sibling))
+      .toThrow(/declared-ability host source.*authority/i);
+    expect(current()).toBe(beforeStore);
+
+    const correlated = JSON.parse(JSON.stringify(restored)) as GameState;
+    const correlatedTrace = persistedWriterSource(correlated, 'optional').causalTrace as Record<string, unknown>;
+    correlatedTrace.tailEventId = correlatedTail.eventId;
+    expect(() => useGameStateStore.getState().setGameState(correlated))
+      .toThrow(/declared-ability host source.*authority/i);
+    expect(current()).toBe(beforeStore);
+
+    const completed = JSON.parse(JSON.stringify(restored)) as GameState;
+    const completedTrace = persistedWriterSource(completed, 'optional').causalTrace as Record<string, unknown>;
+    delete completedTrace.awaitingResume;
+    completedTrace.completed = true;
+    expect(() => useGameStateStore.getState().setGameState(completed))
+      .toThrow(/declared-ability host source.*authority/i);
+    expect(current()).toBe(beforeStore);
   });
 
   it.each([

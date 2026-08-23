@@ -1022,7 +1022,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06098.ts:75",
-        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:426"
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:416"
       ]
     },
     {
@@ -1299,14 +1299,15 @@
     {
       "qaId": "card:B08024:f8f6cc8737bb07a4334459a640a7b7600477d7bfa26bba8ca760517a6601ca7f",
       "answerHash": "fec16cedeb8683f39fe7ddc9a70fab0a14e5c9217502735c4556a1b181870065",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08024.ts:55"
-      ],
-      "noteCodes": [
-        "B08024-SET-REMOVE-GATE-TEST-MISSING"
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p08/B08024.ts:98",
+        "tests:tests/cards/official-qa/deck-look-short-three-public-wave64.test.ts:273",
+        "tests:tests/cards/official-qa/deck-look-short-three-public-wave64.test.ts:289",
+        "tests:tests/cards/official-qa/deck-look-short-three-public-wave64.test.ts:309"
       ]
     },
     {
@@ -1488,7 +1489,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p08/B08094.ts:113",
-        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:431"
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:421"
       ]
     },
     {

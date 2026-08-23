@@ -30,8 +30,8 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p01/B01057.ts:81",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:617",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:624"
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:618",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:625"
       ]
     },
     {
@@ -839,10 +839,10 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05117.ts:119",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:640",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:653",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:665",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:667"
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:641",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:654",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:666",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:668"
       ]
     },
     {
@@ -904,7 +904,7 @@
       "result": "aligned",
       "method": "group-equivalent",
       "evidence": [
-        "src:src/cards/ct-p06/B06043.ts:120",
+        "src:src/cards/ct-p06/B06043.ts:121",
         "tests:tests/integration/dispatch-to-state.test.ts:38",
         "tests:tests/integration/dispatch-to-state.test.ts:50",
         "tests:tests/integration/dispatch-to-state.test.ts:54"
@@ -1689,11 +1689,12 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/26-qa-deck-refresh.md:65",
-        "src:src/cards/ct-p10/B10096.ts:45",
-        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:377"
-      ],
-      "noteCodes": []
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p10/B10096.ts:11",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:380",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:396",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:403"
+      ]
     },
     {
       "qaId": "card:B10099:dc46dc53a352ab1baa14118fe8a0448482eebbb19acb8a26a4bc4ee56489c6e9",
@@ -1726,15 +1727,15 @@
     {
       "qaId": "card:B10101:e1cf102a1d6d73ee31b4ce9b24f69c56d6a3d4d28d31ab0ad025085254877f2b",
       "answerHash": "fec16cedeb8683f39fe7ddc9a70fab0a14e5c9217502735c4556a1b181870065",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/21-declared-ability-cost.md:15",
-        "src:src/cards/ct-p10/B10101.ts:41"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p10/B10101.ts:22",
+        "tests:tests/cards/official-qa/B10101-granted-search-public-wave30.test.ts:243",
+        "tests:tests/cards/official-qa/B10101-granted-search-public-wave30.test.ts:258",
+        "tests:tests/cards/official-qa/B10101-granted-search-public-wave30.test.ts:265"
       ]
     },
     {

@@ -920,7 +920,7 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06043.ts:119",
+        "src:src/cards/ct-p06/B06043.ts:120",
         "tests:tests/cards/hybrid-batch2/B06043.test.ts:128"
       ]
     },
@@ -1189,8 +1189,12 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07066.ts:165",
-        "tests:tests/cards/wave-declared-cost.test.ts:106"
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p07/B07066.ts:124",
+        "src:src/cards/ct-p07/B07066P.ts:124",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:180",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:198",
+        "tests:tests/cards/official-qa/B07066-declared-cost-optional.test.ts:212"
       ]
     },
     {
@@ -1223,7 +1227,7 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07073.ts:111",
+        "src:src/cards/ct-p07/B07073.ts:112",
         "tests:tests/cards/official-qa/misread-public-runtime-wave26.test.ts:110"
       ]
     },
@@ -1343,7 +1347,7 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08024.ts:134",
+        "src:src/cards/ct-p08/B08024.ts:135",
         "tests:tests/compiler/cards-data-consistency.test.ts:88"
       ]
     },

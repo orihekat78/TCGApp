@@ -1493,12 +1493,12 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:14",
         "src:src/cards/ct-p10/B10017.ts:10",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1413",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1419",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1430",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1442",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1450",
-        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1451"
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1551",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1557",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1568",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1580",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1588",
+        "tests:tests/cards/official-qa/set-card-ability-occurrence-public-wave35.test.ts:1589"
       ]
     },
     {

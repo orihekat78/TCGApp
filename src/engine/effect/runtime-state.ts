@@ -27,8 +27,9 @@ import {
   assertPendingRuntimeValue,
 } from './pending-runtime-schema.js';
 import type { GameState } from '../types/game-state.js';
-import type { DeclaredAbilityHostOrigin } from '../types/effect-ctx.js';
+import type { CausalEffectTrace, DeclaredAbilityHostOrigin } from '../types/effect-ctx.js';
 import type { PendingMisreadAuthority } from '../types/misread.js';
+import { validateGameCausalState } from '../log/causal.js';
 import { isDraft, original } from '../produce.js';
 import { def as readDef } from '../read/def.js';
 import {
@@ -699,6 +700,7 @@ function assertPendingMisreadRuntimeMatchesState(
 }
 
 function pendingSourceMatchesEffectEntry(
+  state: GameState,
   entry: GameState['pendingEffects'][number],
   source: Record<string, unknown>,
   includeAbilityOccurrenceIdentity: boolean,
@@ -714,13 +716,39 @@ function pendingSourceMatchesEffectEntry(
   if (source.ownerOrderConfirmed !== undefined
     && entry.ownerOrderConfirmed !== source.ownerOrderConfirmed) return false;
   if (source.declaredBatch !== undefined && entry.declaredBatch !== source.declaredBatch) return false;
-  if (source.causalTrace !== undefined
-    && !samePlainRuntimeValue(entry.causalTrace, source.causalTrace)) return false;
+  if (source.causalTrace !== undefined) {
+    const trace = source.causalTrace as Partial<CausalEffectTrace> | null;
+    if (trace === null || typeof trace !== 'object' || Array.isArray(trace)
+      || typeof trace.rootEventId !== 'string' || typeof trace.tailEventId !== 'string'
+      || trace.awaitingResume !== true || trace.completed === true
+      || entry.causalTrace?.rootEventId !== trace.rootEventId
+      || !causalTailDescendsFrom(state, entry.causalTrace.tailEventId, trace.tailEventId)) {
+      return false;
+    }
+  }
   if (!includeAbilityOccurrenceIdentity) return true;
   return entry.source.setCardId === source.setCardId
     && entry.source.setCardInstanceId === source.setCardInstanceId
     && entry.source.abilityOrigin === source.abilityOrigin
     && entry.source.abilityIndex === source.abilityIndex;
+}
+
+function causalTailDescendsFrom(state: GameState, ancestorId: string, tailId: string): boolean {
+  const entries = validateGameCausalState(state);
+  const byId = new Map(entries.map(entry => [entry.eventId, entry]));
+  if (!byId.has(ancestorId) || !byId.has(tailId)) return false;
+  const pending = [tailId];
+  const visited = new Set<string>();
+  while (pending.length > 0) {
+    const eventId = pending.pop()!;
+    if (eventId === ancestorId) return true;
+    if (visited.has(eventId)) continue;
+    visited.add(eventId);
+    const entry = byId.get(eventId);
+    if (!entry) continue;
+    if (entry.parentEventId) pending.push(entry.parentEventId);
+  }
+  return false;
 }
 
 /**
@@ -758,9 +786,9 @@ function assertPendingAbilitySourceAuthority(
         const active = state.pendingEffects.filter(entry => (
           entry.state === 'pending' || entry.state === 'resolving'
         ));
-        let lineage = active.filter(entry => pendingSourceMatchesEffectEntry(entry, source, false));
+        let lineage = active.filter(entry => pendingSourceMatchesEffectEntry(state, entry, source, false));
         if (lineage.length === 0) {
-          lineage = state.pendingEffects.filter(entry => pendingSourceMatchesEffectEntry(entry, source, false));
+          lineage = state.pendingEffects.filter(entry => pendingSourceMatchesEffectEntry(state, entry, source, false));
         }
         const resolving = lineage.filter(entry => entry.state === 'resolving');
         const authority = resolving.length > 0 ? resolving : lineage;
@@ -769,7 +797,7 @@ function assertPendingAbilitySourceAuthority(
           throw new Error(`Invalid ${key}: ${identity} source has no GameState authority`);
         }
         if (authority.length > 0
-          && !authority.some(entry => pendingSourceMatchesEffectEntry(entry, source, true))) {
+          && !authority.some(entry => pendingSourceMatchesEffectEntry(state, entry, source, true))) {
           const identity = hasSetCardWitness ? 'set-card' : 'declared-ability host';
           throw new Error(`Invalid ${key}: ${identity} source does not match GameState authority`);
         }

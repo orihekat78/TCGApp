@@ -1,8 +1,10 @@
 // qa: card:B07066:939f5e30d9e32c8b233a160a6f70ebb932c71ce0971e6f66cfb3701d5fff76cd
 // qa: card:B07066:c2131ef2b4d611ed2fdcba93cb1619157aea6dcc39318ced5a4a6f69bc29faaf
+// qa: card:B07066:f8f6cc8737bb07a4334459a640a7b7600477d7bfa26bba8ca760517a6601ca7f
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { B07066 } from '@/cards/ct-p07/B07066';
+import { B07066P } from '@/cards/ct-p07/B07066P';
 import { event } from '@/engine/event';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { _resetUidCounter } from '@/engine/mutate/scene';
@@ -22,6 +24,8 @@ const AKAI = 'B07066_QA_AKAI';
 const MATCH = 'B07066_QA_MATCH';
 const WRONG = 'B07066_QA_WRONG';
 const HAND_REMOVE = 'B07066_QA_HAND_REMOVE';
+const REFRESH = 'B07066_QA_REFRESH';
+const OPP_DECK = 'B07066_QA_OPP_DECK';
 
 function card(id: string, options: {
   kind?: 'character' | 'event';
@@ -78,10 +82,13 @@ beforeEach(() => {
   _resetRegistry();
   _resetUidCounter();
   register(B07066);
+  register(B07066P);
   register(card(AKAI, { traits: ['赤井家'], level: 7 }));
   register(card(MATCH, { traits: ['赤井家'], level: 4 }));
   register(card(WRONG, { traits: ['探偵'], level: 4 }));
   register(card(HAND_REMOVE, { kind: 'event' }));
+  register(card(REFRESH));
+  register(card(OPP_DECK));
   registerTriggeredListener();
   endMatchSession();
   beginMatchSession('self');
@@ -155,5 +162,57 @@ describe('B07066 declared ability official Q&A', () => {
     expect(current.gameState?.players.self.hand).toEqual([MATCH]);
     expect(current.gameState?.players.self.remove).toContain(HAND_REMOVE);
     expect(current.pendingEffectPick).toBeNull();
+  });
+
+  it('card:B07066:f8f6cc8737bb07a4334459a640a7b7600477d7bfa26bba8ca760517a6601ca7f: refreshes after selecting the sole card for both printings', () => {
+    const proven: string[] = [];
+    for (const sourceId of [B07066.id, B07066P.id]) {
+      useGameStateStore.getState().resetMatchSessionState();
+      const state = createEmptyGameState();
+      state.turn = { number: 2, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+      state.players.self.scene = [makeChar({ uid: 'source', cardId: sourceId, state: 'active' })];
+      state.players.self.hand = [HAND_REMOVE];
+      state.players.self.deck = [MATCH];
+      state.players.self.remove = [REFRESH];
+      state.players.opp.deck = [OPP_DECK];
+      install(state);
+
+      expect(dispatchEngineAction({
+        type: 'declaredAbility', uid: 'source', abilId: 'a2',
+        costParams: { sleepChar: { uids: ['source'] } },
+      })).toEqual({ ok: true });
+      const pick = useGameStateStore.getState().pendingEffectPick;
+      expect(pick).toMatchObject({
+        atomVerb: 'deckRevealUntil', nMin: 0, nMax: 1,
+        source: { cardId: sourceId, abilityId: 'a2', uid: 'source', area: 'scene' },
+      });
+      expect(pick?.candidates.map(candidate => candidate.cardId)).toEqual([MATCH]);
+      expect(useGameStateStore.getState().pendingDeckReveal).toMatchObject({
+        revealed: [MATCH], awaitingPick: true, visibility: 'private', viewer: 'self',
+      });
+      expect(useGameStateStore.getState().gameState?.refreshCount.self).toBe(0);
+
+      expect(dispatchCurrentDecision({
+        type: 'effectPickResolve', pickedUid: pick!.candidates[0]!.uid,
+      })).toEqual({ ok: true });
+      expect(useGameStateStore.getState().pendingPublicHandReveal).toMatchObject({
+        owner: 'self', audience: 'all', cardIds: [MATCH], origin: 'deck-selected-card',
+        source: { cardId: sourceId, abilityId: 'a2', uid: 'source' },
+      });
+      const discard = useGameStateStore.getState().pendingEffectPick;
+      const selected = discard?.candidates.find(candidate => candidate.cardId === MATCH);
+      expect(dispatchCurrentDecision({
+        type: 'effectPickResolve', pickedUid: selected!.uid,
+      })).toEqual({ ok: true });
+
+      const result = useGameStateStore.getState().gameState!;
+      expect(result.players.self.scene.find(entry => entry.uid === 'source')?.state).toBe('sleep');
+      expect(result.players.self.deck).toEqual([REFRESH]);
+      expect(result.players.self.remove).toContain(MATCH);
+      expect(result.refreshCount.self).toBe(1);
+      expect(result.players.opp.evidence).toHaveLength(1);
+      proven.push(sourceId);
+    }
+    expect(proven).toEqual([B07066.id, B07066P.id]);
   });
 });

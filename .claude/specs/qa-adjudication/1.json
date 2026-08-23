@@ -736,11 +736,15 @@
     {
       "qaId": "card:B06043:f8f6cc8737bb07a4334459a640a7b7600477d7bfa26bba8ca760517a6601ca7f",
       "answerHash": "fec16cedeb8683f39fe7ddc9a70fab0a14e5c9217502735c4556a1b181870065",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06043.ts:1"
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p06/B06043.ts:96",
+        "tests:tests/cards/official-qa/deck-look-short-three-public-wave64.test.ts:273",
+        "tests:tests/cards/official-qa/deck-look-short-three-public-wave64.test.ts:289",
+        "tests:tests/cards/official-qa/deck-look-short-three-public-wave64.test.ts:309"
       ]
     },
     {
@@ -1146,8 +1150,11 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08071.ts:1",
-        "tests:tests/cards/wave-engine0-triage-0628.test.ts:76"
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p08/B08071.ts:37",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:309",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:323",
+        "tests:tests/cards/official-qa/deck-look-short-four-public-wave65.test.ts:329"
       ]
     },
     {
@@ -1681,7 +1688,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:37",
         "src:src/cards/ct-p10/B10068.ts:17",
-        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:434"
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:424"
       ]
     },
     {
@@ -1722,7 +1729,7 @@
         "rules:.claude/rules/01-victory-conditions.md:28",
         "src:src/cards/_shared/caseResolvedHandRemove.ts:35",
         "src:src/cards/ct-p10/B10082.ts:6",
-        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:435"
+        "tests:tests/cards/official-qa/deck-look-zero-choice-public-wave30.test.ts:425"
       ]
     },
     {
