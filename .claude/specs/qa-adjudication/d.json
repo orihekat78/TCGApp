@@ -659,16 +659,33 @@
     {
       "qaId": "card:B04077:1a92dcdf67120f7d76c881aa12661add73fc79ad2cefe30d1e4fbda6978a4758",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04077.ts:1"
+        "rules:.claude/rules/14-refresh.md:31",
+        "rules:.claude/rules/21-declared-ability-cost.md:30",
+        "rules:.claude/rules/21-declared-ability-cost.md:39",
+        "src:src/cards/ct-p04/B04077.ts:1",
+        "src:src/engine/cost/evaluate.ts:142",
+        "src:src/engine/cost/pay.ts:945",
+        "tests:tests/cards/official-qa/deck-top-three-self-only-public-wave59.test.ts:210",
+        "tests:tests/cards/official-qa/deck-top-three-self-only-public-wave59.test.ts:211",
+        "tests:tests/cards/official-qa/deck-top-three-self-only-public-wave59.test.ts:212",
+        "tests:tests/cards/official-qa/deck-top-three-self-only-public-wave59.test.ts:214",
+        "tests:tests/cards/official-qa/deck-top-three-self-only-public-wave59.test.ts:232",
+        "tests:tests/cards/official-qa/deck-top-three-self-only-public-wave59.test.ts:234",
+        "tests:tests/cards/official-qa/deck-top-three-self-only-public-wave59.test.ts:235",
+        "tests:tests/cards/official-qa/deck-top-three-self-only-public-wave59.test.ts:248",
+        "tests:tests/cards/official-qa/deck-top-three-self-only-public-wave59.test.ts:249",
+        "tests:tests/cards/official-qa/deck-top-three-self-only-public-wave59.test.ts:250",
+        "tests:tests/cards/official-qa/deck-top-three-self-only-public-wave59.test.ts:251",
+        "tests:tests/cards/official-qa/deck-top-three-self-only-public-wave59.test.ts:252",
+        "tests:tests/cards/official-qa/deck-top-three-self-only-public-wave59.test.ts:253",
+        "tests:tests/cards/official-qa/deck-top-three-self-only-public-wave59.test.ts:254",
+        "tests:tests/cards/official-qa/deck-top-three-self-only-public-wave59.test.ts:338"
       ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B04092:63c33efbf6377c81ab5472eb465f733d7e82d65b430078705f12a46d6ba0d601",
@@ -1206,16 +1223,25 @@
     {
       "qaId": "card:B07032:924a8b39ee3036e70eeeac9c3a5941e4faa4fec3ebc39e19ceb12b4b0f2419af",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07032.ts:1"
+        "rules:.claude/rules/21-declared-ability-cost.md:30",
+        "rules:.claude/rules/21-declared-ability-cost.md:39",
+        "src:src/cards/ct-p07/B07032.ts:1",
+        "src:src/engine/cost/evaluate.ts:73",
+        "src:src/engine/cost/pay.ts:643",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:192",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:193",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:194",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:196",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:223",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:224",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:285",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:289"
       ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B07034:031fb71e09893fc1246cfa035f4788e78999fc8ad99714580d9d0b82f34627c3",
@@ -1327,16 +1353,24 @@
     {
       "qaId": "card:B07074:924a8b39ee3036e70eeeac9c3a5941e4faa4fec3ebc39e19ceb12b4b0f2419af",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07074.ts:1"
+        "rules:.claude/rules/21-declared-ability-cost.md:30",
+        "rules:.claude/rules/21-declared-ability-cost.md:39",
+        "src:src/cards/ct-p07/B07074.ts:1",
+        "src:src/engine/cost/evaluate.ts:73",
+        "src:src/engine/cost/pay.ts:643",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:192",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:193",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:194",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:196",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:223",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:224",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:300"
       ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B07085:e8eb38fe4adaf20641339946d8691e2339623fbc925878d38fa4bcb0480efe04",

@@ -10,32 +10,15 @@
   `.claude/sessions/2026-08-23-qa-memory-waves27-34.md`.
 - QA Wave35 and Waves36-49: matching dated files under `.claude/sessions/`.
 
-## Recent QA decisions
+## QA campaign history
 
-- Waves44-45 add B07093 a1 without changing prior ability indices and certify
-  twelve scene-only Bond records.
-- Waves46-47 certify end-phase and Investigation paths. BUG-330 gates main
-  actions by turn/phase. BUG-331 publishes exact Souza discoveries without a
-  false shuffle presentation.
-- Waves48-49 certify action-declare timing. Target selection and actor sleep
-  precede triggers; all declaration effects resolve before guard. BUG-332 joins
-  state-owned owner-order to public action-step admission.
+- Waves35-49 are recorded in matching dated session files. They cover physical
+  ability identity, Bond, end phase, Investigation, FILE assist, and action timing.
 
 ## 2026-08-23: QA runtime Waves50-51
 
-- Wave50 certifies ten records proving `stackedCards` are never `setCards`.
-  All real public stack routes assert `setCards=[]`; B09048 gains its missing
-  declared-cost public route.
-- Wave51 certifies ten deck-look refresh records, including B08050
-  recertification. Viewed cards stay in deck until the remainder-to-remove
-  checkpoint; deck sizes 1/2/3 and decline are public-tested.
-- BUG-333 corrects 23 descriptors with `deferRefresh`/`refreshAfter`; B09078 and
-  B07015 now refresh before conditional discard. A runtime invariant covers all
-  24 shipped look-hand-remove descriptors.
-- BUG-334 resolves multi-pick decline once and prevents end-turn transition from
-  overtaking held deck-reveal continuation. Human and no-human B09078 plus real
-  B10097 partner-area end paths pass.
-- Coverage after generation should be 1341 matched / 1623 test-missing.
+- Wave50 separates stacked cards from set cards. Wave51 certifies deck-look
+  refresh timing. BUG-333/334 fix refresh attribution and held continuation.
 
 ## 2026-08-23: QA runtime Waves52-53
 
@@ -70,10 +53,19 @@
   length, and opponent evidence; five malformed classes reject transactionally.
 - Coverage after generation should be 1386 matched / 1578 test-missing.
 
+## 2026-08-23: QA runtime Waves58-59
+
+- Wave58 certifies seven owner-only one-card hand costs across ten physical
+  sources. Opponent-shaped, malformed, and unavailable-sleep payments are atomic.
+- Wave59 certifies seven owner deck-top-three costs across eleven physical
+  sources. Short decks reject; exact three refreshes immediately; owner-relative
+  orientation, cost order, opponent isolation, and printed effects are public.
+- Coverage after generation should be 1400 matched / 1564 test-missing.
+
 ## Next
 
-- Wave58: seven self-only hand-remove cost records at `03c52f9b.../45979cb6...`.
-- Wave59: seven self-only deck-top-three remove records at
-  `d6e909a1.../45979cb6...`; preserve each card's post-cost effect sentinel.
+- Wave60: seven stun-definition records at `7a6f08e2.../4a353f40...`.
+- Wave61: seven full-scene effect-entry/switch records at
+  `c2d241b8.../0e19d91c...`; prove switch authority and entered-source effects.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

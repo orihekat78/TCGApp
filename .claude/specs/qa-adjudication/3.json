@@ -1140,11 +1140,22 @@
     {
       "qaId": "card:B07020:924a8b39ee3036e70eeeac9c3a5941e4faa4fec3ebc39e19ceb12b4b0f2419af",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07020.ts:1"
+        "rules:.claude/rules/21-declared-ability-cost.md:30",
+        "rules:.claude/rules/21-declared-ability-cost.md:39",
+        "src:src/cards/ct-p07/B07020.ts:1",
+        "src:src/engine/cost/evaluate.ts:73",
+        "src:src/engine/cost/pay.ts:643",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:192",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:193",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:194",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:196",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:223",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:224",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:279"
       ]
     },
     {
@@ -1210,11 +1221,23 @@
     {
       "qaId": "card:B07088:924a8b39ee3036e70eeeac9c3a5941e4faa4fec3ebc39e19ceb12b4b0f2419af",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07088.ts:1"
+        "rules:.claude/rules/21-declared-ability-cost.md:30",
+        "rules:.claude/rules/21-declared-ability-cost.md:39",
+        "src:src/cards/ct-p07/B07088.ts:1",
+        "src:src/engine/cost/evaluate.ts:73",
+        "src:src/engine/cost/pay.ts:643",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:192",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:193",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:194",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:196",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:223",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:224",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:304",
+        "tests:tests/cards/official-qa/hand-remove-self-only-public-wave58.test.ts:305"
       ]
     },
     {
