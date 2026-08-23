@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `185b8302c515`
+> Source hash: `4bc27449c947`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,18 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# QA Wave51: defer refresh to remainder movement
+
+- Certify ten deck-look refresh-timing records at deck sizes one through three.
+- Fix 23 shipped descriptors and two deck-window continuation defects.
+- Make B09078/B07015 refresh before their conditional discard tails.
+
+# QA Wave50: stacked cards are not set cards
+
+- Certify ten exact official-QA records through public stack routes.
+- Add the missing B09048 declared-cost path and explicit `setCards=[]` checks.
+- Preserve physical identity, count, host-leave, and existing Wave33 semantics.
 
 ## QA Wave 49 — Pre-guard action decisions
 

@@ -763,14 +763,13 @@
     {
       "qaId": "card:B06006:890b886b35d8a7c12e0c859f4f2faa9d690f9d33250ac772e4668e0ad72c8f6c",
       "answerHash": "47d3f424c54fdda218fd6120058f5d1cd53286fb892b7f7225bac77745c6b456",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06006.ts:77"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/16-card-set.md:28",
+        "src:src/cards/ct-p06/B06006.ts:54",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:246"
       ]
     },
     {
@@ -945,7 +944,7 @@
       "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06098.ts:168"
+        "src:src/cards/ct-p06/B06098.ts:169"
       ]
     },
     {

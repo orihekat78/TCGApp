@@ -55,13 +55,13 @@ const a2: AbilityDef = {
       {
         kind: 'conditional',
         if: { kind: 'bound', key: '$matched', presence: 'matched' },
-        then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } },
+        then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId', deferRefresh: true } },
       },
       // 公式テキスト順: 「残りをリムーブエリアに移す。…以外を加えた場合、手札を1枚リムーブ」=
       // boundToRemove → discard の順 (敵対 review BLOCKER: 逆順だと deck≤3 で boundToRemove の
       // リフレッシュが discard 済み札を deck へ巻き戻す。公式QA「残りをリムーブに移す。まで解決で
       // リフレッシュ」ct-p08 char.tsv)。padding 無のデッキ枯渇時のみ観測差。
-      { kind: 'atom', verb: 'boundToRemove', args: { player: 'self', bindKey: '$revealed' } },
+      { kind: 'atom', verb: 'boundToRemove', args: { player: 'self', bindKey: '$revealed', refreshAfter: true } },
       // 「〚X〛か…以外のカードを手札に加えた場合、手札を1枚リムーブ」: boundMatchesFilter は bound 空
       // (=0枚 add) で false を返すため「加えた場合」gate を内包。
       {

@@ -1325,8 +1325,11 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08050.ts:83",
-        "tests:tests/cards/wave-engine-unlocked-0624.test.ts:93"
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p08/B08050.ts:64",
+        "tests:tests/cards/official-qa/deck-look-refresh-timing-public-wave51.test.ts:222",
+        "tests:tests/cards/official-qa/deck-look-refresh-timing-public-wave51.test.ts:256",
+        "tests:tests/cards/official-qa/deck-look-refresh-timing-public-wave51.test.ts:293"
       ]
     },
     {

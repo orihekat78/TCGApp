@@ -1030,11 +1030,13 @@
     {
       "qaId": "card:B06008:890b886b35d8a7c12e0c859f4f2faa9d690f9d33250ac772e4668e0ad72c8f6c",
       "answerHash": "47d3f424c54fdda218fd6120058f5d1cd53286fb892b7f7225bac77745c6b456",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06008.ts:1"
+        "rules:.claude/rules/16-card-set.md:28",
+        "src:src/cards/ct-p06/B06008.ts:42",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:422"
       ]
     },
     {
@@ -1312,10 +1314,9 @@
         "rules:.claude/rules/16-card-set.md:30",
         "rules:.claude/rules/16-card-set.md:31",
         "src:src/cards/ct-p08/B08002.ts:1",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:191",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:199",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:200",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:203"
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:217",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:218",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:221"
       ]
     },
     {
@@ -1822,7 +1823,7 @@
       "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09078.ts:42"
+        "src:src/cards/ct-p09/B09078.ts:43"
       ],
       "noteCodes": [
         "TEST-GAP"
@@ -2323,11 +2324,13 @@
     {
       "qaId": "card:PR295:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4",
       "answerHash": "47d3f424c54fdda218fd6120058f5d1cd53286fb892b7f7225bac77745c6b456",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR295.ts:1"
+        "rules:.claude/rules/16-card-set.md:28",
+        "src:src/cards/pr-01/PR295.ts:1",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:394"
       ]
     },
     {

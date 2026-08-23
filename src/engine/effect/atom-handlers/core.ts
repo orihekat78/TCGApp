@@ -1637,13 +1637,25 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
       // 用途: 「上から N 枚見る → 1枚まで(filter)を手札に加え → 残りはデッキ下」(D01013/B01013 etc.).
       // 通常 a.cardId='$matched.cardId' で bind 解決 → デッキから splice → hand.add。
       const hadP = resolvePlayer(a.player, ctx);
-      if (!refreshDeckForEffect(s, hadP, ctx)) {
+      const deferRefresh = a.deferRefresh === true;
+      if (!deferRefresh && !refreshDeckForEffect(s, hadP, ctx)) {
         setCardMoveBinding(ctx, a.bind, []);
         mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', result: 'empty-deck-refresh-fail' });
         return;
       }
       const rawHadCardIds = (a as { cardIds?: unknown }).cardIds;
       if (rawHadCardIds === '$pick.cardIds') {
+        // BUG-334: an up-to-N deck-window decline is a resolved zero-card
+        // selection. Re-running the unresolved carrier would surface the same
+        // decision forever and drop the saved remainder.
+        if (a.__declined === true) {
+          setCardMoveBinding(ctx, a.bind, []);
+          mutate.log.append(s, {
+            ts: Date.now(), player: hadP, turn: s.turn.number,
+            action: 'effect:handAddFromDeck', result: 'declined=0',
+          });
+          return;
+        }
         if (a.target && typeof a.target === 'object') {
           tryRePickFromAtom(s, { kind: 'atom', verb: 'handAddFromDeck', args: a }, ctx, {
             byPlayer: hadP,
@@ -1696,7 +1708,7 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
           moved.map((entry) => entry.cardId),
           a.presentation,
         );
-        if (moved.length > 0 && a.deferRefresh !== true) refreshDeckForEffect(s, hadP, ctx);
+        if (moved.length > 0 && !deferRefresh) refreshDeckForEffect(s, hadP, ctx);
         mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', result: moved.length ? `moved=${moved.length}` : 'none' });
         return;
       }
@@ -1749,7 +1761,7 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
       setCardMoveBinding(ctx, a.bind, moved ? [{ cardId: hadCardId, area: 'hand', player: hadP, index: handIndex }] : []);
       recordPublicZoneMove(s, ctx, hadP, 'deck', 'hand', moved ? 1 : 0);
       presentPublicSelectedDeckCard(s, ctx, hadP, moved ? [hadCardId] : [], a.presentation);
-      if (moved && a.deferRefresh !== true) refreshDeckForEffect(s, hadP, ctx);
+      if (moved && !deferRefresh) refreshDeckForEffect(s, hadP, ctx);
       mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', result: moved ? 'moved=1' : 'not-found' });
       return;
     }

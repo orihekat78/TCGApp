@@ -94,25 +94,13 @@ const a2: AbilityDef = {
           presence: 'matched'
         },
         then: {
-          kind: 'sequence',
-          steps: [
-            {
-              kind: 'atom',
-              verb: 'handAddFromDeck',
-              args: {
-                player: 'self',
-                cardId: '$matched.cardId'
-              }
-            },
-            {
-              kind: 'atom',
-              verb: 'discard',
-              args: {
-                player: 'self',
-                n: 1
-              }
-            }
-          ]
+          kind: 'atom',
+          verb: 'handAddFromDeck',
+          args: {
+            player: 'self',
+            cardId: '$matched.cardId',
+            deferRefresh: true
+          }
         }
       },
       {
@@ -120,7 +108,24 @@ const a2: AbilityDef = {
         verb: 'boundToRemove',
         args: {
           player: 'self',
-          bindKey: '$revealed'
+          bindKey: '$revealed',
+          refreshAfter: true
+        }
+      },
+      {
+        kind: 'conditional',
+        if: {
+          kind: 'bound',
+          key: '$matched',
+          presence: 'matched'
+        },
+        then: {
+          kind: 'atom',
+          verb: 'discard',
+          args: {
+            player: 'self',
+            n: 1
+          }
         }
       }
     ]

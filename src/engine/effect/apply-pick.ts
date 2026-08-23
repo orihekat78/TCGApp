@@ -1882,7 +1882,10 @@ export function applyPickSkipAndContinuation(
       // applyPickAndContinuation と同一の保存 ctx 共有 (BUG-107) — 空 bind が remainder から見える
       withStructuredCausalResolution(state, () => {
         runEffect(state, resolvedAtom as never, head.ctx);
-        runAllUntilEmpty(state);
+        // BUG-334: deckRevealUntil only resolves its held window bindings.
+        // Draining here can advance a pending end-turn transition and remove a
+        // partner-area source before the saved sequence remainder runs.
+        if (pending.atomVerb !== 'deckRevealUntil') runAllUntilEmpty(state);
       }, decisionTrace);
     } else {
       event.queue(

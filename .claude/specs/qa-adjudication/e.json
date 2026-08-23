@@ -1096,14 +1096,15 @@
     {
       "qaId": "card:B07035:e501456258551214158642016474ea2c0c3102239185d5ad41ddcbf5bf4e5a43",
       "answerHash": "89083b38d6aba9556fbac3cdddc4f03f3ffe48270972799cfc0fa0f523c39934",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07035.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p07/B07035.ts:71",
+        "tests:tests/cards/official-qa/deck-look-refresh-timing-public-wave51.test.ts:222",
+        "tests:tests/cards/official-qa/deck-look-refresh-timing-public-wave51.test.ts:256",
+        "tests:tests/cards/official-qa/deck-look-refresh-timing-public-wave51.test.ts:293"
       ]
     },
     {
@@ -2075,14 +2076,13 @@
     {
       "qaId": "card:D10009:890b886b35d8a7c12e0c859f4f2faa9d690f9d33250ac772e4668e0ad72c8f6c",
       "answerHash": "47d3f424c54fdda218fd6120058f5d1cd53286fb892b7f7225bac77745c6b456",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d10/D10009.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/16-card-set.md:28",
+        "src:src/cards/ct-d10/D10009.ts:1",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:368"
       ]
     },
     {

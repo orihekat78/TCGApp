@@ -981,11 +981,15 @@
     {
       "qaId": "card:B06098:ffbbf31e863a23cc673a4129010f507e5c8fcf62c699d9dee26061eb41f63b14",
       "answerHash": "89083b38d6aba9556fbac3cdddc4f03f3ffe48270972799cfc0fa0f523c39934",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06098.ts:1"
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p06/B06098.ts:110",
+        "tests:tests/cards/official-qa/deck-look-refresh-timing-public-wave51.test.ts:222",
+        "tests:tests/cards/official-qa/deck-look-refresh-timing-public-wave51.test.ts:256",
+        "tests:tests/cards/official-qa/deck-look-refresh-timing-public-wave51.test.ts:293"
       ]
     },
     {
@@ -1162,9 +1166,9 @@
         "rules:.claude/rules/16-card-set.md:30",
         "rules:.claude/rules/16-card-set.md:31",
         "src:src/cards/ct-p08/B08003.ts:1",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:217",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:224",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:225"
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:242",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:243",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:246"
       ]
     },
     {
@@ -1200,10 +1204,10 @@
         "rules:.claude/rules/16-card-set.md:30",
         "rules:.claude/rules/16-card-set.md:31",
         "src:src/cards/ct-p08/B08008.ts:1",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:238",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:245",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:247",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:250"
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:263",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:265",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:268",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:269"
       ]
     },
     {

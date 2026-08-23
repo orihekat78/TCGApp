@@ -10,9 +10,20 @@
 // qa: card:D10010:199a933934b344f7715091799edd9442eca983c85cb7953418d8f7e9f0d4f2a6
 // qa: card:PR289:2c1155eae7578c77693fb91fa23a0be3cb78c471038868be1123694a6f6b1118
 // qa: card:PR295:2c1155eae7578c77693fb91fa23a0be3cb78c471038868be1123694a6f6b1118
+// qa: card:B06006:890b886b35d8a7c12e0c859f4f2faa9d690f9d33250ac772e4668e0ad72c8f6c
+// qa: card:B06008:890b886b35d8a7c12e0c859f4f2faa9d690f9d33250ac772e4668e0ad72c8f6c
+// qa: card:B08006:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4
+// qa: card:B08008:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4
+// qa: card:B09048:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4
+// qa: card:D08021:d986ef253182d2189e3e421a6df752e07d6fd1d82eadd81dc263f0a35030cca3
+// qa: card:D10009:890b886b35d8a7c12e0c859f4f2faa9d690f9d33250ac772e4668e0ad72c8f6c
+// qa: card:D10010:890b886b35d8a7c12e0c859f4f2faa9d690f9d33250ac772e4668e0ad72c8f6c
+// qa: card:PR289:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4
+// qa: card:PR295:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4
 // Rules: 05, 07, 13, 15, 16, 17, 18, 21, 22, 25.
 // Public actions and decisions prove that under-cards remain physical identities,
 // but do not become scene characters or contribute names, traits, or abilities.
+// Wave50 additionally proves every card-bound under-card stays outside setCards.
 
 import { produce } from 'immer';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -28,6 +39,7 @@ import { B08003 } from '@/cards/ct-p08/B08003';
 import { B08003P } from '@/cards/ct-p08/B08003P';
 import { B08006 } from '@/cards/ct-p08/B08006';
 import { B08008 } from '@/cards/ct-p08/B08008';
+import { B09048 } from '@/cards/ct-p09/B09048';
 import { D08021 } from '@/cards/ct-d08/D08021';
 import { D10009 } from '@/cards/ct-d10/D10009';
 import { D10010 } from '@/cards/ct-d10/D10010';
@@ -80,6 +92,9 @@ const BOY_4 = character('W33-BOY-4', { names: ['少年四'], traits: ['少年探
 const BOY_5 = character('W33-BOY-5', { names: ['少年五'], traits: ['少年探偵団'] });
 const BOY_L8 = character('W33-BOY-L8', { names: ['少年八'], level: 8, traits: ['少年探偵団'] });
 const BLUE_HOST = character('W33-BLUE-HOST', { names: ['青ホスト'], colors: ['青'] });
+const YELLOW_POLICE = character('W50-YELLOW-POLICE', {
+  names: ['黄色警察'], colors: ['黄'], level: 6, traits: ['警察'],
+});
 const RAN = character('W33-RAN', { names: ['毛利蘭'] });
 const TARGET = character('W33-TARGET', { names: ['対象'], colors: ['赤'], ap: 1000 });
 const DRAW_1 = character('W33-DRAW-1');
@@ -89,7 +104,10 @@ const CASE_SR: CardDef = {
   colors: ['青'], traits: [], caseTraits: ['シャッフルロマンス'], caseLevel: 7,
   rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [],
 };
-const FIXTURES = [PROBE, BOY_2, BOY_3, BOY_4, BOY_5, BOY_L8, BLUE_HOST, RAN, TARGET, DRAW_1, DRAW_2, CASE_SR];
+const FIXTURES = [
+  PROBE, BOY_2, BOY_3, BOY_4, BOY_5, BOY_L8, BLUE_HOST, YELLOW_POLICE,
+  RAN, TARGET, DRAW_1, DRAW_2, CASE_SR,
+];
 
 function character(id: string, overrides: Partial<CardDef> = {}): CardDef {
   return {
@@ -173,7 +191,7 @@ afterEach(() => {
   useGameStateStore.getState().setGameState(null);
 });
 
-describe('Wave33 official-QA public stacked-card semantics', () => {
+describe('Wave33/Wave50 official-QA public stacked-card semantics', () => {
   it('keeps every parallel printing structurally equivalent', () => {
     expect(B06005P.abilities).toEqual(B06005.abilities);
     expect(B06008P.abilities).toEqual(B06008.abilities);
@@ -197,7 +215,7 @@ describe('Wave33 official-QA public stacked-card semantics', () => {
     resolvePick(stackPick, [stackPick.candidates[0]!.uid]);
 
     expect(current().players.self.scene.map(character => character.uid)).toEqual(['blue-host']);
-    expect(host(BLUE_HOST.id).stackedCards).toEqual([
+    expect(host(BLUE_HOST.id).stackedCards, 'B08002: selected card is stacked').toEqual([
       expect.objectContaining({ cardId: PROBE.id, instanceId: expect.any(String) }),
     ]);
     expect(host(BLUE_HOST.id).setCards).toEqual([]);
@@ -222,10 +240,10 @@ describe('Wave33 official-QA public stacked-card semantics', () => {
     resolvePick(stackPick, [selected!.uid]);
 
     expect(current().players.self.scene.map(character => character.cardId)).toEqual([source.id]);
-    expect(host(source.id).stackedCards).toEqual([
+    expect(host(source.id).stackedCards, 'B06005/B06006/B08003: selected card is stacked').toEqual([
       expect.objectContaining({ cardId: stacked, instanceId: expect.any(String) }),
     ]);
-    expect(host(source.id).setCards).toEqual([]);
+    expect(host(source.id).setCards, 'B06006: stacked occurrence is not set').toEqual([]);
   });
 
   it('binds B08008 to one public blue host, then grants only when a remove card is stacked', () => {
@@ -244,9 +262,10 @@ describe('Wave33 official-QA public stacked-card semantics', () => {
 
     expect(current().players.self.scene.map(character => character.cardId).sort())
       .toEqual([B08008.id, BLUE_HOST.id].sort());
-    expect(host(BLUE_HOST.id).stackedCards).toEqual([
+    expect(host(BLUE_HOST.id).stackedCards, 'B08008: selected card is stacked').toEqual([
       expect.objectContaining({ cardId: PROBE.id, instanceId: expect.any(String) }),
     ]);
+    expect(host(BLUE_HOST.id).setCards).toEqual([]);
     expect(host(BLUE_HOST.id).turnEffects.actionTargetsActive).toBe(true);
   });
 
@@ -264,7 +283,8 @@ describe('Wave33 official-QA public stacked-card semantics', () => {
     const team = host(D08021.id);
 
     expect(current().players.self.scene).toHaveLength(1);
-    expect(team.stackedCards).toHaveLength(5);
+    expect(team.stackedCards, 'D08021: five selected cards are stacked').toHaveLength(5);
+    expect(team.setCards).toEqual([]);
     expect(readChar.keywords(current(), team.uid)).toContain('突撃');
     expect(dispatchEngineAction({ type: 'actionDeclareChar', byUid: team.uid, targetUid: 'target' }))
       .toEqual({ ok: true });
@@ -289,9 +309,10 @@ describe('Wave33 official-QA public stacked-card semantics', () => {
       .toEqual({ ok: true });
     const removeChoice = pending('sceneRemove');
     resolvePick(removeChoice, []);
-    expect(host(B08006.id).stackedCards).toEqual([
+    expect(host(B08006.id).stackedCards, 'B08006: hand card is stacked').toEqual([
       expect.objectContaining({ cardId: PROBE.id, instanceId: expect.any(String) }),
     ]);
+    expect(host(B08006.id).setCards).toEqual([]);
 
     install(JSON.parse(JSON.stringify(current())) as GameState, 'b08006-round-trip');
     expect(dispatchEngineAction({ type: 'declaredAbility', uid: 'remover', abilId: 'a1' }))
@@ -303,6 +324,26 @@ describe('Wave33 official-QA public stacked-card semantics', () => {
     expect(current().players.self.hand).toEqual([]);
     expect(current().players.self.deck).toEqual([DRAW_1.id, DRAW_2.id]);
     expect(current().pendingEffects.every(entry => entry.source.cardId !== PROBE.id)).toBe(true);
+  });
+
+  it('keeps B09048 public declared-cost stack outside setCards', () => {
+    const state = base();
+    state.players.self.case.colors = ['白', '黄'];
+    state.players.self.scene = [
+      makeChar({ cardId: B09048.id, uid: 'nakamori' }),
+      makeChar({ cardId: YELLOW_POLICE.id, uid: 'yellow-police' }),
+    ];
+    install(state, 'b09048');
+
+    expect(dispatchEngineAction({ type: 'declaredAbility', uid: 'nakamori', abilId: 'a2' }))
+      .toEqual({ ok: true });
+    expect(current().players.self.scene.map(character => character.uid)).toEqual(['nakamori']);
+    expect(host(B09048.id).stackedCards).toEqual([
+      expect.objectContaining({ cardId: YELLOW_POLICE.id, instanceId: expect.any(String) }),
+    ]);
+    expect(host(B09048.id).setCards).toEqual([]);
+    expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
+    expect(current().players.self.scene.map(character => character.uid)).toEqual(['nakamori']);
   });
 
   it.each([D10009, D10010])('$id stacks Ran publicly, then ignores that name for its end-phase bond', source => {
@@ -321,9 +362,10 @@ describe('Wave33 official-QA public stacked-card semantics', () => {
       .toEqual({ ok: true });
     const ranPick = pending('charStackCard');
     resolvePick(ranPick, ['ran']);
-    expect(host(source.id).stackedCards).toEqual([
+    expect(host(source.id).stackedCards, 'D10009/D10010: Ran is stacked').toEqual([
       expect.objectContaining({ cardId: RAN.id, instanceId: expect.any(String) }),
     ]);
+    expect(host(source.id).setCards, 'D10009/D10010: stacked occurrence is not set').toEqual([]);
     expect(current().players.self.scene.map(character => character.uid)).toEqual(['shinichi']);
     expect(readChar.keywords(current(), 'shinichi')).toContain('突撃[キャラ]');
 
@@ -346,9 +388,10 @@ describe('Wave33 official-QA public stacked-card semantics', () => {
     expect(dispatchEngineAction({ type: 'declaredAbility', uid: 'mitsuhiko', abilId: 'a2' }))
       .toEqual({ ok: true });
     expect(current().players.self.scene.map(character => character.uid)).toEqual(['mitsuhiko']);
-    expect(host(source.id).stackedCards).toEqual([
+    expect(host(source.id).stackedCards, 'PR289/PR295: cost card is stacked').toEqual([
       expect.objectContaining({ cardId: PROBE.id, instanceId: expect.any(String) }),
     ]);
+    expect(host(source.id).setCards, 'PR289/PR295: stacked occurrence is not set').toEqual([]);
     expect(current().players.self.hand).toEqual([DRAW_1.id]);
     expect(current().pendingEffects.every(entry => entry.source.cardId !== PROBE.id)).toBe(true);
   });
@@ -373,9 +416,10 @@ describe('Wave33 official-QA public stacked-card semantics', () => {
     resolvePick(hostPick, ['blue-host']);
 
     expect(current().players.self.scene.map(character => character.uid)).toEqual(['blue-host']);
-    expect(host(BLUE_HOST.id).stackedCards).toEqual([
+    expect(host(BLUE_HOST.id).stackedCards, 'B06008/B06008P: source is stacked').toEqual([
       expect.objectContaining({ cardId: source.id, instanceId: expect.any(String) }),
     ]);
+    expect(host(BLUE_HOST.id).setCards, 'B06008/B06008P: stacked occurrence is not set').toEqual([]);
     expect(current().players.self.hand).toEqual([DRAW_1.id]);
     expect(current().players.self.remove).toEqual([]);
   });

@@ -1233,10 +1233,10 @@
         "rules:.claude/rules/16-card-set.md:31",
         "rules:.claude/rules/16-card-set.md:38",
         "src:src/cards/ct-p08/B08006.ts:1",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:288",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:292",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:302",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:305"
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:312",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:315",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:323",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:326"
       ]
     },
     {
@@ -1477,14 +1477,13 @@
     {
       "qaId": "card:B09048:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4",
       "answerHash": "47d3f424c54fdda218fd6120058f5d1cd53286fb892b7f7225bac77745c6b456",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09048.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/16-card-set.md:28",
+        "src:src/cards/ct-p09/B09048.ts:64",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:344"
       ]
     },
     {
@@ -2010,11 +2009,13 @@
     {
       "qaId": "card:D08021:d986ef253182d2189e3e421a6df752e07d6fd1d82eadd81dc263f0a35030cca3",
       "answerHash": "47d3f424c54fdda218fd6120058f5d1cd53286fb892b7f7225bac77745c6b456",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d08/D08021.ts:1"
+        "rules:.claude/rules/16-card-set.md:28",
+        "src:src/cards/ct-d08/D08021.ts:1",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:287"
       ]
     },
     {

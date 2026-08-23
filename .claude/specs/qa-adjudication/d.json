@@ -729,15 +729,15 @@
     {
       "qaId": "card:B05016:e7061b1c3b542622fb32f13182df05bfa258159452eb60cb75a2c492259385d4",
       "answerHash": "89083b38d6aba9556fbac3cdddc4f03f3ffe48270972799cfc0fa0f523c39934",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/26-qa-deck-refresh.md:27",
-        "src:src/cards/ct-p05/B05016.ts:45"
-      ],
-      "noteCodes": [
-        "B05016-SHORT-DECK-REFRESH-TEST-MISSING"
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p05/B05016.ts:45",
+        "tests:tests/cards/official-qa/deck-look-refresh-timing-public-wave51.test.ts:222",
+        "tests:tests/cards/official-qa/deck-look-refresh-timing-public-wave51.test.ts:256",
+        "tests:tests/cards/official-qa/deck-look-refresh-timing-public-wave51.test.ts:293"
       ]
     },
     {
@@ -1981,15 +1981,15 @@
     {
       "qaId": "card:B10077:e7061b1c3b542622fb32f13182df05bfa258159452eb60cb75a2c492259385d4",
       "answerHash": "89083b38d6aba9556fbac3cdddc4f03f3ffe48270972799cfc0fa0f523c39934",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/26-qa-deck-refresh.md:65",
-        "src:src/cards/ct-p10/B10077.ts:42"
-      ],
-      "noteCodes": [
-        "IMPLEMENTED-CARD-TEST-MISSING"
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "src:src/cards/ct-p10/B10077.ts:39",
+        "tests:tests/cards/official-qa/deck-look-refresh-timing-public-wave51.test.ts:222",
+        "tests:tests/cards/official-qa/deck-look-refresh-timing-public-wave51.test.ts:256",
+        "tests:tests/cards/official-qa/deck-look-refresh-timing-public-wave51.test.ts:293"
       ]
     },
     {
@@ -2564,11 +2564,13 @@
     {
       "qaId": "card:PR289:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4",
       "answerHash": "47d3f424c54fdda218fd6120058f5d1cd53286fb892b7f7225bac77745c6b456",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR289.ts:111"
+        "rules:.claude/rules/16-card-set.md:28",
+        "src:src/cards/pr-01/PR289.ts:111",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:394"
       ]
     },
     {
@@ -2581,10 +2583,10 @@
         "rules:.claude/rules/16-card-set.md:30",
         "rules:.claude/rules/16-card-set.md:31",
         "src:src/cards/pr-01/PR295.ts:1",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:346",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:348",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:349",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:353"
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:390",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:391",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:394",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:396"
       ]
     },
     {

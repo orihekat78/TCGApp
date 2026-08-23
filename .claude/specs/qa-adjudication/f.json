@@ -989,10 +989,11 @@
         "rules:.claude/rules/16-card-set.md:30",
         "rules:.claude/rules/16-card-set.md:31",
         "src:src/cards/ct-p06/B06008.ts:42",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:365",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:375",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:376",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:379"
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:418",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:419",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:422",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:423",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:424"
       ]
     },
     {

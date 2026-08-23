@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6300
+- **ファイル数**: 6322
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -513,6 +513,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-330.md` — main actionのturn/phase admission欠落
     - `BUG-331.md` — Souza公開snapshot欠落
     - `BUG-332.md` — 宣言時効果のowner-orderとaction step admission
+    - `BUG-333.md` — deck look remainder refresh checkpoint
+    - `BUG-334.md` — deck-window public continuation loss
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -849,6 +851,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-13-qa-wave47-investigation-found.md`
     - `2026-08-23-14-qa-wave48-action-declare-direct.md`
     - `2026-08-23-15-qa-wave49-action-decisions.md`
+    - `2026-08-23-16-qa-wave50-stack-vs-set.md` — QA Wave50: stacked cards are not set cards
+    - `2026-08-23-17-qa-wave51-refresh-timing.md` — QA Wave51: defer refresh to remainder movement
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1536,6 +1540,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-14-qa-wave13-match-cost.md` — QA Wave 13 and memory rotation
     - `2026-08-21-engine-memory-rotation.md` — Engine memory rotation — 2026-08-21
     - `2026-08-22-qa-waves17-26.md` — QA runtime Waves 17-26
+    - `2026-08-23-qa-memory-waves27-34.md` — QA runtime memory rotation: Waves27-34
     - `2026-08-23-qa-wave35.md` — QA runtime Wave35 physical ability occurrence identity
     - `2026-08-23-qa-waves36-37.md` — QA runtime Waves36-37 self-only evidence costs
     - `2026-08-23-qa-waves38-39.md` — QA runtime Waves38-39 assisting partners in FILE conditions
@@ -1544,6 +1549,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-qa-waves44-45.md` — QA runtime Waves44-45 B07093 and Bond partner exclusion
     - `2026-08-23-qa-waves46-47.md` — QA runtime Waves46-47 end phase and Investigation
     - `2026-08-23-qa-waves48-49.md` — QA runtime Waves48-49 action declaration timing
+    - `2026-08-23-qa-waves50-51.md` — QA adjudication Waves50-51
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1680,6 +1686,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B05007.md` — B05007 妃英理 grounding
       - `B05008.md` — B05008 / B05008P 灰原哀 grounding
       - `B05009.md` — B05009 / B05009P 毛利蘭 grounding
+      - `B05016.md` — B05016 小嶋元太 grounding
       - `B05021.md` — B05021 grounding
       - `B05028P.md` — B05028P grounding
       - `B05048.md` — B05048 黒羽快斗 grounding
@@ -1693,21 +1700,26 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B05108.md` — B05108 バーボン grounding
       - `B06003.md` — B06003/B06003P 毛利蘭＆江戸川コナン (MR キャラ) grounding (2026-07-10, fable)
       - `B06005.md` — B06005 阿笠博士 (R/RP) grounding (2026-07-10, sonnet5)
+      - `B06006.md` — B06006 江戸川コナン grounding
+      - `B06008.md` — B06008 仮面ヤイバー grounding
       - `B06012.md` — B06012 grounding
       - `B06012P.md` — B06012P grounding
       - `B06018.md` — B06018 grounding
       - `B06020.md` — B06020 佐々木小次郎 grounding (2026-07-10, sonnet5)
       - `B06027.md` — B06027 grounding
       - `B06042.md` — B06042 ここで会うたが百年目 (イベント) grounding (2026-07-10, sonnet5)
+      - `B06048.md` — B06048 峰さやか grounding
       - `B06052.md` — B06052 grounding
       - `B06066.md` — B06066/B06066P 怪盗キッド＆白馬探 (MR キャラ) grounding (2026-07-10, fable)
       - `B06087.md` — B06087 萩原千速 grounding
       - `B06090.md` — B06090 grounding
+      - `B06098.md` — B06098 ベルモット＆シェリー grounding
       - `B07008.md` — B07008 小嶋元太 grounding (2026-07-10, fable)
       - `B07013.md` — B07013 grounding
       - `B07023.md` — B07023 / B07023P 光本兵我 grounding
       - `B07030P.md` — grounding dossier: B07030P (自動生成 2026-07-13)
       - `B07030P2.md` — grounding dossier: B07030P2 (自動生成 2026-07-13)
+      - `B07035.md` — B07035 古畑恵 grounding
       - `B07045.md` — B07045 セリザベス女王 grounding
       - `B07061P.md` — grounding dossier: B07061P (自動生成 2026-07-13)
       - `B07069.md` — B07069 本堂瑛海 grounding
@@ -1717,12 +1729,15 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B07100.md` — B07100 コルン grounding (2026-07-10, fable)
       - `B08003.md` — B08003 阿笠博士 (SR/SRP) grounding (2026-07-10, sonnet5)
       - `B08004.md` — B08004 江戸川コナン grounding
+      - `B08006.md` — B08006 小嶋元太 grounding
       - `B08007.md` — B08007 円谷光彦 grounding
+      - `B08008.md` — B08008 吉田歩美 grounding
       - `B08015.md` — B08015 若狭留美 grounding
       - `B08017.md` — B08017 / B08017P grounding
       - `B08019.md` — B08019 大岡紅葉＆伊織無我 (MR/MRP) grounding (2026-07-10, sonnet5)
       - `B08026.md` — B08026 grounding
       - `B08047.md` — B08047/B08047P 沖矢昴 grounding (2026-07-10, fable)
+      - `B08050.md` — B08050 宮野明美 grounding
       - `B08056.md` — B08056 宮野厚司 grounding
       - `B08065.md` — B08065 大和敢助 grounding
       - `B08073.md` — B08073 高木渉 grounding
@@ -1744,6 +1759,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B09057.md` — B09057 grounding
       - `B09060.md` — B09060 沖矢昴 grounding
       - `B09065.md` — B09065 マーク grounding
+      - `B09073.md` — B09073 萩原研二 grounding
+      - `B09078.md` — B09078 榎本梓 grounding
+      - `B09079.md` — B09079 佐藤美和子 grounding
       - `B09112.md` — B09112 キッドVS安室 王妃の前髪 (事件) grounding (2026-07-10, sonnet5)
       - `B10001.md` — B10001 grounding
       - `B10002.md` — B10002 grounding
@@ -1808,6 +1826,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B10070.md` — B10070 grounding
       - `B10071.md` — B10071 grounding
       - `B10074.md` — B10074 grounding
+      - `B10077.md` — B10077 萩原研二 grounding
       - `B10081.md` — B10081 grounding
       - `B10084.md` — B10084 grounding
       - `B10086.md` — B10086 grounding
@@ -1843,6 +1862,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D09017.md` — D09017 諸伏高明 grounding
       - `D10005.md` — D10005 ハート姫（毛利蘭） grounding
       - `D10006.md` — D10006 ハート姫（毛利蘭） grounding
+      - `D10009.md` — D10009 工藤新一 grounding
+      - `D10010.md` — D10010 工藤新一 grounding
       - `D10011.md` — D10011 毛利小五郎 grounding
       - `D10022.md` — D10022 毛利蘭 grounding
       - `D10024.md` — D10024 grounding
@@ -5647,6 +5668,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `ctp10-opponent-turn-cutin-public.test.ts` — qa: card:B10017:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
       - `decision-persistence-wave23.test.ts` — qa: card:B03080:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
       - `deck-look-bottom-family-public.test.ts` — qa: card:B01013:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5
+      - `deck-look-refresh-timing-public-wave51.test.ts` — qa: card:B05016:e7061b1c3b542622fb32f13182df05bfa258159452eb60cb75a2c492259385d4
       - `deck-look-zero-choice-public-wave30.test.ts` — qa: card:B04048:c2131ef2b4d611ed2fdcba93cb1619157aea6dcc39318ced5a4a6f69bc29faaf
       - `deck-refresh-wave8.test.ts` — qa: card:B04012:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4
       - `declared-sleep-cost-public-wave24.test.ts` — qa: card:B01063:f97b21e9e16f570fd0da6acab0a9cb6e819a6e4a010e86dddb5ff82c6d33902e
