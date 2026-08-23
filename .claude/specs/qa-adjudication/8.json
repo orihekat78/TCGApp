@@ -220,11 +220,24 @@
     {
       "qaId": "card:B02057:12d56922ac94e77d7ce7b7d2d7ff6c185065a32f7f91af0ec3483941263df031",
       "answerHash": "4a353f4020ed75a813e684394164883e125362ef4b05b00a05fbf73e18662941",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02057.ts:1"
+        "rules:.claude/rules/03-field-areas.md:31",
+        "rules:.claude/rules/03-field-areas.md:35",
+        "rules:.claude/rules/03-field-areas.md:37",
+        "src:src/cards/ct-p02/B02057.ts:17",
+        "src:src/engine/mutate/scene.ts:763",
+        "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:153",
+        "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:155",
+        "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:157",
+        "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:158",
+        "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:167",
+        "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:170",
+        "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:210",
+        "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:215",
+        "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:220"
       ]
     },
     {

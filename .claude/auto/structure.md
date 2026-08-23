@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6387
+- **ファイル数**: 6401
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -864,6 +864,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-23-qa-wave57-evidence-position.md` — QA Wave57: certify arbitrary evidence positions
     - `2026-08-23-24-qa-wave58-hand-owner-cost.md` — QA Wave58: certify owner-only hand costs
     - `2026-08-23-25-qa-wave59-deck-owner-cost.md` — QA Wave59: certify owner deck-top-three costs
+    - `2026-08-23-26-qa-wave60-stun-definition.md` — QA Wave60: certify the stun definition
+    - `2026-08-23-27-qa-wave61-full-scene-entry.md` — QA Wave61: certify full-scene effect entry
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1565,6 +1567,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-qa-waves54-55.md` — QA adjudication Waves54-55
     - `2026-08-23-qa-waves56-57.md` — QA adjudication Waves56-57
     - `2026-08-23-qa-waves58-59.md` — QA adjudication Waves58-59
+    - `2026-08-23-qa-waves60-61.md` — QA adjudication Waves60-61
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1671,10 +1674,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B02044.md` — B02044 / B02044P grounding
       - `B02045.md` — B02045 grounding
       - `B02047.md` — B02047 grounding
+      - `B02057.md` — B02057 / B02057P grounding
       - `B02058.md` — B02058 / B02058P grounding
       - `B02063.md` — B02063 羽田秀吉 grounding
       - `B02067.md` — B02067 チョーカー型変声機 grounding (2026-07-10, sonnet5)
       - `B02072.md` — B02072 / B02072P 降谷零 grounding
+      - `B02083.md` — B02083 grounding
       - `B02086.md` — B02086 / B02086P grounding
       - `B03018.md` — B03018 grounding
       - `B03019.md` — B03019 grounding
@@ -1699,6 +1704,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B04028.md` — B04028 grounding
       - `B04030.md` — B04030 grounding
       - `B04032.md` — B04032 / B04032P 白馬探 grounding
+      - `B04046.md` — B04046 / B04046P grounding
       - `B04048.md` — B04048/B04048P 羽田秀𠮷 grounding (2026-07-10, fable)
       - `B04055.md` — B04055 grounding
       - `B04059.md` — B04059 水無怜奈 grounding
@@ -1722,6 +1728,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B05077.md` — B05077 ジョディ・サンテミリオン grounding
       - `B05080.md` — B05080 timing grounding
       - `B05086P.md` — grounding dossier: B05086P (自動生成 2026-07-13)
+      - `B05090.md` — B05090 grounding
       - `B05091.md` — B05091 / B05091P 風見裕也 grounding
       - `B05094.md` — B05094 grounding
       - `B05108.md` — B05108 バーボン grounding
@@ -1794,6 +1801,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B09033.md` — grounding dossier: B09033
       - `B09033P.md` — grounding dossier: B09033P
       - `B09036.md` — B09036 怪盗キッド grounding
+      - `B09038.md` — B09038 / B09038P grounding
       - `B09047.md` — B09047 grounding
       - `B09048.md` — B09048 grounding
       - `B09049.md` — B09049 南條欽治 grounding
@@ -1896,6 +1904,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D01012.md` — D01012 grounding
       - `D02004.md` — D02004 服部平次 grounding
       - `D02008.md` — D02008 服部平蔵 grounding
+      - `D02013.md` — D02013 grounding
       - `D05007.md` — D05007 grounding
       - `D06003.md` — D06003 服部平次 grounding (2026-07-10, fable)
       - `D06004.md` — D06004 服部平次 grounding (2026-07-10, sonnet5)
@@ -1921,6 +1930,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D10024.md` — D10024 grounding
       - `D10026.md` — D10026 grounding
       - `PR022.md` — PR022 江戸川コナン
+      - `PR060.md` — PR060 grounding
+      - `PR064.md` — PR064 grounding
       - `PR099.md` — PR099 工藤有希子 grounding
       - `PR100.md` — PR100 宮野厚司 grounding
       - `PR106.md` — PR106 宮野厚司 grounding
@@ -1930,6 +1941,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `PR142.md` — PR142 伊織無我 grounding
       - `PR143.md` — PR143 工藤優作 grounding
       - `PR144.md` — PR144 grounding
+      - `PR154.md` — PR154 grounding
       - `PR173.md` — PR173 工藤有希子 grounding
       - `PR179.md` — PR179 京極真 grounding
       - `PR185.md` — PR185 京極真 grounding
@@ -5739,6 +5751,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `effect-entry-direct-public-wave54.test.ts` — qa: card:B03062:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-enter-trigger-public-wave31.test.ts` — qa: card:B03085:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-enter-trigger-public-waves52-53.test.ts` — qa: card:B06047:a995d1c10d720a31ed82e873a38fc303c498ee2145d91386e258841a02350580
+      - `effect-entry-full-scene-public-wave61.test.ts` — qa: card:B04046:6b96389cc833a3fa159cdc9a1b55a5f5db61c7ee0131677aa3e999ce49bd2c2d
       - `effect-entry-leave-public.test.ts` — qa: card:B02066:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-nested-public-wave55.test.ts` — qa: card:B09056:33271f1e19ae0c4fa4f2f6b6aa1f038e58c6c82bef4e1d59394a5ddb47300767
       - `effect-entry-public-wave3.test.ts` — qa: card:B02077:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
@@ -5780,6 +5793,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `stacked-card-semantics-public-wave33.test.ts` — qa: card:B06005:199a933934b344f7715091799edd9442eca983c85cb7953418d8f7e9f0d4f2a6
       - `stun-action-target-public.test.ts` — qa: card:B01058:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40
       - `stun-activation-to-sleep-wave22.test.ts` — qa: card:B04080:872de2079dce9150e76a70314a5d20400e542df72be79f07c2daed17f80158c3
+      - `stun-definition-public-wave60.test.ts` — qa: card:B02057:12d56922ac94e77d7ce7b7d2d7ff6c185065a32f7f91af0ec3483941263df031
       - `turn-conditioned-cutin-expansion-public.test.ts` — qa: card:B05095:3ebc71d3fe967142af371f16682581bf9d44ac0db1c409f0d2a20d11ffeeae41
       - `turn-conditioned-cutin-public.test.ts` — qa: card:B02007:e4a36acb6bbbb1c8b11eac5e65600d839bba033d5a2b7f0e5ecfc84bacd47a4c
       - `turn1-resolution-time-state-public.test.ts` — rules: 07-action-flow.md, 10-action-event.md, 15-abilities-effects.md, 17-icons.…

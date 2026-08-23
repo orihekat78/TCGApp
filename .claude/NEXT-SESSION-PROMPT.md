@@ -1,42 +1,54 @@
-# Next Task: QA adjudication Waves60-61
+# Next Task: QA adjudication Waves62-63
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves58-59 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves60-61 commit.
 
 ## Completed
 
-- Wave58 certifies seven owner-hand cost records across ten physical sources.
-- Wave59 certifies seven owner deck-top-three cost records across eleven
-  physical sources, including exact-three refresh and compound atomicity.
-- Coverage should be 1400 matched / 1564 test-missing after generation.
+- Wave60 certifies seven stun-definition records across eight physical sources.
+- Wave61 certifies seven full-scene effect-entry records across thirteen physical
+  sources, including source-self switch, nested enter hooks, owner symmetry, and
+  transactional forged-victim rejection.
+- Coverage is 1414 matched / 1550 test-missing / 2964 total.
+- No production or CardDef change was required.
 - Existing untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml` stay protected.
 
-## Wave60: stun definition
+## Start
 
-1. Confirm branch, HEAD, upstream, and protected files read-only.
-2. Ground exact Q/A
-   `7a6f08e207e70382e9b77aaff63586b84027d225047cd889e2427c5b5056298e`
-   / `4a353f4020ed75a813e684394164883e125362ef4b05b00a05fbf73e18662941`:
-   a stunned character is upside down after receiving a stun effect.
-3. Certify B02057, B02083, D02004, D02013, PR060, PR064, PR154.
-4. Bind every physical source and prove active/sleep/stun transitions, repeated
-   stun/sleep no-op, activation-to-sleep replacement, and action prohibition.
+1. Read root/nested AGENTS, `conan-router`, `card-wave`, and `conan-verify`.
+2. Verify branch, HEAD/upstream, status, and protected files read-only.
+3. Read `.claude/sessions/2026-08-23-qa-waves60-61.md` and current QA trace.
+4. Ground exact Q&A before classifying gaps. Do not infer absent rules.
 
-## Wave61: full-scene effect entry and switch
+## Wave62: largest remaining exact group
 
-1. Ground exact Q/A
-   `c2d241b8e2cb10d82b2dc238b1317d1d722a4749ff9ee0585d7c9d15026aba42`
-   / `0e19d91c02200449417a55074745e64a3393a543782d6647d6b042fbd8f0201e`:
-   effect entry is legal at five scene characters by switching one out; the
-   newly entered character itself may be the switched-out character.
-2. Certify B04046, B05007, B05090, B06090, B09038, B10005, B10023.
-3. Use every physical source, full-scene chooser authority, self-switch of the
-   entrant, typed decoys, leave/enter hook ordering, decline, and owner symmetry.
-4. Stop after one or two implementation waves.
+- Question hash:
+  `f70dca6d863c38348fdcedfafa0431d49b150f39c4ad5f90e4dd2d9b641db2d6`
+- Answer hash:
+  `b827971d951f9835d6c0840bd8d55b1b515112a015ed2bc51e5ec3b110f772b1`
+- Records: B08033, B08034, B08035, B10021, B10022, B10023, B10026,
+  B10027, B10040.
+- Physical sources: B08033/P, B08034/P, B08035, B10021/P, B10022/P,
+  B10023/P, B10026/P, B10027/P, B10040.
 
-## Records
+## Wave63: next largest exact group
 
-- `.claude/sessions/2026-08-23-qa-waves58-59.md`
-- `.tmp/_ground/wave58/` and `.tmp/_ground/wave59/`
+- Question hash:
+  `5594be19e41fbe1cb70124f3ccc6258a69b9f9801326e96045000df8c95df77c`
+- Answer hash:
+  `b224b606f8fc34f02bcbd2792e156388486d6469c478c49a07fe2816784668c6`
+- Records: B05055, B05056, B07020, B07037, B07082, B08056, B08083,
+  B09109.
+- Physical sources: B05055, B05056, B07020/P, B07037, B07082/P,
+  B08056, B08083, B09109/P.
 
-Remaining estimate: about 1,564 records, roughly 133-287 agent hours. Route
-grouping and horizontal fixes may reduce it.
+## Gates and stop
+
+- Bind every physical source through public decisions; cover negatives, owner
+  orientation, transactional rejection, persistence, and structural siblings.
+- Run exact/focused tests, typecheck, ESLint, QA merge/lint, docs check, full
+  functional Vitest, smoke1000, and representative/full-match Playwright.
+- Require rules and adversarial review before commit/push.
+- Stop after one or two implementation waves and write the next handoff.
+
+Remaining estimate: about 1,550 records, roughly 132-284 agent hours before
+future grouping gains.

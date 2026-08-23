@@ -62,10 +62,20 @@
   orientation, cost order, opponent isolation, and printed effects are public.
 - Coverage after generation should be 1400 matched / 1564 test-missing.
 
+## 2026-08-23: QA runtime Waves60-61
+
+- Wave60 certifies seven stun-definition records across eight physical sources.
+  Public state transitions preserve stun under sleep/stun requests, replace an
+  active request with sleep, and reject action/reasoning by a stunned actor.
+- Wave61 certifies seven full-scene effect-entry records across thirteen physical
+  sources. Every source may switch itself out after entering the fifth slot while
+  the fired effect and nested entrant hook finish; forged cross-owner victims fail
+  transactionally. No production or CardDef change was required.
+- Coverage after generation is 1414 matched / 1550 test-missing.
+
 ## Next
 
-- Wave60: seven stun-definition records at `7a6f08e2.../4a353f40...`.
-- Wave61: seven full-scene effect-entry/switch records at
-  `c2d241b8.../0e19d91c...`; prove switch authority and entered-source effects.
+- Wave62: nine records at `f70dca6d.../b827971d...`.
+- Wave63: eight records at `5594be19.../b224b606...`.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

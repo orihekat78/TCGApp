@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `b8a5636bbe64`
+> Source hash: `acf992bc804f`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,18 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# QA Wave61: certify full-scene effect entry
+
+- Certify seven records and thirteen physical sources through public hand use.
+- Switch out each newly entered source while its fired effect finishes normally.
+- Cover typed decoys, zero entry, decline, owner symmetry, and forged victims.
+
+# QA Wave60: certify the stun definition
+
+- Certify seven records and eight physical sources through public decisions.
+- Prove active/sleep/stun transitions, persistence, and activation replacement.
+- Cover action admission plus sleep-or-stun gates without changing production.
 
 # QA Wave59: certify owner deck-top-three costs
 
