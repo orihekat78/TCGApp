@@ -877,14 +877,33 @@
     {
       "qaId": "card:B05024:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610",
       "answerHash": "1f9dea222899252685faff65ee3a04b23d7ec4a0bc5637f27004c075dc0a5485",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05024.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/21-declared-ability-cost.md:31",
+        "rules:.claude/rules/21-declared-ability-cost.md:45",
+        "rules:.claude/rules/21-declared-ability-cost.md:50",
+        "src:src/cards/ct-p05/B05024.ts:35",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:156",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:157",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:158",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:159",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:160",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:171",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:172",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:173",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:174",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:182",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:183",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:184",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:193",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:194",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:195",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:196",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:207",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:208",
+        "tests:tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:209"
       ]
     },
     {

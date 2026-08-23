@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `0cc18aebda5f`
+> Source hash: `e8261f34c3b8`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,20 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# QA Wave71: certify owner-only exact-one costs
+
+- Certify six records across ten physical printings.
+- Flip an arbitrary owner evidence occurrence without changing identity/order;
+  reject opponent-only, wrong-count, duplicate, range, and face-up choices.
+- Cover owner=`opp`, CPU positive/negative paths, and save hydration.
+
+# QA Wave70: certify incomplete exact-three costs
+
+- Certify six records across eleven physical printings.
+- Reject flipping all two or zero own face-down evidence before any effect,
+  turn-use count, or public decision changes.
+- Prove opponent evidence cannot supplement payment for self/opp owners or CPU.
 
 # QA Wave69: certify Event YAIBA
 

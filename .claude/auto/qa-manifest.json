@@ -16245,12 +16245,33 @@
       "questionHash": "df623fb6fab6a794407d5c27f0951036cafa3c3d2c5922474e0492195332d20a",
       "sectionHash": "577fab5535f861c63a2d6eb2eced5360b66ed584e1772ab5ee52278d1d4b2ba5",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-p05/B05024.ts:1"
+        "src/cards/ct-p05/B05024.ts:35"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:1",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:156",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:157",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:158",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:159",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:160",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:171",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:172",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:173",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:174",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:182",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:183",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:184",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:193",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:194",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:195",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:196",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:207",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:208",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:209"
+      ]
     },
     {
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
@@ -18083,12 +18104,33 @@
       "questionHash": "df623fb6fab6a794407d5c27f0951036cafa3c3d2c5922474e0492195332d20a",
       "sectionHash": "577fab5535f861c63a2d6eb2eced5360b66ed584e1772ab5ee52278d1d4b2ba5",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-p05/B05063.ts:85"
+        "src/cards/ct-p05/B05063.ts:49"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:156",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:157",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:158",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:159",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:160",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:171",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:172",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:173",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:174",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:182",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:183",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:184",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:193",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:194",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:195",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:196",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:2",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:207",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:208",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:209"
+      ]
     },
     {
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
@@ -18833,12 +18875,33 @@
       "questionHash": "df623fb6fab6a794407d5c27f0951036cafa3c3d2c5922474e0492195332d20a",
       "sectionHash": "577fab5535f861c63a2d6eb2eced5360b66ed584e1772ab5ee52278d1d4b2ba5",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-p05/B05083.ts:1"
+        "src/cards/ct-p05/B05083.ts:48"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:156",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:157",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:158",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:159",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:160",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:171",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:172",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:173",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:174",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:182",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:183",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:184",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:193",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:194",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:195",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:196",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:207",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:208",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:209",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:3"
+      ]
     },
     {
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
@@ -22298,12 +22361,33 @@
       "questionHash": "df623fb6fab6a794407d5c27f0951036cafa3c3d2c5922474e0492195332d20a",
       "sectionHash": "577fab5535f861c63a2d6eb2eced5360b66ed584e1772ab5ee52278d1d4b2ba5",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-p06/B06036.ts:1"
+        "src/cards/ct-p06/B06036.ts:51"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:156",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:157",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:158",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:159",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:160",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:171",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:172",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:173",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:174",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:182",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:183",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:184",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:193",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:194",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:195",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:196",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:207",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:208",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:209",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:4"
+      ]
     },
     {
       "answerHash": "fdb4cd8735372c7760f3c8fcef6f0210434450e71dc1ee3a988e3f8e0a3ce3bd",
@@ -25652,12 +25736,33 @@
       "questionHash": "df623fb6fab6a794407d5c27f0951036cafa3c3d2c5922474e0492195332d20a",
       "sectionHash": "577fab5535f861c63a2d6eb2eced5360b66ed584e1772ab5ee52278d1d4b2ba5",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-p06/B06105.ts:1"
+        "src/cards/ct-p06/B06105.ts:53"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:156",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:157",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:158",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:159",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:160",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:171",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:172",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:173",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:174",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:182",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:183",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:184",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:193",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:194",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:195",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:196",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:207",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:208",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:209",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:5"
+      ]
     },
     {
       "answerHash": "b43e2736aa21378a67cb73627c63b0d6c67ebc0a3ceea8825ce0e196f92dde8d",
@@ -28522,12 +28627,40 @@
       "questionHash": "628a61f1e0071ea8bf82ff81e4c18cd6148f60c6bdfcfd0c548c4861d3efc7fc",
       "sectionHash": "1d1a726d51f8e15c5aad00c2f0ef4af5d5cbf3883a1c4ee178f7838c2035550a",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-p07/B07061.ts:1"
+        "src/cards/ct-p07/B07061.ts:39"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:1",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:163",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:164",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:166",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:167",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:168",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:180",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:181",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:182",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:183",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:184",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:192",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:193",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:194",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:211",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:213",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:214",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:221",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:222",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:223",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:232",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:238",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:239",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:247",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:250",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:251",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:252"
+      ]
     },
     {
       "answerHash": "2c60b49e60c88e7551164d81261d4f3a0e591b10d837f965019e3e67a007c6b1",
@@ -29501,12 +29634,40 @@
       "questionHash": "628a61f1e0071ea8bf82ff81e4c18cd6148f60c6bdfcfd0c548c4861d3efc7fc",
       "sectionHash": "1d1a726d51f8e15c5aad00c2f0ef4af5d5cbf3883a1c4ee178f7838c2035550a",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-p07/B07077.ts:93"
+        "src/cards/ct-p07/B07077.ts:66"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:163",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:164",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:166",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:167",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:168",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:180",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:181",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:182",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:183",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:184",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:192",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:193",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:194",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:2",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:211",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:213",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:214",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:221",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:222",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:223",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:232",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:238",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:239",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:247",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:250",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:251",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:252"
+      ]
     },
     {
       "answerHash": "ef9ce5065ffe05ba9816293110235f334727ce3f9c474307346c1efda94e29b6",
@@ -32207,12 +32368,40 @@
       "questionHash": "628a61f1e0071ea8bf82ff81e4c18cd6148f60c6bdfcfd0c548c4861d3efc7fc",
       "sectionHash": "1d1a726d51f8e15c5aad00c2f0ef4af5d5cbf3883a1c4ee178f7838c2035550a",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-p08/B08030.ts:1"
+        "src/cards/ct-p08/B08030.ts:38"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:163",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:164",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:166",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:167",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:168",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:180",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:181",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:182",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:183",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:184",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:192",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:193",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:194",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:211",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:213",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:214",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:221",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:222",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:223",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:232",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:238",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:239",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:247",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:250",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:251",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:252",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:3"
+      ]
     },
     {
       "answerHash": "cfea53ad6b2267f9b1f9d36ae4fbdd2c5a1cb60a016e329f4fc7b12b078cc33d",
@@ -32824,12 +33013,40 @@
       "questionHash": "628a61f1e0071ea8bf82ff81e4c18cd6148f60c6bdfcfd0c548c4861d3efc7fc",
       "sectionHash": "1d1a726d51f8e15c5aad00c2f0ef4af5d5cbf3883a1c4ee178f7838c2035550a",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-p08/B08044.ts:1"
+        "src/cards/ct-p08/B08044.ts:33"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:163",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:164",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:166",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:167",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:168",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:180",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:181",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:182",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:183",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:184",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:192",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:193",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:194",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:211",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:213",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:214",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:221",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:222",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:223",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:232",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:238",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:239",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:247",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:250",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:251",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:252",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:4"
+      ]
     },
     {
       "answerHash": "f8534b7ceaa0869753bcfca937480b879037bfb4356f58fdfd217fed88297c7c",
@@ -49209,12 +49426,40 @@
       "questionHash": "628a61f1e0071ea8bf82ff81e4c18cd6148f60c6bdfcfd0c548c4861d3efc7fc",
       "sectionHash": "1d1a726d51f8e15c5aad00c2f0ef4af5d5cbf3883a1c4ee178f7838c2035550a",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-d08/D08005.ts:40"
+        "src/cards/ct-d08/D08005.ts:28"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:163",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:164",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:166",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:167",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:168",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:180",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:181",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:182",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:183",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:184",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:192",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:193",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:194",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:211",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:213",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:214",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:221",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:222",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:223",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:232",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:238",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:239",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:247",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:250",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:251",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:252",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:5"
+      ]
     },
     {
       "answerHash": "12671c9db1621b1fc5e73b37daaed95f8a94041353b567787cbb782b0edd6373",
@@ -49243,12 +49488,41 @@
       "questionHash": "628a61f1e0071ea8bf82ff81e4c18cd6148f60c6bdfcfd0c548c4861d3efc7fc",
       "sectionHash": "1d1a726d51f8e15c5aad00c2f0ef4af5d5cbf3883a1c4ee178f7838c2035550a",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-d08/D08006.ts:10"
+        "src/cards/ct-d08/D08005.ts:28",
+        "src/cards/ct-d08/D08006.ts:8"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:163",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:164",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:166",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:167",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:168",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:180",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:181",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:182",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:183",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:184",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:192",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:193",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:194",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:211",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:213",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:214",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:221",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:222",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:223",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:232",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:238",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:239",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:247",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:250",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:251",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:252",
+        "tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:6"
+      ]
     },
     {
       "answerHash": "ffd29dd2b3a9717ba7136cea5055ccdda44f40880914e6babc5934d495c6669b",
@@ -50206,12 +50480,33 @@
       "questionHash": "df623fb6fab6a794407d5c27f0951036cafa3c3d2c5922474e0492195332d20a",
       "sectionHash": "577fab5535f861c63a2d6eb2eced5360b66ed584e1772ab5ee52278d1d4b2ba5",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-d09/D09027.ts:1"
+        "src/cards/ct-d09/D09027.ts:34"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:156",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:157",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:158",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:159",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:160",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:171",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:172",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:173",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:174",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:182",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:183",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:184",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:193",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:194",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:195",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:196",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:207",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:208",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:209",
+        "tests/cards/official-qa/case-cost-three-insufficient-public-wave70.test.ts:6"
+      ]
     },
     {
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
@@ -60656,10 +60951,6 @@
     },
     {
       "kind": "missing-test",
-      "qaId": "card:B05024:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610"
-    },
-    {
-      "kind": "missing-test",
       "qaId": "card:B05027:81bf0a34b9565c11671cea04d1284643649178004f3813011d7f0f60163e5ed0"
     },
     {
@@ -60832,10 +61123,6 @@
     },
     {
       "kind": "missing-test",
-      "qaId": "card:B05063:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610"
-    },
-    {
-      "kind": "missing-test",
       "qaId": "card:B05066:c1d131174b1c3670dd5949367607cecb0113ea8dd17704c6b21f0a4ab4d3f039"
     },
     {
@@ -60905,10 +61192,6 @@
     {
       "kind": "missing-test",
       "qaId": "card:B05082:51de3c143838c348f32a12d2252063f7ac6b6d884ab75fc3ef24a003df5b1731"
-    },
-    {
-      "kind": "missing-test",
-      "qaId": "card:B05083:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610"
     },
     {
       "kind": "missing-test",
@@ -61268,10 +61551,6 @@
     },
     {
       "kind": "missing-test",
-      "qaId": "card:B06036:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610"
-    },
-    {
-      "kind": "missing-test",
       "qaId": "card:B06036:d5b4f1f14f3bfa7b4acbb66e917288698e5ab0f84fa0714f86cd8196f9554e79"
     },
     {
@@ -61588,10 +61867,6 @@
     },
     {
       "kind": "missing-test",
-      "qaId": "card:B06105:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610"
-    },
-    {
-      "kind": "missing-test",
       "qaId": "card:B06105:cef19acafddb85d5e9ebc2616e6fb4f08209d73a51409805a085cd196de080e5"
     },
     {
@@ -61888,10 +62163,6 @@
     },
     {
       "kind": "missing-test",
-      "qaId": "card:B07061:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6"
-    },
-    {
-      "kind": "missing-test",
       "qaId": "card:B07061:b741226e5112f1cb5900d424bf2714a1064c6f2748d3a65cbf03d6c1e9cfdd91"
     },
     {
@@ -61953,10 +62224,6 @@
     {
       "kind": "missing-test",
       "qaId": "card:B07075:8f62d698741bd8b87e040399489a517fa090a5281056cb1f63f399ffe97a6f1d"
-    },
-    {
-      "kind": "missing-test",
-      "qaId": "card:B07077:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6"
     },
     {
       "kind": "missing-test",
@@ -62256,10 +62523,6 @@
     },
     {
       "kind": "missing-test",
-      "qaId": "card:B08030:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6"
-    },
-    {
-      "kind": "missing-test",
       "qaId": "card:B08030:fa86da58031fb9ac89e29ca33154f7e33fdfcb57011d4dc5c56f55e70a74939f"
     },
     {
@@ -62317,10 +62580,6 @@
     {
       "kind": "missing-test",
       "qaId": "card:B08043:d2daf65f8f37c6b92a14e58a624e94f31d9bc62c20d0e0f1cf253457f9149203"
-    },
-    {
-      "kind": "missing-test",
-      "qaId": "card:B08044:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6"
     },
     {
       "kind": "missing-test",
@@ -63972,15 +64231,7 @@
     },
     {
       "kind": "missing-test",
-      "qaId": "card:D08005:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6"
-    },
-    {
-      "kind": "missing-test",
       "qaId": "card:D08006:58763c5eec112da565cbb2892250eb844e45725c5b8575645188326a1a98dcd7"
-    },
-    {
-      "kind": "missing-test",
-      "qaId": "card:D08006:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6"
     },
     {
       "kind": "missing-test",
@@ -64077,10 +64328,6 @@
     {
       "kind": "missing-test",
       "qaId": "card:D09025:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398"
-    },
-    {
-      "kind": "missing-test",
-      "qaId": "card:D09027:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610"
     },
     {
       "kind": "missing-test",
@@ -65002,8 +65249,8 @@
   "coverage": {
     "total": 2964,
     "statusCounts": {
-      "matched": 1472,
-      "test-missing": 1492,
+      "matched": 1484,
+      "test-missing": 1480,
       "legacy-unreviewed": 0,
       "unmapped": 0,
       "mismatch": 0,
@@ -65829,7 +66076,7 @@
       "card:B05023:93a807d59a6ac425607f0d92147ad528a504c6a36dd2a0bfb599f19e6f6019b9": "matched",
       "card:B05023:e2eb7c1b2a34a64cff5afde3981f9c512081cb8c7bf57b64a4ba5774678e31c9": "matched",
       "card:B05024:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "matched",
-      "card:B05024:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "test-missing",
+      "card:B05024:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "matched",
       "card:B05024:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297": "matched",
       "card:B05027:637ab5c67109a0e0093a3c4ca35c9c7a94aaf31d67d58d1fb9c0c6ef74ad0fbe": "matched",
       "card:B05027:81bf0a34b9565c11671cea04d1284643649178004f3813011d7f0f60163e5ed0": "test-missing",
@@ -65920,7 +66167,7 @@
       "card:B05062:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398": "matched",
       "card:B05063:06c268952b83e0a0d17589d4907b18c2b819a312009bc70cc73530576f1cece8": "test-missing",
       "card:B05063:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "matched",
-      "card:B05063:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "test-missing",
+      "card:B05063:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "matched",
       "card:B05063:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297": "matched",
       "card:B05066:a0aaa7e17805bff1ed51625b06de73f32ae71cb4e9de06bfa86a18f73d15f21f": "matched",
       "card:B05066:c1d131174b1c3670dd5949367607cecb0113ea8dd17704c6b21f0a4ab4d3f039": "test-missing",
@@ -65958,7 +66205,7 @@
       "card:B05082:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb": "matched",
       "card:B05082:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305": "matched",
       "card:B05083:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "matched",
-      "card:B05083:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "test-missing",
+      "card:B05083:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "matched",
       "card:B05083:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297": "matched",
       "card:B05083:e0f724507a4784bfc11308fcb6fbdc982897f1eb1d8d90ba30a31c734d9cbd10": "test-missing",
       "card:B05086:9ec6fd3072a58784c509d476f310f272f900999a399e9fc9fc0ec8de66db4c8e": "test-missing",
@@ -66130,7 +66377,7 @@
       "card:B06036:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "matched",
       "card:B06036:6ee4a10e2ff400f6f8c294d10796758725ac4c53cb03413068a05486710358b5": "test-missing",
       "card:B06036:842042d11ef8ee69a0de81391490f90ee08e72e98ba9e0a4e7c61db69c87146c": "test-missing",
-      "card:B06036:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "test-missing",
+      "card:B06036:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "matched",
       "card:B06036:d5b4f1f14f3bfa7b4acbb66e917288698e5ab0f84fa0714f86cd8196f9554e79": "test-missing",
       "card:B06036:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297": "matched",
       "card:B06036:ef8f1c5c8c1abdc6f70dd0cbdf073b3d8c558f5feeca4c12d99122b337875843": "test-missing",
@@ -66291,7 +66538,7 @@
       "card:B06104:e8e3445ac6139f21bb8ab2dd70734b6ea03331a372bfd54f70907a129e263392": "matched",
       "card:B06105:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "matched",
       "card:B06105:4884b70d9b28923ff8aa12110cd31e8a1dbcc3b34ef9dea7cdc81f1a5b856a9b": "matched",
-      "card:B06105:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "test-missing",
+      "card:B06105:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "matched",
       "card:B06105:cef19acafddb85d5e9ebc2616e6fb4f08209d73a51409805a085cd196de080e5": "test-missing",
       "card:B06105:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297": "matched",
       "card:B06105:ef8f1c5c8c1abdc6f70dd0cbdf073b3d8c558f5feeca4c12d99122b337875843": "test-missing",
@@ -66433,7 +66680,7 @@
       "card:B07060:94d4fbcb6d6b527d8e1d1c0eaa9b309fe2198ea03d499bf7e02c1d5a00121143": "test-missing",
       "card:B07060:a97d46d3ab0116f37821991f7d72e241ecfa6e2ff8a5930e1ce47aea3939bad7": "matched",
       "card:B07061:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "matched",
-      "card:B07061:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "test-missing",
+      "card:B07061:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "matched",
       "card:B07061:b741226e5112f1cb5900d424bf2714a1064c6f2748d3a65cbf03d6c1e9cfdd91": "test-missing",
       "card:B07061:fa86da58031fb9ac89e29ca33154f7e33fdfcb57011d4dc5c56f55e70a74939f": "matched",
       "card:B07062:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2": "matched",
@@ -66480,7 +66727,7 @@
       "card:B07076:2a847275894e970eb2d0e6e92f53d03b8a8c24915cbb770001ba6734a00cf260": "matched",
       "card:B07076:c9e60c6019badd8b070bd2873da7f07721919c49b5c072ce7d4840311ff4847b": "matched",
       "card:B07077:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "matched",
-      "card:B07077:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "test-missing",
+      "card:B07077:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "matched",
       "card:B07077:e7696529447cdd4105353e743deb4b9055acf506a6063542ebd4b356f440e195": "test-missing",
       "card:B07077:fa86da58031fb9ac89e29ca33154f7e33fdfcb57011d4dc5c56f55e70a74939f": "test-missing",
       "card:B07079:212da49cce2aca6921fdb352e94b610cbdeeebd02d0ab5c66e8200c0164c3a0e": "matched",
@@ -66619,7 +66866,7 @@
       "card:B08029:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398": "matched",
       "card:B08030:3d207a0dc96f9343d7f6d42ed94ccf8ed9c1fefb23e811660428b40fae1095f9": "test-missing",
       "card:B08030:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "matched",
-      "card:B08030:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "test-missing",
+      "card:B08030:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "matched",
       "card:B08030:fa86da58031fb9ac89e29ca33154f7e33fdfcb57011d4dc5c56f55e70a74939f": "test-missing",
       "card:B08032:80a2cfb16a87e5d0d4da8698cb86f47b173740616dd1af4e02537a5deb1ade52": "test-missing",
       "card:B08033:06ce9fd17111893f363795f972f77b8e344d6bdfdd6a919cf1c87d9c0d4fcc08": "test-missing",
@@ -66648,7 +66895,7 @@
       "card:B08043:9090b8877e07cffd2f03af3a3388dcc7ce9753a67dc3017b1e2ca90bf08cdaef": "matched",
       "card:B08043:d2daf65f8f37c6b92a14e58a624e94f31d9bc62c20d0e0f1cf253457f9149203": "test-missing",
       "card:B08044:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "matched",
-      "card:B08044:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "test-missing",
+      "card:B08044:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "matched",
       "card:B08044:fa86da58031fb9ac89e29ca33154f7e33fdfcb57011d4dc5c56f55e70a74939f": "test-missing",
       "card:B08046:7dd4d4afb1549412d31916afecd76ee07e4991bf7b74dc7fb196896cad7fb01a": "test-missing",
       "card:B08047:6c1e3617937ea14c15441600fcb9ffb67421393476b22c504842e1cdc8e6029f": "test-missing",
@@ -67466,9 +67713,9 @@
       "card:D08004:0e88a4f091552954ddb522f6c6858e2bf997b67d641650f5887cfceaa83c971d": "matched",
       "card:D08004:e84a729d02752500adff3d06cf5d32fca16f9a85df564071a6a51dc0ca748034": "test-missing",
       "card:D08005:58763c5eec112da565cbb2892250eb844e45725c5b8575645188326a1a98dcd7": "test-missing",
-      "card:D08005:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "test-missing",
+      "card:D08005:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "matched",
       "card:D08006:58763c5eec112da565cbb2892250eb844e45725c5b8575645188326a1a98dcd7": "test-missing",
-      "card:D08006:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "test-missing",
+      "card:D08006:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "matched",
       "card:D08007:3ebc71d3fe967142af371f16682581bf9d44ac0db1c409f0d2a20d11ffeeae41": "matched",
       "card:D08007:dbfee7727bf452848f0734983024cebbd5f37a01ee9fcf5756487ea1ffa7b207": "matched",
       "card:D08008:3ebc71d3fe967142af371f16682581bf9d44ac0db1c409f0d2a20d11ffeeae41": "matched",
@@ -67519,7 +67766,7 @@
       "card:D09020:4f1e7b564a969ed3ca23c1c7599caeef0dd4fcdb4d5299623c98f1d4009bea99": "test-missing",
       "card:D09025:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398": "test-missing",
       "card:D09027:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "matched",
-      "card:D09027:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "test-missing",
+      "card:D09027:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "matched",
       "card:D09027:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297": "matched",
       "card:D10003:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2f": "matched",
       "card:D10003:857c38ab302c08c38f3b72a03279e754a87fabcc6c3ef2396e7000b45e0b23ca": "matched",
@@ -68795,7 +69042,7 @@
       "card:B05023:93a807d59a6ac425607f0d92147ad528a504c6a36dd2a0bfb599f19e6f6019b9": "aligned",
       "card:B05023:e2eb7c1b2a34a64cff5afde3981f9c512081cb8c7bf57b64a4ba5774678e31c9": "aligned",
       "card:B05024:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "aligned",
-      "card:B05024:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "test-gap",
+      "card:B05024:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "aligned",
       "card:B05024:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297": "aligned",
       "card:B05027:637ab5c67109a0e0093a3c4ca35c9c7a94aaf31d67d58d1fb9c0c6ef74ad0fbe": "aligned",
       "card:B05027:81bf0a34b9565c11671cea04d1284643649178004f3813011d7f0f60163e5ed0": "test-gap",
@@ -68886,7 +69133,7 @@
       "card:B05062:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398": "aligned",
       "card:B05063:06c268952b83e0a0d17589d4907b18c2b819a312009bc70cc73530576f1cece8": "test-gap",
       "card:B05063:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "aligned",
-      "card:B05063:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "test-gap",
+      "card:B05063:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "aligned",
       "card:B05063:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297": "aligned",
       "card:B05066:a0aaa7e17805bff1ed51625b06de73f32ae71cb4e9de06bfa86a18f73d15f21f": "aligned",
       "card:B05066:c1d131174b1c3670dd5949367607cecb0113ea8dd17704c6b21f0a4ab4d3f039": "test-gap",
@@ -68924,7 +69171,7 @@
       "card:B05082:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb": "aligned",
       "card:B05082:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305": "aligned",
       "card:B05083:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "aligned",
-      "card:B05083:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "test-gap",
+      "card:B05083:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "aligned",
       "card:B05083:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297": "aligned",
       "card:B05083:e0f724507a4784bfc11308fcb6fbdc982897f1eb1d8d90ba30a31c734d9cbd10": "test-gap",
       "card:B05086:9ec6fd3072a58784c509d476f310f272f900999a399e9fc9fc0ec8de66db4c8e": "test-gap",
@@ -69096,7 +69343,7 @@
       "card:B06036:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "aligned",
       "card:B06036:6ee4a10e2ff400f6f8c294d10796758725ac4c53cb03413068a05486710358b5": "test-gap",
       "card:B06036:842042d11ef8ee69a0de81391490f90ee08e72e98ba9e0a4e7c61db69c87146c": "test-gap",
-      "card:B06036:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "test-gap",
+      "card:B06036:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "aligned",
       "card:B06036:d5b4f1f14f3bfa7b4acbb66e917288698e5ab0f84fa0714f86cd8196f9554e79": "test-gap",
       "card:B06036:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297": "aligned",
       "card:B06036:ef8f1c5c8c1abdc6f70dd0cbdf073b3d8c558f5feeca4c12d99122b337875843": "test-gap",
@@ -69257,7 +69504,7 @@
       "card:B06104:e8e3445ac6139f21bb8ab2dd70734b6ea03331a372bfd54f70907a129e263392": "aligned",
       "card:B06105:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "aligned",
       "card:B06105:4884b70d9b28923ff8aa12110cd31e8a1dbcc3b34ef9dea7cdc81f1a5b856a9b": "aligned",
-      "card:B06105:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "test-gap",
+      "card:B06105:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "aligned",
       "card:B06105:cef19acafddb85d5e9ebc2616e6fb4f08209d73a51409805a085cd196de080e5": "test-gap",
       "card:B06105:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297": "aligned",
       "card:B06105:ef8f1c5c8c1abdc6f70dd0cbdf073b3d8c558f5feeca4c12d99122b337875843": "test-gap",
@@ -69399,7 +69646,7 @@
       "card:B07060:94d4fbcb6d6b527d8e1d1c0eaa9b309fe2198ea03d499bf7e02c1d5a00121143": "test-gap",
       "card:B07060:a97d46d3ab0116f37821991f7d72e241ecfa6e2ff8a5930e1ce47aea3939bad7": "aligned",
       "card:B07061:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "aligned",
-      "card:B07061:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "test-gap",
+      "card:B07061:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "aligned",
       "card:B07061:b741226e5112f1cb5900d424bf2714a1064c6f2748d3a65cbf03d6c1e9cfdd91": "test-gap",
       "card:B07061:fa86da58031fb9ac89e29ca33154f7e33fdfcb57011d4dc5c56f55e70a74939f": "aligned",
       "card:B07062:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2": "aligned",
@@ -69446,7 +69693,7 @@
       "card:B07076:2a847275894e970eb2d0e6e92f53d03b8a8c24915cbb770001ba6734a00cf260": "aligned",
       "card:B07076:c9e60c6019badd8b070bd2873da7f07721919c49b5c072ce7d4840311ff4847b": "aligned",
       "card:B07077:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "aligned",
-      "card:B07077:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "test-gap",
+      "card:B07077:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "aligned",
       "card:B07077:e7696529447cdd4105353e743deb4b9055acf506a6063542ebd4b356f440e195": "test-gap",
       "card:B07077:fa86da58031fb9ac89e29ca33154f7e33fdfcb57011d4dc5c56f55e70a74939f": "test-gap",
       "card:B07079:212da49cce2aca6921fdb352e94b610cbdeeebd02d0ab5c66e8200c0164c3a0e": "aligned",
@@ -69585,7 +69832,7 @@
       "card:B08029:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398": "aligned",
       "card:B08030:3d207a0dc96f9343d7f6d42ed94ccf8ed9c1fefb23e811660428b40fae1095f9": "test-gap",
       "card:B08030:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "aligned",
-      "card:B08030:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "test-gap",
+      "card:B08030:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "aligned",
       "card:B08030:fa86da58031fb9ac89e29ca33154f7e33fdfcb57011d4dc5c56f55e70a74939f": "test-gap",
       "card:B08032:80a2cfb16a87e5d0d4da8698cb86f47b173740616dd1af4e02537a5deb1ade52": "test-gap",
       "card:B08033:06ce9fd17111893f363795f972f77b8e344d6bdfdd6a919cf1c87d9c0d4fcc08": "test-gap",
@@ -69614,7 +69861,7 @@
       "card:B08043:9090b8877e07cffd2f03af3a3388dcc7ce9753a67dc3017b1e2ca90bf08cdaef": "aligned",
       "card:B08043:d2daf65f8f37c6b92a14e58a624e94f31d9bc62c20d0e0f1cf253457f9149203": "test-gap",
       "card:B08044:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "aligned",
-      "card:B08044:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "test-gap",
+      "card:B08044:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "aligned",
       "card:B08044:fa86da58031fb9ac89e29ca33154f7e33fdfcb57011d4dc5c56f55e70a74939f": "test-gap",
       "card:B08046:7dd4d4afb1549412d31916afecd76ee07e4991bf7b74dc7fb196896cad7fb01a": "test-gap",
       "card:B08047:6c1e3617937ea14c15441600fcb9ffb67421393476b22c504842e1cdc8e6029f": "test-gap",
@@ -70432,9 +70679,9 @@
       "card:D08004:0e88a4f091552954ddb522f6c6858e2bf997b67d641650f5887cfceaa83c971d": "aligned",
       "card:D08004:e84a729d02752500adff3d06cf5d32fca16f9a85df564071a6a51dc0ca748034": "test-gap",
       "card:D08005:58763c5eec112da565cbb2892250eb844e45725c5b8575645188326a1a98dcd7": "test-gap",
-      "card:D08005:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "test-gap",
+      "card:D08005:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "aligned",
       "card:D08006:58763c5eec112da565cbb2892250eb844e45725c5b8575645188326a1a98dcd7": "test-gap",
-      "card:D08006:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "test-gap",
+      "card:D08006:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6": "aligned",
       "card:D08007:3ebc71d3fe967142af371f16682581bf9d44ac0db1c409f0d2a20d11ffeeae41": "aligned",
       "card:D08007:dbfee7727bf452848f0734983024cebbd5f37a01ee9fcf5756487ea1ffa7b207": "aligned",
       "card:D08008:3ebc71d3fe967142af371f16682581bf9d44ac0db1c409f0d2a20d11ffeeae41": "aligned",
@@ -70485,7 +70732,7 @@
       "card:D09020:4f1e7b564a969ed3ca23c1c7599caeef0dd4fcdb4d5299623c98f1d4009bea99": "test-gap",
       "card:D09025:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398": "test-gap",
       "card:D09027:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93": "aligned",
-      "card:D09027:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "test-gap",
+      "card:D09027:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610": "aligned",
       "card:D09027:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297": "aligned",
       "card:D10003:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2f": "aligned",
       "card:D10003:857c38ab302c08c38f3b72a03279e754a87fabcc6c3ef2396e7000b45e0b23ca": "aligned",

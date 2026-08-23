@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6469
+- **ファイル数**: 6481
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -880,6 +880,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-02-qa-wave67-evidence-positions.md` — QA Wave67: certify arbitrary evidence positions
     - `2026-08-24-03-qa-wave68-owner-cost.md` — QA Wave68: certify owner-only exact-three costs
     - `2026-08-24-04-qa-wave69-event-yaiba.md` — QA Wave69: certify Event YAIBA
+    - `2026-08-24-05-qa-wave70-incomplete-cost.md` — QA Wave70: certify incomplete exact-three costs
+    - `2026-08-24-06-qa-wave71-owner-cost.md` — QA Wave71: certify owner-only exact-one costs
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1586,6 +1588,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-qa-waves64-65.md` — QA adjudication Waves64-65
     - `2026-08-24-qa-waves66-67.md` — QA adjudication Waves66-67
     - `2026-08-24-qa-waves68-69.md` — QA adjudication Waves68-69
+    - `2026-08-24-qa-waves70-71.md` — QA adjudication Waves70-71
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1801,6 +1804,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B07035.md` — B07035 古畑恵 grounding
       - `B07037.md` — B07037 grounding
       - `B07045.md` — B07045 セリザベス女王 grounding
+      - `B07061.md` — B07061 grounding
       - `B07061P.md` — grounding dossier: B07061P (自動生成 2026-07-13)
       - `B07062.md` — B07062 / B07062P grounding
       - `B07063.md` — B07063 / B07063P grounding
@@ -1809,6 +1813,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B07072.md` — B07072 澁谷夏子 grounding
       - `B07073.md` — B07073 / B07073P grounding
       - `B07074.md` — B07074 grounding
+      - `B07077.md` — B07077 grounding
       - `B07082.md` — B07082 / B07082P grounding
       - `B07088.md` — B07088 山村ミサオ grounding
       - `B07093.md` — B07093 / B07093P バーボン＆ライ grounding
@@ -1826,9 +1831,11 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08024.md` — B08024 grounding
       - `B08025.md` — B08025 / B08025P grounding
       - `B08026.md` — B08026 grounding
+      - `B08030.md` — B08030 grounding
       - `B08033.md` — B08033 / B08033P grounding
       - `B08034.md` — B08034 / B08034P grounding
       - `B08035.md` — B08035 grounding
+      - `B08044.md` — B08044 grounding
       - `B08047.md` — B08047/B08047P 沖矢昴 grounding (2026-07-10, fable)
       - `B08050.md` — B08050 宮野明美 grounding
       - `B08056.md` — B08056 宮野厚司 grounding
@@ -1963,6 +1970,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D06013.md` — D06013 白馬探 grounding (2026-07-10, sonnet 調査 + S2 session 裁定)
       - `D06021.md` — D06021 服部平次 grounding (2026-07-10, sonnet5)
       - `D06023.md` — D06023 服部平次 grounding (2026-07-10, sonnet5)
+      - `D08005.md` — D08005 grounding
+      - `D08006.md` — D08006 grounding
       - `D08021.md` — D08021 結成 少年探偵団 grounding
       - `D09008.md` — D09008 上原由衣 grounding
       - `D09009.md` — D09009 上原由衣 grounding
@@ -2040,6 +2049,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `waves64-65-authority.md` — Waves64-65 authority manifest
       - `waves66-67-authority.md` — Waves66-67 authority manifest
       - `waves68-69-authority.md` — Waves68-69 authority manifest
+      - `waves70-71-authority.md` — Waves70-71 authority manifest
     - **`meta-ui/`**
       - `00-overview.md` — 00 — メタ UI 統合設計 概要
       - `01-project-setup.md` — 01 — meta-app プロジェクト構成
@@ -5792,6 +5802,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bond-partner-exclusion-wave21.test.ts` — qa: card:B01087:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
       - `bond-partner-exclusion-wave9.test.ts` — qa: card:B02004:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
       - `bug-331-reveal-complete-public.test.ts`
+      - `case-cost-three-insufficient-public-wave70.test.ts` — qa: card:B05024:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610
       - `case-cost-three-self-only-public-wave68.test.ts` — qa: card:B05024:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297
       - `case-flip-two-complex-public-wave37.test.ts` — qa: card:B06095:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2
       - `case-flip-two-declared-public-wave36.test.ts` — qa: card:B06013:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2
@@ -5806,6 +5817,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `deck-look-zero-choice-public-wave30.test.ts` — qa: card:B04048:c2131ef2b4d611ed2fdcba93cb1619157aea6dcc39318ced5a4a6f69bc29faaf
       - `deck-refresh-wave8.test.ts` — qa: card:B04012:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4
       - `deck-top-three-self-only-public-wave59.test.ts` — qa: card:B04077:1a92dcdf67120f7d76c881aa12661add73fc79ad2cefe30d1e4fbda6978a4758
+      - `declared-cost-one-self-only-public-wave71.test.ts` — qa: card:B07061:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6
       - `declared-sleep-cost-public-wave24.test.ts` — qa: card:B01063:f97b21e9e16f570fd0da6acab0a9cb6e819a6e4a010e86dddb5ff82c6d33902e
       - `disguise-definition-public-wave56.test.ts` — qa: card:B02041:bde0a3a5b0127797c2caad230a469d5a24f2a164829581273d0d8e77589383d6
       - `effect-entry-action-public-wave29.test.ts` — qa: card:B03073:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa

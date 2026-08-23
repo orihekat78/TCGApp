@@ -9,24 +9,22 @@
 - QA Waves27-34: .claude/sessions/2026-08-23-qa-memory-waves27-34.md.
 - QA Waves35-67: matching dated files under .claude/sessions/.
 
-## 2026-08-24: QA runtime Waves68-69
+## 2026-08-24: QA runtime Waves70-71
 
-- Wave68 certifies six exact-three owner-evidence records and replaces B05063
-  horizontal evidence across thirteen physical printings. A short owner
-  payment cannot substitute opponent evidence; CPU owner=`opp` is explicit.
-- Wave69 certifies six Event YAIBA records across eleven physical printings.
-  Real entry, hand, Next Hint, Hirameki, cut-in, and contact routes read only
-  the ability owner's incident.
-- BUG-343 restores official YAIBA traits on B06036/P and B06065/P.
-- BUG-342 makes Next Hint optional-card admission transactional, adds public
-  full-scene switch victim selection, shares picker/engine preflight, and logs
-  the victim's scene→remove causal operation.
-- Coverage after generation is 1472 matched / 1492 test-missing / 2964 total.
+- Wave70 certifies six incomplete exact-three records across eleven printings.
+  Flipping all two/zero own evidence rejects before effects; opponent evidence
+  never supplements self/opp or CPU payment.
+- Wave71 certifies six owner-only exact-one records across ten printings.
+  Arbitrary positions preserve identity/order; malformed and opponent-only
+  choices reject. Owner=`opp`, CPU, and hydration are explicit.
+- B06023 and B10100/P remain matched horizontal Wave71 controls.
+- No production change was required. Fresh current-parser staging has 2964 Q&A
+  items and zero conflicts; the pre-session partial ignored cache is restored.
+- Coverage after generation is 1484 matched / 1480 test-missing / 2964 total.
 
 ## Next
 
-- Wave70: six records at df623fb6.../1f9dea222...; owner has two or fewer
-  facedown evidence, so exact-three cost cannot be partially paid.
-- Wave71: six owner-only exact-one records at 628a61f1e.../45979cb61....
+- Wave72: six partner-area-limit records at 701c4eca.../2c60b49e....
+- Wave73: six deck-short exact-three-cost records at 3a4d85c.../caedd001....
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.
