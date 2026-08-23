@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `acf992bc804f`
+> Source hash: `788b9d2935ee`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,20 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# QA Wave63: certify full-scene effect entry
+
+- Certify eight records and eleven physical sources through public decisions.
+- Switch out every ability source while paid work and entry effects continue.
+- Cover hand/remove/deck origins, sleep state, zero entry, and owner symmetry.
+- Prove source leave precedes entrant entry and reject forged victims atomically.
+
+# QA Wave62: certify face-down set privacy
+
+- Certify nine records and sixteen physical sources through public set routes.
+- Hide owner/opponent identities in picks, cost UI, replay projection, and DOM.
+- Reveal only after removal; reject malformed exact costs transactionally.
+- Fix BUG-338 by restoring B08034's official `R` rarity metadata.
 
 # QA Wave61: certify full-scene effect entry
 

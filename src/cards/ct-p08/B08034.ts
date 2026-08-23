@@ -70,7 +70,7 @@ export const B08034: CardDef = {
   lp: 2,
   traits: ['小説家'],
   keywords: [],
-  rarity: 'C',
+  rarity: 'R',
   imageUrl: '1770731222552780.jpg',
   abilities: [a1, a2],
   ruleRefs: ['rules/11-reasoning.md', 'rules/15-abilities-effects.md', 'rules/16-card-set.md', 'rules/17-icons.md'],

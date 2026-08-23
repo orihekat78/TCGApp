@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6401
+- **ファイル数**: 6415
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -518,6 +518,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-335.md` — effect-entry source omissions
     - `BUG-336.md` — B09056 printed choice collapse
     - `BUG-337.md` — contact action slot reuse
+    - `BUG-338.md` — B08034 rarity mismatch
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -866,6 +867,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-25-qa-wave59-deck-owner-cost.md` — QA Wave59: certify owner deck-top-three costs
     - `2026-08-23-26-qa-wave60-stun-definition.md` — QA Wave60: certify the stun definition
     - `2026-08-23-27-qa-wave61-full-scene-entry.md` — QA Wave61: certify full-scene effect entry
+    - `2026-08-23-28-qa-wave62-set-privacy.md` — QA Wave62: certify face-down set privacy
+    - `2026-08-23-29-qa-wave63-full-scene-entry.md` — QA Wave63: certify full-scene effect entry
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1568,6 +1571,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-qa-waves56-57.md` — QA adjudication Waves56-57
     - `2026-08-23-qa-waves58-59.md` — QA adjudication Waves58-59
     - `2026-08-23-qa-waves60-61.md` — QA adjudication Waves60-61
+    - `2026-08-23-qa-waves62-63.md` — QA adjudication Waves62-63
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1724,6 +1728,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B05048.md` — B05048 黒羽快斗 grounding
       - `B05051.md` — B05051 京極真 grounding
       - `B05052.md` — B05052 工藤優作 grounding
+      - `B05055.md` — B05055 grounding
+      - `B05056.md` — B05056 grounding
       - `B05063.md` — B05063/B05063P 園子のアブない夏物語 (事件) grounding (2026-07-10, fable)
       - `B05077.md` — B05077 ジョディ・サンテミリオン grounding
       - `B05080.md` — B05080 timing grounding
@@ -1763,6 +1769,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B07030P2.md` — grounding dossier: B07030P2 (自動生成 2026-07-13)
       - `B07032.md` — B07032 / B07032P grounding
       - `B07035.md` — B07035 古畑恵 grounding
+      - `B07037.md` — B07037 grounding
       - `B07045.md` — B07045 セリザベス女王 grounding
       - `B07061P.md` — grounding dossier: B07061P (自動生成 2026-07-13)
       - `B07062.md` — B07062 / B07062P grounding
@@ -1770,6 +1777,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B07069.md` — B07069 本堂瑛海 grounding
       - `B07072.md` — B07072 澁谷夏子 grounding
       - `B07074.md` — B07074 grounding
+      - `B07082.md` — B07082 / B07082P grounding
       - `B07088.md` — B07088 山村ミサオ grounding
       - `B07093.md` — B07093 / B07093P バーボン＆ライ grounding
       - `B07100.md` — B07100 コルン grounding (2026-07-10, fable)
@@ -1783,6 +1791,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08019.md` — B08019 大岡紅葉＆伊織無我 (MR/MRP) grounding (2026-07-10, sonnet5)
       - `B08025.md` — B08025 / B08025P grounding
       - `B08026.md` — B08026 grounding
+      - `B08033.md` — B08033 / B08033P grounding
+      - `B08034.md` — B08034 / B08034P grounding
+      - `B08035.md` — B08035 grounding
       - `B08047.md` — B08047/B08047P 沖矢昴 grounding (2026-07-10, fable)
       - `B08050.md` — B08050 宮野明美 grounding
       - `B08056.md` — B08056 宮野厚司 grounding
@@ -1816,6 +1827,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B09078.md` — B09078 榎本梓 grounding
       - `B09079.md` — B09079 佐藤美和子 grounding
       - `B09106.md` — B09106 暗殺計画 grounding
+      - `B09109.md` — B09109 / B09109P grounding
       - `B09111.md` — B09111 grounding
       - `B09112.md` — B09112 grounding
       - `B10001.md` — B10001 grounding
@@ -5762,12 +5774,14 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `event-evidence-action-hirameki-public.test.ts` — qa: card:B04041:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
       - `evidence-position-public-wave57.test.ts` — qa: card:B07062:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a
       - `f026-cutin-public.test.ts` — qa: card:B08085:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
+      - `face-down-set-hidden-public-wave62.test.ts` — qa: card:B08033:d52596199be14d625d7776309eeaca145097a31eecca550237262ad7075cb2f4
       - `file-assist-action-public-wave40.test.ts` — qa: card:B04068:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
       - `file-assist-continuous-public-wave38.test.ts` — qa: card:B02063:cbce41c9b0c72cca046ffb06c2b4ff9c3af679af4bcfb692fac12dc0b5998a23
       - `file-assist-declared-public-wave41.test.ts` — qa: card:B08056:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
       - `file-assist-declared-remaining-public-wave42.test.ts` — qa: card:B07069:cbce41c9b0c72cca046ffb06c2b4ff9c3af679af4bcfb692fac12dc0b5998a23
       - `file-assist-enter-public-wave39.test.ts` — qa: card:B04023:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3
       - `file-assist-nondeclared-public-wave43.test.ts` — qa: card:B06087:fe489ff3199dbdf91d8a4404721956da51ba17ccb819450ceed5b301f31fe7be
+      - `full-scene-effect-entry-public-wave63.test.ts` — qa: card:B05055:c51f6838f7814f2243bbe0560dc33c4dc896f1b0b13d486cd4223cb898983c95
       - `hand-remove-self-only-public-wave58.test.ts` — qa: card:B07020:924a8b39ee3036e70eeeac9c3a5941e4faa4fec3ebc39e19ceb12b4b0f2419af
       - `leave-reveal-until-forced-public.test.ts` — qa: card:B02058:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-opponent-turn-public.test.ts` — qa: card:B01065:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58

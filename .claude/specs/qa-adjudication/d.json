@@ -1308,16 +1308,45 @@
     {
       "qaId": "card:B07037:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398",
       "answerHash": "b224b606f8fc34f02bcbd2792e156388486d6469c478c49a07fe2816784668c6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07037.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:45",
+        "rules:.claude/rules/20-color-and-switch.md:32",
+        "rules:.claude/rules/20-color-and-switch.md:34",
+        "rules:.claude/rules/20-color-and-switch.md:45",
+        "src:src/cards/ct-p07/B07037.ts:25",
+        "src:src/engine/effect/atom-handlers/scene.ts:520",
+        "src:src/engine/mutate/scene.ts:232",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:176",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:217",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:218",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:228",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:229",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:259",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:268",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:269",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:270",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:271",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:272",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:273",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:280",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:281",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:284",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:285",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:327",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:337",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:341",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:342",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:344",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:345",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:347",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:364",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:365",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:366"
       ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B07038:84f5c6306b604cda9a50a74bcac18d44657232a0f7b1fc43f094a69f43d05839",
@@ -1599,16 +1628,37 @@
     {
       "qaId": "card:B08056:c51f6838f7814f2243bbe0560dc33c4dc896f1b0b13d486cd4223cb898983c95",
       "answerHash": "b224b606f8fc34f02bcbd2792e156388486d6469c478c49a07fe2816784668c6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08056.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:45",
+        "rules:.claude/rules/20-color-and-switch.md:32",
+        "rules:.claude/rules/20-color-and-switch.md:34",
+        "rules:.claude/rules/20-color-and-switch.md:45",
+        "src:src/cards/ct-p08/B08056.ts:12",
+        "src:src/engine/effect/atom-handlers/scene.ts:520",
+        "src:src/engine/mutate/scene.ts:232",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:176",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:228",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:229",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:259",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:268",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:269",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:270",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:271",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:272",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:273",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:280",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:281",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:329",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:337",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:341",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:342",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:344",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:345"
       ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B08058:8a293cda8d6b4c898d58ed3beb7a7bcbac944230a73525f8c210fbbe999f3190",

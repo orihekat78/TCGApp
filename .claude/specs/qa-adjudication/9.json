@@ -1150,15 +1150,37 @@
     {
       "qaId": "card:B07082:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398",
       "answerHash": "b224b606f8fc34f02bcbd2792e156388486d6469c478c49a07fe2816784668c6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07082.ts:106"
+        "rules:.claude/rules/15-abilities-effects.md:45",
+        "rules:.claude/rules/20-color-and-switch.md:32",
+        "rules:.claude/rules/20-color-and-switch.md:34",
+        "rules:.claude/rules/20-color-and-switch.md:45",
+        "src:src/cards/ct-p07/B07082.ts:15",
+        "src:src/engine/effect/atom-handlers/scene.ts:520",
+        "src:src/engine/mutate/scene.ts:232",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:176",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:228",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:229",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:259",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:268",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:269",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:270",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:271",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:272",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:273",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:280",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:281",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:328",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:337",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:341",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:342",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:344",
+        "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:345"
       ],
-      "noteCodes": [
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B07090:4d1fa98c33395da54f8574029ff3dab24cda9c8ead57684afaaaa815380793d3",

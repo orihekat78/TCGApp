@@ -15,43 +15,11 @@
 - Waves35-49 are recorded in matching dated session files. They cover physical
   ability identity, Bond, end phase, Investigation, FILE assist, and action timing.
 
-## 2026-08-23: QA runtime Waves50-51
+## 2026-08-23: QA runtime Waves50-57
 
-- Wave50 separates stacked cards from set cards. Wave51 certifies deck-look
-  refresh timing. BUG-333/334 fix refresh attribution and held continuation.
-
-## 2026-08-23: QA runtime Waves52-53
-
-- Wave52 grounds all twenty remaining effect-entry records, then repairs the
-  three real CardDef gaps: B06047, B08083, and B09007/P.
-- Their public routes bind the actual source and prove the chosen entrant's own
-  normal enter ability. B06047's unsupported cross-hand aura stays fail-closed.
-- Wave53 certifies nine declared abilities whose cost is exactly two face-down
-  evidence. Mixed-state rejection is transactional; a later nonadjacent valid
-  selection succeeds in the same turn without using opponent evidence.
-- Coverage after generation should be 1353 matched / 1611 test-missing.
-
-## 2026-08-23: QA runtime Waves54-55
-
-- Wave54 certifies nine direct/linear effect-entry records; Wave55 certifies
-  eight nested, contact, clone, and partner-area sources.
-- BUG-336 restores B09056/P's printed trace choice. Inapplicable options remain
-  human-selectable no-ops; autonomous resolution skips only conditionals known
-  false without `else` and does not surface opponent-owned choices to the human.
-- Physical source identity is public-tested for D10023/PR173 and PR291/PR297.
-- Coverage after generation should be 1370 matched / 1594 test-missing.
-
-## 2026-08-23: QA runtime Waves56-57
-
-- Wave56 certifies eight disguise-definition records through real contact.
-  State, name, modifiers, gained keywords, set cards, and stacked occurrences
-  transfer; old faces reach deck bottom without entry/removal hooks.
-- BUG-337 blocks a second `actionContact` in the same acted slot. Immediate
-  cut-in-to-disguise and disguise-to-cut-in public redispatch now reject.
-- Wave57 certifies eight arbitrary-position exact-two evidence records across
-  fifteen physical case printings. `[3,0]` preserves identity, origin, order,
-  length, and opponent evidence; five malformed classes reject transactionally.
-- Coverage after generation should be 1386 matched / 1578 test-missing.
+- Matching session files record stacked-vs-set separation, deck-look refresh,
+  effect-entry repair, exact-two evidence costs, direct/nested entry, disguise,
+  and arbitrary-position evidence. BUG-333/334/336/337 are included there.
 
 ## 2026-08-23: QA runtime Waves58-59
 
@@ -73,9 +41,20 @@
   transactionally. No production or CardDef change was required.
 - Coverage after generation is 1414 matched / 1550 test-missing.
 
+## 2026-08-23: QA runtime Waves62-63
+
+- Wave62 certifies nine face-down set-card privacy records across sixteen
+  physical sources. Identity stays hidden from owner/spectator public surfaces
+  until face-up removal; malformed and cross-owner payments reject atomically.
+- BUG-338 corrects B08034/P official rarity from C/CP to R/RP.
+- Wave63 certifies eight full-scene effect-entry records across eleven physical
+  sources, including source-self switch, leave/enter order, exact delayed tails,
+  owner symmetry, zero-entry, optional decline, and forged-victim rejection.
+- Coverage after generation is 1431 matched / 1533 test-missing.
+
 ## Next
 
-- Wave62: nine records at `f70dca6d.../b827971d...`.
-- Wave63: eight records at `5594be19.../b224b606...`.
+- Wave64: eight records at `c2a2f472.../fec16ced...`.
+- Wave65: eight records at `e3bbd815.../fec16ced...`.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

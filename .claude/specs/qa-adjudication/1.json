@@ -1482,16 +1482,38 @@
     {
       "qaId": "card:B10021:d5170059a9de91cea01aec02d44b8d76f2b3a0525695aa1ed607cfb81144b15d",
       "answerHash": "b827971d951f9835d6c0840bd8d55b1b515112a015ed2bc51e5ec3b110f772b1",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:14",
-        "src:src/cards/ct-p10/B10021.ts:25"
+        "rules:.claude/rules/16-card-set.md:19",
+        "src:src/cards/ct-p10/B10021.ts:18",
+        "src:src/engine/effect/resolve-picks.ts:789",
+        "src:src/engine/effect/resolve-picks.ts:795",
+        "src:src/ui/hooks/useActionsPanelFlow/flows.ts:699",
+        "src:src/ui/hooks/useActionsPanelFlow/flows.ts:716",
+        "src:src/ui/services/replayViewerProjection.ts:152",
+        "src:src/ui/services/replayViewerProjection.ts:156",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:158",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:163",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:170",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:172",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:179",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:286",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:291",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:299",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:300",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:301",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:302",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:305",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:306",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:332",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:336",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:368",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:417",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:421"
       ],
-      "noteCodes": [
-        "IMPLEMENTED-CARD-TEST-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B10023:4785304193e3d6050fab9e20bbeb9ff17ea702ee22abfe3cfd5cce4db0ff3238",
@@ -1510,16 +1532,47 @@
     {
       "qaId": "card:B10023:d5170059a9de91cea01aec02d44b8d76f2b3a0525695aa1ed607cfb81144b15d",
       "answerHash": "b827971d951f9835d6c0840bd8d55b1b515112a015ed2bc51e5ec3b110f772b1",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:14",
-        "src:src/cards/ct-p10/B10023.ts:23"
+        "rules:.claude/rules/16-card-set.md:19",
+        "src:src/cards/ct-p10/B10023.ts:29",
+        "src:src/engine/effect/resolve-picks.ts:789",
+        "src:src/engine/effect/resolve-picks.ts:795",
+        "src:src/ui/hooks/useActionsPanelFlow/flows.ts:699",
+        "src:src/ui/hooks/useActionsPanelFlow/flows.ts:716",
+        "src:src/ui/services/replayViewerProjection.ts:152",
+        "src:src/ui/services/replayViewerProjection.ts:156",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:158",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:163",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:170",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:172",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:179",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:286",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:287",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:291",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:299",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:300",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:301",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:302",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:305",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:306",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:332",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:336",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:370",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:382",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:387",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:388",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:430",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:435",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:437",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:438",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:442",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:443",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:444"
       ],
-      "noteCodes": [
-        "IMPLEMENTED-CARD-TEST-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B10025:5186112e537ae66e1fd20851d377fb39a1039fdb31aa94a637ce22dbc95bbe27",

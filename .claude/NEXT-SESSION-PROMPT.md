@@ -1,45 +1,44 @@
-# Next Task: QA adjudication Waves62-63
+# Next Task: QA adjudication Waves64-65
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves60-61 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves62-63 commit.
 
 ## Completed
 
-- Wave60 certifies seven stun-definition records across eight physical sources.
-- Wave61 certifies seven full-scene effect-entry records across thirteen physical
-  sources, including source-self switch, nested enter hooks, owner symmetry, and
-  transactional forged-victim rejection.
-- Coverage is 1414 matched / 1550 test-missing / 2964 total.
-- No production or CardDef change was required.
+- Wave62 certifies nine face-down set-card privacy records across sixteen
+  physical sources, including replay/UI redaction and post-removal disclosure.
+- Wave63 certifies eight full-scene effect-entry records across eleven physical
+  sources, including source-self switch, exact tails, and zero-entry routes.
+- BUG-338 corrects B08034/P rarity from C/CP to official R/RP.
+- Coverage is 1431 matched / 1533 test-missing / 2964 total.
 - Existing untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml` stay protected.
 
 ## Start
 
 1. Read root/nested AGENTS, `conan-router`, `card-wave`, and `conan-verify`.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read `.claude/sessions/2026-08-23-qa-waves60-61.md` and current QA trace.
+3. Read `.claude/sessions/2026-08-23-qa-waves62-63.md` and current QA trace.
 4. Ground exact Q&A before classifying gaps. Do not infer absent rules.
 
-## Wave62: largest remaining exact group
+## Wave64: largest remaining exact group
 
 - Question hash:
-  `f70dca6d863c38348fdcedfafa0431d49b150f39c4ad5f90e4dd2d9b641db2d6`
+  `c2a2f4725a401741570b95f9e5d006dd5bc4a10c5a40373e903f18cb0cac1639`
 - Answer hash:
-  `b827971d951f9835d6c0840bd8d55b1b515112a015ed2bc51e5ec3b110f772b1`
-- Records: B08033, B08034, B08035, B10021, B10022, B10023, B10026,
-  B10027, B10040.
-- Physical sources: B08033/P, B08034/P, B08035, B10021/P, B10022/P,
-  B10023/P, B10026/P, B10027/P, B10040.
+  `fec16cedeb8683f39fe7ddc9a70fab0a14e5c9217502735c4556a1b181870065`
+- Records: B06013, B06043, B06088, B08016, B08024, B08094, PR180, PR186.
+- Physical sources: B06013/P, B06043/P, B06088, B08016, B08024,
+  B08094/P, PR180, PR186.
 
-## Wave63: next largest exact group
+## Wave65: next largest exact group
 
 - Question hash:
-  `5594be19e41fbe1cb70124f3ccc6258a69b9f9801326e96045000df8c95df77c`
+  `e3bbd8156841a3aa724da9e2ab9b83bec0015916162b53d294a97a12fb4b3c90`
 - Answer hash:
-  `b224b606f8fc34f02bcbd2792e156388486d6469c478c49a07fe2816784668c6`
-- Records: B05055, B05056, B07020, B07037, B07082, B08056, B08083,
-  B09109.
-- Physical sources: B05055, B05056, B07020/P, B07037, B07082/P,
-  B08056, B08083, B09109/P.
+  `fec16cedeb8683f39fe7ddc9a70fab0a14e5c9217502735c4556a1b181870065`
+- Records: B07073, B08020, B08075, B09074, B10010, B10039, B10054,
+  B10101.
+- Physical sources: B07073/P, B08020/P, B08075/P, B09074/P/P2, B10010,
+  B10039/P, B10054/P, B10101/P.
 
 ## Gates and stop
 
@@ -50,5 +49,5 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves60-61 commit.
 - Require rules and adversarial review before commit/push.
 - Stop after one or two implementation waves and write the next handoff.
 
-Remaining estimate: about 1,550 records, roughly 132-284 agent hours before
+Remaining estimate: about 1,533 records, roughly 130-281 agent hours before
 future grouping gains.

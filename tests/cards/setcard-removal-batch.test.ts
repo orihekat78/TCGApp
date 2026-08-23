@@ -17,6 +17,7 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { registerAll } from '@/cards/index';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { B08034 } from '@/cards/ct-p08/B08034';
+import { B08034P } from '@/cards/ct-p08/B08034P';
 import type { GameState, SceneCharacter, SetCardEntry } from '@/engine/types';
 import { sceneChar as baseScene } from '../helpers/fixtures';
 
@@ -36,6 +37,8 @@ describe('engine-extension set-card 除去 batch (2026-06-06)', () => {
   });
 
   it('card def: a1=enter(事件白+パートナー白) / a2=reasoning:end chain(charRemoveSetCard, draw)', () => {
+    expect(B08034.rarity).toBe('R');
+    expect(B08034P.rarity).toBe('RP');
     expect(B08034.abilities[0].trigger).toMatchObject({ hook: 'enter', selfOnly: true });
     expect(B08034.abilities[1].trigger).toMatchObject({ hook: 'reasoning:end', matcherCondition: { kind: 'triggerCharMatches', side: 'self' } });
     const a2eff = B08034.abilities[1].effect as { kind: string; steps: { verb?: string }[] };

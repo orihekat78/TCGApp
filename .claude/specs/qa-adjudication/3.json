@@ -1719,16 +1719,43 @@
     {
       "qaId": "card:B10022:d5170059a9de91cea01aec02d44b8d76f2b3a0525695aa1ed607cfb81144b15d",
       "answerHash": "b827971d951f9835d6c0840bd8d55b1b515112a015ed2bc51e5ec3b110f772b1",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/21-declared-ability-cost.md:15",
-        "src:src/cards/ct-p10/B10022.ts:2"
+        "rules:.claude/rules/16-card-set.md:19",
+        "src:src/cards/ct-p10/B10022.ts:3",
+        "src:src/engine/effect/resolve-picks.ts:789",
+        "src:src/engine/effect/resolve-picks.ts:795",
+        "src:src/ui/hooks/useActionsPanelFlow/flows.ts:699",
+        "src:src/ui/hooks/useActionsPanelFlow/flows.ts:716",
+        "src:src/ui/services/replayViewerProjection.ts:152",
+        "src:src/ui/services/replayViewerProjection.ts:156",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:158",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:163",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:170",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:172",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:179",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:286",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:287",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:291",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:299",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:300",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:301",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:302",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:305",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:306",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:332",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:336",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:369",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:382",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:387",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:388",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:400",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:404",
+        "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:405"
       ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B10028:7d4e5a15f1e2869123ee4ecab7154fb5fb4d1a5b956e7206fd67775940866d4f",
