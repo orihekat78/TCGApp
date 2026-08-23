@@ -1214,12 +1214,15 @@
     {
       "qaId": "card:B07093:212da49cce2aca6921fdb352e94b610cbdeeebd02d0ab5c66e8200c0164c3a0e",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07093.ts:1"
-      ]
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-p07/B07093.ts:41",
+        "tests:tests/cards/official-qa/b07093-a1-public-wave44.test.ts:435"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B07100:8fa59c53057ee164d956e8a94719c89402a761c9093428f38822e073eaf28600",

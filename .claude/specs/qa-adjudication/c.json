@@ -901,15 +901,16 @@
     {
       "qaId": "card:B05048:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4",
       "answerHash": "8185415da360caa339eec528c2e80b68ea2888896d0c51e0ecbc38b4ab7ec288",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05048.ts:1"
+        "rules:.claude/rules/17-icons.md:37",
+        "src:src/cards/ct-p05/B05048.ts:3",
+        "tests:tests/cards/official-qa/bond-partner-exclusion-public-wave45.test.ts:405",
+        "tests:tests/cards/official-qa/bond-partner-exclusion-public-wave45.test.ts:407"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B05062:5e1d46e3fb96189bbfa298fc91a279db5d6b911f52375d384b0d11c5a6b8bffc",
@@ -1260,28 +1261,31 @@
     {
       "qaId": "card:B07093:6300260a5146582a98ccc4157ad67f0dfb8fc9b9805795efc6070527d5ff9520",
       "answerHash": "05729d17bf4d9957f20e41a697c81c0622e785331481d72284ebf31e63e77128",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07093.ts:1"
+        "rules:.claude/rules/19-special-rules.md:45",
+        "rules:.claude/rules/25-qa-effects-resolution.md:46",
+        "src:src/cards/ct-p07/B07093.ts:117",
+        "tests:tests/cards/official-qa/b07093-a1-public-wave44.test.ts:556",
+        "tests:tests/cards/official-qa/b07093-a1-public-wave44.test.ts:557"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B07093:d3f368d5baca2d075770eacd3703dd420726b14f2957c03c2f001e21b37e73f9",
       "answerHash": "b224b606f8fc34f02bcbd2792e156388486d6469c478c49a07fe2816784668c6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07093.ts:1"
+        "rules:.claude/rules/20-color-and-switch.md:34",
+        "src:src/cards/ct-p07/B07093.ts:41",
+        "tests:tests/cards/official-qa/b07093-a1-public-wave44.test.ts:430",
+        "tests:tests/cards/official-qa/b07093-a1-public-wave44.test.ts:432"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B07098:38c2a9a4f5b4ef1212709f13990154e55f266eec17474d1fc7ea8ce443897328",

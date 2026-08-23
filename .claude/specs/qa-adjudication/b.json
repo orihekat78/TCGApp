@@ -572,13 +572,16 @@
     {
       "qaId": "card:B05008:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4",
       "answerHash": "8185415da360caa339eec528c2e80b68ea2888896d0c51e0ecbc38b4ab7ec288",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
+        "rules:.claude/rules/17-icons.md:37",
         "rules:.claude/rules/19-special-rules.md:21",
-        "src:src/cards/ct-p05/B05008.ts:1"
-      ]
+        "src:src/cards/ct-p05/B05008.ts:3",
+        "tests:tests/cards/official-qa/bond-partner-exclusion-public-wave45.test.ts:390"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B05012:5fefa13e3e1ec369059584a4e3780dce6c812967407c386c362581aee3ffc6b0",

@@ -1050,12 +1050,17 @@
     {
       "qaId": "card:B07093:636d66e72f92b3a3945a9d5e3618003348be0080c29c488fa2626a46dd44a131",
       "answerHash": "80441233d982508df6dfd03d9a821135693430728aba908b51f487ce514fdc9e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07093.ts:43"
-      ]
+        "rules:.claude/rules/23-qa-disguise-cutin.md:16",
+        "rules:.claude/rules/23-qa-disguise-cutin.md:17",
+        "src:src/cards/ct-p07/B07093.ts:62",
+        "tests:tests/cards/official-qa/b07093-a1-public-wave44.test.ts:688",
+        "tests:tests/cards/official-qa/b07093-a1-public-wave44.test.ts:694"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B07096:24dc94f9321e58a7a325489b45930c6c2891ba1c6152c0f967e75d1b558c48de",

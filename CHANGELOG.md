@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `5bf65b985deb`
+> Source hash: `783fdc4545de`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,28 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## QA Wave 45 — Bond excludes the partner area
+
+- Certified twelve official Bond-definition records across CT-P05, CT-D10, and PR.
+- Every negative control places the exact named witness only in the partner area.
+- Every positive control moves that name to self scene and uses the real card ability.
+- Public paths cover declared costs, effect targetability, contact removal, and turn end.
+- Effective AP, LP, and keyword reads cover the continuous Bond cards.
+- B05048 combines canonical condition evaluation with public aura candidate filtering.
+- No production change or engine gap was required for Wave45.
+- Advanced coverage from 1,278 to 1,290 matched; test-missing falls to 1,674.
+
+## QA Wave 44 — B07093 first declared ability
+
+- Implemented the missing printed a1 for B07093/B07093P without new engine primitives.
+- Preserved old save/replay authority by appending a1 after shipped a2/a3 indices.
+- Added public hand/remove choice, zero, filters, turn one, FILE6/7, and partner controls.
+- Proved full-scene self-switch, enter trigger, AP+4000, Assault, and exact deck bottom.
+- Proved public disguise inheritance and public early-leave rider cancellation.
+- Replayed exact and witness-free a2 moves through V1/V2 and dispatched a2 from PA-MR.
+- Certified all five remaining B07093 official QA records.
+- Advanced coverage from 1,273 to 1,278 matched; test-missing falls to 1,686.
 
 ## QA Wave 43 — assisted FILE in contact observers and cut-ins
 
