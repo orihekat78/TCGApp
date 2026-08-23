@@ -1,53 +1,57 @@
-# Next Task: QA adjudication Waves68-69
+# Next Task: QA adjudication Waves70-71
 
-Resume qa/adjudication-wave-20260814-13 after the Waves66-67 commit.
+Resume qa/adjudication-wave-20260814-13 after the Waves68-69 commit.
 
 ## Completed
 
-- Wave66 certifies seven AP-at-or-below-zero records through each physical
-  public ability route; B02008 remains the aligned horizontal member.
-- Wave67 certifies six arbitrary evidence-position records across twelve
-  printings. B09112/P now publishes only its selected named deck card.
-- Coverage is 1460 matched / 1504 test-missing / 2964 total.
+- Wave68 certifies six exact-three owner-cost records; B05063 remains the
+  aligned horizontal member. Thirteen physical printings are public-path bound.
+- Wave69 certifies six Event YAIBA records across eleven physical printings.
+  BUG-342 and BUG-343 are fixed with Sol rules/engine PASS.
+- Coverage is 1472 matched / 1492 test-missing / 2964 total.
 - Existing untracked pnpm-lock.yaml and pnpm-workspace.yaml stay protected.
 
 ## Start
 
 1. Read root/nested AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read .claude/sessions/2026-08-24-qa-waves66-67.md and current QA trace.
-4. Ground exact Q&A before classifying gaps. Do not infer absent rules.
+3. Read .claude/sessions/2026-08-24-qa-waves68-69.md and current QA trace.
+4. Fetch current official source for CT-P05/P06/P07/P08/D08/D09 before binding.
 
-## Wave68
+## Wave70
 
 - Question hash:
-  4cf0563885f2ffb6d9a2b4be187a00295a80474b10cf928079745697e9d71b5a
+  df623fb6fab6a794407d5c27f0951036cafa3c3d2c5922474e0492195332d20a
+- Answer hash:
+  1f9dea222899252685faff65ee3a04b23d7ec4a0bc5637f27004c075dc0a5485
+- Exact Q&A: with two or fewer facedown own evidence, flipping all of them does
+  not pay an exact-three declared cost; the ability cannot be used.
+- Records: B05024, B05063, B05083, B06036, B06105, D09027.
+- Physical sources: B05024/P, B05063/P, B05083/P, B06036/P, B06105/P,
+  D09027 (eleven).
+- Reuse Wave68's short-owner transactional negative only after adding exact
+  Wave70 card-bound QA comments/evidence and fresh authority grounding.
+
+## Wave71
+
+- Question hash:
+  628a61f1e0071ea8bf82ff81e4c18cd6148f60c6bdfcfd0c548c4861d3efc7fc
 - Answer hash:
   45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80
-- Remaining records: B05024, B05083, B06036, B06105, B10083, D09027.
-- Physical sources: B05024/P, B05083/P, B06036/P, B06105/P, B10083/P,
-  D09027 (eleven).
-- B05063/P shares the exact group but is already matched; audit its evidence
-  as the horizontal control.
-
-## Wave69
-
-- Question hash:
-  7ac51d8c7b926288a8dbbb61cda12a9834f42cdc5f6693733f2f57696c4f6848
-- Answer hash:
-  ae8633d90ea02db50231c2b7250878dff62e39a0ee8cd8fb97af5938dee022e1
-- Records: B06018, B06028, B06035, B06050, B06051, B06072.
-- Physical sources: B06018/P, B06028/P, B06035, B06050/P, B06051/P,
-  B06072/P (eleven).
+- Exact Q&A: a colon-left cost that flips one facedown evidence cannot use the
+  opponent's evidence; only the ability owner's cards may pay.
+- Records: B07061, B07077, B08030, B08044, D08005, D08006.
+- Physical sources: B07061/P, B07077/P, B08030/P, B08044/P, D08005, D08006
+  (ten).
 
 ## Gates and stop
 
-- Bind every physical source through public decisions; cover negatives, owner
-  orientation, transactional rejection, persistence, CPU, and structural siblings.
-- Run exact/focused tests, typecheck, ESLint, QA merge/lint, docs check, full
-  functional Vitest, smoke1000, and representative/full-match Playwright.
+- Cover every physical source, owner=`opp`, arbitrary position, malformed
+  selections, transactional rejection, persistence, CPU, and siblings.
+- Run focused/full tests, typecheck, lint, QA/docs/static gates, smoke1000, and
+  isolated representative/full-match Playwright.
 - Require rules and adversarial review before commit/push.
-- Stop after one or two implementation waves and write the next handoff.
+- Stop after Waves70-71 and write the next handoff.
 
-Remaining estimate: about 1,504 records, roughly 128-276 agent hours before
-future grouping gains; about 34-78 wall hours with four-way parallel work.
+Remaining estimate: about 1,492 records, roughly 127-274 agent hours or 33-77
+wall hours with four-way parallel work before future grouping gains.

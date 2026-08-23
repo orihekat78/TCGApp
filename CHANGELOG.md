@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `4c34b88d3e1c`
+> Source hash: `0cc18aebda5f`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,24 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# QA Wave69: certify Event YAIBA
+
+- Certify six records across eleven physical printings through real public
+  entry, hand, Next Hint, Hirameki, cut-in, and contact routes.
+- Restore official YAIBA incident traits on B06036/P and B06065/P (BUG-343).
+- Make Next Hint optional-card admission transactional, support full-scene
+  switch selection, unify picker/engine preflight, and record victim removal
+  in the public causal trace (BUG-342).
+
+# QA Wave68: certify owner-only exact-three costs
+
+- Certify six target records and replace B05063 horizontal evidence across
+  thirteen physical printings.
+- Pay exactly three nonadjacent facedown evidence owned by the ability source;
+  opponent evidence can never substitute for a short payment.
+- Preserve identity, origin, order, hydration, forced refresh, and real CPU
+  owner=`opp` behavior while malformed selections reject atomically.
 
 # QA Wave67: certify arbitrary evidence positions
 

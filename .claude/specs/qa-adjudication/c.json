@@ -11,7 +11,7 @@
       "evidence": [
         "rules:.claude/rules/12-next-hint.md:10",
         "src:src/cards/ct-p01/B01005.ts:22",
-        "src:src/engine/flow/main/next-hint.ts:126",
+        "src:src/engine/flow/main/next-hint.ts:148",
         "tests:tests/cards/miniwave2-nexthint/probes.test.ts:256",
         "tests:tests/cards/miniwave2-nexthint/probes.test.ts:257"
       ],

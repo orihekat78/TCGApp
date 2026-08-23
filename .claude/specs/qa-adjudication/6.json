@@ -1828,7 +1828,7 @@
         "rules:.claude/rules/22-qa-action-contact.md:35",
         "src:src/cards/ct-d08/D08021.ts:62",
         "src:src/cards/ct-d08/D08021.ts:73",
-        "src:src/ui/hooks/useEngineDispatch/can-check.ts:412",
+        "src:src/ui/hooks/useEngineDispatch/can-check.ts:421",
         "tests:tests/cards/official-qa/action-declare-before-guard-public-wave48.test.ts:327"
       ],
       "noteCodes": []

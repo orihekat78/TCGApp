@@ -19,8 +19,9 @@ import { declaredNameCandidates } from '@/engine/effect/declared-name-domain.js'
 import { def as readDef } from '@/engine/read/def.js';
 import { alternativeCostProviders } from '@/engine/cost/alternative.js';
 import { eligibleRemoveSetCards } from '@/engine/cost/remove-set-card-eligible.js';
-import { nextHintEventUseAllowed } from '@/engine/flow/main/next-hint.js';
-import { nextHintColorIgnoreAllowed, effectiveHandLevel } from '@/engine/flow/main/hand-use-card.js'; // W2 P09/r26 色 bypass 鏡像 (NH: B03126 両経路 + B02087 NH 限定 A3) + mini-wave#4 hand level
+import { canOfferNextHintOptionalCard } from '@/engine/flow/main/next-hint.js';
+import { effectiveHandLevel } from '@/engine/flow/main/hand-use-card.js';
+import { sceneCap } from '@/engine/read/scene-cap.js';
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
 import type { Candidate, Effect } from '@/engine/types';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
@@ -157,24 +158,16 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
   // file.length 判定と一致)。旧実装は nonAssistedCount (パートナー除外) を使い、アシスト中は
   // 閾値が 1 少なくなって level=FILE枚数 のカードが候補から漏れていた (BUG-087 の base 誤り)。
   const postPopCount = file.length - 1;
-  const caseColors = state.players[p].case.colors;
-
   /** level ≤ postPopCount かつ 色 ⊆ 事件色 の キャラ/イベント のみ候補化 */
   const toCandidate = (cardId: string, source: 'file' | 'hand'): NextHintCandidate | null => {
     const d = readDef.card(cardId);
     if (!d) return null;
     if (d.kind !== 'character' && d.kind !== 'event') return null;
-    // イベント使用不可 (B09034 §M3): ban 中の event は候補から除外 (engine runNextHint の throw と整合)。
-    //   rules/25 公式 Q&A: ネクストヒントの event 使用も不可。キャラは制限外。
-    if (d.kind === 'event' && state.turnState[p].eventUseBanned) return null;
-    if (d.kind === 'event' && !nextHintEventUseAllowed(state, p, cardId)) return null;
-    // 色制限 (rules/20): カードの全色が事件色に含まれる (色なしは常に OK)。
-    // W2 P09/r26: colorIgnore bypass — engine (next-hint colorAllowed) と鏡像 (B03126 両経路 / B02087 NH 限定 A3)。
-    if (d.colors.length > 0 && !d.colors.every((c) => caseColors.includes(c))
-      && !nextHintColorIgnoreAllowed(state, p, cardId)) return null;
+    // Engineと同じpost-pop preflight。色/level/event条件/使用禁止/事件の
+    // 手札使用制限を一括判定し、満杯時のswitch victimだけは次pickerで選ぶ。
+    if (!canOfferNextHintOptionalCard(state, p, cardId)) return null;
     // レベル ≤ postPopCount (rules/12)
-    // mini-wave #4: 手札内 continuous level modifier (B01009/B09095) — engine gate (next-hint.ts
-    //   effectiveHandLevel) と鏡像。表示 level も有効値 (公式 QA: 手札にある間はそのレベル)。
+    // 表示levelも有効値 (公式 QA: 手札にある間はそのレベル)。
     const lvl = effectiveHandLevel(state, p, cardId);
     if (lvl !== undefined && lvl > postPopCount) return null;
     return {
@@ -199,6 +192,34 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
 
   if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
   if (choice.kind === 'use') {
+    const chosenDef = readDef.card(choice.cardId);
+    if (chosenDef?.kind === 'character' && state.players[p].scene.length >= sceneCap(state, p)) {
+      const sceneChars = state.players[p].scene.map(character => ({
+        uid: character.uid,
+        cardId: character.cardId,
+        name: readDef.card(character.cardId)?.names?.[0] ?? character.cardId,
+        state: character.state,
+        isNamed: character.isNamed,
+      }));
+      const interactionEpoch = currentInteractionEpoch();
+      const switchRemoveUid = await new Promise<string | null>(resolve => {
+        useSceneSwitchPickerStore.getState()._open({
+          player: p,
+          cardId: choice.cardId,
+          newCardName: chosenDef.names?.[0] ?? choice.cardId,
+          candidates: sceneChars,
+          resolve,
+        });
+      });
+      if (!isCurrentLiveInteraction(interactionEpoch)) return { ok: false, reason: 'not-allowed' };
+      if (switchRemoveUid === null) return { ok: false, reason: 'cancelled' };
+      return dispatchEngineAction({
+        type: 'nextHint',
+        player: p,
+        optionalCardId: choice.cardId,
+        switchRemoveUid,
+      });
+    }
     return dispatchEngineAction({ type: 'nextHint', player: p, optionalCardId: choice.cardId });
   }
   // skip: step1 のみ (FILE→手札、使用しない)

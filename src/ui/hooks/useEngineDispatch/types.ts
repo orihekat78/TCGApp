@@ -30,7 +30,7 @@ export type EngineAction =
   | { type: 'handUseCard'; player: Player; cardId: string }
   // Phase 5 advance: SceneSwitch (rules/20) — scene 5 埋まり時のキャラ手札使用
   | { type: 'handUseCardSwitch'; player: Player; cardId: string; removeUid: string }
-  | { type: 'nextHint'; player: Player; optionalCardId?: string }
+  | { type: 'nextHint'; player: Player; optionalCardId?: string; switchRemoveUid?: string }
   // Phase 2c (BUG-116 構造解消): cost+ctx は dispatcher 内 (engine.flow.activateXxx) で構築する。
   // 呼出元は picker 選択値 (costParams) のみ渡す — cost/ctx の caller 構築契約は廃止。
   | { type: 'partnerAbility'; player: Player; abilId: string; costParams?: AbilityCostParams }

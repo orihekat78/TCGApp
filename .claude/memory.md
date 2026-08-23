@@ -9,24 +9,24 @@
 - QA Waves27-34: .claude/sessions/2026-08-23-qa-memory-waves27-34.md.
 - QA Waves35-67: matching dated files under .claude/sessions/.
 
-## 2026-08-24: QA runtime Waves66-67
+## 2026-08-24: QA runtime Waves68-69
 
-- Wave66 certifies seven nonpositive-AP records and retains B02008 horizontal
-  evidence. Printed declaration, entry, disguise, leave, Shippu, and case-cost
-  routes keep zero/negative-AP characters in scene.
-- Signed AP survives save/replay and expires at turn end without a causal
-  removal. Explicit removal semantics are unchanged.
-- Wave67 certifies six arbitrary-evidence-position records across twelve
-  physical printings. Exact indices 3/0 preserve identity/origin/order; malformed
-  choices reject atomically and committed faces survive hydration.
-- B09112/P now publicly presents only the selected named deck card. BUG-339
-  remaining ungrounded handAddFromDeck debt is 151 occurrences.
-- Coverage after generation is 1460 matched / 1504 test-missing / 2964 total.
+- Wave68 certifies six exact-three owner-evidence records and replaces B05063
+  horizontal evidence across thirteen physical printings. A short owner
+  payment cannot substitute opponent evidence; CPU owner=`opp` is explicit.
+- Wave69 certifies six Event YAIBA records across eleven physical printings.
+  Real entry, hand, Next Hint, Hirameki, cut-in, and contact routes read only
+  the ability owner's incident.
+- BUG-343 restores official YAIBA traits on B06036/P and B06065/P.
+- BUG-342 makes Next Hint optional-card admission transactional, adds public
+  full-scene switch victim selection, shares picker/engine preflight, and logs
+  the victim's scene→remove causal operation.
+- Coverage after generation is 1472 matched / 1492 test-missing / 2964 total.
 
 ## Next
 
-- Wave68: six remaining records at 4cf056388.../45979cb61...; B05063/P is the
-  existing matched horizontal member.
-- Wave69: six records at 7ac51d8c7.../ae8633d90....
+- Wave70: six records at df623fb6.../1f9dea222...; owner has two or fewer
+  facedown evidence, so exact-three cost cannot be partially paid.
+- Wave71: six owner-only exact-one records at 628a61f1e.../45979cb61....
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

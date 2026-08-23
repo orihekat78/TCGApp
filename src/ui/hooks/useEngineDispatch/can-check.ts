@@ -1,5 +1,6 @@
 // useEngineDispatch/can-check.ts — Phase 3d 分割 (isAllowed 前段ガード, body 無改変移送, 2026-06-22)
 import * as flow from '@/engine/flow/index.js';
+import { canUseNextHintOptionalCard } from '@/engine/flow/main/next-hint.js';
 import { game as readGame } from '@/engine/read/game.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { _getResolutionLock } from '@/engine/event/registry.js';
@@ -123,7 +124,15 @@ export function isAllowed(
       return flow.canHandUseCardSwitch(state, action.player, action.cardId)
         && state.players[action.player].scene.some((char) => char.uid === action.removeUid);
     case 'nextHint':
-      return flow.canStartNextHint(state, action.player);
+      return flow.canStartNextHint(state, action.player)
+        && (action.optionalCardId === undefined
+          ? action.switchRemoveUid === undefined
+          : canUseNextHintOptionalCard(
+              state,
+              action.player,
+              action.optionalCardId,
+              action.switchRemoveUid,
+            ));
     case 'partnerAbility':
       return flow.canPartnerAbility(state, action.player, action.abilId);
     case 'declaredAbility':

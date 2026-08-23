@@ -9,6 +9,7 @@ import { event } from '@/engine/event/index';
 import { startCausalSession, validateCausalLog } from '@/engine/log/causal';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import type { CardDef, CausalLogEntryV1, GameState } from '@/engine/types';
+import { makeChar } from '../../../helpers/fixtures';
 
 function makeCard(id: string, opts: Partial<CardDef> = {}): CardDef {
   return {
@@ -27,17 +28,21 @@ function makeCard(id: string, opts: Partial<CardDef> = {}): CardDef {
   };
 }
 
-function makeStateWithFile(n: number, opts: { caseColors?: string[]; hand?: string[] } = {}): GameState {
+function makeStateWithFile(
+  n: number,
+  opts: { caseColors?: string[]; hand?: string[]; player?: 'self' | 'opp' } = {},
+): GameState {
   const initial = createEmptyGameState();
   return produce(initial, draft => {
-    draft.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
-    draft.players.self.case.colors = opts.caseColors ?? ['赤'];
-    draft.players.self.case.cardId = 'CASE';
+    const player = opts.player ?? 'self';
+    draft.turn = { number: 1, player, phase: 'main', isFirstPlayerFirstTurn: false };
+    draft.players[player].case.colors = opts.caseColors ?? ['赤'];
+    draft.players[player].case.cardId = 'CASE';
     for (let i = 0; i < n; i++) {
       // Round 3: FileCard.card-back に cardId 必須 (placeholder で OK)
-      draft.players.self.file.push({ type: 'card-back', cardId: `FILE_${i}` });
+      draft.players[player].file.push({ type: 'card-back', cardId: `FILE_${i}` });
     }
-    draft.players.self.hand = opts.hand ?? [];
+    draft.players[player].hand = opts.hand ?? [];
   });
 }
 
@@ -195,6 +200,102 @@ describe('engine.flow.main.runNextHint', () => {
         runNextHint(draft, 'self', 'EV2');
       }),
     ).toThrow(/level/);
+  });
+
+  it.each([
+    ['CASE1', 'case'],
+    ['PARTNER1', 'partner'],
+    ['UNKNOWN1', null],
+  ] as const)('%s: キャラ/イベント以外の optionalCardId は mutation 前に拒否する', (cardId, kind) => {
+    if (kind !== null) registerCardDef(makeCard(cardId, { kind, colors: ['赤'] }));
+    const s = makeStateWithFile(2, { hand: [cardId] });
+    const before = structuredClone(s);
+
+    expect(() => produce(s, draft => {
+      runNextHint(draft, 'self', cardId);
+    })).toThrow(/character or event/);
+    expect(s).toEqual(before);
+  });
+
+  it.each(['self', 'opp'] as const)('%s: 満杯の現場で任意キャラを使うには有効な switch victim が必要', player => {
+    registerCardDef(makeCard('CH-SWITCH', { kind: 'character', colors: ['赤'], level: 1 }));
+    const s = produce(makeStateWithFile(2, { hand: ['CH-SWITCH'], player }), draft => {
+      draft.players[player].scene = [
+        makeChar({ cardId: 'OLD-0', uid: 'old-0', state: 'active', isNamed: false, enterOrder: 1 }),
+        makeChar({ cardId: 'OLD-1', uid: 'old-1', state: 'sleep', isNamed: false, enterOrder: 2 }),
+        makeChar({ cardId: 'OLD-2', uid: 'old-2', state: 'stun', isNamed: false, enterOrder: 3 }),
+        makeChar({ cardId: 'OLD-3', uid: 'old-3', state: 'active', isNamed: true, enterOrder: 4 }),
+        makeChar({ cardId: 'OLD-4', uid: 'old-4', state: 'sleep', isNamed: true, enterOrder: 5 }),
+      ];
+    });
+    const before = structuredClone(s);
+
+    expect(() => produce(s, draft => {
+      runNextHint(draft, player, 'CH-SWITCH');
+    })).toThrow(/switch victim required/);
+    expect(() => produce(s, draft => {
+      runNextHint(draft, player, 'CH-SWITCH', 'missing');
+    })).toThrow(/invalid switch victim/);
+    expect(s).toEqual(before);
+
+    for (const victimIndex of [0, 1, 2, 3, 4]) {
+      const after = produce(s, draft => {
+        runNextHint(draft, player, 'CH-SWITCH', `old-${victimIndex}`);
+      });
+      expect(after.players[player].scene).toHaveLength(5);
+      expect(after.players[player].scene.some(card => card.uid === `old-${victimIndex}`)).toBe(false);
+      expect(after.players[player].scene.find(card => card.cardId === 'CH-SWITCH')).toMatchObject({
+        state: 'active',
+        isNamed: true,
+      });
+      expect(after.players[player].remove).toContain(`OLD-${victimIndex}`);
+      expect(after.players[player].file).toHaveLength(1);
+      expect(after.turnState[player].nextHintUsed).toBe(true);
+    }
+  });
+
+  it('スイッチvictimの現場→リムーブを公開因果列に記録する', () => {
+    registerCardDef(makeCard('CH-TRACE', { kind: 'character', colors: ['赤'], level: 1 }));
+    const s = produce(makeStateWithFile(2, { hand: ['CH-TRACE'] }), draft => {
+      draft.players.self.scene = Array.from({ length: 5 }, (_, index) => makeChar({
+        cardId: `TRACE-OLD-${index}`,
+        uid: `trace-old-${index}`,
+        enterOrder: index + 1,
+      }));
+    });
+
+    const after = produce(s, draft => {
+      startCausalSession(draft, 'next-hint-switch');
+      runNextHint(draft, 'self', 'CH-TRACE', 'trace-old-2');
+    });
+    const graph = validateCausalLog(after.log as CausalLogEntryV1[]);
+    expect(graph.map(node => [node.kind, node.outcome])).toEqual([
+      ['declare', { type: 'state', state: 'active' }],
+      ['zone-move', { type: 'move', from: 'file', to: 'hand', count: 1 }],
+      ['use', { type: 'state', state: 'active' }],
+      ['zone-move', { type: 'move', from: 'scene', to: 'remove', count: 1 }],
+      ['zone-move', { type: 'move', from: 'hand', to: 'scene', count: 1 }],
+      ['enter', { type: 'state', state: 'success' }],
+      ['summary', { type: 'state', state: 'success' }],
+    ]);
+  });
+
+  it('空きがある現場やイベントでは switch victim を拒否する', () => {
+    registerCardDef(makeCard('CH-NORMAL', { kind: 'character', colors: ['赤'], level: 1 }));
+    registerCardDef(makeCard('EV-NORMAL', { kind: 'event', colors: ['赤'], level: 1 }));
+    const characterState = produce(makeStateWithFile(2, { hand: ['CH-NORMAL'] }), draft => {
+      draft.players.self.scene = [makeChar({ cardId: 'OLD', uid: 'old' })];
+    });
+    expect(() => produce(characterState, draft => {
+      runNextHint(draft, 'self', 'CH-NORMAL', 'old');
+    })).toThrow(/switch not allowed/);
+
+    const eventState = produce(makeStateWithFile(2, { hand: ['EV-NORMAL'] }), draft => {
+      draft.players.self.scene = [makeChar({ cardId: 'OLD', uid: 'old' })];
+    });
+    expect(() => produce(eventState, draft => {
+      runNextHint(draft, 'self', 'EV-NORMAL', 'old');
+    })).toThrow(/switch not allowed/);
   });
 
   it('アシスト中パートナーのみ FILE にあれば canStartNextHint=false', () => {

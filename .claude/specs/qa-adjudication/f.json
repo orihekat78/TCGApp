@@ -262,7 +262,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:14",
         "src:src/cards/ct-p03/B03002.ts:13",
-        "src:src/engine/flow/main/next-hint.ts:117",
+        "src:src/engine/flow/main/next-hint.ts:148",
         "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:178",
         "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:180"
       ]

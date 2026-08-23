@@ -12,10 +12,9 @@
 //   カットイン = 使えるが何も起こらない → conditional の else 無し = noop と一致)。
 //   choice 機構 (BUG-121, pendingEffectChoice) が human 選択 / AI=index0 を担う。
 //
-// ⚠ 残データゲート (BUG-114 RCA 未記載の別件): opt_b の「〚特徴［YAIBA］〛のイベント」は
-//   data 上イベントが traits:[] (event.tsv に features 列なし、survey「event traits all empty」black gate)
-//   のため trait filter が永久不発火 → opt_b は YAIBA イベントを発見できない (データ追加待ち)。
-//   opt_a (AP+2000) は完全機能。multi-cutin choice の engine gap 自体は本実装で解消。
+// event.tsv の features drop は残るが、公式API category1を根拠にB06035等のYAIBA event CardDefへ
+// traits:['YAIBA']を保持済み。opt_b は現在、owner事件YAIBA時に実candidateを取得できる。
+// opt_a (AP+2000) とmulti-cutin choiceも出荷済み。
 import type { CardDef, AbilityDef } from '@/engine/types';
 
 const cutin: AbilityDef = {
@@ -35,7 +34,7 @@ const cutin: AbilityDef = {
         if: { kind: 'turn', player: 'self' },
         then: { kind: 'atom', verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: 2000, scope: 'contact' } },
       },
-      // 【事件YAIBA】リムーブの特徴[YAIBA]イベントを1枚手札に (⚠ event traits data gate により現状不発火)
+      // 【事件YAIBA】リムーブの特徴[YAIBA]イベントを1枚手札に
       {
         kind: 'conditional',
         if: { kind: 'caseTrait', trait: 'YAIBA' },

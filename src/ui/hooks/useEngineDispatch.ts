@@ -155,7 +155,7 @@ function runEngineAction(
       flow.handUseCard(draft, action.player, action.cardId, undefined, action.removeUid);
       return;
     case 'nextHint':
-      flow.runNextHint(draft, action.player, action.optionalCardId);
+      flow.runNextHint(draft, action.player, action.optionalCardId, action.switchRemoveUid);
       return;
     case 'partnerAbility':
       // Phase 2c (BUG-116 構造解消): cost+ctx 構築 + pay は engine 側 helper に一元化

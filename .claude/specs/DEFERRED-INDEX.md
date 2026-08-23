@@ -292,7 +292,7 @@ relative-AP (B09096) は本 session で **stale 訂正** (engine変更0 と判�
 | rep | 理由 (支配 gate) | 解禁条件 |
 |-----|------------------|---------|
 | B05039 | cutin「〚特徴［探偵］〛のキャラに【カットイン】した場合、カードを1枚引く」— コンタクト対象キャラ ($contact.byUid) の特徴を評価する Condition が union に不在 (triggerCharMatches は trigger payload uid 限定)。AP+1000 のみの partial 出荷は語義不一致のため見送り | contact-char trait condition 追加 (lint allowlist `B05039:cutin` と同期) |
-| B06035 | hirameki「【事件YAIBA】【解決編】手札を1枚リムーブしてもよい。そうした場合、キャラを1枚まで選び、リムーブする」— hirameki fire 経路 (hiramekiResolve の chooseAtomTarget auto-resolve) 内での chain (してもよい→そうした場合) + caseTrait/caseStatus 条件 gate の挙動が未確証 | fire 経路の chain/condition 検証後に再採用 (lint allowlist `B06035:hirameki` と同期) |
+| ~~B06035~~ | **✅ 解決済 (2026-08-24 Wave69)**: public Hirameki fire/skip、caseTrait/caseStatus、invalid text no-op、save hydrationを実証 | 完了。実在YAIBA事件B06036/P・B06065/Pのtrait backfillもBUG-343で固定 |
 
 ## engine拡張 wave#2 cluster3 (action-lifecycle trigger) defer (2026-06-13, engine/wave2-action-triggers)
 
@@ -402,7 +402,7 @@ cluster11 候補 B01014/B01015/B01021 + B07019 を実装着手。新 condition `
 
 | 項目 | 内容 | 状況 |
 |------|------|------|
-| TSV 抽出の event/case category-drop (systemic) | cards-data の TSV は **event/case の `category1/2/3` (= 特徴) を全件 drop** している (event.tsv/case.tsv に features 列が無い)。一次 API `_raw/*.json` の `category` が特徴の正本。**実測 blast-radius (2026-06-15-2 triage, 決定論 audit)**: 実装済 event 76 / case 65 を API category と全件突合 → dropped-trait は **case 0件 / event 1件 (B06035 の YAIBA、既に hirameki fire-path 理由で DEFER 済)**。MVP deck (D08/D11) は手書きで API 以前のため対象外 (D08026=古城/D11021=婚活 正常)。**= 現出荷カードへの live 影響ほぼ 0**。systemic fix は future-proof のみ (per-card certify が新規実装時に捕捉、赤魔術 family が実証) | **低 urgency に格下げ**。必要なら TSV gen 側で category→traits/caseTraits を carry (全 event/case def に影響→smoke/挙動の広域確認が要る、別タスク) |
+| TSV 抽出の event/case category-drop (systemic) | cards-data TSVはevent/caseのcategory1/2/3をdropするため、一次APIを特徴の正本とする。2026-08-24再監査でB06035 eventとB06036/B06065 case（計5 base/P印刷）を確認し、全CardDefへYAIBAをbackfill済み | parser全体変更は広域影響のため継続backlog。per-card groundingでraw API照合を必須化し、BUG-343 testが現YAIBA事件4印刷を固定 |
 | charRemoveSetCard `n:N` の候補不足時 clamp | PA短縮形 pick の **強制ちょうど N 枚は `n:N` (number)**、`max:N` は 0..N。候補が N 未満のとき `n:N` は available 数へ clamp。さらに certify が **AI/CPU 経路 (resolve-picks Pattern A) は picked 1体のみ解決** し chain が reanimate/bonus へ進む点を指摘 (家族共通)。B07055 a1・**B07031 a2 (B07031P 同、2026-07-02 P clone 出荷)** が同構造 | HUMAN 経路 (apply-pick per-uid) と test (drain pickedUids) は計2枚で正。両カードとも非MVP=smoke/CPU 不在で live 影響なし。strict 化は engine backlog (公式 Q&A 未裁定) |
 
 ## ✅ cluster12 (nested-filter-dyn) — FILE枚数以下レベルの登場 15枚 出荷 (2026-06-15, engine/wave2-cluster12-nested-filter-dyn)

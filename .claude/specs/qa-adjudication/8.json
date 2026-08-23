@@ -879,11 +879,26 @@
     {
       "qaId": "card:B06018:9b784e18994d29858b6b12d02bf7ddc0e040914733a510db8aca6110febbb969",
       "answerHash": "ae8633d90ea02db50231c2b7250878dff62e39a0ee8cd8fb97af5938dee022e1",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06018.ts:1"
+        "rules:.claude/rules/17-icons.md:27",
+        "rules:.claude/rules/17-icons.md:41",
+        "rules:.claude/rules/17-icons.md:46",
+        "src:src/cards/ct-p06/B06018.ts:17",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:395",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:398",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:407",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:408",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:409",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:414",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:417",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:418",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:422",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:425",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:427",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:428"
       ]
     },
     {
@@ -909,11 +924,27 @@
     {
       "qaId": "card:B06050:9b784e18994d29858b6b12d02bf7ddc0e040914733a510db8aca6110febbb969",
       "answerHash": "ae8633d90ea02db50231c2b7250878dff62e39a0ee8cd8fb97af5938dee022e1",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06050.ts:1"
+        "rules:.claude/rules/17-icons.md:27",
+        "rules:.claude/rules/17-icons.md:41",
+        "rules:.claude/rules/17-icons.md:46",
+        "src:src/cards/ct-p06/B06050.ts:40",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:395",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:398",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:407",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:408",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:409",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:503",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:504",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:505",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:509",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:510",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:513",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:514",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:515"
       ]
     },
     {
@@ -1717,8 +1748,8 @@
         "src:src/cards/ct-p10/B10026.ts:5",
         "src:src/engine/effect/resolve-picks.ts:789",
         "src:src/engine/effect/resolve-picks.ts:795",
-        "src:src/ui/hooks/useActionsPanelFlow/flows.ts:699",
-        "src:src/ui/hooks/useActionsPanelFlow/flows.ts:716",
+        "src:src/ui/hooks/useActionsPanelFlow/flows.ts:720",
+        "src:src/ui/hooks/useActionsPanelFlow/flows.ts:737",
         "src:src/ui/services/replayViewerProjection.ts:152",
         "src:src/ui/services/replayViewerProjection.ts:156",
         "tests:tests/cards/official-qa/face-down-set-hidden-public-wave62.test.ts:158",

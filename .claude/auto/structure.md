@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6450
+- **ファイル数**: 6469
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -522,6 +522,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-339.md` — selected deck card publication
     - `BUG-340.md` — causal continuation authority
     - `BUG-341.md` — inherent sleep entry
+    - `BUG-342.md` — Next Hint optional-card admission
+    - `BUG-343.md` — YAIBA incident trait backfill
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -876,6 +878,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-31-qa-wave65-short-deck-four.md` — QA Wave65: certify short top-four deck looks
     - `2026-08-24-01-qa-wave66-nonpositive-ap.md` — QA Wave66: certify nonpositive AP
     - `2026-08-24-02-qa-wave67-evidence-positions.md` — QA Wave67: certify arbitrary evidence positions
+    - `2026-08-24-03-qa-wave68-owner-cost.md` — QA Wave68: certify owner-only exact-three costs
+    - `2026-08-24-04-qa-wave69-event-yaiba.md` — QA Wave69: certify Event YAIBA
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1581,6 +1585,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-qa-waves62-63.md` — QA adjudication Waves62-63
     - `2026-08-23-qa-waves64-65.md` — QA adjudication Waves64-65
     - `2026-08-24-qa-waves66-67.md` — QA adjudication Waves66-67
+    - `2026-08-24-qa-waves68-69.md` — QA adjudication Waves68-69
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1737,6 +1742,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B05015.md` — B05015 小嶋元次 grounding
       - `B05016.md` — B05016 小嶋元太 grounding
       - `B05021.md` — B05021 grounding
+      - `B05024.md` — B05024 grounding
       - `B05028P.md` — B05028P grounding
       - `B05047.md` — B05047 grounding
       - `B05048.md` — B05048 黒羽快斗 grounding
@@ -1744,9 +1750,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B05052.md` — B05052 工藤優作 grounding
       - `B05055.md` — B05055 grounding
       - `B05056.md` — B05056 grounding
-      - `B05063.md` — B05063/B05063P 園子のアブない夏物語 (事件) grounding (2026-07-10, fable)
+      - `B05063.md` — B05063 grounding
       - `B05077.md` — B05077 ジョディ・サンテミリオン grounding
       - `B05080.md` — B05080 timing grounding
+      - `B05083.md` — B05083 grounding
       - `B05086P.md` — grounding dossier: B05086P (自動生成 2026-07-13)
       - `B05090.md` — B05090 grounding
       - `B05091.md` — B05091 / B05091P 風見裕也 grounding
@@ -1763,19 +1770,26 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06018.md` — B06018 grounding
       - `B06020.md` — B06020 grounding
       - `B06027.md` — B06027 grounding
+      - `B06028.md` — B06028 grounding
+      - `B06035.md` — B06035 grounding
+      - `B06036.md` — B06036 grounding
       - `B06042.md` — B06042 ここで会うたが百年目 (イベント) grounding (2026-07-10, sonnet5)
       - `B06043.md` — B06043 / B06043P grounding
       - `B06046.md` — B06046 鉄刃 grounding
       - `B06047.md` — B06047 鉄刃 grounding
       - `B06048.md` — B06048 峰さやか grounding
+      - `B06050.md` — B06050 grounding
+      - `B06051.md` — B06051 grounding
       - `B06052.md` — B06052 grounding
       - `B06065.md` — B06065 grounding
       - `B06066.md` — B06066/B06066P 怪盗キッド＆白馬探 (MR キャラ) grounding (2026-07-10, fable)
+      - `B06072.md` — B06072 grounding
       - `B06087.md` — B06087 萩原千速 grounding
       - `B06088.md` — B06088 grounding
       - `B06090.md` — B06090 grounding
       - `B06095.md` — B06095 grounding
       - `B06098.md` — B06098 ベルモット＆シェリー grounding
+      - `B06105.md` — B06105 grounding
       - `B07001.md` — B07001 / B07001P / B07001P2 grounding
       - `B07008.md` — B07008 小嶋元太 grounding (2026-07-10, fable)
       - `B07013.md` — B07013 grounding
@@ -1921,6 +1935,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B10077.md` — B10077 萩原研二 grounding
       - `B10081.md` — B10081 grounding
       - `B10082.md` — B10082 grounding
+      - `B10083.md` — B10083 grounding
       - `B10084.md` — B10084 grounding
       - `B10086.md` — B10086 grounding
       - `B10087.md` — B10087 grounding
@@ -1955,6 +1970,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D09015.md` — D09015 大和敢助 grounding
       - `D09016.md` — D09016 諸伏高明 grounding
       - `D09017.md` — D09017 諸伏高明 grounding
+      - `D09027.md` — D09027 grounding
       - `D10005.md` — D10005 ハート姫（毛利蘭） grounding
       - `D10006.md` — D10006 ハート姫（毛利蘭） grounding
       - `D10007.md` — D10007 grounding
@@ -2023,6 +2039,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `m3-triage-unregistered.md` — M3 未登録14 ID triage (2026-07-10, sonnet5)
       - `waves64-65-authority.md` — Waves64-65 authority manifest
       - `waves66-67-authority.md` — Waves66-67 authority manifest
+      - `waves68-69-authority.md` — Waves68-69 authority manifest
     - **`meta-ui/`**
       - `00-overview.md` — 00 — メタ UI 統合設計 概要
       - `01-project-setup.md` — 01 — meta-app プロジェクト構成
@@ -5775,8 +5792,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bond-partner-exclusion-wave21.test.ts` — qa: card:B01087:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
       - `bond-partner-exclusion-wave9.test.ts` — qa: card:B02004:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
       - `bug-331-reveal-complete-public.test.ts`
+      - `case-cost-three-self-only-public-wave68.test.ts` — qa: card:B05024:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297
       - `case-flip-two-complex-public-wave37.test.ts` — qa: card:B06095:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2
       - `case-flip-two-declared-public-wave36.test.ts` — qa: card:B06013:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2
+      - `case-trait-yaiba-public-wave69.test.ts` — qa: card:B06018:9b784e18994d29858b6b12d02bf7ddc0e040914733a510db8aca6110febbb969
       - `ct-p10-original-ability-rules.test.ts` — qa: card:B10050:98e82fae32a43d9b6de8c7fd8289dcf4565f2dada1498f0760f5ba9d0cf8ae17
       - `ctp10-opponent-turn-cutin-public.test.ts` — qa: card:B10017:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
       - `decision-persistence-wave23.test.ts` — qa: card:B03080:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
