@@ -1928,7 +1928,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:36",
         "src:src/cards/ct-d10/D10011.ts:20",
-        "tests:tests/cards/official-qa/file-assist-declared-public-wave41.test.ts:227"
+        "tests:tests/cards/official-qa/file-assist-declared-public-wave41.test.ts:242"
       ]
     },
     {

@@ -1,6 +1,8 @@
 // qa: card:B02004:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
 // qa: card:B03030:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
 // qa: card:B03099:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+// qa: card:D10023:f0e393b3a47afbeb95a14a91a8c573bd540fb08877f11528e5ae7dcd501b1a98
+// qa: card:PR173:f0e393b3a47afbeb95a14a91a8c573bd540fb08877f11528e5ae7dcd501b1a98
 // Rules: 03-field-areas.md, 07-action-flow.md, 15-abilities-effects.md, 17-icons.md, 20-color-and-switch.md, 25-qa-effects-resolution.md.
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -10,6 +12,8 @@ import { B02004P } from '@/cards/ct-p02/B02004P';
 import { B03030 } from '@/cards/ct-p03/B03030';
 import { B03030P } from '@/cards/ct-p03/B03030P';
 import { B03099 } from '@/cards/ct-p03/B03099';
+import { D10023 } from '@/cards/ct-d10/D10023';
+import { PR173 } from '@/cards/pr-01/PR173';
 import { event } from '@/engine/event';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { _resetUidCounter } from '@/engine/mutate/scene';
@@ -67,6 +71,8 @@ type ActionEntryCase = {
 
 const CASES: Record<string, ActionEntryCase> = {
   B02004: { source: B02004, abilityId: 'a1', target: EIRI, decoy: EIRI_DECOY, from: 'remove', enteredState: 'active', trigger: 'action', parallel: B02004P, bond: true },
+  D10023: { source: D10023, abilityId: 'a1', target: EIRI, decoy: EIRI_DECOY, from: 'remove', enteredState: 'active', trigger: 'action', bond: true },
+  PR173: { source: PR173, abilityId: 'a1', target: EIRI, decoy: EIRI_DECOY, from: 'remove', enteredState: 'active', trigger: 'action', bond: true },
   B03030: { source: B03030, abilityId: 'a2', target: GREEN, decoy: GREEN_DECOY, from: 'hand', enteredState: 'sleep', trigger: 'action', parallel: B03030P },
   B03099: { source: B03099, abilityId: 'a1', target: NAGANO, decoy: NAGANO_DECOY, from: 'remove', enteredState: 'sleep', trigger: 'action' },
 };
@@ -188,6 +194,10 @@ afterEach(() => {
 
 describe('effect entry official Q&A — action-triggered entries fire enter abilities', () => {
   it(`card:B02004:${QA}`, () => expect(prove(CASES.B02004!)).toEqual(expected(CASES.B02004!)));
+  it('runs D10023 a1 through its physical public action source', () =>
+    expect(prove(CASES.D10023!)).toEqual(expected(CASES.D10023!)));
+  it('runs PR173 a1 through its physical public action source', () =>
+    expect(prove(CASES.PR173!)).toEqual(expected(CASES.PR173!)));
   it(`card:B03030:${QA}`, () => expect(prove(CASES.B03030!)).toEqual(expected(CASES.B03030!)));
   it(`card:B03099:${QA}`, () => expect(prove(CASES.B03099!)).toEqual(expected(CASES.B03099!)));
 

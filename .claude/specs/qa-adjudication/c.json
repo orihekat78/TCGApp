@@ -1613,7 +1613,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:36",
         "src:src/cards/ct-p09/B09010.ts:24",
-        "tests:tests/cards/official-qa/file-assist-declared-public-wave41.test.ts:203"
+        "tests:tests/cards/official-qa/file-assist-declared-public-wave41.test.ts:213"
       ]
     },
     {
@@ -1763,14 +1763,13 @@
     {
       "qaId": "card:B09056:33271f1e19ae0c4fa4f2f6b6aa1f038e58c6c82bef4e1d59394a5ddb47300767",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09056.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-p09/B09056.ts:79",
+        "tests:tests/cards/official-qa/effect-entry-nested-public-wave55.test.ts:246"
       ]
     },
     {
@@ -2161,14 +2160,13 @@
     {
       "qaId": "card:D10023:f0e393b3a47afbeb95a14a91a8c573bd540fb08877f11528e5ae7dcd501b1a98",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d10/D10023.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-d10/D10023.ts:8",
+        "tests:tests/cards/official-qa/effect-entry-action-public.test.ts:198"
       ]
     },
     {
@@ -2226,7 +2224,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:36",
         "src:src/cards/pr-01/PR100.ts:27",
-        "tests:tests/cards/official-qa/file-assist-nondeclared-public-wave43.test.ts:261"
+        "tests:tests/cards/official-qa/file-assist-nondeclared-public-wave43.test.ts:280"
       ]
     },
     {

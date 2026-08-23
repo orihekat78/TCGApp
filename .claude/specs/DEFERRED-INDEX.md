@@ -458,15 +458,15 @@ window5 = fresh green候補 20 rep を per-card certify (opus grounding→敵対
 > ([BUG-111.md](../bugs/BUG-111.md) / [bug-111-human-decline-fix-design.md](bug-111-human-decline-fix-design.md))。
 > - **B05028 = 誤診断**: chain over-fire は再現せず (5 シナリオ独立検証)。**修正不要で出荷可能** → 解禁。
 > - **B09038 = 修正で解禁**: sequence mandatory-tail (draw) の human-decline drop を修正。→ 解禁。
-> - **B09056 = DEFER 継続**: 実バグ (sequence under-fire) は修正済だが、末尾が 2択 `choice` で choice-in-continuation の
->   eager-surface (BUG-145 系) が fragile。choice surface 整備は別 engine 課題のため保留。
+> - **B09056 = ✅ 解消 (2026-08-23, BUG-336)**: choice-in-continuation 基盤は既に修正済み。
+>   公式Q&Aどおり常時2択を提示し、不成立optionをno-opにするCardDefへ修正・public検証。
 > 解禁 2 枚 (B05028/B09038) は後続バッチで card-wave 出荷。
 出荷 = B01065/B02038/B03031/B05024/B07041/B01076/B02041/B04051/B07057/PR237 (+各 P/clone)。残 (refuted 2 + gate5-defer 1 + yellow 7) は下記 (再選定防止)。
 
 | rep | 種別 | 理由 (支配 gate) | 解禁条件 |
 |------|------|------|------|
 | B05028 | 🟢 **解禁 (誤診断、上記解決参照)** | ~~宣言a1 chain[charRemoveSetCard, sceneRemove] の「そうした場合」が human-decline 経路で破綻。~~ (2026-06-16: 再現せず誤診断と判明、修正不要で出荷可能)set-card holder 在 + step1 を 0枚 decline すると step2 sceneRemove が**発火してしまう** (applyPickSkipAndContinuation が chain 残りを無条件実行、decline した charRemoveSetCard が `__chainStepNoApply` を立てない)。no-candidate 経路は substituteAtomPick で正しく break するが **candidate在+decline** が壊れる。AI は greedy で decline せず仮面化 → certify+敵対verify 見落とし、**gate5 実機テストが検出** | BUG-111: candidate在 pick の human-decline でも chain-gated continuation を drop (engine) |
-| B09056 | DEFER 継続 (choice-surface gap、BUG-111 underfire は修正済) | optional{sequence[自sleep, sceneRemove(0-pick), **必須choice**]}。レベル8以下 removal 候補在 + 0枚 decline で末尾の必須 choice (痕跡分岐: 黒復活/相手mill) が drop。「リムーブし、以下から1つ選んで行う」= choice は常時発火が正 | 同上 (BUG-111) |
+| ~~B09056~~ | ✅ 解消 (BUG-336) | optional→0枚remove→必須choiceをpublic経路で保持。痕跡不成立optionも選択可/no-op、成立optionのsleep entryまで検証。 | — |
 | ~~B04042/B04042P/B04084~~ | ✅ 出荷済 (2026-07-13) | `aggregateLevelMax` を resolver/human UI/AI の3経路に追加。B04084 は remove occurrence bind + active 1枚 / sleep remainder split entry。重複、0選択、budget、production dispatch を probe。| — |
 | B06032 | yellow | 【ヒラメキ】本体が top-level optional{chain[discard1, sceneEnter from:remove]} を要するが、hiramekiResolve 経路が humanChooser なしで resolveEffectPicks を呼ぶため top-level optional が常に skip → 再生効果が無音 no-op (BUG-145 同族) | hirameki 経路の top-level optional honor (engine) |
 | B08038 | yellow | 「この効果によって特徴[高校生]/[鈴木財閥]がリムーブされた場合」= **removed-by-this-effect** 条件。mill verb は bind せず、removeTraitAtLeast は remove パイル累積を見るため中盤で誤発火 (false-positive AP+1000) | mill bind + removed-by-this-effect condition (engine) |

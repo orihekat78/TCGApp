@@ -451,7 +451,6 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:41",
         "rules:.claude/rules/17-icons.md:10",
         "src:src/cards/ct-p04/B04019.ts:69",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
@@ -629,14 +628,13 @@
     {
       "qaId": "card:B04090:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04090.ts:66"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-p04/B04090.ts:29",
+        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:292"
       ]
     },
     {

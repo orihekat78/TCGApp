@@ -39,7 +39,10 @@ function findArgs(eff: EffectDescriptor | undefined, verb: string): Record<strin
     const r = findArgs(e[k] as EffectDescriptor | undefined, verb);
     if (r) return r;
   }
-  for (const st of (e.steps as EffectDescriptor[] | undefined) ?? []) {
+  for (const st of [
+    ...((e.steps as EffectDescriptor[] | undefined) ?? []),
+    ...((e.options as EffectDescriptor[] | undefined) ?? []),
+  ]) {
     const r = findArgs(st, verb);
     if (r) return r;
   }
@@ -221,10 +224,10 @@ describe('B09056', () => {
       then: { kind: 'optional' },
     });
   });
-  it('a1 sequence: sceneSetState $self sleep → sceneRemove Lv8以下 → conditional(scratchTrace発見済)', () => {
+  it('a1 sequence: sceneSetState sleep → sceneRemove Lv8以下 → printed trace choice', () => {
     expect(findArgs(a1().effect, 'sceneSetState')).toMatchObject({ uid: '$self', state: 'sleep' });
     expect(findArgs(a1().effect, 'sceneRemove')).toMatchObject({ player: 'self', max: 1, side: 'either', cause: 'effect', filter: { levelMax: 8 } });
-    // 痕跡分岐: then=sceneEnter(remove黒Lv3 sleep), else=forEach opp-scene mill2
+    // 痕跡2択: option0=sceneEnter(remove黒Lv3 sleep), option1=forEach opp-scene mill2
     expect(findArgs(a1().effect, 'sceneEnter')).toMatchObject({ player: 'self', from: 'remove', max: 1, viaEffect: true, enterSleep: true, filter: { color: '黒', levelMax: 3, kind: 'character' } });
     expect(findArgs(a1().effect, 'mill')).toMatchObject({ player: 'opp', n: 2 });
   });
@@ -242,12 +245,17 @@ describe('B09056', () => {
     expect(setup(['赤', '黒'], '青', 'active')).toBe(false);  // partner色違い
     expect(setup(['赤', '黒'], '赤', 'sleep')).toBe(true);    // mandatory trigger; self-stateは解決時判定
   });
-  it('a1 scratchTrace 分岐 evalCond: 発見済=then / 未発見=else', () => {
-    const ifCond = (a1().effect as { then: { effect: { steps: { kind: string; if?: Condition }[] } } }).then.effect.steps.find((x) => x.kind === 'conditional')!.if!;
+  it('a1 scratchTrace choice conditions remain mutually exclusive', () => {
+    const steps = (a1().effect as {
+      then: { effect: { steps: Array<{ kind: string; options?: Array<{ if: Condition }> }> } };
+    }).then.effect.steps;
+    const options = steps.find(step => step.kind === 'choice')!.options!;
+    const found = options[0]!.if;
+    const unfound = options[1]!.if;
     s.scratchTrace = { self: '発見済', opp: '未発見' };
-    expect(evalCond(s, ifCond, makeCtx())).toBe(true);
+    expect([evalCond(s, found, makeCtx()), evalCond(s, unfound, makeCtx())]).toEqual([true, false]);
     s.scratchTrace = { self: '未発見', opp: '発見済' };
-    expect(evalCond(s, ifCond, makeCtx())).toBe(false);
+    expect([evalCond(s, found, makeCtx()), evalCond(s, unfound, makeCtx())]).toEqual([false, true]);
   });
   it('a1 sceneEnter filter matchOneFilter: 黒Lv3=true / 黒Lv4除外 / 赤Lv3除外', () => {
     const f = findArgs(a1().effect, 'sceneEnter')!.filter as TargetFilter;

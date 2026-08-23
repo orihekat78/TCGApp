@@ -966,7 +966,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06077.ts:74",
-        "tests:tests/cards/wave-engine0-0629.test.ts:74"
+        "tests:tests/cards/wave-engine0-0629.test.ts:190"
       ]
     },
     {
@@ -1556,7 +1556,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09056.ts:135",
-        "tests:tests/cards/wave-engine0-0629.test.ts:74"
+        "tests:tests/cards/official-qa/effect-entry-nested-public-wave55.test.ts:262"
       ]
     },
     {
@@ -2302,11 +2302,13 @@
     {
       "qaId": "card:PR280:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR280.ts:86"
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/pr-01/PR280.ts:37",
+        "tests:tests/cards/official-qa/file-assist-nondeclared-public-wave43.test.ts:272"
       ]
     },
     {

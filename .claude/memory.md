@@ -48,11 +48,20 @@
   selection succeeds in the same turn without using opponent evidence.
 - Coverage after generation should be 1353 matched / 1611 test-missing.
 
+## 2026-08-23: QA runtime Waves54-55
+
+- Wave54 certifies nine direct/linear effect-entry records; Wave55 certifies
+  eight nested, contact, clone, and partner-area sources.
+- BUG-336 restores B09056/P's printed trace choice. Inapplicable options remain
+  human-selectable no-ops; autonomous resolution skips only conditionals known
+  false without `else` and does not surface opponent-owned choices to the human.
+- Physical source identity is public-tested for D10023/PR173 and PR291/PR297.
+- Coverage after generation should be 1370 matched / 1594 test-missing.
+
 ## Next
 
-- Wave54: B03062, B04090, B05015, B05077, B06012, B06046, B08076, B09106,
-  and B10095 direct/linear effect-entry routes.
-- Wave55: B06087, B09056, B10023, D10023, PR173, PR280, PR291, and PR297
-  nested, Bond, and clone routes.
+- Wave56: eight disguise-definition records at `a6d4bbd6.../5a5d483a...`.
+- Wave57: eight arbitrary-position evidence-cost records at
+  `24edb958.../cfea53ad...`; Wave36/37 likely contain reusable public proof.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

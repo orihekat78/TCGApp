@@ -1,39 +1,40 @@
-# Next Task: QA adjudication Waves54-55
+# Next Task: QA adjudication Waves56-57
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves52-53 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves54-55 commit.
 
 ## Completed
 
-- Wave52 repairs and certifies B06047, B08083, and B09007/P effect-entry paths.
-- Wave53 certifies nine exact-two face-down evidence costs.
-- Coverage should be 1353 matched / 1611 test-missing after generation.
+- Wave54 certifies nine direct/linear effect-entry records.
+- Wave55 certifies eight nested/physical-source effect-entry records.
+- BUG-336 restores B09056/P real choice and condition-aware autonomous choice.
+- Coverage should be 1370 matched / 1594 test-missing after generation.
 - Existing untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml` stay protected.
 
-## Wave54: direct and linear effect entry
+## Wave56: disguise definition
 
 1. Confirm branch, HEAD, upstream, and protected files read-only.
-2. Reuse exact Q/A `2aa7bfa6.../18ed0c93...`: a character entered by an
-   ability/effect resolves its normal enter ability.
-3. Certify B03062, B04090, B05015, B05077, B06012, B06046, B08076, B09106,
-   and B10095.
-4. Use real event/deck, contact/cut-in, Hirameki, end-phase/set, declared, and
-   event-branch sources. Generic Wave31 evidence is not card-bound evidence.
+2. Ground exact Q/A `a6d4bbd6170b.../5a5d483a0490...`:
+   【変装】 is a contact action sharing cut-in timing; hand disguise swaps with
+   the contacting character, sends the original to deck bottom, and inherits
+   state, gained effects, and set cards.
+3. Certify B02041, B02043, B02044, B02045, B02047, B02086, B05047, B06017.
+4. Reuse generic disguise lifecycle only with card-bound physical source and
+   state/effect/set-card inheritance assertions.
 
-## Wave55: nested, Bond, and clone entry
+## Wave57: arbitrary evidence positions
 
-1. Certify B06087, B09056, B10023, D10023, PR173, PR280, PR291, and PR297.
-2. For nested routes, distinguish outer and entered source card/uid.
-3. For clones, execute each physical D10023/PR173 source; array equality with
-   B02004 is insufficient.
-4. Every route proves source dispatch, chosen entrant normal enter, ordering,
-   owner/opponent asymmetry, typed decoys, and zero/decline behavior.
+1. Ground exact Q/A `24edb9585cfc.../cfea53ad6b22...`: an exact-two evidence
+   cost may choose any two face-down positions without changing evidence order.
+2. Certify B07062, B08076, B08094, B10034, B10082, B10101, B10102, D10026.
+3. Audit Wave36/37 `[down,up,down]` nonadjacent-index evidence before reuse.
+4. Bind each physical case source and effect-specific success sentinel.
 5. Stop after one or two implementation waves.
 
 ## Records
 
-- `.claude/sessions/2026-08-23-qa-waves52-53.md`
-- `.claude/bugs/BUG-335.md`
-- `.tmp/_ground/wave52/`
+- `.claude/sessions/2026-08-23-qa-waves54-55.md`
+- `.claude/bugs/BUG-336.md`
+- `.tmp/_ground/wave54-55*/`
 
-Remaining estimate: about 1,611 records, roughly 138-298 agent hours. Route
+Remaining estimate: about 1,594 records, roughly 136-295 agent hours. Route
 grouping and horizontal fixes may reduce it.

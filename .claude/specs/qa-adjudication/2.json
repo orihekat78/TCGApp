@@ -703,15 +703,13 @@
     {
       "qaId": "card:B05015:a28608862f5450b8c9d283fdb576f4ba39b2558705a2d36a2a0e5d6e35885de7",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:41",
-        "src:src/cards/ct-p05/B05015.ts:14"
-      ],
-      "noteCodes": [
-        "B05015-ENTER-EFFECT-TRIGGER-TEST-MISSING"
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-p05/B05015.ts:37",
+        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:324"
       ]
     },
     {

@@ -238,7 +238,6 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:41",
         "src:src/cards/ct-p03/B03028.ts:79",
         "src:src/cards/ct-p03/B03029.ts:46",
         "tests:tests/cards/official-qa/B03029-public-event-use.test.ts:259",
@@ -263,11 +262,13 @@
     {
       "qaId": "card:B03062:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03062.ts:1"
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-p03/B03062.ts:16",
+        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:261"
       ]
     },
     {
@@ -1515,15 +1516,13 @@
     {
       "qaId": "card:B10095:a96985ed96d005b04cd0c44c2dadf206fac63c8bd49e8c42cef6ea4c73808dae",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:14",
-        "src:src/cards/ct-p10/B10095.ts:8"
-      ],
-      "noteCodes": [
-        "IMPLEMENTED-CARD-TEST-MISSING"
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-p10/B10095.ts:10",
+        "tests:tests/cards/official-qa/file-assist-declared-public-wave41.test.ts:234"
       ]
     },
     {

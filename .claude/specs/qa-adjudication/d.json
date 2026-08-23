@@ -522,12 +522,11 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:41",
         "rules:.claude/rules/17-icons.md:10",
         "src:src/cards/ct-p03/B03099.ts:24",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
         "src:src/engine/listeners/triggered.ts:503",
-        "tests:tests/cards/official-qa/effect-entry-action-public.test.ts:192"
+        "tests:tests/cards/official-qa/effect-entry-action-public.test.ts:202"
       ]
     },
     {
@@ -1128,7 +1127,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:36",
         "src:src/cards/ct-p06/B06087.ts:28",
-        "tests:tests/cards/official-qa/file-assist-nondeclared-public-wave43.test.ts:253"
+        "tests:tests/cards/official-qa/file-assist-nondeclared-public-wave43.test.ts:272"
       ]
     },
     {
@@ -1582,11 +1581,13 @@
     {
       "qaId": "card:B08076:a96985ed96d005b04cd0c44c2dadf206fac63c8bd49e8c42cef6ea4c73808dae",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08076.ts:1"
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-p08/B08076.ts:31",
+        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:463"
       ]
     },
     {

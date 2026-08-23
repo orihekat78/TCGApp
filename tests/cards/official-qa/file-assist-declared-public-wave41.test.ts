@@ -2,6 +2,7 @@
 // qa: card:B09010:fe489ff3199dbdf91d8a4404721956da51ba17ccb819450ceed5b301f31fe7be
 // qa: card:B09036:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
 // qa: card:B10095:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
+// qa: card:B10095:a96985ed96d005b04cd0c44c2dadf206fac63c8bd49e8c42cef6ea4c73808dae
 // qa: card:D10011:fe489ff3199dbdf91d8a4404721956da51ba17ccb819450ceed5b301f31fe7be
 // Rules: 13-keywords.md, 15-abilities-effects.md, 17-icons.md, 21-declared-ability-cost.md.
 
@@ -14,7 +15,7 @@ import { _resetUidCounter } from '@/engine/mutate/scene';
 import { char as readChar } from '@/engine/read/char';
 import { _resetRegistry, register } from '@/engine/read/def';
 import { createEmptyGameState } from '@/engine/state-factory';
-import type { CardDef, GameState } from '@/engine/types';
+import type { AbilityDef, CardDef, GameState } from '@/engine/types';
 import { bindPendingDecision, dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/useEngineDispatch';
 import { resetPresentationQueue } from '@/ui/presentation/coordinator';
 import { beginMatchSession, endMatchSession } from '@/ui/services/matchSession';
@@ -24,7 +25,15 @@ import { sceneChar } from '../../helpers/fixtures';
 const BLUE_PARTNER = 'D08001';
 const MIYANO = 'W41_MIYANO';
 const RAN = 'W41_RAN';
+const ENTRY_DRAW = 'W41_ENTRY_DRAW';
 const DECOY = 'W41_DECOY';
+
+const enterDraw: AbilityDef = {
+  id: 'enter-draw', type: 'triggered', scope: 'on-scene',
+  trigger: { hook: 'enter', selfOnly: true },
+  effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+  description: '登場時に1枚引く。', ruleRefs: [],
+};
 
 type Row = {
   cardId: 'B08056' | 'B09010' | 'B09036' | 'B10095' | 'D10011';
@@ -68,7 +77,7 @@ function stateFor(row: Row, beforeCount: number): GameState {
   state.players.self.partner = { cardId: BLUE_PARTNER, state: 'active', location: 'partner-area' };
   state.players.self.case.status = '解決編';
   state.players.self.file = cardBacks(`${row.cardId}-SELF-FILE`, beforeCount);
-  state.players.self.deck = ['B01001', 'B01002'];
+  state.players.self.deck = [ENTRY_DRAW, 'B01001', 'B01002'];
   state.players.self.scene = [sceneChar(row.cardId, 'source')];
 
   if (row.cardId === 'B08056') state.players.self.hand = [MIYANO, DECOY];
@@ -175,7 +184,8 @@ beforeEach(() => {
   resetPendingRuntimeState();
   registerAll();
   register(fixtureCharacter(MIYANO, ['宮野エレーナ'], 7, { colors: ['赤'] }));
-  register(fixtureCharacter(RAN, ['毛利蘭'], 5));
+  register(fixtureCharacter(RAN, ['毛利蘭'], 5, { abilities: [enterDraw] }));
+  register(fixtureCharacter(ENTRY_DRAW, [ENTRY_DRAW], 1));
   register(fixtureCharacter(DECOY, ['対象外'], 3));
   registerTriggeredListener();
   (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
@@ -221,6 +231,11 @@ describe('official QA Wave41: an assisting partner counts for public declared FI
       below: { assist: true, declared: false, fileCount: 4, opponentFileCount: 5, selfAssistedEntries: 1, promptKind: null, promptSource: null, sourceArea: 'scene', sourceAtDeckBottom: false, sourceState: 'active', sourceUseCount: 0, entered: false, enteredAp: null, targetInHand: false, targetInRemove: true, removedFileCards: 0, settled: true },
       exact: { assist: true, declared: true, fileCount: 5, opponentFileCount: 5, selfAssistedEntries: 1, promptKind: 'pick', promptSource: 'B10095', sourceArea: 'remove', sourceAtDeckBottom: false, sourceState: null, sourceUseCount: null, entered: true, enteredAp: 4000, targetInHand: false, targetInRemove: false, removedFileCards: 0, settled: true },
     });
+    expect(current().pendingEffects.filter(entry => (
+      entry.source.cardId === RAN && entry.source.abilityId === enterDraw.id
+    )).map(entry => entry.state), 'B10095 effect-entry resolves the entrant normal enter').toEqual(['resolved']);
+    const actions = current().log.map(entry => entry.action);
+    expect(actions.lastIndexOf('effect:draw')).toBeGreaterThan(actions.lastIndexOf('effect:sceneEnter'));
   });
 
   it('D10011 enables its deck-bottom cost and remove-area entry only at FILE6', () => {

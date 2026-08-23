@@ -134,7 +134,7 @@
         "src:src/cards/ct-p02/B02004.ts:27",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
         "src:src/engine/listeners/triggered.ts:503",
-        "tests:tests/cards/official-qa/effect-entry-action-public.test.ts:190"
+        "tests:tests/cards/official-qa/effect-entry-action-public.test.ts:196"
       ]
     },
     {

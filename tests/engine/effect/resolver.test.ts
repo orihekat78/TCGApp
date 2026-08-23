@@ -113,6 +113,34 @@ describe('engine.effect.run', () => {
       expect(result.players.self.scene[0].turnEffects['apMod_turn']).toBe(7);
     });
 
+    it('keeps option 0 when its false conditional has a meaningful else branch', () => {
+      const s = newStateWithChar();
+      const eff: Effect = {
+        kind: 'choice', chooser: 'owner', options: [
+          {
+            kind: 'conditional', if: { kind: 'false' },
+            then: { kind: 'atom', verb: 'charModifyAP', args: { uid: 'A#1', delta: 1, scope: 'turn' } },
+            else: { kind: 'atom', verb: 'charModifyAP', args: { uid: 'A#1', delta: 7, scope: 'turn' } },
+          },
+          { kind: 'atom', verb: 'charModifyAP', args: { uid: 'A#1', delta: 99, scope: 'turn' } },
+        ],
+      };
+      const result = produce(s, draft => run(draft, eff, newCtx()));
+      expect(result.players.self.scene[0].turnEffects['apMod_turn']).toBe(7);
+    });
+
+    it('falls back to option 0 when every conditional option is false', () => {
+      const s = newStateWithChar();
+      const eff: Effect = {
+        kind: 'choice', chooser: 'owner', options: [
+          { kind: 'conditional', if: { kind: 'false' }, then: { kind: 'atom', verb: 'charModifyAP', args: { uid: 'A#1', delta: 1, scope: 'turn' } } },
+          { kind: 'conditional', if: { kind: 'false' }, then: { kind: 'atom', verb: 'charModifyAP', args: { uid: 'A#1', delta: 99, scope: 'turn' } } },
+        ],
+      };
+      const result = produce(s, draft => run(draft, eff, newCtx()));
+      expect(result.players.self.scene[0].turnEffects['apMod_turn']).toBeUndefined();
+    });
+
     it('throws on out-of-range choiceIndex', () => {
       const s = newStateWithChar();
       const eff: Effect = {

@@ -354,7 +354,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p03/B03088.ts:1",
-        "tests:tests/cards/wave-engine0-0629.test.ts:74"
+        "tests:tests/cards/wave-engine0-0629.test.ts:309"
       ]
     },
     {
@@ -629,7 +629,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06004.ts:1",
-        "tests:tests/cards/wave-engine0-0629.test.ts:74"
+        "tests:tests/cards/wave-engine0-0629.test.ts:132"
       ]
     },
     {
@@ -660,7 +660,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06021.ts:1",
-        "tests:tests/cards/wave-engine0-0629.test.ts:74"
+        "tests:tests/cards/wave-engine0-0629.test.ts:81"
       ]
     },
     {
@@ -761,7 +761,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06077.ts:1",
-        "tests:tests/cards/wave-engine0-0629.test.ts:74"
+        "tests:tests/cards/wave-engine0-0629.test.ts:190"
       ]
     },
     {
@@ -1092,7 +1092,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:36",
         "src:src/cards/ct-p08/B08056.ts:17",
-        "tests:tests/cards/official-qa/file-assist-declared-public-wave41.test.ts:195"
+        "tests:tests/cards/official-qa/file-assist-declared-public-wave41.test.ts:205"
       ]
     },
     {
@@ -1279,7 +1279,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:36",
         "src:src/cards/ct-p09/B09036.ts:31",
-        "tests:tests/cards/official-qa/file-assist-declared-public-wave41.test.ts:211"
+        "tests:tests/cards/official-qa/file-assist-declared-public-wave41.test.ts:221"
       ]
     },
     {

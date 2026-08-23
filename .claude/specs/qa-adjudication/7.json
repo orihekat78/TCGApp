@@ -1740,7 +1740,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:36",
         "src:src/cards/ct-p10/B10095.ts:12",
-        "tests:tests/cards/official-qa/file-assist-declared-public-wave41.test.ts:219"
+        "tests:tests/cards/official-qa/file-assist-declared-public-wave41.test.ts:229"
       ]
     },
     {

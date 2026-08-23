@@ -838,14 +838,13 @@
     {
       "qaId": "card:B06046:bcef8e553fcab29eb3498024e5adb7d97f89ae4b09b72aa37cf83746d2d53c4b",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06046.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/17-icons.md:10",
+        "src:src/cards/ct-p06/B06046.ts:12",
+        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:434"
       ]
     },
     {
@@ -1899,7 +1898,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:36",
         "src:src/cards/pr-01/PR106.ts:31",
-        "tests:tests/cards/official-qa/file-assist-nondeclared-public-wave43.test.ts:261"
+        "tests:tests/cards/official-qa/file-assist-nondeclared-public-wave43.test.ts:280"
       ]
     },
     {

@@ -1,5 +1,7 @@
 // qa: card:B06087:fe489ff3199dbdf91d8a4404721956da51ba17ccb819450ceed5b301f31fe7be
 // qa: card:PR280:fe489ff3199dbdf91d8a4404721956da51ba17ccb819450ceed5b301f31fe7be
+// qa: card:B06087:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+// qa: card:PR280:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
 // qa: card:PR100:10c375683e0a24e0734188475895fd0fff2f1c3fe44724cb9d8261ea5d872b68
 // qa: card:PR106:10c375683e0a24e0734188475895fd0fff2f1c3fe44724cb9d8261ea5d872b68
 // Rules: 08-contact.md, 09-cutin-disguise.md, 15-abilities-effects.md, 17-icons.md, 22-qa-action-contact.md.
@@ -13,7 +15,7 @@ import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/l
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _resetRegistry, register } from '@/engine/read/def';
 import { createEmptyGameState } from '@/engine/state-factory';
-import type { CardDef, GameState } from '@/engine/types';
+import type { AbilityDef, CardDef, GameState } from '@/engine/types';
 import { bindPendingDecision, dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/useEngineDispatch';
 import { resetPresentationQueue } from '@/ui/presentation/coordinator';
 import { beginMatchSession, endMatchSession } from '@/ui/services/matchSession';
@@ -25,8 +27,16 @@ const ACTOR = 'W43_ACTOR';
 const LOW_TARGET = 'W43_LOW_TARGET';
 const HIGH_TARGET = 'W43_HIGH_TARGET';
 const POLICE_ENTRY = 'W43_POLICE_ENTRY';
+const ENTRY_DRAW = 'W43_ENTRY_DRAW';
 const SHIHO = 'W43_SHIHO';
 const DECOY = 'W43_DECOY';
+
+const enterDraw: AbilityDef = {
+  id: 'enter-draw', type: 'triggered', scope: 'on-scene',
+  trigger: { hook: 'enter', selfOnly: true },
+  effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+  description: '登場時に1枚引く。', ruleRefs: [],
+};
 
 function character(id: string, ap: number, options: Partial<CardDef> = {}): CardDef {
   return {
@@ -79,6 +89,7 @@ function leaveState(cardId: 'B06087' | 'PR280', beforeCount: number): GameState 
   state.players.self.partner = { cardId: YELLOW_PARTNER, state: 'active', location: 'partner-area' };
   state.players.self.file = cardBacks(`${cardId}-SELF-FILE`, beforeCount);
   state.players.self.hand = [POLICE_ENTRY];
+  state.players.self.deck = [ENTRY_DRAW, DECOY];
   state.players.self.scene = [sceneChar(cardId, 'source')];
   state.players.opp.scene = [sceneChar(LOW_TARGET, 'target', { state: 'sleep' })];
   state.players.opp.partner = { cardId: YELLOW_PARTNER, state: 'sleep', location: 'file-area' };
@@ -125,6 +136,7 @@ function runLeave(cardId: 'B06087' | 'PR280', beforeCount: number) {
   }
   closeAction(actionId);
   const state = current();
+  const actions = state.log.map(entry => entry.action);
   return {
     assist,
     declared,
@@ -136,6 +148,10 @@ function runLeave(cardId: 'B06087' | 'PR280', beforeCount: number) {
     sourceState: state.players.self.scene.find(character => character.uid === 'source')?.state,
     sourceRemoved: state.players.self.remove.includes(cardId),
     policeEntered: state.players.self.scene.some(character => character.cardId === POLICE_ENTRY),
+    policeEnterResolved: state.pendingEffects.filter(entry => (
+      entry.source.cardId === POLICE_ENTRY && entry.source.abilityId === enterDraw.id
+    )).map(entry => entry.state).join(',') === 'resolved',
+    enterAfterScene: actions.lastIndexOf('effect:draw') > actions.lastIndexOf('effect:sceneEnter'),
     hand: [...state.players.self.hand],
     targetRemoved: !state.players.opp.scene.some(character => character.uid === 'target')
       && state.players.opp.remove.includes(LOW_TARGET),
@@ -230,7 +246,10 @@ beforeEach(() => {
     character(ACTOR, 1000),
     character(LOW_TARGET, 1000),
     character(HIGH_TARGET, 9000),
-    character(POLICE_ENTRY, 3000, { names: ['佐藤美和子'], traits: ['警察'], level: 7 }),
+    character(POLICE_ENTRY, 3000, {
+      names: ['佐藤美和子'], traits: ['警察'], level: 7, abilities: [enterDraw],
+    }),
+    character(ENTRY_DRAW, 0),
     character(SHIHO, 3000, { names: ['宮野志保'], level: 5 }),
     character(DECOY, 3000, { names: ['対象外'], level: 5 }),
   ].forEach(register);
@@ -252,8 +271,8 @@ describe('official QA Wave43: non-declared FILE conditions count the assisting p
   it.each(['B06087', 'PR280'] as const)('%s enables its contact-removal optional only at FILE6', (cardId) => {
     expect({ cardId, below: runLeave(cardId, 4), exact: runLeave(cardId, 5) }).toEqual({
       cardId,
-      below: { assist: true, declared: true, fileCount: 5, opponentFileCount: 6, selfAssistedEntries: 1, optionalBeforeJudge: null, optionalSource: null, sourceState: 'sleep', sourceRemoved: false, policeEntered: false, hand: [POLICE_ENTRY], targetRemoved: true, settled: true },
-      exact: { assist: true, declared: true, fileCount: 6, opponentFileCount: 6, selfAssistedEntries: 1, optionalBeforeJudge: null, optionalSource: cardId, sourceState: undefined, sourceRemoved: true, policeEntered: true, hand: [], targetRemoved: true, settled: true },
+      below: { assist: true, declared: true, fileCount: 5, opponentFileCount: 6, selfAssistedEntries: 1, optionalBeforeJudge: null, optionalSource: null, sourceState: 'sleep', sourceRemoved: false, policeEntered: false, policeEnterResolved: false, enterAfterScene: false, hand: [POLICE_ENTRY], targetRemoved: true, settled: true },
+      exact: { assist: true, declared: true, fileCount: 6, opponentFileCount: 6, selfAssistedEntries: 1, optionalBeforeJudge: null, optionalSource: cardId, sourceState: undefined, sourceRemoved: true, policeEntered: true, policeEnterResolved: true, enterAfterScene: true, hand: [ENTRY_DRAW], targetRemoved: true, settled: true },
     });
   });
 

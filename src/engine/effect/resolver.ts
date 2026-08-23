@@ -8,8 +8,8 @@
 //     emit 時の handler が直接 engine.resolve.replace / cancel を呼ぶ。
 //     よって engine.effect.run でこれらが渡された場合は明示的に throw する
 //     (誤用検知)。
-//   - choice の選択は ctx.dyn.choiceIndex (number) で行う。未指定なら 0。
-//     UI からの選択ルーティングは Phase 7 で実装する。
+//   - choice の明示選択は ctx.dyn.choiceIndex (number)。未指定のautonomous
+//     経路は先頭の適用可能optionを使い、通常のunconditional choiceはindex 0互換。
 //   - optional の実行は ctx.dyn.optionalRun (boolean) で行う。未指定 / false なら skip。
 //   - forEach は over を engine.target.resolve で展開し、各候補を
 //     ctx.bindings['$each'] に単一要素配列として束ねて do を実行する。
@@ -130,7 +130,8 @@ function pauseRuntimeHumanChoice(state: GameState, eff: Extract<Effect, { kind: 
   const human = dyn?.runtimePickOwnerKnown === true
     ? dyn.runtimeHumanPlayer
     : (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide;
-  if ((human !== 'self' && human !== 'opp') || eff.options.length < 2 || eff.chooser === 'opp') return false;
+  if ((human !== 'self' && human !== 'opp') || human !== ctx.source.player
+    || eff.options.length < 2 || eff.chooser === 'opp') return false;
   const trace = ensureEffectCausalTrace(state, ctx);
   markEffectCausalAwaitingResume(trace);
   const publicHandRevealToken = takePublicHandRevealToken(ctx);
@@ -177,6 +178,24 @@ function attachContinuation(
   // owns both decisions. Cross-owner entry pauses later as its own scene pick.
   if (switchPlayer === pick.player) pick.sceneEnterSwitchPlayer = switchPlayer;
   else delete pick.sceneEnterSwitchPlayer;
+}
+
+/**
+ * Autonomous choices preserve the historical first-option default unless that
+ * option is a top-level conditional known to be false and has no else branch.
+ * This lets CPU/headless flows select the first applicable printed branch while keeping ordinary
+ * unconditional choices byte-compatible. If every branch is inapplicable,
+ * option 0 remains the deliberate no-op fallback.
+ */
+function autonomousChoiceIndex(
+  state: GameState,
+  eff: Extract<Effect, { kind: 'choice' }>,
+  ctx: EffectCtx,
+): number {
+  const applicable = eff.options.findIndex(option => (
+    option.kind !== 'conditional' || option.else !== undefined || evalCond(state, option.if, ctx)
+  ));
+  return applicable >= 0 ? applicable : 0;
 }
 
 function appendSetCardContinuation(remainder: Effect[], ctx: EffectCtx, kind: 'sequence' | 'chain'): void {
@@ -454,9 +473,12 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
     }
     case 'choice': {
       if (pauseRuntimeHumanChoice(state, eff, ctx)) return;
-      // ctx.dyn.choiceIndex で選択する。未指定 / 非数なら 0 を採用。
+      // Explicit human/declared choice wins. Autonomous flow skips a known
+      // inapplicable top-level conditional, otherwise preserves option 0.
       const raw = ctx.dyn?.choiceIndex;
-      const idx = typeof raw === 'number' && Number.isInteger(raw) ? raw : 0;
+      const idx = typeof raw === 'number' && Number.isInteger(raw)
+        ? raw
+        : autonomousChoiceIndex(state, eff, ctx);
       if (idx < 0 || idx >= eff.options.length) {
         throw new Error(`effect.run: choice index ${idx} out of range [0, ${eff.options.length})`);
       }

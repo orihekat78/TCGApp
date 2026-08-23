@@ -1369,7 +1369,8 @@ export function resolveEffectPicks(
       // walk 中に bake)。resolver.run の choice も choiceIndex を読むが、effect は event.queue →
       // entryToCtx で ctx.dyn が落ちるため runtime には届かない。ctx.dyn を保持する resolveEffectPicks
       // (declared-ability / triggered の初期 walk) でここで解決する。
-      // 未指定 / 範囲外なら全 option を walk し、resolver.run の default (=0) に委ねる。
+      // 未指定 / 範囲外なら全 option を walk し、resolver.run の autonomous
+      // applicable-branch selectionに委ねる（unconditional choiceはindex 0互換）。
       const rawIdx = (ctx.dyn as { choiceIndex?: unknown } | undefined)?.choiceIndex;
       if (
         typeof rawIdx === 'number' && Number.isInteger(rawIdx)
@@ -1396,7 +1397,7 @@ export function resolveEffectPicks(
       // (空 parallel) を返して runtime に届けない (どの option も実行しない)。choiceResolve dispatch
       // 後に applyChoiceAndContinuation が readDef から元 effect を復元し choiceIndex 付きで再 walk する。
       //   - choiceIndex 指定済 (declared 経路) は上の unwrap 分岐で処理済 → ここに来ない (無傷)
-      //   - humanChooser=false (AI / hirameki) は従来通り全 walk → resolver.run default 0 (無傷)
+      //   - humanChooser=false (AI / hirameki) は全 walk → resolver.run autonomous selection
       //   - options.length===1 (構造的単一 choice: B02046/B04071/D11014 等) は従来通り (無傷)
       //   - chooser==='opp' (相手が選ぶ) は human modal に出さない (従来通り)
       if (

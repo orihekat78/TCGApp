@@ -9,7 +9,7 @@
 //   - 【登場時】 => trigger { hook 'enter', selfOnly:true }, scope 'on-scene' [src/cards/ct-p04/B04049.ts a1 + ct-p05/B05116.ts a2 use trigger{hook 'enter',selfOnly:true}; cap-map hooks: enter=登場時, selfOnly matches entering char's source.uid.]
 //   - このキャラをスリープさせてもよい。そうした場合、… => effect = conditional(active) → optional{ sequence[ sceneSetState $self sleep, sceneRemove…, conditional… ] }。mandatory triggerと実行可能性を分離 (BUG-145)。
 //   - レベル8以下のキャラを1枚まで選び、リムーブし => sceneRemove { player:'self', max:1, side:'either', cause:'effect', filter:{levelMax:8} } [src/cards/ct-p04/B04049.ts a1 step = sceneRemove{player:'self',max:1,side:'either',cause:'effect',filter:{levelMax:7}} for 「レベル7以下のキャラを1枚まで選び、リムーブする」 (only levelMax 7→8). side:'either'=エリア指定なし=両現場 (rules/15). max:1→n.min:0 (「1枚まで」=0枚可).]
-//   - 以下から1つ選んで行う (the two options are partitioned by mutually-exclusive 痕跡 state) => conditional { if: scratchTrace self '発見済', then: branchA, else: branchB } [src/cards/ct-p09/B09099.ts a1 models the IDENTICAL 「〚痕跡［発見済み］〛の場合…〚痕跡［未発見］〛の場合…」 text as conditional{if:scratchTrace self '発見済', then, else}. 痕跡 is binary so exactly one option is legal → the nominal 「1つ選んで」 collapses to a deterministic conditional (NO choice-surface, sidestepping the BUG-111 choice-in-continuation modal defect for B09056). resolver.ts:134-141 conditional evals if via evalCond and runs then/else (works in the post-pick continuation path, unlike choice which forces choiceIndex 0). cond/eval.ts:182-184 scratchTrace honored. Stable if → resolve-picks pre-walk only surfaces the taken branch's picks (resolve-picks.ts:592, BUG-161-safe).]
+//   - 以下から1つ選んで行う => choice を常に提示し、各 option 内で痕跡条件を評価する。公式Q&Aは条件不成立側も選べて no-op と明記。BUG-111 修正済みの sequence→choice continuation を使用する。
 //   - 〚痕跡［発見済み］〛の場合、自分のリムーブエリアにあるレベル3以下の【黒】のキャラを1枚まで選び、スリープ状態で登場させる => then = sceneEnter { player:'self', from:'remove', max:1, viaEffect:true, enterSleep:true, filter:{color:'黒', levelMax:3, kind 'character'} } [src/cards/ct-p05/B05116.ts a2 = sceneEnter{player:'self',from:'remove',max:1,viaEffect:true,enterSleep:true,filter:{color:'黒',levelMax:4,kind 'character'}} for 「自分のリムーブエリアにあるレベル4以下の【黒】のキャラを1枚まで選び、スリープ状態で登場させる」 (only levelMax 4→3). cap-map sceneEnter from+max short-form builds a remove-area pick ($pick.cardId) via tryRePickFromAtom — re-enqueues as a fresh pending pick even inside the continuation (sequential nested pick, same mechanism as B04049's 2nd pick). remove pick needs kind 'character' (BUG-123); color/levelMax/kind honored on remove candidate (CardDef statics, c===null). enterSleep:true=スリープ状態で登場.]
 //   - 〚痕跡［未発見］〛の場合、相手の現場にいるキャラ1枚につき、相手のデッキのカードを上から2枚リムーブする => else = forEach over:{kind 'all', query:{area:'scene', side:'opp'}} do: mill{player:'opp', n:2} [src/cards/ct-p07/B07104.ts a1 = forEach over:{kind 'all',query:{area:'scene',side:'either'}} do:mill{player:'self',n:2} for 「…現場にいるキャラ1枚につき、…デッキのカードを上から2枚リムーブする」 (here side:'opp' + mill player:'opp' since text is 相手の現場/相手のデッキ). resolver.ts:143-159 forEach resolves over via resolveTarget and runs do per candidate (continuation-safe). mill opp grounded by ct-p09/B09099.ts (mill opp n:1) and B09104.ts (mill opp n:4). dyn/eval.ts has NO opponent-scene-count token (resolveSelf whitelist = sceneTrait/faceUpEvidence/fileCount/ap/lp/uid/cardId/setCardCount only) → forEach-over-all is the engine-supported per-count idiom (memory 21460). KNOWN-EDGE inherited from B07104 (shipped GREEN): if opp deck depletes mid-forEach, refresh then later iterations mill from the refreshed deck — diverges from official 'mill total then stop at refresh' only in late-game deck-depletion; accepted per B07104 precedent.]
 
@@ -76,46 +76,31 @@ const a1: AbilityDef = {
           }
         },
         {
-          kind: 'conditional',
-          if: {
-            kind: 'scratchTrace',
-            player: 'self',
-            v: '発見済'
-          },
-          then: {
-            kind: 'atom',
-            verb: 'sceneEnter',
-            args: {
-              player: 'self',
-              from: 'remove',
-              max: 1,
-              viaEffect: true,
-              enterSleep: true,
-              filter: {
-                color: '黒',
-                levelMax: 3,
-                kind: 'character'
-              }
-            }
-          },
-          else: {
-            kind: 'forEach',
-            over: {
-              kind: 'all',
-              query: {
-                area: 'scene',
-                side: 'opp'
+          kind: 'choice',
+          chooser: 'self',
+          options: [
+            {
+              kind: 'conditional',
+              if: { kind: 'scratchTrace', player: 'self', v: '発見済' },
+              then: {
+                kind: 'atom',
+                verb: 'sceneEnter',
+                args: {
+                  player: 'self', from: 'remove', max: 1, viaEffect: true, enterSleep: true,
+                  filter: { color: '黒', levelMax: 3, kind: 'character' }
+                }
               }
             },
-            do: {
-              kind: 'atom',
-              verb: 'mill',
-              args: {
-                player: 'opp',
-                n: 2
+            {
+              kind: 'conditional',
+              if: { kind: 'scratchTrace', player: 'self', v: '未発見' },
+              then: {
+                kind: 'forEach',
+                over: { kind: 'all', query: { area: 'scene', side: 'opp' } },
+                do: { kind: 'atom', verb: 'mill', args: { player: 'opp', n: 2 } }
               }
             }
-          }
+          ]
         }
         ]
       }
