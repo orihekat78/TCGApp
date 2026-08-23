@@ -1,40 +1,44 @@
-# Next Task: QA adjudication Waves56-57
+# Next Task: QA adjudication Waves58-59
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves54-55 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves56-57 commit.
 
 ## Completed
 
-- Wave54 certifies nine direct/linear effect-entry records.
-- Wave55 certifies eight nested/physical-source effect-entry records.
-- BUG-336 restores B09056/P real choice and condition-aware autonomous choice.
-- Coverage should be 1370 matched / 1594 test-missing after generation.
+- Wave56 certifies eight physical disguise-definition records.
+- BUG-337 rejects a second action in the same contact acted slot.
+- Wave57 certifies eight arbitrary-position exact-two evidence records across
+  fifteen physical case printings.
+- Coverage should be 1386 matched / 1578 test-missing after generation.
 - Existing untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml` stay protected.
 
-## Wave56: disguise definition
+## Wave58: self-only hand removal cost
 
 1. Confirm branch, HEAD, upstream, and protected files read-only.
-2. Ground exact Q/A `a6d4bbd6170b.../5a5d483a0490...`:
-   【変装】 is a contact action sharing cut-in timing; hand disguise swaps with
-   the contacting character, sends the original to deck bottom, and inherits
-   state, gained effects, and set cards.
-3. Certify B02041, B02043, B02044, B02045, B02047, B02086, B05047, B06017.
-4. Reuse generic disguise lifecycle only with card-bound physical source and
-   state/effect/set-card inheritance assertions.
+2. Ground exact Q/A
+   `03c52f9b3040dd01736be520bb4a0434249fef8211fc98946341ee7cac05c5b1`
+   / `45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80`:
+   a declared cost saying remove one hand card may use only the owner's card.
+3. Certify B07020, B07032, B07063, B07074, B07088, D10007, D10008.
+4. Use each physical source, an opponent-hand sentinel, exact one-card payment,
+   insufficient/overspecified/forged payment rejects, turn-use accounting, and
+   card-specific post-cost effects.
 
-## Wave57: arbitrary evidence positions
+## Wave59: self-only deck-top-three removal
 
-1. Ground exact Q/A `24edb9585cfc.../cfea53ad6b22...`: an exact-two evidence
-   cost may choose any two face-down positions without changing evidence order.
-2. Certify B07062, B08076, B08094, B10034, B10082, B10101, B10102, D10026.
-3. Audit Wave36/37 `[down,up,down]` nonadjacent-index evidence before reuse.
-4. Bind each physical case source and effect-specific success sentinel.
-5. Stop after one or two implementation waves.
+1. Ground exact Q/A
+   `d6e909a14c1e94acb86b7c9eee2242041ca16d02d8ea88f3f1dba04866d0237e`
+   / `45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80`:
+   a declared cost removing the deck's top three cards cannot use the opponent's deck.
+2. Certify B04077, B06020, B07001, B08025, B10089, PR292, PR298.
+3. Prove exact own top-three occurrence/order, short-deck rejection,
+   opponent-deck isolation, atomic failure, and each printed post-cost effect.
+4. Stop after one or two implementation waves.
 
 ## Records
 
-- `.claude/sessions/2026-08-23-qa-waves54-55.md`
-- `.claude/bugs/BUG-336.md`
-- `.tmp/_ground/wave54-55*/`
+- `.claude/sessions/2026-08-23-qa-waves56-57.md`
+- `.claude/bugs/BUG-337.md`
+- `.tmp/_ground/wave56/` and `.tmp/_ground/wave57/`
 
-Remaining estimate: about 1,594 records, roughly 136-295 agent hours. Route
+Remaining estimate: about 1,578 records, roughly 134-290 agent hours. Route
 grouping and horizontal fixes may reduce it.

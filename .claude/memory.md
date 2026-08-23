@@ -58,10 +58,22 @@
 - Physical source identity is public-tested for D10023/PR173 and PR291/PR297.
 - Coverage after generation should be 1370 matched / 1594 test-missing.
 
+## 2026-08-23: QA runtime Waves56-57
+
+- Wave56 certifies eight disguise-definition records through real contact.
+  State, name, modifiers, gained keywords, set cards, and stacked occurrences
+  transfer; old faces reach deck bottom without entry/removal hooks.
+- BUG-337 blocks a second `actionContact` in the same acted slot. Immediate
+  cut-in-to-disguise and disguise-to-cut-in public redispatch now reject.
+- Wave57 certifies eight arbitrary-position exact-two evidence records across
+  fifteen physical case printings. `[3,0]` preserves identity, origin, order,
+  length, and opponent evidence; five malformed classes reject transactionally.
+- Coverage after generation should be 1386 matched / 1578 test-missing.
+
 ## Next
 
-- Wave56: eight disguise-definition records at `a6d4bbd6.../5a5d483a...`.
-- Wave57: eight arbitrary-position evidence-cost records at
-  `24edb958.../cfea53ad...`; Wave36/37 likely contain reusable public proof.
+- Wave58: seven self-only hand-remove cost records at `03c52f9b.../45979cb6...`.
+- Wave59: seven self-only deck-top-three remove records at
+  `d6e909a1.../45979cb6...`; preserve each card's post-cost effect sentinel.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

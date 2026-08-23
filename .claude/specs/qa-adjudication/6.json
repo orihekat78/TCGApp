@@ -117,11 +117,23 @@
     {
       "qaId": "card:B02045:bde0a3a5b0127797c2caad230a469d5a24f2a164829581273d0d8e77589383d6",
       "answerHash": "5a5d483a04902b6379b9102179059e899995898e1efd6d91a8673b08aae38121",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02045.ts:61"
+        "rules:.claude/rules/09-cutin-disguise.md:32",
+        "rules:.claude/rules/09-cutin-disguise.md:40",
+        "rules:.claude/rules/16-card-set.md:25",
+        "rules:.claude/rules/23-qa-disguise-cutin.md:56",
+        "src:src/cards/ct-p02/B02045.ts:61",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:228",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:232",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:236",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:245",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:254",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:266",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:295",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:312"
       ]
     },
     {
@@ -1248,11 +1260,22 @@
     {
       "qaId": "card:B08094:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a",
       "answerHash": "cfea53ad6b2267f9b1f9d36ae4fbdd2c5a1cb60a016e329f4fc7b12b078cc33d",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08094.ts:113"
+        "rules:.claude/rules/21-declared-ability-cost.md:30",
+        "rules:.claude/rules/21-declared-ability-cost.md:39",
+        "src:src/cards/ct-p08/B08094.ts:113",
+        "src:src/engine/cost/evaluate.ts:208",
+        "src:src/engine/mutate/evidence.ts:163",
+        "tests:tests/cards/official-qa/evidence-position-public-wave57.test.ts:266",
+        "tests:tests/cards/official-qa/evidence-position-public-wave57.test.ts:324",
+        "tests:tests/cards/official-qa/evidence-position-public-wave57.test.ts:325",
+        "tests:tests/cards/official-qa/evidence-position-public-wave57.test.ts:326",
+        "tests:tests/cards/official-qa/evidence-position-public-wave57.test.ts:328",
+        "tests:tests/cards/official-qa/evidence-position-public-wave57.test.ts:330",
+        "tests:tests/cards/official-qa/evidence-position-public-wave57.test.ts:349"
       ]
     },
     {

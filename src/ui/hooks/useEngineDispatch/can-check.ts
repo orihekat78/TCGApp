@@ -167,6 +167,12 @@ export function isAllowed(
       if (!ax) return false;
       if (hasBlockingResolutionPrompt(state)) return false;
       if (ax.phase !== 'action-1' && ax.phase !== 'action-2' && ax.phase !== 'action-1-redo') return false;
+      const alreadyActed = ax.phase === 'action-1'
+        ? ax.firstActed !== undefined
+        : ax.phase === 'action-2'
+          ? ax.secondActed !== undefined
+          : ax.firstRedoActed !== undefined;
+      if (alreadyActed) return false;
       const currentUid = ax.phase === 'action-2' ? ax.secondUid : ax.firstUid;
       if (!currentUid || ownerOfUid(state, currentUid) !== action.player) return false;
       if (action.choice.kind === 'pass') return true;

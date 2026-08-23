@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `739fbf68f0e6`
+> Source hash: `e12b3e672c0a`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,18 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# QA Wave57: certify arbitrary evidence positions
+
+- Certify eight case records and all fifteen base/parallel physical sources.
+- Accept non-sorted, nonadjacent evidence indices without identity or order change.
+- Reject five malformed payment classes atomically and reach each printed effect.
+
+# QA Wave56: certify the disguise definition
+
+- Certify eight physical disguise sources through the public contact window.
+- Preserve state, modifiers, name, set cards, and stacked-card occurrences.
+- Fix BUG-337 so one contact opportunity cannot use cut-in and disguise twice.
 
 # QA Wave55: certify nested and physical entries
 
