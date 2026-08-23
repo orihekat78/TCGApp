@@ -313,8 +313,8 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:7",
         "src:src/cards/ct-p03/B03013.ts:15",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:534",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:539"
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:540",
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:545"
       ]
     },
     {
@@ -1053,14 +1053,28 @@
     {
       "qaId": "card:B06013:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a",
       "answerHash": "dfc687d5bd704d90cfe7cb905e4b2580b1b16357c920715a87bc2ed21315563a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06013.ts:133"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/21-declared-ability-cost.md:47",
+        "rules:.claude/rules/21-declared-ability-cost.md:49",
+        "src:src/cards/ct-p06/B06013.ts:68",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:214",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:215",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:216",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:218",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:220",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:221",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:239",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:240",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:241",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:242",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:243",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:244",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:253",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:255",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:256"
       ]
     },
     {
@@ -1683,7 +1697,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09070.ts:97",
-        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:355"
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:364"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -1716,7 +1730,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09084.ts:101",
-        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:362"
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:371"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"

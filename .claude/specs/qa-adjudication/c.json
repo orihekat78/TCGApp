@@ -672,7 +672,7 @@
       "evidence": [
         "src:src/cards/ct-p04/B04030.ts:47",
         "src:src/engine/flow/action/target-expander.ts:74",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:565"
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:571"
       ],
       "noteCodes": []
     },
@@ -1904,7 +1904,7 @@
       "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09112.ts:96"
+        "src:src/cards/ct-p09/B09112.ts:104"
       ]
     },
     {

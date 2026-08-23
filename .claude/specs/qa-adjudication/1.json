@@ -1987,7 +1987,7 @@
         "rules:.claude/rules/17-icons.md:13",
         "rules:.claude/rules/17-icons.md:16",
         "src:src/cards/ct-d11/D11003.ts:1",
-        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:364"
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:373"
       ]
     },
     {

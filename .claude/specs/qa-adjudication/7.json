@@ -197,11 +197,20 @@
     {
       "qaId": "card:B02045:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb",
       "answerHash": "13dee71614f2c905921b2ddfef97bebc1511fd57bc103eea3684b5b242c6180c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02008.ts:9"
+        "rules:.claude/rules/19-special-rules.md:46",
+        "rules:.claude/rules/19-special-rules.md:47",
+        "src:src/cards/ct-p02/B02045.ts:35",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:275",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:278",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:280",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:281",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:286",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:287",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:288"
       ]
     },
     {

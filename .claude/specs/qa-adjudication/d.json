@@ -178,14 +178,14 @@
         "rules:.claude/rules/16-card-set.md:25",
         "rules:.claude/rules/23-qa-disguise-cutin.md:56",
         "src:src/cards/ct-p02/B02041.ts:1",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:228",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:232",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:236",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:245",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:254",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:266",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:295",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:312"
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:234",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:238",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:242",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:251",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:260",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:294",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:323",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:340"
       ],
       "noteCodes": []
     },
@@ -268,30 +268,29 @@
         "rules:.claude/rules/16-card-set.md:25",
         "rules:.claude/rules/23-qa-disguise-cutin.md:56",
         "src:src/cards/ct-p02/B02086.ts:1",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:228",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:232",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:236",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:245",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:254",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:266",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:295",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:312"
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:234",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:238",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:242",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:251",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:260",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:294",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:323",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:340"
       ],
       "noteCodes": []
     },
     {
       "qaId": "card:B03013:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb",
       "answerHash": "13dee71614f2c905921b2ddfef97bebc1511fd57bc103eea3684b5b242c6180c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/19-special-rules.md:39",
-        "src:src/cards/ct-p03/B03013.ts:19"
-      ],
-      "noteCodes": [
-        "AP-NONREMOVAL-UNTESTED",
-        "TEST-GAP"
+        "rules:.claude/rules/19-special-rules.md:46",
+        "rules:.claude/rules/19-special-rules.md:47",
+        "src:src/cards/ct-p03/B03013.ts:19",
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:540",
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:545"
       ]
     },
     {
@@ -1079,15 +1078,28 @@
     {
       "qaId": "card:B06043:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a",
       "answerHash": "dfc687d5bd704d90cfe7cb905e4b2580b1b16357c920715a87bc2ed21315563a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06043.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
+        "rules:.claude/rules/21-declared-ability-cost.md:47",
+        "rules:.claude/rules/21-declared-ability-cost.md:49",
+        "src:src/cards/ct-p06/B06043.ts:52",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:214",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:215",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:216",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:218",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:220",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:221",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:239",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:240",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:241",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:242",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:243",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:244",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:253",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:255",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:256"
       ]
     },
     {

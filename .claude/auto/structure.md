@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6437
+- **ファイル数**: 6450
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -874,6 +874,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-29-qa-wave63-full-scene-entry.md` — QA Wave63: certify full-scene effect entry
     - `2026-08-23-30-qa-wave64-short-deck-three.md` — QA Wave64: certify short top-three deck looks
     - `2026-08-23-31-qa-wave65-short-deck-four.md` — QA Wave65: certify short top-four deck looks
+    - `2026-08-24-01-qa-wave66-nonpositive-ap.md` — QA Wave66: certify nonpositive AP
+    - `2026-08-24-02-qa-wave67-evidence-positions.md` — QA Wave67: certify arbitrary evidence positions
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1578,6 +1580,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-23-qa-waves60-61.md` — QA adjudication Waves60-61
     - `2026-08-23-qa-waves62-63.md` — QA adjudication Waves62-63
     - `2026-08-23-qa-waves64-65.md` — QA adjudication Waves64-65
+    - `2026-08-24-qa-waves66-67.md` — QA adjudication Waves66-67
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1673,9 +1676,11 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B01092.md` — B01092 松田陣平 grounding (2026-07-10, sonnet5)
       - `B01095.md` — B01095 「僕の日本から…」 grounding
       - `B02002.md` — B02002 江戸川コナン grounding
+      - `B02008.md` — B02008 grounding
       - `B02014.md` — B02014 少年探偵団の活躍 grounding
       - `B02019.md` — B02019 grounding
       - `B02019P.md` — B02019P grounding
+      - `B02021.md` — B02021 grounding
       - `B02022.md` — B02022 鬼丸猛 grounding (2026-07-10, sonnet5)
       - `B02023.md` — B02023 遠山和葉 grounding
       - `B02039.md` — B02039 工藤優作 grounding (2026-07-10, fable)
@@ -1686,11 +1691,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B02047.md` — B02047 grounding
       - `B02057.md` — B02057 / B02057P grounding
       - `B02058.md` — B02058 / B02058P grounding
+      - `B02060.md` — B02060 grounding
       - `B02063.md` — B02063 羽田秀吉 grounding
       - `B02067.md` — B02067 チョーカー型変声機 grounding (2026-07-10, sonnet5)
       - `B02072.md` — B02072 / B02072P 降谷零 grounding
       - `B02083.md` — B02083 grounding
       - `B02086.md` — B02086 / B02086P grounding
+      - `B03013.md` — B03013 grounding
       - `B03018.md` — B03018 grounding
       - `B03019.md` — B03019 grounding
       - `B03020.md` — B03020 毛利蘭 grounding
@@ -1706,6 +1713,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B03084.md` — B03084 / B03084P 降谷零 grounding
       - `B03085.md` — B03085 grounding
       - `B03111.md` — B03111 バーボン grounding (2026-07-10, sonnet5)
+      - `B03127.md` — B03127 grounding
       - `B04003.md` — B04003 工藤新一 grounding (2026-07-10, sonnet5)
       - `B04018.md` — B04018 / B04018P 遠山和葉 grounding (2026-08-13, gpt-5.6-terra high)
       - `B04018P.md` — B04018P 遠山和葉 grounding (2026-07-14, gpt-5.6-terra high)
@@ -1958,6 +1966,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D10023.md` — D10023 工藤有希子 grounding
       - `D10024.md` — D10024 grounding
       - `D10026.md` — D10026 grounding
+      - `D11014.md` — D11014 grounding
+      - `D11021.md` — D11021 grounding
       - `PR022.md` — PR022 江戸川コナン
       - `PR060.md` — PR060 grounding
       - `PR064.md` — PR064 grounding
@@ -2012,6 +2022,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `m3-triage-registered.md` — M3 PA batch triage — 登録済 18 ID (2026-07-10)
       - `m3-triage-unregistered.md` — M3 未登録14 ID triage (2026-07-10, sonnet5)
       - `waves64-65-authority.md` — Waves64-65 authority manifest
+      - `waves66-67-authority.md` — Waves66-67 authority manifest
     - **`meta-ui/`**
       - `00-overview.md` — 00 — メタ UI 統合設計 概要
       - `01-project-setup.md` — 01 — meta-app プロジェクト構成
@@ -5795,6 +5806,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `end-phase-reactivation-public-wave46.test.ts` — qa: card:B07023:e95274eddf61476e68accaf6348cb07eefb9d8074484ed06055f5022530a1706
       - `event-evidence-action-hirameki-public.test.ts` — qa: card:B04041:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
       - `evidence-position-public-wave57.test.ts` — qa: card:B07062:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a
+      - `evidence-position-public-wave67.test.ts` — qa: card:B06013:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a
       - `f026-cutin-public.test.ts` — qa: card:B08085:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
       - `face-down-set-hidden-public-wave62.test.ts` — qa: card:B08033:d52596199be14d625d7776309eeaca145097a31eecca550237262ad7075cb2f4
       - `file-assist-action-public-wave40.test.ts` — qa: card:B04068:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
@@ -5816,6 +5828,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `misread-public-runtime-wave26.test.ts` — qa: card:B04038:6d5a65b9e083c8565478cceec3269781a67a936789441e6c196e107f90e2e8c8
       - `misread-reaction-order-wave26.test.ts` — qa: card:B05015:32589b2605a57e1fe89295b9b2340e6874cd6600ca6756e790b5fbcad58bae18
       - `multihook-timing-public.test.ts` — qa: card:D03007:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3
+      - `nonpositive-ap-public-wave66.test.ts` — qa: card:B02021:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb
       - `same-card-multicopy-order-wave17.test.ts` — qaId=card:B02020:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c…
       - `set-card-ability-occurrence-public-wave35.test.ts` — qa: card:B01057:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `set-card-host-absent.test.ts`

@@ -18,6 +18,7 @@
 // qa: card:D11004:fd46e3e8955490f444afdb47fbaa606489da5b870cf6d88ae747987457e8c002
 // qa: card:D11009:fd46e3e8955490f444afdb47fbaa606489da5b870cf6d88ae747987457e8c002
 // qa: card:D11014:fd46e3e8955490f444afdb47fbaa606489da5b870cf6d88ae747987457e8c002
+// qa: card:D11014:5d372fbd4d8831b3e59f945a7dd79ed55444cc43b8ba3baa33569492633d402d
 // Rules: 13, 15, 17. Real CardDefs entered by an effect through the public dispatcher.
 
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -44,6 +45,7 @@ import { D11014 } from '@/cards/ct-d11/D11014';
 import { event } from '@/engine/event';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { _resetUidCounter } from '@/engine/mutate/scene';
+import { char as readChar } from '@/engine/read/char';
 import { _resetRegistry, register } from '@/engine/read/def';
 import { pendingOwnerOrderGroup } from '@/engine/resolve';
 import { createEmptyGameState } from '@/engine/state-factory';
@@ -266,11 +268,18 @@ function proveD11009() {
 
 function proveD11014() {
   const state = base(D11014);
-  state.players.opp.scene = [sceneChar(ELIGIBLE, 'opp-target')];
+  state.players.opp.scene = [sceneChar(ELIGIBLE, 'opp-target', { apOverride: 500 })];
   install(state);
   enter(D11014);
   pick(ELIGIBLE);
-  return settled(D11014.id, { cardId: D11014.id, apMod: current().players.opp.scene[0]?.turnEffects.apMod_turn, fired: shippuFired(D11014.id) });
+  return settled(D11014.id, {
+    cardId: D11014.id,
+    apMod: current().players.opp.scene[0]?.turnEffects.apMod_turn,
+    ap: readChar.ap(current(), 'opp-target'),
+    stillInScene: current().players.opp.scene.some(entry => entry.uid === 'opp-target'),
+    targetRemoved: current().players.opp.remove.includes(ELIGIBLE),
+    fired: shippuFired(D11014.id),
+  });
 }
 
 function proveSecondEntryDoesNotFire() {
@@ -364,7 +373,9 @@ describe('Shippu triggered by effect-driven scene entry', () => {
   it(`${QA}/${QA_FIRST_ENTRY}: D11003 effect entry fires its real evidence gain`, () => expect(proveEvidence(D11003)).toEqual({ cardId: 'D11003', evidence: [DRAW], fired: true }));
   it(`${QA}/${QA_FIRST_ENTRY}: D11004 effect entry fires its shared real evidence gain`, () => expect(proveEvidence(D11004)).toEqual({ cardId: 'D11004', evidence: [DRAW], fired: true }));
   it(`${QA}: D11009 effect entry opens and resolves its real sleep Shippu`, () => expect(proveD11009()).toEqual({ cardId: 'D11009', state: 'sleep', fired: true }));
-  it(`${QA}/${QA_FIRST_ENTRY}: D11014 effect entry opens and resolves its real AP reduction Shippu`, () => expect(proveD11014()).toEqual({ cardId: 'D11014', apMod: -1000, fired: true }));
+  it(`${QA}/${QA_FIRST_ENTRY}: D11014 effect entry keeps a negative-AP target in scene`, () => expect(proveD11014()).toEqual({
+    cardId: 'D11014', apMod: -1000, ap: -500, stillInScene: true, targetRemoved: false, fired: true,
+  }));
   it(`${QA}/${QA_FIRST_ENTRY}: effect entry still requires the first self entry of the turn`, () => expect(proveSecondEntryDoesNotFire()).toEqual({ evidence: 0, enterOrder: 2, fired: false }));
   it(`${QA}/${QA_FIRST_ENTRY}: effect entry also fires for the owner during the opponent turn`, () => expect(proveOpponentTurnOwnerMirror()).toEqual({ ownerEvidence: [DRAW], otherGotDraw: false, fired: true }));
   it(`${QA}/${QA_FIRST_ENTRY}: every target CardDef uses the exact first-entry Shippu condition`, () => expect(CARDS.map((definition) => [definition.id, shippuMatcher(definition)])).toEqual(CARDS.map((definition) => [definition.id, { kind: 'enterOrderEquals', n: 1 }])));

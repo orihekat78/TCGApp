@@ -206,14 +206,14 @@
         "rules:.claude/rules/16-card-set.md:25",
         "rules:.claude/rules/23-qa-disguise-cutin.md:56",
         "src:src/cards/ct-p02/B02044.ts:163",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:228",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:232",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:236",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:245",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:254",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:266",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:295",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:312"
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:234",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:238",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:242",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:251",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:260",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:294",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:323",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:340"
       ],
       "noteCodes": []
     },
@@ -243,11 +243,19 @@
     {
       "qaId": "card:B02060:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb",
       "answerHash": "13dee71614f2c905921b2ddfef97bebc1511fd57bc103eea3684b5b242c6180c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02060.ts:1"
+        "rules:.claude/rules/19-special-rules.md:46",
+        "rules:.claude/rules/19-special-rules.md:47",
+        "src:src/cards/ct-p02/B02060.ts:23",
+        "tests:tests/cards/official-qa/nonpositive-ap-public-wave66.test.ts:121",
+        "tests:tests/cards/official-qa/nonpositive-ap-public-wave66.test.ts:122",
+        "tests:tests/cards/official-qa/nonpositive-ap-public-wave66.test.ts:124",
+        "tests:tests/cards/official-qa/nonpositive-ap-public-wave66.test.ts:125",
+        "tests:tests/cards/official-qa/nonpositive-ap-public-wave66.test.ts:176",
+        "tests:tests/cards/official-qa/nonpositive-ap-public-wave66.test.ts:183"
       ]
     },
     {
@@ -695,14 +703,14 @@
         "rules:.claude/rules/16-card-set.md:25",
         "rules:.claude/rules/23-qa-disguise-cutin.md:56",
         "src:src/cards/ct-p05/B05047.ts:1",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:228",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:232",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:236",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:245",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:254",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:266",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:295",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:312"
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:234",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:238",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:242",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:251",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:260",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:294",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:323",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:340"
       ]
     },
     {
@@ -1956,7 +1964,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-d03/D03004.ts:17",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:576"
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:582"
       ]
     },
     {
@@ -2063,7 +2071,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-d11/D11004.ts:1",
-        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:365"
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:374"
       ]
     },
     {

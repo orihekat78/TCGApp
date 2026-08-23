@@ -2,6 +2,7 @@
 // qa: card:B02043:bde0a3a5b0127797c2caad230a469d5a24f2a164829581273d0d8e77589383d6
 // qa: card:B02044:bde0a3a5b0127797c2caad230a469d5a24f2a164829581273d0d8e77589383d6
 // qa: card:B02045:bde0a3a5b0127797c2caad230a469d5a24f2a164829581273d0d8e77589383d6
+// qa: card:B02045:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb
 // qa: card:B02047:bde0a3a5b0127797c2caad230a469d5a24f2a164829581273d0d8e77589383d6
 // qa: card:B02086:bde0a3a5b0127797c2caad230a469d5a24f2a164829581273d0d8e77589383d6
 // qa: card:B05047:bde0a3a5b0127797c2caad230a469d5a24f2a164829581273d0d8e77589383d6
@@ -15,10 +16,15 @@ import { event } from '@/engine/event';
 import * as flow from '@/engine/flow/index.js';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { _resetUidCounter } from '@/engine/mutate/scene';
+import { char as readChar } from '@/engine/read/char';
 import { _resetRegistry, register } from '@/engine/read/def';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { CardDef, GameState, Player, SceneCharacter } from '@/engine/types';
-import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import {
+  bindPendingDecision,
+  dispatchEngineAction,
+  surfacePendingSideChannels,
+} from '@/ui/hooks/useEngineDispatch';
 import { resetPresentationQueue } from '@/ui/presentation/coordinator';
 import { beginMatchSession, endMatchSession } from '@/ui/services/matchSession';
 import { useGameStateStore } from '@/ui/state/store';
@@ -258,6 +264,28 @@ describe('official QA Wave56: disguise swaps the contacting character and inheri
       `${row.cardId}: disguise is not entry`).toBe(false);
     expect(after.pendingEffects.some(entry => entry.triggeredBy.hook === 'leave:to-remove'),
       `${row.cardId}: old face is not removed`).toBe(false);
+  });
+
+  it('B02045 keeps the contacted character in scene after its disguise rider makes AP negative', () => {
+    const row = ROWS.find(entry => entry.cardId === 'B02045')!;
+    const state = prepared(row);
+    state.players.opp.scene[0]!.apOverride = 1000;
+    install(state, 'B02045:wave66-nonpositive-ap');
+
+    expect(dispatchPublicDisguise(row.cardId).result).toEqual({ ok: true });
+    surfacePendingSideChannels();
+    const pick = useGameStateStore.getState().pendingEffectPick;
+    expect(pick?.source).toMatchObject({ cardId: row.cardId, abilityId: 'a2' });
+    const target = pick?.candidates.find(candidate => candidate.uid === TARGET_UID);
+    expect(target).toBeTruthy();
+    expect(dispatchEngineAction(bindPendingDecision(pick!, {
+      type: 'effectPickResolve',
+      pickedUid: target!.uid,
+    }))).toEqual({ ok: true });
+
+    expect(readChar.ap(current(), TARGET_UID)).toBe(-1000);
+    expect(current().players.opp.scene.some(character => character.uid === TARGET_UID)).toBe(true);
+    expect(current().players.opp.remove).not.toContain(TARGET);
   });
 
   it.each(ROWS)('$cardId rejects FILE below its printed threshold without moving either card', row => {

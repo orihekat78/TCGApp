@@ -207,14 +207,14 @@
         "rules:.claude/rules/16-card-set.md:25",
         "rules:.claude/rules/23-qa-disguise-cutin.md:56",
         "src:src/cards/ct-p02/B02047.ts:49",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:228",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:232",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:236",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:245",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:254",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:266",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:295",
-        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:312"
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:234",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:238",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:242",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:251",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:260",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:294",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:323",
+        "tests:tests/cards/official-qa/disguise-definition-public-wave56.test.ts:340"
       ],
       "noteCodes": []
     },
@@ -986,11 +986,28 @@
     {
       "qaId": "card:B06065:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a",
       "answerHash": "dfc687d5bd704d90cfe7cb905e4b2580b1b16357c920715a87bc2ed21315563a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06065.ts:40"
+        "rules:.claude/rules/21-declared-ability-cost.md:47",
+        "rules:.claude/rules/21-declared-ability-cost.md:49",
+        "src:src/cards/ct-p06/B06065.ts:40",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:214",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:215",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:216",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:218",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:220",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:221",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:239",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:240",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:241",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:242",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:243",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:244",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:253",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:255",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:256"
       ]
     },
     {
@@ -1545,7 +1562,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09071.ts:62",
-        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:356"
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:365"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -1586,7 +1603,7 @@
         "rules:.claude/rules/17-icons.md:13",
         "rules:.claude/rules/17-icons.md:16",
         "src:src/cards/ct-p09/B09075.ts:83",
-        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:358"
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:367"
       ]
     },
     {
@@ -1599,7 +1616,7 @@
         "rules:.claude/rules/17-icons.md:13",
         "rules:.claude/rules/17-icons.md:16",
         "src:src/cards/ct-p09/B09076.ts:42",
-        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:359"
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:368"
       ]
     },
     {
@@ -1657,14 +1674,35 @@
     {
       "qaId": "card:B09112:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a",
       "answerHash": "dfc687d5bd704d90cfe7cb905e4b2580b1b16357c920715a87bc2ed21315563a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09112.ts:96"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/21-declared-ability-cost.md:47",
+        "rules:.claude/rules/21-declared-ability-cost.md:49",
+        "src:src/cards/ct-p09/B09112.ts:51",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:214",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:215",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:216",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:218",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:220",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:221",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:239",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:240",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:241",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:242",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:243",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:244",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:253",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:255",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:256",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:301",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:304",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:305",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:306",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:314",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:318",
+        "tests:tests/cards/official-qa/evidence-position-public-wave67.test.ts:326"
       ]
     },
     {
@@ -1959,7 +1997,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-d03/D03004.ts:17",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:576"
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:582"
       ],
       "noteCodes": []
     },
@@ -2098,7 +2136,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-d11/D11003.ts:59",
-        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:364"
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:373"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -2107,14 +2145,14 @@
     {
       "qaId": "card:D11014:5d372fbd4d8831b3e59f945a7dd79ed55444cc43b8ba3baa33569492633d402d",
       "answerHash": "13dee71614f2c905921b2ddfef97bebc1511fd57bc103eea3684b5b242c6180c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d11/D11014.ts:70"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/19-special-rules.md:46",
+        "rules:.claude/rules/19-special-rules.md:47",
+        "src:src/cards/ct-d11/D11014.ts:25",
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:376"
       ]
     },
     {

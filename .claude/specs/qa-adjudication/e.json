@@ -570,9 +570,9 @@
         "rules:.claude/rules/17-icons.md:10",
         "src:src/cards/ct-p04/B04022.ts:31",
         "src:src/cards/ct-p04/B04022P.ts:31",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:522",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:524",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:529"
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:528",
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:530",
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:535"
       ]
     },
     {
@@ -1604,7 +1604,7 @@
         "rules:.claude/rules/17-icons.md:13",
         "rules:.claude/rules/17-icons.md:16",
         "src:src/cards/ct-p09/B09084.ts:1",
-        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:362"
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:371"
       ]
     },
     {

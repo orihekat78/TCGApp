@@ -1259,7 +1259,7 @@
         "rules:.claude/rules/17-icons.md:13",
         "rules:.claude/rules/17-icons.md:16",
         "src:src/cards/ct-p09/B09071.ts:1",
-        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:356"
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:365"
       ]
     },
     {
@@ -1895,14 +1895,18 @@
     {
       "qaId": "card:D11021:64f20835aa771e027c4e116a9e09df91241c0cd1a561ef1a36d170d461790875",
       "answerHash": "13dee71614f2c905921b2ddfef97bebc1511fd57bc103eea3684b5b242c6180c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d11/D11021.ts:83"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/19-special-rules.md:46",
+        "rules:.claude/rules/19-special-rules.md:47",
+        "src:src/cards/ct-d11/D11021.ts:63",
+        "tests:tests/cards/official-qa/nonpositive-ap-public-wave66.test.ts:121",
+        "tests:tests/cards/official-qa/nonpositive-ap-public-wave66.test.ts:122",
+        "tests:tests/cards/official-qa/nonpositive-ap-public-wave66.test.ts:124",
+        "tests:tests/cards/official-qa/nonpositive-ap-public-wave66.test.ts:125",
+        "tests:tests/cards/official-qa/nonpositive-ap-public-wave66.test.ts:232"
       ]
     },
     {

@@ -2,69 +2,31 @@
 
 ## Durable records
 
-- Engine/release history: `.claude/sessions/2026-07-29-engine-adversarial.md`,
-  `.claude/sessions/2026-08-14-qa-engine-public-evidence.md`, and
-  `.claude/sessions/2026-08-21-engine-memory-rotation.md`.
-- QA Waves17-26: `.claude/sessions/2026-08-22-qa-waves17-26.md`.
-- QA Waves27-34 rotation:
-  `.claude/sessions/2026-08-23-qa-memory-waves27-34.md`.
-- QA Wave35 and Waves36-49: matching dated files under `.claude/sessions/`.
+- Engine/release history: .claude/sessions/2026-07-29-engine-adversarial.md,
+  .claude/sessions/2026-08-14-qa-engine-public-evidence.md, and
+  .claude/sessions/2026-08-21-engine-memory-rotation.md.
+- QA Waves17-26: .claude/sessions/2026-08-22-qa-waves17-26.md.
+- QA Waves27-34: .claude/sessions/2026-08-23-qa-memory-waves27-34.md.
+- QA Waves35-67: matching dated files under .claude/sessions/.
 
-## QA campaign history
+## 2026-08-24: QA runtime Waves66-67
 
-- Waves35-49 are recorded in matching dated session files. They cover physical
-  ability identity, Bond, end phase, Investigation, FILE assist, and action timing.
-
-## 2026-08-23: QA runtime Waves50-57
-
-- Matching session files record stacked-vs-set separation, deck-look refresh,
-  effect-entry repair, exact-two evidence costs, direct/nested entry, disguise,
-  and arbitrary-position evidence. BUG-333/334/336/337 are included there.
-
-## 2026-08-23: QA runtime Waves58-59
-
-- Wave58 certifies seven owner-only one-card hand costs across ten physical
-  sources. Opponent-shaped, malformed, and unavailable-sleep payments are atomic.
-- Wave59 certifies seven owner deck-top-three costs across eleven physical
-  sources. Short decks reject; exact three refreshes immediately; owner-relative
-  orientation, cost order, opponent isolation, and printed effects are public.
-- Coverage after generation should be 1400 matched / 1564 test-missing.
-
-## 2026-08-23: QA runtime Waves60-61
-
-- Wave60 certifies seven stun-definition records across eight physical sources.
-  Public state transitions preserve stun under sleep/stun requests, replace an
-  active request with sleep, and reject action/reasoning by a stunned actor.
-- Wave61 certifies seven full-scene effect-entry records across thirteen physical
-  sources. Every source may switch itself out after entering the fifth slot while
-  the fired effect and nested entrant hook finish; forged cross-owner victims fail
-  transactionally. No production or CardDef change was required.
-- Coverage after generation is 1414 matched / 1550 test-missing.
-
-## 2026-08-23: QA runtime Waves62-63
-
-- Wave62 certifies nine face-down set-card privacy records across sixteen
-  physical sources. Identity stays hidden from owner/spectator public surfaces
-  until face-up removal; malformed and cross-owner payments reject atomically.
-- BUG-338 corrects B08034/P official rarity from C/CP to R/RP.
-- Wave63 certifies eight full-scene effect-entry records across eleven physical
-  sources, including source-self switch, leave/enter order, exact delayed tails,
-  owner symmetry, zero-entry, optional decline, and forged-victim rejection.
-- Coverage after generation is 1431 matched / 1533 test-missing.
-
-## 2026-08-23: QA runtime Waves64-65
-
-- Waves64-65 certify sixteen short-deck look records and correct three grounded
-  horizontal records across thirty-two physical sources. Selected cards become
-  public; private look, decline, no-match, and remainder never expose identities.
-- BUG-339 repairs public selected-card presentation. BUG-340 validates pending
-  continuation by same-root parent ancestry while preserving coherent legacy saves.
-  BUG-341 gives PR180/PR186 inherent sleep entry and sparse printed `a2`.
-- Coverage after generation is 1447 matched / 1517 test-missing.
+- Wave66 certifies seven nonpositive-AP records and retains B02008 horizontal
+  evidence. Printed declaration, entry, disguise, leave, Shippu, and case-cost
+  routes keep zero/negative-AP characters in scene.
+- Signed AP survives save/replay and expires at turn end without a causal
+  removal. Explicit removal semantics are unchanged.
+- Wave67 certifies six arbitrary-evidence-position records across twelve
+  physical printings. Exact indices 3/0 preserve identity/origin/order; malformed
+  choices reject atomically and committed faces survive hydration.
+- B09112/P now publicly presents only the selected named deck card. BUG-339
+  remaining ungrounded handAddFromDeck debt is 151 occurrences.
+- Coverage after generation is 1460 matched / 1504 test-missing / 2964 total.
 
 ## Next
 
-- Wave66: seven records at `236305893.../13dee7161...`.
-- Wave67: six records at `24edb9585.../dfc687d5b...`.
-- Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
+- Wave68: six remaining records at 4cf056388.../45979cb61...; B05063/P is the
+  existing matched horizontal member.
+- Wave69: six records at 7ac51d8c7.../ae8633d90....
+- Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

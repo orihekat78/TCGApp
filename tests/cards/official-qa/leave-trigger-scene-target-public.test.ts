@@ -1,5 +1,6 @@
 // qa: card:B03012:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
 // qa: card:B03013:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
+// qa: card:B03013:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb
 // qa: card:B03091:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
 // qa: card:B04010:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
 // qa: card:B04022:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
@@ -437,7 +438,12 @@ const B03013_CASE: LeaveCase = {
   chosen: 'opp-target',
   included: ['self-target', 'opp-target'],
   excluded: [],
-  setup: (state) => setupSceneTargets(state),
+  setup: (state) => {
+    setupSceneTargets(state);
+    const target = state.players.opp.scene.find(character => character.uid === 'opp-target');
+    if (!target) throw new Error('missing B03013 low-AP target');
+    target.apOverride = 1000;
+  },
   capture: targetCapture,
 };
 
@@ -533,7 +539,7 @@ describe('opponent-turn leave scene effects through public dispatch', () => {
     const proof = prove(B03013_CASE);
     expect(proof, `${B03013.id}: either-side target gets AP-2000 only on own opponent-turn leave`).toMatchObject({
       publicPick: { range: [0, 1], chosen: true, inclusions: { 'self-target': true, 'opp-target': true } },
-      positive: { selfTarget: { ap: 4000 }, selfDecoy: { ap: 5000 }, oppTarget: { ap: 4000 }, oppDecoy: { ap: 7000 }, sourceInRemove: true },
+      positive: { selfTarget: { ap: 4000 }, selfDecoy: { ap: 5000 }, oppTarget: { ap: -1000 }, oppDecoy: { ap: 7000 }, sourceInRemove: true },
       ...commonNegative(),
     });
     expect(proof).toMatchObject({ decline: { before: (proof as { decline: { before: unknown } }).decline.before, after: (proof as { decline: { before: unknown } }).decline.before }, selfTurn: { effectState: (proof as { selfTurn: { before: unknown } }).selfTurn.before }, otherLeaves: { effectState: (proof as { otherLeaves: { before: unknown } }).otherLeaves.before } });

@@ -519,9 +519,9 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p04/B04030.ts:19",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:563",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:565",
-        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:571"
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:569",
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:571",
+        "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:577"
       ]
     },
     {
