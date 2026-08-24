@@ -2163,16 +2163,18 @@
     {
       "qaId": "card:B10089:84ecdea6c10bc908728749deacc797a85529c42aef7daa60ffe67827bc5ce34f",
       "answerHash": "caedd0010da4d392046a04456bad3c537f47cf9b0d2b3598bf277055792a4d11",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/09-cutin-disguise.md:9",
-        "src:src/cards/ct-p10/B10089.ts:8"
+        "rules:.claude/rules/21-declared-ability-cost.md:57",
+        "src:src/cards/ct-p10/B10089.ts:6",
+        "tests:tests/cards/official-qa/deck-top-three-insufficient-public-wave73.test.ts:184",
+        "tests:tests/cards/official-qa/deck-top-three-insufficient-public-wave73.test.ts:200",
+        "tests:tests/cards/official-qa/deck-top-three-insufficient-public-wave73.test.ts:218",
+        "tests:tests/cards/official-qa/deck-top-three-insufficient-public-wave73.test.ts:229"
       ],
-      "noteCodes": [
-        "IMPLEMENTED-CARD-TEST-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B10090:0c9d0e7ac8e1aeccc9186815ebf6f4fcbc776e2193db1d43e5cd7294a9e3a664",

@@ -9,22 +9,21 @@
 - QA Waves27-34: .claude/sessions/2026-08-23-qa-memory-waves27-34.md.
 - QA Waves35-67: matching dated files under .claude/sessions/.
 
-## 2026-08-24: QA runtime Waves70-71
+## 2026-08-24: QA runtime Waves72-73
 
-- Wave70 certifies six incomplete exact-three records across eleven printings.
-  Flipping all two/zero own evidence rejects before effects; opponent evidence
-  never supplements self/opp or CPU payment.
-- Wave71 certifies six owner-only exact-one records across ten printings.
-  Arbitrary positions preserve identity/order; malformed and opponent-only
-  choices reject. Owner=`opp`, CPU, and hydration are explicit.
-- B06023 and B10100/P remain matched horizontal Wave71 controls.
-- No production change was required. Fresh current-parser staging has 2964 Q&A
-  items and zero conflicts; the pre-session partial ignored cache is restored.
-- Coverage after generation is 1484 matched / 1480 test-missing / 2964 total.
+- Wave72 certifies six target records across ten printings. All four effect
+  routes append above eight partner-area cards through public store dispatch for
+  self/opp owners; forged/stale occurrence rejection is fully transactional.
+- Wave73 certifies six target records across nine printings. Owner deck sizes
+  zero/one/two reject; exact payment, owner=`opp`, CPU, and B10085
+  refresh-penalty/draw ordering are explicit.
+- No production change was required. Fresh isolated current-parser staging has
+  2964 Q&A items and zero conflicts; live ignored cards-data stayed untouched.
+- Coverage after generation is 1496 matched / 1468 test-missing / 2964 total.
 
 ## Next
 
-- Wave72: six partner-area-limit records at 701c4eca.../2c60b49e....
-- Wave73: six deck-short exact-three-cost records at 3a4d85c.../caedd001....
+- Wave74: B03088/P and B03095 at 4c83ae18.../d8cdbcf9....
+- Wave75: PR264 and PR270 at a0393092.../75e871a7....
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

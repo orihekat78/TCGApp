@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6481
+- **ファイル数**: 6491
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -882,6 +882,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-04-qa-wave69-event-yaiba.md` — QA Wave69: certify Event YAIBA
     - `2026-08-24-05-qa-wave70-incomplete-cost.md` — QA Wave70: certify incomplete exact-three costs
     - `2026-08-24-06-qa-wave71-owner-cost.md` — QA Wave71: certify owner-only exact-one costs
+    - `2026-08-24-07-qa-wave72-partner-limit.md` — QA Wave72: certify unbounded partner area
+    - `2026-08-24-08-qa-wave73-incomplete-deck-cost.md` — QA Wave73: certify incomplete deck costs
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1589,6 +1591,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-qa-waves66-67.md` — QA adjudication Waves66-67
     - `2026-08-24-qa-waves68-69.md` — QA adjudication Waves68-69
     - `2026-08-24-qa-waves70-71.md` — QA adjudication Waves70-71
+    - `2026-08-24-qa-waves72-73.md` — QA adjudication Waves72-73
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1798,12 +1801,14 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B07013.md` — B07013 grounding
       - `B07020.md` — B07020 / B07020P grounding
       - `B07023.md` — B07023 / B07023P 光本兵我 grounding
+      - `B07030.md` — B07030 grounding
       - `B07030P.md` — grounding dossier: B07030P (自動生成 2026-07-13)
       - `B07030P2.md` — grounding dossier: B07030P2 (自動生成 2026-07-13)
       - `B07032.md` — B07032 / B07032P grounding
       - `B07035.md` — B07035 古畑恵 grounding
       - `B07037.md` — B07037 grounding
       - `B07045.md` — B07045 セリザベス女王 grounding
+      - `B07059.md` — B07059 grounding
       - `B07061.md` — B07061 grounding
       - `B07061P.md` — grounding dossier: B07061P (自動生成 2026-07-13)
       - `B07062.md` — B07062 / B07062P grounding
@@ -1944,6 +1949,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B10082.md` — B10082 grounding
       - `B10083.md` — B10083 grounding
       - `B10084.md` — B10084 grounding
+      - `B10085.md` — B10085 grounding
       - `B10086.md` — B10086 grounding
       - `B10087.md` — B10087 grounding
       - `B10088.md` — B10088 grounding
@@ -2011,6 +2017,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `PR180.md` — PR180 grounding
       - `PR185.md` — PR185 京極真 grounding
       - `PR186.md` — PR186 grounding
+      - `PR196.md` — PR196 grounding
       - `PR199.md` — PR199 江戸川コナン grounding
       - `PR205.md` — PR205 江戸川コナン grounding
       - `PR234.md` — PR234 毛利蘭 grounding (2026-07-10, fable)
@@ -2050,6 +2057,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `waves66-67-authority.md` — Waves66-67 authority manifest
       - `waves68-69-authority.md` — Waves68-69 authority manifest
       - `waves70-71-authority.md` — Waves70-71 authority manifest
+      - `waves72-73-authority.md` — Waves72-73 authority manifest
     - **`meta-ui/`**
       - `00-overview.md` — 00 — メタ UI 統合設計 概要
       - `01-project-setup.md` — 01 — meta-app プロジェクト構成
@@ -5816,6 +5824,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `deck-look-short-three-public-wave64.test.ts` — qa: card:B06013:f8f6cc8737bb07a4334459a640a7b7600477d7bfa26bba8ca760517a6601ca7f
       - `deck-look-zero-choice-public-wave30.test.ts` — qa: card:B04048:c2131ef2b4d611ed2fdcba93cb1619157aea6dcc39318ced5a4a6f69bc29faaf
       - `deck-refresh-wave8.test.ts` — qa: card:B04012:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4
+      - `deck-top-three-insufficient-public-wave73.test.ts` — qa: card:B06020:84ecdea6c10bc908728749deacc797a85529c42aef7daa60ffe67827bc5ce34f
       - `deck-top-three-self-only-public-wave59.test.ts` — qa: card:B04077:1a92dcdf67120f7d76c881aa12661add73fc79ad2cefe30d1e4fbda6978a4758
       - `declared-cost-one-self-only-public-wave71.test.ts` — qa: card:B07061:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6
       - `declared-sleep-cost-public-wave24.test.ts` — qa: card:B01063:f97b21e9e16f570fd0da6acab0a9cb6e819a6e4a010e86dddb5ff82c6d33902e
@@ -5860,6 +5869,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `misread-reaction-order-wave26.test.ts` — qa: card:B05015:32589b2605a57e1fe89295b9b2340e6874cd6600ca6756e790b5fbcad58bae18
       - `multihook-timing-public.test.ts` — qa: card:D03007:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3
       - `nonpositive-ap-public-wave66.test.ts` — qa: card:B02021:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb
+      - `partner-area-unbounded-public-wave72.test.ts` — qa: card:B07030:dc07d737cba65ebccfc43e14a2de345262a316223691c7ff5eba2a0c7906bcc0
       - `same-card-multicopy-order-wave17.test.ts` — qaId=card:B02020:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c…
       - `set-card-ability-occurrence-public-wave35.test.ts` — qa: card:B01057:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `set-card-host-absent.test.ts`

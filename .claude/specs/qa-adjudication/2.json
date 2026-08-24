@@ -2386,11 +2386,15 @@
     {
       "qaId": "card:PR297:a97d46d3ab0116f37821991f7d72e241ecfa6e2ff8a5930e1ce47aea3939bad7",
       "answerHash": "2c60b49e60c88e7551164d81261d4f3a0e591b10d837f965019e3e67a007c6b1",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR297.ts:118"
+        "rules:.claude/rules/03-field-areas.md:19",
+        "src:src/cards/pr-01/PR297.ts:98",
+        "tests:tests/cards/official-qa/partner-area-unbounded-public-wave72.test.ts:195",
+        "tests:tests/cards/official-qa/partner-area-unbounded-public-wave72.test.ts:220",
+        "tests:tests/cards/official-qa/partner-area-unbounded-public-wave72.test.ts:237"
       ]
     },
     {
