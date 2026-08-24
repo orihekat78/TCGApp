@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `97bb96f61896`
+> Source hash: `cb5d3691bb56`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,20 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# QA Wave77: certify PR099 name replacement
+
+- Certify PR099 with PR105 as a matched behavior control.
+- Prove hidden deck-top set, exact-one deck-out timing, Assault grant, optional
+  registered-name replacement, split-name matching, and atomic invalid names.
+- Cover public self/opp, expiry, save hydration, action legality, privacy, and CPU.
+
+# QA Wave76: certify B06067 self selection
+
+- Certify B06067/P exact hand-occurrence cost and either-side Police selection.
+- Prove the source is eligible, invalid costs are atomic, and active targets can
+  be acted against through the public dispatcher.
+- Cover contact cause/source exclusions, turn cap, expiry, save, owner, and CPU.
 
 # QA Wave75: certify effective-level self count
 

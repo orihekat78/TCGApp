@@ -835,11 +835,24 @@
     {
       "qaId": "card:B06067:28660457e46b234b8eda0f8ef2c6f3353a37a1739cfebe4112b7bfffed415436",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06067.ts:109"
+        "rules:.claude/rules/15-abilities-effects.md:36",
+        "rules:.claude/rules/21-declared-ability-cost.md:31",
+        "src:src/cards/ct-p06/B06067.ts:51",
+        "tests:tests/cards/official-qa/b06067-self-selection-public-wave76.test.ts:209",
+        "tests:tests/cards/official-qa/b06067-self-selection-public-wave76.test.ts:217",
+        "tests:tests/cards/official-qa/b06067-self-selection-public-wave76.test.ts:247",
+        "tests:tests/cards/official-qa/b06067-self-selection-public-wave76.test.ts:288",
+        "tests:tests/cards/official-qa/b06067-self-selection-public-wave76.test.ts:301",
+        "tests:tests/cards/official-qa/b06067-self-selection-public-wave76.test.ts:324",
+        "tests:tests/cards/official-qa/b06067-self-selection-public-wave76.test.ts:338",
+        "tests:tests/cards/official-qa/b06067-self-selection-public-wave76.test.ts:356",
+        "tests:tests/cards/official-qa/b06067-self-selection-public-wave76.test.ts:367",
+        "tests:tests/cards/official-qa/b06067-self-selection-public-wave76.test.ts:385",
+        "tests:tests/cards/official-qa/b06067-self-selection-public-wave76.test.ts:403"
       ]
     },
     {

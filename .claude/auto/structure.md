@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6501
+- **ファイル数**: 6509
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -886,6 +886,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-08-qa-wave73-incomplete-deck-cost.md` — QA Wave73: certify incomplete deck costs
     - `2026-08-24-09-qa-wave74-self-selection.md` — QA Wave74: certify source self selection
     - `2026-08-24-10-qa-wave75-effective-level.md` — QA Wave75: certify effective-level self count
+    - `2026-08-24-11-qa-wave76-self-selection.md` — QA Wave76: certify B06067 self selection
+    - `2026-08-24-12-qa-wave77-name-replacement.md` — QA Wave77: certify PR099 name replacement
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1595,6 +1597,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-qa-waves70-71.md` — QA adjudication Waves70-71
     - `2026-08-24-qa-waves72-73.md` — QA adjudication Waves72-73
     - `2026-08-24-qa-waves74-75.md` — QA adjudication Waves74-75
+    - `2026-08-24-qa-waves76-77.md` — QA adjudication Waves76-77
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1794,6 +1797,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06052.md` — B06052 grounding
       - `B06065.md` — B06065 grounding
       - `B06066.md` — B06066/B06066P 怪盗キッド＆白馬探 (MR キャラ) grounding (2026-07-10, fable)
+      - `B06067.md` — B06067 grounding
       - `B06072.md` — B06072 grounding
       - `B06087.md` — B06087 萩原千速 grounding
       - `B06088.md` — B06088 grounding
@@ -2009,6 +2013,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `PR064.md` — PR064 grounding
       - `PR099.md` — PR099 工藤有希子 grounding
       - `PR100.md` — PR100 宮野厚司 grounding
+      - `PR105.md` — PR105 grounding
       - `PR106.md` — PR106 宮野厚司 grounding
       - `PR136.md` — PR136 伊織無我 grounding
       - `PR137.md` — PR137 工藤優作 grounding
@@ -2066,6 +2071,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `waves70-71-authority.md` — Waves70-71 authority manifest
       - `waves72-73-authority.md` — Waves72-73 authority manifest
       - `waves74-75-authority.md` — Waves74-75 authority manifest
+      - `waves76-77-authority.md` — Waves76-77 authority manifest
     - **`meta-ui/`**
       - `00-overview.md` — 00 — メタ UI 統合設計 概要
       - `01-project-setup.md` — 01 — meta-app プロジェクト構成
@@ -5813,6 +5819,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D06003-D06024-public-path.test.ts` — qaId=card:D06003:e918d066190b75a908b8154f185c9c4291e8387cb2fc4797f5744acc49a362d…
       - `D10003-D10010-printing-copy-limit.test.ts` — qaId=card:D10003:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2…
       - `action-declare-before-guard-public-wave48.test.ts` — qa: card:B01085:151b435edeb61c22d4471596da22371c8592c23c410528efb5e78938a1bb3b54
+      - `b06067-self-selection-public-wave76.test.ts` — qa: card:B06067:28660457e46b234b8eda0f8ef2c6f3353a37a1739cfebe4112b7bfffed415436
       - `b07093-a1-public-wave44.test.ts` — qa: card:B07093:212da49cce2aca6921fdb352e94b610cbdeeebd02d0ab5c66e8200c0164c3a0e
       - `bond-partner-exclusion-public-wave45.test.ts` — qa: card:B05007:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
       - `bond-partner-exclusion-wave21.test.ts` — qa: card:B01087:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
@@ -5879,6 +5886,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `multihook-timing-public.test.ts` — qa: card:D03007:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3
       - `nonpositive-ap-public-wave66.test.ts` — qa: card:B02021:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb
       - `partner-area-unbounded-public-wave72.test.ts` — qa: card:B07030:dc07d737cba65ebccfc43e14a2de345262a316223691c7ff5eba2a0c7906bcc0
+      - `pr099-public-wave77.test.ts` — qa: card:PR099:2cca6007ab7f2137a43f145275f1d7dd6c33155f5c98d3179becb7d643a950fd
       - `same-card-multicopy-order-wave17.test.ts` — qaId=card:B02020:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c…
       - `self-selection-public-wave74.test.ts` — qa: card:B03088:37d1a5bf035569e61acdccac31f828d38114d0105e6cbe77aa883552b82699c7
       - `set-card-ability-occurrence-public-wave35.test.ts` — qa: card:B01057:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58

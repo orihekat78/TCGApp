@@ -26,7 +26,7 @@
 //     charSetTurnEffect{uid:'$self', key:'nameOverride', val:'$dyn.declaredName'}
 //     (W6 step2 出荷・probe pin 済 (engine-mega-w6.test.ts「PR105 nameOverride 経路」)。
 //     **完全置換** = 印字 names[] 全部を置換、names()/effectiveNameComponents 両 honor site。
-//     rules/19 複数名分割は書き換え後の名前に適用されない (単一文字列)。⚠ 外部付与名 (grantNames)
+//     rules/19 複数名分割は書き換え後の有効名にも適用される。⚠ 外部付与名 (grantNames)
 //     との相互作用は公式Q&A未確認 — DEFERRED-INDEX megaw6 節 (6)、本カード単独では非交差)。
 import type { AbilityDef, CardDef } from '@/engine/types';
 

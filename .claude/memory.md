@@ -9,21 +9,23 @@
 - QA Waves27-34: .claude/sessions/2026-08-23-qa-memory-waves27-34.md.
 - QA Waves35-67: matching dated files under .claude/sessions/.
 
-## 2026-08-24: QA runtime Waves74-75
+## 2026-08-24: QA runtime Waves76-77
 
-- Wave74 certifies B03088 and B03095 across three physical printings. Public
-  self/opp decisions include eligible sources; zero choice, boundaries, expiry,
-  Hirameki decline, trigger limit, and CPU are explicit.
-- Wave75 certifies PR270 with matched PR264 as control. Resolved-case effective
-  level makes the source the third level-7 character before its enter gate;
-  owner, count, decoy, expiry, public action, and CPU paths are covered.
-- No production change was required. Fresh isolated current-parser staging has
-  2964 Q&A items and zero conflicts; live ignored cards-data stayed untouched.
-- Coverage after generation is 1499 matched / 1465 test-missing / 2964 total.
+- Wave76 certifies B06067/P. Public self/opp a3 includes its source and either-
+  side Police targets with exact hand occurrence cost and atomic invalid-cost
+  rejection. a2 contact cause, source/non-Police exclusion, cap, save, and CPU
+  paths are explicit.
+- Wave77 certifies PR099 with matched PR105 control. Public enter, hidden set,
+  legal exact-one deck-out, registered/split name replacement, expiry, save,
+  owner orientation, and CPU skip are explicit.
+- Production behavior was correct; only a stale PR105 split-name comment changed.
+  Fresh isolated authority has 2964 Q&A items and zero conflicts. Coverage is
+  1501 matched / 1463 test-missing / 2964 total.
 
 ## Next
 
-- Wave76: B06067/P at 4c83ae18.../d8cdbcf9....; distinct section/contract.
-- Wave77: PR099 and PR105 at 3dda4dbe.../b50f6e43....
+- Wave78: B01039, B02031, B02052, B02067 at a9a02408.../cfa3c372....
+- Wave79: B01065, B01069, B02061 at 51af55e3.../863ba750....
+- Keep same-question records with different answer hashes outside these groups.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.
