@@ -19,6 +19,7 @@
 - QA Waves102-103: .claude/sessions/2026-08-25-qa-waves102-103.md.
 - QA Waves104-105: .claude/sessions/2026-08-25-qa-waves104-105.md.
 - QA Waves106-107: .claude/sessions/2026-08-25-qa-waves106-107.md.
+- QA Waves108-109: .claude/sessions/2026-08-25-qa-waves108-109.md.
 
 ## 2026-08-24: QA runtime Waves82-83
 
@@ -50,19 +51,18 @@
 
 ## Next
 
-- Waves106-107 move six Q&A items to matched. Coverage is 1679 matched / 1285
-  test-missing / 2964 total; 1108 exact groups remain, including 949 singletons.
-- Wave106 certifies B03018/B05077/B05101 opponent-turn scene-removal triggers.
-- Wave107 fixes BUG-360. B09052/P cut-in and B09112/P case declarations use
-  registered names across human/AI/save/replay. A full combined name matches
-  only the full combined name; B09112/P old evidence-cost saves fail closed
-  unless exact paid authority is present.
-- Wave108 seed: section `78223517...`, Q `52bf2f12...`, A `f6c226c9...` across
-  PR247/PR262/PR268.
-- Wave109 seed: section `93b4b1d4...`, Q `d228cd81...`, A `33f08059...` across
-  D11007/D11008/PR304.
+- Waves108-109 move six Q&A items to matched. Coverage is 1685 matched / 1279
+  test-missing / 2964 total; 1106 exact groups remain, including 949 singletons.
+- Wave108 certifies multiple simultaneous Misread commitments and the bundled
+  uncapped optional set guidance for PR247/PR262/PR268 across both owners.
+- Wave109 certifies that D11007/D11008/PR304 contact AP changes resolve before
+  action order; accept, decline, zero-hand, both owners, and scope expiry pass.
+- Wave110 seed: section `9e88cb5d...`, Q `7ac51d8c...`, A `3ef97efe...` across
+  B07031/B07034/B07052.
+- Wave111 seed: section `afb883b9...`, Q `e01e71cb...`, A `b9faf8f1...` across
+  B08079/B08084/B08089.
 - Official sync drift is separate: new PR322 and changed Q&A for
   B04018/B04018P/B06103P. Do not mix it into selected waves without re-queueing.
-- Revised remaining estimate: 76-146 working hours, center about 111 hours.
+- Revised remaining estimate: 76-145 working hours, center about 110 hours.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

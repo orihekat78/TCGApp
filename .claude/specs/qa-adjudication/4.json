@@ -2228,21 +2228,37 @@
     {
       "qaId": "card:D11007:31477ac476064f376e887ccbb69a33524e3c445608c9009f36c53aa4a9c3b2ba",
       "answerHash": "33f0805905c079ade93217d4dc82e0041bd476996e960b67128f752042900dff",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d11/D11007.ts:1"
+        "rules:.claude/rules/08-contact.md:16",
+        "rules:.claude/rules/22-qa-action-contact.md:34",
+        "src:src/cards/ct-d11/D11007.ts:50",
+        "tests:tests/cards/official-qa/contact-order-ap-public-wave109.test.ts:118",
+        "tests:tests/cards/official-qa/contact-order-ap-public-wave109.test.ts:127",
+        "tests:tests/cards/official-qa/contact-order-ap-public-wave109.test.ts:128",
+        "tests:tests/cards/official-qa/contact-order-ap-public-wave109.test.ts:131",
+        "tests:tests/cards/official-qa/contact-order-ap-public-wave109.test.ts:144",
+        "tests:tests/cards/official-qa/contact-order-ap-public-wave109.test.ts:151"
       ]
     },
     {
       "qaId": "card:D11008:31477ac476064f376e887ccbb69a33524e3c445608c9009f36c53aa4a9c3b2ba",
       "answerHash": "33f0805905c079ade93217d4dc82e0041bd476996e960b67128f752042900dff",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d11/D11008.ts:1"
+        "rules:.claude/rules/08-contact.md:16",
+        "rules:.claude/rules/22-qa-action-contact.md:34",
+        "src:src/cards/ct-d11/D11008.ts:8",
+        "tests:tests/cards/official-qa/contact-order-ap-public-wave109.test.ts:118",
+        "tests:tests/cards/official-qa/contact-order-ap-public-wave109.test.ts:127",
+        "tests:tests/cards/official-qa/contact-order-ap-public-wave109.test.ts:128",
+        "tests:tests/cards/official-qa/contact-order-ap-public-wave109.test.ts:131",
+        "tests:tests/cards/official-qa/contact-order-ap-public-wave109.test.ts:144",
+        "tests:tests/cards/official-qa/contact-order-ap-public-wave109.test.ts:151"
       ]
     },
     {

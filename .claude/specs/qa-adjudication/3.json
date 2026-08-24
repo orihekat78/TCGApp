@@ -2330,11 +2330,17 @@
     {
       "qaId": "card:PR262:c61cc842e775e8f40c3ccc90d41e595b2e2e02184cc4d243534b3c2fdf721fdb",
       "answerHash": "f6c226c9a8e60ffc02bb71841873f3699503d6ec963820f1d141f7c2946d45d1",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR262.ts:1"
+        "rules:.claude/rules/13-keywords.md:29",
+        "rules:.claude/rules/16-card-set.md:18",
+        "src:src/cards/pr-01/PR262.ts:15",
+        "src:src/cards/pr-01/PR262.ts:30",
+        "tests:tests/cards/official-qa/misread-multiple-public-wave108.test.ts:143",
+        "tests:tests/cards/official-qa/misread-multiple-public-wave108.test.ts:178",
+        "tests:tests/cards/official-qa/misread-multiple-public-wave108.test.ts:194"
       ]
     },
     {

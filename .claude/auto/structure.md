@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6611
+- **ファイル数**: 6614
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1634,6 +1634,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves102-103.md` — QA adjudication Waves102-103
     - `2026-08-25-qa-waves104-105.md` — QA adjudication Waves104-105
     - `2026-08-25-qa-waves106-107.md` — QA adjudication Waves106-107
+    - `2026-08-25-qa-waves108-109.md` — QA adjudication Waves108-109
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -5899,6 +5900,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `case-flip-two-declared-public-wave36.test.ts` — qa: card:B06013:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2
       - `case-trait-konkatsu-public-wave90.test.ts` — qa: card:D11003:8a2311865e16f466ee83cb439f6283f6196812688ac3da8d1b8d1173290c37dc
       - `case-trait-yaiba-public-wave69.test.ts` — qa: card:B06018:9b784e18994d29858b6b12d02bf7ddc0e040914733a510db8aca6110febbb969
+      - `contact-order-ap-public-wave109.test.ts` — qa: card:D11007:31477ac476064f376e887ccbb69a33524e3c445608c9009f36c53aa4a9c3b2ba
       - `contact-participant-exit-regression-wave83.test.ts` — Horizontal regression for rules/08 §6: either participant leaving ends contact.
       - `contact-participant-public-wave94.test.ts` — qa: card:B08038:64b0dfa40059e5ed0dddfd2e25c4185a31f5b45ddba7798437a0e7508255c179
       - `ct-p10-original-ability-rules.test.ts` — qa: card:B10050:98e82fae32a43d9b6de8c7fd8289dcf4565f2dada1498f0760f5ba9d0cf8ae17
@@ -5964,6 +5966,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `leave-trigger-top-one-public.test.ts` — qa: card:PR084:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-top-three-public.test.ts` — qa: card:B03079:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `mill-three-short-deck-public-wave91.test.ts` — qa: card:B05068:22aaf9ba5e384ee444adeadb5ffb7b5c97b7a4e75ccbac8c297b8c86d3e85f3f
+      - `misread-multiple-public-wave108.test.ts` — qa: card:PR247:c61cc842e775e8f40c3ccc90d41e595b2e2e02184cc4d243534b3c2fdf721fdb
       - `misread-public-runtime-wave18.test.ts` — qa: card:B04079:c61cc842e775e8f40c3ccc90d41e595b2e2e02184cc4d243534b3c2fdf721fdb
       - `misread-public-runtime-wave26.test.ts` — qa: card:B04038:6d5a65b9e083c8565478cceec3269781a67a936789441e6c196e107f90e2e8c8
       - `misread-reaction-order-wave26.test.ts` — qa: card:B05015:32589b2605a57e1fe89295b9b2340e6874cd6600ca6756e790b5fbcad58bae18
