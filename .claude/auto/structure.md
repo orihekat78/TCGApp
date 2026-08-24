@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6617
+- **ファイル数**: 6620
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1636,6 +1636,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves106-107.md` — QA adjudication Waves106-107
     - `2026-08-25-qa-waves108-109.md` — QA adjudication Waves108-109
     - `2026-08-25-qa-waves110-111.md` — QA adjudication Waves110-111
+    - `2026-08-25-qa-waves112-113.md` — QA adjudication Waves112-113
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -5907,6 +5908,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `contact-participant-public-wave94.test.ts` — qa: card:B08038:64b0dfa40059e5ed0dddfd2e25c4185a31f5b45ddba7798437a0e7508255c179
       - `ct-p10-original-ability-rules.test.ts` — qa: card:B10050:98e82fae32a43d9b6de8c7fd8289dcf4565f2dada1498f0760f5ba9d0cf8ae17
       - `ctp10-opponent-turn-cutin-public.test.ts` — qa: card:B10017:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
+      - `cutin-ineffective-observer-public-wave112.test.ts` — qa: card:B03112:ee9ce331a55bc2711aef71d24e94f8cd4cad8c33b1ec5e49f98bad15b291ad43
       - `decision-persistence-wave23.test.ts` — qa: card:B03080:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
       - `deck-look-bottom-family-public.test.ts` — qa: card:B01013:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5
       - `deck-look-refresh-timing-public-wave51.test.ts` — qa: card:B05016:e7061b1c3b542622fb32f13182df05bfa258159452eb60cb75a2c492259385d4
@@ -5970,6 +5972,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `leave-trigger-top-three-public.test.ts` — qa: card:B03079:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `mill-three-short-deck-public-wave91.test.ts` — qa: card:B05068:22aaf9ba5e384ee444adeadb5ffb7b5c97b7a4e75ccbac8c297b8c86d3e85f3f
       - `misread-multiple-public-wave108.test.ts` — qa: card:PR247:c61cc842e775e8f40c3ccc90d41e595b2e2e02184cc4d243534b3c2fdf721fdb
+      - `misread-one-core-public-wave113.test.ts` — qa: card:D06015:4edfa42fd152dd43d08fd67f36ed96de6ed6daf323da7b0a6c8b4fa1084f3411
       - `misread-public-runtime-wave18.test.ts` — qa: card:B04079:c61cc842e775e8f40c3ccc90d41e595b2e2e02184cc4d243534b3c2fdf721fdb
       - `misread-public-runtime-wave26.test.ts` — qa: card:B04038:6d5a65b9e083c8565478cceec3269781a67a936789441e6c196e107f90e2e8c8
       - `misread-reaction-order-wave26.test.ts` — qa: card:B05015:32589b2605a57e1fe89295b9b2340e6874cd6600ca6756e790b5fbcad58bae18

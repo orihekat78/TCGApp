@@ -305,11 +305,24 @@
     {
       "qaId": "card:B03112:ee9ce331a55bc2711aef71d24e94f8cd4cad8c33b1ec5e49f98bad15b291ad43",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03112.ts:1"
+        "rules:.claude/rules/09-cutin-disguise.md:13",
+        "rules:.claude/rules/09-cutin-disguise.md:14",
+        "rules:.claude/rules/09-cutin-disguise.md:9",
+        "rules:.claude/rules/15-abilities-effects.md:63",
+        "src:src/cards/ct-p03/B03112.ts:39",
+        "src:src/engine/flow/contact.ts:258",
+        "src:src/engine/flow/contact.ts:279",
+        "tests:tests/cards/official-qa/cutin-ineffective-observer-public-wave112.test.ts:172",
+        "tests:tests/cards/official-qa/cutin-ineffective-observer-public-wave112.test.ts:173",
+        "tests:tests/cards/official-qa/cutin-ineffective-observer-public-wave112.test.ts:174",
+        "tests:tests/cards/official-qa/cutin-ineffective-observer-public-wave112.test.ts:175",
+        "tests:tests/cards/official-qa/cutin-ineffective-observer-public-wave112.test.ts:179",
+        "tests:tests/cards/official-qa/cutin-ineffective-observer-public-wave112.test.ts:187",
+        "tests:tests/cards/official-qa/cutin-ineffective-observer-public-wave112.test.ts:211"
       ]
     },
     {
