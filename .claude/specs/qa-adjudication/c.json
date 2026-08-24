@@ -522,28 +522,39 @@
     {
       "qaId": "card:B03088:37d1a5bf035569e61acdccac31f828d38114d0105e6cbe77aa883552b82699c7",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03088.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:36",
+        "src:src/cards/ct-p03/B03088.ts:37",
+        "tests:tests/cards/official-qa/self-selection-public-wave74.test.ts:185",
+        "tests:tests/cards/official-qa/self-selection-public-wave74.test.ts:190",
+        "tests:tests/cards/official-qa/self-selection-public-wave74.test.ts:210",
+        "tests:tests/cards/official-qa/self-selection-public-wave74.test.ts:239",
+        "tests:tests/cards/official-qa/self-selection-public-wave74.test.ts:250",
+        "tests:tests/cards/official-qa/self-selection-public-wave74.test.ts:325"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B03095:37d1a5bf035569e61acdccac31f828d38114d0105e6cbe77aa883552b82699c7",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03095.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:36",
+        "src:src/cards/ct-p03/B03095.ts:13",
+        "tests:tests/cards/official-qa/self-selection-public-wave74.test.ts:264",
+        "tests:tests/cards/official-qa/self-selection-public-wave74.test.ts:265",
+        "tests:tests/cards/official-qa/self-selection-public-wave74.test.ts:270",
+        "tests:tests/cards/official-qa/self-selection-public-wave74.test.ts:277",
+        "tests:tests/cards/official-qa/self-selection-public-wave74.test.ts:291",
+        "tests:tests/cards/official-qa/self-selection-public-wave74.test.ts:314",
+        "tests:tests/cards/official-qa/self-selection-public-wave74.test.ts:351"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B03132:e2f2e95abd482ed3b39e41b21dab18bfdb59f38cdfe18873117af2ef2dc02ced",

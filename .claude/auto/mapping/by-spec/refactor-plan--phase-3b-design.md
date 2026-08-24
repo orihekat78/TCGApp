@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `4151cfcca474`
+> Source hash: `ee094e15bbbf`
 
 仕様書 [`phase-3b-design`](../../../specs/refactor-plan/phase-3b-design.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

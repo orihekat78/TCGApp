@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `50bb193eecee`
+> Source hash: `97bb96f61896`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,20 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# QA Wave75: certify effective-level self count
+
+- Certify PR270 with matched physical twin PR264 as control.
+- Count the entering source at effective level 7 on a resolved case before its
+  exact scene gate evaluates.
+- Cover count boundaries, owner isolation, expiry, public actions, and CPU entry.
+
+# QA Wave74: certify source self selection
+
+- Certify B03088 and B03095 across three physical printings.
+- Prove public self/opp decisions include the eligible physical source while
+  excluding level, trait, side, and bond decoys.
+- Cover zero choice, carrier order, expiry, Hirameki decline, trigger cap, and CPU.
 
 # QA Wave73: certify incomplete deck costs
 

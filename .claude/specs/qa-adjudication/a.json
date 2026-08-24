@@ -2246,15 +2246,23 @@
     {
       "qaId": "card:PR270:04195ab037741d2c4584dcf9e92a0a91822cf9490ff78ec9c83f83e52282be4a",
       "answerHash": "75e871a78c4bae0a61b3f17f229437f1c97e536248cdb66141a6a1e0c74ac4bc",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR270.ts:31"
+        "rules:.claude/rules/13-keywords.md:12",
+        "src:src/cards/pr-01/PR270.ts:16",
+        "tests:tests/cards/official-qa/effective-level-self-count-public-wave75.test.ts:136",
+        "tests:tests/cards/official-qa/effective-level-self-count-public-wave75.test.ts:138",
+        "tests:tests/cards/official-qa/effective-level-self-count-public-wave75.test.ts:149",
+        "tests:tests/cards/official-qa/effective-level-self-count-public-wave75.test.ts:167",
+        "tests:tests/cards/official-qa/effective-level-self-count-public-wave75.test.ts:177",
+        "tests:tests/cards/official-qa/effective-level-self-count-public-wave75.test.ts:184",
+        "tests:tests/cards/official-qa/effective-level-self-count-public-wave75.test.ts:194",
+        "tests:tests/cards/official-qa/effective-level-self-count-public-wave75.test.ts:220",
+        "tests:tests/cards/official-qa/effective-level-self-count-public-wave75.test.ts:241"
       ],
-      "noteCodes": [
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:PR291:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398",

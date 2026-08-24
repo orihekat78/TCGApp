@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6491
+- **ファイル数**: 6501
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -884,6 +884,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-06-qa-wave71-owner-cost.md` — QA Wave71: certify owner-only exact-one costs
     - `2026-08-24-07-qa-wave72-partner-limit.md` — QA Wave72: certify unbounded partner area
     - `2026-08-24-08-qa-wave73-incomplete-deck-cost.md` — QA Wave73: certify incomplete deck costs
+    - `2026-08-24-09-qa-wave74-self-selection.md` — QA Wave74: certify source self selection
+    - `2026-08-24-10-qa-wave75-effective-level.md` — QA Wave75: certify effective-level self count
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1592,6 +1594,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-qa-waves68-69.md` — QA adjudication Waves68-69
     - `2026-08-24-qa-waves70-71.md` — QA adjudication Waves70-71
     - `2026-08-24-qa-waves72-73.md` — QA adjudication Waves72-73
+    - `2026-08-24-qa-waves74-75.md` — QA adjudication Waves74-75
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1723,6 +1726,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B03079.md` — B03079 grounding
       - `B03084.md` — B03084 / B03084P 降谷零 grounding
       - `B03085.md` — B03085 grounding
+      - `B03088.md` — B03088 grounding
+      - `B03095.md` — B03095 grounding
       - `B03111.md` — B03111 バーボン grounding (2026-07-10, sonnet5)
       - `B03127.md` — B03127 grounding
       - `B04003.md` — B04003 工藤新一 grounding (2026-07-10, sonnet5)
@@ -2022,7 +2027,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `PR205.md` — PR205 江戸川コナン grounding
       - `PR234.md` — PR234 毛利蘭 grounding (2026-07-10, fable)
       - `PR240.md` — PR240 毛利蘭 grounding (2026-07-10, fable)
+      - `PR264.md` — PR264 grounding
       - `PR265.md` — PR265 風見裕也 grounding (2026-07-10, fable)
+      - `PR270.md` — PR270 grounding
       - `PR280.md` — PR280 萩原千速 grounding
       - `PR283.md` — PR283 上原由衣 grounding
       - `PR289.md` — PR289 円谷光彦 grounding
@@ -2058,6 +2065,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `waves68-69-authority.md` — Waves68-69 authority manifest
       - `waves70-71-authority.md` — Waves70-71 authority manifest
       - `waves72-73-authority.md` — Waves72-73 authority manifest
+      - `waves74-75-authority.md` — Waves74-75 authority manifest
     - **`meta-ui/`**
       - `00-overview.md` — 00 — メタ UI 統合設計 概要
       - `01-project-setup.md` — 01 — meta-app プロジェクト構成
@@ -5843,6 +5851,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `effect-entry-trigger-order-public.test.ts` — qa: card:B07058:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-trigger-public-wave2.test.ts` — qa: card:B04064:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-trigger-public-wave28.test.ts` — qa: card:B03068:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effective-level-self-count-public-wave75.test.ts` — qa: card:PR270:04195ab037741d2c4584dcf9e92a0a91822cf9490ff78ec9c83f83e52282be4a
       - `end-phase-reactivation-public-wave46.test.ts` — qa: card:B07023:e95274eddf61476e68accaf6348cb07eefb9d8074484ed06055f5022530a1706
       - `event-evidence-action-hirameki-public.test.ts` — qa: card:B04041:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
       - `evidence-position-public-wave57.test.ts` — qa: card:B07062:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a
@@ -5871,6 +5880,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `nonpositive-ap-public-wave66.test.ts` — qa: card:B02021:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb
       - `partner-area-unbounded-public-wave72.test.ts` — qa: card:B07030:dc07d737cba65ebccfc43e14a2de345262a316223691c7ff5eba2a0c7906bcc0
       - `same-card-multicopy-order-wave17.test.ts` — qaId=card:B02020:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c…
+      - `self-selection-public-wave74.test.ts` — qa: card:B03088:37d1a5bf035569e61acdccac31f828d38114d0105e6cbe77aa883552b82699c7
       - `set-card-ability-occurrence-public-wave35.test.ts` — qa: card:B01057:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `set-card-host-absent.test.ts`
       - `set-card-host-owner-wave3.test.ts` — qaId=card:B02018:dc712167e0587386756f5293d40bf1766e89e09669554ebcde8e028749d962d…
