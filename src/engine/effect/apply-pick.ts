@@ -2200,6 +2200,58 @@ function chooseAiPick(
   */
 }
 
+/** Supply the mandatory own-scene victim(s) after an autonomous scene-entry selection. */
+function chooseAiSceneEnterSwitchVictims(
+  state: GameState,
+  pending: PendingEffectPickSide,
+  selectedCount: number,
+  policy?: { chooseAtomTarget?: AtomTargetChooser },
+): string[] {
+  if (pending.atomVerb !== 'sceneEnter'
+    || isSceneEnterSwitchPickArgs(pending.atomArgs)
+    || selectedCount < 1) return [];
+  const owner = pending.ownerPlayer ?? pending.player;
+  const relativeEnterPlayer = (pending.atomArgs as { player?: unknown }).player;
+  const enterPlayer = relativeEnterPlayer === 'self'
+    ? owner
+    : relativeEnterPlayer === 'opp'
+      ? (owner === 'self' ? 'opp' : 'self')
+      : null;
+  if (enterPlayer === null) return [];
+  const required = Math.max(
+    0,
+    state.players[enterPlayer].scene.length + selectedCount - sceneCap(state, enterPlayer),
+  );
+  if (required === 0) return [];
+  const candidates: Candidate[] = state.players[enterPlayer].scene.map(character => ({
+    kind: 'char',
+    uid: character.uid,
+    cardId: character.cardId,
+    player: enterPlayer,
+  }));
+  if (candidates.length < required) return [];
+
+  const selected: string[] = [];
+  for (let index = 0; index < required; index += 1) {
+    const remaining = candidates.filter(candidate => (
+      candidate.kind === 'char' && !selected.includes(candidate.uid)
+    ));
+    const chosen = policy?.chooseAtomTarget?.(
+      state,
+      pending.atomVerb,
+      { ...pending.atomArgs, __sceneEnterSwitchVictim: true },
+      remaining,
+      enterPlayer,
+    );
+    const preferred = (chosen as { uid?: string } | null | undefined)?.uid;
+    const victim = remaining.find(candidate => candidate.kind === 'char' && candidate.uid === preferred)
+      ?? remaining[0];
+    if (!victim || victim.kind !== 'char') return [];
+    selected.push(victim.uid);
+  }
+  return selected;
+}
+
 /**
  * AI/CPU 経路で __pendingEffectPickQueue を順次 drain する。PA 短縮形 atom 等が runtime に
  * tryRePickFromAtom で積んだ pick を heuristic 解決し、continuation も進める (BUG-109)。
@@ -2253,7 +2305,21 @@ export function drainAiEffectPicks(
       // 候補 0 + continuation 無し → 純粋 skip。
       continue;
     }
-    applyPickAndContinuation(state, pending, pickedUid, pickedUids);
+    const switchVictims = chooseAiSceneEnterSwitchVictims(
+      state,
+      pending,
+      pickedUids?.length ?? 1,
+      policy,
+    );
+    const multiSceneEnter = (pending.atomArgs as { cardIds?: unknown }).cardIds === '$pick.cardIds';
+    applyPickAndContinuation(
+      state,
+      pending,
+      pickedUid,
+      pickedUids,
+      !multiSceneEnter && switchVictims.length === 1 ? switchVictims[0] : undefined,
+      multiSceneEnter && switchVictims.length > 0 ? switchVictims : undefined,
+    );
     if (state.gameResult !== undefined) break;
   }
 }

@@ -2364,11 +2364,12 @@
     {
       "qaId": "card:PR297:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398",
       "answerHash": "b79af84d1269cf62ae85ac95d41ce067c3c3dd661890d73e47e4fb451572fe70",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR297.ts:1"
+        "src:src/cards/pr-01/PR297.ts:59",
+        "tests:tests/cards/official-qa/full-scene-event-entry-public-wave84.test.ts:331"
       ]
     },
     {

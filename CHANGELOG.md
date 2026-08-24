@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `593716407859`
+> Source hash: `4fe9c9e1cdb1`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,26 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# QA Wave85: fix and certify inherent sleep entry
+
+- Certify B01050, B01052, B03120, PR180, and PR186; reauthenticate B01011's
+  false-green control with effect-entry timing evidence.
+- Fix BUG-349 by migrating B01011/B01050/B01052/B03120 and horizontal D06016
+  from delayed sleep effects to `CardDef.entersSleep`.
+- Prove sleep before `enter`, zero false `state:change`, genuine enter riders,
+  public effect entry, full-scene switch, owner orientation, and save hydration.
+
+# QA Wave84: certify full-scene event entry
+
+- Certify five gaps across B07090/P, D08024, D09025, PR291, and PR297;
+  reauthenticate B05062 and B08029/P controls against an exactly full scene.
+- Prove public event use, valid own-scene switch, zero entry, owner orientation,
+  physical parity, forged victim rejection, save hydration, and enter hooks.
+- Preserve each printed continuation: AP grants, Assault grants, partner-area
+  movement, and sleeping hand entry.
+- Fix BUG-350 so autonomous direct `sceneEnter` selections supply the required
+  own-scene switch victim instead of silently skipping the chosen entrant.
 
 # QA Wave83: certify disguise replacement contract
 

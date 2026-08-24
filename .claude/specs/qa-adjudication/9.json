@@ -53,14 +53,12 @@
     {
       "qaId": "card:B01050:b294bc57d842a4b1a4aae0d72a5235a9ace1fc0a3c60e43df68c9e6c939153ce",
       "answerHash": "1b2c898e067f3d339db0b91e7d5aaa953bcb98174c1eb0361d7bb21519cd549a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p01/B01050.ts:122"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/ct-p01/B01050.ts:110",
+        "tests:tests/cards/official-qa/effect-entry-sleep-state-wave85.test.ts:284"
       ]
     },
     {
@@ -1808,14 +1806,12 @@
     {
       "qaId": "card:D08024:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398",
       "answerHash": "b79af84d1269cf62ae85ac95d41ce067c3c3dd661890d73e47e4fb451572fe70",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d08/D08024.ts:54"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/ct-d08/D08024.ts:32",
+        "tests:tests/cards/official-qa/full-scene-event-entry-public-wave84.test.ts:331"
       ]
     },
     {

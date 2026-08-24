@@ -69,17 +69,8 @@ describe('BUG-331 matched-only reveal presentation', () => {
     expect(useGameStateStore.getState().setGameState(state)).toBe(true);
 
     expect(dispatchEngineAction({ type: 'handUseCard', player: 'self', cardId: B01050.id })).toEqual({ ok: true });
-    const group = pendingOwnerOrderGroup(current(), 'self')
-      .filter(entry => entry.source.cardId === B01050.id)
-      .sort((left, right) => (left.source.abilityId ?? '').localeCompare(right.source.abilityId ?? ''));
-    expect(group.map(entry => entry.source.abilityId)).toEqual(['a1', 'a2']);
-    group.forEach((entry, order) => {
-      expect(dispatchEngineAction({ type: 'setEffectOrder', entryId: entry.id, order, player: 'self' }))
-        .toEqual({ ok: true });
-    });
-    expect(dispatchEngineAction({
-      type: 'resolveEffectOrder', player: 'self', entryIds: group.map(entry => entry.id),
-    })).toEqual({ ok: true });
+    expect(pendingOwnerOrderGroup(current(), 'self'), 'single genuine enter ability auto-resolves')
+      .toHaveLength(0);
     surfacePendingSideChannels();
 
     expect(useGameStateStore.getState().pendingDeckReveal).toMatchObject({

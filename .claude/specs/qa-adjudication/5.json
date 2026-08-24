@@ -566,8 +566,8 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05062.ts:1",
-        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:171"
+        "src:src/cards/ct-p05/B05062.ts:24",
+        "tests:tests/cards/official-qa/full-scene-event-entry-public-wave84.test.ts:331"
       ],
       "noteCodes": []
     },

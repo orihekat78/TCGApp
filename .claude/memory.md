@@ -21,11 +21,25 @@
 - Fresh isolated authority has 2964 Q&A items and zero conflicts. Coverage is
   1523 matched / 1441 test-missing / 2964 total.
 
+## 2026-08-24: QA runtime Waves84-85
+
+- Wave84 certifies five full-scene effect-entry gaps and reauthenticates
+  B05062/B08029. BUG-350 adds autonomous single/multi switch-victim authority.
+- Wave85 certifies five inherent-sleep gaps and reauthenticates B01011.
+  BUG-349 migrates five delayed-sleep CardDefs, including horizontal D06016.
+- Coverage is 1533 matched / 1431 test-missing / 2964 total. Sol rules/engine
+  and horizontal reviews PASS; full T3 gates are green.
+- Throughput plan changed: ordinary waves batch 20-30 shared-primitive items;
+  use focused gates per wave and full Vitest/lint/smoke/Playwright every ten
+  waves or on T3/publication. Do not repeat unchanged green gates.
+- Remaining snapshot is 1431 items across 1182 exact groups, including 990
+  singleton groups. Estimated remaining effort is 120-220 hours.
+
 ## Next
 
-- Wave84: B07090, D08024, D09025, PR291, PR297 full-scene effect-entry gaps;
-  B05062/B08029 controls at 5594be19.../b79af84d....
-- Wave85: B01050, B01052, B03120, PR180, PR186 effect-entry sleep gaps;
-  B01011 control at 3e07603c.../1b2c898e....
+- Wave86 starts from b4840d0e.../ace28d47... event-use-by-effect group and
+  expands the shared primitive to 20-30 items; B03029 is the matched control.
+- Wave87 starts from 8edeb5c5.../151f71e0... Investigation-count group and
+  expands adjacent Investigation definitions to 20-30 items; B01085 controls.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

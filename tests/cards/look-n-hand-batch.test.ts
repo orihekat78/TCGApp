@@ -5,7 +5,7 @@
 //   PR084/PR090 (【相手ターン中】【現場リムーブ時】 look-1→hand + 【カットイン】AP+1000)。
 //
 // すべて settled パターンの再録: deckRevealUntil + handAddFromDeck + deckToBottomBound (B01013/D01013 同型),
-//   ヒラメキdraw (B01011 a2), enterSleep (B01011 a1), cutin AP+ (D01010 a2), leave:to-remove hook (D01012)。
+//   ヒラメキdraw (B01011 a2), inherent enterSleep (B01011.entersSleep), cutin AP+ (D01010 a2), leave:to-remove hook (D01012)。
 // 本 test は (1) 代表 2 経路 (enter→look→hand / leave-hook→look→hand) の実 flow と
 //   (2) 全 11 枚の descriptor 構造 (maxN / filter / discard chain / hirameki / enterSleep / cutin) を担保する。
 // deckRevealUntil 等の verb 経路自体は既存 deck-look-N batch (B01013/D01013) test で担保済。

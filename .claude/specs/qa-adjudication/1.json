@@ -71,7 +71,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p01/B01052.ts:1",
-        "tests:tests/cards/triage-greens-2026-06-16/B01052.test.ts:139"
+        "tests:tests/cards/triage-greens-2026-06-16/B01052.test.ts:143"
       ]
     },
     {
@@ -2131,7 +2131,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/pr-01/PR046.ts:1",
-        "tests:tests/cards/cluster14-multi-sceneenter.test.ts:254"
+        "tests:tests/cards/cluster14-multi-sceneenter.test.ts:258"
       ]
     },
     {

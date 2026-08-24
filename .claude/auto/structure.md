@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6548
+- **ファイル数**: 6566
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -529,6 +529,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-346.md` — disguise replaced effective values
     - `BUG-347.md` — optional if-hand feasibility
     - `BUG-348.md` — Contact participant exit termination
+    - `BUG-349.md` — remaining inherent sleep entries
+    - `BUG-350.md` — autonomous full-scene effect entry
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -899,6 +901,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-16-qa-wave81-disguise-duration.md` — QA Wave81: certify disguise observers and duration
     - `2026-08-24-17-qa-wave82-multicolor-case.md` — QA Wave82: certify multicolor case membership
     - `2026-08-24-18-qa-wave83-disguise-contract.md` — QA Wave83: certify disguise replacement contract
+    - `2026-08-24-19-qa-wave84-full-scene-event-entry.md` — QA Wave84: certify full-scene event entry
+    - `2026-08-24-20-qa-wave85-inherent-sleep-entry.md` — QA Wave85: fix and certify inherent sleep entry
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1612,6 +1616,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-qa-waves78-79.md` — QA adjudication Waves78-79
     - `2026-08-24-qa-waves80-81.md` — QA adjudication Waves80-81
     - `2026-08-24-qa-waves82-83.md` — QA adjudication Waves82-83
+    - `2026-08-24-qa-waves84-85.md` — QA adjudication Waves84-85
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1696,11 +1701,14 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `implementation-plan.md` — Codex Quality Implementation Plan
     - **`grounding/`**
       - `B01006.md` — B01006 / B01006P grounding
+      - `B01011.md` — B01011 grounding
       - `B01020.md` — B01020 毛利小五郎 grounding (2026-07-10, sonnet5)
       - `B01022.md` — B01022 grounding
       - `B01023.md` — B01023 grounding
       - `B01023P.md` — B01023P grounding
       - `B01039.md` — B01039 grounding
+      - `B01050.md` — B01050 grounding
+      - `B01052.md` — B01052 grounding
       - `B01057.md` — B01057 「最も出会いたくない…恋人ってトコロかな？」 grounding (2026-07-10, fable)
       - `B01065.md` — B01065 grounding
       - `B01069.md` — B01069 grounding
@@ -1756,6 +1764,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B03088.md` — B03088 grounding
       - `B03095.md` — B03095 grounding
       - `B03111.md` — B03111 バーボン grounding (2026-07-10, sonnet5)
+      - `B03120.md` — B03120 grounding
       - `B03127.md` — B03127 grounding
       - `B03129.md` — B03129 / B03129P grounding
       - `B04003.md` — B04003 工藤新一 grounding (2026-07-10, sonnet5)
@@ -1789,6 +1798,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B05052.md` — B05052 工藤優作 grounding
       - `B05055.md` — B05055 grounding
       - `B05056.md` — B05056 grounding
+      - `B05062.md` — B05062 grounding
       - `B05063.md` — B05063 grounding
       - `B05077.md` — B05077 ジョディ・サンテミリオン grounding
       - `B05080.md` — B05080 timing grounding
@@ -1855,6 +1865,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B07077.md` — B07077 grounding
       - `B07082.md` — B07082 / B07082P grounding
       - `B07088.md` — B07088 山村ミサオ grounding
+      - `B07090.md` — B07090 / B07090P grounding
       - `B07093.md` — B07093 / B07093P バーボン＆ライ grounding
       - `B07100.md` — B07100 コルン grounding (2026-07-10, fable)
       - `B08003.md` — B08003 阿笠博士 (SR/SRP) grounding (2026-07-10, sonnet5)
@@ -1870,6 +1881,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08024.md` — B08024 grounding
       - `B08025.md` — B08025 / B08025P grounding
       - `B08026.md` — B08026 grounding
+      - `B08029.md` — B08029 / B08029P grounding
       - `B08030.md` — B08030 grounding
       - `B08033.md` — B08033 / B08033P grounding
       - `B08034.md` — B08034 / B08034P grounding
@@ -2008,17 +2020,20 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D06003.md` — D06003 服部平次 grounding (2026-07-10, fable)
       - `D06004.md` — D06004 服部平次 grounding (2026-07-10, sonnet5)
       - `D06013.md` — D06013 白馬探 grounding (2026-07-10, sonnet 調査 + S2 session 裁定)
+      - `D06016.md` — D06016 grounding
       - `D06021.md` — D06021 服部平次 grounding (2026-07-10, sonnet5)
       - `D06023.md` — D06023 服部平次 grounding (2026-07-10, sonnet5)
       - `D08005.md` — D08005 grounding
       - `D08006.md` — D08006 grounding
       - `D08021.md` — D08021 結成 少年探偵団 grounding
+      - `D08024.md` — D08024 grounding
       - `D09008.md` — D09008 上原由衣 grounding
       - `D09009.md` — D09009 上原由衣 grounding
       - `D09014.md` — D09014 大和敢助 grounding
       - `D09015.md` — D09015 大和敢助 grounding
       - `D09016.md` — D09016 諸伏高明 grounding
       - `D09017.md` — D09017 諸伏高明 grounding
+      - `D09025.md` — D09025 grounding
       - `D09027.md` — D09027 grounding
       - `D10005.md` — D10005 ハート姫（毛利蘭） grounding
       - `D10006.md` — D10006 ハート姫（毛利蘭） grounding
@@ -2100,6 +2115,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `waves78-79-authority.md` — Waves78-79 authority manifest
       - `waves80-81-authority.md` — Waves80-81 authority manifest
       - `waves82-83-authority.md` — Waves82-83 authority
+      - `waves84-85-authority.md` — Waves84-85 authority
     - **`meta-ui/`**
       - `00-overview.md` — 00 — メタ UI 統合設計 概要
       - `01-project-setup.md` — 01 — meta-app プロジェクト構成
@@ -5887,6 +5903,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `effect-entry-leave-public.test.ts` — qa: card:B02066:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-nested-public-wave55.test.ts` — qa: card:B09056:33271f1e19ae0c4fa4f2f6b6aa1f038e58c6c82bef4e1d59394a5ddb47300767
       - `effect-entry-public-wave3.test.ts` — qa: card:B02077:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effect-entry-sleep-state-wave85.test.ts` — qa: card:B01011:b294bc57d842a4b1a4aae0d72a5235a9ace1fc0a3c60e43df68c9e6c939153ce
       - `effect-entry-trigger-order-public.test.ts` — qa: card:B07058:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-trigger-public-wave2.test.ts` — qa: card:B04064:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-trigger-public-wave28.test.ts` — qa: card:B03068:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
@@ -5904,6 +5921,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `file-assist-enter-public-wave39.test.ts` — qa: card:B04023:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3
       - `file-assist-nondeclared-public-wave43.test.ts` — qa: card:B06087:fe489ff3199dbdf91d8a4404721956da51ba17ccb819450ceed5b301f31fe7be
       - `full-scene-effect-entry-public-wave63.test.ts` — qa: card:B05055:c51f6838f7814f2243bbe0560dc33c4dc896f1b0b13d486cd4223cb898983c95
+      - `full-scene-event-entry-public-wave84.test.ts` — qa: card:B05062:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398
       - `hand-remove-self-only-public-wave58.test.ts` — qa: card:B07020:924a8b39ee3036e70eeeac9c3a5941e4faa4fec3ebc39e19ceb12b4b0f2419af
       - `leave-reveal-until-forced-public.test.ts` — qa: card:B02058:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-opponent-turn-public.test.ts` — qa: card:B01065:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
