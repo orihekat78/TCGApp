@@ -296,7 +296,7 @@ describe('official QA Wave54: direct effect-entry routes fire normal enter abili
     expect(current().players.self.remove).toContain(CUTIN_EVENT);
     expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
     expect(dispatchEngineAction({ type: 'actionAdvance', actionId }))
-      .toEqual({ ok: false, reason: 'not-allowed' });
+      .toEqual({ ok: true });
   });
 
   it('B05015 public Hirameki enters only level-six-or-less Genta and fires his enter ability', () => {

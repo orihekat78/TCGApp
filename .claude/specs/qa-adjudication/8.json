@@ -393,11 +393,18 @@
     {
       "qaId": "card:B03051:bde0a3a5b0127797c2caad230a469d5a24f2a164829581273d0d8e77589383d6",
       "answerHash": "28c958b7b5f6584c1568157c061c38488d94b7fdb96d0d40b41138a65bd245b3",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03051.ts:1"
+        "rules:.claude/rules/09-cutin-disguise.md:29",
+        "rules:.claude/rules/23-qa-disguise-cutin.md:7",
+        "src:src/cards/ct-p03/B03051.ts:52",
+        "src:src/engine/flow/contact.ts:318",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:389",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:394",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:405",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:411"
       ]
     },
     {

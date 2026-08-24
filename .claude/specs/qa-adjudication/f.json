@@ -365,11 +365,14 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03050.ts:91",
-        "tests:tests/cards/hybrid-batch4/manual-probes.test.ts:182"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION"
+        "rules:.claude/rules/08-contact.md:48",
+        "src:src/cards/ct-p03/B03050.ts:43",
+        "src:src/engine/flow/action/state-machine.ts:529",
+        "tests:tests/cards/official-qa/b03050-contact-exit-public-wave83.test.ts:114",
+        "tests:tests/cards/official-qa/b03050-contact-exit-public-wave83.test.ts:122",
+        "tests:tests/cards/official-qa/b03050-contact-exit-public-wave83.test.ts:126",
+        "tests:tests/cards/official-qa/b03050-contact-exit-public-wave83.test.ts:132",
+        "tests:tests/cards/official-qa/b03050-contact-exit-public-wave83.test.ts:190"
       ]
     },
     {
@@ -389,14 +392,18 @@
     {
       "qaId": "card:B03052:bde0a3a5b0127797c2caad230a469d5a24f2a164829581273d0d8e77589383d6",
       "answerHash": "28c958b7b5f6584c1568157c061c38488d94b7fdb96d0d40b41138a65bd245b3",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03052.ts:48"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/09-cutin-disguise.md:29",
+        "rules:.claude/rules/23-qa-disguise-cutin.md:7",
+        "src:src/cards/ct-p03/B03052.ts:26",
+        "src:src/engine/flow/contact.ts:318",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:389",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:394",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:405",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:411"
       ]
     },
     {

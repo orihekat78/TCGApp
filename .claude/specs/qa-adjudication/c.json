@@ -1833,7 +1833,7 @@
       "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/ai/action-resolution.ts:158",
+        "src:src/ai/action-resolution.ts:162",
         "src:src/cards/ct-p09/B09054.ts:1"
       ]
     },

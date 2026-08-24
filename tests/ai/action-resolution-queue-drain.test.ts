@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { resolveActionAgainstCase, resolveActionAgainstChar } from '@/ai/action-resolution';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
+import { B01098 } from '@/cards/ct-p01/B01098';
 import { event } from '@/engine/event';
 import { _resetActionContexts } from '@/engine/flow/action/state-machine';
+import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { mutate } from '@/engine/mutate';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { produce } from '@/engine/produce';
@@ -67,12 +69,15 @@ function unresolvedEffects(state: GameState): number {
 describe('AI action resolution queue boundaries', () => {
   beforeEach(() => {
     event._resetRegistry();
+    _resetTriggeredRegistered();
     _resetActionContexts();
     _resetUidCounter();
     resetDefRegistry();
     registerCardDef(card('QUEUE-ATK', 2000));
     registerCardDef(card('QUEUE-DEF', 1000));
     registerCardDef(card('QUEUE-MARK', 500));
+    registerCardDef(B01098);
+    registerTriggeredListener();
   });
 
   it('drains effects queued by contact:start before continuing the contact', () => {
@@ -165,6 +170,51 @@ describe('AI action resolution queue boundaries', () => {
     expect(unresolvedEffects(after)).toBe(0);
   });
 
+  it('stops AI contact after B01098 removes both participants in action-2', () => {
+    const setup = contactBoard();
+    const initial = produce(setup.state, (draft) => {
+      draft.players.self.hand = [B01098.id];
+    });
+    const policy = new HeuristicPolicy();
+    const seenCutInCandidates: Array<{ player: 'self' | 'opp'; candidates: string[] }> = [];
+    policy.chooseCutIn = (_state, _ax, player, candidates) => {
+      seenCutInCandidates.push({ player, candidates: [...candidates] });
+      return player === 'self' && candidates.includes(B01098.id) ? B01098.id : null;
+    };
+    let contactEnds = 0;
+    let contactJudges = 0;
+    event.on('contact:end', () => {
+      contactEnds += 1;
+      return {
+        kind: 'custom',
+        fn: (state: GameState) => { state.players.self.hand.push('CONTACT-END-RAN'); },
+      };
+    });
+    event.on('contact:judge', () => { contactJudges += 1; });
+
+    const after = produce(initial, (draft) => {
+      resolveActionAgainstChar(
+        draft,
+        setup.attackerUid,
+        setup.defenderUid,
+        policy,
+        policy,
+      );
+    });
+
+    expect(seenCutInCandidates).toEqual([
+      { player: 'opp', candidates: [] },
+      { player: 'self', candidates: [B01098.id] },
+    ]);
+    expect(after.players.self.scene.some(cardState => cardState.uid === setup.attackerUid)).toBe(false);
+    expect(after.players.opp.scene.some(cardState => cardState.uid === setup.defenderUid)).toBe(false);
+    expect(Object.keys(after.actionContexts ?? {})).toHaveLength(0);
+    expect(contactEnds).toBe(1);
+    expect(contactJudges).toBe(0);
+    expect(after.players.self.hand).toContain('CONTACT-END-RAN');
+    expect(unresolvedEffects(after)).toBe(0);
+  });
+
   it.each(['character target', 'guarded case'] as const)(
     'does not judge after contact:start removes both participants for a %s',
     (route) => {
@@ -180,6 +230,7 @@ describe('AI action resolution queue boundaries', () => {
           })
         : setup.state;
       const observed: string[] = [];
+      const marker = `EARLY-CONTACT-END-${route}`;
       event.on('contact:start', () => ({
         kind: 'custom',
         fn: (state: GameState) => {
@@ -187,8 +238,19 @@ describe('AI action resolution queue boundaries', () => {
           mutate.scene.removeToRemove(state, setup.defenderUid, 'effect');
         },
       }));
-      event.on('contact:end', () => { observed.push('contact:end'); });
-      event.on('action:end', () => { observed.push('action:end'); });
+      event.on('contact:end', () => {
+        observed.push('contact:end');
+        return {
+          kind: 'custom',
+          fn: (state: GameState) => {
+            state.players.self.hand.push(marker);
+            observed.push('contact:end:effect');
+          },
+        };
+      });
+      event.on('action:end', (state) => {
+        observed.push(state.players.self.hand.includes(marker) ? 'action:end' : 'action:end-before-contact-effect');
+      });
       event.on('contact:before-judge', () => { observed.push('contact:before-judge'); });
       event.on('contact:judge', () => { observed.push('contact:judge'); });
       const policy = new HeuristicPolicy();
@@ -202,7 +264,55 @@ describe('AI action resolution queue boundaries', () => {
         }
       });
 
-      expect(observed).toEqual(['contact:end', 'action:end']);
+      expect(observed).toEqual(['contact:end', 'contact:end:effect', 'action:end']);
+      expect(after.players.self.hand).toContain(marker);
+      expect(Object.keys(after.actionContexts ?? {})).toHaveLength(0);
+      expect(unresolvedEffects(after)).toBe(0);
+    },
+  );
+
+  it.each(['character target', 'guarded case'] as const)(
+    'drains contact:end effects before action:end after a normal %s judge',
+    (route) => {
+      const setup = contactBoard();
+      const initial = route === 'guarded case'
+        ? produce(setup.state, (draft) => {
+            mutate.scene.setState(draft, setup.defenderUid, 'active');
+            draft.players.opp.evidence.push({
+              cardId: 'QUEUE-EVIDENCE',
+              faceUp: true,
+              origin: { turn: 0, via: 'opening' },
+            });
+          })
+        : setup.state;
+      const marker = `NORMAL-CONTACT-END-${route}`;
+      const observed: string[] = [];
+      event.on('contact:end', () => {
+        observed.push('contact:end');
+        return {
+          kind: 'custom',
+          fn: (state: GameState) => {
+            state.players.self.hand.push(marker);
+            observed.push('contact:end:effect');
+          },
+        };
+      });
+      event.on('action:end', (state) => {
+        observed.push(state.players.self.hand.includes(marker) ? 'action:end' : 'action:end-before-contact-effect');
+      });
+      const policy = new HeuristicPolicy();
+      policy.chooseGuard = () => route === 'guarded case' ? setup.defenderUid : null;
+
+      const after = produce(initial, (draft) => {
+        if (route === 'guarded case') {
+          resolveActionAgainstCase(draft, setup.attackerUid, 'opp', policy, policy);
+        } else {
+          resolveActionAgainstChar(draft, setup.attackerUid, setup.defenderUid, policy, policy);
+        }
+      });
+
+      expect(observed).toEqual(['contact:end', 'contact:end:effect', 'action:end']);
+      expect(after.players.self.hand).toContain(marker);
       expect(Object.keys(after.actionContexts ?? {})).toHaveLength(0);
       expect(unresolvedEffects(after)).toBe(0);
     },

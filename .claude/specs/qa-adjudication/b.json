@@ -106,11 +106,17 @@
     {
       "qaId": "card:B02043:9a7ccef11a5002bcfc03a28064e814701347f8287061fa3575d710a68d789a48",
       "answerHash": "aac3f501aac8a6f258c10970c01ed9a7ef08ae569ea2598c91183828a718d96a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02043.ts:6"
+        "rules:.claude/rules/17-icons.md:27",
+        "src:src/cards/ct-d06/D06012.ts:19",
+        "src:src/cards/ct-p02/B02043.ts:6",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:311",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:349",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:359",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:370"
       ]
     },
     {
@@ -120,8 +126,12 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02045.ts:60",
-        "tests:tests/cards/triage-greens-2026-06-15/B02044.test.ts:111"
+        "rules:.claude/rules/17-icons.md:27",
+        "src:src/cards/ct-p02/B02045.ts:21",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:311",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:326",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:349",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:359"
       ]
     },
     {
@@ -429,8 +439,14 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03129.ts:44",
-        "tests:tests/cards/cluster5-usage-restriction-behavioral.test.ts:77"
+        "rules:.claude/rules/09-cutin-disguise.md:29",
+        "rules:.claude/rules/23-qa-disguise-cutin.md:7",
+        "src:src/cards/ct-p03/B03129.ts:16",
+        "src:src/engine/flow/contact.ts:318",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:389",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:394",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:405",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:411"
       ]
     },
     {

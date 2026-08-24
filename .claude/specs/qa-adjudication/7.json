@@ -177,11 +177,16 @@
     {
       "qaId": "card:B02038:9a7ccef11a5002bcfc03a28064e814701347f8287061fa3575d710a68d789a48",
       "answerHash": "aac3f501aac8a6f258c10970c01ed9a7ef08ae569ea2598c91183828a718d96a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02038.ts:1"
+        "rules:.claude/rules/17-icons.md:27",
+        "src:src/cards/ct-p02/B02038.ts:95",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:311",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:349",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:359",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:370"
       ]
     },
     {
@@ -216,11 +221,16 @@
     {
       "qaId": "card:B02047:9a7ccef11a5002bcfc03a28064e814701347f8287061fa3575d710a68d789a48",
       "answerHash": "aac3f501aac8a6f258c10970c01ed9a7ef08ae569ea2598c91183828a718d96a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02047.ts:49"
+        "rules:.claude/rules/17-icons.md:27",
+        "src:src/cards/ct-p02/B02047.ts:27",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:311",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:349",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:359",
+        "tests:tests/cards/official-qa/disguise-case-inheritance-public-waves82-83.test.ts:370"
       ]
     },
     {

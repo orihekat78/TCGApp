@@ -20,6 +20,29 @@ function isContactParticipantPresent(state: GameState, uid: string): boolean {
 }
 
 /**
+ * End an already-started contact when either participant has left the field.
+ * This same rule applies before order is set and after every action window.
+ */
+export function endContactIfParticipantMissing(state: GameState, ax: ActionContext): boolean {
+  if (!hasMissingContactParticipant(state, ax)) return false;
+  delete ax.firstUid;
+  delete ax.secondUid;
+  ax.phase = 'contact-end';
+  event.emit(state, 'contact:end', {}, { player: ax.byPlayer, uid: ax.byUid }, {
+    causalCorrelationEventId: actionCorrelationEventId(ax),
+  });
+  return true;
+}
+
+/** Pure public-action gate for the same participant-presence rule. */
+export function hasMissingContactParticipant(state: GameState, ax: ActionContext): boolean {
+  const participants = contactParticipants(ax);
+  return participants !== null
+    && (!isContactParticipantPresent(state, participants.aUid)
+      || !isContactParticipantPresent(state, participants.bUid));
+}
+
+/**
  * Confirm one contact's action order only after every contact:start effect has
  * drained. The phase is GameState-owned so human decisions can pause and resume
  * without freezing order from pre-effect AP.
@@ -37,15 +60,7 @@ export function continuePendingContactOrder(state: GameState): boolean {
   const { aUid, bUid } = participants;
   // rules/08-contact §6: if either participant left while contact:start effects
   // resolved, skip every action window and proceed immediately to contact end.
-  if (!isContactParticipantPresent(state, aUid) || !isContactParticipantPresent(state, bUid)) {
-    delete ax.firstUid;
-    delete ax.secondUid;
-    ax.phase = 'contact-end';
-    event.emit(state, 'contact:end', {}, { player: ax.byPlayer, uid: ax.byUid }, {
-      causalCorrelationEventId: actionCorrelationEventId(ax),
-    });
-    return true;
-  }
+  if (endContactIfParticipantMissing(state, ax)) return true;
   const order = computeOrder(readChar.ap(state, aUid), readChar.ap(state, bUid), { aUid, bUid });
   ax.firstUid = order.firstUid;
   ax.secondUid = order.secondUid;

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `e39bc7f8a5fe`
+> Source hash: `593716407859`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,24 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# QA Wave83: certify disguise replacement contract
+
+- Certify B03050, B03051, and B03052 gaps and reauthenticate B03129 control.
+- Prove physical hand-to-scene exchange, old-face deck bottom, same UID/action
+  participant, inherited state/effects/set/stack occurrences, owner/save, gates,
+  source negatives, and cut-in exclusivity.
+- Fix BUG-348 so any contact participant departure ends before another action or
+  AP judge across public UI, AI, save, guarded, partner, and effect contacts.
+- Drain contact-end effects before action-end in synchronous AI resolution.
+
+# QA Wave82: certify multicolor case membership
+
+- Certify five gaps across B02038/P, B02041/P, B02043, B02044/P, and B02047;
+  reauthenticate B02045's false-green matched control.
+- Prove D06019 green+white and white-only positives, red+blue and FILE-minus-one
+  atomic negatives, owner orientation, physical parity, and rider separation.
+- Confirm partner color gates B02041/P's rider but not its disguise icon.
 
 # QA Wave81: certify disguise observers and duration
 

@@ -86,11 +86,20 @@ function resumeContactAt(
   state: GameState,
   actionId: string,
   expectedPhases: readonly ActionContext['phase'][],
+  attackerPolicy?: AIPolicy,
+  defenderPolicy?: AIPolicy,
 ): ActionContext | undefined {
-  const current = currentActionContext(state, actionId);
+  let current = currentActionContext(state, actionId);
   if (!current) return undefined;
   if (current.phase === 'contact-end') {
+    // contact:end observers resolve before action:end and before the serialized
+    // context is deleted. Re-read after draining because an effect may replace
+    // or terminate the state-owned ActionContext.
+    drainActionEffects(state, current, attackerPolicy, defenderPolicy);
+    current = currentActionContext(state, actionId);
+    if (!current || current.phase !== 'contact-end') return undefined;
     engine.flow.action.advance(state, current);
+    drainActionEffects(state, current, attackerPolicy, defenderPolicy);
     return undefined;
   }
   if (!expectedPhases.includes(current.phase)) {
@@ -180,38 +189,38 @@ function resolveContactSequence(
   engine.flow.action.advance(state, ax); // contact-pending → action-1
   drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
 
-  let current = resumeContactAt(state, actionId, ['action-1']);
+  let current = resumeContactAt(state, actionId, ['action-1'], attackerPolicy, defenderPolicy);
   if (!current) return;
   resolveCutInForPhase(state, current, attackerPolicy, defenderPolicy, 'firstUid');
-  current = resumeContactAt(state, actionId, ['action-1']);
+  current = resumeContactAt(state, actionId, ['action-1'], attackerPolicy, defenderPolicy);
   if (!current) return;
   engine.flow.action.advance(state, current); // action-1 → action-2
 
-  current = resumeContactAt(state, actionId, ['action-2']);
+  current = resumeContactAt(state, actionId, ['action-2'], attackerPolicy, defenderPolicy);
   if (!current) return;
   resolveCutInForPhase(state, current, attackerPolicy, defenderPolicy, 'secondUid');
-  current = resumeContactAt(state, actionId, ['action-2']);
+  current = resumeContactAt(state, actionId, ['action-2'], attackerPolicy, defenderPolicy);
   if (!current) return;
   engine.flow.action.advance(state, current); // action-2 → judge (or action-1-redo)
 
-  current = resumeContactAt(state, actionId, ['judge', 'action-1-redo']);
+  current = resumeContactAt(state, actionId, ['judge', 'action-1-redo'], attackerPolicy, defenderPolicy);
   if (!current) return;
   if (current.phase === 'action-1-redo') {
     resolveCutInForPhase(state, current, attackerPolicy, defenderPolicy, 'firstUid');
-    current = resumeContactAt(state, actionId, ['action-1-redo']);
+    current = resumeContactAt(state, actionId, ['action-1-redo'], attackerPolicy, defenderPolicy);
     if (!current) return;
     engine.flow.action.advance(state, current); // action-1-redo → judge
   }
 
-  current = resumeContactAt(state, actionId, ['judge']);
+  current = resumeContactAt(state, actionId, ['judge'], attackerPolicy, defenderPolicy);
   if (!current) return;
   engine.flow.action.snapshotAP(state, current);
   engine.flow.contact.judge(state, current);
   drainActionEffects(state, current, attackerPolicy, defenderPolicy);
-  current = resumeContactAt(state, actionId, ['judge']);
+  current = resumeContactAt(state, actionId, ['judge'], attackerPolicy, defenderPolicy);
   if (!current) return;
   engine.flow.action.advance(state, current); // judge → contact-end
-  resumeContactAt(state, actionId, []); // contact-end → action-end
+  resumeContactAt(state, actionId, [], attackerPolicy, defenderPolicy); // contact-end → action-end
 }
 
 /**

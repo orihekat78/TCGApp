@@ -10,7 +10,11 @@
 // 進行中アクションと採番が一致し、別matchへmodule-global stateが漏れない。
 //
 // 注意: caller は produce(state, draft => { flow.action.declare(draft, ...); ... }) で呼ぶ。
-import { continuePendingContactOrder } from './contact-order-continuation.js';
+import {
+  continuePendingContactOrder,
+  endContactIfParticipantMissing,
+  hasMissingContactParticipant,
+} from './contact-order-continuation.js';
 import type { GameState, ActionContext, ActionPhase } from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
 import { clearActionScopedState, clearContactScopedState } from '../../mutate/action-scopes.js';
@@ -518,6 +522,12 @@ export function advance(state: GameState, ax: ActionContext): void {
   ax = contextForState(state, ax);
   const phase = ax.phase;
 
+  // rules/08 §6: an effect used in any contact action window may move either
+  // participant out of the field. End before exposing the next action window
+  // or AP judge. The pre-order path uses the same canonical presence check.
+  if ((phase === 'action-1' || phase === 'action-2' || phase === 'action-1-redo')
+    && endContactIfParticipantMissing(state, ax)) return;
+
   if (phase === 'declared') {
     ax.phase = 'guard-window';
     return;
@@ -670,6 +680,7 @@ export const action = {
   isMissingBeforeGuard,
   snapshotAP,
   computeOrder,
+  hasMissingContactParticipant,
   candidates: targetCandidates,
   mustTargetCandidates,
   registerTargetExpander,

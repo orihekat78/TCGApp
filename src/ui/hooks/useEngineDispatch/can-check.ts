@@ -198,11 +198,11 @@ export function isAllowed(
         case 'contact-end':
           return true;
         case 'action-1':
-          return ax.firstActed !== undefined;
+          return ax.firstActed !== undefined || flow.action.hasMissingContactParticipant(state, ax);
         case 'action-2':
-          return ax.secondActed !== undefined;
+          return ax.secondActed !== undefined || flow.action.hasMissingContactParticipant(state, ax);
         case 'action-1-redo':
-          return ax.firstRedoActed !== undefined;
+          return ax.firstRedoActed !== undefined || flow.action.hasMissingContactParticipant(state, ax);
         case 'judge':
           return ax.judgeResolved === true;
         default:

@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6534
+- **ファイル数**: 6548
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -528,6 +528,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-345.md` — B02047 contact immunity duration
     - `BUG-346.md` — disguise replaced effective values
     - `BUG-347.md` — optional if-hand feasibility
+    - `BUG-348.md` — Contact participant exit termination
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -896,6 +897,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-14-qa-wave79-evidence.md` — QA Wave79: certify opponent evidence gain
     - `2026-08-24-15-qa-wave80-disguise-entry.md` — QA Wave80: separate disguise from entry
     - `2026-08-24-16-qa-wave81-disguise-duration.md` — QA Wave81: certify disguise observers and duration
+    - `2026-08-24-17-qa-wave82-multicolor-case.md` — QA Wave82: certify multicolor case membership
+    - `2026-08-24-18-qa-wave83-disguise-contract.md` — QA Wave83: certify disguise replacement contract
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1608,6 +1611,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-qa-waves76-77.md` — QA adjudication Waves76-77
     - `2026-08-24-qa-waves78-79.md` — QA adjudication Waves78-79
     - `2026-08-24-qa-waves80-81.md` — QA adjudication Waves80-81
+    - `2026-08-24-qa-waves82-83.md` — QA adjudication Waves82-83
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1743,6 +1747,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B03041P.md` — B03041P grounding
       - `B03042.md` — B03042 grounding
       - `B03050.md` — B03050 grounding
+      - `B03051.md` — B03051 grounding
+      - `B03052.md` — B03052 / B03052P grounding
       - `B03062.md` — B03062 私はもう貴方のそばに… grounding
       - `B03079.md` — B03079 grounding
       - `B03084.md` — B03084 / B03084P 降谷零 grounding
@@ -1751,6 +1757,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B03095.md` — B03095 grounding
       - `B03111.md` — B03111 バーボン grounding (2026-07-10, sonnet5)
       - `B03127.md` — B03127 grounding
+      - `B03129.md` — B03129 / B03129P grounding
       - `B04003.md` — B04003 工藤新一 grounding (2026-07-10, sonnet5)
       - `B04018.md` — B04018 / B04018P 遠山和葉 grounding (2026-08-13, gpt-5.6-terra high)
       - `B04018P.md` — B04018P 遠山和葉 grounding (2026-07-14, gpt-5.6-terra high)
@@ -2092,6 +2099,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `waves76-77-authority.md` — Waves76-77 authority manifest
       - `waves78-79-authority.md` — Waves78-79 authority manifest
       - `waves80-81-authority.md` — Waves80-81 authority manifest
+      - `waves82-83-authority.md` — Waves82-83 authority
     - **`meta-ui/`**
       - `00-overview.md` — 00 — メタ UI 統合設計 概要
       - `01-project-setup.md` — 01 — meta-app プロジェクト構成
@@ -5839,6 +5847,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D06003-D06024-public-path.test.ts` — qaId=card:D06003:e918d066190b75a908b8154f185c9c4291e8387cb2fc4797f5744acc49a362d…
       - `D10003-D10010-printing-copy-limit.test.ts` — qaId=card:D10003:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2…
       - `action-declare-before-guard-public-wave48.test.ts` — qa: card:B01085:151b435edeb61c22d4471596da22371c8592c23c410528efb5e78938a1bb3b54
+      - `b03050-contact-exit-public-wave83.test.ts` — qa: card:B03050:19fb99eecd85e2306c2887c5c7eb1210d8e663ec05473fb8f45d59e9f1475925
       - `b06067-self-selection-public-wave76.test.ts` — qa: card:B06067:28660457e46b234b8eda0f8ef2c6f3353a37a1739cfebe4112b7bfffed415436
       - `b07093-a1-public-wave44.test.ts` — qa: card:B07093:212da49cce2aca6921fdb352e94b610cbdeeebd02d0ab5c66e8200c0164c3a0e
       - `bond-partner-exclusion-public-wave45.test.ts` — qa: card:B05007:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
@@ -5850,6 +5859,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `case-flip-two-complex-public-wave37.test.ts` — qa: card:B06095:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2
       - `case-flip-two-declared-public-wave36.test.ts` — qa: card:B06013:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2
       - `case-trait-yaiba-public-wave69.test.ts` — qa: card:B06018:9b784e18994d29858b6b12d02bf7ddc0e040914733a510db8aca6110febbb969
+      - `contact-participant-exit-regression-wave83.test.ts` — Horizontal regression for rules/08 §6: either participant leaving ends contact.
       - `ct-p10-original-ability-rules.test.ts` — qa: card:B10050:98e82fae32a43d9b6de8c7fd8289dcf4565f2dada1498f0760f5ba9d0cf8ae17
       - `ctp10-opponent-turn-cutin-public.test.ts` — qa: card:B10017:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
       - `decision-persistence-wave23.test.ts` — qa: card:B03080:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
@@ -5863,6 +5873,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `deck-top-three-self-only-public-wave59.test.ts` — qa: card:B04077:1a92dcdf67120f7d76c881aa12661add73fc79ad2cefe30d1e4fbda6978a4758
       - `declared-cost-one-self-only-public-wave71.test.ts` — qa: card:B07061:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6
       - `declared-sleep-cost-public-wave24.test.ts` — qa: card:B01063:f97b21e9e16f570fd0da6acab0a9cb6e819a6e4a010e86dddb5ff82c6d33902e
+      - `disguise-case-inheritance-public-waves82-83.test.ts` — qa: card:B02038:9a7ccef11a5002bcfc03a28064e814701347f8287061fa3575d710a68d789a48
       - `disguise-definition-public-wave56.test.ts` — qa: card:B02041:bde0a3a5b0127797c2caad230a469d5a24f2a164829581273d0d8e77589383d6
       - `disguise-not-entry-public-waves80-81.test.ts` — qa: card:B02038:768a20fc5e6e165184d999a8032847d4633ef46d0ac9edd814f3c4ebb18e8e72
       - `effect-entry-action-public-wave29.test.ts` — qa: card:B03073:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
@@ -5909,6 +5920,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `opponent-evidence-gain-public-wave79.test.ts` — qa: card:B01065:b34f939ceba2f547ad6f01ee968061869d0f8abc4e72fa0d51c20b0c14a53ee1
       - `partner-area-unbounded-public-wave72.test.ts` — qa: card:B07030:dc07d737cba65ebccfc43e14a2de345262a316223691c7ff5eba2a0c7906bcc0
       - `pr099-public-wave77.test.ts` — qa: card:PR099:2cca6007ab7f2137a43f145275f1d7dd6c33155f5c98d3179becb7d643a950fd
+      - `pr263-pr269-contact-exit-regression-wave83.test.ts` — Horizontal regression: a disguise rider removes the non-current contact particip…
       - `same-card-multicopy-order-wave17.test.ts` — qaId=card:B02020:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c…
       - `self-selection-public-wave74.test.ts` — qa: card:B03088:37d1a5bf035569e61acdccac31f828d38114d0105e6cbe77aa883552b82699c7
       - `set-card-ability-occurrence-public-wave35.test.ts` — qa: card:B01057:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
@@ -6269,6 +6281,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `cutin-handzone-pick.spec.ts` — User 要望: コンタクト中のカットイン選択を、テキストボタン modal ではなく HandZone pick mode
     - `deck-reveal-overlay-ui.spec.ts` — E2E: DeckRevealOverlay の演出 (user 指摘 #1, 2026-06-01)
     - `declared-source-hand-occurrence.spec.ts` — B06103's on-hand declared ability removes a same-colour character as
+    - `disguise-case-inheritance-waves82-83.spec.ts`
     - `disguise-duration-waves80-81.spec.ts`
     - `disguise-hook-2026-06-06.spec.ts` — E2E: engine-extension disguise-hook batch (2026-06-06 タスクC) — text-faithfulness…
     - `effect-pick.spec.ts` — E2E regression: BUG-053 / BUG-054 — human player effect pick UI 経路
@@ -6429,6 +6442,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `cluster16-filter-predicate.test.ts` — engine cluster16 — filter-predicate 表現力完成 (card-name EXCLUSION + deckReveal cros…
     - **`flow/`**
       - **`action/`**
+        - `contact-participant-exit.test.ts` — rules: 08-contact §6 — either participant leaving ends contact before another ac…
         - `granted-pre-target.test.ts` — Sleep remains a normal rules/07 target; the grant adds no extra sleep target.
         - `state-machine.test.ts` — Phase 4 Group B Task 4.4 — flow.action state machine
         - `target-expander.test.ts` — Phase 4 Group C Task 4.8 — target expander (G29) + mustBeTargeted (G28)
