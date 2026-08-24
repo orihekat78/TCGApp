@@ -67,7 +67,7 @@ const a2: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      { kind: 'atom', verb: 'declareName', args: { bind: 'named' } },
+      { kind: 'atom', verb: 'declareName', args: { bind: 'named', domain: 'registered-card-name' } },
       {
         kind: 'atom',
         verb: 'deckRevealUntil',

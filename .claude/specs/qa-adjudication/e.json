@@ -10,8 +10,8 @@
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/06-card-types.md:12",
-        "src:src/ai/move-enumerator.ts:43",
-        "src:src/ai/move-enumerator.ts:63",
+        "src:src/ai/move-enumerator.ts:48",
+        "src:src/ai/move-enumerator.ts:68",
         "src:src/cards/ct-p01/B01001.ts:5",
         "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:41",
         "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:43",
@@ -1554,11 +1554,14 @@
     {
       "qaId": "card:B09062:5f60f8b4db37b8f92d03a16be385db13124478a72d7648dca0c733585d01bc54",
       "answerHash": "391900cacc11940b4f3cf4cf75016c635360411e2fb2a7efea24ed3cebf7f64a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09062.ts:1"
+        "rules:.claude/rules/17-icons.md:64",
+        "rules:.claude/rules/21-declared-ability-cost.md:15",
+        "src:src/cards/ct-p09/B09062.ts:1",
+        "tests:tests/cards/official-qa/declared-repeat-public-wave102.test.ts:161"
       ]
     },
     {

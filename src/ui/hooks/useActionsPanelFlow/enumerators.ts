@@ -1,6 +1,10 @@
 // useActionsPanelFlow/enumerators.ts — Phase 3d 分割 (候補列挙 / can-check, body 無改変移送, 2026-06-22)
 import * as flow from '@/engine/flow/index.js';
 import { engine } from '@/engine';
+import {
+  declaredNameCandidates,
+  findDeclareNameSpec,
+} from '@/engine/effect/declared-name-domain.js';
 import { makeAbilityCtx } from './cost.js';
 import type { Player } from './cost.js';
 import type { DeclaredAbilityHostOrigin } from '@/engine/types';
@@ -195,15 +199,33 @@ export function enumDeclaredAbilityChoicesFor(
   if (!cardId || !owner) return [];
   const occurrences = flow.findDeclaredAbilityOccurrences(state, uid, cardId, area);
   return occurrences
-    .filter((occurrence) => flow.canActivateDeclaredAbility(state, uid, occurrence.ability.id, undefined, {
-      allowImplicitPhysicalCostSelection: true,
-      sourceRef: {
-        setCardId: occurrence.setCardId,
-        setCardInstanceId: occurrence.setCardInstanceId,
-        abilityOrigin: occurrence.origin === 'set-card' ? undefined : occurrence.origin,
-        abilityIndex: occurrence.abilityIndex,
-      },
-    }))
+    .filter((occurrence) => {
+      let declaredName: string | undefined;
+      try {
+        const spec = findDeclareNameSpec(occurrence.ability.effect);
+        if (spec && !spec.optional && spec.domain !== 'unrestricted') {
+          declaredName = declaredNameCandidates(spec.domain)[0];
+          if (declaredName === undefined) return false;
+        }
+      } catch {
+        return false;
+      }
+      return flow.canActivateDeclaredAbility(
+        state,
+        uid,
+        occurrence.ability.id,
+        declaredName === undefined ? undefined : { declaredName },
+        {
+          allowImplicitPhysicalCostSelection: true,
+          sourceRef: {
+            setCardId: occurrence.setCardId,
+            setCardInstanceId: occurrence.setCardInstanceId,
+            abilityOrigin: occurrence.origin === 'set-card' ? undefined : occurrence.origin,
+            abilityIndex: occurrence.abilityIndex,
+          },
+        },
+      );
+    })
     .map((occurrence) => ({
       abilId: occurrence.ability.id,
       description: occurrence.ability.description,

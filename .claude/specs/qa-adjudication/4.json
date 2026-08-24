@@ -10,8 +10,8 @@
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/06-card-types.md:12",
-        "src:src/ai/move-enumerator.ts:43",
-        "src:src/ai/move-enumerator.ts:63",
+        "src:src/ai/move-enumerator.ts:48",
+        "src:src/ai/move-enumerator.ts:68",
         "src:src/cards/ct-p01/B01002.ts:5",
         "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:41",
         "tests:tests/cards/_shared/sleepingPartnerCommonActions.e2e.test.ts:43",
@@ -1478,7 +1478,7 @@
         "src:src/engine/effect/apply-pick.ts:47",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
         "src:src/engine/listeners/triggered.ts:503",
-        "src:src/engine/resolve/stack.ts:228",
+        "src:src/engine/resolve/stack.ts:229",
         "tests:tests/cards/official-qa/effect-entry-trigger-order-public.test.ts:263"
       ]
     },

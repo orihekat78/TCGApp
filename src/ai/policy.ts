@@ -428,6 +428,9 @@ export function applyMove(state: GameState, move: Move, byPlayer: Player): void 
           costParams = computeAiCostParams(state, probe.source.player as Player, ab.cost);
         }
       }
+      if (move.declaredName !== undefined) {
+        costParams = { ...(costParams ?? {}), declaredName: move.declaredName };
+      }
       engine.flow.activateDeclaredAbility(
         state,
         move.uid,

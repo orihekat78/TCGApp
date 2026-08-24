@@ -115,6 +115,41 @@ beforeEach(() => {
 });
 
 describe('runDeclaredAbilityFlow', () => {
+  it('preflights a mandatory all-card declaration before opening its name modal', async () => {
+    registerCardDef(makeCard('EventName', { kind: 'event', names: ['固有事件名'] }));
+    registerCardDef(makeCard('Source', {
+      abilities: [{
+        id: 'a1', type: 'declared', scope: 'on-scene',
+        effect: {
+          kind: 'atom', verb: 'declareName',
+          args: { bind: 'named', domain: 'registered-card-name' },
+        },
+        description: 'カード名を指定', ruleRefs: [],
+      }],
+    }));
+    const state = produce(setupBase(), draft => {
+      mutate.scene.enter(draft, 'self', 'Source', { active: true });
+    });
+    useGameStateStore.setState({ gameState: state });
+    const uid = state.players.self.scene.find(card => card.cardId === 'Source')!.uid;
+
+    const promise = runDeclaredAbilityFlow({ player: 'self' });
+    const phase = useTargetPickerStore.getState().phase;
+    expect(phase).toMatchObject({
+      phase: 'picking', purpose: 'declared-ability:source', candidates: [uid],
+    });
+    await pickAndConfirmPicker(uid);
+    await acceptConfirmation();
+    const request = useDeclareNamePickerStore.getState().current;
+    expect(request?.domain).toBe('registered-card-name');
+    expect(request?.candidateNames).toContain('固有事件名');
+    const resolver = useDeclareNamePickerStore.getState()._resolver!;
+    useDeclareNamePickerStore.getState()._setCurrent(null);
+    useDeclareNamePickerStore.getState()._setResolver(null);
+    resolver({ kind: 'declare', name: '固有事件名' });
+    expect((await promise).ok).toBe(true);
+  });
+
   it('offers only registered character names for a constrained declaration', async () => {
     registerCardDef(makeCard('Allowed', { names: ['毛利小五郎'] }));
     registerCardDef(makeCard('EventName', { kind: 'event', names: ['黒の組織の事件'] }));

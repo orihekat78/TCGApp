@@ -919,7 +919,7 @@
         "rules:.claude/rules/21-declared-ability-cost.md:47",
         "rules:.claude/rules/21-declared-ability-cost.md:49",
         "src:src/cards/ct-p06/B06023.ts:48",
-        "src:src/engine/flow/main/declared-ability.ts:690",
+        "src:src/engine/flow/main/declared-ability.ts:715",
         "tests:tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:164",
         "tests:tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:166"
       ]

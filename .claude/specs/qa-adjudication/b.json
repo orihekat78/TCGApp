@@ -2186,7 +2186,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-d11/D11019.ts:70",
-        "tests:tests/ai/replay/recorder.test.ts:58"
+        "tests:tests/ai/replay/recorder.test.ts:59"
       ]
     },
     {

@@ -613,14 +613,12 @@
     {
       "qaId": "card:B04048:304cc643ca8775f8fbf3c678a224ca863ff0850c8c8b3f99cc423f146d5dedbd",
       "answerHash": "cf9e029f63dc02ea9b94a8e39361c805a3c0332630c8b9f13aed6e80abe4514c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04048.ts:101"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/ct-p04/B04048.ts:70",
+        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:264"
       ]
     },
     {
@@ -1381,7 +1379,7 @@
         "src:src/engine/effect/apply-pick.ts:47",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
         "src:src/engine/listeners/triggered.ts:503",
-        "src:src/engine/resolve/stack.ts:228",
+        "src:src/engine/resolve/stack.ts:229",
         "tests:tests/cards/official-qa/effect-entry-trigger-order-public.test.ts:242"
       ]
     },

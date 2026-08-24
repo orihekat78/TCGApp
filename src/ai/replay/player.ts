@@ -11,7 +11,7 @@ import type { Move } from '../move-enumerator.js';
 import type { GameState } from '@/engine/types';
 import { replayNondeterminism } from './nondeterminism.js';
 import { decodeReplayLog } from './decode.js';
-import { withLegacyReplayHiramekiCompatibility } from '@/engine/flow/action/legacy-replay-compat.js';
+import { withLegacyReplayCompatibility } from '@/engine/flow/action/legacy-replay-compat.js';
 
 type Player = 'self' | 'opp';
 
@@ -32,12 +32,13 @@ export class ScriptedPolicy implements AIPolicy {
     this.queue = [...moves];
   }
 
-  choose(_state: GameState, candidates: Move[], _byPlayer: Player): Move | null {
+  choose(state: GameState, candidates: Move[], _byPlayer: Player): Move | null {
     if (this.queue.length === 0) {
       throw new Error('replay move queue exhausted');
     }
     const recorded = this.queue[0];
-    const legal = candidates.find((candidate) => movesEqual(candidate, recorded));
+    const legal = candidates.find((candidate) => movesEqual(candidate, recorded))
+      ?? adaptLegacyB04048DeclaredName(state, recorded, candidates);
     if (!legal) {
       throw new Error(`recorded replay move is not legal: ${JSON.stringify(recorded)}`);
     }
@@ -107,6 +108,46 @@ function movesEqual(a: Move, b: Move): boolean {
     === JSON.stringify(canonical(withoutDeclaredOccurrence(b)));
 }
 
+function withoutDeclaredName(move: DeclaredAbilityMove): Omit<DeclaredAbilityMove, 'declaredName'> {
+  const { declaredName: _declaredName, ...base } = move;
+  return base;
+}
+
+function isExactPrintedB04048Occurrence(move: DeclaredAbilityMove): boolean {
+  return move.setCardId === undefined
+    && move.setCardInstanceId === undefined
+    && move.abilityOrigin === 'printed'
+    && move.abilityIndex === 1;
+}
+
+function adaptLegacyB04048DeclaredName(
+  state: GameState,
+  recorded: Move,
+  candidates: Move[],
+): Move | undefined {
+  if (recorded.kind !== 'declaredAbility'
+    || recorded.abilityId !== 'a2'
+    || recorded.declaredName !== undefined) return undefined;
+  let cardId: string | undefined;
+  for (const player of ['self', 'opp'] as const) {
+    const source = state.players[player].scene.find(card => card.uid === recorded.uid);
+    if (!source) continue;
+    cardId = source.cardId;
+    break;
+  }
+  if (cardId !== 'B04048' && cardId !== 'B04048P') return undefined;
+  if (!isWitnessFreeLegacyDeclaredMove(recorded) && !isExactPrintedB04048Occurrence(recorded)) {
+    return undefined;
+  }
+  const candidate = candidates.find((move): move is DeclaredAbilityMove => (
+    move.kind === 'declaredAbility'
+    && move.declaredName !== undefined
+    && isExactPrintedB04048Occurrence(move)
+    && movesEqual(withoutDeclaredName(move) as Move, recorded)
+  ));
+  return candidate ? withoutDeclaredName(candidate) as Move : undefined;
+}
+
 /**
  * replayLog — 記録された log を再生し、record 時と同じ MatchResult を返す。
  *
@@ -125,7 +166,7 @@ export function replayLog(input: unknown): MatchResult {
     ? Math.max(0, log.result.turns - 1)
     : log.result.turns;
   let replayMoveIndex = 0;
-  const run = (): MatchResult => withLegacyReplayHiramekiCompatibility(() => runMatch({
+  const run = (): MatchResult => withLegacyReplayCompatibility(() => runMatch({
     selfPolicy,
     oppPolicy,
     initialState: log.initialState,

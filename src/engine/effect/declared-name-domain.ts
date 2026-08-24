@@ -4,6 +4,7 @@ import { allCardNameComponentsForDef } from '../target/card-def-registry.js';
 
 export const DECLARED_NAME_DOMAINS = [
   'unrestricted',
+  'registered-card-name',
   'registered-character-card-name',
 ] as const;
 
@@ -17,6 +18,7 @@ export type DeclareNameSpec = {
 
 export function declaredNameDomain(value: unknown): DeclaredNameDomain {
   if (value === undefined || value === 'unrestricted') return 'unrestricted';
+  if (value === 'registered-card-name') return value;
   if (value === 'registered-character-card-name') return value;
   throw new Error(`invalid declared-name domain: ${String(value)}`);
 }
@@ -75,7 +77,7 @@ export function findDeclareNameSpec(effect: Effect | undefined): DeclareNameSpec
 
 export function declaredNameCandidates(domain: DeclaredNameDomain): string[] {
   const defs = _allRegistered().filter((card) => (
-    domain === 'unrestricted' || card.kind === 'character'
+    domain !== 'registered-character-card-name' || card.kind === 'character'
   ));
   return [...new Set(
     defs.flatMap((card) => allCardNameComponentsForDef(card))

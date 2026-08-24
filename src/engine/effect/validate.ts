@@ -223,8 +223,9 @@ function walk(node: unknown, path: string, errors: string[], warnings: string[])
         const domain = args?.['domain'];
         if (domain !== undefined
           && domain !== 'unrestricted'
+          && domain !== 'registered-card-name'
           && domain !== 'registered-character-card-name') {
-          errors.push(`${path}.args.domain: declareName requires unrestricted|registered-character-card-name`);
+          errors.push(`${path}.args.domain: declareName requires unrestricted|registered-card-name|registered-character-card-name`);
         }
       }
       // args is otherwise treated opaquely here; per-verb arg validation belongs to runAtom.

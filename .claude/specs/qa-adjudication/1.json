@@ -1012,14 +1012,14 @@
     {
       "qaId": "card:B07074:5f60f8b4db37b8f92d03a16be385db13124478a72d7648dca0c733585d01bc54",
       "answerHash": "391900cacc11940b4f3cf4cf75016c635360411e2fb2a7efea24ed3cebf7f64a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07074.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/17-icons.md:64",
+        "rules:.claude/rules/21-declared-ability-cost.md:15",
+        "src:src/cards/ct-p07/B07074.ts:1",
+        "tests:tests/cards/official-qa/declared-repeat-public-wave102.test.ts:161"
       ]
     },
     {

@@ -26,7 +26,7 @@ import { stepTurn } from '@/ai/policy.js';
 import { replayLog, ScriptedPolicy } from '@/ai/replay/player.js';
 import { replayNondeterminism } from '@/ai/replay/nondeterminism.js';
 import { withHeadlessDecisionContext } from '@/ai/headless-decision-context.js';
-import { withLegacyReplayHiramekiCompatibility } from '@/engine/flow/action/legacy-replay-compat.js';
+import { withLegacyReplayCompatibility } from '@/engine/flow/action/legacy-replay-compat.js';
 import { withIsolatedPendingRuntimeState } from '@/engine/effect/runtime-state.js';
 import { produce } from '@/engine/produce';
 import { engine } from '@/engine';
@@ -117,7 +117,7 @@ export function computeStateAt(log: ReplayLog, upto: number): GameState {
     }
     return state;
   };
-  const runHeadless = (): GameState => withLegacyReplayHiramekiCompatibility(() =>
+  const runHeadless = (): GameState => withLegacyReplayCompatibility(() =>
     withHeadlessDecisionContext(() =>
       withIsolatedPendingRuntimeState(log.initialState, run)));
   return log.schemaVersion === 2

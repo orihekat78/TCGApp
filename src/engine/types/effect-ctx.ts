@@ -5,6 +5,7 @@ import type { Candidate } from './candidate.js';
 
 export type DeclaredNameDomain =
   | 'unrestricted'
+  | 'registered-card-name'
   | 'registered-character-card-name';
 
 /**

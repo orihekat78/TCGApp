@@ -500,6 +500,7 @@ function zeroCandidateWindow(row: Row): string[] {
 
 function proveZeroCandidate(row: Row): void {
   const looked = zeroCandidateWindow(row);
+  if (row.cardId === 'B04048') register(targetCard(row));
   const state = baseState(row, looked[0]!);
   state.players.self.deck = [...looked, TAIL];
   install(state, `qa-wave30-${row.cardId}-zero-candidate`);

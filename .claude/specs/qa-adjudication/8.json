@@ -1861,7 +1861,7 @@
         "src:src/engine/effect/apply-pick.ts:47",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
         "src:src/engine/listeners/triggered.ts:503",
-        "src:src/engine/resolve/stack.ts:228",
+        "src:src/engine/resolve/stack.ts:229",
         "tests:tests/cards/official-qa/effect-entry-trigger-public-wave2.test.ts:175"
       ]
     },
@@ -2273,28 +2273,26 @@
         "rules:.claude/rules/15-abilities-effects.md:32",
         "rules:.claude/rules/16-card-set.md:20",
         "src:src/cards/pr-01/PR099.ts:32",
-        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:153",
-        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:191",
-        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:203",
-        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:227",
-        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:240",
-        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:258",
-        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:275",
-        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:294"
+        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:183",
+        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:221",
+        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:233",
+        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:373",
+        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:386",
+        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:404",
+        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:421",
+        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:440"
       ],
       "noteCodes": []
     },
     {
       "qaId": "card:PR099:304cc643ca8775f8fbf3c678a224ca863ff0850c8c8b3f99cc423f146d5dedbd",
       "answerHash": "cf9e029f63dc02ea9b94a8e39361c805a3c0332630c8b9f13aed6e80abe4514c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR099.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/pr-01/PR099.ts:1",
+        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:243"
       ]
     },
     {

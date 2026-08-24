@@ -16,6 +16,7 @@
 - QA Waves96-97: .claude/sessions/2026-08-25-qa-waves96-97.md.
 - QA Waves98-99: .claude/sessions/2026-08-25-qa-waves98-99.md.
 - QA Waves100-101: .claude/sessions/2026-08-25-qa-waves100-101.md.
+- QA Waves102-103: .claude/sessions/2026-08-25-qa-waves102-103.md.
 
 ## 2026-08-24: QA runtime Waves82-83
 
@@ -47,16 +48,16 @@
 
 ## Next
 
-- Waves100-101 move six Q&A items to matched. Coverage is 1661 matched / 1303
-  test-missing / 2964 total; 1114 exact groups remain, including 949 singletons.
-- Both waves certify must-guard choice enforcement through public dispatch for
-  all physical printings and both owner orientations; production was correct.
-- Wave102 seed: section `577fab55...`, Q `3a64dbf5...`, A `391900ca...` across
-  B05046/B07074/B09062.
-- Wave103 seed: same section, Q `f0237879...`, A `cf9e029f...` across
-  B04048/PR099/PR105.
+- Waves102-103 move six Q&A items to matched. Coverage is 1667 matched / 1297
+  test-missing / 2964 total; 1112 exact groups remain, including 949 singletons.
+- Wave102 certifies repeatable paid declarations. Wave103 fixes BUG-358 with
+  exact all-card names across UI/AI/save/replay while preserving old saves.
+- Wave104 seed: section `5d92283f...`, Q `fb1e1b48...`, A `fde7928e...` across
+  B05055/B06090/B10056.
+- Wave105 seed: section `5fcfb3b6...`, Q `2db9e3e1...`, A `2818fdd5...` across
+  B09003/B09108/B09111.
 - Official sync drift is separate: new PR322 and changed Q&A for
   B04018/B04018P/B06103P. Do not mix it into selected waves without re-queueing.
-- Revised remaining estimate: 77-149 working hours, center about 112 hours.
+- Revised remaining estimate: 77-148 working hours, center about 112 hours.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

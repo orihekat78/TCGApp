@@ -17,6 +17,10 @@ import type {
   DeclaredAbilityHostOrigin,
 } from '@/engine/types';
 import { engine } from '@/engine';
+import {
+  declaredNameCandidates,
+  findDeclareNameSpec,
+} from '@/engine/effect/declared-name-domain';
 import { makePartnerAbilCtx } from './ability-ctx.js';
 
 type Player = 'self' | 'opp';
@@ -38,6 +42,7 @@ export type Move =
       setCardInstanceId?: string;
       abilityOrigin?: DeclaredAbilityHostOrigin;
       abilityIndex?: number;
+      declaredName?: string;
     }
   | { kind: 'reasoning'; uid: string }
   | { kind: 'actionAgainstChar'; byUid: string; targetUid: string }
@@ -99,7 +104,18 @@ function appendDeclaredAbilityMoves(
 ): void {
   for (const occurrence of engine.flow.findDeclaredAbilityOccurrences(state, uid, cardId, area)) {
     const sourceRef = engine.flow.declaredAbilityOccurrenceSourceRef(occurrence);
-    if (!engine.flow.canActivateDeclaredAbility(state, uid, occurrence.ability.id, undefined, {
+    let declaredName: string | undefined;
+    try {
+      const spec = findDeclareNameSpec(occurrence.ability.effect);
+      if (spec && !spec.optional && spec.domain !== 'unrestricted') {
+        const names = declaredNameCandidates(spec.domain);
+        declaredName = names[0];
+      }
+    } catch {
+      continue;
+    }
+    const costParams = declaredName === undefined ? undefined : { declaredName };
+    if (!engine.flow.canActivateDeclaredAbility(state, uid, occurrence.ability.id, costParams, {
       allowImplicitPhysicalCostSelection: true,
       sourceRef,
     })) continue;
@@ -108,6 +124,7 @@ function appendDeclaredAbilityMoves(
       uid,
       abilityId: occurrence.ability.id,
       ...sourceRef,
+      ...(declaredName === undefined ? {} : { declaredName }),
     });
   }
 }

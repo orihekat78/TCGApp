@@ -35,6 +35,7 @@ import { hasPendingHumanPick } from '../../effect/apply-pick.js';
 import { isDeclaredNameValidForEffect } from '../../effect/declared-name-domain.js';
 import { _hasOpenActionContext } from '../action/state-machine.js';
 import { isMainActionWindow } from './main-action-window.js';
+import { isLegacyReplayB04048DeclaredNameSource } from '../action/legacy-replay-compat.js';
 import {
   cloneCausalEffectTrace,
   completeEffectCausalTrace,
@@ -148,6 +149,19 @@ export function declaredAbilityOccurrenceSourceRef(
     abilityOrigin: occurrence.origin,
     abilityIndex: occurrence.abilityIndex,
   };
+}
+
+function permitsLegacyReplayMissingDeclaredName(
+  cardId: string,
+  abilityId: string,
+  occurrence: DeclaredAbilityOccurrence,
+  value: unknown,
+): boolean {
+  return value === undefined && isLegacyReplayB04048DeclaredNameSource({
+    cardId,
+    abilityId,
+    ...declaredAbilityOccurrenceSourceRef(occurrence),
+  });
 }
 
 /**
@@ -390,7 +404,12 @@ export function canActivateDeclaredAbility(
   );
   const ability = occurrence?.ability;
   if (!occurrence || !ability) return false;
-  if (!isDeclaredNameValidForEffect(ability.effect, costParams?.declaredName)) return false;
+  if (!permitsLegacyReplayMissingDeclaredName(
+    found.cardId,
+    abilId,
+    occurrence,
+    costParams?.declaredName,
+  ) && !isDeclaredNameValidForEffect(ability.effect, costParams?.declaredName)) return false;
   const dyn = declaredCostParamsToDyn(costParams);
   const occurrenceSource = declaredAbilityOccurrenceSourceRef(occurrence);
   const ctx: EffectCtx = {
@@ -581,6 +600,12 @@ export function useDeclaredAbility(
   if (!admissionOccurrence) return;
   const admissionAbility = admissionOccurrence?.ability;
   if (admissionAbility?.type === 'declared'
+    && !permitsLegacyReplayMissingDeclaredName(
+      found.cardId,
+      abilId,
+      admissionOccurrence,
+      ctx?.dyn?.declaredName,
+    )
     && !isDeclaredNameValidForEffect(admissionAbility.effect, ctx?.dyn?.declaredName)) return;
   const inheritedRootId = currentEffectCausalCorrelationEventId(state);
   const ownTrace = inheritedRootId === undefined

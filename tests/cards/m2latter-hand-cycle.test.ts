@@ -140,7 +140,7 @@ describe('B04048 a2 — 宣言 (declareName + deckRevealUntil filter dyn cardNam
     const s = base('PRED');
     const me = mutate.scene.enter(s, 'self', 'B04048', {});
     s.players.self.deck = ['MOB1', 'D1', 'D2', 'D3'];
-    activateDeclaredAbility(s, me.uid, 'a2', { declaredName: '存在しない名前' });
+    activateDeclaredAbility(s, me.uid, 'a2', { declaredName: 'ターゲット' });
     runAllUntilEmpty(s);
     drainAiEffectPicks(s);
     runAllUntilEmpty(s);

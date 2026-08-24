@@ -1,4 +1,7 @@
 // qa: card:PR099:2cca6007ab7f2137a43f145275f1d7dd6c33155f5c98d3179becb7d643a950fd
+// qa: card:B04048:304cc643ca8775f8fbf3c678a224ca863ff0850c8c8b3f99cc423f146d5dedbd
+// qa: card:PR099:304cc643ca8775f8fbf3c678a224ca863ff0850c8c8b3f99cc423f146d5dedbd
+// qa: card:PR105:304cc643ca8775f8fbf3c678a224ca863ff0850c8c8b3f99cc423f146d5dedbd
 // Rules: 07-action-flow, 13-keywords, 15-abilities-effects, 16-card-set,
 // 17-icons, 19-special-rules, 21-declared-ability-cost.
 
@@ -6,6 +9,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { enumerateMoves } from '@/ai/move-enumerator';
 import { applyMove } from '@/ai/policy';
 import { registerAll } from '@/cards';
+import { B04048 } from '@/cards/ct-p04/B04048';
+import { B04048P } from '@/cards/ct-p04/B04048P';
 import { evalCond } from '@/engine/cond/eval';
 import { resetPendingRuntimeState } from '@/engine/effect/runtime-state';
 import { event } from '@/engine/event';
@@ -18,7 +23,7 @@ import { _resetRegistry, register } from '@/engine/read/def';
 import { runAllUntilEmpty } from '@/engine/resolve';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { CardDef, EffectCtx, GameState, Player } from '@/engine/types';
-import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import { bindPendingDecision, dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { resetPresentationQueue } from '@/ui/presentation/coordinator';
 import { beginMatchSession, endMatchSession } from '@/ui/services/matchSession';
 import { useGameStateStore } from '@/ui/state/store';
@@ -33,6 +38,11 @@ const TARGET = 'W77-TARGET';
 const EVIDENCE = 'W77-EVIDENCE';
 const CASE = 'W77-CASE';
 const ALLOWED_NAME = '毛利小五郎';
+const UNIQUE_ALL_CARD_NAME = '波百三固有登録事件';
+const UNIQUE_ALL_CARD_INPUT = '百三固有';
+const UNIQUE_ALL_CARD_TYPO = '波百三固有登録事伴';
+const UNIQUE_ALL_CARD_ID = 'W103-UNIQUE-ALL-CARD';
+const AMBIGUOUS_ALL_CARD_ID = 'W103-AMBIGUOUS-ALL-CARD';
 const EVENT_NAME = '黒の組織の事件';
 const SPLIT_NAME = '江戸川コナン＆工藤新一';
 
@@ -55,7 +65,16 @@ const FIXTURES: CardDef[] = [
   fixture('MOURI_RAN', 'character', '毛利蘭'),
   fixture('SPLIT', 'character', SPLIT_NAME, { names: [SPLIT_NAME, '江戸川コナン', '工藤新一'] }),
   fixture('EVENT', 'event', EVENT_NAME),
+  fixture(UNIQUE_ALL_CARD_ID, 'event', UNIQUE_ALL_CARD_NAME),
+  fixture(AMBIGUOUS_ALL_CARD_ID, 'event', '毛利事件'),
 ];
+
+const ALL_CARD_ROWS = [
+  { cardId: 'B04048', owner: 'self', declaredName: `  ${UNIQUE_ALL_CARD_INPUT}  ` },
+  { cardId: 'B04048', owner: 'opp', declaredName: UNIQUE_ALL_CARD_TYPO },
+  { cardId: 'B04048P', owner: 'self', declaredName: UNIQUE_ALL_CARD_TYPO },
+  { cardId: 'B04048P', owner: 'opp', declaredName: UNIQUE_ALL_CARD_INPUT },
+] as const;
 
 function other(player: Player): Player {
   return player === 'self' ? 'opp' : 'self';
@@ -122,6 +141,17 @@ function declareName(row: Row, owner: Player, name?: string) {
     abilityOrigin: 'printed', abilityIndex: 1,
     ...(name === undefined ? {} : { costParams: { declaredName: name } }),
   });
+}
+
+function legacyAllCardNameDefinition(card: CardDef): CardDef {
+  const legacy = structuredClone(card);
+  const ability = legacy.abilities.find(candidate => candidate.id === 'a2');
+  const firstStep = ability?.effect?.kind === 'sequence' ? ability.effect.steps[0] : undefined;
+  if (firstStep?.kind !== 'atom' || firstStep.verb !== 'declareName') {
+    throw new Error(`missing ${card.id} legacy declareName step`);
+  }
+  delete (firstStep.args as { domain?: string }).domain;
+  return legacy;
 }
 
 beforeEach(() => {
@@ -206,11 +236,127 @@ describe('official QA Wave77: PR099 optional name replacement stays public and b
     expect(current().players.self.scene[0]?.turnEffects.nameOverride).toBeUndefined();
   });
 
-  it('PR099 canonicalizes a unique abbreviation through the public dispatcher', () => {
-    const row: Row = { cardId: 'PR099' };
-    install(declaredState(row, 'self'), 'PR099:wave77-abbreviation', 'self');
+  // Card-bound Wave103 rows: PR099 and PR105.
+  it.each(ROWS)('$cardId canonicalizes a unique abbreviation through the public dispatcher', row => {
+    install(declaredState(row, 'self'), `${row.cardId}:wave103-abbreviation`, 'self');
     expect(declareName(row, 'self', '  小五郎  ')).toEqual({ ok: true });
     expect(readChar.names(current(), 'self-source')).toEqual([ALLOWED_NAME]);
+  });
+
+  // Card-bound Wave103 physical rows: B04048 and B04048P.
+  it.each(ALL_CARD_ROWS)(
+    '$cardId owner $owner canonicalizes an identifiable all-card name before its public deck match',
+    ({ cardId, owner, declaredName }) => {
+      const state = createEmptyGameState();
+      state.turn = { number: 13, player: owner, phase: 'main', isFirstPlayerFirstTurn: false };
+      state.players[owner].scene = [sceneChar(cardId, `${owner}-source`)];
+      state.players[owner].deck = [UNIQUE_ALL_CARD_ID, TAIL];
+      state.players[other(owner)].deck = [TAIL, TAIL];
+      install(state, `${cardId}:wave103-identifiable-${owner}`, owner);
+
+      // Card-bound all-name proof: B04048 and B04048P.
+      expect(dispatchEngineAction({
+        type: 'declaredAbility', uid: `${owner}-source`, abilId: 'a2',
+        abilityOrigin: 'printed', abilityIndex: 1,
+        costParams: { declaredName },
+      })).toEqual({ ok: true });
+      expect(useGameStateStore.getState().pendingEffectPick?.atomVerb).toBe('deckRevealUntil');
+      expect(useGameStateStore.getState().pendingEffectPick?.candidates.map(candidate => candidate.cardId))
+        .toEqual([UNIQUE_ALL_CARD_ID]);
+      expect(JSON.stringify(current().pendingRuntimeState)).toContain('"registered-card-name"');
+    },
+  );
+
+  it.each(['B04048', 'B04048P'] as const)(
+    '%s rejects a cross-kind ambiguous abbreviation atomically',
+    cardId => {
+      const state = createEmptyGameState();
+      state.turn = { number: 13, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+      state.players.self.scene = [sceneChar(cardId, 'self-source')];
+      state.players.self.deck = [UNIQUE_ALL_CARD_ID, TAIL];
+      state.players.opp.deck = [TAIL, TAIL];
+      install(state, `${cardId}:wave103-ambiguous`, 'self');
+      const before = current();
+      const beforeJson = JSON.stringify(before);
+
+      expect(dispatchEngineAction({
+        type: 'declaredAbility', uid: 'self-source', abilId: 'a2',
+        abilityOrigin: 'printed', abilityIndex: 1,
+        costParams: { declaredName: '毛利' },
+      })).toEqual({ ok: false, reason: 'not-allowed' });
+      expect(current()).toBe(before);
+      expect(JSON.stringify(current())).toBe(beforeJson);
+      expect(readChar.declaredUseCount(current(), 'self-source', 'a2', {
+        abilityOrigin: 'printed', abilityIndex: 1,
+      })).toBe(0);
+      expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
+      expect(current().pendingRuntimeState).toBeUndefined();
+    },
+  );
+
+  it.each([B04048, B04048P])(
+    '$id hydrates and resumes a real pre-domain deck-reveal pause',
+    card => {
+      register(legacyAllCardNameDefinition(card));
+      const state = createEmptyGameState();
+      state.turn = { number: 13, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+      state.players.self.scene = [sceneChar(card.id, 'self-source')];
+      state.players.self.deck = [UNIQUE_ALL_CARD_ID, TAIL];
+      state.players.opp.deck = [TAIL, TAIL];
+      install(state, `${card.id}:wave103-legacy-save`, 'self');
+
+      expect(dispatchEngineAction({
+        type: 'declaredAbility', uid: 'self-source', abilId: 'a2',
+        abilityOrigin: 'printed', abilityIndex: 1,
+        costParams: { declaredName: UNIQUE_ALL_CARD_NAME },
+      })).toEqual({ ok: true });
+      expect(useGameStateStore.getState().pendingEffectPick?.atomVerb).toBe('deckRevealUntil');
+      const saved = JSON.parse(JSON.stringify(current())) as GameState;
+      expect(JSON.stringify(saved.pendingRuntimeState)).toContain('"unrestricted"');
+
+      resetPendingRuntimeState();
+      _resetRegistry();
+      registerAll();
+      FIXTURES.forEach(register);
+      expect(useGameStateStore.getState().setGameState(saved)).toBe(true);
+      const pending = useGameStateStore.getState().pendingEffectPick;
+      const selected = pending?.candidates.find(candidate => candidate.cardId === UNIQUE_ALL_CARD_ID);
+      expect(selected).toBeDefined();
+      expect(dispatchEngineAction(bindPendingDecision(pending!, {
+        type: 'effectPickResolve', pickedUid: selected!.uid,
+      }))).toEqual({ ok: true });
+      expect(current().players.self.hand).toContain(UNIQUE_ALL_CARD_ID);
+    },
+  );
+
+  it('B04048 CPU declaration is independent of hidden deck order and resolves legally', () => {
+    const stateFor = (deck: string[]) => {
+      const state = createEmptyGameState();
+      state.turn = { number: 13, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+      state.players.self.scene = [sceneChar(B04048.id, 'self-source')];
+      state.players.self.deck = deck;
+      state.players.opp.deck = [TAIL, TAIL];
+      return state;
+    };
+    const forward = stateFor([UNIQUE_ALL_CARD_ID, TAIL]);
+    const reverse = stateFor([TAIL, UNIQUE_ALL_CARD_ID]);
+    const moveFor = (state: GameState) => enumerateMoves(state, 'self').find(candidate => (
+      candidate.kind === 'declaredAbility' && candidate.uid === 'self-source' && candidate.abilityId === 'a2'
+    ));
+    const move = moveFor(forward);
+    const reversedMove = moveFor(reverse);
+    expect(move?.kind === 'declaredAbility' ? move.declaredName : undefined).toBeTruthy();
+    expect(move?.kind === 'declaredAbility' ? move.declaredName : undefined)
+      .toBe(reversedMove?.kind === 'declaredAbility' ? reversedMove.declaredName : undefined);
+
+    const after = produce(forward, draft => {
+      applyMove(draft, move!, 'self');
+      runAllUntilEmpty(draft);
+    });
+    expect(after.pendingEffects.every(entry => entry.state === 'resolved')).toBe(true);
+    expect(readChar.declaredUseCount(after, 'self-source', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    })).toBe(1);
   });
 
   it.each([

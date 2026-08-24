@@ -26,6 +26,7 @@ import { isDeclaredNameValidForEffect } from '../effect/declared-name-domain.js'
 import { evalCond } from '../cond/eval.js';
 import { _getResolutionLock, _setResolutionLock, event } from '../event/registry.js';
 import { _resolveReasoningContinuation } from '../flow/main/reasoning.js';
+import { isLegacyReplayB04048DeclaredNameSource } from '../flow/action/legacy-replay-compat.js';
 import { _continueTurnTransition } from '../flow/turn.js';
 import {
   clearPersistedPendingRuntimeState,
@@ -299,7 +300,10 @@ export function runOne(state: GameState, entry: EffectStackEntry): void {
     });
     return;
   }
-  if (!isDeclaredNameValidForEffect(entry.effect, entry.dyn?.declaredName)) {
+  const legacyReplayMissingName = entry.dyn?.declaredName === undefined
+    && isLegacyReplayB04048DeclaredNameSource(entry.source);
+  if (!legacyReplayMissingName
+    && !isDeclaredNameValidForEffect(entry.effect, entry.dyn?.declaredName)) {
     entry.state = 'cancelled';
     return;
   }

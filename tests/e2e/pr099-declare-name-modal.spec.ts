@@ -39,6 +39,22 @@ async function setupPr099(page: Page): Promise<void> {
   });
 }
 
+async function setupB04048(page: Page): Promise<void> {
+  await primeHuman(page);
+  await buildGameState(page, (state) => {
+    const base = state.players.self.scene[0]!;
+    state.players.self.scene = [{
+      ...base,
+      uid: 'pr099-host',
+      cardId: 'B04048',
+      state: 'active',
+      declaredUseCount: {},
+    }];
+    state.players.self.deck = ['B10065', 'B01001'];
+    state.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as never;
+  });
+}
+
 async function openDeclaration(page: Page): Promise<void> {
   await page.locator('[data-action-id="declared-ability"]').click();
   await page.locator(`[data-uid="${SOURCE_UID}"]`).click();
@@ -239,5 +255,58 @@ test('PR099 keeps cancel non-mutating and optional skip reachable without a name
     useCount: 1,
   });
   await expect(page.locator(`[data-uid="${SOURCE_UID}"] .ap`)).toHaveText('6000');
+  expectNoConsoleErrors(errors);
+});
+
+test('B04048 resolves an identifiable all-card name through the visible declaration and deck pick', async ({ page }) => {
+  const { errors } = await setupGamePage(page);
+  await setupB04048(page);
+  await openDeclaration(page);
+
+  const modal = page.getByTestId('declare-card-name-modal');
+  const input = page.getByTestId('declare-card-name-input');
+  const confirm = page.getByTestId('declare-card-name-confirm');
+  const guidance = page.getByTestId('declare-card-name-domain-guidance');
+  await expect(guidance).toContainText('登録済みのカード名');
+  await expect(guidance).not.toContainText('キャラクターカード名');
+
+  await input.fill(AMBIGUOUS_NAME);
+  await expect(modal.getByRole('alert')).toContainText('登録済みのカード名');
+  await expect(confirm).toBeDisabled();
+
+  await input.fill(TYPO_REGISTERED_NAME);
+  await expect(page.getByTestId('declare-card-name-resolution')).toContainText(EXACT_REGISTERED_NAME);
+  await expect(confirm).toBeEnabled();
+  await confirm.click();
+  await expect(modal).toBeHidden();
+
+  const picker = page.getByRole('dialog', { name: /自分の公開されたカード/ });
+  await expect(picker).toBeVisible();
+  await expect.poll(() => page.evaluate(() => {
+    const store = (window as unknown as {
+      __game: { getState: () => { pendingEffectPick: { candidates: Array<{ cardId: string }> } | null } };
+    }).__game.getState();
+    return store.pendingEffectPick?.candidates.map(candidate => candidate.cardId) ?? [];
+  })).toEqual(['B10065']);
+  await picker.getByRole('button', { name: `${EXACT_REGISTERED_NAME} を選択` }).click();
+  await expect(picker).toBeHidden();
+
+  await expect.poll(() => page.evaluate(({ uid }) => {
+    const game = (window as unknown as {
+      __game: {
+        getState: () => {
+          gameState: { players: { self: { hand: string[] } } };
+          pendingEffectPick: unknown;
+        };
+        read: { char: { declaredUseCount: (state: unknown, uid: string, abilityId: string) => number } };
+      };
+    }).__game;
+    const store = game.getState();
+    return {
+      handHasMatch: store.gameState.players.self.hand.includes('B10065'),
+      pending: store.pendingEffectPick,
+      useCount: game.read.char.declaredUseCount(store.gameState, uid, 'a2'),
+    };
+  }, { uid: SOURCE_UID })).toEqual({ handHasMatch: true, pending: null, useCount: 1 });
   expectNoConsoleErrors(errors);
 });

@@ -261,7 +261,7 @@
       "evidence": [
         "rules:.claude/rules/25-qa-effects-resolution.md:79",
         "src:src/cards/ct-p03/B03002.ts:13",
-        "src:src/engine/resolve/stack.ts:143",
+        "src:src/engine/resolve/stack.ts:144",
         "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:199",
         "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:201",
         "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:202"
@@ -2188,11 +2188,12 @@
     {
       "qaId": "card:PR105:304cc643ca8775f8fbf3c678a224ca863ff0850c8c8b3f99cc423f146d5dedbd",
       "answerHash": "cf9e029f63dc02ea9b94a8e39361c805a3c0332630c8b9f13aed6e80abe4514c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR105.ts:1"
+        "src:src/cards/pr-01/PR105.ts:1",
+        "tests:tests/cards/official-qa/pr099-public-wave77.test.ts:243"
       ]
     },
     {

@@ -363,7 +363,7 @@ function effectCtx(value: unknown, path: string, mode: ValidationMode, depth = 0
         rawDomain,
         new Set(DECLARED_NAME_DOMAINS),
         `${path}.declaredNameDomains.${key}`,
-      ) as 'unrestricted' | 'registered-character-card-name';
+      ) as DeclareNameSpec['domain'];
       const declaredName = names[key];
       if (typeof declaredName === 'string'
         && declaredName !== ''
@@ -424,6 +424,86 @@ function sameDeclareNameSpec(left: DeclareNameSpec, right: DeclareNameSpec): boo
     && left.optional === right.optional;
 }
 
+const LEGACY_REGISTERED_CARD_NAME_MIGRATIONS = new Set([
+  'B04048:a2',
+  'B04048P:a2',
+]);
+
+function stripRegisteredCardNameDomain(value: unknown): { value: unknown; removed: number } {
+  if (Array.isArray(value)) {
+    const entries = value.map(stripRegisteredCardNameDomain);
+    return {
+      value: entries.map(entry => entry.value),
+      removed: entries.reduce((total, entry) => total + entry.removed, 0),
+    };
+  }
+  if (value === null || typeof value !== 'object') return { value, removed: 0 };
+  const source = value as Record<string, unknown>;
+  const output: Record<string, unknown> = {};
+  let removed = 0;
+  for (const [key, child] of Object.entries(source)) {
+    if (source.kind === 'atom' && source.verb === 'declareName' && key === 'args'
+      && child !== null && typeof child === 'object' && !Array.isArray(child)) {
+      const args: Record<string, unknown> = {};
+      for (const [argKey, argValue] of Object.entries(child as Record<string, unknown>)) {
+        if (argKey === 'domain' && argValue === 'registered-card-name') {
+          removed += 1;
+          continue;
+        }
+        const nested = stripRegisteredCardNameDomain(argValue);
+        args[argKey] = nested.value;
+        removed += nested.removed;
+      }
+      output[key] = args;
+      continue;
+    }
+    const nested = stripRegisteredCardNameDomain(child);
+    output[key] = nested.value;
+    removed += nested.removed;
+  }
+  return { value: output, removed };
+}
+
+function structurallyEqual(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return Array.isArray(left) && Array.isArray(right)
+      && left.length === right.length
+      && left.every((entry, index) => structurallyEqual(entry, right[index]));
+  }
+  if (left === null || right === null || typeof left !== 'object' || typeof right !== 'object') return false;
+  const leftObject = left as Record<string, unknown>;
+  const rightObject = right as Record<string, unknown>;
+  const leftKeys = Object.keys(leftObject).sort();
+  const rightKeys = Object.keys(rightObject).sort();
+  return leftKeys.length === rightKeys.length
+    && leftKeys.every((key, index) => key === rightKeys[index]
+      && structurallyEqual(leftObject[key], rightObject[key]));
+}
+
+function isLegacyRegisteredCardNameMigration(
+  queued: DeclareNameSpec,
+  printed: DeclareNameSpec,
+  cardId: string,
+  abilityId: string,
+  queuedEffect: Effect,
+  printedEffect: Effect,
+): boolean {
+  const legacyPrinted = stripRegisteredCardNameDomain(printedEffect);
+  return LEGACY_REGISTERED_CARD_NAME_MIGRATIONS.has(`${cardId}:${abilityId}`)
+    && queued.bind === printed.bind
+    && queued.optional === printed.optional
+    && queued.domain === 'unrestricted'
+    && printed.domain === 'registered-card-name'
+    && legacyPrinted.removed === 1
+    && structurallyEqual(queuedEffect, legacyPrinted.value);
+}
+
+type ExpectedDeclareNameAuthority = {
+  spec: DeclareNameSpec;
+  legacyMigration: boolean;
+};
+
 function matchingDeclaredNameLineage(
   state: GameState,
   source: Record<string, unknown>,
@@ -456,18 +536,20 @@ function expectedDeclaredNameSpec(
   state: GameState,
   source: Record<string, unknown>,
   path: string,
-): DeclareNameSpec | null {
+): ExpectedDeclareNameAuthority | null {
   const cardId = string(source.cardId, `${path}.source.cardId`);
   const abilityId = string(source.abilityId, `${path}.source.abilityId`);
   let printedSpec: DeclareNameSpec | null = null;
+  let printedEffect: Effect | undefined;
   try {
     const printed = def.card(cardId)?.abilities.find((ability) => ability.id === abilityId);
+    printedEffect = printed?.effect;
     printedSpec = findDeclareNameSpec(printed?.effect);
   } catch {
     fail(path, 'printed ability has an invalid declared-name descriptor');
   }
 
-  const queuedSpecs: DeclareNameSpec[] = [];
+  const queuedSpecs: ExpectedDeclareNameAuthority[] = [];
   for (const queued of matchingDeclaredNameLineage(state, source)) {
     let queuedSpec: DeclareNameSpec | null;
     try {
@@ -476,13 +558,28 @@ function expectedDeclaredNameSpec(
       fail(path, 'queued declaration lineage has an invalid declared-name descriptor');
     }
     if (!queuedSpec) continue;
-    if (printedSpec && !sameDeclareNameSpec(queuedSpec, printedSpec)) {
+    const legacyMigration = printedSpec !== null
+      && printedEffect !== undefined
+      && isLegacyRegisteredCardNameMigration(
+        queuedSpec,
+        printedSpec,
+        cardId,
+        abilityId,
+        queued.effect,
+        printedEffect,
+      );
+    if (printedSpec
+      && !sameDeclareNameSpec(queuedSpec, printedSpec)
+      && !legacyMigration) {
       fail(path, 'queued declaration lineage does not match the printed ability');
     }
-    if (queuedSpecs.some((candidate) => !sameDeclareNameSpec(candidate, queuedSpec))) {
+    if (queuedSpecs.some((candidate) => (
+      !sameDeclareNameSpec(candidate.spec, queuedSpec)
+      || candidate.legacyMigration !== legacyMigration
+    ))) {
       fail(path, 'queued declaration lineage is ambiguous');
     }
-    queuedSpecs.push(queuedSpec);
+    queuedSpecs.push({ spec: queuedSpec, legacyMigration });
   }
   return queuedSpecs[0] ?? null;
 }
@@ -510,9 +607,43 @@ function assertEffectCtxDeclaredNameAuthority(
   if (!hasDynName && !hasNames && !hasDomains) return;
 
   const source = record(item.source, `${path}.source`);
-  const expected = expectedDeclaredNameSpec(state, source, path);
-  if (!expected) {
+  const expectedAuthority = expectedDeclaredNameSpec(state, source, path);
+  if (!expectedAuthority) {
     fail(path, 'declared-name state has no matching queued declaration lineage');
+  }
+  const expected = expectedAuthority.spec;
+  if (expectedAuthority.legacyMigration) {
+    if (!hasNames) {
+      fail(`${path}.declaredNames`, 'is required by migrated legacy declaration lineage');
+    }
+    const legacyNames = record(item.declaredNames, `${path}.declaredNames`);
+    assertExactDeclaredNameKeys(legacyNames, expected.bind, `${path}.declaredNames`);
+    const legacyName = legacyNames[expected.bind];
+    if (typeof legacyName !== 'string') {
+      fail(`${path}.declaredNames.${expected.bind}`, 'expected a string');
+    }
+    if (!hasDynName || typeof dyn?.declaredName !== 'string') {
+      fail(`${path}.dyn.declaredName`, 'expected a string');
+    }
+    const dynKeys = Object.keys(dyn ?? {}).sort();
+    const plainLegacyDyn = dynKeys.length === 1 && dynKeys[0] === 'declaredName';
+    const runtimeLegacyDyn = dynKeys.length === 3
+      && dynKeys[0] === 'declaredName'
+      && dynKeys[1] === 'runtimeHumanPlayer'
+      && dynKeys[2] === 'runtimePickOwnerKnown'
+      && dyn?.runtimeHumanPlayer === source.player
+      && dyn?.runtimePickOwnerKnown === true;
+    if ((!plainLegacyDyn && !runtimeLegacyDyn) || dyn?.declaredName !== legacyName) {
+      fail(`${path}.dyn`, 'must contain only the matching legacy declared name');
+    }
+    if (hasDomains) {
+      const legacyDomains = record(item.declaredNameDomains, `${path}.declaredNameDomains`);
+      assertExactDeclaredNameKeys(legacyDomains, expected.bind, `${path}.declaredNameDomains`);
+      if (legacyDomains[expected.bind] !== 'unrestricted') {
+        fail(`${path}.declaredNameDomains.${expected.bind}`, 'expected unrestricted legacy domain');
+      }
+    }
+    return;
   }
 
   if (!hasNames || !hasDomains) {
