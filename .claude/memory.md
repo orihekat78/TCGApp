@@ -11,6 +11,7 @@
 - QA Waves86-87: .claude/sessions/2026-08-24-qa-waves86-87.md.
 - QA Waves88-89: .claude/sessions/2026-08-24-qa-waves88-89.md.
 - QA Waves90-91: .claude/sessions/2026-08-24-qa-waves90-91.md.
+- QA Waves92-93: .claude/sessions/2026-08-25-qa-waves92-93.md.
 
 ## 2026-08-24: QA runtime Waves82-83
 
@@ -42,16 +43,16 @@
 
 ## Next
 
-- Waves90-91 move eight Q&A items to matched. Coverage is 1618 matched / 1346
-  test-missing / 2964 total; 1127 exact groups remain, including 949 singletons.
-- BUG-355 restores exact `婚活パーティー` case-feature identity and rejects
-  the old alias. BUG-356 moves D11005/D11006 to serializable effective-AP picks.
-- Wave92 seed: Q `d16e0622...`, A `45979cb6...` across
-  B04019/B07025/B07079/B07080.
-- Wave93 seed: Q `b1e45192...`, A `9c0db2a3...` across
-  B04030/B06077/PR289/PR295. Ground before expansion.
+- Waves92-93 move eight Q&A items to matched. Coverage is 1626 matched / 1338
+  test-missing / 2964 total; 1125 exact groups remain, including 949 singletons.
+- Wave92 proves scene costs are owner-only. Wave93 proves action-end abilities
+  require their acting source to remain on scene.
+- Wave94 seed: Q `b79714d3...`, A `72f763ac...` across
+  B08038/D11007/D11008/PR304.
+- Wave95 seed: Q `790579b0...`, A `188711a1...` across
+  B07060/PR195/PR196/PR297. Ground before expansion.
 - Official sync drift is separate: new PR322 and changed Q&A for
-  B04018/B04018P/B06103P. Do not mix it into Waves90-91 without re-queueing.
-- Revised remaining estimate: 81-154 working hours, center about 117 hours.
+  B04018/B04018P/B06103P. Do not mix it into Waves94-95 without re-queueing.
+- Revised remaining estimate: 80-153 working hours, center about 116 hours.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

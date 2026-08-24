@@ -554,16 +554,17 @@
     {
       "qaId": "card:B04019:a1ea0a1b03ae906d9062ba5906497c7178e10970f12b5935b23937f559152d86",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/21-declared-ability-cost.md:15",
-        "src:src/cards/ct-p04/B04019.ts:28"
+        "rules:.claude/rules/21-declared-ability-cost.md:37",
+        "rules:.claude/rules/21-declared-ability-cost.md:39",
+        "src:src/cards/ct-p04/B04019.ts:28",
+        "tests:tests/cards/official-qa/declared-cost-scene-owner-public-wave92.test.ts:134",
+        "tests:tests/cards/official-qa/declared-cost-scene-owner-public-wave92.test.ts:146"
       ],
-      "noteCodes": [
-        "B04019-OPPONENT-COST-TARGET-TEST-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B04022:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa",
@@ -1219,22 +1220,34 @@
     {
       "qaId": "card:B07079:a1ea0a1b03ae906d9062ba5906497c7178e10970f12b5935b23937f559152d86",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07079.ts:47"
-      ]
+        "rules:.claude/rules/21-declared-ability-cost.md:37",
+        "rules:.claude/rules/21-declared-ability-cost.md:39",
+        "src:src/cards/ct-p07/B07079.ts:47",
+        "src:src/cards/ct-p07/B07079P.ts:27",
+        "tests:tests/cards/official-qa/declared-cost-scene-owner-public-wave92.test.ts:134",
+        "tests:tests/cards/official-qa/declared-cost-scene-owner-public-wave92.test.ts:146"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B07080:a1ea0a1b03ae906d9062ba5906497c7178e10970f12b5935b23937f559152d86",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07080.ts:46"
-      ]
+        "rules:.claude/rules/21-declared-ability-cost.md:37",
+        "rules:.claude/rules/21-declared-ability-cost.md:39",
+        "src:src/cards/ct-p07/B07080.ts:46",
+        "src:src/cards/ct-p07/B07080P.ts:44",
+        "tests:tests/cards/official-qa/declared-cost-scene-owner-public-wave92.test.ts:134",
+        "tests:tests/cards/official-qa/declared-cost-scene-owner-public-wave92.test.ts:146"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B07085:3ebc71d3fe967142af371f16682581bf9d44ac0db1c409f0d2a20d11ffeeae41",

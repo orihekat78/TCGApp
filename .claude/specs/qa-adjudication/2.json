@@ -2394,12 +2394,17 @@
     {
       "qaId": "card:PR289:76f3670ceb57dfb996531dae5f61c2fefd2e21bed4287242a3866a4218a951c3",
       "answerHash": "9c0db2a38965deffd47636c93cae43b0d982f74ebba0f3cfb2444876c95e59f4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR289.ts:111"
-      ]
+        "rules:.claude/rules/22-qa-action-contact.md:64",
+        "rules:.claude/rules/22-qa-action-contact.md:65",
+        "src:src/cards/pr-01/PR289.ts:13",
+        "tests:tests/cards/official-qa/action-end-source-present-public-wave93.test.ts:149",
+        "tests:tests/cards/official-qa/action-end-source-present-public-wave93.test.ts:151"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:PR297:a97d46d3ab0116f37821991f7d72e241ecfa6e2ff8a5930e1ce47aea3939bad7",

@@ -1,22 +1,19 @@
-# Next Task: batched QA adjudication Waves92-93
+# Next Task: batched QA adjudication Waves94-95
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves90-91 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves92-93 commit.
 
 ## Completed
 
-- Wave90 certifies D11003-D11006 exact case-condition rows.
-- BUG-355 uses exact `婚活パーティー` identity across CardDefs, public catalog,
-  tests, and specs; shortened `婚活` no longer satisfies the icon.
-- BUG-356 replaces D11005/D11006 fixed AP/custom closure with serializable
-  `apMaxSource:true`, honoring effective AP at resolution.
-- Wave91 certifies the optional mill-three short-deck group through public
-  dispatch, including PR207/PR285/B10096P physical paths.
-- Coverage is 1618 matched / 1346 test-missing / 2964 total.
+- Wave92 certifies owner-only scene costs for B04019/B07025/B07079/B07080,
+  including B07079P/B07080P and owner-opp public paths.
+- Wave93 certifies action-end source presence for B04030/B06077/PR289/PR295,
+  including B04030P/B06077P public action paths.
+- Coverage is 1626 matched / 1338 test-missing / 2964 total.
 - Fresh isolated authority remains 2964 Q&A / zero conflicts.
 - Read-only official sync now reports new PR322 plus Q&A drift for
-  B04018/B04018P/B06103P. Keep this separate from Waves92-93 unless re-queued.
+  B04018/B04018P/B06103P. Keep this separate from Waves94-95 unless re-queued.
 - Protected `pnpm-lock.yaml`, `pnpm-workspace.yaml`, and live cards-data remain
-  untouched. Gate evidence is in the Waves90-91 session record.
+  untouched. Gate evidence is in the Waves92-93 session record.
 
 ## Throughput contract
 
@@ -35,28 +32,28 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves90-91 commit.
 
 1. Read root/nested AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read `.claude/sessions/2026-08-24-qa-waves90-91.md`, this prompt, and the
+3. Read `.claude/sessions/2026-08-25-qa-waves92-93.md`, this prompt, and the
    current QA trace/workflow.
 4. Re-run the hash-only queue. Fetch required packages into an isolated temp
    root; never modify live `.claude/specs/cards-data`.
 
-## Wave92 seed
+## Wave94 seed
 
-- Exact tuple: Q `d16e06226253b0266071bb23fb2610107c080feaaa0d9391dff8daf51b523f94`,
-  A `45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80`,
-  section `1d1a726d51f8e15c5aad00c2f0ef4af5d5cbf3883a1c4ee178f7838c2035550a`.
-- Missing members: B04019, B07025, B07079, B07080.
+- Exact tuple: Q `b79714d353b8489064452c19390fab29106faecf289d66c7f7d6b70cceeaa92d`,
+  A `72f763acbcebae843d584269562044d5aacaf6534790c089bfa9df0b90cb10fb`,
+  section `93b4b1d410b3d03e079cbf9f9e8000765e121a2b773e6d0ad785e8f2c240729c`.
+- Missing members: B08038, D11007, D11008, PR304.
 - Ground first, then expand only adjacent rows sharing the exact primitive.
 
-## Wave93 seed
+## Wave95 seed
 
-- Exact tuple: Q `b1e45192009f9f339e509f63e204115cc64e64fd441418793bc87ca1bb9dd543`,
-  A `9c0db2a38965deffd47636c93cae43b0d982f74ebba0f3cfb2444876c95e59f4`,
-  section `7893e9f384661c3bff3048afff9f7cbba0aa413bdab0cef2616fa40ffe763936`.
-- Missing members: B04030, B06077, PR289, PR295.
-- Keep separate from Wave92 until fresh grounding proves reuse.
+- Exact tuple: Q `790579b0273f2928145c049c606342b0f0bc9b16d3cea3e3f1c654e6cae6b9d8`,
+  A `188711a1925166b73d3fc85103fbe567257d32c6135ffc69f33c6cba408a46b3`,
+  section `ae447b04b2937795dd9e80cb022a1c40238ce754e790755a5bfbd2e1ae6e9f30`.
+- Missing members: B07060, PR195, PR196, PR297.
+- Keep separate from Wave94 until fresh grounding proves reuse.
 
 ## Estimate
 
-- Snapshot: 1346 remaining items / 1127 exact groups; 949 groups are singleton.
-- Remaining QA work: 81-154 working hours; center estimate about 117 hours.
+- Snapshot: 1338 remaining items / 1125 exact groups; 949 groups are singleton.
+- Remaining QA work: 80-153 working hours; center estimate about 116 hours.

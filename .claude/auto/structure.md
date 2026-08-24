@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6581
+- **ファイル数**: 6584
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1626,6 +1626,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-qa-waves86-87.md` — QA adjudication Waves86-87
     - `2026-08-24-qa-waves88-89.md` — QA adjudication Waves88-89
     - `2026-08-24-qa-waves90-91.md` — QA adjudication Waves90-91
+    - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -5872,6 +5873,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D06003-D06024-public-path.test.ts` — qaId=card:D06003:e918d066190b75a908b8154f185c9c4291e8387cb2fc4797f5744acc49a362d…
       - `D10003-D10010-printing-copy-limit.test.ts` — qaId=card:D10003:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2…
       - `action-declare-before-guard-public-wave48.test.ts` — qa: card:B01085:151b435edeb61c22d4471596da22371c8592c23c410528efb5e78938a1bb3b54
+      - `action-end-source-present-public-wave93.test.ts` — qa: card:B04030:76f3670ceb57dfb996531dae5f61c2fefd2e21bed4287242a3866a4218a951c3
       - `b03050-contact-exit-public-wave83.test.ts` — qa: card:B03050:19fb99eecd85e2306c2887c5c7eb1210d8e663ec05473fb8f45d59e9f1475925
       - `b06067-self-selection-public-wave76.test.ts` — qa: card:B06067:28660457e46b234b8eda0f8ef2c6f3353a37a1739cfebe4112b7bfffed415436
       - `b07093-a1-public-wave44.test.ts` — qa: card:B07093:212da49cce2aca6921fdb352e94b610cbdeeebd02d0ab5c66e8200c0164c3a0e
@@ -5898,6 +5900,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `deck-top-three-insufficient-public-wave73.test.ts` — qa: card:B06020:84ecdea6c10bc908728749deacc797a85529c42aef7daa60ffe67827bc5ce34f
       - `deck-top-three-self-only-public-wave59.test.ts` — qa: card:B04077:1a92dcdf67120f7d76c881aa12661add73fc79ad2cefe30d1e4fbda6978a4758
       - `declared-cost-one-self-only-public-wave71.test.ts` — qa: card:B07061:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6
+      - `declared-cost-scene-owner-public-wave92.test.ts` — qa: card:B04019:a1ea0a1b03ae906d9062ba5906497c7178e10970f12b5935b23937f559152d86
       - `declared-sleep-cost-public-wave24.test.ts` — qa: card:B01063:f97b21e9e16f570fd0da6acab0a9cb6e819a6e4a010e86dddb5ff82c6d33902e
       - `disguise-case-inheritance-public-waves82-83.test.ts` — qa: card:B02038:9a7ccef11a5002bcfc03a28064e814701347f8287061fa3575d710a68d789a48
       - `disguise-definition-public-wave56.test.ts` — qa: card:B02041:bde0a3a5b0127797c2caad230a469d5a24f2a164829581273d0d8e77589383d6

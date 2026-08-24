@@ -983,12 +983,17 @@
     {
       "qaId": "card:B07025:a1ea0a1b03ae906d9062ba5906497c7178e10970f12b5935b23937f559152d86",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07025.ts:1"
-      ]
+        "rules:.claude/rules/21-declared-ability-cost.md:37",
+        "rules:.claude/rules/21-declared-ability-cost.md:39",
+        "src:src/cards/ct-p07/B07025.ts:47",
+        "tests:tests/cards/official-qa/declared-cost-scene-owner-public-wave92.test.ts:134",
+        "tests:tests/cards/official-qa/declared-cost-scene-owner-public-wave92.test.ts:146"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B07041:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333",
