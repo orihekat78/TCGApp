@@ -1,13 +1,14 @@
-# Next Task: batched QA adjudication Waves100-101
+# Next Task: batched QA adjudication Waves102-103
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves98-99 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves100-101 commit.
 
 ## Completed
 
-- Wave98 certifies assisted-partner FILE7 counting for B04023/D09014/D09015.
-- Wave99 certifies static unlimited-copy rules and the fixed 40-card total for
-  B09100/PR158/PR164.
-- Coverage is 1655 matched / 1309 test-missing / 2964 total.
+- Waves100-101 certify six must-guard rows across B09040/PR290/PR296 and the
+  physical B09040P spread.
+- Public proof covers both owners, required/unavailable guards, and choosing
+  exactly one of multiple legal must-guard characters.
+- Coverage is 1661 matched / 1303 test-missing / 2964 total.
 - Fresh isolated authority remains 2964 Q&A / zero conflicts.
 - Protected `pnpm-lock.yaml`, `pnpm-workspace.yaml`, and live cards-data remain
   untouched. Full evidence is in the Waves98-99 session record.
@@ -34,23 +35,23 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves98-99 commit.
 4. Re-run the hash-only queue. Revalidate the isolated authority root and
    never modify live `.claude/specs/cards-data`.
 
-## Wave100 seed
+## Wave102 seed
 
 - Exact tuple: section `577fab5535f861c63a2d6eb2eced5360b66ed584e1772ab5ee52278d1d4b2ba5`,
-  Q `2582052cf20fcce0d5f5f98b296dbb937f96e8597c1f38ae9caacba349d43261`,
-  A `8268b668022a014b601e117aef5157e38707e866bee200e2daddd40cf1e0ea32`.
-- Missing members: B09040, PR290, PR296.
+  Q `3a64dbf55e679dc4033b47b3c97d66026ce7dd1ad9de1baec36d4d8a1582b862`,
+  A `391900cacc11940b4f3cf4cf75016c635360411e2fb2a7efea24ed3cebf7f64a`.
+- Missing members: B05046, B07074, B09062.
 - Ground first and preserve physical-printing equivalence.
 
-## Wave101 seed
+## Wave103 seed
 
 - Exact tuple: same section,
-  Q `2b8a269ce1d86fc646c7cd9379984b53add26c0e8eee7d896c9592e7bbb03ef5`,
-  A `ffe0b792b1620c0d14dd6e2ac0775e67623c57fa1159f9e7ff7978fcb4f8d7d0`.
-- Missing members: B09040, PR290, PR296.
-- Batch with Wave100 only after grounding proves one shared behavior matrix.
+  Q `f02378790d5bd3c975d563a8b544575618156926828fa0e238457462fc194e50`,
+  A `cf9e029f63dc02ea9b94a8e39361c805a3c0332630c8b9f13aed6e80abe4514c`.
+- Missing members: B04048, PR099, PR105.
+- Batch with Wave102 only after grounding proves a compatible public matrix.
 
 ## Estimate
 
-- Snapshot: 1309 remaining items / 1116 exact groups; 949 groups are singleton.
-- Remaining QA work: 77-150 working hours; center estimate about 113 hours.
+- Snapshot: 1303 remaining items / 1114 exact groups; 949 groups are singleton.
+- Remaining QA work: 77-149 working hours; center estimate about 112 hours.

@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6594
+- **ファイル数**: 6596
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1627,6 +1627,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-qa-waves86-87.md` — QA adjudication Waves86-87
     - `2026-08-24-qa-waves88-89.md` — QA adjudication Waves88-89
     - `2026-08-24-qa-waves90-91.md` — QA adjudication Waves90-91
+    - `2026-08-25-qa-waves100-101.md` — QA adjudication Waves100-101
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -5958,6 +5959,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `misread-public-runtime-wave26.test.ts` — qa: card:B04038:6d5a65b9e083c8565478cceec3269781a67a936789441e6c196e107f90e2e8c8
       - `misread-reaction-order-wave26.test.ts` — qa: card:B05015:32589b2605a57e1fe89295b9b2340e6874cd6600ca6756e790b5fbcad58bae18
       - `multihook-timing-public.test.ts` — qa: card:D03007:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3
+      - `must-guard-public-wave100-101.test.ts` — qa: card:B09040:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6
       - `nonpositive-ap-public-wave66.test.ts` — qa: card:B02021:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb
       - `opponent-event-removal-immunity-public-wave97.test.ts` — qa: card:B10010:8acc30fd02aa7a57c56a3a40704c2abd0853dd036d083f11f04b3cf0687a4e11
       - `opponent-evidence-gain-public-wave79.test.ts` — qa: card:B01065:b34f939ceba2f547ad6f01ee968061869d0f8abc4e72fa0d51c20b0c14a53ee1

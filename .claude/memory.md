@@ -15,6 +15,7 @@
 - QA Waves94-95: .claude/sessions/2026-08-25-qa-waves94-95.md.
 - QA Waves96-97: .claude/sessions/2026-08-25-qa-waves96-97.md.
 - QA Waves98-99: .claude/sessions/2026-08-25-qa-waves98-99.md.
+- QA Waves100-101: .claude/sessions/2026-08-25-qa-waves100-101.md.
 
 ## 2026-08-24: QA runtime Waves82-83
 
@@ -46,16 +47,16 @@
 
 ## Next
 
-- Waves98-99 move nine Q&A items to matched. Coverage is 1655 matched / 1309
-  test-missing / 2964 total; 1116 exact groups remain, including 949 singletons.
-- Wave98 certifies assisted-partner FILE7 counting. Wave99 certifies unlimited
-  copy metadata remains static while the 40-card total remains mandatory.
-- Wave100 seed: section `577fab55...`, Q `2582052c...`, A `8268b668...` across
-  B09040/PR290/PR296.
-- Wave101 seed: same section, Q `2b8a269c...`, A `ffe0b792...` across the same
-  B09040/PR290/PR296 family.
+- Waves100-101 move six Q&A items to matched. Coverage is 1661 matched / 1303
+  test-missing / 2964 total; 1114 exact groups remain, including 949 singletons.
+- Both waves certify must-guard choice enforcement through public dispatch for
+  all physical printings and both owner orientations; production was correct.
+- Wave102 seed: section `577fab55...`, Q `3a64dbf5...`, A `391900ca...` across
+  B05046/B07074/B09062.
+- Wave103 seed: same section, Q `f0237879...`, A `cf9e029f...` across
+  B04048/PR099/PR105.
 - Official sync drift is separate: new PR322 and changed Q&A for
   B04018/B04018P/B06103P. Do not mix it into selected waves without re-queueing.
-- Revised remaining estimate: 77-150 working hours, center about 113 hours.
+- Revised remaining estimate: 77-149 working hours, center about 112 hours.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

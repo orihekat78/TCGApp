@@ -37874,12 +37874,19 @@
       "questionHash": "2582052cf20fcce0d5f5f98b296dbb937f96e8597c1f38ae9caacba349d43261",
       "sectionHash": "577fab5535f861c63a2d6eb2eced5360b66ed584e1772ab5ee52278d1d4b2ba5",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-p09/B09040.ts:1"
+        "src/cards/ct-p09/B09040.ts:71",
+        "src/cards/ct-p09/B09040P.ts:6"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:1",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:175",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:179",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:197",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:201"
+      ]
     },
     {
       "answerHash": "0f58c02fd1acbb183910b46d94f13d1ca55ed85cf861ae8ca62b7273443c510a",
@@ -37910,12 +37917,19 @@
       "questionHash": "2b8a269ce1d86fc646c7cd9379984b53add26c0e8eee7d896c9592e7bbb03ef5",
       "sectionHash": "577fab5535f861c63a2d6eb2eced5360b66ed584e1772ab5ee52278d1d4b2ba5",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/ct-p09/B09040.ts:86"
+        "src/cards/ct-p09/B09040.ts:71",
+        "src/cards/ct-p09/B09040P.ts:6"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:211",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:213",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:215",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:216",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:4"
+      ]
     },
     {
       "answerHash": "7b304278b3469aab5f2c97718aa0ac4cc6de645151f0528c11ee516602561882",
@@ -58276,12 +58290,18 @@
       "questionHash": "2582052cf20fcce0d5f5f98b296dbb937f96e8597c1f38ae9caacba349d43261",
       "sectionHash": "577fab5535f861c63a2d6eb2eced5360b66ed584e1772ab5ee52278d1d4b2ba5",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/pr-01/PR290.ts:1"
+        "src/cards/pr-01/PR290.ts:53"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:175",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:179",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:197",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:2",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:201"
+      ]
     },
     {
       "answerHash": "ffe0b792b1620c0d14dd6e2ac0775e67623c57fa1159f9e7ff7978fcb4f8d7d0",
@@ -58293,12 +58313,18 @@
       "questionHash": "2b8a269ce1d86fc646c7cd9379984b53add26c0e8eee7d896c9592e7bbb03ef5",
       "sectionHash": "577fab5535f861c63a2d6eb2eced5360b66ed584e1772ab5ee52278d1d4b2ba5",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/pr-01/PR290.ts:85"
+        "src/cards/pr-01/PR290.ts:53"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:211",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:213",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:215",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:216",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:5"
+      ]
     },
     {
       "answerHash": "269013021012c3bf85ff7a47fadb52ae1b84aeee2fb6621937a7a12763793ab1",
@@ -58643,12 +58669,18 @@
       "questionHash": "2582052cf20fcce0d5f5f98b296dbb937f96e8597c1f38ae9caacba349d43261",
       "sectionHash": "577fab5535f861c63a2d6eb2eced5360b66ed584e1772ab5ee52278d1d4b2ba5",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/pr-01/PR296.ts:1"
+        "src/cards/pr-01/PR296.ts:53"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:175",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:179",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:197",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:201",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:3"
+      ]
     },
     {
       "answerHash": "ffe0b792b1620c0d14dd6e2ac0775e67623c57fa1159f9e7ff7978fcb4f8d7d0",
@@ -58660,12 +58692,18 @@
       "questionHash": "2b8a269ce1d86fc646c7cd9379984b53add26c0e8eee7d896c9592e7bbb03ef5",
       "sectionHash": "577fab5535f861c63a2d6eb2eced5360b66ed584e1772ab5ee52278d1d4b2ba5",
       "classification": "shipped",
-      "coverageStatus": "test-missing",
-      "adjudicationResult": "test-gap",
+      "coverageStatus": "matched",
+      "adjudicationResult": "aligned",
       "sourceRefs": [
-        "src/cards/pr-01/PR296.ts:84"
+        "src/cards/pr-01/PR296.ts:53"
       ],
-      "testRefs": []
+      "testRefs": [
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:211",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:213",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:215",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:216",
+        "tests/cards/official-qa/must-guard-public-wave100-101.test.ts:6"
+      ]
     },
     {
       "answerHash": "269013021012c3bf85ff7a47fadb52ae1b84aeee2fb6621937a7a12763793ab1",
@@ -63459,15 +63497,7 @@
     },
     {
       "kind": "missing-test",
-      "qaId": "card:B09040:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6"
-    },
-    {
-      "kind": "missing-test",
       "qaId": "card:B09040:ccfd4718c55f312b6e3d9e68cd0a79c23b25c6bd34ba3514db3c020bcbe6359d"
-    },
-    {
-      "kind": "missing-test",
-      "qaId": "card:B09040:ebc300cd2852f7cc3e2d52664bcc7405d5e9146ec924a4907a24a2545f389883"
     },
     {
       "kind": "missing-test",
@@ -65335,14 +65365,6 @@
     },
     {
       "kind": "missing-test",
-      "qaId": "card:PR290:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6"
-    },
-    {
-      "kind": "missing-test",
-      "qaId": "card:PR290:ebc300cd2852f7cc3e2d52664bcc7405d5e9146ec924a4907a24a2545f389883"
-    },
-    {
-      "kind": "missing-test",
       "qaId": "card:PR291:61e88f63f25893434026dec6f473208ea19c5d06253006706b27c71989c017a6"
     },
     {
@@ -65356,14 +65378,6 @@
     {
       "kind": "missing-test",
       "qaId": "card:PR296:2df117b4e7028ef4376342cff4bf2e8030099380c27068ff85c417d76460bfc6"
-    },
-    {
-      "kind": "missing-test",
-      "qaId": "card:PR296:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6"
-    },
-    {
-      "kind": "missing-test",
-      "qaId": "card:PR296:ebc300cd2852f7cc3e2d52664bcc7405d5e9146ec924a4907a24a2545f389883"
     },
     {
       "kind": "missing-test",
@@ -65385,8 +65399,8 @@
   "coverage": {
     "total": 2964,
     "statusCounts": {
-      "matched": 1655,
-      "test-missing": 1309,
+      "matched": 1661,
+      "test-missing": 1303,
       "legacy-unreviewed": 0,
       "unmapped": 0,
       "mismatch": 0,
@@ -67251,9 +67265,9 @@
       "card:B09039:a66d7cf78459b9e4d9b564da956b6349d01f5a73a9a2f683a1dd77dca913d152": "matched",
       "card:B09039:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0": "matched",
       "card:B09040:2df117b4e7028ef4376342cff4bf2e8030099380c27068ff85c417d76460bfc6": "matched",
-      "card:B09040:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6": "test-missing",
+      "card:B09040:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6": "matched",
       "card:B09040:ccfd4718c55f312b6e3d9e68cd0a79c23b25c6bd34ba3514db3c020bcbe6359d": "test-missing",
-      "card:B09040:ebc300cd2852f7cc3e2d52664bcc7405d5e9146ec924a4907a24a2545f389883": "test-missing",
+      "card:B09040:ebc300cd2852f7cc3e2d52664bcc7405d5e9146ec924a4907a24a2545f389883": "matched",
       "card:B09041:3200d4ba826a9b033c5ff6ce83ef2a230d2503d7fba3f6f8f88cc4d1cc6a373a": "matched",
       "card:B09041:e4a8be25d1df1ed6eaebc5d52ef4db8ecddf8a180b3691cd421120c85c1d7551": "test-missing",
       "card:B09043:02302fc0994ea1eebd94ba851a2e38a51fa3e6dc54324f9029105bc44473bef0": "matched",
@@ -68275,8 +68289,8 @@
       "card:PR289:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3": "matched",
       "card:PR289:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4": "matched",
       "card:PR290:2df117b4e7028ef4376342cff4bf2e8030099380c27068ff85c417d76460bfc6": "test-missing",
-      "card:PR290:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6": "test-missing",
-      "card:PR290:ebc300cd2852f7cc3e2d52664bcc7405d5e9146ec924a4907a24a2545f389883": "test-missing",
+      "card:PR290:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6": "matched",
+      "card:PR290:ebc300cd2852f7cc3e2d52664bcc7405d5e9146ec924a4907a24a2545f389883": "matched",
       "card:PR291:61e88f63f25893434026dec6f473208ea19c5d06253006706b27c71989c017a6": "test-missing",
       "card:PR291:94d4fbcb6d6b527d8e1d1c0eaa9b309fe2198ea03d499bf7e02c1d5a00121143": "matched",
       "card:PR291:a97d46d3ab0116f37821991f7d72e241ecfa6e2ff8a5930e1ce47aea3939bad7": "matched",
@@ -68293,8 +68307,8 @@
       "card:PR295:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3": "matched",
       "card:PR295:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4": "matched",
       "card:PR296:2df117b4e7028ef4376342cff4bf2e8030099380c27068ff85c417d76460bfc6": "test-missing",
-      "card:PR296:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6": "test-missing",
-      "card:PR296:ebc300cd2852f7cc3e2d52664bcc7405d5e9146ec924a4907a24a2545f389883": "test-missing",
+      "card:PR296:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6": "matched",
+      "card:PR296:ebc300cd2852f7cc3e2d52664bcc7405d5e9146ec924a4907a24a2545f389883": "matched",
       "card:PR297:61e88f63f25893434026dec6f473208ea19c5d06253006706b27c71989c017a6": "test-missing",
       "card:PR297:94d4fbcb6d6b527d8e1d1c0eaa9b309fe2198ea03d499bf7e02c1d5a00121143": "matched",
       "card:PR297:a97d46d3ab0116f37821991f7d72e241ecfa6e2ff8a5930e1ce47aea3939bad7": "matched",
@@ -70217,9 +70231,9 @@
       "card:B09039:a66d7cf78459b9e4d9b564da956b6349d01f5a73a9a2f683a1dd77dca913d152": "aligned",
       "card:B09039:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0": "aligned",
       "card:B09040:2df117b4e7028ef4376342cff4bf2e8030099380c27068ff85c417d76460bfc6": "aligned",
-      "card:B09040:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6": "test-gap",
+      "card:B09040:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6": "aligned",
       "card:B09040:ccfd4718c55f312b6e3d9e68cd0a79c23b25c6bd34ba3514db3c020bcbe6359d": "test-gap",
-      "card:B09040:ebc300cd2852f7cc3e2d52664bcc7405d5e9146ec924a4907a24a2545f389883": "test-gap",
+      "card:B09040:ebc300cd2852f7cc3e2d52664bcc7405d5e9146ec924a4907a24a2545f389883": "aligned",
       "card:B09041:3200d4ba826a9b033c5ff6ce83ef2a230d2503d7fba3f6f8f88cc4d1cc6a373a": "aligned",
       "card:B09041:e4a8be25d1df1ed6eaebc5d52ef4db8ecddf8a180b3691cd421120c85c1d7551": "test-gap",
       "card:B09043:02302fc0994ea1eebd94ba851a2e38a51fa3e6dc54324f9029105bc44473bef0": "aligned",
@@ -71241,8 +71255,8 @@
       "card:PR289:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3": "aligned",
       "card:PR289:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4": "aligned",
       "card:PR290:2df117b4e7028ef4376342cff4bf2e8030099380c27068ff85c417d76460bfc6": "test-gap",
-      "card:PR290:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6": "test-gap",
-      "card:PR290:ebc300cd2852f7cc3e2d52664bcc7405d5e9146ec924a4907a24a2545f389883": "test-gap",
+      "card:PR290:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6": "aligned",
+      "card:PR290:ebc300cd2852f7cc3e2d52664bcc7405d5e9146ec924a4907a24a2545f389883": "aligned",
       "card:PR291:61e88f63f25893434026dec6f473208ea19c5d06253006706b27c71989c017a6": "test-gap",
       "card:PR291:94d4fbcb6d6b527d8e1d1c0eaa9b309fe2198ea03d499bf7e02c1d5a00121143": "aligned",
       "card:PR291:a97d46d3ab0116f37821991f7d72e241ecfa6e2ff8a5930e1ce47aea3939bad7": "aligned",
@@ -71259,8 +71273,8 @@
       "card:PR295:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3": "aligned",
       "card:PR295:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4": "aligned",
       "card:PR296:2df117b4e7028ef4376342cff4bf2e8030099380c27068ff85c417d76460bfc6": "test-gap",
-      "card:PR296:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6": "test-gap",
-      "card:PR296:ebc300cd2852f7cc3e2d52664bcc7405d5e9146ec924a4907a24a2545f389883": "test-gap",
+      "card:PR296:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6": "aligned",
+      "card:PR296:ebc300cd2852f7cc3e2d52664bcc7405d5e9146ec924a4907a24a2545f389883": "aligned",
       "card:PR297:61e88f63f25893434026dec6f473208ea19c5d06253006706b27c71989c017a6": "test-gap",
       "card:PR297:94d4fbcb6d6b527d8e1d1c0eaa9b309fe2198ea03d499bf7e02c1d5a00121143": "aligned",
       "card:PR297:a97d46d3ab0116f37821991f7d72e241ecfa6e2ff8a5930e1ce47aea3939bad7": "aligned",

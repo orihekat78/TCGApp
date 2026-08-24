@@ -2164,14 +2164,16 @@
     {
       "qaId": "card:PR290:ebc300cd2852f7cc3e2d52664bcc7405d5e9146ec924a4907a24a2545f389883",
       "answerHash": "ffe0b792b1620c0d14dd6e2ac0775e67623c57fa1159f9e7ff7978fcb4f8d7d0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR290.ts:85"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/07-action-flow.md:22",
+        "src:src/cards/pr-01/PR290.ts:53",
+        "tests:tests/cards/official-qa/must-guard-public-wave100-101.test.ts:211",
+        "tests:tests/cards/official-qa/must-guard-public-wave100-101.test.ts:213",
+        "tests:tests/cards/official-qa/must-guard-public-wave100-101.test.ts:215",
+        "tests:tests/cards/official-qa/must-guard-public-wave100-101.test.ts:216"
       ]
     },
     {
