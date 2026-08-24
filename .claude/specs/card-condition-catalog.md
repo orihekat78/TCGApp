@@ -13,7 +13,7 @@
 | 【自分/相手ターン中】 | `{ kind:'turn', player:'self' }` | D11016 |
 | 【パートナー(色)】 | `{ kind:'partnerColor', color:'青' }` | D08003 |
 | 【事件(色)】 | `{ kind:'caseColor', color:'青', combine?:'and' }` | — |
-| 【事件(特徴)】 | `{ kind:'caseTrait', trait:'婚活' }` | D11003 (factory) |
+| 【事件(特徴)】 | `{ kind:'caseTrait', trait:'婚活パーティー' }` | D11003 (factory) |
 | 【FILE(X)】 | `{ kind:'fileAtLeast', n:7 }` | — |
 | 【事件編/解決編】 | `{ kind:'caseStatus', status:'解決編' }` | D08019 / D08026 ⚠ |
 | 【絆(名)】 | `{ kind:'bond', cardName:'工藤新一' }` | — |

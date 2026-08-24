@@ -10,6 +10,7 @@
 - QA Waves35-67: matching dated files under .claude/sessions/.
 - QA Waves86-87: .claude/sessions/2026-08-24-qa-waves86-87.md.
 - QA Waves88-89: .claude/sessions/2026-08-24-qa-waves88-89.md.
+- QA Waves90-91: .claude/sessions/2026-08-24-qa-waves90-91.md.
 
 ## 2026-08-24: QA runtime Waves82-83
 
@@ -41,17 +42,16 @@
 
 ## Next
 
-- Waves88-89 certify 42 Q&A items. Coverage is 1610 matched / 1354
-  test-missing / 2964 total; 1129 exact groups remain, including 949 singletons.
-- BUG-353 makes modern stacked identities legally inspectable/selectable while
-  rules readers remain informationless and legacy unknowns remain hidden.
-- BUG-354 gates stale stack moves and resumes set-card replacement before the
-  B06008/D10009/D10010 chain tail.
-- Wave90 seed: Q `7ac51d8c...`, A `240d9989...` across D11003-D11006.
-- Wave91 seed: Q `fc92aa0e...`, A `09ac3974...` across
-  B05068/PR132/PR207/PR285. Ground before expansion.
+- Waves90-91 move eight Q&A items to matched. Coverage is 1618 matched / 1346
+  test-missing / 2964 total; 1127 exact groups remain, including 949 singletons.
+- BUG-355 restores exact `婚活パーティー` case-feature identity and rejects
+  the old alias. BUG-356 moves D11005/D11006 to serializable effective-AP picks.
+- Wave92 seed: Q `d16e0622...`, A `45979cb6...` across
+  B04019/B07025/B07079/B07080.
+- Wave93 seed: Q `b1e45192...`, A `9c0db2a3...` across
+  B04030/B06077/PR289/PR295. Ground before expansion.
 - Official sync drift is separate: new PR322 and changed Q&A for
   B04018/B04018P/B06103P. Do not mix it into Waves90-91 without re-queueing.
-- Revised remaining estimate: 82-155 working hours, center about 118 hours.
+- Revised remaining estimate: 81-154 working hours, center about 117 hours.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

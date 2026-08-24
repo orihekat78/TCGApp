@@ -2164,12 +2164,18 @@
     {
       "qaId": "card:D11006:8a2311865e16f466ee83cb439f6283f6196812688ac3da8d1b8d1173290c37dc",
       "answerHash": "240d9989d84b1446fdf8446d85b4f07e316976c39088c96ba345975e0ba2ccaf",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d11/D11006.ts:1"
-      ]
+        "rules:.claude/rules/17-icons.md:27",
+        "rules:.claude/rules/17-icons.md:41",
+        "src:src/cards/ct-d11/D11005.ts:32",
+        "src:src/cards/ct-d11/D11006.ts:8",
+        "tests:tests/cards/official-qa/case-trait-konkatsu-public-wave90.test.ts:140",
+        "tests:tests/cards/official-qa/case-trait-konkatsu-public-wave90.test.ts:153"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:D11008:64b0dfa40059e5ed0dddfd2e25c4185a31f5b45ddba7798437a0e7508255c179",

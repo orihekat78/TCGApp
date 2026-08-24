@@ -1990,9 +1990,11 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/26-qa-deck-refresh.md:65",
-        "src:src/cards/ct-p10/B10096.ts:9",
-        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:377"
+        "rules:.claude/rules/14-refresh.md:39",
+        "rules:.claude/rules/14-refresh.md:42",
+        "src:src/cards/ct-p10/B10096.ts:31",
+        "tests:tests/cards/official-qa/mill-three-short-deck-public-wave91.test.ts:119",
+        "tests:tests/cards/official-qa/mill-three-short-deck-public-wave91.test.ts:143"
       ],
       "noteCodes": []
     },
@@ -2428,15 +2430,18 @@
     {
       "qaId": "card:PR285:22aaf9ba5e384ee444adeadb5ffb7b5c97b7a4e75ccbac8c297b8c86d3e85f3f",
       "answerHash": "09ac3974741d3f1b11af49f9784152184c91bbaa96972834da09effd62d3f59f",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR285.ts:1"
+        "rules:.claude/rules/14-refresh.md:39",
+        "rules:.claude/rules/14-refresh.md:42",
+        "src:src/cards/pr-01/PR132.ts:34",
+        "src:src/cards/pr-01/PR285.ts:5",
+        "tests:tests/cards/official-qa/mill-three-short-deck-public-wave91.test.ts:119",
+        "tests:tests/cards/official-qa/mill-three-short-deck-public-wave91.test.ts:143"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:PR289:0b99c0ba35be9ca093f7dbe4f5f7ab67f47eb3d22a621af04bf3c8fab0199e03",

@@ -146,7 +146,7 @@ function rowToCardDef(row: Row, kind: CardDef['kind']): CardDef {
       // rules/01: 必要証拠数 = 先攻7 / 後攻6。difficultyFirst が先攻側の値。
       // caseLevel は「事件レベル」(rules/06). 先攻基準の数値を保持。
       if (lv !== undefined) base.caseLevel = lv;
-      // TODO Phase 5: caseTraits は title 等から推定 (古城/婚活 等)
+      // TODO Phase 5: caseTraits は title 等から推定 (古城/婚活パーティー 等)
       base.caseTraits = [];
       return base;
     }

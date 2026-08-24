@@ -1,23 +1,22 @@
-# Next Task: batched QA adjudication Waves90-91
+# Next Task: batched QA adjudication Waves92-93
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves88-89 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves90-91 commit.
 
 ## Completed
 
-- Wave88 certifies 22 stacked-card rows across lifecycle, exact choice,
-  thresholds, continuous AP, action timing, cascade, informationlessness, and MR.
-- BUG-353 exposes modern exact stack identities for legal inspection/selection
-  while keeping rules evaluation informationless and legacy unknowns hidden.
-- BUG-354 gates stale stack resolutions and preserves set-card replacement
-  continuations before B06008 draw or D10009/D10010 Assault tails.
-- Wave89 certifies 20 assisted-partner FILE count/top-movement rows through real
-  assist and card dispatch paths, including every physical variant.
-- Coverage is 1610 matched / 1354 test-missing / 2964 total.
+- Wave90 certifies D11003-D11006 exact case-condition rows.
+- BUG-355 uses exact `婚活パーティー` identity across CardDefs, public catalog,
+  tests, and specs; shortened `婚活` no longer satisfies the icon.
+- BUG-356 replaces D11005/D11006 fixed AP/custom closure with serializable
+  `apMaxSource:true`, honoring effective AP at resolution.
+- Wave91 certifies the optional mill-three short-deck group through public
+  dispatch, including PR207/PR285/B10096P physical paths.
+- Coverage is 1618 matched / 1346 test-missing / 2964 total.
 - Fresh isolated authority remains 2964 Q&A / zero conflicts.
 - Read-only official sync now reports new PR322 plus Q&A drift for
-  B04018/B04018P/B06103P. Keep this separate from Waves90-91 unless re-queued.
+  B04018/B04018P/B06103P. Keep this separate from Waves92-93 unless re-queued.
 - Protected `pnpm-lock.yaml`, `pnpm-workspace.yaml`, and live cards-data remain
-  untouched. Gate evidence is in the Waves88-89 session record.
+  untouched. Gate evidence is in the Waves90-91 session record.
 
 ## Throughput contract
 
@@ -36,28 +35,28 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves88-89 commit.
 
 1. Read root/nested AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read `.claude/sessions/2026-08-24-qa-waves88-89.md`, this prompt, and the
+3. Read `.claude/sessions/2026-08-24-qa-waves90-91.md`, this prompt, and the
    current QA trace/workflow.
 4. Re-run the hash-only queue. Fetch required packages into an isolated temp
    root; never modify live `.claude/specs/cards-data`.
 
-## Wave90 seed
+## Wave92 seed
 
-- Exact tuple: Q `7ac51d8c7b926288a8dbbb61cda12a9834f42cdc5f6693733f2f57696c4f6848`,
-  A `240d9989d84b1446fdf8446d85b4f07e316976c39088c96ba345975e0ba2ccaf`,
-  section `0267a4565a1830e9dd372eaa9b4064963293ba9b568ac7a47314f03550f6fab7`.
-- Missing members: D11003, D11004, D11005, D11006.
+- Exact tuple: Q `d16e06226253b0266071bb23fb2610107c080feaaa0d9391dff8daf51b523f94`,
+  A `45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80`,
+  section `1d1a726d51f8e15c5aad00c2f0ef4af5d5cbf3883a1c4ee178f7838c2035550a`.
+- Missing members: B04019, B07025, B07079, B07080.
 - Ground first, then expand only adjacent rows sharing the exact primitive.
 
-## Wave91 seed
+## Wave93 seed
 
-- Exact tuple: Q `fc92aa0e06397d980ce911990fe909721a45b221ca712ff70bbb1bc3d4b81df6`,
-  A `09ac3974741d3f1b11af49f9784152184c91bbaa96972834da09effd62d3f59f`,
-  section `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
-- Missing members: B05068, PR132, PR207, PR285.
-- Keep separate from Wave90 until fresh grounding proves reuse.
+- Exact tuple: Q `b1e45192009f9f339e509f63e204115cc64e64fd441418793bc87ca1bb9dd543`,
+  A `9c0db2a38965deffd47636c93cae43b0d982f74ebba0f3cfb2444876c95e59f4`,
+  section `7893e9f384661c3bff3048afff9f7cbba0aa413bdab0cef2616fa40ffe763936`.
+- Missing members: B04030, B06077, PR289, PR295.
+- Keep separate from Wave92 until fresh grounding proves reuse.
 
 ## Estimate
 
-- Snapshot: 1354 remaining items / 1129 exact groups; 949 groups are singleton.
-- Remaining QA work: 82-155 working hours; center estimate about 118 hours.
+- Snapshot: 1346 remaining items / 1127 exact groups; 949 groups are singleton.
+- Remaining QA work: 81-154 working hours; center estimate about 117 hours.

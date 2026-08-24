@@ -676,7 +676,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
       "宣言",
       "疾風"
     ],
-    "effectShort": "【疾風】自分は証拠を1つ得る。\n【事件婚活】【宣言】【スリープ】AP6000以下のキャラを1枚まで選び、リムーブする。警察2枚以上で宣言可。\n【ヒラメキ】キャラを1枚まで選び、アクティブにする。",
+    "effectShort": "【疾風】自分は証拠を1つ得る。\n【事件婚活パーティー】【宣言】【スリープ】AP6000以下のキャラを1枚まで選び、リムーブする。警察2枚以上で宣言可。\n【ヒラメキ】キャラを1枚まで選び、アクティブにする。",
     "imagePath": "1775608962430700.jpg"
   },
   {
@@ -703,7 +703,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
       "宣言",
       "疾風"
     ],
-    "effectShort": "【疾風】自分は証拠を1つ得る。\n【事件婚活】【宣言】【スリープ】AP6000以下のキャラを1枚まで選び、リムーブする。警察2枚以上で宣言可。\n【ヒラメキ】キャラを1枚まで選び、アクティブにする。",
+    "effectShort": "【疾風】自分は証拠を1つ得る。\n【事件婚活パーティー】【宣言】【スリープ】AP6000以下のキャラを1枚まで選び、リムーブする。警察2枚以上で宣言可。\n【ヒラメキ】キャラを1枚まで選び、アクティブにする。",
     "imagePath": "1775608962438303.jpg"
   },
   {
@@ -728,7 +728,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "keywords": [
       "宣言"
     ],
-    "effectShort": "【事件婚活】【登場時】このキャラのAP以下のAPのキャラを1枚まで選び、リムーブする。\n【宣言】【スリープ】相手ターン終了時まで「アクション対象に必ず指定される」(挑発)。",
+    "effectShort": "【事件婚活パーティー】【登場時】このキャラのAP以下のAPのキャラを1枚まで選び、リムーブする。\n【宣言】【スリープ】相手ターン終了時まで「アクション対象に必ず指定される」(挑発)。",
     "imagePath": "1775608962447530.jpg"
   },
   {
@@ -753,7 +753,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "keywords": [
       "宣言"
     ],
-    "effectShort": "【事件婚活】【登場時】このキャラのAP以下のAPのキャラを1枚まで選び、リムーブする。\n【宣言】【スリープ】相手ターン終了時まで「アクション対象に必ず指定される」(挑発)。",
+    "effectShort": "【事件婚活パーティー】【登場時】このキャラのAP以下のAPのキャラを1枚まで選び、リムーブする。\n【宣言】【スリープ】相手ターン終了時まで「アクション対象に必ず指定される」(挑発)。",
     "imagePath": "1775608962455731.jpg"
   },
   {
@@ -1111,7 +1111,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "difficultySecond": 6,
     "rarity": "D",
     "features": [
-      "婚活"
+      "婚活パーティー"
     ],
     "keywords": [
       "宣言"
@@ -16599,7 +16599,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "keywords": [
       "迅速"
     ],
-    "effectShort": "【手札】手札にあるこのカードはレベル−1する。\n【自分ターン中】このキャラに〚特徴［YAIBA］〛のカードがセットされたとき、カードを1枚引く。",
+    "effectShort": "自分の手札にある【白】の〚特徴［YAIBA］〛のイベントをレベル－1する。\n【自分ターン中】【ターン1】このキャラに〚特徴［YAIBA］〛のカードがセットされたとき、自分のリムーブエリアにあるレベル5以下の〚特徴［YAIBA］〛のキャラを1枚まで選び、スリープ状態で登場させる。",
     "imagePath": "1754285220451879.jpg"
   },
   {
@@ -20042,7 +20042,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
       "寿司職人"
     ],
     "keywords": [],
-    "effectShort": "【相手ターン中】【現場リムーブ時】カードを1枚引く。",
+    "effectShort": "【相手ターン中】【現場リムーブ時】カードを1枚引く。\n【パートナー黒】【解決編】【登場時】このキャラをリムーブしてもよい。そうした場合、手札からレベル8以下の〚カード名［ラム］〛を1枚まで登場させる。",
     "imagePath": "1775608802624184.jpg"
   },
   {
@@ -20064,7 +20064,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
       "寿司職人"
     ],
     "keywords": [],
-    "effectShort": "【相手ターン中】【現場リムーブ時】カードを1枚引く。",
+    "effectShort": "【相手ターン中】【現場リムーブ時】カードを1枚引く。\n【パートナー黒】【解決編】【登場時】このキャラをリムーブしてもよい。そうした場合、手札からレベル8以下の〚カード名［ラム］〛を1枚まで登場させる。",
     "imagePath": "1775608802632581.jpg"
   },
   {
@@ -20261,9 +20261,10 @@ export const CARD_CATALOG: readonly CardDef[] = [
     ],
     "keywords": [
       "カットイン",
+      "突撃",
       "宣言"
     ],
-    "effectShort": "【宣言】【ターン1】相手の現場のキャラを1枚までレベル-1 (ターン終了時まで)。\n【カットイン】AP＋2000",
+    "effectShort": "【宣言】【ターン1】相手の現場のキャラを1枚までレベル-1 (ターン終了時まで)。\n【カットイン】AP＋2000\n【パートナー黒】【FILE7】【宣言】【ターン1】手札からレベル4以下の〚特徴［黒ずくめの組織］〛のキャラを1枚まで登場させるか、自分のリムーブエリアにあるレベル4以下の〚特徴［黒ずくめの組織］〛のキャラを1枚まで選び、登場させる。ターン終了時までそのキャラをAP＋4000し、〚突撃〛と「ターン終了時、このキャラを現場からデッキの下に移す。」を与える。",
     "imagePath": "1758249671523142.jpg"
   },
   {
@@ -20286,9 +20287,10 @@ export const CARD_CATALOG: readonly CardDef[] = [
     ],
     "keywords": [
       "カットイン",
+      "突撃",
       "宣言"
     ],
-    "effectShort": "【宣言】【ターン1】相手の現場のキャラを1枚までレベル-1 (ターン終了時まで)。\n【カットイン】AP＋2000",
+    "effectShort": "【宣言】【ターン1】相手の現場のキャラを1枚までレベル-1 (ターン終了時まで)。\n【カットイン】AP＋2000\n【パートナー黒】【FILE7】【宣言】【ターン1】手札からレベル4以下の〚特徴［黒ずくめの組織］〛のキャラを1枚まで登場させるか、自分のリムーブエリアにあるレベル4以下の〚特徴［黒ずくめの組織］〛のキャラを1枚まで選び、登場させる。ターン終了時までそのキャラをAP＋4000し、〚突撃〛と「ターン終了時、このキャラを現場からデッキの下に移す。」を与える。",
     "imagePath": "1763546840464776.jpg"
   },
   {
@@ -20594,8 +20596,10 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "features": [
       "黒ずくめの組織"
     ],
-    "keywords": [],
-    "effectShort": "【相手ターン中】【現場リムーブ時】カードを1枚引く。",
+    "keywords": [
+      "宣言"
+    ],
+    "effectShort": "【相手ターン中】【現場リムーブ時】カードを1枚引く。\n【事件青＆黒】【宣言】【スリープ】：手札から【現場リムーブ時】を持つレベル5以下のキャラを1枚まで登場させる。",
     "imagePath": "1770731255833292.jpg"
   },
   {
@@ -21459,7 +21463,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "ap": 7000,
     "lp": 2,
     "level": 8,
-    "rarity": "C",
+    "rarity": "R",
     "features": [
       "小説家"
     ],
@@ -21481,7 +21485,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "ap": 7000,
     "lp": 2,
     "level": 8,
-    "rarity": "CP",
+    "rarity": "RP",
     "features": [
       "小説家"
     ],
@@ -22249,7 +22253,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "keywords": [
       "ヒラメキ"
     ],
-    "effectShort": "このキャラはスリープ状態で登場する。\n【ヒラメキ】カードを1枚引く。",
+    "effectShort": "【ヒラメキ】カードを1枚引く。",
     "imagePath": "1714012985492767.jpg"
   },
   {
@@ -22548,7 +22552,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
       "FBI"
     ],
     "keywords": [],
-    "effectShort": "このキャラはスリープ状態で登場する。\n【登場時】デッキ上から3枚見る → 特徴[FBI]キャラを1枚まで手札(取った場合 discard 1) → 残りをデッキ下。",
+    "effectShort": "【登場時】デッキ上から3枚見る → 特徴[FBI]キャラを1枚まで手札(取った場合 discard 1) → 残りをデッキ下。",
     "imagePath": "1759195553234312.jpg"
   },
   {
@@ -22570,7 +22574,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
       "FBI"
     ],
     "keywords": [],
-    "effectShort": "このキャラはスリープ状態で登場する。\n【登場時】デッキ上から3枚見る → 特徴[FBI]キャラを1枚まで手札(取った場合 discard 1) → 残りをデッキ下。",
+    "effectShort": "【登場時】デッキ上から3枚見る → 特徴[FBI]キャラを1枚まで手札(取った場合 discard 1) → 残りをデッキ下。",
     "imagePath": "1759195553269458.jpg"
   },
   {
@@ -22982,7 +22986,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "keywords": [
       "ヒラメキ"
     ],
-    "effectShort": "このキャラはスリープ状態で登場する。\n【登場時】自分のデッキのカードを上から1枚公開する。公開したカードが【白】のカードの場合、手札に加える。公開したカードがそれ以外の場合、デッキの下に移す。\n【ヒラメキ】（証拠からリムーブされるときに発動する）カードを1枚引く。",
+    "effectShort": "【登場時】自分のデッキのカードを上から1枚公開する。公開したカードが【白】のカードの場合、手札に加える。公開したカードがそれ以外の場合、デッキの下に移す。\n【ヒラメキ】（証拠からリムーブされるときに発動する）カードを1枚引く。",
     "imagePath": "1714013020329346.jpg"
   },
   {
@@ -23146,7 +23150,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
       "ヒラメキ",
       "宣言"
     ],
-    "effectShort": "このキャラはスリープ状態で登場する。\n【宣言】【スリープ】：このキャラをリムーブする。AP4000以下のキャラを1枚まで選び、リムーブする。\n【ヒラメキ】（証拠からリムーブされるときに発動する）キャラを1枚まで選び、スリープさせる。",
+    "effectShort": "【宣言】【スリープ】：このキャラをリムーブする。AP4000以下のキャラを1枚まで選び、リムーブする。\n【ヒラメキ】（証拠からリムーブされるときに発動する）キャラを1枚まで選び、スリープさせる。",
     "imagePath": "1729133483045969.jpg"
   },
   {
@@ -26409,7 +26413,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "rarity": "C",
     "features": [],
     "keywords": [],
-    "effectShort": "【ターン1】このキャラが相手の能力や効果によって選ばれたとき、それを無効にする。",
+    "effectShort": "このイベントを自分の現場にいる【赤】のキャラ1枚にセットする。\n【ターン1】このキャラが相手の能力や効果によって選ばれたとき、それを無効にする。",
     "imagePath": "1721357267333530.jpg"
   },
   {
@@ -26427,7 +26431,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "rarity": "CP",
     "features": [],
     "keywords": [],
-    "effectShort": "【ターン1】このキャラが相手の能力や効果によって選ばれたとき、それを無効にする。",
+    "effectShort": "このイベントを自分の現場にいる【赤】のキャラ1枚にセットする。\n【ターン1】このキャラが相手の能力や効果によって選ばれたとき、それを無効にする。",
     "imagePath": "1721357267336451.jpg"
   },
   {
@@ -29960,7 +29964,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
       "小説家"
     ],
     "keywords": [],
-    "effectShort": "このキャラはスリープ状態で登場する。\n【登場時】自分のデッキのカードを上から1枚公開する。公開したカードがレベル6以下のキャラの場合、登場させる。公開したカードがそれ以外の場合、手札に加える。",
+    "effectShort": "【登場時】自分のデッキのカードを上から1枚公開する。公開したカードがレベル6以下のキャラの場合、登場させる。公開したカードがそれ以外の場合、手札に加える。",
     "imagePath": "1714013041155817.jpg"
   },
   {
@@ -29982,7 +29986,7 @@ export const CARD_CATALOG: readonly CardDef[] = [
       "小説家"
     ],
     "keywords": [],
-    "effectShort": "このキャラはスリープ状態で登場する。\n【登場時】自分のデッキのカードを上から1枚公開する。公開したカードがレベル6以下のキャラの場合、登場させる。公開したカードがそれ以外の場合、手札に加える。",
+    "effectShort": "【登場時】自分のデッキのカードを上から1枚公開する。公開したカードがレベル6以下のキャラの場合、登場させる。公開したカードがそれ以外の場合、手札に加える。",
     "imagePath": "1718844195424380.jpg"
   },
   {
@@ -38779,7 +38783,9 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "difficultyFirst": 7,
     "difficultySecond": 6,
     "rarity": "C",
-    "features": [],
+    "features": [
+      "YAIBA"
+    ],
     "keywords": [
       "宣言"
     ],
@@ -39248,7 +39254,9 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "difficultyFirst": 7,
     "difficultySecond": 6,
     "rarity": "CP",
-    "features": [],
+    "features": [
+      "YAIBA"
+    ],
     "keywords": [
       "宣言"
     ],
@@ -46912,7 +46920,9 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "difficultyFirst": 7,
     "difficultySecond": 6,
     "rarity": "C",
-    "features": [],
+    "features": [
+      "YAIBA"
+    ],
     "keywords": [
       "ヒラメキ",
       "宣言"
@@ -46933,7 +46943,9 @@ export const CARD_CATALOG: readonly CardDef[] = [
     "difficultyFirst": 7,
     "difficultySecond": 6,
     "rarity": "CP",
-    "features": [],
+    "features": [
+      "YAIBA"
+    ],
     "keywords": [
       "ヒラメキ",
       "宣言"

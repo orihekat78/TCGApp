@@ -116,7 +116,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       // 例 D08026=古城 は caseTraits:['古城'] / traits:[])。旧実装は d?.traits (キャラ特徴用) のみ
       // 参照しており、caseTraits だけに特徴を持つ事件 (古城) で【事件古城】が永久不発火だった
       // (field-drop, BUG-117/118/122/123 と同族)。caseTraits + traits の union で評価
-      // (D11021=婚活 は両方に持つため後方互換 / 古城系 gating を解禁)。
+      // (D11021=婚活パーティー は両方に持つため後方互換 / 古城系 gating を解禁)。
       const traits = [...(d?.caseTraits ?? []), ...(d?.traits ?? [])];
       return traits.includes(cond.trait);
     }

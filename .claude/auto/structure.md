@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6576
+- **ファイル数**: 6581
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -535,6 +535,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-352.md` — B08074 Investigation continuation
     - `BUG-353.md` — BUG-353: stacked-card identities were incorrectly hidden
     - `BUG-354.md` — BUG-354: failed or deferred stacking ran the wrong chain tail
+    - `BUG-355.md` — BUG-355: exact case-feature identity was shortened
+    - `BUG-356.md` — BUG-356: D11005 used a fixed AP removal threshold
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1623,6 +1625,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-qa-waves84-85.md` — QA adjudication Waves84-85
     - `2026-08-24-qa-waves86-87.md` — QA adjudication Waves86-87
     - `2026-08-24-qa-waves88-89.md` — QA adjudication Waves88-89
+    - `2026-08-24-qa-waves90-91.md` — QA adjudication Waves90-91
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -5880,6 +5883,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `case-cost-three-self-only-public-wave68.test.ts` — qa: card:B05024:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297
       - `case-flip-two-complex-public-wave37.test.ts` — qa: card:B06095:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2
       - `case-flip-two-declared-public-wave36.test.ts` — qa: card:B06013:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2
+      - `case-trait-konkatsu-public-wave90.test.ts` — qa: card:D11003:8a2311865e16f466ee83cb439f6283f6196812688ac3da8d1b8d1173290c37dc
       - `case-trait-yaiba-public-wave69.test.ts` — qa: card:B06018:9b784e18994d29858b6b12d02bf7ddc0e040914733a510db8aca6110febbb969
       - `contact-participant-exit-regression-wave83.test.ts` — Horizontal regression for rules/08 §6: either participant leaving ends contact.
       - `ct-p10-original-ability-rules.test.ts` — qa: card:B10050:98e82fae32a43d9b6de8c7fd8289dcf4565f2dada1498f0760f5ba9d0cf8ae17
@@ -5939,6 +5943,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `leave-trigger-scene-target-public.test.ts` — qa: card:B03012:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-top-one-public.test.ts` — qa: card:PR084:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-top-three-public.test.ts` — qa: card:B03079:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
+      - `mill-three-short-deck-public-wave91.test.ts` — qa: card:B05068:22aaf9ba5e384ee444adeadb5ffb7b5c97b7a4e75ccbac8c297b8c86d3e85f3f
       - `misread-public-runtime-wave18.test.ts` — qa: card:B04079:c61cc842e775e8f40c3ccc90d41e595b2e2e02184cc4d243534b3c2fdf721fdb
       - `misread-public-runtime-wave26.test.ts` — qa: card:B04038:6d5a65b9e083c8565478cceec3269781a67a936789441e6c196e107f90e2e8c8
       - `misread-reaction-order-wave26.test.ts` — qa: card:B05015:32589b2605a57e1fe89295b9b2340e6874cd6600ca6756e790b5fbcad58bae18

@@ -2067,15 +2067,17 @@
     {
       "qaId": "card:D11003:8a2311865e16f466ee83cb439f6283f6196812688ac3da8d1b8d1173290c37dc",
       "answerHash": "240d9989d84b1446fdf8446d85b4f07e316976c39088c96ba345975e0ba2ccaf",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d11/D11003.ts:1"
+        "rules:.claude/rules/17-icons.md:27",
+        "rules:.claude/rules/17-icons.md:41",
+        "src:src/cards/ct-d11/D11003.ts:44",
+        "tests:tests/cards/official-qa/case-trait-konkatsu-public-wave90.test.ts:109",
+        "tests:tests/cards/official-qa/case-trait-konkatsu-public-wave90.test.ts:125"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:D11003:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb",
@@ -2274,9 +2276,13 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR201.ts:1",
-        "tests:tests/cards/defer-unlock-miniwave/miniwave-cards-manual.test.ts:108"
-      ]
+        "rules:.claude/rules/14-refresh.md:39",
+        "rules:.claude/rules/14-refresh.md:42",
+        "src:src/cards/pr-01/PR201.ts:33",
+        "tests:tests/cards/official-qa/mill-three-short-deck-public-wave91.test.ts:119",
+        "tests:tests/cards/official-qa/mill-three-short-deck-public-wave91.test.ts:143"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:PR268:c61cc842e775e8f40c3ccc90d41e595b2e2e02184cc4d243534b3c2fdf721fdb",

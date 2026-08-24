@@ -766,15 +766,17 @@
     {
       "qaId": "card:B05068:22aaf9ba5e384ee444adeadb5ffb7b5c97b7a4e75ccbac8c297b8c86d3e85f3f",
       "answerHash": "09ac3974741d3f1b11af49f9784152184c91bbaa96972834da09effd62d3f59f",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05068.ts:69"
+        "rules:.claude/rules/14-refresh.md:39",
+        "rules:.claude/rules/14-refresh.md:42",
+        "src:src/cards/ct-p05/B05068.ts:31",
+        "tests:tests/cards/official-qa/mill-three-short-deck-public-wave91.test.ts:119",
+        "tests:tests/cards/official-qa/mill-three-short-deck-public-wave91.test.ts:143"
       ],
-      "noteCodes": [
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B05093:7bb2673d75370e56ee9b7ec8378ef524330bb3a8d590db6bdd01c48058a9ab95",

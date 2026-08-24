@@ -2448,7 +2448,7 @@
       "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d11/D11005.ts:57"
+        "src:src/cards/ct-d11/D11005.ts:47"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION-MISSING"

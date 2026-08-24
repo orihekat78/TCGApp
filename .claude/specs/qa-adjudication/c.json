@@ -2347,15 +2347,17 @@
     {
       "qaId": "card:PR132:22aaf9ba5e384ee444adeadb5ffb7b5c97b7a4e75ccbac8c297b8c86d3e85f3f",
       "answerHash": "09ac3974741d3f1b11af49f9784152184c91bbaa96972834da09effd62d3f59f",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR132.ts:1"
+        "rules:.claude/rules/14-refresh.md:39",
+        "rules:.claude/rules/14-refresh.md:42",
+        "src:src/cards/pr-01/PR132.ts:34",
+        "tests:tests/cards/official-qa/mill-three-short-deck-public-wave91.test.ts:119",
+        "tests:tests/cards/official-qa/mill-three-short-deck-public-wave91.test.ts:143"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:PR162:13acb9b2198bd7007c40f60596424b56f10d3ad72e3ae58086e362c2b1883845",

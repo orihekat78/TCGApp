@@ -404,6 +404,6 @@ export type CardDef = {
 
   // kind-specific optional fields
   caseLevel?: number;                      // kind:'case' — 事件レベル (rules/01)
-  caseTraits?: string[];                   // kind:'case' — 例: ["古城", "婚活"]
+  caseTraits?: string[];                   // kind:'case' — 例: ["古城", "婚活パーティー"]
   keywords?: string[];                     // kind:'character' — 迅速/突撃[X]等 (rules/13)
 };

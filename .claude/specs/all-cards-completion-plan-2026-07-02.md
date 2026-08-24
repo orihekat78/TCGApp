@@ -17,11 +17,11 @@
 
 - 上記 2026-07-02 数値は実装計画の履歴値。現在は全カード Q&A 検証を
   [qa-adjudication/WORKFLOW.md](qa-adjudication/WORKFLOW.md) で完了させる段階。
-- 公式 Q&A 2964 件中 1610 matched / 1354 test-missing。残 1129 exact
+- 公式 Q&A 2964 件中 1618 matched / 1346 test-missing。残 1127 exact
   groups、うち singleton 949 groups。
 - 通常は20-30件/Wave。各Waveは局所テストのみ。2 Waveごとに型・lint・
   QA整合を1回実行し、1 commit / 1 push。フル回帰は10 Waveごと、T3、公開前。
-- 残工数は82-155実作業時間、中心値約118時間。10 Waveごとに実測補正する。
+- 残工数は81-154実作業時間、中心値約117時間。10 Waveごとに実測補正する。
 
 ## Track A: engine 拡張 — 10-12 session
 

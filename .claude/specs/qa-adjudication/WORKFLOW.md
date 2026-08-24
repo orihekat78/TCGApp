@@ -44,9 +44,9 @@ does not access ignored raw Q&A packages.
 - Do not repeat a green unchanged gate inside one checkpoint. Re-estimate the
   remaining effort after each ten-wave full-gate checkpoint.
 
-Current 2026-08-24 snapshot: 1354 test-missing items / 1129 exact groups, with
-949 singleton groups. Revised remaining effort is 82-155 working hours; the
-center estimate is about 118 hours.
+Current 2026-08-24 snapshot: 1346 test-missing items / 1127 exact groups, with
+949 singleton groups. Revised remaining effort is 81-154 working hours; the
+center estimate is about 117 hours.
 
 ## Privacy
 

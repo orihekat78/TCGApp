@@ -10,7 +10,7 @@ describe('D11021 千速と重悟の婚活パーティー (case)', () => {
     expect(D11021.no).toBe('0946/D11021');
     expect(D11021.kind).toBe('case');
     expect(D11021.caseLevel).toBe(7);
-    expect(D11021.caseTraits).toEqual(['婚活']);
+    expect(D11021.caseTraits).toEqual(['婚活パーティー']);
     expect(D11021.colors).toEqual(['黄']);
   });
 
