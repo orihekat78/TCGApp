@@ -20,6 +20,7 @@
 - QA Waves104-105: .claude/sessions/2026-08-25-qa-waves104-105.md.
 - QA Waves106-107: .claude/sessions/2026-08-25-qa-waves106-107.md.
 - QA Waves108-109: .claude/sessions/2026-08-25-qa-waves108-109.md.
+- QA Waves110-111: .claude/sessions/2026-08-25-qa-waves110-111.md.
 
 ## 2026-08-24: QA runtime Waves82-83
 
@@ -51,18 +52,18 @@
 
 ## Next
 
-- Waves108-109 move six Q&A items to matched. Coverage is 1685 matched / 1279
-  test-missing / 2964 total; 1106 exact groups remain, including 949 singletons.
-- Wave108 certifies multiple simultaneous Misread commitments and the bundled
-  uncapped optional set guidance for PR247/PR262/PR268 across both owners.
-- Wave109 certifies that D11007/D11008/PR304 contact AP changes resolve before
-  action order; accept, decline, zero-hand, both owners, and scope expiry pass.
-- Wave110 seed: section `9e88cb5d...`, Q `7ac51d8c...`, A `3ef97efe...` across
-  B07031/B07034/B07052.
-- Wave111 seed: section `afb883b9...`, Q `e01e71cb...`, A `b9faf8f1...` across
-  B08079/B08084/B08089.
+- Waves110-111 move six Q&A items to matched. Coverage is 1691 matched / 1273
+  test-missing / 2964 total; 1104 exact groups remain, including 949 singletons.
+- Wave110 certifies exact owner-relative 【事件赤魔術】 gates across five
+  physical B07031/B07034/B07052 printings and four trait variants.
+- Wave111 certifies that B08079/B08084/B08089 leave sources enter remove before
+  draw-triggered refresh; four printings, both owners, zero/nonzero controls pass.
+- Wave112 seed: section `e3b0c442...`, Q `09b58615...`, A `18ed0c93...` across
+  B03112/B03118/B09086.
+- Wave113 seed: same empty section, Q `0f05cb5e...`, A `9774db2b...` across
+  D06015/PR027/PR031.
 - Official sync drift is separate: new PR322 and changed Q&A for
   B04018/B04018P/B06103P. Do not mix it into selected waves without re-queueing.
-- Revised remaining estimate: 76-145 working hours, center about 110 hours.
+- Revised remaining estimate: 75-144 working hours, center about 110 hours.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

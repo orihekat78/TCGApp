@@ -1218,11 +1218,15 @@
     {
       "qaId": "card:B07031:dcf72f7ad683c115b3f581b518e42b1c728f361ea984bfb38ac165c79eb83ce4",
       "answerHash": "3ef97efe6e461ba6b4a5f8bba236edd1078298c43d05f2c5ec145c0ec58c2282",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07031.ts:93"
+        "rules:.claude/rules/15-abilities-effects.md:60",
+        "rules:.claude/rules/17-icons.md:27",
+        "src:src/cards/ct-p07/B07031.ts:49",
+        "tests:tests/cards/official-qa/case-trait-red-magic-public-wave110.test.ts:142",
+        "tests:tests/cards/official-qa/case-trait-red-magic-public-wave110.test.ts:151"
       ]
     },
     {

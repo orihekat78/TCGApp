@@ -1758,15 +1758,27 @@
     {
       "qaId": "card:B08089:63af9346bf0cdf05f7fe697c62740abf76d9e08bc098d298f2d22eb00f875eea",
       "answerHash": "b9faf8f17f1bc23ab3afe80b636d314a04ad55b9846a3d1641f8b898c3bd308d",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08089.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
+        "rules:.claude/rules/14-refresh.md:27",
+        "rules:.claude/rules/14-refresh.md:5",
+        "rules:.claude/rules/14-refresh.md:9",
+        "rules:.claude/rules/26-qa-deck-refresh.md:37",
+        "rules:.claude/rules/26-qa-deck-refresh.md:39",
+        "src:src/cards/ct-p08/B08089.ts:17",
+        "src:src/engine/mutate/scene.ts:498",
+        "src:src/engine/mutate/scene.ts:511",
+        "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:100",
+        "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:131",
+        "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:135",
+        "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:141",
+        "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:150",
+        "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:162",
+        "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:170",
+        "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:97",
+        "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:98"
       ]
     },
     {

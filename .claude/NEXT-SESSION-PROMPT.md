@@ -1,17 +1,17 @@
-# Next Task: batched QA adjudication Waves110-111
+# Next Task: batched QA adjudication Waves112-113
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves108-109 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves110-111 commit.
 
 ## Completed
 
-- Wave108 certifies multiple simultaneous Misread commitments plus uncapped,
-  optional set guidance for PR247/PR262/PR268 across both owners.
-- Wave109 certifies post-effect contact AP order for D11007/D11008/PR304,
-  including accept, decline, zero-hand, both owners, and scope expiry.
-- Coverage is 1685 matched / 1279 test-missing / 2964 total.
+- Wave110 certifies exact owner-relative 【事件赤魔術】 gates for five physical
+  B07031/B07034/B07052 printings.
+- Wave111 certifies leave-source refresh membership for four physical
+  B08079/B08084/B08089 printings across both owners and zero/nonzero controls.
+- Coverage is 1691 matched / 1273 test-missing / 2964 total.
 - Fresh isolated authority remains 2964 Q&A / zero conflicts.
 - Protected `pnpm-lock.yaml`, `pnpm-workspace.yaml`, and live cards-data remain
-  untouched. Full evidence is in the Waves108-109 session record.
+  untouched. Full evidence is in the Waves110-111 session record.
 
 ## Throughput contract
 
@@ -30,28 +30,28 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves108-109 commit.
 
 1. Read root/nested AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read `.claude/sessions/2026-08-25-qa-waves108-109.md`, this prompt, and the
+3. Read `.claude/sessions/2026-08-25-qa-waves110-111.md`, this prompt, and the
    current QA trace/workflow.
 4. Re-run the hash-only queue. Revalidate the isolated authority root and
    never modify live `.claude/specs/cards-data`.
 
-## Wave110 seed
+## Wave112 seed
 
-- Exact tuple: section `9e88cb5d4113c7fd585835e24d289615ec8309ca14a85e08434073bcf182bda7`,
-  Q `7ac51d8c7b926288a8dbbb61cda12a9834f42cdc5f6693733f2f57696c4f6848`,
-  A `3ef97efe6e461ba6b4a5f8bba236edd1078298c43d05f2c5ec145c0ec58c2282`.
-- Missing exact-group members: B07031, B07034, B07052.
+- Exact tuple: section `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
+  Q `09b586153c1bb2034273085ffa6fb352b2325b0d7ee3e0179259ee896346980e`,
+  A `18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee`.
+- Missing exact-group members: B03112, B03118, B09086.
 - Ground all three members before changing adjudication.
 
-## Wave111 seed
+## Wave113 seed
 
-- Exact tuple: section `afb883b98a982a500934550cf3fdb6fa976325b6885be8679ccb0d868df55fc2`,
-  Q `e01e71cb6976e1c4d4c60f62e15b3246bdd03f1b1ef05f8f27fc75fe689a2c3c`,
-  A `b9faf8f17f1bc23ab3afe80b636d314a04ad55b9846a3d1641f8b898c3bd308d`.
-- Missing exact-group members: B08079, B08084, B08089.
+- Exact tuple: section `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
+  Q `0f05cb5ea8c693189608d5cd636cf11d4e14120fc537a0af0eb739a0924d47aa`,
+  A `9774db2bba11e1d8d8eb55ecaab030d2da5bec33b33e7ee366cc4ddf59c1cdc0`.
+- Missing exact-group members: D06015, PR027, PR031.
 - Ground all three members before changing adjudication.
 
 ## Estimate
 
-- Snapshot: 1279 remaining items / 1106 exact groups; 949 groups are singleton.
-- Remaining QA work: 76-145 working hours; center estimate about 110 hours.
+- Snapshot: 1273 remaining items / 1104 exact groups; 949 groups are singleton.
+- Remaining QA work: 75-144 working hours; center estimate about 110 hours.
