@@ -474,16 +474,20 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       return false;
     }
     case 'contactOpponentApHigher': {
-      // D11007 a3: contact:start payload から aUid (attacker) / bUid (defender) を取得。
-      // 自分 (ctx.source.uid) が攻撃者 (aUid) として、相手 (bUid) の AP が自分より高いコンタクトのみ true。
+      // D11007 a3: contact:start payload から自分と相手の participant uid を取得。
+      // 通常アクションの攻撃側だけでなく、効果で自分ターン中に発生した contact の
+      // bUid 側でも「このキャラより AP の高いキャラ」を同じ相対契約で評価する。
       // BUG-098: 旧実装は自分の関与を確認せず、任意のコンタクト (defender>attacker) で過剰発火していた。
-      // 【自分ターン中】= 自分が攻撃するので攻撃者 (aUid) 限定で十分 (rules/07-08)。
       const payload = ctx.triggerPayload as { aUid?: string; bUid?: string } | undefined;
       if (!payload?.aUid || !payload?.bUid) return false;
-      if (payload.aUid !== ctx.source.uid) return false; // 自分が攻撃者のコンタクトのみ
-      const aAp = charRead.ap(state, payload.aUid);
-      const bAp = charRead.ap(state, payload.bUid);
-      return bAp > aAp;
+      const selfUid = ctx.source.uid;
+      const otherUid = payload.aUid === selfUid
+        ? payload.bUid
+        : payload.bUid === selfUid
+          ? payload.aUid
+          : undefined;
+      if (!selfUid || !otherUid) return false;
+      return charRead.ap(state, otherUid) > charRead.ap(state, selfUid);
     }
     case 'guardedBySelf': {
       // D11016 a1: action:guarded payload.guardUid が自分 (ctx.source.uid) と一致するとき true

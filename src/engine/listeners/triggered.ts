@@ -18,7 +18,7 @@
 //     type='triggered' (条件発動) のみを対象とする
 //   - 'effect:declared' hook では payload.cardId を見て on-hand のカード自身を判定
 //     (event card 自身が「使われた」とき発動する eventRemoveByAP 等の pattern)
-//   - selfOnly: scene/partner では source.uid が一致、hand では payload.cardId が一致
+//   - selfOnly: scene/partner では hook が示す本人、hand では payload.cardId が一致
 
 import { event } from '../event/registry.js';
 import { def as readDef } from '../read/def.js';
@@ -266,6 +266,7 @@ function scopeAllowsArea(scope: AbilityScope | undefined, area: CardLocation['ar
 }
 
 function selfOnlyMatches(
+  hookName: TriggeredHook,
   card: CardLocation,
   payload: unknown,
   source: unknown,
@@ -280,8 +281,61 @@ function selfOnlyMatches(
     const sourcePlayer = (source as { player?: string } | undefined)?.player;
     return payloadCardId === card.cardId && sourcePlayer === card.player;
   }
+  if (hookName === 'contact:start') {
+    const contact = contactStartPayload(payload);
+    return contact !== null && (contact.aUid === card.uid || contact.bUid === card.uid);
+  }
   // scene/partner/case は source.uid で一致確認
   return sourceUid === card.uid;
+}
+
+type ContactStartPayload = Record<string, unknown> & { aUid: string; bUid: string };
+
+function contactStartPayload(payload: unknown): ContactStartPayload | null {
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) return null;
+  const record = payload as Record<string, unknown>;
+  return typeof record.aUid === 'string' && typeof record.bUid === 'string'
+    ? record as ContactStartPayload
+    : null;
+}
+
+/**
+ * A self contact trigger reads aUid/byUid as itself and bUid/targetUid as the
+ * other participant. The emitted event remains attacker-relative for
+ * observers; only the queued occurrence owned by the bUid participant is
+ * rebased.
+ */
+function participantRelativeContactContext(
+  hookName: TriggeredHook,
+  card: CardLocation,
+  selfOnly: boolean,
+  payload: unknown,
+  bindings: EffectCtx['bindings'],
+): { payload: unknown; bindings: EffectCtx['bindings'] } {
+  const contact = hookName === 'contact:start' && selfOnly
+    ? contactStartPayload(payload)
+    : null;
+  if (contact === null || contact.bUid !== card.uid) return { payload, bindings };
+
+  const relativePayload = { ...contact, aUid: contact.bUid, bUid: contact.aUid };
+  const contactBindings = bindings.contact;
+  if (!Array.isArray(contactBindings)) return { payload: relativePayload, bindings };
+
+  const relativeBindings = contactBindings.map((binding) => {
+    if (binding === null || typeof binding !== 'object' || Array.isArray(binding)) return binding;
+    const record = binding as unknown as Record<string, unknown>;
+    if (record.byUid !== contact.aUid || record.targetUid !== contact.bUid) return binding;
+    return {
+      ...record,
+      byUid: contact.bUid,
+      byPlayer: card.player,
+      targetUid: contact.aUid,
+    };
+  });
+  return {
+    payload: relativePayload,
+    bindings: { ...bindings, contact: relativeBindings } as EffectCtx['bindings'],
+  };
 }
 
 // BUG-132 GAP-2 (2026-06-12): effect:declared の emit 1 回 = 1 batch の連番カウンタ。
@@ -453,14 +507,23 @@ function handleHook(
       // scope check
       if (!scopeAllowsArea(ability.scope, card.area)) continue;
       // selfOnly check
-      if (trig.selfOnly && !selfOnlyMatches(card, payload, source)) continue;
+      if (trig.selfOnly && !selfOnlyMatches(hookName, card, payload, source)) continue;
+      const occurrenceContext = participantRelativeContactContext(
+        hookName,
+        card,
+        trig.selfOnly === true,
+        payload,
+        queuedBindings,
+      );
+      const occurrencePayload = occurrenceContext.payload;
+      const occurrenceBindings = occurrenceContext.bindings;
       // matcher check (カード側で custom 判定)
-      if (trig.matcher && !trig.matcher(payload, state)) continue;
+      if (trig.matcher && !trig.matcher(occurrencePayload, state)) continue;
       // engine mega-wave W4 (2026-07-03, r83): emit source.bindings を gate 評価 ctx にも貫通する。
       // enter:group の boundAnyMatchesFilter{bindKey:'enterGroup'} を ability.condition (=発動条件、
       // rules/24: 条件不成立なら「発動」自体しない=【ターン1】未消費) で評価するため。
       // 既存 emit は bindings を渡さない → {} で従来と byte 同一。
-      const gateBindings = queuedBindings;
+      const gateBindings = occurrenceBindings;
       // D11007 v2 (Phase 2): matcherCondition (declarative 版 matcher)
       // payload を ctx.triggerPayload に詰めて evalCond に渡す
       if (trig.matcherCondition) {
@@ -475,7 +538,7 @@ function handleHook(
           const ctxMc = {
             source: abilitySource,
             bindings: gateBindings,
-            triggerPayload: payload,
+            triggerPayload: occurrencePayload,
           };
           if (!evalCond(state, trig.matcherCondition, ctxMc)) continue;
         }
@@ -486,7 +549,7 @@ function handleHook(
         const ctx = {
           source: abilitySource,
           bindings: gateBindings,
-          triggerPayload: payload,
+          triggerPayload: occurrencePayload,
         };
         if (!evalCond(state, ability.condition, ctx)) continue;
       }
@@ -524,7 +587,7 @@ function handleHook(
       // walk 時 (resolveEffectPicks) の resolveCtx.bindings にも載せる — optional{...} が $contact.* /
       // ctx.contact (inContact pick, B04092 キャンティ) を surface 時に captur するため (choice の BUG-114 対称、
       // setPendingOptionalBindings)。既存 non-optional 効果の pick/$contact は従来通り runtime (entryToCtx) 解決。
-      const sourceBindings = queuedBindings;
+      const sourceBindings = occurrenceBindings;
       // user_request 20260522_01 #6/#2 + BUG-054 + BUG-065-followup:
       // human player owned effect は humanChooser=true で resolveEffectPicks に
       // 渡し、$pick 検出時に side-channel `__pendingEffectPickSide` を set。
@@ -556,7 +619,7 @@ function handleHook(
         resolvedEffect,
         abilitySource,
         hookName,
-        payload,
+        occurrencePayload,
         sourceBindings,
         // BUG-132 GAP-2: effect:declared のみ batch 連番 + 反応マーカーを entry に付与
         {
@@ -904,7 +967,7 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
     if (!trig || trig.hook !== 'leave:to-remove') continue;
     // rider (on-set-host) は host 現場離場 = scope 成立済みなので area gate を通す (host 印字は従来どおり)。
     if (ability.scope !== 'on-set-host' && !scopeAllowsArea(ability.scope, card.area)) continue;
-    if (trig.selfOnly && !selfOnlyMatches(card, payload, source)) continue;
+    if (trig.selfOnly && !selfOnlyMatches('leave:to-remove', card, payload, source)) continue;
     if (trig.matcher && !trig.matcher(payload, state)) continue;
     const baseCtx = {
       source: {
@@ -975,7 +1038,7 @@ function handleDisguiseReplacedSelf(state: GameState, payload: unknown, source: 
     const trig = ability.trigger;
     if (!trig || trig.hook !== 'disguise:replaced') continue;
     if (!scopeAllowsArea(ability.scope, card.area)) continue;
-    if (trig.selfOnly && !selfOnlyMatches(card, payload, source)) continue;
+    if (trig.selfOnly && !selfOnlyMatches('disguise:replaced', card, payload, source)) continue;
     if (trig.matcher && !trig.matcher(payload, state)) continue;
     const baseCtx = {
       source: {
@@ -1025,7 +1088,7 @@ function handleOnSetSelfPhaseEndStart(state: GameState, payload: unknown, source
           if (ability.type !== 'triggered' || ability.scope !== 'on-set-self') continue;
           const trigger = ability.trigger;
           if (!trigger || trigger.hook !== 'phase:end:start') continue;
-          if (trigger.selfOnly && !selfOnlyMatches({ player, uid: host.uid, cardId: setCard.cardId, area: 'scene' }, payload, source)) continue;
+          if (trigger.selfOnly && !selfOnlyMatches('phase:end:start', { player, uid: host.uid, cardId: setCard.cardId, area: 'scene' }, payload, source)) continue;
           if (trigger.matcher && !trigger.matcher(payload, state)) continue;
           const triggerPayload = {
             ...(payload as Record<string, unknown>),

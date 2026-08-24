@@ -1364,11 +1364,19 @@
     {
       "qaId": "card:B08038:64b0dfa40059e5ed0dddfd2e25c4185a31f5b45ddba7798437a0e7508255c179",
       "answerHash": "72f763acbcebae843d584269562044d5aacaf6534790c089bfa9df0b90cb10fb",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08038.ts:1"
+        "rules:.claude/rules/08-contact.md:3",
+        "rules:.claude/rules/22-qa-action-contact.md:34",
+        "src:src/cards/ct-p08/B08038.ts:13",
+        "src:src/cards/ct-p08/B08038P.ts:6",
+        "src:src/engine/listeners/triggered.ts:308",
+        "tests:tests/cards/official-qa/contact-participant-public-wave94.test.ts:113",
+        "tests:tests/cards/official-qa/contact-participant-public-wave94.test.ts:116",
+        "tests:tests/cards/official-qa/contact-participant-public-wave94.test.ts:139",
+        "tests:tests/cards/official-qa/contact-participant-public-wave94.test.ts:152"
       ]
     },
     {
@@ -2180,11 +2188,20 @@
     {
       "qaId": "card:D11008:64b0dfa40059e5ed0dddfd2e25c4185a31f5b45ddba7798437a0e7508255c179",
       "answerHash": "72f763acbcebae843d584269562044d5aacaf6534790c089bfa9df0b90cb10fb",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d11/D11008.ts:1"
+        "rules:.claude/rules/08-contact.md:3",
+        "rules:.claude/rules/22-qa-action-contact.md:34",
+        "src:src/cards/ct-d11/D11007.ts:57",
+        "src:src/cards/ct-d11/D11007.ts:59",
+        "src:src/cards/ct-d11/D11008.ts:8",
+        "src:src/engine/cond/eval.ts:476",
+        "tests:tests/cards/official-qa/contact-participant-public-wave94.test.ts:113",
+        "tests:tests/cards/official-qa/contact-participant-public-wave94.test.ts:116",
+        "tests:tests/cards/official-qa/contact-participant-public-wave94.test.ts:139",
+        "tests:tests/cards/official-qa/contact-participant-public-wave94.test.ts:152"
       ]
     },
     {

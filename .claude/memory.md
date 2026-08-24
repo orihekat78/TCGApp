@@ -12,6 +12,7 @@
 - QA Waves88-89: .claude/sessions/2026-08-24-qa-waves88-89.md.
 - QA Waves90-91: .claude/sessions/2026-08-24-qa-waves90-91.md.
 - QA Waves92-93: .claude/sessions/2026-08-25-qa-waves92-93.md.
+- QA Waves94-95: .claude/sessions/2026-08-25-qa-waves94-95.md.
 
 ## 2026-08-24: QA runtime Waves82-83
 
@@ -43,16 +44,17 @@
 
 ## Next
 
-- Waves92-93 move eight Q&A items to matched. Coverage is 1626 matched / 1338
-  test-missing / 2964 total; 1125 exact groups remain, including 949 singletons.
-- Wave92 proves scene costs are owner-only. Wave93 proves action-end abilities
-  require their acting source to remain on scene.
-- Wave94 seed: Q `b79714d3...`, A `72f763ac...` across
-  B08038/D11007/D11008/PR304.
-- Wave95 seed: Q `790579b0...`, A `188711a1...` across
-  B07060/PR195/PR196/PR297. Ground before expansion.
+- Waves94-95 move eight more Q&A items to matched. Coverage is 1634 matched /
+  1330 test-missing / 2964 total; 1123 exact groups remain, including 949
+  singletons.
+- Wave94 fixes contact participant role orientation. Wave95 proves Hirameki
+  decline leaves the event in remove and partner-area cards unchanged.
+- Wave96 seed: section `1d1a726d...`, Q `70887356...`, A `cfea53ad...` across
+  B06023/B07077/B08030.
+- Wave97 seed: section `200b0fb5...`, Q `306041e0...`, A `cb4fe5ab...` across
+  B10010/B10011/PR279. Ground adjacent same-family tuples before batching.
 - Official sync drift is separate: new PR322 and changed Q&A for
   B04018/B04018P/B06103P. Do not mix it into Waves94-95 without re-queueing.
-- Revised remaining estimate: 80-153 working hours, center about 116 hours.
+- Revised remaining estimate: 79-152 working hours, center about 115 hours.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

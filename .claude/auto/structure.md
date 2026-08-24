@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6584
+- **ファイル数**: 6588
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1627,6 +1627,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-qa-waves88-89.md` — QA adjudication Waves88-89
     - `2026-08-24-qa-waves90-91.md` — QA adjudication Waves90-91
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
+    - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -5888,6 +5889,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `case-trait-konkatsu-public-wave90.test.ts` — qa: card:D11003:8a2311865e16f466ee83cb439f6283f6196812688ac3da8d1b8d1173290c37dc
       - `case-trait-yaiba-public-wave69.test.ts` — qa: card:B06018:9b784e18994d29858b6b12d02bf7ddc0e040914733a510db8aca6110febbb969
       - `contact-participant-exit-regression-wave83.test.ts` — Horizontal regression for rules/08 §6: either participant leaving ends contact.
+      - `contact-participant-public-wave94.test.ts` — qa: card:B08038:64b0dfa40059e5ed0dddfd2e25c4185a31f5b45ddba7798437a0e7508255c179
       - `ct-p10-original-ability-rules.test.ts` — qa: card:B10050:98e82fae32a43d9b6de8c7fd8289dcf4565f2dada1498f0760f5ba9d0cf8ae17
       - `ctp10-opponent-turn-cutin-public.test.ts` — qa: card:B10017:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
       - `decision-persistence-wave23.test.ts` — qa: card:B03080:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
@@ -5939,6 +5941,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `full-scene-effect-entry-public-wave63.test.ts` — qa: card:B05055:c51f6838f7814f2243bbe0560dc33c4dc896f1b0b13d486cd4223cb898983c95
       - `full-scene-event-entry-public-wave84.test.ts` — qa: card:B05062:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398
       - `hand-remove-self-only-public-wave58.test.ts` — qa: card:B07020:924a8b39ee3036e70eeeac9c3a5941e4faa4fec3ebc39e19ceb12b4b0f2419af
+      - `hirameki-decline-partner-area-public-wave95.test.ts` — qa: card:B07059:94d4fbcb6d6b527d8e1d1c0eaa9b309fe2198ea03d499bf7e02c1d5a00121143
       - `leave-reveal-until-forced-public.test.ts` — qa: card:B02058:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-opponent-turn-public.test.ts` — qa: card:B01065:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-remove-retrieval-public.test.ts` — qa: card:B02004:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
@@ -6521,6 +6524,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`listeners/`**
       - `bug-197-original-ability-suppression.test.ts` — BUG-197: "original abilities" means every printed ability entry, not only keywor…
       - `contact-leave-self-trigger-suppression.test.ts`
+      - `contact-participant-role-relative.test.ts`
       - `cutin-summon-misfire.test.ts` — tests/engine/listeners/cutin-summon-misfire — 【カットイン】が召喚時に誤発火しないこと
       - `declared-batch-seq.test.ts`
       - `granted-ability.test.ts` — Task D E4 (2026-06-12): charGrantAbility — triggered ability の動的付与

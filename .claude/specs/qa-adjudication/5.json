@@ -2105,11 +2105,18 @@
     {
       "qaId": "card:PR195:94d4fbcb6d6b527d8e1d1c0eaa9b309fe2198ea03d499bf7e02c1d5a00121143",
       "answerHash": "188711a1925166b73d3fc85103fbe567257d32c6135ffc69f33c6cba408a46b3",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR195.ts:1"
+        "rules:.claude/rules/10-action-event.md:14",
+        "rules:.claude/rules/10-action-event.md:15",
+        "rules:.claude/rules/10-action-event.md:16",
+        "src:src/cards/pr-01/PR195.ts:62",
+        "tests:tests/cards/official-qa/hirameki-decline-partner-area-public-wave95.test.ts:86",
+        "tests:tests/cards/official-qa/hirameki-decline-partner-area-public-wave95.test.ts:87",
+        "tests:tests/cards/official-qa/hirameki-decline-partner-area-public-wave95.test.ts:94",
+        "tests:tests/cards/official-qa/hirameki-decline-partner-area-public-wave95.test.ts:95"
       ]
     },
     {
