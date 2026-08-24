@@ -892,7 +892,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05115.ts:52",
-        "tests:tests/cards/engine-mega-w3.test.ts:407"
+        "tests:tests/cards/engine-mega-w3.test.ts:421"
       ]
     },
     {
@@ -2085,9 +2085,9 @@
         "tests:tests/cards/official-qa/case-cost-three-self-only-public-wave68.test.ts:262",
         "tests:tests/cards/official-qa/case-cost-three-self-only-public-wave68.test.ts:263",
         "tests:tests/cards/official-qa/case-cost-three-self-only-public-wave68.test.ts:264",
-        "tests:tests/cards/official-qa/case-cost-three-self-only-public-wave68.test.ts:309",
-        "tests:tests/cards/official-qa/case-cost-three-self-only-public-wave68.test.ts:314",
-        "tests:tests/cards/official-qa/case-cost-three-self-only-public-wave68.test.ts:315"
+        "tests:tests/cards/official-qa/case-cost-three-self-only-public-wave68.test.ts:312",
+        "tests:tests/cards/official-qa/case-cost-three-self-only-public-wave68.test.ts:317",
+        "tests:tests/cards/official-qa/case-cost-three-self-only-public-wave68.test.ts:318"
       ]
     },
     {

@@ -303,10 +303,16 @@ export function disguise(state: GameState, ax: ActionContext, p: Player, cardId:
   // cardId を書換えるため shallow copy で凍結)。uid は sentinel 化 — targetUid slot はこの後も同 uid の
   // まま新カードが residence するため、素の uid だと disguiseReplacedMatches の filter 評価
   // (matchOneFilter → continuousDeltaSafe 等が scene.byUid) が「新カード自身の継続効果」を誤参照する。
-  // sentinel は scene に実在しない → continuous/aura 軸 0 (removedCharMatches と同じ既知 limitation、
-  // turnEffects/override 軸は snapshot が保持し正確)。
+  // sentinel は scene に実在しないため、入替え前に有効 AP/LP/level も別 snapshot へ固定する。
+  // disguiseReplacedMatches はこの数値 snapshot を使い、新カード側の continuous/aura 混入と
+  // 旧カード側の continuous/aura 欠落を同時に防ぐ。
   // toPlainDeep (BUG-132 posture): shallow copy だと nested field (setCards/turnEffects/keywordOverrides)
   // が Immer draft proxy のまま emit payload に残り、produce finalize 後に revoked-proxy crash する。
+  const replacedEffective = {
+    ap: readChar.ap(state, targetUid),
+    lp: readChar.lp(state, targetUid),
+    level: readChar.level(state, targetUid),
+  };
   const replacedChar: SceneCharacter = toPlainDeep({ ...targetChar, uid: `${targetUid}::disguise-replaced` });
 
   // 元 cardId を デッキ下へ (refactor 1a 2026-06-12: mutate 層経由に統一。挙動は push と同一)
@@ -354,11 +360,11 @@ export function disguise(state: GameState, ax: ActionContext, p: Player, cardId:
     // side 判定するため payload.player 必須 (cutin:used は既に持つ)。source.bindings.contact は observer
     // effect の inContact pick ($contact 参加者) 解決用。既存 disguise:into consumer (selfOnly の【変装時】系
     // B02038/B02044 等) は player/bindings を読まない → 挙動不変 (baseline smoke 不変)。
-    // W3 (r51): payload に replacedChar (入替え元 snapshot) を追加。既存 consumer は未読 → 挙動不変。
+    // W3 (r51): payload に replacedChar、BUG-346: replacedEffective を追加。
     event.emit(
       state,
       'disguise:into',
-      { uid: targetUid, fromCardId, newCardId: cardId, player: p, replacedChar },
+      { uid: targetUid, fromCardId, newCardId: cardId, player: p, replacedChar, replacedEffective },
       { player: p, uid: targetUid, bindings: buildContactBindings(ax, p) },
       { causalCorrelationEventId: disguiseDecisionEventId },
     );

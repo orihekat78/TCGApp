@@ -1440,12 +1440,20 @@ export function resolveEffectPicks(
       //   - ctx.dyn.optionalRun 指定済 (optionalResolve 再開) → その値で確定 (consume 後 delete で leak 防止)。
       //   - humanChooser → pendingEffectOptional を surface して pause (no-op return)。
       //   - AI / non-human → skip (optional は自己コストを含むことが多く既定で使わない)。
+      const ownerPlayer = ctx.source.player;
+      const decisionPlayer = effect.chooser === 'opp-of-owner'
+        ? (ownerPlayer === 'self' ? 'opp' : 'self')
+        : ownerPlayer;
+      // `if-hand` is also the feasibility contract for human decisions.  A
+      // zero-card hand cannot choose the discard branch; resolve the printed
+      // else branch directly instead of surfacing/accepting an impossible yes.
+      const canRun = effect.aiRun !== 'if-hand' || state.players[decisionPlayer].hand.length > 0;
       const dynRun = (ctx.dyn as { optionalRun?: unknown } | undefined)?.optionalRun;
       if (typeof dynRun === 'boolean') {
         // 消費した optionalRun は同一 ctx の後続/ネスト optional へ leak させない (choiceIndex と同方針)
         delete (ctx.dyn as { optionalRun?: unknown }).optionalRun;
         const closesPublicHandReveal = peekPublicHandRevealToken(ctx) !== undefined;
-        const branch = dynRun
+        const branch = dynRun && canRun
           ? resolveEffectPicks(state, effect.effect, ctx, opts)
           : effect.else ? resolveEffectPicks(state, effect.else, ctx, opts) : { kind: 'parallel' as const, steps: [] };
         // As with a selected choice, only a resumed public hand-reveal window
@@ -1458,10 +1466,9 @@ export function resolveEffectPicks(
             }
           : branch;
       }
-      const ownerPlayer = ctx.source.player;
-      const decisionPlayer = effect.chooser === 'opp-of-owner'
-        ? (ownerPlayer === 'self' ? 'opp' : 'self')
-        : ownerPlayer;
+      if (!canRun) {
+        return effect.else ? resolveEffectPicks(state, effect.else, ctx, opts) : { kind: 'parallel', steps: [] };
+      }
       const humanPlayer = humanDecisionPlayer(opts);
       if (humanPlayer === decisionPlayer) {
         const srcUid = (ctx.source as { uid?: string } | undefined)?.uid ?? '';

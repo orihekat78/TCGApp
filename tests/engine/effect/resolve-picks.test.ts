@@ -159,6 +159,32 @@ describe('engine.effect.resolveEffectPicks', () => {
     _clearPendingEffectOptionalSide();
   });
 
+  it('optional if-hand: human zero hand takes else without surfacing an impossible decision', () => {
+    _clearPendingEffectOptionalSide();
+    const state = stateWithSelfChar('self-1');
+    state.players.self.hand = [];
+    const fallback: Effect = { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } };
+    const effect: Effect = {
+      kind: 'optional', aiRun: 'if-hand', effect: PICK_ATOM, else: fallback,
+    };
+    expect(resolveEffectPicks(state, effect, ctxSelf(), {
+      humanChooser: true, byPlayer: 'self', source: { cardId: 'X', abilityId: 'a1' },
+    })).toEqual(fallback);
+    expect(_peekPendingEffectOptionalSide()).toBeNull();
+  });
+
+  it('optional if-hand: resumed true rechecks a now-empty hand and takes else', () => {
+    const state = stateWithSelfChar('self-1');
+    state.players.self.hand = [];
+    const fallback: Effect = { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } };
+    const effect: Effect = {
+      kind: 'optional', aiRun: 'if-hand', effect: PICK_ATOM, else: fallback,
+    };
+    const ctx = ctxSelf();
+    ctx.dyn = { optionalRun: true };
+    expect(resolveEffectPicks(state, effect, ctx)).toEqual(fallback);
+  });
+
   it('parallel: 各 step を再帰的に処理', () => {
     const s = stateWithSelfChar('self-1');
     const effect: Effect = { kind: 'parallel', steps: [PICK_ATOM, PICK_ATOM] };

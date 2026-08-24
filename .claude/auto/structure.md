@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6523
+- **ファイル数**: 6534
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -525,6 +525,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-342.md` — Next Hint optional-card admission
     - `BUG-343.md` — YAIBA incident trait backfill
     - `BUG-344.md` — B02061 optional evidence transfer
+    - `BUG-345.md` — B02047 contact immunity duration
+    - `BUG-346.md` — disguise replaced effective values
+    - `BUG-347.md` — optional if-hand feasibility
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -891,6 +894,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-12-qa-wave77-name-replacement.md` — QA Wave77: certify PR099 name replacement
     - `2026-08-24-13-qa-wave78-set-event.md` — QA Wave78: certify set events without hosts
     - `2026-08-24-14-qa-wave79-evidence.md` — QA Wave79: certify opponent evidence gain
+    - `2026-08-24-15-qa-wave80-disguise-entry.md` — QA Wave80: separate disguise from entry
+    - `2026-08-24-16-qa-wave81-disguise-duration.md` — QA Wave81: certify disguise observers and duration
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1602,6 +1607,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-qa-waves74-75.md` — QA adjudication Waves74-75
     - `2026-08-24-qa-waves76-77.md` — QA adjudication Waves76-77
     - `2026-08-24-qa-waves78-79.md` — QA adjudication Waves78-79
+    - `2026-08-24-qa-waves80-81.md` — QA adjudication Waves80-81
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1708,6 +1714,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B02022.md` — B02022 鬼丸猛 grounding (2026-07-10, sonnet5)
       - `B02023.md` — B02023 遠山和葉 grounding
       - `B02031.md` — B02031 grounding
+      - `B02038.md` — B02038 grounding
       - `B02039.md` — B02039 工藤優作 grounding (2026-07-10, fable)
       - `B02041.md` — B02041 / B02041P grounding
       - `B02043.md` — B02043 grounding
@@ -1735,6 +1742,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B03041.md` — B03041 grounding
       - `B03041P.md` — B03041P grounding
       - `B03042.md` — B03042 grounding
+      - `B03050.md` — B03050 grounding
       - `B03062.md` — B03062 私はもう貴方のそばに… grounding
       - `B03079.md` — B03079 grounding
       - `B03084.md` — B03084 / B03084P 降谷零 grounding
@@ -2083,6 +2091,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `waves74-75-authority.md` — Waves74-75 authority manifest
       - `waves76-77-authority.md` — Waves76-77 authority manifest
       - `waves78-79-authority.md` — Waves78-79 authority manifest
+      - `waves80-81-authority.md` — Waves80-81 authority manifest
     - **`meta-ui/`**
       - `00-overview.md` — 00 — メタ UI 統合設計 概要
       - `01-project-setup.md` — 01 — meta-app プロジェクト構成
@@ -5855,6 +5864,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `declared-cost-one-self-only-public-wave71.test.ts` — qa: card:B07061:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6
       - `declared-sleep-cost-public-wave24.test.ts` — qa: card:B01063:f97b21e9e16f570fd0da6acab0a9cb6e819a6e4a010e86dddb5ff82c6d33902e
       - `disguise-definition-public-wave56.test.ts` — qa: card:B02041:bde0a3a5b0127797c2caad230a469d5a24f2a164829581273d0d8e77589383d6
+      - `disguise-not-entry-public-waves80-81.test.ts` — qa: card:B02038:768a20fc5e6e165184d999a8032847d4633ef46d0ac9edd814f3c4ebb18e8e72
       - `effect-entry-action-public-wave29.test.ts` — qa: card:B03073:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-action-public.test.ts` — qa: card:B02004:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-declared-public-wave27.test.ts` — qa: card:B04018:a96985ed96d005b04cd0c44c2dadf206fac63c8bd49e8c42cef6ea4c73808dae
@@ -6259,6 +6269,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `cutin-handzone-pick.spec.ts` — User 要望: コンタクト中のカットイン選択を、テキストボタン modal ではなく HandZone pick mode
     - `deck-reveal-overlay-ui.spec.ts` — E2E: DeckRevealOverlay の演出 (user 指摘 #1, 2026-06-01)
     - `declared-source-hand-occurrence.spec.ts` — B06103's on-hand declared ability removes a same-colour character as
+    - `disguise-duration-waves80-81.spec.ts`
     - `disguise-hook-2026-06-06.spec.ts` — E2E: engine-extension disguise-hook batch (2026-06-06 タスクC) — text-faithfulness…
     - `effect-pick.spec.ts` — E2E regression: BUG-053 / BUG-054 — human player effect pick UI 経路
     - `engine-extensions-2026-06-05.spec.ts` — E2E verification for the 2026-06-05 engine-extension #1/#2 batches:

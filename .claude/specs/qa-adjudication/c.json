@@ -271,14 +271,17 @@
     {
       "qaId": "card:B02038:768a20fc5e6e165184d999a8032847d4633ef46d0ac9edd814f3c4ebb18e8e72",
       "answerHash": "471dbd81e897e564c03b9dec6f7c79c7d383055b3da168f9c89e5348f224708a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02038.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/09-cutin-disguise.md:51",
+        "rules:.claude/rules/23-qa-disguise-cutin.md:21",
+        "src:src/cards/ct-p02/B02038.ts:22",
+        "tests:tests/cards/official-qa/disguise-not-entry-public-waves80-81.test.ts:287",
+        "tests:tests/cards/official-qa/disguise-not-entry-public-waves80-81.test.ts:293",
+        "tests:tests/cards/official-qa/disguise-not-entry-public-waves80-81.test.ts:358",
+        "tests:tests/cards/official-qa/disguise-not-entry-public-waves80-81.test.ts:373"
       ]
     },
     {

@@ -9,21 +9,21 @@
 - QA Waves27-34: .claude/sessions/2026-08-23-qa-memory-waves27-34.md.
 - QA Waves35-67: matching dated files under .claude/sessions/.
 
-## 2026-08-24: QA runtime Waves78-79
+## 2026-08-24: QA runtime Waves80-81
 
-- Wave78 certifies B01039, B02031, B02052, and B02067 across seven physicals.
-  Public self/opp event use proves mandatory eligible set, legal no-host use,
-  atomic rejection, save, host leave, consumers, and CPU.
-- Wave79 certifies B01065/P, B01069, and B02061. Public evidence transfer,
-  accept/decline, contact leave, exact-one deck-out, save, CPU, and Hirameki are
-  explicit. BUG-344 fixes B02061's missing optional and `evidenceGain n`.
+- Wave80 certifies B02038/P, B02044/P, and B02086/P. Public disguise suppresses
+  own and external enter observers while normal entry remains the control.
+- Wave81 certifies B02043, B02045, B02047, and B03050. BUG-345 scopes contact
+  immunity to one action; BUG-346 freezes replaced effective values; BUG-347
+  sends impossible empty-hand `if-hand` decisions to the printed else branch.
 - Fresh isolated authority has 2964 Q&A items and zero conflicts. Coverage is
-  1508 matched / 1456 test-missing / 2964 total.
+  1515 matched / 1449 test-missing / 2964 total.
 
 ## Next
 
-- Wave80: B02038/P, B02044/P, B02086/P at f4bbd03d.../471dbd81....
-- Wave81: B02043, B02045, B02047, B03050 at fec493c4.../471dbd81....
-- Keep the two same-answer disguise groups separate by exact question hash.
+- Wave82: five gaps among B02038/P, B02041/P, B02043, B02044/P, B02045,
+  B02047 at ec58a8a7.../aac3f501.... B02045 is the matched control.
+- Wave83: B03050, B03051, B03052/P gaps with B03129/P control at
+  a6d4bbd6.../28c958b7....
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `38d4bc75b29b`
+> Source hash: `e39bc7f8a5fe`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,23 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# QA Wave81: certify disguise observers and duration
+
+- Certify B02043, B02045, B02047, and B03050 without merging Wave80's distinct
+  question hash.
+- Fix BUG-345 by scoping B02047 contact immunity to one action; prove a second
+  same-turn contact removes it normally.
+- Fix BUG-346 by freezing the replaced character's effective AP/LP/level before
+  disguise, preserving continuous and aura values without new-card pollution.
+
+# QA Wave80: separate disguise from entry
+
+- Certify B02038/P, B02044/P, and B02086/P against the exact shared ruling.
+- Prove every physical's public disguise suppresses both its own entry rider and
+  an external entry observer; ordinary hand entry remains the positive control.
+- Fix BUG-347 so empty-hand B02086 decisions take the printed immunity branch,
+  including restored pending decisions whose hand became empty.
 
 # QA Wave79: certify opponent evidence gain
 

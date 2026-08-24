@@ -267,6 +267,9 @@ describe('official QA Wave68: exact-three case costs use only owner evidence', (
   it('B06036 preserves the cost-flipped Hirameki candidate through save hydration', () => {
     const row = { cardId: 'B06036', baseId: 'B06036' } as const;
     const state = baseState(row);
+    // B06035's optional discard branch is only feasible with a hand card.
+    // Keep this fixture focused on save hydration of the invoked ability.
+    state.players.self.hand = [SELF_E];
     state.players.self.evidence = [
       evidence(B06035.id),
       evidence(SELF_A),

@@ -1,48 +1,48 @@
-# Next Task: QA adjudication Waves80-81
+# Next Task: QA adjudication Waves82-83
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves78-79 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves80-81 commit.
 
 ## Completed
 
-- Wave78 certifies four set-event target records across seven physicals.
-- Wave79 certifies B01065, B01069, and B02061 across four physicals.
-- BUG-344 fixes B02061's missing optional and zero-card evidence transfer.
-- Coverage is 1508 matched / 1456 test-missing / 2964 total.
+- Wave80 certifies B02038, B02044, and B02086 across six physicals.
+- Wave81 certifies B02043, B02045, B02047, and B03050.
+- BUG-345 scopes B02047 immunity to one action. BUG-346 preserves replaced
+  effective values. BUG-347 closes impossible empty-hand optional acceptance.
+- Coverage is 1515 matched / 1449 test-missing / 2964 total.
 - Existing untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml` stay protected.
 
 ## Start
 
 1. Read root/nested AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read `.claude/sessions/2026-08-24-qa-waves78-79.md` and current QA trace.
-4. Fetch needed CT-P02/CT-P03 authority only into a separate `.tmp` root.
+3. Read `.claude/sessions/2026-08-24-qa-waves80-81.md` and current QA trace.
+4. Fetch CT-P02/CT-P03 authority only into a new isolated `.tmp` root.
 
-## Wave80
+## Wave82
 
-- Exact tuple: Q `f4bbd03d5c63d2445b8f5de8897299d3b4d82e8686ba1e049b82f77724d632c9`,
-  A `471dbd81e897e564c03b9dec6f7c79c7d383055b3da168f9c89e5348f224708a`,
+- Exact tuple: Q `ec58a8a7c7211d94959b85a007ced3e8c692c54c4a106fb92abebfe5c9660435`,
+  A `aac3f501aac8a6f258c10970c01ed9a7ef08ae569ea2598c91183828a718d96a`,
+  section `a7490cde656fdea72d6939329d372f44f8631dd88e1a4cbad59dbda0fd53bcb5`.
+- QA suffix `9a7ccef11a5002bcfc03a28064e814701347f8287061fa3575d710a68d789a48`.
+- Exact members: B02038/P, B02041/P, B02043, B02044/P, B02045, B02047.
+  Five records are test-missing; B02045 is the matched control.
+- Ruling: a multicolor case containing white still satisfies 【事件（白）】.
+- Prove public disguise gates for white-only, white+other, nonwhite, owner=`opp`,
+  physical variants, riders, and atomic invalid rejection.
+
+## Wave83
+
+- Exact tuple: Q `a6d4bbd6170b3457e1cfb10f2f4f93681bd4e4d4645589023a949de6e7b8e1a2`,
+  A `28c958b7b5f6584c1568157c061c38488d94b7fdb96d0d40b41138a65bd245b3`,
   section `0029d75498ecdbd0f5ec8a773acb521b538c42cfb00ee15631b9b02d68462f09`.
-- QA suffix `768a20fc5e6e165184d999a8032847d4633ef46d0ac9edd814f3c4ebb18e8e72`.
-- Targets: B02038/P, B02044/P, B02086/P. Matched control: B02041/P.
-- Ground the exact shared ruling before defining the matrix. Keep enter and
-  disguise hooks distinct while covering each card's rider: remove-area entry,
-  deck-look/order, opponent discard/contact immunity, and turn grants.
-- Prove public valid/decoy/zero decisions, owner orientation, CPU, expiry, and
-  save hydration where a decision persists.
-
-## Wave81
-
-- Exact tuple: Q `fec493c40578b4a964c5d174484e81328bae61e31d664655bb7940ef8016f130`,
-  A `471dbd81e897e564c03b9dec6f7c79c7d383055b3da168f9c89e5348f224708a`,
-  section `0029d75498ecdbd0f5ec8a773acb521b538c42cfb00ee15631b9b02d68462f09`.
-- QA suffix `14a8ef526b9ef00574961cab066ef5e035dbbeb7f94728142ad18aaa7e3fc498`.
-- Targets: B02043, B02045, B02047, B03050. No matched exact-tuple control.
-- B02043 is a D06012 reprint. B02045 has a disguise AP rider, B02047 has
-  replaced-character contact immunity, and B03050 has the Sera optional rider.
-- Prove replaced-character valid/decoy boundaries, public accept/decline,
-  opponent ownership, contact completion/expiry, CPU, and save where applicable.
-- Do not merge Wave80 rows merely because their answer and section match;
-  Wave80 and Wave81 have different question hashes.
+- QA suffix `bde0a3a5b0127797c2caad230a469d5a24f2a164829581273d0d8e77589383d6`.
+- Exact members: B03050, B03051, B03052/P, B03129/P. Three records are
+  test-missing; B03129 is the matched control.
+- Ruling: disguise exchanges hand and scene characters, bottoms the old card,
+  and preserves state, modifiers, and set cards under the replacement contract.
+- Prove public valid/invalid exchange, owner orientation, inherited state and
+  attachments, old-face deck order, observers, save where persistent, and all
+  riders. Escalate to T3 if contact/GameState changes are required.
 
 ## Gates and stop
 
@@ -50,7 +50,7 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves78-79 commit.
 - Run focused/full tests, typecheck, lint, QA/docs/static gates, smoke1000, and
   isolated representative/full-match Playwright.
 - Require rules and adversarial review before commit/push.
-- Stop after Waves80-81 and write the next handoff.
+- Stop after Waves82-83 and write the next handoff.
 
-Remaining estimate: 1456 records, about 123-268 agent-hours or 33-75 wall
+Remaining estimate: 1449 records, about 122-267 agent-hours or 33-74 wall
 hours with four-way parallel work before future grouping gains.

@@ -14,8 +14,8 @@
 //         filter:{lpMin:2, color:'白'}} (W3 新 primitive) — disguise:into payload.replacedChar (入替え元の
 //         disguiseInto 直前 snapshot、turnEffects 保持 = 効果解決時点の実効 LP、rules/19) を filter 評価。
 //       「このキャラはこのコンタクトによってリムーブされない」=> charSetTurnEffect{uid:'$self',
-//         key:'contactImmune', val:true} — AP 判定 gate (flow/contact judge の ax.contactImmune snapshot) +
-//         コンタクト終了時クリアは既存配線 (rules/22: AP 判定リムーブのみ免疫、カットイン直接リムーブは貫通)。
+//         key:'contactImmune_action', val:true} — AP 判定 gate (flow/contact judge の ax.contactImmune snapshot) +
+//         action-end 清掃 (同一ターンの後続 contact へ持ち越さない)。rules/22: AP 判定リムーブのみ免疫。
 import type { AbilityDef, CardDef } from '@/engine/types';
 
 const a1: AbilityDef = {
@@ -41,7 +41,7 @@ const a2: AbilityDef = {
     selfOnly: true,
     matcherCondition: { kind: 'disguiseReplacedMatches', filter: { lpMin: 2, color: '白' } },
   },
-  effect: { kind: 'atom', verb: 'charSetTurnEffect', args: { uid: '$self', key: 'contactImmune', val: true } },
+  effect: { kind: 'atom', verb: 'charSetTurnEffect', args: { uid: '$self', key: 'contactImmune_action', val: true } },
   description: '【変装時】LP2以上の【白】のキャラと入れ替わった場合、このキャラはこのコンタクトによってリムーブされない。',
   ruleRefs: ['rules/08-contact.md', 'rules/09-cutin-disguise.md', 'rules/17-icons.md', 'rules/23-qa-disguise-cutin.md'],
 };
