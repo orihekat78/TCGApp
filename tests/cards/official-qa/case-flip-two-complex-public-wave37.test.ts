@@ -52,7 +52,7 @@ const ROWS: Row[] = [
   {
     cardId: 'B09112',
     setup: () => undefined,
-    declaredName: 'キッド',
+    declaredName: '工藤新一',
     expectedSelfRemove: [], expectedOppRemove: [], expectedOppFile: [],
   },
   {

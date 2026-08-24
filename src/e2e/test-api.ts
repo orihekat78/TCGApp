@@ -14,6 +14,7 @@ import { useTargetPickerStore } from '../ui/hooks/useTargetPicker.js';
 import { resetPresentationQueue } from '../ui/presentation/coordinator.js';
 import { surfacePendingSideChannels } from '../ui/state/surface-pending.js';
 import { deckOccurrenceAuthority } from '../engine/effect/deck-occurrence-authority.js';
+import { resetMatchSession } from '../ui/services/matchSession.js';
 
 export const e2eTestApi = {
   appendCausal,
@@ -22,6 +23,7 @@ export const e2eTestApi = {
   persistPendingRuntimeState,
   produce,
   resetPendingRuntimeState,
+  resetMatchSession,
   resetPresentationQueue,
   runAtom,
   startCausalSession,

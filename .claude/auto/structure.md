@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6604
+- **ファイル数**: 6611
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -540,6 +540,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-357.md` — declared prewalk decision authority
     - `BUG-358.md` — B04048 registered all-card name authority
     - `BUG-359.md` — Wave105 registered all-card name authority
+    - `BUG-360.md` — Wave107 cut-in declared-name authority
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1632,6 +1633,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves100-101.md` — QA adjudication Waves100-101
     - `2026-08-25-qa-waves102-103.md` — QA adjudication Waves102-103
     - `2026-08-25-qa-waves104-105.md` — QA adjudication Waves104-105
+    - `2026-08-25-qa-waves106-107.md` — QA adjudication Waves106-107
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -2885,6 +2887,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `.gitkeep`
     - `ability-ctx.ts` — ai.ability-ctx — Phase 8.8d: EffectCtx 構築ヘルパ
     - `action-resolution.ts` — ai.action-resolution — Phase 8.7c: アクション宣言の共通解決ヘルパ
+    - `cutin-declared-name.ts`
     - `headless-decision-context.ts` — AI simulation and replay are headless authorities. They must not inherit
     - `index.ts` — ai namespace barrel — Phase 6 Group A
     - `match.ts` — ai.match — AI vs AI single-match driver (Phase 6 Group C Task 6.5)
@@ -5442,7 +5445,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useContactModalStore.ts` — Phase 8 完全クローズ Commit 2: コンタクトフロー用モーダル状態 store
       - `useCutinDemoDriver.ts` — 2026-05-27 カットイン効果検証 demo の完了検知 driver
       - `useDeckCount.ts` — Phase 7 Task 7.7: DeckArea selector hook
-      - `useDeclareNamePicker.ts` — CARD PHASE step12 batch2 (2026-07-04): declareName verb (「カード名を1つ指定し」B09108/…
+      - `useDeclareNamePicker.ts` — CARD PHASE step12 batch2 (2026-07-04): declareName verb (宣言能力 / カットイン)
       - `useEffectPickFlowDriver.ts` — 公開UIの保留decisionをresolver順に監視するdriver。
       - `useEffectStack.ts` — Phase 7 Task 7.14: EffectStackPanel selector hook
       - `useEngineDispatch.ts` — Phase 8 Task 8.1: UI → engine action ディスパッチ基盤
@@ -5964,6 +5967,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `misread-public-runtime-wave18.test.ts` — qa: card:B04079:c61cc842e775e8f40c3ccc90d41e595b2e2e02184cc4d243534b3c2fdf721fdb
       - `misread-public-runtime-wave26.test.ts` — qa: card:B04038:6d5a65b9e083c8565478cceec3269781a67a936789441e6c196e107f90e2e8c8
       - `misread-reaction-order-wave26.test.ts` — qa: card:B05015:32589b2605a57e1fe89295b9b2340e6874cd6600ca6756e790b5fbcad58bae18
+      - `multi-component-name-consumers-public-wave107.test.ts` — qa: card:B09108:52e25d1fb9d3623390ecb00ccb1047978985d54514cf0287453e6c0e3105c82a
+      - `multi-component-name-public-wave107.test.ts` — qa: card:B09052:45a28272794215b6465b92629940788c48e8cb3de486869a26a5a34e1a4f6a73
       - `multihook-timing-public.test.ts` — qa: card:D03007:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3
       - `must-guard-public-wave100-101.test.ts` — qa: card:B09040:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6
       - `nonpositive-ap-public-wave66.test.ts` — qa: card:B02021:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb
@@ -6331,6 +6336,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `charge-keyword-badge.spec.ts` — E2E: 突撃バッジ (user 指摘, 2026-06-01)
     - `choice-picker.spec.ts` — BUG-108 E2E: ChoicePickerModal の実ブラウザ render + option click → picker resolve を検証…
     - `choose-intercept.spec.ts`
+    - `cutin-declared-name-wave107.spec.ts`
     - `cutin-handzone-pick.spec.ts` — User 要望: コンタクト中のカットイン選択を、テキストボタン modal ではなく HandZone pick mode
     - `deck-reveal-overlay-ui.spec.ts` — E2E: DeckRevealOverlay の演出 (user 指摘 #1, 2026-06-01)
     - `declared-source-hand-occurrence.spec.ts` — B06103's on-hand declared ability removes a same-colour character as
@@ -6826,6 +6832,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useActionsPanelFlow.test.ts` — Phase 8 Task 8.5: ActionsPanel フロー (endTurn 最小配線)
       - `useCanEndTurnForUi.test.tsx`
       - `useConfirmation.test.ts` — Phase 8 Task 8.3: useConfirmation (Q9 厳格モード モーダル)
+      - `useContactFlowDriver.declared-name.test.ts`
       - `useContactFlowDriver.test.ts` — Phase 8 完全クローズ Commit 2: ContactFlowDriver smoke tests
       - `useCutinDemoDriver.test.tsx`
       - `useEffectPickFlowDriver.integration.test.tsx`

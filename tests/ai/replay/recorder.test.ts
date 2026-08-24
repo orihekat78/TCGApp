@@ -128,6 +128,8 @@ describe('ScriptedPolicy', () => {
     { cardId: 'B09108P', abilityId: 'a2', abilityIndex: 1, area: 'partner-area' as const },
     { cardId: 'B09111', abilityId: 'a2', abilityIndex: 1, area: 'case' as const },
     { cardId: 'B09111P', abilityId: 'a2', abilityIndex: 1, area: 'case' as const },
+    { cardId: 'B09112', abilityId: 'a2', abilityIndex: 1, area: 'case' as const },
+    { cardId: 'B09112P', abilityId: 'a2', abilityIndex: 1, area: 'case' as const },
   ])('adapts a name-missing legacy $cardId/$abilityId printed move', (row) => {
     resetForRun();
     const uid = row.area === 'case' ? 'case:self' : row.area === 'partner-area' ? 'partnerMR:self' : 'legacy-host';

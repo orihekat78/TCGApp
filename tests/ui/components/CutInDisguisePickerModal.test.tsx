@@ -126,7 +126,7 @@ describe('CutInDisguisePickerModal', () => {
       (container.querySelector('[data-testid="cid-disg-card:self:hand:DIS#1"]') as HTMLButtonElement).click();
       (container.querySelector('[data-testid="cid-pass"]') as HTMLButtonElement).click();
     });
-    expect(onPickCutIn).toHaveBeenCalledWith('CUT');
+    expect(onPickCutIn).toHaveBeenCalledWith('CUT', 'card:self:hand:CUT#0');
     expect(onPickDisguise).toHaveBeenCalledWith('DIS');
     expect(onPass).toHaveBeenCalledOnce();
 
@@ -220,6 +220,32 @@ describe('CutInDisguisePickerModal', () => {
     container.remove();
   });
 
+  it('focuses a requested cut-in occurrence after a nested prompt closes', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    act(() => root.render(
+      <CutInDisguisePickerModal
+        open
+        actorLabel="1番目"
+        candidates={[
+          { uid: 'SAME#0', cardId: 'SAME', name: 'First', kind: 'cutin' },
+          { uid: 'SAME#1', cardId: 'SAME', name: 'Second', kind: 'cutin' },
+        ]}
+        initialFocusOccurrenceUid="SAME#1"
+        onPickCutIn={vi.fn()}
+        onPickDisguise={vi.fn()}
+        onPass={vi.fn()}
+      />,
+    ));
+
+    expect(document.activeElement).toBe(
+      container.querySelector('[data-testid="cid-cutin-SAME#1"]'),
+    );
+    act(() => root.unmount());
+    container.remove();
+  });
+
   it('renders public action candidates with independent details and preserves the action payload', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -247,7 +273,7 @@ describe('CutInDisguisePickerModal', () => {
     act(() => select.dispatchEvent(contextEvent));
     expect(contextEvent.defaultPrevented).toBe(true);
     act(() => select.click());
-    expect(onPickCutIn).toHaveBeenCalledWith('D08015');
+    expect(onPickCutIn).toHaveBeenCalledWith('D08015', 'D08015#0');
 
     act(() => root.unmount());
     container.remove();

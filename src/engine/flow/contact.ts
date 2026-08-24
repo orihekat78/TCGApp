@@ -19,6 +19,11 @@ import { findLiveHandLeaveInterceptor } from '../effect/consult-leave-intercept.
 import { effectiveCutinAbilities } from '../read/hand-cutin.js';
 import { evalCond } from '../cond/eval.js';
 import { matchOneFilter } from '../target/candidates.js'; // engine A3 wave (2026-07-11): B05007 filtered action-scoped cutin ban
+import {
+  findDeclareNameSpec,
+  resolveDeclaredName,
+  type DeclareNameSpec,
+} from '../effect/declared-name-domain.js';
 import { computeOrder as _computeOrder } from './action/order.js';
 import { contextForState } from './action/context-registry.js';
 import {
@@ -144,6 +149,54 @@ function sideHasActionCutinBan(state: GameState, side: Player): boolean {
   return state.players[side].scene.some(c => c.turnEffects['cutinBanOpp_action'] === true);
 }
 
+function selectedCutInAbility(
+  state: GameState,
+  player: Player,
+  cardId: string,
+  abilityId?: string,
+): AbilityDef | undefined {
+  const abilities = effectiveCutinAbilities(state, player, cardId);
+  return abilityId ? abilities.find(ability => ability.id === abilityId) : abilities[0];
+}
+
+function activeCutInAbility(
+  state: GameState,
+  ax: ActionContext,
+  player: Player,
+  cardId: string,
+  abilityId?: string,
+): AbilityDef | undefined {
+  ax = contextForState(state, ax);
+  const ability = selectedCutInAbility(state, player, cardId, abilityId);
+  if (!ability) return undefined;
+  const payload = { cardId, abilityId: 'cutin', cutinAbilityId: ability.id };
+  const ctx: EffectCtx = {
+    source: { player, cardId, abilityId: ability.id, area: 'hand' },
+    bindings: buildContactBindings(ax, player) as EffectCtx['bindings'],
+    triggerPayload: payload,
+  };
+  const trigger = ability.trigger;
+  if (trigger?.matcher && !trigger.matcher(payload, state)) return undefined;
+  if (trigger?.matcherCondition && !evalCond(state, trigger.matcherCondition, ctx)) return undefined;
+  if (ability.condition && !evalCond(state, ability.condition, ctx)) return undefined;
+  return ability;
+}
+
+/** Name input required by the selected cut-in's currently effective text. */
+export function cutInDeclaredNameSpec(
+  state: GameState,
+  ax: ActionContext,
+  player: Player,
+  cardId: string,
+  abilityId?: string,
+): (DeclareNameSpec & { abilityId: string; description: string }) | null {
+  const ability = activeCutInAbility(state, ax, player, cardId, abilityId);
+  const spec = findDeclareNameSpec(ability?.effect);
+  return ability && spec
+    ? { ...spec, abilityId: ability.id, description: ability.description }
+    : null;
+}
+
 /**
  * cutIn — カットイン実行
  *
@@ -159,7 +212,14 @@ function sideHasActionCutinBan(state: GameState, side: Player): boolean {
  * その中で cutin Effect を pendingEffects に push した後、
  * engine.resolve.runAllUntilEmpty() を駆動すること。
  */
-export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: string, cutinAbilityId?: string): void {
+export function cutIn(
+  state: GameState,
+  ax: ActionContext,
+  p: Player,
+  cardId: string,
+  cutinAbilityId?: string,
+  declaredName?: string,
+): void {
   ax = contextForState(state, ax);
   if (!canCutIn(state, ax, p, cardId)) {
     throw new Error(`flow.contact.cutIn: cannot cut in cardId=${cardId} for ${p}`);
@@ -175,11 +235,18 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
   // と渡り、atom-handler の resolveBindRef が `$contact.byUid` を解決できる。
   // BUG-104: p 視点の contact bindings (攻撃側/防御側 cutin で $contact.byUid が正しく解決)。
   const contactBindings = buildContactBindings(ax, p);
-  const cutinAbilities = effectiveCutinAbilities(state, p, cardId);
-  const selected = cutinAbilityId
-    ? cutinAbilities.find(a => a.id === cutinAbilityId)
-    : cutinAbilities[0];
+  const selected = selectedCutInAbility(state, p, cardId, cutinAbilityId);
   if (!selected) throw new Error(`flow.contact.cutIn: cutin ability not found cardId=${cardId}`);
+  const declareSpec = cutInDeclaredNameSpec(state, ax, p, cardId, selected.id);
+  let canonicalDeclaredName: string | undefined;
+  if (declareSpec && typeof declaredName === 'string' && declaredName.trim() !== '') {
+    canonicalDeclaredName = resolveDeclaredName(declareSpec.domain, declaredName) ?? undefined;
+    if (canonicalDeclaredName === undefined) {
+      throw new Error('flow.contact.cutIn: declared name is not registered or identifiable');
+    }
+  } else if (declareSpec && !declareSpec.optional && declareSpec.domain !== 'unrestricted') {
+    throw new Error('flow.contact.cutIn: registered declared name is required');
+  }
   const cutinDecisionEventId = recordActionCausalOperation(state, ax, {
     actor: p,
     kind: 'use',
@@ -188,7 +255,12 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
     targets: [{ kind: 'zone', side: p, zone: 'hand' }],
     outcome: { type: 'state', state: 'active' },
   });
-  event.emit(state, 'effect:declared', { cardId, abilityId: 'cutin', cutinAbilityId: selected.id }, {
+  event.emit(state, 'effect:declared', {
+    cardId,
+    abilityId: 'cutin',
+    cutinAbilityId: selected.id,
+    ...(canonicalDeclaredName === undefined ? {} : { declaredName: canonicalDeclaredName }),
+  }, {
     player: p, cardId, bindings: contactBindings, resolutionKind: 'cutin' as const,
   }, {
     causalCorrelationEventId: cutinDecisionEventId,
@@ -765,6 +837,7 @@ export function computeOrder(
 export const contact = {
   canCutIn,
   cutIn,
+  cutInDeclaredNameSpec,
   canDisguise,
   disguise,
   pass,

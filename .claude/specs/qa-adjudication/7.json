@@ -1479,8 +1479,8 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09052.ts:1",
-        "tests:tests/cards/official-qa/decision-persistence-wave23.test.ts:325"
+        "src:src/cards/ct-p09/B09052.ts:27",
+        "tests:tests/cards/official-qa/multi-component-name-public-wave107.test.ts:90"
       ],
       "noteCodes": []
     },

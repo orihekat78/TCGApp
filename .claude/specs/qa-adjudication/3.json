@@ -826,7 +826,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:10",
         "src:src/cards/ct-p05/B05077.ts:18",
-        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:355"
+        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:356"
       ]
     },
     {
@@ -1688,7 +1688,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:10",
         "src:src/cards/ct-p09/B09106.ts:16",
-        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:487"
+        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:488"
       ]
     },
     {

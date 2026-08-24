@@ -12,6 +12,7 @@ import {
   DECLARED_NAME_DOMAINS,
   findDeclareNameSpec,
   isLegacyRegisteredCardNameMigrationSource,
+  registeredCardNameMigrationFor,
   resolveDeclaredName,
   type DeclareNameSpec,
 } from './declared-name-domain.js';
@@ -589,6 +590,77 @@ function assertExactDeclaredNameKeys(
   }
 }
 
+function plainRecord(value: unknown): Record<string, unknown> | undefined {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : undefined;
+}
+
+function hasExactKeys(value: Record<string, unknown> | undefined, expected: string[]): boolean {
+  if (!value) return false;
+  const actual = Object.keys(value).sort();
+  const sortedExpected = [...expected].sort();
+  return actual.length === sortedExpected.length
+    && actual.every((key, index) => key === sortedExpected[index]);
+}
+
+function exactLegacyEvidenceCostDyn(
+  item: Record<string, unknown>,
+  dyn: Record<string, unknown>,
+  source: Record<string, unknown>,
+): boolean {
+  const migration = registeredCardNameMigrationFor(
+    typeof source.cardId === 'string' ? source.cardId : undefined,
+    typeof source.abilityId === 'string' ? source.abilityId : undefined,
+  );
+  if (migration?.legacyCostShape !== 'flip-face-up-evidence-2'
+    || !hasExactKeys(dyn, [
+      'costParams', 'declaredName', 'runtimeHumanPlayer', 'runtimePickOwnerKnown',
+    ])
+    || dyn.runtimeHumanPlayer !== source.player
+    || dyn.runtimePickOwnerKnown !== true) return false;
+
+  const costParams = plainRecord(dyn.costParams);
+  const flipParams = plainRecord(costParams?.flipFaceUpEvidence);
+  const indices = flipParams?.indices;
+  if (!hasExactKeys(costParams, ['flipFaceUpEvidence'])
+    || !hasExactKeys(flipParams, ['indices'])
+    || !Array.isArray(indices)
+    || indices.length !== 2
+    || indices.some(index => !Number.isSafeInteger(index) || (index as number) < 0)
+    || new Set(indices).size !== indices.length) return false;
+
+  const costPaid = plainRecord(item.costPaid);
+  const paidFlip = plainRecord(costPaid?.flipFaceUpEvidence);
+  const ids = paidFlip?.ids;
+  const occurrences = paidFlip?.occurrences;
+  if (!paidFlip
+    || !hasExactKeys(costPaid, ['flipFaceUpEvidence'])
+    || !hasExactKeys(paidFlip, ['count', 'ids', 'occurrences'])
+    || paidFlip.count !== 2
+    || !Array.isArray(ids)
+    || ids.length !== 2
+    || !Array.isArray(occurrences)
+    || occurrences.length !== 2) return false;
+
+  const paidIndices: number[] = [];
+  for (let index = 0; index < occurrences.length; index += 1) {
+    const occurrence = plainRecord(occurrences[index]);
+    if (!occurrence
+      || occurrence.kind !== 'card'
+      || occurrence.player !== source.player
+      || occurrence.area !== 'evidence'
+      || !Number.isSafeInteger(occurrence.index)
+      || occurrence.index as number < 0
+      || typeof occurrence.cardId !== 'string'
+      || ids[index] !== occurrence.cardId) return false;
+    paidIndices.push(occurrence.index as number);
+  }
+  return [...indices].sort((left, right) => (left as number) - (right as number)).every(
+    (index, position) => index === paidIndices.sort((left, right) => left - right)[position],
+  );
+}
+
 function assertEffectCtxDeclaredNameAuthority(
   state: GameState,
   item: Record<string, unknown>,
@@ -627,7 +699,17 @@ function assertEffectCtxDeclaredNameAuthority(
       && dynKeys[2] === 'runtimePickOwnerKnown'
       && dyn?.runtimeHumanPlayer === source.player
       && dyn?.runtimePickOwnerKnown === true;
-    if ((!plainLegacyDyn && !runtimeLegacyDyn) || dyn?.declaredName !== legacyName) {
+    const evidenceCostLegacyDyn = dyn !== undefined
+      && exactLegacyEvidenceCostDyn(item, dyn, source);
+    const migration = registeredCardNameMigrationFor(
+      typeof source.cardId === 'string' ? source.cardId : undefined,
+      typeof source.abilityId === 'string' ? source.abilityId : undefined,
+    );
+    const allowedLegacyDyn = migration?.legacyCostShape === undefined
+      ? plainLegacyDyn || runtimeLegacyDyn || evidenceCostLegacyDyn
+      : evidenceCostLegacyDyn;
+    if (!allowedLegacyDyn
+      || dyn?.declaredName !== legacyName) {
       fail(`${path}.dyn`, 'must contain only the matching legacy declared name');
     }
     if (hasDomains) {

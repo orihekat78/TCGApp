@@ -881,15 +881,13 @@
     {
       "qaId": "card:B05077:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
       "answerHash": "bd1021263916b76aa59508c6813bbffe73c698f6db8511f6e09c600022e7d446",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05077.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
+        "src:src/cards/ct-p05/B05077.ts:22",
+        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:351",
+        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:381"
       ]
     },
     {
@@ -947,15 +945,14 @@
     {
       "qaId": "card:B05101:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
       "answerHash": "bd1021263916b76aa59508c6813bbffe73c698f6db8511f6e09c600022e7d446",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05101.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
+        "src:src/cards/ct-p05/B05101.ts:39",
+        "tests:tests/cards/s1-defer/B05101.test.ts:124",
+        "tests:tests/cards/s1-defer/B05101.test.ts:160",
+        "tests:tests/cards/s1-defer/B05101.test.ts:73"
       ]
     },
     {
@@ -1741,7 +1738,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:10",
         "src:src/cards/ct-p08/B08076.ts:31",
-        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:463"
+        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:464"
       ]
     },
     {

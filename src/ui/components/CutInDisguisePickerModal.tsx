@@ -41,17 +41,34 @@ export type CutInDisguisePickerModalProps = {
   candidates: readonly CutInDisguiseCandidate[];
   /** Full hand, including prohibited and otherwise noneligible cards. */
   handCards?: readonly CutInDisguiseHandCard[];
-  onPickCutIn: (cardId: string) => void;
+  /** Preferred occurrence after a nested name prompt closes. */
+  initialFocusOccurrenceUid?: string;
+  onPickCutIn: (cardId: string, occurrenceUid: string) => void;
   onPickDisguise: (cardId: string) => void;
   onPass: () => void;
 };
 
 export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): JSX.Element | null {
-  const { open, actorLabel, actorName, candidates, handCards, onPickCutIn, onPickDisguise, onPass } = props;
+  const {
+    open,
+    actorLabel,
+    actorName,
+    candidates,
+    handCards,
+    initialFocusOccurrenceUid,
+    onPickCutIn,
+    onPickDisguise,
+    onPass,
+  } = props;
   const expandModal = useCardExpandModal();
+  const escapedInitialFocusUid = initialFocusOccurrenceUid
+    ?.replaceAll('\\', '\\\\')
+    .replaceAll('"', '\\"');
   const dialogRef = useModalFocusTrap({
     active: open,
-    initialFocusSelector: '[data-cid-primary-action="true"]',
+    initialFocusSelector: escapedInitialFocusUid === undefined
+      ? '[data-cid-primary-action="true"]'
+      : `[data-cid-occurrence="${escapedInitialFocusUid}"]`,
   });
   if (!open) return null;
 
@@ -132,7 +149,8 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
                       type="button"
                       className="cid-cand cid-cand-cutin"
                       data-cid-primary-action="true"
-                      onClick={() => onPickCutIn(c.cardId)}
+                      data-cid-occurrence={occurrenceId}
+                      onClick={() => onPickCutIn(c.cardId, occurrenceId)}
                       onContextMenu={(event) => {
                         event.preventDefault();
                         expandModal.open(c.cardId);

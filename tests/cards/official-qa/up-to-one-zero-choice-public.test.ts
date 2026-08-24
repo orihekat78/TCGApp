@@ -556,7 +556,31 @@ function expectDeckRepresentative(cardId: string, options: { discard?: boolean; 
 
 describe('official QA: representative positive and no-match continuations stay card-bound', () => {
   it('B03007 keeps the match and gates its discard', () => expectDeckRepresentative('B03007', { discard: true }));
-  it('B03018 completes the opponent-turn leave and shuffle', () => expectDeckRepresentative('B03018'));
+  // qa: card:B03018:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
+  it('B03018 completes the opponent-turn leave and shuffle', () => {
+    expect(proveDeckLookBranch('B03018', true), 'B03018 public positive branch').toEqual({
+      selected: 'QA-UP-TO-POS-B03018',
+      targetInHand: true,
+      targetInScene: false,
+      targetCopies: 1,
+      decoyInHand: false,
+      decoyCopies: 1,
+      sentinelInHand: true,
+      priorResolved: true,
+      terminalCleared: true,
+    });
+    expect(proveDeckLookBranch('B03018', false), 'B03018 public no-match branch').toEqual({
+      selected: null,
+      targetInHand: false,
+      targetInScene: false,
+      targetCopies: 0,
+      decoyInHand: false,
+      decoyCopies: 1,
+      sentinelInHand: true,
+      priorResolved: true,
+      terminalCleared: true,
+    });
+  });
   it('B03086 removes the revealed remainder', () => expectDeckRepresentative('B03086'));
   it('B03115 resolves the prior scene pick before its match and discard', () => expectDeckRepresentative('B03115', { discard: true }));
   it('B07035 applies filterAny and the solved-case discard gate', () => expectDeckRepresentative('B07035', { discard: true }));

@@ -15,6 +15,7 @@ export type RegisteredCardNameMigration = {
   abilityId: string;
   abilityIndex: number;
   area: 'scene' | 'partner-area' | 'case';
+  legacyCostShape?: 'flip-face-up-evidence-2';
 };
 
 const REGISTERED_CARD_NAME_MIGRATIONS: readonly RegisteredCardNameMigration[] = [
@@ -26,6 +27,14 @@ const REGISTERED_CARD_NAME_MIGRATIONS: readonly RegisteredCardNameMigration[] = 
   { cardId: 'B09108P', abilityId: 'a2', abilityIndex: 1, area: 'partner-area' },
   { cardId: 'B09111', abilityId: 'a2', abilityIndex: 1, area: 'case' },
   { cardId: 'B09111P', abilityId: 'a2', abilityIndex: 1, area: 'case' },
+  {
+    cardId: 'B09112', abilityId: 'a2', abilityIndex: 1, area: 'case',
+    legacyCostShape: 'flip-face-up-evidence-2',
+  },
+  {
+    cardId: 'B09112P', abilityId: 'a2', abilityIndex: 1, area: 'case',
+    legacyCostShape: 'flip-face-up-evidence-2',
+  },
 ];
 
 export function registeredCardNameMigrationFor(

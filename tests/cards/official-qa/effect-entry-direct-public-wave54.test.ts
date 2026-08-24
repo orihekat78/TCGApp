@@ -326,6 +326,7 @@ describe('official QA Wave54: direct effect-entry routes fire normal enter abili
     finishAction(actionId);
   });
 
+  // qa: card:B05077:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
   it('B05077 opponent-turn contact removal forces Jodie entry before her normal enter fires', () => {
     const state = createEmptyGameState();
     state.turn = { number: 4, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };

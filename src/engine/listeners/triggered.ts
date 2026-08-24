@@ -612,6 +612,11 @@ function handleHook(
           && trig.selfOnly !== true
       ) || (hookName === 'cutin:used' && declaredBatch !== undefined);
       const resolvedEffect = ability.effect;
+      const cutinDeclaredName = hookName === 'effect:declared'
+        && resolutionKind === 'cutin'
+        && typeof (occurrencePayload as { declaredName?: unknown } | undefined)?.declaredName === 'string'
+        ? (occurrencePayload as { declaredName: string }).declaredName
+        : undefined;
       // queue (side-channel set されていても skip しない、pre-pick step 実行のため)。
       // sourceBindings (contact bindings) は上で算出済 → entry に永続化 (runtime $contact.byUid 解決)。
       event.queue(
@@ -624,6 +629,7 @@ function handleHook(
         // BUG-132 GAP-2: effect:declared のみ batch 連番 + 反応マーカーを entry に付与
         {
           deferredPicks: true,
+          ...(cutinDeclaredName === undefined ? {} : { dyn: { declaredName: cutinDeclaredName } }),
           ...(declaredBatch !== undefined
           ? {
               declaredBatch,

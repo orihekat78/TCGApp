@@ -1574,11 +1574,8 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09112.ts:104",
-        "tests:tests/cards/night-wB2/B09112.test.ts:104"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION"
+        "src:src/cards/ct-p09/B09112.ts:56",
+        "tests:tests/cards/official-qa/multi-component-name-consumers-public-wave107.test.ts:173"
       ]
     },
     {

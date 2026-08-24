@@ -93,6 +93,7 @@ import { isSceneEnterSwitchPickArgs } from '@/engine/effect/scene-switch.js';
 // D08021 driver 2026-05-26: distinctNames 制約 (rules/19) を multi-pick UI で
 // 適用するため、name component 計算 helper を import。
 import { allCardNameComponentsForDef } from '@/engine/target/card-def-registry.js';
+import { declaredNameCandidates } from '@/engine/effect/declared-name-domain.js';
 import './Playmat.css';
 
 // engine の `players[side].case.colors` (日本語色名) を CaseInfo.color (英名) に変換
@@ -127,6 +128,37 @@ type CandidateProps = {
   isPartnerMRCandidate?: boolean;
   onPartnerMRClick?: () => void;
 };
+
+type CutInDeclaredNameResult =
+  | { cancelled: true }
+  | { cancelled: false; declaredName?: string };
+
+async function collectCutInDeclaredName(
+  state: GameState,
+  actionId: string,
+  player: 'self' | 'opp',
+  cardId: string,
+): Promise<CutInDeclaredNameResult> {
+  const action = engineFlow.action._getContext(state, actionId);
+  if (!action) return { cancelled: true };
+  const spec = engineFlow.contact.cutInDeclaredNameSpec(state, action, player, cardId);
+  if (!spec) return { cancelled: false };
+  const sourceName = readDef.card(cardId)?.names?.[0] ?? cardId;
+  const interactionEpoch = currentInteractionEpoch();
+  const result = await useDeclareNamePicker().ask({
+    sourceName,
+    prompt: `${sourceName}：${spec.description}`,
+    candidateNames: declaredNameCandidates(spec.domain),
+    optional: spec.optional,
+    domain: spec.domain,
+  });
+  if (!isCurrentLiveInteraction(interactionEpoch)) return { cancelled: true };
+  if (result.kind === 'cancel') return { cancelled: true };
+  return {
+    cancelled: false,
+    ...(result.kind === 'declare' ? { declaredName: result.name } : {}),
+  };
+}
 
 type PlayerMatProps = CandidateProps & {
   side: 'self' | 'opp';
@@ -478,14 +510,30 @@ export function Playmat({
     ? `カットイン可能 ${cutinCount}枚（パス可）— ${cutInStore.actorLabel}${cutInStore.actorName ? `（${cutInStore.actorName}）` : ''}`
     : undefined;
   const handleCutinPick = (uid: string): void => {
-    const cur = useContactModalStore.getState().cutInDisguise;
-    if (!cur) return;
-    const cardId = cardIdFromOccurrenceUid(uid);
-    if (!cardId) return;
-    useContactModalStore.getState()._setCutInDisguise(null);
-    setHandExpanded(false);
-    dispatchEngineAction({ type: 'actionContact', actionId: cur.actionId, player: cur.player, choice: { kind: 'cutin', cardId } });
-    dispatchEngineAction({ type: 'actionAdvance', actionId: cur.actionId });
+    void (async () => {
+      const cur = useContactModalStore.getState().cutInDisguise;
+      if (!cur) return;
+      const cardId = cardIdFromOccurrenceUid(uid);
+      if (!cardId) return;
+      const state = useGameStateStore.getState().gameState;
+      if (!state) return;
+      const declaration = await collectCutInDeclaredName(state, cur.actionId, cur.player, cardId);
+      if (declaration.cancelled) return;
+      if (useContactModalStore.getState().cutInDisguise?.actionId !== cur.actionId) return;
+      useContactModalStore.getState()._setCutInDisguise(null);
+      setHandExpanded(false);
+      dispatchEngineAction({
+        type: 'actionContact',
+        actionId: cur.actionId,
+        player: cur.player,
+        choice: {
+          kind: 'cutin',
+          cardId,
+          ...(declaration.declaredName === undefined ? {} : { declaredName: declaration.declaredName }),
+        },
+      });
+      dispatchEngineAction({ type: 'actionAdvance', actionId: cur.actionId });
+    })();
   };
   const handleCutinPass = (): void => {
     const cur = useContactModalStore.getState().cutInDisguise;
@@ -1730,10 +1778,15 @@ function PlaymatMisreadPickerModal(): JSX.Element | null {
 function PlaymatCutInDisguisePickerModal(): JSX.Element | null {
   const current = useContactModalStore((s) => s.cutInDisguise);
   const gameState = useGameStateStore((s) => s.gameState);
+  const declaredNameRequest = useDeclareNamePickerStore((s) => s.current);
+  const restoreCutInFocusRef = useRef<{ actionId: string; occurrenceUid: string } | null>(null);
+  useEffect(() => {
+    if (current === null) restoreCutInFocusRef.current = null;
+  }, [current]);
   // 変装候補があるときだけ modal を出す。cutin のみ (MVP は常にこちら) は Playmat の
   // HandZone pick mode (黄色枠) で処理するため modal は閉じたまま。
   const hasDisguise = (current?.candidates ?? []).some((c) => c.kind === 'disguise');
-  if (!current || !hasDisguise) {
+  if (!current || !hasDisguise || declaredNameRequest !== null) {
     return (
       <CutInDisguisePickerModal
         open={false}
@@ -1760,17 +1813,41 @@ function PlaymatCutInDisguisePickerModal(): JSX.Element | null {
       actorName={current.actorName}
       candidates={current.candidates}
       handCards={handCards}
-      onPickCutIn={(cardId) => {
-        close();
-        dispatchEngineAction({
-          type: 'actionContact',
-          actionId: current.actionId,
-          player: current.player,
-          choice: { kind: 'cutin', cardId },
-        });
-        dispatchAdvance();
+      initialFocusOccurrenceUid={
+        restoreCutInFocusRef.current?.actionId === current.actionId
+          ? restoreCutInFocusRef.current.occurrenceUid
+          : undefined
+      }
+      onPickCutIn={(cardId, occurrenceUid) => {
+        restoreCutInFocusRef.current = { actionId: current.actionId, occurrenceUid };
+        void (async () => {
+          if (!gameState) return;
+          const declaration = await collectCutInDeclaredName(
+            gameState,
+            current.actionId,
+            current.player,
+            cardId,
+          );
+          if (declaration.cancelled) return;
+          if (useContactModalStore.getState().cutInDisguise?.actionId !== current.actionId) return;
+          close();
+          dispatchEngineAction({
+            type: 'actionContact',
+            actionId: current.actionId,
+            player: current.player,
+            choice: {
+              kind: 'cutin',
+              cardId,
+              ...(declaration.declaredName === undefined
+                ? {}
+                : { declaredName: declaration.declaredName }),
+            },
+          });
+          dispatchAdvance();
+        })();
       }}
       onPickDisguise={(cardId) => {
+        restoreCutInFocusRef.current = null;
         close();
         dispatchEngineAction({
           type: 'actionContact',
@@ -1781,6 +1858,7 @@ function PlaymatCutInDisguisePickerModal(): JSX.Element | null {
         dispatchAdvance();
       }}
       onPass={() => {
+        restoreCutInFocusRef.current = null;
         close();
         dispatchEngineAction({
           type: 'actionContact',

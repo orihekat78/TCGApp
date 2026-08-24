@@ -18,6 +18,7 @@
 - QA Waves100-101: .claude/sessions/2026-08-25-qa-waves100-101.md.
 - QA Waves102-103: .claude/sessions/2026-08-25-qa-waves102-103.md.
 - QA Waves104-105: .claude/sessions/2026-08-25-qa-waves104-105.md.
+- QA Waves106-107: .claude/sessions/2026-08-25-qa-waves106-107.md.
 
 ## 2026-08-24: QA runtime Waves82-83
 
@@ -49,19 +50,19 @@
 
 ## Next
 
-- Waves104-105 move six Q&A items to matched. Coverage is 1673 matched / 1291
-  test-missing / 2964 total; 1110 exact groups remain, including 949 singletons.
-- Wave104 proves a Hirameki source is not yet in remove during its own effect;
-  another matching removed character remains selectable.
-- Wave105 fixes BUG-359. B09003/P, B09108/P, and B09111/P now require a
-  registered all-card name across UI/AI/save/replay. Legacy migration requires
-  exact area and witness authority; B09111/P evidence cost survives hydration.
-- Wave106 seed: section `98391238...`, Q `3e9b9e80...`, A `bd102126...` across
-  B03018/B05077/B05101.
-- Wave107 seed: section `5fcfb3b6...`, Q `c5a0fed5...`, A `3182fdb3...` across
-  B09108/B09111/B09112. This is distinct from Wave105 and must be grounded anew.
+- Waves106-107 move six Q&A items to matched. Coverage is 1679 matched / 1285
+  test-missing / 2964 total; 1108 exact groups remain, including 949 singletons.
+- Wave106 certifies B03018/B05077/B05101 opponent-turn scene-removal triggers.
+- Wave107 fixes BUG-360. B09052/P cut-in and B09112/P case declarations use
+  registered names across human/AI/save/replay. A full combined name matches
+  only the full combined name; B09112/P old evidence-cost saves fail closed
+  unless exact paid authority is present.
+- Wave108 seed: section `78223517...`, Q `52bf2f12...`, A `f6c226c9...` across
+  PR247/PR262/PR268.
+- Wave109 seed: section `93b4b1d4...`, Q `d228cd81...`, A `33f08059...` across
+  D11007/D11008/PR304.
 - Official sync drift is separate: new PR322 and changed Q&A for
   B04018/B04018P/B06103P. Do not mix it into selected waves without re-queueing.
-- Revised remaining estimate: 76-147 working hours, center about 111 hours.
+- Revised remaining estimate: 76-146 working hours, center about 111 hours.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

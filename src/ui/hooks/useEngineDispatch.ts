@@ -220,7 +220,14 @@ function runEngineAction(
       const ax = flow.action._getContext(draft, action.actionId);
       if (!ax) return;
       if (action.choice.kind === 'cutin') {
-        flow.contact.cutIn(draft, ax, action.player, action.choice.cardId);
+        flow.contact.cutIn(
+          draft,
+          ax,
+          action.player,
+          action.choice.cardId,
+          undefined,
+          action.choice.declaredName,
+        );
       } else if (action.choice.kind === 'disguise') {
         flow.contact.disguise(draft, ax, action.player, action.choice.cardId);
       } else {

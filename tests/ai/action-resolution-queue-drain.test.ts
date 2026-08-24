@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { resolveActionAgainstCase, resolveActionAgainstChar } from '@/ai/action-resolution';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { B01098 } from '@/cards/ct-p01/B01098';
+import { B09052 } from '@/cards/ct-p09/B09052';
 import { event } from '@/engine/event';
 import { _resetActionContexts } from '@/engine/flow/action/state-machine';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
@@ -11,6 +12,7 @@ import { produce } from '@/engine/produce';
 import { _resetRegistry as resetDefRegistry, register as registerCardDef } from '@/engine/read/def';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { CardDef, Effect, GameState } from '@/engine/types';
+import type { AIPolicy } from '@/ai/policy';
 
 function card(id: string, ap: number): CardDef {
   return {
@@ -168,6 +170,44 @@ describe('AI action resolution queue boundaries', () => {
 
     expect(after.players.self.scene.find((cardState) => cardState.uid === setup.markerUid)?.state).toBe('sleep');
     expect(unresolvedEffects(after)).toBe(0);
+  });
+
+  it('supplies a registered name to B09052 in the synchronous AI contact lane', () => {
+    const combined = {
+      ...card('QUEUE-COMBINED', 3000),
+      names: ['江戸川コナン&工藤新一', '江戸川コナン', '工藤新一'],
+    };
+    registerCardDef(combined);
+    registerCardDef(B09052);
+    const state = createEmptyGameState();
+    state.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    const attackerUid = mutate.scene.enter(state, 'self', combined.id, {}).uid;
+    const defenderUid = mutate.scene.enter(state, 'opp', 'QUEUE-DEF', {}).uid;
+    mutate.scene.setState(state, defenderUid, 'sleep');
+    state.players.self.hand = [B09052.id];
+    const attackerPolicy: AIPolicy = {
+      name: 'wave107-cutin-name',
+      choose: () => null,
+      chooseCutIn: (_state, _action, _player, candidates) => (
+        candidates.includes(B09052.id) ? B09052.id : null
+      ),
+    };
+
+    let after: GameState | undefined;
+    expect(() => {
+      after = produce(state, draft => {
+        resolveActionAgainstChar(
+          draft,
+          attackerUid,
+          defenderUid,
+          new HeuristicPolicy(),
+          attackerPolicy,
+        );
+      });
+    }).not.toThrow();
+    expect(after?.pendingEffects.find(entry => (
+      entry.source.cardId === B09052.id && entry.source.abilityId === 'a2'
+    ))?.dyn?.declaredName).toEqual(expect.any(String));
   });
 
   it('stops AI contact after B01098 removes both participants in action-2', () => {

@@ -904,7 +904,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:10",
         "src:src/cards/ct-p06/B06012.ts:30",
-        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:411"
+        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:412"
       ]
     },
     {

@@ -23,6 +23,7 @@ import {
 import { drainAiEffectPicks } from '@/engine/effect/apply-pick.js';
 import type { GameState, ActionContext } from '@/engine/types';
 import type { AIPolicy } from './policy.js';
+import { chooseAiCutInDeclaredName } from './cutin-declared-name.js';
 
 type Player = 'self' | 'opp';
 
@@ -148,11 +149,15 @@ function resolveCutInForPhase(
     );
     const cutinChoice = policy.chooseCutIn(state, ax, player, cutinCands);
     if (cutinChoice !== null) {
-      engine.flow.contact.cutIn(state, ax, player, cutinChoice);
-      drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
-      const current = currentActionContext(state, ax.id);
-      if (current) current[flagKey] = true;
-      return;
+      const declaredName = chooseAiCutInDeclaredName(state, ax, player, cutinChoice);
+      const spec = engine.flow.contact.cutInDeclaredNameSpec(state, ax, player, cutinChoice);
+      if (!spec || spec.optional || spec.domain === 'unrestricted' || declaredName !== undefined) {
+        engine.flow.contact.cutIn(state, ax, player, cutinChoice, undefined, declaredName);
+        drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
+        const current = currentActionContext(state, ax.id);
+        if (current) current[flagKey] = true;
+        return;
+      }
     }
   }
 

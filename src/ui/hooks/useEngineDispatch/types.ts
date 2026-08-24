@@ -20,7 +20,7 @@ type BoundDecision<T> = T & DecisionResponse;
  *  - 'pass': 行動しない
  */
 export type ContactChoice =
-  | { kind: 'cutin'; cardId: string }
+  | { kind: 'cutin'; cardId: string; declaredName?: string }
   | { kind: 'disguise'; cardId: string }
   | { kind: 'pass' };
 

@@ -263,6 +263,92 @@ describe('registered character declared-name domain', () => {
 
   it.each([
     {
+      label: 'mismatched evidence indices',
+      costParams: { flipFaceUpEvidence: { indices: [0, 2] } },
+      omitCostParams: false,
+    },
+    {
+      label: 'extra cost authority',
+      costParams: { flipFaceUpEvidence: { indices: [0, 1] }, forged: true },
+      omitCostParams: false,
+    },
+    {
+      label: 'missing evidence cost authority',
+      costParams: undefined,
+      omitCostParams: true,
+    },
+  ])('rejects B09112 legacy declared-name dyn with $label', ({ costParams, omitCostParams }) => {
+    const currentEffect = {
+      kind: 'sequence',
+      steps: [
+        { kind: 'atom', verb: 'declareName', args: { bind: 'named', domain: 'registered-card-name' } },
+        { kind: 'atom', verb: 'noop', args: {} },
+      ],
+    } as Effect;
+    const legacyEffect: Effect = {
+      kind: 'sequence',
+      steps: [
+        { kind: 'atom', verb: 'declareName', args: { bind: 'named' } },
+        { kind: 'atom', verb: 'noop', args: {} },
+      ],
+    };
+    register({
+      ...card('B09112', 'case', ['キッドVS安室 王妃の前髪']),
+      abilities: [
+        {
+          id: 'a1', type: 'triggered', scope: 'always',
+          effect: { kind: 'atom', verb: 'noop', args: {} },
+          description: 'migration index fixture', ruleRefs: [],
+        },
+        {
+          id: 'a2', type: 'declared', scope: 'always', effect: currentEffect,
+          description: 'registered card-name migration fixture', ruleRefs: [],
+        },
+      ],
+    });
+    const source = {
+      player: 'self' as const, area: 'case' as const, cardId: 'B09112', abilityId: 'a2',
+      abilityOrigin: 'printed' as const, abilityIndex: 1, uid: 'case:self',
+    };
+    const state = createEmptyGameState();
+    event.queue(state, legacyEffect, source, 'test');
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingRpsContinuation', present: true,
+        value: {
+          remainder: [], kind: 'sequence',
+          ctx: {
+            source,
+            bindings: {},
+            dyn: {
+              declaredName: 'Legacy Free Text',
+              runtimeHumanPlayer: 'self',
+              runtimePickOwnerKnown: true,
+              ...(omitCostParams ? {} : { costParams }),
+            },
+            declaredNames: { named: 'Legacy Free Text' },
+            declaredNameDomains: { named: 'unrestricted' },
+            costPaid: {
+              flipFaceUpEvidence: {
+                count: 2,
+                ids: ['E0', 'E1'],
+                occurrences: [
+                  { kind: 'card', player: 'self', area: 'evidence', index: 0, cardId: 'E0' },
+                  { kind: 'card', player: 'self', area: 'evidence', index: 1, cardId: 'E1' },
+                ],
+              },
+            },
+          },
+        },
+      }],
+    };
+
+    expect(() => hydratePendingRuntimeState(state)).toThrow(/legacy declared name|dyn|cost/i);
+  });
+
+  it.each([
+    {
       label: 'altered queued effect',
       legacyEffect: {
         kind: 'sequence',

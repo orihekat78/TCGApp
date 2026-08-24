@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `deb5234eda64`
+> Source hash: `8edb90ac770e`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **2234** ファイル（[全体 index](./index.md)）
+このグループ: **2235** ファイル（[全体 index](./index.md)）
 
 ## cards/_shared (12)
 
@@ -2242,12 +2242,13 @@
 | [`src/cards/pr-01/PR319.ts`](../../../src/cards/pr-01/PR319.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/cards/pr-01/PR320.ts`](../../../src/cards/pr-01/PR320.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 
-## ai (20)
+## ai (21)
 
 | ソース | 参照ルール |
 | ------ | --------- |
 | [`src/ai/ability-ctx.ts`](../../../src/ai/ability-ctx.ts) | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/ai/action-resolution.ts`](../../../src/ai/action-resolution.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) |
+| [`src/ai/cutin-declared-name.ts`](../../../src/ai/cutin-declared-name.ts) | _(参照なし)_ |
 | [`src/ai/headless-decision-context.ts`](../../../src/ai/headless-decision-context.ts) | _(参照なし)_ |
 | [`src/ai/index.ts`](../../../src/ai/index.ts) | _(参照なし)_ |
 | [`src/ai/match.ts`](../../../src/ai/match.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`04-game-setup.md`](../../rules/04-game-setup.md) / [`05-turn-phases.md`](../../rules/05-turn-phases.md) |

@@ -1,14 +1,13 @@
-# Next Task: batched QA adjudication Waves106-107
+# Next Task: batched QA adjudication Waves108-109
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves104-105 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves106-107 commit.
 
 ## Completed
 
-- Wave104 proves Hirameki cannot select its own source before that source enters
-  remove, while another matching removed character remains legal.
-- Wave105 fixes BUG-359 for B09003/P, B09108/P, and B09111/P. Registered
-  all-card names now work across UI, AI, save hydration, replay, and resolver.
-- Coverage is 1673 matched / 1291 test-missing / 2964 total.
+- Wave106 certifies B03018/B05077/B05101 opponent-turn removal behavior.
+- Wave107 fixes BUG-360 across B09052/P and B09112/P name supply and old-save
+  migration, then certifies combined-name consumers B09108/P-B09112/P.
+- Coverage is 1679 matched / 1285 test-missing / 2964 total.
 - Fresh isolated authority remains 2964 Q&A / zero conflicts.
 - Protected `pnpm-lock.yaml`, `pnpm-workspace.yaml`, and live cards-data remain
   untouched. Full evidence is in the Waves104-105 session record.
@@ -21,7 +20,7 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves104-105 commit.
 - Two-wave checkpoint: typechecks, focused ESLint, QA merge/lint,
   generated-Q&A check, diff-check, then one commit and one push.
 - Full Vitest/lint/smoke/Playwright only every ten waves, on T3/public-flow
-  changes, or before publication. Latest T3 gate is Waves104-105.
+  changes, or before publication. Latest T3 gate is Waves106-107.
 - Certification-only waves normally use no review agent. Independent review is
   allowed when useful, with a strict maximum of three subagents.
 - Hand off after the two-wave checkpoint under the context limit.
@@ -30,28 +29,28 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves104-105 commit.
 
 1. Read root/nested AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read `.claude/sessions/2026-08-25-qa-waves104-105.md`, this prompt, and the
+3. Read `.claude/sessions/2026-08-25-qa-waves106-107.md`, this prompt, and the
    current QA trace/workflow.
 4. Re-run the hash-only queue. Revalidate the isolated authority root and
    never modify live `.claude/specs/cards-data`.
 
-## Wave106 seed
+## Wave108 seed
 
-- Exact tuple: section `9839123858bef7bacd9f63d88ef2690dc2cce149064a4924dbd2253df5ece373`,
-  Q `3e9b9e801fb001be09d143ab029c12f2458acdde4eaffc0b25a757f2fbb5aa28`,
-  A `bd1021263916b76aa59508c6813bbffe73c698f6db8511f6e09c600022e7d446`.
-- Missing members: B03018, B05077, B05101.
-- Ground all 51 exact-group members before reusing the existing 48 matches.
+- Exact tuple: section `7822351767bd7e5a726669f512bf5c1f438f615927bb96e4da425ed43a12b06d`,
+  Q `52bf2f1282fa1c20d600c1d8aca50040415fd695416b15cdec762432a990fb73`,
+  A `f6c226c9a8e60ffc02bb71841873f3699503d6ec963820f1d141f7c2946d45d1`.
+- Missing exact-group members: PR247, PR262, PR268.
+- Ground all three members before changing adjudication.
 
-## Wave107 seed
+## Wave109 seed
 
-- Exact tuple: section `5fcfb3b6e315fc230928eee3b27a1ba2624c90c932889c54aff9a4aba30053eb`,
-  Q `c5a0fed53850995d13a05ba1f5f33c1fdacf046acfbb3d26a1d962c61df7bab8`,
-  A `3182fdb3d7835f2e4a486f1278adbb707f2bf68821439f73378f908b5fb96f97`.
-- Missing members: B09108, B09111, B09112; two exact members already matched.
-- This is not Wave105's declaration-name Q&A. Ground its exact semantics anew.
+- Exact tuple: section `93b4b1d410b3d03e079cbf9f9e8000765e121a2b773e6d0ad785e8f2c240729c`,
+  Q `d228cd81309e6431272b2333ef042221a46555004d5f331ad9f12f1f368f17a8`,
+  A `33f0805905c079ade93217d4dc82e0041bd476996e960b67128f752042900dff`.
+- Missing exact-group members: D11007, D11008, PR304.
+- Ground all three members before changing adjudication.
 
 ## Estimate
 
-- Snapshot: 1291 remaining items / 1110 exact groups; 949 groups are singleton.
-- Remaining QA work: 76-147 working hours; center estimate about 111 hours.
+- Snapshot: 1285 remaining items / 1108 exact groups; 949 groups are singleton.
+- Remaining QA work: 76-146 working hours; center estimate about 111 hours.

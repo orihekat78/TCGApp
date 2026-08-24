@@ -36,6 +36,7 @@ import type { CutInDisguiseCandidate } from '../components/CutInDisguisePickerMo
 import { pendingOwnerOrderGroup } from '@/engine/resolve/index.js';
 import { selectAutonomousDecisionBlocked } from '@/ui/state/autonomousDecisionGate.js';
 import { cardOccurrenceUid } from '@/engine/target/card-occurrence.js';
+import { chooseAiCutInDeclaredName } from '@/ai/cutin-declared-name.js';
 
 type Player = 'self' | 'opp';
 
@@ -282,7 +283,18 @@ function chooseAiContact(
     flow.contact.canCutIn(state, ax, player, c),
   );
   const cutinChoice = ai.chooseCutIn?.(state, ax, player, cutinCands) ?? null;
-  if (cutinChoice) return { kind: 'cutin', cardId: cutinChoice };
+  if (cutinChoice) {
+    const declaredName = chooseAiCutInDeclaredName(state, ax, player, cutinChoice);
+    const spec = flow.contact.cutInDeclaredNameSpec(state, ax, player, cutinChoice);
+    if (spec && !spec.optional && spec.domain !== 'unrestricted' && declaredName === undefined) {
+      return { kind: 'pass' };
+    }
+    return {
+      kind: 'cutin',
+      cardId: cutinChoice,
+      ...(declaredName === undefined ? {} : { declaredName }),
+    };
+  }
   const disgCands = state.players[player].hand.filter((c) =>
     flow.contact.canDisguise(state, ax, player, c),
   );

@@ -24,7 +24,7 @@ const a2: AbilityDef = {
   trigger: { hook: 'effect:declared', optional: true, selfOnly: true },
   condition: { kind: 'turn', player: 'self' },
   effect: { kind: 'sequence', steps: [
-    { kind: 'atom', verb: 'declareName', args: { bind: 'named' } },
+    { kind: 'atom', verb: 'declareName', args: { bind: 'named', domain: 'registered-card-name' } },
     { kind: 'atom', verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: { dyn: '$declared.named.sceneNameCount * 1000' }, scope: 'contact' } },
   ] },
   description: '【カットイン】【自分ターン中】カード名を1つ指定し、自分の現場にいる指定したカード名のキャラ1枚につき、AP＋1000。',

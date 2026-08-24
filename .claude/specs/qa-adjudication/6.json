@@ -946,7 +946,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:10",
         "src:src/cards/ct-p06/B06046.ts:12",
-        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:434"
+        "tests:tests/cards/official-qa/effect-entry-direct-public-wave54.test.ts:435"
       ]
     },
     {
