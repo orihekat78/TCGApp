@@ -14,6 +14,7 @@
 - QA Waves92-93: .claude/sessions/2026-08-25-qa-waves92-93.md.
 - QA Waves94-95: .claude/sessions/2026-08-25-qa-waves94-95.md.
 - QA Waves96-97: .claude/sessions/2026-08-25-qa-waves96-97.md.
+- QA Waves98-99: .claude/sessions/2026-08-25-qa-waves98-99.md.
 
 ## 2026-08-24: QA runtime Waves82-83
 
@@ -45,16 +46,16 @@
 
 ## Next
 
-- Waves96-97 move 12 Q&A items to matched. Coverage is 1646 matched / 1318
-  test-missing / 2964 total; 1119 exact groups remain, including 949 singletons.
-- BUG-357 makes queue-prewalk declared decisions share exact causal authority
-  with their occurrence-bound GameState entry.
-- Wave98 seed: section `2a0e8368...`, Q `8fa4b8e7...`, A `ba588ce2...` across
-  B04023/D09014/D09015.
-- Wave99 seed: section `4e51b053...`, Q `34c19eea...`, A `7f10b8f4...` across
-  B09100/PR158/PR164. Ground the adjacent same-family tuple before batching.
+- Waves98-99 move nine Q&A items to matched. Coverage is 1655 matched / 1309
+  test-missing / 2964 total; 1116 exact groups remain, including 949 singletons.
+- Wave98 certifies assisted-partner FILE7 counting. Wave99 certifies unlimited
+  copy metadata remains static while the 40-card total remains mandatory.
+- Wave100 seed: section `577fab55...`, Q `2582052c...`, A `8268b668...` across
+  B09040/PR290/PR296.
+- Wave101 seed: same section, Q `2b8a269c...`, A `ffe0b792...` across the same
+  B09040/PR290/PR296 family.
 - Official sync drift is separate: new PR322 and changed Q&A for
   B04018/B04018P/B06103P. Do not mix it into selected waves without re-queueing.
-- Revised remaining estimate: 78-151 working hours, center about 114 hours.
+- Revised remaining estimate: 77-150 working hours, center about 113 hours.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

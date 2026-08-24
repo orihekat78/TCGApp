@@ -1542,11 +1542,15 @@
     {
       "qaId": "card:B09100:d0e693e845a989227a1f748f447006aac04210c1d6e72bf100fe32eeff0b9b05",
       "answerHash": "7f10b8f443d9a90838f9e9ede13e4ed6f2a0203c23b020010145b928ce2458e6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03120.ts:8"
+        "rules:.claude/rules/02-deck-construction.md:16",
+        "src:src/cards/ct-p09/B09100.ts:37",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:57",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:58",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:59"
       ]
     },
     {

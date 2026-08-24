@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6591
+- **ファイル数**: 6594
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1630,6 +1630,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
+    - `2026-08-25-qa-waves98-99.md` — QA adjudication Waves98-99
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -5940,6 +5941,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `file-assisted-partner-count-public-wave89.test.ts` — qa: card:B04027:3d48fd2885346e1f56efcdd259b31a7a5e33cf94f53ca3cfa08175b86a749f26
       - `file-assisted-partner-hand-public-wave89.test.ts` — qa: card:B03110:778145d226f364876d2f75e0d6bc0336b6c61bdfdd1822254bb244878b57c818
       - `file-assisted-partner-remove-public-wave89.test.ts` — qa: card:B09003:47be099f12105fcb17bdc68f8bf3ebbe2d1d1100aa005a41d302a5df45f74ab5
+      - `file7-assisted-partner-public-wave98.test.ts` — qa: card:B04023:d0c74bb56871ed8c7a652acc4f63e492bee4dac3c03ede1fcc8e65fc8b8b4b2e
       - `full-scene-effect-entry-public-wave63.test.ts` — qa: card:B05055:c51f6838f7814f2243bbe0560dc33c4dc896f1b0b13d486cd4223cb898983c95
       - `full-scene-event-entry-public-wave84.test.ts` — qa: card:B05062:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398
       - `hand-remove-self-only-public-wave58.test.ts` — qa: card:B07020:924a8b39ee3036e70eeeac9c3a5941e4faa4fec3ebc39e19ceb12b4b0f2419af
@@ -5981,6 +5983,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `turn-conditioned-cutin-expansion-public.test.ts` — qa: card:B05095:3ebc71d3fe967142af371f16682581bf9d44ac0db1c409f0d2a20d11ffeeae41
       - `turn-conditioned-cutin-public.test.ts` — qa: card:B02007:e4a36acb6bbbb1c8b11eac5e65600d839bba033d5a2b7f0e5ecfc84bacd47a4c
       - `turn1-resolution-time-state-public.test.ts` — rules: 07-action-flow.md, 10-action-event.md, 15-abilities-effects.md, 17-icons.…
+      - `unlimited-deck-rule-public-wave99.test.ts` — qa: card:B09100:d0e693e845a989227a1f748f447006aac04210c1d6e72bf100fe32eeff0b9b05
       - `up-to-one-zero-choice-public.test.ts` — qa: card:B03007:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d
     - **`pr-01/`**
       - `PR100.test.ts`

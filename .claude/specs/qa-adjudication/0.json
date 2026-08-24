@@ -1641,14 +1641,17 @@
     {
       "qaId": "card:B09100:efd6c21e2f7905796100f2d468a68b999155b3da10e77373da20e6be92c33536",
       "answerHash": "2cfc332da63be1f02a3c457cd74370a31acf49f90bca4c0d0b74ad4f3893b781",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09100.ts:26"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/02-deck-construction.md:14",
+        "rules:.claude/rules/02-deck-construction.md:16",
+        "src:src/cards/ct-p09/B09100.ts:37",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:64",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:69",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:70",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:71"
       ]
     },
     {
@@ -2059,14 +2062,17 @@
     {
       "qaId": "card:D09014:d0c74bb56871ed8c7a652acc4f63e492bee4dac3c03ede1fcc8e65fc8b8b4b2e",
       "answerHash": "ba588ce24702c1524b7adc56ae88fa31d452d556cd11a7e2f7b6430215be9343",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d09/D09014.ts:51"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/17-icons.md:28",
+        "rules:.claude/rules/17-icons.md:36",
+        "src:src/cards/ct-d09/D09014.ts:16",
+        "tests:tests/cards/official-qa/file7-assisted-partner-public-wave98.test.ts:100",
+        "tests:tests/cards/official-qa/file7-assisted-partner-public-wave98.test.ts:104",
+        "tests:tests/cards/official-qa/file7-assisted-partner-public-wave98.test.ts:105",
+        "tests:tests/cards/official-qa/file7-assisted-partner-public-wave98.test.ts:106"
       ]
     },
     {

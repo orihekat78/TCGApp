@@ -2289,11 +2289,17 @@
     {
       "qaId": "card:PR164:efd6c21e2f7905796100f2d468a68b999155b3da10e77373da20e6be92c33536",
       "answerHash": "2cfc332da63be1f02a3c457cd74370a31acf49f90bca4c0d0b74ad4f3893b781",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR164.ts:26"
+        "rules:.claude/rules/02-deck-construction.md:14",
+        "rules:.claude/rules/02-deck-construction.md:16",
+        "src:src/cards/pr-01/PR164.ts:37",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:64",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:69",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:70",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:71"
       ]
     },
     {

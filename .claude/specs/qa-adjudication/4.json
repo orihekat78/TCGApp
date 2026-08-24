@@ -2327,21 +2327,31 @@
     {
       "qaId": "card:PR158:d0e693e845a989227a1f748f447006aac04210c1d6e72bf100fe32eeff0b9b05",
       "answerHash": "7f10b8f443d9a90838f9e9ede13e4ed6f2a0203c23b020010145b928ce2458e6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR158.ts:1"
+        "rules:.claude/rules/02-deck-construction.md:16",
+        "src:src/cards/pr-01/PR158.ts:43",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:57",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:58",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:59"
       ]
     },
     {
       "qaId": "card:PR158:efd6c21e2f7905796100f2d468a68b999155b3da10e77373da20e6be92c33536",
       "answerHash": "2cfc332da63be1f02a3c457cd74370a31acf49f90bca4c0d0b74ad4f3893b781",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR158.ts:1"
+        "rules:.claude/rules/02-deck-construction.md:14",
+        "rules:.claude/rules/02-deck-construction.md:16",
+        "src:src/cards/pr-01/PR158.ts:43",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:64",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:69",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:70",
+        "tests:tests/cards/official-qa/unlimited-deck-rule-public-wave99.test.ts:71"
       ]
     },
     {
