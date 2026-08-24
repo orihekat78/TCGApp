@@ -2055,11 +2055,32 @@
     {
       "qaId": "card:D02013:01bb734094827c257df91fd003da99ea0d4b837ed48b4cd5abecc6a860322d09",
       "answerHash": "a59d427662d1ccb609694fffe240c6a21ead2cf3ad85ee7a2442755e68819ff2",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d02/D02013.ts:1"
+        "rules:.claude/rules/21-declared-ability-cost.md:15",
+        "rules:.claude/rules/21-declared-ability-cost.md:31",
+        "rules:.claude/rules/21-declared-ability-cost.md:32",
+        "rules:.claude/rules/21-declared-ability-cost.md:37",
+        "rules:.claude/rules/21-declared-ability-cost.md:39",
+        "rules:.claude/rules/21-declared-ability-cost.md:50",
+        "rules:.claude/rules/21-declared-ability-cost.md:51",
+        "src:src/cards/ct-d02/D02013.ts:21",
+        "tests:tests/cards/official-qa/declared-one-hand-cost-public-wave115.test.ts:120",
+        "tests:tests/cards/official-qa/declared-one-hand-cost-public-wave115.test.ts:121",
+        "tests:tests/cards/official-qa/declared-one-hand-cost-public-wave115.test.ts:122",
+        "tests:tests/cards/official-qa/declared-one-hand-cost-public-wave115.test.ts:124",
+        "tests:tests/cards/official-qa/declared-one-hand-cost-public-wave115.test.ts:136",
+        "tests:tests/cards/official-qa/declared-one-hand-cost-public-wave115.test.ts:146",
+        "tests:tests/cards/official-qa/declared-one-hand-cost-public-wave115.test.ts:147",
+        "tests:tests/cards/official-qa/declared-one-hand-cost-public-wave115.test.ts:148",
+        "tests:tests/cards/official-qa/declared-one-hand-cost-public-wave115.test.ts:160",
+        "tests:tests/cards/official-qa/declared-one-hand-cost-public-wave115.test.ts:161",
+        "tests:tests/cards/official-qa/declared-one-hand-cost-public-wave115.test.ts:162",
+        "tests:tests/cards/official-qa/declared-one-hand-cost-public-wave115.test.ts:168",
+        "tests:tests/cards/official-qa/declared-one-hand-cost-public-wave115.test.ts:169",
+        "tests:tests/cards/official-qa/declared-one-hand-cost-public-wave115.test.ts:170"
       ]
     },
     {
@@ -2264,11 +2285,24 @@
     {
       "qaId": "card:PR046:9f6ab1b52677a41085f0ff92eeb2b7d34234ca1be8b9cb52cfd66f62b4062d2d",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR046.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/pr-01/PR046.ts:30",
+        "tests:tests/cards/official-qa/up-to-two-public-wave114.test.ts:166",
+        "tests:tests/cards/official-qa/up-to-two-public-wave114.test.ts:167",
+        "tests:tests/cards/official-qa/up-to-two-public-wave114.test.ts:169",
+        "tests:tests/cards/official-qa/up-to-two-public-wave114.test.ts:170",
+        "tests:tests/cards/official-qa/up-to-two-public-wave114.test.ts:171",
+        "tests:tests/cards/official-qa/up-to-two-public-wave114.test.ts:173",
+        "tests:tests/cards/official-qa/up-to-two-public-wave114.test.ts:174",
+        "tests:tests/cards/official-qa/up-to-two-public-wave114.test.ts:175",
+        "tests:tests/cards/official-qa/up-to-two-public-wave114.test.ts:182",
+        "tests:tests/cards/official-qa/up-to-two-public-wave114.test.ts:184",
+        "tests:tests/cards/official-qa/up-to-two-public-wave114.test.ts:190",
+        "tests:tests/cards/official-qa/up-to-two-public-wave114.test.ts:191"
       ]
     },
     {

@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6620
+- **ファイル数**: 6623
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1637,6 +1637,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves108-109.md` — QA adjudication Waves108-109
     - `2026-08-25-qa-waves110-111.md` — QA adjudication Waves110-111
     - `2026-08-25-qa-waves112-113.md` — QA adjudication Waves112-113
+    - `2026-08-25-qa-waves114-115.md` — QA adjudication Waves114-115
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -5920,6 +5921,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `deck-top-three-self-only-public-wave59.test.ts` — qa: card:B04077:1a92dcdf67120f7d76c881aa12661add73fc79ad2cefe30d1e4fbda6978a4758
       - `declared-cost-one-self-only-public-wave71.test.ts` — qa: card:B07061:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6
       - `declared-cost-scene-owner-public-wave92.test.ts` — qa: card:B04019:a1ea0a1b03ae906d9062ba5906497c7178e10970f12b5935b23937f559152d86
+      - `declared-one-hand-cost-public-wave115.test.ts` — qa: card:B01007:01bb734094827c257df91fd003da99ea0d4b837ed48b4cd5abecc6a860322d09
       - `declared-repeat-public-wave102.test.ts` — qa: card:B05046:5f60f8b4db37b8f92d03a16be385db13124478a72d7648dca0c733585d01bc54
       - `declared-sleep-cost-public-wave24.test.ts` — qa: card:B01063:f97b21e9e16f570fd0da6acab0a9cb6e819a6e4a010e86dddb5ff82c6d33902e
       - `disguise-case-inheritance-public-waves82-83.test.ts` — qa: card:B02038:9a7ccef11a5002bcfc03a28064e814701347f8287061fa3575d710a68d789a48
@@ -6008,6 +6010,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `turn1-resolution-time-state-public.test.ts` — rules: 07-action-flow.md, 10-action-event.md, 15-abilities-effects.md, 17-icons.…
       - `unlimited-deck-rule-public-wave99.test.ts` — qa: card:B09100:d0e693e845a989227a1f748f447006aac04210c1d6e72bf100fe32eeff0b9b05
       - `up-to-one-zero-choice-public.test.ts` — qa: card:B03007:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d
+      - `up-to-two-public-wave114.test.ts` — qa: card:B01022:9f6ab1b52677a41085f0ff92eeb2b7d34234ca1be8b9cb52cfd66f62b4062d2d
     - **`pr-01/`**
       - `PR100.test.ts`
       - `PR158.test.ts` — tests/cards/pr-01/PR158 犯人 (character, cutin remove-name scaling AP)

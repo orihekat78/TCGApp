@@ -22,6 +22,7 @@
 - QA Waves108-109: .claude/sessions/2026-08-25-qa-waves108-109.md.
 - QA Waves110-111: .claude/sessions/2026-08-25-qa-waves110-111.md.
 - QA Waves112-113: .claude/sessions/2026-08-25-qa-waves112-113.md.
+- QA Waves114-115: .claude/sessions/2026-08-25-qa-waves114-115.md.
 
 ## 2026-08-24: QA runtime Waves82-83
 
@@ -53,18 +54,18 @@
 
 ## Next
 
-- Waves112-113 move six Q&A items to matched. Coverage is 1697 matched / 1267
-  test-missing / 2964 total; 1102 exact groups remain, including 949 singletons.
-- Wave112 certifies ineffective Cut-In usage still emits observer reactions for
-  five physical B03112/B03118/B09086 printings, both owners and contact roles.
-- Wave113 certifies Misread 1 across D06015/PR027/PR031: character/partner,
-  accept/decline, LP1, cleanup, and zero controls.
-- Wave114 seed: empty section, Q `3ec2b10d...`, A `d8cdbcf9...` across
-  B01022/PR042/PR046.
-- Wave115 seed: empty section, Q `45a11369...`, A `a59d4276...` across
-  B01007/B01088/D02013.
+- Waves114-115 move six Q&A items to matched. Coverage is 1703 matched / 1261
+  test-missing / 2964 total; 1100 exact groups remain, including 949 singletons.
+- Wave114 certifies 0/1/2 selection for B01022/PR042/PR046, including both
+  owners, limits, eligibility windows, optional payment, and empty candidates.
+- Wave115 certifies exact one-card owner-hand costs for B01007/B01088/D02013,
+  including atomic invalid payment, selection identity, and per-turn use count.
+- Wave116 seed: empty section, Q `50c04838...`, A `4c8d0ca9...` across
+  D06015/PR027/PR031.
+- Wave117 seed: empty section, Q `58570773...`, A `bd8ba090...` across
+  PR060/PR064/PR154.
 - Official sync drift is separate: new PR322 and changed Q&A for
   B04018/B04018P/B06103P. Do not mix it into selected waves without re-queueing.
-- Revised remaining estimate: 75-143 working hours, center about 109 hours.
+- Revised remaining estimate: 75-142 working hours, center about 109 hours.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

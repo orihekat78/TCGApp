@@ -1,22 +1,22 @@
-# Next Task: batched QA adjudication Waves114-115
+# Next Task: batched QA adjudication Waves116-117
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves112-113 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves114-115 commit.
 
 ## Completed
 
-- Wave112 certifies ineffective Cut-In observer emission for five physical
-  B03112/B03118/B09086 printings across both owners and contact roles.
-- Wave113 certifies Misread 1 for D06015/PR027/PR031 across character/partner,
-  accept/decline, LP1, cleanup, and zero controls.
-- Coverage is 1697 matched / 1267 test-missing / 2964 total.
+- Wave114 certifies 0/1/2 selection for B01022/PR042/PR046 across both owners,
+  with limit, filter, reveal-window, optional-payment, and empty-candidate proof.
+- Wave115 certifies exact one-card owner-hand costs for B01007/B01088/D02013,
+  including atomic invalid payment, identity, effect ordering, and turn limits.
+- Coverage is 1703 matched / 1261 test-missing / 2964 total.
 - Fresh isolated authority remains 2964 Q&A / zero conflicts.
 - Protected `pnpm-lock.yaml`, `pnpm-workspace.yaml`, and live cards-data remain
-  untouched. Full evidence is in the Waves112-113 session record.
+  untouched. Full evidence is in the Waves114-115 session record.
 
 ## Throughput contract
 
-- Batch 20-30 semantically aligned items per ordinary wave. Never merge
-  different hashes or routes merely to reach the count.
+- Batch semantically aligned items, but never merge different hashes or routes
+  merely to reach a numeric target.
 - Per-wave: focused behavioral tests plus a narrow QA shape check only.
 - Two-wave checkpoint: typechecks, focused ESLint, QA merge/lint,
   generated-Q&A check, diff-check, then one commit and one push.
@@ -30,28 +30,28 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves112-113 commit.
 
 1. Read root/nested AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read `.claude/sessions/2026-08-25-qa-waves112-113.md`, this prompt, and the
+3. Read `.claude/sessions/2026-08-25-qa-waves114-115.md`, this prompt, and the
    current QA trace/workflow.
 4. Re-run the hash-only queue. Revalidate the isolated authority root and
    never modify live `.claude/specs/cards-data`.
 
-## Wave114 seed
+## Wave116 seed
 
 - Exact tuple: section `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
-  Q `3ec2b10d1e33547250313a3254c0eceb2146a642fa312844b2d9d54032a1e172`,
-  A `d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04`.
-- Missing exact-group members: B01022, PR042, PR046.
-- Ground all three members before changing adjudication.
+  Q `50c04838bb6eab70583a8c16bbdb6f255bc00340b440d0fccf07f1292e03210f`,
+  A `4c8d0ca99cf571a16514ffdd00a8e799ce732b57c6ef00d3e9049b7e4b2d9b94`.
+- Missing exact-group members: D06015, PR027, PR031.
+- This is a different Q&A identity from Wave113. Ground it independently.
 
-## Wave115 seed
+## Wave117 seed
 
 - Exact tuple: section `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
-  Q `45a11369ec9822986dcbcfab3dec24cc7867d83a37dfa78592e5fde74c8857be`,
-  A `a59d427662d1ccb609694fffe240c6a21ead2cf3ad85ee7a2442755e68819ff2`.
-- Missing exact-group members: B01007, B01088, D02013.
+  Q `58570773a8801cdeb5a0460fdf0080e395efd7252885a1abef186f6aa01845b6`,
+  A `bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713`.
+- Missing exact-group members: PR060, PR064, PR154.
 - Ground all three members before changing adjudication.
 
 ## Estimate
 
-- Snapshot: 1267 remaining items / 1102 exact groups; 949 groups are singleton.
-- Remaining QA work: 75-143 working hours; center estimate about 109 hours.
+- Snapshot: 1261 remaining items / 1100 exact groups; 949 groups are singleton.
+- Remaining QA work: 75-142 working hours; center estimate about 109 hours.
