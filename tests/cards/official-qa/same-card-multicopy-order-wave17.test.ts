@@ -196,7 +196,7 @@ function emitScenario(cardId: WaveCardId, state: GameState, bearerA: string, bea
       }, { player: 'self', uid: 'boy', cardId: 'W17_BOY' });
       return;
     case 'B03096':
-      event.emit(state, 'reasoning:end', { uid: bearerA, player: 'self', gained: 1 }, {
+      event.emit(state, 'reasoning:after-sleep', { uid: bearerA, player: 'self' }, {
         player: 'self', uid: bearerA, cardId,
       });
       return;

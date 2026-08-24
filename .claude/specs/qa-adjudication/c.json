@@ -178,7 +178,7 @@
         "rules:.claude/rules/13-keywords.md:36",
         "src:src/cards/ct-p01/B01084.ts:24",
         "src:src/engine/effect/atom-handlers/picks.ts:586",
-        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:218"
+        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:228"
       ],
       "noteCodes": []
     },
@@ -205,7 +205,7 @@
         "rules:.claude/rules/13-keywords.md:36",
         "src:src/cards/ct-p01/B01095.ts:33",
         "src:src/engine/effect/atom-handlers/picks.ts:586",
-        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:237"
+        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:247"
       ],
       "noteCodes": []
     },
@@ -690,12 +690,15 @@
     {
       "qaId": "card:B04032:dc56a35456842894d1d5ccb47f5a59375c8cac2f7408199e28773ab4537e3752",
       "answerHash": "59278248237862e001bf854a883b35a425511f50b1211fe9ac4c20fde5a04afb",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04032.ts:92"
-      ]
+        "src:src/cards/ct-p04/B04032.ts:92",
+        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:282",
+        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:283"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B04037:ef4ee81a3ed597a8c981851f7a9daac5c657a4a2f1cf2d9a1440637e60fca9bb",
@@ -801,15 +804,17 @@
     {
       "qaId": "card:B04074:00c20cbc76d1906d9a935d4dbc89c85f45f3c8de438836025d1e361e4590d9a9",
       "answerHash": "3e03f1ea9bef7761e44565827e7e42bf10e746b6be15a4893302164e9b276f88",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04074.ts:1"
+        "src:src/cards/ct-p04/B04074.ts:1",
+        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:310",
+        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:311",
+        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:314",
+        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:315"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B04079:c61cc842e775e8f40c3ccc90d41e595b2e2e02184cc4d243534b3c2fdf721fdb",
@@ -939,8 +944,8 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:37",
         "src:src/cards/ct-p05/B05048.ts:3",
-        "tests:tests/cards/official-qa/bond-partner-exclusion-public-wave45.test.ts:405",
-        "tests:tests/cards/official-qa/bond-partner-exclusion-public-wave45.test.ts:407"
+        "tests:tests/cards/official-qa/bond-partner-exclusion-public-wave45.test.ts:406",
+        "tests:tests/cards/official-qa/bond-partner-exclusion-public-wave45.test.ts:408"
       ],
       "noteCodes": []
     },
@@ -1223,15 +1228,15 @@
     {
       "qaId": "card:B07026:aa6cee9184eb750b4bbdf101a1f9e34f98db2949c94973f4c6381b3e616c6ae3",
       "answerHash": "aea443c9e22faa1372bf647350d7fdf64bb6c8f49e18f1a2c5c0042af9f633da",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07026.ts:1"
+        "src:src/cards/ct-p07/B07026.ts:1",
+        "tests:tests/cards/step12-batch1.test.ts:566",
+        "tests:tests/cards/step12-batch1.test.ts:629"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B07031:924a8b39ee3036e70eeeac9c3a5941e4faa4fec3ebc39e19ceb12b4b0f2419af",
@@ -1400,15 +1405,14 @@
     {
       "qaId": "card:B08026:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0",
       "answerHash": "ace28d47c654d454586320dc50a9b40679f9f442a52cd20d643581a497ebacce",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08026.ts:1"
+        "src:src/cards/ct-p08/B08026.ts:1",
+        "tests:tests/cards/step12-batch1.test.ts:654"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B08029:82ba236a1affc9a48d48c8b59711d42b7d6ee9be7c4c72589983ce1d899477a1",

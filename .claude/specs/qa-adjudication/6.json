@@ -1066,12 +1066,15 @@
     {
       "qaId": "card:B07026:e2083b017bfa1ea6d00eeefc6f22cfd8f3659e5ed90b0033c3b72877f355391a",
       "answerHash": "1e4dd0609a1b88461e24ed0f36fcfb175677498b2eacaeb0f43f7ae258b79f16",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07026.ts:51"
-      ]
+        "src:src/cards/ct-p07/B07026.ts:51",
+        "tests:tests/cards/step12-batch1.test.ts:532",
+        "tests:tests/cards/step12-batch1.test.ts:566"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B07034:d71b9e6c2babf72f5b2352e1ef9f8eee06ec0be26c9bd4ff573c08887a09f47b",
@@ -1295,12 +1298,17 @@
     {
       "qaId": "card:B08074:3d0bb222ea57dce33046312e882396aa9a601d551a1b3a7fa7d6484884ed334e",
       "answerHash": "01ba2d0fea1056a61f0b8ad8f4c109e65a0d6d40c8d1883e9576409f212992f6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08074.ts:35"
-      ]
+        "src:src/cards/ct-p08/B08074.ts:35",
+        "tests:tests/cards/B08074.test.ts:68",
+        "tests:tests/cards/B08074.test.ts:69",
+        "tests:tests/cards/B08074.test.ts:70",
+        "tests:tests/cards/B08074.test.ts:71"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B08075:92062546ddf7a403f9256b40d656a58bd5ffba9eb3b65a25c8d181a9230230aa",

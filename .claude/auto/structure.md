@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6566
+- **ファイル数**: 6569
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -531,6 +531,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-348.md` — Contact participant exit termination
     - `BUG-349.md` — remaining inherent sleep entries
     - `BUG-350.md` — autonomous full-scene effect entry
+    - `BUG-351.md` — B03096 reasoning timing
+    - `BUG-352.md` — B08074 Investigation continuation
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1617,6 +1619,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-qa-waves80-81.md` — QA adjudication Waves80-81
     - `2026-08-24-qa-waves82-83.md` — QA adjudication Waves82-83
     - `2026-08-24-qa-waves84-85.md` — QA adjudication Waves84-85
+    - `2026-08-24-qa-waves86-87.md` — QA adjudication Waves86-87
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -5866,7 +5869,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `b03050-contact-exit-public-wave83.test.ts` — qa: card:B03050:19fb99eecd85e2306c2887c5c7eb1210d8e663ec05473fb8f45d59e9f1475925
       - `b06067-self-selection-public-wave76.test.ts` — qa: card:B06067:28660457e46b234b8eda0f8ef2c6f3353a37a1739cfebe4112b7bfffed415436
       - `b07093-a1-public-wave44.test.ts` — qa: card:B07093:212da49cce2aca6921fdb352e94b610cbdeeebd02d0ab5c66e8200c0164c3a0e
-      - `bond-partner-exclusion-public-wave45.test.ts` — qa: card:B05007:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
+      - `bond-partner-exclusion-public-wave45.test.ts` — qa: card:D10006:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0
       - `bond-partner-exclusion-wave21.test.ts` — qa: card:B01087:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
       - `bond-partner-exclusion-wave9.test.ts` — qa: card:B02004:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
       - `bug-331-reveal-complete-public.test.ts`
@@ -5949,7 +5952,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `shippu-effect-entry-public.test.ts` — qa: card:B09070:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
       - `short-deck-reveal-hand-entry-public.test.ts` — rules: 15-abilities-effects.md, 17-icons.md, 20-color-and-switch.…
       - `shuffle-romance-public-wave32.test.ts` — qa: card:B01023:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
-      - `sleep-cost-related-entry-public-wave24.test.ts` — qa: card:B07002:18266db4732b9571ebae419afbd36f26fb54fb836c7752251e64e6dad817b4d1
+      - `sleep-cost-related-entry-public-wave24.test.ts` — qa: card:B07015:90178c65731533021339234d85b8740114d42f59cdc8a453b6336bba3cd197e1
       - `souza-found-public-wave47.test.ts` — qa: card:B01084:c6e5391785273827b8dabcd809585155ef42406b996be0913d033b9dcb43cbe6
       - `stacked-card-semantics-public-wave33.test.ts` — qa: card:B06005:199a933934b344f7715091799edd9442eca983c85cb7953418d8f7e9f0d4f2a6
       - `stun-action-target-public.test.ts` — qa: card:B01058:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40
@@ -5968,13 +5971,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06036.test.ts` — s1-defer probe — B06036 鬼丸天下統一プロジェクト (case)
       - `B06105.test.ts` — s1-defer probe — B06105 ブラックインパクト！ (case)
       - `B07001.test.ts` — s1-defer probe — B07001 毛利蘭＆灰原哀 (MR, 青, cost-dyn traitCountAny + PA宣言)
-      - `B09039.test.ts` — tests/cards/s1-defer/B09039 中森青子 — S1 defer-unlock probe (owner='opp' 固定)
+      - `B09039.test.ts` — qa: card:B09039:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0
       - `B09105.test.ts` — tests/cards/s1-defer/B09105 キッ — S1 defer-unlock probe (owner='opp' 固定)
       - `B09109.test.ts` — s1-defer probe — B09109 怪盗キッド&安室透 (MR, 白+黄, deckRevealUntil chain + revealFromHa…
     - **`s2-deck/`**
       - `B01022.gen.test.ts` — tests/cards/s2-deck/B01022.gen — HAND-AUTHORED (S2 deck cluster, deck-window mul…
       - `B01093.gen.test.ts` — tests/cards/s2-deck/B01093.gen — HAND-AUTHORED (S2 deck cluster, 非所有者 chooser de…
-      - `B02072.gen.test.ts` — tests/cards/s2-deck/B02072.gen — HAND-AUTHORED (S2 deck cluster, souza dyn X + l…
+      - `B02072.gen.test.ts` — qa: card:B02072:d318ff70e45401b63348e1dc41c896a174b47ebc5076d2054aa468915f989c1a
       - `B08057.gen.test.ts` — tests/cards/s2-deck/B08057.gen — HAND-AUTHORED (S2 deck cluster, remove→deck-bot…
     - **`s2-protect/`**
       - `dbg2.test.ts`
@@ -6049,7 +6052,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `B08008.test.ts`
     - `B08063.test.ts` — draw1後も非terminalにし、本テストのdistinct-name→discard契約だけを観測する。
     - `B08069.test.ts`
-    - `B08074.test.ts`
+    - `B08074.test.ts` — qa: card:B08074:3d0bb222ea57dce33046312e882396aa9a601d551a1b3a7fa7d6484884ed334e
     - `B08078.test.ts`
     - `B09036.test.ts`
     - `B09047.test.ts`
@@ -6105,12 +6108,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `cluster3-action-triggers.test.ts` — cluster3 action-lifecycle trigger 15枚 — 構造アサーション (transcription 回帰保護)
     - `cluster4-remove-area-deckbottom.test.ts` — cluster4 — remove-area → deck-bottom 解禁6枚を実 engine 経路で駆動する挙動テスト
     - `cluster5-usage-restriction-behavioral.test.ts` — cluster5 — usage-restriction aura 3枚を実 engine 経路で駆動する挙動テスト
-    - `cluster6-event-use-ban-behavioral.test.ts` — cluster6 — usage-restriction (event-use ban) を実 engine 経路で駆動する挙動テスト
+    - `cluster6-event-use-ban-behavioral.test.ts` — qa: card:B09034:20c3c55ad1dcb3f8aeb0d5e61e281969a5cf678c581f643a252268467f8d37a6
     - `cluster7-hand-count-cards-behavioral.test.ts` — cluster7 — engine変更0 card-authoring 2枚 (B07067 沖矢昴 /…
     - `cluster8-hirameki-suppress.test.ts` — cluster8 — ヒラメキ抑止窓 (B06049 a2) を実 engine 経路で駆動する挙動テスト
     - `cluster9-setcard-leave.test.ts` — cluster9 — setcard:leave hook を実 engine 経路で駆動する挙動テスト (engine拡張 wave#2 cluster9,…
     - `continuation-nest-b06033.test.ts` — continuation-nest cluster — B06033/B06033P「わが味方となるべし!!」(緑 L6 event) の挙動テスト。
-    - `d10026-black-knight.test.ts`
+    - `d10026-black-knight.test.ts` — qa: card:D10026:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0
     - `deck-bottom-to-hand.test.ts` — engine additive (2026-06-29) — handAddFromDeckBottom verb (B03051 怪盗キッド)
     - `disguise-hook-batch.test.ts` — engine-extension disguise-hook batch (2026-06-06 タスクC) — 実カード経由 sanity test
     - `distinct-name-count.test.ts` — distinct-name-count — sceneHas が query.distinctNames を honor して「それぞれカード名の異なる
@@ -6178,7 +6181,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `pr307-310-runtime.test.ts`
     - `pr307-triggered-effect.test.ts`
     - `reasoning-hook-batch.test.ts` — engine-extension reasoning-hook batch (2026-06-06 タスクC) — 実カード経由 sanity test
-    - `reasoning-hook-batch3.test.ts` — engine-extension reasoning-hook batch #3 (2026-06-06 タスクC) — 実カード経由 sanity test
+    - `reasoning-hook-batch3.test.ts` — qa: card:B03096:586cbc6530a51d5bcfbe6b4b5eac53defa0f7184e31d96b19b4cdbfebca0b4b8
     - `registry.test.ts` — tests/cards/registry — registerAll + cross-set registry テスト
     - `reuse-batch.test.ts` — tests/cards/reuse-batch — catalog-reuse バッチ (手書き, card-condition-catalog 流用) の構造…
     - `s3-hand-cutin-aura.test.ts` — S3 hand-zone cutin aura — B06020 / B07003(+P) production probes.
@@ -6187,7 +6190,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `set-card-remove-enter.test.ts` — Hydrated legacy state has no occurrence IDs. Phase dispatch must backfill,
     - `setcard-enter.test.ts` — engine additive (2026-06-29) — setcard:enter hook + setCardMatches condition.
     - `setcard-removal-batch.test.ts` — engine-extension set-card 除去 batch (2026-06-06 タスクC) — charRemoveSetCard verb +…
-    - `step12-batch1.test.ts` — tests/cards/step12-batch1
+    - `step12-batch1.test.ts` — qa: card:B07015:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0
     - `step12-batch2.test.ts` — CARD PHASE step12 batch2 probe — B09108/B09108P 工藤新一&服部平次 (MR) / B09003/…
     - `step12-batch3-b06085.test.ts` — CARD PHASE step12 batch3 probe — B06085 松田陣平 + engine touch-up evidenceGain face…
     - `triggerchar-target-batch.test.ts` — engine-extension triggerChar→target batch (2026-06-06 タスクC) — $trigger.…
@@ -6382,7 +6385,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bug-114-discard-bind-dyn.test.ts` — BUG-114 primitive: discard で除去した手札カードを bind し、その level/AP を dyn で参照する。
       - `bug-121-sequence-choice.test.ts` — BUG-121 残課題解消: sequence 内の human 複数択 choice が、pre-choice step を二重実行せず
       - `bug-130-158-pattern-a-repause.test.ts` — The outer draw belongs after the nested decision, not merely after PB.
-      - `bug-132-gap-fixes.test.ts` — BUG-132 GAP-1/2 修正の pin test (engine拡張 wave#2, 2026-06-12)
+      - `bug-132-gap-fixes.test.ts` — qa: card:B08020:6ca13ec6fb35a17a1d4e9cce41f4a239d75c6760de2061c25511aec53cf9ea8f
       - `bug-134-cofire-pick-staleness.test.ts` — BUG-134 characterization / guard — 同一 hook (phase:end:start 等) で複数 triggered ent…
       - `bug-136-deck-reorder.test.ts` — BUG-136 — deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択。
       - `bug-138-drain-ownership.test.ts` — BUG-138 (engine拡張 wave#2 cluster2 X8): drainAiEffectPicks の pick 所有権
@@ -6477,7 +6480,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `action-case.test.ts` — Phase 4 Group B Task 4.6 — flow.actionCase
       - `auto-phase.test.ts` — Phase 4 Task 4.2 — engine.flow.runAutoPhase
       - `bug-112-offboard-declared-use.test.ts` — BUG-112: 「自身を場外へ移すコスト」(selfToDeckBottom 等) の宣言能力で incrDeclaredUseCount が
-      - `bug-140-cutin-batch.test.ts` — tests/engine/flow/bug-140-cutin-batch — BUG-140 補修 (2026-06-13) の cutin 挙動検証
+      - `bug-140-cutin-batch.test.ts` — qa: card:B03028:d5ed43d6e9854041a9d21e09941ee12b53c86ab6a330a20e63d83cef33a88a45
       - `bug-194-partner-ap.test.ts` — BUG-194: real partner is a contact actor and must share AP modifier/read/…
       - `bug-212-production-contact.test.ts`
       - `contact-causal.test.ts`

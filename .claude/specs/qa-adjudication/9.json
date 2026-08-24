@@ -759,7 +759,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:37",
         "src:src/cards/ct-p05/B05052.ts:37",
-        "tests:tests/cards/official-qa/bond-partner-exclusion-public-wave45.test.ts:416"
+        "tests:tests/cards/official-qa/bond-partner-exclusion-public-wave45.test.ts:417"
       ],
       "noteCodes": []
     },
@@ -1276,15 +1276,14 @@
     {
       "qaId": "card:B08020:d889f1124f88bd5349a26b958a18b82b1763750edd4fba8e540934e467d2c49a",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08020.ts:87"
+        "src:src/cards/ct-p08/B08020.ts:87",
+        "tests:tests/engine/effect/bug-132-gap-fixes.test.ts:275"
       ],
-      "noteCodes": [
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B08035:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333",

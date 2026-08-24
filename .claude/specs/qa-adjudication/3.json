@@ -121,12 +121,14 @@
     {
       "qaId": "card:B01095:586cbc6530a51d5bcfbe6b4b5eac53defa0f7184e31d96b19b4cdbfebca0b4b8",
       "answerHash": "151f71e0f3fe880bba4086d745e94540f1546d2bed45fbe51037afd3a7c27ead",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p01/B01095.ts:1"
-      ]
+        "src:src/cards/ct-p01/B01095.ts:1",
+        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:246"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B02002:e4dc8750fdc90c094edcf6692ef42e73791f134e61cc3d17ba02fca0771c5581",
@@ -266,12 +268,14 @@
     {
       "qaId": "card:B02072:586cbc6530a51d5bcfbe6b4b5eac53defa0f7184e31d96b19b4cdbfebca0b4b8",
       "answerHash": "151f71e0f3fe880bba4086d745e94540f1546d2bed45fbe51037afd3a7c27ead",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02072.ts:1"
-      ]
+        "src:src/cards/ct-p02/B02072.ts:1",
+        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:260"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B02074:65bfc79d1ce20a012c4bb2056ea9dcf5c81704919fc0acec16bfde9ce62971cd",
@@ -1197,8 +1201,8 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p07/B07016.ts:17",
-        "tests:tests/cards/official-qa/sleep-cost-related-entry-public-wave24.test.ts:183",
-        "tests:tests/cards/official-qa/sleep-cost-related-entry-public-wave24.test.ts:190"
+        "tests:tests/cards/official-qa/sleep-cost-related-entry-public-wave24.test.ts:184",
+        "tests:tests/cards/official-qa/sleep-cost-related-entry-public-wave24.test.ts:191"
       ]
     },
     {
@@ -1403,12 +1407,16 @@
     {
       "qaId": "card:B08026:b4bf4cb52317e58384fb94eec13cba7f5715743eeebd64c3e143c32bf16f668e",
       "answerHash": "f7631db5549b5e0bde33fa0a84b386ec64b701e14ae5480b1834c4760901b67e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08026.ts:1"
-      ]
+        "src:src/cards/ct-p08/B08026.ts:1",
+        "tests:tests/cards/step12-batch1.test.ts:678",
+        "tests:tests/cards/step12-batch1.test.ts:683",
+        "tests:tests/cards/step12-batch1.test.ts:684"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B08032:80a2cfb16a87e5d0d4da8698cb86f47b173740616dd1af4e02537a5deb1ade52",

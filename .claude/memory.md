@@ -8,6 +8,7 @@
 - QA Waves17-26: .claude/sessions/2026-08-22-qa-waves17-26.md.
 - QA Waves27-34: .claude/sessions/2026-08-23-qa-memory-waves27-34.md.
 - QA Waves35-67: matching dated files under .claude/sessions/.
+- QA Waves86-87: .claude/sessions/2026-08-24-qa-waves86-87.md.
 
 ## 2026-08-24: QA runtime Waves82-83
 
@@ -37,9 +38,16 @@
 
 ## Next
 
-- Wave86 starts from b4840d0e.../ace28d47... event-use-by-effect group and
-  expands the shared primitive to 20-30 items; B03029 is the matched control.
-- Wave87 starts from 8edeb5c5.../151f71e0... Investigation-count group and
-  expands adjacent Investigation definitions to 20-30 items; B01085 controls.
+- Waves86-87 certify 35 Q&A items. Coverage is 1568 matched / 1396
+  test-missing / 2964 total; remaining exact groups are 1156, including 967
+  singletons.
+- BUG-351 moves B03096 Investigation/draw to `reasoning:after-sleep` and uses
+  canonical `souza`; BUG-352 holds B08074 found-count grants behind defender
+  reorder confirmation.
+- Wave88 starts from Q `6a9286d4...`, A `6600f74d...` across
+  B08006/B08008/B09048/PR289/PR295; ground semantics before expanding.
+- Wave89 starts from Q `74968c3b...`, A `9a850b0a...` across
+  B04027/B04047/B04064/B05067; keep it separate until grounding proves reuse.
+- Revised remaining estimate: 115-215 hours under the batched cadence.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

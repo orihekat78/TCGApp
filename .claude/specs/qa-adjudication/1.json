@@ -516,9 +516,8 @@
       "evidence": [
         "src:src/cards/ct-p05/B05039.ts:21",
         "src:src/cards/ct-p05/B05039.ts:34",
-        "tests:tests/cards/reasoning-hook-batch3.test.ts:105",
-        "tests:tests/cards/reasoning-hook-batch3.test.ts:97",
-        "tests:tests/cards/reasoning-hook-batch3.test.ts:98",
+        "tests:tests/cards/reasoning-hook-batch3.test.ts:100",
+        "tests:tests/cards/reasoning-hook-batch3.test.ts:106",
         "tests:tests/cards/reasoning-hook-batch3.test.ts:99"
       ]
     },
@@ -920,9 +919,9 @@
       "evidence": [
         "src:src/cards/ct-p07/B07015.ts:24",
         "src:src/cards/ct-p07/B07015.ts:9",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:247",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:248",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:249"
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:250",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:251",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:252"
       ]
     },
     {
@@ -993,8 +992,8 @@
       "evidence": [
         "src:src/cards/ct-p07/B07056.ts:24",
         "src:src/cards/ct-p07/B07056.ts:40",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:573",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:577"
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:598",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:602"
       ]
     },
     {
@@ -1378,7 +1377,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09039.ts:1",
-        "tests:tests/cards/s1-defer/B09039.test.ts:109"
+        "tests:tests/cards/s1-defer/B09039.test.ts:117"
       ]
     },
     {

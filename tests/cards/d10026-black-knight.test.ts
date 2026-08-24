@@ -1,3 +1,4 @@
+// qa: card:D10026:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0
 import { beforeEach, describe, expect, it } from 'vitest';
 import { D10026 } from '@/cards/ct-d10/D10026';
 import { activateDeclaredAbility } from '@/engine/flow/main/ability-activate';
@@ -72,6 +73,6 @@ describe('D10026 The Black Knight', () => {
     runAllUntilEmpty(state);
     expect(state.players.self.hand).not.toContain('ROMANCE_EVENT');
     expect(state.players.self.hand).toContain('DECOY_EVENT');
-    expect(state.players.self.remove).toContain('ROMANCE_EVENT');
+    expect(state.players.self.remove, D10026.id).toContain('ROMANCE_EVENT');
   });
 });

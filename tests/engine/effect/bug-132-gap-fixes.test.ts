@@ -1,3 +1,5 @@
+// qa: card:B08020:6ca13ec6fb35a17a1d4e9cce41f4a239d75c6760de2061c25511aec53cf9ea8f
+// qa: card:B08020:d889f1124f88bd5349a26b958a18b82b1763750edd4fba8e540934e467d2c49a
 // BUG-132 GAP-1/2 修正の pin test (engine拡張 wave#2, 2026-06-12)
 //
 // GAP-1: deckRevealUntil chooseMatch:'upTo' — 「1枚まで」=0枚可 (rules/15) の decline channel。
@@ -181,13 +183,13 @@ describe('BUG-132 GAP-2 — effect:declared 自効果先行 + 反応 pick の解
   });
 
   /** B07016 (反応) + B06035 (緑イベント: キャラ1枚までリムーブ) の共通 fixture */
-  function gap2State(): GameState {
+  function gap2State(observerCardId = 'B07016'): GameState {
     const s = createEmptyGameState();
     s.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     s.players.self.case.colors = ['緑'];
     s.players.self.file = [FB, FB, FB, FB, FB, FB, FB]; // FILE7 ≥ B06035 level7
     s.players.self.hand = ['B06035'];
-    s.players.self.scene = [sceneChar('B07016', 'hatt#1', { state: 'active' })];
+    s.players.self.scene = [sceneChar(observerCardId, 'hatt#1', { state: 'active' })];
     // opp: D11003 (lvl8 AP8000) / D11015 (lvl5 AP5000) — どちらも反応 filter levelMax:8 内
     s.players.opp.scene = [
       sceneChar('D11003', 'oppA#1', { state: 'active' }),
@@ -241,5 +243,53 @@ describe('BUG-132 GAP-2 — effect:declared 自効果先行 + 反応 pick の解
       applyPickAndContinuation(d, reactionPick!, 'oppB#1');
     });
     expect(s.players.opp.scene.length, '反応が oppB#1 を除去 — 公式順の完走').toBe(0);
+  });
+
+  it('B08020 builds its removal candidates only after the used event finishes resolving', () => {
+    g.__humanPlayerSide = 'self';
+    let s = produce(gap2State('B08020'), (d) => {
+      handUseCard(d, 'self', 'B06035');
+      runAllUntilEmpty(d);
+    });
+    const ownPick = pickQueue()[0]!;
+    g.__pendingEffectPickQueue = [];
+    s = produce(s, (d) => { applyPickAndContinuation(d, ownPick, 'oppA#1'); });
+
+    const observerPick = pickQueue()[0]!;
+    expect(observerPick.source).toMatchObject({ cardId: 'B08020', abilityId: 'a2' });
+    expect(observerPick.candidates.map((candidate) => candidate.uid)).not.toContain('oppA#1');
+    expect(observerPick.candidates.map((candidate) => candidate.uid)).toContain('oppB#1');
+  });
+
+  it('B08020 waits for the event used by B05042 to finish before choosing its removal', () => {
+    const initial = gap2State('B08020');
+    initial.players.self.partner.cardId = 'D02001';
+    initial.players.self.hand = ['B05042', 'B07026'];
+    initial.players.self.deck = ['D11003', 'D11015'];
+    const after = produce(initial, (d) => {
+      handUseCard(d, 'self', 'B05042');
+      runAllUntilEmpty(d);
+      drainAiEffectPicks(d);
+    });
+
+    expect(after.players.self.remove).toEqual(expect.arrayContaining(['B05042', 'B07026']));
+    expect(after.players.opp.scene, 'nested event and B08020 remove different post-resolution targets').toHaveLength(0);
+  });
+
+  it('each B08020 copy triggers once after the event and removes a different remaining character', () => {
+    const initial = gap2State('B08020');
+    initial.players.self.scene.push(sceneChar('B08020', 'kazuha#2', { state: 'active' }));
+    initial.players.opp.scene.push(sceneChar('D11015', 'oppC#1', { state: 'active' }));
+    const after = produce(initial, (d) => {
+      handUseCard(d, 'self', 'B06035');
+      runAllUntilEmpty(d);
+      drainAiEffectPicks(d);
+    });
+
+    expect(after.players.opp.scene).toHaveLength(0);
+    expect(after.pendingEffects
+      .filter((entry) => entry.source.cardId === 'B08020' && entry.source.abilityId === 'a2')
+      .map((entry) => entry.source.uid)
+      .sort()).toEqual(['hatt#1', 'kazuha#2']);
   });
 });

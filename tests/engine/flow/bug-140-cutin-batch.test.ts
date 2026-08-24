@@ -1,3 +1,5 @@
+// qa: card:B03028:d5ed43d6e9854041a9d21e09941ee12b53c86ab6a330a20e63d83cef33a88a45
+// qa: card:B08020:d0447a989e2ce1eae2c62ea7297724ea5fe7015808c2a90c2e3be0d2a4e7821f
 // tests/engine/flow/bug-140-cutin-batch — BUG-140 補修 (2026-06-13) の cutin 挙動検証
 //
 // rules: 09-cutin-disguise.md, 22-qa-action-contact.md
@@ -59,6 +61,23 @@ describe('BUG-140 補修 cutin 挙動 (テンプレ代表 3 枚)', () => {
     expect(engine.read.char.ap(after, oppUid)).toBe(before + 1000);
     expect(engine.read.char.ap(after, selfUid)).toBe(selfBefore); // 攻撃側には乗らない
     expect(after.players.opp.hand).not.toContain('B03129'); // 使用済 (手札から離れる)
+  });
+
+  it('a green Cut-in is not an event-use trigger for B03028 or B08020', () => {
+    const { s, ax } = setup('B05042', 'self');
+    const after = produce(s, (d) => {
+      d.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+      engine.mutate.scene.enter(d, 'self', 'B03028', {});
+      engine.mutate.scene.enter(d, 'self', 'B08020', {});
+      cutIn(d, ax, 'self', 'B05042');
+      runAllUntilEmpty(d);
+    });
+
+    for (const cardId of ['B03028', 'B08020']) {
+      const observer = after.players.self.scene.find((card) => card.cardId === cardId)!;
+      expect(observer.declaredUseCount.a2, cardId).toBeUndefined();
+      expect(after.pendingEffects.some((entry) => entry.source.cardId === cardId), cardId).toBe(false);
+    }
   });
 
   it('c-ap2000 B07093: opp がカットイン → 防御キャラ AP+2000', () => {

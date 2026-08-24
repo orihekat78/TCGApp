@@ -253,11 +253,10 @@ test('BUG-252 CPU B08074 uses the public 捜査3 route and waits for the human d
     } } }).__game.getState();
     return {
       pending: state.pendingDeckReveal,
-      result: state.gameState.log.find((entry) => entry.action === 'effect:deckRevealUntil')?.result,
+      result: state.gameState.log.find((entry) => entry.action === 'souza')?.result,
     };
   });
-  expect(audit.result).toContain('revealed=3');
-  expect(audit.result).toContain('visibility=public viewer=all');
+  expect(audit.result).toBe('revealed 3');
   const before = await cpuProgress(page);
   await setAiPaused(page, false);
   await page.waitForTimeout(250);

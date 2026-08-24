@@ -116,7 +116,7 @@ test.describe('reasoning-hook batch #3 (2026-06-06)', () => {
       self.case = { cardId: 'D08026', status: '事件編', requiredEvidence: 7, colors: ['黄'], declaredUseCount: {} };
       self.hand = []; self.evidence = []; self.remove = []; self.file = [];
       self.scene = [mkC('B03096', 'mgr#1')];
-      // 先頭から LP1 証拠化 → 発見ドローで D08013。末尾はdeck-outを避ける予備。
+      // after-sleep の発見ドローで D08005、その後の LP1 証拠で D08013。
       self.deck = ['D08005', 'D08013', 'D08009'];
       // opp deck top = Lv8 (D08003 江戸川コナン Lv8) = 発見成立
       opp.deck = ['D08003', 'D08009', 'D08010'];
@@ -127,9 +127,10 @@ test.describe('reasoning-hook batch #3 (2026-06-06)', () => {
     await dispatchAction(page, { type: 'reasoning', uid: 'mgr#1' });
 
     const after = await getGameState(page);
-    const self = after.players.self as { hand: string[] };
+    const self = after.players.self as { hand: string[]; evidence: Array<{ cardId: string }> };
     const opp = after.players.opp as { deck: string[] };
-    expect(self.hand, 'Lv8発見で自分が1ドロー (D08013)').toContain('D08013');
+    expect(self.hand, 'Lv8発見で証拠獲得前に自分が1ドロー (D08005)').toContain('D08005');
+    expect(self.evidence.some((card) => card.cardId === 'D08013'), 'その後に推理証拠を得る').toBe(true);
     expect(opp.deck[0], '公開した Lv8 (D08003) は相手デッキ上に残らない').not.toBe('D08003');
     expect(opp.deck[opp.deck.length - 1], '公開した Lv8 は相手デッキ下へ (捜査1)').toBe('D08003');
     expect(errors).toEqual([]);

@@ -94,15 +94,14 @@
     {
       "qaId": "card:B01084:586cbc6530a51d5bcfbe6b4b5eac53defa0f7184e31d96b19b4cdbfebca0b4b8",
       "answerHash": "151f71e0f3fe880bba4086d745e94540f1546d2bed45fbe51037afd3a7c27ead",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p01/B01084.ts:1"
+        "src:src/cards/ct-p01/B01084.ts:1",
+        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:228"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B01087:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4",
@@ -274,15 +273,14 @@
     {
       "qaId": "card:B02072:d318ff70e45401b63348e1dc41c896a174b47ebc5076d2054aa468915f989c1a",
       "answerHash": "9a850b0aa69167d50fe9b35374145bd3a1f7c6ca2159ee4d9315b205401b53c5",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02072.ts:1"
+        "src:src/cards/ct-p02/B02072.ts:1",
+        "tests:tests/cards/s2-deck/B02072.gen.test.ts:142"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B02087:7d8bb98d9586f9573b10f3eb83715c1a41c24c9c4f61d8f2bd63d82736e0693a",
@@ -1418,7 +1416,7 @@
         "rules:.claude/rules/13-keywords.md:36",
         "src:src/cards/ct-p08/B08074.ts:22",
         "src:src/engine/effect/atom-handlers/picks.ts:108",
-        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:310"
+        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:334"
       ],
       "noteCodes": []
     },
@@ -1548,8 +1546,8 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09058.ts:26",
-        "tests:tests/cards/official-qa/sleep-cost-related-entry-public-wave24.test.ts:244",
-        "tests:tests/cards/official-qa/sleep-cost-related-entry-public-wave24.test.ts:247"
+        "tests:tests/cards/official-qa/sleep-cost-related-entry-public-wave24.test.ts:245",
+        "tests:tests/cards/official-qa/sleep-cost-related-entry-public-wave24.test.ts:248"
       ]
     },
     {
@@ -2130,15 +2128,14 @@
     {
       "qaId": "card:D10005:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0",
       "answerHash": "ace28d47c654d454586320dc50a9b40679f9f442a52cd20d643581a497ebacce",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d10/D10005.ts:1"
+        "src:src/cards/ct-d10/D10005.ts:1",
+        "tests:tests/cards/step12-batch1.test.ts:707"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:D10006:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4",
@@ -2149,7 +2146,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:37",
         "src:src/cards/ct-d10/D10006.ts:82",
-        "tests:tests/cards/official-qa/bond-partner-exclusion-public-wave45.test.ts:444"
+        "tests:tests/cards/official-qa/bond-partner-exclusion-public-wave45.test.ts:445"
       ],
       "noteCodes": []
     },
@@ -2189,15 +2186,15 @@
     {
       "qaId": "card:D10026:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0",
       "answerHash": "ace28d47c654d454586320dc50a9b40679f9f442a52cd20d643581a497ebacce",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d10/D10026.ts:1"
+        "src:src/cards/ct-d10/D10026.ts:1",
+        "tests:tests/cards/d10026-black-knight.test.ts:74",
+        "tests:tests/cards/d10026-black-knight.test.ts:76"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:D11005:398c6d64539fb3ff23ab377e3bb5f06201f3194d915a8bb51fcfcc30a5bfaead",

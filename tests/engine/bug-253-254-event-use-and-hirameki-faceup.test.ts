@@ -33,6 +33,9 @@ import { B07056 } from '@/cards/ct-p07/B07056';
 import { B07056P } from '@/cards/ct-p07/B07056P';
 import { B07015 } from '@/cards/ct-p07/B07015';
 import { B05042 } from '@/cards/ct-p05/B05042';
+import { B03028 } from '@/cards/ct-p03/B03028';
+import { B08020 } from '@/cards/ct-p08/B08020';
+import { B09034 } from '@/cards/ct-p09/B09034';
 import { dispatchCurrentDecision } from '../helpers/dispatch-current-decision';
 
 const eventUseTrigger = {
@@ -456,6 +459,9 @@ describe('BUG-254 action-case Hirameki visibility', () => {
     _resetTriggeredRegistered();
     _resetPendingHirameki();
     register(B04028);
+    register(B03028);
+    register(B08020);
+    register(B09034);
     register(actionProbe);
     register({ id: 'NO_HIRAMEKI', no: 'TEST/NO_HIRAMEKI', kind: 'event', names: ['none'], colors: [], level: 1, traits: [], rarity: 'C', imageUrl: '', ruleRefs: [], abilities: [] });
     registerTriggeredListener();
@@ -523,6 +529,25 @@ describe('BUG-254 action-case Hirameki visibility', () => {
       removeOpponentEvidenceTop(draft, actionContext());
     });
     expect(_drainPendingHirameki()).toBeNull();
+  });
+
+  it('a banned green Hirameki remains available and is not an event-use trigger for B03028 or B08020', () => {
+    const state = createEmptyGameState();
+    state.players.self.evidence = [{ cardId: B09034.id, faceUp: false, origin: { turn: 0, via: 'opening' } }];
+    state.players.self.scene = [sceneChar(B03028.id, 'heiji'), sceneChar(B08020.id, 'kazuha')];
+    state.players.self.remove = ['NO_HIRAMEKI'];
+    state.turnState.self.eventUseBanned = true;
+    driveUnguardedCaseAction(state);
+
+    expect(useGameStateStore.getState().pendingHirameki).toMatchObject({
+      player: 'self', cardId: B09034.id, abilityId: 'a2',
+    });
+    expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
+    const after = useGameStateStore.getState().gameState!;
+    expect(after.players.self.hand).toContain('NO_HIRAMEKI');
+    for (const observerId of [B03028.id, B08020.id]) {
+      expect(after.pendingEffects.some((entry) => entry.source.cardId === observerId), observerId).toBe(false);
+    }
   });
 });
 

@@ -132,7 +132,7 @@ export type TurnScopedFlags = {
   /**
    * 「このターン中、自分はイベントを使用できない」(rules/25 §B08020 周辺 / B09034 公式 Q&A)。
    * setEventUseBan verb がセットし、turn:start の resetTurnFlags でクリア。
-   * undefined/false = 制限なし。ゲート対象は「手札の使用」と「ネクストヒント」の event のみ
+   * undefined/false = 制限なし。ゲート対象は「手札の使用」「ネクストヒント」「イベントを使用する効果」の event
    * (公式 Q&A: 【カットイン】【ヒラメキ】は本制限を受けない)。enterCountThisTurn と同じ
    * optional-flag 前例に倣い state-factory / fixtures では未初期化。
    */
@@ -140,7 +140,7 @@ export type TurnScopedFlags = {
   /**
    * 「このターン中、自分はネクストヒントできない」(B06104/P・B09019/P・B09105/P、wave use-restrict 2026-06-30)。
    * setNextHintBan verb がセットし、turn:start の resetTurnFlags でクリア。undefined/false = 制限なし。
-   * eventUseBanned は手札使用/ネクストヒントの **event のみ** を gate するのに対し、本フラグは
+   * eventUseBanned は手札使用/ネクストヒント/効果使用の **event のみ** を gate するのに対し、本フラグは
    * **ネクストヒント全体** (step1 FILE→手札 含む) を canStartNextHint で不可にする (rules/12 §「ネクストヒントできない」)。
    * 手札の使用 (rules/05 01.) は別行動なので阻害しない。enterCountThisTurn と同じ optional-flag 前例に倣い未初期化。
    */

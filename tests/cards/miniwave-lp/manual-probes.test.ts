@@ -364,7 +364,7 @@ describe('BUG-179 regression B03096 a1 (side:self, filter:{}) — 自 PARTNER �
 
   it('positive: 自現場キャラ推理 → souza 実行 (opp デッキ上 OTOP が下へ移動)', () => {
     const { s, reasoner } = board();
-    emitReasoningEnd(s, 'self', reasoner);
+    emitReasoningAfterSleep(s, 'self', reasoner);
     runAllUntilEmpty(s);
     expect(s.players.opp.deck[0], 'OTOP はもうデッキ上ではない').not.toBe('OTOP');
     expect(s.players.opp.deck[s.players.opp.deck.length - 1], 'OTOP がデッキ最下部へ').toBe('OTOP');
@@ -372,7 +372,7 @@ describe('BUG-179 regression B03096 a1 (side:self, filter:{}) — 自 PARTNER �
 
   it('negative(BUG-179): 自 PARTNER 推理 (uid=partner:self) → 発火しない (opp デッキ据置)', () => {
     const { s } = board();
-    emitReasoningEnd(s, 'self', 'partner:self');
+    emitReasoningAfterSleep(s, 'self', 'partner:self');
     runAllUntilEmpty(s);
     expect(s.players.opp.deck[0], 'souza 走らず OTOP デッキ上のまま').toBe('OTOP');
     expect(s.pendingEffects.length, 'pendingEffect も増えない').toBe(0);

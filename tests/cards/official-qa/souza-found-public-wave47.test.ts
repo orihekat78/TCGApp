@@ -6,6 +6,15 @@
 // qa: card:B04032:d5e0a704a7651a6bbf180feb7cc6f603d2402b08bcd4abd6c4586ae258ac0515
 // qa: card:B04074:c6e5391785273827b8dabcd809585155ef42406b996be0913d033b9dcb43cbe6
 // qa: card:B08074:005e493fba4351e0068829bd845547d2262609dc9387785fd09e678fa32f04ae
+// qa: card:B01084:586cbc6530a51d5bcfbe6b4b5eac53defa0f7184e31d96b19b4cdbfebca0b4b8
+// qa: card:B01095:586cbc6530a51d5bcfbe6b4b5eac53defa0f7184e31d96b19b4cdbfebca0b4b8
+// qa: card:B02072:586cbc6530a51d5bcfbe6b4b5eac53defa0f7184e31d96b19b4cdbfebca0b4b8
+// qa: card:B03084:586cbc6530a51d5bcfbe6b4b5eac53defa0f7184e31d96b19b4cdbfebca0b4b8
+// qa: card:B04032:dc56a35456842894d1d5ccb47f5a59375c8cac2f7408199e28773ab4537e3752
+// qa: card:B04074:586cbc6530a51d5bcfbe6b4b5eac53defa0f7184e31d96b19b4cdbfebca0b4b8
+// qa: card:B04074:00c20cbc76d1906d9a935d4dbc89c85f45f3c8de438836025d1e361e4590d9a9
+// qa: card:B06084:d5e0a704a7651a6bbf180feb7cc6f603d2402b08bcd4abd6c4586ae258ac0515
+// qa: card:B08074:00d08b39545de7da195b7e47bafd7f3f634ab46f5721517ad7402a17e614b92f
 // Rules: 13-keywords.md — cards revealed by Investigation are the found cards.
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -17,6 +26,7 @@ import { B02072 } from '@/cards/ct-p02/B02072';
 import { B03084 } from '@/cards/ct-p03/B03084';
 import { B04032 } from '@/cards/ct-p04/B04032';
 import { B04074 } from '@/cards/ct-p04/B04074';
+import { B06084 } from '@/cards/ct-p06/B06084';
 import { B08074 } from '@/cards/ct-p08/B08074';
 import { resetPendingRuntimeState } from '@/engine/effect/runtime-state';
 import { event } from '@/engine/event';
@@ -289,6 +299,39 @@ describe('official QA Wave47: found cards are the cards publicly revealed by Inv
     expect(pick.candidates.map((candidate) => candidate.uid)).not.toContain('decoy');
     resolvePickByUid('target');
     expect(current().players.opp.remove).toContain(HIGH);
+  });
+
+  it('B04074 may decline its up-to-one removal even when an exact-level target exists', () => {
+    const state = base();
+    state.players.self.scene = [sceneChar(B04074.id, 'source')];
+    state.players.opp.scene = [sceneChar(HIGH, 'target')];
+    state.players.opp.deck = [LOW_TWO, HIGH, TAIL];
+    install(state, 'w87-B04074-decline');
+    expect(dispatchEngineAction({ type: 'declaredAbility', uid: 'source', abilId: 'a1' })).toEqual({ ok: true });
+    expect(captureFound(B04074, [LOW_TWO, HIGH])).toEqual([LOW_TWO, HIGH]);
+
+    resolvePickByUid(null);
+    expect(current().players.opp.scene.map((card) => card.uid)).toContain('target');
+    expect(current().players.opp.remove).not.toContain(HIGH);
+  });
+
+  it('B06084 treats its one investigated card as found before applying the mandatory discard', () => {
+    const state = base();
+    state.players.self.scene = [sceneChar(B06084.id, 'source')];
+    state.players.self.hand = [TARGET];
+    state.players.self.deck = [TAIL, TAIL];
+    state.players.opp.deck = [LOW, HIGH, TAIL];
+    install(state, 'w87-B06084');
+
+    expect(dispatchEngineAction({ type: 'declaredAbility', uid: 'source', abilId: 'a2' })).toEqual({ ok: true });
+    expect(captureFound(B06084, [LOW])).toEqual([LOW]);
+    surfacePendingSideChannels();
+    const discard = useGameStateStore.getState().pendingEffectPick!;
+    const candidate = discard.candidates.find((entry) => entry.cardId === TARGET)!;
+    expect(dispatchEngineAction(bindPendingDecision(discard, {
+      type: 'effectPickResolve', pickedUid: candidate.uid,
+    }))).toEqual({ ok: true });
+    expect(current().players.self.remove).toContain(TARGET);
   });
 
   it('B08074 public trait choice counts all three publicly found Police cards', () => {

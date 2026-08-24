@@ -19,11 +19,10 @@ const a1: AbilityDef = {
     then: {
       kind: 'chain',
       steps: [
-        { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'opp', maxN: 3, visibility: 'public', viewer: 'all', presentation: 'reveal-to-bottom', bind: '$revealed' } },
+        { kind: 'atom', verb: 'souza', args: { player: 'opp', x: 3, bind: '$revealed' } },
         { kind: 'conditional', if: declaredTraitCount(1), then: { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$self', kw: '\u7a81\u6483[\u30ad\u30e3\u30e9]', scope: 'turn' } } },
         { kind: 'conditional', if: declaredTraitCount(2), then: { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$self', kw: '\u7a81\u6483', scope: 'turn' } } },
         { kind: 'conditional', if: declaredTraitCount(3), then: { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$self', kw: '\u8fc5\u901f', scope: 'turn' } } },
-        { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'opp', bindKey: '$revealed' } },
       ],
     },
   },

@@ -235,7 +235,7 @@
         "rules:.claude/rules/13-keywords.md:36",
         "src:src/cards/ct-p02/B02072.ts:38",
         "src:src/engine/effect/atom-handlers/picks.ts:586",
-        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:251"
+        "tests:tests/cards/official-qa/souza-found-public-wave47.test.ts:261"
       ],
       "noteCodes": []
     },
@@ -494,7 +494,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p03/B03126.ts:64",
-        "tests:tests/cards/step12-batch1.test.ts:381"
+        "tests:tests/cards/step12-batch1.test.ts:396"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -508,7 +508,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p03/B03126.ts:64",
-        "tests:tests/cards/step12-batch1.test.ts:381"
+        "tests:tests/cards/step12-batch1.test.ts:396"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -819,7 +819,7 @@
         "tests:tests/cards/engine-mega-w6.test.ts:381",
         "tests:tests/cards/engine-mega-w6.test.ts:382",
         "tests:tests/cards/engine-mega-w6.test.ts:384",
-        "tests:tests/cards/step12-batch1.test.ts:555"
+        "tests:tests/cards/step12-batch1.test.ts:590"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -834,13 +834,13 @@
       "evidence": [
         "src:src/cards/ct-p05/B05042.ts:49",
         "src:src/cards/ct-p05/B05042.ts:54",
-        "tests:tests/cards/step12-batch1.test.ts:555",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:154",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:155",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:156",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:162",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:163",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:164"
+        "tests:tests/cards/step12-batch1.test.ts:590",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:157",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:158",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:159",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:165",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:166",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:167"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"
@@ -1331,7 +1331,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p07/B07014.ts:67",
-        "tests:tests/cards/step12-batch1.test.ts:684"
+        "tests:tests/cards/step12-batch1.test.ts:780"
       ],
       "noteCodes": [
         "CARD-BOUND-ASSERTION"

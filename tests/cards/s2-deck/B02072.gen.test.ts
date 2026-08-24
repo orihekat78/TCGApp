@@ -1,3 +1,7 @@
+// qa: card:B02072:d318ff70e45401b63348e1dc41c896a174b47ebc5076d2054aa468915f989c1a
+// qa: card:B02072:a15bc8904cf0cb368b744793b86426eca39c0ce555e83702b3f347197fbc1391
+// qa: card:B02072:dde8a4e3f3585a2b42d029aa8be1b6b10cf73aa59f7523c3f9064c44887a88e6
+// qa: card:B02072:d370f1b6e59c56f2d1bd035a04300d6b1292944bc2328768ee314b6a7f84ae47
 // tests/cards/s2-deck/B02072.gen — HAND-AUTHORED (S2 deck cluster, souza dyn X + levelSum 閾値)。
 //
 // production dispatch (activateDeclaredAbility + runAllUntilEmpty) で novel 部を pin:
@@ -9,11 +13,17 @@
 //
 // MANUAL-NOTE: souza は相手デッキ top X を公開→デッキ下へ移す (deck 枚数不変)。deckDelta 側は opp n:0。
 
-import { describe, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach } from 'vitest';
 import { event } from '@/engine/event/index';
 import { _resetTriggeredRegistered } from '@/engine/listeners/triggered';
-import { _resetRegistry as resetDefRegistry } from '@/engine/read/def';
+import { _resetRegistry as resetDefRegistry, register } from '@/engine/read/def';
 import { _resetUidCounter } from '@/engine/mutate/scene';
+import { _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
+import { applyDeckReorderAndContinuation } from '@/engine/effect/apply-pick';
+import { activateDeclaredAbility } from '@/engine/flow/main/ability-activate';
+import { runAllUntilEmpty } from '@/engine/resolve';
+import { createEmptyGameState } from '@/engine/state-factory';
+import { sceneChar } from '../../helpers/fixtures';
 import {
   _clearPendingEffectPickQueue,
   _clearPendingEffectOptionalSide,
@@ -117,4 +127,38 @@ describe('B02072 — hand-authored probe (souza dyn X + levelSum threshold)', ()
       runCardScenario(B02072, FIXTURES, sc);
     });
   }
+
+  it('lets only the defending deck owner order the found cards without exposing that order in the log', () => {
+    [B02072, ...FIXTURES].forEach(register);
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'opp';
+    const state = createEmptyGameState();
+    state.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    state.players.self.scene = [sceneChar(B02072.id, 'u0'), sceneChar(COP.id, 'u1')];
+    state.players.opp.deck = [P2.id, P3.id, P9.id];
+
+    activateDeclaredAbility(state, 'u0', 'a1');
+    runAllUntilEmpty(state);
+    const reorder = _drainPendingDeckReorderSide();
+    expect(reorder).toMatchObject({ player: 'opp', cardIds: [P2.id, P3.id] });
+    expect(JSON.stringify(state.log)).not.toContain(P2.id);
+    expect(JSON.stringify(state.log)).not.toContain(P3.id);
+
+    applyDeckReorderAndContinuation(state, reorder!, [P3.id, P2.id]);
+    expect(state.players.opp.deck).toEqual([P9.id, P3.id, P2.id]);
+  });
+
+  it('reveals the only available card for X=2 without refreshing the short deck', () => {
+    [B02072, ...FIXTURES].forEach(register);
+    const state = createEmptyGameState();
+    state.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    state.players.self.scene = [sceneChar(B02072.id, 'u0'), sceneChar(COP.id, 'u1')];
+    state.players.opp.deck = [P3.id];
+
+    activateDeclaredAbility(state, 'u0', 'a1');
+    runAllUntilEmpty(state);
+
+    expect(state.log.findLast((entry) => entry.action === 'souza')?.result).toBe('revealed 1');
+    expect(state.players.opp.deck).toEqual([P3.id]);
+    expect(state.refreshCount.opp).toBe(0);
+  });
 });

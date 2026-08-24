@@ -229,12 +229,14 @@
     {
       "qaId": "card:B02072:d370f1b6e59c56f2d1bd035a04300d6b1292944bc2328768ee314b6a7f84ae47",
       "answerHash": "ed917d61402287be39335fe97b783c430fef846c0a729c3ac4eee2d0f4f2588b",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02072.ts:48"
-      ]
+        "src:src/cards/ct-p02/B02072.ts:48",
+        "tests:tests/cards/s2-deck/B02072.gen.test.ts:143"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B03002:23c9bd7209af9bd9d812ae6f4607207f920a91b7b692105dc6b17b3c3d655bf2",
@@ -432,12 +434,20 @@
     {
       "qaId": "card:B03096:586cbc6530a51d5bcfbe6b4b5eac53defa0f7184e31d96b19b4cdbfebca0b4b8",
       "answerHash": "151f71e0f3fe880bba4086d745e94540f1546d2bed45fbe51037afd3a7c27ead",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03096.ts:73"
-      ]
+        "rules:.claude/rules/13-keywords.md:35",
+        "rules:.claude/rules/13-keywords.md:36",
+        "src:src/cards/ct-p03/B03096.ts:29",
+        "tests:tests/cards/reasoning-hook-batch3.test.ts:144",
+        "tests:tests/cards/reasoning-hook-batch3.test.ts:145",
+        "tests:tests/cards/reasoning-hook-batch3.test.ts:146",
+        "tests:tests/cards/reasoning-hook-batch3.test.ts:155",
+        "tests:tests/cards/reasoning-hook-batch3.test.ts:156"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B03096:9f6dd27f461691dbed853838301402ea7f626e048ca55d38f4cd670fd660d185",
@@ -1177,8 +1187,8 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p07/B07002.ts:49",
-        "tests:tests/cards/official-qa/sleep-cost-related-entry-public-wave24.test.ts:153",
-        "tests:tests/cards/official-qa/sleep-cost-related-entry-public-wave24.test.ts:159"
+        "tests:tests/cards/official-qa/sleep-cost-related-entry-public-wave24.test.ts:154",
+        "tests:tests/cards/official-qa/sleep-cost-related-entry-public-wave24.test.ts:160"
       ]
     },
     {

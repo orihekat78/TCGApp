@@ -181,12 +181,14 @@
     {
       "qaId": "card:B02072:dde8a4e3f3585a2b42d029aa8be1b6b10cf73aa59f7523c3f9064c44887a88e6",
       "answerHash": "2a146c73abfdb32f9022967aff54a9412323fbcc32024d67121829104cb4fbf9",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02072.ts:47"
-      ]
+        "src:src/cards/ct-p02/B02072.ts:47",
+        "tests:tests/cards/s2-deck/B02072.gen.test.ts:160"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B02079:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
@@ -547,10 +549,10 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p04/B04064.ts:61",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:378",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:394",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:395",
-        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:399"
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:381",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:397",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:398",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:402"
       ]
     },
     {
@@ -596,7 +598,7 @@
         "rules:.claude/rules/17-icons.md:37",
         "rules:.claude/rules/19-special-rules.md:21",
         "src:src/cards/ct-p05/B05008.ts:3",
-        "tests:tests/cards/official-qa/bond-partner-exclusion-public-wave45.test.ts:390"
+        "tests:tests/cards/official-qa/bond-partner-exclusion-public-wave45.test.ts:391"
       ],
       "noteCodes": []
     },
@@ -647,7 +649,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05042.ts:73",
-        "tests:tests/cards/step12-batch1.test.ts:555"
+        "tests:tests/cards/step12-batch1.test.ts:590"
       ]
     },
     {
@@ -1380,12 +1382,15 @@
     {
       "qaId": "card:B08020:6ca13ec6fb35a17a1d4e9cce41f4a239d75c6760de2061c25511aec53cf9ea8f",
       "answerHash": "782443160f1e9b6a77c1feabf54d6327a9a7ae59fab923b021d497e6c2ac37b6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08020.ts:87"
-      ]
+        "src:src/cards/ct-p08/B08020.ts:87",
+        "tests:tests/engine/effect/bug-132-gap-fixes.test.ts:275",
+        "tests:tests/engine/effect/bug-132-gap-fixes.test.ts:276"
+      ],
+      "noteCodes": []
     },
     {
       "qaId": "card:B08024:d52596199be14d625d7776309eeaca145097a31eecca550237262ad7075cb2f4",

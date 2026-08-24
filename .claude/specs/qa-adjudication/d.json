@@ -1558,16 +1558,17 @@
     {
       "qaId": "card:B08020:d0447a989e2ce1eae2c62ea7297724ea5fe7015808c2a90c2e3be0d2a4e7821f",
       "answerHash": "3e24c4974b890684c6425a1c553584756a707e44f3ebb6b1e853cdbef3ff1ab0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08020.ts:1"
+        "src:src/cards/ct-p08/B08020.ts:1",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:542",
+        "tests:tests/engine/bug-253-254-event-use-and-hirameki-faceup.test.ts:549",
+        "tests:tests/engine/flow/bug-140-cutin-batch.test.ts:78",
+        "tests:tests/engine/flow/bug-140-cutin-batch.test.ts:79"
       ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B08028:79e28e7fa78e2d090aa94a8dd2079a8c24caa3eb38cfb5ff00eaf821ca69e1ec",

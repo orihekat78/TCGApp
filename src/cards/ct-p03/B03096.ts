@@ -5,13 +5,10 @@
 //   【ターン1】自分の現場にいるキャラが推理したとき、〚捜査1〛（相手はデッキのカードを上から指定の数だけ公開し、
 //     好きな順番でデッキの下に移す）する。レベル8以上のカードが発見された場合、カードを1枚引く。
 //
-// a1: 推理反応 (reasoning:end, 非 selfOnly = 自分の現場の任意キャラ)。
+// a1: 推理反応 (reasoning:after-sleep, 非 selfOnly = 自分の現場の任意キャラ)。
 //   matcherCondition triggerCharMatches{side:'self'} (filter 無し = 自分側の任意キャラ) + 【ターン1】= limit turn:1。
-//   〚捜査1〛 = 相手デッキ上 1 枚を公開し、デッキの下へ移す:
-//     souza atom は「発見された」カードを bind/参照できない (atom-handlers.ts §souza「発見された参照は scope 外」)
-//     ため、deck-look-N (B01017/D01013 同型) で代替する。deckRevealUntil(player:'opp', maxN:1) で相手デッキ上 1 枚を
-//     公開 (levelMin:8 に該当すれば $found に bind、残りを $rest)、deckToBottomBound で $found/$rest をデッキ下へ。
-//   レベル8以上が発見された場合 = $found が matched → conditional で自分が1枚引く (必須効果「引く」)。
+//   〚捜査1〛 = souza{player:'opp', x:1, bind:'$found'}。公開札を相手がデッキ下へ移し終えてから
+//     後続を再開する。レベル8以上が発見された場合 = boundAnyMatchesFilter(levelMin:8) で自分が1枚引く。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 
@@ -21,7 +18,7 @@ const a1: AbilityDef = {
   scope: 'on-scene',
   limit: { kind: 'turn', n: 1 }, // 【ターン1】
   trigger: {
-    hook: 'reasoning:end',
+    hook: 'reasoning:after-sleep',
     // 自分の現場にいるキャラが推理したとき (filter 無し = 自分側の任意キャラ、rules/11)
     // BUG-179: filter:{} で scene 走査を強制 (無いと自パートナーの推理でも誤発火。印字は「現場にいるキャラ」)。
     matcherCondition: { kind: 'triggerCharMatches', side: 'self', filter: {} },
@@ -29,21 +26,13 @@ const a1: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      // 〚捜査1〛: 相手デッキ上 1 枚を公開。レベル8以上なら $found に bind、残りを $rest に
-      {
-        kind: 'atom',
-        verb: 'deckRevealUntil',
-        args: { player: 'opp', maxN: 1, visibility: 'public', viewer: 'all', filter: { levelMin: 8 }, bind: '$rest', bindMatch: '$found' },
-      },
+      { kind: 'atom', verb: 'souza', args: { player: 'opp', x: 1, bind: '$found' } },
       // レベル8以上のカードが発見された場合、自分はカードを1枚引く (必須)
       {
         kind: 'conditional',
-        if: { kind: 'bound', key: '$found', presence: 'matched' },
+        if: { kind: 'boundAnyMatchesFilter', bindKey: '$found', filter: { levelMin: 8 } },
         then: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
       },
-      // 公開したカードをデッキの下へ ($found / $rest のいずれかに 1 枚、もう一方は空 = no-op)
-      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'opp', bindKey: '$found' } },
-      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'opp', bindKey: '$rest' } },
     ],
   },
   description:
