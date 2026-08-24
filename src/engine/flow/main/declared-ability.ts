@@ -35,7 +35,7 @@ import { hasPendingHumanPick } from '../../effect/apply-pick.js';
 import { isDeclaredNameValidForEffect } from '../../effect/declared-name-domain.js';
 import { _hasOpenActionContext } from '../action/state-machine.js';
 import { isMainActionWindow } from './main-action-window.js';
-import { isLegacyReplayB04048DeclaredNameSource } from '../action/legacy-replay-compat.js';
+import { isLegacyReplayRegisteredCardNameSource } from '../action/legacy-replay-compat.js';
 import {
   cloneCausalEffectTrace,
   completeEffectCausalTrace,
@@ -154,12 +154,14 @@ export function declaredAbilityOccurrenceSourceRef(
 function permitsLegacyReplayMissingDeclaredName(
   cardId: string,
   abilityId: string,
+  area: 'scene' | 'case' | 'partner-area' | 'hand' | 'evidence' | 'file',
   occurrence: DeclaredAbilityOccurrence,
   value: unknown,
 ): boolean {
-  return value === undefined && isLegacyReplayB04048DeclaredNameSource({
+  return value === undefined && isLegacyReplayRegisteredCardNameSource({
     cardId,
     abilityId,
+    area,
     ...declaredAbilityOccurrenceSourceRef(occurrence),
   });
 }
@@ -407,6 +409,7 @@ export function canActivateDeclaredAbility(
   if (!permitsLegacyReplayMissingDeclaredName(
     found.cardId,
     abilId,
+    found.area,
     occurrence,
     costParams?.declaredName,
   ) && !isDeclaredNameValidForEffect(ability.effect, costParams?.declaredName)) return false;
@@ -603,6 +606,7 @@ export function useDeclaredAbility(
     && !permitsLegacyReplayMissingDeclaredName(
       found.cardId,
       abilId,
+      found.area,
       admissionOccurrence,
       ctx?.dyn?.declaredName,
     )

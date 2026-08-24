@@ -1714,7 +1714,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:28",
         "src:src/cards/ct-p09/B09033.ts:40",
-        "tests:tests/cards/official-qa/file-assisted-partner-remove-public-wave89.test.ts:181"
+        "tests:tests/cards/official-qa/file-assisted-partner-remove-public-wave89.test.ts:187"
       ]
     },
     {

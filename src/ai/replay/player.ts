@@ -12,6 +12,10 @@ import type { GameState } from '@/engine/types';
 import { replayNondeterminism } from './nondeterminism.js';
 import { decodeReplayLog } from './decode.js';
 import { withLegacyReplayCompatibility } from '@/engine/flow/action/legacy-replay-compat.js';
+import {
+  registeredCardNameMigrationFor,
+  type RegisteredCardNameMigration,
+} from '@/engine/effect/declared-name-domain.js';
 
 type Player = 'self' | 'opp';
 
@@ -38,7 +42,7 @@ export class ScriptedPolicy implements AIPolicy {
     }
     const recorded = this.queue[0];
     const legal = candidates.find((candidate) => movesEqual(candidate, recorded))
-      ?? adaptLegacyB04048DeclaredName(state, recorded, candidates);
+      ?? adaptLegacyRegisteredCardName(state, recorded, candidates);
     if (!legal) {
       throw new Error(`recorded replay move is not legal: ${JSON.stringify(recorded)}`);
     }
@@ -113,38 +117,57 @@ function withoutDeclaredName(move: DeclaredAbilityMove): Omit<DeclaredAbilityMov
   return base;
 }
 
-function isExactPrintedB04048Occurrence(move: DeclaredAbilityMove): boolean {
+function isExactPrintedMigrationOccurrence(
+  move: DeclaredAbilityMove,
+  migration: RegisteredCardNameMigration,
+): boolean {
   return move.setCardId === undefined
     && move.setCardInstanceId === undefined
     && move.abilityOrigin === 'printed'
-    && move.abilityIndex === 1;
+    && move.abilityIndex === migration.abilityIndex;
 }
 
-function adaptLegacyB04048DeclaredName(
+function replayDeclaredSource(
+  state: GameState,
+  uid: string,
+): { cardId: string; area: 'scene' | 'partner-area' | 'case' } | undefined {
+  if (uid === 'case:self' || uid === 'case:opp') {
+    const player = uid === 'case:self' ? 'self' : 'opp';
+    const cardId = state.players[player].case.cardId;
+    return cardId ? { cardId, area: 'case' } : undefined;
+  }
+  for (const player of ['self', 'opp'] as const) {
+    const partnerMR = state.players[player].partnerAreaMR;
+    if (partnerMR && (partnerMR.uid === uid || uid === `partnerMR:${player}`)) {
+      return { cardId: partnerMR.cardId, area: 'partner-area' };
+    }
+    const scene = state.players[player].scene.find(card => card.uid === uid);
+    if (scene) return { cardId: scene.cardId, area: 'scene' };
+  }
+  return undefined;
+}
+
+function adaptLegacyRegisteredCardName(
   state: GameState,
   recorded: Move,
   candidates: Move[],
 ): Move | undefined {
   if (recorded.kind !== 'declaredAbility'
-    || recorded.abilityId !== 'a2'
     || recorded.declaredName !== undefined) return undefined;
-  let cardId: string | undefined;
-  for (const player of ['self', 'opp'] as const) {
-    const source = state.players[player].scene.find(card => card.uid === recorded.uid);
-    if (!source) continue;
-    cardId = source.cardId;
-    break;
-  }
-  if (cardId !== 'B04048' && cardId !== 'B04048P') return undefined;
-  if (!isWitnessFreeLegacyDeclaredMove(recorded) && !isExactPrintedB04048Occurrence(recorded)) {
-    return undefined;
-  }
-  const candidate = candidates.find((move): move is DeclaredAbilityMove => (
+  const namedCandidates = candidates.filter((move): move is DeclaredAbilityMove => (
     move.kind === 'declaredAbility'
     && move.declaredName !== undefined
-    && isExactPrintedB04048Occurrence(move)
     && movesEqual(withoutDeclaredName(move) as Move, recorded)
   ));
+  if (namedCandidates.length === 0) return undefined;
+  const source = replayDeclaredSource(state, recorded.uid);
+  const migration = registeredCardNameMigrationFor(source?.cardId, recorded.abilityId);
+  if (!source || !migration || source.area !== migration.area) return undefined;
+  if (!isWitnessFreeLegacyDeclaredMove(recorded)
+    && !isExactPrintedMigrationOccurrence(recorded, migration)) {
+    return undefined;
+  }
+  const candidate = namedCandidates.find(move => isExactPrintedMigrationOccurrence(move, migration));
   return candidate ? withoutDeclaredName(candidate) as Move : undefined;
 }
 

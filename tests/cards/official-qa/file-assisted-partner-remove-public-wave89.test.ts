@@ -31,10 +31,15 @@ import { makeChar } from '../../helpers/fixtures';
 
 const PARTNER = 'D08001';
 const HATTORI = 'W89-HATTORI';
-const NONMATCH = '存在しないカード名';
+const NONMATCH_ID = 'W89-REGISTERED-NONMATCH';
+const NONMATCH = '波八十九登録非一致事件';
 const HATTORI_DEF: CardDef = {
   id: HATTORI, no: HATTORI, kind: 'character', names: ['服部平次'], colors: ['緑'],
   level: 1, ap: 1000, lp: 1, traits: [], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [],
+};
+const NONMATCH_DEF: CardDef = {
+  id: NONMATCH_ID, no: NONMATCH_ID, kind: 'event', names: [NONMATCH], colors: ['青'],
+  traits: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [],
 };
 
 function fileCards(prefix: string, count: number) {
@@ -109,6 +114,7 @@ beforeEach(() => {
   resetPendingRuntimeState();
   registerAll();
   register(HATTORI_DEF);
+  register(NONMATCH_DEF);
   registerTriggeredListener();
 });
 

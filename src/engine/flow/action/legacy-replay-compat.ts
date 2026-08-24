@@ -1,3 +1,5 @@
+import { isRegisteredCardNameMigrationSource } from '../../effect/declared-name-domain.js';
+
 let compatibilityDepth = 0;
 let declaredNameCompatibilityDepth = 0;
 
@@ -37,19 +39,15 @@ export function withLegacyReplayCompatibility<T>(run: () => T): T {
   );
 }
 
-export function isLegacyReplayB04048DeclaredNameSource(source: {
+export function isLegacyReplayRegisteredCardNameSource(source: {
   cardId?: string;
   abilityId?: string;
+  area?: string;
   setCardId?: string;
   setCardInstanceId?: string;
   abilityOrigin?: string;
   abilityIndex?: number;
 }): boolean {
   return isLegacyReplayDeclaredNameCompatibilityActive()
-    && (source.cardId === 'B04048' || source.cardId === 'B04048P')
-    && source.abilityId === 'a2'
-    && source.setCardId === undefined
-    && source.setCardInstanceId === undefined
-    && source.abilityOrigin === 'printed'
-    && source.abilityIndex === 1;
+    && isRegisteredCardNameMigrationSource(source);
 }

@@ -54,7 +54,8 @@ const a2: AbilityDef = {
         kind: 'atom',
         verb: 'declareName',
         args: {
-          bind: 'named'
+          bind: 'named',
+          domain: 'registered-card-name'
         }
       },
       {

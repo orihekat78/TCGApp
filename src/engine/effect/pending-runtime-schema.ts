@@ -11,6 +11,7 @@ import {
 import {
   DECLARED_NAME_DOMAINS,
   findDeclareNameSpec,
+  isLegacyRegisteredCardNameMigrationSource,
   resolveDeclaredName,
   type DeclareNameSpec,
 } from './declared-name-domain.js';
@@ -424,11 +425,6 @@ function sameDeclareNameSpec(left: DeclareNameSpec, right: DeclareNameSpec): boo
     && left.optional === right.optional;
 }
 
-const LEGACY_REGISTERED_CARD_NAME_MIGRATIONS = new Set([
-  'B04048:a2',
-  'B04048P:a2',
-]);
-
 function stripRegisteredCardNameDomain(value: unknown): { value: unknown; removed: number } {
   if (Array.isArray(value)) {
     const entries = value.map(stripRegisteredCardNameDomain);
@@ -484,13 +480,12 @@ function structurallyEqual(left: unknown, right: unknown): boolean {
 function isLegacyRegisteredCardNameMigration(
   queued: DeclareNameSpec,
   printed: DeclareNameSpec,
-  cardId: string,
-  abilityId: string,
+  source: Record<string, unknown>,
   queuedEffect: Effect,
   printedEffect: Effect,
 ): boolean {
   const legacyPrinted = stripRegisteredCardNameDomain(printedEffect);
-  return LEGACY_REGISTERED_CARD_NAME_MIGRATIONS.has(`${cardId}:${abilityId}`)
+  return isLegacyRegisteredCardNameMigrationSource(source)
     && queued.bind === printed.bind
     && queued.optional === printed.optional
     && queued.domain === 'unrestricted'
@@ -563,8 +558,7 @@ function expectedDeclaredNameSpec(
       && isLegacyRegisteredCardNameMigration(
         queuedSpec,
         printedSpec,
-        cardId,
-        abilityId,
+        source,
         queued.effect,
         printedEffect,
       );

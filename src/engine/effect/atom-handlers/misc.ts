@@ -6,7 +6,7 @@ import type { Player } from './_shared.js';
 import type { GameState, EffectCtx, LogEntry, Effect, Condition } from '../../types/index.js';
 import { recordEffectCausalOperation } from '../../log/effect-causal.js';
 import { declaredNameDomain, resolveDeclaredName } from '../declared-name-domain.js';
-import { isLegacyReplayB04048DeclaredNameSource } from '../../flow/action/legacy-replay-compat.js';
+import { isLegacyReplayRegisteredCardNameSource } from '../../flow/action/legacy-replay-compat.js';
 
 export function atomPartnerAssist(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       const paP = resolvePlayer(a.player, ctx);
@@ -419,7 +419,7 @@ export function atomDeclareName(s: GameState, a: Record<string, unknown>, ctx: E
       const supplied = typeof raw === 'string' ? raw.trim() : '';
       const domain = supplied === ''
         && configuredDomain === 'registered-card-name'
-        && isLegacyReplayB04048DeclaredNameSource(ctx.source)
+        && isLegacyReplayRegisteredCardNameSource(ctx.source)
         ? 'unrestricted'
         : configuredDomain;
       const resolvedName = supplied === '' ? null : resolveDeclaredName(domain, supplied);

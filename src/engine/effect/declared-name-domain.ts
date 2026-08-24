@@ -10,6 +10,82 @@ export const DECLARED_NAME_DOMAINS = [
 
 export type { DeclaredNameDomain } from '../types/index.js';
 
+export type RegisteredCardNameMigration = {
+  cardId: string;
+  abilityId: string;
+  abilityIndex: number;
+  area: 'scene' | 'partner-area' | 'case';
+};
+
+const REGISTERED_CARD_NAME_MIGRATIONS: readonly RegisteredCardNameMigration[] = [
+  { cardId: 'B04048', abilityId: 'a2', abilityIndex: 1, area: 'scene' },
+  { cardId: 'B04048P', abilityId: 'a2', abilityIndex: 1, area: 'scene' },
+  { cardId: 'B09003', abilityId: 'a3', abilityIndex: 2, area: 'scene' },
+  { cardId: 'B09003P', abilityId: 'a3', abilityIndex: 2, area: 'scene' },
+  { cardId: 'B09108', abilityId: 'a2', abilityIndex: 1, area: 'partner-area' },
+  { cardId: 'B09108P', abilityId: 'a2', abilityIndex: 1, area: 'partner-area' },
+  { cardId: 'B09111', abilityId: 'a2', abilityIndex: 1, area: 'case' },
+  { cardId: 'B09111P', abilityId: 'a2', abilityIndex: 1, area: 'case' },
+];
+
+export function registeredCardNameMigrationFor(
+  cardId: string | undefined,
+  abilityId: string | undefined,
+): RegisteredCardNameMigration | undefined {
+  return REGISTERED_CARD_NAME_MIGRATIONS.find(candidate => (
+    candidate.cardId === cardId && candidate.abilityId === abilityId
+  ));
+}
+
+type RegisteredCardNameMigrationSource = {
+  cardId?: unknown;
+  abilityId?: unknown;
+  area?: unknown;
+  setCardId?: unknown;
+  setCardInstanceId?: unknown;
+  abilityOrigin?: unknown;
+  abilityIndex?: unknown;
+};
+
+function migrationForSource(
+  source: RegisteredCardNameMigrationSource,
+): RegisteredCardNameMigration | undefined {
+  return registeredCardNameMigrationFor(
+    typeof source.cardId === 'string' ? source.cardId : undefined,
+    typeof source.abilityId === 'string' ? source.abilityId : undefined,
+  );
+}
+
+function hasRegisteredCardNameMigrationAuthority(
+  source: RegisteredCardNameMigrationSource,
+  migration: RegisteredCardNameMigration | undefined,
+): migration is RegisteredCardNameMigration {
+  return migration !== undefined
+    && source.area === migration.area
+    && source.setCardId === undefined
+    && source.setCardInstanceId === undefined;
+}
+
+export function isRegisteredCardNameMigrationSource(
+  source: RegisteredCardNameMigrationSource,
+): boolean {
+  const migration = migrationForSource(source);
+  return hasRegisteredCardNameMigrationAuthority(source, migration)
+    && source.abilityOrigin === 'printed'
+    && source.abilityIndex === migration.abilityIndex;
+}
+
+export function isLegacyRegisteredCardNameMigrationSource(
+  source: RegisteredCardNameMigrationSource,
+): boolean {
+  const migration = migrationForSource(source);
+  if (!hasRegisteredCardNameMigrationAuthority(source, migration)) return false;
+  const witnessFree = source.abilityOrigin === undefined && source.abilityIndex === undefined;
+  const exactPrinted = source.abilityOrigin === 'printed'
+    && source.abilityIndex === migration.abilityIndex;
+  return witnessFree || exactPrinted;
+}
+
 export type DeclareNameSpec = {
   bind: string;
   optional: boolean;

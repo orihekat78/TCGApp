@@ -122,6 +122,40 @@ describe('ScriptedPolicy', () => {
   });
 
   it.each([
+    { cardId: 'B09003', abilityId: 'a3', abilityIndex: 2, area: 'scene' as const },
+    { cardId: 'B09003P', abilityId: 'a3', abilityIndex: 2, area: 'scene' as const },
+    { cardId: 'B09108', abilityId: 'a2', abilityIndex: 1, area: 'partner-area' as const },
+    { cardId: 'B09108P', abilityId: 'a2', abilityIndex: 1, area: 'partner-area' as const },
+    { cardId: 'B09111', abilityId: 'a2', abilityIndex: 1, area: 'case' as const },
+    { cardId: 'B09111P', abilityId: 'a2', abilityIndex: 1, area: 'case' as const },
+  ])('adapts a name-missing legacy $cardId/$abilityId printed move', (row) => {
+    resetForRun();
+    const uid = row.area === 'case' ? 'case:self' : row.area === 'partner-area' ? 'partnerMR:self' : 'legacy-host';
+    const state = produce(createEmptyGameState(), draft => {
+      draft.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+      if (row.area === 'case') {
+        draft.players.self.case.cardId = row.cardId;
+      } else {
+        const source = engine.mutate.scene.enter(draft, 'self', row.cardId, { active: true });
+        source.uid = uid;
+        if (row.area === 'partner-area') {
+          draft.players.self.partnerAreaMR = source;
+          draft.players.self.scene = [];
+        }
+      }
+      draft.players.self.deck = ['D11003', 'D11005'];
+    });
+    const recorded: Move = {
+      kind: 'declaredAbility', uid, abilityId: row.abilityId,
+      abilityOrigin: 'printed', abilityIndex: row.abilityIndex,
+    };
+    const current: Move = { ...recorded, declaredName: '毛利小五郎' };
+    const chosen = new ScriptedPolicy(`legacy-${row.cardId}`, [recorded]).choose(state, [current], 'self');
+
+    expect(chosen).toEqual(recorded);
+  });
+
+  it.each([
     {
       label: 'granted occurrence',
       sourceCardId: 'B04048',

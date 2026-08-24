@@ -17,6 +17,7 @@
 - QA Waves98-99: .claude/sessions/2026-08-25-qa-waves98-99.md.
 - QA Waves100-101: .claude/sessions/2026-08-25-qa-waves100-101.md.
 - QA Waves102-103: .claude/sessions/2026-08-25-qa-waves102-103.md.
+- QA Waves104-105: .claude/sessions/2026-08-25-qa-waves104-105.md.
 
 ## 2026-08-24: QA runtime Waves82-83
 
@@ -48,16 +49,19 @@
 
 ## Next
 
-- Waves102-103 move six Q&A items to matched. Coverage is 1667 matched / 1297
-  test-missing / 2964 total; 1112 exact groups remain, including 949 singletons.
-- Wave102 certifies repeatable paid declarations. Wave103 fixes BUG-358 with
-  exact all-card names across UI/AI/save/replay while preserving old saves.
-- Wave104 seed: section `5d92283f...`, Q `fb1e1b48...`, A `fde7928e...` across
-  B05055/B06090/B10056.
-- Wave105 seed: section `5fcfb3b6...`, Q `2db9e3e1...`, A `2818fdd5...` across
-  B09003/B09108/B09111.
+- Waves104-105 move six Q&A items to matched. Coverage is 1673 matched / 1291
+  test-missing / 2964 total; 1110 exact groups remain, including 949 singletons.
+- Wave104 proves a Hirameki source is not yet in remove during its own effect;
+  another matching removed character remains selectable.
+- Wave105 fixes BUG-359. B09003/P, B09108/P, and B09111/P now require a
+  registered all-card name across UI/AI/save/replay. Legacy migration requires
+  exact area and witness authority; B09111/P evidence cost survives hydration.
+- Wave106 seed: section `98391238...`, Q `3e9b9e80...`, A `bd102126...` across
+  B03018/B05077/B05101.
+- Wave107 seed: section `5fcfb3b6...`, Q `c5a0fed5...`, A `3182fdb3...` across
+  B09108/B09111/B09112. This is distinct from Wave105 and must be grounded anew.
 - Official sync drift is separate: new PR322 and changed Q&A for
   B04018/B04018P/B06103P. Do not mix it into selected waves without re-queueing.
-- Revised remaining estimate: 77-148 working hours, center about 112 hours.
+- Revised remaining estimate: 76-147 working hours, center about 111 hours.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

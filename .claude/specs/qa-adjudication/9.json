@@ -1374,7 +1374,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:28",
         "src:src/cards/ct-p09/B09010.ts:50",
-        "tests:tests/cards/official-qa/file-assisted-partner-remove-public-wave89.test.ts:160"
+        "tests:tests/cards/official-qa/file-assisted-partner-remove-public-wave89.test.ts:166"
       ]
     },
     {
@@ -1507,8 +1507,8 @@
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/17-icons.md:28",
-        "src:src/cards/ct-p09/B09111.ts:114",
-        "tests:tests/cards/official-qa/file-assisted-partner-remove-public-wave89.test.ts:219"
+        "src:src/cards/ct-p09/B09111.ts:115",
+        "tests:tests/cards/official-qa/file-assisted-partner-remove-public-wave89.test.ts:225"
       ]
     },
     {

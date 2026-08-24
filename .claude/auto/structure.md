@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6599
+- **ファイル数**: 6604
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -539,6 +539,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-356.md` — BUG-356: D11005 used a fixed AP removal threshold
     - `BUG-357.md` — declared prewalk decision authority
     - `BUG-358.md` — B04048 registered all-card name authority
+    - `BUG-359.md` — Wave105 registered all-card name authority
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1630,6 +1631,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-qa-waves90-91.md` — QA adjudication Waves90-91
     - `2026-08-25-qa-waves100-101.md` — QA adjudication Waves100-101
     - `2026-08-25-qa-waves102-103.md` — QA adjudication Waves102-103
+    - `2026-08-25-qa-waves104-105.md` — QA adjudication Waves104-105
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -5950,6 +5952,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `full-scene-event-entry-public-wave84.test.ts` — qa: card:B05062:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398
       - `hand-remove-self-only-public-wave58.test.ts` — qa: card:B07020:924a8b39ee3036e70eeeac9c3a5941e4faa4fec3ebc39e19ceb12b4b0f2419af
       - `hirameki-decline-partner-area-public-wave95.test.ts` — qa: card:B07059:94d4fbcb6d6b527d8e1d1c0eaa9b309fe2198ea03d499bf7e02c1d5a00121143
+      - `hirameki-source-exclusion-public-wave104.test.ts` — qa: card:B05055:954d5e661b6a0db14e75a56af70b2eb74dcec6e8ac0f10646134ec418133b014
       - `leave-reveal-until-forced-public.test.ts` — qa: card:B02058:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-opponent-turn-public.test.ts` — qa: card:B01065:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `leave-trigger-remove-retrieval-public.test.ts` — qa: card:B02004:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
@@ -5969,6 +5972,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `partner-area-unbounded-public-wave72.test.ts` — qa: card:B07030:dc07d737cba65ebccfc43e14a2de345262a316223691c7ff5eba2a0c7906bcc0
       - `pr099-public-wave77.test.ts` — qa: card:PR099:2cca6007ab7f2137a43f145275f1d7dd6c33155f5c98d3179becb7d643a950fd
       - `pr263-pr269-contact-exit-regression-wave83.test.ts` — Horizontal regression: a disguise rider removes the non-current contact particip…
+      - `registered-card-name-scope-public-wave105.test.ts` — qa: card:B09003:45a28272794215b6465b92629940788c48e8cb3de486869a26a5a34e1a4f6a73
       - `same-card-multicopy-order-wave17.test.ts` — qaId=card:B02020:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c…
       - `self-selection-public-wave74.test.ts` — qa: card:B03088:37d1a5bf035569e61acdccac31f828d38114d0105e6cbe77aa883552b82699c7
       - `set-card-ability-occurrence-public-wave35.test.ts` — qa: card:B01057:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
@@ -6355,6 +6359,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `public-hand-reveal-window.spec.ts` — The reveal stays usable above its linked effect picker. Card detail is
     - `reasoning-hook-2026-06-06.spec.ts` — E2E: engine-extension reasoning-hook (2026-06-06 タスクC) の実機 text-faithfulness 検証。
     - `reasoning-hook-batch3-2026-06-06.spec.ts` — E2E: engine-extension reasoning-hook batch #3 (2026-06-06 タスクC) 実機 text-faithful…
+    - `registered-card-name-wave105.spec.ts`
     - `replay-ui.spec.ts` — Phase 9-G.2 (Cleanup 7-D): リプレイ UI E2E
     - `reuse-cards-2026-06-05.spec.ts` — E2E verification for the 2026-06-05 catalog-reuse cards (sequential hand-impl):
     - `rps-decision.spec.ts`
