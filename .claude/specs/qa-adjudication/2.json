@@ -1696,15 +1696,14 @@
     {
       "qaId": "card:B10011:a29432736c9e0da7f13b3e318a178351f577621ebd450b986296f9f839c94421",
       "answerHash": "63fddb7dbd0120193584f647dae3a2df77a341e27bd7e482737f21c9b03454d5",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:20",
-        "src:src/cards/ct-p10/B10011.ts:15"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10011.ts:7",
+        "tests:tests/cards/official-qa/opponent-event-removal-immunity-public-wave97.test.ts:256",
+        "tests:tests/cards/official-qa/opponent-event-removal-immunity-public-wave97.test.ts:263",
+        "tests:tests/cards/official-qa/opponent-event-removal-immunity-public-wave97.test.ts:264"
       ]
     },
     {
@@ -2350,11 +2349,13 @@
     {
       "qaId": "card:PR279:8acc30fd02aa7a57c56a3a40704c2abd0853dd036d083f11f04b3cf0687a4e11",
       "answerHash": "cb4fe5abb0109aacfe807a5aa363432062f0fabb52e699154a3aada0c9710177",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR279.ts:54"
+        "src:src/cards/pr-01/PR279.ts:31",
+        "tests:tests/cards/official-qa/opponent-event-removal-immunity-public-wave97.test.ts:176",
+        "tests:tests/cards/official-qa/opponent-event-removal-immunity-public-wave97.test.ts:218"
       ]
     },
     {

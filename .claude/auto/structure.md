@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6588
+- **ファイル数**: 6591
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -537,6 +537,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-354.md` — BUG-354: failed or deferred stacking ran the wrong chain tail
     - `BUG-355.md` — BUG-355: exact case-feature identity was shortened
     - `BUG-356.md` — BUG-356: D11005 used a fixed AP removal threshold
+    - `BUG-357.md` — declared prewalk decision authority
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1628,6 +1629,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-qa-waves90-91.md` — QA adjudication Waves90-91
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
+    - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -5955,6 +5957,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `misread-reaction-order-wave26.test.ts` — qa: card:B05015:32589b2605a57e1fe89295b9b2340e6874cd6600ca6756e790b5fbcad58bae18
       - `multihook-timing-public.test.ts` — qa: card:D03007:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3
       - `nonpositive-ap-public-wave66.test.ts` — qa: card:B02021:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb
+      - `opponent-event-removal-immunity-public-wave97.test.ts` — qa: card:B10010:8acc30fd02aa7a57c56a3a40704c2abd0853dd036d083f11f04b3cf0687a4e11
       - `opponent-evidence-gain-public-wave79.test.ts` — qa: card:B01065:b34f939ceba2f547ad6f01ee968061869d0f8abc4e72fa0d51c20b0c14a53ee1
       - `partner-area-unbounded-public-wave72.test.ts` — qa: card:B07030:dc07d737cba65ebccfc43e14a2de345262a316223691c7ff5eba2a0c7906bcc0
       - `pr099-public-wave77.test.ts` — qa: card:PR099:2cca6007ab7f2137a43f145275f1d7dd6c33155f5c98d3179becb7d643a950fd

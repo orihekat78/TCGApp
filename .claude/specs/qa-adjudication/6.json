@@ -2205,11 +2205,13 @@
     {
       "qaId": "card:PR279:d2649f12c376076d66067f8d7b0ce732b2fd8a8e4b651a732c09c8c562749635",
       "answerHash": "f1b886a3c9835da71b1028b2fd1e999cc625dd248b69d38938f1c4138608ccc2",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/pr-01/PR279.ts:54"
+        "src:src/cards/pr-01/PR279.ts:31",
+        "tests:tests/cards/official-qa/opponent-event-removal-immunity-public-wave97.test.ts:231",
+        "tests:tests/cards/official-qa/opponent-event-removal-immunity-public-wave97.test.ts:233"
       ]
     },
     {

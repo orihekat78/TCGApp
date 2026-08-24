@@ -36,6 +36,7 @@ import { isDeclaredNameValidForEffect } from '../../effect/declared-name-domain.
 import { _hasOpenActionContext } from '../action/state-machine.js';
 import { isMainActionWindow } from './main-action-window.js';
 import {
+  cloneCausalEffectTrace,
   completeEffectCausalTrace,
   currentEffectCausalCorrelationEventId,
   startStandaloneCausalTrace,
@@ -681,6 +682,12 @@ export function useDeclaredAbility(
     humanChooser: isHumanEffect,
     source: { cardId: found.cardId, abilityId: abilId, ...admissionSource },
   });
+  // A declared effect is pre-walked before its stack entry exists. If that
+  // walk surfaces a human decision, pendingSource() has already created the
+  // exact awaiting-resume trace used by the public projection. Persist an
+  // independent copy on the entry so occurrence-bound sources can authenticate
+  // against GameState instead of falling back to the ambient correlation.
+  const prewalkCausalTrace = cloneCausalEffectTrace(resolveCtx.causal?.trace);
   const declaredEntry = event.queue(
     state,
     resolvedEffect,
@@ -707,8 +714,9 @@ export function useDeclaredAbility(
     // ⚠ pre-walk (resolveEffectPicks) が 0-candidate 短縮形 pick で書く chainStepNoApply は
     // 「queue 境界で捨てられる dead write」前提だった — persist 対象から除外して焼込を防ぐ
     // (現 reader は runtime step 冒頭 reset で inert だが、将来 reader への落とし穴予防。review NIT)。
-    resolveCtx.costPaid || resolveCtx.dyn
+    prewalkCausalTrace || resolveCtx.costPaid || resolveCtx.dyn
       ? {
+          ...(prewalkCausalTrace ? { causalTrace: prewalkCausalTrace } : {}),
           // Picks were resolved before queueing.  Deferring here would resolve
           // the same pick a second time when this entry reaches the stack.
           ...(resolveCtx.costPaid ? { costPaid: resolveCtx.costPaid } : {}),

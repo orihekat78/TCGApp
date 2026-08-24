@@ -1780,12 +1780,13 @@
     {
       "qaId": "card:B10010:8acc30fd02aa7a57c56a3a40704c2abd0853dd036d083f11f04b3cf0687a4e11",
       "answerHash": "cb4fe5abb0109aacfe807a5aa363432062f0fabb52e699154a3aada0c9710177",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:36",
-        "src:src/cards/ct-p10/B10010.ts:7"
+        "src:src/cards/ct-p10/B10010.ts:7",
+        "tests:tests/cards/official-qa/opponent-event-removal-immunity-public-wave97.test.ts:176",
+        "tests:tests/cards/official-qa/opponent-event-removal-immunity-public-wave97.test.ts:218"
       ]
     },
     {

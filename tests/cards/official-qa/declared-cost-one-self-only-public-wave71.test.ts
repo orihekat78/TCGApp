@@ -27,10 +27,11 @@ import { beginMatchSession, endMatchSession } from '@/ui/services/matchSession';
 import { useGameStateStore } from '@/ui/state/store';
 import { sceneChar } from '../../helpers/fixtures';
 
-type BaseId = 'B07061' | 'B07077' | 'B08030' | 'B08044' | 'D08005' | 'D08006';
+type BaseId = 'B06023' | 'B07061' | 'B07077' | 'B08030' | 'B08044' | 'D08005' | 'D08006';
 type Row = { cardId: string; baseId: BaseId; kind: 'case' | 'character' };
 
 const PRINTINGS: Row[] = [
+  { cardId: 'B06023', baseId: 'B06023', kind: 'character' },
   { cardId: 'B07061', baseId: 'B07061', kind: 'case' },
   { cardId: 'B07061P', baseId: 'B07061', kind: 'case' },
   { cardId: 'B07077', baseId: 'B07077', kind: 'case' },
@@ -42,7 +43,6 @@ const PRINTINGS: Row[] = [
   { cardId: 'D08005', baseId: 'D08005', kind: 'character' },
   { cardId: 'D08006', baseId: 'D08006', kind: 'character' },
 ];
-
 const FBI = 'W71-FBI';
 const MOMIJI = 'W71-MOMIJI';
 const OWN_A = 'W71-OWN-A';
@@ -77,9 +77,9 @@ function satisfyPrintedCondition(row: Row, state: GameState, owner: Player): voi
     state.players[owner].scene = [sceneChar(MOMIJI, `${owner}-momiji`)];
   } else if (row.kind === 'character') {
     state.players[owner].scene = [sceneChar(row.cardId, sourceUid(row, owner))];
+    if (row.baseId === 'B06023') state.players[owner].case.status = '解決編';
   }
 }
-
 function stateFor(row: Row, owner: Player, ownerFaces: boolean[]): GameState {
   const state = createEmptyGameState();
   state.turn = { number: 9, player: owner, phase: 'main', isFirstPlayerFirstTurn: false };
@@ -153,7 +153,7 @@ afterEach(() => {
   delete (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide;
 });
 
-describe('official QA Wave71: B07061/P B07077/P B08030/P B08044/P D08005 D08006 use only owner evidence', () => {
+describe('official QA Waves71/96: B06023 B07061/P B07077/P B08030/P B08044/P D08005 D08006 preserve owner evidence order', () => {
   it.each(PRINTINGS)('$cardId flips the selected non-top owner occurrence only', row => {
     const state = stateFor(row, 'self', [true, false, false]);
     const identity = state.players.self.evidence.map(({ cardId, origin }) => ({ cardId, origin }));
@@ -252,3 +252,7 @@ describe('official QA Wave71: B07061/P B07077/P B08030/P B08044/P D08005 D08006 
     expect(current().players.opp.evidence.map(entry => entry.faceUp)).toEqual([false]);
   });
 });
+
+// qa: card:B06023:fa86da58031fb9ac89e29ca33154f7e33fdfcb57011d4dc5c56f55e70a74939f
+// qa: card:B07077:fa86da58031fb9ac89e29ca33154f7e33fdfcb57011d4dc5c56f55e70a74939f
+// qa: card:B08030:fa86da58031fb9ac89e29ca33154f7e33fdfcb57011d4dc5c56f55e70a74939f

@@ -1962,12 +1962,14 @@
     {
       "qaId": "card:B10010:a29432736c9e0da7f13b3e318a178351f577621ebd450b986296f9f839c94421",
       "answerHash": "63fddb7dbd0120193584f647dae3a2df77a341e27bd7e482737f21c9b03454d5",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/26-qa-deck-refresh.md:22",
-        "src:src/cards/ct-p10/B10010.ts:16"
+        "src:src/cards/ct-p10/B10010.ts:7",
+        "tests:tests/cards/official-qa/opponent-event-removal-immunity-public-wave97.test.ts:256",
+        "tests:tests/cards/official-qa/opponent-event-removal-immunity-public-wave97.test.ts:263",
+        "tests:tests/cards/official-qa/opponent-event-removal-immunity-public-wave97.test.ts:264"
       ]
     },
     {
