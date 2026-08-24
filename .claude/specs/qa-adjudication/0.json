@@ -67,15 +67,17 @@
     {
       "qaId": "card:B01069:b34f939ceba2f547ad6f01ee968061869d0f8abc4e72fa0d51c20b0c14a53ee1",
       "answerHash": "863ba7507bdba87e23fac09c79b03864353d45b38637b01e943ef9b6f1dee775",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:35",
-        "src:src/cards/ct-p01/B01069.ts:51"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/03-field-areas.md:11",
+        "rules:.claude/rules/14-refresh.md:5",
+        "rules:.claude/rules/15-abilities-effects.md:32",
+        "src:src/cards/ct-p01/B01069.ts:27",
+        "tests:tests/cards/official-qa/opponent-evidence-gain-public-wave79.test.ts:246",
+        "tests:tests/cards/official-qa/opponent-evidence-gain-public-wave79.test.ts:269",
+        "tests:tests/cards/official-qa/opponent-evidence-gain-public-wave79.test.ts:291"
       ]
     },
     {

@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6509
+- **ファイル数**: 6523
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -524,6 +524,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-341.md` — inherent sleep entry
     - `BUG-342.md` — Next Hint optional-card admission
     - `BUG-343.md` — YAIBA incident trait backfill
+    - `BUG-344.md` — B02061 optional evidence transfer
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -888,6 +889,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-10-qa-wave75-effective-level.md` — QA Wave75: certify effective-level self count
     - `2026-08-24-11-qa-wave76-self-selection.md` — QA Wave76: certify B06067 self selection
     - `2026-08-24-12-qa-wave77-name-replacement.md` — QA Wave77: certify PR099 name replacement
+    - `2026-08-24-13-qa-wave78-set-event.md` — QA Wave78: certify set events without hosts
+    - `2026-08-24-14-qa-wave79-evidence.md` — QA Wave79: certify opponent evidence gain
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1598,6 +1601,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-qa-waves72-73.md` — QA adjudication Waves72-73
     - `2026-08-24-qa-waves74-75.md` — QA adjudication Waves74-75
     - `2026-08-24-qa-waves76-77.md` — QA adjudication Waves76-77
+    - `2026-08-24-qa-waves78-79.md` — QA adjudication Waves78-79
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1686,7 +1690,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B01022.md` — B01022 grounding
       - `B01023.md` — B01023 grounding
       - `B01023P.md` — B01023P grounding
+      - `B01039.md` — B01039 grounding
       - `B01057.md` — B01057 「最も出会いたくない…恋人ってトコロかな？」 grounding (2026-07-10, fable)
+      - `B01065.md` — B01065 grounding
+      - `B01069.md` — B01069 grounding
       - `B01070.md` — B01070 アンドレ・キャメル grounding (2026-07-10, sonnet5)
       - `B01084.md` — B01084 / B01084P 降谷零 grounding
       - `B01085.md` — B01085 安室透 grounding
@@ -1700,17 +1707,20 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B02021.md` — B02021 grounding
       - `B02022.md` — B02022 鬼丸猛 grounding (2026-07-10, sonnet5)
       - `B02023.md` — B02023 遠山和葉 grounding
+      - `B02031.md` — B02031 grounding
       - `B02039.md` — B02039 工藤優作 grounding (2026-07-10, fable)
       - `B02041.md` — B02041 / B02041P grounding
       - `B02043.md` — B02043 grounding
       - `B02044.md` — B02044 / B02044P grounding
       - `B02045.md` — B02045 grounding
       - `B02047.md` — B02047 grounding
+      - `B02052.md` — B02052 grounding
       - `B02057.md` — B02057 / B02057P grounding
       - `B02058.md` — B02058 / B02058P grounding
       - `B02060.md` — B02060 grounding
+      - `B02061.md` — B02061 grounding
       - `B02063.md` — B02063 羽田秀吉 grounding
-      - `B02067.md` — B02067 チョーカー型変声機 grounding (2026-07-10, sonnet5)
+      - `B02067.md` — B02067 grounding
       - `B02072.md` — B02072 / B02072P 降谷零 grounding
       - `B02083.md` — B02083 grounding
       - `B02086.md` — B02086 / B02086P grounding
@@ -2072,6 +2082,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `waves72-73-authority.md` — Waves72-73 authority manifest
       - `waves74-75-authority.md` — Waves74-75 authority manifest
       - `waves76-77-authority.md` — Waves76-77 authority manifest
+      - `waves78-79-authority.md` — Waves78-79 authority manifest
     - **`meta-ui/`**
       - `00-overview.md` — 00 — メタ UI 統合設計 概要
       - `01-project-setup.md` — 01 — meta-app プロジェクト構成
@@ -5885,6 +5896,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `misread-reaction-order-wave26.test.ts` — qa: card:B05015:32589b2605a57e1fe89295b9b2340e6874cd6600ca6756e790b5fbcad58bae18
       - `multihook-timing-public.test.ts` — qa: card:D03007:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3
       - `nonpositive-ap-public-wave66.test.ts` — qa: card:B02021:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb
+      - `opponent-evidence-gain-public-wave79.test.ts` — qa: card:B01065:b34f939ceba2f547ad6f01ee968061869d0f8abc4e72fa0d51c20b0c14a53ee1
       - `partner-area-unbounded-public-wave72.test.ts` — qa: card:B07030:dc07d737cba65ebccfc43e14a2de345262a316223691c7ff5eba2a0c7906bcc0
       - `pr099-public-wave77.test.ts` — qa: card:PR099:2cca6007ab7f2137a43f145275f1d7dd6c33155f5c98d3179becb7d643a950fd
       - `same-card-multicopy-order-wave17.test.ts` — qaId=card:B02020:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c…
@@ -5893,6 +5905,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `set-card-host-absent.test.ts`
       - `set-card-host-owner-wave3.test.ts` — qaId=card:B02018:dc712167e0587386756f5293d40bf1766e89e09669554ebcde8e028749d962d…
       - `set-card-lifecycle-public-wave34.test.ts` — qa: card:B01039:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
+      - `set-event-no-host-public-wave78.test.ts` — qa: card:B01039:40fe7fe9a42e0cc53a2d869e7307b57e578331caf3f51f4d26fa5840acaacc55
       - `shippu-effect-entry-public.test.ts` — qa: card:B09070:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
       - `short-deck-reveal-hand-entry-public.test.ts` — rules: 15-abilities-effects.md, 17-icons.md, 20-color-and-switch.…
       - `shuffle-romance-public-wave32.test.ts` — qa: card:B01023:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
@@ -6215,6 +6228,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `partner-color-keyword.spec.ts` — Round 4f Phase 2: partnerColorKeyword 共通クラスを使う 5 カードを 1 spec で集約検証。
     - `B02023-facedown-set-privacy.spec.ts` — qa: card:B02023:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b
     - `audit-suspects-coverage.spec.ts` — E2E: 2026-06-05 監査 workflow が「静的には faithful・実機未確認」とした suspect の runtime カバレッジ。
+    - `b02061-opponent-evidence-wave79.spec.ts`
     - `b10094-mixed-source.spec.ts` — Two public equal PA cards prove that the UI retains occurrence identity.
     - `bug-006.spec.ts` — BUG-006: アクション[事件] で証拠が変動しない (rules/10)
     - `bug-029.spec.ts` — BUG-029: 現場カードがアクション/推理してもスリープにならない (UI 反映)

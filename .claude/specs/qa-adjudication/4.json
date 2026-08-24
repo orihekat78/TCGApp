@@ -22,11 +22,17 @@
     {
       "qaId": "card:B01039:40fe7fe9a42e0cc53a2d869e7307b57e578331caf3f51f4d26fa5840acaacc55",
       "answerHash": "cfa3c372e070cc760a9e1622375347c45c1b2f05342c71656e44de9077adf77b",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p01/B01039.ts:1"
+        "rules:.claude/rules/06-card-types.md:32",
+        "rules:.claude/rules/15-abilities-effects.md:31",
+        "rules:.claude/rules/16-card-set.md:12",
+        "src:src/cards/ct-p01/B01039.ts:32",
+        "tests:tests/cards/official-qa/set-event-no-host-public-wave78.test.ts:182",
+        "tests:tests/cards/official-qa/set-event-no-host-public-wave78.test.ts:215",
+        "tests:tests/cards/official-qa/set-event-no-host-public-wave78.test.ts:265"
       ]
     },
     {
@@ -144,11 +150,17 @@
     {
       "qaId": "card:B02031:40fe7fe9a42e0cc53a2d869e7307b57e578331caf3f51f4d26fa5840acaacc55",
       "answerHash": "cfa3c372e070cc760a9e1622375347c45c1b2f05342c71656e44de9077adf77b",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02031.ts:1"
+        "rules:.claude/rules/06-card-types.md:32",
+        "rules:.claude/rules/15-abilities-effects.md:31",
+        "rules:.claude/rules/16-card-set.md:12",
+        "src:src/cards/ct-p02/B02031.ts:23",
+        "tests:tests/cards/official-qa/set-event-no-host-public-wave78.test.ts:182",
+        "tests:tests/cards/official-qa/set-event-no-host-public-wave78.test.ts:215",
+        "tests:tests/cards/official-qa/set-event-no-host-public-wave78.test.ts:276"
       ]
     },
     {
@@ -197,11 +209,17 @@
     {
       "qaId": "card:B02061:b34f939ceba2f547ad6f01ee968061869d0f8abc4e72fa0d51c20b0c14a53ee1",
       "answerHash": "863ba7507bdba87e23fac09c79b03864353d45b38637b01e943ef9b6f1dee775",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02061.ts:1"
+        "rules:.claude/rules/03-field-areas.md:11",
+        "rules:.claude/rules/14-refresh.md:5",
+        "rules:.claude/rules/15-abilities-effects.md:32",
+        "src:src/cards/ct-p02/B02061.ts:26",
+        "tests:tests/cards/official-qa/opponent-evidence-gain-public-wave79.test.ts:246",
+        "tests:tests/cards/official-qa/opponent-evidence-gain-public-wave79.test.ts:295",
+        "tests:tests/cards/official-qa/opponent-evidence-gain-public-wave79.test.ts:400"
       ]
     },
     {

@@ -82,11 +82,16 @@
     {
       "qaId": "card:B01065:b34f939ceba2f547ad6f01ee968061869d0f8abc4e72fa0d51c20b0c14a53ee1",
       "answerHash": "863ba7507bdba87e23fac09c79b03864353d45b38637b01e943ef9b6f1dee775",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p01/B01065.ts:1"
+        "rules:.claude/rules/03-field-areas.md:11",
+        "rules:.claude/rules/15-abilities-effects.md:32",
+        "src:src/cards/ct-p01/B01065.ts:34",
+        "tests:tests/cards/official-qa/opponent-evidence-gain-public-wave79.test.ts:313",
+        "tests:tests/cards/official-qa/opponent-evidence-gain-public-wave79.test.ts:335",
+        "tests:tests/cards/official-qa/opponent-evidence-gain-public-wave79.test.ts:353"
       ]
     },
     {

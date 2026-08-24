@@ -1,51 +1,48 @@
-# Next Task: QA adjudication Waves78-79
+# Next Task: QA adjudication Waves80-81
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves76-77 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves78-79 commit.
 
 ## Completed
 
-- Wave76 certifies B06067/P self-selection and contact-trigger behavior.
-- Wave77 certifies PR099 with PR105 as matched twin control.
-- Rules and adversarial reviews pass. Coverage is 1501 matched / 1463
-  test-missing / 2964 total.
+- Wave78 certifies four set-event target records across seven physicals.
+- Wave79 certifies B01065, B01069, and B02061 across four physicals.
+- BUG-344 fixes B02061's missing optional and zero-card evidence transfer.
+- Coverage is 1508 matched / 1456 test-missing / 2964 total.
 - Existing untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml` stay protected.
 
 ## Start
 
 1. Read root/nested AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read `.claude/sessions/2026-08-24-qa-waves76-77.md` and current QA trace.
-4. Fetch only needed authority into a separate `.tmp` root. Never write live
-   ignored cards-data.
+3. Read `.claude/sessions/2026-08-24-qa-waves78-79.md` and current QA trace.
+4. Fetch needed CT-P02/CT-P03 authority only into a separate `.tmp` root.
 
-## Wave78
+## Wave80
 
-- Exact tuple: Q `a9a0240895edc64359332491c4e76c69ea0d575b71d3a60a93fce1ca90c4274d`,
-  A `cfa3c372e070cc760a9e1622375347c45c1b2f05342c71656e44de9077adf77b`,
-  section `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
-- Target QA IDs use suffix
-  `40fe7fe9a42e0cc53a2d869e7307b57e578331caf3f51f4d26fa5840acaacc55`:
-  B01039, B02031, B02052, and B02067.
-- Physicals: B01039; B02031/P; B02052/P; B02067/P.
-- Matched controls: B01023/P, B01057/P, B02013/P, B05117/P, D10024.
-- Ground the exact set-card/host contracts, then prove privacy, occurrence
-  identity, owner=`opp`, host absence/leave behavior, atomic rejection, CPU,
-  and save where applicable.
-- Exclude B02084: same question/QA suffix but different answer hash.
+- Exact tuple: Q `f4bbd03d5c63d2445b8f5de8897299d3b4d82e8686ba1e049b82f77724d632c9`,
+  A `471dbd81e897e564c03b9dec6f7c79c7d383055b3da168f9c89e5348f224708a`,
+  section `0029d75498ecdbd0f5ec8a773acb521b538c42cfb00ee15631b9b02d68462f09`.
+- QA suffix `768a20fc5e6e165184d999a8032847d4633ef46d0ac9edd814f3c4ebb18e8e72`.
+- Targets: B02038/P, B02044/P, B02086/P. Matched control: B02041/P.
+- Ground the exact shared ruling before defining the matrix. Keep enter and
+  disguise hooks distinct while covering each card's rider: remove-area entry,
+  deck-look/order, opponent discard/contact immunity, and turn grants.
+- Prove public valid/decoy/zero decisions, owner orientation, CPU, expiry, and
+  save hydration where a decision persists.
 
-## Wave79
+## Wave81
 
-- Exact tuple: Q `51af55e3a8f5e310ad274dfeaf866ba406503b4bbee612cd4d95d40fa0611e23`,
-  A `863ba7507bdba87e23fac09c79b03864353d45b38637b01e943ef9b6f1dee775`,
-  section `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
-- Target QA IDs use suffix
-  `b34f939ceba2f547ad6f01ee968061869d0f8abc4e72fa0d51c20b0c14a53ee1`:
-  B01065, B01069, and B02061.
-- Physicals: B01065/P, B01069, B02061. No matched exact-group control.
-- Ground each card before defining the shared public matrix. Cover real enter,
-  optional accept/decline, opponent evidence ownership, zero target, Hirameki
-  fire/skip, owner=`opp`, CPU, save, and transactional rejection as applicable.
-- Exclude B03066/B03068/B03069: same question/QA suffix but different answers.
+- Exact tuple: Q `fec493c40578b4a964c5d174484e81328bae61e31d664655bb7940ef8016f130`,
+  A `471dbd81e897e564c03b9dec6f7c79c7d383055b3da168f9c89e5348f224708a`,
+  section `0029d75498ecdbd0f5ec8a773acb521b538c42cfb00ee15631b9b02d68462f09`.
+- QA suffix `14a8ef526b9ef00574961cab066ef5e035dbbeb7f94728142ad18aaa7e3fc498`.
+- Targets: B02043, B02045, B02047, B03050. No matched exact-tuple control.
+- B02043 is a D06012 reprint. B02045 has a disguise AP rider, B02047 has
+  replaced-character contact immunity, and B03050 has the Sera optional rider.
+- Prove replaced-character valid/decoy boundaries, public accept/decline,
+  opponent ownership, contact completion/expiry, CPU, and save where applicable.
+- Do not merge Wave80 rows merely because their answer and section match;
+  Wave80 and Wave81 have different question hashes.
 
 ## Gates and stop
 
@@ -53,7 +50,7 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves76-77 commit.
 - Run focused/full tests, typecheck, lint, QA/docs/static gates, smoke1000, and
   isolated representative/full-match Playwright.
 - Require rules and adversarial review before commit/push.
-- Stop after Waves78-79 and write the next handoff.
+- Stop after Waves80-81 and write the next handoff.
 
-Remaining estimate: 1463 records, about 124-269 agent-hours or 33-75 wall
+Remaining estimate: 1456 records, about 123-268 agent-hours or 33-75 wall
 hours with four-way parallel work before future grouping gains.

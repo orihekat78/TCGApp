@@ -226,11 +226,17 @@
     {
       "qaId": "card:B02052:40fe7fe9a42e0cc53a2d869e7307b57e578331caf3f51f4d26fa5840acaacc55",
       "answerHash": "cfa3c372e070cc760a9e1622375347c45c1b2f05342c71656e44de9077adf77b",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02052.ts:1"
+        "rules:.claude/rules/06-card-types.md:32",
+        "rules:.claude/rules/15-abilities-effects.md:31",
+        "rules:.claude/rules/16-card-set.md:12",
+        "src:src/cards/ct-p02/B02052.ts:9",
+        "tests:tests/cards/official-qa/set-event-no-host-public-wave78.test.ts:182",
+        "tests:tests/cards/official-qa/set-event-no-host-public-wave78.test.ts:215",
+        "tests:tests/cards/official-qa/set-event-no-host-public-wave78.test.ts:230"
       ]
     },
     {
