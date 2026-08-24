@@ -67,7 +67,7 @@ function replayFixture(
     isNamed: false,
     enterOrder: 1,
     setCards: [{ cardId: 'SELF-HIDDEN-SET', faceUp: false, instanceId: 'set:hidden' }],
-    stackedCards: [{ cardId: 'SELF-HIDDEN-STACK', instanceId: 'stack:hidden' }],
+    stackedCards: [{ cardId: 'PUBLIC-STACKED-CARD', instanceId: 'stack:public' }],
     keywordOverrides: { granted: [], disabledOriginal: false },
     apOverride: null,
     lpOverride: null,
@@ -245,10 +245,11 @@ describe('history replay repository contract', () => {
     for (const secret of [
       'D11001', 'SELF-DECK-SECRET', 'OPP-DECK-SECRET',
       'SELF-HIDDEN-EVIDENCE', 'SELF-HIDDEN-SOURCE', 'SELF-HIDDEN-FILE',
-      'SELF-HIDDEN-SET', 'SELF-HIDDEN-STACK',
+      'SELF-HIDDEN-SET',
     ]) {
       expect(serialized).not.toContain(secret);
     }
+    expect(serialized).toContain('PUBLIC-STACKED-CARD');
     expect(serialized.includes('D08001')).toBe(revealSelfHand);
   });
 

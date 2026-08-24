@@ -6,7 +6,6 @@ import { run } from '@/engine/effect/resolver';
 import { _clearPendingEffectPickQueue, _drainPendingEffectPickSide } from '@/engine/effect/pending-state';
 import { applyPickAndContinuation, applyPickSkipAndContinuation } from '@/engine/effect/apply-pick';
 import { hydratePendingRuntimeState, persistPendingRuntimeState, resetPendingRuntimeState } from '@/engine/effect/runtime-state';
-import { FILE_CARD_BACK_PLACEHOLDER } from '@/engine/types';
 import type { CardDef, Effect, EffectCtx, GameState } from '@/engine/types';
 
 const CARD = (id: string): CardDef => ({ id, no: id, kind: 'character', names: [id], colors: ['青'], level: 1, ap: 0, lp: 1, traits: [], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [] });
@@ -50,22 +49,22 @@ describe('charTransferStackedCards', () => {
     expect(state.players.self.scene.find(c => c.uid === targetUid)!.stackedCards).toEqual([{ cardId: 'B', instanceId: 'stack:source:b' }]);
   });
 
-  it('persists only opaque candidates, then restores the exact selected stack identity', () => {
+  it('persists inspectable candidates, then restores the exact selected stack identity', () => {
     const { state, ctx, sourceUid, targetUid } = setup();
     run(state, effect(sourceUid), ctx);
     persistPendingRuntimeState(state);
     const persisted = structuredClone(state.pendingRuntimeState);
 
-    expect(JSON.stringify(persisted)).not.toContain('"cardId":"A"');
-    expect(JSON.stringify(persisted)).not.toContain('"cardId":"B"');
+    expect(JSON.stringify(persisted)).toContain('"cardId":"A"');
+    expect(JSON.stringify(persisted)).toContain('"cardId":"B"');
 
     resetPendingRuntimeState();
     state.pendingRuntimeState = persisted;
     expect(hydratePendingRuntimeState(state)).toBe(true);
     const pending = _drainPendingEffectPickSide()!;
     expect(pending.candidates).toEqual([
-      { uid: 'stack:source:a', cardId: FILE_CARD_BACK_PLACEHOLDER, player: 'self', hidden: true },
-      { uid: 'stack:source:b', cardId: FILE_CARD_BACK_PLACEHOLDER, player: 'self', hidden: true },
+      { uid: 'stack:source:a', cardId: 'A', player: 'self', hidden: false },
+      { uid: 'stack:source:b', cardId: 'B', player: 'self', hidden: false },
     ]);
 
     applyPickAndContinuation(state, pending, 'stack:source:b');
@@ -100,6 +99,7 @@ describe('charTransferStackedCards', () => {
     run(state, effect(sourceUid), ctx);
     const pending = _drainPendingEffectPickSide()!;
     expect(pending.candidates.map(c => c.uid)).toEqual(['legacy:' + sourceUid + ':0', 'legacy:' + sourceUid + ':1']);
+    expect(pending.candidates.every(c => c.cardId === 'back-card' && c.hidden === true)).toBe(true);
     applyPickAndContinuation(state, pending, 'legacy:' + sourceUid + ':1');
     expect(state.players.self.scene.find(c => c.uid === targetUid)!.stackedCards)
       .toEqual([{ cardId: 'back-card', instanceId: 'legacy:' + sourceUid + ':1' }]);

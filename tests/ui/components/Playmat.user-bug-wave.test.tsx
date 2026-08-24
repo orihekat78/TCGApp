@@ -475,12 +475,12 @@ describe('Playmat user bug wave', () => {
     expect(container.querySelector('[data-testid="card-list-pick-detail-evidence:self:1"]')).toBeNull();
   });
 
-  it('keeps B03006 stacked identities opaque while selecting an exact non-first occurrence', async () => {
+  it('shows B03006 stacked identities while selecting an exact non-first occurrence', async () => {
     const choice = useStackedCardCostPicker().ask({
       sourceName: 'B03006',
       candidates: [
-        { instanceId: 'stack:0', ordinal: 1 },
-        { instanceId: 'stack:1', ordinal: 2 },
+        { instanceId: 'stack:0', cardId: 'D08003', ordinal: 1 },
+        { instanceId: 'stack:1', cardId: 'D08015', ordinal: 2 },
       ],
       nMin: 1,
       nMax: 1,
@@ -488,13 +488,13 @@ describe('Playmat user bug wave', () => {
     act(() => root.render(<Playmat gameState={createEmptyGameState()} resolveCard={resolveCard} />));
 
     const html = container.innerHTML;
-    expect(html).not.toContain('D08003');
-    expect(html).not.toContain('D08015');
-    expect(container.querySelector('[data-testid^="card-list-pick-detail-stack:"]')).toBeNull();
+    expect(html).toContain('D08003');
+    expect(html).toContain('D08015');
+    expect(container.querySelectorAll('[data-testid="selectable-card-tile-detail"]')).toHaveLength(2);
     const candidates = [...container.querySelectorAll<HTMLButtonElement>('[data-instance-id^="stack:"]')];
     expect(candidates.map((candidate) => candidate.getAttribute('aria-label'))).toEqual([
-      'B03006の下のカード 1 を選択',
-      'B03006の下のカード 2 を選択',
+      'D08003 1枚目を選択',
+      'D08015 2枚目を選択',
     ]);
     act(() => container.querySelector<HTMLDivElement>('[data-testid="stacked-card-cost-modal"]')!
       .dispatchEvent(new MouseEvent('click', { bubbles: true })));
@@ -555,6 +555,41 @@ describe('Playmat user bug wave', () => {
     expect(container.querySelector('[data-testid="card-list-detail-OPP-SECRET-1"]')).toBeNull();
     act(() => (container.querySelector<HTMLButtonElement>('[data-testid="card-list-detail-OPP-PUBLIC-0"]')!).click());
     expect(container.querySelector('.card-expand-modal')).not.toBeNull();
+  });
+
+  it('lets either player inspect every exact stacked-card identity at any time', () => {
+    const state = createEmptyGameState();
+    state.players.self.scene = [{
+      cardId: 'SELF-HOST', uid: 'self-stack-host', state: 'active', isNamed: false, enterOrder: 0,
+      setCards: [],
+      stackedCards: [
+        { cardId: 'SELF-STACK-A', instanceId: 'stack:self:a' },
+        { cardId: 'back-card', instanceId: 'legacy:self:unknown' },
+        { cardId: 'SELF-STACK-B', instanceId: 'stack:self:b' },
+      ],
+      keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {},
+    }];
+    state.players.opp.scene = [{
+      cardId: 'OPP-HOST', uid: 'opp-stack-host', state: 'active', isNamed: false, enterOrder: 0,
+      setCards: [],
+      stackedCards: [{ cardId: 'OPP-STACK-A', instanceId: 'stack:opp:a' }],
+      keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {},
+    }];
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+
+    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="scene-stack-inspect-self-stack-host"]')!).click());
+    expect(container.textContent).toContain('SELF-STACK-A');
+    expect(container.textContent).toContain('SELF-STACK-B');
+    expect(container.textContent).not.toContain('back-card');
+    expect(container.querySelectorAll('[data-testid^="card-list-detail-SELF-STACK-"]')).toHaveLength(2);
+    expect(container.querySelector('[data-testid="card-list-facedown-stack-0"]')).not.toBeNull();
+    act(() => (container.querySelector<HTMLButtonElement>('.card-list-modal-close')!).click());
+
+    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="scene-stack-inspect-opp-stack-host"]')!).click());
+    expect(container.textContent).toContain('OPP-STACK-A');
+    expect(container.querySelector('[data-testid="card-list-detail-OPP-STACK-A-0"]')).not.toBeNull();
   });
 
   it('hosts hand sceneEnter in HandZone with exact duplicate occurrence candidates', () => {

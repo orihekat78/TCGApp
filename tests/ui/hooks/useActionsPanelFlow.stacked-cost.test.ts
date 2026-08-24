@@ -71,10 +71,10 @@ describe('runDeclaredAbilityFlow removeStackedCards', () => {
     expect(useStackedCardCostPickerStore.getState().current?.candidates.map((c) => c.instanceId))
       .toEqual(['stack:agasa:a', 'stack:agasa:b', 'stack:agasa:c', 'stack:agasa:d']);
     expect(useStackedCardCostPickerStore.getState().current?.candidates).toEqual([
-      { instanceId: 'stack:agasa:a', ordinal: 1 },
-      { instanceId: 'stack:agasa:b', ordinal: 2 },
-      { instanceId: 'stack:agasa:c', ordinal: 3 },
-      { instanceId: 'stack:agasa:d', ordinal: 4 },
+      { instanceId: 'stack:agasa:a', cardId: 'A', ordinal: 1, hidden: false },
+      { instanceId: 'stack:agasa:b', cardId: 'DUP', ordinal: 2, hidden: false },
+      { instanceId: 'stack:agasa:c', cardId: 'DUP', ordinal: 3, hidden: false },
+      { instanceId: 'stack:agasa:d', cardId: 'D', ordinal: 4, hidden: false },
     ]);
     useStackedCardCostPicker().confirm(['stack:agasa:b', 'stack:agasa:c', 'stack:agasa:d']);
     await flush();

@@ -1,7 +1,12 @@
 import { create } from 'zustand';
 import { areTerminalInteractionsBlocked } from '@/ui/services/terminalInteractionGate.js';
 
-export type StackedCardCostCandidate = { instanceId: string; ordinal: number };
+export type StackedCardCostCandidate = {
+  instanceId: string;
+  cardId: string;
+  ordinal: number;
+  hidden?: boolean;
+};
 export type StackedCardCostRequest = {
   sourceName: string;
   candidates: StackedCardCostCandidate[];

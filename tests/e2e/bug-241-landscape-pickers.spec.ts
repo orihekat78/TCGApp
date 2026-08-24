@@ -123,10 +123,10 @@ test('BUG-241 Pixel 5 landscape: real stacked-card effect keeps header and confi
   const list = shell.locator('.effect-picker-list');
   const confirm = modal.getByTestId('effect-picker-confirm');
   const html = await modal.innerHTML();
-  for (const cardId of ['B03006', 'D08021', 'D08003', 'D08015']) expect(html).not.toContain(cardId);
-  await expect(modal.getByTestId(/effect-pick-detail-stack:agasa:/)).toHaveCount(0);
-  const thirdOpaqueCard = modal.getByRole('button', { name: '自分の非公開カード 3枚目を選択' });
-  await thirdOpaqueCard.focus();
+  for (const cardId of ['B03006', 'D08021', 'D08003', 'D08015']) expect(html).toContain(cardId);
+  await expect(modal.getByTestId(/effect-pick-detail-stack:agasa:/)).toHaveCount(4);
+  const thirdVisibleCard = modal.getByTestId('effect-pick-cand-stack:agasa:2');
+  await thirdVisibleCard.focus();
   await page.keyboard.press('Enter');
   await expectFixedDecisionShell(page, shell, list, shell.locator('.effect-picker-header'), confirm);
   await confirm.click();

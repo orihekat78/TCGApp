@@ -31,12 +31,22 @@ does not access ignored raw Q&A packages.
 - Use smaller 5-15 item waves when public decisions, save hydration, card
   interactions, or new fixture shapes need individual judgment. Isolate T3
   engine/resolver/GameState defects as their own wave.
-- Every ordinary wave runs focused tests, both typechecks, focused ESLint,
-  adjudication merge/lint, generated-Q&A check, and diff-check.
+- Every ordinary wave runs only its focused behavioral tests and a narrow QA
+  shape check. Reuse the checkpoint's fresh authority snapshot for both waves.
+- After two implementation waves, run both typechecks, focused ESLint,
+  adjudication merge/lint, generated-Q&A check, and diff-check once; then create
+  one coherent commit and push it once.
 - Run full Vitest, full ESLint, smoke, and Playwright once per ten waves, and
   immediately for T3 engine/security/save/public-UI changes or publication.
-- Do not repeat a green unchanged gate inside one checkpoint. Commit and push
-  after two implementation waves under the repository context limit.
+- Certification-only waves normally use no review agent. Production changes,
+  unresolved conflicts, or T3 may use independent read-only reviewers when
+  parallel work helps, with a strict maximum of three subagents.
+- Do not repeat a green unchanged gate inside one checkpoint. Re-estimate the
+  remaining effort after each ten-wave full-gate checkpoint.
+
+Current 2026-08-24 snapshot: 1354 test-missing items / 1129 exact groups, with
+949 singleton groups. Revised remaining effort is 82-155 working hours; the
+center estimate is about 118 hours.
 
 ## Privacy
 

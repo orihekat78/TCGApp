@@ -711,6 +711,34 @@ describe('engine.effect.runAtom', () => {
       });
       expect(Array.isArray(result.players.self.scene[0].stackedCards) ? result.players.self.scene[0].stackedCards.length : result.players.self.scene[0].stackedCards).toBe(3);
     });
+
+    it('gates a fromSelf continuation when the source left before the host choice resumed', () => {
+      const host = makeChar({ uid: 'host' });
+      const state = withScene(createEmptyGameState(), 'self', [host]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'stale-source', cardId: 'B06008' }, dyn: {} });
+
+      const result = produce(state, draft => {
+        runAtom(draft, 'charStackCard', { fromSelf: true, uid: 'host' }, ctx);
+      });
+
+      expect(ctx.dyn?.chainStepNoApply).toBe(true);
+      expect(result.players.self.scene[0]?.stackedCards).toEqual(0);
+      expect(result.log.some(entry => entry.action === 'effect:charStackCard:self-under')).toBe(false);
+    });
+
+    it('gates a fromScene continuation when the selected character left before resume', () => {
+      const host = makeChar({ uid: 'host' });
+      const state = withScene(createEmptyGameState(), 'self', [host]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'host', cardId: 'D10009' }, dyn: {} });
+
+      const result = produce(state, draft => {
+        runAtom(draft, 'charStackCard', { fromScene: true, uid: 'stale-selected', hostUid: 'host' }, ctx);
+      });
+
+      expect(ctx.dyn?.chainStepNoApply).toBe(true);
+      expect(result.players.self.scene[0]?.stackedCards).toEqual(0);
+      expect(result.log.some(entry => entry.action === 'effect:charStackCard:scene-under')).toBe(false);
+    });
   });
 
   // --- パートナー / 事件 ---

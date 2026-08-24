@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6569
+- **ファイル数**: 6576
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -533,6 +533,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-350.md` — autonomous full-scene effect entry
     - `BUG-351.md` — B03096 reasoning timing
     - `BUG-352.md` — B08074 Investigation continuation
+    - `BUG-353.md` — BUG-353: stacked-card identities were incorrectly hidden
+    - `BUG-354.md` — BUG-354: failed or deferred stacking ran the wrong chain tail
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1620,6 +1622,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-qa-waves82-83.md` — QA adjudication Waves82-83
     - `2026-08-24-qa-waves84-85.md` — QA adjudication Waves84-85
     - `2026-08-24-qa-waves86-87.md` — QA adjudication Waves86-87
+    - `2026-08-24-qa-waves88-89.md` — QA adjudication Waves88-89
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -5923,6 +5926,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `file-assist-declared-remaining-public-wave42.test.ts` — qa: card:B07069:cbce41c9b0c72cca046ffb06c2b4ff9c3af679af4bcfb692fac12dc0b5998a23
       - `file-assist-enter-public-wave39.test.ts` — qa: card:B04023:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3
       - `file-assist-nondeclared-public-wave43.test.ts` — qa: card:B06087:fe489ff3199dbdf91d8a4404721956da51ba17ccb819450ceed5b301f31fe7be
+      - `file-assisted-partner-count-public-wave89.test.ts` — qa: card:B04027:3d48fd2885346e1f56efcdd259b31a7a5e33cf94f53ca3cfa08175b86a749f26
+      - `file-assisted-partner-hand-public-wave89.test.ts` — qa: card:B03110:778145d226f364876d2f75e0d6bc0336b6c61bdfdd1822254bb244878b57c818
+      - `file-assisted-partner-remove-public-wave89.test.ts` — qa: card:B09003:47be099f12105fcb17bdc68f8bf3ebbe2d1d1100aa005a41d302a5df45f74ab5
       - `full-scene-effect-entry-public-wave63.test.ts` — qa: card:B05055:c51f6838f7814f2243bbe0560dc33c4dc896f1b0b13d486cd4223cb898983c95
       - `full-scene-event-entry-public-wave84.test.ts` — qa: card:B05062:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398
       - `hand-remove-self-only-public-wave58.test.ts` — qa: card:B07020:924a8b39ee3036e70eeeac9c3a5941e4faa4fec3ebc39e19ceb12b4b0f2419af
@@ -6449,6 +6455,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `short-form-characterization.test.ts` — 短縮形 characterization test (Phase2 refactor の動作不変オラクル)
       - `short-form-new-verbs.test.ts` — 新規 verb 短縮形 test (Phase2 Task2.4-2.7)
       - `stacked-card-pick.test.ts`
+      - `stacked-card-replacement-tail.test.ts`
       - `stacked-card-transfer.test.ts`
       - `start-contact-actor.test.ts`
       - `validate.test.ts` — engine.effect.validate / engine.cards.validate — tests

@@ -10,6 +10,7 @@ import type { GameState, AtomVerb, EffectCtx, CausalOutcome, PublicCausalZone } 
 import { recordEffectCausalOperation } from '../../log/effect-causal.js';
 import { advanceIndexedZoneEpoch } from '../../state/indexed-zone-epoch.js';
 import { advanceDeckEpochAndRebaseBindings } from '../deck-occurrence-authority.js';
+import { _peekPendingSetCardReplacementSide } from '../pending-state.js';
 
 function sceneOwnerOf(s: GameState, uid: string): Player | undefined {
   if (s.players.self.scene.some((card) => card.uid === uid)) return 'self';
@@ -687,8 +688,15 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
         const selfUid = ctx.source.uid;
         if (typeof selfUid !== 'string') return;
         const sourceOwner = sceneOwnerOf(s, selfUid);
+        const replacementBefore = _peekPendingSetCardReplacementSide();
         const moved = mutate.scene.toStack(s, selfUid, hostUid);
-        if (moved && sourceOwner !== undefined) recordStackMove(s, ctx, sourceOwner, 'scene', hostUid, 1);
+        const replacementAfter = _peekPendingSetCardReplacementSide();
+        if (!moved) {
+          if (replacementAfter && replacementAfter !== replacementBefore) return;
+          (ctx.dyn ??= {}).chainStepNoApply = true;
+          return;
+        }
+        if (sourceOwner !== undefined) recordStackMove(s, ctx, sourceOwner, 'scene', hostUid, 1);
         mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charStackCard:self-under', target: hostUid, result: selfUid });
         return;
       }
@@ -716,8 +724,15 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
         const hostUid = typeof a.hostUid === 'string' ? a.hostUid : ctx.source.uid;
         if (typeof hostUid !== 'string') return;
         const sourceOwner = sceneOwnerOf(s, movedUid);
+        const replacementBefore = _peekPendingSetCardReplacementSide();
         const moved = mutate.scene.toStack(s, movedUid, hostUid);
-        if (moved && sourceOwner !== undefined) recordStackMove(s, ctx, sourceOwner, 'scene', hostUid, 1);
+        const replacementAfter = _peekPendingSetCardReplacementSide();
+        if (!moved) {
+          if (replacementAfter && replacementAfter !== replacementBefore) return;
+          (ctx.dyn ??= {}).chainStepNoApply = true;
+          return;
+        }
+        if (sourceOwner !== undefined) recordStackMove(s, ctx, sourceOwner, 'scene', hostUid, 1);
         mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charStackCard:scene-under', target: hostUid, result: movedUid });
         return;
       }

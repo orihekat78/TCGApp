@@ -23,7 +23,7 @@ import { canOfferNextHintOptionalCard } from '@/engine/flow/main/next-hint.js';
 import { effectiveHandLevel } from '@/engine/flow/main/hand-use-card.js';
 import { sceneCap } from '@/engine/read/scene-cap.js';
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
-import type { Candidate, Effect } from '@/engine/types';
+import { FILE_CARD_BACK_PLACEHOLDER, type Candidate, type Effect } from '@/engine/types';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
 import { costToText, findFlipFaceUpCost, findRemoveFromHandCost, findRemoveStackedCardsCost, findRemoveSetCardCost, findCharacterStateCost, findChoiceCostAtPath, completeCostChoicePaths, findDeclareNameAtom, choiceOptionLabel, makeAbilityCtx } from './cost.js';
 import type { Player } from './cost.js';
@@ -532,7 +532,12 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     if (Array.isArray(entries) && entries.length > removeStackedCost.n) {
       const choice = await useStackedCardCostPicker().ask({
         sourceName,
-        candidates: entries.map(({ instanceId }, index) => ({ instanceId, ordinal: index + 1 })),
+        candidates: entries.map(({ instanceId, cardId }, index) => ({
+          instanceId,
+          cardId,
+          ordinal: index + 1,
+          hidden: cardId === FILE_CARD_BACK_PLACEHOLDER || cardId === 'back-card',
+        })),
         nMin: removeStackedCost.n,
         nMax: removeStackedCost.n,
       });

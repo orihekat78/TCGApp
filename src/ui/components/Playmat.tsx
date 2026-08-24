@@ -138,6 +138,7 @@ type PlayerMatProps = CandidateProps & {
   /** Round 4l (BUG-001): カード単体クリックで拡大 modal を開く callback */
   onExpand?: (cardId: string) => void;
   onSetInspect?: (side: 'self' | 'opp', uid: string) => void;
+  onStackInspect?: (side: 'self' | 'opp', uid: string) => void;
   /** User vision (拡張 4): scene キャラ pick mode (sceneRemove 等の effect 対象選択) */
   pickCharUids?: ReadonlySet<string>;
   onPickChar?: (uid: string) => void;
@@ -225,7 +226,7 @@ function PlayerMat({
   side, state, resolveCard, resolveCase,
   candidateUids, onUnitClick, isPartnerCandidate, onPartnerClick,
   isPartnerMRCandidate, onPartnerMRClick,
-  isCaseCandidate, onCaseClick, onAreaClick, onExpand, onSetInspect,
+  isCaseCandidate, onCaseClick, onAreaClick, onExpand, onSetInspect, onStackInspect,
   pickCharUids, onPickChar, autoFocusPickUid, nextHintDrawPreview = false,
   activeCardUid, activeCardLabel,
 }: PlayerMatProps & {
@@ -295,6 +296,7 @@ function PlayerMat({
           onUnitClick={onUnitClick}
           onExpand={onExpand}
           onSetInspect={(character) => onSetInspect?.(side, character.uid)}
+          onStackInspect={(character) => onStackInspect?.(side, character.uid)}
           pickCharUids={pickCharUids}
           onPickChar={onPickChar}
           autoFocusPickUid={autoFocusPickUid}
@@ -395,6 +397,10 @@ export function Playmat({
   const inspectSetCards = (side: 'self' | 'opp', hostUid: string): void => {
     if (terminalRef.current) return;
     setAreaModal({ kind: 'set', side, origin: 'browse', hostUid });
+  };
+  const inspectStackedCards = (side: 'self' | 'opp', hostUid: string): void => {
+    if (terminalRef.current) return;
+    setAreaModal({ kind: 'stack', side, origin: 'browse', hostUid });
   };
   const openCardExpand = (cardId: string): void => {
     if (!terminalRef.current) expandModal.open(cardId);
@@ -1075,6 +1081,7 @@ export function Playmat({
             onAreaClick={replayReadOnly || terminal ? undefined : handleAreaClick}
             onExpand={replayReadOnly || terminal ? undefined : openCardExpand}
             onSetInspect={replayReadOnly || terminal ? undefined : inspectSetCards}
+            onStackInspect={terminal ? undefined : inspectStackedCards}
             pickCharUids={replayReadOnly ? EMPTY_UID_SET : oppScenePickUids}
             onPickChar={replayReadOnly ? undefined : oppOnPickChar}
             autoFocusPickUid={replayReadOnly || switchPlayer !== 'opp'
@@ -1104,6 +1111,7 @@ export function Playmat({
             onAreaClick={replayReadOnly || terminal ? undefined : handleAreaClick}
             onExpand={replayReadOnly || terminal ? undefined : openCardExpand}
             onSetInspect={replayReadOnly || terminal ? undefined : inspectSetCards}
+            onStackInspect={terminal ? undefined : inspectStackedCards}
             pickCharUids={replayReadOnly ? EMPTY_UID_SET : selfScenePickUids}
             onPickChar={replayReadOnly ? undefined : selfOnPickChar}
             autoFocusPickUid={replayReadOnly || switchPlayer !== 'self'
@@ -1225,7 +1233,7 @@ export function Playmat({
         {/* Round 2: FILE/証拠/リムーブ クリック → 内容確認モーダル
             証拠 / FILE は engine 上裏向きなので faceDownCount で枚数のみ表示。
             リムーブは表向きなので cards (cardId[]) で実カード表示。 */}
-        {!replayReadOnly && !terminal && areaModal && gameState && pendingDeckReorder === null && (() => {
+        {!terminal && areaModal && gameState && pendingDeckReorder === null && (() => {
           const player = gameState.players[areaModal.side];
           // Round 3: FILE 内アシスト中パートナーのみ表向き表示 (ユーザ指示)
           //   - file の中身を 「assisted-partner cards (表向き)」 と 「card-back count (裏向き)」 に分割
@@ -1234,7 +1242,16 @@ export function Playmat({
           let faceDownCount = 0;
           // BUG-085: 証拠は faceUp が混在し得る。表向きは公開表示する。
           let faceUpEvidence: { index: number; cardId: string; faceState?: '表向き' | '裏向き' }[] | undefined;
-          if (areaModal.kind === 'set') {
+          if (areaModal.kind === 'stack') {
+            const host = player.scene.find((character) => character.uid === areaModal.hostUid);
+            if (Array.isArray(host?.stackedCards)) {
+              const known = host.stackedCards.filter(entry => entry.cardId !== 'back-card' && entry.cardId !== 'card-back');
+              cards = known.map(entry => entry.cardId);
+              faceDownCount = host.stackedCards.length - known.length;
+            } else {
+              faceDownCount = typeof host?.stackedCards === 'number' ? host.stackedCards : 0;
+            }
+          } else if (areaModal.kind === 'set') {
             const host = player.scene.find((character) => character.uid === areaModal.hostUid);
             const setCards = host?.setCards ?? [];
             faceDownCount = setCards.length;
@@ -1464,7 +1481,7 @@ export function Playmat({
           );
         })()}
         {/* Round 4l (BUG-001): カード拡大表示 modal */}
-        {!replayReadOnly && !terminal && <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />}
+        {!terminal && <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />}
         {/* User vision (拡張 5 chain): SceneArea pick mode で skip 可能 (max:N) の場合
             scene キャラを click せず「リムーブしない」できるよう overlay ボタン表示 */}
         {!replayReadOnly && isScenePick && (
@@ -1946,6 +1963,7 @@ function PlaymatStackedCardCostPickerDialog({
 }: {
   request: NonNullable<ReturnType<typeof useStackedCardCostPicker>['current']>;
 }): JSX.Element {
+  const expandModal = useCardExpandModal();
   const [selected, setSelected] = useState<string[]>([]);
   const dialogRef = useModalFocusTrap({
     active: true,
@@ -1962,6 +1980,7 @@ function PlaymatStackedCardCostPickerDialog({
   };
 
   return (
+    <>
     <div
       ref={dialogRef}
       className="cp-overlay"
@@ -1984,13 +2003,15 @@ function PlaymatStackedCardCostPickerDialog({
                 className={`cp-choice-row${selected.includes(candidate.instanceId) ? ' cp-choice-row--selected' : ''}`}
               >
                 <SelectableCardTile
-                  cardId=""
+                  cardId={candidate.cardId}
                   instanceId={candidate.instanceId}
-                  hidden
+                  hidden={candidate.hidden === true}
                   hiddenLabel={`${request.sourceName}の下のカード ${candidate.ordinal}`}
+                  occurrenceLabel={`${candidate.ordinal}枚目`}
                   selectTestId={`card-list-pick-${candidate.instanceId}`}
                   selected={selected.includes(candidate.instanceId)}
                   onSelect={select}
+                  onExpand={candidate.hidden === true ? undefined : expandModal.open}
                 />
               </li>
             ))}
@@ -2017,6 +2038,8 @@ function PlaymatStackedCardCostPickerDialog({
         </div>
       </div>
     </div>
+    <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
+    </>
   );
 }
 

@@ -86,9 +86,9 @@ export function atomStackedCardPick(s: GameState, a: Record<string, unknown>, ct
     player: resolvePlayer(a.player, ctx), ownerPlayer: ctx.source.player,
     candidates: mutate.char.stackedCardEntries(s, hostUid).map(entry => ({
       uid: entry.instanceId,
-      cardId: FILE_CARD_BACK_PLACEHOLDER,
+      cardId: entry.cardId,
       player: owner,
-      hidden: true,
+      hidden: entry.cardId === FILE_CARD_BACK_PLACEHOLDER || entry.cardId === 'back-card',
     })),
     atomVerb: 'stackedCardPick', atomArgs: toPlainDeep(a), nMin: min, nMax: max,
     source: pendingSource(s, ctx, {

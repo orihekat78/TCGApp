@@ -1,4 +1,5 @@
 // qa: card:B07069:cbce41c9b0c72cca046ffb06c2b4ff9c3af679af4bcfb692fac12dc0b5998a23
+// qa: card:B07069:fe60095d4b257e19dc003f76a307b4b68db03357af49ee5e3c4159c46e86e96d
 // qa: card:B08004:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
 // qa: card:B08007:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
 // qa: card:B09055:cbce41c9b0c72cca046ffb06c2b4ff9c3af679af4bcfb692fac12dc0b5998a23
@@ -11,6 +12,8 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { registerAll } from '@/cards';
+import { B07069 } from '@/cards/ct-p07/B07069';
+import { B07069P } from '@/cards/ct-p07/B07069P';
 import { event } from '@/engine/event';
 import { resetPendingRuntimeState } from '@/engine/effect/runtime-state';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
@@ -278,6 +281,7 @@ afterEach(() => {
 
 describe('official QA Wave42: remaining declared FILE conditions count the assisting partner', () => {
   it('B07069 enables exact FILE8 payment, preserves the partner, and enters its cost card', () => {
+    expect(B07069P.abilities).toEqual(B07069.abilities);
     expect(prove(ROWS[0]!)).toEqual({
       cardId: 'B07069',
       below: { assist: true, declared: false, fileCount: 7, opponentFileCount: 8, selfAssistedEntries: 1, choices: [], continuationSource: null, sourceArea: 'scene', sourceState: 'active', sourceUseCount: 0, sourceAp: 7000, sourceAssault: false, sourceAssaultCase: false, sourceAssaultChar: false, haibaraState: null, kogoroAssault: false, redEntryScene: false, dualScene: false, hand: [RED_ENTRY], remove: [], ordinaryFileRemoved: 0, settled: true },

@@ -652,11 +652,13 @@
     {
       "qaId": "card:B05045:a7fa9913527fba6c52ba50e080f131ba501ab2b308a32b44ab20b71086daf0a2",
       "answerHash": "2c48d0949f5d59e3446ce09f98f14b5a47264f924c9091c5de1a8e7d8bccb616",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05045.ts:1"
+        "rules:.claude/rules/17-icons.md:28",
+        "src:src/cards/ct-p05/B05045.ts:68",
+        "tests:tests/cards/official-qa/file-assisted-partner-hand-public-wave89.test.ts:187"
       ]
     },
     {
@@ -715,9 +717,9 @@
         "rules:.claude/rules/16-card-set.md:30",
         "rules:.claude/rules/16-card-set.md:31",
         "src:src/cards/ct-p06/B06005.ts:1",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:242",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:243",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:246"
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:267",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:268",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:271"
       ]
     },
     {
@@ -2195,7 +2197,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:36",
         "src:src/cards/pr-01/PR179.ts:13",
-        "tests:tests/cards/official-qa/file-assist-declared-remaining-public-wave42.test.ts:325"
+        "tests:tests/cards/official-qa/file-assist-declared-remaining-public-wave42.test.ts:329"
       ]
     },
     {
@@ -2207,7 +2209,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:36",
         "src:src/cards/pr-01/PR185.ts:13",
-        "tests:tests/cards/official-qa/file-assist-declared-remaining-public-wave42.test.ts:325"
+        "tests:tests/cards/official-qa/file-assist-declared-remaining-public-wave42.test.ts:329"
       ]
     },
     {

@@ -20,6 +20,28 @@
 // qa: card:D10010:890b886b35d8a7c12e0c859f4f2faa9d690f9d33250ac772e4668e0ad72c8f6c
 // qa: card:PR289:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4
 // qa: card:PR295:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4
+// qa: card:B06005:e1a6e64815c58606072ac20c67188b6cc1472569b0dc6537f12cdc605d9a610b
+// qa: card:B06006:b613a027b4ca6f975c1394bd9b4231b4abd556f739bcf91ae15f90f6d4dc9c4d
+// qa: card:B06006:c758369a7dddc50cdfaf7333ed60a91e5c9ad6e42a67f2f798a59018a06e92d6
+// qa: card:B06008:13f2c66d3a63e25b1ea570c21065d32c9c7eca667b684fe9834d95fff9b047d8
+// qa: card:B06008:f651c66bbcd726b091b581235fb199d7d7645cd967fa16259bd01ea8b9bb503a
+// qa: card:B06008:bcffba7faf7d2337aae3fde5466a30572ef43ad842587937f2985c2dc207c617
+// qa: card:B06008:f6bb828600d8e124ed4158179d3cb65de4850f101b2e3b6322320a59fa61f216
+// qa: card:B08002:e33118d4632e5314cf73dc4039212273daf194a7c81d2f263d31c86ddb892b98
+// qa: card:B08003:94f262abeb10687989849154c850adad60ca367392a6db3eb2e0283ee116af2d
+// qa: card:B08006:1bbde3be12dc0daade91f1163bcbf5d316ced403a686470ea90e27428aa5c193
+// qa: card:B08008:1bbde3be12dc0daade91f1163bcbf5d316ced403a686470ea90e27428aa5c193
+// qa: card:B08008:71f0b53e3306356afabddfa3949a9ac5ab81aeb295e6a9d6c975d97b377cd46a
+// qa: card:B09048:1bbde3be12dc0daade91f1163bcbf5d316ced403a686470ea90e27428aa5c193
+// qa: card:D08021:94f262abeb10687989849154c850adad60ca367392a6db3eb2e0283ee116af2d
+// qa: card:D10009:0606d3069ffa7481b7a75218e5fffe1c2716765b1f9a58bde7621838f5dbaab8
+// qa: card:D10009:f6bb828600d8e124ed4158179d3cb65de4850f101b2e3b6322320a59fa61f216
+// qa: card:D10010:0606d3069ffa7481b7a75218e5fffe1c2716765b1f9a58bde7621838f5dbaab8
+// qa: card:D10010:f6bb828600d8e124ed4158179d3cb65de4850f101b2e3b6322320a59fa61f216
+// qa: card:PR289:1bbde3be12dc0daade91f1163bcbf5d316ced403a686470ea90e27428aa5c193
+// qa: card:PR289:0b99c0ba35be9ca093f7dbe4f5f7ab67f47eb3d22a621af04bf3c8fab0199e03
+// qa: card:PR295:1bbde3be12dc0daade91f1163bcbf5d316ced403a686470ea90e27428aa5c193
+// qa: card:PR295:0b99c0ba35be9ca093f7dbe4f5f7ab67f47eb3d22a621af04bf3c8fab0199e03
 // Rules: 05, 07, 13, 15, 16, 17, 18, 21, 22, 25.
 // Public actions and decisions prove that under-cards remain physical identities,
 // but do not become scene characters or contribute names, traits, or abilities.
@@ -49,12 +71,13 @@ import { PR295 } from '@/cards/pr-01/PR295';
 import { event } from '@/engine/event';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { _resetUidCounter } from '@/engine/mutate/scene';
+import { mutate } from '@/engine/mutate';
 import { char as readChar } from '@/engine/read/char';
 import { _resetRegistry, register } from '@/engine/read/def';
 import { runAllUntilEmpty } from '@/engine/resolve';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { CardDef, GameState, Player, SceneCharacter } from '@/engine/types';
-import { bindPendingDecision, dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import { bindPendingDecision, dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/useEngineDispatch';
 import { resetPresentationQueue } from '@/ui/presentation/coordinator';
 import { beginMatchSession, endMatchSession } from '@/ui/services/matchSession';
 import { useGameStateStore } from '@/ui/state/store';
@@ -192,6 +215,8 @@ afterEach(() => {
 });
 
 describe('Wave33/Wave50 official-QA public stacked-card semantics', () => {
+  // Wave88 card-bound assertions: B06005 B06006 B06008 B08002 B08003 B08006
+  // B08008 B09048 D08021 D10009 D10010 PR289 PR295.
   it('keeps every parallel printing structurally equivalent', () => {
     expect(B06005P.abilities).toEqual(B06005.abilities);
     expect(B06008P.abilities).toEqual(B06008.abilities);
@@ -422,5 +447,238 @@ describe('Wave33/Wave50 official-QA public stacked-card semantics', () => {
     expect(host(BLUE_HOST.id).setCards, 'B06008/B06008P: stacked occurrence is not set').toEqual([]);
     expect(current().players.self.hand).toEqual([DRAW_1.id]);
     expect(current().players.self.remove).toEqual([]);
+  });
+
+  it.each([B06008, B06008P])('$id does not draw when its source leaves before the mandatory host choice resumes', source => {
+    const state = base();
+    state.players.self.scene = [
+      makeChar({ cardId: source.id, uid: 'yaiba' }),
+      makeChar({ cardId: BLUE_HOST.id, uid: 'blue-host' }),
+    ];
+    state.players.opp.scene = [makeChar({ cardId: TARGET.id, uid: 'target', state: 'sleep' })];
+    install(state, `${source.id}-stale-source`);
+
+    expect(dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'yaiba', targetUid: 'target' }))
+      .toEqual({ ok: true });
+    const actionId = useGameStateStore.getState().activeActionId!;
+    expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: null })).toEqual({ ok: true });
+    expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
+    expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
+    finishContact(actionId, 'opp', 'self');
+    const hostPick = pending('charStackCard');
+
+    useGameStateStore.setState({
+      gameState: produce(current(), draft => {
+        draft.players.self.scene = draft.players.self.scene.filter(character => character.uid !== 'yaiba');
+        draft.players.self.remove.push(source.id);
+      }),
+    });
+    resolvePick(hostPick, ['blue-host']);
+
+    expect(host(BLUE_HOST.id).stackedCards).toBe(0);
+    expect(current().players.self.hand).toEqual([]);
+    expect(current().players.self.deck).toEqual([DRAW_1.id, DRAW_2.id]);
+  });
+
+  it.each([D10009, D10010])('$id does not grant Assault when the selected Ran leaves before resume', source => {
+    const state = base();
+    state.players.self.case = {
+      cardId: CASE_SR.id, status: '事件編', requiredEvidence: 7,
+      colors: ['青'], declaredUseCount: {},
+    };
+    state.players.self.scene = [
+      makeChar({ cardId: source.id, uid: 'shinichi' }),
+      makeChar({ cardId: RAN.id, uid: 'ran' }),
+    ];
+    install(state, `${source.id}-stale-ran`);
+
+    expect(dispatchEngineAction({ type: 'declaredAbility', uid: 'shinichi', abilId: 'a2' }))
+      .toEqual({ ok: true });
+    const ranPick = pending('charStackCard');
+    useGameStateStore.setState({
+      gameState: produce(current(), draft => {
+        draft.players.self.scene = draft.players.self.scene.filter(character => character.uid !== 'ran');
+        draft.players.self.remove.push(RAN.id);
+      }),
+    });
+    resolvePick(ranPick, ['ran']);
+
+    expect(host(source.id).stackedCards).toBe(0);
+    expect(readChar.keywords(current(), 'shinichi')).not.toContain('突撃[キャラ]');
+  });
+
+  it('re-evaluates B06006 continuous AP from exact stack count only during its own turn', () => {
+    const state = base();
+    state.players.self.scene = [makeChar({
+      cardId: B06006.id,
+      uid: 'ai',
+      stackedCards: [
+        { cardId: BOY_2.id, instanceId: 'stack:ai:1' },
+        { cardId: BOY_3.id, instanceId: 'stack:ai:2' },
+      ],
+    })];
+    install(state, 'b06006-ap');
+
+    expect(readChar.ap(current(), 'ai')).toBe((B06006.ap ?? 0) + 2000);
+    useGameStateStore.setState({
+      gameState: produce(current(), draft => { draft.turn.player = 'opp'; }),
+    });
+    expect(readChar.ap(current(), 'ai')).toBe(B06006.ap);
+  });
+
+  it('lets the B06005 owner choose exact non-first under-cards and move zero to two of them', () => {
+    const state = base();
+    state.players.self.scene = [
+      makeChar({
+        cardId: B06005.id,
+        uid: 'agasa',
+        stackedCards: [
+          { cardId: BOY_2.id, instanceId: 'stack:agasa:1' },
+          { cardId: BOY_3.id, instanceId: 'stack:agasa:2' },
+          { cardId: BOY_4.id, instanceId: 'stack:agasa:3' },
+        ],
+      }),
+      makeChar({ cardId: BLUE_HOST.id, uid: 'target-host' }),
+    ];
+    install(state, 'b06005-transfer-owner');
+
+    expect(dispatchEngineAction({ type: 'declaredAbility', uid: 'agasa', abilId: 'a2' })).toEqual({ ok: true });
+    const hostPick = pending('bindPick');
+    resolvePick(hostPick, ['target-host']);
+    const stackPick = pending('stackedCardPick');
+    expect(stackPick).toMatchObject({ player: 'self', ownerPlayer: 'self', nMin: 0, nMax: 2 });
+    expect(stackPick.candidates.map(candidate => ({ uid: candidate.uid, cardId: candidate.cardId, hidden: candidate.hidden })))
+      .toEqual([
+        { uid: 'stack:agasa:1', cardId: BOY_2.id, hidden: false },
+        { uid: 'stack:agasa:2', cardId: BOY_3.id, hidden: false },
+        { uid: 'stack:agasa:3', cardId: BOY_4.id, hidden: false },
+      ]);
+    resolvePick(stackPick, ['stack:agasa:2', 'stack:agasa:3']);
+
+    expect(host(B06005.id).stackedCards).toEqual([
+      { cardId: BOY_2.id, instanceId: 'stack:agasa:1' },
+    ]);
+    expect(host(BLUE_HOST.id).stackedCards).toEqual([
+      { cardId: BOY_3.id, instanceId: 'stack:agasa:2' },
+      { cardId: BOY_4.id, instanceId: 'stack:agasa:3' },
+    ]);
+  });
+
+  it.each([B08002, B08008])('$id immediately enables a real host threshold after adding its first stack', source => {
+    const state = base();
+    state.players.self.scene = [makeChar({ cardId: D08021.id, uid: 'team' })];
+    state.players.self.remove = [PROBE.id];
+    if (source.id === B08002.id) {
+      state.players.self.partnerAreaMR = makeChar({ cardId: B08002.id, uid: 'pa-mr' });
+    } else {
+      state.players.self.hand = [B08008.id];
+    }
+    install(state, `${source.id}-threshold`);
+    expect(readChar.keywords(current(), 'team')).not.toContain('突撃');
+
+    if (source.id === B08002.id) {
+      expect(dispatchEngineAction({ type: 'declaredAbility', uid: 'pa-mr', abilId: 'a2' })).toEqual({ ok: true });
+    } else {
+      expect(dispatchEngineAction({ type: 'handUseCard', player: 'self', cardId: B08008.id })).toEqual({ ok: true });
+    }
+    const hostPick = pending('bindPick');
+    resolvePick(hostPick, ['team']);
+    const stackPick = pending('charStackCard');
+    resolvePick(stackPick, [stackPick.candidates[0]!.uid]);
+
+    expect(host(D08021.id).stackedCards).toHaveLength(1);
+    expect(readChar.keywords(current(), 'team')).toContain('突撃');
+  });
+
+  it.each([PR289, PR295])('$id may stack an actual MR, whose MR and printed abilities stay inactive underneath', source => {
+    const state = base();
+    state.players.self.scene = [
+      makeChar({ cardId: source.id, uid: 'mitsuhiko' }),
+      makeChar({ cardId: B08002.id, uid: 'mr-boy' }),
+    ];
+    install(state, `${source.id}-mr-stack`);
+
+    expect(dispatchEngineAction({ type: 'declaredAbility', uid: 'mitsuhiko', abilId: 'a2' })).toEqual({ ok: true });
+
+    // Card-bound MR matrix: PR289 PR295 with actual B08002 MR.
+    expect(host(source.id).stackedCards).toEqual([
+      expect.objectContaining({ cardId: B08002.id, instanceId: expect.any(String) }),
+    ]);
+    expect(current().players.self.partnerAreaMR).toBeUndefined();
+    expect(current().players.self.scene.some(character => character.uid === 'mr-boy')).toBe(false);
+    expect(dispatchEngineAction({ type: 'declaredAbility', uid: 'mr-boy', abilId: 'a2' }))
+      .toEqual({ ok: false, reason: 'not-allowed' });
+    const afterAction = produce(current(), draft => {
+      event.emit(draft, 'action:declare', { byUid: 'mitsuhiko' }, { player: 'self', uid: 'mitsuhiko', cardId: source.id });
+      runAllUntilEmpty(draft);
+    });
+    expect(afterAction.pendingEffects.some(entry => entry.source.cardId === B08002.id)).toBe(false);
+  });
+
+  it.each([B06008, B06008P])('$id cascades its old set and stacked attachments when it becomes an under-card', source => {
+    const state = base();
+    state.players.self.scene = [
+      makeChar({
+        cardId: source.id,
+        uid: 'yaiba',
+        setCards: [{ cardId: BOY_2.id, faceUp: false, instanceId: 'set:yaiba:old' }],
+        stackedCards: [{ cardId: BOY_3.id, instanceId: 'stack:yaiba:old' }],
+      }),
+      makeChar({ cardId: BLUE_HOST.id, uid: 'blue-host' }),
+    ];
+    install(state, `${source.id}-cascade`);
+
+    const afterTrigger = produce(current(), draft => {
+      event.emit(draft, 'action:end', { byUid: 'yaiba', result: 'completed' }, { player: 'self', uid: 'yaiba', cardId: source.id });
+      runAllUntilEmpty(draft);
+    });
+    useGameStateStore.setState({ gameState: afterTrigger });
+    surfacePendingSideChannels();
+    const hostPick = pending('charStackCard');
+    resolvePick(hostPick, ['blue-host']);
+
+    // Card-bound cascade matrix: B06008 B06008P.
+    expect(host(BLUE_HOST.id).stackedCards).toEqual([
+      expect.objectContaining({ cardId: source.id, instanceId: expect.any(String) }),
+    ]);
+    expect(current().players.self.remove).toEqual(expect.arrayContaining([BOY_2.id, BOY_3.id]));
+  });
+
+  it.each([B06008, B06008P])('$id uses the real action terminal path after either participant leaves', source => {
+    const run = (leaving: 'source' | 'counterpart') => {
+      const state = base();
+      state.players.self.scene = [
+        makeChar({ cardId: source.id, uid: 'yaiba' }),
+        makeChar({ cardId: BLUE_HOST.id, uid: 'blue-host' }),
+      ];
+      state.players.opp.scene = [makeChar({ cardId: TARGET.id, uid: 'target', state: 'sleep' })];
+      install(state, `${source.id}-${leaving}-leaves`);
+      expect(dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'yaiba', targetUid: 'target' })).toEqual({ ok: true });
+      const actionId = useGameStateStore.getState().activeActionId!;
+      expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: null })).toEqual({ ok: true });
+      expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
+      expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
+      expect(current().actionContexts?.[actionId]?.phase).toBe('action-1');
+
+      useGameStateStore.setState({
+        gameState: produce(current(), draft => {
+          mutate.scene.removeToRemove(draft, leaving === 'source' ? 'yaiba' : 'target', 'effect');
+        }),
+      });
+      expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
+      expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
+      return actionId;
+    };
+
+    // Card-bound action terminal matrix: B06008 B06008P.
+    run('source');
+    expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
+    expect(current().players.self.hand).toEqual([]);
+
+    run('counterpart');
+    const hostPick = pending('charStackCard');
+    resolvePick(hostPick, ['blue-host']);
+    expect(host(BLUE_HOST.id).stackedCards).toHaveLength(1);
+    expect(current().players.self.hand).toEqual([DRAW_1.id]);
   });
 });

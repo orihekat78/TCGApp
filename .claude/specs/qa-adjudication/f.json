@@ -1072,11 +1072,11 @@
         "rules:.claude/rules/16-card-set.md:30",
         "rules:.claude/rules/16-card-set.md:31",
         "src:src/cards/ct-p06/B06008.ts:42",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:418",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:419",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:422",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:423",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:424"
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:443",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:444",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:447",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:448",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:449"
       ]
     },
     {
@@ -2270,14 +2270,14 @@
     {
       "qaId": "card:D10009:0606d3069ffa7481b7a75218e5fffe1c2716765b1f9a58bde7621838f5dbaab8",
       "answerHash": "d84685494c09303838dd12c4f0435275972d567292a10d74244216319b0d6a7a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d10/D10009.ts:70"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/16-card-set.md:30",
+        "src:src/cards/ct-d10/D10009.ts:69",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:221",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:386"
       ]
     },
     {

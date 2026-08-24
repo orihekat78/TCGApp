@@ -4,6 +4,8 @@
 // qa: card:PR280:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
 // qa: card:PR100:10c375683e0a24e0734188475895fd0fff2f1c3fe44724cb9d8261ea5d872b68
 // qa: card:PR106:10c375683e0a24e0734188475895fd0fff2f1c3fe44724cb9d8261ea5d872b68
+// qa: card:PR100:4a8da30392488512110c909ac4bcac7f48c402a3d275868030f40ffc0887bf34
+// qa: card:PR106:4a8da30392488512110c909ac4bcac7f48c402a3d275868030f40ffc0887bf34
 // Rules: 08-contact.md, 09-cutin-disguise.md, 15-abilities-effects.md, 17-icons.md, 22-qa-action-contact.md.
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';

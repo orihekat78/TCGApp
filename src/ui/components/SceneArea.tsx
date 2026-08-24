@@ -56,6 +56,8 @@ export type SceneAreaProps = {
   onExpand?: (cardId: string) => void;
   /** Requests a privacy-filtered browse view of cards set under a character. */
   onSetInspect?: (character: SceneCharacter) => void;
+  /** Requests the public browse view of cards stacked under a character. */
+  onStackInspect?: (character: SceneCharacter) => void;
   /**
    * Effect pick mode (User vision: SceneArea も pick UI として流用)。
    * 候補 uid 集合。空でなければ各 char が pick 対象として黄色枠 + click 可能化。
@@ -93,6 +95,7 @@ type SceneCharacterCardProps = {
   /** Round 4l (BUG-001): 候補でないとき click で expand modal を開く */
   onExpand?: (cardId: string) => void;
   onSetInspect?: () => void;
+  onStackInspect?: () => void;
   /** Phase 8.10g-2: ゴースト (fade-out 中) の場合 true → .removing クラスを付与 */
   isGhost?: boolean;
   /** Pick mode (effect pick) — true で黄色枠 + cursor pointer。onPickClick 経由で発火 */
@@ -113,7 +116,7 @@ type SceneCharacterCardProps = {
   activeLabel?: string | null;
 };
 
-function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, onSetInspect, isGhost, isPickable, onPickClick, focusPick, pickOrdinal, chargeKeywords, stats, isActive, activeLabel }: SceneCharacterCardProps): JSX.Element {
+function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, onSetInspect, onStackInspect, isGhost, isPickable, onPickClick, focusPick, pickOrdinal, chargeKeywords, stats, isActive, activeLabel }: SceneCharacterCardProps): JSX.Element {
   const pickButtonRef = useRef<HTMLButtonElement>(null);
   const charges = CHARGE_BADGES.filter((b) => (chargeKeywords ?? []).includes(b.kw));
   // BUG-110: カード下の数値は「修正反映後の有効値」(read.char.ap/lp) を表示する。
@@ -138,6 +141,7 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, onSetIns
 
   const setCount = ch.setCards.length;
   const browseSetCards = setCount > 0 && onSetInspect !== undefined;
+  const stackCount = Array.isArray(ch.stackedCards) ? ch.stackedCards.length : ch.stackedCards;
   const pickHandler = !isGhost && isPickable ? onPickClick : undefined;
 
   useEffect(() => {
@@ -230,15 +234,28 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, onSetIns
           +{setCount}
         </button>
       )}
-      {(Array.isArray(ch.stackedCards) ? ch.stackedCards.length : ch.stackedCards) > 0 && (
-        <div className="stack-badge">×{(Array.isArray(ch.stackedCards) ? ch.stackedCards.length : ch.stackedCards) + 1}</div>
-      )}
+      {stackCount > 0 && !isGhost && (onStackInspect ? (
+          <button
+            type="button"
+            className="stack-badge"
+            data-testid={`scene-stack-inspect-${ch.uid}`}
+            aria-label={`重ねたカード ${stackCount}枚を確認`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onStackInspect();
+            }}
+          >
+            ×{stackCount + 1}
+          </button>
+        ) : (
+          <div className="stack-badge">×{stackCount + 1}</div>
+        ))}
     </div>
   );
 }
 
 export function SceneArea(props: SceneAreaProps): JSX.Element {
-  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick, onExpand, onSetInspect, pickCharUids, onPickChar, autoFocusPickUid, resolveKeywords, resolveCharStats, activeCardUid, activeCardLabel } = props;
+  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick, onExpand, onSetInspect, onStackInspect, pickCharUids, onPickChar, autoFocusPickUid, resolveKeywords, resolveCharStats, activeCardUid, activeCardLabel } = props;
 
   // enterOrder 昇順で並べ替えて表示順を安定させる
   const sorted = [...characters].sort((a, b) => a.enterOrder - b.enterOrder);
@@ -296,6 +313,7 @@ export function SceneArea(props: SceneAreaProps): JSX.Element {
               onClick={onUnitClick ? () => onUnitClick(ch.uid) : undefined}
               onExpand={onExpand}
               onSetInspect={onSetInspect ? () => onSetInspect(ch) : undefined}
+              onStackInspect={onStackInspect ? () => onStackInspect(ch) : undefined}
               isPickable={isPickable}
               onPickClick={isPickable && onPickChar ? () => onPickChar(ch.uid) : undefined}
               focusPick={isPickable && ch.uid === autoFocusPickUid}

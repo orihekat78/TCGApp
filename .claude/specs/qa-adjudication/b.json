@@ -2364,7 +2364,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:10",
         "src:src/cards/pr-01/PR280.ts:37",
-        "tests:tests/cards/official-qa/file-assist-nondeclared-public-wave43.test.ts:272"
+        "tests:tests/cards/official-qa/file-assist-nondeclared-public-wave43.test.ts:274"
       ]
     },
     {

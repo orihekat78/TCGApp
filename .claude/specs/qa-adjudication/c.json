@@ -1052,14 +1052,14 @@
     {
       "qaId": "card:B06006:c758369a7dddc50cdfaf7333ed60a91e5c9ad6e42a67f2f798a59018a06e92d6",
       "answerHash": "914885489360aabba779d0e5edd8618def54207721f704b592327c5a3c89e83c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06006.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/16-card-set.md:30",
+        "src:src/cards/ct-p06/B06006.ts:76",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:221",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:522"
       ]
     },
     {
@@ -1071,17 +1071,20 @@
       "evidence": [
         "rules:.claude/rules/16-card-set.md:28",
         "src:src/cards/ct-p06/B06008.ts:42",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:422"
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:447"
       ]
     },
     {
       "qaId": "card:B06008:f651c66bbcd726b091b581235fb199d7d7645cd967fa16259bd01ea8b9bb503a",
       "answerHash": "39160a60993a754ee0100bb1ca8807575c463ccc16bf489b20334001404328dc",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06008.ts:1"
+        "rules:.claude/rules/16-card-set.md:30",
+        "src:src/cards/ct-p06/B06008.ts:51",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:221",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:675"
       ]
     },
     {
@@ -1193,14 +1196,13 @@
     {
       "qaId": "card:B06104:778145d226f364876d2f75e0d6bc0336b6c61bdfdd1822254bb244878b57c818",
       "answerHash": "02c85c3e7f8fb1f95c059a0e93d2a205206467d9ba5d177fc6effba43c7fe9b1",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06104.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/17-icons.md:28",
+        "src:src/cards/ct-p06/B06104.ts:123",
+        "tests:tests/cards/official-qa/file-assisted-partner-hand-public-wave89.test.ts:217"
       ]
     },
     {
@@ -1359,9 +1361,9 @@
         "rules:.claude/rules/16-card-set.md:30",
         "rules:.claude/rules/16-card-set.md:31",
         "src:src/cards/ct-p08/B08002.ts:1",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:217",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:218",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:221"
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:242",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:243",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:246"
       ]
     },
     {
@@ -1703,14 +1705,13 @@
     {
       "qaId": "card:B09033:0ae3329b249fa56d9f5b74d8cc5763d116f5816852e8f6c82c9f8b3f7ef24ac4",
       "answerHash": "d5bfe6aec9aa427a606d26ccedc68d2293fa218037451e07e64b0f8f1f987576",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09033.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/17-icons.md:28",
+        "src:src/cards/ct-p09/B09033.ts:40",
+        "tests:tests/cards/official-qa/file-assisted-partner-remove-public-wave89.test.ts:181"
       ]
     },
     {
@@ -1774,11 +1775,14 @@
     {
       "qaId": "card:B09048:1bbde3be12dc0daade91f1163bcbf5d316ced403a686470ea90e27428aa5c193",
       "answerHash": "6600f74d7b70f2a1044d39d7aff9c8f16ea5257fe4739943b8ddb87cf06fa515",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09048.ts:1"
+        "rules:.claude/rules/16-card-set.md:30",
+        "src:src/cards/ct-p09/B09048.ts:79",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:221",
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:363"
       ]
     },
     {
@@ -2337,7 +2341,7 @@
       "evidence": [
         "rules:.claude/rules/17-icons.md:36",
         "src:src/cards/pr-01/PR100.ts:27",
-        "tests:tests/cards/official-qa/file-assist-nondeclared-public-wave43.test.ts:280"
+        "tests:tests/cards/official-qa/file-assist-nondeclared-public-wave43.test.ts:282"
       ]
     },
     {
@@ -2438,7 +2442,7 @@
       "evidence": [
         "rules:.claude/rules/16-card-set.md:28",
         "src:src/cards/pr-01/PR295.ts:1",
-        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:394"
+        "tests:tests/cards/official-qa/stacked-card-semantics-public-wave33.test.ts:419"
       ]
     },
     {

@@ -85,7 +85,7 @@ describe('EffectPickerModal card details', () => {
     expect(hidden.innerHTML).not.toContain('D08003');
   });
 
-  it('keeps stacked-card occurrences opaque even when a legacy pending candidate carries identity', () => {
+  it('shows exact stacked-card identities and detail controls', () => {
     const current = useGameStateStore.getState().pendingEffectPick!;
     act(() => {
       useGameStateStore.setState({
@@ -103,13 +103,10 @@ describe('EffectPickerModal card details', () => {
 
     const candidates = [...container.querySelectorAll<HTMLButtonElement>('[data-testid^="effect-pick-cand-stack:host:"]')];
     expect(candidates).toHaveLength(2);
-    expect(candidates.map((candidate) => candidate.textContent)).toEqual(['非公開カード 1自', '非公開カード 2自']);
-    expect(candidates.map((candidate) => candidate.getAttribute('aria-label'))).toEqual([
-      '自分の非公開カード 1枚目を選択',
-      '自分の非公開カード 2枚目を選択',
-    ]);
-    expect(candidates.every((candidate) => !candidate.innerHTML.includes('D08003') && !candidate.innerHTML.includes('D08015'))).toBe(true);
-    expect(container.querySelector('[data-testid^="effect-pick-detail-stack:host:"]')).toBeNull();
+    expect(candidates.map((candidate) => candidate.getAttribute('data-card-id'))).toEqual(['D08003', 'D08015']);
+    expect(candidates[0]?.textContent).toContain('D08003');
+    expect(candidates[1]?.textContent).toContain('D08015');
+    expect(container.querySelectorAll('[data-testid^="effect-pick-detail-stack:host:"]')).toHaveLength(2);
   });
 
   it('opens public details from context menu without selecting', () => {

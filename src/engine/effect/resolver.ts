@@ -27,7 +27,7 @@ import { resolveEffectPicks } from './resolve-picks.js';
 import { assertCompleteSetCardSource } from './source-identity.js';
 import { resolve as resolveTarget } from '../target/resolve.js';
 import { _attachPendingDeckPlaceContinuation, _attachPendingDeckReorderContinuation, _peekPendingDeckPlaceSide, _peekPendingDeckReorderSide, peekPublicHandRevealToken, resolveBindRef, takePublicHandRevealToken } from './atom-handlers/_shared.js';
-import { _peekPendingEffectChoiceSide, _peekPendingEffectOptionalSide, _peekPendingEffectRepeatOptionalSide, _peekPendingRpsSide, _peekPendingSetCardChoiceSide, appendPendingChoiceContinuation, appendPendingRpsContinuation, pushPendingEffectRepeatOptionalSide, setPendingEffectRepeatOptionalRemainder, pushPendingRpsSide, setPendingRpsResume, pushPendingSetCardChoiceSide, setPendingSetCardChoiceResume, appendPendingSetCardChoiceContinuation, pushPendingEffectChoiceSide, setPendingChoiceBindings, setPendingChoiceResume, type PendingEffectPickSide, type RpsHand } from './pending-state.js';
+import { _peekPendingEffectChoiceSide, _peekPendingEffectOptionalSide, _peekPendingEffectRepeatOptionalSide, _peekPendingRpsSide, _peekPendingSetCardChoiceSide, _peekPendingSetCardReplacementSide, _peekPendingSetCardReplacementContinuation, appendPendingChoiceContinuation, appendPendingRpsContinuation, pushPendingEffectRepeatOptionalSide, setPendingEffectRepeatOptionalRemainder, pushPendingRpsSide, setPendingRpsResume, pushPendingSetCardChoiceSide, setPendingSetCardChoiceResume, appendPendingSetCardChoiceContinuation, setPendingSetCardReplacementContinuation, pushPendingEffectChoiceSide, setPendingChoiceBindings, setPendingChoiceResume, type PendingEffectPickSide, type RpsHand } from './pending-state.js';
 import { toPlainDeep } from './pending-state.js';
 import { continuationMayEnterSceneForPlayer } from './scene-switch.js';
 import {
@@ -205,6 +205,31 @@ function appendSetCardContinuation(remainder: Effect[], ctx: EffectCtx, kind: 's
   appendPendingSetCardChoiceContinuation({ remainder, ctx: resumeCtx, kind });
 }
 
+function attachSetCardReplacementContinuation(
+  remainder: Effect[],
+  ctx: EffectCtx,
+  kind: 'sequence' | 'chain',
+): void {
+  const outer = remainder.length > 0
+    ? snapshotContinuationFrame({ remainder, ctx, kind })
+    : undefined;
+  const existing = _peekPendingSetCardReplacementContinuation();
+  if (existing) {
+    if (!outer) return;
+    let tail = existing;
+    while (tail.outer) tail = tail.outer;
+    tail.outer = outer;
+    return;
+  }
+  const holder = snapshotContinuationFrame({
+    remainder: [],
+    ctx,
+    kind: 'sequence',
+    ...(outer ? { outer } : {}),
+  });
+  setPendingSetCardReplacementContinuation(holder);
+}
+
 function snapshotContinuationFrame(frame: ContinuationFrame): ContinuationFrame {
   const ctxHasDraft = containsDraft(frame.ctx);
   const remainderHasDraft = containsDraft(frame.remainder);
@@ -265,6 +290,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         const choiceBefore = _peekPendingEffectChoiceSide();
         const rpsBefore = _peekPendingRpsSide();
         const setCardBefore = _peekPendingSetCardChoiceSide();
+        const setCardReplacementBefore = _peekPendingSetCardReplacementSide();
         run(state, eff.steps[i]!, ctx);
         transferPublicHandRevealToPendingDecision(ctx);
         if (_peekPendingEffectChoiceSide() !== choiceBefore) {
@@ -281,6 +307,10 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         if (_peekPendingSetCardChoiceSide() !== setCardBefore) {
           appendSetCardContinuation(eff.steps.slice(i + 1), ctx, 'sequence');
           delete ctx.dyn?.setCardChoicePending;
+          return;
+        }
+        if (_peekPendingSetCardReplacementSide() !== setCardReplacementBefore) {
+          attachSetCardReplacementContinuation(eff.steps.slice(i + 1), ctx, 'sequence');
           return;
         }
         const repeatAfter = _peekPendingEffectRepeatOptionalSide() !== null;
@@ -343,6 +373,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         const choiceBefore = _peekPendingEffectChoiceSide();
         const rpsBefore = _peekPendingRpsSide();
         const setCardBefore = _peekPendingSetCardChoiceSide();
+        const setCardReplacementBefore = _peekPendingSetCardReplacementSide();
         run(state, step, ctx);
         transferPublicHandRevealToPendingDecision(ctx);
         if (_peekPendingEffectChoiceSide() !== choiceBefore) {
@@ -359,6 +390,10 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         if (_peekPendingSetCardChoiceSide() !== setCardBefore) {
           appendSetCardContinuation(eff.steps.slice(i + 1), ctx, 'chain');
           delete ctx.dyn?.setCardChoicePending;
+          return;
+        }
+        if (_peekPendingSetCardReplacementSide() !== setCardReplacementBefore) {
+          attachSetCardReplacementContinuation(eff.steps.slice(i + 1), ctx, 'chain');
           return;
         }
         const reorderAfter = _peekPendingDeckReorderSide();
@@ -419,6 +454,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         const choiceBefore = _peekPendingEffectChoiceSide();
         const rpsBefore = _peekPendingRpsSide();
         const setCardBefore = _peekPendingSetCardChoiceSide();
+        const setCardReplacementBefore = _peekPendingSetCardReplacementSide();
         run(state, eff.steps[i]!, branchCtx);
         transferPublicHandRevealToPendingDecision(branchCtx);
         const remainder = eff.steps.slice(i + 1);
@@ -438,6 +474,11 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
           handoffParallelPause(ctx, branchCtx);
           appendSetCardContinuation(remainder, branchScopedCtx(ctx), 'sequence');
           delete branchCtx.dyn?.setCardChoicePending;
+          return;
+        }
+        if (_peekPendingSetCardReplacementSide() !== setCardReplacementBefore) {
+          handoffParallelPause(ctx, branchCtx);
+          attachSetCardReplacementContinuation(remainder, branchScopedCtx(ctx), 'sequence');
           return;
         }
         const reorderAfter = _peekPendingDeckReorderSide();

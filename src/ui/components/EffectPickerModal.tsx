@@ -187,7 +187,7 @@ export function EffectPickerModal(): JSX.Element | null {
    * gameState から faceUp を確認し、裏向きなら「(非公開)」表示にする。
    */
   const isOpaqueCandidate = (c: { uid: string; hidden?: boolean }): boolean => {
-    if (pending.atomVerb === 'stackedCardPick' || c.hidden === true) return true;
+    if (c.hidden === true) return true;
     const evMatch = c.uid.match(/^evidence:(self|opp):(\d+)$/);
     if (!evMatch || !gameState) return false;
     const evPlayer = evMatch[1] as 'self' | 'opp';
@@ -256,6 +256,7 @@ export function EffectPickerModal(): JSX.Element | null {
                     expandModal.open(c.cardId);
                   }}
                   data-testid={`effect-pick-cand-${c.uid}`}
+                  data-card-id={hidden ? undefined : c.cardId}
                   aria-label={hidden
                     ? `${c.player === 'self' ? '自分' : '相手'}の非公開カード ${index + 1}枚目を${selected ? '選択解除' : '選択'}`
                     : undefined}
