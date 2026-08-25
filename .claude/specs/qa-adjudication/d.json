@@ -2110,15 +2110,21 @@
     {
       "qaId": "card:B10065:210502ad3cfac2ac045c7e17b3c7d5905db9ed5babf58abb6d8e4242e762dcf6",
       "answerHash": "b224b606f8fc34f02bcbd2792e156388486d6469c478c49a07fe2816784668c6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:11",
-        "src:src/cards/ct-p10/B10065.ts:6"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10065.ts:12",
+        "src:src/cards/ct-p10/B10065.ts:13",
+        "src:src/cards/ct-p10/B10065.ts:23",
+        "src:src/cards/ct-p10/B10065.ts:24",
+        "src:src/cards/ct-p10/B10065.ts:9",
+        "tests:tests/cards/official-qa/B10065-completion-public-wave134.test.ts:218",
+        "tests:tests/cards/official-qa/B10065-completion-public-wave134.test.ts:219",
+        "tests:tests/cards/official-qa/B10065-completion-public-wave134.test.ts:227",
+        "tests:tests/cards/official-qa/B10065-completion-public-wave134.test.ts:228",
+        "tests:tests/cards/official-qa/B10065-completion-public-wave134.test.ts:230"
       ]
     },
     {

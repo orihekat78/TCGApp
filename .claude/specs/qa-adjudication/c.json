@@ -2080,12 +2080,20 @@
     {
       "qaId": "card:B10065:f0e393b3a47afbeb95a14a91a8c573bd540fb08877f11528e5ae7dcd501b1a98",
       "answerHash": "2b9d7f628072122b279cb451280af9a5b44a852e97f6d4bcf287129507dda624",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:14",
-        "src:src/cards/ct-p10/B10065.ts:7"
+        "src:src/cards/ct-p10/B10065.ts:23",
+        "src:src/cards/ct-p10/B10065.ts:24",
+        "src:src/cards/ct-p10/B10065.ts:6",
+        "src:src/cards/ct-p10/B10065.ts:7",
+        "tests:tests/cards/official-qa/B10065-completion-public-wave134.test.ts:159",
+        "tests:tests/cards/official-qa/B10065-completion-public-wave134.test.ts:169",
+        "tests:tests/cards/official-qa/B10065-completion-public-wave134.test.ts:176",
+        "tests:tests/cards/official-qa/B10065-completion-public-wave134.test.ts:181",
+        "tests:tests/cards/official-qa/B10065-completion-public-wave134.test.ts:185"
       ]
     },
     {

@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6646
+- **ファイル数**: 6649
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1647,6 +1647,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves128-129.md` — QA adjudication Waves128-129
     - `2026-08-25-qa-waves130-131.md` — QA adjudication Waves130-131
     - `2026-08-25-qa-waves132-133.md` — QA adjudication Waves132-133
+    - `2026-08-25-qa-waves134-135.md` — QA adjudication Waves134-135
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -5880,6 +5881,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B04012-optional-decline.test.ts` — qa: card:B04012:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d
       - `B04015-B04028-action-hirameki.test.ts` — qa: card:B04015:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
       - `B04030.test.ts` — The opposing contact character has left, but Kaito remains in the scene.
+      - `B04048-completion-public-wave135.test.ts` — qa: card:B04048:56d8adf38bad4a8ad033c6796edb1ba33e5f92e244cf396f8b741f465350ee09
       - `B04059.test.ts` — B04059 水無怜奈 — official Q&A: scene-only additional card name.
       - `B04074.test.ts`
       - `B05007-completion-public-wave129.test.ts` — qa: card:B05007:64c8ea1dbd685ed1a2d1338e4c52910b1b19f6cca7249f8e288576f37e426d44
@@ -5897,6 +5899,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B09090-PR286-entry-waiver.test.ts` — qaId=card:B09090:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7e…
       - `B09109-completion-public-wave128.test.ts` — qa: card:B09109:87aa9ca394d3b7a7faa9cc64726031a8e157f606ad5c5fab6f9690c1e7ed7c45
       - `B10036-completion-public-wave133.test.ts` — qa: card:B10036:0b75452df6157fca2faca3660e38d13be769a1eae20e32990c76ac7780cdac0b
+      - `B10065-completion-public-wave134.test.ts` — qa: card:B10065:132b6ee607cc3a33eb9e91d1f3bda4dc39dfcf54b0a2f045cc2168294ce8a923
       - `B10071-public-wave25.test.ts` — qa: card:B10071:816d7965a6d1b8124bc6be2098194d8f3f19a88be3cdc253bf643cfdff0e1e69
       - `B10087-public-wave25.test.ts` — qa: card:B10087:0c9d0e7ac8e1aeccc9186815ebf6f4fcbc776e2193db1d43e5cd7294a9e3a664
       - `B10088-effect-entry-public-wave25.test.ts` — qa: card:B10088:00139d4a04a7b6b8457670c965d9b2c6ee827110a2321d40b2ba641c9a01b896
