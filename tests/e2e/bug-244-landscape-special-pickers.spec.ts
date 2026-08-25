@@ -219,6 +219,7 @@ test.describe('BUG-244 special picker landscape containment', () => {
     await buildCausalGameState(page, (gs: GameStateLike) => {
       const g = gs as unknown as AnyState;
       const players = g.players as { self: AnyState; opp: AnyState };
+      g.turn = { number: 4, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
       players.opp.partner = { cardId: 'D11001', state: 'active', location: 'partner-area' };
       players.self.case = { cardId: 'D08026', status: '解決編', requiredEvidence: 7, colors: ['blue'], declaredUseCount: {} };
       players.self.evidence = [{ cardId: 'B06032', faceUp: false, origin: { turn: 1, via: 'reasoning' } }];
@@ -255,6 +256,7 @@ test.describe('BUG-244 special picker landscape containment', () => {
     await buildCausalGameState(page, (gs: GameStateLike) => {
       const g = gs as unknown as AnyState;
       const players = g.players as { self: AnyState; opp: AnyState };
+      g.turn = { number: 4, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
       const makeCharacter = (uid: string) => ({
         cardId: 'D08005',
         uid,

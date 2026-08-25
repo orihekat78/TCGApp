@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6623
+- **ファイル数**: 6626
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1638,6 +1638,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves110-111.md` — QA adjudication Waves110-111
     - `2026-08-25-qa-waves112-113.md` — QA adjudication Waves112-113
     - `2026-08-25-qa-waves114-115.md` — QA adjudication Waves114-115
+    - `2026-08-25-qa-waves116-117.md` — QA adjudication Waves116-117
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -5974,6 +5975,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `leave-trigger-top-three-public.test.ts` — qa: card:B03079:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `mill-three-short-deck-public-wave91.test.ts` — qa: card:B05068:22aaf9ba5e384ee444adeadb5ffb7b5c97b7a4e75ccbac8c297b8c86d3e85f3f
       - `misread-multiple-public-wave108.test.ts` — qa: card:PR247:c61cc842e775e8f40c3ccc90d41e595b2e2e02184cc4d243534b3c2fdf721fdb
+      - `misread-multiple-public-wave116.test.ts` — qa: card:D06015:7917a528ebb99edb4efb1d6ed72558b874851a0c65d93d121901eb7488a29e03
       - `misread-one-core-public-wave113.test.ts` — qa: card:D06015:4edfa42fd152dd43d08fd67f36ed96de6ed6daf323da7b0a6c8b4fa1084f3411
       - `misread-public-runtime-wave18.test.ts` — qa: card:B04079:c61cc842e775e8f40c3ccc90d41e595b2e2e02184cc4d243534b3c2fdf721fdb
       - `misread-public-runtime-wave26.test.ts` — qa: card:B04038:6d5a65b9e083c8565478cceec3269781a67a936789441e6c196e107f90e2e8c8
@@ -6005,6 +6007,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `stun-action-target-public.test.ts` — qa: card:B01058:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40
       - `stun-activation-to-sleep-wave22.test.ts` — qa: card:B04080:872de2079dce9150e76a70314a5d20400e542df72be79f07c2daed17f80158c3
       - `stun-definition-public-wave60.test.ts` — qa: card:B02057:12d56922ac94e77d7ce7b7d2d7ff6c185065a32f7f91af0ec3483941263df031
+      - `stun-gate-sleep-target-public-wave117.test.ts` — qa: card:PR060:f0205ebe785380650d240fdf4799be132d63a973ea8eedc201b577d4d66bc433
       - `turn-conditioned-cutin-expansion-public.test.ts` — qa: card:B05095:3ebc71d3fe967142af371f16682581bf9d44ac0db1c409f0d2a20d11ffeeae41
       - `turn-conditioned-cutin-public.test.ts` — qa: card:B02007:e4a36acb6bbbb1c8b11eac5e65600d839bba033d5a2b7f0e5ecfc84bacd47a4c
       - `turn1-resolution-time-state-public.test.ts` — rules: 07-action-flow.md, 10-action-event.md, 15-abilities-effects.md, 17-icons.…
