@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6634
+- **ファイル数**: 6635
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1642,6 +1642,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves118-119.md` — QA adjudication Waves118-119
     - `2026-08-25-qa-waves120-121.md` — QA adjudication Waves120-121
     - `2026-08-25-qa-waves122-123.md` — QA adjudication Waves122-123
+    - `2026-08-25-qa-waves124-125.md` — QA adjudication Waves124-125
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97

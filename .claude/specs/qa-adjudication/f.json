@@ -1671,10 +1671,10 @@
         "src:src/engine/flow/guard.ts:49",
         "src:src/engine/flow/guard.ts:70",
         "src:src/engine/flow/guard.ts:82",
-        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:161",
-        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:162",
-        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:163",
-        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:167"
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:177",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:178",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:179",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:183"
       ]
     },
     {

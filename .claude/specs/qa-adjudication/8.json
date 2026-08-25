@@ -1784,23 +1784,30 @@
         "src:src/cards/ct-p10/B10016.ts:8",
         "src:src/engine/flow/action/state-machine.ts:307",
         "src:src/engine/flow/action/state-machine.ts:333",
-        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:147",
-        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:149",
-        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:151"
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:163",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:165",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:167"
       ]
     },
     {
       "qaId": "card:B10016:834e9f1549978b53db5e67241dc3c0164382951e0268b784196863fb038f6fe5",
       "answerHash": "22cf72497c12e4979f2dbd0c277552e3e126cdc6f68932e8f3809d54cedd206d",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:5",
-        "src:src/cards/ct-p10/B10016.ts:8"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/07-action-flow.md:25",
+        "src:src/cards/ct-p10/B10016.ts:8",
+        "src:src/engine/flow/action/state-machine.ts:307",
+        "src:src/engine/flow/action/state-machine.ts:333",
+        "src:src/engine/flow/guard.ts:70",
+        "src:src/engine/flow/guard.ts:71",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:207",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:215",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:218",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:220",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:226",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:228"
       ]
     },
     {

@@ -4,6 +4,12 @@
 // qa: card:B09028:5cffe9de58a0cbfffe692e8c6c421d82ca89e35b1bff91c29c90eb6cff59e3a3
 // qa: card:B09054:5cffe9de58a0cbfffe692e8c6c421d82ca89e35b1bff91c29c90eb6cff59e3a3
 // qa: card:B10016:5cffe9de58a0cbfffe692e8c6c421d82ca89e35b1bff91c29c90eb6cff59e3a3
+// qa: card:B09028:834e9f1549978b53db5e67241dc3c0164382951e0268b784196863fb038f6fe5
+// qa: card:B09054:834e9f1549978b53db5e67241dc3c0164382951e0268b784196863fb038f6fe5
+// qa: card:B10016:834e9f1549978b53db5e67241dc3c0164382951e0268b784196863fb038f6fe5
+// qa: card:B09028:9d800ddb1453a443607383e0c16204a571f4ded5ecb0b359a8e844675a7eb884
+// qa: card:B09054:9d800ddb1453a443607383e0c16204a571f4ded5ecb0b359a8e844675a7eb884
+// qa: card:B10016:9d800ddb1453a443607383e0c16204a571f4ded5ecb0b359a8e844675a7eb884
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { registerAll } from '@/cards';
@@ -39,6 +45,8 @@ const CASES = ROWS.flatMap(row => (['self', 'opp'] as const).map(owner => ({ ...
 
 const ATTACKER = fixture('W122_ATTACKER');
 const BULLET_ATTACKER = fixture('W123_BULLET_ATTACKER', { keywords: ['ブレット'] });
+const REPEAT_ATTACKER = fixture('W124_REPEAT_ATTACKER', { ap: 0 });
+const PLAIN_GUARDER = fixture('W125_PLAIN_GUARDER');
 const TARGET = fixture('W122_TARGET');
 const OSAKA_ALLY = fixture('W122_OSAKA_ALLY', { traits: ['大阪府警'] });
 const AKAI_GUARDER = fixture('W122_AKAI_GUARDER', { traits: ['赤井家'] });
@@ -83,7 +91,12 @@ function stateFor(row: Row, owner: Player, attacker: CardDef): GameState {
   return state;
 }
 
-function installPermission(row: Row, owner: Player, attacker: CardDef, guarderState: 'active' | 'sleep'): void {
+function installPermission(
+  row: Row,
+  owner: Player,
+  attacker: CardDef,
+  guarderState: 'active' | 'sleep' | 'stun',
+): void {
   endMatchSession();
   beginMatchSession(owner);
   (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide = owner;
@@ -112,8 +125,8 @@ function installPermission(row: Row, owner: Player, attacker: CardDef, guarderSt
   expect(useGameStateStore.getState().setGameState(ready)).toBe(true);
 }
 
-function declare(): string {
-  expect(dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'attacker', targetUid: 'target' }))
+function declare(byUid = 'attacker'): string {
+  expect(dispatchEngineAction({ type: 'actionDeclareChar', byUid, targetUid: 'target' }))
     .toEqual({ ok: true });
   const actionId = useGameStateStore.getState().activeActionId;
   expect(actionId).toBeTruthy();
@@ -129,7 +142,10 @@ beforeEach(() => {
   _resetTriggeredRegistered();
   _resetUidCounter();
   registerAll();
-  for (const card of [ATTACKER, BULLET_ATTACKER, TARGET, OSAKA_ALLY, AKAI_GUARDER]) register(card);
+  for (const card of [
+    ATTACKER, BULLET_ATTACKER, REPEAT_ATTACKER, PLAIN_GUARDER,
+    TARGET, OSAKA_ALLY, AKAI_GUARDER,
+  ]) register(card);
   registerTriggeredListener();
   beginMatchSession('self');
 });
@@ -164,6 +180,73 @@ describe('official QA Wave123: Bullet still prevents sleep-guard permission', ()
       .toEqual({ ok: false, reason: 'not-allowed' });
     expect(current().players[owner].scene.find(character => character.uid === 'guarder')?.state)
       .toBe('sleep');
+    expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: null }))
+      .toEqual({ ok: true });
+  });
+});
+
+function finishCharacterAction(actionId: string): void {
+  for (let step = 0; step < 20 && useGameStateStore.getState().activeActionId === actionId; step += 1) {
+    const action = current().actionContexts?.[actionId];
+    if (!action) break;
+    if (action.phase === 'action-1' || action.phase === 'action-2' || action.phase === 'action-1-redo') {
+      const actingUid = action.phase === 'action-2' ? action.secondUid : action.firstUid;
+      const player = current().players.self.scene.some(character => character.uid === actingUid)
+        ? 'self'
+        : 'opp';
+      expect(dispatchEngineAction({
+        type: 'actionContact', actionId, player, choice: { kind: 'pass' },
+      })).toEqual({ ok: true });
+    } else if (action.phase === 'judge') {
+      expect(dispatchEngineAction({ type: 'actionJudge', actionId })).toEqual({ ok: true });
+    }
+    if (useGameStateStore.getState().activeActionId === actionId) {
+      expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
+    }
+  }
+  expect(useGameStateStore.getState().activeActionId).toBeNull();
+}
+
+describe('official QA Wave124: the same eligible bearer may guard again in one turn', () => {
+  // Card-bound physical rows: B09028 B09054 B09054P B10016.
+  it.each(CASES)('$source.id owner $owner', ({ source, mode, owner }) => {
+    installPermission({ source, mode }, owner, REPEAT_ATTACKER, 'active');
+    let actionId = declare();
+    expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: 'guarder' }))
+      .toEqual({ ok: true });
+    finishCharacterAction(actionId);
+    expect(current().players[owner].scene.find(character => character.uid === 'guarder')?.state)
+      .toBe('sleep');
+    expect(readChar.hasTextAbility(current(), 'guarder', 'sleepGuard')).toBe(true);
+
+    const second = structuredClone(current());
+    second.players[other(owner)].scene.push(sceneChar(REPEAT_ATTACKER.id, 'attacker-2'));
+    expect(useGameStateStore.getState().setGameState(second)).toBe(true);
+    actionId = declare('attacker-2');
+    expect(guard.candidates(current(), 'attacker-2', 'target').map(candidate => candidate.uid))
+      .toContain('guarder');
+    expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: 'guarder' }))
+      .toEqual({ ok: true });
+  });
+});
+
+describe('official QA Wave125: stun remains ineligible despite sleep-guard permission', () => {
+  // Card-bound physical rows: B09028 B09054 B09054P B10016.
+  it.each(CASES)('$source.id owner $owner', ({ source, mode, owner }) => {
+    installPermission({ source, mode }, owner, ATTACKER, 'stun');
+    const withDecoy = structuredClone(current());
+    withDecoy.players[owner].scene.push(sceneChar(PLAIN_GUARDER.id, 'plain-guarder'));
+    expect(useGameStateStore.getState().setGameState(withDecoy)).toBe(true);
+
+    const actionId = declare();
+    expect(readChar.hasTextAbility(current(), 'guarder', 'sleepGuard')).toBe(true);
+    const candidateUids = guard.candidates(current(), 'attacker', 'target').map(candidate => candidate.uid);
+    expect(candidateUids).toContain('plain-guarder');
+    expect(candidateUids).not.toContain('guarder');
+    expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: 'guarder' }))
+      .toEqual({ ok: false, reason: 'not-allowed' });
+    expect(current().players[owner].scene.find(character => character.uid === 'guarder')?.state)
+      .toBe('stun');
     expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: null }))
       .toEqual({ ok: true });
   });

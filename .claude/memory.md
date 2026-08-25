@@ -27,6 +27,7 @@
 - QA Waves118-119: .claude/sessions/2026-08-25-qa-waves118-119.md.
 - QA Waves120-121: .claude/sessions/2026-08-25-qa-waves120-121.md.
 - QA Waves122-123: .claude/sessions/2026-08-25-qa-waves122-123.md.
+- QA Waves124-125: .claude/sessions/2026-08-25-qa-waves124-125.md.
 
 ## 2026-08-24: QA runtime Waves82-83
 
@@ -58,20 +59,17 @@
 
 ## Next
 
-- Waves122-123 move six Q&A items to matched. Coverage is 1727 matched / 1237
-  test-missing / 2964 total; 1092 exact groups remain, including 949 singletons.
-- Wave122 certifies that active sleep-guard bearers still follow ordinary guard
-  resolution and become sleep across B09028, B09054/P, and B10016.
-- Wave123 certifies that Bullet still prevents those same four physical cards
-  from guarding, across both owners.
-- Wave124 seed: section `f414b60e...`, Q `966dab87...`, A `22cf7249...` across
-  B09028/B09054/B10016; same-character repeat guarding, already grounded.
-- Wave125 seed: same section, Q `d4c1eaa0...`, A `bd8ba090...` across
-  B09028/B09054/B10016; stun prohibition, already grounded.
-- Horizontal finding: B09054/P header comments still describe PA declaration as
-  vacuous, while the shipped `on-partner-area` path is wired. Behavior is sound.
+- Waves124-125 move six Q&A items to matched. Coverage is 1733 matched / 1231
+  test-missing / 2964 total; 1090 exact groups remain, including 949 singletons.
+- Wave124 certifies the same bearer can guard two actions in one turn across
+  B09028, B09054/P, and B10016. Wave125 certifies stun remains ineligible while
+  an active decoy stays legal, across both owners.
+- Wave126 batch: finish five remaining B09028/B10016 items, including target-self
+  exclusion and B09028 live condition/self-count; re-ground B10016 singleton.
+- Wave127 batch: finish three B09054/P declared-ability items: self count,
+  active self-selection, and PA-to-new-scene-uid reuse.
 - Official sync drift is separate: new PR322 and changed Q&A for
   B04018/B04018P/B06103P. Do not mix it into selected waves without re-queueing.
-- Revised remaining estimate: 73-138 working hours, center about 106 hours.
+- Revised remaining estimate: 72-137 working hours, center about 105 hours.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

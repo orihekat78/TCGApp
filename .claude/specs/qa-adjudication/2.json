@@ -1593,9 +1593,9 @@
         "src:src/cards/ct-p09/B09028.ts:34",
         "src:src/engine/flow/action/state-machine.ts:307",
         "src:src/engine/flow/action/state-machine.ts:333",
-        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:147",
-        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:149",
-        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:151"
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:163",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:165",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:167"
       ]
     },
     {
