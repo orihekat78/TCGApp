@@ -875,11 +875,14 @@
     {
       "qaId": "card:B06072:6fc795f4f30ade615b73f19c92634e279b3660340b23a3cdba5eeb034199985d",
       "answerHash": "04cca5f8cad62010d109594e484a26fa7058d8ec1860ea2adbb564a3ea71e202",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06072.ts:1"
+        "rules:.claude/rules/20-color-and-switch.md:6",
+        "src:src/cards/ct-p06/B06072.ts:8",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:435",
+        "tests:tests/cards/official-qa/case-trait-yaiba-public-wave69.test.ts:450"
       ]
     },
     {

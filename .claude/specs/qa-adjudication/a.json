@@ -959,11 +959,14 @@
     {
       "qaId": "card:B06085:8b2afa65e94bc9030fd142d29d8351670cafb8e77bb5f4dbd3ddf286dc486e3b",
       "answerHash": "1b65695166680e33fa7950a3e116e3e4ca4081c11ab2746896e6169aba0067a3",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06085.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-p06/B06085.ts:21",
+        "tests:tests/cards/official-qa/B06076-B06086-completion-public-wave161.test.ts:335",
+        "tests:tests/cards/official-qa/B06076-B06086-completion-public-wave161.test.ts:339"
       ]
     },
     {

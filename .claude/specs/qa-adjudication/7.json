@@ -1084,11 +1084,13 @@
     {
       "qaId": "card:B06076:2bcbc572704a40c4bd313efcdb48dc88426ff84922e2c41ac0fcde537aec79ab",
       "answerHash": "9a6a10e705d72f06e9ee2f2d93d0b23b5d9f56c5863355723ef7b6ce37c5e2da",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06076.ts:1"
+        "rules:.claude/rules/21-declared-ability-cost.md:6",
+        "src:src/cards/ct-p06/B06076.ts:42",
+        "tests:tests/cards/official-qa/B06076-B06086-completion-public-wave161.test.ts:200"
       ]
     },
     {

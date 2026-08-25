@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6707
+- **ファイル数**: 6711
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1673,6 +1673,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
     - `2026-08-25-qa-waves98-99.md` — QA adjudication Waves98-99
+    - `2026-08-26-qa-waves160-161.md` — QA adjudication Waves160-161
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1903,6 +1904,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06066.md` — B06066/B06066P 怪盗キッド＆白馬探 (MR キャラ) grounding (2026-07-10, fable)
       - `B06067.md` — B06067 grounding
       - `B06072.md` — B06072 grounding
+      - `B06076.md` — B06076 ジェイムズ・ブラック grounding
       - `B06087.md` — B06087 萩原千速 grounding
       - `B06088.md` — B06088 grounding
       - `B06090.md` — B06090 grounding
@@ -4188,7 +4190,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06074P.ts` — cards/ct-p06/B06074P 沖矢昴＆世良真純 (キャラ パラレル) — B06074 の絵柄違い (同 cardId 0694)
       - `B06075.ts` — cards/ct-p06/B06075 宮野明美 (キャラ) — catalog-reuse batch
       - `B06075P.ts` — cards/ct-p06/B06075P 宮野明美 (キャラ) — catalog-reuse batch (variant of B06075)
-      - `B06076.ts` — cards/ct-p06/B06076 ジェイムズ・ブラック (キャラ) — bounce batch #2 (a1 only)
+      - `B06076.ts` — cards/ct-p06/B06076 ジェイムズ・ブラック (キャラ) — bounce batch #2 + declared backfill
       - `B06077.ts` — cards/ct-p06/B06077 ジョディ・スターリング (character) — Task A green候補 (engine変更0)
       - `B06077P.ts` — cards/ct-p06/B06077P ジョディ・スターリング (character) — Task A green候補 (engine変更0)
       - `B06078.ts` — cards/ct-p06/B06078 羽田秀𠮷 (character) — Task A green候補 (engine変更0)
@@ -5942,9 +5944,11 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06049-B06050-completion-public-wave156.test.ts` — qa: card:B06049:1522823aa460aa0572f53f018bc39a9461f8b0b892d70825d15382c5c94a0818
       - `B06052-B06053-completion-public-wave157.test.ts` — qa: card:B06052:7124f41d3267d0e2df2692070acfdd9e66fca11edbbbfb6b64ada8bee4c94b79
       - `B06057-B06058-completion-public-wave158.test.ts` — qa: card:B06057:6ef75028554fc17862ec6d9114267258f52ac2a1d278a1c7fb0e61edc0d1d265
+      - `B06060-B06072-completion-public-wave160.test.ts` — qa: card:B06060:2ca5b478df684d0944e74fceb7664125a59a6e2a239ae9323d3477e04506cf07
       - `B06062-B06064-completion-public-wave159.test.ts` — qa: card:B06062:0006b174016834d6e10769372f487ca740771f9f2b3e55d0e6b52a5c209b5c43
       - `B06068-completion-public-wave139.test.ts` — qa: card:B06068:1a2a46c6c6f2d223c19bf80a2832fa8cc71d77c57cb5d6b98be4e42610903db0
       - `B06074-completion-public-wave131.test.ts` — qa: card:B06074:2e622a225c9c5743d9f4eba3865e40ddb799ad15a2800aca084ac672a33c6b74
+      - `B06076-B06086-completion-public-wave161.test.ts` — qa: card:B06076:2bcbc572704a40c4bd313efcdb48dc88426ff84922e2c41ac0fcde537aec79ab
       - `B07066-declared-cost-optional.test.ts` — qa: card:B07066:939f5e30d9e32c8b233a160a6f70ebb932c71ce0971e6f66cfb3701d5fff76cd
       - `B07102-refresh-includes-removed.test.ts` — qaId=card:B07102:99f16dd6a248501c9d63a44dd85b2d6097ef720865e4181d1b451669f04b05d…
       - `B08049-completion-public-wave132.test.ts` — qa: card:B08049:190baa1e1f03afa7d9e83de8ff7b5f6134452bd6b3a05caf22783df26c2a9ea8

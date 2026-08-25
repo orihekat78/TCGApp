@@ -1054,11 +1054,13 @@
     {
       "qaId": "card:B06071:cb8dae30a14a64f9d6492d1cca938382df2537937250eb97dca078a642423626",
       "answerHash": "e2026024a6670b630daf3923cf7e0ba3245945f1c6f71a5cd6a1743fcb848885",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06071.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:34",
+        "src:src/cards/ct-p06/B06071.ts:15",
+        "tests:tests/cards/official-qa/B06060-B06072-completion-public-wave160.test.ts:317"
       ]
     },
     {
@@ -1081,11 +1083,14 @@
     {
       "qaId": "card:B06086:c84d7aad4528fd6d980afa11b31629dd80c57a9c461526f6b41e76abb0604128",
       "answerHash": "9678dcba4645bd0bc2d7ce77e0ce1c56e29eb806bc870a3e8dcfd085d227db98",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06086.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:31",
+        "src:src/cards/ct-p06/B06086.ts:22",
+        "tests:tests/cards/official-qa/B06076-B06086-completion-public-wave161.test.ts:408",
+        "tests:tests/cards/official-qa/B06076-B06086-completion-public-wave161.test.ts:415"
       ]
     },
     {

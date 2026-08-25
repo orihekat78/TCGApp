@@ -13,19 +13,20 @@
 
 ## Next
 
-- Waves158-159 move twelve items to matched. Coverage is 1899 matched / 1065
-  test-missing / 2964 total; 943 exact groups remain, including 821 singletons.
-- B06057 event observer excludes Cut-In/Hirameki and mandates ordinary-use draw.
-- B06058 effective-LP0 target and post-reactivation repeat action complete.
-- B06062/P-B06064/P no-host/mandatory-set matrix, short-deck refresh, double
-  rider stack, and face-up event/host leave timing complete.
-- All five cards needed tests/docs only; production unchanged. Target 49 and
-  focused horizontal 251 tests pass; exact evidence is in the session record.
-- Wave160 batches B06060/B06067/B06071/B06072. Wave161 batches B06076/B06077/
-  B06085/B06086 and runs the scheduled broad gate.
+- Waves160-161 move fifteen items to matched. Coverage is 1914 matched / 1050
+  test-missing / 2964 total; 931 exact groups remain, including 812 singletons.
+- B06060/B06067/P/B06071/P/B06072/P public matrices cover repeat actions,
+  mandatory observers, named-state gating, non-targeting stun, and sequential
+  remove-count resolution.
+- B06076's omitted declared ability is appended as a3/index2; shipped a1/a2
+  occurrence identities remain stable. B06077/P-B06086/P public flows complete.
+- Target 43 and focused horizontal 411 tests pass. Full Vitest, ESLint,
+  smoke1000/baseline, and desktop/mobile human-vs-CPU Playwright pass.
+- Waves162-163 complete the remaining thirteen CT-P06 items across B06091,
+  B06092, B06093, B06095/P, B06098/P, B06103/P, B06105/P, and B06109/P.
 - Official sync drift remains separate: PR322 and changed B04018/B04018P/
   B06103P Q&A require re-queueing.
-- Remaining estimate: 54-115 working hours, center about 85 hours; roughly
-  34-74 implementation waves.
+- Remaining estimate: 52-112 working hours, center about 82 hours; roughly
+  32-72 implementation waves.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

@@ -1197,14 +1197,14 @@
     {
       "qaId": "card:B06060:2ca5b478df684d0944e74fceb7664125a59a6e2a239ae9323d3477e04506cf07",
       "answerHash": "4ae46b0be4b3c2aa5c895426ddad5338a81bd418b2a15dcb3c2f573ddfdfc4f1",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06060.ts:36"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/07-action-flow.md:10",
+        "rules:.claude/rules/11-reasoning.md:24",
+        "src:src/cards/ct-p06/B06060.ts:14",
+        "tests:tests/cards/official-qa/B06060-B06072-completion-public-wave160.test.ts:229"
       ]
     },
     {

@@ -1,83 +1,78 @@
-# Next Task: card-completion QA Waves160-161
+# Next Task: card-completion QA Waves162-163
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves158-159 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves160-161 commit.
 
 ## Completed
 
-- Wave158 finishes B06057 event-use observer exclusions/mandatory draw and
-  B06058 effective-LP0/reactivation-repeat rulings.
-- Wave159 finishes twelve public rulings across B06062/P-B06064/P for optional
-  leading targets, mandatory/no-host set behavior, short deck, rider stacking,
-  and face-up set leave timing.
-- All twelve items needed public tests/docs only; production source is unchanged.
-- Coverage is 1899 matched / 1065 test-missing / 2964 total; 943 exact groups
-  remain, including 821 singleton groups.
-- Fresh authority is 2257 printings and 2964 Q&A/zero conflict. PR322 remains
-  separate. Protected pnpm files remain untouched.
+- Wave160 certifies B06060/B06067/P/B06071/P/B06072/P across repeat actions,
+  mandatory multi-observers, named-state restrictions, non-targeting stun,
+  color-ignore use, and sequential remove-count branches.
+- Wave161 certifies B06076/B06077/P/B06085/P/B06086/P across declared timing,
+  action-end source presence, evidence/MR movement, and pre-guard flips.
+- B06076's omitted declared ability is repaired. The shipped a1/a2 physical
+  indices remain 0/1; appended a3 uses index 2 for old-save/replay safety.
+- Coverage is 1914 matched / 1050 test-missing / 2964 total. Remaining exact
+  groups are 931, including 812 singleton groups.
 
-## Throughput and gate contract
+## Throughput and gates
 
-- Batch complete cards; use separate matrices for unrelated semantics.
-- Per wave: grounded public proof and narrow QA merge.
-- Two-wave checkpoint: type/lint/QA/docs/diff, one commit, one push.
-- This is the scheduled ten-wave checkpoint. After Waves160-161, run full
-  functional Vitest, full ESLint, smoke1000/baseline, and desktop/mobile
-  human-vs-CPU Playwright even if production remains unchanged.
-- Certification-only work uses no agents. Production/T3 may reuse up to three
+- Batch complete cards; keep unrelated semantics in separate matrices.
+- Per wave: fresh grounding, public proof, narrow QA merge.
+- Per two waves: type/lint/QA/docs/diff, one commit, one push.
+- Full Vitest/ESLint/smoke/Playwright ran at Wave161. Do not repeat before
+  Wave170 unless a T3/security/save/public-UI change requires it.
+- Certification-only work uses no agents. Production/T3 may use at most three
   read-only reviewers.
 
 ## Start
 
-1. Read root/cards/tests AGENTS, conan-router, card-wave, and conan-verify.
-2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read the Waves158-159 session record, this prompt, and QA workflow.
-4. Re-run hash-only queue and fresh isolated authority validation.
+1. Read root/cards/tests/.claude AGENTS, conan-router, card-wave, conan-verify.
+2. Verify branch, HEAD/upstream, status, and protected pnpm files read-only.
+3. Read the Waves160-161 session record, this prompt, and QA workflow.
+4. Re-run the hash-only queue and a fresh isolated authority validation.
 5. Ground every physical printing before certification or repair.
 
-## Wave160: B06060, B06067/P, B06071/P, B06072/P
+## Wave162: six CT-P06 items
 
-- B06060 target: `2ca5b478df684d0944e74fceb7664125a59a6e2a239ae9323d3477e04506cf07`.
-  Certify reactivated YAIBA may reason/action again; its stunned result is matched.
-- B06067 targets: `216635e95c72a51ec62eae36e6d454a46acedc98cc0a2a21ba43330df5ea5cdc`
-  and `42704e74cdc71bbd20cccec5539d9b54f9235cd9a16e556a7bc2c6da0c4f8fda`.
-  Certify all physical observers fire mandatorily, plus self-selection; granting
-  active-target authority alone does not bypass same-turn named-state action ban.
-- B06071 target: `cb8dae30a14a64f9d6492d1cca938382df2537937250eb97dca078a642423626`.
-  Certify its all-sleeping stun is non-targeting and affects untargetable chars.
-- B06072 targets: `6fc795f4f30ade615b73f19c92634e279b3660340b23a3cdba5eeb034199985d`,
-  `f9a68a53b3f56507b27132d0bf80e22da4efe49d79c91138658d9a6fe43eebb2`,
-  `22be40f06dc558d4dde620e44fe198bf395c34480c4c217a4958a229a718d83e`.
-  Certify color-ignore hand/Next Hint use, the 14-or-less branch, and transition
-  into the 15-plus sequence after the low branch increases YAIBA remove count.
+- B06091 `100adbbed925b66fdcb792ff3aa4a483640f287338264fc5c064d46af6177788`:
+  certify its observer does not fire when B06091 itself guards an action that
+  selected another character or incident.
+- B06092 `b190d782f194602ebcc5f5fd6d94ccd7e5927e1acc2a87517b2038e4bbfcec6c`:
+  certify Cut-In remains legal on a non-Poirot character, grants AP+1000, and
+  draws no card.
+- B06093 `fd663a129833b5aca7792e25753f35394f7af3f2f622b2954c7aaf38224ce727`:
+  certify multiple active Misread bearers may apply to one reasoning action.
+- B06095/P `125282ef42997636595e79840f9671009a309cc99d36b0f0da406e3de9b044e4`:
+  certify the turn trait grant covers character cards in all eight defined
+  areas while excluding non-characters and the opponent.
+- B06098/P targets `78b84cb792d3783cc2b18d867f6652c605ce2650a2a6e5732aafea92c999e37f`
+  and `85038b630222e1a06910714245cc1b0963194173e2ed898fd0916ce95e7d3845`:
+  certify the source counts itself toward two Organization characters only
+  while on scene; its partner-area occurrence does not satisfy that count.
 
-## Wave161: B06076, B06077/P, B06085/P, B06086/P
+## Wave163: seven CT-P06 items
 
-- B06076 target: `2bcbc572704a40c4bd313efcdb48dc88426ff84922e2c41ac0fcde537aec79ab`.
-  Certify its declared ability is usable in incident phase; resolved condition
-  belongs only to the enter ability.
-- B06077 target: `65dd2c7e49e2adf37709417f08fbadb4f39726eb883e81d8d5c811220ad32722`.
-  Certify action-end ability still fires when the opposing contact character
-  leaves but B06077 itself remains.
-- B06085 targets: `d1c94c78592eadb05a3dffd93557a2e630046e03a30c05d4326e2b09a1664141`,
-  `1b0a91fc4f7f6848d183ec4bdbb062fb4d26144fe32b0459fe99f07ec54fcc64`,
-  `8b2afa65e94bc9030fd142d29d8351670cafb8e77bb5f4dbd3ddf286dc486e3b`.
-  Public declared flow: arbitrary evidence position/top insertion, MR scene-to-
-  evidence redirect into partner area, and independent 0..1 choices.
-- B06086 targets: `7e995814959f1317d5d3a0209d1a4fe2bdd07f8bce570f7d1491700501592010`,
-  `c84d7aad4528fd6d980afa11b31629dd80c57a9c461526f6b41e76abb0604128`,
-  `c609f7a1a0c521302172c1f974c7bd0f428812c87dbbe14e019da0d62c3a0c72`.
-  Certify pre-guard timing, mandatory available evidence flips with no AP bonus
-  unless both sides flip, and arbitrary face-down evidence positions.
+- B06103/P targets `06421f8b3e73fe7e22aaac43188049be0f09de4bd944b4069b0a1c84ffcd7102`,
+  `39f1c14b17c896de002441eedc381447fd981ccfbc3a113402954cf4b89f23d2`,
+  `dae02fc940ddff850db5b2535ec40ecb446e33833474a6114667f1fd14600790`:
+  certify the Gin use/entry ban across hand, Next Hint, and effect entry;
+  declaration remains usable while its enter step is suppressed, Cut-In and
+  Hirameki stay exempt, and the turn ban survives source departure.
+- B06105/P targets `cef19acafddb85d5e9ebc2616e6fb4f08209d73a51409805a085cd196de080e5`
+  and `ef8f1c5c8c1abdc6f70dd0cbdf073b3d8c558f5feeca4c12d99122b337875843`:
+  certify arbitrary exact-three own evidence payment and mandatory draw after
+  an opposing level-6-or-lower discard.
+- B06109/P targets `0344326f0d096542a20d08638ac7053181e88bdbe689d4c051caf0b6bac71225`
+  and `d0d507837dc0c22afe4230aae4e7bc09551a213d037f02ea876c29a982a8b289`:
+  certify hand/Next-Hint character restriction exceptions for effects, Cut-In,
+  Disguise, Hirameki, and events, plus its green-and-white incident identity.
 
-## Gate carry-forward
+## Carry-forward
 
-- Target public matrices: 2 files / 49 tests PASS.
-- Focused horizontal: 14 files / 251 tests PASS.
-- Both TypeScript projects, scoped ESLint, QA/docs/icon/card gates PASS.
-- Last broad gate: Waves154-155 full Vitest 1229 files /12920 tests,
-  smoke1000, full ESLint, desktop/mobile Playwright 2/2.
-
-## Estimate
-
-- Snapshot: 1065 remaining items / 943 exact groups; 821 singleton groups.
-- Remaining work: 54-115 hours, center about 85; roughly 34-74 waves.
+- Fresh authority: 2257 raw/TSV, 22 packages, duplicate 0, 2964 Q&A/conflict 0;
+  normalized hash `9a36b5d40860f10a6688bb34d6e52c143b7a996d5f3f561486c6384907b723ec`.
+- CT-P06 character SHA is `15eab04615778f7ce4c436924e5a8966b91d2f19499cfad9c07de35191ba7bd7`;
+  case SHA is `d8323f3f1948ca6ada5049cb7274c019c805242fcc5058b173ba9e85fcd112e6`.
+- PR322 and the known live-sync Q&A drift remain separate. Do not absorb them.
+- Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
+- Forecast: roughly 32-72 waves; 52-112 working hours, center about 82.
