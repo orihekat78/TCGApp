@@ -109,6 +109,7 @@ const CONDS = new Set([
   'enterCountAtMost',
   // engine additive (2026-06-29, B06046): setcard:enter payload の set card filter 評価
   'setCardMatches',
+  'setCardFaceIs',
   // engine additive wave-3 (2026-06-30, B09086): cutin:used 使用カットインの cardName/特徴 filter
   'triggerCutinMatches',
   // engine additive wave-4 (2026-07-01, B05087/B05088): remove:exit 離脱カードの filter 評価

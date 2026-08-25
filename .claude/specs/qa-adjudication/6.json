@@ -57,7 +57,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p01/B01095.ts:71",
-        "src:src/engine/mutate/scene.ts:753",
+        "src:src/engine/mutate/scene.ts:799",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:224"
       ]
     },
@@ -201,7 +201,7 @@
         "rules:.claude/rules/03-field-areas.md:37",
         "rules:.claude/rules/07-action-flow.md:16",
         "src:src/cards/ct-p02/B02083.ts:15",
-        "src:src/engine/mutate/scene.ts:763",
+        "src:src/engine/mutate/scene.ts:809",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:184",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:186",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:188",
@@ -276,7 +276,7 @@
         "rules:.claude/rules/16-card-set.md:33",
         "src:src/cards/ct-d08/D08021.ts:22",
         "src:src/cards/ct-p03/B03006.ts:6",
-        "src:src/engine/mutate/scene.ts:375",
+        "src:src/engine/mutate/scene.ts:393",
         "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:233",
         "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:234",
         "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:235"
@@ -734,7 +734,7 @@
         "rules:.claude/rules/20-color-and-switch.md:45",
         "src:src/cards/ct-p05/B05055.ts:13",
         "src:src/engine/effect/atom-handlers/scene.ts:520",
-        "src:src/engine/mutate/scene.ts:232",
+        "src:src/engine/mutate/scene.ts:240",
         "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:176",
         "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:228",
         "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:229",
@@ -814,7 +814,7 @@
         "rules:.claude/rules/25-qa-effects-resolution.md:53",
         "src:src/cards/ct-p05/B05090.ts:18",
         "src:src/engine/effect/atom-handlers/scene.ts:520",
-        "src:src/engine/mutate/scene.ts:232",
+        "src:src/engine/mutate/scene.ts:240",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:191",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:212",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:213",
@@ -1088,7 +1088,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06075.ts:48",
-        "src:src/engine/mutate/scene.ts:753",
+        "src:src/engine/mutate/scene.ts:799",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:194"
       ]
     },
@@ -1159,11 +1159,16 @@
     {
       "qaId": "card:B07034:d71b9e6c2babf72f5b2352e1ef9f8eee06ec0be26c9bd4ff573c08887a09f47b",
       "answerHash": "0081db3ff9b14538fdd9e710af1aef1f0660b0661d70bbf43e10491c83d9a1b6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07034.ts:77"
+        "src:src/cards/ct-p07/B07034.ts:28",
+        "tests:tests/cards/official-qa/B07031-B07039-completion-public-wave167.test.ts:607",
+        "tests:tests/cards/official-qa/B07031-B07039-completion-public-wave167.test.ts:608"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {
@@ -1220,7 +1225,7 @@
         "rules:.claude/rules/24-qa-naming-stun.md:49",
         "src:src/cards/ct-p07/B07088.ts:27",
         "src:src/engine/effect/atom-handlers/scene.ts:1340",
-        "src:src/engine/mutate/scene.ts:754",
+        "src:src/engine/mutate/scene.ts:800",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:266"
       ],
       "noteCodes": []
@@ -1646,7 +1651,7 @@
         "rules:.claude/rules/25-qa-effects-resolution.md:53",
         "src:src/cards/ct-p10/B10005.ts:17",
         "src:src/engine/effect/atom-handlers/scene.ts:520",
-        "src:src/engine/mutate/scene.ts:232",
+        "src:src/engine/mutate/scene.ts:240",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:191",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:212",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:213",
@@ -2241,7 +2246,7 @@
         "src:src/cards/pr-01/PR158.ts:23",
         "src:src/cards/pr-01/PR158.ts:25",
         "src:src/engine/flow/contact.ts:162",
-        "src:src/engine/listeners/triggered.ts:437",
+        "src:src/engine/listeners/triggered.ts:503",
         "tests:tests/cards/official-qa/f026-cutin-public.test.ts:377"
       ]
     },
@@ -2257,7 +2262,7 @@
         "src:src/cards/pr-01/PR164.ts:18",
         "src:src/cards/pr-01/PR164.ts:19",
         "src:src/engine/flow/contact.ts:162",
-        "src:src/engine/listeners/triggered.ts:437",
+        "src:src/engine/listeners/triggered.ts:503",
         "tests:tests/cards/official-qa/f026-cutin-public.test.ts:383"
       ],
       "noteCodes": []

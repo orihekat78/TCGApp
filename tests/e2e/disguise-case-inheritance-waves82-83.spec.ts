@@ -115,6 +115,30 @@ function buildB03050(gs: AnyState): void {
   gs.turn = { number: 33, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
 }
 
+function buildWave167B07033(gs: AnyState): void {
+  const makeChar = (cardId: string, uid: string, state: 'active' | 'sleep') => ({
+    cardId, uid, state, isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
+    setCards: [], stackedCards: [], keywordOverrides: { granted: [], disabledOriginal: false },
+    apOverride: null, lpOverride: null,
+    turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {},
+  });
+  const players = gs.players as { self: AnyState; opp: AnyState };
+  players.self.case = {
+    cardId: 'D08026', status: '事件編', requiredEvidence: 7,
+    colors: ['青'], declaredUseCount: {},
+  };
+  players.self.file = Array.from({ length: 6 }, () => ({ type: 'card-back', cardId: 'D08017' }));
+  players.self.hand = ['B07033'];
+  players.self.deck = ['D08009', 'D08010'];
+  players.self.scene = [makeChar('D08005', 'wave167-actor', 'active')];
+  players.self.remove = ['B07059'];
+  players.self.partnerAreaCards = Array.from({ length: 8 }, () => 'B07059');
+  players.opp.scene = [makeChar('D08006', 'wave167-target', 'sleep')];
+  players.opp.deck = ['D08009', 'D08010'];
+  gs.pendingEffects = [];
+  gs.turn = { number: 34, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+}
+
 async function startB03050FirstWindow(page: Page): Promise<string> {
   return page.evaluate(() => {
     const game = (window as unknown as {
@@ -245,6 +269,43 @@ test.describe('Waves82-83 disguise public UI', () => {
     expect(state.players.self.scene.some(card => card.uid === 'wave83-b03050-defender')).toBe(false);
     expect(state.players.self.evidence).toHaveLength(1);
     expect(state.players.opp.hand).toContain('D08017');
+    expectNoConsoleErrors(errors);
+  });
+
+  test('Wave167 B07033 FILE6 disguise appends a ninth Big Jewel through the visible picker', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await primeHuman(page);
+    await buildGameState(page, buildWave167B07033);
+
+    expect(await dispatchAction(page, {
+      type: 'actionDeclareChar', byUid: 'wave167-actor', targetUid: 'wave167-target',
+    })).toEqual({ ok: true });
+    const disguise = page.getByTestId('cid-disg-card:self:hand:B07033#0');
+    await expect(disguise).toBeVisible({ timeout: 5000 });
+    await disguise.click();
+
+    await expect(page.getByTestId('effect-picker-modal')).toBeVisible();
+    const jewelUid = await page.evaluate(() => {
+      const pending = (window as unknown as {
+        __game: { getState: () => { pendingEffectPick: { candidates: Array<{ uid: string; cardId: string }> } | null } };
+      }).__game.getState().pendingEffectPick;
+      return pending?.candidates.find(candidate => candidate.cardId === 'B07059')?.uid ?? null;
+    });
+    expect(jewelUid).not.toBeNull();
+    await page.getByTestId(`effect-pick-cand-${jewelUid}`).click();
+    await expect(page.getByTestId('effect-picker-modal')).toBeHidden();
+
+    const state = await getGameState(page) as unknown as {
+      players: { self: {
+        scene: Array<{ uid: string; cardId: string }>;
+        remove: string[];
+        partnerAreaCards: string[];
+      } };
+    };
+    expect(state.players.self.scene.find(card => card.uid === 'wave167-actor')?.cardId).toBe('B07033');
+    expect(state.players.self.partnerAreaCards).toHaveLength(9);
+    expect(state.players.self.partnerAreaCards.at(-1)).toBe('B07059');
+    expect(state.players.self.remove).not.toContain('B07059');
     expectNoConsoleErrors(errors);
   });
 });

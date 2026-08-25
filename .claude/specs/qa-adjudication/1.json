@@ -946,11 +946,21 @@
     {
       "qaId": "card:B07033:4006f5213020543decf5ce3d53690050881602191cb3ad0a24d14c026c39ab5d",
       "answerHash": "6935f98ef3e01b5c6670e17dca78c06027b5229e8447481b4050e496896a408b",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07033.ts:19"
+        "src:src/cards/ct-p07/B07033.ts:12",
+        "src:src/cards/ct-p07/B07033.ts:19",
+        "tests:tests/cards/official-qa/B07031-B07039-completion-public-wave167.test.ts:436",
+        "tests:tests/cards/official-qa/B07031-B07039-completion-public-wave167.test.ts:441",
+        "tests:tests/cards/official-qa/B07031-B07039-completion-public-wave167.test.ts:445",
+        "tests:tests/cards/official-qa/B07031-B07039-completion-public-wave167.test.ts:449",
+        "tests:tests/cards/official-qa/B07031-B07039-completion-public-wave167.test.ts:450",
+        "tests:tests/cards/official-qa/B07031-B07039-completion-public-wave167.test.ts:453"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {
@@ -1375,7 +1385,7 @@
         "src:src/engine/flow/contact.ts:162",
         "src:src/engine/flow/contact.ts:206",
         "src:src/engine/flow/contact.ts:217",
-        "src:src/engine/listeners/triggered.ts:439",
+        "src:src/engine/listeners/triggered.ts:505",
         "tests:tests/cards/official-qa/turn-conditioned-cutin-expansion-public.test.ts:176"
       ]
     },

@@ -133,7 +133,7 @@
         "rules:.claude/rules/17-icons.md:10",
         "src:src/cards/ct-p02/B02004.ts:27",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
-        "src:src/engine/listeners/triggered.ts:503",
+        "src:src/engine/listeners/triggered.ts:578",
         "tests:tests/cards/official-qa/effect-entry-action-public.test.ts:196"
       ]
     },
@@ -233,7 +233,7 @@
         "rules:.claude/rules/03-field-areas.md:35",
         "rules:.claude/rules/03-field-areas.md:37",
         "src:src/cards/ct-p02/B02057.ts:17",
-        "src:src/engine/mutate/scene.ts:763",
+        "src:src/engine/mutate/scene.ts:809",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:153",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:155",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:157",
@@ -438,7 +438,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p03/B03060.ts:1",
-        "src:src/engine/mutate/scene.ts:753",
+        "src:src/engine/mutate/scene.ts:799",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:230"
       ]
     },
@@ -1047,7 +1047,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06071.ts:47",
-        "src:src/engine/mutate/scene.ts:753",
+        "src:src/engine/mutate/scene.ts:799",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:193"
       ]
     },
@@ -1250,11 +1250,16 @@
     {
       "qaId": "card:B07017:077dd7a61a20a31e5929ca294e5fed39ecfd7fd9c913426e4dc297ce71780ae9",
       "answerHash": "fc9d2445b3834712106ad6326cf203d366ec53fcb7825cccab30b052371ae6a0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07017.ts:1"
+        "src:src/cards/ct-p07/B07017.ts:30",
+        "tests:tests/cards/official-qa/B07017-B07030-completion-public-wave166.test.ts:208",
+        "tests:tests/cards/official-qa/B07017-B07030-completion-public-wave166.test.ts:209"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {
@@ -1413,7 +1418,7 @@
         "rules:.claude/rules/22-qa-action-contact.md:34",
         "src:src/cards/ct-p08/B08038.ts:13",
         "src:src/cards/ct-p08/B08038P.ts:6",
-        "src:src/engine/listeners/triggered.ts:308",
+        "src:src/engine/listeners/triggered.ts:343",
         "tests:tests/cards/official-qa/contact-participant-public-wave94.test.ts:113",
         "tests:tests/cards/official-qa/contact-participant-public-wave94.test.ts:116",
         "tests:tests/cards/official-qa/contact-participant-public-wave94.test.ts:139",
@@ -1569,8 +1574,8 @@
         "rules:.claude/rules/26-qa-deck-refresh.md:37",
         "rules:.claude/rules/26-qa-deck-refresh.md:39",
         "src:src/cards/ct-p08/B08084.ts:15",
-        "src:src/engine/mutate/scene.ts:498",
-        "src:src/engine/mutate/scene.ts:511",
+        "src:src/engine/mutate/scene.ts:516",
+        "src:src/engine/mutate/scene.ts:529",
         "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:100",
         "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:131",
         "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:135",
@@ -1685,7 +1690,7 @@
         "src:src/cards/ct-p09/B09065.ts:47",
         "src:src/cards/ct-p09/B09065.ts:95",
         "src:src/engine/effect/atom-handlers/scene.ts:1340",
-        "src:src/engine/mutate/scene.ts:754",
+        "src:src/engine/mutate/scene.ts:800",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:335",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:347"
       ],
@@ -1925,7 +1930,7 @@
         "src:src/cards/ct-p10/B10032.ts:17",
         "src:src/engine/effect/apply-pick.ts:47",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
-        "src:src/engine/listeners/triggered.ts:503",
+        "src:src/engine/listeners/triggered.ts:578",
         "src:src/engine/resolve/stack.ts:229",
         "tests:tests/cards/official-qa/effect-entry-trigger-public-wave2.test.ts:175"
       ]
@@ -2417,7 +2422,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/pr-01/PR163.ts:1",
-        "src:src/engine/mutate/scene.ts:753",
+        "src:src/engine/mutate/scene.ts:799",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:206"
       ],
       "noteCodes": []

@@ -274,7 +274,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:14",
         "src:src/cards/ct-p03/B03002.ts:27",
-        "src:src/engine/listeners/triggered.ts:403",
+        "src:src/engine/listeners/triggered.ts:446",
         "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:186",
         "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:188"
       ]
@@ -597,7 +597,7 @@
         "rules:.claude/rules/25-qa-effects-resolution.md:53",
         "src:src/cards/ct-p04/B04046.ts:24",
         "src:src/engine/effect/atom-handlers/scene.ts:520",
-        "src:src/engine/mutate/scene.ts:232",
+        "src:src/engine/mutate/scene.ts:240",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:191",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:212",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:213",
@@ -747,7 +747,7 @@
         "src:src/cards/ct-p05/B05011.ts:18",
         "src:src/engine/flow/main/reasoning.ts:157",
         "src:src/engine/flow/main/reasoning.ts:322",
-        "src:src/engine/listeners/triggered.ts:85"
+        "src:src/engine/listeners/triggered.ts:89"
       ],
       "noteCodes": [
         "B05011-REASONING-DECLARE-TIMING-MISMATCH"
@@ -1058,7 +1058,7 @@
         "rules:.claude/rules/24-qa-naming-stun.md:49",
         "src:src/cards/ct-p06/B06058.ts:49",
         "src:src/engine/effect/atom-handlers/scene.ts:1340",
-        "src:src/engine/mutate/scene.ts:754",
+        "src:src/engine/mutate/scene.ts:800",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:167"
       ],
       "noteCodes": []
@@ -1701,7 +1701,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09082.ts:1",
-        "src:src/engine/mutate/scene.ts:753",
+        "src:src/engine/mutate/scene.ts:799",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:204"
       ],
       "noteCodes": []
@@ -1824,7 +1824,7 @@
         "rules:.claude/rules/25-qa-effects-resolution.md:53",
         "src:src/cards/ct-p10/B10023.ts:6",
         "src:src/engine/effect/atom-handlers/scene.ts:520",
-        "src:src/engine/mutate/scene.ts:232",
+        "src:src/engine/mutate/scene.ts:240",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:191",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:212",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:213",

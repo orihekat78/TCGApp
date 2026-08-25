@@ -587,7 +587,7 @@
         "src:src/cards/ct-p04/B04022P.ts:31",
         "src:src/engine/effect/apply-pick.ts:47",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
-        "src:src/engine/listeners/triggered.ts:503",
+        "src:src/engine/listeners/triggered.ts:578",
         "tests:tests/cards/official-qa/effect-entry-leave-public.test.ts:238"
       ]
     },
@@ -694,7 +694,7 @@
         "src:src/cards/ct-p04/B04080.ts:33",
         "src:src/cards/ct-p04/B04080.ts:49",
         "src:src/engine/effect/atom-handlers/scene.ts:1340",
-        "src:src/engine/mutate/scene.ts:754",
+        "src:src/engine/mutate/scene.ts:800",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:126"
       ],
       "noteCodes": []
@@ -1097,7 +1097,7 @@
         "rules:.claude/rules/24-qa-naming-stun.md:49",
         "src:src/cards/ct-p06/B06102.ts:50",
         "src:src/engine/effect/atom-handlers/scene.ts:1340",
-        "src:src/engine/mutate/scene.ts:754",
+        "src:src/engine/mutate/scene.ts:800",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:207"
       ],
       "noteCodes": []
@@ -1153,28 +1153,40 @@
         "rules:.claude/rules/17-icons.md:10",
         "src:src/cards/ct-p07/B07020.ts:43",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
-        "src:src/engine/listeners/triggered.ts:503",
+        "src:src/engine/listeners/triggered.ts:578",
         "tests:tests/cards/official-qa/effect-entry-declared-public.test.ts:208"
       ]
     },
     {
       "qaId": "card:B07024:fe57a813449ca122c4da650d6a548969360425c94dc6a81ea4ea72958d35145b",
       "answerHash": "63e4063dcea3fd08252e0243e243a3a51aa6d52e8bf416d012150361b79761c1",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07024.ts:25"
+        "src:src/cards/ct-p07/B07024.ts:17",
+        "tests:tests/cards/official-qa/B07017-B07030-completion-public-wave166.test.ts:308",
+        "tests:tests/cards/official-qa/B07017-B07030-completion-public-wave166.test.ts:309"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {
       "qaId": "card:B07030:0556066518d4d9fc09a46fdca9214b9875803910fa24c8f20cd448344bbbaa4d",
       "answerHash": "a2e515ff9635c999be447a3b567e1bfc7d36d592b4d211efe06ee8a7a5190ac2",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07030.ts:45"
+        "src:src/cards/ct-p07/B07030.ts:42",
+        "tests:tests/cards/official-qa/B07017-B07030-completion-public-wave166.test.ts:404",
+        "tests:tests/cards/official-qa/B07017-B07030-completion-public-wave166.test.ts:409",
+        "tests:tests/cards/official-qa/B07017-B07030-completion-public-wave166.test.ts:414",
+        "tests:tests/cards/official-qa/B07017-B07030-completion-public-wave166.test.ts:420"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {
@@ -1311,7 +1323,7 @@
         "src:src/engine/flow/contact.ts:162",
         "src:src/engine/flow/contact.ts:206",
         "src:src/engine/flow/contact.ts:217",
-        "src:src/engine/listeners/triggered.ts:439",
+        "src:src/engine/listeners/triggered.ts:505",
         "tests:tests/cards/official-qa/turn-conditioned-cutin-expansion-public.test.ts:158"
       ]
     },
@@ -1430,7 +1442,7 @@
         "src:src/cards/ct-p08/B08029.ts:33",
         "src:src/engine/effect/apply-pick.ts:47",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
-        "src:src/engine/listeners/triggered.ts:503",
+        "src:src/engine/listeners/triggered.ts:578",
         "src:src/engine/resolve/stack.ts:229",
         "tests:tests/cards/official-qa/effect-entry-trigger-order-public.test.ts:242"
       ]
@@ -1511,7 +1523,7 @@
         "rules:.claude/rules/24-qa-naming-stun.md:49",
         "src:src/cards/ct-p08/B08075.ts:38",
         "src:src/engine/effect/atom-handlers/scene.ts:1340",
-        "src:src/engine/mutate/scene.ts:754",
+        "src:src/engine/mutate/scene.ts:800",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:302"
       ],
       "noteCodes": []
@@ -1543,8 +1555,8 @@
         "rules:.claude/rules/26-qa-deck-refresh.md:37",
         "rules:.claude/rules/26-qa-deck-refresh.md:39",
         "src:src/cards/ct-p08/B08079.ts:34",
-        "src:src/engine/mutate/scene.ts:498",
-        "src:src/engine/mutate/scene.ts:511",
+        "src:src/engine/mutate/scene.ts:516",
+        "src:src/engine/mutate/scene.ts:529",
         "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:100",
         "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:131",
         "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:135",
@@ -1604,7 +1616,7 @@
         "rules:.claude/rules/24-qa-naming-stun.md:49",
         "src:src/cards/ct-p09/B09002.ts:115",
         "src:src/engine/effect/atom-handlers/scene.ts:1340",
-        "src:src/engine/mutate/scene.ts:754",
+        "src:src/engine/mutate/scene.ts:800",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:313"
       ],
       "noteCodes": []
@@ -2033,7 +2045,7 @@
         "src:src/cards/ct-p10/B10091.ts:24",
         "src:src/cards/ct-p10/B10091.ts:27",
         "src:src/engine/flow/contact.ts:162",
-        "src:src/engine/listeners/triggered.ts:437",
+        "src:src/engine/listeners/triggered.ts:503",
         "tests:tests/cards/official-qa/f026-cutin-public.test.ts:297",
         "tests:tests/cards/official-qa/f026-cutin-public.test.ts:319",
         "tests:tests/cards/official-qa/f026-cutin-public.test.ts:338",
@@ -2068,7 +2080,7 @@
         "src:src/cards/ct-p10/B10096.ts:50",
         "src:src/cards/ct-p10/B10096.ts:53",
         "src:src/engine/flow/contact.ts:162",
-        "src:src/engine/listeners/triggered.ts:437",
+        "src:src/engine/listeners/triggered.ts:503",
         "tests:tests/cards/official-qa/ctp10-opponent-turn-cutin-public.test.ts:208"
       ]
     },
@@ -2364,7 +2376,7 @@
         "rules:.claude/rules/03-field-areas.md:35",
         "rules:.claude/rules/03-field-areas.md:37",
         "src:src/cards/pr-01/PR060.ts:13",
-        "src:src/engine/mutate/scene.ts:763",
+        "src:src/engine/mutate/scene.ts:809",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:285",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:287",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:288",

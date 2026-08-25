@@ -13,20 +13,21 @@
 
 ## Next
 
-- Waves164-165 move nineteen items to matched. Coverage is 1947 matched / 1017
-  test-missing / 2964 total; about 901 exact groups remain, including 785
+- Waves166-167 move eighteen items to matched. Coverage is 1965 matched / 999
+  test-missing / 2964 total; about 884 exact groups remain, including 769
   singletons.
-- BUG-370 fixes parent/child decision order: an active pending pick permits only
-  exact physical/provenance authority or an explicit resume carrier to cross
-  the stack boundary. GameState/save/public API shapes are unchanged.
-- B07001/P/P2-B07015/P public matrices cover zero choices, owner orientation,
-  short-deck refresh, simultaneous entry, RPS repetition, and owner-order.
-- Full Vitest, full desktop/mobile Playwright, TypeScript, ESLint, smoke 1000,
-  QA merge/lint, and Sol engine review pass.
-- Waves166-167 batch eighteen CT-P07 items across B07017/P-B07039/P.
+- BUG-371 restores B07033/P/P2 FILE6 Disguise append-only. BUG-372 preserves
+  detached set-card observers across simultaneous batch removal without
+  persisting snapshots. BUG-373 limits B07034/P to face-down leaves.
+- B07017/P-B07039/P public matrices cover effect contacts, optional branches,
+  owner-only costs, no-target triggers, full-scene switch, and multiple observers.
+- Full Vitest, TypeScript, ESLint, smoke 1000, QA merge/lint, Sol review, and
+  targeted desktop/mobile B07033 Playwright pass. One unrelated B08054 full-suite
+  bootstrap timeout passed immediately in isolated rerun.
+- Waves168-169 batch eighteen CT-P07 items across B07043-B07056/P.
 - Official sync drift remains separate: PR322 and changed B04018/B04018P/
   B06103P Q&A require re-queueing.
-- Remaining estimate: 47-107 working hours, center about 77; roughly 28-68
-  implementation waves.
+- At nine exact groups per wave, the current queue is about 99 waves, ending near
+  Wave266; recalculate after every two-wave batch.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

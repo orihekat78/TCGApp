@@ -811,6 +811,10 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const cand: Candidate = { kind: 'char', uid: pl.setCardId, cardId: pl.setCardId, player: ctx.source.player };
       return matchOneFilter(state, pl.setCardId, cond.filter, null, cand);
     }
+    case 'setCardFaceIs': {
+      const pl = ctx.triggerPayload as { faceUp?: unknown } | undefined;
+      return typeof pl?.faceUp === 'boolean' && pl.faceUp === cond.faceUp;
+    }
     // engine additive wave-3 (2026-06-30): cutin:used payload の使用カットイン (cardId) を filter 評価 (B09086)。
     // setCardMatches と同式 — set card 同様 cutin カードは scene char ではないため matchOneFilter の char 引数は null。
     case 'triggerCutinMatches': {
@@ -1100,6 +1104,7 @@ const CONDITION_KIND_MAP = {
   selfSelectedByOwnMrThisTurn: true, // engine mega-wave W6 step6 (2026-07-04, r79): MR 選択追跡 (B08014)
   paMrColorCountMin: true, // engine mega-wave W6 step6 (2026-07-04, r79): PA-MR 色数 gate (B09047)
   setCardMatches: true, // engine additive (2026-06-29, B06046)
+  setCardFaceIs: true,
   triggerCutinMatches: true, // engine additive wave-3 (2026-06-30, B09086): cutin:used 使用cutin filter
   charTurnEffect: true, // Task D E4 (2026-06-12)
   triggerActionKind: true, // engine拡張 wave#2 cluster3 (2026-06-13)

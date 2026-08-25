@@ -22,14 +22,6 @@
 //     · effect = sequence[ charSetCard{uid:$self, fromDeckTop, faceUp:false} (デッキ上端を裏向きでこのキャラに),
 //                          sceneRemove{max:1, side:either, filter:levelMax7} (レベル7以下1枚まで、0枚可 rules/15) ]。
 //
-// known-gap (cluster9 design-review、本カード起因ではない engine 制約。DEFERRED-INDEX 記録):
-//   - FIX-3 「裏向き」filter: 全 charSetCard atom が faceUp:false = face-up set card は現状 0 枚のため、
-//     faceUp filter 無し (= 任意 set card 反応) は **vacuously 等価**。payload は faceUp を運ぶため、
-//     将来 face-up set card 追加時に matcherCondition 1 行で filter 追加可 (engine 変更不要)。
-//   - FIX-2 cross-char 同時離場の順序依存: engine は atomic な複数キャラ同時リムーブを持たず逐次。
-//     listener (このキャラ) が sibling より **先に** splice されると sibling の set card 離場では発火しない
-//     (self-leave 単体 / 1キャラ複数 set card は正)。leave:to-remove と同じ engine-wide 性質。
-
 import type { AbilityDef, CardDef } from '@/engine/types';
 
 // a1: 【事件赤魔術】【自分ターン中】【ターン2】自側キャラの (裏向き)セットカードが1枚離れるたび、1ドロー。
@@ -38,7 +30,16 @@ const a1: AbilityDef = {
   type: 'triggered',
   scope: 'on-scene',
   // 「自分の現場にいるキャラに…セットされているカードが離れるたび」= 自側 set card 離場 (triggerPlayerIs side:self)
-  trigger: { hook: 'setcard:leave', matcherCondition: { kind: 'triggerPlayerIs', side: 'self' } },
+  trigger: {
+    hook: 'setcard:leave',
+    matcherCondition: {
+      kind: 'and',
+      cs: [
+        { kind: 'triggerPlayerIs', side: 'self' },
+        { kind: 'setCardFaceIs', faceUp: false },
+      ],
+    },
+  },
   // 【事件赤魔術】(自分の事件が特徴[赤魔術]) + 【自分ターン中】
   condition: { kind: 'and', cs: [{ kind: 'caseTrait', trait: '赤魔術' }, { kind: 'turn', player: 'self' }] },
   limit: { kind: 'turn', n: 2 }, // 【ターン2】

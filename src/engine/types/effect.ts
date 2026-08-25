@@ -239,6 +239,8 @@ export type Condition =
   // 裏向きセット (faceUp!==true) は情報を持たない (rules/16) → 必ず false。set card は scene char では
   // ないため matchOneFilter の char 引数は null (CardDef の印字属性のみ評価)。
   | { kind: 'setCardMatches'; filter: TargetFilter }
+  // setcard:leave/enter payload の表裏を厳密に照合する。payload 欠落は false。
+  | { kind: 'setCardFaceIs'; faceUp: boolean }
   // engine additive wave-3 (2026-06-30): cutin:used payload の使用カットイン (cardId) を filter 評価。
   // 「(使用した)〚カード名/特徴〛のカットインのとき」(B09086 = [諸伏景光]/[長野県警] で分岐)。setCardMatches と
   // 同式で matchOneFilter の char 引数は null (CardDef 印字属性のみ)。triggerPlayerIs(側) との複合は and で書く。

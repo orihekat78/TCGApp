@@ -28,10 +28,18 @@ type DeferredSceneRemove = {
   byPlayer?: Player;
   leaveInterceptDecision?: LeaveInterceptDecision;
 };
+type SimultaneousSetCardObserver = {
+  player: Player;
+  uid: string;
+  cardId: string;
+  abilityIndices: number[];
+  declaredUseCount: SceneCharacter['declaredUseCount'];
+};
 type RemoveOpts = {
   noMrRedirect?: boolean;
   byPlayer?: Player;
   triggeredAuraAbilities?: AbilityDef[];
+  simultaneousSetCardObservers?: SimultaneousSetCardObserver[];
   leaveInterceptDecision?: LeaveInterceptDecision;
   skipSetCardReplacementInstanceIds?: string[];
   afterSceneRemove?: DeferredSceneRemove;
@@ -284,6 +292,7 @@ function emitSetCardLeave(
   player: Player,
   entry: SceneCharacter['setCards'][number],
   cause: string,
+  simultaneousSetCardObservers?: SimultaneousSetCardObserver[],
 ): void {
   event.emit(
     s,
@@ -296,13 +305,22 @@ function emitSetCardLeave(
       setCardInstanceId: entry.instanceId,
       faceUp: entry.faceUp,
       cause,
+      ...(simultaneousSetCardObservers ? { simultaneousSetCardObservers } : {}),
     },
     { player, uid: char.uid, cardId: char.cardId, setCardId: entry.cardId, setCardInstanceId: entry.instanceId },
   );
 }
 
-function emitSetCardLeaves(s: GameState, char: SceneCharacter, player: Player, cause: string): void {
-  for (const entry of char.setCards) emitSetCardLeave(s, char, player, entry, cause);
+function emitSetCardLeaves(
+  s: GameState,
+  char: SceneCharacter,
+  player: Player,
+  cause: string,
+  simultaneousSetCardObservers?: SimultaneousSetCardObserver[],
+): void {
+  for (const entry of char.setCards) {
+    emitSetCardLeave(s, char, player, entry, cause, simultaneousSetCardObservers);
+  }
 }
 
 /**
@@ -450,7 +468,7 @@ function removeToRemove(
       charMutator.replaceEligibleSetCardsBeforeHostLeaves(s, uid);
       const hSetCardsRemoved: string[] = char.setCards.map(e => e.cardId);
       addToRemove(s, player, hSetCardsRemoved);
-      emitSetCardLeaves(s, char, player, cause); // set-card 自身は正規に離れる (row9 risks(a))
+      emitSetCardLeaves(s, char, player, cause, opts?.simultaneousSetCardObservers); // set-card 自身は正規に離れる (row9 risks(a))
       const hStacked = moveStackedCardsToRemove(s, player, char);
       // hand.push は splice 成功時のみ (混成 review opus NIT: interceptor cost 除去の
       // 【現場リムーブ時】cascade が対象 char を先に除去した病的ケースで phantom 手札を作らない)
@@ -484,7 +502,7 @@ function removeToRemove(
   // rules/30: 現場6枚超過の修正処置 (misplay-overflow) はリムーブ発動能力 不発動 → 除外
   // (leave:to-remove と同一 posture)。
   if (cause !== 'misplay-overflow') {
-    emitSetCardLeaves(s, char, player, cause);
+    emitSetCardLeaves(s, char, player, cause, opts?.simultaneousSetCardObservers);
   }
 
   // stackedCards は保持中の実カードIDでリムーブ（旧count形式だけback-card）
@@ -584,6 +602,33 @@ function removeToRemoveBatch(
   if (uniqueUids.some((uid) => charMutator.wouldDeferSetCardReplacementForHostLeave(s, uid))) {
     throw new Error('unsupported-human-deferred-batch');
   }
+  // A simultaneous group snapshots printed setcard:leave observers before any
+  // member is spliced. The listener consumes this synchronously and strips it
+  // before queueing, so hidden set-card identities never persist in GameState.
+  const simultaneousSetCardObservers: SimultaneousSetCardObserver[] = [];
+  for (const player of ['self', 'opp'] as const) {
+    for (const char of s.players[player].scene) {
+      const originalDisabled = char.keywordOverrides?.disabledOriginal === true
+        || char.turnEffects?.['originalAbilitiesDisabled_turn'] === true;
+      if (originalDisabled) continue;
+      const abilityIndices = (def.card(char.cardId)?.abilities ?? []).flatMap((ability, abilityIndex) => (
+        ability.type === 'triggered'
+          && (ability.trigger?.hook === 'setcard:leave' || ability.trigger?.hooks?.includes('setcard:leave'))
+          && (ability.scope ?? 'on-scene') === 'on-scene'
+          ? [abilityIndex]
+          : []
+      ));
+      if (abilityIndices.length > 0) {
+        simultaneousSetCardObservers.push({
+          player,
+          uid: char.uid,
+          cardId: char.cardId,
+          abilityIndices,
+          declaredUseCount: { ...char.declaredUseCount },
+        });
+      }
+    }
+  }
   const auraByUid = new Map<string, AbilityDef[]>();
   for (const uid of uniqueUids) {
     const found = findChar(s, uid);
@@ -600,6 +645,7 @@ function removeToRemoveBatch(
     results.push(removeToRemove(s, uid, cause, byUid, {
       ...opts,
       triggeredAuraAbilities: auraByUid.get(uid),
+      simultaneousSetCardObservers,
     }));
   }
   return results;

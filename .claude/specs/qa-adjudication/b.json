@@ -1644,7 +1644,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09047.ts:1",
-        "src:src/engine/mutate/scene.ts:753",
+        "src:src/engine/mutate/scene.ts:799",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:202"
       ],
       "noteCodes": []
@@ -1696,7 +1696,7 @@
         "rules:.claude/rules/24-qa-naming-stun.md:49",
         "src:src/cards/ct-p09/B09070.ts:79",
         "src:src/engine/effect/atom-handlers/scene.ts:1340",
-        "src:src/engine/mutate/scene.ts:754",
+        "src:src/engine/mutate/scene.ts:800",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:359"
       ],
       "noteCodes": []
@@ -2374,7 +2374,7 @@
         "rules:.claude/rules/24-qa-naming-stun.md:49",
         "src:src/cards/pr-01/PR199.ts:85",
         "src:src/engine/effect/atom-handlers/scene.ts:1340",
-        "src:src/engine/mutate/scene.ts:754",
+        "src:src/engine/mutate/scene.ts:800",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:409"
       ],
       "noteCodes": []

@@ -16,4 +16,9 @@ const a2: AbilityDef = {
   ruleRefs: ['rules/03-field-areas.md', 'rules/09-cutin-disguise.md', 'rules/15-abilities-effects.md'],
 };
 const a0: AbilityDef = partnerColorKeyword({ color: '白', kw: '突撃', abilityId: 'a0' });
-export const B07033: CardDef = { id: 'B07033', no: '0762/B07033', kind: 'character', names: ['怪盗キッド'], colors: ['白'], level: 7, ap: 6000, lp: 1, traits: ['怪盗'], keywords: [], rarity: 'R', imageUrl: '1762413994222260.jpg', abilities: [a0, a1, a2], ruleRefs: ['rules/03-field-areas.md', 'rules/09-cutin-disguise.md', 'rules/13-keywords.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md'] };
+const a3: AbilityDef = {
+  id: 'a3', type: 'icon-disguise', condition: { kind: 'fileAtLeast', n: 6 },
+  description: '【変装】【FILE6】（コンタクト中のキャラと入れ替わって手札から出る。入れ替わったキャラはデッキの下に移す）',
+  ruleRefs: ['rules/09-cutin-disguise.md', 'rules/17-icons.md'],
+};
+export const B07033: CardDef = { id: 'B07033', no: '0762/B07033', kind: 'character', names: ['怪盗キッド'], colors: ['白'], level: 7, ap: 6000, lp: 1, traits: ['怪盗'], keywords: [], rarity: 'R', imageUrl: '1762413994222260.jpg', abilities: [a0, a1, a2, a3], ruleRefs: ['rules/03-field-areas.md', 'rules/09-cutin-disguise.md', 'rules/13-keywords.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md'] };

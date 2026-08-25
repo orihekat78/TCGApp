@@ -513,10 +513,10 @@
         "rules:.claude/rules/08-contact.md:39",
         "rules:.claude/rules/08-contact.md:42",
         "src:src/cards/ct-p04/B04091.ts:38",
-        "src:src/engine/cond/eval.ts:923",
         "src:src/engine/cond/eval.ts:927",
-        "src:src/engine/cond/eval.ts:932",
-        "src:src/engine/cond/eval.ts:934",
+        "src:src/engine/cond/eval.ts:931",
+        "src:src/engine/cond/eval.ts:936",
+        "src:src/engine/cond/eval.ts:938",
         "src:src/engine/effect/atom-handlers/scene.ts:1021",
         "src:src/engine/effect/atom-handlers/scene.ts:1024",
         "src:src/engine/effect/atom-handlers/scene.ts:1027",
@@ -1021,11 +1021,18 @@
     {
       "qaId": "card:B07031:48340448bd76e8a3eb79d6c85817dc581f1569c8e7e620277e9c61d82072cc94",
       "answerHash": "3f99fa1bbf596cbe5ec449f0a9e0f49f1a18a9200a3bc9b820dfb87ed2dc7dbf",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07031.ts:1"
+        "src:src/cards/ct-p07/B07031.ts:44",
+        "tests:tests/cards/official-qa/B07031-B07039-completion-public-wave167.test.ts:281",
+        "tests:tests/cards/official-qa/B07031-B07039-completion-public-wave167.test.ts:295",
+        "tests:tests/cards/official-qa/B07031-B07039-completion-public-wave167.test.ts:297",
+        "tests:tests/cards/official-qa/B07031-B07039-completion-public-wave167.test.ts:299"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {
@@ -1380,7 +1387,7 @@
         "src:src/engine/flow/contact.ts:162",
         "src:src/engine/flow/contact.ts:206",
         "src:src/engine/flow/contact.ts:217",
-        "src:src/engine/listeners/triggered.ts:439",
+        "src:src/engine/listeners/triggered.ts:505",
         "tests:tests/cards/official-qa/turn-conditioned-cutin-expansion-public.test.ts:179"
       ]
     },
@@ -1392,7 +1399,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09050.ts:1",
-        "src:src/engine/mutate/scene.ts:753",
+        "src:src/engine/mutate/scene.ts:799",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:203"
       ],
       "noteCodes": []
@@ -1710,7 +1717,7 @@
         "src:src/cards/ct-p10/B10087.ts:31",
         "src:src/cards/ct-p10/B10087.ts:34",
         "src:src/engine/flow/contact.ts:162",
-        "src:src/engine/listeners/triggered.ts:437",
+        "src:src/engine/listeners/triggered.ts:503",
         "tests:tests/cards/official-qa/ctp10-opponent-turn-cutin-public.test.ts:176"
       ]
     },
@@ -2176,7 +2183,7 @@
         "rules:.claude/rules/03-field-areas.md:35",
         "rules:.claude/rules/03-field-areas.md:37",
         "src:src/cards/pr-01/PR154.ts:13",
-        "src:src/engine/mutate/scene.ts:763",
+        "src:src/engine/mutate/scene.ts:809",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:285",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:287",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:288",
@@ -2193,7 +2200,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/pr-01/PR157.ts:87",
-        "src:src/engine/mutate/scene.ts:753",
+        "src:src/engine/mutate/scene.ts:799",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:205"
       ],
       "noteCodes": []

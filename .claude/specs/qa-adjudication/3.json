@@ -266,7 +266,7 @@
         "src:src/cards/ct-p02/B02066.ts:40",
         "src:src/engine/effect/apply-pick.ts:47",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
-        "src:src/engine/listeners/triggered.ts:503",
+        "src:src/engine/listeners/triggered.ts:578",
         "tests:tests/cards/official-qa/effect-entry-leave-public.test.ts:235"
       ]
     },
@@ -565,7 +565,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p04/B04030.ts:47",
-        "src:src/engine/mutate/scene.ts:753",
+        "src:src/engine/mutate/scene.ts:799",
         "tests:tests/cards/official-qa/leave-trigger-scene-target-public.test.ts:571"
       ],
       "noteCodes": []
@@ -688,10 +688,10 @@
         "rules:.claude/rules/08-contact.md:39",
         "rules:.claude/rules/08-contact.md:42",
         "src:src/cards/ct-p04/B04089.ts:45",
-        "src:src/engine/cond/eval.ts:923",
         "src:src/engine/cond/eval.ts:927",
-        "src:src/engine/cond/eval.ts:932",
-        "src:src/engine/cond/eval.ts:934",
+        "src:src/engine/cond/eval.ts:931",
+        "src:src/engine/cond/eval.ts:936",
+        "src:src/engine/cond/eval.ts:938",
         "src:src/engine/effect/atom-handlers/scene.ts:1021",
         "src:src/engine/effect/atom-handlers/scene.ts:1024",
         "src:src/engine/effect/atom-handlers/scene.ts:1027",
@@ -764,7 +764,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p05/B05032.ts:1",
-        "src:src/engine/mutate/scene.ts:753",
+        "src:src/engine/mutate/scene.ts:799",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:234"
       ]
     },
@@ -1646,7 +1646,7 @@
         "src:src/cards/ct-p09/B09025.ts:23",
         "src:src/cards/ct-p09/B09025.ts:26",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
-        "src:src/engine/listeners/triggered.ts:503",
+        "src:src/engine/listeners/triggered.ts:578",
         "tests:tests/cards/official-qa/effect-entry-declared-public.test.ts:240",
         "tests:tests/cards/official-qa/effect-entry-declared-public.test.ts:250"
       ]
@@ -1691,7 +1691,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09046.ts:1",
-        "src:src/engine/mutate/scene.ts:753",
+        "src:src/engine/mutate/scene.ts:799",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:201"
       ]
     },
@@ -1954,7 +1954,7 @@
         "rules:.claude/rules/24-qa-naming-stun.md:49",
         "src:src/cards/ct-p10/B10045.ts:7",
         "src:src/engine/effect/atom-handlers/scene.ts:1340",
-        "src:src/engine/mutate/scene.ts:754",
+        "src:src/engine/mutate/scene.ts:800",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:385"
       ],
       "noteCodes": []
@@ -1998,7 +1998,7 @@
         "src:src/engine/flow/contact.ts:162",
         "src:src/engine/flow/contact.ts:206",
         "src:src/engine/flow/contact.ts:217",
-        "src:src/engine/listeners/triggered.ts:439",
+        "src:src/engine/listeners/triggered.ts:505",
         "tests:tests/cards/official-qa/turn-conditioned-cutin-expansion-public.test.ts:202"
       ]
     },

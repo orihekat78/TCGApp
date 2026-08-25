@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6719
+- **ファイル数**: 6745
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -550,6 +550,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-367.md` — B03102 reasoning reaction timing
     - `BUG-368.md` — B05092 zero-selection shuffle
     - `BUG-369.md` — Human pre-guard action reconciliation
+    - `BUG-370.md` — Pending decision publication order
+    - `BUG-371.md` — B07033 FILE6 Disguise omission
+    - `BUG-372.md` — Simultaneous set-card observer loss
+    - `BUG-373.md` — B07034 face-down trigger gate
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -922,6 +926,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-18-qa-wave83-disguise-contract.md` — QA Wave83: certify disguise replacement contract
     - `2026-08-24-19-qa-wave84-full-scene-event-entry.md` — QA Wave84: certify full-scene event entry
     - `2026-08-24-20-qa-wave85-inherent-sleep-entry.md` — QA Wave85: fix and certify inherent sleep entry
+    - `2026-08-26-01-pending-decision-order.md`
+    - `2026-08-26-02-qa-waves166-167.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1675,6 +1681,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves98-99.md` — QA adjudication Waves98-99
     - `2026-08-26-qa-waves160-161.md` — QA adjudication Waves160-161
     - `2026-08-26-qa-waves162-163.md` — QA adjudication Waves162-163
+    - `2026-08-26-qa-waves164-165.md` — QA adjudication Waves164-165
+    - `2026-08-26-qa-waves166-167.md` — QA adjudication Waves166-167
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1918,16 +1926,30 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06105.md` — B06105 grounding
       - `B06109.md` — B06109 紅の修学旅行 grounding
       - `B07001.md` — B07001 / B07001P / B07001P2 grounding
-      - `B07008.md` — B07008 小嶋元太 grounding (2026-07-10, fable)
+      - `B07003.md` — B07003 / B07003P grounding
+      - `B07004.md` — B07004 / B07004P grounding
+      - `B07005.md` — B07005 grounding
+      - `B07008.md` — B07008 grounding
+      - `B07009.md` — B07009 / B07009P grounding
+      - `B07010.md` — B07010 grounding
+      - `B07011.md` — B07011 grounding
+      - `B07012.md` — B07012 / B07012P grounding
       - `B07013.md` — B07013 grounding
+      - `B07015.md` — B07015 / B07015P grounding
+      - `B07017.md` — B07017 / B07017P grounding
       - `B07020.md` — B07020 / B07020P grounding
       - `B07023.md` — B07023 / B07023P 光本兵我 grounding
+      - `B07024.md` — B07024 grounding
       - `B07030.md` — B07030 grounding
       - `B07030P.md` — grounding dossier: B07030P (自動生成 2026-07-13)
       - `B07030P2.md` — grounding dossier: B07030P2 (自動生成 2026-07-13)
+      - `B07031.md` — B07031 / B07031P grounding
       - `B07032.md` — B07032 / B07032P grounding
+      - `B07033.md` — B07033 / B07033P / B07033P2 grounding
+      - `B07034.md` — B07034 / B07034P grounding
       - `B07035.md` — B07035 古畑恵 grounding
       - `B07037.md` — B07037 grounding
+      - `B07039.md` — B07039 / B07039P grounding
       - `B07045.md` — B07045 セリザベス女王 grounding
       - `B07059.md` — B07059 grounding
       - `B07061.md` — B07061 grounding
@@ -5957,6 +5979,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06076-B06086-completion-public-wave161.test.ts` — qa: card:B06076:2bcbc572704a40c4bd313efcdb48dc88426ff84922e2c41ac0fcde537aec79ab
       - `B06091-B06098-completion-public-wave162.test.ts` — qa: card:B06091:100adbbed925b66fdcb792ff3aa4a483640f287338264fc5c064d46af6177788
       - `B06103-B06109-completion-public-wave163.test.ts` — qa: card:B06103:06421f8b3e73fe7e22aaac43188049be0f09de4bd944b4069b0a1c84ffcd7102
+      - `B07001-B07004-completion-public-wave164.test.ts` — qa: card:B07001:9008e450155fd9d8c51c93ed1ce6e7747a6d956514d5141c12b9e1499dee91e9
+      - `B07005-B07015-completion-public-wave165.test.ts` — qa: card:B07005:c596ae62d295a0df22c230a2cbc61a4567f85c825a50fd331245bee0fa8fa94c
+      - `B07017-B07030-completion-public-wave166.test.ts` — qa: card:B07017:077dd7a61a20a31e5929ca294e5fed39ecfd7fd9c913426e4dc297ce71780ae9
+      - `B07031-B07039-completion-public-wave167.test.ts` — qa: card:B07031:5a3bf6716303171e5a355286c8ea7863437a9946cab30a09b076210246f250d2
       - `B07066-declared-cost-optional.test.ts` — qa: card:B07066:939f5e30d9e32c8b233a160a6f70ebb932c71ce0971e6f66cfb3701d5fff76cd
       - `B07102-refresh-includes-removed.test.ts` — qaId=card:B07102:99f16dd6a248501c9d63a44dd85b2d6097ef720865e4181d1b451669f04b05d…
       - `B08049-completion-public-wave132.test.ts` — qa: card:B08049:190baa1e1f03afa7d9e83de8ff7b5f6134452bd6b3a05caf22783df26c2a9ea8
