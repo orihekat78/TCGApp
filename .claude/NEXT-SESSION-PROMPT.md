@@ -1,28 +1,28 @@
-# Next Task: card-completion QA Waves158-159
+# Next Task: card-completion QA Waves160-161
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves156-157 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves158-159 commit.
 
 ## Completed
 
-- Wave156 finishes B06049 entry-snapshot persistence and B06050/P Cut-In choice
-  plus off-turn no-op. The stale B06049 suppression DEFER is closed.
-- Wave157 finishes B06052 hand-paid re-entry/source switch and B06053/P forced
-  first-match/no-match whole-deck reveal behavior.
-- All eight items needed public tests/docs only; production source is unchanged.
-- Coverage is 1887 matched / 1077 test-missing / 2964 total; 954 exact groups
-  remain, including 831 singleton groups.
+- Wave158 finishes B06057 event-use observer exclusions/mandatory draw and
+  B06058 effective-LP0/reactivation-repeat rulings.
+- Wave159 finishes twelve public rulings across B06062/P-B06064/P for optional
+  leading targets, mandatory/no-host set behavior, short deck, rider stacking,
+  and face-up set leave timing.
+- All twelve items needed public tests/docs only; production source is unchanged.
+- Coverage is 1899 matched / 1065 test-missing / 2964 total; 943 exact groups
+  remain, including 821 singleton groups.
 - Fresh authority is 2257 printings and 2964 Q&A/zero conflict. PR322 remains
-  outside the tracked 2256-printing snapshot.
-- Protected pnpm files remain untouched.
+  separate. Protected pnpm files remain untouched.
 
-## Throughput contract
+## Throughput and gate contract
 
-- Batch complete cards while keeping unrelated semantics in separate matrices.
-- Per wave: grounded public proof and narrow QA merge only.
-- Two-wave checkpoint: one type/lint/QA/docs/diff gate, one commit, one push.
-- Waves154-155 ran fresh T3 broad gates. Waves156-157 were certification-only.
-- Do not repeat broad gates during Wave158. If Wave159 remains certification,
-  defer the scheduled ten-wave broad gate to the Wave160 checkpoint.
+- Batch complete cards; use separate matrices for unrelated semantics.
+- Per wave: grounded public proof and narrow QA merge.
+- Two-wave checkpoint: type/lint/QA/docs/diff, one commit, one push.
+- This is the scheduled ten-wave checkpoint. After Waves160-161, run full
+  functional Vitest, full ESLint, smoke1000/baseline, and desktop/mobile
+  human-vs-CPU Playwright even if production remains unchanged.
 - Certification-only work uses no agents. Production/T3 may reuse up to three
   read-only reviewers.
 
@@ -30,51 +30,54 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves156-157 commit.
 
 1. Read root/cards/tests AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read the Waves156-157 session record, this prompt, and QA workflow.
+3. Read the Waves158-159 session record, this prompt, and QA workflow.
 4. Re-run hash-only queue and fresh isolated authority validation.
-5. Ground every physical printing before deciding certification versus repair.
+5. Ground every physical printing before certification or repair.
 
-## Wave158: complete B06057 and B06058
+## Wave160: B06060, B06067/P, B06071/P, B06072/P
 
-- B06057 target IDs:
-  `9cf96476126c1e8f61997b00d847da85ab81c2d0e6281421a481b755b35ea73e`
-  and `6ef75028554fc17862ec6d9114267258f52ac2a1d278a1c7fb0e61edc0d1d265`.
-- Certify that white YAIBA Cut-In/Hirameki use does not trigger its event-use
-  observer, while a qualifying ordinary event use mandates the draw.
-- The same-card multi-source/Turn1 item is already matched.
-- B06058 target IDs:
-  `6881f15695286303edf5b552916dd1faca5e8acc0930bbfc54bd149171acded3`
-  and `b0f3eacc47c4c656dfb430f1965f826fcdbdad6f064df0c1803663d0a16f2761`.
-- Certify target LP at resolution time, including modified positive/negative LP,
-  and that a reactivated character may reason/action again when otherwise legal.
-- Its stunned-activation item is already matched.
+- B06060 target: `2ca5b478df684d0944e74fceb7664125a59a6e2a239ae9323d3477e04506cf07`.
+  Certify reactivated YAIBA may reason/action again; its stunned result is matched.
+- B06067 targets: `216635e95c72a51ec62eae36e6d454a46acedc98cc0a2a21ba43330df5ea5cdc`
+  and `42704e74cdc71bbd20cccec5539d9b54f9235cd9a16e556a7bc2c6da0c4f8fda`.
+  Certify all physical observers fire mandatorily, plus self-selection; granting
+  active-target authority alone does not bypass same-turn named-state action ban.
+- B06071 target: `cb8dae30a14a64f9d6492d1cca938382df2537937250eb97dca078a642423626`.
+  Certify its all-sleeping stun is non-targeting and affects untargetable chars.
+- B06072 targets: `6fc795f4f30ade615b73f19c92634e279b3660340b23a3cdba5eeb034199985d`,
+  `f9a68a53b3f56507b27132d0bf80e22da4efe49d79c91138658d9a6fe43eebb2`,
+  `22be40f06dc558d4dde620e44fe198bf395c34480c4c217a4958a229a718d83e`.
+  Certify color-ignore hand/Next Hint use, the 14-or-less branch, and transition
+  into the 15-plus sequence after the low branch increases YAIBA remove count.
 
-## Wave159: complete B06062/P, B06063/P, and B06064/P
+## Wave161: B06076, B06077/P, B06085/P, B06086/P
 
-- B06062 target IDs: `0006b174016834d6e10769372f487ca740771f9f2b3e55d0e6b52a5c209b5c43`,
-  `3dcf957ce25b0100aab930e1cebdfa5824f5183eeddce6011d5699be765a5abf`,
-  `a7cc984fb0e3691d53ce48afdd3ec2c50043b1d60db08868a02838de17cad3d9`.
-- B06063 target IDs: `34f593b081269e7230603c6ba41bfb30204234c76224753da06ad06d4b837741`,
-  `3dcf957ce25b0100aab930e1cebdfa5824f5183eeddce6011d5699be765a5abf`,
-  `93d5ba8c720b073b1770d6a26e5c3009e28b78112854e92e612b7fd29ac9ec3d`.
-- B06064 target IDs: `3dcf957ce25b0100aab930e1cebdfa5824f5183eeddce6011d5699be765a5abf`
-  and `9b6d433b1185b735c64098d872b9750e01d22ef63df05b842c3b6da49181e104`.
-- Share one public set-event matrix: optional leading target may be zero; no-host
-  use remains legal; a valid host makes setting mandatory; Base/P are twins.
-- Add card-specific tails: B06062 short-deck mill/refresh, B06063 two-copy AP
-  stacking, and B06064 face-up set leave timing. Already-matched set lifecycle,
-  face-down no-trigger, and entrant-trigger items must remain green.
+- B06076 target: `2bcbc572704a40c4bd313efcdb48dc88426ff84922e2c41ac0fcde537aec79ab`.
+  Certify its declared ability is usable in incident phase; resolved condition
+  belongs only to the enter ability.
+- B06077 target: `65dd2c7e49e2adf37709417f08fbadb4f39726eb883e81d8d5c811220ad32722`.
+  Certify action-end ability still fires when the opposing contact character
+  leaves but B06077 itself remains.
+- B06085 targets: `d1c94c78592eadb05a3dffd93557a2e630046e03a30c05d4326e2b09a1664141`,
+  `1b0a91fc4f7f6848d183ec4bdbb062fb4d26144fe32b0459fe99f07ec54fcc64`,
+  `8b2afa65e94bc9030fd142d29d8351670cafb8e77bb5f4dbd3ddf286dc486e3b`.
+  Public declared flow: arbitrary evidence position/top insertion, MR scene-to-
+  evidence redirect into partner area, and independent 0..1 choices.
+- B06086 targets: `7e995814959f1317d5d3a0209d1a4fe2bdd07f8bce570f7d1491700501592010`,
+  `c84d7aad4528fd6d980afa11b31629dd80c57a9c461526f6b41e76abb0604128`,
+  `c609f7a1a0c521302172c1f974c7bd0f428812c87dbbe14e019da0d62c3a0c72`.
+  Certify pre-guard timing, mandatory available evidence flips with no AP bonus
+  unless both sides flip, and arbitrary face-down evidence positions.
 
 ## Gate carry-forward
 
-- Target public matrices: 2 files / 24 tests PASS.
-- Focused horizontal: 11 files / 183 tests PASS.
+- Target public matrices: 2 files / 49 tests PASS.
+- Focused horizontal: 14 files / 251 tests PASS.
 - Both TypeScript projects, scoped ESLint, QA/docs/icon/card gates PASS.
-- Last broad gate remains Waves154-155: full Vitest 1229 files /12920 tests,
+- Last broad gate: Waves154-155 full Vitest 1229 files /12920 tests,
   smoke1000, full ESLint, desktop/mobile Playwright 2/2.
 
 ## Estimate
 
-- Snapshot: 1077 remaining items / 954 exact groups; 831 singleton groups.
-- Remaining QA work: 56-117 working hours; center about 87 hours.
-- Risk-aware batching forecast: roughly 36-76 implementation waves.
+- Snapshot: 1065 remaining items / 943 exact groups; 821 singleton groups.
+- Remaining work: 54-115 hours, center about 85; roughly 34-74 waves.

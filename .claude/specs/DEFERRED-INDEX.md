@@ -1365,8 +1365,8 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | ID | blocker 要旨 |
 |---|---|
 | B06012 | set event の「このイベントをリムーブしてもよい→登場」= 特定 set card 自己除去 verb 不在 (removeOneSetCard は末尾 pop のみ) |
-| B06047 | a2出荷済。a1 filtered cross-hand level auraのみ継続DEFER |
-| B06064 | (同上) |
+| ~~B06047~~ | ✅ Wave155でfiltered cross-hand `handLevelAura`出荷。a2 set-trigger entryと合わせ全Q&A完了。 |
+| ~~B06064~~ | ✅ set event exact self-leave/host-leave listenerを出荷済み。Wave159でno-host/mandatory setと両leave経路をpublic証明。 |
 | B07033 | (同上) |
 | B09113 | (同上) |
 | B09067 | VERIFY_NG: bound-conditional (unstable if) の両枝に Pattern-A pick — BUG-161 pre-walk 過剰 queue hazard。短縮形化 or conditionIfIsStable 拡張後に再 author |
