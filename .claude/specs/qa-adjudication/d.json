@@ -2265,15 +2265,38 @@
     {
       "qaId": "card:D06003:4b3b3a6e577fa931249ccf431fb14ab9eeff47a1db16ec003d96edbf2af044dc",
       "answerHash": "b266e93764f8203e56a49d78836a15a2fd50a14d01ad2d10c1d7f894b05c474e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-d06/D06003.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
+        "rules:.claude/rules/09-cutin-disguise.md:17",
+        "rules:.claude/rules/09-cutin-disguise.md:9",
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-d06/D06003.ts:47",
+        "src:src/cards/ct-d06/D06003.ts:48",
+        "src:src/engine/read/keyword.ts:34",
+        "src:src/engine/read/keyword.ts:36",
+        "src:src/engine/target/candidates.ts:863",
+        "src:src/engine/target/candidates.ts:873",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:106",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:107",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:108",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:109",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:110",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:111",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:112",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:115",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:116",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:117",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:118",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:119",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:120",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:129",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:130",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:131",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:139",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:140",
+        "tests:tests/cards/official-qa/cutin-ap-text-filter-public-wave120.test.ts:141"
       ]
     },
     {

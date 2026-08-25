@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6629
+- **ファイル数**: 6632
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1640,6 +1640,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves114-115.md` — QA adjudication Waves114-115
     - `2026-08-25-qa-waves116-117.md` — QA adjudication Waves116-117
     - `2026-08-25-qa-waves118-119.md` — QA adjudication Waves118-119
+    - `2026-08-25-qa-waves120-121.md` — QA adjudication Waves120-121
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -5911,6 +5912,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `contact-participant-public-wave94.test.ts` — qa: card:B08038:64b0dfa40059e5ed0dddfd2e25c4185a31f5b45ddba7798437a0e7508255c179
       - `ct-p10-original-ability-rules.test.ts` — qa: card:B10050:98e82fae32a43d9b6de8c7fd8289dcf4565f2dada1498f0760f5ba9d0cf8ae17
       - `ctp10-opponent-turn-cutin-public.test.ts` — qa: card:B10017:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
+      - `cutin-ap-text-filter-public-wave120.test.ts` — qa: card:D06003:4b3b3a6e577fa931249ccf431fb14ab9eeff47a1db16ec003d96edbf2af044dc
       - `cutin-ineffective-observer-public-wave112.test.ts` — qa: card:B03112:ee9ce331a55bc2711aef71d24e94f8cd4cad8c33b1ec5e49f98bad15b291ad43
       - `decision-persistence-wave23.test.ts` — qa: card:B03080:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
       - `deck-look-bottom-family-public.test.ts` — qa: card:B01013:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5
@@ -5952,6 +5954,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `evidence-position-public-wave67.test.ts` — qa: card:B06013:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a
       - `f026-cutin-public.test.ts` — qa: card:B08085:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
       - `face-down-set-hidden-public-wave62.test.ts` — qa: card:B08033:d52596199be14d625d7776309eeaca145097a31eecca550237262ad7075cb2f4
+      - `face-down-set-move-private-public-wave121.test.ts` — qa: card:B10007:c93226a2bebd7c4a5a21e373534e75faba33cbe2ec6c147a0d4b0d4a745cec10
       - `file-assist-action-public-wave40.test.ts` — qa: card:B04068:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
       - `file-assist-continuous-public-wave38.test.ts` — qa: card:B02063:cbce41c9b0c72cca046ffb06c2b4ff9c3af679af4bcfb692fac12dc0b5998a23
       - `file-assist-declared-public-wave41.test.ts` — qa: card:B08056:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b

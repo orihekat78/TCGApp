@@ -1519,15 +1519,36 @@
     {
       "qaId": "card:B10007:c93226a2bebd7c4a5a21e373534e75faba33cbe2ec6c147a0d4b0d4a745cec10",
       "answerHash": "bc06b45c77b553b94d7406a9e439b81183696c446e50547af0d7ca1748470faf",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:14",
-        "src:src/cards/ct-p10/B10007.ts:26"
-      ],
-      "noteCodes": [
-        "IMPLEMENTED-CARD-TEST-MISSING"
+        "rules:.claude/rules/16-card-set.md:19",
+        "src:src/cards/ct-p10/B10007.ts:16",
+        "src:src/cards/ct-p10/B10007.ts:36",
+        "src:src/cards/ct-p10/B10007.ts:7",
+        "src:src/ui/services/replayViewerProjection.ts:151",
+        "src:src/ui/services/replayViewerProjection.ts:156",
+        "src:src/ui/services/replayViewerProjection.ts:186",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:117",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:120",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:121",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:122",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:145",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:150",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:154",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:155",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:161",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:166",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:170",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:171",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:175",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:176",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:178",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:180",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:182",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:77",
+        "tests:tests/cards/official-qa/face-down-set-move-private-public-wave121.test.ts:79"
       ]
     },
     {

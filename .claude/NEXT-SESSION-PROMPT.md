@@ -1,17 +1,17 @@
-# Next Task: batched QA adjudication Waves120-121
+# Next Task: batched QA adjudication Waves122-123
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves118-119 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves120-121 commit.
 
 ## Completed
 
-- Wave118 certifies B04089/P, B04091/P, and B04094/P trigger after owner-effect
-  opposing removal but never after contact, across both owners and all outcomes.
-- Wave119 certifies choosing exactly one across B04027/P, B04042/P, and B04084,
-  with zero/max/aggregate rejection and B04084 continuation cleanup.
-- Coverage is 1715 matched / 1249 test-missing / 2964 total.
+- Wave120 certifies D06003/D06004/D06021 retrieve only effective AP-plus Cut-In
+  text from the owner remove area, with both-owner and decoy controls.
+- Wave121 certifies B10007/P, B10012/P, and B10013/P keep face-down set identity
+  hidden on entry and opaque movement for both owners.
+- Coverage is 1721 matched / 1243 test-missing / 2964 total.
 - Fresh isolated authority remains 2964 Q&A / zero conflicts.
 - Protected `pnpm-lock.yaml`, `pnpm-workspace.yaml`, and live cards-data remain
-  untouched. Full evidence is in the Waves118-119 session record.
+  untouched. Full evidence is in the Waves120-121 session record.
 
 ## Throughput contract
 
@@ -30,26 +30,27 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves118-119 commit.
 
 1. Read root/nested AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read `.claude/sessions/2026-08-25-qa-waves118-119.md`, this prompt, and the
+3. Read `.claude/sessions/2026-08-25-qa-waves120-121.md`, this prompt, and the
    current QA trace/workflow.
 4. Re-run the hash-only queue. Revalidate the isolated authority root and
    never modify live `.claude/specs/cards-data`.
 
-## Wave120 seed
+## Wave122 seed
 
-- Exact tuple: section `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
-  Q `ec46e0d5d240618fe1ff0da6bf613a4112a59cbcb2fe387b300d410e6088cb16`,
-  A `b266e93764f8203e56a49d78836a15a2fd50a14d01ad2d10c1d7f894b05c474e`.
-- Missing exact-group members: D06003, D06004, D06021.
-- Ground all three members before changing adjudication.
+- Exact tuple: section `f414b60e12d2ea28b6dccfbe327a56a72e8c2db37fa11cb57994e0e081fc3fea`,
+  Q `26e51a9ee5be1b007c21ca690657250a977b14b2d3ad31039b36d9b2c75b12cf`,
+  A `aedd1fae8cb5d370350b8c5d65d957a9153744872951b43f93124ba8a5aa1d38`.
+- Missing exact-group members: B09028, B09054, B10016.
+- Ground all three members and the adjacent exact tuples before adjudication.
 
-## Wave121 seed
+## Wave123 seed
 
-- Exact tuple: section `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
-  Q `f70dca6d863c38348fdcedfafa0431d49b150f39c4ad5f90e4dd2d9b641db2d6`,
-  A `bc06b45c77b553b94d7406a9e439b81183696c446e50547af0d7ca1748470faf`.
-- Missing exact-group members: B10007, B10012, B10013.
-- Ground all three members before changing adjudication.
+- Exact tuple: section `f414b60e12d2ea28b6dccfbe327a56a72e8c2db37fa11cb57994e0e081fc3fea`,
+  Q `4506935e0a047963a823e70eb8b354d376b6843e15d6475425bcd130b54a4629`,
+  A `73a6f00663f191761324ed9f7ff894295dbebe8b28371c1db514b6e292884657`.
+- Missing exact-group members: B09028, B09054, B10016.
+- Keep it separate from the two later same-card tuples unless exact hashes and
+  semantics are independently grounded.
 
 ## Gate carry-forward
 
@@ -59,5 +60,5 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves118-119 commit.
 
 ## Estimate
 
-- Snapshot: 1249 remaining items / 1096 exact groups; 949 groups are singleton.
-- Remaining QA work: 74-140 working hours; center estimate about 108 hours.
+- Snapshot: 1243 remaining items / 1094 exact groups; 949 groups are singleton.
+- Remaining QA work: 74-139 working hours; center estimate about 107 hours.
