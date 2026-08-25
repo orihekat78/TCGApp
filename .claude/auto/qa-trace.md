@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-qa-trace.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:qa-trace`
-> Source hash: `656d5661a0a2`
+> Source hash: `5aaa81cc0a4e`
 
 Tracked Q&A identifiers and digests only. Official question and answer bodies are intentionally excluded.
 
@@ -20,8 +20,8 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 ## Coverage classification
 
 - total: 2964
-- matched: 1757
-- test-missing: 1207
+- matched: 1769
+- test-missing: 1195
 - legacy-unreviewed: 0
 - unmapped: 0
 - mismatch: 0
@@ -1107,14 +1107,14 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 | `card:B06018:7124f41d3267d0e2df2692070acfdd9e66fca11edbbbfb6b64ada8bee4c94b79` | `B06018` | `B06018`, `B06018P` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B06018:9b784e18994d29858b6b12d02bf7ddc0e040914733a510db8aca6110febbb969` | `B06018` | `B06018`, `B06018P` | shipped | matched | aligned | 1 | 13 |
 | `card:B06020:18dc36e2487fedc4cef7e629c1b85051a004933ae443c524e4caf4670ce0ae0f` | `B06020` | `B06020` | shipped | matched | aligned | 1 | 1 |
-| `card:B06020:19859600f0b7fb132d4bc3da0e2c962fc9d85cb1c626d221e15e78f42f2a4c88` | `B06020` | `B06020` | shipped | test-missing | test-gap | 1 | 0 |
+| `card:B06020:19859600f0b7fb132d4bc3da0e2c962fc9d85cb1c626d221e15e78f42f2a4c88` | `B06020` | `B06020` | shipped | matched | aligned | 2 | 6 |
 | `card:B06020:1a92dcdf67120f7d76c881aa12661add73fc79ad2cefe30d1e4fbda6978a4758` | `B06020` | `B06020` | shipped | matched | aligned | 3 | 16 |
-| `card:B06020:719ad960d0dfbc9c6146b9e1f646c60a4f1b85e4fbf634d711643b71c7f8f4e0` | `B06020` | `B06020` | shipped | test-missing | test-gap | 1 | 0 |
+| `card:B06020:719ad960d0dfbc9c6146b9e1f646c60a4f1b85e4fbf634d711643b71c7f8f4e0` | `B06020` | `B06020` | shipped | matched | aligned | 1 | 3 |
 | `card:B06020:84ecdea6c10bc908728749deacc797a85529c42aef7daa60ffe67827bc5ce34f` | `B06020` | `B06020` | shipped | matched | aligned | 1 | 5 |
-| `card:B06020:87ca22fac9069dba0ae35a8316c041f1929afc422da2a7ecd4c6938cc50c0ff5` | `B06020` | `B06020` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:B06020:b50a8af517a68c456a51613c3b05839873884ae9861897261010e179a7625ade` | `B06020` | `B06020` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:B06020:d382a7fc6e4702740cff1f11bd9d38e1f26b60b01597860ee5b20cfae1c5b1d0` | `B06020` | `B06020` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:B06020:d3b7730aa0d24dcbd34fa32b3419352d1238d398c3f73d60ca2d4f1125207a8c` | `B06020` | `B06020` | shipped | test-missing | test-gap | 1 | 0 |
+| `card:B06020:87ca22fac9069dba0ae35a8316c041f1929afc422da2a7ecd4c6938cc50c0ff5` | `B06020` | `B06020` | shipped | matched | aligned | 1 | 4 |
+| `card:B06020:b50a8af517a68c456a51613c3b05839873884ae9861897261010e179a7625ade` | `B06020` | `B06020` | shipped | matched | aligned | 1 | 3 |
+| `card:B06020:d382a7fc6e4702740cff1f11bd9d38e1f26b60b01597860ee5b20cfae1c5b1d0` | `B06020` | `B06020` | shipped | matched | aligned | 1 | 3 |
+| `card:B06020:d3b7730aa0d24dcbd34fa32b3419352d1238d398c3f73d60ca2d4f1125207a8c` | `B06020` | `B06020` | shipped | matched | aligned | 1 | 8 |
 | `card:B06021:dbd263c01fd82009a9183c98060a919ce66f7ae8ccb9ffb6afdfd2ff8e8aac89` | `B06021` | `B06021`, `B06021P` | shipped | matched | aligned | 1 | 1 |
 | `card:B06023:0025cb3b7aecab7dca31296259c4dca893915c9eb6eecce256504c10d3ebd07d` | `B06023` | `B06023` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B06023:30a7759896adeb54b8229a3083eb1615ae39b079a34bba004f00f993c0a898c9` | `B06023` | `B06023` | shipped | test-missing | test-gap | 1 | 0 |
@@ -1250,14 +1250,14 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 | `card:B06072:9b784e18994d29858b6b12d02bf7ddc0e040914733a510db8aca6110febbb969` | `B06072` | `B06072`, `B06072P` | shipped | matched | aligned | 4 | 18 |
 | `card:B06072:f9a68a53b3f56507b27132d0bf80e22da4efe49d79c91138658d9a6fe43eebb2` | `B06072` | `B06072`, `B06072P` | shipped | test-missing | test-gap | 1 | 0 |
 | `card:B06074:235a009a9c6df00bd13465dbf1c777e425d5f871b9a9a5ca4d7c5bf38aecc821` | `B06074` | `B06074`, `B06074P` | shipped | matched | aligned | 1 | 2 |
-| `card:B06074:2e622a225c9c5743d9f4eba3865e40ddb799ad15a2800aca084ac672a33c6b74` | `B06074` | `B06074`, `B06074P` | shipped | test-missing | test-gap | 1 | 0 |
+| `card:B06074:2e622a225c9c5743d9f4eba3865e40ddb799ad15a2800aca084ac672a33c6b74` | `B06074` | `B06074`, `B06074P` | shipped | matched | aligned | 3 | 10 |
 | `card:B06074:380717ada1c87998940617c779095a769ab2293d76f781d461a0b31f080e0b8b` | `B06074` | `B06074`, `B06074P` | shipped | matched | aligned | 1 | 2 |
-| `card:B06074:4bcf1ca2a52482ef58f2a9bbf780fb11cb5c7446289c8c9e24f7d63bb485e566` | `B06074` | `B06074`, `B06074P` | shipped | test-missing | test-gap | 1 | 0 |
+| `card:B06074:4bcf1ca2a52482ef58f2a9bbf780fb11cb5c7446289c8c9e24f7d63bb485e566` | `B06074` | `B06074`, `B06074P` | shipped | matched | aligned | 3 | 6 |
 | `card:B06074:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f` | `B06074` | `B06074`, `B06074P` | shipped | matched | aligned | 1 | 2 |
-| `card:B06074:ae7f52880f245b79ea26502eaca624f082c7777854d029f9cd6ca7c88b4fb8b4` | `B06074` | `B06074`, `B06074P` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:B06074:b62596e6ff613c1c30c1e092ac56acbc9b611d0d1fc15172d89829fe1241e765` | `B06074` | `B06074`, `B06074P` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:B06074:d3026efd67f9c4e87f3a732bbbf9f3314a413f135e7b6f725d3d129dc7046b94` | `B06074` | `B06074`, `B06074P` | shipped | test-missing | test-gap | 1 | 0 |
-| `card:B06074:e6ce2b727de130ad39777e7e31ada341fdac65e6c96f16755b304794c642328e` | `B06074` | `B06074`, `B06074P` | shipped | test-missing | test-gap | 1 | 0 |
+| `card:B06074:ae7f52880f245b79ea26502eaca624f082c7777854d029f9cd6ca7c88b4fb8b4` | `B06074` | `B06074`, `B06074P` | shipped | matched | aligned | 2 | 8 |
+| `card:B06074:b62596e6ff613c1c30c1e092ac56acbc9b611d0d1fc15172d89829fe1241e765` | `B06074` | `B06074`, `B06074P` | shipped | matched | aligned | 3 | 11 |
+| `card:B06074:d3026efd67f9c4e87f3a732bbbf9f3314a413f135e7b6f725d3d129dc7046b94` | `B06074` | `B06074`, `B06074P` | shipped | matched | aligned | 2 | 7 |
+| `card:B06074:e6ce2b727de130ad39777e7e31ada341fdac65e6c96f16755b304794c642328e` | `B06074` | `B06074`, `B06074P` | shipped | matched | aligned | 3 | 6 |
 | `card:B06075:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333` | `B06075` | `B06075`, `B06075P` | shipped | matched | aligned | 2 | 2 |
 | `card:B06075:bd2d9135e77cd20272d351740bbc65e757a5096d00d80aecf99990dff33779fe` | `B06075` | `B06075`, `B06075P` | shipped | matched | aligned | 1 | 2 |
 | `card:B06076:2bcbc572704a40c4bd313efcdb48dc88426ff84922e2c41ac0fcde537aec79ab` | `B06076` | `B06076` | shipped | test-missing | test-gap | 1 | 0 |
@@ -3443,12 +3443,6 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 - missing-test: `card:B06017:9b784e18994d29858b6b12d02bf7ddc0e040914733a510db8aca6110febbb969`
 - missing-test: `card:B06018:4ee1867360fe69dcc32ae106bf6665fca2c9bf3bd397482d79ed1cdd6aa4bf5b`
 - missing-test: `card:B06018:7124f41d3267d0e2df2692070acfdd9e66fca11edbbbfb6b64ada8bee4c94b79`
-- missing-test: `card:B06020:19859600f0b7fb132d4bc3da0e2c962fc9d85cb1c626d221e15e78f42f2a4c88`
-- missing-test: `card:B06020:719ad960d0dfbc9c6146b9e1f646c60a4f1b85e4fbf634d711643b71c7f8f4e0`
-- missing-test: `card:B06020:87ca22fac9069dba0ae35a8316c041f1929afc422da2a7ecd4c6938cc50c0ff5`
-- missing-test: `card:B06020:b50a8af517a68c456a51613c3b05839873884ae9861897261010e179a7625ade`
-- missing-test: `card:B06020:d382a7fc6e4702740cff1f11bd9d38e1f26b60b01597860ee5b20cfae1c5b1d0`
-- missing-test: `card:B06020:d3b7730aa0d24dcbd34fa32b3419352d1238d398c3f73d60ca2d4f1125207a8c`
 - missing-test: `card:B06023:0025cb3b7aecab7dca31296259c4dca893915c9eb6eecce256504c10d3ebd07d`
 - missing-test: `card:B06023:30a7759896adeb54b8229a3083eb1615ae39b079a34bba004f00f993c0a898c9`
 - missing-test: `card:B06023:318e0b4ddb5668092bec5b9d46b3eb38676ff0524d7b683ec38006c983e016f3`
@@ -3518,12 +3512,6 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 - missing-test: `card:B06072:22be40f06dc558d4dde620e44fe198bf395c34480c4c217a4958a229a718d83e`
 - missing-test: `card:B06072:6fc795f4f30ade615b73f19c92634e279b3660340b23a3cdba5eeb034199985d`
 - missing-test: `card:B06072:f9a68a53b3f56507b27132d0bf80e22da4efe49d79c91138658d9a6fe43eebb2`
-- missing-test: `card:B06074:2e622a225c9c5743d9f4eba3865e40ddb799ad15a2800aca084ac672a33c6b74`
-- missing-test: `card:B06074:4bcf1ca2a52482ef58f2a9bbf780fb11cb5c7446289c8c9e24f7d63bb485e566`
-- missing-test: `card:B06074:ae7f52880f245b79ea26502eaca624f082c7777854d029f9cd6ca7c88b4fb8b4`
-- missing-test: `card:B06074:b62596e6ff613c1c30c1e092ac56acbc9b611d0d1fc15172d89829fe1241e765`
-- missing-test: `card:B06074:d3026efd67f9c4e87f3a732bbbf9f3314a413f135e7b6f725d3d129dc7046b94`
-- missing-test: `card:B06074:e6ce2b727de130ad39777e7e31ada341fdac65e6c96f16755b304794c642328e`
 - missing-test: `card:B06076:2bcbc572704a40c4bd313efcdb48dc88426ff84922e2c41ac0fcde537aec79ab`
 - missing-test: `card:B06077:65dd2c7e49e2adf37709417f08fbadb4f39726eb883e81d8d5c811220ad32722`
 - missing-test: `card:B06085:1b0a91fc4f7f6848d183ec4bdbb062fb4d26144fe32b0459fe99f07ec54fcc64`

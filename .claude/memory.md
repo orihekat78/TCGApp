@@ -30,6 +30,7 @@
 - QA Waves124-125: .claude/sessions/2026-08-25-qa-waves124-125.md.
 - QA Waves126-127: .claude/sessions/2026-08-25-qa-waves126-127.md.
 - QA Waves128-129: .claude/sessions/2026-08-25-qa-waves128-129.md.
+- QA Waves130-131: .claude/sessions/2026-08-25-qa-waves130-131.md.
 
 ## 2026-08-24: QA runtime Waves82-83
 
@@ -61,14 +62,15 @@
 
 ## Next
 
-- Waves128-129 move sixteen Q&A items to matched. Coverage is 1757 matched / 1207
-  test-missing / 2964 total; 1068 exact groups remain, including 929 singletons.
-- Wave128 completes B09109/P's nine remaining a1/a2 lifecycle Q&A. Wave129
-  completes B05007/P's seven entry and action Cut-In-ban Q&A.
-- Wave130 completes six B06020 items; Wave131 completes six B06074 items.
+- Waves130-131 move twelve Q&A items to matched. Coverage is 1769 matched / 1195
+  test-missing / 2964 total; 1056 exact groups remain, including 917 singletons.
+- Wave130 completes B06020's hand Cut-In aura and effect-contact Q&A. Wave131
+  completes B06074/P's entry, reserved resolution, FILE cost, and refresh Q&A.
+- Wave132 completes six B08049/P items; Wave133 completes six B10036/P items.
   Continue complete-card batches of 5-15 items.
 - Official sync drift is separate: new PR322 and changed Q&A for
   B04018/B04018P/B06103P. Do not mix it into selected waves without re-queueing.
-- Revised remaining estimate: 70-134 working hours, center about 102 hours.
+- Revised remaining estimate: 69-133 working hours, center about 101 hours;
+  roughly 56-96 implementation waves.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

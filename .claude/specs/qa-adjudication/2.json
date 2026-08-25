@@ -953,14 +953,14 @@
     {
       "qaId": "card:B06020:87ca22fac9069dba0ae35a8316c041f1929afc422da2a7ecd4c6938cc50c0ff5",
       "answerHash": "328c56b23a22829e19742f23a3759f8b8286f6fe5d1919bf7b3c20305054928e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06020.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p06/B06020.ts:25",
+        "tests:tests/cards/official-qa/B06020-completion-public-wave130.test.ts:211",
+        "tests:tests/cards/official-qa/B06020-completion-public-wave130.test.ts:215",
+        "tests:tests/cards/official-qa/B06020-completion-public-wave130.test.ts:228"
       ]
     },
     {

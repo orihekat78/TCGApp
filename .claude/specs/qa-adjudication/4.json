@@ -886,11 +886,13 @@
     {
       "qaId": "card:B06020:719ad960d0dfbc9c6146b9e1f646c60a4f1b85e4fbf634d711643b71c7f8f4e0",
       "answerHash": "7a889c2acb680af507578a8546cfe095b3a7aa28e3194d63289b704aca159f66",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06020.ts:26"
+        "src:src/cards/ct-p06/B06020.ts:26",
+        "tests:tests/cards/official-qa/B06020-completion-public-wave130.test.ts:222",
+        "tests:tests/cards/official-qa/B06020-completion-public-wave130.test.ts:228"
       ]
     },
     {
