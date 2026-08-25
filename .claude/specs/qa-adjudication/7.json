@@ -1703,15 +1703,16 @@
     {
       "qaId": "card:B10036:fcd5db872cd38e14275a02c09c16471d493e46666205e305dcde43e1ee864fce",
       "answerHash": "fc9d2445b3834712106ad6326cf203d366ec53fcb7825cccab30b052371ae6a0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/21-declared-ability-cost.md:15",
-        "src:src/cards/ct-p10/B10036.ts:27"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10036.ts:27",
+        "src:src/cards/ct-p10/B10036.ts:39",
+        "tests:tests/cards/official-qa/B10036-completion-public-wave133.test.ts:193",
+        "tests:tests/cards/official-qa/B10036-completion-public-wave133.test.ts:214",
+        "tests:tests/cards/official-qa/B10036-completion-public-wave133.test.ts:233"
       ]
     },
     {

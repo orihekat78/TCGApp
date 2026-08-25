@@ -1,15 +1,15 @@
-# Next Task: card-completion QA Waves132-133
+# Next Task: card-completion QA Waves134-135
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves130-131 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves132-133 commit.
 
 ## Completed
 
-- Wave130 finishes all six remaining B06020 Q&A items.
-- Wave131 finishes all six remaining B06074/P Q&A items.
-- Coverage is 1769 matched / 1195 test-missing / 2964 total.
+- Wave132 finishes all six remaining B08049/P Q&A items.
+- Wave133 finishes all six remaining B10036/P Q&A items.
+- Coverage is 1781 matched / 1183 test-missing / 2964 total.
 - Fresh authority remains 2257 printings / 2964 Q&A / zero conflicts.
 - Protected pnpm files and live cards-data remain untouched.
-- Full evidence is in the Waves130-131 session record.
+- Full evidence is in the Waves132-133 session record.
 
 ## Throughput contract
 
@@ -28,26 +28,27 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves130-131 commit.
 
 1. Read root/nested AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read `.claude/sessions/2026-08-25-qa-waves130-131.md`, this prompt, and the
+3. Read `.claude/sessions/2026-08-25-qa-waves132-133.md`, this prompt, and the
    current QA trace/workflow.
 4. Re-run the hash-only queue and fresh isolated authority validation.
 5. Run pinned grounding for every physical printing before adjudication.
 
-## Wave132: complete B08049/P
+## Wave134: complete B10065/P/P2
 
-- Certify all six remaining B08049-family Q&A items in one card matrix.
-- Current suffix prefixes: `190baa1e1f03`, `6da58a7c708a`, `adeccaf4d2c5`,
-  `b6cd283a3bf7`, `f0398d124b6f`, `f34bda62bcbe`.
-- Cover both physical definitions, both owners, turn-end FBI counting, draw,
-  declared turn limit, sleep cost, prior action history, and active-state pick.
+- Certify all six remaining B10065-family Q&A items in one card matrix.
+- Current suffix prefixes: `132b6ee607cc`, `15e4cae14b71`, `210502ad3cfa`,
+  `9c441855706d`, `a8246c5912c2`, `f0e393b3a47a`.
+- Cover all three physical definitions and both owners. Separate entry-trigger,
+  optional turn-end chain, partner-area declaration, and Cut-In semantics.
 
-## Wave133: complete B10036/P
+## Wave135: complete B04048/P
 
-- Certify all six remaining B10036-family Q&A items in one card matrix.
-- Current suffix prefixes: `0b75452df615`, `0e3dfbcf73fb`, `19859600f0b7`,
-  `3aa4146f97fd`, `a3b35ffcf4a5`, `fcd5db872cd3`.
-- Cover both physical definitions, both owners, exact dual picks, sleep/self
-  exclusion, generated-contact attacker identity, no guard, and contact hooks.
+- Certify all five remaining B04048-family Q&A items in one card matrix.
+- Current suffix prefixes: `56d8adf38bad`, `812718039114`, `81ca9d0c5d23`,
+  `b1c71ee07fa1`, `cc1f1a619e3e`.
+- Cover both physical definitions and both owners. Separate hand-size-seven
+  draw/return accounting from declared-name reveal, zero choice, ordering,
+  short-deck, refresh, and visibility behavior.
 
 ## Gate carry-forward
 
@@ -55,11 +56,11 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves130-131 commit.
 - Release-only known failures: dirty-worktree fail-closed and protected pnpm
   `jose@6.2.9` allowlist. Do not mutate protected pnpm files.
 - Full Playwright baseline: 451 PASS / 17 skip / 20 old Hirameki fixture
-  failures; no Wave130-131 UI production change.
+  failures; no Wave132-133 UI production change.
 - Smoke baseline: 471/529, timeout0, exception0.
 
 ## Estimate
 
-- Snapshot: 1195 remaining items / 1056 exact groups; 917 singleton groups.
-- Remaining QA work: 69-133 working hours; center about 101 hours.
-- Risk-aware batching forecast: roughly 56-96 implementation waves.
+- Snapshot: 1183 remaining items / 1044 exact groups; 905 singleton groups.
+- Remaining QA work: 68-132 working hours; center about 100 hours.
+- Risk-aware batching forecast: roughly 54-94 implementation waves.
