@@ -1,76 +1,73 @@
-# Next Task: card-completion QA Waves154-155
+# Next Task: card-completion QA Waves156-157
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves152-153 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves154-155 commit.
 
 ## Completed
 
-- Wave152 finishes all four remaining B05092 Q&A items.
-- BUG-368 preserves mandatory shuffle on voluntary-zero and zero-candidate
-  `handToDeckBottom` resolution.
-- BUG-369 ends a human action immediately when a settled declaration effect
-  removes its actor or target; AI timing, GameState context, and UI state agree.
-- Wave153 finishes all four B06034 items for zone movement, suppression bypass,
-  inactive conditions, and self-flip.
-- Coverage is 1871 matched / 1093 test-missing / 2964 total; 970 exact groups
-  remain, including 847 singleton groups.
+- Wave154 finishes four B06046/P items for mandatory active-host Turn2 use,
+  no-decline, hand-paid re-entry, and full-scene source switch.
+- Wave155 ships B06047 filtered cross-hand level aura and finishes four items
+  across ordinary hand use, Next Hint, two-source stacking, re-entry, and switch.
+- Official YAIBA traits are restored for B06034 and white B06062-64 printings.
+- Coverage is 1879 matched / 1085 test-missing / 2964 total; 962 exact groups
+  remain, including 839 singleton groups.
 - Fresh authority is 2257 printings and 2964 Q&A/zero conflict. PR322 remains
   outside the tracked 2256-printing snapshot.
-- Protected pnpm files and live cards-data remain untouched.
+- GameState/save shape is unchanged. Protected pnpm files remain untouched.
 
 ## Throughput contract
 
+- Batch complete cards while keeping unrelated semantics in separate matrices.
 - Per wave: grounded public proof and narrow QA merge only.
 - Two-wave checkpoint: one type/lint/QA/docs/diff gate, one commit, one push.
-- Waves152-153 already ran fresh T3 full gates. Do not repeat unchanged broad
-  gates during Wave154.
-- Wave155 has a known engine gap. If production changes, run its required T3
-  full gates once at the final two-wave checkpoint.
-- Keep certification-only work agent-free; use read-only T3 reviewers only for
-  the engine change, maximum three subagents.
+- Waves154-155 ran fresh T3 full gates. Do not repeat unchanged broad gates
+  inside Wave156; run them at the checkpoint only if T3 production changes.
+- Certification-only work uses no agents. Production/T3 may reuse up to three
+  read-only reviewers.
 
 ## Start
 
 1. Read root/cards/tests AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read the Waves152-153 session record, this prompt, and QA workflow.
+3. Read the Waves154-155 session record, this prompt, and QA workflow.
 4. Re-run hash-only queue and fresh isolated authority validation.
-5. Ground every physical printing. Read engine AGENT and `engine-wave` before
-   any Wave155 primitive work.
+5. Ground every physical printing before deciding certification versus repair.
 
-## Wave154: complete B06046 / B06046P
+## Wave156: complete B06049 and B06050/P
 
-- Certify four remaining items: `3b1c6f4fbf55`, `5534de892499`,
-  `92820adcff61`, and `f9d1417c8f5a`.
-- Separate active-host mandatory reactivation/Turn2 consumption, no-decline,
-  hand-paid character re-entry, and full-scene switch including the source.
-- Base/P share text. The fifth entry-trigger item is already matched.
-- Existing CardDef ships `setcard:enter`, filtered set count, optional discard,
-  remove re-entry, sleep entry, and switch paths; begin as T1 certification.
+- B06049 target IDs: `1522823aa460aa0572f53f018bc39a9461f8b0b892d70825d15382c5c94a0818`
+  and `68cb616e7037c15b43574cfef1c5f00ad25c53eb054ed185b99894700a81c0d3`.
+- Certify that its enter-time YAIBA condition is a snapshot: failing at entry
+  cannot become true later, and granted turn-scope `突撃` is not lost later.
+- Existing source also ships action-scoped opponent Hirameki suppression. Treat
+  old DEFER text as suspect; start with public proof before any engine edit.
+- B06050 target IDs: `a0f94bba8509d4acfe102a31eb39dc8bcda03d5de444256e1a8f94f608eaf3e4`
+  and `b0dedb9840a286bff2f817bbb1129574287876ab303fd5083762681f4170d8dc`.
+- Base/P share mechanics. Certify one-of-two Cut-In choice and that the own-turn
+  AP choice remains usable on the opponent turn but resolves to no effect.
+- Its case-YAIBA icon explanation item is already matched.
 
-## Wave155: complete B06047
+## Wave157: complete B06052 and B06053/P
 
-- Certify four remaining items: `3632e94d50bc`, `3abd9296f96b`,
-  `3fc9fa7a38cb`, and `955aafea8be9`.
-- The first two require effective level reduction for white YAIBA events in the
-  owner's hand, including additive stacking across two B06047 sources and both
-  ordinary hand use and Next Hint.
-- The current a1 slot is intentionally inert. Implement the filtered cross-hand
-  level aura at the narrowest engine/read/use boundary via TDD; do not lower
-  B06047 itself or expose hidden hand identity.
-- The remaining two items certify hand-paid YAIBA re-entry and full-scene switch.
-  The fifth entry-trigger item is already matched.
+- B06052 target IDs: `7124f41d3267d0e2df2692070acfdd9e66fca11edbbbfb6b64ada8bee4c94b79`
+  and `ae7f52880f245b79ea26502eaca624f082c7777854d029f9cd6ca7c88b4fb8b4`.
+- Certify immediate eligibility of the hand-paid YAIBA character and full-scene
+  switch including the just-entered B06052. Its entrant-trigger item is matched.
+- B06053/P target IDs: `789166124304989d9b4fa07711b90275986274798404b2ff8df9ee25725c552b`
+  and `fd2c5177b466b8aa0ca13fefd957ad4642a0e177a3bb6bb2d792ae35ea5b579d`.
+- Certify no-match whole-deck reveal returns/shuffles all cards without hand add,
+  and the first matching YAIBA event is mandatory rather than declineable.
 
 ## Gate carry-forward
 
-- Target matrices: 2 files / 9 tests PASS.
-- Focused horizontal: 11 files / 176 tests PASS.
-- Full functional Vitest: 1227 files / 12893 tests PASS, 177 skipped.
-- Typecheck, full ESLint, QA/docs/icon gates, smoke1000 PASS.
-- Desktop/mobile full-match Playwright 2/2 PASS, console error0.
-- Sol rules/engine/regression reviews PASS; Critical/Important zero.
+- Target/unit matrices: 3 files / 33 tests PASS.
+- Full functional Vitest: 1229 files / 12920 tests PASS, 177 skipped.
+- Typecheck, full ESLint, QA/docs/icon/card gates, smoke1000 PASS.
+- Desktop/mobile human-vs-CPU Playwright 2/2 PASS, console error0.
+- Sol rules/engine and final regression reviews PASS; findings remediated.
 
 ## Estimate
 
-- Snapshot: 1093 remaining items / 970 exact groups; 847 singleton groups.
-- Remaining QA work: 58-121 working hours; center about 90 hours.
-- Risk-aware batching forecast: roughly 40-80 implementation waves.
+- Snapshot: 1085 remaining items / 962 exact groups; 839 singleton groups.
+- Remaining QA work: 57-119 working hours; center about 89 hours.
+- Risk-aware batching forecast: roughly 38-78 implementation waves.

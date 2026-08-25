@@ -1,15 +1,19 @@
 // cards/ct-p06/B06047 鉄刃
-// rules: 15-abilities-effects.md, 16-card-set.md, 17-icons.md
+// rules: 12-next-hint.md, 15-abilities-effects.md, 16-card-set.md, 17-icons.md,
+//        19-special-rules.md
 import type { AbilityDef, CardDef } from '@/engine/types';
 
 const abilities: AbilityDef[] = [
   {
-    // DEFERRED: this is a scene aura over matching event cards in hand. The
-    // current hand-level modifiers are bearer-only, so keep the printed slot
-    // inert instead of incorrectly lowering B06047 itself.
     id: 'a1', type: 'continuous', scope: 'on-scene',
+    continuousModifier: {
+      handLevelAura: {
+        filter: { kind: 'event', color: '白', trait: 'YAIBA' },
+        delta: -1,
+      },
+    },
     description: '自分の手札にある【白】の〚特徴［YAIBA］〛のイベントをレベル－1する。',
-    ruleRefs: ['rules/15-abilities-effects.md'],
+    ruleRefs: ['rules/12-next-hint.md', 'rules/15-abilities-effects.md', 'rules/19-special-rules.md'],
   },
   {
     id: 'a2', type: 'triggered', scope: 'on-scene',
@@ -30,4 +34,4 @@ const abilities: AbilityDef[] = [
   },
 ];
 
-export const B06047: CardDef = { id: 'B06047', no: '0668/B06047', kind: 'character', names: ['鉄刃'], colors: ['白'], level: 8, ap: 7000, lp: 0, traits: ['YAIBA'], keywords: ['迅速'], rarity: 'R', imageUrl: '1754285220451879.jpg', abilities, ruleRefs: ['rules/15-abilities-effects.md', 'rules/16-card-set.md', 'rules/17-icons.md'] };
+export const B06047: CardDef = { id: 'B06047', no: '0668/B06047', kind: 'character', names: ['鉄刃'], colors: ['白'], level: 8, ap: 7000, lp: 0, traits: ['YAIBA'], keywords: ['迅速'], rarity: 'R', imageUrl: '1754285220451879.jpg', abilities, ruleRefs: ['rules/12-next-hint.md', 'rules/15-abilities-effects.md', 'rules/16-card-set.md', 'rules/17-icons.md', 'rules/19-special-rules.md'] };

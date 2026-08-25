@@ -843,11 +843,21 @@
     {
       "qaId": "card:B06047:3fc9fa7a38cbc087684db70c4bdd94732788455f030cfc2ce13ed9a6e746d50b",
       "answerHash": "56b28ded97aa4cf0bdd2ceb02071a48e8e0b07c87141e71c6c42b4d858047a74",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06047.ts:1"
+        "src:src/cards/ct-p06/B06047.ts:7",
+        "src:src/engine/flow/main/hand-use-card.ts:136",
+        "tests:tests/cards/official-qa/B06047-completion-public-wave155.test.ts:203",
+        "tests:tests/cards/official-qa/B06047-completion-public-wave155.test.ts:205",
+        "tests:tests/cards/official-qa/B06047-completion-public-wave155.test.ts:206",
+        "tests:tests/cards/official-qa/B06047-completion-public-wave155.test.ts:208",
+        "tests:tests/cards/official-qa/B06047-completion-public-wave155.test.ts:214",
+        "tests:tests/cards/official-qa/B06047-completion-public-wave155.test.ts:216",
+        "tests:tests/cards/official-qa/B06047-completion-public-wave155.test.ts:217",
+        "tests:tests/cards/official-qa/B06047-completion-public-wave155.test.ts:219",
+        "tests:tests/cards/official-qa/B06047-completion-public-wave155.test.ts:225"
       ]
     },
     {

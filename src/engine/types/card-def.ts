@@ -117,6 +117,12 @@ export type ContinuousDelta =
 // engine mega-wave W4 (2026-07-03, r62 G32): filter 付き突撃 grant の 1 entry (B07096「突撃[レベル4以下のキャラ]」)。
 export type FilteredAssaultGrant = { targetKind: 'char' | 'case'; filter: TargetFilter };
 
+/** Static identity axes allowed for a scene aura that changes hand-card level. */
+export type HandLevelAuraFilter = Pick<
+  TargetFilter,
+  'cardId' | 'cardName' | 'cardNameNot' | 'trait' | 'traitAll' | 'color' | 'colorNot' | 'kind'
+>;
+
 export type ContinuousModifier = {
   /** A scene character may be removed instead of paying a declared ability's printed cost. */
   alternativeCostProvider?: AlternativeCostProvider;
@@ -273,6 +279,12 @@ export type ContinuousModifier = {
   //   filterAny (OR、per-char 判定 = 両該当でも 1 枚は 1 で二重計上なし) に一致する自現場キャラ数 × delta を
   //   effectiveHandLevel が加算する (honor site は同 helper 1 箇所で閉じる — scene 側 level 読みは不変)。
   lvlDeltaInHandPer?: { delta: number; filterAny: TargetFilter[] };
+  /**
+   * Each active friendly scene bearer adds `delta` to matching cards in its
+   * owner's hand. The restricted filter deliberately excludes effective-level
+   * axes, preventing recursive `effectiveHandLevel` evaluation.
+   */
+  handLevelAura?: { filter: HandLevelAuraFilter; delta: number };
   // S3 hand-zone cutin aura (2026-07-12, B06020/B07003): bearer が手札にある間、同じ owner の
   // 手札で filter に一致するカードへ固定 AP cutin を付与する。read.hand-cutin が CardDef を変更せず
   // synthetic on-hand ability として合成し、flow.contact / triggered listener が同じ集合を参照する。

@@ -23,6 +23,6 @@ const a3: AbilityDef = {
 };
 export const B06064: CardDef = {
   id: 'B06064', no: '0685/B06064', kind: 'event', names: ['刃新陰流風車'], colors: ['白'], level: 7,
-  traits: [], keywords: [], rarity: 'C', imageUrl: '1754285220546831.jpg', abilities: [a1, a2, a3],
+  traits: ['YAIBA'], keywords: [], rarity: 'C', imageUrl: '1754285220546831.jpg', abilities: [a1, a2, a3],
   ruleRefs: ['rules/07-action-flow.md', 'rules/15-abilities-effects.md', 'rules/16-card-set.md'],
 };

@@ -18,6 +18,7 @@ import type { GameState, Candidate, TargetFilter, EffectCtx } from '../../types/
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js';
+import { char as readChar } from '../../read/char.js';
 import { matchOneFilter, registerEffectiveHandLevel } from '../../target/candidates.js';
 import { evalCond } from '../../cond/eval.js';
 import {
@@ -125,6 +126,8 @@ function colorAllowed(state: GameState, p: Player, cardId: string): boolean {
  * 「手札にあるこのキャラはレベル4になる」(B01009 lvlOverrideInHand) / 「手札にある間レベル-2」
  * (B09095 lvlDeltaInHand) を、hand 在中カード**自身**の def の continuous ability walk で反映する
  * (handUseColorIgnoreAllowed と同流儀、ability.condition honor)。
+ * B06047 handLevelAura は owner の現場にいる物理 bearer を1枚ずつ走査し、対象手札カードへ
+ * filtered delta を加算する。bearer離場・元能力無効化で即失効し、同名複数は各1回stackする。
  * 合成は rules/19 流儀の二段: override を先に確定 → delta を加算 (ability 記載順に依存しない)。
  * 下限なし (rules/19) — 負値もそのまま返す。公式 QA: 手札にある間だけ有効、現場では元レベル →
  * 本 helper は 手札の使用 / ネクストヒント step2 の level gate (+UI 表示系) 専用。
@@ -153,6 +156,28 @@ export function effectiveHandLevel(state: GameState, p: Player, cardId: string):
         if (per.filterAny.some(f => matchOneFilter(state, ch.cardId, f, ch, cand))) cnt++;
       }
       delta += per.delta * cnt;
+    }
+  }
+  const handCandidate: Candidate = { kind: 'card', cardId, area: 'hand', player: p };
+  for (const bearer of state.players[p].scene) {
+    if (readChar.originalAbilitiesDisabled(state, bearer.uid)) continue;
+    const bearerDef = readDef.card(bearer.cardId);
+    if (!bearerDef) continue;
+    for (const ability of bearerDef.abilities ?? []) {
+      const aura = ability.continuousModifier?.handLevelAura;
+      if (ability.type !== 'continuous'
+        || (ability.scope !== 'on-scene' && ability.scope !== 'always')
+        || !aura) continue;
+      const bearerCtx = {
+        source: {
+          player: p, area: 'scene', cardId: bearer.cardId, uid: bearer.uid,
+          abilityId: ability.id,
+        },
+        bindings: {},
+      } as EffectCtx;
+      if (ability.condition && !evalCond(state, ability.condition, bearerCtx)) continue;
+      if (!matchOneFilter(state, cardId, aura.filter, null, handCandidate)) continue;
+      delta += aura.delta;
     }
   }
   return base + delta;

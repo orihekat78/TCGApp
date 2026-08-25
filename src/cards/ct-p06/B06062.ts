@@ -74,7 +74,7 @@ export const B06062: CardDef = {
     '白'
   ],
   level: 7,
-  traits: [],
+  traits: ['YAIBA'],
   rarity: 'C',
   imageUrl: '1754285220535505.jpg',
   abilities: [a1],
