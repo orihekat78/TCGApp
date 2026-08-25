@@ -11,7 +11,7 @@
 // a2: 【自分ターン中】【1枚以上】AP＋1000 — continuous (turn + stackedCountAtLeast n:1, apDelta:1000) (D08021 a2/a3 同型)。
 // a3: 【自分ターン中】【1枚以上】〚突撃[キャラ]〛 — continuous grantKeywords (同上条件) (D08021 a2 同型)。
 // a4: 【自分ターン中】【3枚以上】【FILE5】【宣言】【ターン1】〚手札1リム〛: このキャラをアクティブに
-//     — declared (and(turn, stackedCountAtLeast n:3, fileAtLeast n:5), cost removeFromHand n:1, sceneSetState active $self) (D11016/B01088 同型)。
+//     — declared (and(turn, stackedCountAtLeast n:3, fileAtLeast n:5), cost removeFromHand n:1, sceneSetState active $self) (B01088 同型)。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 import { partnerColorKeyword } from '@/cards/_shared';

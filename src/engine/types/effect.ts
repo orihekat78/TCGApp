@@ -143,7 +143,7 @@ export type Condition =
   // D11007 a3: contact:start hook 発火時、attacker (aUid) より defender (bUid) の方が AP が高い場合
   // payload は ctx.triggerPayload に詰められ、listener から評価される (TriggerDef.matcherCondition 経由)
   | { kind: 'contactOpponentApHigher' }
-  // D11016 a1: action:guarded payload.guardUid === ctx.source.uid (このキャラがガードしたとき、rules/07)
+  // B09014 a1: action:guarded payload.guardUid === ctx.source.uid (このキャラがガードしたとき、rules/07)
   | { kind: 'guardedBySelf' }
   // engine defer-unlock mini-wave (2026-07-09): コンタクト参加キャラを TargetFilter で評価
   // (B02006/B02080/PR278/D11013)。who は p-相対 (buildContactBindings): byUid=自コンタクトキャラ /

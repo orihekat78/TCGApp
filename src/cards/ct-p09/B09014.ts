@@ -4,7 +4,7 @@
 // 公式テキスト:
 //   【相手ターン中】【ターン1】このキャラがガードしたとき、自分の現場に〚カード名［小嶋元太］〛以外のレベル4の〚特徴［少年探偵団］〛のキャラがいる場合、ターン終了時までこのキャラをAP＋2000する。
 //
-// a1: triggered (action:guarded, guardedBySelf) — 【相手ターン中】【ターン1】ガード時、現場に[小嶋元太]以外のlvl4[少年探偵団]がいれば自身AP＋2000 (turn scope)。D11016 a1 + D08003 a2 conditional 同型。
+// a1: triggered (action:guarded, guardedBySelf) — 【相手ターン中】【ターン1】ガード時、現場に[小嶋元太]以外のlvl4[少年探偵団]がいれば自身AP＋2000 (turn scope)。
 import type { AbilityDef, CardDef } from '@/engine/types';
 
 const a1: AbilityDef = {

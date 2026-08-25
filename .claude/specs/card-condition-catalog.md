@@ -42,7 +42,8 @@
 | 公式 | snippet | 例 |
 | --- | --- | --- |
 | 【疾風 N】(このターンN番目に登場) | `{ kind:'enterOrderEquals', n:1 }` | D11014 ✅ (D11003/D11009 は誤、後述) |
-| このキャラがガードしたとき | `{ kind:'guardedBySelf' }` | D11016 |
+| このキャラがガードしたとき | `{ kind:'guardedBySelf' }` | B09014 |
+| このキャラが指定されたアクションがガードされたとき | `{ kind:'triggerCharMatches', payloadKey:'targetUid', side:'self', filter:{}, requireSource:true }` | D11016 / B06091 |
 | 自分が高APとコンタクト時 | `{ kind:'contactOpponentApHigher' }` | D11007 |
 
 ## 使い分け

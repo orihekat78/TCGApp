@@ -1107,21 +1107,25 @@
     {
       "qaId": "card:B06098:78b84cb792d3783cc2b18d867f6652c605ce2650a2a6e5732aafea92c999e37f",
       "answerHash": "9a850b0aa69167d50fe9b35374145bd3a1f7c6ca2159ee4d9315b205401b53c5",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06098.ts:169"
+        "src:src/cards/ct-p06/B06098.ts:15",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:371",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:376"
       ]
     },
     {
       "qaId": "card:B06105:ef8f1c5c8c1abdc6f70dd0cbdf073b3d8c558f5feeca4c12d99122b337875843",
       "answerHash": "e6371e006ba68898855313262f180f8071b2ee7266086748427d1471b30f7947",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06105.ts:91"
+        "rules:.claude/rules/21-declared-ability-cost.md:47",
+        "src:src/cards/ct-p06/B06105.ts:53",
+        "tests:tests/cards/official-qa/B06103-B06109-completion-public-wave163.test.ts:345"
       ]
     },
     {

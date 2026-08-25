@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import { D11016 } from '@/cards/ct-d11/D11016';
 
-describe('D11016 大江忍 (相手ターン1 ガード反撃 → アクティブ+AP+2000)', () => {
+describe('D11016 大江忍 (相手ターン1 指定対象のガード → ガード役アクティブ+AP+2000)', () => {
   it('shape: id, level=3, ap=3000, lp=1, 黄, traits=[]', () => {
     expect(D11016.id).toBe('D11016');
     expect(D11016.no).toBe('0710/D11016');
@@ -21,8 +21,16 @@ describe('D11016 大江忍 (相手ターン1 ガード反撃 → アクティブ
     const a1 = D11016.abilities[0];
     expect(a1.type).toBe('triggered');
     expect(a1.trigger?.hook).toBe('action:guarded');
+    expect(a1.trigger?.matcherCondition).toEqual({
+      kind: 'triggerCharMatches', payloadKey: 'targetUid', side: 'self', filter: {}, requireSource: true,
+    });
     expect(a1.condition).toEqual({ kind: 'turn', player: 'opp' });
     expect(a1.limit).toEqual({ kind: 'turn', n: 1 });
-    expect(a1.effect?.kind).toBe('sequence');
+    expect(a1.effect).toMatchObject({
+      kind: 'sequence', steps: [
+        { kind: 'atom', verb: 'sceneSetState', args: { uid: '$trigger.guardUid', state: 'active' } },
+        { kind: 'atom', verb: 'charModifyAP', args: { uid: '$trigger.guardUid', delta: 2000, scope: 'turn' } },
+      ],
+    });
   });
 });

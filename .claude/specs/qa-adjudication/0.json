@@ -1054,11 +1054,14 @@
     {
       "qaId": "card:B06092:b190d782f194602ebcc5f5fd6d94ccd7e5927e1acc2a87517b2038e4bbfcec6c",
       "answerHash": "50c869438aaaa3ac411c6fdc95fc4b581c58f7ce37a07a746bb90ac4d5352053",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06092.ts:18"
+        "rules:.claude/rules/09-cutin-disguise.md:9",
+        "src:src/cards/ct-p06/B06092.ts:20",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:240",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:243"
       ]
     },
     {
@@ -1102,11 +1105,15 @@
     {
       "qaId": "card:B06103:dae02fc940ddff850db5b2535ec40ecb446e33833474a6114667f1fd14600790",
       "answerHash": "4b851196ffb6c6ccb057452d44671e6e933380b4cf38686d3a2fed947d6feeae",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06103.ts:8"
+        "rules:.claude/rules/20-color-and-switch.md:11",
+        "src:src/cards/ct-p06/B06103.ts:8",
+        "tests:tests/cards/official-qa/B06103-B06109-completion-public-wave163.test.ts:245",
+        "tests:tests/cards/official-qa/B06103-B06109-completion-public-wave163.test.ts:248",
+        "tests:tests/cards/official-qa/B06103-B06109-completion-public-wave163.test.ts:255"
       ]
     },
     {

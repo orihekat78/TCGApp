@@ -48,7 +48,7 @@ caseResolvedHandRemove / caseDeclaredEvidenceFlip / eventRemoveByAP は 2枚し�
 
 ## 1枚 (個別実装)
 
-D08021 enterStackFromRemove / stackCountThreshold, D11012 ヒラメキ系全般, D11014 declaredSleepHandRemoveReanimate, D11016 guardCounterReact, D08024 eventReanimate, D11019 eventRevealUntilEnter, D11013 cutinConditionalDraw, D11015 enterConditionalGrant, D11020 eventRemoveBySleep, D11020 conditionalSecondaryEffect, D11014 shippuTargetAPMinus
+D08021 enterStackFromRemove / stackCountThreshold, D11012 ヒラメキ系全般, D11014 declaredSleepHandRemoveReanimate, D11016 guardedSelectedSourceReact, D08024 eventReanimate, D11019 eventRevealUntilEnter, D11013 cutinConditionalDraw, D11015 enterConditionalGrant, D11020 eventRemoveBySleep, D11020 conditionalSecondaryEffect, D11014 shippuTargetAPMinus
 
 ## 関連
 - [INDEX.md](INDEX.md) — 47枚進捗

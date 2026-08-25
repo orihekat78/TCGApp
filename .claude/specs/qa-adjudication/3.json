@@ -1206,25 +1206,27 @@
     {
       "qaId": "card:B06091:100adbbed925b66fdcb792ff3aa4a483640f287338264fc5c064d46af6177788",
       "answerHash": "0d18c53c3084e2aac02a38fc53d81747350c7d329a2aaf84c95f9b1daa4a07b3",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06091.ts:1"
+        "rules:.claude/rules/07-action-flow.md:22",
+        "src:src/cards/ct-d11/D11016.ts:21",
+        "src:src/cards/ct-p06/B06091.ts:13",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:182",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:213"
       ]
     },
     {
       "qaId": "card:B06105:cef19acafddb85d5e9ebc2616e6fb4f08209d73a51409805a085cd196de080e5",
       "answerHash": "b43e2736aa21378a67cb73627c63b0d6c67ebc0a3ceea8825ce0e196f92dde8d",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06105.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
+        "rules:.claude/rules/15-abilities-effects.md:31",
+        "src:src/cards/ct-p06/B06105.ts:63",
+        "tests:tests/cards/official-qa/B06103-B06109-completion-public-wave163.test.ts:350"
       ]
     },
     {

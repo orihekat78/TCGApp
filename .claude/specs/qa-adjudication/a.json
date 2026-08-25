@@ -972,21 +972,35 @@
     {
       "qaId": "card:B06093:fd663a129833b5aca7792e25753f35394f7af3f2f622b2954c7aaf38224ce727",
       "answerHash": "cfd1d0e40e58e6fb910da65c3f17028604c8f54aff30fc36e9932d6bc835787a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06093.ts:1"
+        "rules:.claude/rules/13-keywords.md:29",
+        "src:src/cards/ct-p06/B06093.ts:13",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:263",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:266",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:270",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:271",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:272"
       ]
     },
     {
       "qaId": "card:B06095:125282ef42997636595e79840f9671009a309cc99d36b0f0da406e3de9b044e4",
       "answerHash": "705d8f6a9f4aecf800f3cbb53afecd15b19d19959948d252fdcb73c90a04efec",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06095.ts:1"
+        "rules:.claude/rules/03-field-areas.md:5",
+        "src:src/cards/ct-p06/B06095.ts:18",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:314",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:318",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:321",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:324",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:327",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:329",
+        "tests:tests/cards/official-qa/B06091-B06098-completion-public-wave162.test.ts:332"
       ]
     },
     {

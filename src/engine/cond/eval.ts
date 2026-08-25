@@ -490,8 +490,8 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       return charRead.ap(state, otherUid) > charRead.ap(state, selfUid);
     }
     case 'guardedBySelf': {
-      // D11016 a1: action:guarded payload.guardUid が自分 (ctx.source.uid) と一致するとき true
-      // (「このキャラがガードしたとき」= 自分のガードのみ発火、rules/07。BUG-097)
+      // B09014 a1: action:guarded payload.guardUid が自分 (ctx.source.uid) と一致するとき true
+      // (「このキャラがガードしたとき」= 自分のガードのみ発火、rules/07)
       const guardUid = (ctx.triggerPayload as { guardUid?: string } | undefined)?.guardUid;
       return guardUid === ctx.source.uid;
     }

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `4fe9c9e1cdb1`
+> Source hash: `1dadbd967aa5`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -9145,7 +9145,8 @@ scope: engine
 
 ## D11007 a3 過剰発火の修正 (BUG-098)
 
-BUG-097 (D11016 guardedBySelf) の水平展開で検出。`contactOpponentApHigher`
+当時のBUG-097解釈 (D11016 guardedBySelf) の水平展開で検出。2026-08-26にD11016の
+解釈は訂正されたが、D11007の当事者照合バグと本修正は独立して有効。`contactOpponentApHigher`
 ([cond/eval.ts](../src/engine/cond/eval.ts)) は contact の aUid/bUid の AP だけを見て、D11007 自身が
 コンタクト当事者かを確認していなかった。`contact:start` は全コンタクトで emit されるため、D11007 が
 関与しない任意のコンタクト (defender>attacker) でも a3 が発火していた。
@@ -9167,6 +9168,11 @@ scope: engine
 ---
 
 ## MVP 監査で確定した triggered ability 2バグの修正
+
+> 2026-08-26訂正: B06091公式Q&Aにより、D11016は「自身がガード」ではなく
+> 「自身を指定したアクションがガードされたとき」と判明。以下のBUG-097記述は当時の解釈であり、
+> D11016/B06091は`triggerCharMatches(payloadKey:'targetUid')`へ修正済み。
+> `guardedBySelf`自体はB09014の「このキャラがガードしたとき」に使用する。
 
 6レンズ MVP デッドコード監査で確定:
 

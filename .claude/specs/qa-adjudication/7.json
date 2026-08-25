@@ -1096,11 +1096,14 @@
     {
       "qaId": "card:B06103:39f1c14b17c896de002441eedc381447fd981ccfbc3a113402954cf4b89f23d2",
       "answerHash": "b96aec26aee44b1ae6976d0146a6b523acef118737f6777ec2e0cdb76bb28648",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06103.ts:7"
+        "rules:.claude/rules/09-cutin-disguise.md:9",
+        "src:src/cards/ct-p06/B06103.ts:8",
+        "tests:tests/cards/official-qa/B06103-B06109-completion-public-wave163.test.ts:292",
+        "tests:tests/cards/official-qa/B06103-B06109-completion-public-wave163.test.ts:316"
       ]
     },
     {
