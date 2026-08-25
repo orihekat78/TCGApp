@@ -1378,14 +1378,16 @@
     {
       "qaId": "card:B07098:38c2a9a4f5b4ef1212709f13990154e55f266eec17474d1fc7ea8ce443897328",
       "answerHash": "55fa9d9fef0d101cadc97105c38aa8be406b8250ec55d45ee8bbfe8c180cf0f1",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07098.ts:1"
+        "src:src/cards/ct-p07/B07098.ts:1",
+        "src:src/cards/ct-p07/B07098P.ts:1",
+        "tests:tests/cards/official-qa/B07094-B07098-completion-public-wave173.test.ts:297"
       ],
       "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {

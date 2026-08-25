@@ -1269,14 +1269,16 @@
     {
       "qaId": "card:B07090:4d1fa98c33395da54f8574029ff3dab24cda9c8ead57684afaaaa815380793d3",
       "answerHash": "dc855fd02f25482031b43fc023211a789db63d2fce5f42d200012a0842154fc8",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07090.ts:64"
+        "src:src/cards/ct-p07/B07090.ts:64",
+        "tests:tests/cards/official-qa/B07085-B07091-completion-public-wave172.test.ts:341",
+        "tests:tests/cards/official-qa/B07085-B07091-completion-public-wave172.test.ts:344"
       ],
       "noteCodes": [
-        "TEST-GAP"
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {

@@ -1274,11 +1274,15 @@
     {
       "qaId": "card:B07096:24dc94f9321e58a7a325489b45930c6c2891ba1c6152c0f967e75d1b558c48de",
       "answerHash": "8511efab76e16723b8b25f7920950245fa840af04009ad7478230b02bdc3f9b9",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07096.ts:1"
+        "src:src/cards/ct-p07/B07096.ts:1",
+        "tests:tests/cards/official-qa/B07094-B07098-completion-public-wave173.test.ts:241"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {

@@ -13,15 +13,15 @@
 
 ## Next
 
-- Waves170-171 move nineteen items to matched. Coverage is 2002 matched / 962
-  test-missing / 2964 total; 851 exact groups remain, including 740 singletons.
-- B07057/P-B07079/P public matrices cover optional targets, effect-only gates,
-  effective LP/level, owner costs, full scenes, entry order, and Disguise riders.
-- Production gap is none. Wave suites 56/56, focused horizontal 303/303,
-  TypeScript, scoped ESLint, QA merge, and both Sol reviews pass.
-- Waves172-173 batch nineteen CT-P07 items across B07085-B07098.
+- Waves172-173 move nineteen items to matched. Coverage is 2021 matched / 943
+  test-missing / 2964 total; 834 exact groups remain, including 725 singletons.
+- B07085-B07098/P public matrices cover forced reveal, independent branches,
+  owner evidence/hand costs, turn-end, effective level, removal, and refresh.
+- Production gap is none. Wave suites 54/54, focused horizontal 465/465,
+  TypeScript, scoped ESLint, and QA merge pass.
+- Waves174-175 batch nineteen items across B07100-B08016.
 - Official sync drift remains separate: PR322 and changed B04018/B04018P/
   B06103P Q&A require re-queueing.
-- At about nine exact groups per wave, about 95 waves remain through Wave266.
+- At about nine exact groups per wave, about 93 waves remain through Wave266.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.
