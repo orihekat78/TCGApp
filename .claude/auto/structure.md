@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6649
+- **ファイル数**: 6655
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -541,6 +541,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-358.md` — B04048 registered all-card name authority
     - `BUG-359.md` — Wave105 registered all-card name authority
     - `BUG-360.md` — Wave107 cut-in declared-name authority
+    - `BUG-361.md` — Direct invoked Hirameki evidence movement
+    - `BUG-362.md` — B06025 own-scene target authority
+    - `BUG-363.md` — B06027 direct-invoke full-scene switch
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1648,6 +1651,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves130-131.md` — QA adjudication Waves130-131
     - `2026-08-25-qa-waves132-133.md` — QA adjudication Waves132-133
     - `2026-08-25-qa-waves134-135.md` — QA adjudication Waves134-135
+    - `2026-08-25-qa-waves136-137.md` — QA adjudication Waves136-137
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -5885,8 +5889,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B04059.test.ts` — B04059 水無怜奈 — official Q&A: scene-only additional card name.
       - `B04074.test.ts`
       - `B05007-completion-public-wave129.test.ts` — qa: card:B05007:64c8ea1dbd685ed1a2d1338e4c52910b1b19f6cca7249f8e288576f37e426d44
+      - `B05058-completion-public-wave136.test.ts` — qa: card:B05058:005869b804a7f1211f4012d0d1923a1b445b97f955eaa4b6df86b2644fff0648
       - `B05118-family-nonblack-partner.test.ts` — Official Q&A cluster: these seven cases share the same printed
       - `B06020-completion-public-wave130.test.ts` — qa: card:B06020:d3b7730aa0d24dcbd34fa32b3419352d1238d398c3f73d60ca2d4f1125207a8c
+      - `B06023-completion-public-wave137.test.ts` — qa: card:B06023:0025cb3b7aecab7dca31296259c4dca893915c9eb6eecce256504c10d3ebd07d
       - `B06042-effect-contact-public.test.ts` — qa: card:B06042:51624536ab2df37b3ce09f45df7c715d9ac3c8bbb64d8ff36ed28ebcc48829d5
       - `B06042-grant-lifecycle-public.test.ts` — qa: card:B06042:954b33bfb2a596a7ba88bb1d6476fd34416af93d38e8012a55157693df8c903a
       - `B06074-completion-public-wave131.test.ts` — qa: card:B06074:2e622a225c9c5743d9f4eba3865e40ddb799ad15a2800aca084ac672a33c6b74

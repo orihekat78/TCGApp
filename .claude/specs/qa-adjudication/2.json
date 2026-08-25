@@ -811,21 +811,24 @@
     {
       "qaId": "card:B05058:005869b804a7f1211f4012d0d1923a1b445b97f955eaa4b6df86b2644fff0648",
       "answerHash": "ecbe86a579ce0fefe59eec0001d65691f85cba5ca5fc360fdb491fc53103d4e3",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05058.ts:36"
+        "src:src/cards/ct-p05/B05058.ts:19",
+        "tests:tests/cards/partial-partner-b05058-b05116.test.ts:63"
       ]
     },
     {
       "qaId": "card:B05058:357bc184b1a324a6e8f0c47236894c6098a8a9bf9d216a5f53ab86712037a2e5",
       "answerHash": "5ec468ee93cd3c72de3fafeab3972431224dacf0e5c0f002849bf4d1fec97cca",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05058.ts:36"
+        "src:src/cards/ct-p05/B05058.ts:19",
+        "src:src/cards/ct-p05/B05058.ts:48",
+        "tests:tests/cards/official-qa/B05058-completion-public-wave136.test.ts:158"
       ]
     },
     {

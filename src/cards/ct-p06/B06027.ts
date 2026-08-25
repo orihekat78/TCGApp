@@ -18,6 +18,7 @@ const a2: AbilityDef = {
     args: {
       player: 'self', cardId: '$occurrence.cardId', selectedCardIndex: '$occurrence.index',
       exactSelectedCardIndex: true, sourceRequired: true, enterSleep: true,
+      deferSceneSwitchChoice: true,
       target: { kind: 'pick', query: { area: 'remove', side: 'self', filter: { cardId: '$occurrence.cardId', kind: 'character' } }, n: { min: 1, max: 1 }, chooser: 'self' },
     },
   },

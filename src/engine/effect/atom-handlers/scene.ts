@@ -135,6 +135,62 @@ interface SelectedSceneOccurrence {
   index: number;
 }
 
+type InvokedEvidenceSelfClaimRead =
+  | { kind: 'absent' }
+  | { kind: 'invalid' }
+  | { kind: 'claim'; claim: { player: Player; cardId: string; index: number } };
+
+/**
+ * Direct Hirameki invocation (B06023/B06034/B06036) keeps the exact evidence
+ * occurrence in `$occurrence` instead of an ActionContext held-evidence slot.
+ * Revalidate that authority at the eventual self-entry step so effects such as
+ * B06025/B06027 can move their own evidence occurrence without retargeting an
+ * equal card ID after an indexed-zone change.
+ */
+function readInvokedEvidenceSelfClaim(
+  s: GameState,
+  ctx: EffectCtx,
+  expectedPlayer: Player,
+): InvokedEvidenceSelfClaimRead {
+  const payload = ctx.triggerPayload;
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)
+    || (payload as Record<string, unknown>).invoked !== true) {
+    return { kind: 'absent' };
+  }
+  const record = payload as Record<string, unknown>;
+  const bound = (ctx.bindings as Record<string, unknown>).occurrence;
+  if (!Array.isArray(bound) || bound.length !== 1
+    || bound[0] === null || typeof bound[0] !== 'object' || Array.isArray(bound[0])) {
+    return { kind: 'invalid' };
+  }
+  const occurrence = bound[0] as Record<string, unknown>;
+  const index = occurrence.index;
+  const cardId = occurrence.cardId;
+  const witness = occurrence.occurrenceWitness;
+  const uid = occurrence.uid;
+  if (occurrence.kind !== 'card'
+    || occurrence.area !== 'evidence'
+    || occurrence.player !== expectedPlayer
+    || typeof index !== 'number' || !Number.isSafeInteger(index) || index < 0
+    || typeof cardId !== 'string'
+    || typeof witness !== 'string'
+    || uid !== `evidence:${expectedPlayer}:${index}`
+    || record.uid !== uid
+    || record.cardId !== cardId
+    || record.player !== expectedPlayer
+    || record.area !== 'evidence'
+    || record.index !== index
+    || ctx.source.player !== expectedPlayer
+    || ctx.source.area !== 'evidence'
+    || ctx.source.uid !== uid
+    || ctx.source.cardId !== cardId
+    || !isLiveCardOccurrenceWitness(s, expectedPlayer, 'evidence', witness)
+    || s.players[expectedPlayer].evidence[index]?.cardId !== cardId) {
+    return { kind: 'invalid' };
+  }
+  return { kind: 'claim', claim: { player: expectedPlayer, cardId, index } };
+}
+
 function selectedSceneOccurrences(
   s: GameState,
   a: Record<string, unknown>,
@@ -476,7 +532,10 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       const heldClaimRead = mayConsumeHeldEvidence
         ? readHeldHiramekiSelfClaim(ctx, enterPlayer)
         : { kind: 'absent' as const };
-      if (heldClaimRead.kind === 'invalid') {
+      const invokedEvidenceRead = mayConsumeHeldEvidence
+        ? readInvokedEvidenceSelfClaim(s, ctx, enterPlayer)
+        : { kind: 'absent' as const };
+      if (heldClaimRead.kind === 'invalid' || invokedEvidenceRead.kind === 'invalid') {
         (ctx.dyn ??= {}).chainStepNoApply = true;
         mutate.log.append(s, {
           ts: Date.now(), player: enterPlayer, turn: s.turn.number,
@@ -485,7 +544,10 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         return;
       }
       const heldClaim = heldClaimRead.kind === 'claim' ? heldClaimRead.claim : undefined;
-      const cardId = heldClaim?.cardId ?? resolveBindRef(rawCardId, ctx) as string;
+      const invokedEvidenceClaim = heldClaim === undefined && invokedEvidenceRead.kind === 'claim'
+        ? invokedEvidenceRead.claim
+        : undefined;
+      const cardId = heldClaim?.cardId ?? invokedEvidenceClaim?.cardId ?? resolveBindRef(rawCardId, ctx) as string;
       // D11014 a2 driver 2026-05-26: cardId が `$pick.*` で未解決かつ target に
       // pick query があれば tryRePickFromAtom で side-channel set (Pattern A 同型)。
       // handAddFromRemove と同 pattern。これがないと sceneEnter は silent no-op で
@@ -587,7 +649,7 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       const boundDeckOccurrence = allowedSourceAreas.includes('deck')
         ? resolveBoundOccurrenceRef(rawCardId, s, ctx, selectedSourcePlayer, 'deck')
         : { kind: 'unbound' as const };
-      const invalidPhysicalSelection = heldClaim === undefined && (selectedOccurrences === null
+      const invalidPhysicalSelection = heldClaim === undefined && invokedEvidenceClaim === undefined && (selectedOccurrences === null
         || boundRemoveOccurrence.kind === 'invalid'
         || boundDeckOccurrence.kind === 'invalid'
         || (boundRemoveOccurrence.kind === 'live'
@@ -625,6 +687,21 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
           return;
         }
         movedFromSource = { player: heldClaim.player, area: 'evidence' };
+      } else if (invokedEvidenceClaim !== undefined) {
+        const evidence = s.players[invokedEvidenceClaim.player].evidence;
+        if (evidence[invokedEvidenceClaim.index]?.cardId !== invokedEvidenceClaim.cardId) {
+          (ctx.dyn ??= {}).chainStepNoApply = true;
+          mutate.log.append(s, {
+            ts: Date.now(), player: enterPlayer, turn: s.turn.number,
+            action: 'effect:sceneEnter:source-missing-skip', target: cardId,
+          });
+          return;
+        }
+        evidence.splice(invokedEvidenceClaim.index, 1);
+        advanceIndexedZoneEpoch(s, invokedEvidenceClaim.player, 'evidence');
+        // Direct invocation moves this occurrence from evidence to scene. It never
+        // enters the remove area, so evidence-removal observers must stay silent.
+        movedFromSource = { player: invokedEvidenceClaim.player, area: 'evidence' };
       } else if (Array.isArray(rawSrcArea) || rawSrcArea === 'partner-area') {
         const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
         const areas = (Array.isArray(rawSrcArea) ? rawSrcArea : [rawSrcArea])

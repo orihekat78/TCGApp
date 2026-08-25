@@ -75,20 +75,24 @@ describe('B06025 ケロ介: action-removed evidence occurrence reentry', () => {
     state.players.self.remove = ['B06025'];
     state.players.self.deck = ['D08005'];
     state.players.opp.deck = ['D08017', 'D08017'];
-    state.players.opp.scene = [targetChar()];
+    state.players.self.scene = [targetChar()];
+    state.players.opp.scene = [{ ...targetChar(), uid: 'opponent-decoy' }];
     const { actionId, pending, actorUid } = openCaseHirameki(state, 'B06025');
     expect(pending.occurrence).toBeUndefined();
     expect(pending.heldEvidence).toEqual(expect.objectContaining({ player: 'self', cardId: 'B06025' }));
 
     expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' })).toEqual({ ok: true });
-    expect(useGameStateStore.getState().pendingEffectPick?.atomVerb).toBe('sceneRemove');
+    const removal = useGameStateStore.getState().pendingEffectPick;
+    expect(removal?.atomVerb).toBe('sceneRemove');
+    expect(removal?.candidates.map(candidate => candidate.uid)).toContain('target');
+    expect(removal?.candidates.map(candidate => candidate.uid)).not.toContain('opponent-decoy');
     expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: 'target' }).ok).toBe(true);
     finishCaseAction(actionId);
     const after = useGameStateStore.getState().gameState!;
-    expect(after.players.opp.scene.map(c => c.uid)).toEqual([actorUid]);
+    expect(after.players.opp.scene.map(c => c.uid)).toEqual(['opponent-decoy', actorUid]);
     expect(after.players.self.scene.map(c => c.cardId)).toEqual(['B06025']);
-    expect(after.players.self.remove).toEqual(['B06025']);
-    expect(after.players.opp.remove).toEqual(['D08005']);
+    expect(after.players.self.remove).toEqual(['B06025', 'D08005']);
+    expect(after.players.opp.remove).toEqual([]);
   });
 
   it('skip leaves the removed occurrence and target unchanged', () => {
@@ -107,21 +111,22 @@ describe('B06025 ケロ介: action-removed evidence occurrence reentry', () => {
 
   it('does not enter when zero targets are selected', () => {
     const state = createEmptyGameState();
-    const { actionId, actorUid } = openCaseHirameki(state, 'B06025');
+    state.players.self.scene = [targetChar()];
+    const { actionId } = openCaseHirameki(state, 'B06025');
 
     expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' })).toEqual({ ok: true });
     expect(useGameStateStore.getState().pendingEffectPick?.atomVerb).toBe('sceneRemove');
     expect(dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null })).toEqual({ ok: true });
     finishCaseAction(actionId);
     const after = useGameStateStore.getState().gameState!;
-    expect(after.players.self.scene).toHaveLength(0);
+    expect(after.players.self.scene.map(card => card.uid)).toEqual(['target']);
     expect(after.players.self.remove).toEqual(['B06025']);
   });
 
   it('does not retarget an identical remove card when held authority becomes stale', () => {
     const state = createEmptyGameState();
     state.players.self.remove = ['B06025'];
-    state.players.opp.scene = [targetChar()];
+    state.players.self.scene = [targetChar()];
     state.players.opp.deck = ['D08017', 'D08017'];
     const { actionId, actorUid } = openCaseHirameki(state, 'B06025');
 
@@ -137,8 +142,8 @@ describe('B06025 ケロ介: action-removed evidence occurrence reentry', () => {
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.opp.scene.map(c => c.uid)).toEqual([actorUid]);
     expect(after.players.self.scene).toHaveLength(0);
-    expect(after.players.self.remove).toEqual(['B06025', 'B06025']);
-    expect(after.players.opp.remove).toEqual(['D08005']);
+    expect(after.players.self.remove).toEqual(['B06025', 'D08005', 'B06025']);
+    expect(after.players.opp.remove).toEqual([]);
   });
 
   it('a1 requires another YAIBA and exposes turn-scoped Assault/AP+1000 choices', () => {

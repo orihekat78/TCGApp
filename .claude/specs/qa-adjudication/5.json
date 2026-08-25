@@ -602,11 +602,13 @@
     {
       "qaId": "card:B05058:d533b0ca0d9e25659d4cafd5fa63d742a17440de2bd15b1323712ffad0513e08",
       "answerHash": "d3a1a1bf7803706283e75e122e5e980e9cd993ed9807a16e7f1c8816c526e57e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05058.ts:1"
+        "src:src/cards/ct-p05/B05058.ts:19",
+        "src:src/cards/ct-p05/B05058.ts:48",
+        "tests:tests/cards/official-qa/B05058-completion-public-wave136.test.ts:158"
       ]
     },
     {
