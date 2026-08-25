@@ -28,7 +28,7 @@ import { char as readChar } from '../read/char.js';
 import type { GameState, Effect, EffectCtx, TargetingRef, Condition } from '../types/index.js';
 import type { Candidate } from '../types/candidate.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from './atom-pick-spec.js';
-import { findChooseInterceptReactions } from './consult-choose-intercept.js';
+import { findChooseInterceptReactions, isTrustedSetCardOccurrenceSelection } from './consult-choose-intercept.js';
 import { hand } from '../mutate/hand.js';
 import { run as runEffect } from './resolver.js';
 import { eventUseAllowed } from '../flow/main/hand-use-card.js';
@@ -935,7 +935,9 @@ function substituteAtomPick(
         ),
       };
     }
-    const interceptReactions = findChooseInterceptReactions(state, picked.uid, ctx);
+    const interceptReactions = isTrustedSetCardOccurrenceSelection(state, atom.verb, args, ctx.source)
+      ? []
+      : findChooseInterceptReactions(state, picked.uid, ctx);
     const decisionTrace = interceptReactions.length === 0 ? undefined : ensureEffectCausalTrace(state, ctx);
     if (decisionTrace !== undefined) recordEffectCausalDecision(state, decisionTrace, byPlayer);
     let effectCancelled = false;

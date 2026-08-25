@@ -2,16 +2,92 @@ import { def as readDef } from '../read/def.js';
 import { evalCond } from '../cond/eval.js';
 import { char as readChar } from '../read/char.js';
 import { char as mutateChar } from '../mutate/char.js';
+import { buildShortFormPick } from './atom-pick-spec.js';
 import {
   incrementDeclaredAbilityUseCountRecord,
   incrementTurnScopedUseCount,
   readDeclaredAbilityUseCountRecord,
   readTurnScopedUseCount,
 } from './source-identity.js';
-import type { AbilityDef, DeclaredAbilityHostOrigin, EffectCtx, GameState } from '../types/index.js';
+import type { AbilityDef, DeclaredAbilityHostOrigin, Effect, EffectCtx, GameState } from '../types/index.js';
 
 type Player = 'self' | 'opp';
 type InterceptTarget = { cardName?: string; excludeSelf?: boolean; requiresNonBlackSceneChar?: boolean };
+
+type SelectionSource = Pick<EffectCtx['source'],
+  'player' | 'cardId' | 'uid' | 'abilityId' | 'abilityOrigin' | 'abilityIndex' | 'area'>;
+
+function markedSetCardProxyAtoms(effect: Effect | undefined): Array<Extract<Effect, { kind: 'atom' }>> {
+  if (!effect) return [];
+  switch (effect.kind) {
+    case 'atom':
+      return effect.verb === 'bindPick'
+        && (effect.args as { selectionSubject?: unknown }).selectionSubject === 'set-card'
+        ? [effect]
+        : [];
+    case 'sequence':
+    case 'parallel':
+    case 'chain':
+      return effect.steps.flatMap(markedSetCardProxyAtoms);
+    case 'choice':
+      return effect.options.flatMap(markedSetCardProxyAtoms);
+    case 'optional':
+      return [effect.effect, effect.else].flatMap(markedSetCardProxyAtoms);
+    case 'conditional':
+      return [effect.then, effect.else].flatMap(markedSetCardProxyAtoms);
+    case 'forEach':
+      return markedSetCardProxyAtoms(effect.do);
+    case 'repeatOptional':
+      return markedSetCardProxyAtoms(effect.body);
+    case 'replace':
+      return markedSetCardProxyAtoms(effect.with);
+    default:
+      return [];
+  }
+}
+
+/**
+ * Authenticate a host proxy whose printed subject is a physical set card.
+ * Persisted atom args are untrusted: the bypass is rederived from the exact
+ * live printed ability and its canonical short-form target on every path.
+ */
+export function isTrustedSetCardOccurrenceSelection(
+  state: GameState,
+  atomVerb: unknown,
+  atomArgs: unknown,
+  source: SelectionSource,
+): boolean {
+  if (atomVerb !== 'bindPick' || atomArgs === null || typeof atomArgs !== 'object' || Array.isArray(atomArgs)) {
+    return false;
+  }
+  if ((atomArgs as { selectionSubject?: unknown }).selectionSubject !== 'set-card'
+    || source.abilityOrigin !== 'printed'
+    || !Number.isSafeInteger(source.abilityIndex)
+    || typeof source.cardId !== 'string'
+    || typeof source.abilityId !== 'string'
+    || typeof source.uid !== 'string'
+    || (source.area ?? 'scene') !== 'scene') {
+    return false;
+  }
+  const liveSource = state.players[source.player].scene.find(character => character.uid === source.uid);
+  if (liveSource?.cardId !== source.cardId) return false;
+  const ability = readDef.card(source.cardId)?.abilities[source.abilityIndex!];
+  if (ability?.id !== source.abilityId) return false;
+
+  return markedSetCardProxyAtoms(ability.effect).some((atom) => {
+    const canonicalArgs = atom.args as Record<string, unknown>;
+    if (canonicalArgs.player !== 'self' && canonicalArgs.player !== 'opp') return false;
+    const chooser = canonicalArgs.player === 'self'
+      ? source.player
+      : source.player === 'self' ? 'opp' : 'self';
+    const expectedArgs = {
+      ...canonicalArgs,
+      uid: '$pick',
+      target: buildShortFormPick('scene', canonicalArgs, chooser, 'either'),
+    };
+    return JSON.stringify(atomArgs) === JSON.stringify(expectedArgs);
+  });
+}
 
 export type ChooseInterceptProtector = {
   responder: Player;

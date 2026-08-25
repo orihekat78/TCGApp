@@ -1321,8 +1321,8 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | ~~B01009~~ | ✅ 出荷済 (2026-07-10 mini-wave #4: lvlOverrideInHand、B09095 と同 wave) |
 | B01070 | 「このキャラを指定してアクション」= target=self gate 不在 (triggerCharMatches に includeSource 系 field 無し、side:self では over-fire) |
 | B02013 | set-host への grantKeywords が closure 型で JSON 不可 (on-set-host 継続 rider の keyword 版) |
-| B02039 | set-card を表向き証拠として持ち主が得る verb 不在 |
-| B02067 | 「選ばれたとき無効にする」= choose-intercept + negate 機構不在 (B04003 と同 cluster) |
+| ~~B02039~~ | **✅ 解消**: `setCardToEvidence` と物理occurrence選択を出荷。Wave147でB02067 host-proxy境界を再確認。 |
+| ~~B02067~~ | **✅ 解消**: `effect:choose-intercept`、即時cancel、物理set occurrence単位のTurn1を出荷。Wave147公開matrixで再確認。 |
 | B02084 | セット状態のイベント自身の remove 到達 observer 不在 (PR234 line2 と同 cluster、faceUp filter も) |
 | B02086 | 【変装時】相手 discard 強制 or 無効化の相手選択分岐 (そうしなかった場合〜) 不在。**WC2a で再検証 → 依然 DEFER**: pick chooser:'opp-of-owner' は解決したが、B02086 は optional/choice の **chooser=opp + else 枝** (相手が discard する/しない を決め、しない場合 contactUnremovable 付与) を要する。optional 型に chooser も else も無く、optional/choice には pick と違い AI-drain (drainAiEffectPicks) が無い (resolve-picks:713 で AI skip 固定) → opp-decision infra 新設が別途必要。0-hand feasibility で choice 2択モデルも不可 |
 | B02087 | ネクストヒント限定の色無視 token 不在 (colorIgnoreOnHandUse は手札使用+NH 両経路で over-wide、QA は NH 限定) |
@@ -1331,7 +1331,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | B03041 | イベント→host への triggered 能力付与機構不在 (grantAbility は declared 想定) |
 | B03078 | sleepGuard (スリープ状態でもガード可) の JSON token 不在 (closure 出荷 1 枚のみ) |
 | B03112 | leave:to-remove payload に効果 owner attribution 不在 (B03116/B04091 と同 cluster) |
-| B04003 | 「選ばれたとき〜無効にする」intercept (B02067 と同 cluster) + 相手 optional discard 分岐 |
+| ~~B04003~~ | **✅ 解消**: `effect:choose-intercept-discard` と相手discard-or-cancel分岐を出荷。 |
 | B05005 | ネクストヒント限定 trigger (B01005 cluster) + 使用カード color filter |
 | B05007 | 「このターン中〜アクションしたとき」の遅延 observer 設置 (turn-scoped conditional hook 付与) 不在 |
 | B05092 | 手札→デッキ下 N 枚 (好きな順) verb 不在 + 移した枚数 bind draw |
@@ -1343,7 +1343,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | B07003 | 手札内カードへのカットイン能力動的付与不在 (isCutInCard は印字判定) |
 | B07011 | じゃんけん RNG primitive 不在 (P48、既知) |
 
-**cluster 追記 (batch3 と合算した mini-wave 優先度)**: ~~⑥next-hint 判別~~ ✅ mini-wave #2 出荷済 ⑦「選ばれたとき無効」intercept (B02067/B04003) ~~⑧hand 内 continuous level~~ ✅ mini-wave #4 出荷済 (B01009/B09095。B07003 は cutin 動的付与 = 別機構で DEFER 継続)。
+**cluster 追記 (batch3 と合算した mini-wave 優先度)**: ~~⑥next-hint 判別~~ ✅ mini-wave #2 出荷済 ~~⑦「選ばれたとき無効」intercept (B02067/B04003)~~ ✅ 出荷済 ~~⑧hand 内 continuous level~~ ✅ mini-wave #4 出荷済 (B01009/B09095。B07003 は cutin 動的付与 = 別機構で DEFER 継続)。
 
 ## hybrid-batch5 由来 DEFER (2026-07-10、2行 pool 最終 14 unit 中 7 DEFER。全文 = .tmp/_batch5_defers.txt)
 
@@ -1351,7 +1351,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 |---|---|
 | B07030 | remove→PA の pick 型 verb 不在 (toPartnerArea は self-only 決定論、pick 不可) |
 | B08017 / B08017P | **✅ IMPLEMENTED (2026-07-13, uncommitted)** — sleep hostのface-up set riderが自陣灰原哀へ `untargetableByOppEffectAura` を付与。 |
-| B08081 | 「選ばれたとき〜無効」intercept (B02067/B04003 cluster ⑦) + 相手 optional 分岐 |
+| ~~B08081~~ | **✅ 解消**: choose-interceptと相手discard-or-cancel分岐を出荷。 |
 | ~~B09011~~ | **✅ 解消 (2026-07-10 miniwave-lp)**: `forEach` + `charOverrideLP val:1 scope:'turn'` を出荷。 |
 | B09039 | PA∪remove union pick 不在 (B09055 と同 cluster) |
 | B09060 | 手札 cost リムーブの costRemovedMatches が hand-source 非対応 (removeDeckTop 専用) |
@@ -1373,7 +1373,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 
 **hybrid pipeline 完了宣言 (2026-07-10 朝)**: refuse-1/2/3/4行 全層掃き終わり。残 pool = DEFER cluster のみ
 (engine mini-wave 対象。優先 cluster = ①turn-scope LP override ②bound levelSum dyn ③deck-reveal 拡張
-④next-hint 判別 ⑤選ばれたとき無効 intercept ⑥hand 内 continuous ⑦set-card 操作系 ⑧cost choice UI)。
+④next-hint 判別 ~~⑤選ばれたとき無効 intercept~~ ✅ ⑥hand 内 continuous ⑦set-card 操作系 ⑧cost choice UI)。
 
 ## miniwave-lp nits (2026-07-10、opus 敵対 review SHIP_WITH_NITS)
 - **latent: misread listener × lpOverride_turn 共存** — listeners/misread.ts:128 は恒久 lpOverride を書く

@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6669
+- **ファイル数**: 6673
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -546,6 +546,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-363.md` — B06027 direct-invoke full-scene switch
     - `BUG-364.md` — B06068 keyword-loss temporal boundary
     - `BUG-365.md` — B02030 Cut-In negation
+    - `BUG-366.md` — B02039 set-card proxy interception
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1658,6 +1659,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves140-141.md` — QA adjudication Waves140-141
     - `2026-08-25-qa-waves142-143.md` — QA adjudication Waves142-143
     - `2026-08-25-qa-waves144-145.md` — QA adjudication Waves144-145
+    - `2026-08-25-qa-waves146-147.md` — QA adjudication Waves146-147
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -5883,6 +5885,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B02008-turn-limit-order-ap.test.ts` — qaId=card:B02008:3240a4626ffa31e953f10ca03af61b33b9d3367feeffa3bc87cd8b3c7be01d9…
       - `B02023-facedown-set-privacy.test.ts` — qa: card:B02023:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b
       - `B02030-completion-public-wave145.test.ts` — qa: card:B02030:22477398ef5d506ba40697a07f730240d929ade78c8a7edaa6aeed9aeb97b358
+      - `B02058-completion-public-wave146.test.ts` — qa: card:B02058:762a82ad66fef61f8a12010f8d850cf7cca54916f71d63712f5f7227f290bd90
+      - `B02067-completion-public-wave147.test.ts` — qa: card:B02067:21d33c0a5eb6a0635654047e680572967ebce417be0fe911d4c8034e4df2390d
       - `B02067-multi-set-intercept-public-wave34.test.ts` — Rules: 15-abilities-effects.md, 16-card-set.md, 17-icons.md.
       - `B03002-B05005-next-hint-order-guard.test.ts` — Official Q&A certification: public dispatch paths only.
       - `B03006-public-stack-lifecycle.test.ts` — qa: card:B03006:151b435edeb61c22d4471596da22371c8592c23c410528efb5e78938a1bb3b54

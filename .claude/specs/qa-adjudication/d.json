@@ -235,15 +235,16 @@
     {
       "qaId": "card:B02067:fdda495dd5c83ddcb58abe8348f40a601067c2389d2e526b243e204327809853",
       "answerHash": "9db9167ffcbec1aa406be9b0a1e2cbd1eb69497dbba1bc0a9aaa8a2cb4a1aa73",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02067.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
+        "rules:.claude/rules/15-abilities-effects.md:52",
+        "src:src/cards/ct-p02/B02067.ts:25",
+        "src:src/engine/effect/apply-pick.ts:1333",
+        "tests:tests/cards/official-qa/B02067-completion-public-wave147.test.ts:185",
+        "tests:tests/cards/official-qa/B02067-completion-public-wave147.test.ts:186",
+        "tests:tests/cards/official-qa/B02067-completion-public-wave147.test.ts:187"
       ]
     },
     {

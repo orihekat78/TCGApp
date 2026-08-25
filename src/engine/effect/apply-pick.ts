@@ -13,7 +13,7 @@
 import type { CausalEffectTrace, DeclaredAbilityHostOrigin, GameState, Effect, EffectCtx, Candidate, Condition, RemoveResult } from '../types/index.js';
 import type { PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide, ContinuationFrame } from './resolve-picks.js';
 import { resolveEffectPicks, rememberedRuntimeAtomTargetPolicy, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume, _takePendingOptionalBindings, _takePendingOptionalCostPaid } from './resolve-picks.js';
-import { findChooseInterceptReactions } from './consult-choose-intercept.js';
+import { findChooseInterceptReactions, isTrustedSetCardOccurrenceSelection } from './consult-choose-intercept.js';
 import {
   clearChooseInterceptBatchAuthority,
   consumeChooseInterceptBatchAuthority,
@@ -1321,7 +1321,13 @@ export function applyPickAndContinuation(
   }
     consumeQueuedPick(state, pending);
   commitDecision();
-  if (!skipChooseIntercept && !sceneEnterSwitchPick) {
+  const selectsSetCardOccurrence = isTrustedSetCardOccurrenceSelection(
+    state,
+    pending.atomVerb,
+    pending.atomArgs,
+    interceptCtx.source,
+  );
+  if (!skipChooseIntercept && !sceneEnterSwitchPick && !selectsSetCardOccurrence) {
     const guards: PendingChooseInterceptResponseSide[] = [];
     for (const uid of pickedUids ?? [pickedUid]) {
       const reactions = findChooseInterceptReactions(state, uid, interceptCtx);

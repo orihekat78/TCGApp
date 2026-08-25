@@ -206,15 +206,16 @@
     {
       "qaId": "card:B02058:762a82ad66fef61f8a12010f8d850cf7cca54916f71d63712f5f7227f290bd90",
       "answerHash": "c35c48d623b1f8f493b2b6868c6ffb5b3ff583a9d623419aa7caad09ce21c6e1",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/26-qa-deck-refresh.md:65",
-        "src:src/cards/ct-p02/B02058.ts:58"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p02/B02058.ts:23",
+        "src:src/engine/flow/main/hand-use-card.ts:310",
+        "tests:tests/cards/official-qa/B02058-completion-public-wave146.test.ts:118",
+        "tests:tests/cards/official-qa/B02058-completion-public-wave146.test.ts:120",
+        "tests:tests/cards/official-qa/B02058-completion-public-wave146.test.ts:122",
+        "tests:tests/cards/official-qa/B02058-completion-public-wave146.test.ts:123"
       ]
     },
     {
