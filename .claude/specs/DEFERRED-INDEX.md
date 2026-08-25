@@ -1330,7 +1330,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | B03028 | 「【緑】のイベントを使用したとき」= event-use の color filter matcher 不在 (matcherCondition に triggerCardMatches{color} は event-use payload 非対応) |
 | B03041 | イベント→host への triggered 能力付与機構不在 (grantAbility は declared 想定) |
 | B03078 | sleepGuard (スリープ状態でもガード可) の JSON token 不在 (closure 出荷 1 枚のみ) |
-| B03112 | leave:to-remove payload に効果 owner attribution 不在 (B03116/B04091 と同 cluster) |
+| ~~B03112~~ | **✅ 解消**: `leave:to-remove` の `byPlayer` owner attribution を出荷済み。Wave151公開matrixでown/opponent effectとswitch非発火を再確認。 |
 | ~~B04003~~ | **✅ 解消**: `effect:choose-intercept-discard` と相手discard-or-cancel分岐を出荷。 |
 | B05005 | ネクストヒント限定 trigger (B01005 cluster) + 使用カード color filter |
 | B05007 | 「このターン中〜アクションしたとき」の遅延 observer 設置 (turn-scoped conditional hook 付与) 不在 |

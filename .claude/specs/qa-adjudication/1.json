@@ -384,11 +384,17 @@
     {
       "qaId": "card:B03102:0d310607ecb1545941beca62cb928c162123c380c3ec000be0d418c018300f0c",
       "answerHash": "83419519db79bf2bf87e96a843bdeacaf252a041e8baa1682575139bf38aac27",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p03/B03102.ts:12"
+        "rules:.claude/rules/11-reasoning.md:26",
+        "rules:.claude/rules/11-reasoning.md:30",
+        "src:src/cards/ct-p03/B03102.ts:18",
+        "src:src/cards/ct-p03/B03102.ts:20",
+        "tests:tests/cards/official-qa/B03102-completion-public-wave150.test.ts:155",
+        "tests:tests/cards/official-qa/B03102-completion-public-wave150.test.ts:156",
+        "tests:tests/cards/official-qa/B03102-completion-public-wave150.test.ts:157"
       ]
     },
     {

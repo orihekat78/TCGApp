@@ -1,68 +1,68 @@
-# Next Task: card-completion QA Waves150-151
+# Next Task: card-completion QA Waves152-153
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves148-149 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves150-151 commit.
 
 ## Completed
 
-- Wave148 finishes all four remaining B02088 Q&A items.
-- Wave149 finishes all four remaining B03094 Q&A items.
-- Coverage is 1855 matched / 1109 test-missing / 2964 total.
-- Production source is unchanged; public matrices close turn-end, Cut-In,
-  Hirameki, action timing, exact-mill, repeat-action, and expiry gaps.
-- Fresh official authority is 2257 printings; the tracked snapshot remains 2256
-  because new PR322 stays outside this adjudication. Q&A remains 2964/zero conflict.
+- Wave150 finishes all four remaining B03102 Q&A items.
+- BUG-367 moves B03102 from stale `reasoning:end` to `reasoning:after-sleep`,
+  so its AP reaction resolves after sleep and before Misread/evidence.
+- Wave151 finishes all four remaining B03112 Q&A items for base/P across
+  ineffective/additive Cut-In, effect-owner attribution, and switch exclusion.
+- Coverage is 1863 matched / 1101 test-missing / 2964 total; 978 exact groups
+  remain, including 855 singleton groups.
+- Fresh authority remains 2257 printings and 2964 Q&A/zero conflict; PR322 stays
+  outside the tracked 2256-printing adjudication snapshot.
 - Protected pnpm files and live cards-data remain untouched.
-- Full evidence is in the Waves148-149 session record.
 
 ## Throughput contract
 
-- Prefer complete-card batches of 5-15 grounded items; exact groups are mostly
-  singleton or pairs and are not implementation-wave boundaries.
-- Keep unrelated semantics in separate describe blocks inside one card matrix.
+- Prefer complete-card batches of 5-15 grounded items; exact groups are not
+  implementation-wave boundaries.
 - Per wave: focused behavioral tests and narrow QA merge only.
-- Two-wave checkpoint: typechecks, focused ESLint, QA trace/lint, docs,
+- Two-wave checkpoint: typecheck, focused ESLint, QA merge/lint, docs,
   diff-check, one commit, and one push.
-- The next routine full checkpoint is Waves154-155 unless T3/publication requires
-  earlier. Ordinary certification waves use focused gates only.
-- Certification-only work uses no review agent. Raise route on a production
-  defect, rule conflict, or new engine path.
+- The next routine full checkpoint is Waves154-155 unless T3/publication or a
+  newly found engine defect requires earlier full gates.
+- Certification-only work uses no review agent. Raise route for production,
+  rule conflict, or new engine/resolver behavior.
 
 ## Start
 
 1. Read root/nested AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read `.claude/sessions/2026-08-25-qa-waves148-149.md`, this prompt, and the
-   current QA trace/workflow.
-4. Re-run the hash-only queue and fresh isolated authority validation.
+3. Read the Waves150-151 session record, this prompt, and QA workflow.
+4. Re-run hash-only queue and fresh isolated authority validation.
 5. Run pinned grounding for every physical printing before adjudication.
 
-## Wave150: complete B03102
+## Wave152: complete B05092
 
-- Certify all four remaining B03102 Q&A items in one card matrix.
-- Current suffix prefixes: `0d310607ecb1`, `5bc3bbbf1d67`, `d9dae1726ce1`,
-  `df53870dd5d1`.
-- Ground every printing and separate exact Q&A semantics before test design.
+- Certify all four remaining items: `2bb0d1134005`, `4d673c3dfcb7`,
+  `8786a477fc17`, and `a4313105cbdb`.
+- Separate zero-card shuffle, face-down deck-top movement, pre-guard timing,
+  and action termination after moving the declared target.
+- Existing CardDef ships `handToDeckBottom` and `sceneToDeck`; the old DEFER row
+  is stale and must be reconciled only after public dispatch proof.
 
-## Wave151: complete B03112
+## Wave153: complete B06034
 
-- Certify all four remaining B03112 Q&A items in one card matrix.
-- Current suffix prefixes: `2c83e0569954`, `671a506d6cd4`, `6d00eabe29a7`,
-  `b1a3c7472a22`.
-- Ground every printing and preserve owner, optional, and physical boundaries.
+- Certify all four remaining items: `69959d6bea85`, `a54fba013cee`,
+  `a5f52b076ec7`, and `ce881ce830b`.
+- Separate invoked Hirameki zone movement, suppression bypass, ineffective
+  condition behavior, and self-target flip-back behavior.
+- Existing CardDef ships `evidenceFlip` plus `invokeHiramekiOfCard`; reconcile
+  stale DEFER rows only after event-use and evidence-Hirameki public matrices.
 
 ## Gate carry-forward
 
-- Waves148-149 focused horizontal gate: 8 files / 154 tests PASS. Both
-  TypeScript projects and scoped ESLint PASS; QA merge/lint PASS.
-- Full functional Vitest: 1221 files / 12860 tests PASS / 177 skip; three files
-  skipped and two protected release-writer lanes excluded. Both TypeScript projects
-  and full ESLint PASS.
-- Smoke1000 baseline PASS: 471/529, timeout0, exception0, average11.685.
-- Full-match desktop/mobile Playwright: 2/2 PASS, console error0.
+- Waves150-151 target matrices: 2 files / 9 tests PASS.
+- Focused horizontal gate: 7 files / 99 tests PASS.
+- Both TypeScript projects, scoped ESLint, icon lint, QA merge, and QA lint PASS.
 - Sol rules and engine reviewers PASS; Critical/Important zero.
+- See the Waves150-151 session record for full functional/smoke gate evidence.
 
 ## Estimate
 
-- Snapshot: 1109 remaining items / 982 exact groups; 855 singleton groups.
-- Remaining QA work: 60-124 working hours; center about 92 hours.
-- Risk-aware batching forecast: roughly 44-84 implementation waves.
+- Snapshot: 1101 remaining items / 978 exact groups; 855 singleton groups.
+- Remaining QA work: 60-123 working hours; center about 91 hours.
+- Risk-aware batching forecast: roughly 42-82 implementation waves.

@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6678
+- **ファイル数**: 6684
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -547,6 +547,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-364.md` — B06068 keyword-loss temporal boundary
     - `BUG-365.md` — B02030 Cut-In negation
     - `BUG-366.md` — B02039 set-card proxy interception
+    - `BUG-367.md` — B03102 reasoning reaction timing
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1661,6 +1662,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves144-145.md` — QA adjudication Waves144-145
     - `2026-08-25-qa-waves146-147.md` — QA adjudication Waves146-147
     - `2026-08-25-qa-waves148-149.md` — QA adjudication Waves148-149
+    - `2026-08-25-qa-waves150-151.md` — QA adjudication Waves150-151
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -1813,7 +1815,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B03088.md` — B03088 grounding
       - `B03094.md` — B03094 / B03094P grounding
       - `B03095.md` — B03095 grounding
+      - `B03102.md` — B03102 grounding
       - `B03111.md` — B03111 バーボン grounding (2026-07-10, sonnet5)
+      - `B03112.md` — B03112 / B03112P grounding
       - `B03120.md` — B03120 grounding
       - `B03127.md` — B03127 grounding
       - `B03129.md` — B03129 / B03129P grounding
@@ -5899,6 +5903,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B03025-public-refresh-flow.test.ts` — qa: card:B03025:51de3c143838c348f32a12d2252063f7ac6b6d884ab75fc3ef24a003df5b1731
       - `B03029-public-event-use.test.ts` — qa: card:B03029:83d447e04f250f995eb1040561f6f0f992b0be02cc6c13613c214b837568b222
       - `B03094-completion-public-wave149.test.ts` — qa: card:B03094:3e54bbed10ce6842d1023560a2b7dd83568ca8dd44f892439011d6b3afb17059
+      - `B03102-completion-public-wave150.test.ts` — qa: card:B03102:0d310607ecb1545941beca62cb928c162123c380c3ec000be0d418c018300f0c
+      - `B03112-completion-public-wave151.test.ts` — qa: card:B03112:2c83e05699547a122e72d36589adce2d81152f65597bff1f1551047f02568ed9
       - `B04003-choose-intercept-public.test.ts` — qa: card:B04003:29b8cf6699112a9cca3172f2425ac76e59a7d7337034c7b9985bbdab46e21912
       - `B04012-optional-decline.test.ts` — qa: card:B04012:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d
       - `B04015-B04028-action-hirameki.test.ts` — qa: card:B04015:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
