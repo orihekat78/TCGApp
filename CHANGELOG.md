@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `b8309df94466`
+> Source hash: `73c010b3e842`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,24 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-08-26
+title: CT-P07 Q&A Waves168-169を完了
+type: fix
+scope: cards-engine-ui
+---
+
+## QA coverage
+
+B07043からB07056/Pまで18件の公式Q&Aへ、両owner、全printing、
+実dispatch、条件破壊decoyを含む証跡を追加した。
+
+## Corrections
+
+- choice DSLへ任意の意味ラベルを追加し、B07043の3宣言名を表示する。
+- B07053の選択カードを公開し、解決後に閉じられるpresentationへ配線する。
+- 同型の手札公開6 printingも公開presentationへ統一する。
 
 ---
 date: 2026-08-26

@@ -13,21 +13,17 @@
 
 ## Next
 
-- Waves166-167 move eighteen items to matched. Coverage is 1965 matched / 999
-  test-missing / 2964 total; about 884 exact groups remain, including 769
-  singletons.
-- BUG-371 restores B07033/P/P2 FILE6 Disguise append-only. BUG-372 preserves
-  detached set-card observers across simultaneous batch removal without
-  persisting snapshots. BUG-373 limits B07034/P to face-down leaves.
-- B07017/P-B07039/P public matrices cover effect contacts, optional branches,
-  owner-only costs, no-target triggers, full-scene switch, and multiple observers.
-- Full Vitest, TypeScript, ESLint, smoke 1000, QA merge/lint, Sol review, and
-  targeted desktop/mobile B07033 Playwright pass. One unrelated B08054 full-suite
-  bootstrap timeout passed immediately in isolated rerun.
-- Waves168-169 batch eighteen CT-P07 items across B07043-B07056/P.
+- Waves168-169 move eighteen items to matched. Coverage is 1983 matched / 981
+  test-missing / 2964 total; 868 exact groups remain, including 755 singletons.
+- BUG-374 carries optional semantic labels through runtime and declared choice
+  paths. BUG-375 publishes seven hand-reveal printings with closeable lifetime.
+- B07043-B07056/P public matrices cover split names, continuous modifiers,
+  owner costs, guarded contact identity, refresh, optional branches, and stun.
+- Functional full Vitest, TypeScript, full ESLint, smoke 1000, QA merge, full
+  desktop/mobile Playwright, and Sol review pass. Clean release runs after commit.
+- Waves170-171 batch nineteen CT-P07 items across B07057/P-B07079/P.
 - Official sync drift remains separate: PR322 and changed B04018/B04018P/
   B06103P Q&A require re-queueing.
-- At nine exact groups per wave, the current queue is about 99 waves, ending near
-  Wave266; recalculate after every two-wave batch.
+- At nine exact groups per wave, about 97 waves remain through roughly Wave266.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

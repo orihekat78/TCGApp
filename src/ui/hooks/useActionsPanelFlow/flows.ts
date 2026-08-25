@@ -769,7 +769,10 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   //   AI 経路の択一は BUG-109 (PA 短縮形 AI no-op) と併せて別途対応 (現状 default 0)。
   const effect = chosenAbil?.effect as Effect | undefined;
   if (effect && effect.kind === 'choice' && effect.options.length > 1 && owner === 'self' && cardId) {
-    const options = effect.options.map((o, index) => ({ index, label: choiceOptionLabel(o) }));
+    const options = effect.options.map((o, index) => ({
+      index,
+      label: effect.labels?.[index] ?? choiceOptionLabel(o),
+    }));
     const choice = await useChoicePicker().ask({ sourceName, options });
     if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
     costParams = { ...(costParams ?? {}), choiceIndex: choice.index };

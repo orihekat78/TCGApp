@@ -1176,7 +1176,7 @@
       "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07053.ts:71",
+        "src:src/cards/ct-p07/B07053.ts:73",
         "tests:tests/cards/m1-megasweep/B07053.manual.test.ts:130"
       ]
     },

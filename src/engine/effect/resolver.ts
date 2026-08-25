@@ -183,6 +183,7 @@ function pauseRuntimeHumanChoice(state: GameState, eff: Extract<Effect, { kind: 
     },
     options: eff.options.map((option, index) => ({
       index,
+      label: eff.labels?.[index],
       verb: option.kind === 'atom' ? option.verb : undefined,
       args: option.kind === 'atom' ? option.args as Record<string, unknown> : undefined,
     })),

@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6745
+- **ファイル数**: 6764
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -554,6 +554,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-371.md` — B07033 FILE6 Disguise omission
     - `BUG-372.md` — Simultaneous set-card observer loss
     - `BUG-373.md` — B07034 face-down trigger gate
+    - `BUG-374.md` — B07043 semantic choice labels
+    - `BUG-375.md` — Public hand reveal presentation omission
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -928,6 +930,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-24-20-qa-wave85-inherent-sleep-entry.md` — QA Wave85: fix and certify inherent sleep entry
     - `2026-08-26-01-pending-decision-order.md`
     - `2026-08-26-02-qa-waves166-167.md`
+    - `2026-08-26-03-qa-waves168-169.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1683,6 +1686,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-26-qa-waves162-163.md` — QA adjudication Waves162-163
     - `2026-08-26-qa-waves164-165.md` — QA adjudication Waves164-165
     - `2026-08-26-qa-waves166-167.md` — QA adjudication Waves166-167
+    - `2026-08-26-qa-waves168-169.md` — QA adjudication Waves168-169
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1950,7 +1954,18 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B07035.md` — B07035 古畑恵 grounding
       - `B07037.md` — B07037 grounding
       - `B07039.md` — B07039 / B07039P grounding
+      - `B07043.md` — B07043 grounding
+      - `B07044.md` — B07044 grounding
       - `B07045.md` — B07045 セリザベス女王 grounding
+      - `B07046.md` — B07046 grounding
+      - `B07047.md` — B07047 / B07047P grounding
+      - `B07048.md` — B07048 grounding
+      - `B07050.md` — B07050 grounding
+      - `B07051.md` — B07051 grounding
+      - `B07052.md` — B07052 grounding
+      - `B07053.md` — B07053 grounding
+      - `B07055.md` — B07055 / B07055P grounding
+      - `B07056.md` — B07056 / B07056P grounding
       - `B07059.md` — B07059 grounding
       - `B07061.md` — B07061 grounding
       - `B07061P.md` — grounding dossier: B07061P (自動生成 2026-07-13)
@@ -5983,6 +5998,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B07005-B07015-completion-public-wave165.test.ts` — qa: card:B07005:c596ae62d295a0df22c230a2cbc61a4567f85c825a50fd331245bee0fa8fa94c
       - `B07017-B07030-completion-public-wave166.test.ts` — qa: card:B07017:077dd7a61a20a31e5929ca294e5fed39ecfd7fd9c913426e4dc297ce71780ae9
       - `B07031-B07039-completion-public-wave167.test.ts` — qa: card:B07031:5a3bf6716303171e5a355286c8ea7863437a9946cab30a09b076210246f250d2
+      - `B07043-B07051-completion-public-wave168.test.ts` — qa: card:B07043:2936447fd71a80eedcaab6991807eb457d313818936c6e73c803d98f0b0c0ed5
+      - `B07052-B07056-completion-public-wave169.test.ts` — qa: card:B07052:6f98c3d7a03fcea61db5d9ae93b0a97ce83fd44eb79a4179dfe5b3072986d55a
       - `B07066-declared-cost-optional.test.ts` — qa: card:B07066:939f5e30d9e32c8b233a160a6f70ebb932c71ce0971e6f66cfb3701d5fff76cd
       - `B07102-refresh-includes-removed.test.ts` — qaId=card:B07102:99f16dd6a248501c9d63a44dd85b2d6097ef720865e4181d1b451669f04b05d…
       - `B08049-completion-public-wave132.test.ts` — qa: card:B08049:190baa1e1f03afa7d9e83de8ff7b5f6134452bd6b3a05caf22783df26c2a9ea8
@@ -6330,6 +6347,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `evidence-top-to-hand.test.ts` — evidence-top-to-hand — evidenceToHand の新 fromTop フラグ (「証拠を上から1つ」= deterministic…
     - `generated-batch.test.ts` — tests/cards/generated-batch — 非MVP 単純カード + 複雑カットイン generator 出力の構造検証
     - `hagiwara-self-remove-observer.test.ts` — engine拡張 wave#2 cluster16 — 萩原千速 (PR280/B06087/B06087P) gate5 実機検証
+    - `hand-reveal-public-lifecycle-wave169.test.ts`
     - `hand-to-evidence.test.ts` — hand-to-evidence — 新 verb handToEvidence (手札→裏向き証拠) と evidence-swap chain の挙動テスト…
     - `hybrid-pilot-1.test.ts` — CARD PHASE hybrid-pilot-1 probe — compiler refuse-1行 hybrid 穴埋め 17枚
     - `leave-reanimate-foreach-batch.test.ts` — Task A batch#2 wave2 — leave→hand / reanimate / forEach-all クラスタ (engine変更0)
@@ -6497,6 +6515,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `pr099-declare-name-modal.spec.ts`
     - `private-hosted-static.spec.ts`
     - `public-hand-reveal-window.spec.ts` — The reveal stays usable above its linked effect picker. Card detail is
+    - `qa-waves168-169-visible-decisions.spec.ts`
     - `reasoning-hook-2026-06-06.spec.ts` — E2E: engine-extension reasoning-hook (2026-06-06 タスクC) の実機 text-faithfulness 検証。
     - `reasoning-hook-batch3-2026-06-06.spec.ts` — E2E: engine-extension reasoning-hook batch #3 (2026-06-06 タスクC) 実機 text-faithful…
     - `registered-card-name-wave105.spec.ts`

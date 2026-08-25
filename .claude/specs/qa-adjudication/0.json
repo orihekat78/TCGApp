@@ -1192,21 +1192,34 @@
     {
       "qaId": "card:B07043:2936447fd71a80eedcaab6991807eb457d313818936c6e73c803d98f0b0c0ed5",
       "answerHash": "649846cf9714bbedc4b23674f4c600ecc2ae0b9faacddff89563c5f302b94522",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07043.ts:22"
+        "src:src/cards/ct-p07/B07043.ts:22",
+        "src:src/cards/ct-p07/B07043.ts:44",
+        "tests:tests/cards/official-qa/B07043-B07051-completion-public-wave168.test.ts:156",
+        "tests:tests/cards/official-qa/B07043-B07051-completion-public-wave168.test.ts:170",
+        "tests:tests/cards/official-qa/B07043-B07051-completion-public-wave168.test.ts:175"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {
       "qaId": "card:B07043:e6c826386ff01a7b0b104dc4409261f05cca204fb433686a0170faf9c5c42173",
       "answerHash": "a27ae75a4bba47c8fb23d3f20ea03e0173aff98c55a371f7dc8380b373d39980",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07043.ts:27"
+        "src:src/cards/ct-p07/B07043.ts:28",
+        "tests:tests/cards/official-qa/B07043-B07051-completion-public-wave168.test.ts:157",
+        "tests:tests/cards/official-qa/B07043-B07051-completion-public-wave168.test.ts:175",
+        "tests:tests/cards/official-qa/B07043-B07051-completion-public-wave168.test.ts:177"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {
@@ -1234,11 +1247,19 @@
     {
       "qaId": "card:B07052:789049b9d2880459669d430a17e448773f634fb20994dacac7767fba2c85d6a0",
       "answerHash": "a27ae75a4bba47c8fb23d3f20ea03e0173aff98c55a371f7dc8380b373d39980",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07052.ts:1"
+        "src:src/cards/ct-p07/B07052.ts:50",
+        "src:src/cards/ct-p07/B07052.ts:56",
+        "tests:tests/cards/official-qa/B07052-B07056-completion-public-wave169.test.ts:183",
+        "tests:tests/cards/official-qa/B07052-B07056-completion-public-wave169.test.ts:185",
+        "tests:tests/cards/official-qa/B07052-B07056-completion-public-wave169.test.ts:188",
+        "tests:tests/cards/official-qa/B07052-B07056-completion-public-wave169.test.ts:191"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {

@@ -1419,6 +1419,7 @@ export function resolveEffectPicks(
           }),
           options: effect.options.map((o, i) => ({
             index: i,
+            label: effect.labels?.[i],
             verb: o.kind === 'atom' ? (o.verb as string) : undefined,
             args: o.kind === 'atom' ? (o.args as Record<string, unknown>) : undefined,
             sceneEnter: containsSceneEnter(o),
@@ -1434,6 +1435,7 @@ export function resolveEffectPicks(
       return {
         kind: 'choice',
         chooser: effect.chooser,
+        ...(effect.labels ? { labels: effect.labels } : {}),
         options: effect.options.map((o) => resolveEffectPicks(state, o, ctx, opts)),
       };
     }

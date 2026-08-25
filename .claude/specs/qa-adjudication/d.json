@@ -1387,14 +1387,15 @@
     {
       "qaId": "card:B07053:7ce0d31df5ea2d710918e2ea0d7a375d03e86245d2a2ebd28b657a05f528cc69",
       "answerHash": "c4cbd8a278d06f96eb3bca784c0be9f25c7768cb5780e36a1c5846c9f18036d6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07053.ts:1"
+        "src:src/cards/ct-p07/B07053.ts:13",
+        "tests:tests/cards/official-qa/B07052-B07056-completion-public-wave169.test.ts:200"
       ],
       "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {
