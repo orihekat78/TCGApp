@@ -1739,15 +1739,16 @@
     {
       "qaId": "card:B10003:a170fb70e2da9658e32bc5ce7cc8f2a0d8c79fd727bdd75bb32253f45e459efc",
       "answerHash": "9c0db2a38965deffd47636c93cae43b0d982f74ebba0f3cfb2444876c95e59f4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:20",
-        "src:src/cards/ct-p10/B10003.ts:17"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/22-qa-action-contact.md:64",
+        "src:src/cards/ct-p10/B10003.ts:24",
+        "tests:tests/cards/official-qa/B10003-completion-public-wave140.test.ts:187",
+        "tests:tests/cards/official-qa/B10003-completion-public-wave140.test.ts:193",
+        "tests:tests/cards/official-qa/B10003-completion-public-wave140.test.ts:194",
+        "tests:tests/cards/official-qa/B10003-completion-public-wave140.test.ts:195"
       ]
     },
     {
@@ -2013,12 +2014,13 @@
     {
       "qaId": "card:B10098:0022106a43764f3ac81c3e8d5e4d4c1f5bfc49acedbbfb228e454807752361d7",
       "answerHash": "5b5f33b1e53912e40ca077245ed428f808039b4f97cee18b17892fdfa5c7a85c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/18-mr.md:16",
-        "src:src/cards/ct-p10/B10098.ts:16"
+        "src:src/cards/ct-p10/B10098.ts:19",
+        "tests:tests/cards/official-qa/B10098-completion-public-wave141.test.ts:188",
+        "tests:tests/cards/official-qa/B10098-completion-public-wave141.test.ts:189"
       ]
     },
     {

@@ -1785,15 +1785,15 @@
     {
       "qaId": "card:B10003:648ebbcb352a942bf69b98d734cd00e8335b630bb1d31ac0c90de1edf1338f80",
       "answerHash": "e20366ba4d41dcf89e1719b538cb87ed891343dfa97b0364048d011bf7766737",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:14",
-        "src:src/cards/ct-p10/B10003.ts:34"
-      ],
-      "noteCodes": [
-        "IMPLEMENTED-CARD-TEST-MISSING"
+        "rules:.claude/rules/22-qa-action-contact.md:64",
+        "src:src/cards/ct-p10/B10003.ts:24",
+        "tests:tests/cards/official-qa/B10003-completion-public-wave140.test.ts:201",
+        "tests:tests/cards/official-qa/B10003-completion-public-wave140.test.ts:204",
+        "tests:tests/cards/official-qa/B10003-completion-public-wave140.test.ts:207"
       ]
     },
     {

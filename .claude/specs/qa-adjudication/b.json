@@ -1791,29 +1791,29 @@
     {
       "qaId": "card:B10003:0194b74149e29b2d31fa5b6d2a9bf767dfd2a718b7ea50244905b5d5fb423e0b",
       "answerHash": "96d58df4cc19cd0a9e2c992194ac4f8f84bb6f707589f5df3affb69ba96bc178",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:7",
-        "src:src/cards/ct-p10/B10003.ts:8"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10003.ts:40",
+        "src:src/cards/ct-p10/B10003.ts:8",
+        "tests:tests/cards/official-qa/B10003-completion-public-wave140.test.ts:174",
+        "tests:tests/cards/official-qa/B10003-completion-public-wave140.test.ts:176"
       ]
     },
     {
       "qaId": "card:B10003:41a4d71898ca68c0a066e9abd2abb7dadd774393e70eb45b6f20ad04f878f316",
       "answerHash": "bc06b45c77b553b94d7406a9e439b81183696c446e50547af0d7ca1748470faf",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/07-action-flow.md:21",
-        "src:src/cards/ct-p10/B10003.ts:24"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/16-card-set.md:19",
+        "src:src/cards/ct-p10/B10003.ts:27",
+        "tests:tests/cards/official-qa/B10003-completion-public-wave140.test.ts:213",
+        "tests:tests/cards/official-qa/B10003-completion-public-wave140.test.ts:217",
+        "tests:tests/cards/official-qa/B10003-completion-public-wave140.test.ts:221",
+        "tests:tests/cards/official-qa/B10003-completion-public-wave140.test.ts:222"
       ]
     },
     {
@@ -1968,15 +1968,13 @@
     {
       "qaId": "card:B10098:8270b12479bcdb4866a43f3a480e6571cfb6333ea4f4c3e1c59bbbe659dad545",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/21-declared-ability-cost.md:15",
-        "src:src/cards/ct-p10/B10098.ts:15"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10098.ts:19",
+        "tests:tests/cards/official-qa/B10098-completion-public-wave141.test.ts:188",
+        "tests:tests/cards/official-qa/B10098-completion-public-wave141.test.ts:189"
       ]
     },
     {

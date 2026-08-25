@@ -2125,12 +2125,13 @@
     {
       "qaId": "card:B10098:93124d913071a04a7dc261334bd1722376911cd4bb21a79cb2f264ed0d2f567d",
       "answerHash": "e00c1738523039a8766c6c2822d61dc174c01893b55927da25218f1acce14a0b",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/18-mr.md:16",
-        "src:src/cards/ct-p10/B10098.ts:16"
+        "src:src/cards/ct-p10/B10098.ts:19",
+        "tests:tests/cards/official-qa/B10098-completion-public-wave141.test.ts:188",
+        "tests:tests/cards/official-qa/B10098-completion-public-wave141.test.ts:189"
       ]
     },
     {

@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6659
+- **ファイル数**: 6662
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1654,6 +1654,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves134-135.md` — QA adjudication Waves134-135
     - `2026-08-25-qa-waves136-137.md` — QA adjudication Waves136-137
     - `2026-08-25-qa-waves138-139.md` — QA adjudication Waves138-139
+    - `2026-08-25-qa-waves140-141.md` — QA adjudication Waves140-141
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -5908,11 +5909,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08087-B08091-leave-evidence-public.test.ts` — qa: card:B08087:1f49f9f42b38c241ebd655d06681a4cb1c6030ffaa8345da75416cb84193fc80
       - `B09090-PR286-entry-waiver.test.ts` — qaId=card:B09090:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7e…
       - `B09109-completion-public-wave128.test.ts` — qa: card:B09109:87aa9ca394d3b7a7faa9cc64726031a8e157f606ad5c5fab6f9690c1e7ed7c45
+      - `B10003-completion-public-wave140.test.ts` — qa: card:B10003:0194b74149e29b2d31fa5b6d2a9bf767dfd2a718b7ea50244905b5d5fb423e0b
       - `B10036-completion-public-wave133.test.ts` — qa: card:B10036:0b75452df6157fca2faca3660e38d13be769a1eae20e32990c76ac7780cdac0b
       - `B10065-completion-public-wave134.test.ts` — qa: card:B10065:132b6ee607cc3a33eb9e91d1f3bda4dc39dfcf54b0a2f045cc2168294ce8a923
       - `B10071-public-wave25.test.ts` — qa: card:B10071:816d7965a6d1b8124bc6be2098194d8f3f19a88be3cdc253bf643cfdff0e1e69
       - `B10087-public-wave25.test.ts` — qa: card:B10087:0c9d0e7ac8e1aeccc9186815ebf6f4fcbc776e2193db1d43e5cd7294a9e3a664
       - `B10088-effect-entry-public-wave25.test.ts` — qa: card:B10088:00139d4a04a7b6b8457670c965d9b2c6ee827110a2321d40b2ba641c9a01b896
+      - `B10098-completion-public-wave141.test.ts` — qa: card:B10098:0022106a43764f3ac81c3e8d5e4d4c1f5bfc49acedbbfb228e454807752361d7
       - `B10101-granted-search-public-wave30.test.ts` — qa: card:B10101:10a900367f7fe2bb97f89519de6c2707375ecf532cb3d2dc8e368059e8f5470e
       - `D06003-D06024-public-path.test.ts` — qaId=card:D06003:e918d066190b75a908b8154f185c9c4291e8387cb2fc4797f5744acc49a362d…
       - `D10003-D10010-printing-copy-limit.test.ts` — qaId=card:D10003:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2…

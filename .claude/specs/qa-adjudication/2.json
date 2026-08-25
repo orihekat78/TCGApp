@@ -1984,15 +1984,16 @@
     {
       "qaId": "card:B10098:ea0d46011bfcd4c7f085f2edcb82aaaf6f5e6e85905331a6addb18489ca201ff",
       "answerHash": "14f798a4ba48e0198334b13fd303c9de8ee4dd37f8bcb7d18f9b474a5dc0d347",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/09-cutin-disguise.md:9",
-        "src:src/cards/ct-p10/B10098.ts:33"
-      ],
-      "noteCodes": [
-        "IMPLEMENTED-CARD-TEST-MISSING"
+        "src:src/cards/ct-p10/B10098.ts:28",
+        "src:src/cards/ct-p10/B10098.ts:32",
+        "tests:tests/cards/official-qa/B10098-completion-public-wave141.test.ts:213",
+        "tests:tests/cards/official-qa/B10098-completion-public-wave141.test.ts:214",
+        "tests:tests/cards/official-qa/B10098-completion-public-wave141.test.ts:218",
+        "tests:tests/cards/official-qa/B10098-completion-public-wave141.test.ts:220"
       ]
     },
     {
