@@ -297,6 +297,7 @@ function queue(
   entryExtras?: Pick<EffectStackEntry,
     | 'declaredBatch'
     | 'declaredReaction'
+    | 'immediateDeclaredReaction'
     | 'costPaid'
     | 'dyn'
     | 'publicHandRevealToken'

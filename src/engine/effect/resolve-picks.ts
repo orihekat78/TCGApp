@@ -1494,7 +1494,8 @@ export function resolveEffectPicks(
         setPendingOptionalCostPaid((ctx as { costPaid?: Record<string, unknown> }).costPaid);
         return { kind: 'parallel', steps: [] };
       }
-      if (effect.aiRun === 'if-hand' && state.players[decisionPlayer].hand.length > 0) {
+      if (effect.aiRun === 'always'
+        || (effect.aiRun === 'if-hand' && state.players[decisionPlayer].hand.length > 0)) {
         return resolveEffectPicks(state, effect.effect, ctx, opts);
       }
       return effect.else ? resolveEffectPicks(state, effect.else, ctx, opts) : { kind: 'parallel', steps: [] };

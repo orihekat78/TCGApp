@@ -1,17 +1,18 @@
-# Next Task: card-completion QA Waves144-145
+# Next Task: card-completion QA Waves146-147
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves142-143 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves144-145 commit.
 
 ## Completed
 
-- Wave142 finishes all five remaining B10099/P Q&A items.
-- Wave143 finishes all four remaining B01009/P Q&A items.
-- Coverage is 1831 matched / 1133 test-missing / 2964 total.
-- No production source changed; public-path card tests close all nine gaps.
+- Wave144 finishes all four remaining B01045 Q&A items.
+- Wave145 finishes all four remaining B02030 Q&A items.
+- Coverage is 1839 matched / 1125 test-missing / 2964 total.
+- BUG-365 implements immediate Cut-In negation with human/CPU parity, exact-two
+  physical set-card removal, cold restore, causal presentation, and action-order preservation.
 - Fresh official authority is 2257 printings; the tracked snapshot remains 2256
   because new PR322 stays outside this adjudication. Q&A remains 2964/zero conflict.
 - Protected pnpm files and live cards-data remain untouched.
-- Full evidence is in the Waves142-143 session record.
+- Full evidence is in the Waves144-145 session record.
 
 ## Throughput contract
 
@@ -21,8 +22,8 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves142-143 commit.
 - Per wave: focused behavioral tests and narrow QA merge only.
 - Two-wave checkpoint: typechecks, focused ESLint, QA trace/lint, docs,
   diff-check, one commit, and one push.
-- Waves144-145 are the routine ten-wave full checkpoint. Run full functional
-  Vitest, full ESLint, smoke/baseline, and isolated desktop/mobile Playwright.
+- The next routine full checkpoint is Waves154-155 unless T3/publication requires
+  earlier. Ordinary certification waves use focused gates only.
 - Certification-only work uses no review agent. Raise route on a production
   defect, rule conflict, or new engine path.
 
@@ -30,38 +31,35 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves142-143 commit.
 
 1. Read root/nested AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read `.claude/sessions/2026-08-25-qa-waves142-143.md`, this prompt, and the
+3. Read `.claude/sessions/2026-08-25-qa-waves144-145.md`, this prompt, and the
    current QA trace/workflow.
 4. Re-run the hash-only queue and fresh isolated authority validation.
 5. Run pinned grounding for every physical printing before adjudication.
 
-## Wave144: complete B01045
+## Wave146: complete B02058
 
-- Certify all four remaining B01045 Q&A items in one card matrix.
-- Current suffix prefixes: `05863fa35054`, `67e481015241`, `858dc0993195`,
-  `ef2f7279fad2`.
+- Certify all four remaining B02058 Q&A items in one card matrix.
+- Current suffix prefixes: `762a82ad66fe`, `9ff7004a9839`, `a8bf8ce39b8a`,
+  `ff6d7da4ad97`.
 - Ground every printing and separate exact Q&A semantics before test design.
 
-## Wave145: complete B02030
+## Wave147: complete B02067
 
-- Certify all four remaining B02030 Q&A items in one card matrix.
-- Current suffix prefixes: `22477398ef5d`, `39a9ed43f18`, `aa20aec7b73c`,
-  `d2129671c0cc`.
+- Certify all four remaining B02067 Q&A items in one card matrix.
+- Current suffix prefixes: `21d33c0a5eb6`, `902ae020bffe`, `b822c6a98356`,
+  `fdda495dd5c8`.
 - Ground every printing and preserve owner, optional, and physical boundaries.
 
 ## Gate carry-forward
 
-- Waves142-143 focused horizontal gate: 8 files / 72 tests PASS. Both TypeScript
-  projects and scoped ESLint PASS; QA merge/lint PASS.
-- Latest full functional Vitest: 1213 files / 12752 tests PASS / 177 skip; two
-  protected release-writer lanes excluded. Full ESLint PASS.
-- Smoke1000 baseline PASS: 471/529, timeout0, exception0.
+- Full functional Vitest: 1219 files / 12831 tests PASS / 177 skip; two protected
+  release-writer lanes excluded. Both TypeScript projects and full ESLint PASS.
+- Smoke1000 baseline PASS: 471/529, timeout0, exception0, average11.685.
 - Full-match desktop/mobile Playwright: 2/2 PASS, console error0.
-- Latest Sol rules and engine reviewers PASS. Refresh every full-gate result in
-  this checkpoint; do not carry the Waves138-139 full evidence forward again.
+- Sol rules and engine reviewers PASS; Critical/Important zero.
 
 ## Estimate
 
-- Snapshot: 1133 remaining items / 1004 exact groups; 875 singleton groups.
-- Remaining QA work: 63-127 working hours; center about 95 hours.
-- Risk-aware batching forecast: roughly 47-87 implementation waves.
+- Snapshot: 1125 remaining items / 997 exact groups; 869 singleton groups.
+- Remaining QA work: 62-126 working hours; center about 94 hours.
+- Risk-aware batching forecast: roughly 46-86 implementation waves.

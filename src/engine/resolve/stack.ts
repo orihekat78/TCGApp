@@ -100,9 +100,17 @@ function hasPendingDecisionExceptPick(): boolean {
 // (敵対レビュー impl/regression lens 反映)。未注入時は raw effect をそのまま実行 (従来挙動)。
 type DeferredEntryPickResolver = (state: GameState, entry: EffectStackEntry, ctx: EffectCtx) => Effect;
 let _deferredEntryPickResolver: DeferredEntryPickResolver | null = null;
+type ImmediateReactionDecisionResolver = (state: GameState, entry: EffectStackEntry) => void;
+let _immediateReactionDecisionResolver: ImmediateReactionDecisionResolver | null = null;
 
 export function _setDeferredEntryPickResolver(fn: DeferredEntryPickResolver | null): void {
   _deferredEntryPickResolver = fn;
+}
+
+export function _setImmediateReactionDecisionResolver(
+  fn: ImmediateReactionDecisionResolver | null,
+): void {
+  _immediateReactionDecisionResolver = fn;
 }
 
 /**
@@ -183,6 +191,7 @@ function isDeclaredReactionEligible(
   pending: Array<{ entry: EffectStackEntry; idx: number }>,
 ): boolean {
   if (entry.declaredReaction === undefined) return true;
+  if (entry.immediateDeclaredReaction === true) return true;
   if (entry.declaredBatch !== undefined
     && pending.some(other =>
       other.entry !== entry
@@ -218,6 +227,7 @@ export function next(state: GameState): EffectStackEntry | null {
       return !pending.some(other => other.entry !== entry && other.entry.reasoningContinuation === undefined);
     }
     if (entry.declaredReaction === undefined) return true;
+    if (entry.immediateDeclaredReaction === true) return true;
     // (i) 同 batch の own entry が pending
     if (entry.declaredBatch !== undefined
       && pending.some(o =>
@@ -233,8 +243,12 @@ export function next(state: GameState): EffectStackEntry | null {
   gated.sort((a, b) => {
     // 1. A carrier created after a human decision is still the effect that was
     // already resolving. Finish it before any trigger emitted by its prefix.
-    const ar = a.entry.resumesCurrentEffect === true ? 0 : 1;
-    const br = b.entry.resumesCurrentEffect === true ? 0 : 1;
+    const ar = a.entry.resumesCurrentEffect === true
+      ? 0
+      : a.entry.immediateDeclaredReaction === true ? 1 : 2;
+    const br = b.entry.resumesCurrentEffect === true
+      ? 0
+      : b.entry.immediateDeclaredReaction === true ? 1 : 2;
     if (ar !== br) return ar - br;
     // 2. Turn player first.
     const ap = a.entry.source.player === turnPlayer ? 0 : 1;
@@ -335,6 +349,9 @@ export function runOne(state: GameState, entry: EffectStackEntry): void {
           ? _deferredEntryPickResolver(state, entry, ctx)
           : entry.effect;
         runEffect(state, effectToRun, ctx);
+        if (entry.immediateDeclaredReaction === true && _immediateReactionDecisionResolver !== null) {
+          _immediateReactionDecisionResolver(state, entry);
+        }
       }
       entry.state = 'resolved';
       event.emit(state, 'effect:resolve:end', { effectId: entry.id }, entry.source);

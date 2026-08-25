@@ -31,8 +31,9 @@ import { flag } from '../mutate/flag.js';            // BUG-096: declaredUseCoun
 import { evidence as evidenceMutator } from '../mutate/evidence.js';
 import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from '../effect/resolve-picks.js';
+import { drainAiEffectPicks } from '../effect/apply-pick.js';
 import { cardOccurrenceUid } from '../target/card-occurrence.js';
-import { _setDeferredEntryPickResolver } from '../resolve/stack.js';
+import { _setDeferredEntryPickResolver, _setImmediateReactionDecisionResolver } from '../resolve/stack.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import type { GameState, AbilityDef, AbilityScope, Effect, EffectCtx, EffectResolutionKind, EffectStackEntry } from '../types/index.js';
 // 2026-05-27 Option C: ヒラメキは triggered hook='evidence:remove-by-action' + optional:true
@@ -57,6 +58,32 @@ export function _setHumanPlayerSide(side: 'self' | 'opp' | null): void {
 }
 
 type Player = 'self' | 'opp';
+
+function effectContainsNegate(effect: Effect | undefined): boolean {
+  if (!effect) return false;
+  switch (effect.kind) {
+    case 'negate':
+      return true;
+    case 'sequence':
+    case 'parallel':
+    case 'chain':
+      return effect.steps.some(effectContainsNegate);
+    case 'choice':
+      return effect.options.some(effectContainsNegate);
+    case 'optional':
+      return effectContainsNegate(effect.effect) || effectContainsNegate(effect.else);
+    case 'conditional':
+      return effectContainsNegate(effect.then) || effectContainsNegate(effect.else);
+    case 'forEach':
+      return effectContainsNegate(effect.do);
+    case 'repeatOptional':
+      return effectContainsNegate(effect.body);
+    case 'replace':
+      return effectContainsNegate(effect.with);
+    default:
+      return false;
+  }
+}
 
 type TriggeredAbilityOccurrence = {
   ability: AbilityDef;
@@ -612,6 +639,9 @@ function handleHook(
           && trig.selfOnly !== true
       ) || (hookName === 'cutin:used' && declaredBatch !== undefined);
       const resolvedEffect = ability.effect;
+      const isImmediateDeclaredReaction = isDeclaredReaction
+        && hookName === 'cutin:used'
+        && effectContainsNegate(resolvedEffect);
       const cutinDeclaredName = hookName === 'effect:declared'
         && resolutionKind === 'cutin'
         && typeof (occurrencePayload as { declaredName?: unknown } | undefined)?.declaredName === 'string'
@@ -634,6 +664,7 @@ function handleHook(
           ? {
               declaredBatch,
               ...(isDeclaredReaction ? { declaredReaction: { abilityId: ability.id } } : {}),
+              ...(isImmediateDeclaredReaction ? { immediateDeclaredReaction: true as const } : {}),
             }
           : {}),
         },
@@ -672,10 +703,20 @@ function resolveDeferredEntryPicks(state: GameState, entry: EffectStackEntry, re
   return resolved;
 }
 
+function resolveImmediateAutonomousDecisions(state: GameState, entry: EffectStackEntry): void {
+  const humanSide = getHumanPlayerSide();
+  if (humanSide !== null && entry.source.player === humanSide) return;
+  const aiPolicy = new HeuristicPolicy();
+  drainAiEffectPicks(state, {
+    chooseAtomTarget: aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+  });
+}
+
 let _registered = false;
 
 export function _resetTriggeredRegistered(): void {
   _registered = false;
+  _setImmediateReactionDecisionResolver(null);
 }
 
 export function registerTriggeredListener(): void {
@@ -683,6 +724,7 @@ export function registerTriggeredListener(): void {
   _registered = true;
   // BUG-132 GAP-2: 遅延 pick resolver を stack へ注入 (登録は冪等)
   _setDeferredEntryPickResolver(resolveDeferredEntryPicks);
+  _setImmediateReactionDecisionResolver(resolveImmediateAutonomousDecisions);
   for (const hook of TRIGGERED_HOOKS) {
     if (hook === 'evidence:remove-by-action') {
       // 2026-05-27 Option C: ヒラメキ統合経路。in-play scan ではなく payload の cardId から

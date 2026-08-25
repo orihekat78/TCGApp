@@ -4,10 +4,9 @@
 // rules: 15-abilities-effects.md, 25-qa-effects-resolution.md
 //
 // 設計メモ:
-//   - replace / negate は "発動時に即解決" の例外 (rules/15) であり、
-//     emit 時の handler が直接 engine.resolve.replace / cancel を呼ぶ。
-//     よって engine.effect.run でこれらが渡された場合は明示的に throw する
-//     (誤用検知)。
+//   - replace は "発動時に即解決" の例外 (rules/15) であり、effect.run では禁止。
+//   - negate は human decision を挟む即時反応を表現するため、同じ declaredBatch の
+//     未解決 Cut-In 自効果だけを cancel する限定 descriptor を許可する。
 //   - choice の明示選択は ctx.dyn.choiceIndex (number)。未指定のautonomous
 //     経路は先頭の適用可能optionを使い、通常のunconditional choiceはindex 0互換。
 //   - optional の実行は ctx.dyn.optionalRun (boolean) で行う。未指定 / false なら skip。
@@ -36,9 +35,49 @@ import {
   ensureEffectCausalTrace,
   handoffPausedEffectCausalTrace,
   markEffectCausalAwaitingResume,
+  recordEffectCausalOperation,
 } from '../log/effect-causal.js';
 
 type Player = 'self' | 'opp';
+
+function negateDeclaredCutinEffect(
+  state: GameState,
+  effect: Extract<Effect, { kind: 'negate' }>,
+  ctx: EffectCtx,
+): void {
+  const matcher = effect.trigger.on === 'effect-resolution'
+    ? effect.trigger.matcher as { resolutionKind?: unknown; declaredBatch?: unknown }
+    : undefined;
+  if (matcher?.resolutionKind !== 'cutin' || matcher.declaredBatch !== '$trigger.declaredBatch') {
+    throw new Error('unsupported negate descriptor');
+  }
+  const payload = ctx.triggerPayload as {
+    player?: unknown;
+    cardId?: unknown;
+    declaredBatch?: unknown;
+  } | undefined;
+  const batch = payload?.declaredBatch;
+  if ((typeof batch !== 'number' && typeof batch !== 'string')
+    || (payload?.player !== 'self' && payload?.player !== 'opp')
+    || typeof payload.cardId !== 'string') return;
+  const targets = state.pendingEffects.filter(entry =>
+    entry.state === 'pending'
+    && entry.declaredReaction === undefined
+    && entry.declaredBatch === batch
+    && entry.source.player === payload.player
+    && entry.source.cardId === payload.cardId
+    && entry.source.resolutionKind === 'cutin');
+  if (targets.length !== 1) return;
+  targets[0]!.state = 'cancelled';
+  recordEffectCausalOperation(state, ctx, {
+    actor: ctx.source.player,
+    kind: 'negate',
+    tags: ['cutin'],
+    source: { kind: 'player', side: ctx.source.player },
+    targets: [{ kind: 'zone', side: payload.player, zone: 'remove' }],
+    outcome: { type: 'state', state: 'negated' },
+  });
+}
 
 function decisionSource(ctx: EffectCtx): {
   cardId: string; abilityId: string; uid: string;
@@ -808,10 +847,12 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
       return;
     }
     case 'replace':
-    case 'negate':
       throw new Error(
-        'replace/negate are immediate-resolution; not runnable via effect.run — see resolver stack handling',
+        'replace is immediate-resolution; not runnable via effect.run — see resolver stack handling',
       );
+    case 'negate':
+      negateDeclaredCutinEffect(state, eff, ctx);
+      return;
     case 'atom': {
       // mega-wave W6 step6 (2026-07-04, r79/B08014): MR の「選ぶ」効果で解決された現場キャラへ
       // selectedByOwnMr を実行 **前** に記録する (atom 自体が対象を移動/除去しても標識は先に立つ)。

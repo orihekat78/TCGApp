@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `5c14e015b719`
+> Source hash: `b81c3f7519e2`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -20,8 +20,8 @@
 | [`05-turn-phases.md`](../../rules/05-turn-phases.md) | 112 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/random.ts` ほか 109 件 |
 | [`06-card-types.md`](../../rules/06-card-types.md) | 47 | `cards/ct-d01/D01016.ts`, `cards/ct-d02/D02016.ts`, `cards/ct-d03/D03016.ts` ほか 44 件 |
 | [`07-action-flow.md`](../../rules/07-action-flow.md) | 186 | `ai/action-resolution.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 183 件 |
-| [`08-contact.md`](../../rules/08-contact.md) | 120 | `ai/action-resolution.ts`, `ai/policies/heuristic.ts`, `cards/_shared/contactTargetMatches.ts` ほか 117 件 |
-| [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) | 277 | `cards/_shared/contactTargetMatches.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d01/D01009.ts` ほか 274 件 |
+| [`08-contact.md`](../../rules/08-contact.md) | 121 | `ai/action-resolution.ts`, `ai/policies/heuristic.ts`, `cards/_shared/contactTargetMatches.ts` ほか 118 件 |
+| [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) | 278 | `cards/_shared/contactTargetMatches.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d01/D01009.ts` ほか 275 件 |
 | [`10-action-event.md`](../../rules/10-action-event.md) | 310 | `cards/ct-d01/D01003.ts`, `cards/ct-d01/D01006.ts`, `cards/ct-d01/D01012.ts` ほか 307 件 |
 | [`11-reasoning.md`](../../rules/11-reasoning.md) | 75 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `cards/ct-d01/D01010.ts` ほか 72 件 |
 | [`12-next-hint.md`](../../rules/12-next-hint.md) | 34 | `ai/policies/heuristic.ts`, `cards/ct-p01/B01005.ts`, `cards/ct-p01/B01009.ts` ほか 31 件 |

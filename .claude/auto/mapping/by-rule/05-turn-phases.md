@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `5c14e015b719`
+> Source hash: `b81c3f7519e2`
 
 公式ルール [`05-turn-phases.md`](../../../rules/05-turn-phases.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

@@ -135,4 +135,11 @@ export type EffectStackEntry = {
    * abilityId は遅延 substitute の resolveCtx 再構築用。
    */
   declaredReaction?: { abilityId: string };
+  /**
+   * A reaction whose printed text negates the declaration currently waiting in
+   * the same batch. It resolves before that declaration's own effect; any
+   * paused continuation still uses `resumesCurrentEffect` as the higher
+   * authority. Currently emitted only for Cut-In negation.
+   */
+  immediateDeclaredReaction?: true;
 };

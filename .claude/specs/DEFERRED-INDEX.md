@@ -1287,8 +1287,8 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | B01005 | next-hint 使用と手札使用の emit payload 同一で判別 hook 無し (flag:next-hint:used は TRIGGERED_HOOKS 未登録) + 使用カード level を引く $trigger.level dyn 不在 |
 | B01020 | 相手 actor 側 level-filter アクション禁止 aura 不在 (opponentRestrict に 'action' 無し、_canAction は opp 盤面 aura を走査しない。untargetableByAction は target 側で逆方向) |
 | ~~B01022~~ | **✅ 解消 (2026-07-10 S2)**: fromGroupCards TargetQuery + bind index 同梱 + stale-bind prune + CardListModal deck kind。B01022 出荷 |
-| B01045 | LP の turn-scope base override 不在 (AP 側 apOverride_turn のみ出荷。lpOverride_turn + observer 側 opt-mill cost 複合) |
-| B01054 | 同上 lpOverride_turn 不在 (【現場リムーブ時】pick + 元LP0 ターン終了時まで) |
+| ~~B01045~~ | **✅ 解消 (2026-07-10 miniwave-lp)**: `charOverrideLP scope:'turn'` と observer optional/mill gate を出荷。Wave144 public Q&A matrixで再確認。 |
+| ~~B01054~~ | **✅ 解消 (2026-07-10 miniwave-lp)**: 現場リムーブ時pickと `charOverrideLP scope:'turn'` を出荷。 |
 | ~~B01093~~ | **✅ 解消 (2026-07-10 S2)**: deckPlaceSplitBound chooser を ownerPlayer gate に是正 (BUG-175 パターン)。B01093 出荷 |
 | B02022 | mustBeTargeted taunt (指定できる場合必ず指定) primitive 不在 |
 | ~~B02072~~ | **✅ 解消 (2026-07-10 S2)**: 両 dyn とも既出荷 (sceneTrait / $bound.levelSum) の stale DEFER。souza x:{dyn} handler 数値化 (+5行) のみ追加。B02072/P 出荷 (chain 必須の罠 = probe pin 済) |
@@ -1312,7 +1312,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | D10009 (+D10010) | scene-source キャラを host の下に重ねる effect verb 不在 (charStackCard は remove/hand/deck source のみ、sceneStackUnderSelf は cost 専用) + 重ねた場合の条件付き突撃[キャラ] 付与 |
 | PR234 (+PR240) | charSetCard pick 経路の faceUp 不在 (裏向きハードコード) + hand∪remove union source 不在 + setcard:leave の faceUp filter 不在 |
 
-**engine mini-wave 候補 cluster (頻度順)**: ①turn-scope LP override (B01045/B01054、apOverride_turn 対称で小粒) ②bound 集合 levelSum/計数 dyn (B04063/B02072/B08068/B03063) ③deck-reveal 拡張 (~~per-card placement B05047 / bottom-reveal B03049~~ ✅ mini-wave #5 出荷済。残 = multi-deploy B01022 (T3、grounding 済 = specs/miniwave5-deck-reveal-grounding.md P1 節)) ④cost choice UI (B09027、W 級 UI) ⑤faceUp setCard 系 (PR234 + B07034 済基盤)。
+**engine mini-wave 候補 cluster (頻度順)**: ~~①turn-scope LP override (B01045/B01054/B09011)~~ ✅ 2026-07-10出荷 ②bound 集合 levelSum/計数 dyn (B04063/B02072/B08068/B03063) ③deck-reveal 拡張 (~~per-card placement B05047 / bottom-reveal B03049~~ ✅ mini-wave #5 出荷済。残 = multi-deploy B01022 (T3、grounding 済 = specs/miniwave5-deck-reveal-grounding.md P1 節)) ④cost choice UI (B09027、W 級 UI) ⑤faceUp setCard 系 (PR234 + B07034 済基盤)。
 
 ## hybrid-batch4 由来 DEFER (2026-07-10、2行 40 unit 中 22 DEFER + 2 VERIFY_NG。file:line 根拠全文 = .tmp/_batch4_defers.txt)
 
@@ -1352,7 +1352,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | B07030 | remove→PA の pick 型 verb 不在 (toPartnerArea は self-only 決定論、pick 不可) |
 | B08017 / B08017P | **✅ IMPLEMENTED (2026-07-13, uncommitted)** — sleep hostのface-up set riderが自陣灰原哀へ `untargetableByOppEffectAura` を付与。 |
 | B08081 | 「選ばれたとき〜無効」intercept (B02067/B04003 cluster ⑦) + 相手 optional 分岐 |
-| B09011 | turn-scope LP override (B01045/B01054 cluster ①) の「元のLPを1」変種 + forEach all 適用 |
+| ~~B09011~~ | **✅ 解消 (2026-07-10 miniwave-lp)**: `forEach` + `charOverrideLP val:1 scope:'turn'` を出荷。 |
 | B09039 | PA∪remove union pick 不在 (B09055 と同 cluster) |
 | B09060 | 手札 cost リムーブの costRemovedMatches が hand-source 非対応 (removeDeckTop 専用) |
 | B09110 | 「同じカード名が出るまで公開」の動的 stop 条件 (リムーブしたキャラ名 bind) 不在 |

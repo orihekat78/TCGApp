@@ -778,7 +778,7 @@ export type Effect =
   | { kind: 'sequence'; steps: Effect[] }
   | { kind: 'parallel'; steps: Effect[] }
   | { kind: 'choice'; options: Effect[]; chooser: 'self' | 'opp' | 'owner' }
-  | { kind: 'optional'; effect: Effect; chooser?: 'owner' | 'opp-of-owner'; else?: Effect; aiRun?: 'if-hand' }
+  | { kind: 'optional'; effect: Effect; chooser?: 'owner' | 'opp-of-owner'; else?: Effect; aiRun?: 'if-hand' | 'always' }
   | { kind: 'conditional'; if: Condition; then: Effect; else?: Effect }
   | { kind: 'forEach'; over: TargetingRef; do: Effect }
   | { kind: 'repeatOptional'; max: number; body: Effect }

@@ -64,17 +64,17 @@
 
 ## Next
 
-- Waves142-143 move nine Q&A items to matched. Coverage is 1831 matched / 1133
-  test-missing / 2964 total; 1004 exact groups remain, including 875 singletons.
-- Wave142 completes five B10099/P items across aura, mandatory Turn2 use,
-  simultaneous entry, effective level, and original-ability scope.
-- Wave143 completes four B01009/P items across effective LP, Misread expiry,
-  repeat action, and stun-to-sleep activation.
-- Wave144 completes four B01045 items. Wave145 completes four B02030 items and
-  runs the routine ten-wave full checkpoint.
+- Waves144-145 move eight Q&A items to matched. Coverage is 1839 matched / 1125
+  test-missing / 2964 total; 997 exact groups remain, including 869 singletons.
+- Wave144 completes four B01045 items across base overrides, timing, and Turn1.
+- Wave145 completes four B02030 items. BUG-365 adds immediate Cut-In negate,
+  exact-two set removal, CPU resolution, cold restore, and causal presentation.
+- Full checkpoint is green: 1219 files / 12831 tests PASS / 177 skip; full lint,
+  typecheck, smoke471/529, and desktop/mobile full-match 2/2 PASS.
+- Wave146 completes four B02058 items. Wave147 completes four B02067 items.
 - Official sync drift is separate: new PR322 and changed Q&A for
   B04018/B04018P/B06103P. Do not mix it into selected waves without re-queueing.
-- Revised remaining estimate: 63-127 working hours, center about 95 hours;
-  roughly 47-87 implementation waves.
+- Revised remaining estimate: 62-126 working hours, center about 94 hours;
+  roughly 46-86 implementation waves.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

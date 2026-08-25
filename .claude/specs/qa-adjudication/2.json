@@ -158,11 +158,15 @@
     {
       "qaId": "card:B02030:22477398ef5d506ba40697a07f730240d929ade78c8a7edaa6aeed9aeb97b358",
       "answerHash": "deac3f359bdb60021b232a80af7f820e7531dfb0860314bad66246e2f0969614",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p02/B02030.ts:30"
+        "rules:.claude/rules/09-cutin-disguise.md:29",
+        "src:src/cards/ct-p02/B02030.ts:17",
+        "tests:tests/cards/official-qa/B02030-completion-public-wave145.test.ts:231",
+        "tests:tests/cards/official-qa/B02030-completion-public-wave145.test.ts:236",
+        "tests:tests/cards/official-qa/B02030-completion-public-wave145.test.ts:237"
       ]
     },
     {
