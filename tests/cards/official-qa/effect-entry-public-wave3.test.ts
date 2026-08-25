@@ -416,8 +416,9 @@ describe('effect entry official Q&A — public wave 3', () => {
       type: 'effectPickResolve', pickedUid: selected!.uid, switchRemoveUid: 'source',
     }))).toEqual({ ok: true });
 
-    expect(useGameStateStore.getState().activeActionId).toBe(actionId);
-    expect(dispatchEngineAction({ type: 'actionGuard', actionId: actionId!, guarderUid: null })).toEqual({ ok: true });
+    expect(useGameStateStore.getState().activeActionId).toBeNull();
+    expect(dispatchEngineAction({ type: 'actionGuard', actionId: actionId!, guarderUid: null }))
+      .toEqual({ ok: false, reason: 'not-allowed' });
     expectEntryTriggered(B09047, BLUE_ENTRY, 'active');
     expect(current().players.self.scene.some(item => item.uid === 'source')).toBe(false);
     expect(current().players.self.remove).toContain(B09047.id);

@@ -623,7 +623,7 @@ describe('turn-1 resolution-time state gates through public action flow', () => 
       guardBeforeResolution: { ok: false, reason: 'not-allowed' },
       victimRemoved: true,
       activeActionId: null,
-      guardAfterRemoval: { ok: true },
+      guardAfterRemoval: { ok: false, reason: 'not-allowed' },
       judgeAfterRemoval: { ok: false, reason: 'not-allowed' },
     });
   });

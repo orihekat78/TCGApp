@@ -427,6 +427,14 @@ export function atomHandToDeckBottom(s: GameState, a0: Record<string, unknown>, 
       // normalizeTargetToString で 1 枚に collapse する engine-wide 既知罠。miniwave3 probe で実測)。
       const hdRawCardIds = (a as { cardIds?: unknown }).cardIds;
       if (hdRawCardIds === '$pick.cardIds') {
+        // B05092: 「4枚まで」は0枚を選べるが、その後のshuffleは必須。
+        // skipResolvesAtom はこの空解決を明示するopt-in。候補ありの辞退は
+        // __declined、候補0は空のhandで到達する。どちらもmove 0として
+        // hdMoveへ渡し、shuffleThenDrawMovedのshuffleだけを実行する。
+        if ((a as { skipResolvesAtom?: unknown }).skipResolvesAtom === true
+          && (a.__declined === true || s.players[hdP].hand.length === 0)) {
+          return hdMove(s, a, ctx, hdP, []);
+        }
         if (a.target && typeof a.target === 'object' && !Array.isArray(a.target)) {
           tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, { byPlayer: hdP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
           mutate.log.append(s, { ts: Date.now(), player: hdP, turn: s.turn.number, action: 'effect:handToDeckBottom:awaiting-pick' });

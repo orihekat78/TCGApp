@@ -862,11 +862,19 @@
     {
       "qaId": "card:B05092:a4313105cbdbcb2713395cbb04bd163a24f421501dc7f646c4735b84f7c68138",
       "answerHash": "f1bfc88f110092610547062d7077518357268f6e54d74f747b9ec0ebe58b04ca",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05092.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-p05/B05092.ts:28",
+        "src:src/cards/ct-p05/B05092.ts:30",
+        "tests:tests/cards/official-qa/B05092-completion-public-wave152.test.ts:142",
+        "tests:tests/cards/official-qa/B05092-completion-public-wave152.test.ts:148",
+        "tests:tests/cards/official-qa/B05092-completion-public-wave152.test.ts:150",
+        "tests:tests/cards/official-qa/B05092-completion-public-wave152.test.ts:166",
+        "tests:tests/cards/official-qa/B05092-completion-public-wave152.test.ts:169",
+        "tests:tests/cards/official-qa/B05092-completion-public-wave152.test.ts:172"
       ]
     },
     {
@@ -1007,11 +1015,20 @@
     {
       "qaId": "card:B06034:ce881ce830b0156ebce763608d2da6878acb277765f1fc7927e75ef2a4257b2a",
       "answerHash": "fdb4cd8735372c7760f3c8fcef6f0210434450e71dc1ee3a988e3f8e0a3ce3bd",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06034.ts:1"
+        "rules:.claude/rules/10-action-event.md:42",
+        "src:src/cards/ct-p06/B06025.ts:18",
+        "src:src/cards/ct-p06/B06034.ts:47",
+        "src:src/cards/ct-p06/B06034.ts:51",
+        "tests:tests/cards/official-qa/B06034-completion-public-wave153.test.ts:107",
+        "tests:tests/cards/official-qa/B06034-completion-public-wave153.test.ts:117",
+        "tests:tests/cards/official-qa/B06034-completion-public-wave153.test.ts:155",
+        "tests:tests/cards/official-qa/B06034-completion-public-wave153.test.ts:158",
+        "tests:tests/cards/official-qa/B06034-completion-public-wave153.test.ts:159",
+        "tests:tests/cards/official-qa/B06034-completion-public-wave153.test.ts:160"
       ]
     },
     {

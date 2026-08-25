@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6684
+- **ファイル数**: 6691
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -548,6 +548,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-365.md` — B02030 Cut-In negation
     - `BUG-366.md` — B02039 set-card proxy interception
     - `BUG-367.md` — B03102 reasoning reaction timing
+    - `BUG-368.md` — B05092 zero-selection shuffle
+    - `BUG-369.md` — Human pre-guard action reconciliation
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1663,6 +1665,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves146-147.md` — QA adjudication Waves146-147
     - `2026-08-25-qa-waves148-149.md` — QA adjudication Waves148-149
     - `2026-08-25-qa-waves150-151.md` — QA adjudication Waves150-151
+    - `2026-08-25-qa-waves152-153.md` — QA adjudication Waves152-153
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -1860,6 +1863,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B05086P.md` — grounding dossier: B05086P (自動生成 2026-07-13)
       - `B05090.md` — B05090 grounding
       - `B05091.md` — B05091 / B05091P 風見裕也 grounding
+      - `B05092.md` — B05092 grounding
       - `B05094.md` — B05094 grounding
       - `B05108.md` — B05108 バーボン grounding
       - `B06003.md` — B06003/B06003P 毛利蘭＆江戸川コナン (MR キャラ) grounding (2026-07-10, fable)
@@ -1874,6 +1878,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06020.md` — B06020 grounding
       - `B06027.md` — B06027 grounding
       - `B06028.md` — B06028 grounding
+      - `B06034.md` — B06034 grounding
       - `B06035.md` — B06035 grounding
       - `B06036.md` — B06036 grounding
       - `B06042.md` — B06042 ここで会うたが百年目 (イベント) grounding (2026-07-10, sonnet5)
@@ -5914,9 +5919,11 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B04074.test.ts`
       - `B05007-completion-public-wave129.test.ts` — qa: card:B05007:64c8ea1dbd685ed1a2d1338e4c52910b1b19f6cca7249f8e288576f37e426d44
       - `B05058-completion-public-wave136.test.ts` — qa: card:B05058:005869b804a7f1211f4012d0d1923a1b445b97f955eaa4b6df86b2644fff0648
+      - `B05092-completion-public-wave152.test.ts` — qa: card:B05092:2bb0d1134005d964c09d50ab280f7c81db291b8893da82fac9b0e7feed9e55c8
       - `B05118-family-nonblack-partner.test.ts` — Official Q&A cluster: these seven cases share the same printed
       - `B06020-completion-public-wave130.test.ts` — qa: card:B06020:d3b7730aa0d24dcbd34fa32b3419352d1238d398c3f73d60ca2d4f1125207a8c
       - `B06023-completion-public-wave137.test.ts` — qa: card:B06023:0025cb3b7aecab7dca31296259c4dca893915c9eb6eecce256504c10d3ebd07d
+      - `B06034-completion-public-wave153.test.ts` — qa: card:B06034:69959d6bea858af0019b9119c1e8ca433349b7964059e710a523adc480d9e5e5
       - `B06036-completion-public-wave138.test.ts` — qa: card:B06036:30a7759896adeb54b8229a3083eb1615ae39b079a34bba004f00f993c0a898c9
       - `B06042-effect-contact-public.test.ts` — qa: card:B06042:51624536ab2df37b3ce09f45df7c715d9ac3c8bbb64d8ff36ed28ebcc48829d5
       - `B06042-grant-lifecycle-public.test.ts` — qa: card:B06042:954b33bfb2a596a7ba88bb1d6476fd34416af93d38e8012a55157693df8c903a

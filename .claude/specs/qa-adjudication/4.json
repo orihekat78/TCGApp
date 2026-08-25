@@ -802,14 +802,16 @@
     {
       "qaId": "card:B05092:4d673c3dfcb71f99d51f123ad66fa10efac33ab915d9acf3fbc749682239ddbe",
       "answerHash": "13b3f7c8b2f179e6af986147af2fe87ed7617bf801fa4f690fbcaa3134a25a5c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05092.ts:90"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/07-action-flow.md:21",
+        "src:src/cards/ct-p05/B05092.ts:55",
+        "tests:tests/cards/official-qa/B05092-completion-public-wave152.test.ts:181",
+        "tests:tests/cards/official-qa/B05092-completion-public-wave152.test.ts:182",
+        "tests:tests/cards/official-qa/B05092-completion-public-wave152.test.ts:184",
+        "tests:tests/cards/official-qa/B05092-completion-public-wave152.test.ts:188"
       ]
     },
     {

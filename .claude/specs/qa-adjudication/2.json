@@ -974,11 +974,17 @@
     {
       "qaId": "card:B06034:a54fba013cee1c4f1657f7007dbc6e664a2cedf67c66990f1a3a2daa903b7ef5",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p06/B06034.ts:86"
+        "rules:.claude/rules/15-abilities-effects.md:36",
+        "src:src/cards/ct-p06/B06026.ts:74",
+        "src:src/cards/ct-p06/B06034.ts:51",
+        "tests:tests/cards/official-qa/B06034-completion-public-wave153.test.ts:117",
+        "tests:tests/cards/official-qa/B06034-completion-public-wave153.test.ts:118",
+        "tests:tests/cards/official-qa/B06034-completion-public-wave153.test.ts:195",
+        "tests:tests/cards/official-qa/B06034-completion-public-wave153.test.ts:197"
       ]
     },
     {

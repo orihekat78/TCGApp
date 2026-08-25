@@ -685,6 +685,15 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
         // Phase 5 listener が pendingEffects に積んだ effect を解決する。
         // AI orchestrator (src/ai/policy.ts) と同じ運用パターン。
         runAllUntilEmpty(draft);
+        // rules/07: 宣言時効果でactor/targetが離れた場合、guard入力を
+        // もう1回要求せず、その効果の完全解決直後にactionを終了する。
+        // decision/owner-order待ちではまだ効果解決中なのでreconcileしない。
+        const declarationEffectsSettled = draft.pendingRuntimeState === undefined
+          && !draft.pendingEffects.some((entry) => entry.state === 'pending' || entry.state === 'resolving');
+        if (declarationEffectsSettled && flow.action.abortMissingBeforeGuardActions(draft)) {
+          // action:end observerも同じdispatch内で解決する。
+          runAllUntilEmpty(draft);
+        }
       }),
     );
     if (!committed) {

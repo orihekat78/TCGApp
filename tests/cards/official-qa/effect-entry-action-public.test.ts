@@ -237,7 +237,7 @@ describe('effect entry official Q&A — action-triggered entries fire enter abil
     expect([store.pendingEffectPick, store.pendingEffectOptional, store.pendingEffectChoice, store.activeActionId]).toEqual([null, null, null, null]);
   });
 
-  it('B03030 switching out the acting source aborts on the next public guard step without contact', () => {
+  it('B03030 switching out the acting source aborts immediately without contact', () => {
     const spec = CASES.B03030!;
     const actionEnds: unknown[] = [];
     const unguarded: unknown[] = [];
@@ -255,8 +255,9 @@ describe('effect entry official Q&A — action-triggered entries fire enter abil
     expect(dispatchEngineAction(bindPendingDecision(pending, {
       type: 'effectPickResolve', pickedUid: target.uid, switchRemoveUid: 'source',
     }))).toEqual({ ok: true });
-    expect(useGameStateStore.getState().activeActionId).toBe(actionId);
-    expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: null })).toEqual({ ok: true });
+    expect(useGameStateStore.getState().activeActionId).toBeNull();
+    expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: null }))
+      .toEqual({ ok: false, reason: 'not-allowed' });
 
     const state = current();
     expect(state.players.self.scene.some((card) => card.uid === 'source')).toBe(false);

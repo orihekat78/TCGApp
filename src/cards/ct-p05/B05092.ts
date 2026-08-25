@@ -26,6 +26,8 @@ const a1: AbilityDef = {
           cardIds: '$pick.cardIds',
           bind: '$moved',
           shuffleThenDrawMoved: true,
+          // 0枚選択でも atom を空解決し、必須の deck shuffle を実行する。
+          skipResolvesAtom: true,
           target: {
             kind: 'pick',
             query: { area: 'hand', side: 'self' },

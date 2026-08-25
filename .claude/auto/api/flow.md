@@ -24,7 +24,7 @@
 
 | 名前 | メンバー |
 | ---- | -------- |
-| `action` | `_deleteContext`, `_getContext`, `_hasOpenActionContext`, `_resetActionContexts`, `_resetTargetExpanders`, `abortForTerminal`, `abortIfMissing`, `advance`, `candidates`, `computeOrder`, `declare`, `hasMissingContactParticipant`, `isMissingBeforeGuard`, `mustTargetCandidates`, `passGuard`, `registerTargetExpander`, `snapshotAP`, `startFromEffect`, `tryGuard` |
+| `action` | `_deleteContext`, `_getContext`, `_hasOpenActionContext`, `_resetActionContexts`, `_resetTargetExpanders`, `abortForTerminal`, `abortIfMissing`, `abortMissingBeforeGuardActions`, `advance`, `candidates`, `computeOrder`, `declare`, `hasMissingContactParticipant`, `isMissingBeforeGuard`, `mustTargetCandidates`, `passGuard`, `registerTargetExpander`, `snapshotAP`, `startFromEffect`, `tryGuard` |
 | `actionCase` | `finalizePendingHiramekiEvidenceRemoval`, `flashWindow`, `gainSelfEvidence`, `isValidHiramekiSceneSwitchChoice`, `matchesHiramekiCheckpoint`, `readHiramekiSceneSwitchRequirement`, `removeOpponentEvidenceTop`, `resolveHiramekiDecision` |
 | `contact` | `advanceLeaveInterceptReplacement`, `advanceLeaveInterceptReplacementAfterResume`, `canAdvanceLeaveInterceptReplacement`, `canCutIn`, `canDisguise`, `canResolveLeaveIntercept`, `computeOrder`, `cutIn`, `cutInDeclaredNameSpec`, `disguise`, `finalizeLeaveInterceptReplacement`, `judge`, `pass`, `resolveLeaveIntercept` |
 | `guard` | `canGuard`, `candidates`, `mustGuardCandidates` |

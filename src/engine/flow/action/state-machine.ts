@@ -513,6 +513,17 @@ export function abortIfMissing(state: GameState, ax: ActionContext): boolean {
   return false;
 }
 
+/** Reconcile normal actions after every declaration-effect resolution boundary. */
+export function abortMissingBeforeGuardActions(state: GameState): boolean {
+  let aborted = false;
+  const guardWindows = Object.values(state.actionContexts ?? {})
+    .filter((context) => context.phase === 'guard-window');
+  for (const context of guardWindows) {
+    if (abortIfMissing(state, context)) aborted = true;
+  }
+  return aborted;
+}
+
 /**
  * advance — フェーズ遷移
  *
@@ -676,6 +687,7 @@ export const action = {
   passGuard,
   advance,
   abortIfMissing,
+  abortMissingBeforeGuardActions,
   abortForTerminal,
   isMissingBeforeGuard,
   snapshotAP,

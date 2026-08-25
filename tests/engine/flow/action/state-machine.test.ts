@@ -10,6 +10,7 @@ import {
   passGuard,
   advance,
   abortIfMissing,
+  abortMissingBeforeGuardActions,
   abortForTerminal,
   snapshotAP,
   computeOrder,
@@ -279,6 +280,18 @@ describe('engine.flow.action.abortIfMissing', () => {
       abortIfMissing(draft, ax);
     });
     expect(ax?.phase).toBe('action-end');
+  });
+
+  it('reconciles every missing guard-window action without another guard input', () => {
+    const { s, selfUid, oppUid } = makeScene({});
+    const after = produce(s, draft => {
+      declare(draft, selfUid, { kind: 'char', uid: oppUid });
+      mutate.scene.toDeck(draft, oppUid, 'top');
+      expect(abortMissingBeforeGuardActions(draft)).toBe(true);
+    });
+
+    expect(after.actionContexts).toEqual({});
+    expect(after.players.opp.deck[0]).toBe('Def');
   });
 
   it('passGuard aborts instead of opening the unguarded path when the target left first', () => {

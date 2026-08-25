@@ -76,7 +76,7 @@ hiramekiResolve humanChooser (hirameki 内 optional の human surface 実バグ�
 **DEFER**: B07001 (cost-removed trait-count dyn 不在 — costRemovedMatches は threshold のみ) /
 B09109 a2 (revealFromHand costPaid cardName + resolveBindRef $cost 非対応)。
 **NIT (記録)**: B09081 a2「1枚まで」が optional 諾否に折込 (B03085/B05111 踏襲、候補常 1 体)。
-**Wave C 残 (次 session 候補)**: ~~B05093~~ **SHIPPED (WC2a)** / B02086 依然 DEFER (optional chooser+else+AI-drain infra 別途要、上記 B02086 行参照) / B06023+B06036+B06034 (hirameki invoke-by-cardId) / B06020+B07003 (hand-zone
+**Wave C 残 (次 session 候補)**: ~~B05093~~ **SHIPPED (WC2a)** / B02086 依然 DEFER (optional chooser+else+AI-drain infra 別途要、上記 B02086 行参照) / ~~B06023+B06036+B06034~~ **SHIPPED (WC2b/Wave138/153)** / B06020+B07003 (hand-zone
 cutin aura) / B03042 B04055 B09033 PR279 B03093 / 重: B02022 B05033 B08003 /
 T3: B06025 B08059 B02039 B01082 D06013 B09024 / Wave D `untargetableByOppEffect` 実装・gate中。
 
@@ -616,7 +616,7 @@ changelog [2026-06-23-02](../changelog-entries/2026-06-23-02-wave-evidence-flip.
 | ~~B06086 / B06086P~~ | ✅ **出荷済 (2026-07-04 hybrid-pilot-1)**。W5 evidenceFlip cardIds+bind (declined=[] 書込) + `and[bound{$flipSelf,matched}, bound{$flipOpp,matched}]` conditional で count-flipped を表現 — 旧 gap は W5 で解消済だった | ✅ 出荷済 |
 | B08028 | 日向幸: 宣言 cost[このキャラ以外をリムーブエリアへ] + 「自分の裏向き証拠を**好きな数**選び表向き、**表向きにした枚数と同じ数まで**相手の裏向き証拠を選び表向き」= variable-count pick + dynamic-linked second pick + cost closure | variable-count pick + flip-count-linked pick (engine) |
 | B05079 | 世良真純: hira は pick-faceup で green だが main「相手は【ヒラメキ】を発動できない」= continuous opp-ability-deny gate ゆえ全体 DEFER | opp-ability-deny continuous (engine) |
-| B06034 | 鬼丸城: pick-faceup + 「【ヒラメキ】持ち〚YAIBA〛が表向きになった場合 その【ヒラメキ】を発動」= hirameki-cascade gate | reveal-triggered hirameki cascade (engine) |
+| ~~B06034~~ | ✅ `evidenceFlip` occurrence bind + `invokeHiramekiOfCard`を出荷済み。Wave153で移動・抑止貫通・無効条件・self flipを公開再確認。 | ✅ 出荷済 |
 | PR279 | 萩原千速: 疾風 pick-faceup は green だが「相手のイベントの効果によってリムーブされない」= continuous removal-immunity gate ゆえ全体 DEFER | event-effect removal-immunity continuous (engine) |
 
 > 注: 事件カードの【宣言】cost「〚裏向きの証拠をN つ表向きにする〛」(B05063/B06036/B06043/B06065/B06095/B06105/
@@ -785,7 +785,7 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 |-----|----------------------|---------|
 | ~~B06006 (江戸川コナン)~~ | ✅ **engine 解禁 (2026-06-28、engine/relative-ap-random-removal)**: `$self.stackedCount` dyn token を resolveSelf に追加 (`scene.byUid(uid)?.stackedCards ?? 0`、session64 `$self.setCardCount` 同型・static field 読み)。a2「下に重なるカード1枚につき AP+1000」= `continuousModifier{apDelta:{dyn:'$self.stackedCount * 1000'}}` で表現可。a1+a3 既GREEN → **全句 buildable** | ✅ **出荷済 (63000bc6、CARD PHASE #2、2026-07-03)**: a1=caseStatus解決編 grantKeywords突撃 / a2=apDelta dyn stackedCount / a3=chain[mill, charStackCard pick trait[探偵\|少年探偵団]配列any-match]。probe 10件 + engine変更0 |
 | B05115 (弁崎素江) | 「相手の能力/効果で手札からこのカードがリムーブされたとき」= hand-leave 反応 hook 不在 (HookName に leave:from-hand 無、hand discard は silent mutation、手札カードは collectCardsInPlay 非走査) | hand-removal observer hook + source-attribution (engine) |
-| B06023 / B06034 (金棒博士/鬼丸城) | hirameki-trigger-from-flip: cost flipFaceUpEvidence は count のみ記録 (flipカード identity 破棄)、flip契機 hook 不在、別カードの【ヒラメキ】効果を起動する verb 不在 (hirameki は evidence:remove-by-action 専属) | flip-evidence hook + cross-card hirameki invoke verb (engine) |
+| ~~B06023 / B06034 (金棒博士/鬼丸城)~~ | ✅ physical occurrence bindとcross-card `invokeHiramekiOfCard`をWC2bで出荷。Wave153でB06034 public event-useを再確認。 | ✅ 出荷済 |
 | B06026 (コウモリ男) | a1/a3 green。a2 = **✅ gainCard idx===-1 harden 出荷 (2026-06-29, engine/bulk-additive-0629)** (source 不在で証拠化せず return)。残: a2 の character-scoped 【現場リムーブ時】→selfToEvidence 経路 (leave:to-remove self-trigger) を card session で実機検証 (handleLeaveToRemoveSelf は配線済の見込み、未実証) | 残: char-leave selfToEvidence の card-author 検証 |
 | B06027 (カマキリ男等) | hirameki「このキャラをスリープ状態で登場」= 証拠リムーブ中の自身を現場再登場 primitive 不在 (evidence→scene verb 無、replacement 意味論) | evidence-transient self-reenter (engine、B06025 と同族) |
 | B06047 (鉄刃) | a2 YAIBA set→remove entry は Wave52/BUG-335 で出荷。残a1は現場sourceが手札の白YAIBAイベントへ与えるcross-hand level auraで、bearer-only hand modifierでは表現不可。誤self減算を除去しa1 slotをfail-closed保持 | 残: filtered cross-hand level aura (engine) |
@@ -1334,7 +1334,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | ~~B04003~~ | **✅ 解消**: `effect:choose-intercept-discard` と相手discard-or-cancel分岐を出荷。 |
 | B05005 | ネクストヒント限定 trigger (B01005 cluster) + 使用カード color filter |
 | B05007 | 「このターン中〜アクションしたとき」の遅延 observer 設置 (turn-scoped conditional hook 付与) 不在 |
-| B05092 | 手札→デッキ下 N 枚 (好きな順) verb 不在 + 移した枚数 bind draw |
+| ~~B05092~~ | **✅ 解消**: `handToDeckBottom` + `shuffleThenDrawMoved`を出荷。Wave152でmulti/0枚shuffleと同数draw契約を公開再確認。 |
 | B05097 | player-chosen 可変枚数 deck-top リムーブ EFFECT 不在 (cost 側 r37 と対、QA=枚数先決め) |
 | B06003 | cost〚ターン終了時まで LP-2〛= self LP-delta cost primitive 不在 |
 | B06037 | VERIFY_NG: 「パートナーエリアでも宣言できる」= scope on-scene では PA 宣言不可 (PA宣言 batch 送り、DEFERRED-INDEX batch2 節と同 cluster) |

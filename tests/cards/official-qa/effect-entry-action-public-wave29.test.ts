@@ -458,7 +458,9 @@ describe('effect entry official Q&A — Wave 29 action-triggered public paths', 
     expect(dispatchEngineAction(bindPendingDecision(pending!, {
       type: 'effectPickResolve', pickedUid: target!.uid, switchRemoveUid: 'source',
     }))).toEqual({ ok: true });
-    expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: null })).toEqual({ ok: true });
+    expect(useGameStateStore.getState().activeActionId).toBeNull();
+    expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: null }))
+      .toEqual({ ok: false, reason: 'not-allowed' });
     expect(sourceArea(entryCase)).toBe('remove');
     expect(current().players.self.scene.find(card => card.cardId === entryCase.target.id)?.state).toBe('active');
     expect(current().pendingEffects.filter(item => item.source.cardId === entryCase.target.id)).toHaveLength(1);
@@ -480,7 +482,9 @@ describe('effect entry official Q&A — Wave 29 action-triggered public paths', 
     expect(dispatchEngineAction(bindPendingDecision(pending!, {
       type: 'effectPickResolve', pickedUid: target!.uid, switchRemoveUid: 'source',
     }))).toEqual({ ok: true });
-    expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: null })).toEqual({ ok: true });
+    expect(useGameStateStore.getState().activeActionId).toBeNull();
+    expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: null }))
+      .toEqual({ ok: false, reason: 'not-allowed' });
     expect(sourceArea(entryCase)).toBe('remove');
     expect(current().players.self.file).toHaveLength(5);
     expect(current().players.self.hand).toContain(FILLER);
