@@ -1611,15 +1611,20 @@
     {
       "qaId": "card:B10016:ba833eaf820ef15094d039d1057fd271f5a7bb23b43e95a1c2ac2a5bb5e4687a",
       "answerHash": "4c5d26e94891811e773aa0913ad7768d8dd8c16c4f17701a423739d147fcb801",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/07-action-flow.md:22",
-        "src:src/cards/ct-p10/B10016.ts:6"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p10/B10016.ts:8",
+        "src:src/engine/flow/action/state-machine.ts:372",
+        "src:src/engine/flow/action/state-machine.ts:373",
+        "src:src/engine/flow/guard.ts:102",
+        "src:src/engine/flow/guard.ts:117",
+        "src:src/engine/flow/guard.ts:71",
+        "tests:tests/cards/official-qa/must-guard-public-wave100-101.test.ts:231",
+        "tests:tests/cards/official-qa/must-guard-public-wave100-101.test.ts:234",
+        "tests:tests/cards/official-qa/must-guard-public-wave100-101.test.ts:238",
+        "tests:tests/cards/official-qa/must-guard-public-wave100-101.test.ts:240"
       ]
     },
     {

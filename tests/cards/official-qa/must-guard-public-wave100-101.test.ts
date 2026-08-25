@@ -216,3 +216,28 @@ describe('official QA Waves100-101: B09040/P PR290 PR296 must-guard choices', ()
     expect(current().players.opp.scene.find(card => card.uid === FORCED_TWO_UID)?.state).toBe('sleep');
   });
 });
+
+// qa: card:B10016:ba833eaf820ef15094d039d1057fd271f5a7bb23b43e95a1c2ac2a5bb5e4687a
+
+describe('official QA Wave126: a sleeping B10016 honors granted must-guard', () => {
+  it.each(['self', 'opp'] as const)('grant owner %s', owner => {
+    const row = ROWS[0]!;
+    const state = stateFor(row, owner);
+    const defender = other(owner);
+    const bearer = state.players[defender].scene
+      .find(character => character.uid === FORCED_ONE_UID)!;
+    bearer.cardId = 'B10016';
+    bearer.state = 'sleep';
+    expect('B10016').toBe(bearer.cardId);
+    install(state, owner, 'B10016-' + owner + '-sleep-must-guard');
+    grant(row, 1, FORCED_ONE_UID);
+    expect(current().players[defender].scene.find(character => character.uid === FORCED_ONE_UID))
+      .toMatchObject({ cardId: 'B10016', state: 'sleep', turnEffects: { mustGuard: true } });
+
+    const actionId = declareAction();
+    expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: null }))
+      .toEqual({ ok: false, reason: 'not-allowed' });
+    expect(dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: FORCED_ONE_UID }))
+      .toEqual({ ok: true });
+  });
+});

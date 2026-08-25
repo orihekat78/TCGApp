@@ -1492,14 +1492,18 @@
     {
       "qaId": "card:B09028:c5a3cdddff8ccf11b34763f972a8687787f0073d28df03b185cd97943c2722dc",
       "answerHash": "9a850b0aa69167d50fe9b35374145bd3a1f7c6ca2159ee4d9315b205401b53c5",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09028.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p09/B09028.ts:32",
+        "src:src/cards/ct-p09/B09028.ts:34",
+        "src:src/engine/cond/eval.ts:153",
+        "src:src/engine/cond/eval.ts:171",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:270",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:294",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:298",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:299"
       ]
     },
     {

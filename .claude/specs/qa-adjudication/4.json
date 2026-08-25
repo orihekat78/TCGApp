@@ -1543,11 +1543,25 @@
     {
       "qaId": "card:B09028:994d30af4d93af550bf5f2fade6b238d84f11ba9dcf0b9fcf7a1949add4f7b07",
       "answerHash": "95c0f2e7e324897126fe9eda94c39374bac7bce1a1192dc21fed429bd69508ce",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09028.ts:1"
+        "rules:.claude/rules/22-qa-action-contact.md:35",
+        "src:src/cards/ct-p09/B09028.ts:32",
+        "src:src/cards/ct-p09/B09028.ts:34",
+        "src:src/engine/cond/eval.ts:153",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:270",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:324",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:326",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:331",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:335",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:336",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:340",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:342",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:344",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:346",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:348"
       ]
     },
     {
@@ -1646,11 +1660,20 @@
     {
       "qaId": "card:B09054:be26cfbb13dc4cbade567e0e2119410a53a7352cbf2402270145178503d5061c",
       "answerHash": "9a850b0aa69167d50fe9b35374145bd3a1f7c6ca2159ee4d9315b205401b53c5",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09054.ts:1"
+        "src:src/cards/ct-p09/B09054.ts:52",
+        "src:src/cards/ct-p09/B09054P.ts:37",
+        "src:src/engine/cond/eval.ts:153",
+        "src:src/engine/cond/eval.ts:171",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:106",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:119",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:121",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:125",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:126",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:99"
       ]
     },
     {

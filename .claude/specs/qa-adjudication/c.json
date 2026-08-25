@@ -1817,11 +1817,21 @@
     {
       "qaId": "card:B09054:80a2cfb16a87e5d0d4da8698cb86f47b173740616dd1af4e02537a5deb1ade52",
       "answerHash": "b0b5374a8472f559965950684249d1a99f08e7930b3d4179401444863c71d2a4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09054.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:36",
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-p09/B09054.ts:67",
+        "src:src/cards/ct-p09/B09054P.ts:52",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:133",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:137",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:138",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:141",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:146",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:147",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:148"
       ]
     },
     {
@@ -1850,12 +1860,27 @@
     {
       "qaId": "card:B09054:c0c7a68122e93ddaf73fc8d2c1e30b62955cdfb17877f874490c7f302df30d8a",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/ai/action-resolution.ts:162",
-        "src:src/cards/ct-p09/B09054.ts:1"
+        "rules:.claude/rules/18-mr.md:38",
+        "rules:.claude/rules/21-declared-ability-cost.md:10",
+        "rules:.claude/rules/21-declared-ability-cost.md:20",
+        "src:src/cards/ct-p09/B09054.ts:67",
+        "src:src/cards/ct-p09/B09054P.ts:52",
+        "src:src/engine/flow/main/declared-ability.ts:328",
+        "src:src/engine/flow/main/declared-ability.ts:343",
+        "src:src/engine/read/char.ts:864",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:154",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:161",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:162",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:165",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:169",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:170",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:171",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:175",
+        "tests:tests/cards/official-qa/b09054-declared-public-wave127.test.ts:178"
       ]
     },
     {
@@ -1990,12 +2015,20 @@
     {
       "qaId": "card:B10016:31d03128b5170ea5589887ff0e06067d7b24ba1fd934248f4d1644f835a84003",
       "answerHash": "93a9e84372e36a6ed4533751f8f0b6087f1befb6b925534dafdc5145a1bb59d2",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/24-qa-naming-stun.md:49",
-        "src:src/cards/ct-p10/B10016.ts:8"
+        "src:src/cards/ct-p10/B10016.ts:8",
+        "src:src/engine/flow/action/state-machine.ts:306",
+        "src:src/engine/flow/action/state-machine.ts:307",
+        "src:src/engine/flow/guard.ts:69",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:270",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:276",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:282",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:283",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:284",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:286"
       ]
     },
     {

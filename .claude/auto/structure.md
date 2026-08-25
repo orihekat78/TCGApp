@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6635
+- **ファイル数**: 6637
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1643,6 +1643,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves120-121.md` — QA adjudication Waves120-121
     - `2026-08-25-qa-waves122-123.md` — QA adjudication Waves122-123
     - `2026-08-25-qa-waves124-125.md` — QA adjudication Waves124-125
+    - `2026-08-25-qa-waves126-127.md` — QA adjudication Waves126-127
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -5898,6 +5899,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `b03050-contact-exit-public-wave83.test.ts` — qa: card:B03050:19fb99eecd85e2306c2887c5c7eb1210d8e663ec05473fb8f45d59e9f1475925
       - `b06067-self-selection-public-wave76.test.ts` — qa: card:B06067:28660457e46b234b8eda0f8ef2c6f3353a37a1739cfebe4112b7bfffed415436
       - `b07093-a1-public-wave44.test.ts` — qa: card:B07093:212da49cce2aca6921fdb352e94b610cbdeeebd02d0ab5c66e8200c0164c3a0e
+      - `b09054-declared-public-wave127.test.ts` — qa: card:B09054:be26cfbb13dc4cbade567e0e2119410a53a7352cbf2402270145178503d5061c
       - `bond-partner-exclusion-public-wave45.test.ts` — qa: card:D10006:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0
       - `bond-partner-exclusion-wave21.test.ts` — qa: card:B01087:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
       - `bond-partner-exclusion-wave9.test.ts` — qa: card:B02004:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4

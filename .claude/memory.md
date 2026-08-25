@@ -28,6 +28,7 @@
 - QA Waves120-121: .claude/sessions/2026-08-25-qa-waves120-121.md.
 - QA Waves122-123: .claude/sessions/2026-08-25-qa-waves122-123.md.
 - QA Waves124-125: .claude/sessions/2026-08-25-qa-waves124-125.md.
+- QA Waves126-127: .claude/sessions/2026-08-25-qa-waves126-127.md.
 
 ## 2026-08-24: QA runtime Waves82-83
 
@@ -59,17 +60,14 @@
 
 ## Next
 
-- Waves124-125 move six Q&A items to matched. Coverage is 1733 matched / 1231
-  test-missing / 2964 total; 1090 exact groups remain, including 949 singletons.
-- Wave124 certifies the same bearer can guard two actions in one turn across
-  B09028, B09054/P, and B10016. Wave125 certifies stun remains ineligible while
-  an active decoy stays legal, across both owners.
-- Wave126 batch: finish five remaining B09028/B10016 items, including target-self
-  exclusion and B09028 live condition/self-count; re-ground B10016 singleton.
-- Wave127 batch: finish three B09054/P declared-ability items: self count,
-  active self-selection, and PA-to-new-scene-uid reuse.
+- Waves126-127 move eight Q&A items to matched. Coverage is 1741 matched / 1223
+  test-missing / 2964 total; 1083 exact groups remain, including 943 singletons.
+- Wave126 finishes B09028/B10016 target-self, live condition/self-count, and
+  sleepGuard+mustGuard. Wave127 finishes B09054/P declared-ability Q&A.
+- Wave128 completes nine remaining B09109 items. Wave129 completes seven
+  remaining B05007 items; use card-completion batches for higher throughput.
 - Official sync drift is separate: new PR322 and changed Q&A for
   B04018/B04018P/B06103P. Do not mix it into selected waves without re-queueing.
-- Revised remaining estimate: 72-137 working hours, center about 105 hours.
+- Revised remaining estimate: 71-136 working hours, center about 104 hours.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.
