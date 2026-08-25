@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `3b3af8fc7cfb`
+> Source hash: `5c14e015b719`
 
 公式ルール [`14-refresh.md`](../../../rules/14-refresh.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

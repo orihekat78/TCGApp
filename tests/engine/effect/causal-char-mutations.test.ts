@@ -88,7 +88,9 @@ describe('character mutation causal projection', () => {
     },
   ])('records $verb as one public state change', ({ verb, args, check }) => {
     const state = runCausalAtom(`causal-${verb}`, (draft) => {
-      draft.players.self.scene = [sceneChar('PUBLIC-TARGET', 'target')];
+      draft.players.self.scene = [sceneChar('PUBLIC-TARGET', 'target', verb === 'charRevokeKeyword'
+        ? { keywordOverrides: { granted: ['迅速'], disabledOriginal: false } }
+        : {})];
     }, { kind: 'atom', verb, args });
 
     check(state);
@@ -97,6 +99,39 @@ describe('character mutation causal projection', () => {
       targets: [{ kind: 'card', side: 'self', zone: 'scene', cardNumber: 'PUBLIC-TARGET' }],
       outcome: { type: 'state', state: 'success' },
     });
+  });
+
+  it('records a marker-only same-value keyword regrant as a value change', () => {
+    const state = runCausalAtom('causal-keyword-regrant-marker', (draft) => {
+      draft.players.self.scene = [sceneChar('PUBLIC-TARGET', 'target', {
+        turnEffects: {
+          contactImmune: false,
+          removeOnTurnEnd: false,
+          grantedKeywords: ['突撃[キャラ]'],
+          revokedKeywords: ['突撃[キャラ]'],
+          revokedSetKeywordSources: { '突撃[キャラ]': [] },
+        },
+      })];
+    }, { kind: 'atom', verb: 'charGrantKeyword', args: { uid: 'target', kw: '突撃[キャラ]', scope: 'turn' } });
+
+    expect(graph(state).map((node) => node.kind)).toEqual(['declare', 'value-change', 'summary']);
+  });
+
+  it('records a second revoke after regrant as a value change', () => {
+    const state = runCausalAtom('causal-keyword-rerevoke-marker', (draft) => {
+      draft.players.self.scene = [sceneChar('PUBLIC-TARGET', 'target', {
+        turnEffects: {
+          contactImmune: false,
+          removeOnTurnEnd: false,
+          grantedKeywords: ['突撃[キャラ]'],
+          revokedKeywords: ['突撃[キャラ]'],
+          postRevokeGrantedKeywords: ['突撃[キャラ]'],
+          revokedSetKeywordSources: { '突撃[キャラ]': [] },
+        },
+      })];
+    }, { kind: 'atom', verb: 'charRevokeKeyword', args: { uid: 'target', kw: '突撃[キャラ]', scope: 'turn' } });
+
+    expect(graph(state).map((node) => node.kind)).toEqual(['declare', 'value-change', 'summary']);
   });
 
   it('records selected private cards as a public zone count and removes IDs from every log field', () => {

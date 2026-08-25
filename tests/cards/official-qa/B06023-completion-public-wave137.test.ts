@@ -98,11 +98,11 @@ function declare(index: number): ReturnType<typeof dispatchEngineAction> {
   });
 }
 
-function acceptInvoke(): void {
+function acceptInvoke(owner: Player): void {
   surfacePendingSideChannels();
   const optional = useGameStateStore.getState().pendingEffectOptional;
   expect(optional).toMatchObject({
-    player: expect.any(String), source: { uid: 'source', cardId: B06023.id, abilityId: 'a2' },
+    player: owner, source: { uid: 'source', cardId: B06023.id, abilityId: 'a2' },
   });
   expect(dispatchEngineAction(bindPendingDecision(optional!, {
     type: 'optionalResolve', run: true,
@@ -170,7 +170,7 @@ describe('official QA Wave137: public cost binds the exact evidence occurrence',
         { cardId: EVIDENCE_DECOY.id, faceUp: false },
         { cardId: HIR_DRAW.id, faceUp: true },
       ]);
-    acceptInvoke();
+    acceptInvoke(owner);
     resolveInvoked(owner, HIR_DRAW.id);
     expect(current().players[owner].hand).toEqual([DRAW.id]);
   });
@@ -203,7 +203,7 @@ describe('official QA Wave137: invoked Hirameki honors its whole effect and own 
     install(state, owner, `${owner}-kerosuke`);
 
     expect(declare(0)).toEqual({ ok: true });
-    acceptInvoke();
+    acceptInvoke(owner);
     resolveInvoked(owner, B06025.id);
     const removal = pendingPick('sceneRemove');
     expect(removal.candidates.map(candidate => candidate.uid)).toContain('target');
@@ -229,7 +229,7 @@ describe('official QA Wave137: invoked Hirameki honors its whole effect and own 
     install(state, owner, `${owner}-condition-disabled`);
 
     expect(declare(0)).toEqual({ ok: true });
-    acceptInvoke();
+    acceptInvoke(owner);
     expect(pendingOwnerOrderGroup(current(), owner)).toEqual([]);
     expect(current().players[owner].hand).toEqual([]);
     expect(current().players[owner].evidence[0]).toMatchObject({ cardId: HIR_BLOCKED.id, faceUp: true });
@@ -240,7 +240,7 @@ describe('official QA Wave137: invoked Hirameki honors its whole effect and own 
     install(state, owner, `${owner}-batman-self-flip`);
 
     expect(declare(1)).toEqual({ ok: true });
-    acceptInvoke();
+    acceptInvoke(owner);
     resolveInvoked(owner, B06026.id);
     const flip = pendingPick('evidenceFlipDown');
     const source = flip.candidates.find(candidate => candidate.cardId === B06026.id);
@@ -266,7 +266,7 @@ describe('official QA Wave137: invoked Hirameki honors its whole effect and own 
     install(state, owner, `${owner}-kamen-yaiba-full-scene`);
 
     expect(declare(0)).toEqual({ ok: true });
-    acceptInvoke();
+    acceptInvoke(owner);
     resolveInvoked(owner, B06027.id);
     const switchPick = pendingPick('sceneEnter');
     expect(switchPick.candidates.map(candidate => candidate.uid)).toContain('switch-victim');

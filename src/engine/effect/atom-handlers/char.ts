@@ -1,6 +1,7 @@
 // engine.effect.atom-handlers/char — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
 import { mutate } from '../../mutate/index.js';
 import { scene as readScene } from '../../read/scene.js';
+import { char as readChar } from '../../read/char.js';
 import { tryRePickFromAtom } from '../resolve-picks.js';
 import { isShortFormDelta } from '../atom-pick-spec.js';
 import { removeExcludedSourceCardId } from '../../read/effect-source.js';
@@ -222,11 +223,10 @@ export function atomCharGrantKeyword(s: GameState, a: Record<string, unknown>, c
       const grantKw = a.kw as string;
       const grantScope = (a.scope as 'turn' | 'contact' | 'permanent' | undefined) ?? 'permanent';
       const grantChar = readScene.byUid(s, grantUid);
-      const keywordAlreadyGranted = grantScope === 'permanent'
-        ? grantChar?.keywordOverrides.granted.includes(grantKw) === true
-        : ((grantChar?.turnEffects.grantedKeywords as string[] | undefined) ?? []).includes(grantKw);
+      const effectiveBefore = grantChar ? readChar.hasKeyword(s, grantUid, grantKw) : false;
       mutate.char.grantKeyword(s, grantUid, grantKw, grantScope);
-      if (grantChar !== null && !keywordAlreadyGranted) {
+      const effectiveAfter = grantChar ? readChar.hasKeyword(s, grantUid, grantKw) : false;
+      if (grantChar && effectiveBefore !== effectiveAfter) {
         recordSceneValueChange(s, ctx, grantUid, { type: 'state', state: 'success' });
       }
       // BUG-073: effect log
@@ -243,15 +243,14 @@ export function atomCharRevokeKeyword(s: GameState, a: Record<string, unknown>, 
       // charRevokeKeyword 使用は0件ゆえ既定挙動は不変 (回帰0)。turn は revokedKeywords へ積み read.char.keywords が減算。
       const revokeScope = (a.scope as 'turn' | 'permanent' | undefined) ?? 'permanent';
       const revokeChar = readScene.byUid(s, revokeUid);
-      const keywordWillChange = revokeScope === 'turn'
-        ? !((revokeChar?.turnEffects.revokedKeywords as string[] | undefined) ?? []).includes(revokeKw)
-        : revokeChar?.keywordOverrides.granted.includes(revokeKw) === true;
+      const effectiveBefore = revokeChar ? readChar.hasKeyword(s, revokeUid, revokeKw) : false;
       if (revokeScope === 'turn') {
         mutate.char.revokeKeywordTurn(s, revokeUid, revokeKw);
       } else {
         mutate.char.revokeKeyword(s, revokeUid, revokeKw);
       }
-      if (revokeChar !== null && keywordWillChange) {
+      const effectiveAfter = revokeChar ? readChar.hasKeyword(s, revokeUid, revokeKw) : false;
+      if (revokeChar && effectiveBefore !== effectiveAfter) {
         recordSceneValueChange(s, ctx, revokeUid, { type: 'state', state: 'success' });
       }
       // BUG-073: effect log

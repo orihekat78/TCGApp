@@ -133,14 +133,14 @@ describe('#A on-set-host continuous rider', () => {
     expect(read.char.keywords(s, 'do#1'), 'disabledOriginal でも rider の 突撃 は外部付与ゆえ残る').toContain('突撃');
   });
 
-  it('rider keyword は「失う」(revoked) 効果の減算対象外 (rules/19 外部付与は独立)', () => {
+  it('legacy save without a temporal marker treats its active rider as pre-boundary', () => {
     const s = createEmptyGameState();
     turn(s, 'self');
     s.players.self.scene = [sceneChar('HOST', 'rv#1', {
       setCards: [up('RIDER_KW')],
       turnEffects: { contactImmune: false, removeOnTurnEnd: false, revokedKeywords: ['突撃'] },
     })];
-    expect(read.char.keywords(s, 'rv#1'), '同名 突撃 を revoke しても rider 由来は外部付与ゆえ残る').toContain('突撃');
+    expect(read.char.keywords(s, 'rv#1')).not.toContain('突撃');
   });
 
   it('conditional rider (【自分ターン中】AP+2000) — 自分ターンのみ有効', () => {
@@ -235,5 +235,23 @@ describe('#B on-set-host triggered conferral', () => {
       runAllUntilEmpty(d);
     });
     expect(after.players.self.hand.length, 'on-scene set-card trigger は host に conferral されない').toBe(before);
+  });
+});
+
+describe('keyword-loss temporal boundary for on-set-host grants', () => {
+  it('live revoke suppresses an existing rider while a later rider source restores the keyword', () => {
+    const s = createEmptyGameState();
+    turn(s, 'self');
+    s.players.self.scene = [sceneChar('HOST', 'rv#1', {
+      setCards: [up('RIDER_KW')],
+    })];
+
+    mutate.char.revokeKeywordTurn(s, 'rv#1', '突撃');
+    expect(s.players.self.scene[0]!.setCards[0]!.instanceId).toMatch(/^set:\d+$/);
+    expect(read.char.keywords(s, 'rv#1')).not.toContain('突撃');
+    const hydrated = structuredClone(s);
+    expect(read.char.keywords(hydrated, 'rv#1')).not.toContain('突撃');
+    mutate.char.setCard(hydrated, 'rv#1', 'RIDER_KW', true);
+    expect(read.char.keywords(hydrated, 'rv#1')).toContain('突撃');
   });
 });

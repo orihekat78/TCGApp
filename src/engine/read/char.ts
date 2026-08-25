@@ -661,6 +661,59 @@ function traits(s: GameState, uid: string): string[] {
   return revoked.length > 0 ? unioned.filter(t => !revoked.includes(t)) : unioned;
 }
 
+type SetHostKeywordGrant = { keyword: string; sourceKey: string | null };
+
+function setHostKeywordSourceKey(entry: SetCardEntry): string | null {
+  return typeof entry.instanceId === 'string' && entry.instanceId.length > 0
+    ? `instance:${entry.instanceId}`
+    : null;
+}
+
+function activeSetHostKeywordGrants(s: GameState, uid: string): SetHostKeywordGrant[] {
+  const char = scene.byUid(s, uid);
+  const owner = ownerSideOf(s, uid);
+  if (!char || !owner) return [];
+  const ctx = { source: { player: owner, uid } } as Parameters<typeof evalCond>[2];
+  const grants: SetHostKeywordGrant[] = [];
+  for (const entry of char.setCards ?? []) {
+    if (!entry.faceUp) continue;
+    const sd = def.card(entry.cardId);
+    if (!sd) continue;
+    for (const ability of sd.abilities ?? []) {
+      if (ability.type !== 'continuous' || ability.scope !== 'on-set-host') continue;
+      const grantFn = ability.continuousModifier?.grantKeywords;
+      if (!grantFn) continue;
+      if (ability.condition && !evalContinuousCondition(s, uid, ctx, ability.condition)) continue;
+      const keywords = grantFn(s, { uid });
+      if (!Array.isArray(keywords)) continue;
+      const sourceKey = setHostKeywordSourceKey(entry);
+      for (const keyword of keywords) grants.push({ keyword, sourceKey });
+    }
+  }
+  return grants;
+}
+
+/** Active external continuous sources captured by a turn-scoped keyword-loss boundary. */
+export function activeSetHostKeywordSourceKeys(s: GameState, uid: string, keyword: string): string[] {
+  return [...new Set(activeSetHostKeywordGrants(s, uid)
+    .filter((grant): grant is SetHostKeywordGrant & { sourceKey: string } =>
+      grant.keyword === keyword && grant.sourceKey !== null)
+    .map(grant => grant.sourceKey))];
+}
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value) && value.every(item => typeof item === 'string') ? value : [];
+}
+
+function revokedSetSourceBoundary(value: unknown, keyword: string): Set<string> | null {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)
+    || !Object.prototype.hasOwnProperty.call(value, keyword)) return null;
+  const raw = (value as Record<string, unknown>)[keyword];
+  return Array.isArray(raw) && raw.every(item => typeof item === 'string')
+    ? new Set(raw)
+    : null;
+}
+
 // keywords: granted + 元能力 (disabledOriginal の場合は元抜き)
 // rules: 19-special-rules.md (元の能力を無効にする), 18-mr.md (MR能力は無効にならない)
 function keywords(s: GameState, uid: string): string[] {
@@ -672,45 +725,33 @@ function keywords(s: GameState, uid: string): string[] {
   // turnEffects['grantedKeywords'] に積まれる。これを統合しないと突撃[事件]等の turn-scope 付与が
   // namedExceptionAllowed (突撃/迅速 の名乗り例外判定) 等で読まれず無効だった。
   // turn-scope の付与も「外部から与えられた能力」なので disabledOriginal でも残す (rules/19)。
-  const turnGranted = (effects['grantedKeywords'] as string[] | undefined) ?? [];
-  // engine additive (2026-06-29): ターン終了時まで印字キーワードを失う (「ターン終了時までこのキャラは
-  // 〚突撃[キャラ]〛を失う」B06068)。charRevokeKeyword scope:'turn' が turnEffects['revokedKeywords'] へ積む。
-  // ⚠ 減算対象は **印字 (base CardDef.keywords) + continuous (自身の grantKeywords) のみ**。granted / turnGranted
-  // (外部カードからの付与) は減算しない — 公式 B06068 Q&A「失った後に他カードの能力/効果で 突撃[キャラ] を
-  // 再付与された場合はアクション[キャラ]を行える」= 外部付与は「失う」効果と独立に重なる (再付与で復活)。
-  // 不在時 [] = 減算なし (既存カードは未宣言 → 回帰0)。clearTurnEffects('turn') で清掃。rules/19 §「失う」効果。
-  const revoked = (effects['revokedKeywords'] as string[] | undefined) ?? [];
-  // engine additive (2026-06-29c): on-set-host rider keyword grant (装備イベント、B02013 〚突撃〛付与)。
-  // faceUp でセットされたカード def の scope:'on-set-host' continuous grantKeywords を host に付与する。
-  // rider は **他カードによる付与** = 外部 grant 扱い → disabledOriginal でも残り (rules/19 §他カードの付与は無効化されない)、
-  // revoked (印字/自前 continuous の「失う」) の減算対象外 (granted/turnGranted と同じ外部由来)。faceDown は除外 (rules/16)。
-  const fromSetHost: string[] = [];
-  {
-    const ownerForSet = ownerSideOf(s, uid);
-    if (ownerForSet) {
-      const setCtx = { source: { player: ownerForSet, uid } } as Parameters<typeof evalCond>[2];
-      for (const entry of char.setCards ?? []) {
-        if (!entry.faceUp) continue;
-        const sd = def.card(entry.cardId);
-        if (!sd) continue;
-        for (const ability of sd.abilities ?? []) {
-          if (ability.type !== 'continuous') continue;
-          if (ability.scope !== 'on-set-host') continue;
-          const grantFn = ability.continuousModifier?.grantKeywords;
-          if (!grantFn) continue;
-          if (ability.condition && !evalContinuousCondition(s, uid, setCtx, ability.condition)) continue;
-          const kws = grantFn(s, { uid });
-          if (Array.isArray(kws)) fromSetHost.push(...kws);
-        }
-      }
-    }
-  }
+  const turnGranted = stringList(effects['grantedKeywords']);
+  // B06068 Q&A: 「失う」は由来でなく解決時の境界。境界以前の印字、自身 continuous、
+  // 外部 grant、face-up rider を全て抑止し、境界後に新しく得た同名 keyword だけを許可する。
+  // marker 無し旧 save は時系列を復元できないため、同名外部 grant を pre-boundary として
+  // fail-closed に扱う。新 metadata は optional / JSON serializable で turn cleanup 時に消える。
+  const revoked = stringList(effects['revokedKeywords']);
+  const postBoundaryGranted = new Set(stringList(effects['postRevokeGrantedKeywords']));
+  const externalVisible = (keyword: string) => !revoked.includes(keyword) || postBoundaryGranted.has(keyword);
+  const grantedVisible = granted.filter(externalVisible);
+  const turnGrantedVisible = turnGranted.filter(externalVisible);
+  const setBoundary = effects['revokedSetKeywordSources'];
+  const fromSetHost = activeSetHostKeywordGrants(s, uid)
+    .filter(({ keyword, sourceKey }) => {
+      if (!revoked.includes(keyword)) return true;
+      if (sourceKey === null) return false;
+      const sources = revokedSetSourceBoundary(setBoundary, keyword);
+      // Missing/malformed boundary means a legacy save: every live source is
+      // conservatively pre-boundary. A valid empty list means no source was live.
+      return sources !== null && !sources.has(sourceKey);
+    })
+    .map(grant => grant.keyword);
   if (originalAbilitiesDisabledOn(char)) {
     // 元の CardDef キーワードと continuous ability の grantKeywords は除外 (rules/19)
     // granted は外部から与えられたキーワードなので残る (rules/19 §他のカード能力/効果による付与は無効にならない)。
     // disabledOriginal では base/continuous (= 減算対象) が既に除外済 → external grant に revoke は及ばない (再付与は独立)。
     // fromSetHost (装備リダー) も外部付与ゆえ残す。
-    return [...new Set([...granted, ...turnGranted, ...fromSetHost])];
+    return [...new Set([...grantedVisible, ...turnGrantedVisible, ...fromSetHost])];
   }
   const d = def.card(char.cardId);
   // 印字キーワードから revoked を減算 (「失う」効果。外部 grant は下段で union するため独立に復活しうる)。
@@ -739,9 +780,9 @@ function keywords(s: GameState, uid: string): string[] {
     }
   }
 
-  // continuous (自身の grantKeywords) も revoked を減算 (印字と同じ「自前」由来)。granted/turnGranted/fromSetHost は外部付与ゆえ非減算。
+  // continuous (自身の grantKeywords) も boundary 以前の自前 source として減算。
   const fromContinuousKept = fromContinuous.filter(kw => !revoked.includes(kw));
-  return [...new Set([...base, ...granted, ...turnGranted, ...fromContinuousKept, ...fromSetHost])];
+  return [...new Set([...base, ...grantedVisible, ...turnGrantedVisible, ...fromContinuousKept, ...fromSetHost])];
 }
 
 function hasKeyword(s: GameState, uid: string, kw: string): boolean {
@@ -1026,7 +1067,7 @@ registerEffectiveKeyword((s, uid, keyword, fallback) => {
   // printed ability, defer to defHasKeyword; when originals are disabled, false
   // is authoritative. Base/revoked and externally granted keywords stay effective.
   if (originalAbilitiesDisabledOn(char)) return effective || defHasIconKeyword(cardDef, keyword);
-  if ((cardDef.keywords ?? []).includes(keyword)) return true;
+  if ((cardDef.keywords ?? []).includes(keyword)) return effective;
   if (effective) return true;
   return defHasKeyword(cardDef, keyword);
 }); // BUG-197: real board keyword filter == effective keyword reader

@@ -13,6 +13,7 @@ import {
   incrementTurnScopedUseCount,
   readTurnScopedUseCount,
 } from '../effect/source-identity.js';
+import { activeSetHostKeywordSourceKeys } from '../read/char.js';
 
 type Player = 'self' | 'opp';
 // engine拡張 wave#2 cluster3 (2026-06-13): 'action' = 「アクション終了時まで」(rules/08 §6-7)。
@@ -118,6 +119,13 @@ function grantKeyword(s: GameState, uid: string, kw: string, scope: ModScope = '
   const found = findChar(s, uid);
   if (!found) return;
 
+  const revoked = (found.char.turnEffects['revokedKeywords'] as string[] | undefined) ?? [];
+  if (revoked.includes(kw)) {
+    const postBoundary = (found.char.turnEffects['postRevokeGrantedKeywords'] as string[] | undefined) ?? [];
+    if (!postBoundary.includes(kw)) postBoundary.push(kw);
+    found.char.turnEffects['postRevokeGrantedKeywords'] = postBoundary;
+  }
+
   if (scope === 'permanent') {
     const granted = found.char.keywordOverrides.granted;
     if (!granted.includes(kw)) {
@@ -152,12 +160,24 @@ function revokeKeyword(s: GameState, uid: string, kw: string): void {
  * grantedKeywords (付与) の鏡像。clearTurnEffects('turn') で清掃される (rules/19 §「失う」効果はターン scope)。
  */
 function revokeKeywordTurn(s: GameState, uid: string, kw: string): void {
+  ensureSetCardInstanceIds(s);
   const found = findChar(s, uid);
   if (!found) return;
+  const setSourceKeys = activeSetHostKeywordSourceKeys(s, uid, kw);
   const te = found.char.turnEffects;
   const cur = (te['revokedKeywords'] as string[] | undefined) ?? [];
   if (!cur.includes(kw)) cur.push(kw);
   te['revokedKeywords'] = cur;
+  const postBoundary = ((te['postRevokeGrantedKeywords'] as string[] | undefined) ?? [])
+    .filter(keyword => keyword !== kw);
+  if (postBoundary.length > 0) te['postRevokeGrantedKeywords'] = postBoundary;
+  else delete te['postRevokeGrantedKeywords'];
+  const rawBoundaries = te['revokedSetKeywordSources'];
+  const boundaries = rawBoundaries !== null && typeof rawBoundaries === 'object' && !Array.isArray(rawBoundaries)
+    ? rawBoundaries as Record<string, unknown>
+    : {};
+  boundaries[kw] = setSourceKeys;
+  te['revokedSetKeywordSources'] = boundaries;
 }
 
 /**
@@ -270,6 +290,8 @@ function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn' 
     delete te['grantedKeywords'];
     // engine additive (2026-06-29): revokeKeywordTurn が積んだ「ターン終了時まで失う」キーワード (B06068)。
     delete te['revokedKeywords'];
+    delete te['postRevokeGrantedKeywords'];
+    delete te['revokedSetKeywordSources'];
     // engine A1 wave (2026-07-11): scope:'turn' の trait 付与/剥奪 (grantTrait/revokeTrait)。
     // '_permanent' 版は「ターン終了時に切れない」ため **ここでは消さない** (B05101、grantedTraits_permanent /
     // revokedTraits_permanent は apMod_permanent と同じ生存 key)。BUG-119 教訓: 新 turn キーは必ずここに列挙。

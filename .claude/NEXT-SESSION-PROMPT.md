@@ -1,17 +1,17 @@
-# Next Task: card-completion QA Waves138-139
+# Next Task: card-completion QA Waves140-141
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves136-137 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves138-139 commit.
 
 ## Completed
 
-- Wave136 finishes all five remaining B05058 Q&A items.
-- Wave137 finishes all five remaining B06023 Q&A items.
-- Coverage is 1802 matched / 1162 test-missing / 2964 total.
-- BUG-361/362/363 repair invoked occurrence movement, B06025 owner orientation,
-  and B06027 full-scene switching.
+- Wave138 finishes all five remaining B06036/P Q&A items.
+- Wave139 finishes all five remaining B06068/P Q&A items.
+- Coverage is 1812 matched / 1152 test-missing / 2964 total.
+- BUG-364 adds temporal keyword-loss authority across reader, filter, causal,
+  UI, AI, set-source, and legacy-save paths.
 - Fresh authority remains 2257 printings / 2964 Q&A / zero conflicts.
 - Protected pnpm files and live cards-data remain untouched.
-- Full evidence is in the Waves134-135 session record.
+- Full evidence is in the Waves138-139 session record.
 
 ## Throughput contract
 
@@ -21,7 +21,7 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves136-137 commit.
 - Per wave: focused behavioral tests and narrow QA merge only.
 - Two-wave checkpoint: typechecks, focused ESLint, QA trace/lint, docs,
   diff-check, one commit, and one push.
-- T3 engine repair required a full checkpoint at Waves136-137. The next routine
+- T3 engine repair required a full checkpoint at Waves138-139. The next routine
   full checkpoint remains Waves144-145 unless T3/publication requires earlier.
 - Certification-only work uses no review agent. Raise route on a production
   defect, rule conflict, or new engine path.
@@ -30,29 +30,28 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves136-137 commit.
 
 1. Read root/nested AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read `.claude/sessions/2026-08-25-qa-waves136-137.md`, this prompt, and the
+3. Read `.claude/sessions/2026-08-25-qa-waves138-139.md`, this prompt, and the
    current QA trace/workflow.
 4. Re-run the hash-only queue and fresh isolated authority validation.
 5. Run pinned grounding for every physical printing before adjudication.
 
-## Wave138: complete B06036
+## Wave140: complete B10003
 
-- Certify all five remaining B06036 Q&A items in one card matrix.
-- Current suffix prefixes: `30a7759896ad`, `6ee4a10e2ff4`, `842042d11ef8`,
-  `d5b4f1f14f3b`, `ef8f1c5c8c1a`.
-- Ground exact text before reusing Wave137 invoke-Hirameki patterns. Cover both
-  owners, physical evidence identity, optional decisions, and whole-effect moves.
+- Certify all five remaining B10003 Q&A items in one card matrix.
+- Current suffix prefixes: `0194b74149e2`, `41a4d71898ca`, `648ebbcb352a`,
+  `a170fb70e2da`, `a1a08a01622d`.
+- Ground every printing and separate exact Q&A semantics before test design.
 
-## Wave139: complete B06068
+## Wave141: complete B10098
 
-- Certify all five remaining B06068 Q&A items in one card matrix.
-- Current suffix prefixes: `1a2a46c6c6f2`, `2e5a940a4513`, `749063705a6e`,
-  `a93b9aaf8ad6`, `b7b643c73534`.
-- Ground all printings and separate each exact Q&A semantic before test design.
+- Certify all five remaining B10098 Q&A items in one card matrix.
+- Current suffix prefixes: `0022106a4376`, `8270b12479bc`, `93124d913071`,
+  `aad6b96d24d2`, `ea0d46011bfc`.
+- Ground every printing and preserve owner, optional, and physical boundaries.
 
 ## Gate carry-forward
 
-- Full functional Vitest: 1211 files / 12712 tests PASS / 177 skip; two protected
+- Full functional Vitest: 1213 files / 12752 tests PASS / 177 skip; two protected
   release-writer lanes excluded. Both typechecks and full ESLint PASS.
 - Smoke1000 baseline PASS: 471/529, timeout0, exception0.
 - Full-match desktop/mobile Playwright: 2/2 PASS, console error0.
@@ -60,6 +59,6 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves136-137 commit.
 
 ## Estimate
 
-- Snapshot: 1162 remaining items / 1028 exact groups; 894 singleton groups.
-- Remaining QA work: 66-130 working hours; center about 98 hours.
-- Risk-aware batching forecast: roughly 50-90 implementation waves.
+- Snapshot: 1152 remaining items / 1020 exact groups; 888 singleton groups.
+- Remaining QA work: 65-129 working hours; center about 97 hours.
+- Risk-aware batching forecast: roughly 49-89 implementation waves.

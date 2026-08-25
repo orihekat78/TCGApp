@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6655
+- **ファイル数**: 6659
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -544,6 +544,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-361.md` — Direct invoked Hirameki evidence movement
     - `BUG-362.md` — B06025 own-scene target authority
     - `BUG-363.md` — B06027 direct-invoke full-scene switch
+    - `BUG-364.md` — B06068 keyword-loss temporal boundary
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1652,6 +1653,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves132-133.md` — QA adjudication Waves132-133
     - `2026-08-25-qa-waves134-135.md` — QA adjudication Waves134-135
     - `2026-08-25-qa-waves136-137.md` — QA adjudication Waves136-137
+    - `2026-08-25-qa-waves138-139.md` — QA adjudication Waves138-139
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -5893,8 +5895,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B05118-family-nonblack-partner.test.ts` — Official Q&A cluster: these seven cases share the same printed
       - `B06020-completion-public-wave130.test.ts` — qa: card:B06020:d3b7730aa0d24dcbd34fa32b3419352d1238d398c3f73d60ca2d4f1125207a8c
       - `B06023-completion-public-wave137.test.ts` — qa: card:B06023:0025cb3b7aecab7dca31296259c4dca893915c9eb6eecce256504c10d3ebd07d
+      - `B06036-completion-public-wave138.test.ts` — qa: card:B06036:30a7759896adeb54b8229a3083eb1615ae39b079a34bba004f00f993c0a898c9
       - `B06042-effect-contact-public.test.ts` — qa: card:B06042:51624536ab2df37b3ce09f45df7c715d9ac3c8bbb64d8ff36ed28ebcc48829d5
       - `B06042-grant-lifecycle-public.test.ts` — qa: card:B06042:954b33bfb2a596a7ba88bb1d6476fd34416af93d38e8012a55157693df8c903a
+      - `B06068-completion-public-wave139.test.ts` — qa: card:B06068:1a2a46c6c6f2d223c19bf80a2832fa8cc71d77c57cb5d6b98be4e42610903db0
       - `B06074-completion-public-wave131.test.ts` — qa: card:B06074:2e622a225c9c5743d9f4eba3865e40ddb799ad15a2800aca084ac672a33c6b74
       - `B07066-declared-cost-optional.test.ts` — qa: card:B07066:939f5e30d9e32c8b233a160a6f70ebb932c71ce0971e6f66cfb3701d5fff76cd
       - `B07102-refresh-includes-removed.test.ts` — qaId=card:B07102:99f16dd6a248501c9d63a44dd85b2d6097ef720865e4181d1b451669f04b05d…

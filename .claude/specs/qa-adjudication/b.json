@@ -963,7 +963,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06063.ts:73",
-        "tests:tests/cards/engine-additive-wave-0629c-setcard-rider.test.ts:143"
+        "tests:tests/cards/engine-additive-wave-0629c-setcard-rider.test.ts:159"
       ]
     },
     {
