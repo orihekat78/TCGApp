@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6626
+- **ファイル数**: 6629
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1639,6 +1639,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves112-113.md` — QA adjudication Waves112-113
     - `2026-08-25-qa-waves114-115.md` — QA adjudication Waves114-115
     - `2026-08-25-qa-waves116-117.md` — QA adjudication Waves116-117
+    - `2026-08-25-qa-waves118-119.md` — QA adjudication Waves118-119
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -5943,6 +5944,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `effect-entry-trigger-order-public.test.ts` — qa: card:B07058:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-trigger-public-wave2.test.ts` — qa: card:B04064:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
       - `effect-entry-trigger-public-wave28.test.ts` — qa: card:B03068:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effect-removal-not-contact-public-wave118.test.ts` — qa: card:B04089:0b6239f8b2e0d7252ecdbe7cdba6272d9a4d98a7a84f59d98bb3a2be00a36fc0
       - `effective-level-self-count-public-wave75.test.ts` — qa: card:PR270:04195ab037741d2c4584dcf9e92a0a91822cf9490ff78ec9c83f83e52282be4a
       - `end-phase-reactivation-public-wave46.test.ts` — qa: card:B07023:e95274eddf61476e68accaf6348cb07eefb9d8074484ed06055f5022530a1706
       - `event-evidence-action-hirameki-public.test.ts` — qa: card:B04041:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
@@ -5992,6 +5994,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `pr263-pr269-contact-exit-regression-wave83.test.ts` — Horizontal regression: a disguise rider removes the non-current contact particip…
       - `registered-card-name-scope-public-wave105.test.ts` — qa: card:B09003:45a28272794215b6465b92629940788c48e8cb3de486869a26a5a34e1a4f6a73
       - `same-card-multicopy-order-wave17.test.ts` — qaId=card:B02020:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c…
+      - `select-one-of-up-to-two-public-wave119.test.ts` — qa: card:B04027:9bafe2020798f633e8f0c109144c9d2df6edaeea89943b94f2424dbc601e886a
       - `self-selection-public-wave74.test.ts` — qa: card:B03088:37d1a5bf035569e61acdccac31f828d38114d0105e6cbe77aa883552b82699c7
       - `set-card-ability-occurrence-public-wave35.test.ts` — qa: card:B01057:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `set-card-host-absent.test.ts`

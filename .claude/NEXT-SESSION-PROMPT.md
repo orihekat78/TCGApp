@@ -1,17 +1,17 @@
-# Next Task: batched QA adjudication Waves118-119
+# Next Task: batched QA adjudication Waves120-121
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves116-117 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves118-119 commit.
 
 ## Completed
 
-- Wave116 certifies arbitrary multi-Misread commitments for D06015/PR027/PR031
-  across both owners, 0/1/2/3 sources, partner reasoning, and zero controls.
-- Wave117 certifies PR060/PR064/PR154 count stun for the entry gate but permit
-  only sleep removal targets across both owners, either side, decoys, and zero.
-- Coverage is 1709 matched / 1255 test-missing / 2964 total.
+- Wave118 certifies B04089/P, B04091/P, and B04094/P trigger after owner-effect
+  opposing removal but never after contact, across both owners and all outcomes.
+- Wave119 certifies choosing exactly one across B04027/P, B04042/P, and B04084,
+  with zero/max/aggregate rejection and B04084 continuation cleanup.
+- Coverage is 1715 matched / 1249 test-missing / 2964 total.
 - Fresh isolated authority remains 2964 Q&A / zero conflicts.
 - Protected `pnpm-lock.yaml`, `pnpm-workspace.yaml`, and live cards-data remain
-  untouched. Full evidence is in the Waves116-117 session record.
+  untouched. Full evidence is in the Waves118-119 session record.
 
 ## Throughput contract
 
@@ -30,35 +30,34 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves116-117 commit.
 
 1. Read root/nested AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read `.claude/sessions/2026-08-25-qa-waves116-117.md`, this prompt, and the
+3. Read `.claude/sessions/2026-08-25-qa-waves118-119.md`, this prompt, and the
    current QA trace/workflow.
 4. Re-run the hash-only queue. Revalidate the isolated authority root and
    never modify live `.claude/specs/cards-data`.
 
-## Wave118 seed
+## Wave120 seed
 
 - Exact tuple: section `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
-  Q `9a53219dce3c225a9c208d3e02a076c5f40adbb3bae3c3bce1098f01e259d555`,
-  A `f813540a43fdb01e639a009712ef2d2b34e9e6fb52586365f4f90f94a0cf1f85`.
-- Missing exact-group members: B04089, B04091, B04094.
+  Q `ec46e0d5d240618fe1ff0da6bf613a4112a59cbcb2fe387b300d410e6088cb16`,
+  A `b266e93764f8203e56a49d78836a15a2fd50a14d01ad2d10c1d7f894b05c474e`.
+- Missing exact-group members: D06003, D06004, D06021.
 - Ground all three members before changing adjudication.
 
-## Wave119 seed
+## Wave121 seed
 
 - Exact tuple: section `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`,
-  Q `e5a1d5c8890805960d9d41a86065d041e9871a138762795f3aba66d37a658162`,
-  A `d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04`.
-- Missing exact-group members: B04027, B04042, B04084.
+  Q `f70dca6d863c38348fdcedfafa0431d49b150f39c4ad5f90e4dd2d9b641db2d6`,
+  A `bc06b45c77b553b94d7406a9e439b81183696c446e50547af0d7ca1748470faf`.
+- Missing exact-group members: B10007, B10012, B10013.
 - Ground all three members before changing adjudication.
 
 ## Gate carry-forward
 
-- Full functional Vitest, full ESLint, smoke, and both-project Playwright were
-  exercised at Waves116-117. Known non-wave failures remain isolated to the
-  protected pnpm release gates and twenty old Hirameki pattern fixtures.
-- BUG-244 Hirameki action-window fixtures were corrected and pass 10/10.
+- Waves116-117 exercised the ten-wave full checkpoint. Known non-wave failures
+  stay isolated to protected pnpm release gates and twenty old Hirameki fixtures.
+- BUG-244 action-window fixtures remain green 10/10 after their prior correction.
 
 ## Estimate
 
-- Snapshot: 1255 remaining items / 1098 exact groups; 949 groups are singleton.
-- Remaining QA work: 74-141 working hours; center estimate about 108 hours.
+- Snapshot: 1249 remaining items / 1096 exact groups; 949 groups are singleton.
+- Remaining QA work: 74-140 working hours; center estimate about 108 hours.

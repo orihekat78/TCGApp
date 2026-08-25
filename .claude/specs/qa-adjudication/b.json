@@ -479,11 +479,23 @@
     {
       "qaId": "card:B04027:9bafe2020798f633e8f0c109144c9d2df6edaeea89943b94f2424dbc601e886a",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04027.ts:54"
+        "rules:.claude/rules/15-abilities-effects.md:36",
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-p04/B04027.ts:38",
+        "src:src/cards/ct-p04/B04027.ts:51",
+        "tests:tests/cards/official-qa/select-one-of-up-to-two-public-wave119.test.ts:178",
+        "tests:tests/cards/official-qa/select-one-of-up-to-two-public-wave119.test.ts:179",
+        "tests:tests/cards/official-qa/select-one-of-up-to-two-public-wave119.test.ts:180",
+        "tests:tests/cards/official-qa/select-one-of-up-to-two-public-wave119.test.ts:183",
+        "tests:tests/cards/official-qa/select-one-of-up-to-two-public-wave119.test.ts:184",
+        "tests:tests/cards/official-qa/select-one-of-up-to-two-public-wave119.test.ts:185",
+        "tests:tests/cards/official-qa/select-one-of-up-to-two-public-wave119.test.ts:187",
+        "tests:tests/cards/official-qa/select-one-of-up-to-two-public-wave119.test.ts:188",
+        "tests:tests/cards/official-qa/select-one-of-up-to-two-public-wave119.test.ts:189"
       ]
     },
     {

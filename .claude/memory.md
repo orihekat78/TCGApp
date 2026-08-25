@@ -24,6 +24,7 @@
 - QA Waves112-113: .claude/sessions/2026-08-25-qa-waves112-113.md.
 - QA Waves114-115: .claude/sessions/2026-08-25-qa-waves114-115.md.
 - QA Waves116-117: .claude/sessions/2026-08-25-qa-waves116-117.md.
+- QA Waves118-119: .claude/sessions/2026-08-25-qa-waves118-119.md.
 
 ## 2026-08-24: QA runtime Waves82-83
 
@@ -55,18 +56,18 @@
 
 ## Next
 
-- Waves116-117 move six Q&A items to matched. Coverage is 1709 matched / 1255
-  test-missing / 2964 total; 1098 exact groups remain, including 949 singletons.
-- Wave116 certifies arbitrary multi-Misread commitments for D06015/PR027/PR031,
-  both owners, 0/1/2/3 sources, partner reasoning, and ineligible controls.
-- Wave117 certifies PR060/PR064/PR154 count stun for their gate but permit only
-  sleep removal targets, with both-owner, either-side, decoy, and zero proof.
-- Wave118 seed: empty section, Q `9a53219d...`, A `f813540a...` across
-  B04089/B04091/B04094.
-- Wave119 seed: empty section, Q `e5a1d5c8...`, A `d8cdbcf9...` across
-  B04027/B04042/B04084.
+- Waves118-119 move six Q&A items to matched. Coverage is 1715 matched / 1249
+  test-missing / 2964 total; 1096 exact groups remain, including 949 singletons.
+- Wave118 certifies B04089/P, B04091/P, and B04094/P trigger for owner-effect
+  removal but not contact, across both owners and all outcomes.
+- Wave119 certifies choosing exactly one across B04027/P, B04042/P, and B04084,
+  with zero/max/aggregate rejection and B04084 continuation cleanup.
+- Wave120 seed: empty section, Q `ec46e0d5...`, A `b266e937...` across
+  D06003/D06004/D06021.
+- Wave121 seed: empty section, Q `f70dca6d...`, A `bc06b45c...` across
+  B10007/B10012/B10013.
 - Official sync drift is separate: new PR322 and changed Q&A for
   B04018/B04018P/B06103P. Do not mix it into selected waves without re-queueing.
-- Revised remaining estimate: 74-141 working hours, center about 108 hours.
+- Revised remaining estimate: 74-140 working hours, center about 108 hours.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.
