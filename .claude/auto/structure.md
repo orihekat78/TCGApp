@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6632
+- **ファイル数**: 6634
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1641,6 +1641,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves116-117.md` — QA adjudication Waves116-117
     - `2026-08-25-qa-waves118-119.md` — QA adjudication Waves118-119
     - `2026-08-25-qa-waves120-121.md` — QA adjudication Waves120-121
+    - `2026-08-25-qa-waves122-123.md` — QA adjudication Waves122-123
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -6008,6 +6009,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `short-deck-reveal-hand-entry-public.test.ts` — rules: 15-abilities-effects.md, 17-icons.md, 20-color-and-switch.…
       - `shuffle-romance-public-wave32.test.ts` — qa: card:B01023:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
       - `sleep-cost-related-entry-public-wave24.test.ts` — qa: card:B07015:90178c65731533021339234d85b8740114d42f59cdc8a453b6336bba3cd197e1
+      - `sleep-guard-priority-public-waves122-123.test.ts` — qa: card:B09028:323becb3ad65022766eb60c151e76088089be9650ea67e0f5c4c52d67147bc99
       - `souza-found-public-wave47.test.ts` — qa: card:B01084:c6e5391785273827b8dabcd809585155ef42406b996be0913d033b9dcb43cbe6
       - `stacked-card-semantics-public-wave33.test.ts` — qa: card:B06005:199a933934b344f7715091799edd9442eca983c85cb7953418d8f7e9f0d4f2a6
       - `stun-action-target-public.test.ts` — qa: card:B01058:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40

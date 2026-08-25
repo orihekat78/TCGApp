@@ -1627,11 +1627,20 @@
     {
       "qaId": "card:B09054:323becb3ad65022766eb60c151e76088089be9650ea67e0f5c4c52d67147bc99",
       "answerHash": "aedd1fae8cb5d370350b8c5d65d957a9153744872951b43f93124ba8a5aa1d38",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09054.ts:1"
+        "rules:.claude/rules/07-action-flow.md:25",
+        "rules:.claude/rules/22-qa-action-contact.md:46",
+        "src:src/cards/ct-p09/B09054.ts:67",
+        "src:src/cards/ct-p09/B09054P.ts:52",
+        "src:src/engine/flow/action/state-machine.ts:307",
+        "src:src/engine/flow/action/state-machine.ts:333",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:102",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:147",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:149",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:151"
       ]
     },
     {
@@ -1808,15 +1817,20 @@
     {
       "qaId": "card:B10016:5cffe9de58a0cbfffe692e8c6c421d82ca89e35b1bff91c29c90eb6cff59e3a3",
       "answerHash": "73a6f00663f191761324ed9f7ff894295dbebe8b28371c1db514b6e292884657",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:7",
-        "src:src/cards/ct-p10/B10016.ts:8"
-      ],
-      "noteCodes": [
-        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
+        "rules:.claude/rules/13-keywords.md:19",
+        "src:src/cards/ct-p10/B10016.ts:8",
+        "src:src/engine/flow/guard.ts:48",
+        "src:src/engine/flow/guard.ts:49",
+        "src:src/engine/flow/guard.ts:70",
+        "src:src/engine/flow/guard.ts:82",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:161",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:162",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:163",
+        "tests:tests/cards/official-qa/sleep-guard-priority-public-waves122-123.test.ts:167"
       ]
     },
     {
