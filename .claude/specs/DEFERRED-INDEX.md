@@ -298,7 +298,7 @@ relative-AP (B09096) は本 session で **stale 訂正** (engine変更0 と判�
 
 | rep | 理由 (支配 gate) | 解禁条件 |
 |-----|------------------|---------|
-| B06049 | a2「アクション終了時まで相手の【ヒラメキ】は発動しない」= ヒラメキ抑止機構 + side-level「アクション終了時まで」flag が engine に不存在 (hirameki.ts / handleEvidenceRemovedHook に抑止参照点なし、turnEffects は per-char)。a1 突撃句は X8(enter+sceneHas) で可能だが partial 出荷はしない (cluster 方針) | ヒラメキ抑止窓 (side-level action-scope flag) の設計 (独立クラスタ) |
+| ~~B06049~~ | ✅ **出荷済**。a1 は enter 時 `sceneHas` snapshot から turn-scope `突撃` を付与。a2 は `setHiramekiSuppress` → opponent `turnState`、triggered listener抑止、action-end清掃を配線済み。Wave156 public proofでa1の非遡及・付与後持続を両owner確認。 | ✅ resolved |
 
 ### cluster3 で記録した既知ギャップ (カード defer ではない)
 

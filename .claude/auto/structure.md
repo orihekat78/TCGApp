@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6694
+- **ファイル数**: 6699
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1667,6 +1667,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves150-151.md` — QA adjudication Waves150-151
     - `2026-08-25-qa-waves152-153.md` — QA adjudication Waves152-153
     - `2026-08-25-qa-waves154-155.md` — QA adjudication Waves154-155
+    - `2026-08-25-qa-waves156-157.md` — QA adjudication Waves156-157
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -1887,9 +1888,11 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06046.md` — B06046 鉄刃 grounding
       - `B06047.md` — B06047 鉄刃 grounding
       - `B06048.md` — B06048 峰さやか grounding
+      - `B06049.md` — B06049 佐々木小次郎 grounding
       - `B06050.md` — B06050 grounding
       - `B06051.md` — B06051 grounding
       - `B06052.md` — B06052 grounding
+      - `B06053.md` — B06053 鉄刃 grounding
       - `B06065.md` — B06065 grounding
       - `B06066.md` — B06066/B06066P 怪盗キッド＆白馬探 (MR キャラ) grounding (2026-07-10, fable)
       - `B06067.md` — B06067 grounding
@@ -5930,6 +5933,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06042-grant-lifecycle-public.test.ts` — qa: card:B06042:954b33bfb2a596a7ba88bb1d6476fd34416af93d38e8012a55157693df8c903a
       - `B06046-completion-public-wave154.test.ts` — qa: card:B06046:3b1c6f4fbf55d8cf875921b50de0edf27064d4cef8ac4818301b6914eb9cdfe3
       - `B06047-completion-public-wave155.test.ts` — qa: card:B06047:3632e94d50bc47ae346b59442957707c6dc4daeee6428f02d48162a52d31374f
+      - `B06049-B06050-completion-public-wave156.test.ts` — qa: card:B06049:1522823aa460aa0572f53f018bc39a9461f8b0b892d70825d15382c5c94a0818
+      - `B06052-B06053-completion-public-wave157.test.ts` — qa: card:B06052:7124f41d3267d0e2df2692070acfdd9e66fca11edbbbfb6b64ada8bee4c94b79
       - `B06068-completion-public-wave139.test.ts` — qa: card:B06068:1a2a46c6c6f2d223c19bf80a2832fa8cc71d77c57cb5d6b98be4e42610903db0
       - `B06074-completion-public-wave131.test.ts` — qa: card:B06074:2e622a225c9c5743d9f4eba3865e40ddb799ad15a2800aca084ac672a33c6b74
       - `B07066-declared-cost-optional.test.ts` — qa: card:B07066:939f5e30d9e32c8b233a160a6f70ebb932c71ce0971e6f66cfb3701d5fff76cd
