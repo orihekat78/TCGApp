@@ -613,15 +613,14 @@
     {
       "qaId": "card:B05007:8e1da005d76183ea47967a03d6c18dd03568acc2047544ed69e2deb0ce4e7a24",
       "answerHash": "424e76341eadb77410410583fe93f63738826ee9d5e8494580ecba9a08be2fc2",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/09-cutin-disguise.md:29",
-        "src:src/cards/ct-p05/B05007.ts:98"
-      ],
-      "noteCodes": [
-        "B05007-ACTION-CUTIN-BAN-DISGUISE-TEST-MISSING"
+        "src:src/cards/ct-p05/B05007.ts:102",
+        "src:src/cards/ct-p05/B05007P.ts:6",
+        "tests:tests/cards/official-qa/B05007-completion-public-wave129.test.ts:250",
+        "tests:tests/cards/official-qa/B05007-completion-public-wave129.test.ts:251"
       ]
     },
     {

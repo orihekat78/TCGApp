@@ -1736,24 +1736,35 @@
     {
       "qaId": "card:B09109:87aa9ca394d3b7a7faa9cc64726031a8e157f606ad5c5fab6f9690c1e7ed7c45",
       "answerHash": "e3bd99fac941e766bca54214ba6b752070766ad6e3c44525dadc51d4416c12d2",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09109.ts:1"
+        "src:src/cards/ct-p09/B09109.ts:50",
+        "src:src/cards/ct-p09/B09109P.ts:17",
+        "tests:tests/cards/official-qa/B09109-completion-public-wave128.test.ts:129",
+        "tests:tests/cards/official-qa/B09109-completion-public-wave128.test.ts:130",
+        "tests:tests/cards/official-qa/B09109-completion-public-wave128.test.ts:131",
+        "tests:tests/cards/official-qa/B09109-completion-public-wave128.test.ts:133",
+        "tests:tests/cards/official-qa/B09109-completion-public-wave128.test.ts:164"
       ]
     },
     {
       "qaId": "card:B09109:c7a68e13ec1b5b8e1c7987fc1225f6ee61e19610f863268de62fed9a026bb022",
       "answerHash": "a6398b6f5387a6bd1ccd8af81bb0e1f88a647744215d8cc105420e10316f73aa",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09109.ts:95"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p09/B09109.ts:77",
+        "src:src/cards/ct-p09/B09109P.ts:38",
+        "tests:tests/cards/official-qa/B09109-completion-public-wave128.test.ts:246",
+        "tests:tests/cards/official-qa/B09109-completion-public-wave128.test.ts:247",
+        "tests:tests/cards/official-qa/B09109-completion-public-wave128.test.ts:248",
+        "tests:tests/cards/official-qa/B09109-completion-public-wave128.test.ts:253",
+        "tests:tests/cards/official-qa/B09109-completion-public-wave128.test.ts:254",
+        "tests:tests/cards/official-qa/B09109-completion-public-wave128.test.ts:255",
+        "tests:tests/cards/official-qa/B09109-completion-public-wave128.test.ts:269"
       ]
     },
     {

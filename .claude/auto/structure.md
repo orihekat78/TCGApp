@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6637
+- **ファイル数**: 6640
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1644,6 +1644,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves122-123.md` — QA adjudication Waves122-123
     - `2026-08-25-qa-waves124-125.md` — QA adjudication Waves124-125
     - `2026-08-25-qa-waves126-127.md` — QA adjudication Waves126-127
+    - `2026-08-25-qa-waves128-129.md` — QA adjudication Waves128-129
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -5879,6 +5880,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B04030.test.ts` — The opposing contact character has left, but Kaito remains in the scene.
       - `B04059.test.ts` — B04059 水無怜奈 — official Q&A: scene-only additional card name.
       - `B04074.test.ts`
+      - `B05007-completion-public-wave129.test.ts` — qa: card:B05007:64c8ea1dbd685ed1a2d1338e4c52910b1b19f6cca7249f8e288576f37e426d44
       - `B05118-family-nonblack-partner.test.ts` — Official Q&A cluster: these seven cases share the same printed
       - `B06042-effect-contact-public.test.ts` — qa: card:B06042:51624536ab2df37b3ce09f45df7c715d9ac3c8bbb64d8ff36ed28ebcc48829d5
       - `B06042-grant-lifecycle-public.test.ts` — qa: card:B06042:954b33bfb2a596a7ba88bb1d6476fd34416af93d38e8012a55157693df8c903a
@@ -5888,6 +5890,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08081-multi-intercept-public-wave25.test.ts` — qa: card:B08081:6b3d06f3573c39d85fe728b4613bf4458ef9a1849c52f036ac9bf48314a44dd7
       - `B08087-B08091-leave-evidence-public.test.ts` — qa: card:B08087:1f49f9f42b38c241ebd655d06681a4cb1c6030ffaa8345da75416cb84193fc80
       - `B09090-PR286-entry-waiver.test.ts` — qaId=card:B09090:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7e…
+      - `B09109-completion-public-wave128.test.ts` — qa: card:B09109:87aa9ca394d3b7a7faa9cc64726031a8e157f606ad5c5fab6f9690c1e7ed7c45
       - `B10071-public-wave25.test.ts` — qa: card:B10071:816d7965a6d1b8124bc6be2098194d8f3f19a88be3cdc253bf643cfdff0e1e69
       - `B10087-public-wave25.test.ts` — qa: card:B10087:0c9d0e7ac8e1aeccc9186815ebf6f4fcbc776e2193db1d43e5cd7294a9e3a664
       - `B10088-effect-entry-public-wave25.test.ts` — qa: card:B10088:00139d4a04a7b6b8457670c965d9b2c6ee827110a2321d40b2ba641c9a01b896

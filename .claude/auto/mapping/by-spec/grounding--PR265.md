@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `2287a0cd1c4c`
+> Source hash: `be58d128cf17`
 
 仕様書 [`PR265`](../../../specs/grounding/PR265.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

@@ -535,15 +535,15 @@
     {
       "qaId": "card:B05007:03ab9e39864651b7fb215fb7b4390a0a90599aa1e6abaa6868353ceba72938cb",
       "answerHash": "9f3330f63c0f3c368413567e59e34a745259c37be1e4b78150685e23cee5a633",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/07-action-flow.md:21",
-        "src:src/cards/ct-p05/B05007.ts:98"
-      ],
-      "noteCodes": [
-        "B05007-ACTION-DECLARE-BEFORE-GUARD-TEST-MISSING"
+        "src:src/cards/ct-p05/B05007.ts:102",
+        "src:src/cards/ct-p05/B05007P.ts:6",
+        "tests:tests/cards/official-qa/B05007-completion-public-wave129.test.ts:237",
+        "tests:tests/cards/official-qa/B05007-completion-public-wave129.test.ts:242",
+        "tests:tests/cards/official-qa/B05007-completion-public-wave129.test.ts:243"
       ]
     },
     {

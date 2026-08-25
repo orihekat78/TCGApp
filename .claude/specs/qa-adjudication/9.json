@@ -650,15 +650,19 @@
     {
       "qaId": "card:B05007:1326a9294ee6a8f8fb160e25680fb9eadb1af57c1a38f516b058d52eecea0875",
       "answerHash": "d312e659a83b5c574f5b30e380cea2851c581ef81cd45343a2b0711038dcc222",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:16",
-        "src:src/cards/ct-p05/B05007.ts:98"
-      ],
-      "noteCodes": [
-        "B05007-SOURCE-LEAVE-TURN-EFFECT-TEST-MISSING"
+        "src:src/cards/ct-p05/B05007.ts:102",
+        "src:src/cards/ct-p05/B05007P.ts:6",
+        "tests:tests/cards/official-qa/B05007-completion-public-wave129.test.ts:217",
+        "tests:tests/cards/official-qa/B05007-completion-public-wave129.test.ts:218",
+        "tests:tests/cards/official-qa/B05007-completion-public-wave129.test.ts:223",
+        "tests:tests/cards/official-qa/B05007-completion-public-wave129.test.ts:225",
+        "tests:tests/cards/official-qa/B05007-completion-public-wave129.test.ts:234",
+        "tests:tests/cards/official-qa/B05007-completion-public-wave129.test.ts:235",
+        "tests:tests/cards/official-qa/B05007-completion-public-wave129.test.ts:243"
       ]
     },
     {
