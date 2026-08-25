@@ -699,7 +699,7 @@ function assertPendingMisreadRuntimeMatchesState(
   }
 }
 
-function pendingSourceMatchesEffectEntry(
+export function pendingSourceMatchesEffectEntry(
   state: GameState,
   entry: GameState['pendingEffects'][number],
   source: Record<string, unknown>,

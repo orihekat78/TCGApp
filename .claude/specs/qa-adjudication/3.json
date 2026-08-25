@@ -1232,34 +1232,38 @@
     {
       "qaId": "card:B07001:80a2cfb16a87e5d0d4da8698cb86f47b173740616dd1af4e02537a5deb1ade52",
       "answerHash": "5e0e6096ea5fbcfa18086240ebf4944b8f22d891a5faa8f4c31016e03b76cafd",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07001.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:36",
+        "src:src/cards/ct-p07/B07001.ts:70",
+        "tests:tests/cards/official-qa/B07001-B07004-completion-public-wave164.test.ts:234"
       ]
     },
     {
       "qaId": "card:B07001:934608b55c1b640bd5e5c1bf6dc33c3322750bdefd79b0a5e162289b809c3ad0",
       "answerHash": "2bfc31348a4949b662b7db9e2be78fba43cba6e21ae3cde87ea38207b796fa1d",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07001.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/24-qa-naming-stun.md:9",
+        "src:src/cards/ct-p07/B07001.ts:72",
+        "tests:tests/cards/official-qa/B07001-B07004-completion-public-wave164.test.ts:257",
+        "tests:tests/cards/official-qa/B07001-B07004-completion-public-wave164.test.ts:260"
       ]
     },
     {
       "qaId": "card:B07011:1c10b9e97107208c6fd31174fe5b3b8f52f89fc789fee528f6ffc2b2a8aef5c7",
       "answerHash": "324e60c374cab75f2d68f6e5cde9926bda8b5a454bdbd513e49254f47a56b453",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07011.ts:1"
+        "src:src/cards/ct-p07/B07011.ts:7",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:338",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:342"
       ]
     },
     {

@@ -173,8 +173,8 @@ export async function dispatchUnguardedCaseAction(
       type: 'actionDeclareCase',
       byUid: attackerUid,
       targetPlayer: target,
-    }) as { ok: boolean; reason?: string };
-    if (!declared.ok) throw new Error(`actionDeclareCase failed: ${declared.reason ?? 'unknown'}`);
+    }) as { ok: boolean; reason?: string; detail?: string };
+    if (!declared.ok) throw new Error(`actionDeclareCase failed: ${declared.reason ?? 'unknown'}${declared.detail ? `: ${declared.detail}` : ''}`);
 
     const actionId = w.__game.getState().activeActionId;
     if (!actionId) throw new Error('activeActionId not set after actionDeclareCase');
@@ -182,14 +182,16 @@ export async function dispatchUnguardedCaseAction(
     const guarded = w.__game.dispatch({ type: 'actionGuard', actionId, guarderUid: null }) as {
       ok: boolean;
       reason?: string;
+      detail?: string;
     };
-    if (!guarded.ok) throw new Error(`actionGuard failed: ${guarded.reason ?? 'unknown'}`);
+    if (!guarded.ok) throw new Error(`actionGuard failed: ${guarded.reason ?? 'unknown'}${guarded.detail ? `: ${guarded.detail}` : ''}`);
 
     const judged = w.__game.dispatch({ type: 'actionJudge', actionId }) as {
       ok: boolean;
       reason?: string;
+      detail?: string;
     };
-    if (!judged.ok) throw new Error(`actionJudge failed: ${judged.reason ?? 'unknown'}`);
+    if (!judged.ok) throw new Error(`actionJudge failed: ${judged.reason ?? 'unknown'}${judged.detail ? `: ${judged.detail}` : ''}`);
     return actionId;
   }, { attackerUid: byUid, target: targetPlayer });
 }

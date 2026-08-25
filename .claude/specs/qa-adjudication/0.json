@@ -1119,21 +1119,28 @@
     {
       "qaId": "card:B07004:657dafe95083ad08981b7610e34d651ff4ade221a78bb2a0482884c4475c0ff7",
       "answerHash": "18d2577fe49dec8eeb57a29f51d9c25aa5fe1ee49f81b1190c121b56ca8be176",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07004.ts:33"
+        "rules:.claude/rules/26-qa-deck-refresh.md:22",
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "rules:.claude/rules/26-qa-deck-refresh.md:24",
+        "src:src/cards/ct-p07/B07004.ts:33",
+        "tests:tests/cards/official-qa/B07001-B07004-completion-public-wave164.test.ts:374"
       ]
     },
     {
       "qaId": "card:B07009:684d62441f6ae3dcf940ea71c84bb30e59e92ef6cbe04ac02ddbeacb5aec06d6",
       "answerHash": "50c869438aaaa3ac411c6fdc95fc4b581c58f7ce37a07a746bb90ac4d5352053",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07009.ts:13"
+        "rules:.claude/rules/09-cutin-disguise.md:9",
+        "src:src/cards/ct-p07/B07009.ts:20",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:282",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:284"
       ]
     },
     {

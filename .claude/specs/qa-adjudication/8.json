@@ -1149,21 +1149,24 @@
     {
       "qaId": "card:B07001:3ba2c681a2b0b87e9836fd9d8ac464dfbef5f7fae479ef7c2910bc6cd18acbcc",
       "answerHash": "0f235c176819448762a02b8dc3aaeefdb9fb789049d95b1d66359b30be7e6941",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07001.ts:1"
+        "rules:.claude/rules/13-keywords.md:11",
+        "src:src/cards/ct-p07/B07001.ts:54",
+        "tests:tests/cards/official-qa/B07001-B07004-completion-public-wave164.test.ts:217"
       ]
     },
     {
       "qaId": "card:B07001:9008e450155fd9d8c51c93ed1ce6e7747a6d956514d5141c12b9e1499dee91e9",
       "answerHash": "ebc244209e7da6d86dfcfb0e748ccd92c499f1eb79a157da47313a28a56abd3b",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07001.ts:1"
+        "src:src/cards/ct-p07/B07001.ts:52",
+        "tests:tests/cards/official-qa/B07001-B07004-completion-public-wave164.test.ts:196"
       ]
     },
     {
@@ -1192,41 +1195,56 @@
     {
       "qaId": "card:B07004:0e8778bc75d72ebcd73bd21c7d81f547b11128d056f64b4457e321f5a1653fdf",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07004.ts:1"
+        "src:src/cards/ct-p07/B07004.ts:90",
+        "tests:tests/cards/official-qa/B07001-B07004-completion-public-wave164.test.ts:351"
       ]
     },
     {
       "qaId": "card:B07010:3c5311bf5b7b3ddb55695107de7b3e7ac562b49df49486020cbf2f14f49f4137",
       "answerHash": "89083b38d6aba9556fbac3cdddc4f03f3ffe48270972799cfc0fa0f523c39934",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07010.ts:1"
+        "rules:.claude/rules/26-qa-deck-refresh.md:22",
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "rules:.claude/rules/26-qa-deck-refresh.md:24",
+        "src:src/cards/ct-p07/B07010.ts:50",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:309",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:311"
       ]
     },
     {
       "qaId": "card:B07012:13f7236b17a7c3f7577c4e42cab42556ddb14ba5f6edf1dfaf0192479bb325ed",
       "answerHash": "f14fc9a2b2607f8145ec4fd3952efd15676c9f9e594f6b002da9d74113b1aca8",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07012.ts:1"
+        "rules:.claude/rules/20-color-and-switch.md:34",
+        "rules:.claude/rules/25-qa-effects-resolution.md:35",
+        "src:src/cards/ct-p07/B07012.ts:33",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:372",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:375"
       ]
     },
     {
       "qaId": "card:B07015:6717248f8a1ed1d34006e53d306840354235151597ab416af3b9a421f8603070",
       "answerHash": "e1d7ecbc11212c491c44b9cfb3076fadc82b9037529394df7d902779d391d0ef",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07015.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:42",
+        "rules:.claude/rules/25-qa-effects-resolution.md:25",
+        "src:src/cards/ct-p07/B07015.ts:55",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:408",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:423",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:427"
       ]
     },
     {

@@ -1006,21 +1006,26 @@
     {
       "qaId": "card:B07003:accf47f82e87c381577a50c21051cd8f4c040da9bf67cf224d7ccb3cd83252bd",
       "answerHash": "e4608c113fb6e4bc3fa5e5ed797413229ad09341d4b853948e68425c000bfafe",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07003.ts:1"
+        "rules:.claude/rules/09-cutin-disguise.md:9",
+        "src:src/cards/ct-p07/B07003.ts:8",
+        "tests:tests/cards/official-qa/B07001-B07004-completion-public-wave164.test.ts:289",
+        "tests:tests/cards/official-qa/B07001-B07004-completion-public-wave164.test.ts:292"
       ]
     },
     {
       "qaId": "card:B07003:cdeced21ac31590728e947e8ac9d755b7698532e0bb7eb83f3f288dc594464f8",
       "answerHash": "351022f96925aa8b9cc35887f0d88516fe5691ce42d621d306c08d598dfdf715",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07003.ts:38"
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-p07/B07003.ts:18",
+        "tests:tests/cards/official-qa/B07001-B07004-completion-public-wave164.test.ts:319"
       ]
     },
     {

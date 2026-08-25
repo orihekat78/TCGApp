@@ -816,8 +816,8 @@
       "evidence": [
         "src:src/cards/ct-p05/B05042.ts:49",
         "src:src/cards/ct-p05/B05042.ts:54",
-        "tests:tests/cards/engine-additive-wave-0629d.test.ts:161",
-        "tests:tests/cards/engine-additive-wave-0629d.test.ts:162",
+        "tests:tests/cards/engine-additive-wave-0629d.test.ts:163",
+        "tests:tests/cards/engine-additive-wave-0629d.test.ts:164",
         "tests:tests/cards/engine-mega-w6.test.ts:381",
         "tests:tests/cards/engine-mega-w6.test.ts:382",
         "tests:tests/cards/engine-mega-w6.test.ts:384",
@@ -1328,11 +1328,14 @@
     {
       "qaId": "card:B07008:241b02bbb7a8197710e7c0ed17093c02e009cea693fa3391d4e1fa3577457fe1",
       "answerHash": "5c8c1335a3359da9e5dc651633c7148a3898876f7f0d5d4044cc790442d6e698",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07008.ts:1"
+        "rules:.claude/rules/12-next-hint.md:24",
+        "src:src/cards/ct-p07/B07008.ts:71",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:255",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:257"
       ]
     },
     {

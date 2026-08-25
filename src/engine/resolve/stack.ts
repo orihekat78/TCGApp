@@ -31,6 +31,7 @@ import { _continueTurnTransition } from '../flow/turn.js';
 import {
   clearPersistedPendingRuntimeState,
   hydratePendingRuntimeState,
+  pendingSourceMatchesEffectEntry,
   persistPendingRuntimeState,
   resetPendingRuntimeStateAfterGameEnd,
 } from '../effect/runtime-state.js';
@@ -417,10 +418,11 @@ export function runAllUntilEmpty(
       clearPersistedPendingRuntimeState(state);
       return;
     }
-    if (
-      pendingPick?.source.triggerBatch !== undefined
-      && e.triggeredBy.hook !== 'effect:pick-resolved'
-    ) {
+    const pendingPickOwnsUpcomingEntry = pendingPick !== null
+      && pendingSourceMatchesEffectEntry(state, e, pendingPick.source, true);
+    if (pendingPick
+      && e.resumesCurrentEffect !== true
+      && !pendingPickOwnsUpcomingEntry) {
       persistPendingRuntimeState(state);
       return;
     }

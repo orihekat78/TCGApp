@@ -13,20 +13,20 @@
 
 ## Next
 
-- Waves162-163 move fourteen items to matched. Coverage is 1928 matched / 1036
-  test-missing / 2964 total; 919 exact groups remain, including 802 singletons.
-- Official B06091 Q&A reverses the old BUG-097 reading: the bearer is the
-  original action target and the other guard gets active/AP+2000. D11016 shares
-  the corrected definition; no engine change was needed.
-- B06092/B06093/B06095/P/B06098/P and B06103/P-B06109/P public matrices cover
-  Cut-In, Misread, all-area traits, MR scene counts, named bans, exact costs,
-  restriction exceptions, and multi-color incident identity.
-- Target/legacy 63 and focused horizontal 328 tests pass; both TypeScript
-  projects, focused ESLint, QA/docs/bug checks, and diff checks pass.
-- Waves164-165 batch nineteen CT-P07 items across B07001/P/P2-B07015/P.
+- Waves164-165 move nineteen items to matched. Coverage is 1947 matched / 1017
+  test-missing / 2964 total; about 901 exact groups remain, including 785
+  singletons.
+- BUG-370 fixes parent/child decision order: an active pending pick permits only
+  exact physical/provenance authority or an explicit resume carrier to cross
+  the stack boundary. GameState/save/public API shapes are unchanged.
+- B07001/P/P2-B07015/P public matrices cover zero choices, owner orientation,
+  short-deck refresh, simultaneous entry, RPS repetition, and owner-order.
+- Full Vitest, full desktop/mobile Playwright, TypeScript, ESLint, smoke 1000,
+  QA merge/lint, and Sol engine review pass.
+- Waves166-167 batch eighteen CT-P07 items across B07017/P-B07039/P.
 - Official sync drift remains separate: PR322 and changed B04018/B04018P/
   B06103P Q&A require re-queueing.
-- Remaining estimate: 50-110 working hours, center about 80 hours; roughly
-  30-70 implementation waves.
+- Remaining estimate: 47-107 working hours, center about 77; roughly 28-68
+  implementation waves.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

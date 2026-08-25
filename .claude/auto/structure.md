@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6711
+- **ファイル数**: 6719
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1674,6 +1674,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
     - `2026-08-25-qa-waves98-99.md` — QA adjudication Waves98-99
     - `2026-08-26-qa-waves160-161.md` — QA adjudication Waves160-161
+    - `2026-08-26-qa-waves162-163.md` — QA adjudication Waves162-163
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1724,7 +1725,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D11013.md` — D11013 萩原千速 (キャラ・カットイン)
       - `D11014.md` — D11014 横溝重悟 (キャラ・疾風+宣言)
       - `D11015.md` — D11015 目暮十三 (キャラ・アクション時+登場時)
-      - `D11016.md` — D11016 大江忍 (キャラ・ガード反撃)
+      - `D11016.md` — D11016 大江忍 (キャラ・指定対象ガード支援)
       - `D11017.md` — D11017 高木渉 (キャラ・カットイン)
       - `D11018.md` — D11018 佐藤美和子 (キャラ・カットイン簡易)
       - `D11019.md` — D11019 15の受難 (イベント)
@@ -1908,9 +1909,14 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06087.md` — B06087 萩原千速 grounding
       - `B06088.md` — B06088 grounding
       - `B06090.md` — B06090 grounding
+      - `B06091.md` — B06091 大江忍 grounding
+      - `B06092.md` — B06092 金丸嶺太 grounding
+      - `B06093.md` — B06093 山村ミサオ grounding
       - `B06095.md` — B06095 grounding
       - `B06098.md` — B06098 ベルモット＆シェリー grounding
+      - `B06103.md` — B06103 ジン grounding
       - `B06105.md` — B06105 grounding
+      - `B06109.md` — B06109 紅の修学旅行 grounding
       - `B07001.md` — B07001 / B07001P / B07001P2 grounding
       - `B07008.md` — B07008 小嶋元太 grounding (2026-07-10, fable)
       - `B07013.md` — B07013 grounding
@@ -5949,6 +5955,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06068-completion-public-wave139.test.ts` — qa: card:B06068:1a2a46c6c6f2d223c19bf80a2832fa8cc71d77c57cb5d6b98be4e42610903db0
       - `B06074-completion-public-wave131.test.ts` — qa: card:B06074:2e622a225c9c5743d9f4eba3865e40ddb799ad15a2800aca084ac672a33c6b74
       - `B06076-B06086-completion-public-wave161.test.ts` — qa: card:B06076:2bcbc572704a40c4bd313efcdb48dc88426ff84922e2c41ac0fcde537aec79ab
+      - `B06091-B06098-completion-public-wave162.test.ts` — qa: card:B06091:100adbbed925b66fdcb792ff3aa4a483640f287338264fc5c064d46af6177788
+      - `B06103-B06109-completion-public-wave163.test.ts` — qa: card:B06103:06421f8b3e73fe7e22aaac43188049be0f09de4bd944b4069b0a1c84ffcd7102
       - `B07066-declared-cost-optional.test.ts` — qa: card:B07066:939f5e30d9e32c8b233a160a6f70ebb932c71ce0971e6f66cfb3701d5fff76cd
       - `B07102-refresh-includes-removed.test.ts` — qaId=card:B07102:99f16dd6a248501c9d63a44dd85b2d6097ef720865e4181d1b451669f04b05d…
       - `B08049-completion-public-wave132.test.ts` — qa: card:B08049:190baa1e1f03afa7d9e83de8ff7b5f6134452bd6b3a05caf22783df26c2a9ea8

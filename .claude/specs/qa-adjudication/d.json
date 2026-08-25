@@ -1268,15 +1268,12 @@
     {
       "qaId": "card:B07008:cb48ad5742f63c2a3b6c5b048905bade78ab9cec63501a1ce37450092eb0d7af",
       "answerHash": "7aef876cdf64a05a57eee87b599749fdf17601e75236023bd984450e239774f8",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07008.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
+        "src:src/cards/ct-p07/B07008.ts:51",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:237"
       ]
     },
     {

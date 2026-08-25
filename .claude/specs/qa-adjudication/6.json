@@ -1131,11 +1131,16 @@
     {
       "qaId": "card:B07015:2f7dc2557c5ec988da3b2e72a18d5c685ca1a99b820578d15180b3a4021a1072",
       "answerHash": "89083b38d6aba9556fbac3cdddc4f03f3ffe48270972799cfc0fa0f523c39934",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07015.ts:1"
+        "rules:.claude/rules/26-qa-deck-refresh.md:22",
+        "rules:.claude/rules/26-qa-deck-refresh.md:23",
+        "rules:.claude/rules/26-qa-deck-refresh.md:24",
+        "src:src/cards/ct-p07/B07015.ts:108",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:449",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:451"
       ]
     },
     {

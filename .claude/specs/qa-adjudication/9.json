@@ -1098,14 +1098,15 @@
     {
       "qaId": "card:B07005:c596ae62d295a0df22c230a2cbc61a4567f85c825a50fd331245bee0fa8fa94c",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07005.ts:62"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "rules:.claude/rules/09-cutin-disguise.md:29",
+        "rules:.claude/rules/09-cutin-disguise.md:32",
+        "src:src/cards/ct-p07/B07005.ts:52",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:215",
+        "tests:tests/cards/official-qa/B07005-B07015-completion-public-wave165.test.ts:217"
       ]
     },
     {

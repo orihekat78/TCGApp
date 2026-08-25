@@ -21,6 +21,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { evalCond } from '@/engine/cond/eval';
 import { runAtom } from '@/engine/effect/index';
+import { resetPendingRuntimeState } from '@/engine/effect/runtime-state';
 import { pay } from '@/engine/cost/pay';
 import { canCutIn } from '@/engine/flow/contact';
 import { read } from '@/engine/read/index';
@@ -39,6 +40,7 @@ function ch(id: string, over: Partial<CardDef> = {}): CardDef {
 }
 
 beforeEach(() => {
+  resetPendingRuntimeState();
   resetDefRegistry();
   _resetUidCounter();
 });
