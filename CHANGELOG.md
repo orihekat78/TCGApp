@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `73c010b3e842`
+> Source hash: `d0264e16d071`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,24 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-08-26
+title: CT-P07 Q&A Waves170-171を完了
+type: fix
+scope: cards
+---
+
+## QA coverage
+
+B07057/PからB07079/Pまで19件の公式Q&Aへ、両owner、全printing、
+実dispatch、条件境界と原子的rejectを含む証跡を追加した。
+
+## Result
+
+- 既存engine/card定義が全19 rulingを満たし、production gapはなかった。
+- hand/FILE/evidence costのowner制約、full-scene switch、effective LP/level、
+  entry/contact/disguiseの解決順をpublic経路で固定した。
 
 ---
 date: 2026-08-26

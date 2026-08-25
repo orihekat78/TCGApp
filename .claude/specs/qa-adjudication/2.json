@@ -1288,31 +1288,56 @@
     {
       "qaId": "card:B07058:dcf72f7ad683c115b3f581b518e42b1c728f361ea984bfb38ac165c79eb83ce4",
       "answerHash": "d8539f8a4353174dfab714067b969b9c1f5c5ce33ab94b14fc039cad8c93abc5",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07058.ts:78"
+        "src:src/cards/ct-p07/B07058.ts:35",
+        "src:src/cards/ct-p07/B07058P.ts:7",
+        "tests:tests/cards/official-qa/B07057-B07068-completion-public-wave170.test.ts:209",
+        "tests:tests/cards/official-qa/B07057-B07068-completion-public-wave170.test.ts:211",
+        "tests:tests/cards/official-qa/B07057-B07068-completion-public-wave170.test.ts:213",
+        "tests:tests/cards/official-qa/B07057-B07068-completion-public-wave170.test.ts:217",
+        "tests:tests/cards/official-qa/B07057-B07068-completion-public-wave170.test.ts:222"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {
       "qaId": "card:B07068:426886de8581b320e3ebb09308f95cdb635a8c7c5a9cea88b3333ff26606f83d",
       "answerHash": "edf0f03e2a909c6af537ac0fe4079553dd6f60524e9c24674f251a699059db59",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07068.ts:155"
+        "src:src/cards/ct-p07/B07068.ts:56",
+        "src:src/cards/ct-p07/B07068.ts:85",
+        "src:src/cards/ct-p07/B07068P.ts:6",
+        "tests:tests/cards/official-qa/B07057-B07068-completion-public-wave170.test.ts:351",
+        "tests:tests/cards/official-qa/B07057-B07068-completion-public-wave170.test.ts:363",
+        "tests:tests/cards/official-qa/B07057-B07068-completion-public-wave170.test.ts:364",
+        "tests:tests/cards/official-qa/B07057-B07068-completion-public-wave170.test.ts:366"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {
       "qaId": "card:B07068:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f",
       "answerHash": "f61d3330613e46bff354c9ef6abb4392333314b68d6e99be4376d4cab5bce520",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07068.ts:155"
+        "src:src/cards/ct-p07/B07068.ts:56",
+        "src:src/cards/ct-p07/B07068P.ts:6",
+        "tests:tests/cards/official-qa/B07057-B07068-completion-public-wave170.test.ts:366",
+        "tests:tests/cards/official-qa/B07057-B07068-completion-public-wave170.test.ts:367",
+        "tests:tests/cards/official-qa/B07057-B07068-completion-public-wave170.test.ts:369"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {
@@ -1358,15 +1383,22 @@
     {
       "qaId": "card:B07079:8b7f821960dd18cf824ea5d63d3ee948f149decdcb8f2ad014f6649089472cdf",
       "answerHash": "d558135b77f54ebe8d0082dd1ea62da76cedb430b9390b5371394c233e0aadff",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07079.ts:1"
+        "src:src/cards/ct-p07/B07079.ts:75",
+        "src:src/cards/ct-p07/B07079.ts:77",
+        "src:src/cards/ct-p07/B07079P.ts:57",
+        "tests:tests/cards/official-qa/B07069-B07079-completion-public-wave171.test.ts:386",
+        "tests:tests/cards/official-qa/B07069-B07079-completion-public-wave171.test.ts:389",
+        "tests:tests/cards/official-qa/B07069-B07079-completion-public-wave171.test.ts:390",
+        "tests:tests/cards/official-qa/B07069-B07079-completion-public-wave171.test.ts:391",
+        "tests:tests/cards/official-qa/B07069-B07079-completion-public-wave171.test.ts:405",
+        "tests:tests/cards/official-qa/B07069-B07079-completion-public-wave171.test.ts:407"
       ],
       "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
+        "CARD-BOUND-ASSERTION"
       ]
     },
     {

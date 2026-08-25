@@ -13,17 +13,15 @@
 
 ## Next
 
-- Waves168-169 move eighteen items to matched. Coverage is 1983 matched / 981
-  test-missing / 2964 total; 868 exact groups remain, including 755 singletons.
-- BUG-374 carries optional semantic labels through runtime and declared choice
-  paths. BUG-375 publishes seven hand-reveal printings with closeable lifetime.
-- B07043-B07056/P public matrices cover split names, continuous modifiers,
-  owner costs, guarded contact identity, refresh, optional branches, and stun.
-- Functional full Vitest, TypeScript, full ESLint, smoke 1000, QA merge, full
-  desktop/mobile Playwright, and Sol review pass. Clean release runs after commit.
-- Waves170-171 batch nineteen CT-P07 items across B07057/P-B07079/P.
+- Waves170-171 move nineteen items to matched. Coverage is 2002 matched / 962
+  test-missing / 2964 total; 851 exact groups remain, including 740 singletons.
+- B07057/P-B07079/P public matrices cover optional targets, effect-only gates,
+  effective LP/level, owner costs, full scenes, entry order, and Disguise riders.
+- Production gap is none. Wave suites 56/56, focused horizontal 303/303,
+  TypeScript, scoped ESLint, QA merge, and both Sol reviews pass.
+- Waves172-173 batch nineteen CT-P07 items across B07085-B07098.
 - Official sync drift remains separate: PR322 and changed B04018/B04018P/
   B06103P Q&A require re-queueing.
-- At nine exact groups per wave, about 97 waves remain through roughly Wave266.
+- At about nine exact groups per wave, about 95 waves remain through Wave266.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.
