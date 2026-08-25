@@ -2026,12 +2026,16 @@
     {
       "qaId": "card:B10099:640df767ce1693a6c289ab1d9869c461083d1e678224db8ace1d58f9f308af94",
       "answerHash": "328b692978794745bf5789c4ab79a13f91595640a06672e0aa8af76399c67448",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/18-mr.md:19",
-        "src:src/cards/ct-p10/B10099.ts:26"
+        "rules:.claude/rules/15-abilities-effects.md:7",
+        "src:src/cards/ct-p10/B10099.ts:8",
+        "tests:tests/cards/official-qa/B10099-completion-public-wave142.test.ts:131",
+        "tests:tests/cards/official-qa/B10099-completion-public-wave142.test.ts:132",
+        "tests:tests/cards/official-qa/B10099-completion-public-wave142.test.ts:133",
+        "tests:tests/cards/official-qa/B10099-completion-public-wave142.test.ts:137"
       ]
     },
     {

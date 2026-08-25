@@ -5,16 +5,18 @@
     {
       "qaId": "card:B01009:9b35da4fb6ed8aa62d54a57747cf2b31522347729a78580f7e98cf5539e5d455",
       "answerHash": "8e47eeb66aafbb18891c37c4fc6abe75c71633e86c3b97db0e57dafa72820ddc",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/11-reasoning.md:28",
         "src:src/cards/ct-p01/B01009.ts:63",
-        "src:src/engine/flow/main/reasoning.ts:91"
-      ],
-      "noteCodes": [
-        "MISLEAD-EXPIRY-B01009-INTEGRATION-TEST-MISSING"
+        "src:src/engine/flow/main/reasoning.ts:365",
+        "tests:tests/cards/official-qa/B01009-completion-public-wave143.test.ts:182",
+        "tests:tests/cards/official-qa/B01009-completion-public-wave143.test.ts:184",
+        "tests:tests/cards/official-qa/B01009-completion-public-wave143.test.ts:185",
+        "tests:tests/cards/official-qa/B01009-completion-public-wave143.test.ts:188",
+        "tests:tests/cards/official-qa/B01009-completion-public-wave143.test.ts:189"
       ]
     },
     {

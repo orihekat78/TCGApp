@@ -1999,15 +1999,14 @@
     {
       "qaId": "card:B10099:778f2ec6d361908c4a67f350b59be3fb6673daac7dd65787323343b2748e3208",
       "answerHash": "bb65e094262a4287317aeae4975f831702fe50ba0bdaf885700a0ec2948190e4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:20",
-        "src:src/cards/ct-p10/B10099.ts:16"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/19-special-rules.md:52",
+        "src:src/cards/ct-p10/B10099.ts:27",
+        "tests:tests/cards/official-qa/B10099-completion-public-wave142.test.ts:196",
+        "tests:tests/cards/official-qa/B10099-completion-public-wave142.test.ts:197"
       ]
     },
     {

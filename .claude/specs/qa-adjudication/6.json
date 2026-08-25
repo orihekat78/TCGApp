@@ -1782,15 +1782,15 @@
     {
       "qaId": "card:B10099:dc46dc53a352ab1baa14118fe8a0448482eebbb19acb8a26a4bc4ee56489c6e9",
       "answerHash": "1f4f75334c0011fc01e60a83951df8784474f472a50588b94056f9fa36f12791",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:60",
-        "src:src/cards/ct-p10/B10099.ts:45"
-      ],
-      "noteCodes": [
-        "IMPLEMENTED-CARD-TEST-MISSING"
+        "rules:.claude/rules/15-abilities-effects.md:44",
+        "src:src/cards/ct-p10/B10099.ts:40",
+        "tests:tests/cards/official-qa/B10099-completion-public-wave142.test.ts:199",
+        "tests:tests/cards/official-qa/B10099-completion-public-wave142.test.ts:203",
+        "tests:tests/cards/official-qa/B10099-completion-public-wave142.test.ts:204"
       ]
     },
     {

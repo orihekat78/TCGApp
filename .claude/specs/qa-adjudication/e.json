@@ -22,15 +22,15 @@
     {
       "qaId": "card:B01009:eee7f80e75bd8abebe536238f02477e2a85687c6e7831056e13e58dc4f76389c",
       "answerHash": "aa2b33252364eaa4286beed63186955f275eb52b50d161d7e66c8e83fdfb97b8",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/15-abilities-effects.md:36",
-        "src:src/cards/ct-p01/B01009.ts:63"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/15-abilities-effects.md:44",
+        "src:src/cards/ct-p01/B01009.ts:63",
+        "src:src/engine/target/candidates.ts:919",
+        "tests:tests/cards/official-qa/B01009-completion-public-wave143.test.ts:163",
+        "tests:tests/cards/official-qa/B01009-completion-public-wave143.test.ts:165"
       ]
     },
     {

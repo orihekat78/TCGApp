@@ -5,15 +5,16 @@
     {
       "qaId": "card:B01009:f9d4fa8587cf380f15b87d0c08fe628abd77c032a533c1e631434f3129693416",
       "answerHash": "76b859f15adb439639eb10a33e8176e4149d07f983cb8e53779f6d9cc4d44b3c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
         "rules:.claude/rules/03-field-areas.md:35",
-        "src:src/cards/ct-p01/B01009.ts:63"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p01/B01009.ts:57",
+        "src:src/engine/mutate/scene.ts:771",
+        "src:src/engine/mutate/scene.ts:773",
+        "tests:tests/cards/official-qa/B01009-completion-public-wave143.test.ts:165",
+        "tests:tests/cards/official-qa/B01009-completion-public-wave143.test.ts:167"
       ]
     },
     {

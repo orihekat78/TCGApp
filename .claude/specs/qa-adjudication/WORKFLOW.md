@@ -44,9 +44,9 @@ does not access ignored raw Q&A packages.
 - Do not repeat a green unchanged gate inside one checkpoint. Re-estimate the
   remaining effort after each ten-wave full-gate checkpoint.
 
-Current 2026-08-25 snapshot: 1142 test-missing items / 1012 exact groups, with
-882 singleton groups. Revised remaining effort is 64-128 working hours; the
-center estimate is about 96 hours. Risk-aware batching implies roughly 48-88
+Current 2026-08-25 snapshot: 1133 test-missing items / 1004 exact groups, with
+875 singleton groups. Revised remaining effort is 63-127 working hours; the
+center estimate is about 95 hours. Risk-aware batching implies roughly 47-87
 implementation waves, not one wave per exact group. Prefer complete-card batches
 of 5-15 related Q&A items when exact groups are mostly singleton or pairs.
 
