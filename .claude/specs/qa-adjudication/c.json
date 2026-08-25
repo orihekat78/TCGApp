@@ -353,15 +353,19 @@
     {
       "qaId": "card:B02088:a0c7e6e6f58df97e5742a601c5a48c218ce7c41eb6efeaf0e971747694d67076",
       "answerHash": "add25d4f286fc58a84e62905fbe0b0b8768cb845182e4add024a6966e0147902",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/10-action-event.md:42",
-        "src:src/cards/ct-p02/B02088.ts:98"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/20-color-and-switch.md:15",
+        "rules:.claude/rules/20-color-and-switch.md:32",
+        "src:src/cards/ct-p02/B02088.ts:67",
+        "src:src/cards/ct-p02/B02088.ts:79",
+        "tests:tests/cards/official-qa/B02088-completion-public-wave148.test.ts:198",
+        "tests:tests/cards/official-qa/B02088-completion-public-wave148.test.ts:202",
+        "tests:tests/cards/official-qa/B02088-completion-public-wave148.test.ts:203",
+        "tests:tests/cards/official-qa/B02088-completion-public-wave148.test.ts:204",
+        "tests:tests/cards/official-qa/B02088-completion-public-wave148.test.ts:205"
       ]
     },
     {

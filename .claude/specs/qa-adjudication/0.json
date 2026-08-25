@@ -291,15 +291,16 @@
     {
       "qaId": "card:B02088:93cc0cd820f469b370d02694a51ede409f0f50313a74eee526eb5a3fcea3aaf1",
       "answerHash": "063c58eb1939a114424e594cc44890d8f6f7e7b13ec68505bb128a3fe2eefadf",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/10-action-event.md:42",
-        "src:src/cards/ct-p02/B02088.ts:98"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/10-action-event.md:15",
+        "src:src/cards/ct-p02/B02088.ts:88",
+        "tests:tests/cards/official-qa/B02088-completion-public-wave148.test.ts:225",
+        "tests:tests/cards/official-qa/B02088-completion-public-wave148.test.ts:228",
+        "tests:tests/cards/official-qa/B02088-completion-public-wave148.test.ts:231",
+        "tests:tests/cards/official-qa/B02088-completion-public-wave148.test.ts:232"
       ]
     },
     {
@@ -508,29 +509,35 @@
     {
       "qaId": "card:B03094:3e54bbed10ce6842d1023560a2b7dd83568ca8dd44f892439011d6b3afb17059",
       "answerHash": "bbc4dc6bf654f811a8925c72370349df1b96c312b661b3d0c5843466dde9839c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/14-refresh.md:34",
-        "src:src/cards/ct-p03/B03094.ts:49"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/07-action-flow.md:7",
+        "rules:.claude/rules/22-qa-action-contact.md:67",
+        "src:src/cards/ct-p03/B03094.ts:28",
+        "src:src/cards/ct-p03/B03094.ts:41",
+        "tests:tests/cards/official-qa/B03094-completion-public-wave149.test.ts:187",
+        "tests:tests/cards/official-qa/B03094-completion-public-wave149.test.ts:189",
+        "tests:tests/cards/official-qa/B03094-completion-public-wave149.test.ts:194",
+        "tests:tests/cards/official-qa/B03094-completion-public-wave149.test.ts:196",
+        "tests:tests/cards/official-qa/B03094-completion-public-wave149.test.ts:197"
       ]
     },
     {
       "qaId": "card:B03094:5b6baf97ab8a140a976bfd146e307cb324ac5e702a0e23347a8069d99ce8178c",
       "answerHash": "ef7999815971cc7882ad26a5c8960f40ce963da1a6484f84ecf6f9763a0277c8",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/14-refresh.md:34",
-        "src:src/cards/ct-p03/B03094.ts:49"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "rules:.claude/rules/17-icons.md:27",
+        "src:src/cards/ct-p03/B03094.ts:25",
+        "src:src/cards/ct-p03/B03094.ts:28",
+        "src:src/cards/ct-p03/B03094.ts:32",
+        "tests:tests/cards/official-qa/B03094-completion-public-wave149.test.ts:156",
+        "tests:tests/cards/official-qa/B03094-completion-public-wave149.test.ts:162",
+        "tests:tests/cards/official-qa/B03094-completion-public-wave149.test.ts:96"
       ]
     },
     {

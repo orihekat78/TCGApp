@@ -64,17 +64,17 @@
 
 ## Next
 
-- Waves146-147 move eight Q&A items to matched. Coverage is 1847 matched / 1117
-  test-missing / 2964 total; 989 exact groups remain, including 861 singletons.
-- Wave146 completes four B02058 items across hand-count timing and forced reveal.
-- Wave147 completes four B02067 items. BUG-366 authenticates B02039 set-card
-  proxy selection across human, CPU, cold-save, and forged-marker paths.
-- T3 checkpoint is green: 1221 files / 12860 tests PASS / 177 skip; full lint,
-  typecheck, smoke471/529, and desktop/mobile full-match 2/2 PASS.
-- Wave148 completes four B02088 items. Wave149 completes four B03094 items.
+- Waves148-149 move eight Q&A items to matched. Coverage is 1855 matched / 1109
+  test-missing / 2964 total; 982 exact groups remain, including 855 singletons.
+- Wave148 completes four B02088 items across turn-end, full-scene Cut-In, and
+  public Hirameki fire/skip with evidence-gain observer behavior.
+- Wave149 completes four B03094 items across partner isolation, pre-guard timing,
+  exact-two mill, repeat action, and action-scope expiry.
+- Production source is unchanged; focused horizontal gate is 8 files / 154 tests.
+- Wave150 completes four B03102 items. Wave151 completes four B03112 items.
 - Official sync drift is separate: new PR322 and changed Q&A for
   B04018/B04018P/B06103P. Do not mix it into selected waves without re-queueing.
-- Revised remaining estimate: 61-125 working hours, center about 93 hours;
-  roughly 45-85 implementation waves.
+- Revised remaining estimate: 60-124 working hours, center about 92 hours;
+  roughly 44-84 implementation waves.
 - Preserve untracked pnpm-lock.yaml and pnpm-workspace.yaml.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

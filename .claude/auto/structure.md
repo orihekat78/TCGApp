@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6673
+- **ファイル数**: 6678
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1660,6 +1660,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-25-qa-waves142-143.md` — QA adjudication Waves142-143
     - `2026-08-25-qa-waves144-145.md` — QA adjudication Waves144-145
     - `2026-08-25-qa-waves146-147.md` — QA adjudication Waves146-147
+    - `2026-08-25-qa-waves148-149.md` — QA adjudication Waves148-149
     - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
     - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
     - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
@@ -1790,6 +1791,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B02072.md` — B02072 / B02072P 降谷零 grounding
       - `B02083.md` — B02083 grounding
       - `B02086.md` — B02086 / B02086P grounding
+      - `B02088.md` — B02088 / B02088P grounding
       - `B03013.md` — B03013 grounding
       - `B03018.md` — B03018 grounding
       - `B03019.md` — B03019 grounding
@@ -1809,6 +1811,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B03084.md` — B03084 / B03084P 降谷零 grounding
       - `B03085.md` — B03085 grounding
       - `B03088.md` — B03088 grounding
+      - `B03094.md` — B03094 / B03094P grounding
       - `B03095.md` — B03095 grounding
       - `B03111.md` — B03111 バーボン grounding (2026-07-10, sonnet5)
       - `B03120.md` — B03120 grounding
@@ -5888,12 +5891,14 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B02058-completion-public-wave146.test.ts` — qa: card:B02058:762a82ad66fef61f8a12010f8d850cf7cca54916f71d63712f5f7227f290bd90
       - `B02067-completion-public-wave147.test.ts` — qa: card:B02067:21d33c0a5eb6a0635654047e680572967ebce417be0fe911d4c8034e4df2390d
       - `B02067-multi-set-intercept-public-wave34.test.ts` — Rules: 15-abilities-effects.md, 16-card-set.md, 17-icons.md.
+      - `B02088-completion-public-wave148.test.ts` — qa: card:B02088:4960b906976210e8a8d17152c0f10630265edca04f7db484487532b661306134
       - `B03002-B05005-next-hint-order-guard.test.ts` — Official Q&A certification: public dispatch paths only.
       - `B03006-public-stack-lifecycle.test.ts` — qa: card:B03006:151b435edeb61c22d4471596da22371c8592c23c410528efb5e78938a1bb3b54
       - `B03020.test.ts` — qaId=card:B03020:7e1b89161d4cc08ba1dd9f60c2dd203d56a0d75ebc1fe8ce0ada2bb43af5a27…
       - `B03023.test.ts` — Official Q&A: B03023 脇田兼則
       - `B03025-public-refresh-flow.test.ts` — qa: card:B03025:51de3c143838c348f32a12d2252063f7ac6b6d884ab75fc3ef24a003df5b1731
       - `B03029-public-event-use.test.ts` — qa: card:B03029:83d447e04f250f995eb1040561f6f0f992b0be02cc6c13613c214b837568b222
+      - `B03094-completion-public-wave149.test.ts` — qa: card:B03094:3e54bbed10ce6842d1023560a2b7dd83568ca8dd44f892439011d6b3afb17059
       - `B04003-choose-intercept-public.test.ts` — qa: card:B04003:29b8cf6699112a9cca3172f2425ac76e59a7d7337034c7b9985bbdab46e21912
       - `B04012-optional-decline.test.ts` — qa: card:B04012:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d
       - `B04015-B04028-action-hirameki.test.ts` — qa: card:B04015:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c

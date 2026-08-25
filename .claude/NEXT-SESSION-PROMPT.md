@@ -1,18 +1,18 @@
-# Next Task: card-completion QA Waves148-149
+# Next Task: card-completion QA Waves150-151
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves146-147 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves148-149 commit.
 
 ## Completed
 
-- Wave146 finishes all four remaining B02058 Q&A items.
-- Wave147 finishes all four remaining B02067 Q&A items.
-- Coverage is 1847 matched / 1117 test-missing / 2964 total.
-- BUG-366 distinguishes B02039 set-card proxy selection from host-character
-  selection through authenticated human/autonomous resolution.
+- Wave148 finishes all four remaining B02088 Q&A items.
+- Wave149 finishes all four remaining B03094 Q&A items.
+- Coverage is 1855 matched / 1109 test-missing / 2964 total.
+- Production source is unchanged; public matrices close turn-end, Cut-In,
+  Hirameki, action timing, exact-mill, repeat-action, and expiry gaps.
 - Fresh official authority is 2257 printings; the tracked snapshot remains 2256
   because new PR322 stays outside this adjudication. Q&A remains 2964/zero conflict.
 - Protected pnpm files and live cards-data remain untouched.
-- Full evidence is in the Waves146-147 session record.
+- Full evidence is in the Waves148-149 session record.
 
 ## Throughput contract
 
@@ -31,27 +31,29 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves146-147 commit.
 
 1. Read root/nested AGENTS, conan-router, card-wave, and conan-verify.
 2. Verify branch, HEAD/upstream, status, and protected files read-only.
-3. Read `.claude/sessions/2026-08-25-qa-waves146-147.md`, this prompt, and the
+3. Read `.claude/sessions/2026-08-25-qa-waves148-149.md`, this prompt, and the
    current QA trace/workflow.
 4. Re-run the hash-only queue and fresh isolated authority validation.
 5. Run pinned grounding for every physical printing before adjudication.
 
-## Wave148: complete B02088
+## Wave150: complete B03102
 
-- Certify all four remaining B02088 Q&A items in one card matrix.
-- Current suffix prefixes: `4960b9069762`, `93cc0cd820f4`, `a0c7e6e6f58d`,
-  `e944414b8bab`.
+- Certify all four remaining B03102 Q&A items in one card matrix.
+- Current suffix prefixes: `0d310607ecb1`, `5bc3bbbf1d67`, `d9dae1726ce1`,
+  `df53870dd5d1`.
 - Ground every printing and separate exact Q&A semantics before test design.
 
-## Wave149: complete B03094
+## Wave151: complete B03112
 
-- Certify all four remaining B03094 Q&A items in one card matrix.
-- Current suffix prefixes: `3e54bbed10ce`, `5b6baf97ab8a`, `6701e39fe90f`,
-  `9e084cf085f2`.
+- Certify all four remaining B03112 Q&A items in one card matrix.
+- Current suffix prefixes: `2c83e0569954`, `671a506d6cd4`, `6d00eabe29a7`,
+  `b1a3c7472a22`.
 - Ground every printing and preserve owner, optional, and physical boundaries.
 
 ## Gate carry-forward
 
+- Waves148-149 focused horizontal gate: 8 files / 154 tests PASS. Both
+  TypeScript projects and scoped ESLint PASS; QA merge/lint PASS.
 - Full functional Vitest: 1221 files / 12860 tests PASS / 177 skip; three files
   skipped and two protected release-writer lanes excluded. Both TypeScript projects
   and full ESLint PASS.
@@ -61,6 +63,6 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves146-147 commit.
 
 ## Estimate
 
-- Snapshot: 1117 remaining items / 989 exact groups; 861 singleton groups.
-- Remaining QA work: 61-125 working hours; center about 93 hours.
-- Risk-aware batching forecast: roughly 45-85 implementation waves.
+- Snapshot: 1109 remaining items / 982 exact groups; 855 singleton groups.
+- Remaining QA work: 60-124 working hours; center about 92 hours.
+- Risk-aware batching forecast: roughly 44-84 implementation waves.
