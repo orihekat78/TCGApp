@@ -1503,40 +1503,42 @@
     {
       "qaId": "card:B08063:cf1285aacbbce7287de5d266891bcbe85580b45e3a78d95c7fd831c56a032125",
       "answerHash": "ecbe86a579ce0fefe59eec0001d65691f85cba5ca5fc360fdb491fc53103d4e3",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08063.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p08/B08063.ts:5",
+        "tests:tests/cards/official-qa/B08062-B08066-completion-public-wave182.test.ts:240",
+        "tests:tests/cards/official-qa/B08062-B08066-completion-public-wave182.test.ts:257",
+        "tests:tests/cards/official-qa/B08062-B08066-completion-public-wave182.test.ts:258",
+        "tests:tests/cards/official-qa/B08062-B08066-completion-public-wave182.test.ts:259"
       ]
     },
     {
       "qaId": "card:B08072:8eadbbc432ff0b12ab5d701819788dee01eac2e8fdd17d8439daa8cd5f5a1167",
       "answerHash": "abbb68adff508510bdffe83318bae94184b94f73ea3726d6d0cfe72083ee4081",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08072.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p08/B08072.ts:9",
+        "tests:tests/cards/official-qa/B08067-B08073-completion-public-wave183.test.ts:309",
+        "tests:tests/cards/official-qa/B08067-B08073-completion-public-wave183.test.ts:312",
+        "tests:tests/cards/official-qa/B08067-B08073-completion-public-wave183.test.ts:314",
+        "tests:tests/cards/official-qa/B08067-B08073-completion-public-wave183.test.ts:315"
       ]
     },
     {
       "qaId": "card:B08073:33ee144ebb5fb91b5a4714cc066bce3624f387d0ef38a4b489ab03b1a3b60987",
       "answerHash": "af4d11e33df70974b409e262df7b0222ae585db5fa8ea5fb53682245a75f81c4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08073.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p08/B08073.ts:8",
+        "tests:tests/cards/official-qa/B08067-B08073-completion-public-wave183.test.ts:388",
+        "tests:tests/cards/official-qa/B08067-B08073-completion-public-wave183.test.ts:389",
+        "tests:tests/cards/official-qa/B08067-B08073-completion-public-wave183.test.ts:390"
       ]
     },
     {

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `c78b212f75d1`
+> Source hash: `969f6eb35d55`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,21 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-08-26
+category: cards
+title: QA Waves182-183 public certification
+---
+
+- Aligned eighteen CT-P08 Q&A rows across B08062-B08073 with public owner,
+  MR timing, continuous aura, reveal lifetime, cost, Cut-In, and end-phase proofs.
+- Proved B08066's remove-area cost triggers both shipped B05087/B05088
+  `remove:exit` observers and retired the stale pre-consumer DEFER record.
+- Proved two B08069 physical declarations create independent turn-end reserves,
+  and separated B08073 trigger-time Bond from resolution-time scene checks.
+- Re-grounded the selected subset against current local raw data; all thirty
+  target Q&A identities and answers still match the reviewed tracked snapshot.
 
 ---
 date: 2026-08-26

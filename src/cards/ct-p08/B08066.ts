@@ -18,12 +18,9 @@
 //         kw:'突撃', scope:'turn'} (B09032 a1 短縮形 carrier 同型。明示 uid:'$pick'+target は human 経路で
 //         bind 喪失のため短縮形必須 / BUG-130)。
 //
-// 既知 engine ギャップ (DEFER, DEFERRED-INDEX 記載): 公式Q&A は本 cost で《諸伏高明/0585》《大和敢助/0586》の
-//   「自分のリムーブエリアにある特徴［長野県警］のキャラがリムーブエリアから離れたとき」能力が発動する、と裁定する。
-//   engine には 'leave:remove-area' hook が無く (TRIGGERED_HOOKS は 'leave:to-remove'=現場→remove のみ)、
-//   かつ反応元 B05087/B05088 は未実装のため、本クラスタでは安全に DEFER (盤面に反応カードが存在しない)。
-//   将来 諸伏高明/大和敢助 (または同型 cost を持つ B05088) を実装する wave では、removeAreaToDeckBottom の pay に
-//   leave:remove-area hook の emit を追加し本 cost と再配線する必要がある。
+// 旧 DEFER は解消済み: removeAreaToDeckBottom cost は mutate.remove.removeFromHere を通じて
+//   原因非依存の remove:exit を emit する。B05087/B05088 も同 hook の実consumerとして出荷済み。
+//   Wave182 は本costから両observerが同時発動し、owner-order groupへ入るproduction経路を再認定した。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 

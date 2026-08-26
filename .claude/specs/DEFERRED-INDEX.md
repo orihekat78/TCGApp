@@ -320,7 +320,7 @@ relative-AP (B09096) は本 session で **stale 訂正** (engine変更0 と判�
 
 | 項目 | 内容 | 状況 |
 |------|------|------|
-| B08066 leave:remove-area 反応 | 公式Q&A は removeAreaToDeckBottom cost で《諸伏高明/0585》《大和敢助/0586》の「リムーブエリアから離れたとき」発動を要求。engine に `leave:remove-area` hook 不在 (TRIGGERED_HOOKS は leave:to-remove=現場→remove のみ) + 反応元 B05087/B05088 未実装のため安全に DEFER (盤面に反応カードなし) | それら実装時に leave:remove-area hook 追加 + removeAreaToDeckBottom pay の emit 再配線 (B05088 が同 cost 共有) |
+| ~~B08066 leave:remove-area 反応~~ | ✅ `remove:exit`、`mutate.remove.removeFromHere`、B05087/B05088は出荷済み。Wave182でB08066 costから両observerの同時発動・owner-orderをpublic認定 | ✅ 解消 |
 | removeAreaToDeckBottom UI picker | first-n fallback (sceneToDeckBottom 同 posture)。複数候補時に人間が選べない (UX 制限、rules 誤りではない) | costParams.removeAreaToDeckBottom.ids 配線済 → RemoveAreaCostPickerModal を drop-in 追加 (engine 変更不要) |
 
 ## ✅ self-state micro-cluster (BUG-145, 2026-06-15 修正済) — self-sleep optional gate
@@ -487,7 +487,7 @@ changelog [2026-06-21-02](../changelog-entries/2026-06-21-02-cluster-distinct-na
 
 | rep | DEFER 理由 (残存 gate) | 解禁条件 |
 |-----|----------------------|---------|
-| B08063 (黒田兵衛) | a1「現場にいるこのキャラは〚特徴［長野県警］〛を持つ」= **self-trait-grant continuous** が engine 不在 (ContinuousModifier は ap/lpDelta/grantKeywords のみ、trait 付与機構なし)。a2 は distinct-name-count で解禁済だが partial 出荷せず | self-trait-grant (継続 trait 付与) 機構の追加 (別 micro-cluster) |
+| ~~B08063 (黒田兵衛)~~ | ✅ `continuousModifier.grantTraits`で現場限定self traitを出荷済み。Wave182で必須turn-end処理と変装先への非継承をpublic認定 | ✅ 解消 |
 
 ### 同セッションで scope した未着手 micro-cluster (engine変更0 枯渇後の次弾候補、要別判断)
 
@@ -876,8 +876,8 @@ ctx.contact を読まない = 挙動不変)。
 | `drawUpToHandSize` verb | B08047 | ✅ a1出荷済み。a2も`removeFromHandDownTo`で解消し、Wave179でhand≤2のremove 0 + sleep支払いを認定。B07076/B04048は別variant |
 | `remove:exit` hook + `removeExitMatches` matcher | B05087/B05088 | リムーブエリア離脱 observer。全離脱経路 emit (emitExit 単一ソース)。原因非依存 |
 
-⚠ **card-wave 実装時に要対応の latent risk** (4-lens review 指摘、現 consumer 0 で挙動無害):
-- **B05087/B05088 (remove:exit) のコスト由来発火**: `remove.removeFromHere` の唯一の呼出は `removeAreaToDeckBottom` **コスト**経路 (cost/pay.ts)。engine は原因非依存に emit するが (rules/17 【現場リムーブ時】類推 = 方法問わず)、rules/21「コストで行ったこと ≠ 〜したとき」との関係で B05087/B05088 がコスト由来離脱を拾うべきかは **官報 Q&A で確定**してから出荷する。拾わない裁定なら matcher に cost-cause 除外 field を additive 追加。
+⚠ **card-wave follow-up** (4-lens review由来。consumerは現在出荷済み):
+- ~~**B05087/B05088 (remove:exit) のコスト由来発火**~~: ✅ B08066公式Q&Aが`removeAreaToDeckBottom`コストでも両能力の発動を要求。Wave182で`remove.removeFromHere`→`remove:exit`→両consumer同時発動をpublic認定。
 - **複数枚同時離脱の発火回数**: refresh で N 枚一致カードがデッキへ戻る場合、deck.refresh は離脱カード毎に remove:exit emit (per-card)。B05087/B05088 は【ターン1】のため実解決は1回だが、emit 回数と【ターン1】カウントの整合 (rules/24「発動したが解決できない場合もカウント」) を実機 test で確認。
 - **G16 相対 level の残カード**: `$self.level` は「このキャラのレベル(以下/同じ)」を解禁。B08043の`sceneMaxLp`は出荷済みでWave179にて自現場0のfail-closedを認定。B04074は別dynとして残る。
 - **drawUpToHandSize の discard-down 方向**: B07076「手札が N 枚になるまでリムーブ」は hand-pick を要する別 variant (本 verb は draw-up のみ)。B04048「引いた枚数と同じ数をデッキ下」は引いた枚数の bind-return が必要 → 別 variant DEFER。

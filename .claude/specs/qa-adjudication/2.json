@@ -1598,11 +1598,18 @@
     {
       "qaId": "card:B08066:7b874358a3b2be6f3991251836cb1b2d0253c3128a3e646b9c5e3c6436781c24",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08066.ts:54"
+        "src:src/cards/ct-p05/B05087.ts:8",
+        "src:src/cards/ct-p05/B05088.ts:11",
+        "src:src/cards/ct-p08/B08066.ts:27",
+        "src:src/engine/cost/pay.ts:809",
+        "tests:tests/cards/official-qa/B08062-B08066-completion-public-wave182.test.ts:404",
+        "tests:tests/cards/official-qa/B08062-B08066-completion-public-wave182.test.ts:410",
+        "tests:tests/cards/official-qa/B08062-B08066-completion-public-wave182.test.ts:415",
+        "tests:tests/cards/official-qa/B08062-B08066-completion-public-wave182.test.ts:418"
       ]
     },
     {

@@ -13,20 +13,20 @@
 
 ## Next
 
-- Waves180-181 move sixteen items to matched. Coverage is 2088 matched / 876
-  test-missing / 2964 total; 772 exact groups remain, including 668 singletons.
-- BUG-380 adds B08054's synchronous hidden-set return for opponent effect/contact,
-  optional persisted attribution, legacy fail-closed hydration, and queued-observer
-  hidden-identity redaction.
-- Focused 128, TypeScript, full ESLint, smoke1000/baseline, Playwright 28, QA merge,
-  horizontal scan, and Sol review pass. Two release suites require clean post-commit rerun.
+- Waves182-183 move eighteen items to matched. Coverage is 2106 matched / 858
+  test-missing / 2964 total; 755 exact groups remain, including 652 singletons.
+- Production CardDefs/engine already matched all rulings. New public proofs cover
+  MR overwrite, reveal lifetime, remove-exit cost observers, duplicate reserve,
+  dynamic AP/split names, and turn-end trigger/resolution boundaries.
+- Focused structural matrix 128, TypeScript, scoped ESLint, QA reviewed gate, and
+  Sol semantic review pass. Broad Vitest/smoke stays on the ten-wave/T2-T3 cadence.
 - Generic policy-free sequence pre-walk can still preselect a later PA target
   before an earlier PA mutation. B07104 heuristic and human paths avoid it;
   investigate this engine-wide ordering risk when a future card exposes it.
-- Waves182-183 start with eighteen ungrounded rows across B08062-B08073; re-ground
+- Waves184-185 start with eighteen ungrounded rows across B08075-B08091; re-ground
   before interpreting the hashes.
 - Official sync drift remains separate: PR322 and changed B04018/B04018P/
   B06103P Q&A require re-queueing.
-- At about nine exact groups per wave, about 86 waves remain through roughly Wave267.
+- At about nine exact groups per wave, about 84 waves remain through roughly Wave267.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

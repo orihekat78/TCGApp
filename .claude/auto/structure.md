@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6835
+- **ファイル数**: 6846
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -941,6 +941,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-26-06-qa-waves176-177.md`
     - `2026-08-26-07-qa-waves178-179.md`
     - `2026-08-26-08-qa-waves180-181.md`
+    - `2026-08-26-09-qa-waves182-183.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1703,6 +1704,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-26-qa-waves176-177.md` — QA adjudication Waves176-177
     - `2026-08-26-qa-waves178-179.md` — QA adjudication Waves178-179
     - `2026-08-26-qa-waves180-181.md` — QA adjudication Waves180-181
+    - `2026-08-26-qa-waves182-183.md` — QA adjudication Waves182-183
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -2060,8 +2062,14 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08059.md` — B08059 / B08059P grounding
       - `B08060.md` — B08060 / B08060P grounding
       - `B08062.md` — B08062 grounding
+      - `B08063.md` — B08063 / B08063P grounding
+      - `B08064.md` — B08064 grounding
       - `B08065.md` — B08065 大和敢助 grounding
+      - `B08066.md` — B08066 / B08066P grounding
+      - `B08067.md` — B08067 / B08067P grounding
+      - `B08069.md` — B08069 grounding
       - `B08071.md` — B08071 grounding
+      - `B08072.md` — B08072 grounding
       - `B08073.md` — B08073 高木渉 grounding
       - `B08074.md` — B08074 降谷零 grounding
       - `B08075.md` — B08075 / B08075P grounding
@@ -2275,6 +2283,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `m3-pa-batch.md` — M3 前処理: PA(パートナーエリア) 宣言19+発動5 batch dossier
       - `m3-triage-registered.md` — M3 PA batch triage — 登録済 18 ID (2026-07-10)
       - `m3-triage-unregistered.md` — M3 未登録14 ID triage (2026-07-10, sonnet5)
+      - `waves182-183-authority.md` — Waves182-183 authority
       - `waves64-65-authority.md` — Waves64-65 authority manifest
       - `waves66-67-authority.md` — Waves66-67 authority manifest
       - `waves68-69-authority.md` — Waves68-69 authority manifest
@@ -6074,6 +6083,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08057-B08059-completion-public-wave181.test.ts` — qa: card:B08057:291f87522e2089d9232b03fc488c0790757f2e96f260d1b155bbdd6f24c2678e
       - `B08058-resolution-public-wave25.test.ts` — qa: card:B08058:2b4e49ff7d67dddeddd1fff86f17cd8814f42adc4f55ce818ce3626a24b4cdcf
       - `B08060-B08062-completion-public-wave181.test.ts` — qa: card:B08060:1e6decec598c8178c0ef59895411a3e6043a00f96c40f3608c98b25e915c134b
+      - `B08062-B08066-completion-public-wave182.test.ts` — qa: card:B08062:da1937a11dcf309e17d182661b4159ebeb8de46a5d221c3e68a64c918142b883
+      - `B08067-B08073-completion-public-wave183.test.ts` — qa: card:B08067:39697486128060cc69b3013afbfa63811801fc44ee3420780fc81d03aeb87e02
       - `B08081-multi-intercept-public-wave25.test.ts` — qa: card:B08081:6b3d06f3573c39d85fe728b4613bf4458ef9a1849c52f036ac9bf48314a44dd7
       - `B08087-B08091-leave-evidence-public.test.ts` — qa: card:B08087:1f49f9f42b38c241ebd655d06681a4cb1c6030ffaa8345da75416cb84193fc80
       - `B09090-PR286-entry-waiver.test.ts` — qaId=card:B09090:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7e…

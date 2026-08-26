@@ -1399,34 +1399,43 @@
     {
       "qaId": "card:B08062:e69ffd017f470a62cf136a7143741ae183e2c7155360291f9d3c385545eb58f6",
       "answerHash": "6a99e5de41592b59a0c686e1bcea695853e6670f5187ff26d2d7c3f1d29db6e0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08062.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p08/B08062.ts:67",
+        "tests:tests/cards/official-qa/B08062-B08066-completion-public-wave182.test.ts:195",
+        "tests:tests/cards/official-qa/B08062-B08066-completion-public-wave182.test.ts:197",
+        "tests:tests/cards/official-qa/B08062-B08066-completion-public-wave182.test.ts:202"
       ]
     },
     {
       "qaId": "card:B08065:c758369a7dddc50cdfaf7333ed60a91e5c9ad6e42a67f2f798a59018a06e92d6",
       "answerHash": "c4346ae9d144e8cb7f36ecf8d45fa159a34e4de797f441aac77ea289cc1bafc8",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08065.ts:1"
+        "src:src/cards/ct-p08/B08065.ts:13",
+        "tests:tests/cards/official-qa/B08062-B08066-completion-public-wave182.test.ts:337",
+        "tests:tests/cards/official-qa/B08062-B08066-completion-public-wave182.test.ts:338",
+        "tests:tests/cards/official-qa/B08062-B08066-completion-public-wave182.test.ts:342",
+        "tests:tests/cards/official-qa/B08062-B08066-completion-public-wave182.test.ts:347",
+        "tests:tests/cards/official-qa/B08062-B08066-completion-public-wave182.test.ts:352"
       ]
     },
     {
       "qaId": "card:B08072:fe200fa87639fad66be77335cd98bb1639dfd8cf8e7f1fd958a5c4d6b563bc33",
       "answerHash": "1c2fdcd2f21243076f1c93958b48ed242f186f2658ec250017ae3485283d6ee0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08072.ts:1"
+        "src:src/cards/ct-p07/B07079.ts:99",
+        "src:src/cards/ct-p08/B08072.ts:9",
+        "tests:tests/cards/official-qa/B08067-B08073-completion-public-wave183.test.ts:332",
+        "tests:tests/cards/official-qa/B08067-B08073-completion-public-wave183.test.ts:334",
+        "tests:tests/cards/official-qa/B08067-B08073-completion-public-wave183.test.ts:353"
       ]
     },
     {
