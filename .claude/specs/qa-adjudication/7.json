@@ -1293,11 +1293,12 @@
     {
       "qaId": "card:B07104:8bbd69cb64076bd484e95dcb7251faa74f8a1aa69e7c4fed9505474b9472f6b5",
       "answerHash": "b713067c9d9b0bc19278255cbfebc4197426842b165b1e85f2243796eeaec9a4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07104.ts:1"
+        "src:src/cards/ct-p07/B07104.ts:1",
+        "tests:tests/cards/official-qa/B07100-B08003-completion-public-wave174.test.ts:322"
       ]
     },
     {

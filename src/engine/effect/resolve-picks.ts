@@ -25,7 +25,7 @@ import { evalCond } from '../cond/eval.js';
 import { bindingKeysReadByCondition } from '../cond/binding-keys.js';
 import { def as readDef } from '../read/def.js';
 import { char as readChar } from '../read/char.js';
-import type { GameState, Effect, EffectCtx, TargetingRef, Condition } from '../types/index.js';
+import type { GameState, Effect, EffectCtx, TargetingRef, Condition, AtomVerb } from '../types/index.js';
 import type { Candidate } from '../types/candidate.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from './atom-pick-spec.js';
 import { findChooseInterceptReactions, isTrustedSetCardOccurrenceSelection } from './consult-choose-intercept.js';
@@ -130,13 +130,19 @@ function conditionHasMissingBinding(cond: Condition, bindings: EffectCtx['bindin
  * costPaid が乗っている useDeclaredAbility の resolveEffectPicks 初期 walk) でしか
  * 解決できない。
  *
- * `{ dyn }` 値を持つ atom が現状 caseDeclaredEvidenceFlip のみのため、他カードへの
- * 影響はゼロ (dyn 値が無い args はそのまま同一参照を返す)。
+ * Runtime dyn を正式に解決できる atom 引数は consumer 側の契約として raw のまま残す。
+ * `mill.n` は atomMill が実行時 state と bindings から数値化するため、sequence 前段の
+ * 盤面変更より前に snapshot してはならない。他の dyn は従来どおりここで確定する。
  */
+const RUNTIME_DYN_ARG_KEYS: Partial<Record<AtomVerb, ReadonlySet<string>>> = {
+  mill: new Set(['n']),
+};
+
 function resolveDynArgs(
   state: GameState,
   args: Record<string, unknown>,
   ctx: EffectCtx,
+  verb: AtomVerb,
 ): Record<string, unknown> {
   let mutated = false;
   const out: Record<string, unknown> = {};
@@ -147,6 +153,10 @@ function resolveDynArgs(
       'dyn' in v &&
       typeof (v as { dyn: unknown }).dyn === 'string'
     ) {
+      if (RUNTIME_DYN_ARG_KEYS[verb]?.has(k)) {
+        out[k] = v;
+        continue;
+      }
       // M2後半 (2026-07-10, PR265): `$bound.<key>.*` 参照で <key> が初期 walk 時点で未 bind の場合は
       // literal 化を保留する ({dyn} のまま残す)。chain/sequence 前段 (deckRevealUntil 等) が bind を
       // 書くのは実行時であり、walk 時に evalDyn すると NaN が焼き込まれる (walk-literalize 罠 —
@@ -561,6 +571,7 @@ function substituteAtomPick(
     n?: unknown; max?: unknown; filter?: unknown;
   } & Record<string, unknown>;
   const verbStr = typeof atom.verb === 'string' ? atom.verb : '';
+  const atomVerb = verbStr as AtomVerb;
   // 物理動作 atom 短縮形: { player, n or max, filter? } で target 未指定なら
   // verb 既定 area を使って pick query を engine が補完する。
   // - n: number → { min: n, max: n } 固定
@@ -586,7 +597,7 @@ function substituteAtomPick(
     // 非 pick atom (uid=$contact.byUid 等で target なし) でも {dyn} arg は literal 化する。
     // 例: D08007 cutin の delta:{dyn:'$self.sceneTrait.少年探偵団 * 1000'} (pick 不在だが dyn 評価が必要)。
     // resolveDynArgs は {dyn} object のみ変換し、それ以外は同一参照を返すため既存 atom は no-op。
-    const dynResolved = resolveDynArgs(state, args, ctx);
+    const dynResolved = resolveDynArgs(state, args, ctx, atomVerb);
     if (dynResolved === args) return atom as Effect;
     return { kind: 'atom', verb: atom.verb as never, args: dynResolved } as Effect;
   }
@@ -849,7 +860,7 @@ function substituteAtomPick(
       // pendingEffectPick として human-pick 境界へ運ぶ。
       // BUG-132: deep-plain 化 — runtime 経路 (drafted entry.effect 由来) の nested object が
       // draft proxy のまま produce 境界を跨ぐと次 produce の finalize で revoked-proxy crash。
-      atomArgs: toPlainDeep(resolveDynArgs(state, { ...args }, ctx)),
+      atomArgs: toPlainDeep(resolveDynArgs(state, { ...args }, ctx, atomVerb)),
       nMin: targetRef.n?.min ?? 1,
       nMax: targetRef.n?.max ?? 1,
       source: pendingSource(state, ctx, opts.source ?? { cardId: '', abilityId: '' }),
@@ -931,7 +942,7 @@ function substituteAtomPick(
         kind: 'atom',
         verb: 'sceneEnter',
         args: markAutonomousPick(
-          resolveDynArgs(state, restored, ctx) as Record<string, unknown>,
+          resolveDynArgs(state, restored, ctx, 'sceneEnter') as Record<string, unknown>,
         ),
       };
     }
@@ -985,8 +996,8 @@ function substituteAtomPick(
       verb: atom.verb as never,
       // BUG-085: AI / heuristic 経路 (human-pick 境界なし) でも { dyn } を literal 化する。
       args: interceptReactions.length === 0
-        ? markAutonomousPick(w6TagMr(resolveDynArgs(state, { ...restArgs, uid: picked.uid }, ctx) as Record<string, unknown>, [picked.uid]))
-        : w6TagMr(resolveDynArgs(state, { ...restArgs, uid: picked.uid }, ctx) as Record<string, unknown>, [picked.uid]),
+        ? markAutonomousPick(w6TagMr(resolveDynArgs(state, { ...restArgs, uid: picked.uid }, ctx, atomVerb) as Record<string, unknown>, [picked.uid]))
+        : w6TagMr(resolveDynArgs(state, { ...restArgs, uid: picked.uid }, ctx, atomVerb) as Record<string, unknown>, [picked.uid]),
     } as Effect;
   }
 
@@ -1038,7 +1049,7 @@ function substituteAtomPick(
     return {
       kind: 'atom',
       verb: atom.verb as never,
-      args: markAutonomousPick(resolveDynArgs(state, { ...args, occurrence }, ctx)),
+      args: markAutonomousPick(resolveDynArgs(state, { ...args, occurrence }, ctx, atomVerb)),
     } as Effect;
   }
 
@@ -1096,7 +1107,7 @@ function substituteAtomPick(
           }
           return [];
         }),
-      }, ctx)),
+      }, ctx, atomVerb)),
     } as Effect;
   }
   // BUG-106 (D11014 a2 / D11019 a1 driver): single-pick contract (cardId:'$pick.cardId')。
@@ -1135,7 +1146,7 @@ function substituteAtomPick(
                 ?? cardOccurrenceWitness(state, picked.player, 'evidence'),
             }] }
             : {}),
-      }, ctx)),
+      }, ctx, atomVerb)),
     } as Effect;
   }
   const selectedIndexedOccurrenceOf = (candidate: Candidate) => {
@@ -1207,7 +1218,7 @@ function substituteAtomPick(
         ...args,
         target: pickValues,
         ...selectedOccurrencePart,
-      }, ctx) as Record<string, unknown>, w6CharUidsG)),
+      }, ctx, atomVerb) as Record<string, unknown>, w6CharUidsG)),
     } as Effect;
   }
   const pickValue = pickValueOf(picked);
@@ -1221,7 +1232,7 @@ function substituteAtomPick(
         ...args,
         target: [pickValue],
         ...(indexedOccurrence === null ? {} : { selectedCardOccurrences: [indexedOccurrence] }),
-      }, ctx) as Record<string, unknown>,
+      }, ctx, atomVerb) as Record<string, unknown>,
       picked.kind === 'char' ? [picked.uid] : [],
     )),
   } as Effect;

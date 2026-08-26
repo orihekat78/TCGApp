@@ -13,15 +13,18 @@
 
 ## Next
 
-- Waves172-173 move nineteen items to matched. Coverage is 2021 matched / 943
-  test-missing / 2964 total; 834 exact groups remain, including 725 singletons.
-- B07085-B07098/P public matrices cover forced reveal, independent branches,
-  owner evidence/hand costs, turn-end, effective level, removal, and refresh.
-- Production gap is none. Wave suites 54/54, focused horizontal 465/465,
-  TypeScript, scoped ESLint, and QA merge pass.
-- Waves174-175 batch nineteen items across B07100-B08016.
+- Waves174-175 move nineteen items to matched. Coverage is 2040 matched / 924
+  test-missing / 2964 total; 816 exact groups remain, including 708 singletons.
+- BUG-376 unifies hand Cut-In presence with `effectiveCutinAbilities`.
+- BUG-377 replaces per-character mill loops with one aggregate mill and keeps
+  `mill.n` runtime-bound through AI pre-walk.
+- Wave suites and horizontal checks pass; Sol review has no Critical/Important.
+- Generic policy-free sequence pre-walk can still preselect a later PA target
+  before an earlier PA mutation. B07104 heuristic and human paths avoid it;
+  investigate this engine-wide ordering risk when a future card exposes it.
+- Waves176-177 batch sixteen items across B08017-B08030.
 - Official sync drift remains separate: PR322 and changed B04018/B04018P/
   B06103P Q&A require re-queueing.
-- At about nine exact groups per wave, about 93 waves remain through Wave266.
+- At about nine exact groups per wave, about 91 waves remain through Wave266.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

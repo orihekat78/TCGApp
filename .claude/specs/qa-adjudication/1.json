@@ -353,7 +353,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p03/B03088.ts:1",
-        "tests:tests/cards/wave-engine0-0629.test.ts:309"
+        "tests:tests/cards/wave-engine0-0629.test.ts:311"
       ]
     },
     {

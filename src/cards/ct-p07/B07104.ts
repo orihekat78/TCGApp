@@ -12,13 +12,9 @@
 //   - clause2「キャラを1枚まで選びターン終了まで突撃付与」= charGrantKeyword 短縮形{player:'self', kw:'突撃', scope:'turn', max:1, side:'either'}。
 //     ★短縮形必須 (uid:'$pick'+target 明示形は sequence 内で初期 walk push → human 経路で clause1 より先に pick surface
 //      = 印字順逆転 BUG-158)。短縮形は paShortFormAwait の runtime push で clause1→clause2→clause3 の正順 surface。
-//   - clause3「自分と相手の現場のキャラ1枚につきデッキ上2枚リムーブ」= forEach{over:{kind:'all', query:{area:'scene', side:'either'}},
-//     do: atom mill{player:'self', n:2}} (B02083 forEach over:all 同型)。clause1 のリムーブ後の盤面を execution-time に計数 (印字順)。
-//   ⚠ KNOWN-EDGE (敵対 review 検出、shipped-with-DEFER): mill は per-atom で min(n, deck) + deck0 で refresh するが、
-//     forEach ループ "途中" でデッキが枯渇 → refresh された後、後続キャラ分が refresh 済デッキから追加 mill される。
-//     公式Q&A「可能な限りリムーブ→リフレッシュ→残りはリムーブしない」= 合計 (キャラ数×2) を一括 mill して中途 refresh で停止、が正。
-//     forEach+mill では中途 refresh 停止が表現できない (engine変更0 範囲外。faithful 化には mill-total-with-refresh-stop primitive が必要)。
-//     通常域 (deck ≥ キャラ数×2) は正。divergence は late-game の deck 枯渇時のみ。→ 将来 engine additive wave で修正。
+//   - clause3「自分と相手の現場のキャラ1枚につきデッキ上2枚リムーブ」= aggregate mill
+//     n:{dyn:'($self.sceneCount + $self.oppSceneCount) * 2'}。clause1 解決後の盤面を1回数え、
+//     atom mill 1回で可能な限りリムーブ→refresh→停止する (rules/14・26、公式Q&A)。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 
@@ -33,7 +29,7 @@ const a1: AbilityDef = {
     steps: [
       { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', cause: 'effect' } },
       { kind: 'atom', verb: 'charGrantKeyword', args: { player: 'self', kw: '突撃', scope: 'turn', max: 1, side: 'either' } },
-      { kind: 'forEach', over: { kind: 'all', query: { area: 'scene', side: 'either' } }, do: { kind: 'atom', verb: 'mill', args: { player: 'self', n: 2 } } },
+      { kind: 'atom', verb: 'mill', args: { player: 'self', n: { dyn: '($self.sceneCount + $self.oppSceneCount) * 2' } } },
     ],
   },
   description: '【パートナー黒】キャラを1枚まで選び、リムーブする。キャラを1枚まで選び、ターン終了時まで〚突撃〛を与える。自分と相手の現場にいるキャラ1枚につき、自分のデッキのカードを上から2枚リムーブする。',

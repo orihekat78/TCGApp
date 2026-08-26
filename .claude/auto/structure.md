@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6787
+- **ファイル数**: 6799
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -556,6 +556,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-373.md` — B07034 face-down trigger gate
     - `BUG-374.md` — B07043 semantic choice labels
     - `BUG-375.md` — Public hand reveal presentation omission
+    - `BUG-376.md` — Granted hand Cut-In filter omission
+    - `BUG-377.md` — Per-character mill crosses refresh boundary
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1691,6 +1693,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-26-qa-waves168-169.md` — QA adjudication Waves168-169
     - `2026-08-26-qa-waves170-171.md` — QA adjudication Waves170-171
     - `2026-08-26-qa-waves172-173.md` — QA adjudication Waves172-173
+    - `2026-08-26-qa-waves174-175.md` — QA adjudication Waves174-175
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -2000,12 +2003,19 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B07094.md` — B07094 / B07094P grounding
       - `B07096.md` — B07096 grounding
       - `B07098.md` — B07098 / B07098P grounding
-      - `B07100.md` — B07100 コルン grounding (2026-07-10, fable)
-      - `B08003.md` — B08003 阿笠博士 (SR/SRP) grounding (2026-07-10, sonnet5)
-      - `B08004.md` — B08004 江戸川コナン grounding
+      - `B07100.md` — B07100 コルン grounding
+      - `B07103.md` — B07103 / B07103P grounding
+      - `B07104.md` — B07104 / B07104P grounding
+      - `B08002.md` — B08002 / B08002P grounding
+      - `B08003.md` — B08003 / B08003P grounding
+      - `B08004.md` — B08004 / B08004P grounding
       - `B08006.md` — B08006 小嶋元太 grounding
       - `B08007.md` — B08007 円谷光彦 grounding
       - `B08008.md` — B08008 吉田歩美 grounding
+      - `B08009.md` — B08009 grounding
+      - `B08010.md` — B08010 grounding
+      - `B08012.md` — B08012 / B08012P grounding
+      - `B08014.md` — B08014 / B08014P grounding
       - `B08015.md` — B08015 若狭留美 grounding
       - `B08016.md` — B08016 grounding
       - `B08017.md` — B08017 / B08017P grounding
@@ -6024,7 +6034,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B07069-B07079-completion-public-wave171.test.ts` — qa: card:B07069:2bcb59c4061b4f418e16db29d59e7a70e64ac2d3f6d1648c367d531fdb1d49f9
       - `B07085-B07091-completion-public-wave172.test.ts` — qa: card:B07085:e8eb38fe4adaf20641339946d8691e2339623fbc925878d38fa4bcb0480efe04
       - `B07094-B07098-completion-public-wave173.test.ts` — qa: card:B07094:46562cdd4a832c2c219c087a402e6bbdbbc11d0a33031b3b0cd7a267c29e0af3
+      - `B07100-B08003-completion-public-wave174.test.ts` — qa: card:B07100:8fa59c53057ee164d956e8a94719c89402a761c9093428f38822e073eaf28600
       - `B07102-refresh-includes-removed.test.ts` — qaId=card:B07102:99f16dd6a248501c9d63a44dd85b2d6097ef720865e4181d1b451669f04b05d…
+      - `B08004-B08016-completion-public-wave175.test.ts` — qa: card:B08004:1a671f1699203588abc9b63b4ed1d94a1f5f07bf485a87e3994b1ec8ac4c4733
       - `B08049-completion-public-wave132.test.ts` — qa: card:B08049:190baa1e1f03afa7d9e83de8ff7b5f6134452bd6b3a05caf22783df26c2a9ea8
       - `B08058-resolution-public-wave25.test.ts` — qa: card:B08058:2b4e49ff7d67dddeddd1fff86f17cd8814f42adc4f55ce818ce3626a24b4cdcf
       - `B08081-multi-intercept-public-wave25.test.ts` — qa: card:B08081:6b3d06f3573c39d85fe728b4613bf4458ef9a1849c52f036ac9bf48314a44dd7

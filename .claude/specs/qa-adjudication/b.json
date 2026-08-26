@@ -1412,11 +1412,12 @@
     {
       "qaId": "card:B08003:a96985ed96d005b04cd0c44c2dadf206fac63c8bd49e8c42cef6ea4c73808dae",
       "answerHash": "065034b2d7175116e6361afe08fce9c5fb449e32f96b7c0e420182a577116a43",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08003.ts:1"
+        "src:src/cards/ct-p08/B08003.ts:1",
+        "tests:tests/cards/official-qa/B07100-B08003-completion-public-wave174.test.ts:493"
       ]
     },
     {

@@ -1291,11 +1291,12 @@
     {
       "qaId": "card:B07103:b385cc0ffa2c4f468ffbbff448fb7cd0afda5502f9a01f3e95a0a9b2e793b8a9",
       "answerHash": "b799801200c2817724a5f6abd8be85d2b75970c0298ff01ee70165e90bed94cd",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p07/B07103.ts:1"
+        "src:src/cards/ct-p07/B07103.ts:1",
+        "tests:tests/cards/official-qa/B07100-B08003-completion-public-wave174.test.ts:250"
       ]
     },
     {
@@ -1316,24 +1317,23 @@
     {
       "qaId": "card:B08003:43b1bf5d83d7464c9b5af3ae0c258e99ef6a2922ed2bdf104bd97082a305b22b",
       "answerHash": "e4cc0f67a70c33db688d586953c96067fe1a4e66f9a925a2dfa8131081e64351",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08003.ts:7"
-      ],
-      "noteCodes": [
-        "B08003-STACK-NOT-SET-TEST-MISSING"
+        "src:src/cards/ct-p08/B08003.ts:7",
+        "tests:tests/cards/official-qa/B07100-B08003-completion-public-wave174.test.ts:491"
       ]
     },
     {
       "qaId": "card:B08003:893ecd7cc4f7a035960d5512fce0c72bc88e82ae83d55bb7178fd7fd8649f75d",
       "answerHash": "94de3cab3cc0e3f1154821b105683d7fb232efc11d71afe2a3d7261acba3d2f2",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08003.ts:1"
+        "src:src/cards/ct-p08/B08003.ts:1",
+        "tests:tests/cards/official-qa/B07100-B08003-completion-public-wave174.test.ts:443"
       ]
     },
     {
@@ -1355,14 +1355,12 @@
     {
       "qaId": "card:B08016:07fa73b6ca16df88298a7eb2ba6d9709a8c57c77e947d70f0fd00bc2b45e2867",
       "answerHash": "88b813bdcfb2190f6adca8f4afe88d7494ae239cfb5c9fe303d7ce0414907a29",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08016.ts:117"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/ct-p08/B08016.ts:117",
+        "tests:tests/cards/official-qa/B08004-B08016-completion-public-wave175.test.ts:407"
       ]
     },
     {

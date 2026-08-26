@@ -201,6 +201,31 @@ describe('engine.effect.resolveEffectPicks', () => {
     expect(resolved).toStrictEqual(effect); // 不変
   });
 
+  it('mill.n dyn remains runtime-bound while non-mill dyn stays pre-walk literalized', () => {
+    const s = stateWithSelfChar('self-1');
+    s.players.opp.scene.push(
+      { ...s.players.self.scene[0]!, uid: 'opp-1', enterOrder: 2 },
+      { ...s.players.self.scene[0]!, uid: 'opp-2', enterOrder: 3 },
+    );
+    const mill: Effect = {
+      kind: 'atom', verb: 'mill',
+      args: { player: 'self', n: { dyn: '$self.oppSceneCount * 2' } },
+    };
+    const modify: Effect = {
+      kind: 'atom', verb: 'charModifyAP',
+      args: { uid: 'self-1', delta: { dyn: '$self.oppSceneCount * 1000' }, scope: 'turn' },
+    };
+
+    const resolvedMill = resolveEffectPicks(s, mill, ctxSelf()) as { args: { n: unknown } };
+    const resolvedModify = resolveEffectPicks(s, modify, ctxSelf()) as { args: { delta: unknown } };
+
+    expect(resolvedMill.args.n, 'atomMill owns runtime dyn evaluation').toEqual({
+      dyn: '$self.oppSceneCount * 2',
+    });
+    expect(resolvedModify.args.delta, 'other atom dyn keeps the existing eager snapshot contract')
+      .toBe(2000);
+  });
+
   it('深いネスト (sequence → choice → atom $pick) を再帰処理', () => {
     const s = stateWithSelfChar('self-1');
     const effect: Effect = {

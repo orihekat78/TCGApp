@@ -6,6 +6,7 @@ import { scene } from './scene.js';
 import { def } from './def.js'; import { abilityIsCutin, defHasIconKeyword, defHasKeyword } from './keyword.js';
 import { evalCond } from '../cond/eval.js';
 import { evalDyn } from '../dyn/eval.js';
+import { effectiveCutinAbilities } from './hand-cutin.js';
 import {
   readDeclaredAbilityUseCountRecord,
   readTurnScopedUseCount,
@@ -1041,6 +1042,15 @@ registerEffectiveKeyword((s, uid, keyword, fallback) => {
     if (!fallback) return undefined;
     const offSceneDef = def.card(fallback.cardId);
     if (!offSceneDef) return false;
+    // B07100 official Q&A: a hand card granted Cut-In by another hand card
+    // still "has Cut-In" for filtered hand selection.  The hand aura reader is
+    // the single source used by contact legality, so reuse it here instead of
+    // duplicating aura evaluation in candidates.ts.
+    if (fallback.area === 'hand'
+      && keyword === 'カットイン'
+      && effectiveCutinAbilities(s, fallback.player, fallback.cardId).length > 0) {
+      return true;
+    }
     const sourceArea = fallback.area === 'deck' || fallback.area === 'bound' ? 'hand' : fallback.area;
     const ctx = {
       source: { player: fallback.player, cardId: fallback.cardId, uid, area: sourceArea },

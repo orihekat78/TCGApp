@@ -77,7 +77,7 @@ hiramekiResolve humanChooser (hirameki 内 optional の human surface 実バグ�
 B09109 a2 (revealFromHand costPaid cardName + resolveBindRef $cost 非対応)。
 **NIT (記録)**: B09081 a2「1枚まで」が optional 諾否に折込 (B03085/B05111 踏襲、候補常 1 体)。
 **Wave C 残 (次 session 候補)**: ~~B05093~~ **SHIPPED (WC2a)** / B02086 依然 DEFER (optional chooser+else+AI-drain infra 別途要、上記 B02086 行参照) / ~~B06023+B06036+B06034~~ **SHIPPED (WC2b/Wave138/153)** / B06020+B07003 (hand-zone
-cutin aura) / B03042 B04055 B09033 PR279 B03093 / 重: B02022 B05033 B08003 /
+cutin aura) / B03042 B04055 B09033 PR279 B03093 / 重: B02022 B05033 /
 T3: B06025 B08059 B02039 B01082 D06013 B09024 / Wave D `untargetableByOppEffect` 実装・gate中。
 
 ## 公式 defer 宣言済 (専用ファイルあり)
@@ -91,7 +91,7 @@ T3: B06025 B08059 B02039 B01082 D06013 B09024 / Wave D `untargetableByOppEffect`
 
 | 繰越元 | 内容 | 状況 |
 |--------|------|------|
-| Cleanup Phase 中/大規模 #1 | 動的式評価括弧 | `src/engine/dyn/eval.ts:13,145` TODO Phase 5 |
+| ~~Cleanup Phase 中/大規模 #1~~ | ✅ 動的式の標準優先順位・括弧は出荷済。Wave174で直接unitと記録を再固定 | ✅ 解消 |
 | Cleanup Phase 中/大規模 #2 | AI コスト選択ロジック拡張 | undocumented (S148 session log のみ) |
 | Cleanup Phase 中/大規模 #3 | AI ヒューリスティック「有用カード操作」(大) | undocumented |
 | Cleanup Phase 中/大規模 #6 | Playmat レスポンシブレイアウト | undocumented |
@@ -245,7 +245,7 @@ relative-AP (B09096) は本 session で **stale 訂正** (engine変更0 と判�
 | name-designation | 「カード名を1つ指定し」UI+条件 (B09003/B09108/B09111/B09052) | 宣言 UI surface + designated-name 比較 condition |
 | ~~multi-card sceneEnter~~ | **✅ 解消 (2026-06-15 cluster14)**: sceneEnter に cardIds:'$pick.cardIds' 契約 + switchRemoveUids[] (現場満杯 switch) を additive 拡張。distinctNames AI dedup + skipResolvesAtom (0枚でも後続 step 解決)。B09010/P + PR042/PR046 計 4 printings 出荷 | 完了 — branch engine/wave2-cluster14-multi-sceneenter。残 B01022 (multi-match deckRevealUntil) / B05117 (persistent set-granted leave ability) は別 gate |
 | ~~nested filter dyn~~ | **✅ 解消 (2026-06-15 cluster12)**: pick query filter 内の {dyn} (levelMax 等) を substituteAtomPick chokepoint で解決。B08060 + 「小さくなった名探偵」family 15 printings 出荷。残 B05102/B09052 は **別 gate** (B05102=hirameki self-to-hand / B09052=rename verb + name-designation) のため対象外 | 完了 — branch engine/wave2-cluster12-nested-filter-dyn |
-| until-N discard / reveal verb 等 | B07076/B07100/B08047 a2/B08093 a1 | **hand-reveal verb = 出荷済 (2026-06-28、下記 §handReveal)**。残 = 可変 count atom (B07076/B07100/B08047 a2) / B08093 a1 は ability-presence filter 待ち |
+| until-N discard / reveal verb 等 | B07076/B08047 a2/B08093 a1 | **hand-reveal verb = 出荷済 (2026-06-28、下記 §handReveal)**。B07100はWave174で動的Cut-In presenceまで解消。残 = 可変 count atom (B07076/B08047 a2) / B08093 a1 は ability-presence filter 待ち |
 
 ## Task A green候補 wave#2 defer (2026-06-12, cards/wave2-handauthor)
 
@@ -254,7 +254,7 @@ relative-AP (B09096) は本 session で **stale 訂正** (engine変更0 と判�
 | ~~B08020/P~~ | **✅ 再採用済 (2026-06-12 engine拡張 wave#2)**: BUG-132 GAP-1/2 修正 (chooseMatch decline channel + declaredBatch gate/遅延 pick) 後に hand-author で出荷。実機 decoy 検証済 (a1 色+kind filter / decline / a2 解決順+AP filter) | 完了 — branch engine/wave2-bug132 |
 | ~~B07052~~ | **✅ 解決済 (2026-06-15 赤魔術 family)**: 「赤魔術 はどのカードにも無い」は **stale 誤認**。一次 API の `category1/2/3` (特徴の正本) に 赤魔術 が実在 (B07055/B07058 event, B07062 case)。TSV 抽出が event/case の category-trait を全件 drop していたのが真因 (field-drop, BUG-124 同族)。per-card で trait 補完 → B07052 実装 + B07062 latent 解消 | 完了 — branch cards/akamajutsu-trait (changelog 2026-06-15-04)。残課題は下記 known-gap |
 | ~~B02026~~ | ✅ **出荷済 (2026-06-21、`cards/wave-dsl-reauthor`)**。a1 に空 `filter:{}` を付与 (eval.ts:298 が filter 存在時のみ scene 走査 → partner 除外、kind:character 不要)。敵対verify 2/2 ship・decoy 1対1。changelog 2026-06-21-01 | ✅ 出荷済 |
-| B07104 | refuted(fatal): 【パートナー黒】を step1 のみ conditional 化 (全 ability gate が正) + PA pick 非終端 step で二重 grant desync | ability.condition 化 + PA ordering 対応 |
+| ~~B07104~~ | ✅ ability.conditionとPA orderingは出荷済。Wave174でaggregate mill、短デッキrefresh停止、AI実行時countをBUG-377として修正・認定 | ✅ 解消 |
 | B09038 | 🟢 **解禁 (BUG-111 #2 修正済)** — ~~refuted(fatal) ×2~~。a2 末尾の無条件 draw (「登場させ…セットし、カードを1枚引く」) が 0-enter human-decline で continuation [conditional,draw] ごと drop。draw を pick 前に reorder すると引いたカードが登場対象になり意味論非等価 → 不可 | BUG-111: 0-pick decline 時の必須末尾 step 保持 (engine) |
 | ~~B09097 / B09097P~~ | ✅ **出荷済 (2026-06-21、`cards/wave-dsl-reauthor`)**。bare-chain `discard{max:1}`(min:0=decline可、shipped twin B04056/D08003 と同型) で再author。DEFER note の optional ラップは不要 (敵対verify が「AI-policy divergence only / 有益効果の greedy-accept 妥当」と nit-ship 判定)。decoy 1対1。changelog 2026-06-21-01 | ✅ 出荷済 |
 
@@ -282,7 +282,7 @@ relative-AP (B09096) は本 session で **stale 訂正** (engine変更0 と判�
 
 | 項目 | 内容 | 状況 |
 |------|------|------|
-| 付与能力の presence | B07100 qAndA は「付与も持つ」だが defHasKeyword は CardDef 静的のみ (turnEffects 付与分は不参加)。cluster2 出荷 10枚には grant 源が共存しないため実害なし | B07100 (handReveal gate) 出荷時に state-aware reader へ拡張 |
+| ~~付与能力の presence~~ | ✅ Wave174 BUG-376。off-scene handのCut-In filterを`effectiveCutinAbilities`へ統一し、B07003の動的付与と無効条件付き印字Cut-Inを認定 | ✅ 解消 |
 | 能力無効化中の presence | rules/19 文理は「持たない」だが既存 4 アイコンも static 判定 (無効化中も match)。直接 Q&A なし | 要公式照会 (talk002) |
 | 疾風×名乗り例外の rules 不整合 | rules/03・06 は疾風を名乗り例外に列挙、rules/13 は迅速/突撃のみ。engine は疾風の naming-exception 未実装 | 公式 PDF 再確認 (impl lens F9、独立タスク) |
 | ~~BUG-140 残 74枚~~ | **✅ 補修済 (2026-06-13 BUG-140 wave)**: 52 ファイル直接 patch + 22 spread 継承。`npm run lint:icon-abilities` 化 (CI 規約 8 本目)。DEFER 2 枚は下記 | 完了 — branch fix/bug-140-icon-abilities |
@@ -686,7 +686,7 @@ B05035 遠山和葉 は当初出荷候補だったが、敵対 review が else-s
 |-----|----------------------|---------|
 | B07065 (世良真純＆メアリー, 全体) | MR カード (rules/18 §MR①② が engine 未配線) + 複数名カード名 (rules/19 split-name)。両 hard gap | MR①②配線 (rules/18) + 複数名ルール |
 | B07068 (羽田秀吉, 全体) | a1「登場させたキャラ…をアクティブにする」= sceneEnter で登場した $entered キャラを後続 step で参照する binding token が engine 不在 (実装0件)。主能力ゆえ a2 ヒラメキ単体では薄く全体 DEFER | sceneEnter に entered-char binding ($entered) 追加 (engine) |
-| B07100 (コルン, 全体) | 【登場時】「相手は手札を公開…カットイン持ち lv≤8 を1枚選び相手がリムーブ」= 相手手札の reveal + filter 選択 + 相手手札からの removal 機構が engine 不在 (opponentHand/handReveal verb ゼロ、S12456 確認済) | opp-hand reveal + filtered removal verb (engine) |
+| ~~B07100 (コルン, 全体)~~ | ✅ 相手手札公開、owner選択、cross-side removalは既出荷。Wave174で残る動的Cut-In presenceをBUG-376として修正し全Q&A認定 | ✅ 解消 |
 | ~~PR099 a2~~ **✅出荷済 (2026-08-13)** | 登録済みキャラ CardDef の名前 component を列挙する constrained declaration domain、任意skip、`nameOverride` 完全置換を共有実装。PR105 と同一descriptor | ✅完了 |
 | ~~B05030 a2~~ **✅出荷済 (2026-06-28 session64 setCardCount dyn)** | 【自分ターン中】「セットされているカード1枚につき AP+1000」= set-card 枚数スケールの継続 AP 修飾。`$self.setCardCount` dyn token が engine 不在 (resolveSelf は sceneTrait/faceUpEvidence/fileCount のみ) で a1 のみ partial-ship だった。**session64 で resolveSelf に `setCardCount` 分岐を additive 追加** (`scene.byUid(state,uid).setCards.length`、静的 field ゆえ ap/lp 再帰なし) → a2 解禁し fully faithful 化。D08005 a1 (faceUpEvidence) 同型の継続修飾 | ✅完了 (setCardCount dyn) |
 | ~~B05035 (遠山和葉, 全体)~~ **✅出荷済 (2026-06-23 wave bug153-setcard-host-check)** | 【登場時】reveal-1 + cardName[服部平次/遠山和葉] OR + 任意手札追加 / 加えねば裏向きセット。当初は else-set の `charSetCard{fromDeckTop}` が host 離場時に公開カード消失 (**BUG-153** 共有 engine 順序バグ、公式Q&A『離場時はデッキ上に戻す』違反) で DEFER していたが、**BUG-153 を engine additive 修正** (host 存在チェック→shift 順) し再出荷。ALL_CARDS 1409→1410 | ✅完了 (BUG-153 修正済) |
@@ -733,7 +733,7 @@ classify workflow GREEN候補のうち、実 engine 型直読で false-green と
 | ~~B08050 (【解決編】継続レベル+3)~~ | ✅ **出荷済** (card wave engine-unlocked-0624, 2026-06-24): `ContinuousModifier.lvlDelta` (a206e9dc) + 登場時 deck-look (deckRevealUntil match-all → handAdd → boundToRemove + boundMatchesFilter `cardNameNot` discard)。condition=caseStatus解決編 (自己参照なし) で latch 問題と無縁。spec: [engine-additive-wave-2026-06-24.md](engine-additive-wave-2026-06-24.md) | — |
 | **B08059 / B08059P (【自分ターン中】現場lv7×2 → 自レベル+1)** | ⚠ **再 DEFER** (engine additive wave で誤って「解禁」と記載): lvlDelta 機構自体は a206e9dc で追加済だが、本カードの条件「現場にレベル7のキャラ2枚以上」は **このキャラ自身(lv6+1=7)を数に含める latch** (公式QA「このキャラを含めレベル7のキャラが2枚」)。`_inContinuousDelta` guard ([candidates.ts:24](../../src/engine/target/candidates.ts#L24)) が depth-2 で全 delta を base 化するため、自己条件評価中は諸星=base6 と数えられ、**他lv7が1枚に減った瞬間 latch が外れる** (engine実測: 諸星+1lv7 で read.char.level=6、QA要求=7)。engine wave の敵対 review は「無限ループ無し」のみ検証し QA fidelity を見落とした。faithful 化には guard に自己 delta 例外 (固定点/self-include) を入れる engine 変更が必要 | continuous 条件の **self-counting** 対応 (recursion guard の自己 delta 例外、要 engine 変更・要設計) |
 | ~~B08023 / B08023P~~ / B08033 (1pick→2atom 同キャラ) | ✅ **B08023/P 出荷済** (card wave engine-unlocked-0624, 2026-06-24): **短縮形** carrier-reuse (charSetCard{player,max,filter,bind:'$picked'}、明示 uid:'$pick'+target は human 経路で rider 不発 = [BUG-158](../bugs/BUG-158.md))。【登場時】choice×3 (伊織無我 setCard+AP/突撃 / 相手 setCard+sleep、opt3 は charSetCard{player:'opp'} = B02020/B05028 同型)。⚠ **B08033 a2 は別 gate (set-card-removal COST kind, 下記) 併発で依然 DEFER** | (B08023) ✅ 出荷済 / (B08033 a2) set-card-removal cost 待ち |
-| **B08004 / B08004P (stun cost コナン)** | ⚠ **再 DEFER** (stunChar は解禁したが第2 gate が残存): Cost `stunChar` (a206e9dc) で「現場のアクティブ灰原哀1枚スタン」コスト自体は表現可。だが宣言ゲート「自分のリムーブエリアに**【黒】のキャラ**が3枚以上」は **remove-area を 色 AND 種別(character) で数える** 必要があり、`removeColorAtLeast` ([cond/eval.ts:192](../../src/engine/cond/eval.ts#L192)) は色のみで kind を見ない (黒イベントを誤計上)。remove-area の kind 付き count 条件が engine 未対応。errata 2026-03-02 現場条件は stunChar の scene-scoped target で充足済 | remove-area の color+kind (or TargetFilter) count 条件追加 (要 engine 変更、additive) |
+| ~~B08004 / B08004P (stun cost コナン)~~ | ✅ `removeColorAtLeast.cardKind:'character'`と`stunChar`は出荷済。Wave175で自分のactive灰原哀限定、黒イベント非計上、owner相対costを認定 | ✅ 解消 |
 | B08019 (partner-area declare, 非MR) | a2「この能力はパートナーエリアでも宣言できる」だが `scope` 単値で `on-scene`+`on-partner-area` 併記不可。非MR char は partner-area 不達 → on-scene のみでは under-faithful。加えて「&」名・cutin の複合 | scope 複数値 (array) 対応 or 該当 char の partner-area 到達経路確定 |
 
 ## wave novel-0624 由来 (2026-06-24)
@@ -792,7 +792,7 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 | B07008 (小嶋元太) | (1) 手札カードの per-count level 減 (cross-field UNION count[cardName 阿笠博士 + trait 少年探偵団] dyn 無、$self.sceneCardName 無) (2) in-hand level modifier (同上) | per-count union dyn + hand-level modifier (engine) |
 | B07013 (event 予告状) | sequence の chain-gate continuation 内 $picked carrier-reuse (un-stun を同一 picked stun-char に2回) = 最深 nesting。human dispatch path で rider 喪失の既知 false-green class (BUG-130/158)、要 human-path probe (+ event closure) | carrier-reuse human-path 実証 or event closure |
 | B07096 (ウォッカ) | 突撃[レベル4以下のキャラ] = filtered-突撃 variant (namedExceptionAllowed は exact-string only、組込み target filter付き突撃 grant 不可) + removed-char level filter trigger | filtered-keyword grant (engine) |
-| B08002 (コナン&灰原) | 「リムーブしたキャラのレベルと同じ枚数 mill」= removed-char-stat 動的 mill count (mill は静的 n、evalDyn placeholder に sceneRemove-char level root 無) | removed-char-level dyn (engine) |
+| ~~B08002 (コナン&灰原)~~ | ✅ `sceneRemove`の実効level snapshotと`$removed.level` dynは出荷済。Wave174で増減後level、短デッキ、refresh停止を認定 | ✅ 解消 |
 | B08006 (小嶋元太) | (1) cost「手札公開+選んだ青キャラの下に重ねる」= reveal+stack-under-chosen-host cost 不在 (2) hirameki「アクション中のキャラ」= action-context candidate filter 不在 | stack-cost + action-context targeting (engine) |
 | B08019 (大岡紅葉&伊織無我) | cross-side set-card removal の per-side quota (合わせて2枚・各side1枚) + aggregate-conditional draw primitive 不在 | per-side-quota scope-array (engine) |
 | B08041 (高橋良一) | a2 cost で除去した裏向きセットカードの kind(char/event) 分岐 = cost-removed-card-kind conditional 不在 (PayResult を effect ctx に渡さない) | cost-removed-card-kind branch (engine) |
@@ -1060,7 +1060,7 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
 
 出荷済 = atom `bindPick` (pick-only bind、preamble writeback 依存) + filter `hasFaceDownSetCards` + charRemoveSetCard `faceDownOnly` arg / hook `enter:group` + TargetQuery `fromGroup` + gate ctx への emit bindings 貫通 + 凍結 bindings shallow-copy (stack.ts/triggered.ts) / mutate.scene `toStack` (非リムーブ離場、**MR 非redirect** = B09048 公式Q&A) + charStackCard `fromSelf` / cost `sceneStackUnderSelf`・`handStackUnder` / TargetQuery `perSideMax` (resolve validate + chooseAiPick greedy + pending 伝播) / ContinuousModifier `grantFilteredAssault` + read.char.filteredAssaultKeywords + action.ts namedExceptionAllowed 橋渡し (**bundled fix = BUG-168**、smoke re-baseline winsA 472) / opponentRestrict `remove|sleep|stun` + read.char.charProtectedFrom (per-target、on-set-host rider walk) + atomSceneRemove/SetState narrow-gate。exemplar **B08035・B01012・B06008/P・B09048・B08006・B07096・B05041/P** (9 printings)。
 
-- ★**DEFER: B08003 阿笠博士** (r83 第2 exemplar) — cost「このキャラの下に重なっているカードを3枚リムーブする」+ effect「相手はこのコストによってリムーブされたキャラの中から1枚選ぶ」は **stacked card の identity 不在** (SceneCharacter.stackedCards = number のみ、離場時 'back-card' placeholder) で表現不可。stacked-identity 化 = GameState 形状変更 (W6 級)。加えて opp-chooser pick + cost bind 伝播も未配線。設計 workflow の「removeSetCard cost に bind」案は **セット≠重ね (rules/16) の混同で誤り** — 採用しなかった。
+- ★~~**DEFER: B08003 阿笠博士**~~ — ✅ `stackedCardIds` identity、`removeStackedCards` costPaid、`opp-of-owner` chooser、cost group filter、scene switch continuationは出荷済。Wave174でdistinct-name、直前switch victim、満場switch、parent tail→entrant enter順を認定。
 - ★**DEFER: B08019 大岡紅葉＆伊織無我** (r84 exemplar) — perSideMax engine 3経路は出荷済だが、**scene PA multi-pick の human UI が単発 dispatch collapse** (B02033/B07031/B07055 の「合わせて2枚」と同型の pre-existing gap — SceneArea は multi 収集を持たない)。partial 禁止 → UI multi 収集 + perSideMax disabled-state 配線と同時に card-phase で author。CardListModal への perSideMax disabled 配線も consumer 不在につき同時期へ。
 - ★**DEFER: B08074 降谷零** (r62 第2候補) — 「〚特徴〛を1つ指定し」の trait-declare 宣言機構 + 捜査 bind 集合の指定特徴一致 **枚数** count evaluator (boundAnyMatchesFilter は bool) が不在。backlog の soleUnlock=2 は誤り (実質1)。新規 row「trait-declare + revealed-count carrier」として W5/W6 で起票。
 - ★**DEFER: B06005 阿笠博士 a1後段/a2** (r5 第2候補) — a1「重ねたキャラのレベルの合計以下」= bound 集合 levelSum dyn 不在 / a2「重なっているカードを2枚までそのキャラの下に重ねる」= host 間 stackedCards 転送 verb 不在 (scene-source とは別操作)。
@@ -1475,8 +1475,8 @@ UI 基盤 (partnerMR source 列挙 + PA-MR tile + flows 解決) は出荷済。�
   候補列挙は zone 配列対応済だが **mutate 側 splice に partner-area 分岐が無い**。additive 1 点
 - **cluster 2: toPartnerArea の pick 対応** (B07030/B07061): 現 verb は self-only。remove→PA / PA→現場の
   pick 型変種。additive
-- **cluster 3: removed-card static snapshot root** (B08002 level / B09110 cardName 配列): `$discarded.*`
-  同型の「リムーブしたカード」参照 root 不在。B09109 は revealFromHand costPaid に cardName 1 行追加のみ
+- **cluster 3: removed-card static snapshot root**: B08002 levelは`$removed.level`で解消済。
+  残りB09110 cardName配列のみ。B09109はrevealFromHand costPaidにcardName 1行追加のみ
 - 単発: B07001 (charSetTurnEffect 経路は解禁済 — 再 ground 要) / B08019 (scope 配列) / B09027
   (cost kind:'choice' の UI ブランチ選択 modal — flows 3.7 effect-choice の cost 版) / B09110 / B09055
 - BUG-154 (mutate 層 PA-MR 非解決) は本 batch 出荷分では非該当を実測済。「PA 発動 + 自身 mutate」型が

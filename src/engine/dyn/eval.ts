@@ -9,8 +9,8 @@
 //   - $dyn.X — from ctx.dyn[X] (pre-computed by parent effect)
 //   - $pick — placeholder for target-pick result, NOT evaluable here
 //
-// Supports simple arithmetic: $dyn.X * 1000, $self.ap + 100
-// Left-to-right precedence (no parens). TODO Phase 5: parentheses / precedence if needed.
+// Supports arithmetic with standard precedence and parentheses:
+// $dyn.X * 1000, $self.ap + 100, ($self.sceneCount + $self.oppSceneCount) * 2.
 // SECURITY: does NOT use eval() or new Function().
 
 import type { GameState } from '@/engine/types';
@@ -341,6 +341,13 @@ function resolveSelf(state: GameState, rest: string[], ctx: EffectCtx, original:
   if (prop === 'fileCount') {
     const side = ctx.source.player;
     return state.players[side].file.length;
+  }
+  // B07104: total scene count is evaluated after its preceding optional
+  // removal/grant clauses, then multiplied into one aggregate mill.  A single
+  // mill owns the short-deck refresh boundary and cannot continue post-refresh.
+  if (prop === 'sceneCount') {
+    const side = ctx.source.player;
+    return state.players[side].scene.length;
   }
   // engine additive (2026-06-29): $self.oppSceneCount — 相手 (ctx.source.player の対戦相手) の現場キャラ枚数。
   // B08086 テキーラ「相手の現場にいるキャラ1枚につき AP+2000」継続修飾の dyn 足場 (rules/15 §常時有効型)。

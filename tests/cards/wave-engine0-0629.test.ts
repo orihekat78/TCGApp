@@ -227,9 +227,11 @@ describe('B09056', () => {
   it('a1 sequence: sceneSetState sleep → sceneRemove Lv8以下 → printed trace choice', () => {
     expect(findArgs(a1().effect, 'sceneSetState')).toMatchObject({ uid: '$self', state: 'sleep' });
     expect(findArgs(a1().effect, 'sceneRemove')).toMatchObject({ player: 'self', max: 1, side: 'either', cause: 'effect', filter: { levelMax: 8 } });
-    // 痕跡2択: option0=sceneEnter(remove黒Lv3 sleep), option1=forEach opp-scene mill2
+    // 痕跡2択: option0=sceneEnter(remove黒Lv3 sleep), option1=opp-scene count×2 aggregate mill
     expect(findArgs(a1().effect, 'sceneEnter')).toMatchObject({ player: 'self', from: 'remove', max: 1, viaEffect: true, enterSleep: true, filter: { color: '黒', levelMax: 3, kind: 'character' } });
-    expect(findArgs(a1().effect, 'mill')).toMatchObject({ player: 'opp', n: 2 });
+    expect(findArgs(a1().effect, 'mill')).toMatchObject({
+      player: 'opp', n: { dyn: '$self.oppSceneCount * 2' },
+    });
   });
   it('a1 listener gate: 事件{赤,黒}+partner赤ならself状態に依存せずtrue / printed gate不一致はfalse', () => {
     const cond = a1().condition as Condition;

@@ -277,8 +277,8 @@ describe('PR264 宮野明美 — 突撃[キャラ]印字 + 解決編lvlDelta+2 +
 });
 
 // ───────────────────────── B07104 / B07104P ミステリーコースター ─────────────────────────
-describe('B07104 ミステリーコースター — partnerColor黒 event: sceneRemove + 突撃grant短縮形 + forEach mill', () => {
-  it('a1 構造: partnerColor黒 + event-use + sequence[sceneRemove, charGrantKeyword(短縮形), forEach mill]', () => {
+describe('B07104 ミステリーコースター — partnerColor黒 event: sceneRemove + 突撃grant短縮形 + aggregate mill', () => {
+  it('a1 構造: partnerColor黒 + event-use + sequence[sceneRemove, charGrantKeyword(短縮形), aggregate mill]', () => {
     const a1 = ab(B07104, 'a1');
     expect(a1.condition).toMatchObject({ kind: 'partnerColor', color: '黒' });
     expect(a1.trigger).toMatchObject({ hook: 'effect:declared', selfOnly: true });
@@ -289,16 +289,16 @@ describe('B07104 ミステリーコースター — partnerColor黒 event: scene
     expect(grant).toMatchObject({ player: 'self', kw: '突撃', scope: 'turn', max: 1, side: 'either' });
     expect(grant.uid).toBeUndefined();     // ← explicit-$pick carrier 回帰防止
     expect(grant.target).toBeUndefined();
-    // clause3 forEach over両現場 → mill 2
-    expect(findArgs(a1.effect, 'mill')).toMatchObject({ player: 'self', n: 2 });
-    const fe = (a1.effect as { steps: Record<string, unknown>[] }).steps.find((x) => x.kind === 'forEach') as Record<string, unknown>;
-    expect(fe.over).toMatchObject({ kind: 'all', query: { area: 'scene', side: 'either' } });
+    // clause3 両現場合計×2を一括 mill (refresh後の再反復を禁止)
+    expect(findArgs(a1.effect, 'mill')).toMatchObject({
+      player: 'self', n: { dyn: '($self.sceneCount + $self.oppSceneCount) * 2' },
+    });
   });
-  it('clause 順序: sceneRemove(0) → charGrantKeyword(1) → forEach(2) (印字順保持)', () => {
+  it('clause 順序: sceneRemove(0) → charGrantKeyword(1) → aggregate mill(2) (印字順保持)', () => {
     const steps = (ab(B07104, 'a1').effect as { steps: Record<string, unknown>[] }).steps;
     expect(steps[0].verb).toBe('sceneRemove');
     expect(steps[1].verb).toBe('charGrantKeyword');
-    expect(steps[2].kind).toBe('forEach');
+    expect(steps[2]).toMatchObject({ kind: 'atom', verb: 'mill' });
   });
   it('B07104P は B07104 と同型 (effect/condition deep-equal、matcher は closure ゆえ別参照)', () => {
     // matcher は arrow closure (参照比較で不一致) ゆえ effect / condition / scope のみ deep-equal
