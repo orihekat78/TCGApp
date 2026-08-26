@@ -97,6 +97,7 @@ export function findFlipFaceUpCost(cost: Cost | undefined): FlipFaceUpCost | nul
 
 type RemoveStackedCardsCost = Extract<Cost, { kind: 'removeStackedCards' }>;
 type RemoveFromHandCost = Extract<Cost, { kind: 'removeFromHand' }>;
+type RevealFromHandCost = Extract<Cost, { kind: 'revealFromHand' }>;
 export function findRemoveStackedCardsCost(cost: Cost | undefined): RemoveStackedCardsCost | null {
   if (!cost) return null;
   if (cost.kind === 'removeStackedCards') return cost;
@@ -152,6 +153,31 @@ export function findCharacterStateCost(
   let cursor = 0;
   const visit = (node: Cost): CharacterStateCost | null => {
     if (node.kind === 'sleepChar' || node.kind === 'stunChar') return node;
+    if (node.kind === 'pay') {
+      for (const item of node.items) {
+        const found = visit(item);
+        if (found) return found;
+      }
+      return null;
+    }
+    if (node.kind !== 'choice') return null;
+    const selected = choices?.[cursor++];
+    return selected !== undefined && Number.isInteger(selected) && selected >= 0 && selected < node.items.length
+      ? visit(node.items[selected]!)
+      : null;
+  };
+  return cost ? visit(cost) : null;
+}
+
+/** Return the reveal-from-hand item on the already selected cost-choice path. */
+export function findRevealFromHandCost(
+  cost: Cost | undefined,
+  choicePath?: ChoicePath,
+): RevealFromHandCost | null {
+  const choices = normalizedChoicePath(choicePath);
+  let cursor = 0;
+  const visit = (node: Cost): RevealFromHandCost | null => {
+    if (node.kind === 'revealFromHand') return node;
     if (node.kind === 'pay') {
       for (const item of node.items) {
         const found = visit(item);

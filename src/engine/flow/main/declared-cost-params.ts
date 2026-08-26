@@ -10,6 +10,7 @@ export function declaredCostParamsToDyn(costParams?: AbilityCostParams): Record<
     'sleepChar',
     'stunChar',
     'removeFromHand',
+    'revealFromHand',
     'sceneToDeckBottom',
     'removeAreaToDeckBottom',
     'partnerAreaRemove',

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `d4d04d37588a`
+> Source hash: `39a4452d2630`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,20 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# QA adjudication Waves186-187
+
+- Moved sixteen CT-P08/CT-P09 official Q&A rows from
+  `test-missing/test-gap` to `matched/aligned`; coverage is now 2140/2964.
+- Added public owner-mirror proofs for dynamic event sequencing, inactive
+  printed ability presence, MR replacement, simultaneous order, refresh-safe
+  FILE-name snapshots, reveal origin, bond-loss timing, and FILE flip no-op.
+- Added exact human `revealFromHand` cost selection and cost-completion public
+  presentation while preserving AI/legacy fallback.
+- Fixed declared hand-reveal reactions to wait for the current effect without
+  changing ordinary cost-trigger owner ordering; added rollback and B10006
+  horizontal regression proof.
+- Retired stale B08093/B09003/B09004/B09005 DEFER records and MR timing comment.
 
 # QA adjudication Waves184-185
 

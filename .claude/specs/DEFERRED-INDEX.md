@@ -177,9 +177,9 @@ opus 4-lens 敵対 review = 全 ship:true / blocker 0。
 
 | companion (未実装、follow-up wave) | 解禁待ちカード |
 |------|------|
-| ~~**ability-presence filter** (TargetFilter「【現場リムーブ時】を持つ」)~~ | ✅ `defHasKeyword` 出荷済み。B08082はWave185でinactive印字能力の公開候補化をpublic認定。B08093は別QA wave |
+| ~~**ability-presence filter** (TargetFilter「【現場リムーブ時】を持つ」)~~ | ✅ `defHasKeyword` 出荷済み。B08082はWave185、B08093はWave186でinactive印字能力の候補化をpublic認定 |
 | **$revealed 色読み condition** (公開カードの色分岐。bound は {cardId}[] 足場済、boundMatchesFilter は bound[0] のみ) | B07022 第2句 |
-| **UI awaiting-pick label + AI pick heuristic** (非ブロッカー、removeSetCard UI picker と同じ defer) | B07022 (atom pick) / B08093 (cost pick)。B08082 human public pickerはWave185で認定済み |
+| **UI awaiting-pick label + AI pick heuristic** | B07022 atom pickのみ残。B08093 cost pickはWave186でexact hand occurrence選択とcost公開windowを出荷・public認定 |
 
 ※ handReveal 単独ではカード出荷不可。各カードは上記 companion が残 gate。
 
@@ -242,10 +242,10 @@ relative-AP (B09096) は本 session で **stale 訂正** (engine変更0 と判�
 | auraGrant (triggered 付与) | 常時 aura で他キャラに **triggered 能力テキスト**を付与 (B09024 a1「他キャラに【現場リムーブ時】を与える」) | **✅ 解消 (2026-07-13, uncommitted)**: `triggeredAbilityAura` reader は付与元UIDを合成ability IDへ含め、各abilityを一度だけqueueする。batch remove の発火時点snapshotも実装。 |
 | partner-area 構造 | ビッグジュエル B07045 / MR 列挙 B09047 / MR能力①② (rules/18) | **Phase1 engine core 実装済 (2026-06-23, engine/mr-partner-area-core)**: partnerAreaMR slot + MR①②(全 leave verb / enter-removal) + PA-MR reader spine (byUid/continuous/declared/auto活性) + canDeclaredAbility PA scope gate。4-lens 敵対review=REVISE 反映。残: Phase2=UI / 3=AI / 4=card wave (SOLE 15)。未解決4件+暫定5件=[BUG-154](../bugs/BUG-154.md)。設計=[design](engine-mr-partner-area-design.md)+[cohort](engine-mr-partner-area-cohort.md)。**ビッグジュエル列挙: wave-12 (2026-07-02) で PA 一般カード枠 spine (partnerAreaCards + toPartnerArea + candidates 列挙) 出荷済** — 残 = PA→remove 移動 verb (B07037) + PA 読み Condition (B07045/PR263)、下段 wave12-pa-cards 節参照 |
 | ~~「パートナーエリアでも宣言できる/発動する」句~~ | B07079/P・B08032/P・B09054/P + B07093/B05066 | **✅ 解消**: `scope:'on-partner-area'` を各CardDefへ配線済み。Wave178でB08032の現場自己選択も公開認定 |
-| name-designation | 「カード名を1つ指定し」UI+条件 (B09003/B09108/B09111/B09052) | 宣言 UI surface + designated-name 比較 condition |
+| name-designation | B09111/B09052の個別残課題 | B09003/B09108/PR105の宣言UI・比較条件は出荷済み。Wave187でB09003のrefresh後name snapshotをpublic認定 |
 | ~~multi-card sceneEnter~~ | **✅ 解消 (2026-06-15 cluster14)**: sceneEnter に cardIds:'$pick.cardIds' 契約 + switchRemoveUids[] (現場満杯 switch) を additive 拡張。distinctNames AI dedup + skipResolvesAtom (0枚でも後続 step 解決)。B09010/P + PR042/PR046 計 4 printings 出荷 | 完了 — branch engine/wave2-cluster14-multi-sceneenter。残 B01022 (multi-match deckRevealUntil) / B05117 (persistent set-granted leave ability) は別 gate |
 | ~~nested filter dyn~~ | **✅ 解消 (2026-06-15 cluster12)**: pick query filter 内の {dyn} (levelMax 等) を substituteAtomPick chokepoint で解決。B08060 + 「小さくなった名探偵」family 15 printings 出荷。残 B05102/B09052 は **別 gate** (B05102=hirameki self-to-hand / B09052=rename verb + name-designation) のため対象外 | 完了 — branch engine/wave2-cluster12-nested-filter-dyn |
-| until-N discard / reveal verb 等 | B07076/B08093 a1 | **B08047 a2は`removeFromHandDownTo`で解消しWave179認定**。B07100もWave174で解消。残=B07076 effect variant / B08093 ability-presence filter |
+| until-N discard / reveal verb 等 | B07076 | **B08047 a2は`removeFromHandDownTo`で解消しWave179認定**。B07100はWave174、B08093 ability-presence/reveal costはWave186で解消。残=B07076 effect variant |
 
 ## Task A green候補 wave#2 defer (2026-06-12, cards/wave2-handauthor)
 
@@ -1050,7 +1050,7 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
 
 - ★~~**DEFER: B08078 ジン**~~ — ✅ `removeFilterAtLeast`、keyword filter、`invokeLeaveToRemoveOfCard`を一括出荷済み。Wave184でnested optional、無効能力no-op、draw起因refresh後のbind保持をpublic認定。
 - ★**latent gap (engine-wide、W3 で実測発見)**: **cross-side 短縮形 pick の side/chooser 不整合** — buildShortFormPick は chooser (resolvePlayer 済の絶対値) を query.side に literal 代入するが、sidesForQuery は side を **ctx.source.player 相対**で解釈する。source と手札所有者が異なる短縮形 pick (「相手は手札から1枚選んでリムーブ」型) では候補が source 側に化ける / pending 適用時の再解釈でも反転。**現出荷カードは全て source=owner の同側 pick で未踏** (相手手札リムーブは B01077 discardRandom = pick 無し)。相手選択型 discard カード出荷時に buildShortFormPick の side を相対値で渡すよう要修正。
-- **B09004 a1 の「（現在の効果を解決してからリムーブする）」**は rules/25 未解決効果 queue の確認的注記として実装 (専用機構なし)。公開→即 discard の同一効果内 timing を厳密に問う裁定が将来出たら再確認。
+- ~~**B09004 a1 の「（現在の効果を解決してからリムーブする）」**~~ — ✅ Wave187でcost公開反応を宣言効果の`declaredBatch`へ帰属させ、現在の効果完了後に解決する順序をpublic認定。発動後の絆消失でも反応は維持。
 - **hand:removed は cutin 使用 discard でも emit** (byPlayer=使用者)。「イベント/カットインの使用によるリムーブ」を区別する将来カードは attribution 拡張 (viaUse marker) で対応。
 - **混成 review nits (megaw3、両 lens SHIP_WITH_NITS 0-blocker、latent 記録)**:
   (1) invokeLeaveToRemoveOfCard の fabricated payload は {uid, cardId, player, invoked:true} のみ — removedCharMatches 系 matcherCondition (side/byUid 要求) を持つ【現場リムーブ時】は invoke 経由で常に false (現4カード B04004/B05032/B07097/B09071 は全て cause:'contact-ap' 要求 = 手札 invokeシナリオでは文言上も正しく不発)。Wave184はcondition-false発動選択→no-opを認定済み。将来payload依存consumer追加時は再確認。
@@ -1303,7 +1303,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | ~~B08008~~ | ✅ 解消: picked blue host stack + gateOnEmpty + actionTargetsActive rider |
 | ~~B08057~~ | **✅ 解消 (2026-07-10 S2)**: removeAreaToDeckTop bindKey opt + boundCountCompare cond + deckBottomReorderBound atom (~60行 additive)。B08057 出荷 |
 | B08068 | levelMax = cost-revealed 枚数 + 盤面計数の合成 dyn 不在 |
-| B09005 | revealFromHand cost の公開カード名を effect 側で参照する $costRevealed bind 不在 + 相手 FILE top を表向きにする verb 不在 |
+| ~~B09005~~ | ✅ `costRevealedMatches` + `fileFlipTop`出荷済み。Wave187で既に表向きの最上位をno-opとし、下の裏向き札へ進まないことをpublic認定 |
 | B09019 | 「この効果によってキャラが5枚登場した場合」の effect 内登場数カウンタ不在 |
 | B09027 | VERIFY_NG: cost kind:'choice' の human 選択 UI 不在 (pay.ts は最初の payable branch 自動選択、costChoice 供給経路 0。shipped exemplar 0) |
 | B09055 | sceneEnter の partner-area source 不在 + 「PAかリムーブ」2 zone union pick 不在 |

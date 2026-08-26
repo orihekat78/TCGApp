@@ -28,6 +28,10 @@ import { mutate } from '../../mutate/index.js';
 import { declaredCostParamsToDyn } from './declared-cost-params.js';
 import { _clearPendingSetCardReplacementSide } from '../../effect/pending-state.js';
 import {
+  _restorePendingPublicHandRevealSide,
+  _snapshotPendingPublicHandRevealSide,
+} from '../../effect/atom-handlers/_shared.js';
+import {
   completeEffectCausalTrace,
   currentEffectCausalCorrelationEventId,
   startStandaloneCausalTrace,
@@ -53,6 +57,8 @@ export interface AbilityCostParams {
   stunChar?: { uids: string[] };
   /** Exact physical hand occurrences selected for a remove-from-hand cost. */
   removeFromHand?: { indices: number[] };
+  /** Exact physical hand occurrences selected for a reveal-from-hand cost. */
+  revealFromHand?: { indices: number[] };
   sceneToDeckBottom?: { uids: string[] };
   removeAreaToDeckBottom?: { ids: string[] }; // cluster4 (2026-06-14)
   partnerAreaRemove?: { ids: string[] };
@@ -101,6 +107,7 @@ export function activateDeclaredAbility(
     useDeclaredAbility(state, uid, abilId);
     return;
   }
+  const publicHandRevealBeforeActivation = _snapshotPendingPublicHandRevealSide();
   // Physical cost selection may use the deterministic engine fallback, but a
   // set-card ability source is never inferred: its exact physical IDs are part
   // of the public authorization witness.
@@ -155,6 +162,7 @@ export function activateDeclaredAbility(
   const rootEventId = inheritedRootId ?? causalTrace?.rootEventId;
   try {
     withEffectCausalCorrelation(state, rootEventId, () => {
+      const pendingCountBeforeCost = state.pendingEffects.length;
       if (plan?.kind === 'alternative') {
         const removed = mutate.scene.removeToRemove(state, plan.providerUid, 'cost');
         if (removed.deferred || removed.prevented || removed.removed.uid !== plan.providerUid || !removed.removed.cardId) {
@@ -165,7 +173,39 @@ export function activateDeclaredAbility(
         engineCost.pay(state, ability.cost, ctx);
         ctx.costPaid ??= {};
       }
+      // A hand-reveal cost can release observers before the declared effect
+      // exists. Only those reactions carry the printed/current-effect-first
+      // precedence; other cost triggers retain normal simultaneous owner order.
+      const costTriggeredEffects = state.pendingEffects.splice(pendingCountBeforeCost);
+      const handRevealReactions = costTriggeredEffects.filter(
+        entry => entry.triggeredBy.hook === 'hand:reveal',
+      );
+      state.pendingEffects.push(...costTriggeredEffects.filter(
+        entry => entry.triggeredBy.hook !== 'hand:reveal',
+      ));
       useDeclaredAbility(state, uid, abilId, ctx);
+      if (handRevealReactions.length > 0) {
+        const declaredEntryIndex = state.pendingEffects.findIndex((entry, index) => (
+          index >= pendingCountBeforeCost
+          && entry.triggeredBy.hook === 'declaredAbility'
+          && entry.source.uid === uid
+          && entry.source.abilityId === abilId
+        ));
+        const declaredEntry = declaredEntryIndex >= 0
+          ? state.pendingEffects[declaredEntryIndex]
+          : undefined;
+        if (declaredEntry?.declaredBatch !== undefined) {
+          for (const reaction of handRevealReactions) {
+            reaction.declaredBatch = declaredEntry.declaredBatch;
+            reaction.declaredReaction ??= { abilityId: reaction.source.abilityId ?? '' };
+          }
+        }
+        state.pendingEffects.splice(
+          declaredEntryIndex >= 0 ? declaredEntryIndex + 1 : pendingCountBeforeCost,
+          0,
+          ...handRevealReactions,
+        );
+      }
     });
     completeEffectCausalTrace(state, causalTrace, found.player);
   } catch (error) {
@@ -177,6 +217,7 @@ export function activateDeclaredAbility(
       { type: 'state', state: 'cancelled' },
     );
     _clearPendingSetCardReplacementSide();
+    _restorePendingPublicHandRevealSide(publicHandRevealBeforeActivation);
     throw error;
   }
 }

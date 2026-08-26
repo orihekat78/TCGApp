@@ -268,7 +268,7 @@ describe('public hand reveal window', () => {
     }
   });
 
-  it('never opens a public window for a reveal-from-hand cost', () => {
+  it('opens a cost-completion presentation for only the selected hand card', () => {
     const state = createEmptyGameState();
     state.players.self.hand = ['COST-CARD'];
     const cost: Cost = {
@@ -277,12 +277,15 @@ describe('public hand reveal window', () => {
     };
 
     pay(state, cost, {
-      source: { player: 'self', cardId: 'SOURCE', area: 'scene' },
+      source: { player: 'self', cardId: 'SOURCE', abilityId: 'a1', area: 'scene' },
       bindings: {},
       picked: [{ kind: 'card', cardId: 'COST-CARD', player: 'self', area: 'hand', index: 0 }],
     });
 
-    expect(_drainPendingPublicHandRevealSide()).toBeNull();
+    expect(_drainPendingPublicHandRevealSide()).toMatchObject({
+      owner: 'self', audience: 'all', cardIds: ['COST-CARD'], lifetime: 'presentation',
+      source: { cardId: 'SOURCE' },
+    });
   });
 
   it('does not serialize revealed card IDs into the game log', () => {

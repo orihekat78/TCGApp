@@ -17,6 +17,7 @@ import {
 import { useGameStateStore } from '@/ui/state/store';
 import { useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
 import { useConfirmationStore } from '@/ui/hooks/useConfirmation';
+import { useHandCostPicker, useHandCostPickerStore } from '@/ui/hooks/useHandCostPicker';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { mutate } from '@/engine/mutate/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
@@ -78,12 +79,46 @@ beforeEach(() => {
   useGameStateStore.setState({ gameState: null });
   useTargetPickerStore.getState()._reset();
   useConfirmationStore.getState()._reset();
+  useHandCostPickerStore.getState()._reset();
   _resetUidCounter();
   resetDefRegistry();
   registerCardDef(makeCard('PS', { kind: 'partner' }));
 });
 
 describe('Phase 8.8c: ability cost in confirm modal', () => {
+  it('revealFromHand pauses for an exact human occurrence and pays the selected second card', async () => {
+    const revealCost: Cost = {
+      kind: 'revealFromHand', n: 1,
+      target: {
+        kind: 'pick', query: { area: 'hand', side: 'self', filter: { color: '青' } },
+        n: { min: 1, max: 1 }, chooser: 'self',
+      },
+    };
+    registerCardDef(makeCard('RevealSource', { abilities: [declAbil('a1', revealCost)] }));
+    registerCardDef(makeCard('BLUE_A', { colors: ['青'] }));
+    registerCardDef(makeCard('BLUE_B', { colors: ['青'] }));
+    registerCardDef(makeCard('RED_DECOY', { colors: ['赤'] }));
+    const state = produce(setupBase(), draft => {
+      mutate.scene.enter(draft, 'self', 'RevealSource', { active: true });
+      draft.players.self.hand = ['BLUE_A', 'BLUE_B', 'RED_DECOY'];
+    });
+    useGameStateStore.setState({ gameState: state });
+    const flow = runDeclaredAbilityFlow({ player: 'self' });
+    await pickAndConfirmPicker(state.players.self.scene[0]!.uid);
+    await acceptConfirmation();
+    expect(useHandCostPickerStore.getState().current).toMatchObject({
+      candidates: [{ index: 0, cardId: 'BLUE_A' }, { index: 1, cardId: 'BLUE_B' }],
+    });
+    expect(useGameStateStore.getState().pendingPublicHandReveal).toBeNull();
+    useHandCostPicker().confirm([1]);
+    expect(await flow).toEqual({ ok: true });
+    expect(useGameStateStore.getState().pendingPublicHandReveal).toMatchObject({
+      cardIds: ['BLUE_B'], lifetime: 'presentation',
+    });
+    expect(useGameStateStore.getState().gameState?.players.self.hand)
+      .toEqual(['BLUE_A', 'BLUE_B', 'RED_DECOY']);
+  });
+
   it('ability with no cost: modal body says "コスト: 無し"', async () => {
     registerCardDef(makeCard('NoCost', { abilities: [declAbil('a1')] }));
     const s = produce(setupBase(), (d) => {

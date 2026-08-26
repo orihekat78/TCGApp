@@ -13,22 +13,25 @@
 
 ## Next
 
-- Waves184-185 move eighteen items to matched. Coverage is 2124 matched / 840
-  test-missing / 2964 total; 738 exact groups remain, including 636 singletons.
-- Production CardDefs/engine already matched all rulings. New public proofs cover
-  ordered options, cost-after-state, refresh-safe invoke, forced event picks,
-  continuous AP, naming state, and full-scene switch.
-- New tests 38, horizontal 294, TypeScript, QA, smoke 1000, and Sol review pass.
-  Full Vitest functional lane has 13812 passes; release-only clean/junction gates
-  remain environment-bound. Playwright's stale B08034 fixture was corrected and
-  its desktop/mobile rerun is 4/4.
+- Waves186-187 move sixteen items to matched. Coverage is 2140 matched / 824
+  test-missing / 2964 total; 722 exact groups remain, including 620 singletons.
+- BUG-381 adds exact human `revealFromHand` occurrence selection and a public
+  cost-completion presentation. Invalid/duplicate indices reject; AI/legacy
+  keeps deterministic fallback.
+- BUG-382 assigns only `hand:reveal` cost reactions to the declared effect's
+  batch. B05088/B07034 retain ordinary cost-trigger owner order; B09004/B10006
+  wait for the current effect. Failed activation restores the reveal FIFO.
+- Wave public 24, focused 130, TypeScript, full lint, QA, functional full Vitest
+  13734, smoke 1000, Playwright full 477, and reveal-cost browser 2/2 pass.
+- Release-only dirty-worktree and pnpm-junction `jose` gates remain isolated;
+  do not relax the private-hosted security allowlist.
 - Generic policy-free sequence pre-walk can still preselect a later PA target
   before an earlier PA mutation. B07104 heuristic and human paths avoid it;
   investigate this engine-wide ordering risk when a future card exposes it.
-- Waves186-187 start with sixteen ungrounded rows across B08092-B09005; re-ground
-  before interpreting the hashes.
+- Waves188-189 start with sixteen B09006-B09024 rows; B09016/B09022/B09023/
+  B09024 require exact grounding before test authoring.
 - Official sync drift remains separate: PR322 and changed B04018/B04018P/
   B06103P Q&A require re-queueing.
-- At about nine exact groups per wave, about 82 waves remain through roughly Wave267.
+- At about nine exact groups per wave, about 80 waves remain through roughly Wave267.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

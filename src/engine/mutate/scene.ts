@@ -102,7 +102,7 @@ function findChar(s: GameState, uid: string): { char: SceneCharacter; player: Pl
  * 離脱方法不問 (リムーブ/移動/効果)。「代わりに」ではない → leave トリガは発火する設計のため、
  * 呼出元は scene splice + (該当する)各 area への push + emit を済ませた **後** に本判定を呼ぶ。
  *
- * 未解決 #1 (要公式Q&A) の暫定保守解: 【現場リムーブ時】hook を先に解決 (char は一旦 destination に
+ * B08093公式Q&Aで確定: 【現場リムーブ時】hook を先に解決 (char は一旦 destination に
  * 在席) → その後 PA へ移す (rules/18 「離れた先のエリアへ一度置かれてから即座に」)。refresh 二重計上を
  * 防ぐため、呼出元は redirect=true のとき destination から当該 cardId を取り除く (removeToRemove は
  * push→emit→pop、他 verb は push 自体を skip)。

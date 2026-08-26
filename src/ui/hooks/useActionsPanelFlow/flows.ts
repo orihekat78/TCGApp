@@ -25,7 +25,7 @@ import { sceneCap } from '@/engine/read/scene-cap.js';
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
 import { FILE_CARD_BACK_PLACEHOLDER, type Candidate, type Effect } from '@/engine/types';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
-import { costToText, findFlipFaceUpCost, findRemoveFromHandCost, findRemoveStackedCardsCost, findRemoveSetCardCost, findCharacterStateCost, findChoiceCostAtPath, completeCostChoicePaths, findDeclareNameAtom, choiceOptionLabel, makeAbilityCtx } from './cost.js';
+import { costToText, findFlipFaceUpCost, findRemoveFromHandCost, findRevealFromHandCost, findRemoveStackedCardsCost, findRemoveSetCardCost, findCharacterStateCost, findChoiceCostAtPath, completeCostChoicePaths, findDeclareNameAtom, choiceOptionLabel, makeAbilityCtx } from './cost.js';
 import type { Player } from './cost.js';
 import {
   ACTION_CASE_TARGET_OPP,
@@ -608,6 +608,36 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
       || new Set(choice.indices).size !== choice.indices.length
       || choice.indices.some(index => !allowedIndices.has(index))) return { ok: false, reason: 'not-allowed' };
     costParams = { ...(costParams ?? {}), removeFromHand: { indices: choice.indices } };
+  }
+
+  const revealHandCost = findRevealFromHandCost(cost, costParams?.costChoicePath ?? costParams?.costChoice);
+  if (!useAlternativeCost && revealHandCost && owner === 'self' && cardId) {
+    const handState = useGameStateStore.getState().gameState;
+    if (handState === null) return { ok: false, reason: 'no-state' };
+    const allowed = engine.target.candidates(handState, revealHandCost.target, makeAbilityCtx({
+      player: owner, uid: sourceUid, cardId, abilityId: chosenAbilId, area: sourceArea, ...chosenSourceRef,
+    })).filter((candidate): candidate is Candidate & { kind: 'card'; index: number } => (
+      candidate.kind === 'card' && typeof candidate.index === 'number'
+    ));
+    const nMin = typeof revealHandCost.n === 'number' ? revealHandCost.n : revealHandCost.n.min;
+    const rawMax = typeof revealHandCost.n === 'number' ? revealHandCost.n : revealHandCost.n.max;
+    const nMax = Math.min(rawMax, allowed.length);
+    if (allowed.length < nMin) return { ok: false, reason: 'not-allowed' };
+    const choice = await useHandCostPicker().ask({
+      side: owner,
+      sourceName,
+      candidates: allowed.map(candidate => ({ index: candidate.index, cardId: candidate.cardId })),
+      n: nMin,
+      nMax,
+      action: 'reveal',
+    });
+    if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
+    const allowedIndices = new Set(allowed.map(candidate => candidate.index));
+    if (choice.indices.length < nMin
+      || choice.indices.length > nMax
+      || new Set(choice.indices).size !== choice.indices.length
+      || choice.indices.some(index => !allowedIndices.has(index))) return { ok: false, reason: 'not-allowed' };
+    costParams = { ...(costParams ?? {}), revealFromHand: { indices: choice.indices } };
   }
 
   // 3.6) 夜間 W0 (2026-07-11, B09027): cost kind:'choice' (「AかBを1枚リムーブする」択一コスト) の

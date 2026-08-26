@@ -1300,37 +1300,40 @@
     {
       "qaId": "card:B08093:9e01ca22cca2f339265d90808c23c7e3a000b668ee36a95dc5943cc691497765",
       "answerHash": "7a7909ca18ed1c591d3d3b4f18bb35345f0d8f50366b1685c1abdbaf773bd7d1",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08093.ts:115"
+        "src:src/cards/ct-p08/B08093.ts:115",
+        "tests:tests/cards/official-qa/B08092-B08094-completion-public-wave186.test.ts:202",
+        "tests:tests/cards/official-qa/B08092-B08094-completion-public-wave186.test.ts:207",
+        "tests:tests/cards/official-qa/B08092-B08094-completion-public-wave186.test.ts:210"
       ]
     },
     {
       "qaId": "card:B08093:fdb9ef6ae9c47b04e82005efd2265bb2204587a1de82c6b1c1e925446d2c4b8f",
       "answerHash": "77f23bbc83098fce26ac183b84eb7572015fd6964ee09a275ba9dafc09c597a7",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08093.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p08/B08093.ts:1",
+        "tests:tests/cards/official-qa/B08092-B08094-completion-public-wave186.test.ts:243",
+        "tests:tests/cards/official-qa/B08092-B08094-completion-public-wave186.test.ts:248",
+        "tests:tests/cards/official-qa/B08092-B08094-completion-public-wave186.test.ts:250"
       ]
     },
     {
       "qaId": "card:B09003:1fefea11e9f62644d0760810fefb72ce203d027c2194b205a1bb441878975d27",
       "answerHash": "a8bc78d7df2e831c5a763430013c96ded82657fc1167884ae4abb3aa6bff00a6",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09003.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p09/B09003.ts:1",
+        "tests:tests/cards/official-qa/B09002-B09005-completion-public-wave187.test.ts:295",
+        "tests:tests/cards/official-qa/B09002-B09005-completion-public-wave187.test.ts:296",
+        "tests:tests/cards/official-qa/B09002-B09005-completion-public-wave187.test.ts:299"
       ]
     },
     {

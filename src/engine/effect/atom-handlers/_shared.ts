@@ -64,6 +64,51 @@ export type PublicHandRevealSide = {
   source: PublicEffectSource;
 };
 
+export type PendingPublicHandRevealSnapshot = {
+  present: boolean;
+  value: PublicHandRevealSide | PublicHandRevealSide[] | null | undefined;
+};
+
+function clonePublicHandRevealSide(value: PublicHandRevealSide): PublicHandRevealSide {
+  return {
+    ...value,
+    cardIds: [...value.cardIds],
+    ...(value.handSnapshot ? { handSnapshot: [...value.handSnapshot] } : {}),
+    source: { ...value.source },
+  };
+}
+
+/** Snapshot only this FIFO without validating unrelated pending-runtime channels. */
+export function _snapshotPendingPublicHandRevealSide(): PendingPublicHandRevealSnapshot {
+  const root = globalThis as {
+    __pendingPublicHandRevealSide?: PublicHandRevealSide | PublicHandRevealSide[] | null;
+  };
+  const present = Object.prototype.hasOwnProperty.call(root, '__pendingPublicHandRevealSide');
+  const current = root.__pendingPublicHandRevealSide;
+  return {
+    present,
+    value: Array.isArray(current)
+      ? current.map(clonePublicHandRevealSide)
+      : current ? clonePublicHandRevealSide(current) : current,
+  };
+}
+
+/** Restore the exact pre-activation FIFO, including absent-vs-null ownership. */
+export function _restorePendingPublicHandRevealSide(
+  snapshot: PendingPublicHandRevealSnapshot,
+): void {
+  const root = globalThis as {
+    __pendingPublicHandRevealSide?: PublicHandRevealSide | PublicHandRevealSide[] | null;
+  };
+  if (!snapshot.present) {
+    delete root.__pendingPublicHandRevealSide;
+    return;
+  }
+  root.__pendingPublicHandRevealSide = Array.isArray(snapshot.value)
+    ? snapshot.value.map(clonePublicHandRevealSide)
+    : snapshot.value ? clonePublicHandRevealSide(snapshot.value) : snapshot.value;
+}
+
 export function allocatePublicHandRevealToken(s: GameState): string {
   const next = (s.publicHandRevealSeq ?? 0) + 1;
   s.publicHandRevealSeq = next;

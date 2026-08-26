@@ -1993,6 +1993,9 @@ function PlaymatHandCostPickerModal(): JSX.Element | null {
   const expandModal = useCardExpandModal();
   const current = useHandCostPickerStore((s) => s.current);
   if (!current) return null;
+  const nMax = current.nMax ?? current.n;
+  const actionLabel = current.action === 'reveal' ? '公開する' : 'リムーブする';
+  const countLabel = current.n === nMax ? `${current.n}枚` : `${current.n}〜${nMax}枚`;
   const pickCands = current.candidates.map((candidate) => ({
     uid: `hand:${current.side}:${candidate.index}`,
     cardId: candidate.cardId,
@@ -2012,13 +2015,13 @@ function PlaymatHandCostPickerModal(): JSX.Element | null {
         onExpand={expandModal.open}
         pickCands={pickCands}
         pickSessionKey={current}
-        pickBannerText={`${current.sourceName}: リムーブする手札を${current.n}枚選んでください`}
+        pickBannerText={`${current.sourceName}: ${actionLabel}手札を${countLabel}選んでください`}
         onPick={(uid) => {
           const index = parseIndex(uid);
           if (index !== null) useHandCostPicker().confirm([index]);
         }}
         pickNMin={current.n}
-        pickNMax={current.n}
+        pickNMax={nMax}
         onPickMulti={(uids) => {
           const indices = uids.map(parseIndex).filter((index): index is number => index !== null);
           useHandCostPicker().confirm(indices);

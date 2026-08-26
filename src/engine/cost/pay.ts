@@ -25,6 +25,11 @@ import { produce } from '@/engine/produce.js';
 import { cardOccurrenceWitness } from '@/engine/target/card-occurrence.js';
 import { advanceIndexedZoneEpoch } from '@/engine/state/indexed-zone-epoch.js';
 import { resolveCostPlayer } from './player.js';
+import {
+  allocatePublicHandRevealToken,
+  publicEffectSource,
+  queuePendingPublicHandRevealSide,
+} from '@/engine/effect/atom-handlers/_shared.js';
 
 /**
  * Pay a Cost. Mutates the draft in place.
@@ -64,6 +69,25 @@ export function pay(state: GameState, cost: Cost, ctx: EffectCtx): PayResult {
     payInner(state, cost, ctx, result);
     _commitEventJournal(journal);
     journal = null;
+    for (const paid of result.paidItems) {
+      if (paid.kind !== 'revealFromHand') continue;
+      const ids = (paid.details as { ids?: unknown }).ids;
+      if (!Array.isArray(ids) || ids.length === 0 || !ids.every(id => typeof id === 'string')) continue;
+      const source = publicEffectSource(ctx);
+      // Direct engine-cost probes and legacy callers may not identify an
+      // ability. Keep payment/hook semantics, but never enqueue a projection
+      // that cannot pass the persisted public-source schema.
+      if (!source.cardId || !source.abilityId) continue;
+      queuePendingPublicHandRevealSide({
+        owner: ctx.source.player,
+        audience: 'all',
+        cardIds: ids,
+        handSnapshot: [...state.players[ctx.source.player].hand],
+        lifetime: 'presentation',
+        resolutionToken: allocatePublicHandRevealToken(state),
+        source,
+      });
+    }
     return result;
   } catch (error) {
     if (journal !== null) _abortEventJournal(journal);
@@ -672,10 +696,8 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
       // (公開は多いほど利益 = AI fallback 最大公開)。number は従来 pickCandidates と同一挙動。
       const rfhMin = typeof cost.n === 'number' ? cost.n : cost.n.min;
       const rfhMax = typeof cost.n === 'number' ? cost.n : cost.n.max;
-      const targets = selectRangeCostCandidates(state, cost.target, ctx);
-      const ids = targets
-        .filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card')
-        .map(c => c.cardId);
+      const targets = selectRevealFromHandCandidates(state, cost, ctx);
+      const ids = targets.map(c => c.cardId);
       if (ids.length < rfhMin || ids.length > rfhMax) throw new Error('cost.pay: revealFromHand is not payable');
       // W3 (r18): コスト経路の公開も hand:reveal を emit (B09004「【宣言】能力のコストによって」)
       mutate.hand.emitReveal(state, ctx.source.player, ids, { byPlayer: ctx.source.player, cause: 'cost' });
@@ -1211,6 +1233,32 @@ function selectRangeCostCandidates(state: GameState, ref: TargetingRef, ctx: Eff
   return allowed.slice(0, max);
 }
 
+/** Human reveal costs carry exact hand indices; AI/legacy callers keep fallback selection. */
+function selectRevealFromHandCandidates(
+  state: GameState,
+  cost: Extract<Cost, { kind: 'revealFromHand' }>,
+  ctx: EffectCtx,
+): Array<Candidate & { kind: 'card'; index: number }> {
+  const min = typeof cost.n === 'number' ? cost.n : cost.n.min;
+  const max = typeof cost.n === 'number' ? cost.n : cost.n.max;
+  const indices = readRevealFromHandIndices(ctx);
+  if (indices === undefined) {
+    return selectRangeCostCandidates(state, cost.target, ctx)
+      .filter((candidate): candidate is Candidate & { kind: 'card'; index: number } => (
+        candidate.kind === 'card' && typeof candidate.index === 'number'
+      ));
+  }
+  if (indices.length < min || indices.length > max || new Set(indices).size !== indices.length) return [];
+  const allowed = candidates(state, cost.target, ctx)
+    .filter((candidate): candidate is Candidate & { kind: 'card'; index: number } => (
+      candidate.kind === 'card'
+      && candidate.player === ctx.source.player
+      && typeof candidate.index === 'number'
+    ));
+  return indices.map(index => allowed.find(candidate => candidate.index === index))
+    .filter((candidate): candidate is Candidate & { kind: 'card'; index: number } => candidate !== undefined);
+}
+
 /** Sleep/stun costs choose only payable active characters before applying n.max. */
 function selectActiveCharRangeCostCandidates(
   state: GameState,
@@ -1370,6 +1418,16 @@ function readFlipIndices(ctx: EffectCtx): number[] {
 function readRemoveFromHandIndices(ctx: EffectCtx): number[] | undefined {
   const params = ctx.dyn?.['costParams'] as Record<string, unknown> | undefined;
   const selected = params?.['removeFromHand'] as { indices?: unknown } | undefined;
+  if (selected === undefined) return undefined;
+  return Array.isArray(selected.indices)
+    && selected.indices.every(index => typeof index === 'number' && Number.isInteger(index) && index >= 0)
+    ? selected.indices
+    : [];
+}
+
+function readRevealFromHandIndices(ctx: EffectCtx): number[] | undefined {
+  const params = ctx.dyn?.['costParams'] as Record<string, unknown> | undefined;
+  const selected = params?.['revealFromHand'] as { indices?: unknown } | undefined;
   if (selected === undefined) return undefined;
   return Array.isArray(selected.indices)
     && selected.indices.every(index => typeof index === 'number' && Number.isInteger(index) && index >= 0)
