@@ -1504,14 +1504,12 @@
     {
       "qaId": "card:B08043:d2daf65f8f37c6b92a14e58a624e94f31d9bc62c20d0e0f1cf253457f9149203",
       "answerHash": "e9816c4c83245616e7249b5b392ba5e50102257b87128a5ac942d8e66b8063a4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08043.ts:41"
-      ],
-      "noteCodes": [
-        "B08043-EMPTY-SCENE-LP-TEST-MISSING"
+        "src:src/cards/ct-p08/B08043.ts:39",
+        "tests:tests/cards/official-qa/B08038-B08047-completion-public-wave179.test.ts:242"
       ]
     },
     {

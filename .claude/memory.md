@@ -13,16 +13,19 @@
 
 ## Next
 
-- Waves176-177 move sixteen items to matched. Coverage is 2056 matched / 908
-  test-missing / 2964 total; 801 exact groups remain, including 694 singletons.
-- BUG-378 adds the missing `player:'self'` to B08022 Maro-chan recovery.
-- Full Vitest, lint, smoke, targeted Playwright, review, and horizontal scan pass.
+- Waves178-179 move sixteen items to matched. Coverage is 2072 matched / 892
+  test-missing / 2964 total; 786 exact groups remain, including 680 singletons.
+- BUG-379 moves B08034/B08034P reasoning reactions from `reasoning:end` to the
+  official pre-Mislead/evidence `reasoning:after-sleep` window.
+- Full functional Vitest, lint, smoke, focused public tests, adjudication, and
+  horizontal scan pass. Release suites still need the normal clean post-commit run.
 - Generic policy-free sequence pre-walk can still preselect a later PA target
   before an earlier PA mutation. B07104 heuristic and human paths avoid it;
   investigate this engine-wide ordering risk when a future card exposes it.
-- Waves178-179 batch sixteen items across B08032-B08047.
+- Waves180-181 batch sixteen items across B08048-B08062. B08054 has a confirmed
+  missing set-card leave replacement and must be isolated as T3 before alignment.
 - Official sync drift remains separate: PR322 and changed B04018/B04018P/
   B06103P Q&A require re-queueing.
-- At about nine exact groups per wave, about 89 waves remain through Wave266.
+- At about nine exact groups per wave, about 87 waves remain through Wave266.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

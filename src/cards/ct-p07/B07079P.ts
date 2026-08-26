@@ -12,7 +12,7 @@
 //
 // 句マッピング: B07079.ts と同一 (a1: sleepSelf+sceneToDeckBottom cost → sceneRemove apMax8000 +
 //   choice[手札登場/draw] / a2: removeFromHand cost → charModifyAP 短縮形 carrier (+3000, bind) →
-//   toDeckBottomOnTurnEnd、パートナーエリア句 vacuous / a3: カットイン AP+2000)。
+//   toDeckBottomOnTurnEnd、パートナーエリア句はscope:'on-partner-area'で配線済み / a3: カットイン AP+2000)。
 //   ⚠ a2 step1 は短縮形必須 (明示 $pick+target は human 経路で bind 喪失 — B07079.ts 参照)。
 //   P 版差分は rarity / imageUrl / no のみ。
 

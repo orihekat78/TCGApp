@@ -19,11 +19,11 @@
 //   - a2 赤井家のアクティブ状態のキャラを1枚まで選び、相手のターン終了時まで「スリープ状態でもガードできる」 =>
 //     charSetTurnEffect Pattern A 長形 {uid:'$pick', key:'sleepGuard_oppTurn', val:true,
 //     target: pick scene self trait赤井家 state['active'] n{0,1}} (Task D E4 '_oppTurn' token)
-//   - a2 「この能力はパートナーエリアでも宣言できる。」 => ⚠ vacuous (パートナーエリアのキャラ slot 不在、
-//     B07093 a2 前例。DEFERRED-INDEX 対象句)
+//   - a2 「この能力はパートナーエリアでも宣言できる。」 => scope:'on-partner-area'
+//     (現場とPA常駐MRの両方で使用可)
 //   - a3 【カットイン】AP＋2000 => on-hand triggered effect:declared + charModifyAP $contact.byUid +2000 contact
 //
-// 公式Q&A: B09054 と同一 (MR能力 = rules/18 フレームルールは engine 未実装、既存 MR カード前例に同じ)。
+// 公式Q&A: B09054 と同一。MR能力①②とPA宣言scopeはengine配線済み。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 

@@ -1484,11 +1484,15 @@
     {
       "qaId": "card:B08044:fa86da58031fb9ac89e29ca33154f7e33fdfcb57011d4dc5c56f55e70a74939f",
       "answerHash": "f8534b7ceaa0869753bcfca937480b879037bfb4356f58fdfd217fed88297c7c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08044.ts:58"
+        "rules:.claude/rules/21-declared-ability-cost.md:47",
+        "rules:.claude/rules/21-declared-ability-cost.md:49",
+        "src:src/cards/ct-p08/B08044.ts:20",
+        "tests:tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:164",
+        "tests:tests/cards/official-qa/declared-cost-one-self-only-public-wave71.test.ts:166"
       ]
     },
     {

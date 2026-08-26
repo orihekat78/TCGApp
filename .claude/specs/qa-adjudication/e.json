@@ -1377,27 +1377,23 @@
     {
       "qaId": "card:B08038:f8f46017d87b910c05faf7a9553e12f283c51a7e645bf43caf5146dc8dd3fde8",
       "answerHash": "10e0fd673a9d0f695dda2369f23942aa6c67c9bcc73e7043d1b18b87b4a1e6fa",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08038.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p08/B08038.ts:20",
+        "tests:tests/cards/official-qa/B08038-B08047-completion-public-wave179.test.ts:184"
       ]
     },
     {
       "qaId": "card:B08046:7dd4d4afb1549412d31916afecd76ee07e4991bf7b74dc7fb196896cad7fb01a",
       "answerHash": "e3f5181fc579d05ac304b1dfe6d6432b670e0d454eadec09ad847f6bfde53a7d",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08046.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p08/B08046.ts:35",
+        "tests:tests/cards/official-qa/B08038-B08047-completion-public-wave179.test.ts:261"
       ]
     },
     {

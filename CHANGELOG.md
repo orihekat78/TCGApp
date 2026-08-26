@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `920e4505b5f8`
+> Source hash: `2922b04642ff`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,21 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-08-26
+category: cards
+title: QA Waves178-179 and B08034 reasoning timing
+---
+
+- Aligned sixteen CT-P08 Q&A rows across B08032-B08047 with public owner,
+  boundary, occurrence, refresh, contact, evidence, and action-gate proofs.
+- Fixed B08034/B08034P reasoning reactions to resolve after sleep and before
+  Mislead/evidence instead of at `reasoning:end` (BUG-379).
+- Corrected stale hash descriptions and DEFER rows for already shipped card
+  primitives; coverage is now 2072 matched / 892 test-missing.
+- Added Wave180-181 grounding. B08054's missing set-card leave replacement is a
+  confirmed separate T3 implementation requirement before its QA row can align.
 
 ---
 date: 2026-08-26

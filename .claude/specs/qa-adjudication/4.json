@@ -1485,11 +1485,14 @@
     {
       "qaId": "card:B08036:d52596199be14d625d7776309eeaca145097a31eecca550237262ad7075cb2f4",
       "answerHash": "e7e4fa5f48fcc810881d0b009f9e383471409d24dcb12a31f9094d970b84de40",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08036.ts:1"
+        "rules:.claude/rules/16-card-set.md:19",
+        "src:src/cards/ct-p08/B08036.ts:23",
+        "src:src/ui/services/replayViewerProjection.ts:152",
+        "tests:tests/cards/official-qa/B08032-B08037-completion-public-wave178.test.ts:321"
       ]
     },
     {

@@ -26,16 +26,15 @@
 //     charSetTurnEffect key:'sleepGuard_oppTurn' val:true (Task D E4 token。'_oppTurn' suffix を
 //     read/char.hasTextAbility が読み、flow/turn.ts endTurn(相手) → clearTurnEffects('opp-turn') が
 //     suffix 一致キーを清掃 = 相手のターン終了時まで。flow/guard.ts:57 が sleep ガード候補化)
-//   - a2 「この能力はパートナーエリアでも宣言できる。」 => ⚠ vacuous (現 engine にパートナーエリアの
-//     キャラ slot が存在しないため到達不能。B07093 a2 出荷前例に従い本体句のみ実装・本句は注記のみ。
-//     DEFERRED-INDEX 対象句)
+//   - a2 「この能力はパートナーエリアでも宣言できる。」 => scope:'on-partner-area'
+//     (現場とPA常駐MRの両方で使用可)。
 //   - a3 【カットイン】AP＋2000 => triggered + scope:'on-hand' + trigger{hook:'effect:declared', optional:true, selfOnly:true}
 //     + charModifyAP {uid:'$contact.byUid', delta:2000, scope:'contact'} (D11019 a2 / B05090 a2 同型、rules/09)
 //
 // 公式Q&A:
 //   - スタン状態はガード不可 / ブレットは「できない」優先 / ガード時スリープ化は通常通り → engine 既存配線 ✓
 //   - パートナーエリアで使用後、再登場で再使用可 → 【ターン1】counter は uid 単位 (declaredUseCount) で
-//     再登場時に新 uid となるため整合 (現状パートナーエリア宣言自体が vacuous)
+//     再登場時に新 uid となるため整合 (パートナーエリア宣言も配線済み)
 //   - MR能力 (rules/18 ①相手ターン中離場→パートナーエリア ②MR重複登場リムーブ) はカードテキスト外の
 //     フレームルール。engine/mr-partner-area-core (2026-06-23) で配線済 (isMR=rarity 消費 + partnerAreaMR slot)。
 //     本カードを含むデッキでは MR①②が実発火する (BUG-154 / engine-mr-partner-area-design.md)

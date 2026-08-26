@@ -18,12 +18,12 @@
 //   a2: 【宣言】【ターン1】= declared + limit{turn,1}。「自分の現場にいる[京極真]を1枚まで選び、
 //       ターン終了時までAP＋1000する」= charModifyAP 短縮形 (side:'self', cardName filter は分割名対応
 //       rules/19 — このカード自身も [京極真] を持つため対象可、公式Q&A同旨)。
-//       ⚠「この能力はパートナーエリアでも宣言できる」句は partner-area キャラ slot 不存在で vacuous
-//         (B07093 a2 出荷前例に従い本体句のみ実装。DEFERRED-INDEX 注記対象)
+//       「この能力はパートナーエリアでも宣言できる」= scope:'on-partner-area'
+//       (現場とPA常駐MRの両方で使用可)。
 //   a3: 【カットイン】AP＋2000 = D01011 同型 inline atom ($contact.byUid + contact scope)
 //   ※ MR能力①② (rules/18: 相手ターン離場→パートナーエリア / MR重複リムーブ) は
 //     engine/mr-partner-area-core (2026-06-23) で配線済 (isMR=rarity 消費)。本カードを含むデッキでは実発火。
-//     card固有「PAでも宣言」句の scope 補正は Phase 4 wave で対応 (BUG-154)
+//     card固有「PAでも宣言」句もM3 PA batchで配線済み。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 

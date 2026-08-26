@@ -1233,11 +1233,15 @@
     {
       "qaId": "card:B08037:0bcbb181ef2cf2a48d13e2a78537e164803e7f0ef97a2a8ca772d8ce2b5aae8c",
       "answerHash": "4c841d1b76d006731ad003d01b0fc8997dc9fa08374cccc9cef5b91843fac70d",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08037.ts:1"
+        "rules:.claude/rules/03-field-areas.md:44",
+        "rules:.claude/rules/03-field-areas.md:46",
+        "rules:.claude/rules/24-qa-naming-stun.md:9",
+        "src:src/cards/ct-p08/B08037.ts:33",
+        "tests:tests/cards/official-qa/B08032-B08037-completion-public-wave178.test.ts:350"
       ]
     },
     {

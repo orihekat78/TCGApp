@@ -10,11 +10,11 @@
 // a1: DEFERRED (triggered hook = 相手キャラリムーブ反応、leave:to-remove + matcher で実装可能だが
 //     本バッチは declared a2 に集中)
 // a2: declared + turn1 limit + 相手 1pick で turn-level-1 (B07103 a2 同型)
-//     ※「パートナーエリアでも宣言できる」は partial-impl (scope:on-scene のみ、partner-area での
-//     宣言は MR area 拡張要)
+//     ※「パートナーエリアでも宣言できる」= scope:'on-partner-area'
+//     (現場とPA常駐MRの両方で使用可)
 // MR能力①② (rules/18): engine/mr-partner-area-core (2026-06-23) で配線済 (isMR=rarity 消費 + partnerAreaMR slot)。
-// 本カードを含むデッキでは MR①(相手ターン離脱→PA)/②(MR重複リムーブ) が実発火する。card固有の「PAでも宣言」句の
-// scope 補正 (on-scene→on-partner-area) は Phase 4 card wave で対応。BUG-154 / engine-mr-partner-area-design.md 参照。
+// 本カードを含むデッキではMR①(相手ターン離脱→PA)/②(MR重複リムーブ)が実発火し、
+// card固有のPA宣言scopeもM3 PA batchで配線済み。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 

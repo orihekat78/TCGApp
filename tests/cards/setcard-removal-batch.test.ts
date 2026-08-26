@@ -36,11 +36,11 @@ describe('engine-extension set-card 除去 batch (2026-06-06)', () => {
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   });
 
-  it('card def: a1=enter(事件白+パートナー白) / a2=reasoning:end chain(charRemoveSetCard, draw)', () => {
+  it('card def: a1=enter(事件白+パートナー白) / a2=reasoning:after-sleep chain(charRemoveSetCard, draw)', () => {
     expect(B08034.rarity).toBe('R');
     expect(B08034P.rarity).toBe('RP');
     expect(B08034.abilities[0].trigger).toMatchObject({ hook: 'enter', selfOnly: true });
-    expect(B08034.abilities[1].trigger).toMatchObject({ hook: 'reasoning:end', matcherCondition: { kind: 'triggerCharMatches', side: 'self' } });
+    expect(B08034.abilities[1].trigger).toMatchObject({ hook: 'reasoning:after-sleep', matcherCondition: { kind: 'triggerCharMatches', side: 'self' } });
     const a2eff = B08034.abilities[1].effect as { kind: string; steps: { verb?: string }[] };
     expect(a2eff.kind).toBe('chain');
     expect(a2eff.steps[0]?.verb).toBe('charRemoveSetCard');
@@ -55,7 +55,7 @@ describe('engine-extension set-card 除去 batch (2026-06-06)', () => {
       sceneChar('B08034', 'kudo#1'),
       sceneChar('D08009', 'holder#1', [{ cardId: 'D08003', faceUp: false }]),
     ];
-    s.players.self.deck = ['e1', 'e2', 'draw1', 'x']; // LP2 で e1/e2 証拠化 + a2 draw で draw1
+    s.players.self.deck = ['draw1', 'e1', 'e2', 'x']; // a2 draw が先、その後 LP2 で e1/e2 証拠化
     s = produce(s, (d) => {
       doReasoning(d, 'kudo#1');
       runAllUntilEmpty(d);

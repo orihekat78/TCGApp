@@ -9,8 +9,8 @@
 //
 // a1: 【事件白】【パートナー白】(condition) + 【登場時】(enter selfOnly) →
 //   sequence([sceneRemove apMax:8000 max:1 (両現場), charSetCard fromDeckTop max:1 自陣])。いずれも既存 (B09100/B02023 同型)。
-// a2: 【ターン1】推理反応 (reasoning:end + triggerCharMatches{self}) →
-//   chain([charRemoveSetCard{hasSetCards} (1枚リムーブしてもよい), draw 1 (そうした場合)])。
+// a2: 【ターン1】推理反応 (reasoning:after-sleep + triggerCharMatches{self}) →
+//   chain([charRemoveSetCard{hasFaceDownSetCards,faceDownOnly} (1枚リムーブしてもよい), draw 1 (そうした場合)])。
 //   charRemoveSetCard = 在場キャラから setCard を1枚外す新 verb (rules/16)。chain で「してもよい/そうした場合」を表現。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
@@ -40,7 +40,8 @@ const a2: AbilityDef = {
   scope: 'on-scene',
   limit: { kind: 'turn', n: 1 }, // 【ターン1】
   trigger: {
-    hook: 'reasoning:end',
+    // 推理キャラをスリープした直後、ミスリードと証拠追加より前に解決する。
+    hook: 'reasoning:after-sleep',
     // 自分の現場にいるキャラが推理したとき (filter 無し = 自分側の任意キャラ)
     // BUG-179: filter:{} で scene 走査を強制 (無いと自パートナーの推理でも誤発火。印字は「現場にいるキャラ」)。
     matcherCondition: { kind: 'triggerCharMatches', side: 'self', filter: {} },

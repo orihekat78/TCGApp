@@ -1524,11 +1524,15 @@
     {
       "qaId": "card:B08032:80a2cfb16a87e5d0d4da8698cb86f47b173740616dd1af4e02537a5deb1ade52",
       "answerHash": "d283d78b577d4c15300a0ce2c8ece3cea9090ce2b9b6aa63ab2ca88526541304",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08032.ts:1"
+        "rules:.claude/rules/15-abilities-effects.md:36",
+        "rules:.claude/rules/19-special-rules.md:17",
+        "src:src/cards/ct-p08/B08032.ts:48",
+        "tests:tests/cards/official-qa/B08032-B08037-completion-public-wave178.test.ts:138",
+        "tests:tests/cards/official-qa/B08032-B08037-completion-public-wave178.test.ts:142"
       ]
     },
     {
