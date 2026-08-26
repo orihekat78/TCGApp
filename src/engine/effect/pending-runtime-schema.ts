@@ -1194,10 +1194,13 @@ function setCardReplacement(value: unknown, path: string): void {
   const kind = oneOf(resume.kind, new Set([
     'scene-remove', 'scene-to-deck', 'scene-to-hand', 'scene-to-evidence', 'scene-to-stack',
   ]), `${path}.resume.kind`);
+  if (resume.cause !== undefined) {
+    oneOf(resume.cause, new Set(['contact-ap', 'effect', 'switch', 'cost', 'misplay-overflow']), `${path}.resume.cause`);
+  }
+  optionalString(resume.byUid, `${path}.resume.byUid`);
+  optionalPlayer(resume.byPlayer, `${path}.resume.byPlayer`);
   if (kind === 'scene-remove') {
     oneOf(resume.cause, new Set(['contact-ap', 'effect', 'switch', 'cost', 'misplay-overflow']), `${path}.resume.cause`);
-    optionalString(resume.byUid, `${path}.resume.byUid`);
-    optionalPlayer(resume.byPlayer, `${path}.resume.byPlayer`);
     if (resume.leaveInterceptDecision !== undefined) {
       const decision = record(resume.leaveInterceptDecision, `${path}.resume.leaveInterceptDecision`);
       string(decision.interceptorUid, `${path}.resume.leaveInterceptDecision.interceptorUid`);

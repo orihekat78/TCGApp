@@ -13,19 +13,20 @@
 
 ## Next
 
-- Waves178-179 move sixteen items to matched. Coverage is 2072 matched / 892
-  test-missing / 2964 total; 786 exact groups remain, including 680 singletons.
-- BUG-379 moves B08034/B08034P reasoning reactions from `reasoning:end` to the
-  official pre-Mislead/evidence `reasoning:after-sleep` window.
-- Full functional Vitest, lint, smoke, focused public tests, adjudication, and
-  horizontal scan pass. Release suites still need the normal clean post-commit run.
+- Waves180-181 move sixteen items to matched. Coverage is 2088 matched / 876
+  test-missing / 2964 total; 772 exact groups remain, including 668 singletons.
+- BUG-380 adds B08054's synchronous hidden-set return for opponent effect/contact,
+  optional persisted attribution, legacy fail-closed hydration, and queued-observer
+  hidden-identity redaction.
+- Focused 128, TypeScript, full ESLint, smoke1000/baseline, Playwright 28, QA merge,
+  horizontal scan, and Sol review pass. Two release suites require clean post-commit rerun.
 - Generic policy-free sequence pre-walk can still preselect a later PA target
   before an earlier PA mutation. B07104 heuristic and human paths avoid it;
   investigate this engine-wide ordering risk when a future card exposes it.
-- Waves180-181 batch sixteen items across B08048-B08062. B08054 has a confirmed
-  missing set-card leave replacement and must be isolated as T3 before alignment.
+- Waves182-183 start with eighteen ungrounded rows across B08062-B08073; re-ground
+  before interpreting the hashes.
 - Official sync drift remains separate: PR322 and changed B04018/B04018P/
   B06103P Q&A require re-queueing.
-- At about nine exact groups per wave, about 87 waves remain through Wave266.
+- At about nine exact groups per wave, about 86 waves remain through roughly Wave267.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

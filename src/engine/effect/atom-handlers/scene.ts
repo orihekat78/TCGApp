@@ -1245,7 +1245,7 @@ export function atomSceneToHand(s: GameState, a: Record<string, unknown>, ctx: E
         : s.players[sthOwner].scene.find((card) => card.uid === sthUid)?.cardId;
       const sthHandBefore = sthOwner === undefined ? 0 : s.players[sthOwner].hand.length;
       const sthPartnerAreaBefore = sthOwner === undefined ? undefined : partnerAreaMrSignature(s, sthOwner);
-      mutate.scene.toHand(s, sthUid);
+      mutate.scene.toHand(s, sthUid, { cause: 'effect', byPlayer: ctx.source.player });
       if (sthOwner !== undefined && s.players[sthOwner].hand.length === sthHandBefore + 1) {
         recordEffectCausalOperation(s, ctx, {
           actor: ctx.source.player,
@@ -1297,7 +1297,7 @@ export function atomSceneToDeck(s: GameState, a: Record<string, unknown>, ctx: E
         : s.players[stdOwner].scene.find((card) => card.uid === stdUid)?.cardId;
       const stdDeckBefore = stdOwner === undefined ? 0 : s.players[stdOwner].deck.length;
       const stdPartnerAreaBefore = stdOwner === undefined ? undefined : partnerAreaMrSignature(s, stdOwner);
-      mutate.scene.toDeck(s, stdUid, stdPos);
+      mutate.scene.toDeck(s, stdUid, stdPos, { cause: 'effect', byPlayer: ctx.source.player });
       if (stdOwner !== undefined && s.players[stdOwner].deck.length === stdDeckBefore + 1) {
         recordPublicZoneMove(s, ctx, stdOwner, 'scene', stdOwner, 'deck', 1);
       } else if (
@@ -1339,7 +1339,9 @@ export function atomSceneToEvidence(s: GameState, a: Record<string, unknown>, ct
         : s.players[steOwner].scene.find((card) => card.uid === steUid)?.cardId;
       const steEvidenceBefore = steOwner === undefined ? 0 : s.players[steOwner].evidence.length;
       const stePartnerAreaBefore = steOwner === undefined ? undefined : partnerAreaMrSignature(s, steOwner);
-      mutate.scene.toEvidence(s, steUid, steFaceUp, ctx.source.cardId);
+      mutate.scene.toEvidence(s, steUid, steFaceUp, ctx.source.cardId, {
+        cause: 'effect', byPlayer: ctx.source.player,
+      });
       if (steOwner !== undefined && s.players[steOwner].evidence.length === steEvidenceBefore + 1) {
         recordPublicZoneMove(s, ctx, steOwner, 'scene', steOwner, 'evidence', 1, 'evidence');
       } else if (

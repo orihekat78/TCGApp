@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `2922b04642ff`
+> Source hash: `c78b212f75d1`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,22 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-08-26
+category: cards
+title: QA Waves180-181 and B08054 host-leave replacement
+---
+
+- Aligned sixteen CT-P08 Q&A rows across B08048-B08062 with public action,
+  switch, remove-cost, Cut-In, deck-cost, continuous-aura, and event proofs.
+- Implemented B08054's synchronous face-down set-card return when an opponent
+  effect or contact makes its host leave, while preserving the host destination.
+- Preserved old-save compatibility by carrying optional leave attribution through
+  B02052 resumes and failing closed when legacy attribution is absent (BUG-380).
+- Redacted private face-down identities from queued set-leave observer payloads;
+  real B02020 pending and replay projections now preserve owner-only visibility.
+- Retired stale B08057/B08059 DEFER notes after current production-path proofs.
 
 ---
 date: 2026-08-26

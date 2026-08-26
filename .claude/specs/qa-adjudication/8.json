@@ -133,7 +133,7 @@
         "rules:.claude/rules/17-icons.md:10",
         "src:src/cards/ct-p02/B02004.ts:27",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
-        "src:src/engine/listeners/triggered.ts:578",
+        "src:src/engine/listeners/triggered.ts:591",
         "tests:tests/cards/official-qa/effect-entry-action-public.test.ts:196"
       ]
     },
@@ -233,7 +233,7 @@
         "rules:.claude/rules/03-field-areas.md:35",
         "rules:.claude/rules/03-field-areas.md:37",
         "src:src/cards/ct-p02/B02057.ts:17",
-        "src:src/engine/mutate/scene.ts:809",
+        "src:src/engine/mutate/scene.ts:877",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:153",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:155",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:157",
@@ -438,7 +438,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p03/B03060.ts:1",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:230"
       ]
     },
@@ -1047,7 +1047,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p06/B06071.ts:47",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:193"
       ]
     },
@@ -1421,7 +1421,7 @@
         "rules:.claude/rules/22-qa-action-contact.md:34",
         "src:src/cards/ct-p08/B08038.ts:13",
         "src:src/cards/ct-p08/B08038P.ts:6",
-        "src:src/engine/listeners/triggered.ts:343",
+        "src:src/engine/listeners/triggered.ts:356",
         "tests:tests/cards/official-qa/contact-participant-public-wave94.test.ts:113",
         "tests:tests/cards/official-qa/contact-participant-public-wave94.test.ts:116",
         "tests:tests/cards/official-qa/contact-participant-public-wave94.test.ts:139",
@@ -1471,35 +1471,39 @@
     {
       "qaId": "card:B08048:7744747aea8bdeea154ceec0441efede03509bcb560cff3382ed5c8c8235ff4d",
       "answerHash": "a648dc657af8f6b72775c24bd3666b4e15ca41e584ca46779d66b5d9794b8d7b",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08048.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-SOURCE-ONLY",
-        "TEST-GAP"
+        "src:src/cards/ct-p08/B08048.ts:69",
+        "tests:tests/cards/official-qa/B08048-B08055-completion-public-wave180.test.ts:182"
       ]
     },
     {
       "qaId": "card:B08055:e4a36acb6bbbb1c8b11eac5e65600d839bba033d5a2b7f0e5ecfc84bacd47a4c",
       "answerHash": "b553d3183b31f9ff04dd82c1886f78d5c6df68d16fb311a281f7637154fd3161",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08055.ts:1"
+        "src:src/cards/ct-p08/B08055.ts:14",
+        "tests:tests/cards/official-qa/B08048-B08055-completion-public-wave180.test.ts:293",
+        "tests:tests/cards/official-qa/B08048-B08055-completion-public-wave180.test.ts:294"
       ]
     },
     {
       "qaId": "card:B08057:291f87522e2089d9232b03fc488c0790757f2e96f260d1b155bbdd6f24c2678e",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08057.ts:1"
+        "src:src/cards/ct-p08/B08057.ts:45",
+        "tests:tests/cards/official-qa/B08057-B08059-completion-public-wave181.test.ts:135",
+        "tests:tests/cards/official-qa/B08057-B08059-completion-public-wave181.test.ts:137",
+        "tests:tests/cards/official-qa/B08057-B08059-completion-public-wave181.test.ts:148",
+        "tests:tests/cards/official-qa/B08057-B08059-completion-public-wave181.test.ts:149",
+        "tests:tests/cards/official-qa/B08057-B08059-completion-public-wave181.test.ts:152"
       ]
     },
     {
@@ -1516,11 +1520,13 @@
     {
       "qaId": "card:B08057:fa43ed745439324401acbe56f8a54fdb451168e8ce6dc2aaacce43a43e859242",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08057.ts:1"
+        "src:src/cards/ct-p08/B08057.ts:45",
+        "tests:tests/cards/official-qa/B08057-B08059-completion-public-wave181.test.ts:181",
+        "tests:tests/cards/official-qa/B08057-B08059-completion-public-wave181.test.ts:182"
       ]
     },
     {
@@ -1577,8 +1583,8 @@
         "rules:.claude/rules/26-qa-deck-refresh.md:37",
         "rules:.claude/rules/26-qa-deck-refresh.md:39",
         "src:src/cards/ct-p08/B08084.ts:15",
-        "src:src/engine/mutate/scene.ts:516",
-        "src:src/engine/mutate/scene.ts:529",
+        "src:src/engine/mutate/scene.ts:555",
+        "src:src/engine/mutate/scene.ts:568",
         "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:100",
         "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:131",
         "tests:tests/cards/official-qa/leave-refresh-source-public-wave111.test.ts:135",
@@ -1693,7 +1699,7 @@
         "src:src/cards/ct-p09/B09065.ts:47",
         "src:src/cards/ct-p09/B09065.ts:95",
         "src:src/engine/effect/atom-handlers/scene.ts:1340",
-        "src:src/engine/mutate/scene.ts:800",
+        "src:src/engine/mutate/scene.ts:868",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:335",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:347"
       ],
@@ -1933,7 +1939,7 @@
         "src:src/cards/ct-p10/B10032.ts:17",
         "src:src/engine/effect/apply-pick.ts:47",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
-        "src:src/engine/listeners/triggered.ts:578",
+        "src:src/engine/listeners/triggered.ts:591",
         "src:src/engine/resolve/stack.ts:229",
         "tests:tests/cards/official-qa/effect-entry-trigger-public-wave2.test.ts:175"
       ]
@@ -2425,7 +2431,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/pr-01/PR163.ts:1",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:206"
       ],
       "noteCodes": []

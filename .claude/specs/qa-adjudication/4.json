@@ -301,7 +301,7 @@
         "rules:.claude/rules/17-icons.md:10",
         "src:src/cards/ct-p03/B03030.ts:4",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
-        "src:src/engine/listeners/triggered.ts:578",
+        "src:src/engine/listeners/triggered.ts:591",
         "tests:tests/cards/official-qa/effect-entry-action-public.test.ts:201"
       ]
     },
@@ -371,7 +371,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p03/B03085.ts:1",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:231"
       ]
     },
@@ -1194,7 +1194,7 @@
         "rules:.claude/rules/20-color-and-switch.md:45",
         "src:src/cards/ct-p07/B07020.ts:13",
         "src:src/engine/effect/atom-handlers/scene.ts:520",
-        "src:src/engine/mutate/scene.ts:240",
+        "src:src/engine/mutate/scene.ts:253",
         "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:176",
         "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:228",
         "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:229",
@@ -1287,7 +1287,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p07/B07054.ts:1",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:196"
       ]
     },
@@ -1382,7 +1382,7 @@
         "src:src/cards/ct-p07/B07075.ts:31",
         "src:src/engine/effect/apply-pick.ts:47",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
-        "src:src/engine/listeners/triggered.ts:578",
+        "src:src/engine/listeners/triggered.ts:591",
         "tests:tests/cards/official-qa/effect-entry-leave-public.test.ts:240"
       ]
     },
@@ -1498,11 +1498,13 @@
     {
       "qaId": "card:B08051:43e0680a7f73c9e7e26ee84d8c2481068fbd10f53075d29105babebb8219bde7",
       "answerHash": "4fdd45f172e2859ba933761648f65e6dc323808ec3a97c5fb454a3feaf34aa7a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08051.ts:1"
+        "src:src/cards/ct-p08/B08051.ts:26",
+        "tests:tests/cards/official-qa/B08048-B08055-completion-public-wave180.test.ts:224",
+        "tests:tests/cards/official-qa/B08048-B08055-completion-public-wave180.test.ts:226"
       ]
     },
     {
@@ -1541,7 +1543,7 @@
         "rules:.claude/rules/20-color-and-switch.md:45",
         "src:src/cards/ct-p08/B08083.ts:24",
         "src:src/engine/effect/atom-handlers/scene.ts:520",
-        "src:src/engine/mutate/scene.ts:240",
+        "src:src/engine/mutate/scene.ts:253",
         "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:176",
         "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:228",
         "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:229",
@@ -1574,7 +1576,7 @@
         "src:src/cards/ct-p08/B08085.ts:45",
         "src:src/cards/ct-p08/B08085.ts:47",
         "src:src/engine/flow/contact.ts:162",
-        "src:src/engine/listeners/triggered.ts:503",
+        "src:src/engine/listeners/triggered.ts:516",
         "tests:tests/cards/official-qa/f026-cutin-public.test.ts:262",
         "tests:tests/cards/official-qa/f026-cutin-public.test.ts:269"
       ]
@@ -1591,7 +1593,7 @@
         "src:src/cards/ct-p08/B08092.ts:45",
         "src:src/engine/effect/apply-pick.ts:47",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
-        "src:src/engine/listeners/triggered.ts:578",
+        "src:src/engine/listeners/triggered.ts:591",
         "src:src/engine/resolve/stack.ts:229",
         "tests:tests/cards/official-qa/effect-entry-trigger-order-public.test.ts:263"
       ]
@@ -1643,7 +1645,7 @@
         "src:src/engine/flow/contact.ts:162",
         "src:src/engine/flow/contact.ts:206",
         "src:src/engine/flow/contact.ts:217",
-        "src:src/engine/listeners/triggered.ts:505",
+        "src:src/engine/listeners/triggered.ts:518",
         "tests:tests/cards/official-qa/turn-conditioned-cutin-expansion-public.test.ts:170"
       ]
     },
@@ -1683,7 +1685,7 @@
         "src:src/engine/flow/contact.ts:162",
         "src:src/engine/flow/contact.ts:206",
         "src:src/engine/flow/contact.ts:217",
-        "src:src/engine/listeners/triggered.ts:505",
+        "src:src/engine/listeners/triggered.ts:518",
         "tests:tests/cards/official-qa/turn-conditioned-cutin-expansion-public.test.ts:173"
       ]
     },

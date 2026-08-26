@@ -311,7 +311,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p02/B02052.ts:1",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:225"
       ]
     },
@@ -393,7 +393,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:16",
         "src:src/cards/ct-p03/B03014.ts:18",
-        "src:src/engine/listeners/triggered.ts:285"
+        "src:src/engine/listeners/triggered.ts:298"
       ],
       "noteCodes": [
         "OPPONENT-TURN-END-TRIGGER-UNTESTED"
@@ -748,7 +748,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p04/B04042.ts:1",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:190"
       ]
     },
@@ -811,7 +811,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p04/B04071.ts:1",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:191"
       ]
     },
@@ -1215,7 +1215,7 @@
         "src:src/engine/flow/contact.ts:162",
         "src:src/engine/flow/contact.ts:206",
         "src:src/engine/flow/contact.ts:217",
-        "src:src/engine/listeners/triggered.ts:505",
+        "src:src/engine/listeners/triggered.ts:518",
         "tests:tests/cards/official-qa/turn-conditioned-cutin-expansion-public.test.ts:167"
       ]
     },
@@ -1479,14 +1479,13 @@
     {
       "qaId": "card:B08048:723965466bac2e32665651b8d1aa327a67370ee59523610b9f9324ea4a24c202",
       "answerHash": "e3948b31884239cc4ee0037d9589e85f3a3d1b62fb7baff00e8652c7679df662",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08048.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p08/B08048.ts:34",
+        "tests:tests/cards/official-qa/B08048-B08055-completion-public-wave180.test.ts:157",
+        "tests:tests/cards/official-qa/B08048-B08055-completion-public-wave180.test.ts:159"
       ]
     },
     {
@@ -1551,7 +1550,7 @@
         "rules:.claude/rules/24-qa-naming-stun.md:49",
         "src:src/cards/ct-p08/B08073.ts:53",
         "src:src/engine/effect/atom-handlers/scene.ts:1340",
-        "src:src/engine/mutate/scene.ts:800",
+        "src:src/engine/mutate/scene.ts:868",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:290"
       ],
       "noteCodes": []
@@ -1776,7 +1775,7 @@
         "rules:.claude/rules/25-qa-effects-resolution.md:53",
         "src:src/cards/ct-p09/B09038.ts:46",
         "src:src/engine/effect/atom-handlers/scene.ts:520",
-        "src:src/engine/mutate/scene.ts:240",
+        "src:src/engine/mutate/scene.ts:253",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:191",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:212",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:213",
@@ -1965,7 +1964,7 @@
         "src:src/engine/flow/contact.ts:162",
         "src:src/engine/flow/contact.ts:206",
         "src:src/engine/flow/contact.ts:217",
-        "src:src/engine/listeners/triggered.ts:505",
+        "src:src/engine/listeners/triggered.ts:518",
         "tests:tests/cards/official-qa/turn-conditioned-cutin-expansion-public.test.ts:190"
       ]
     },

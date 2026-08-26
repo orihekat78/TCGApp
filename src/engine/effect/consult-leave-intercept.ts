@@ -44,6 +44,42 @@ export type LeaveInterceptVerdict =
     }
   | null;
 
+/**
+ * Deterministic replacement of a leaving host's face-down set-card cleanup.
+ * This does not redirect or prevent the host leave itself.
+ */
+export function consultHostLeaveSetCardReplacement(
+  state: GameState,
+  char: SceneCharacter,
+  player: Player,
+  cause: string,
+  byUid?: string,
+  byPlayer?: Player,
+): boolean {
+  const attributed = cause === 'contact-ap'
+    || (cause === 'effect' && byPlayer !== undefined && byPlayer !== player);
+  if (!attributed || readChar.originalAbilitiesDisabled(state, char.uid)) return false;
+  const card = readDef.card(char.cardId);
+  if (!card) return false;
+  const payload = { uid: char.uid, cause, byUid, ownerPlayer: player };
+  for (const ability of card.abilities as AbilityDef[]) {
+    if (ability.type !== 'triggered'
+      || ability.trigger?.hook !== 'leave:intercept'
+      || ability.trigger.optional === true
+      || (ability.scope !== undefined && ability.scope !== 'on-scene' && ability.scope !== 'always')
+      || ability.hostLeaveSetCardReplacement?.kind !== 'face-down-to-owner-hand') continue;
+    const ctx = {
+      source: { cardId: char.cardId, uid: char.uid, abilityId: ability.id, player, area: 'scene' as const },
+      bindings: {},
+      triggerPayload: payload,
+    };
+    if (ability.trigger.matcherCondition && !evalCond(state, ability.trigger.matcherCondition, ctx as never)) continue;
+    if (ability.condition && !evalCond(state, ability.condition, ctx as never)) continue;
+    return true;
+  }
+  return false;
+}
+
 function destinationOf(ability: AbilityDef): string | undefined {
   const eff = ability.effect as { kind?: string; verb?: string; args?: { destination?: string } } | undefined;
   if (eff && eff.kind === 'atom' && eff.verb === 'leaveInterceptRedirect') return eff.args?.destination;

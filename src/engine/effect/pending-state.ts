@@ -555,10 +555,22 @@ export type PendingSetCardReplacementSide = {
           leaveInterceptDecision?: { interceptorUid: string; accept: boolean; interceptorCostPaid?: boolean };
         };
       }
-    | { kind: 'scene-to-deck'; pos: 'bottom' | 'top' }
-    | { kind: 'scene-to-hand' }
-    | { kind: 'scene-to-evidence'; faceUp: boolean; sourceCardId?: string }
-    | { kind: 'scene-to-stack'; hostUid: string };
+    | {
+        kind: 'scene-to-deck'; pos: 'bottom' | 'top';
+        cause?: 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow'; byUid?: string; byPlayer?: Player;
+      }
+    | {
+        kind: 'scene-to-hand';
+        cause?: 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow'; byUid?: string; byPlayer?: Player;
+      }
+    | {
+        kind: 'scene-to-evidence'; faceUp: boolean; sourceCardId?: string;
+        cause?: 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow'; byUid?: string; byPlayer?: Player;
+      }
+    | {
+        kind: 'scene-to-stack'; hostUid: string;
+        cause?: 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow'; byUid?: string; byPlayer?: Player;
+      };
 };
 export function pushPendingSetCardReplacementSide(v: PendingSetCardReplacementSide): void {
   const g = globalThis as {

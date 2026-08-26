@@ -1260,11 +1260,13 @@
     {
       "qaId": "card:B08051:2f338c8af1f1fbae63949a5fbaed1e2483276b330fad2cfcca904087ca10e13c",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08051.ts:1"
+        "src:src/cards/ct-p08/B08051.ts:41",
+        "tests:tests/cards/official-qa/B08048-B08055-completion-public-wave180.test.ts:194",
+        "tests:tests/cards/official-qa/B08048-B08055-completion-public-wave180.test.ts:205"
       ]
     },
     {
@@ -1401,7 +1403,7 @@
         "src:src/engine/flow/contact.ts:162",
         "src:src/engine/flow/contact.ts:206",
         "src:src/engine/flow/contact.ts:217",
-        "src:src/engine/listeners/triggered.ts:505",
+        "src:src/engine/listeners/triggered.ts:518",
         "tests:tests/cards/official-qa/turn-conditioned-cutin-expansion-public.test.ts:179"
       ]
     },
@@ -1413,7 +1415,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09050.ts:1",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:203"
       ],
       "noteCodes": []
@@ -1731,7 +1733,7 @@
         "src:src/cards/ct-p10/B10087.ts:31",
         "src:src/cards/ct-p10/B10087.ts:34",
         "src:src/engine/flow/contact.ts:162",
-        "src:src/engine/listeners/triggered.ts:503",
+        "src:src/engine/listeners/triggered.ts:516",
         "tests:tests/cards/official-qa/ctp10-opponent-turn-cutin-public.test.ts:176"
       ]
     },
@@ -2197,7 +2199,7 @@
         "rules:.claude/rules/03-field-areas.md:35",
         "rules:.claude/rules/03-field-areas.md:37",
         "src:src/cards/pr-01/PR154.ts:13",
-        "src:src/engine/mutate/scene.ts:809",
+        "src:src/engine/mutate/scene.ts:877",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:285",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:287",
         "tests:tests/cards/official-qa/stun-definition-public-wave60.test.ts:288",
@@ -2214,7 +2216,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/pr-01/PR157.ts:87",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:205"
       ],
       "noteCodes": []

@@ -552,16 +552,32 @@ export function applySetCardReplacementDetailed(
         }
         break;
       case 'scene-to-deck':
-        sceneMutator.toDeck(state, guard.fromUid, guard.resume.pos);
+        sceneMutator.toDeck(state, guard.fromUid, guard.resume.pos, {
+          cause: guard.resume.cause,
+          byUid: guard.resume.byUid,
+          byPlayer: guard.resume.byPlayer,
+        });
         break;
       case 'scene-to-hand':
-        sceneMutator.toHand(state, guard.fromUid);
+        sceneMutator.toHand(state, guard.fromUid, {
+          cause: guard.resume.cause,
+          byUid: guard.resume.byUid,
+          byPlayer: guard.resume.byPlayer,
+        });
         break;
       case 'scene-to-evidence':
-        sceneMutator.toEvidence(state, guard.fromUid, guard.resume.faceUp, guard.resume.sourceCardId);
+        sceneMutator.toEvidence(state, guard.fromUid, guard.resume.faceUp, guard.resume.sourceCardId, {
+          cause: guard.resume.cause,
+          byUid: guard.resume.byUid,
+          byPlayer: guard.resume.byPlayer,
+        });
         break;
       case 'scene-to-stack':
-        sceneMutator.toStack(state, guard.fromUid, guard.resume.hostUid);
+        sceneMutator.toStack(state, guard.fromUid, guard.resume.hostUid, {
+          cause: guard.resume.cause,
+          byUid: guard.resume.byUid,
+          byPlayer: guard.resume.byPlayer,
+        });
         break;
     }
   }

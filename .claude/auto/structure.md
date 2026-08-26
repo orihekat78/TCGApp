@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6819
+- **ファイル数**: 6835
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -560,6 +560,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-377.md` — Per-character mill crosses refresh boundary
     - `BUG-378.md` — B08022 handAddFromRemove owner omission
     - `BUG-379.md` — B08034 reasoning timing hook mismatch
+    - `BUG-380.md` — B08054 host-leave set-card replacement missing
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -939,6 +940,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-26-05-qa-waves172-173.md`
     - `2026-08-26-06-qa-waves176-177.md`
     - `2026-08-26-07-qa-waves178-179.md`
+    - `2026-08-26-08-qa-waves180-181.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1700,6 +1702,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-26-qa-waves174-175.md` — QA adjudication Waves174-175
     - `2026-08-26-qa-waves176-177.md` — QA adjudication Waves176-177
     - `2026-08-26-qa-waves178-179.md` — QA adjudication Waves178-179
+    - `2026-08-26-qa-waves180-181.md` — QA adjudication Waves180-181
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -2047,8 +2050,16 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08044.md` — B08044 / B08044P grounding
       - `B08046.md` — B08046 grounding
       - `B08047.md` — B08047 / B08047P grounding
+      - `B08048.md` — B08048 grounding
       - `B08050.md` — B08050 宮野明美 grounding
+      - `B08051.md` — B08051 grounding
+      - `B08054.md` — B08054 grounding
+      - `B08055.md` — B08055 grounding
       - `B08056.md` — B08056 宮野厚司 grounding
+      - `B08057.md` — B08057 grounding
+      - `B08059.md` — B08059 / B08059P grounding
+      - `B08060.md` — B08060 / B08060P grounding
+      - `B08062.md` — B08062 grounding
       - `B08065.md` — B08065 大和敢助 grounding
       - `B08071.md` — B08071 grounding
       - `B08073.md` — B08073 高木渉 grounding
@@ -6057,8 +6068,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08025-B08030-completion-public-wave177.test.ts` — qa: card:B08025:84ecdea6c10bc908728749deacc797a85529c42aef7daa60ffe67827bc5ce34f
       - `B08032-B08037-completion-public-wave178.test.ts` — qa: card:B08032:80a2cfb16a87e5d0d4da8698cb86f47b173740616dd1af4e02537a5deb1ade52
       - `B08038-B08047-completion-public-wave179.test.ts` — qa: card:B08038:e47123f9e1245d63129ed54c2b95a76198d5f97abc9116047b1b635275aad06a
+      - `B08048-B08055-completion-public-wave180.test.ts` — qa: card:B08048:3053f6462e12a9e2865b2025bb9466d188a73da0b7fe642edc6b5118575c89e9
       - `B08049-completion-public-wave132.test.ts` — qa: card:B08049:190baa1e1f03afa7d9e83de8ff7b5f6134452bd6b3a05caf22783df26c2a9ea8
+      - `B08054-host-leave-set-return-public-wave180.test.ts` — qa: card:B08054:94adce46750f1bdd020b0c468474dff27cf3ae1f8ff38f2afb3ac2efdc60af1c
+      - `B08057-B08059-completion-public-wave181.test.ts` — qa: card:B08057:291f87522e2089d9232b03fc488c0790757f2e96f260d1b155bbdd6f24c2678e
       - `B08058-resolution-public-wave25.test.ts` — qa: card:B08058:2b4e49ff7d67dddeddd1fff86f17cd8814f42adc4f55ce818ce3626a24b4cdcf
+      - `B08060-B08062-completion-public-wave181.test.ts` — qa: card:B08060:1e6decec598c8178c0ef59895411a3e6043a00f96c40f3608c98b25e915c134b
       - `B08081-multi-intercept-public-wave25.test.ts` — qa: card:B08081:6b3d06f3573c39d85fe728b4613bf4458ef9a1849c52f036ac9bf48314a44dd7
       - `B08087-B08091-leave-evidence-public.test.ts` — qa: card:B08087:1f49f9f42b38c241ebd655d06681a4cb1c6030ffaa8345da75416cb84193fc80
       - `B09090-PR286-entry-waiver.test.ts` — qaId=card:B09090:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7e…
@@ -6727,6 +6742,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
         - `reasoning.test.ts` — Phase 4 Task 4.3 — flow.main.doReasoning
       - `action-case.test.ts` — Phase 4 Group B Task 4.6 — flow.actionCase
       - `auto-phase.test.ts` — Phase 4 Task 4.2 — engine.flow.runAutoPhase
+      - `b08054-host-leave-replacement.test.ts`
       - `bug-112-offboard-declared-use.test.ts` — BUG-112: 「自身を場外へ移すコスト」(selfToDeckBottom 等) の宣言能力で incrDeclaredUseCount が
       - `bug-140-cutin-batch.test.ts` — qa: card:B03028:d5ed43d6e9854041a9d21e09941ee12b53c86ab6a330a20e63d83cef33a88a45
       - `bug-194-partner-ap.test.ts` — BUG-194: real partner is a contact actor and must share AP modifier/read/…

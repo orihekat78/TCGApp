@@ -1831,7 +1831,7 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
             return;
           }
           const handIndex = s.players[p].hand.length;
-          mutate.scene.toHand(s, sourceCard.uid);
+          mutate.scene.toHand(s, sourceCard.uid, { cause: 'effect', byPlayer: ctx.source.player });
           if (s.players[p].hand.length !== handIndex + 1) {
             setCardMoveBinding(ctx, a.bind, []);
             mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', result: 'none' });

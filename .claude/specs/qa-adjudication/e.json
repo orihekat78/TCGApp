@@ -305,7 +305,7 @@
       "evidence": [
         "rules:.claude/rules/16-card-set.md:30",
         "src:src/cards/ct-p03/B03006.ts:6",
-        "src:src/engine/mutate/scene.ts:393",
+        "src:src/engine/mutate/scene.ts:428",
         "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:254",
         "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:255",
         "tests:tests/cards/official-qa/B03006-public-stack-lifecycle.test.ts:256",
@@ -413,7 +413,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p03/B03048.ts:1",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:228"
       ]
     },
@@ -1243,7 +1243,7 @@
         "rules:.claude/rules/24-qa-naming-stun.md:49",
         "src:src/cards/ct-p07/B07072.ts:43",
         "src:src/engine/effect/atom-handlers/scene.ts:1340",
-        "src:src/engine/mutate/scene.ts:800",
+        "src:src/engine/mutate/scene.ts:868",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:254"
       ],
       "noteCodes": []
@@ -1411,27 +1411,26 @@
     {
       "qaId": "card:B08059:24724a7bdd74ed439861b6795dd7242b2f30cd9413262f35d42547dc0d2c5ebe",
       "answerHash": "b5c37b4066ad54311a6a9e0227af507ebf7f67ad4f7bc8651503c245e2c6da12",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08059.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p08/B08059.ts:3",
+        "tests:tests/cards/official-qa/B08057-B08059-completion-public-wave181.test.ts:234",
+        "tests:tests/cards/official-qa/B08057-B08059-completion-public-wave181.test.ts:236",
+        "tests:tests/cards/official-qa/B08057-B08059-completion-public-wave181.test.ts:237"
       ]
     },
     {
       "qaId": "card:B08060:1e6decec598c8178c0ef59895411a3e6043a00f96c40f3608c98b25e915c134b",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08060.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p08/B08060.ts:25",
+        "tests:tests/cards/official-qa/B08060-B08062-completion-public-wave181.test.ts:140",
+        "tests:tests/cards/official-qa/B08060-B08062-completion-public-wave181.test.ts:141"
       ]
     },
     {
@@ -1647,7 +1646,7 @@
         "src:src/engine/flow/contact.ts:162",
         "src:src/engine/flow/contact.ts:206",
         "src:src/engine/flow/contact.ts:217",
-        "src:src/engine/listeners/triggered.ts:505",
+        "src:src/engine/listeners/triggered.ts:518",
         "tests:tests/cards/official-qa/turn-conditioned-cutin-expansion-public.test.ts:193"
       ]
     },
@@ -1745,7 +1744,7 @@
         "rules:.claude/rules/20-color-and-switch.md:45",
         "src:src/cards/ct-p09/B09109.ts:39",
         "src:src/engine/effect/atom-handlers/scene.ts:520",
-        "src:src/engine/mutate/scene.ts:240",
+        "src:src/engine/mutate/scene.ts:253",
         "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:176",
         "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:225",
         "tests:tests/cards/official-qa/full-scene-effect-entry-public-wave63.test.ts:228",
@@ -1969,7 +1968,7 @@
         "src:src/cards/ct-p10/B10078.ts:10",
         "src:src/cards/ct-p10/B10078.ts:6",
         "src:src/engine/flow/contact.ts:162",
-        "src:src/engine/listeners/triggered.ts:503",
+        "src:src/engine/listeners/triggered.ts:516",
         "tests:tests/cards/official-qa/ctp10-opponent-turn-cutin-public.test.ts:171"
       ]
     },
@@ -2164,7 +2163,7 @@
         "src:src/engine/flow/contact.ts:162",
         "src:src/engine/flow/contact.ts:206",
         "src:src/engine/flow/contact.ts:217",
-        "src:src/engine/listeners/triggered.ts:505",
+        "src:src/engine/listeners/triggered.ts:518",
         "tests:tests/cards/official-qa/turn-conditioned-cutin-expansion-public.test.ts:164"
       ]
     },

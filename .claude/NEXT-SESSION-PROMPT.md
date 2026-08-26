@@ -1,61 +1,62 @@
-# Next Task: card-completion QA Waves180-181
+# Next Task: card-completion QA Waves182-183
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves178-179 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves180-181 commit.
 
 ## Completed
 
-- Waves178-179 align sixteen B08032-B08047 rows. Coverage is 2072 matched /
-  892 test-missing / 2964 total; 786 exact groups remain, 680 singletons.
-- BUG-379 fixes B08034/B08034P at the after-sleep, pre-Mislead/evidence window.
-- Rules adjudication corrected the stale incoming hash descriptions before merge.
-- Full functional Vitest, TypeScript, full ESLint, smoke1000/baseline, focused
-  public tests, QA merge, and horizontal scan are green.
+- Waves180-181 align sixteen B08048-B08062 rows. Coverage is 2088 matched /
+  876 test-missing / 2964 total; 772 exact groups remain, 668 singletons.
+- BUG-380 implements B08054's opponent-effect/contact hidden-set return across
+  every scene destination, including persisted attribution and legacy fail-closed.
+- Private hidden identities are removed from queued observer payloads before a
+  B02020-style human pending decision or replay projection.
+- Sol final review: Critical 0 / Important 0 / Nit 0.
 
 ## Cadence
 
-- Per wave: fresh authority, public proof, narrow QA merge.
-- Per two waves: type/focused lint/QA/docs/diff, one commit, one push.
+- Continue without confirmation. Accuracy remains first.
+- Per two waves: focused/type/lint/QA/docs, one commit, one push.
 - Broad gates every ten waves or immediately after T2/T3/security/save/UI.
+- Reuse at most three read-only agents. Stop after two implementation waves or
+  around 60% context and write the next handoff.
 
 ## Start
 
 1. Read root/cards/tests/.claude AGENTS and router/card-wave/verify skills.
 2. Verify branch/upstream/status and preserve the two untracked pnpm files.
-3. Re-run hash-only queue and isolated authority hashes.
-4. Handle B08054 as an isolated T3 RED/design/review before aligning its row.
-5. Re-evaluate CardDefs and stale DEFER notes; use public dispatch proof.
+3. Re-run hash-only queue and isolated official authority hashes.
+4. Ground every row below before trusting its current test-gap description.
+5. Re-evaluate CardDefs and stale DEFER notes; use public owner mirrors.
 
-## Wave180: nine items
+## Wave182 candidates: nine ungrounded rows
 
-- `B08048 3053f6462e12...`: level7 becomes level6, then qualifies for AP+3000.
-- `B08048 723965466bac...`: action trigger resolves after sleep and before guard.
-- `B08048 7744747aea8b...`: later FBI entry does not retroactively grant Assault.
-- `B08051 2f338c8af1f1...`: declaration cost cannot use opponent remove cards.
-- `B08051 43e0680a7f73...`: switch removes Akemi before entry-condition evaluation.
-- `B08051 c77e68990a51...`: later Akemi removal does not retroactively grant Assault.
-- `B08051 f4a642b51d9e...`: granted Assault persists after Akemi leaves remove.
-- `B08054 94adce46750f...`: T3 BLOCK — opponent leave replacement returns all
-  face-down set cards to hand immediately before same-time effects.
-- `B08055 e4a36acb6bbb...`: opponent-turn Cut-In is usable, but inactive text adds
-  no extra hand removal or AP.
+- `B08062 da1937a11dcf...`
+- `B08062 e69ffd017f47...`
+- `B08063 685833a68d06...`
+- `B08063 cf1285aacbbc...`
+- `B08064 535abf870a66...`
+- `B08064 9a3781013274...`
+- `B08065 c758369a7ddd...`
+- `B08066 7b874358a3b2...`
+- `B08066 9862605d3cac...`
 
-## Wave181: seven items
+## Wave183 candidates: nine ungrounded rows
 
-- `B08057 291f87522e20...`: exact top-nine cost uses only the owner deck.
-- `B08057 fa43ed745439...`: cards just paid into remove are eligible for the tail.
-- `B08059 24724a7bdd74...`: started Assault action survives later condition loss.
-- `B08059 9a421079649c...`: self-adjusted level7 counts in its own aura latch.
-- `B08060 1e6decec598c...`: post-search scene entry remains zero-selectable.
-- `B08060 facf6c955657...`: first revealed level7 must enter hand; no decline.
-- `B08062 b097293b6a62...`: continuous aura has no activation/decline window.
+- `B08067 396974861280...`
+- `B08069 66d562d548cf...`
+- `B08071 c0f4cd95060c...`
+- `B08072 8eadbbc432ff...`
+- `B08072 fe200fa87639...`
+- `B08073 07cb3dce14db...`
+- `B08073 2b2af443366f...`
+- `B08073 33ee144ebb5f...`
+- `B08073 d538f5ad89d4...`
 
 ## Carry-forward
 
 - Authority: 2257 printings / 2964 Q&A / conflict zero; normalized hash
   `9a36b5d40860f10a6688bb34d6e52c143b7a996d5f3f561486c6384907b723ec`.
-- Dossiers: `C:/Users/arumi/AppData/Local/Temp/conan-ground-wave180-181-20260826`.
 - CT-P08 hashes: event `0355d32c6952...`, character `ae38933ccbeb...`,
   case `f152683d7038...`, partner `6acb5b4707e3...`.
-- B08059 and B08057 DEFER rows are stale; B08054 is a genuine missing capability.
 - Preserve `pnpm-lock.yaml` and `pnpm-workspace.yaml`; keep official sync drift separate.
-- About 87 waves remain through roughly Wave266.
+- About 86 waves remain through roughly Wave267.

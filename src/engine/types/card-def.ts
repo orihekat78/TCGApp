@@ -11,6 +11,11 @@ export type SetCardRemovalReplacement = {
   filter: TargetFilter;
 };
 
+/** Immediate replacement of the leaving host's ordinary set-card cleanup. */
+export type HostLeaveSetCardReplacement = {
+  kind: 'face-down-to-owner-hand';
+};
+
 export type AlternativeCostProvider = { targetFilter: TargetFilter };
 
 // ---------- AbilityType ----------
@@ -371,6 +376,8 @@ export type AbilityDef = {
   limit?: AbilityLimit;                    // 【ターン①】等
   /** Pre-removal replacement for a face-up set-card occurrence. */
   setCardRemovalReplacement?: SetCardRemovalReplacement;
+  /** Pre-cleanup replacement owned by the leaving host itself. */
+  hostLeaveSetCardReplacement?: HostLeaveSetCardReplacement;
   effect?: Effect;                         // Descriptor (DSL) — continuous 以外
   continuousModifier?: ContinuousModifier; // type='continuous' 時のみ (G23)
   description: string;                     // 公式テキスト (エラッタ後)

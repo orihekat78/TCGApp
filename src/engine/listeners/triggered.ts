@@ -253,6 +253,19 @@ function withoutSimultaneousSetCardObservers(payload: unknown): unknown {
   return publicPayload;
 }
 
+/** A face-down set returned to a private hand has no public identity. */
+function withoutPrivateSetCardLeaveIdentity(payload: unknown): unknown {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return payload;
+  const value = payload as Record<string, unknown>;
+  if (value.faceUp === true || value.destination !== 'hand') return payload;
+  const {
+    setCardId: _setCardId,
+    setCardInstanceId: _setCardInstanceId,
+    ...publicPayload
+  } = value;
+  return publicPayload;
+}
+
 function collectCardsInPlay(state: GameState): CardLocation[] {
   const result: CardLocation[] = [];
   for (const p of ['self', 'opp'] as const) {
@@ -732,12 +745,15 @@ function handleHook(
         : undefined;
       // queue (side-channel set されていても skip しない、pre-pick step 実行のため)。
       // sourceBindings (contact bindings) は上で算出済 → entry に永続化 (runtime $contact.byUid 解決)。
+      const queuedTriggerPayload = hookName === 'setcard:leave'
+        ? withoutPrivateSetCardLeaveIdentity(occurrencePayload)
+        : occurrencePayload;
       event.queue(
         state,
         resolvedEffect,
         abilitySource,
         hookName,
-        occurrencePayload,
+        queuedTriggerPayload,
         sourceBindings,
         // BUG-132 GAP-2: effect:declared のみ batch 連番 + 反応マーカーを entry に付与
         {

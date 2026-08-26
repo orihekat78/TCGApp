@@ -274,7 +274,7 @@
       "evidence": [
         "rules:.claude/rules/15-abilities-effects.md:14",
         "src:src/cards/ct-p03/B03002.ts:27",
-        "src:src/engine/listeners/triggered.ts:446",
+        "src:src/engine/listeners/triggered.ts:459",
         "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:186",
         "tests:tests/cards/official-qa/B03002-B05005-next-hint-order-guard.test.ts:188"
       ]
@@ -597,7 +597,7 @@
         "rules:.claude/rules/25-qa-effects-resolution.md:53",
         "src:src/cards/ct-p04/B04046.ts:24",
         "src:src/engine/effect/atom-handlers/scene.ts:520",
-        "src:src/engine/mutate/scene.ts:240",
+        "src:src/engine/mutate/scene.ts:253",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:191",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:212",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:213",
@@ -1058,7 +1058,7 @@
         "rules:.claude/rules/24-qa-naming-stun.md:49",
         "src:src/cards/ct-p06/B06058.ts:49",
         "src:src/engine/effect/atom-handlers/scene.ts:1340",
-        "src:src/engine/mutate/scene.ts:800",
+        "src:src/engine/mutate/scene.ts:868",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:167"
       ],
       "noteCodes": []
@@ -1586,11 +1586,13 @@
     {
       "qaId": "card:B08051:f4a642b51d9e6a3f15c26aaa09c523c9650a98ad925d4c237ba629a31033bea5",
       "answerHash": "3d82e1ce0d30306f0b2fa9081c9ac0f4ef72077803d652bb33764a04de2a8c51",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08051.ts:60"
+        "src:src/cards/ct-p08/B08051.ts:26",
+        "tests:tests/cards/official-qa/B08048-B08055-completion-public-wave180.test.ts:265",
+        "tests:tests/cards/official-qa/B08048-B08055-completion-public-wave180.test.ts:266"
       ]
     },
     {
@@ -1744,7 +1746,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09082.ts:1",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:204"
       ],
       "noteCodes": []
@@ -1867,7 +1869,7 @@
         "rules:.claude/rules/25-qa-effects-resolution.md:53",
         "src:src/cards/ct-p10/B10023.ts:6",
         "src:src/engine/effect/atom-handlers/scene.ts:520",
-        "src:src/engine/mutate/scene.ts:240",
+        "src:src/engine/mutate/scene.ts:253",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:191",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:212",
         "tests:tests/cards/official-qa/effect-entry-full-scene-public-wave61.test.ts:213",

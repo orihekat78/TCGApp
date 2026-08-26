@@ -56,7 +56,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p01/B01058.ts:1",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:223"
       ]
     },
@@ -241,7 +241,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p02/B02083.ts:1",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:226"
       ]
     },
@@ -317,7 +317,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p03/B03054.ts:1",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:229"
       ]
     },
@@ -488,9 +488,9 @@
       "evidence": [
         "rules:.claude/rules/10-action-event.md:39",
         "src:src/cards/ct-p04/B04028.ts:26",
-        "src:src/engine/listeners/triggered.ts:739",
-        "src:src/engine/listeners/triggered.ts:750",
-        "src:src/engine/listeners/triggered.ts:783",
+        "src:src/engine/listeners/triggered.ts:755",
+        "src:src/engine/listeners/triggered.ts:766",
+        "src:src/engine/listeners/triggered.ts:799",
         "tests:tests/cards/official-qa/B04015-B04028-action-hirameki.test.ts:75",
         "tests:tests/cards/official-qa/B04015-B04028-action-hirameki.test.ts:80",
         "tests:tests/cards/official-qa/B04015-B04028-action-hirameki.test.ts:81"
@@ -896,7 +896,7 @@
         "rules:.claude/rules/24-qa-naming-stun.md:49",
         "src:src/cards/ct-p06/B06066.ts:88",
         "src:src/engine/effect/atom-handlers/scene.ts:1340",
-        "src:src/engine/mutate/scene.ts:800",
+        "src:src/engine/mutate/scene.ts:868",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:193"
       ],
       "noteCodes": []
@@ -1056,7 +1056,7 @@
         "rules:.claude/rules/24-qa-naming-stun.md:49",
         "src:src/cards/ct-p07/B07023.ts:43",
         "src:src/engine/effect/atom-handlers/scene.ts:1340",
-        "src:src/engine/mutate/scene.ts:800",
+        "src:src/engine/mutate/scene.ts:868",
         "tests:tests/cards/official-qa/stun-activation-to-sleep-wave22.test.ts:219"
       ],
       "noteCodes": []
@@ -1098,7 +1098,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p07/B07041.ts:1",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:195"
       ]
     },
@@ -1166,7 +1166,7 @@
         "src:src/cards/ct-p07/B07058.ts:42",
         "src:src/engine/effect/apply-pick.ts:47",
         "src:src/engine/effect/atom-handlers/scene.ts:807",
-        "src:src/engine/listeners/triggered.ts:578",
+        "src:src/engine/listeners/triggered.ts:591",
         "src:src/engine/resolve/stack.ts:229",
         "tests:tests/cards/official-qa/effect-entry-trigger-order-public.test.ts:198"
       ]
@@ -1502,7 +1502,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-p09/B09027.ts:1",
-        "src:src/engine/mutate/scene.ts:799",
+        "src:src/engine/mutate/scene.ts:867",
         "tests:tests/cards/official-qa/stun-action-target-public.test.ts:200"
       ]
     },
@@ -1608,7 +1608,7 @@
         "src:src/engine/flow/contact.ts:162",
         "src:src/engine/flow/contact.ts:206",
         "src:src/engine/flow/contact.ts:217",
-        "src:src/engine/listeners/triggered.ts:505",
+        "src:src/engine/listeners/triggered.ts:518",
         "tests:tests/cards/official-qa/turn-conditioned-cutin-expansion-public.test.ts:187"
       ]
     },

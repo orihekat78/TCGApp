@@ -688,7 +688,9 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
         if (typeof selfUid !== 'string') return;
         const sourceOwner = sceneOwnerOf(s, selfUid);
         const replacementBefore = _peekPendingSetCardReplacementSide();
-        const moved = mutate.scene.toStack(s, selfUid, hostUid);
+        const moved = mutate.scene.toStack(s, selfUid, hostUid, {
+          cause: 'effect', byPlayer: ctx.source.player,
+        });
         const replacementAfter = _peekPendingSetCardReplacementSide();
         if (!moved) {
           if (replacementAfter && replacementAfter !== replacementBefore) return;
@@ -724,7 +726,9 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
         if (typeof hostUid !== 'string') return;
         const sourceOwner = sceneOwnerOf(s, movedUid);
         const replacementBefore = _peekPendingSetCardReplacementSide();
-        const moved = mutate.scene.toStack(s, movedUid, hostUid);
+        const moved = mutate.scene.toStack(s, movedUid, hostUid, {
+          cause: 'effect', byPlayer: ctx.source.player,
+        });
         const replacementAfter = _peekPendingSetCardReplacementSide();
         if (!moved) {
           if (replacementAfter && replacementAfter !== replacementBefore) return;

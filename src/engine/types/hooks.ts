@@ -75,7 +75,8 @@ export type HookName =
   | 'leave:to-partner-area'
   // engine拡張 wave#2 cluster9 (2026-06-15): 裏向き/表向きセットカードが現場から離れたとき
   // (rules/16 セット解除)。per-occurrence (1枚につき1回) emit。
-  //   payload: { player(=host owner), hostUid, hostCardId, setCardId, setCardInstanceId, faceUp, cause }
+  //   payload: { player(=host owner), hostUid, hostCardId, setCardId, setCardInstanceId, faceUp, cause,
+  //              destination?:'remove'|'hand' }
   //   source : { player, uid(=hostUid), cardId(=hostCardId), setCardId, setCardInstanceId }
   // listener は triggerPlayerIs で自/相手側を判定 (host uid を持つが set card 自体に ability は無い)。
   // B07034/B07034P/PR231 a1 (side:self) + B02020/B02020P a1 (side:opp) が購読。

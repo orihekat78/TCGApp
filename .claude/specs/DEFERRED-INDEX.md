@@ -731,7 +731,7 @@ classify workflow GREEN候補のうち、実 engine 型直読で false-green と
 | rep | DEFER 理由 (engine gap) | 解禁条件 |
 |-----|----------------------|---------|
 | ~~B08050 (【解決編】継続レベル+3)~~ | ✅ **出荷済** (card wave engine-unlocked-0624, 2026-06-24): `ContinuousModifier.lvlDelta` (a206e9dc) + 登場時 deck-look (deckRevealUntil match-all → handAdd → boundToRemove + boundMatchesFilter `cardNameNot` discard)。condition=caseStatus解決編 (自己参照なし) で latch 問題と無縁。spec: [engine-additive-wave-2026-06-24.md](engine-additive-wave-2026-06-24.md) | — |
-| ~~B08059 / B08059P (【自分ターン中】現場lv7×2 → 自レベル+1)~~ | ✅ `levelFilterOverride`でself-inclusive latchを修正済み。focused 4/4 green; Wave181で公式public認定予定 | — |
+| ~~B08059 / B08059P (【自分ターン中】現場lv7×2 → 自レベル+1)~~ | ✅ `levelFilterOverride`でself-inclusive latchを修正済み。Wave181で自己包含latchと開始済みaction継続をpublic認定 | ✅ 解消 |
 | ~~B08023 / B08023P / B08033~~ (1pick→2atom 同キャラ) | ✅ B08023/P carrier-reuseとB08033 `removeSetCard` cost/同一target riderは出荷済み。Wave178でB08033 split-host costとAP/Assault tailを公開認定 | ✅ 解消 |
 | ~~B08004 / B08004P (stun cost コナン)~~ | ✅ `removeColorAtLeast.cardKind:'character'`と`stunChar`は出荷済。Wave175で自分のactive灰原哀限定、黒イベント非計上、owner相対costを認定 | ✅ 解消 |
 | ~~B08019 (partner-area declare)~~ | ✅ 当該カードはMR。`scope:'always'`でscene/PA宣言を共有し、Wave176で現行descriptorを再認定 | ✅ 解消 |
@@ -1390,7 +1390,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
   literalize (空 bind → 0)。cross-step で「前段 pick の bind を後段 plain atom の dyn が読む」構成は
   **現状不可** — PB contract atom (walk skip) 内蔵 composite (shuffleThenDrawMoved 等) か dyn-max 対応
   atom (evidenceFlip 型) で書く。authoring 規約として finish.cjs lint 追加候補。
-- ~~B08057 継続 DEFER~~: ✅ `removeAreaToDeckTop` bind + moved-count gate + bound reorderを出荷済み。Wave181で公式public認定予定。
+- ~~B08057 継続 DEFER~~: ✅ `removeAreaToDeckTop` bind + moved-count gate + bound reorderを出荷済み。Wave181でowner deck限定costとcost由来候補をpublic認定。
 - B03110 gate 意味論 nit: FILE<2 で opt-in した場合「1枚だけ加える (rules/15 可能な限り)」読みも成立。
   現実装 = all-or-nothing (0枚)。board-wipe 発火条件は両読み同一。カード個別 QA 出現時に再確認。
 
@@ -1486,4 +1486,4 @@ UI 基盤 (partnerMR source 列挙 + PA-MR tile + flows 解決) は出荷済。�
 
 | rep | 理由 | 解禁条件 |
 |-----|------|---------|
-| B08054 | 相手の効果/コンタクトでhostが離場するとき、裏向きset全枚を通常removeの代わりに即handへ戻す置換能力がCardDef/engineとも不在。同時発動能力より先に処理する必要あり | T3 replacement設計、effect/contact正例、own/cost leave反例、同時trigger順のRED-GREEN |
+| ~~B08054~~ | ✅ `hostLeaveSetCardReplacement`を同期pre-cleanup consultとして追加。host行先を維持し、相手effect/contact時だけ裏向きset occurrenceをowner handへ返す。旧saveのattribution欠落はfail-closed | ✅ Wave180 public/engine T3認定 |
