@@ -13,20 +13,22 @@
 
 ## Next
 
-- Waves182-183 move eighteen items to matched. Coverage is 2106 matched / 858
-  test-missing / 2964 total; 755 exact groups remain, including 652 singletons.
+- Waves184-185 move eighteen items to matched. Coverage is 2124 matched / 840
+  test-missing / 2964 total; 738 exact groups remain, including 636 singletons.
 - Production CardDefs/engine already matched all rulings. New public proofs cover
-  MR overwrite, reveal lifetime, remove-exit cost observers, duplicate reserve,
-  dynamic AP/split names, and turn-end trigger/resolution boundaries.
-- Focused structural matrix 128, TypeScript, scoped ESLint, QA reviewed gate, and
-  Sol semantic review pass. Broad Vitest/smoke stays on the ten-wave/T2-T3 cadence.
+  ordered options, cost-after-state, refresh-safe invoke, forced event picks,
+  continuous AP, naming state, and full-scene switch.
+- New tests 38, horizontal 294, TypeScript, QA, smoke 1000, and Sol review pass.
+  Full Vitest functional lane has 13812 passes; release-only clean/junction gates
+  remain environment-bound. Playwright's stale B08034 fixture was corrected and
+  its desktop/mobile rerun is 4/4.
 - Generic policy-free sequence pre-walk can still preselect a later PA target
   before an earlier PA mutation. B07104 heuristic and human paths avoid it;
   investigate this engine-wide ordering risk when a future card exposes it.
-- Waves184-185 start with eighteen ungrounded rows across B08075-B08091; re-ground
+- Waves186-187 start with sixteen ungrounded rows across B08092-B09005; re-ground
   before interpreting the hashes.
 - Official sync drift remains separate: PR322 and changed B04018/B04018P/
   B06103P Q&A require re-queueing.
-- At about nine exact groups per wave, about 84 waves remain through roughly Wave267.
+- At about nine exact groups per wave, about 82 waves remain through roughly Wave267.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

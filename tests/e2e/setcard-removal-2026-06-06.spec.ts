@@ -37,7 +37,9 @@ function build(gs: AnyState): void {
   self.case = { cardId: 'D08026', status: '事件編', requiredEvidence: 7, colors: ['白'], declaredUseCount: {} };
   // B08034 (推理する) + holder (D08009 に setCard 1枚)
   self.scene = [mkC('B08034', 'kudo#1'), mkC('D08009', 'holder#1', [{ cardId: 'D08003', faceUp: false, instanceId: 'set:holder:one' }])];
-  self.deck = ['e1', 'e2', 'draw1', 'x']; self.hand = []; self.evidence = []; self.remove = []; self.file = [];
+  // reasoning trigger resolves before reasoning evidence is gained, so the
+  // ability's draw must be the current deck top.
+  self.deck = ['draw1', 'e1', 'e2', 'x']; self.hand = []; self.evidence = []; self.remove = []; self.file = [];
   gs.pendingEffects = [];
   gs.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
 }

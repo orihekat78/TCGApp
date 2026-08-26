@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `969f6eb35d55`
+> Source hash: `d4d04d37588a`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,18 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# QA adjudication Waves184-185
+
+- Moved eighteen CT-P08 official Q&A rows from `test-missing/test-gap` to
+  `matched/aligned`; coverage is now 2124/2964.
+- Added public owner-mirror proofs for ordered optional event choices,
+  resolution-time name checks, refresh-safe leave invocation, continuous AP,
+  forced event targets, naming-state action limits, and full-scene switching.
+- Retired stale B08075/B08078/B08082/B08086/B08087/B08091 DEFER records.
+- Corrected the B08034 E2E deck fixture to reflect that its reasoning trigger
+  resolves before reasoning evidence is gained.
+- Production CardDefs and engine required no behavior changes.
 
 ---
 date: 2026-08-26
