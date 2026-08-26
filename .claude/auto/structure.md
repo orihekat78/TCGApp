@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6799
+- **ファイル数**: 6808
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -558,6 +558,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-375.md` — Public hand reveal presentation omission
     - `BUG-376.md` — Granted hand Cut-In filter omission
     - `BUG-377.md` — Per-character mill crosses refresh boundary
+    - `BUG-378.md` — B08022 handAddFromRemove owner omission
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -935,6 +936,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-26-03-qa-waves168-169.md`
     - `2026-08-26-04-qa-waves170-171.md`
     - `2026-08-26-05-qa-waves172-173.md`
+    - `2026-08-26-06-qa-waves176-177.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1694,6 +1696,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-26-qa-waves170-171.md` — QA adjudication Waves170-171
     - `2026-08-26-qa-waves172-173.md` — QA adjudication Waves172-173
     - `2026-08-26-qa-waves174-175.md` — QA adjudication Waves174-175
+    - `2026-08-26-qa-waves176-177.md` — QA adjudication Waves176-177
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -2019,13 +2022,17 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08015.md` — B08015 若狭留美 grounding
       - `B08016.md` — B08016 grounding
       - `B08017.md` — B08017 / B08017P grounding
-      - `B08019.md` — B08019 大岡紅葉＆伊織無我 (MR/MRP) grounding (2026-07-10, sonnet5)
+      - `B08019.md` — B08019 / B08019P grounding
       - `B08020.md` — B08020 / B08020P grounding
+      - `B08021.md` — B08021 grounding
+      - `B08022.md` — B08022 grounding
       - `B08024.md` — B08024 grounding
       - `B08025.md` — B08025 / B08025P grounding
       - `B08026.md` — B08026 grounding
+      - `B08027.md` — B08027 grounding
+      - `B08028.md` — B08028 grounding
       - `B08029.md` — B08029 / B08029P grounding
-      - `B08030.md` — B08030 grounding
+      - `B08030.md` — B08030 / B08030P grounding
       - `B08033.md` — B08033 / B08033P grounding
       - `B08034.md` — B08034 / B08034P grounding
       - `B08035.md` — B08035 grounding
@@ -6037,6 +6044,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B07100-B08003-completion-public-wave174.test.ts` — qa: card:B07100:8fa59c53057ee164d956e8a94719c89402a761c9093428f38822e073eaf28600
       - `B07102-refresh-includes-removed.test.ts` — qaId=card:B07102:99f16dd6a248501c9d63a44dd85b2d6097ef720865e4181d1b451669f04b05d…
       - `B08004-B08016-completion-public-wave175.test.ts` — qa: card:B08004:1a671f1699203588abc9b63b4ed1d94a1f5f07bf485a87e3994b1ec8ac4c4733
+      - `B08019-B08022-completion-public-wave176.test.ts` — qa: card:B08019:c3e39b5f3aa8ed0eb6d3559b0878dcec5c606a324573fdbe79826a0a3408072f
+      - `B08025-B08030-completion-public-wave177.test.ts` — qa: card:B08025:84ecdea6c10bc908728749deacc797a85529c42aef7daa60ffe67827bc5ce34f
       - `B08049-completion-public-wave132.test.ts` — qa: card:B08049:190baa1e1f03afa7d9e83de8ff7b5f6134452bd6b3a05caf22783df26c2a9ea8
       - `B08058-resolution-public-wave25.test.ts` — qa: card:B08058:2b4e49ff7d67dddeddd1fff86f17cd8814f42adc4f55ce818ce3626a24b4cdcf
       - `B08081-multi-intercept-public-wave25.test.ts` — qa: card:B08081:6b3d06f3573c39d85fe728b4613bf4458ef9a1849c52f036ac9bf48314a44dd7
@@ -6518,7 +6527,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `bug-249-effect-order.spec.ts` — Keep reserve cards: both real effects consume a card, and normal engine
     - `bug-252-reveal-visibility-order.spec.ts` — setupGamePage already waited for the Vite dev bridge. Hash-only routing avoids
     - `bug-260-b04030-switch-overlay.spec.ts`
-    - `card-choice-details-real-flow.spec.ts` — The first of two cards becomes stable while the reveal phase still has
+    - `card-choice-details-real-flow.spec.ts` — qa: card:B08019:d52596199be14d625d7776309eeaca145097a31eecca550237262ad7075cb2f4
     - `card-expand-modal-priority.spec.ts`
     - `charge-keyword-badge.spec.ts` — E2E: 突撃バッジ (user 指摘, 2026-06-01)
     - `choice-picker.spec.ts` — BUG-108 E2E: ChoicePickerModal の実ブラウザ render + option click → picker resolve を検証…

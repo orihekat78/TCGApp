@@ -193,7 +193,7 @@ function proveSelectedPhysicalRow(row: Row, sourceId: string) {
   }))).toEqual({ ok: true });
 
   const result = current();
-  expect(result.refreshCount.self, `${sourceId}: selected sole card refreshes`).toBe(1);
+  expect(result.refreshCount.self, `B08020 cohort ${sourceId}: selected sole card refreshes`).toBe(1);
   expect(result.players.opp.evidence, `${sourceId}: refresh gives opponent evidence`).toHaveLength(1);
   if (row.extraRefresh) {
     const seeds = [...result.players.self.deck, ...result.players.self.hand]
@@ -404,3 +404,5 @@ describe('official QA Wave65 horizontal: B10096 mills into the one-card look', (
       .toEqual(['B10096', 'B10096P']);
   });
 });
+
+// qa: card:B08020:34b5e50478a370f3ee9ce8bf309eeb4e4825d1b3115ec9eeab3024bdaf99dfa9

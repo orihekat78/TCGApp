@@ -1,65 +1,64 @@
-# Next Task: card-completion QA Waves176-177
+# Next Task: card-completion QA Waves178-179
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves174-175 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves176-177 commit.
 
 ## Completed
 
-- Waves174-175 align nineteen B07100-B08016 items. Coverage is 2040 matched /
-  924 test-missing / 2964 total; 816 exact groups remain, including 708 singletons.
-- BUG-376 makes dynamically granted hand Cut-In visible to keyword filters.
-- BUG-377 aggregates scene-count mill and evaluates `mill.n` after prior runtime
-  mutations, including autonomous resolution.
-- Wave matrices, focused 598, full Vitest 13516, full ESLint, typecheck,
-  smoke1000/baseline, and Playwright 477 pass / 17 skip are green.
-- Sol engine review: Critical/Important zero. Self-review and horizontal scan done.
+- Waves176-177 align sixteen B08017-B08030 items. Coverage is 2056 matched /
+  908 test-missing / 2964 total; 801 exact groups remain, including 694 singletons.
+- BUG-378 adds the missing owner to B08022 Maro-chan recovery.
+- Public matrices cover MR replacement timing, hidden set privacy, deck look,
+  continuous Bond, recovery ordering, owner costs, transfer, evidence multi-pick,
+  and mandatory Assist resolution.
+- Final focused matrix, TypeScript, full ESLint, full Vitest 13550,
+  smoke1000/baseline, and targeted Playwright desktop/mobile are green.
+- Independent T2 review: Critical/Important/Nit zero. Horizontal scan complete.
 
 ## Cadence
 
 - Per wave: fresh authority, public proof, narrow QA merge.
 - Per two waves: type/focused lint/QA/docs/diff, one commit, one push.
-- Broad Vitest/Playwright/smoke every ten waves or immediately after T3,
-  security, save, or public-UI changes. Certification-only work uses no agents.
+- Broad Vitest/Playwright/smoke every ten waves or after T2/T3/security/save/UI.
+  Certification-only work uses no agents.
 
 ## Start
 
 1. Read root/cards/tests/.claude AGENTS and router/card-wave/verify skills.
 2. Verify branch, upstream, status, and protected pnpm files read-only.
-3. Re-run the hash-only queue and fresh isolated authority validation.
-4. Re-evaluate each current CardDef before treating old DEFER notes as current.
-5. Use public tests; change production only after a failing semantic probe.
+3. Re-run the hash-only queue and isolated authority hashes.
+4. Re-evaluate current CardDefs and stale DEFER notes before implementation.
+5. Use public tests; production changes require a semantic RED first.
 
-## Wave176: nine items
+## Wave178: nine items
 
-- `B08017 10b387786ab0...`: stun disables Ai untargetability.
-- `B08017 b203c71c5a2c...`: opponent effect selection cannot choose protected Ai.
-- `B08017 d8dc99d62acd...`: ordinary actions may still target protected Ai.
-- `B08019 c3e39b5f3aa8...`: same-time MR removal does not trigger old same-name MR.
-- `B08019 d52596199be1...`: neither player may inspect face-down set identities.
-- `B08020 34b5e50478a3...`: short top-four look delays refresh until a card moves.
-- `B08021 a6add0dc4b25...`: Bond AP bonus is continuous, not an activated effect.
-- `B08022 9571a8a6da4f...`: the just-discarded Maro-chan may be recovered.
-- `B08022 fcb6f5077090...`: recovery remains independent when removal is declined.
+- `B08032 80a2cfb16a87...`: its second declaration may select itself in scene.
+- `B08033 06ce9fd17111...`: entry scene count includes the entering source.
+- `B08033 0ff04fc4b7cc...`: short deck sets all, refreshes, then continues.
+- `B08033 4785304193e3...`: set-card declaration cost is owner-only.
+- `B08034 5169c84a9f5e...`: neither player may inspect hidden set identity.
+- `B08034 a00a4fcb627d...`: reasoning trigger resolves before later reasoning effects.
+- `B08034 d889f1124f88...`: simultaneous mandatory turn-one triggers all fire.
+- `B08036 d52596199be1...`: returned hidden set occurrences stay distinguishable.
+- `B08037 0bcbb181ef2c...`: active-target permission does not waive entry naming.
 
-## Wave177: seven items
+## Wave179: seven items
 
-- `B08025 84ecdea6c10b...`: deck-top-three cost uses only the owner's deck.
-- `B08027 afd4ca647a05...`: the removed source joins remove-to-deck transfer.
-- `B08027 ea3d2d5ee477...`: the used entry event also joins that transfer.
-- `B08027 ec597b045373...`: transfer/shuffle is not refresh and gains no evidence.
-- `B08028 79e28e7fa78e...`: select all face-down evidence before flipping together.
-- `B08028 af0cdf511d18...`: any evidence positions are legal selections.
-- `B08030 3d207a0dc96f...`: Assist case resolution cannot be declined afterward.
+- `B08038 e47123f9e124...`: contact trigger precedes Cut-In/Disguise.
+- `B08038 f8f46017d87b...`: effect-generated contact also triggers it.
+- `B08038 fd298447ad15...`: deck1 cannot pay exact top-two cost or resolve tail.
+- `B08043 d2daf65f8f37...`: target LP compares with current highest own-scene LP.
+- `B08044 fa86da58031f...`: Assist threshold resolution cannot be declined.
+- `B08046 7dd4d4afb154...`: FBI count includes the source itself in scene.
+- `B08047 6c1e3617937e...`: hand≤2 makes down-to-two cost zero; sleep still pays.
 
 ## Carry-forward
 
 - Authority: 2257 printings / 2964 Q&A / conflict zero; normalized hash
   `9a36b5d40860f10a6688bb34d6e52c143b7a996d5f3f561486c6384907b723ec`.
 - Fresh dossiers:
-  `C:/Users/arumi/AppData/Local/Temp/conan-ground-wave176-177-20260826`.
+  `C:/Users/arumi/AppData/Local/Temp/conan-ground-wave178-179-20260826`.
 - CT-P08 hashes: event `0355d32c6952...`, character `ae38933ccbeb...`,
   case `f152683d7038...`.
-- Generic policy-free pre-walk may preselect a later PA target before an earlier
-  PA mutation; current B07104 human/heuristic paths are safe. Keep as horizontal risk.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Official sync drift PR322/B04018/B04018P/B06103P remains separate.
-- About 91 waves remain through roughly Wave266.
+- About 89 waves remain through roughly Wave266.

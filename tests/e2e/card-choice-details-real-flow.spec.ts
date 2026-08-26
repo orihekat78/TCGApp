@@ -1,3 +1,4 @@
+// qa: card:B08019:d52596199be14d625d7776309eeaca145097a31eecca550237262ad7075cb2f4
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import {
   buildGameState,
@@ -126,7 +127,7 @@ test.describe('real mounted card-choice details', () => {
     expect(selfCandidates).toHaveLength(2);
     expect(new Set(selfCandidates.map((candidate) => candidate.setCardInstanceId)).size).toBe(2);
     expect(oppCandidate).toBeDefined();
-    expect(candidates!.every((candidate) => candidate.hidden === true)).toBe(true);
+    expect(candidates!.every((candidate) => candidate.hidden === true), 'B08019 keeps both owners face-down set identities hidden').toBe(true);
     const selfCandidate = selfCandidates[0]!;
     const primary = page.getByTestId(`effect-pick-cand-${selfCandidate.uid}`);
     await expectHiddenCardBack(primary);

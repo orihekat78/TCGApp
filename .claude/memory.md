@@ -13,18 +13,16 @@
 
 ## Next
 
-- Waves174-175 move nineteen items to matched. Coverage is 2040 matched / 924
-  test-missing / 2964 total; 816 exact groups remain, including 708 singletons.
-- BUG-376 unifies hand Cut-In presence with `effectiveCutinAbilities`.
-- BUG-377 replaces per-character mill loops with one aggregate mill and keeps
-  `mill.n` runtime-bound through AI pre-walk.
-- Wave suites and horizontal checks pass; Sol review has no Critical/Important.
+- Waves176-177 move sixteen items to matched. Coverage is 2056 matched / 908
+  test-missing / 2964 total; 801 exact groups remain, including 694 singletons.
+- BUG-378 adds the missing `player:'self'` to B08022 Maro-chan recovery.
+- Full Vitest, lint, smoke, targeted Playwright, review, and horizontal scan pass.
 - Generic policy-free sequence pre-walk can still preselect a later PA target
   before an earlier PA mutation. B07104 heuristic and human paths avoid it;
   investigate this engine-wide ordering risk when a future card exposes it.
-- Waves176-177 batch sixteen items across B08017-B08030.
+- Waves178-179 batch sixteen items across B08032-B08047.
 - Official sync drift remains separate: PR322 and changed B04018/B04018P/
   B06103P Q&A require re-queueing.
-- At about nine exact groups per wave, about 91 waves remain through Wave266.
+- At about nine exact groups per wave, about 89 waves remain through Wave266.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

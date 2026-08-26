@@ -1476,21 +1476,23 @@
     {
       "qaId": "card:B08017:10b387786ab0605083805e1deebdd4a91ceb1adad240f341046c8e8d79295290",
       "answerHash": "8dcb517ec83605bf56b495f3c603800368e72a7388efd3146a365e7b5f46ed3d",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08017.ts:1"
+        "src:src/cards/ct-p08/B08017.ts:1",
+        "tests:tests/cards/official-qa/B01006-B08017-target-protection-public.test.ts:223"
       ]
     },
     {
       "qaId": "card:B08019:d52596199be14d625d7776309eeaca145097a31eecca550237262ad7075cb2f4",
       "answerHash": "018c28c57ffc3f7c7b045b0944716eb559c49535245b0642311f9ff66387704c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08019.ts:1"
+        "src:src/cards/ct-p08/B08019.ts:1",
+        "tests:tests/e2e/card-choice-details-real-flow.spec.ts:130"
       ]
     },
     {

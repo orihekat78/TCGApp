@@ -1545,14 +1545,12 @@
     {
       "qaId": "card:B08025:84ecdea6c10bc908728749deacc797a85529c42aef7daa60ffe67827bc5ce34f",
       "answerHash": "12307bb186b8a21efe7a9c05a6f5614d658a5701c491721b67aeaa71cf74f9fa",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p08/B08025.ts:83"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/ct-p08/B08025.ts:83",
+        "tests:tests/cards/official-qa/B08025-B08030-completion-public-wave177.test.ts:166"
       ]
     },
     {
