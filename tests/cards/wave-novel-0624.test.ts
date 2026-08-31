@@ -136,7 +136,11 @@ describe('wave novel-0624 — structural', () => {
     expect(a2.limit).toMatchObject({ kind: 'turn', n: 1 });
     expect(a2.trigger?.hook).toBe('enter');
     expect(a2.trigger?.matcherCondition).toMatchObject({ kind: 'triggerCharMatches', side: 'self', filter: { levelMin: 8, levelMax: 8 } });
-    expect(a2.effect).toMatchObject({ verb: 'draw' });
+    expect(a2.condition).toEqual({ kind: 'turn', player: 'self' });
+    expect(a2.effect).toMatchObject({
+      kind: 'conditional', if: { kind: 'not', c: { kind: 'sceneHas', query: { side: 'opp' } } },
+      then: { verb: 'draw' },
+    });
   });
 
   it('B09066 メアリー: a1=【登場時】絆(赤井家excludeSelf) conditional sleep, a2=【パートナー赤】phase-end 自スリープ draw+discard', () => {

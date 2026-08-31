@@ -2074,7 +2074,7 @@
       "method": "manual-semantic",
       "evidence": [
         "src:src/cards/ct-d01/D01008.ts:86",
-        "tests:tests/cards/wave-novel-0624.test.ts:143"
+        "tests:tests/cards/wave-novel-0624.test.ts:147"
       ]
     },
     {

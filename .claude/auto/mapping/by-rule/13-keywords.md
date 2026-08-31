@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `5ec8a9c6de7d`
+> Source hash: `4eed4cbf2fe9`
 
 公式ルール [`13-keywords.md`](../../../rules/13-keywords.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

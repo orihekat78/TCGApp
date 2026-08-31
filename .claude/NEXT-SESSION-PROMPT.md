@@ -1,6 +1,6 @@
-# Next Task: card-completion QA Wave192
+# Next Task: card-completion QA Wave193
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves190-191 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Wave192 commit.
 
 ## Required runtime
 
@@ -9,24 +9,21 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves190-191 commit.
 
 ## Completed
 
-- Waves190-191 align sixteen B09026-B09055 Q&A rows.
-- Coverage: 2172 matched / 792 test-missing / 2964 total.
-- Structural assertions were replaced by disguise, event-use, switch, trigger,
-  cost, owner-mirror, and public pick-authorization execution paths.
-- BUG-383 snapshots effective hand level before discard/cost removal and rejects
-  duplicate, missing, and stale hand occurrences.
-- Focused regression: 5 files / 99 tests PASS. TypeScript, scoped/full ESLint,
-  QA merge/lint, docs, bug lint, smoke 1000/baseline PASS.
-- Full Vitest completion is recorded in the Waves190-191 session note. It has
-  a known internal `CARDS_DATA_BUSY` test-host blocker; do not weaken the lock.
+- Wave192 aligns eight B09056-B09064 Q&A rows.
+- Coverage: 2180 matched / 784 test-missing / 2964 total.
+- Public owner mirrors execute zero removal, choice, full-scene switch,
+  short-deck refresh stop, owner-only declared cost, and dual-trait rewards.
+- BUG-384 makes B09063 consume 【ターン1】 when a level-7 blocker prevents draw.
+- Focused regression: 14 files / 351 tests PASS. TypeScript, scoped ESLint,
+  QA merge, taskA validation, and bug lint PASS. QA/docs artifacts were refreshed.
 
 ## Cadence
 
-- Complete Wave192 only. Do not start Wave193 in the same task.
+- Complete Wave193 only. Do not start Wave194 in the same task.
 - Certification-only work uses no agent. Production gaps require a failing probe.
-- After Wave192, run focused type/lint/QA/docs gates, make one commit and one push,
-  update this prompt for Wave193 only, then stop.
-- Next scheduled broad gate is Wave200 unless Wave192 changes engine, state,
+- After Wave193, run focused type/lint/QA/docs gates, make one commit and one push,
+  update this prompt for Wave194 only, then stop.
+- Next scheduled broad gate is Wave200 unless Wave193 changes engine, state,
   resolver, security, save, or visible UI behavior.
 
 ## Start
@@ -38,16 +35,16 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves190-191 commit.
 5. Prefer one public owner-mirror test file. Change production only for a RED gap.
 6. Use worktree-local binaries. Never use `pnpm exec`.
 
-## Wave192 candidates: eight rows
+## Wave193 candidates: eight rows
 
-- `B09056 291fc09e63b332fbdca9e94aae30890f71c8741ec83bda8724ea0b58d7b8dfd9`
-- `B09056 5302873b710d2a6013bbca719807f088b656f140927e19a6e8ab2a7e6a6d699b`
-- `B09056 57247cdb00d687f5f6a06d3987bccc1e4a8db8305235ed012d4fdda21abd6dd3`
-- `B09057 674ddfc2479854991161980b6b17e67c29832295a9d8c6790a534b955c228d41`
-- `B09057 ee4ff12ae2f5d9aaa25b2b03a760a31f15b0d141c59c71aebf70ad2269611e12`
-- `B09060 4b9ed3ae16be0d13349f1dab20fb4be1753c986295c1ce7c6853f494d840ff44`
-- `B09063 4fb59cfc644032b36ff3acee74cdfdce39b0d1fd77a47e772c0606e2eb7d543f`
-- `B09064 0c2766a6353754c22e1dd3df8a1dfda2dfc29acce248c88f56cc9a0d778e4549`
+- `B09073 6f84244014e18679f78a5ae0b96cec21787fc34c207c0c4ba6935a6b198b5b03`
+- `B09074 94b5f9ac6b539ddcff7e29f747ed02143be59ad6baacbb89e3a61038c9964adf`
+- `B09075 7505735302078534653e21e817caddde9141485ccd57604acac1b5b532a6b765`
+- `B09078 3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd`
+- `B09078 60bc571b2b7fbd182856b3fc57ec8ed167504073a034957e36be8fe49059137b`
+- `B09078 b12f43e33fad16d06ae71349d7a99edf1e732707da24c745d2874072861502f1`
+- `B09080 baf591af1a71b89c3e45ee478080278addb5fcda9d66647ac2fb576ead16fb0a`
+- `B09080 e708bf24cffc57978de99d717908363a3a03482fcf5db48da0af7d4c282c09fa`
 
 ## Pinned authority and protection
 

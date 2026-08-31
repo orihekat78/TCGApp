@@ -1627,11 +1627,12 @@
     {
       "qaId": "card:B09060:4b9ed3ae16be0d13349f1dab20fb4be1753c986295c1ce7c6853f494d840ff44",
       "answerHash": "d1ff892c1ecdfb8d4c7832ed4fc574b0775d817e5e9aecdb650862eda63ef9b4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09060.ts:1"
+        "src:src/cards/ct-p09/B09060.ts:31",
+        "tests:tests/cards/official-qa/B09056-B09064-completion-public-wave192.test.ts:331"
       ]
     },
     {

@@ -37,8 +37,12 @@
 - Full Vitest reaches completion but internally recurs `CARDS_DATA_BUSY` with
   one worker and no external holder. Native release prepare is clean; preserve
   the lock and isolate test-host writer overlap separately.
-- Wave192 only starts with B09056-B09064 rows in the next-task prompt.
+- Wave192 moved eight B09056-B09064 rows to matched. Coverage is 2180 matched /
+  784 test-missing / 2964 total. BUG-384 moves B09063's opponent-level blocker
+  from the pre-trigger gate into effect resolution so blocked draw still consumes
+  【ターン1】. Focused regression is 14 files / 351 tests.
+- Wave193 only starts with B09073-B09080 rows in the next-task prompt.
 - Local raw drift `ct-d01-api.json` remains separate from the tracked snapshot.
-- About 78 waves remain through Wave267.
+- About 77 waves remain through Wave267.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.
