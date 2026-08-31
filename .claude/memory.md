@@ -13,25 +13,26 @@
 
 ## Next
 
-- Waves186-187 move sixteen items to matched. Coverage is 2140 matched / 824
-  test-missing / 2964 total; 722 exact groups remain, including 620 singletons.
-- BUG-381 adds exact human `revealFromHand` occurrence selection and a public
-  cost-completion presentation. Invalid/duplicate indices reject; AI/legacy
-  keeps deterministic fallback.
-- BUG-382 assigns only `hand:reveal` cost reactions to the declared effect's
-  batch. B05088/B07034 retain ordinary cost-trigger owner order; B09004/B10006
-  wait for the current effect. Failed activation restores the reveal FIFO.
-- Wave public 24, focused 130, TypeScript, full lint, QA, functional full Vitest
-  13734, smoke 1000, Playwright full 477, and reveal-cost browser 2/2 pass.
+- Waves188-189 move sixteen B09006-B09024 rows to matched. Coverage is 2156
+  matched / 808 test-missing / 2964 total; 706 exact groups remain, including
+  604 singletons. No production code changed.
+- Public owner mirrors cover independent optional steps, continuous state,
+  full-scene switch, LP override lifetime, resolved guard AP, name branches,
+  Misread windows, Cut-In versus disguise, FILE no-op, contact attribution,
+  granted-trigger multiplicity/batch snapshot, and reveal-cost lifetime.
+- Focused 34, TypeScript, scoped ESLint, QA merge/generated docs/baseline lint pass.
+- The prior long-lived task ran Sol/ultra and reused about 0.65M input tokens per
+  turn. Continue in fresh Terra/high tasks, two waves per task, without agents
+  for certification-only work.
+- `pnpm exec` attempts an install and fails `ERR_PNPM_IGNORED_BUILDS`; use
+  worktree-local binaries without approving or changing dependencies.
 - Release-only dirty-worktree and pnpm-junction `jose` gates remain isolated;
   do not relax the private-hosted security allowlist.
 - Generic policy-free sequence pre-walk can still preselect a later PA target
   before an earlier PA mutation. B07104 heuristic and human paths avoid it;
   investigate this engine-wide ordering risk when a future card exposes it.
-- Waves188-189 start with sixteen B09006-B09024 rows; B09016/B09022/B09023/
-  B09024 require exact grounding before test authoring.
-- Official sync drift remains separate: PR322 and changed B04018/B04018P/
-  B06103P Q&A require re-queueing.
-- At about nine exact groups per wave, about 80 waves remain through roughly Wave267.
+- Waves190-191 start with sixteen B09026-B09055 rows in the next-task prompt.
+- Local raw drift `ct-d01-api.json` remains separate from the tracked snapshot.
+- About 78 waves remain through Wave267.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.

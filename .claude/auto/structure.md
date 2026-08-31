@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6874
+- **ファイル数**: 6879
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -946,6 +946,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-26-09-qa-waves182-183.md`
     - `2026-08-26-10-qa-waves184-185.md` — QA adjudication Waves184-185
     - `2026-08-26-11-qa-waves186-187.md` — QA adjudication Waves186-187
+    - `2026-08-31-01-qa-waves188-189.md` — QA adjudication Waves188-189
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1711,6 +1712,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-26-qa-waves182-183.md` — QA adjudication Waves182-183
     - `2026-08-26-qa-waves184-185.md` — QA adjudication Waves184-185
     - `2026-08-26-qa-waves186-187.md` — QA adjudication Waves186-187
+    - `2026-08-31-qa-waves188-189.md` — QA adjudication Waves188-189
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -2100,7 +2102,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B09007.md` — B09007 脇田兼則 grounding
       - `B09010.md` — B09010 阿笠博士 grounding
       - `B09019.md` — B09019/B09019P 「くさるなよ！」 (イベント) grounding (2026-07-10, fable)
-      - `B09024.md` — grounding dossier: B09024（世良真純）
+      - `B09024.md` — B09024 服部平蔵 grounding
       - `B09033.md` — grounding dossier: B09033
       - `B09033P.md` — grounding dossier: B09033P
       - `B09036.md` — B09036 怪盗キッド grounding
@@ -2305,6 +2307,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `waves182-183-authority.md` — Waves182-183 authority
       - `waves184-185-authority.md` — Waves184-185 authority
       - `waves186-187-authority.md` — Waves186-187 authority
+      - `waves188-189-authority.md` — Waves188-189 authority
       - `waves64-65-authority.md` — Waves64-65 authority manifest
       - `waves66-67-authority.md` — Waves66-67 authority manifest
       - `waves68-69-authority.md` — Waves68-69 authority manifest
@@ -6112,6 +6115,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08087-B08091-leave-evidence-public.test.ts` — qa: card:B08087:1f49f9f42b38c241ebd655d06681a4cb1c6030ffaa8345da75416cb84193fc80
       - `B08092-B08094-completion-public-wave186.test.ts` — qa: card:B08092:2acd62799ca89c8181d220a474927d8805e8f2fac855125cae4be29f07af6fa5
       - `B09002-B09005-completion-public-wave187.test.ts` — qa: card:B09002:b4865a17eaa7c68418a6b7755125081b917cc5203b710a3ee92ce60bee4d42ac
+      - `B09006-B09015-completion-public-wave188.test.ts` — qa: card:B09006:2d9f6416a9eff00283168d4c98abf4724ce62c0471c67384b312b1d17e6b5148
+      - `B09016-B09024-completion-public-wave189.test.ts` — qa: card:B09016:8d2d79973300c910aa8b160f07aabc86cbdb7d97fa97745452c640db361be527
       - `B09090-PR286-entry-waiver.test.ts` — qaId=card:B09090:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7e…
       - `B09109-completion-public-wave128.test.ts` — qa: card:B09109:87aa9ca394d3b7a7faa9cc64726031a8e157f606ad5c5fab6f9690c1e7ed7c45
       - `B10003-completion-public-wave140.test.ts` — qa: card:B10003:0194b74149e29b2d31fa5b6d2a9bf767dfd2a718b7ea50244905b5d5fb423e0b
