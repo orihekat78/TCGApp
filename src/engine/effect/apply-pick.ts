@@ -1257,12 +1257,14 @@ export function applyPickAndContinuation(
   }
   const selectedIndexedOccurrencesAreLive = (pickedUids ?? [pickedUid]).every((uid) => {
     const candidate = findPendingPickCandidate(pending, uid);
-    if (!candidate || (candidate.area !== 'deck' && candidate.area !== 'evidence' && candidate.area !== 'remove')) {
+    if (!candidate || (candidate.area !== 'deck' && candidate.area !== 'evidence'
+      && candidate.area !== 'remove' && candidate.area !== 'hand')) {
       return candidate !== undefined;
     }
     const index = candidate.index;
-    if (typeof index !== 'number' || !Number.isInteger(index)
-      || !isLiveCardOccurrenceWitness(state, candidate.player, candidate.area, candidate.occurrenceWitness)) return false;
+    if (typeof index !== 'number' || !Number.isInteger(index)) return false;
+    if (candidate.area === 'hand') return state.players[candidate.player].hand[index] === candidate.cardId;
+    if (!isLiveCardOccurrenceWitness(state, candidate.player, candidate.area, candidate.occurrenceWitness)) return false;
     return candidate.area === 'evidence'
       ? state.players[candidate.player].evidence[index]?.cardId === candidate.cardId
       : candidate.area === 'deck'

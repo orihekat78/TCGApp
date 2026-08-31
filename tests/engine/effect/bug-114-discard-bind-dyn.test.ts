@@ -13,14 +13,29 @@ import type { EffectCtx, GameState } from '@/engine/types';
 describe('BUG-114 primitive — discard bind + $discarded dyn root', () => {
   beforeAll(() => registerAll());
 
-  it('discard{bind} は除去した cardId を ctx.bindings に書く', () => {
+  it('discard{bind} は除去した cardId と離れる直前の実効レベルを ctx.bindings に書く', () => {
     const s: GameState = createEmptyGameState();
     s.players.self.hand = ['D11012'];
     const ctx: EffectCtx = { source: { player: 'self', cardId: 'X', abilityId: 'a1' }, bindings: {} } as EffectCtx;
     // target を直接解決して渡す (pick 経路を経ずに handler の bind 書き込みを検証)
     runEffect(s, { kind: 'atom', verb: 'discard' as never, args: { player: 'self', target: ['D11012'], bind: '$discarded' } }, ctx);
-    expect((ctx.bindings as Record<string, unknown>)['$discarded']).toEqual([{ cardId: 'D11012' }]);
+    expect((ctx.bindings as Record<string, unknown>)['$discarded']).toEqual([{ cardId: 'D11012', snapLevel: 4 }]);
     expect(s.players.self.hand).not.toContain('D11012');
+  });
+
+  it('discard{bind} は重複・不存在targetから実在occurrenceだけをremoveとbindingへ移す', () => {
+    const s = createEmptyGameState();
+    s.players.self.hand = ['D11012'];
+    const ctx: EffectCtx = { source: { player: 'self', cardId: 'X', abilityId: 'a1' }, bindings: {} } as EffectCtx;
+
+    runEffect(s, {
+      kind: 'atom', verb: 'discard' as never,
+      args: { player: 'self', target: ['D11012', 'D11012', 'MISSING'], bind: '$discarded' },
+    }, ctx);
+
+    expect(s.players.self.hand).toEqual([]);
+    expect(s.players.self.remove).toEqual(['D11012']);
+    expect((ctx.bindings as Record<string, unknown>)['$discarded']).toEqual([{ cardId: 'D11012', snapLevel: 4 }]);
   });
 
   it('$discarded.level / $discarded.ap が bind した cardId の printed 値を返す', () => {

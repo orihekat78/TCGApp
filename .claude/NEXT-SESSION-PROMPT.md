@@ -1,68 +1,60 @@
-# Next Task: card-completion QA Waves190-191
+# Next Task: card-completion QA Wave192
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves188-189 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves190-191 commit.
 
 ## Required runtime
 
-- Use a fresh task with actual runtime `gpt-5.6-terra`, reasoning `high`.
-- Confirm runtime/app status; do not infer activation from `config.toml` alone.
-- The prior long-lived task was Sol/ultra with about 0.65M input tokens per turn.
+- Use actual runtime `gpt-5.6-terra`, reasoning `high`.
+- Confirm the effective task runtime; do not infer it from `config.toml`.
 
 ## Completed
 
-- Waves188-189 align sixteen B09006-B09024 rows with public owner mirrors.
-- No production code changed. Focused tests are 34/34 PASS.
-- Coverage: 2156 matched / 808 test-missing / 2964 total.
-- Remaining: 706 exact groups, including 604 singletons.
+- Waves190-191 align sixteen B09026-B09055 Q&A rows.
+- Coverage: 2172 matched / 792 test-missing / 2964 total.
+- Structural assertions were replaced by disguise, event-use, switch, trigger,
+  cost, owner-mirror, and public pick-authorization execution paths.
+- BUG-383 snapshots effective hand level before discard/cost removal and rejects
+  duplicate, missing, and stale hand occurrences.
+- Focused regression: 5 files / 99 tests PASS. TypeScript, scoped/full ESLint,
+  QA merge/lint, docs, bug lint, smoke 1000/baseline PASS.
+- Full Vitest completion is recorded in the Waves190-191 session note. It has
+  a known internal `CARDS_DATA_BUSY` test-host blocker; do not weaken the lock.
 
-## Economy cadence
+## Cadence
 
-- Continue without confirmation. Use no agent for certification-only work.
-- Per two waves: one focused test batch, type/lint/QA/docs, one commit, one push.
-- Run broad gates at Wave190 because it is the ten-wave milestone, or sooner only
-  for actual T2/T3/security/save/UI production changes.
-- Stop after Waves190-191 or around 60% context and write the next handoff.
+- Complete Wave192 only. Do not start Wave193 in the same task.
+- Certification-only work uses no agent. Production gaps require a failing probe.
+- After Wave192, run focused type/lint/QA/docs gates, make one commit and one push,
+  update this prompt for Wave193 only, then stop.
+- Next scheduled broad gate is Wave200 unless Wave192 changes engine, state,
+  resolver, security, save, or visible UI behavior.
 
 ## Start
 
 1. Read root/cards/tests/.claude AGENTS and router/card-wave/verify skills.
-2. Verify branch/upstream/status. Preserve all dirty and untracked work.
-3. Ground the selected rows from the pinned CT-P09 source before test authoring.
-4. Prefer one public owner-mirror test file per wave; change production only for
-   a demonstrated gap.
-5. Use worktree-local binaries. `pnpm exec` currently attempts an install and
-   fails `ERR_PNPM_IGNORED_BUILDS`; do not approve or rewrite dependencies.
+2. Verify branch, upstream, HEAD, and status read-only.
+3. Preserve all unrelated dirty and untracked work. Do not stash/reset/clean/checkout.
+4. Ground selected rows from the pinned CT-P09 source before test authoring.
+5. Prefer one public owner-mirror test file. Change production only for a RED gap.
+6. Use worktree-local binaries. Never use `pnpm exec`.
 
-## Wave190 candidates: eight rows
+## Wave192 candidates: eight rows
 
-- `B09026 3b40e4f1bfa97db36362fad681b7510cb4024f54c57fd8fed3c92833f80261a0`
-- `B09032 2dbdc98972f09762697ca53ba1cef0efe3e3089d3f2fc4fef8179b95d65e7beb`
-- `B09033 9c1b15e50492b9e1fbc78b0f0e1de0c61378d0a3d45a147b287f2bef1d27d49c`
-- `B09033 d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa`
-- `B09033 ef2849caee7180cda9c275655743b8c0f8ccc524228510f100ce9dd045396741`
-- `B09036 4527c78eaad3bb72d4884ace8948f3b3b46c32efebd407cfdf869f7cea4c9274`
-- `B09036 f9fdd58e767090dd50e30d7a5f59197ea337006ee562ff64750770e47a9da32e`
-- `B09037 625c35bc13eccd561159206b7740e3c9cc1470b74e7aea147131087f6cd0a00d`
+- `B09056 291fc09e63b332fbdca9e94aae30890f71c8741ec83bda8724ea0b58d7b8dfd9`
+- `B09056 5302873b710d2a6013bbca719807f088b656f140927e19a6e8ab2a7e6a6d699b`
+- `B09056 57247cdb00d687f5f6a06d3987bccc1e4a8db8305235ed012d4fdda21abd6dd3`
+- `B09057 674ddfc2479854991161980b6b17e67c29832295a9d8c6790a534b955c228d41`
+- `B09057 ee4ff12ae2f5d9aaa25b2b03a760a31f15b0d141c59c71aebf70ad2269611e12`
+- `B09060 4b9ed3ae16be0d13349f1dab20fb4be1753c986295c1ce7c6853f494d840ff44`
+- `B09063 4fb59cfc644032b36ff3acee74cdfdce39b0d1fd77a47e772c0606e2eb7d543f`
+- `B09064 0c2766a6353754c22e1dd3df8a1dfda2dfc29acce248c88f56cc9a0d778e4549`
 
-## Wave191 candidates: eight rows
+## Pinned authority and protection
 
-- `B09038 56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f`
-- `B09040 ccfd4718c55f312b6e3d9e68cd0a79c23b25c6bd34ba3514db3c020bcbe6359d`
-- `B09041 e4a8be25d1df1ed6eaebc5d52ef4db8ecddf8a180b3691cd421120c85c1d7551`
-- `B09047 25e17b48d633cf3b18cc3eaca3275c611a8fc1365206c61a492e5d1a8d697620`
-- `B09048 7124f41d3267d0e2df2692070acfdd9e66fca11edbbbfb6b64ada8bee4c94b79`
-- `B09048 801430e41b8bba0a80712bc0ae76bb5c7ac726aea9c6bcc905c41ff1f9d37670`
-- `B09050 c056998b7e5216cbe86e8aba420c46e2769a7f4aac3ca8ea0ea48c91c8a5c466`
-- `B09055 5cd641b5128932814c29c2d1177af359548f137dd66f80fb726079fba400a222`
-
-## Carry-forward
-
-- Tracked normalized hash:
+- Normalized Q&A SHA-256:
   `9a36b5d40860f10a6688bb34d6e52c143b7a996d5f3f561486c6384907b723ec`.
 - CT-P09 character TSV SHA-256:
   `34f2babbaaf07cef0f19ff7a765ca7052262d7c43637230b606b14306ff20c04`.
-- Local raw drift `ct-d01-api.json` is outside these waves; isolate it.
-- Preserve untracked `pnpm-lock.yaml`, `pnpm-workspace.yaml`, and the zero-diff
-  `tests/cards/ct-p10/B10006.test.ts` worktree status.
-- Release-only dirty-worktree and pnpm-junction `jose` gates remain isolated.
-- About 78 waves remain through Wave267.
+- Local raw drift `ct-d01-api.json` is out of scope.
+- Preserve untracked `pnpm-lock.yaml`, `pnpm-workspace.yaml`, and zero-diff
+  `tests/cards/ct-p10/B10006.test.ts` status.

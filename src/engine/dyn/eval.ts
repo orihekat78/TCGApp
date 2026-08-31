@@ -18,7 +18,7 @@ import type { EffectCtx } from '@/engine/types';
 import { effectiveTraitNames } from '@/engine/target/candidates.js';
 import { char as charRead } from '@/engine/read/char.js';
 import { scene } from '@/engine/read/scene.js'; // session64: $self.setCardCount (このキャラの setCards 枚数)
-import { def } from '@/engine/read/def.js'; // BUG-114: $discarded.level/ap で discard したカードの printed 値を参照
+import { def } from '@/engine/read/def.js'; // $discarded legacy binding の printed-value fallback
 import { lookupCardDef, allCardNameComponentsForDef, cardNameComponents } from '@/engine/target/card-def-registry.js'; // wave (2026-07-02): $self.removeNameCount の分割名一致 (removeNameAtLeast cond と同式) / W6 step1: $declared.*.sceneNameCount
 
 type DynValue = number | string | boolean | undefined;
@@ -499,9 +499,9 @@ function resolveContact(rest: string[], ctx: EffectCtx, original: string): DynVa
   }
 }
 
-// $discarded.<field>: discard{bind:'$discarded'} で除去した手札カードの printed 値 (BUG-114)。
+// $discarded.<field>: discard{bind:'$discarded'} で除去した手札カードの離脱直前 snapshot (BUG-383)。
 // 「リムーブしたカードのレベル/AP1000につきAP+1000」(B05040/B08055) のスケーリング用。
-// カードは既に remove へ移っているため CardDef の printed 値を参照する (手札カードに修飾は無い)。
+// snapshot が無い旧 binding は CardDef の printed 値へ fallback する (BUG-114 compatibility)。
 // 未 bind (discard していない / 0 枚) は 0 を返す = scaling 無効 (してもよい を skip した場合等)。
 function resolveDiscarded(ctx: EffectCtx, rest: string[], original: string): DynValue {
   if (rest.length === 0) {
@@ -512,18 +512,20 @@ function resolveDiscarded(ctx: EffectCtx, rest: string[], original: string): Dyn
   if (!Array.isArray(binding) || binding.length === 0) return 0;
   // discard{bind} は除去全カードを array で書くが、本 root は先頭 1 枚を参照 (現用途は max:1 の
   // B05040/B08055 のみ。複数枚 discard でのスケーリングが必要な card が出たら集計仕様を再定義する)。
-  const cardId = (binding[0] as { cardId?: string }).cardId;
+  const first = binding[0] as { cardId?: string; snapLevel?: number };
+  const cardId = first.cardId;
   if (typeof cardId !== 'string') return 0;
   const d = def.card(cardId);
   if (!d) return 0;
   switch (field) {
     case 'levelSum':
       return binding.reduce((sum, entry) => {
-        const cardId = (entry as { cardId?: string }).cardId;
-        return sum + (typeof cardId === 'string' ? (def.card(cardId)?.level ?? 0) : 0);
+        const snapshot = entry as { cardId?: string; snapLevel?: number };
+        return sum + (snapshot.snapLevel
+          ?? (typeof snapshot.cardId === 'string' ? (def.card(snapshot.cardId)?.level ?? 0) : 0));
       }, 0);
     case 'level':
-      return d.level ?? 0;
+      return first.snapLevel ?? d.level ?? 0;
     case 'ap':
       return d.ap ?? 0;
     case 'lp':

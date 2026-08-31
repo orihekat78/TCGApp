@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6879
+- **ファイル数**: 6884
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -563,6 +563,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-380.md` — B08054 host-leave set-card replacement missing
     - `BUG-381.md` — revealFromHand public occurrence missing
     - `BUG-382.md` — Declared cost reaction overtakes source effect
+    - `BUG-383.md` — Hand level snapshot is lost on removal
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1713,6 +1714,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-26-qa-waves184-185.md` — QA adjudication Waves184-185
     - `2026-08-26-qa-waves186-187.md` — QA adjudication Waves186-187
     - `2026-08-31-qa-waves188-189.md` — QA adjudication Waves188-189
+    - `2026-08-31-qa-waves190-191.md` — QA adjudication Waves190-191
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -2308,6 +2310,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `waves184-185-authority.md` — Waves184-185 authority
       - `waves186-187-authority.md` — Waves186-187 authority
       - `waves188-189-authority.md` — Waves188-189 authority
+      - `waves190-191-authority.md` — Waves190-191 authority
       - `waves64-65-authority.md` — Waves64-65 authority manifest
       - `waves66-67-authority.md` — Waves66-67 authority manifest
       - `waves68-69-authority.md` — Waves68-69 authority manifest
@@ -6117,6 +6120,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B09002-B09005-completion-public-wave187.test.ts` — qa: card:B09002:b4865a17eaa7c68418a6b7755125081b917cc5203b710a3ee92ce60bee4d42ac
       - `B09006-B09015-completion-public-wave188.test.ts` — qa: card:B09006:2d9f6416a9eff00283168d4c98abf4724ce62c0471c67384b312b1d17e6b5148
       - `B09016-B09024-completion-public-wave189.test.ts` — qa: card:B09016:8d2d79973300c910aa8b160f07aabc86cbdb7d97fa97745452c640db361be527
+      - `B09026-B09037-completion-public-wave190.test.ts` — qa: card:B09026:3b40e4f1bfa97db36362fad681b7510cb4024f54c57fd8fed3c92833f80261a0
+      - `B09038-B09055-completion-public-wave191.test.ts` — qa: card:B09038:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f
       - `B09090-PR286-entry-waiver.test.ts` — qaId=card:B09090:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7e…
       - `B09109-completion-public-wave128.test.ts` — qa: card:B09109:87aa9ca394d3b7a7faa9cc64726031a8e157f606ad5c5fab6f9690c1e7ed7c45
       - `B10003-completion-public-wave140.test.ts` — qa: card:B10003:0194b74149e29b2d31fa5b6d2a9bf767dfd2a718b7ea50244905b5d5fb423e0b

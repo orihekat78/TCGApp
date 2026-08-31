@@ -4,7 +4,7 @@ import { invokeLeaveToRemoveOfCard } from '../invoke-leave-to-remove.js';
 import { invokeHiramekiOfCard, isHiramekiOccurrence, type HiramekiOccurrence } from '../invoke-hirameki.js';
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js'; // W6 step3 (r63): useEventFromHand の kind guard
-import { eventUseAllowed } from '../../flow/main/hand-use-card.js';
+import { effectiveHandLevel, eventUseAllowed } from '../../flow/main/hand-use-card.js';
 import { pendingSource, tryRePickFromAtom } from '../resolve-picks.js';
 // WC2b (2026-07-11): invokeHiramekiOfCard atom-level optional prompt 用 (pending-state は leaf — cycle 無し)。
 import { pushPendingEffectOptionalSide, setPendingOptionalResume, setPendingOptionalBindings, setPendingOptionalCostPaid } from '../pending-state.js';
@@ -379,9 +379,17 @@ export function atomDiscard(s: GameState, a: Record<string, unknown>, ctx: Effec
         return;
       }
       const target = dcArgs.target as string[];
+      const dcAvailable = [...s.players[dcP].hand];
+      const dcSnapshots: Array<{ cardId: string; snapLevel: number | undefined }> = [];
+      for (const cardId of target) {
+        const index = dcAvailable.indexOf(cardId);
+        if (index === -1) continue;
+        dcSnapshots.push({ cardId, snapLevel: effectiveHandLevel(s, dcP, cardId) });
+        dcAvailable.splice(index, 1);
+      }
       // W3 (r17): byPlayer = 効果起動側 (相対 player と乖離しうる — 「相手の効果によって」判定用)
       const dcBefore = s.players[dcP].hand.length;
-      mutate.hand.discardToRemove(s, dcP, target, { byPlayer: ctx.source.player });
+      const dcRemoved = mutate.hand.discardToRemove(s, dcP, target, { byPlayer: ctx.source.player });
       const dcDiscarded = dcBefore - s.players[dcP].hand.length;
       if (dcDiscarded > 0) {
         recordEffectCausalOperation(s, ctx, {
@@ -395,7 +403,10 @@ export function atomDiscard(s: GameState, a: Record<string, unknown>, ctx: Effec
       // BUG-114: discard したカードを bind (リムーブしたカードの level/AP を $discarded dyn で参照)。
       // 続く chain step (charModifyAP delta:{dyn:'$discarded.level*1000'}) が同一 ctx で読む (BUG-107)。
       if (typeof a.bind === 'string' && target.length > 0) {
-        (ctx.bindings as Record<string, unknown>)[a.bind] = target.map((cardId) => ({ cardId }));
+        (ctx.bindings as Record<string, unknown>)[a.bind] = dcRemoved.map((cardId, index) => ({
+          cardId,
+          snapLevel: dcSnapshots[index]?.snapLevel,
+        }));
       }
       // BUG-072: effect 経由の discard 成功も log に残す
       mutate.log.append(s, {

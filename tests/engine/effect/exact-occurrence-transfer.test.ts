@@ -498,6 +498,34 @@ describe('exact occurrence transfer', () => {
     expect(state.log.at(-1)).toMatchObject({ action: 'effect:pick', result: 'stale-selection' });
   });
 
+  it('rejects a stale hand occurrence before discard and does not resume its continuation', () => {
+    const ctx = makeCtx();
+    const state = createEmptyGameState();
+    state.players.self.hand = ['DUP'];
+    state.players.self.deck = ['CONTINUATION'];
+    _clearPendingEffectPickQueue();
+
+    tryRePickFromAtom(state, {
+      kind: 'atom', verb: 'discard', args: {
+        player: 'self', max: 1, bind: '$discarded',
+      },
+    }, ctx, { byPlayer: 'self' });
+
+    const pending = _drainPendingEffectPickSide()!;
+    pending.continuation = {
+      kind: 'sequence',
+      remainder: [{ kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } }],
+      ctx,
+    };
+    state.players.self.hand = ['REPLACEMENT'];
+    applyPickAndContinuation(state, pending, pending.candidates[0]!.uid);
+
+    expect(state.players.self.hand).toEqual(['REPLACEMENT']);
+    expect(state.players.self.remove).toEqual([]);
+    expect(state.players.self.deck).toEqual(['CONTINUATION']);
+    expect(state.log.at(-1)).toMatchObject({ action: 'effect:pick', result: 'stale-selection' });
+  });
+
   it('resolves a direct explicit AI re-pick synchronously without surfacing a human modal', () => {
     const ctx = makeCtx();
     const state = createEmptyGameState();

@@ -31,7 +31,13 @@
 - Generic policy-free sequence pre-walk can still preselect a later PA target
   before an earlier PA mutation. B07104 heuristic and human paths avoid it;
   investigate this engine-wide ordering risk when a future card exposes it.
-- Waves190-191 start with sixteen B09026-B09055 rows in the next-task prompt.
+- Waves190-191 moved sixteen B09026-B09055 rows to matched. Coverage is 2172
+  matched / 792 test-missing / 2964 total. BUG-383 now snapshots effective
+  hand level before discard/cost payment and rejects stale hand picks.
+- Full Vitest reaches completion but internally recurs `CARDS_DATA_BUSY` with
+  one worker and no external holder. Native release prepare is clean; preserve
+  the lock and isolate test-host writer overlap separately.
+- Wave192 only starts with B09056-B09064 rows in the next-task prompt.
 - Local raw drift `ct-d01-api.json` remains separate from the tracked snapshot.
 - About 78 waves remain through Wave267.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.

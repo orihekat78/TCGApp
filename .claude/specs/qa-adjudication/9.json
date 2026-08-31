@@ -1427,14 +1427,14 @@
     {
       "qaId": "card:B09040:ccfd4718c55f312b6e3d9e68cd0a79c23b25c6bd34ba3514db3c020bcbe6359d",
       "answerHash": "0f58c02fd1acbb183910b46d94f13d1ca55ed85cf861ae8ca62b7273443c510a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09040.ts:86"
-      ],
-      "noteCodes": [
-        "TEST-GAP"
+        "src:src/cards/ct-p09/B09040.ts:53",
+        "src:src/engine/dyn/eval.ts:528",
+        "src:src/engine/effect/atom-handlers/core.ts:387",
+        "tests:tests/cards/official-qa/B09038-B09055-completion-public-wave191.test.ts:113"
       ]
     },
     {

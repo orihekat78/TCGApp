@@ -1749,14 +1749,12 @@
     {
       "qaId": "card:B09032:2dbdc98972f09762697ca53ba1cef0efe3e3089d3f2fc4fef8179b95d65e7beb",
       "answerHash": "0aad3d9f0674b33d41632d37ead5bc28323e78a110817b3662b4c2184416c47a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09032.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p09/B09032.ts:1",
+        "tests:tests/cards/official-qa/B09026-B09037-completion-public-wave190.test.ts:142"
       ]
     },
     {
@@ -1774,14 +1772,12 @@
     {
       "qaId": "card:B09033:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa",
       "answerHash": "86d9d6baa1066cd24146659851024cf16cfd9debc5df16520a6d9a08486a0832",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09033.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p09/B09033.ts:1",
+        "tests:tests/cards/official-qa/B09026-B09037-completion-public-wave190.test.ts:163"
       ]
     },
     {
@@ -1845,27 +1841,25 @@
     {
       "qaId": "card:B09048:801430e41b8bba0a80712bc0ae76bb5c7ac726aea9c6bcc905c41ff1f9d37670",
       "answerHash": "2b75118ceacac4e718b32e0691cfdf6b5c3e3695e894e1542974bbfaf1956de0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09048.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p09/B09048.ts:1",
+        "tests:tests/cards/official-qa/B09038-B09055-completion-public-wave191.test.ts:239"
       ]
     },
     {
       "qaId": "card:B09050:c056998b7e5216cbe86e8aba420c46e2769a7f4aac3ca8ea0ea48c91c8a5c466",
       "answerHash": "e86b1ee7b584f8e7eddfe158746ec61b87c93fd99c93fce23687554081ecda0c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09050.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p09/B09050.ts:46",
+        "src:src/engine/cost/pay.ts:673",
+        "src:src/engine/cost/pay.ts:691",
+        "tests:tests/cards/official-qa/B09038-B09055-completion-public-wave191.test.ts:153"
       ]
     },
     {

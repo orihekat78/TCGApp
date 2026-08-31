@@ -10,11 +10,11 @@
 //   - canPay() should be called first; pay() throws if a step cannot be paid.
 
 import type { GameState, Cost, EffectCtx, PayResult, Candidate, TargetingRef } from '@/engine/types';
-import { candidates } from '@/engine/target/candidates.js';
+import { candidates, effectiveLevelForCandidate } from '@/engine/target/candidates.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { canPay } from './evaluate.js';
 import { resolveDynNumber } from '@/engine/dyn/eval.js';
-// attribution mini-wave (2026-07-10): costPaid 導出値 (level/kind) の印字値参照。dyn/eval.ts と同一 import 元。
+// attribution mini-wave (2026-07-10): costPaid 導出値の静的 kind/name 参照。level は離脱前に snapshot する。
 import { def as readDef } from '@/engine/read/def.js';
 import { readRemoveSetCardWitness } from './remove-set-card-witness.js';
 import { eligibleRemoveSetCards } from './remove-set-card-eligible.js';
@@ -232,10 +232,12 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       return true;
     }
     case 'removeFromHand': {
-      const ids = selectRemoveFromHandCandidates(state, cost, ctx).map(c => c.cardId);
+      const targets = selectRemoveFromHandCandidates(state, cost, ctx);
+      const ids = targets.map(c => c.cardId);
       if (ids.length !== cost.n) return false;
+      const level = targets[0] ? effectiveLevelForCandidate(state, targets[0]) : undefined;
       removeHand(ids, true);
-      recordCostPaid(ctx, 'removeFromHand', { ids, level: readDef.card(ids[0])?.level });
+      recordCostPaid(ctx, 'removeFromHand', { ids, level });
       return true;
     }
     case 'revealFromHand': {
@@ -668,6 +670,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
       const targets = selectRemoveFromHandCandidates(state, cost, ctx);
       const ids = targets.map(c => c.cardId);
       if (ids.length !== cost.n) throw new Error('cost.pay: removeFromHand is not payable');
+      const level = targets[0] ? effectiveLevelForCandidate(state, targets[0]) : undefined;
       // Exact occurrence witnesses are removed by index, preserving duplicate
       // hand-card identity. Legacy/AI fallback still uses the old id path.
       const explicit = readRemoveFromHandIndices(ctx);
@@ -683,9 +686,9 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
       acc.paidItems.push({ kind: 'removeFromHand', details: { ids } });
       // attribution mini-wave (2026-07-10): costRemovedMatches{key:'removeFromHand'} (B09060) と
       // dyn $cost.removeFromHand.level (B09050「リムーブしたカードとレベルが同じか低い」) が読む。
-      // level は先頭 1 枚の印字値 (対象カードは n=1 のみ。removeDeckTop の ids 記録と同型)。
+      // level は手札を離れる直前の実効値 (対象カードは n=1 のみ)。
       if (!ctx.costPaid) ctx.costPaid = {};
-      ctx.costPaid['removeFromHand'] = { ids, level: readDef.card(ids[0])?.level };
+      ctx.costPaid['removeFromHand'] = { ids, level };
       return;
     }
     // engine additive wave (2026-06-28): revealFromHand — 手札公開 presence-check cost (B08093 a1)。
