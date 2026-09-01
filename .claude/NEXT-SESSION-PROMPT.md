@@ -1,11 +1,13 @@
-# Next Task: card-completion QA Wave195
+# Next Task: card-completion QA Waves195-196
 
 Resume `qa/adjudication-wave-20260814-13` after the Wave193-194 commit.
 
 ## Runtime and cadence
 
 - Use actual `gpt-5.6-terra` / `high`; confirm session metadata, not config.
-- Complete Waves195-196 only. Do not begin Wave197.
+- **Waves195-196 are one fixed, uninterrupted pair in this task.** Finish both
+  before any gate, commit, or stop. Do not stop after Wave195. Do not begin
+  Wave197.
 - Certification-only work uses no agent. Production gap requires a failing probe.
 - One focused type/lint/QA/docs gate after Wave196; one commit and push.
 - Broad gate remains Wave200 unless engine, state, resolver, security, save, or visible UI changes.
@@ -30,3 +32,14 @@ Resume `qa/adjudication-wave-20260814-13` after the Wave193-194 commit.
 - `B09094 f805102c1ace6c8225bf996e69c2966354e98b388e1efaba09ecd4b0a16d4885`
 - `B09095 cb48ad5742f63c2a3b6c5b048905bade78ab9cec63501a1ce37450092eb0d7af`
 - `B09096 aed9fa2aadf694d4b830c3df8fe97d3324f2ece2e72a125fb2eee167d1badc6`
+
+## Wave196 candidates
+
+- `B09097 0237a0c142d5e7feca1b4e4a9e92d3bf06f73c90344a81fa1ae51d869726b9b3`
+- `B09097 b7713abe7876ef1ad566c125fa172a4f2a13b192f2b22a4a2cea136020526dac`
+- `B09101 e4bfd093e51f7de5f557e06b272adb54e6d73f1329c7ee205a9406d7f885cd01`
+- `B09102 2c4400fb754558e01719a011fef8dd61a940683187cb23450c6aef9de67b3131`
+- `B09102 58e653d9c49856dc9de4392d6e300c58ecfbd1f8a97358141cef1a2af866c307`
+- `B09103 2d507903ab36126f938c276a8a8c062abb57b56f33145ef337d80dedb53883ce`
+- `B09103 c5e5dfbc5f228baa2e8456d556f8e0c51ee6af40acbfa37469da20356b5c7ad8`
+- `B09104 2ff985085270588f156ddf5ca26bf7b0a1b52d2f4f81c92ef94584017075c82a`
