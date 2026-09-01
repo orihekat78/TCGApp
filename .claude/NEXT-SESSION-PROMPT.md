@@ -1,12 +1,12 @@
-# Next Task: card-completion QA Waves199-200
+# Next Task: card-completion QA Waves201-202
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves197-198 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves199-200 commit.
 
 ## Completed pair
 
-- Wave197: four CT-P09 Q&A rows for B09105 are `matched/aligned`.
-- Wave198: three B09106 and one B09107 CT-P09 Q&A rows are `matched/aligned`.
-- Added two bounded proof files; 5 tests pass.
+- Wave199: four B09108 CT-P09 Q&A rows are `matched/aligned`.
+- Wave200: one B09110, two B09111, and one B09112 row are `matched/aligned`.
+- Added two bounded proof files; 5 direct proofs and 29 focused runtime tests pass.
 - No engine, state, resolver, security, save, or visible UI change.
 
 ## Pinned authority and protection
@@ -15,15 +15,19 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves197-198 commit.
 - CT-P09 character TSV SHA-256:
   `34f2babbaaf07cef0f19ff7a765ca7052262d7c43637230b606b14306ff20c04`.
 - Preserve unrelated `pnpm-lock.yaml`, `pnpm-workspace.yaml`, and B10006 test.
-- Raw `ct-d01-api.json` drift stays out of scope; run the broad gate at Wave200.
+- Raw `ct-d01-api.json` drift stays out of scope.
+- Broad Vitest was attempted with default and one-worker modes; both hit
+  `CARDS_DATA_BUSY`, and existing release tests also failed. Keep this as an
+  unresolved harness lock lifecycle issue, never as a pass.
 
 ## Next candidates
 
-- `B09108 0643b41835d29ed2fe718d2fe0b916ea3a9086713081a1b6c5e9c0517dfe99a7`
-- `B09108 0ae647669c43a49b9ad408264f0e80c5c5d6f5169c0d2d4aa382d127006777eb`
-- `B09108 628fe49da7ac3d0ac5a5fdbb23a36f02bd9d278f640322cab14399ff90ba9fda`
-- `B09108 ee061ffcf4652d834b2aa83508fd512dedb3e0a2d8251c3d26d6ef0844a5fe36`
-- `B09110 c6c48c4f8eb604b6a40d12fe2a7833e6d2add2d529e04b3e29c2843f0a5e305c`
-- `B09111 1fefea11e9f62644d0760810fefb72ce203d027c2194b205a1bb441878975d27`
-- `B09111 ee061ffcf4652d834b2aa83508fd512dedb3e0a2d8251c3d26d6ef0844a5fe36`
-- `B09112 3f51aa8485b9e13a1daa1830af8049c5d9c6c1d840cfe9de20e2fee77992ce64`
+- `B09112 ee061ffcf4652d834b2aa83508fd512dedb3e0a2d8251c3d26d6ef0844a5fe36`
+- `B09113 9179ee748432a89bc4bb8e424ac5aae5a8f117950e7f2f148df4b66db80aedd0`
+- `B09113 cc6997867a54241b60eb4f7f08b1dc660071b20baf9ea38fc5e7631c48af9fc0`
+- `B09113 e0d277a2b084096ebd90ddd6fbe507fbf5135a16fc85f02a0d5a795f18fcd4b5`
+- `B10004 0194b74149e29b2d31fa5b6d2a9bf767dfd2a718b7ea50244905b5d5fb423e0b`
+- `B10004 a1a08a01622d9551bdceff6e19bd462e9fc6b6f49f36cd7cabf5dc57eed8aaa6`
+- `B10004 e725319b76a76f2955f488fe7aca6d11ed83820f06cb3c06a370770ac164845f`
+- `B10005 56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f`
+- `B10009 3b98bb511de05680d81bddbf8c687fbdfada4b0b487b8b3297c1994d216de105`

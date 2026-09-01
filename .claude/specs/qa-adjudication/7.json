@@ -1709,21 +1709,23 @@
     {
       "qaId": "card:B09108:628fe49da7ac3d0ac5a5fdbb23a36f02bd9d278f640322cab14399ff90ba9fda",
       "answerHash": "d6a4daabed9e9ff3d0e7a8e539ed9d02be83a0103b60c3c53f4a6edbaae6511a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09108.ts:1"
+        "src:src/cards/ct-p09/B09108.ts:1",
+        "tests:tests/cards/official-qa/B09108-completion-wave199.test.ts:21"
       ]
     },
     {
       "qaId": "card:B09108:ee061ffcf4652d834b2aa83508fd512dedb3e0a2d8251c3d26d6ef0844a5fe36",
       "answerHash": "a218eff4aaec237bd83ee00bcb406db3882015984600014e70bd4db4eee6f192",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09108.ts:1"
+        "src:src/cards/ct-p09/B09108.ts:1",
+        "tests:tests/cards/official-qa/B09108-completion-wave199.test.ts:21"
       ]
     },
     {
@@ -1745,11 +1747,12 @@
     {
       "qaId": "card:B09111:ee061ffcf4652d834b2aa83508fd512dedb3e0a2d8251c3d26d6ef0844a5fe36",
       "answerHash": "cf9e029f63dc02ea9b94a8e39361c805a3c0332630c8b9f13aed6e80abe4514c",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09111.ts:1"
+        "src:src/cards/ct-p09/B09111.ts:1",
+        "tests:tests/cards/official-qa/B09110-B09112-completion-wave200.test.ts:26"
       ]
     },
     {

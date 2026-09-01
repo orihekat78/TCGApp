@@ -69,3 +69,15 @@
   QA baseline lint, and generated QA trace all pass.
 - Horizontal review reused B09105 S1 defer, B09106 effect-entry, and B09107
   alternate-defeat paths; no same-pattern production gap was found.
+
+## 2026-09-01: CT-P09 Q&A Waves199-200
+
+- Certified four B09108, one B09110, two B09111, and one B09112 Q&A rows as
+  `matched/aligned`; production code is unchanged.
+- Added two bounded proof files. Focused 5-test proof and 29-test relevant
+  runtime regression, TypeScript, QA merge, generated trace, and QA lint pass.
+- Broad Vitest was attempted with default and single-worker modes, but both hit
+  `CARDS_DATA_BUSY`; existing release checks also failed. Agent-owned trees were
+  terminated after ancestry verification. This gate remains unresolved.
+- Horizontal review reused B09110 enter/refresh, B09111 FILE-bound, B09112
+  dynamic deck-window, and registered-name consumer paths; no production gap.

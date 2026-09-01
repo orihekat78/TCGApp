@@ -1783,21 +1783,23 @@
     {
       "qaId": "card:B09110:c6c48c4f8eb604b6a40d12fe2a7833e6d2add2d529e04b3e29c2843f0a5e305c",
       "answerHash": "d396eb53ebe92ee628a31db2ee79eb20ec20c6a366da76d73cae571acaa255d8",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09110.ts:1"
+        "src:src/cards/ct-p09/B09110.ts:1",
+        "tests:tests/cards/official-qa/B09110-B09112-completion-wave200.test.ts:13"
       ]
     },
     {
       "qaId": "card:B09111:1fefea11e9f62644d0760810fefb72ce203d027c2194b205a1bb441878975d27",
       "answerHash": "261ca687f54e5faeb68208758b9a4a97348a014d57246145da834b58b1d027bb",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09111.ts:1"
+        "src:src/cards/ct-p09/B09111.ts:1",
+        "tests:tests/cards/official-qa/B09110-B09112-completion-wave200.test.ts:26"
       ]
     },
     {
