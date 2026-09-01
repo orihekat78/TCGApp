@@ -2000,14 +2000,12 @@
     {
       "qaId": "card:B09101:e4bfd093e51f7de5f557e06b272adb54e6d73f1329c7ee205a9406d7f885cd01",
       "answerHash": "cc0809af6bf2324dbe9facc224fd6409899b1ab61367505e42a05690c0f8097a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09101.ts:1"
-      ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
+        "src:src/cards/ct-p09/B09101.ts:1",
+        "tests:tests/cards/official-qa/B09097-B09104-completion-wave196.test.ts:24"
       ]
     },
     {

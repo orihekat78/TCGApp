@@ -1862,11 +1862,12 @@
     {
       "qaId": "card:B09093:c81ed2b96b74a7195fd0af27c74fbaaf1ca39451fad6595923353a24a32fbc98",
       "answerHash": "6923d83cc28e264c29b27b7003ee3536f1f34e0f94bf6b7e0f81e8b32799e831",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09093.ts:1"
+        "src:src/cards/ct-p09/B09093.ts:1",
+        "tests:tests/cards/official-qa/B09092-B09096-completion-wave195.test.ts:25"
       ]
     },
     {

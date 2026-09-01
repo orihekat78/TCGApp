@@ -50,3 +50,13 @@
   768 test-missing / 2964 total. No production code changed.
 - Wave195 starts with the remaining B09092 row, then B09093-B09096; prompt is
   updated. Broad gate remains Wave200.
+
+## 2026-09-01: CT-P09 Q&A Waves195-196
+
+- Certified sixteen B09092-B09104 rows as `matched/aligned` with two bounded
+  card-specific proof files (9 tests); production code is unchanged.
+- B09096's supplied candidate hash lacked its final `a`; the tracked snapshot
+  canonical ID was used and verified.
+- Preserve inherited lockfiles and B10006 test; raw ct-d01 drift excluded.
+- Horizontal review reused B09096 dynamic-AP, B09097 chain, and B09104
+  printed-ability test paths; no same-pattern production gap was found.

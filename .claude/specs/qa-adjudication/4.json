@@ -1843,11 +1843,12 @@
     {
       "qaId": "card:B09102:2c4400fb754558e01719a011fef8dd61a940683187cb23450c6aef9de67b3131",
       "answerHash": "7ca681950869f6085d35a7ce8ccc9fc2fd934d624482680ad11a18fe8f1e3b04",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09102.ts:1"
+        "src:src/cards/ct-p09/B09102.ts:1",
+        "tests:tests/cards/official-qa/B09097-B09104-completion-wave196.test.ts:28"
       ]
     },
     {

@@ -1,45 +1,30 @@
-# Next Task: card-completion QA Waves195-196
+# Next Task: card-completion QA Waves197-198
 
-Resume `qa/adjudication-wave-20260814-13` after the Wave193-194 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves195-196 commit.
 
-## Runtime and cadence
+## Completed pair
 
-- Use actual `gpt-5.6-terra` / `high`; confirm session metadata, not config.
-- **Waves195-196 are one fixed, uninterrupted pair in this task.** Finish both
-  before any gate, commit, or stop. Do not stop after Wave195. Do not begin
-  Wave197.
-- Certification-only work uses no agent. Production gap requires a failing probe.
-- One focused type/lint/QA/docs gate after Wave196; one commit and push.
-- Broad gate remains Wave200 unless engine, state, resolver, security, save, or visible UI changes.
+- Wave195: eight CT-P09 Q&A rows for B09092–B09096 are `matched/aligned`.
+- Wave196: eight CT-P09 Q&A rows for B09097–B09104 are `matched/aligned`.
+- Added two bounded proof files; 9 tests pass.
+- No engine, state, resolver, security, save, or visible UI change.
+- The B09096 input ID missed a final `a`; canonical snapshot ID ends in `...d1badc6a`.
 
-## Coverage and protection
+## Pinned authority and protection
 
-- Wave193-194 target rows are adjudicated. Preserve unrelated dirty/untracked
-  `pnpm-lock.yaml`, `pnpm-workspace.yaml`, and `tests/cards/ct-p10/B10006.test.ts`.
-- Local raw `ct-d01-api.json` drift remains out of scope.
-- Normalized Q&A SHA-256:
-  `9a36b5d40860f10a6688bb34d6e52c143b7a996d5f3f561486c6384907b723ec`.
+- normalized Q&A SHA-256: `9a36b5d40860f10a6688bb34d6e52c143b7a996d5f3f561486c6384907b723ec`.
 - CT-P09 character TSV SHA-256:
   `34f2babbaaf07cef0f19ff7a765ca7052262d7c43637230b606b14306ff20c04`.
+- Preserve unrelated `pnpm-lock.yaml`, `pnpm-workspace.yaml`, and B10006 test.
+- Raw `ct-d01-api.json` drift stays out of scope; broad gate remains Wave200.
 
-## Wave195 candidates
+## Next candidates
 
-- `B09092 70f5af4b948092f863f1b2d28f8c91c4016f93c53f89de134024bbd39068daa3`
-- `B09093 c5e5dfbc5f228baa2e8456d556f8e0c51ee6af40acbfa37469da20356b5c7ad8`
-- `B09093 c81ed2b96b74a7195fd0af27c74fbaaf1ca39451fad6595923353a24a32fbc98`
-- `B09093 dbb9809c88559fd14fec1cb2ac25273aeb5c690cf759286cb43a3b84e6387e3c`
-- `B09094 88ce7c7971391a7b00c6d94931dab0231da2abf295066c75da6122dd279cc728`
-- `B09094 f805102c1ace6c8225bf996e69c2966354e98b388e1efaba09ecd4b0a16d4885`
-- `B09095 cb48ad5742f63c2a3b6c5b048905bade78ab9cec63501a1ce37450092eb0d7af`
-- `B09096 aed9fa2aadf694d4b830c3df8fe97d3324f2ece2e72a125fb2eee167d1badc6`
-
-## Wave196 candidates
-
-- `B09097 0237a0c142d5e7feca1b4e4a9e92d3bf06f73c90344a81fa1ae51d869726b9b3`
-- `B09097 b7713abe7876ef1ad566c125fa172a4f2a13b192f2b22a4a2cea136020526dac`
-- `B09101 e4bfd093e51f7de5f557e06b272adb54e6d73f1329c7ee205a9406d7f885cd01`
-- `B09102 2c4400fb754558e01719a011fef8dd61a940683187cb23450c6aef9de67b3131`
-- `B09102 58e653d9c49856dc9de4392d6e300c58ecfbd1f8a97358141cef1a2af866c307`
-- `B09103 2d507903ab36126f938c276a8a8c062abb57b56f33145ef337d80dedb53883ce`
-- `B09103 c5e5dfbc5f228baa2e8456d556f8e0c51ee6af40acbfa37469da20356b5c7ad8`
-- `B09104 2ff985085270588f156ddf5ca26bf7b0a1b52d2f4f81c92ef94584017075c82a`
+- `B09105 c7ae8a0b8705f2f925f39f99642bb7a79d30f9cf38ac1993b68357ce50dd6d54`
+- `B09105 c9d1abbedddbedbfad74851f5da4e68d45940c5dc7b1a674e2aa635443a4df5e`
+- `B09105 d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa`
+- `B09105 e8e3445ac6139f21bb8ab2dd70734b6ea03331a372bfd54f70907a129e263392`
+- `B09106 b7713abe7876ef1ad566c125fa172a4f2a13b192f2b22a4a2cea136020526dac`
+- `B09106 c54b5549bd11a1622d7ffa672c7f30ab5fc40d02abb96c921f5e3a24acc3acdd`
+- `B09106 ef2849caee7180cda9c275655743b8c0f8ccc524228510f100ce9dd045396741`
+- `B09107 4f848afcdc0e788f64c05c38b92bfb367407f6be7f9fc578ced2a8b5c406a824`
