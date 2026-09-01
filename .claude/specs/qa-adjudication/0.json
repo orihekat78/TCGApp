@@ -1712,15 +1712,14 @@
     {
       "qaId": "card:B09074:94b5f9ac6b539ddcff7e29f747ed02143be59ad6baacbb89e3a61038c9964adf",
       "answerHash": "982e7e39ab5dfb511ac3a78851a7f85f18f981611294d070d95e6eced62b2448",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09074.ts:64"
+        "src:src/cards/ct-p09/B09074.ts:64",
+        "tests:tests/cards/official-qa/B09073-B09080-completion-public-wave193.test.ts:213"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B09075:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb",

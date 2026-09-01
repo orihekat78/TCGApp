@@ -1651,11 +1651,12 @@
     {
       "qaId": "card:B09075:7505735302078534653e21e817caddde9141485ccd57604acac1b5b532a6b765",
       "answerHash": "0e19d91c02200449417a55074745e64a3393a543782d6647d6b042fbd8f0201e",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09075.ts:1"
+        "src:src/cards/ct-p09/B09075.ts:25",
+        "tests:tests/cards/official-qa/B09073-B09080-completion-public-wave193.test.ts:239"
       ]
     },
     {
@@ -1686,11 +1687,12 @@
     {
       "qaId": "card:B09086:2c83e05699547a122e72d36589adce2d81152f65597bff1f1551047f02568ed9",
       "answerHash": "8ab5e00b40b22d88c5a9d95173b6764c9536074aa57e5545cf87c2e053baaf12",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09086.ts:1"
+        "src:src/cards/ct-p09/B09086.ts:22",
+        "tests:tests/cards/official-qa/cutin-ineffective-observer-public-wave112.test.ts:174"
       ]
     },
     {
@@ -1709,11 +1711,12 @@
     {
       "qaId": "card:B09092:0a7b79351a135f0b5277f183d8028ddc88073d99a54bf083bff74d1b3c1a1358",
       "answerHash": "4d6a0a46242ecc955cb1a494eda41b90cde49b9bf02e0c5a49296536025a9771",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09092.ts:1"
+        "src:src/cards/ct-p09/B09092.ts:92",
+        "tests:tests/cards/official-qa/B09092-completion-wave194.test.ts:22"
       ]
     },
     {

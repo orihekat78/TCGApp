@@ -1640,21 +1640,23 @@
     {
       "qaId": "card:B09081:f2ec2b341d33416d552603ad513d8a2563b7d010997840bd20300e6e4f149932",
       "answerHash": "2b75118ceacac4e718b32e0691cfdf6b5c3e3695e894e1542974bbfaf1956de0",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09081.ts:1"
+        "src:src/cards/ct-p09/B09081.ts:38",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:105"
       ]
     },
     {
       "qaId": "card:B09092:61f7cb6171a13e222c9bca6a09d3cca6e453562364041127705fd3a83111d391",
       "answerHash": "f286e1544321865e1d69f335466b6e02b42d3916cb6c6f82d2e2bee99f106c7d",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p05/B05046.ts:6"
+        "src:src/cards/ct-p09/B09092.ts:53",
+        "tests:tests/cards/official-qa/B09092-completion-wave194.test.ts:11"
       ]
     },
     {

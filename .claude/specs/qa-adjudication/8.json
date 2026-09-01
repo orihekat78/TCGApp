@@ -1720,25 +1720,25 @@
     {
       "qaId": "card:B09073:6f84244014e18679f78a5ae0b96cec21787fc34c207c0c4ba6935a6b198b5b03",
       "answerHash": "1f2bdb787fc95d5985c58ea62912a86312ba1c2ba4ae2b71eecefd1789df6e68",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09073.ts:1"
+        "src:src/cards/ct-p09/B09073.ts:34",
+        "tests:tests/cards/official-qa/B09073-B09080-completion-public-wave193.test.ts:194"
       ]
     },
     {
       "qaId": "card:B09081:0a72380f53da5f183c4edd2934bd60e418615e2a579c153a047f9dea6c938f25",
       "answerHash": "28438088d79b9b9d0d6e18edb8af5da4b9d5fb0002ebe5f25f4ca52132dffdee",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09081.ts:1"
+        "src:src/cards/ct-p09/B09081.ts:83",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:207"
       ],
-      "noteCodes": [
-        "CARD-BOUND-ASSERTION-MISSING"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B09090:3651e64eedf9e862b41a0be484831446dee1f637b43e35ac632ac295bfaeffbd",

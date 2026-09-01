@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6889
+- **ファイル数**: 6891
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -6127,7 +6127,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B09026-B09037-completion-public-wave190.test.ts` — qa: card:B09026:3b40e4f1bfa97db36362fad681b7510cb4024f54c57fd8fed3c92833f80261a0
       - `B09038-B09055-completion-public-wave191.test.ts` — qa: card:B09038:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f
       - `B09056-B09064-completion-public-wave192.test.ts` — qa: card:B09056:291fc09e63b332fbdca9e94aae30890f71c8741ec83bda8724ea0b58d7b8dfd9
+      - `B09073-B09080-completion-public-wave193.test.ts` — qa: card:B09073:6f84244014e18679f78a5ae0b96cec21787fc34c207c0c4ba6935a6b198b5b03
       - `B09090-PR286-entry-waiver.test.ts` — qaId=card:B09090:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7e…
+      - `B09092-completion-wave194.test.ts` — qa: card:B09092:0a7b79351a135f0b5277f183d8028ddc88073d99a54bf083bff74d1b3c1a1358
       - `B09109-completion-public-wave128.test.ts` — qa: card:B09109:87aa9ca394d3b7a7faa9cc64726031a8e157f606ad5c5fab6f9690c1e7ed7c45
       - `B10003-completion-public-wave140.test.ts` — qa: card:B10003:0194b74149e29b2d31fa5b6d2a9bf767dfd2a718b7ea50244905b5d5fb423e0b
       - `B10036-completion-public-wave133.test.ts` — qa: card:B10036:0b75452df6157fca2faca3660e38d13be769a1eae20e32990c76ac7780cdac0b

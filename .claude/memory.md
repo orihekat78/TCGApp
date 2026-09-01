@@ -46,3 +46,7 @@
 - About 77 waves remain through Wave267.
 - Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 - Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.
+- Waves193-194 moved sixteen B09073-B09092 rows to matched: 2196 matched /
+  768 test-missing / 2964 total. No production code changed.
+- Wave195 starts with the remaining B09092 row, then B09093-B09096; prompt is
+  updated. Broad gate remains Wave200.

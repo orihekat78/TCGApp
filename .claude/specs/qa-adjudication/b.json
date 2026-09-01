@@ -1745,11 +1745,12 @@
     {
       "qaId": "card:B09081:0f058da851b97ca7040483888e03f1ef3561aecdb6a5c3cd6ecb25ecb5bb551b",
       "answerHash": "4a6a3fc1ccf2875c4529e661b66dd2978c665e277fd6b3b78c0619507d5711fc",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09081.ts:84"
+        "src:src/cards/ct-p09/B09081.ts:83",
+        "tests:tests/cards/night-wC/hirameki-optional.test.ts:207"
       ]
     },
     {

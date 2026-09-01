@@ -1772,15 +1772,14 @@
     {
       "qaId": "card:B09090:503214a02f4aed5722f530357639b8f16a4d6a9d218eb826b4fa47693c36556e",
       "answerHash": "a656260114532b9a98b1caf4d0184b9f787ef79b35aa04b1808f2b1854178375",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09090.ts:56"
+        "src:src/cards/ct-p09/B09090.ts:56",
+        "tests:tests/cards/official-qa/B09090-PR286-entry-waiver.test.ts:123"
       ],
-      "noteCodes": [
-        "TEST-GAP"
-      ]
+      "noteCodes": []
     },
     {
       "qaId": "card:B09109:80a2cfb16a87e5d0d4da8698cb86f47b173740616dd1af4e02537a5deb1ade52",

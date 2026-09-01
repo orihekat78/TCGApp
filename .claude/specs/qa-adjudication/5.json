@@ -1486,11 +1486,12 @@
     {
       "qaId": "card:B09078:b12f43e33fad16d06ae71349d7a99edf1e732707da24c745d2874072861502f1",
       "answerHash": "cc43bdfc880e6d177dd0822494c800f75d923e20c7a72a7df56f6f968d9936e4",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09078.ts:41"
+        "src:src/cards/ct-p09/B09078.ts:41",
+        "tests:tests/cards/official-qa/B09073-B09080-completion-public-wave193.test.ts:306"
       ]
     },
     {
@@ -1525,11 +1526,12 @@
     {
       "qaId": "card:B09084:18266db4732b9571ebae419afbd36f26fb54fb836c7752251e64e6dad817b4d1",
       "answerHash": "ef6eb8f6db810f1a2ffa5c7c0d7b095f64ae2f9341787a23599d407c098f542a",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09084.ts:101"
+        "src:src/cards/ct-p09/B09084.ts:101",
+        "tests:tests/cards/official-qa/shippu-effect-entry-public.test.ts:371"
       ]
     },
     {
