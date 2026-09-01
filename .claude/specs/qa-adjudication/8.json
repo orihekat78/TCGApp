@@ -1780,11 +1780,12 @@
     {
       "qaId": "card:B09105:c7ae8a0b8705f2f925f39f99642bb7a79d30f9cf38ac1993b68357ce50dd6d54",
       "answerHash": "43a3dd4a173f578a69b328fe5437cf62aa9f1bbf71aa2c498f0dae9a28d88f3b",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09105.ts:1"
+        "src:src/cards/ct-p09/B09105.ts:1",
+        "tests:tests/cards/official-qa/B09105-completion-wave197.test.ts:12"
       ]
     },
     {

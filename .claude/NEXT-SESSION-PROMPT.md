@@ -1,14 +1,13 @@
-# Next Task: card-completion QA Waves197-198
+# Next Task: card-completion QA Waves199-200
 
-Resume `qa/adjudication-wave-20260814-13` after the Waves195-196 commit.
+Resume `qa/adjudication-wave-20260814-13` after the Waves197-198 commit.
 
 ## Completed pair
 
-- Wave195: eight CT-P09 Q&A rows for B09092–B09096 are `matched/aligned`.
-- Wave196: eight CT-P09 Q&A rows for B09097–B09104 are `matched/aligned`.
-- Added two bounded proof files; 9 tests pass.
+- Wave197: four CT-P09 Q&A rows for B09105 are `matched/aligned`.
+- Wave198: three B09106 and one B09107 CT-P09 Q&A rows are `matched/aligned`.
+- Added two bounded proof files; 5 tests pass.
 - No engine, state, resolver, security, save, or visible UI change.
-- The B09096 input ID missed a final `a`; canonical snapshot ID ends in `...d1badc6a`.
 
 ## Pinned authority and protection
 
@@ -16,15 +15,15 @@ Resume `qa/adjudication-wave-20260814-13` after the Waves195-196 commit.
 - CT-P09 character TSV SHA-256:
   `34f2babbaaf07cef0f19ff7a765ca7052262d7c43637230b606b14306ff20c04`.
 - Preserve unrelated `pnpm-lock.yaml`, `pnpm-workspace.yaml`, and B10006 test.
-- Raw `ct-d01-api.json` drift stays out of scope; broad gate remains Wave200.
+- Raw `ct-d01-api.json` drift stays out of scope; run the broad gate at Wave200.
 
 ## Next candidates
 
-- `B09105 c7ae8a0b8705f2f925f39f99642bb7a79d30f9cf38ac1993b68357ce50dd6d54`
-- `B09105 c9d1abbedddbedbfad74851f5da4e68d45940c5dc7b1a674e2aa635443a4df5e`
-- `B09105 d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa`
-- `B09105 e8e3445ac6139f21bb8ab2dd70734b6ea03331a372bfd54f70907a129e263392`
-- `B09106 b7713abe7876ef1ad566c125fa172a4f2a13b192f2b22a4a2cea136020526dac`
-- `B09106 c54b5549bd11a1622d7ffa672c7f30ab5fc40d02abb96c921f5e3a24acc3acdd`
-- `B09106 ef2849caee7180cda9c275655743b8c0f8ccc524228510f100ce9dd045396741`
-- `B09107 4f848afcdc0e788f64c05c38b92bfb367407f6be7f9fc578ced2a8b5c406a824`
+- `B09108 0643b41835d29ed2fe718d2fe0b916ea3a9086713081a1b6c5e9c0517dfe99a7`
+- `B09108 0ae647669c43a49b9ad408264f0e80c5c5d6f5169c0d2d4aa382d127006777eb`
+- `B09108 628fe49da7ac3d0ac5a5fdbb23a36f02bd9d278f640322cab14399ff90ba9fda`
+- `B09108 ee061ffcf4652d834b2aa83508fd512dedb3e0a2d8251c3d26d6ef0844a5fe36`
+- `B09110 c6c48c4f8eb604b6a40d12fe2a7833e6d2add2d529e04b3e29c2843f0a5e305c`
+- `B09111 1fefea11e9f62644d0760810fefb72ce203d027c2194b205a1bb441878975d27`
+- `B09111 ee061ffcf4652d834b2aa83508fd512dedb3e0a2d8251c3d26d6ef0844a5fe36`
+- `B09112 3f51aa8485b9e13a1daa1830af8049c5d9c6c1d840cfe9de20e2fee77992ce64`

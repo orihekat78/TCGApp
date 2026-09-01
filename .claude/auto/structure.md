@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6894
+- **ファイル数**: 6897
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1719,6 +1719,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-08-31-qa-waves188-189.md` — QA adjudication Waves188-189
     - `2026-08-31-qa-waves190-191.md` — QA adjudication Waves190-191
     - `2026-09-01-qa-waves195-196.md` — QA adjudication Waves195-196
+    - `2026-09-01-qa-waves197-198.md` — QA adjudication Waves197-198
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -6133,6 +6134,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B09092-B09096-completion-wave195.test.ts` — qa: card:B09092:70f5af4b948092f863f1b2d28f8c91c4016f93c53f89de134024bbd39068daa3
       - `B09092-completion-wave194.test.ts` — qa: card:B09092:0a7b79351a135f0b5277f183d8028ddc88073d99a54bf083bff74d1b3c1a1358
       - `B09097-B09104-completion-wave196.test.ts` — qa: card:B09097:0237a0c142d5e7feca1b4e4a9e92d3bf06f73c90344a81fa1ae51d869726b9b3
+      - `B09105-completion-wave197.test.ts` — qa: card:B09105:c7ae8a0b8705f2f925f39f99642bb7a79d30f9cf38ac1993b68357ce50dd6d54
+      - `B09106-B09107-completion-wave198.test.ts` — qa: card:B09106:b7713abe7876ef1ad566c125fa172a4f2a13b192f2b22a4a2cea136020526dac
       - `B09109-completion-public-wave128.test.ts` — qa: card:B09109:87aa9ca394d3b7a7faa9cc64726031a8e157f606ad5c5fab6f9690c1e7ed7c45
       - `B10003-completion-public-wave140.test.ts` — qa: card:B10003:0194b74149e29b2d31fa5b6d2a9bf767dfd2a718b7ea50244905b5d5fb423e0b
       - `B10036-completion-public-wave133.test.ts` — qa: card:B10036:0b75452df6157fca2faca3660e38d13be769a1eae20e32990c76ac7780cdac0b

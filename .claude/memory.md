@@ -60,3 +60,12 @@
 - Preserve inherited lockfiles and B10006 test; raw ct-d01 drift excluded.
 - Horizontal review reused B09096 dynamic-AP, B09097 chain, and B09104
   printed-ability test paths; no same-pattern production gap was found.
+
+## 2026-09-01: CT-P09 Q&A Waves197-198
+
+- Certified four B09105, three B09106, and one B09107 Q&A rows as
+  `matched/aligned`; production code is unchanged.
+- Added two bounded proof files (5 tests). Focused Vitest, TypeScript, QA merge,
+  QA baseline lint, and generated QA trace all pass.
+- Horizontal review reused B09105 S1 defer, B09106 effect-entry, and B09107
+  alternate-defeat paths; no same-pattern production gap was found.

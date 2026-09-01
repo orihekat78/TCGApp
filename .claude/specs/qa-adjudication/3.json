@@ -1821,11 +1821,12 @@
     {
       "qaId": "card:B09107:4f848afcdc0e788f64c05c38b92bfb367407f6be7f9fc578ced2a8b5c406a824",
       "answerHash": "1f06e440f64d419c1ae5e2c2aed0e915e51ecba3f5537be042e0e9753a16c69b",
-      "status": "test-missing",
-      "result": "test-gap",
+      "status": "matched",
+      "result": "aligned",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p09/B09107.ts:1"
+        "src:src/cards/ct-p09/B09107.ts:1",
+        "tests:tests/cards/official-qa/B09106-B09107-completion-wave198.test.ts:23"
       ]
     },
     {
