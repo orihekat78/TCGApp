@@ -89,7 +89,7 @@ export const B06034: CardDef = {
   names: ['鬼丸城'],
   colors: ['緑'],
   level: 4,
-  traits: [],
+  traits: ['YAIBA'],
   rarity: 'C',
   imageUrl: '1754285189456772.jpg',
   abilities: [a1, a2],

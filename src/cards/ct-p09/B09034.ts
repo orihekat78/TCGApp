@@ -22,8 +22,8 @@
 //       n:{min:0,max:2}, chooser:'self'} })。短縮形 max:2 は単一カードしか動かないため (BUG: normalizeTargetToString
 //     value[0])、charStackCard(D08021) と同型の明示 multi-pick contract を使う。「2枚まで」=0〜2 (rules/15)。
 //   - clause2「このターン中、自分はイベントを使用できない（能力や効果によっても）」=> setEventUseBan {player:'self'}。
-//     gate は hand-use-card.ts / next-hint.ts の event のみ。qAndA 通り【カットイン】【ヒラメキ】は対象外。
-//     「イベントを使用する」効果 verb は engine に未実装 (生成するカード皆無) のため追加ゲート不要。
+//     gate は hand-use-card.ts / next-hint.ts / useEventFromHand の event。qAndA 通り
+//     【カットイン】【ヒラメキ】は対象外。
 //   - 本体 trigger = on-hand effect:declared selfOnly + matcher kind==='event-use' (B02053 と同型: 手札の使用・
 //     ネクストヒントでの自イベント使用時に発火)。
 //   - 【ヒラメキ】=> on-evidence evidence:remove-by-action optional + handAddFromRemove {max:1, filter:{kind:'event'}}

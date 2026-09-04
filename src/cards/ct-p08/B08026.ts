@@ -12,8 +12,8 @@
 //   - 「上から5枚見る…1枚まで公開して手札に加え」=> deckRevealUntil{maxN:5, chooseMatch:'upTo'}
 //     (rules/26「1枚まで」型 = 加えない選択可、B08026 QA 明示。BUG-132 GAP-1 経路) +
 //     conditional{bound $matched} → handAddFromDeck。デッキ5枚未満 = 残り全部 (rules/26)。
-//   - 「残りをシャッフルしてデッキの下に移す」=> deckToBottomBound → deckShuffle
-//     (B03018/D11019 出荷済 convention)。
+//   - 「残りをシャッフルしてデッキの下に移す」=> deckToBottomBound{order:'shuffle'}。
+//     公開した残りだけを無作為化し、未公開のデッキ本体はシャッフルしない。
 //   - コスト「リムーブエリアに移す」= 対象省略 → 自身 (rules/21) => removeFromScene{target:self, n:1}。
 //   - 「手札からレベル6以下のイベントを1枚まで使用する」=> useEventFromHand{max:1,
 //     filter:{levelMax:6, kind:'event'}} (engine mega-wave W6 step3 — FILE/色制限バイパス、
@@ -47,8 +47,7 @@ const a1: AbilityDef = {
         if: { kind: 'bound', key: '$matched', presence: 'matched' },
         then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } },
       },
-      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },
-      { kind: 'atom', verb: 'deckShuffle', args: { player: 'self' } },
+      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed', order: 'shuffle' } },
     ],
   },
   description:

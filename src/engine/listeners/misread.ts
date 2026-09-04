@@ -1,86 +1,90 @@
-import { event } from '../event/registry.js';
-import { def as readDef } from '../read/def.js';
-import { char as readChar } from '../read/char.js';
+import {
+  _abortEventJournal,
+  _beginEventJournal,
+  _commitEventJournal,
+  event,
+} from '../event/registry.js';
 import { mutate } from '../mutate/index.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
-import type { CausalEffectTrace, GameState } from '../types/index.js';
+import type {
+  CausalEffectTrace,
+  GameState,
+  MisreadCandidate,
+  MisreadDecision,
+  PendingMisreadAuthority,
+} from '../types/index.js';
+import {
+  assertMisreadDecisionMatchesLive,
+  clonePendingMisreadAuthority,
+  collectMisreadCandidates,
+  resetLiveMisreadLease,
+} from '../state/misread-authority.js';
 
-export type MisreadCandidate = { uid: string; x: number };
-
-export type PendingMisreadSide = {
-  /** Player who owns the misread decision. */
-  player: 'self' | 'opp';
-  reasoningUid: string;
-  reasoningPlayer: 'self' | 'opp';
-  candidates: MisreadCandidate[];
-  /** Causal graph paused while the human resolves this decision. */
-  causalTrace?: CausalEffectTrace;
-};
+type PendingMisreadValue = MisreadDecision | PendingMisreadAuthority;
 
 declare global {
-  var __pendingMisread: PendingMisreadSide | null | undefined;
+  var __pendingMisread: PendingMisreadValue | null | undefined;
 }
 
-function readPending(): PendingMisreadSide | null {
+function readPending(): PendingMisreadValue | null {
   return globalThis.__pendingMisread ?? null;
 }
 
-function writePending(value: PendingMisreadSide | null): void {
+function writePending(value: PendingMisreadValue | null): void {
   globalThis.__pendingMisread = value;
 }
 
-export function _drainPendingMisread(): PendingMisreadSide | null {
+export function _drainPendingMisread(): PendingMisreadAuthority | null {
   const value = readPending();
   writePending(null);
-  return value;
+  if (value === null) return null;
+  if (!('continuationToken' in value)) {
+    throw new Error('Invalid pendingMisread: unauthenticated runtime projection');
+  }
+  return clonePendingMisreadAuthority(value);
 }
 
-export function _peekPendingMisread(): PendingMisreadSide | null {
+export function _peekPendingMisread(): PendingMisreadValue | null {
   return readPending();
+}
+
+/** Transfer one consumed reasoning continuation token into the human decision. */
+export function _authenticatePendingMisread(
+  reasoningUid: string,
+  reasoningPlayer: 'self' | 'opp',
+  continuationToken: number,
+  causalTrace?: CausalEffectTrace,
+): PendingMisreadAuthority | null {
+  const pending = readPending();
+  if (pending === null
+    || pending.reasoningUid !== reasoningUid
+    || pending.reasoningPlayer !== reasoningPlayer) return null;
+  if ('continuationToken' in pending) {
+    throw new Error('Invalid pendingMisread: decision already authenticated');
+  }
+  const authenticated: PendingMisreadAuthority = {
+    continuationToken,
+    player: pending.player,
+    reasoningUid: pending.reasoningUid,
+    reasoningPlayer: pending.reasoningPlayer,
+    candidates: pending.candidates.map((candidate) => ({ ...candidate })),
+    ...(causalTrace ? { causalTrace: { ...causalTrace } } : {}),
+  };
+  writePending(clonePendingMisreadAuthority(authenticated));
+  return authenticated;
 }
 
 export function _resetPendingMisread(): void {
   writePending(null);
+  resetLiveMisreadLease();
 }
 
 export function _resetMisreadRegistered(): void {
   _registered = false;
 }
 
-function findOwnerOfUid(state: GameState, uid: string): 'self' | 'opp' | null {
-  if (uid === 'partner:self') return 'self';
-  if (uid === 'partner:opp') return 'opp';
-  for (const player of ['self', 'opp'] as const) {
-    if (state.players[player].scene.some((character) => character.uid === uid)) return player;
-  }
-  return null;
-}
-
-function extractMisreadX(ability: unknown): number | null {
-  if (!ability || typeof ability !== 'object') return null;
-  const candidate = ability as { type?: string; effect?: { args?: { x?: number } } };
-  if (candidate.type !== 'icon-misread') return null;
-  const x = candidate.effect?.args?.x;
-  return typeof x === 'number' ? x : null;
-}
-
 function humanPlayerSide(): 'self' | 'opp' | null {
   return (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
-}
-
-function collectCandidates(state: GameState, player: 'self' | 'opp'): MisreadCandidate[] {
-  const candidates: MisreadCandidate[] = [];
-  for (const character of state.players[player].scene) {
-    if (character.state !== 'active') continue;
-    if (readChar.originalAbilitiesDisabled(state, character.uid)) continue;
-    const card = readDef.card(character.cardId);
-    if (!card) continue;
-    for (const ability of card.abilities) {
-      const x = extractMisreadX(ability);
-      if (x !== null) candidates.push({ uid: character.uid, x });
-    }
-  }
-  return candidates;
 }
 
 function setReasoningLpReduction(state: GameState, uid: string, reduction: number): void {
@@ -100,19 +104,14 @@ function setReasoningLpReduction(state: GameState, uid: string, reduction: numbe
   throw new Error(`misreadResolve: missing reasoning target uid=${uid}`);
 }
 
-function validatePicks(
+export function _validateMisreadPicks(
   state: GameState,
-  pending: PendingMisreadSide,
+  pending: MisreadDecision,
   requestedPicks: ReadonlyArray<MisreadCandidate>,
 ): MisreadCandidate[] {
-  if (findOwnerOfUid(state, pending.reasoningUid) !== pending.reasoningPlayer) {
-    throw new Error(`misreadResolve: stale reasoning target uid=${pending.reasoningUid}`);
-  }
-  const defender = pending.reasoningPlayer === 'self' ? 'opp' : 'self';
-  if (pending.player !== defender) throw new Error('misreadResolve: invalid decision owner');
+  assertMisreadDecisionMatchesLive(state, pending);
 
   const snapshot = new Map(pending.candidates.map((candidate) => [candidate.uid, candidate.x]));
-  const live = new Map(collectCandidates(state, pending.player).map((candidate) => [candidate.uid, candidate.x]));
   const selected = new Set<string>();
   const picks: MisreadCandidate[] = [];
   for (const requested of requestedPicks) {
@@ -122,9 +121,6 @@ function validatePicks(
     if (snapshotX === undefined || snapshotX !== requested.x) {
       throw new Error(`misreadResolve: forged pick uid=${requested.uid}`);
     }
-    if (live.get(requested.uid) !== snapshotX) {
-      throw new Error(`misreadResolve: stale pick uid=${requested.uid}`);
-    }
     picks.push({ uid: requested.uid, x: snapshotX });
   }
 
@@ -133,31 +129,47 @@ function validatePicks(
 
 export function _canResolveMisreadPicks(
   state: GameState,
-  pending: PendingMisreadSide,
+  pending: MisreadDecision,
   requestedPicks: ReadonlyArray<MisreadCandidate>,
 ): boolean {
   try {
-    validatePicks(state, pending, requestedPicks);
+    _validateMisreadPicks(state, pending, requestedPicks);
     return true;
   } catch {
     return false;
   }
 }
 
+/** Commit the whole simultaneous Misread batch before any reaction can observe it. */
+export function _applyValidatedMisreadPicks(
+  state: GameState,
+  pending: MisreadDecision,
+  picks: ReadonlyArray<MisreadCandidate>,
+): void {
+  const journal = _beginEventJournal();
+  try {
+    for (const pick of picks) mutate.scene.setState(state, pick.uid, 'sleep');
+    const totalReduction = picks.reduce((sum, pick) => sum + pick.x, 0);
+    if (totalReduction > 0) setReasoningLpReduction(state, pending.reasoningUid, totalReduction);
+    // state:change listeners must see the whole simultaneous Misread commit.
+    _commitEventJournal(journal);
+  } catch (error) {
+    _abortEventJournal(journal);
+    throw error;
+  }
+  for (const pick of picks) {
+    event.emit(state, 'misread:performed', { player: pending.player }, { player: pending.player, uid: pick.uid });
+  }
+}
+
 /** Validate against the surfaced snapshot and live board before applying a decision. */
 export function _resolveMisreadPicks(
   state: GameState,
-  pending: PendingMisreadSide,
+  pending: MisreadDecision,
   requestedPicks: ReadonlyArray<MisreadCandidate>,
 ): void {
-  const picks = validatePicks(state, pending, requestedPicks);
-  let totalReduction = 0;
-  for (const pick of picks) {
-    mutate.scene.setState(state, pick.uid, 'sleep');
-    totalReduction += pick.x;
-    event.emit(state, 'misread:performed', { player: pending.player }, { player: pending.player, uid: pick.uid });
-  }
-  if (totalReduction > 0) setReasoningLpReduction(state, pending.reasoningUid, totalReduction);
+  const picks = _validateMisreadPicks(state, pending, requestedPicks);
+  _applyValidatedMisreadPicks(state, pending, picks);
 }
 
 let _registered = false;
@@ -168,13 +180,19 @@ export function registerMisreadListener(): void {
   event.on('reasoning:before-add', (state, payload) => {
     const uid = (payload as { uid?: string } | undefined)?.uid;
     if (!uid) return;
-    const reasoningPlayer = findOwnerOfUid(state, uid);
-    if (!reasoningPlayer) return;
+    const reasoningPlayer = state.players.self.scene.some((character) => character.uid === uid)
+      || uid === 'partner:self'
+      ? 'self'
+      : state.players.opp.scene.some((character) => character.uid === uid)
+        || uid === 'partner:opp'
+        ? 'opp'
+        : null;
+    if (reasoningPlayer === null) return;
     const defender = reasoningPlayer === 'self' ? 'opp' : 'self';
-    const candidates = collectCandidates(state, defender);
+    const candidates = collectMisreadCandidates(state, defender);
     if (candidates.length === 0) return;
 
-    const pending: PendingMisreadSide = {
+    const pending: MisreadDecision = {
       player: defender,
       reasoningUid: uid,
       reasoningPlayer,

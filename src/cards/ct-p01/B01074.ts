@@ -4,8 +4,9 @@
 // 公式テキスト:
 //   このキャラが推理したとき、相手は手札を公開する。（その後、元に戻す）
 //
-// a1: 推理反応 (reasoning:end selfOnly = このキャラが推理したとき)。相手手札公開は
-//     情報開示のみで状態変化なし → log atom (D05004 同型 no-op)。
+// a1: 推理反応 (reasoning:after-sleep selfOnly = このキャラが推理したとき)。
+//     スリープ直後、ミスリードと証拠獲得の前に相手手札を公開する。情報開示は
+//     状態変化なし → log atom (D05004 同型 no-op)。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 
@@ -13,8 +14,8 @@ const a1: AbilityDef = {
   id: 'a1',
   type: 'triggered',
   scope: 'on-scene',
-  // このキャラが推理したとき (reasoning:end、source.uid 一致でこのキャラ自身の推理のみ発火)
-  trigger: { hook: 'reasoning:end', selfOnly: true },
+  // このキャラが推理したとき: スリープ直後、ミスリードと証拠獲得の前。
+  trigger: { hook: 'reasoning:after-sleep', selfOnly: true },
   // 相手は手札を公開する（その後、元に戻す）= presentation 窓のみ、状態不変 (D05004 a1 同型)
   effect: { kind: 'atom', verb: 'handReveal', args: { player: 'opp', all: true, audience: 'all', lifetime: 'presentation' } },
   description: 'このキャラが推理したとき、相手は手札を公開する。（その後、元に戻す）',

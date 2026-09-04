@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { produce } from 'immer';
 import { REUSE_CARDS } from '@/cards';
 import { B10047 } from '@/cards/ct-p10/B10047';
-import { canHandUseCard } from '@/engine/flow/main/hand-use-card';
+import { canHandUseCard, handUseCard } from '@/engine/flow/main/hand-use-card';
 import { runNextHint } from '@/engine/flow/main/next-hint';
 import { _resetRegistry, register } from '@/engine/read/def';
 import { createEmptyGameState } from '@/engine/state-factory';
@@ -43,8 +43,13 @@ describe('B10047 ラディッシュ・レッドウッド', () => {
     for (const status of ['事件編', '解決編'] as const) {
       const legal = state('CASE_NY', status);
       expect(canHandUseCard(legal, 'self', 'B10047')).toBe(true);
-      const after = produce(legal, (draft) => runNextHint(draft, 'self', 'B10047'));
-      expect(after.players.self.scene.map((char) => char.cardId)).toEqual(['B10047']);
+      const normal = produce(legal, (draft) => handUseCard(draft, 'self', 'B10047'));
+      const nextHint = produce(legal, (draft) => runNextHint(draft, 'self', 'B10047'));
+      // qa: card:B10047:18485b08aaf71c37dce1f7952b7f4382610c83a5c07f19db06d8ede4d712d9e5
+      expect({
+        normal: normal.players.self.scene.map((char) => char.cardId),
+        nextHint: nextHint.players.self.scene.map((char) => char.cardId),
+      }).toEqual({ normal: ['B10047'], nextHint: ['B10047'] });
     }
 
     for (const illegal of [state('CASE_OTHER'), state('')]) {

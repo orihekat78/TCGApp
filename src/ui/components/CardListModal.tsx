@@ -18,10 +18,11 @@ import { CardArt } from './CardArt.js';
 import { cardIdToDisplayName, cardIdToPrintedNumber, publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import './CardListModal.css';
 
-export type CardListKind = 'file' | 'evidence' | 'remove' | 'partner-area' | 'deck' | 'selection' | 'set';
+export type CardListKind = 'file' | 'evidence' | 'remove' | 'partner-area' | 'deck' | 'selection' | 'set' | 'stack';
 
 const TITLE: Record<CardListKind, string> = {
   set:             'セットカード',
+  stack:           '重ねたカード',
   selection:       'Selection candidates',
   file:            'FILE エリア',
   evidence:        '証拠エリア',
@@ -32,6 +33,7 @@ const TITLE: Record<CardListKind, string> = {
 
 const HINT: Record<CardListKind, string> = {
   set: '表向きのカードは公開情報です。裏向きのカードは枚数と裏面のみ表示します。',
+  stack: '重ねたカードは両方のプレイヤーがいつでも確認できます。',
   selection: 'Choose from the listed public-area candidates.',
   file:     'デッキ上から裏向きで配置されたカード (rules/05 オートフェイズ)。アシスト中パートナーが含まれる場合があります。',
   evidence: '推理やアクション[事件] で集めた証拠カード (裏向き)。ヒラメキ付きが含まれる可能性があります。',
@@ -46,6 +48,7 @@ const HINT: Record<CardListKind, string> = {
  */
 const PICK_BANNER_TEXT: Record<CardListKind, string> = {
   set: 'セットカードを選んでください',
+  stack: '重ねたカードを選んでください',
   selection: 'Choose a candidate',
   file:     'FILE から1枚選んでください',
   evidence: '証拠から1枚選んで手札に加えてください',

@@ -91,6 +91,12 @@
   outline-offset: 2px;
 }
 
+.cp-modal .selectable-card-tile--hidden {
+  background: #f7fbff;
+  border-color: #6d9cbd;
+  color: #163f61;
+}
+
 .leave-intercept-cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

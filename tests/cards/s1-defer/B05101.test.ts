@@ -1,4 +1,5 @@
 // tests/cards/s1-defer/B05101 — 毛利小五郎 self-revival + permanent trait-flip
+// qa: card:B05101:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
 //   【相手ターン中】【現場リムーブ時】特徴[警察]の場合、自身をリムーブから スリープ登場 + draw1 してもよい。
 //   そうした場合、[警察]/[警視庁] を失い [探偵] を持つ (ターン終了時に切れない)。
 // 検証: ①相手ターン中に効果リムーブ → optional 承諾 → remove から消え scene に sleep 登場・draw1・trait flip

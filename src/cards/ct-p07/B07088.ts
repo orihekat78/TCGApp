@@ -6,7 +6,7 @@
 //   【宣言】【スリープ】〚手札を1枚リムーブする〛：自分のリムーブエリアにある〚特徴［警察］〛のキャラを1枚まで選び、手札に加える。
 //
 // a1: 自分のターン終了時 (phase:end:start + turn self) + 現場に[諸伏景光]がいる場合 → このキャラをアクティブに
-//     (D08003 a2 phase:end:start / D11016 sceneSetState $self active 同型)。
+//     (D08003 a2 phase:end:start / sceneSetState $self active)。
 // a2: 【宣言】【スリープ】〚手札1リム〛 cost (pay: sleepSelf + removeFromHand) で
 //     リムーブの[警察]を1枚まで手札へ (D11012 a2 handAddFromRemove / B04008 a1 pay cost 同型)。
 

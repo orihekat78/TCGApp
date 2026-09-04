@@ -26,7 +26,7 @@ const a1: AbilityDef = {
         verb: 'sceneEnter',
         args: {
           player: 'self', cardId: '$pick.cardId', from: 'hand', viaEffect: true,
-          target: { kind: 'pick', query: { area: 'hand', side: 'self', filter: { cardName: ['宮野エレーナ', '宮野志保', '宮野明美'], levelMax: 7 } }, n: { min: 0, max: 1 }, chooser: 'self' },
+          target: { kind: 'pick', query: { area: 'hand', side: 'self', filter: { kind: 'character', cardName: ['宮野エレーナ', '宮野志保', '宮野明美'], levelMax: 7 } }, n: { min: 0, max: 1 }, chooser: 'self' },
         },
       },
     ],

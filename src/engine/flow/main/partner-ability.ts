@@ -15,6 +15,7 @@ import {
   startStandaloneCausalTrace,
   withEffectCausalCorrelation,
 } from '../../log/effect-causal.js';
+import { isMainActionWindow } from './main-action-window.js';
 
 type Player = 'self' | 'opp';
 
@@ -27,6 +28,7 @@ type Player = 'self' | 'opp';
  * abilId 単位の細かい条件 (【ターン①】等) はカード固有 listener で判定する想定。
  */
 export function canPartnerAbility(state: GameState, p: Player, _abilId: string): boolean {
+  if (!isMainActionWindow(state, p)) return false;
   const partner = state.players[p].partner;
   if (!partner.cardId) return false;
   if (partner.state !== 'active') return false;

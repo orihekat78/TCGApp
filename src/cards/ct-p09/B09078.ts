@@ -9,19 +9,21 @@ const a1: AbilityDef = {
     { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', maxN: 3, bind: '$revealed' } },
     { kind: 'atom', verb: 'handAddFromDeck', args: {
       player: 'self', cardIds: '$pick.cardIds', bind: '$pickedCharacter', skipResolvesAtom: true,
+      deferRefresh: true,
       target: { kind: 'pick', chooser: 'self', n: { min: 0, max: 1 },
         query: { area: 'deck', side: 'self', fromGroupCards: '$revealed', filter: { kind: 'character', color: whiteOrYellow } } },
     } },
     { kind: 'atom', verb: 'handAddFromDeck', args: {
       player: 'self', cardIds: '$pick.cardIds', bind: '$pickedEvent', skipResolvesAtom: true,
+      deferRefresh: true,
       target: { kind: 'pick', chooser: 'self', n: { min: 0, max: 1 },
         query: { area: 'deck', side: 'self', fromGroupCards: '$revealed', filter: { kind: 'event', color: whiteOrYellow } } },
     } },
+    { kind: 'atom', verb: 'boundToRemove', args: { player: 'self', bindKey: '$revealed', refreshAfter: true } },
     { kind: 'conditional', if: { kind: 'and', cs: [
       { kind: 'bound', key: '$pickedCharacter', presence: 'matched' },
       { kind: 'bound', key: '$pickedEvent', presence: 'matched' },
     ] }, then: { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } } },
-    { kind: 'atom', verb: 'boundToRemove', args: { player: 'self', bindKey: '$revealed' } },
   ] },
   description: '\u3010\u4e8b\u4ef6\u7de8\u3011\u3010\u767b\u5834\u6642\u3011\u30c7\u30c3\u30ad\u306e\u4e0a\u304b\u30893\u679a\u898b\u308b\u3002',
   ruleRefs: ['rules/03-field-areas.md', 'rules/14-refresh.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/26-qa-deck-refresh.md'],

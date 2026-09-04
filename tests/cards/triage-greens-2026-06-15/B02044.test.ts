@@ -232,6 +232,7 @@ describe('B02044 怪盗キッド — gate5 runtime behavior', () => {
 
     // 事件白 + FILE4 → 可
     const ok = produce(s, (d) => { d.players.self.case.colors = ['白']; d.players.self.file = [FB, FB, FB, FB]; });
+    // qa: card:B02044:6fe2b952c3e8519188bd91013248e9727357b179c3959ffea7fa9c6cbe6b8f62
     expect(canDisguise(ok, ax, 'self', 'B02044'), '事件白+FILE4 → 変装可').toBe(true);
     // DECOY条件1: 事件赤 (白でない) → 不可 (caseColor 白 不成立)
     const wrongColor = produce(ok, (d) => { d.players.self.case.colors = ['赤']; });

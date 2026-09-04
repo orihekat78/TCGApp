@@ -1,5 +1,5 @@
 import type { Effect, GameState } from '../types/index.js';
-import type { PendingEffectPickSide } from './pending-state.js';
+import type { ContinuationFrame, PendingEffectPickSide } from './pending-state.js';
 import { effectivePendingPickRange } from './pick-selection.js';
 import { ATOM_VERBS, validate } from './validate.js';
 import { def } from '../read/def.js';
@@ -11,9 +11,16 @@ import {
 import {
   DECLARED_NAME_DOMAINS,
   findDeclareNameSpec,
+  isLegacyRegisteredCardNameMigrationSource,
+  registeredCardNameMigrationFor,
   resolveDeclaredName,
   type DeclareNameSpec,
 } from './declared-name-domain.js';
+import {
+  continuationMayEnterSceneForPlayer,
+  isSceneEnterSwitchPickArgs,
+  isValidSceneEnterSwitchPickAuthority,
+} from './scene-switch.js';
 
 type ValidationMode = 'live' | 'persisted';
 
@@ -23,6 +30,7 @@ export type PendingRuntimeValidationOptions = {
 };
 
 const PLAYERS = new Set(['self', 'opp']);
+const DECLARED_ABILITY_HOST_ORIGINS = new Set(['printed', 'granted']);
 const SOURCE_AREAS = new Set([
   'scene', 'partner-area', 'hand', 'evidence', 'file', 'remove', 'case',
 ]);
@@ -73,7 +81,7 @@ function boundOccurrenceWitness(
   value: unknown,
   path: string,
   player: 'self' | 'opp',
-  area: 'evidence' | 'remove',
+  area: 'deck' | 'evidence' | 'remove',
 ): void {
   occurrenceWitness(value, path);
   if (!isCardOccurrenceWitnessFor(value, player, area)) {
@@ -99,6 +107,22 @@ function integer(value: unknown, path: string, min = 0): number {
 
 function optionalInteger(value: unknown, path: string, min = 0): void {
   if (value !== undefined) integer(value, path, min);
+}
+
+function abilitySourceIdentity(item: Record<string, unknown>, path: string): void {
+  const hasOrigin = item.abilityOrigin !== undefined;
+  const hasIndex = item.abilityIndex !== undefined;
+  if (hasOrigin !== hasIndex) {
+    fail(path, 'declared-ability source requires both abilityOrigin and abilityIndex');
+  }
+  if (hasOrigin) {
+    oneOf(item.abilityOrigin, DECLARED_ABILITY_HOST_ORIGINS, `${path}.abilityOrigin`);
+    integer(item.abilityIndex, `${path}.abilityIndex`);
+    string(item.abilityId, `${path}.abilityId`);
+  }
+  if (item.setCardId !== undefined && hasOrigin) {
+    fail(path, 'set-card and host declared-ability source witnesses are mutually exclusive');
+  }
 }
 
 function oneOf(value: unknown, values: ReadonlySet<string>, path: string): string {
@@ -188,6 +212,12 @@ function source(value: unknown, path: string, requireUid = false): void {
   if (item.area !== undefined) oneOf(item.area, SOURCE_AREAS, `${path}.area`);
   if (requireUid) string(item.uid, `${path}.uid`, true);
   else if (item.uid !== undefined) string(item.uid, `${path}.uid`, true);
+  if (item.setCardId !== undefined) string(item.setCardId, `${path}.setCardId`);
+  if (item.setCardInstanceId !== undefined) string(item.setCardInstanceId, `${path}.setCardInstanceId`);
+  if ((item.setCardId === undefined) !== (item.setCardInstanceId === undefined)) {
+    fail(path, 'set-card source requires both setCardId and setCardInstanceId');
+  }
+  abilitySourceIdentity(item, path);
   if (item.resolutionKind !== undefined) oneOf(item.resolutionKind, RESOLUTION_KINDS, `${path}.resolutionKind`);
   optionalInteger(item.triggerBatch, `${path}.triggerBatch`, 1);
   optionalInteger(item.ownerChosenOrder, `${path}.ownerChosenOrder`);
@@ -262,6 +292,12 @@ function effectCtx(value: unknown, path: string, mode: ValidationMode, depth = 0
   if (src.cardId !== undefined) string(src.cardId, `${path}.source.cardId`, true);
   if (src.uid !== undefined) string(src.uid, `${path}.source.uid`, true);
   if (src.abilityId !== undefined) string(src.abilityId, `${path}.source.abilityId`, true);
+  if (src.setCardId !== undefined) string(src.setCardId, `${path}.source.setCardId`);
+  if (src.setCardInstanceId !== undefined) string(src.setCardInstanceId, `${path}.source.setCardInstanceId`);
+  if ((src.setCardId === undefined) !== (src.setCardInstanceId === undefined)) {
+    fail(`${path}.source`, 'set-card source requires both setCardId and setCardInstanceId');
+  }
+  abilitySourceIdentity(src, `${path}.source`);
   if (src.resolutionKind !== undefined) oneOf(src.resolutionKind, RESOLUTION_KINDS, `${path}.source.resolutionKind`);
   optionalInteger(src.triggerBatch, `${path}.source.triggerBatch`, 1);
   optionalInteger(src.ownerChosenOrder, `${path}.source.ownerChosenOrder`);
@@ -279,7 +315,22 @@ function effectCtx(value: unknown, path: string, mode: ValidationMode, depth = 0
         const entryPath = `${path}.bindings.${key}[${index}]`;
         const binding = record(entry, entryPath);
         genericData(entry, entryPath, mode);
-        if (binding.area === 'remove' || binding.area === 'evidence') {
+        if (binding.area === 'deck') {
+          player(binding.player, `${entryPath}.player`);
+          const bindingPlayer = binding.player as 'self' | 'opp';
+          const bindingIndex = integer(binding.index, `${entryPath}.index`);
+          const cardId = string(binding.cardId, `${entryPath}.cardId`);
+          boundOccurrenceWitness(
+            binding.occurrenceWitness,
+            `${entryPath}.occurrenceWitness`,
+            bindingPlayer,
+            'deck',
+          );
+          const uid = string(binding.uid, `${entryPath}.uid`);
+          if (uid !== cardOccurrenceUid(bindingPlayer, 'deck', cardId, bindingIndex)) {
+            fail(`${entryPath}.uid`, 'does not match the indexed deck occurrence');
+          }
+        } else if (binding.area === 'remove' || binding.area === 'evidence') {
           player(binding.player, `${entryPath}.player`);
           const bindingPlayer = binding.player as 'self' | 'opp';
           const bindingIndex = integer(binding.index, `${entryPath}.index`);
@@ -314,7 +365,7 @@ function effectCtx(value: unknown, path: string, mode: ValidationMode, depth = 0
         rawDomain,
         new Set(DECLARED_NAME_DOMAINS),
         `${path}.declaredNameDomains.${key}`,
-      ) as 'unrestricted' | 'registered-character-card-name';
+      ) as DeclareNameSpec['domain'];
       const declaredName = names[key];
       if (typeof declaredName === 'string'
         && declaredName !== ''
@@ -375,6 +426,80 @@ function sameDeclareNameSpec(left: DeclareNameSpec, right: DeclareNameSpec): boo
     && left.optional === right.optional;
 }
 
+function stripRegisteredCardNameDomain(value: unknown): { value: unknown; removed: number } {
+  if (Array.isArray(value)) {
+    const entries = value.map(stripRegisteredCardNameDomain);
+    return {
+      value: entries.map(entry => entry.value),
+      removed: entries.reduce((total, entry) => total + entry.removed, 0),
+    };
+  }
+  if (value === null || typeof value !== 'object') return { value, removed: 0 };
+  const source = value as Record<string, unknown>;
+  const output: Record<string, unknown> = {};
+  let removed = 0;
+  for (const [key, child] of Object.entries(source)) {
+    if (source.kind === 'atom' && source.verb === 'declareName' && key === 'args'
+      && child !== null && typeof child === 'object' && !Array.isArray(child)) {
+      const args: Record<string, unknown> = {};
+      for (const [argKey, argValue] of Object.entries(child as Record<string, unknown>)) {
+        if (argKey === 'domain' && argValue === 'registered-card-name') {
+          removed += 1;
+          continue;
+        }
+        const nested = stripRegisteredCardNameDomain(argValue);
+        args[argKey] = nested.value;
+        removed += nested.removed;
+      }
+      output[key] = args;
+      continue;
+    }
+    const nested = stripRegisteredCardNameDomain(child);
+    output[key] = nested.value;
+    removed += nested.removed;
+  }
+  return { value: output, removed };
+}
+
+function structurallyEqual(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return Array.isArray(left) && Array.isArray(right)
+      && left.length === right.length
+      && left.every((entry, index) => structurallyEqual(entry, right[index]));
+  }
+  if (left === null || right === null || typeof left !== 'object' || typeof right !== 'object') return false;
+  const leftObject = left as Record<string, unknown>;
+  const rightObject = right as Record<string, unknown>;
+  const leftKeys = Object.keys(leftObject).sort();
+  const rightKeys = Object.keys(rightObject).sort();
+  return leftKeys.length === rightKeys.length
+    && leftKeys.every((key, index) => key === rightKeys[index]
+      && structurallyEqual(leftObject[key], rightObject[key]));
+}
+
+function isLegacyRegisteredCardNameMigration(
+  queued: DeclareNameSpec,
+  printed: DeclareNameSpec,
+  source: Record<string, unknown>,
+  queuedEffect: Effect,
+  printedEffect: Effect,
+): boolean {
+  const legacyPrinted = stripRegisteredCardNameDomain(printedEffect);
+  return isLegacyRegisteredCardNameMigrationSource(source)
+    && queued.bind === printed.bind
+    && queued.optional === printed.optional
+    && queued.domain === 'unrestricted'
+    && printed.domain === 'registered-card-name'
+    && legacyPrinted.removed === 1
+    && structurallyEqual(queuedEffect, legacyPrinted.value);
+}
+
+type ExpectedDeclareNameAuthority = {
+  spec: DeclareNameSpec;
+  legacyMigration: boolean;
+};
+
 function matchingDeclaredNameLineage(
   state: GameState,
   source: Record<string, unknown>,
@@ -384,6 +509,10 @@ function matchingDeclaredNameLineage(
     if (entry.source.player !== source.player
       || entry.source.cardId !== source.cardId
       || entry.source.abilityId !== source.abilityId) return false;
+    if (entry.source.setCardId !== source.setCardId
+      || entry.source.setCardInstanceId !== source.setCardInstanceId) return false;
+    if (entry.source.abilityOrigin !== source.abilityOrigin
+      || entry.source.abilityIndex !== source.abilityIndex) return false;
     if (source.uid !== undefined && entry.source.uid !== source.uid) return false;
     if (sourceArea !== undefined && (entry.source.area ?? 'scene') !== sourceArea) return false;
     if (source.resolutionKind !== undefined
@@ -403,18 +532,20 @@ function expectedDeclaredNameSpec(
   state: GameState,
   source: Record<string, unknown>,
   path: string,
-): DeclareNameSpec | null {
+): ExpectedDeclareNameAuthority | null {
   const cardId = string(source.cardId, `${path}.source.cardId`);
   const abilityId = string(source.abilityId, `${path}.source.abilityId`);
   let printedSpec: DeclareNameSpec | null = null;
+  let printedEffect: Effect | undefined;
   try {
     const printed = def.card(cardId)?.abilities.find((ability) => ability.id === abilityId);
+    printedEffect = printed?.effect;
     printedSpec = findDeclareNameSpec(printed?.effect);
   } catch {
     fail(path, 'printed ability has an invalid declared-name descriptor');
   }
 
-  const queuedSpecs: DeclareNameSpec[] = [];
+  const queuedSpecs: ExpectedDeclareNameAuthority[] = [];
   for (const queued of matchingDeclaredNameLineage(state, source)) {
     let queuedSpec: DeclareNameSpec | null;
     try {
@@ -423,13 +554,27 @@ function expectedDeclaredNameSpec(
       fail(path, 'queued declaration lineage has an invalid declared-name descriptor');
     }
     if (!queuedSpec) continue;
-    if (printedSpec && !sameDeclareNameSpec(queuedSpec, printedSpec)) {
+    const legacyMigration = printedSpec !== null
+      && printedEffect !== undefined
+      && isLegacyRegisteredCardNameMigration(
+        queuedSpec,
+        printedSpec,
+        source,
+        queued.effect,
+        printedEffect,
+      );
+    if (printedSpec
+      && !sameDeclareNameSpec(queuedSpec, printedSpec)
+      && !legacyMigration) {
       fail(path, 'queued declaration lineage does not match the printed ability');
     }
-    if (queuedSpecs.some((candidate) => !sameDeclareNameSpec(candidate, queuedSpec))) {
+    if (queuedSpecs.some((candidate) => (
+      !sameDeclareNameSpec(candidate.spec, queuedSpec)
+      || candidate.legacyMigration !== legacyMigration
+    ))) {
       fail(path, 'queued declaration lineage is ambiguous');
     }
-    queuedSpecs.push(queuedSpec);
+    queuedSpecs.push({ spec: queuedSpec, legacyMigration });
   }
   return queuedSpecs[0] ?? null;
 }
@@ -445,6 +590,77 @@ function assertExactDeclaredNameKeys(
   }
 }
 
+function plainRecord(value: unknown): Record<string, unknown> | undefined {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : undefined;
+}
+
+function hasExactKeys(value: Record<string, unknown> | undefined, expected: string[]): boolean {
+  if (!value) return false;
+  const actual = Object.keys(value).sort();
+  const sortedExpected = [...expected].sort();
+  return actual.length === sortedExpected.length
+    && actual.every((key, index) => key === sortedExpected[index]);
+}
+
+function exactLegacyEvidenceCostDyn(
+  item: Record<string, unknown>,
+  dyn: Record<string, unknown>,
+  source: Record<string, unknown>,
+): boolean {
+  const migration = registeredCardNameMigrationFor(
+    typeof source.cardId === 'string' ? source.cardId : undefined,
+    typeof source.abilityId === 'string' ? source.abilityId : undefined,
+  );
+  if (migration?.legacyCostShape !== 'flip-face-up-evidence-2'
+    || !hasExactKeys(dyn, [
+      'costParams', 'declaredName', 'runtimeHumanPlayer', 'runtimePickOwnerKnown',
+    ])
+    || dyn.runtimeHumanPlayer !== source.player
+    || dyn.runtimePickOwnerKnown !== true) return false;
+
+  const costParams = plainRecord(dyn.costParams);
+  const flipParams = plainRecord(costParams?.flipFaceUpEvidence);
+  const indices = flipParams?.indices;
+  if (!hasExactKeys(costParams, ['flipFaceUpEvidence'])
+    || !hasExactKeys(flipParams, ['indices'])
+    || !Array.isArray(indices)
+    || indices.length !== 2
+    || indices.some(index => !Number.isSafeInteger(index) || (index as number) < 0)
+    || new Set(indices).size !== indices.length) return false;
+
+  const costPaid = plainRecord(item.costPaid);
+  const paidFlip = plainRecord(costPaid?.flipFaceUpEvidence);
+  const ids = paidFlip?.ids;
+  const occurrences = paidFlip?.occurrences;
+  if (!paidFlip
+    || !hasExactKeys(costPaid, ['flipFaceUpEvidence'])
+    || !hasExactKeys(paidFlip, ['count', 'ids', 'occurrences'])
+    || paidFlip.count !== 2
+    || !Array.isArray(ids)
+    || ids.length !== 2
+    || !Array.isArray(occurrences)
+    || occurrences.length !== 2) return false;
+
+  const paidIndices: number[] = [];
+  for (let index = 0; index < occurrences.length; index += 1) {
+    const occurrence = plainRecord(occurrences[index]);
+    if (!occurrence
+      || occurrence.kind !== 'card'
+      || occurrence.player !== source.player
+      || occurrence.area !== 'evidence'
+      || !Number.isSafeInteger(occurrence.index)
+      || occurrence.index as number < 0
+      || typeof occurrence.cardId !== 'string'
+      || ids[index] !== occurrence.cardId) return false;
+    paidIndices.push(occurrence.index as number);
+  }
+  return [...indices].sort((left, right) => (left as number) - (right as number)).every(
+    (index, position) => index === paidIndices.sort((left, right) => left - right)[position],
+  );
+}
+
 function assertEffectCtxDeclaredNameAuthority(
   state: GameState,
   item: Record<string, unknown>,
@@ -457,9 +673,53 @@ function assertEffectCtxDeclaredNameAuthority(
   if (!hasDynName && !hasNames && !hasDomains) return;
 
   const source = record(item.source, `${path}.source`);
-  const expected = expectedDeclaredNameSpec(state, source, path);
-  if (!expected) {
+  const expectedAuthority = expectedDeclaredNameSpec(state, source, path);
+  if (!expectedAuthority) {
     fail(path, 'declared-name state has no matching queued declaration lineage');
+  }
+  const expected = expectedAuthority.spec;
+  if (expectedAuthority.legacyMigration) {
+    if (!hasNames) {
+      fail(`${path}.declaredNames`, 'is required by migrated legacy declaration lineage');
+    }
+    const legacyNames = record(item.declaredNames, `${path}.declaredNames`);
+    assertExactDeclaredNameKeys(legacyNames, expected.bind, `${path}.declaredNames`);
+    const legacyName = legacyNames[expected.bind];
+    if (typeof legacyName !== 'string') {
+      fail(`${path}.declaredNames.${expected.bind}`, 'expected a string');
+    }
+    if (!hasDynName || typeof dyn?.declaredName !== 'string') {
+      fail(`${path}.dyn.declaredName`, 'expected a string');
+    }
+    const dynKeys = Object.keys(dyn ?? {}).sort();
+    const plainLegacyDyn = dynKeys.length === 1 && dynKeys[0] === 'declaredName';
+    const runtimeLegacyDyn = dynKeys.length === 3
+      && dynKeys[0] === 'declaredName'
+      && dynKeys[1] === 'runtimeHumanPlayer'
+      && dynKeys[2] === 'runtimePickOwnerKnown'
+      && dyn?.runtimeHumanPlayer === source.player
+      && dyn?.runtimePickOwnerKnown === true;
+    const evidenceCostLegacyDyn = dyn !== undefined
+      && exactLegacyEvidenceCostDyn(item, dyn, source);
+    const migration = registeredCardNameMigrationFor(
+      typeof source.cardId === 'string' ? source.cardId : undefined,
+      typeof source.abilityId === 'string' ? source.abilityId : undefined,
+    );
+    const allowedLegacyDyn = migration?.legacyCostShape === undefined
+      ? plainLegacyDyn || runtimeLegacyDyn || evidenceCostLegacyDyn
+      : evidenceCostLegacyDyn;
+    if (!allowedLegacyDyn
+      || dyn?.declaredName !== legacyName) {
+      fail(`${path}.dyn`, 'must contain only the matching legacy declared name');
+    }
+    if (hasDomains) {
+      const legacyDomains = record(item.declaredNameDomains, `${path}.declaredNameDomains`);
+      assertExactDeclaredNameKeys(legacyDomains, expected.bind, `${path}.declaredNameDomains`);
+      if (legacyDomains[expected.bind] !== 'unrestricted') {
+        fail(`${path}.declaredNameDomains.${expected.bind}`, 'expected unrestricted legacy domain');
+      }
+    }
+    return;
   }
 
   if (!hasNames || !hasDomains) {
@@ -561,6 +821,8 @@ function pendingPick(value: unknown, path: string, mode: ValidationMode): void {
   const item = record(value, path);
   player(item.player, `${path}.player`);
   optionalPlayer(item.ownerPlayer, `${path}.ownerPlayer`);
+  const verb = string(item.atomVerb, `${path}.atomVerb`);
+  if (!ATOM_VERBS.has(verb)) fail(`${path}.atomVerb`, 'unknown atom verb');
   const candidates = array(item.candidates, `${path}.candidates`);
   const candidateUids = new Set<string>();
   candidates.forEach((raw, index) => {
@@ -588,7 +850,7 @@ function pendingPick(value: unknown, path: string, mode: ValidationMode): void {
       } else if (candidateItem.index !== undefined) {
         fail(`${path}.candidates[${index}].index`, 'not allowed for this area');
       }
-      if (area === 'evidence' || area === 'remove') {
+      if (area === 'evidence' || area === 'remove' || (area === 'deck' && verb === 'deckRevealUntil')) {
         if (candidateUid !== cardOccurrenceUid(candidatePlayer, area, candidateCardId, candidateIndex!)) {
           fail(`${path}.candidates[${index}].uid`, 'does not match the indexed card occurrence');
         }
@@ -631,16 +893,137 @@ function pendingPick(value: unknown, path: string, mode: ValidationMode): void {
       fail(`${path}.candidates[${index}].hidden`, 'expected a boolean');
     }
   });
-  const verb = string(item.atomVerb, `${path}.atomVerb`);
-  if (!ATOM_VERBS.has(verb)) fail(`${path}.atomVerb`, 'unknown atom verb');
   const atomArgs = record(item.atomArgs, `${path}.atomArgs`);
+  optionalPlayer(item.sceneEnterSwitchPlayer, `${path}.sceneEnterSwitchPlayer`);
   genericData(item.atomArgs, `${path}.atomArgs`, mode);
+  const sceneEnterSwitchPick = isSceneEnterSwitchPickArgs(atomArgs);
+  if (atomArgs.__sceneEnterSwitchPick !== undefined && !sceneEnterSwitchPick) {
+    fail(`${path}.atomArgs.__sceneEnterSwitchPick`, 'must be true when present');
+  }
+  if (sceneEnterSwitchPick) {
+    const switchContinuation = item.continuation !== null
+      && typeof item.continuation === 'object'
+      && !Array.isArray(item.continuation)
+      ? item.continuation as Record<string, unknown>
+      : undefined;
+    const switchCtx = switchContinuation?.ctx !== null
+      && typeof switchContinuation?.ctx === 'object'
+      && !Array.isArray(switchContinuation.ctx)
+      ? switchContinuation.ctx as Record<string, unknown>
+      : undefined;
+    const switchSource = switchCtx?.source !== null
+      && typeof switchCtx?.source === 'object'
+      && !Array.isArray(switchCtx.source)
+      ? switchCtx.source as Record<string, unknown>
+      : undefined;
+    if (verb !== 'sceneEnter'
+      || item.sceneEnterSwitchPlayer !== undefined
+      || !isValidSceneEnterSwitchPickAuthority(
+        atomArgs,
+        item.player as 'self' | 'opp',
+        item.ownerPlayer as 'self' | 'opp' | undefined,
+        switchSource?.player as 'self' | 'opp' | undefined,
+      )) {
+      fail(path, 'scene-enter switch pick must be an unbundled sceneEnter decision');
+    }
+    const originalArgs = record(
+      atomArgs.__sceneEnterSwitchOriginalArgs,
+      `${path}.atomArgs.__sceneEnterSwitchOriginalArgs`,
+    );
+    if (originalArgs.__sceneEnterSwitchPick !== undefined) {
+      fail(`${path}.atomArgs.__sceneEnterSwitchOriginalArgs`, 'must not contain a nested switch pick');
+    }
+    const switchTarget = record(atomArgs.target, `${path}.atomArgs.target`);
+    const switchRange = record(switchTarget.n, `${path}.atomArgs.target.n`);
+    const switchQuery = record(switchTarget.query, `${path}.atomArgs.target.query`);
+    if (switchTarget.kind !== 'pick'
+      || integer(switchRange.min, `${path}.atomArgs.target.n.min`) !== 1
+      || integer(switchRange.max, `${path}.atomArgs.target.n.max`) !== 1
+      || switchQuery.area !== 'scene') {
+      fail(`${path}.atomArgs.target`, 'must select exactly one scene character');
+    }
+    candidates.forEach((raw, index) => {
+      const candidate = record(raw, `${path}.candidates[${index}]`);
+      if (candidate.kind !== 'char' || candidate.player !== item.player) {
+        fail(`${path}.candidates[${index}]`, 'switch candidates must be live characters owned by the decision player');
+      }
+    });
+  }
+  if (verb === 'deckRevealUntil') {
+    const pendingPlayer = item.player as 'self' | 'opp';
+    if (atomArgs.__windowPlayer !== undefined) {
+      player(atomArgs.__windowPlayer, `${path}.atomArgs.__windowPlayer`);
+    }
+    const windowPlayer = (atomArgs.__windowPlayer ?? pendingPlayer) as 'self' | 'opp';
+    const windowWitness = string(atomArgs.__windowWitness, `${path}.atomArgs.__windowWitness`);
+    boundOccurrenceWitness(
+      windowWitness,
+      `${path}.atomArgs.__windowWitness`,
+      windowPlayer,
+      'deck',
+    );
+    const windowIds = array(atomArgs.__windowIds, `${path}.atomArgs.__windowIds`)
+      .map((value, index) => string(value, `${path}.atomArgs.__windowIds[${index}]`));
+    const windowOccurrences = array(
+      atomArgs.__windowOccurrences,
+      `${path}.atomArgs.__windowOccurrences`,
+    );
+    if (windowIds.length !== windowOccurrences.length) {
+      fail(`${path}.atomArgs`, 'deckRevealUntil window IDs and occurrences must have the same length');
+    }
+    const windowUids = new Set<string>();
+    windowOccurrences.forEach((raw, index) => {
+      const occurrence = record(raw, `${path}.atomArgs.__windowOccurrences[${index}]`);
+      if (occurrence.kind !== 'card') {
+        fail(`${path}.atomArgs.__windowOccurrences[${index}].kind`, 'deck occurrences require kind card');
+      }
+      if (occurrence.player !== windowPlayer || occurrence.area !== 'deck') {
+        fail(`${path}.atomArgs.__windowOccurrences[${index}]`, 'must match the reveal window player and deck area');
+      }
+      const cardId = string(
+        occurrence.cardId,
+        `${path}.atomArgs.__windowOccurrences[${index}].cardId`,
+      );
+      const occurrenceIndex = integer(
+        occurrence.index,
+        `${path}.atomArgs.__windowOccurrences[${index}].index`,
+      );
+      const uid = string(occurrence.uid, `${path}.atomArgs.__windowOccurrences[${index}].uid`);
+      if (uid !== cardOccurrenceUid(windowPlayer, 'deck', cardId, occurrenceIndex)) {
+        fail(`${path}.atomArgs.__windowOccurrences[${index}].uid`, 'does not match the indexed card occurrence');
+      }
+      if (occurrence.occurrenceWitness !== windowWitness) {
+        fail(`${path}.atomArgs.__windowOccurrences[${index}].occurrenceWitness`, 'must match the reveal window witness');
+      }
+      if (windowIds[index] !== cardId) {
+        fail(`${path}.atomArgs.__windowOccurrences[${index}].cardId`, 'must match the reveal window card ID');
+      }
+      if (windowUids.has(uid)) {
+        fail(`${path}.atomArgs.__windowOccurrences[${index}].uid`, 'duplicate reveal window occurrence');
+      }
+      windowUids.add(uid);
+    });
+    candidates.forEach((raw, index) => {
+      const candidate = record(raw, `${path}.candidates[${index}]`);
+      if (candidate.kind !== 'card'
+        || candidate.player !== windowPlayer
+        || candidate.area !== 'deck'
+        || candidate.occurrenceWitness !== windowWitness
+        || typeof candidate.uid !== 'string'
+        || !windowUids.has(candidate.uid)) {
+        fail(`${path}.candidates[${index}].occurrenceWitness`, 'must belong to the exact reveal window');
+      }
+    });
+  }
   if (atomArgs.minimumPolicy !== undefined) {
     oneOf(atomArgs.minimumPolicy, new Set(['best-effort', 'exact']), `${path}.atomArgs.minimumPolicy`);
   }
   const nMin = integer(item.nMin, `${path}.nMin`);
   const nMax = integer(item.nMax, `${path}.nMax`);
   if (nMin > nMax) fail(path, 'nMin must be <= nMax');
+  if (sceneEnterSwitchPick && (nMin !== 1 || nMax !== 1)) {
+    fail(path, 'scene-enter switch pick must require exactly one selection');
+  }
   const requestedNMin = item.requestedNMin === undefined
     ? undefined
     : integer(item.requestedNMin, `${path}.requestedNMin`);
@@ -665,6 +1048,20 @@ function pendingPick(value: unknown, path: string, mode: ValidationMode): void {
   optionalInteger(item.perSideMax, `${path}.perSideMax`, 1);
   optionalInteger(item.aggregateLevelMax, `${path}.aggregateLevelMax`);
   if (item.forcedUids !== undefined) stringArray(item.forcedUids, `${path}.forcedUids`);
+  if (sceneEnterSwitchPick
+    && (requestedNMin !== 1
+      || requestedNMax !== 1
+      || item.minimumPolicy !== 'best-effort'
+      || item.continuation === undefined
+      || item.forcedUids !== undefined
+      || item.perSideMax !== undefined
+      || item.aggregateLevelMax !== undefined
+      || item.distinctNames === true
+      || item.distinctLevel === true
+      || item.distinctColors === true
+      || item.skipResolvesAtom === true)) {
+    fail(path, 'scene-enter switch pick carries non-canonical selection authority');
+  }
   const effectiveRange = effectivePendingPickRange(item as unknown as PendingEffectPickSide);
   if (!effectiveRange.feasible) fail(path, 'exact minimum is not feasible');
   if ((requestedNMin !== undefined || requestedNMax !== undefined || item.minimumPolicy !== undefined)
@@ -672,6 +1069,16 @@ function pendingPick(value: unknown, path: string, mode: ValidationMode): void {
     fail(path, 'runtime bounds must match the canonical feasible range');
   }
   if (item.continuation !== undefined) continuation(item.continuation, `${path}.continuation`, mode);
+  if (item.sceneEnterSwitchPlayer !== undefined) {
+    const switchPlayer = item.sceneEnterSwitchPlayer as 'self' | 'opp';
+    const otherPlayer = switchPlayer === 'self' ? 'opp' : 'self';
+    if (switchPlayer !== item.player
+      || item.continuation === undefined
+      || !continuationMayEnterSceneForPlayer(item.continuation as ContinuationFrame, switchPlayer)
+      || continuationMayEnterSceneForPlayer(item.continuation as ContinuationFrame, otherPlayer)) {
+      fail(`${path}.sceneEnterSwitchPlayer`, 'must match a future scene-entry continuation');
+    }
+  }
 }
 
 function effectChoice(value: unknown, path: string, mode: ValidationMode): void {
@@ -705,15 +1112,40 @@ function effectOptional(value: unknown, path: string, mode: ValidationMode): voi
   if (item.triggerPayload !== undefined) genericData(item.triggerPayload, `${path}.triggerPayload`, mode);
 }
 
-function chooseIntercept(value: unknown, path: string): void {
+function chooseInterceptResponse(value: unknown, path: string): void {
   const item = record(value, path);
+  if (item.kind !== undefined && item.kind !== 'response') fail(`${path}.kind`, 'expected response');
+  if (item.resolution !== undefined
+    && item.resolution !== 'cancel'
+    && item.resolution !== 'discard-or-cancel') {
+    fail(`${path}.resolution`, 'expected cancel or discard-or-cancel');
+  }
   player(item.player, `${path}.player`);
+  optionalPlayer(item.ownerPlayer, `${path}.ownerPlayer`);
   optionalString(item.publicHandRevealToken, `${path}.publicHandRevealToken`);
   const protector = record(item.protector, `${path}.protector`);
   string(protector.uid, `${path}.protector.uid`);
   string(protector.cardId, `${path}.protector.cardId`);
   string(protector.abilityId, `${path}.protector.abilityId`);
+  abilitySourceIdentity(protector, `${path}.protector`);
+  optionalString(protector.setCardInstanceId, `${path}.protector.setCardInstanceId`);
+  if (protector.setCardInstanceId !== undefined && protector.abilityOrigin !== undefined) {
+    fail(`${path}.protector`, 'set-card and host ability witnesses are mutually exclusive');
+  }
   string(item.targetUid, `${path}.targetUid`);
+}
+
+function chooseIntercept(value: unknown, path: string): void {
+  const item = record(value, path);
+  if (item.kind !== 'order') {
+    chooseInterceptResponse(value, path);
+    return;
+  }
+  player(item.player, `${path}.player`);
+  optionalString(item.publicHandRevealToken, `${path}.publicHandRevealToken`);
+  const choices = array(item.choices, `${path}.choices`);
+  if (choices.length < 2) fail(`${path}.choices`, 'order prompt requires at least two choices');
+  choices.forEach((choice, index) => chooseInterceptResponse(choice, `${path}.choices[${index}]`));
 }
 
 function setCardChoice(value: unknown, path: string): void {
@@ -762,10 +1194,32 @@ function setCardReplacement(value: unknown, path: string): void {
   const kind = oneOf(resume.kind, new Set([
     'scene-remove', 'scene-to-deck', 'scene-to-hand', 'scene-to-evidence', 'scene-to-stack',
   ]), `${path}.resume.kind`);
+  if (resume.cause !== undefined) {
+    oneOf(resume.cause, new Set(['contact-ap', 'effect', 'switch', 'cost', 'misplay-overflow']), `${path}.resume.cause`);
+  }
+  optionalString(resume.byUid, `${path}.resume.byUid`);
+  optionalPlayer(resume.byPlayer, `${path}.resume.byPlayer`);
   if (kind === 'scene-remove') {
     oneOf(resume.cause, new Set(['contact-ap', 'effect', 'switch', 'cost', 'misplay-overflow']), `${path}.resume.cause`);
-    optionalString(resume.byUid, `${path}.resume.byUid`);
-    optionalPlayer(resume.byPlayer, `${path}.resume.byPlayer`);
+    if (resume.leaveInterceptDecision !== undefined) {
+      const decision = record(resume.leaveInterceptDecision, `${path}.resume.leaveInterceptDecision`);
+      string(decision.interceptorUid, `${path}.resume.leaveInterceptDecision.interceptorUid`);
+      bool(decision.accept, `${path}.resume.leaveInterceptDecision.accept`);
+      optionalBool(decision.interceptorCostPaid, `${path}.resume.leaveInterceptDecision.interceptorCostPaid`);
+    }
+    if (resume.afterSceneRemove !== undefined) {
+      const after = record(resume.afterSceneRemove, `${path}.resume.afterSceneRemove`);
+      string(after.uid, `${path}.resume.afterSceneRemove.uid`);
+      oneOf(after.cause, new Set(['contact-ap', 'effect', 'switch', 'cost', 'misplay-overflow']), `${path}.resume.afterSceneRemove.cause`);
+      optionalString(after.byUid, `${path}.resume.afterSceneRemove.byUid`);
+      optionalPlayer(after.byPlayer, `${path}.resume.afterSceneRemove.byPlayer`);
+      if (after.leaveInterceptDecision !== undefined) {
+        const decision = record(after.leaveInterceptDecision, `${path}.resume.afterSceneRemove.leaveInterceptDecision`);
+        string(decision.interceptorUid, `${path}.resume.afterSceneRemove.leaveInterceptDecision.interceptorUid`);
+        bool(decision.accept, `${path}.resume.afterSceneRemove.leaveInterceptDecision.accept`);
+        optionalBool(decision.interceptorCostPaid, `${path}.resume.afterSceneRemove.leaveInterceptDecision.interceptorCostPaid`);
+      }
+    }
   } else if (kind === 'scene-to-deck') {
     oneOf(resume.pos, new Set(['bottom', 'top']), `${path}.resume.pos`);
   } else if (kind === 'scene-to-evidence') {
@@ -784,12 +1238,9 @@ function deckReveal(value: unknown, path: string): void {
   stringArray(item.revealed, `${path}.revealed`);
   if (item.matched !== null) string(item.matched, `${path}.matched`);
   optionalBool(item.awaitingPick, `${path}.awaitingPick`);
-  if (item.presentation !== undefined) oneOf(item.presentation, new Set(['reveal-return']), `${path}.presentation`);
+  if (item.presentation !== undefined) oneOf(item.presentation, new Set(['reveal-complete', 'reveal-return', 'reveal-to-bottom', 'reveal-to-bottom-randomized']), `${path}.presentation`);
   if (item.source !== undefined) {
-    const src = record(item.source, `${path}.source`);
-    optionalString(src.cardId, `${path}.source.cardId`);
-    optionalString(src.abilityId, `${path}.source.abilityId`);
-    optionalString(src.uid, `${path}.source.uid`);
+    source(item.source, `${path}.source`);
   }
 }
 
@@ -798,13 +1249,25 @@ function publicHandReveal(value: unknown, path: string): void {
   player(item.owner, `${path}.owner`);
   oneOf(item.audience, new Set(['all']), `${path}.audience`);
   stringArray(item.cardIds, `${path}.cardIds`);
-  stringArray(item.handSnapshot, `${path}.handSnapshot`);
   oneOf(item.lifetime, new Set(['effect', 'presentation']), `${path}.lifetime`);
   string(item.resolutionToken, `${path}.resolutionToken`);
-  const src = record(item.source, `${path}.source`);
-  optionalString(src.cardId, `${path}.source.cardId`);
-  optionalString(src.abilityId, `${path}.source.abilityId`);
-  optionalString(src.uid, `${path}.source.uid`);
+  if (item.origin !== undefined) {
+    oneOf(item.origin, new Set(['deck-selected-card']), `${path}.origin`);
+  }
+  if (item.origin === 'deck-selected-card') {
+    if (array(item.cardIds, `${path}.cardIds`).length !== 1) {
+      fail(`${path}.cardIds`, 'deck-selected-card must expose exactly one selected card');
+    }
+    if (item.lifetime !== 'presentation') {
+      fail(`${path}.lifetime`, 'deck-selected-card must be presentation-only');
+    }
+    if (item.handSnapshot !== undefined) {
+      fail(`${path}.handSnapshot`, 'deck-selected-card must not persist the private hand');
+    }
+  } else {
+    stringArray(item.handSnapshot, `${path}.handSnapshot`);
+  }
+  source(item.source, `${path}.source`);
 }
 
 function singleOrArray(value: unknown, path: string, check: (value: unknown, path: string) => void): void {
@@ -880,6 +1343,31 @@ export function assertPendingRuntimeValue(
         optionalString(item.actionId, `${entryPath}.actionId`);
         optionalString(item.causalCorrelationEventId, `${entryPath}.causalCorrelationEventId`);
         optionalBool(item.gainDeferred, `${entryPath}.gainDeferred`);
+        if (item.heldEvidence !== undefined) {
+          const held = record(item.heldEvidence, `${entryPath}.heldEvidence`);
+          string(held.token, `${entryPath}.heldEvidence.token`);
+          player(held.player, `${entryPath}.heldEvidence.player`);
+          string(held.cardId, `${entryPath}.heldEvidence.cardId`);
+          if (item.actionId === undefined) {
+            fail(`${entryPath}.actionId`, 'required for held evidence');
+          }
+          if (item.actorUid === undefined) {
+            fail(`${entryPath}.actorUid`, 'required for held evidence');
+          }
+          bool(item.effectValid, `${entryPath}.effectValid`);
+          if (held.player !== item.player) {
+            fail(`${entryPath}.heldEvidence.player`, 'must match pending player');
+          }
+          if (held.cardId !== item.cardId) {
+            fail(`${entryPath}.heldEvidence.cardId`, 'must match pending cardId');
+          }
+          if (item.occurrence !== undefined) {
+            fail(entryPath, 'heldEvidence and occurrence are mutually exclusive');
+          }
+          if (item.causalCorrelationEventId !== undefined) {
+            fail(`${entryPath}.causalCorrelationEventId`, 'held evidence has no remove-event correlation');
+          }
+        }
         if (item.occurrence !== undefined) {
           const occurrence = record(item.occurrence, `${entryPath}.occurrence`);
           string(occurrence.uid, `${entryPath}.occurrence.uid`);
@@ -894,6 +1382,7 @@ export function assertPendingRuntimeValue(
     case '__pendingMisread':
       nullable(value, 'pendingMisread', (entry, entryPath) => {
         const item = record(entry, entryPath);
+        integer(item.continuationToken, `${entryPath}.continuationToken`, 1);
         player(item.player, `${entryPath}.player`);
         string(item.reasoningUid, `${entryPath}.reasoningUid`);
         player(item.reasoningPlayer, `${entryPath}.reasoningPlayer`);
@@ -931,7 +1420,14 @@ export function assertPendingRuntimeValue(
         if (item.pickedUids !== undefined) stringArray(item.pickedUids, `${entryPath}.pickedUids`);
         optionalString(item.switchRemoveUid, `${entryPath}.switchRemoveUid`);
         if (item.switchRemoveUids !== undefined) stringArray(item.switchRemoveUids, `${entryPath}.switchRemoveUids`);
+        if (item.batchToken !== undefined) integer(item.batchToken, `${entryPath}.batchToken`, 1);
+        optionalBool(item.effectCancelled, `${entryPath}.effectCancelled`);
         if (item.guard !== undefined) chooseIntercept(item.guard, `${entryPath}.guard`);
+        if (item.remainingGuards !== undefined) {
+          array(item.remainingGuards, `${entryPath}.remainingGuards`).forEach((guard, index) => {
+            chooseInterceptResponse(guard, `${entryPath}.remainingGuards[${index}]`);
+          });
+        }
       });
       return;
     case '__pendingEffectRepeatOptionalResume':
@@ -952,6 +1448,7 @@ export function assertPendingRuntimeValue(
     case '__pendingEffectOptionalContinuation':
     case '__pendingRpsContinuation':
     case '__pendingSetCardChoiceContinuation':
+    case '__pendingSetCardReplacementContinuation':
       nullable(value, path, (entry, entryPath) => continuation(entry, entryPath, mode));
       return;
     case '__pendingEffectOptionalBindings':
@@ -994,15 +1491,52 @@ export function assertPendingRuntimeValue(
         if ((item.deckSnapshot === undefined) !== (item.occurrences === undefined)) {
           fail(entryPath, 'deckSnapshot and occurrences must be provided together');
         }
+        if (item.deckSnapshot === undefined) {
+          fail(entryPath, 'deckSnapshot and occurrences are required');
+        }
         if (item.deckSnapshot !== undefined) stringArray(item.deckSnapshot, `${entryPath}.deckSnapshot`);
+        if (item.occurrenceWitness === undefined) fail(entryPath, 'occurrenceWitness is required');
+        boundOccurrenceWitness(
+          item.occurrenceWitness,
+          `${entryPath}.occurrenceWitness`,
+          item.player as 'self' | 'opp',
+          'deck',
+        );
+        const validatedOccurrences: Array<{ cardId: string; index: number }> = [];
         if (item.occurrences !== undefined) {
           array(item.occurrences, `${entryPath}.occurrences`).forEach((raw, index) => {
             const occurrence = record(raw, `${entryPath}.occurrences[${index}]`);
-            string(occurrence.cardId, `${entryPath}.occurrences[${index}].cardId`);
-            integer(occurrence.index, `${entryPath}.occurrences[${index}].index`);
+            validatedOccurrences.push({
+              cardId: string(occurrence.cardId, `${entryPath}.occurrences[${index}].cardId`),
+              index: integer(occurrence.index, `${entryPath}.occurrences[${index}].index`),
+            });
           });
         }
-        if (item.ctx !== undefined) effectCtx(item.ctx, `${entryPath}.ctx`, mode);
+        if (item.deckSnapshot !== undefined && item.occurrences !== undefined) {
+          const cardIds = item.cardIds as string[];
+          const deckSnapshot = item.deckSnapshot as string[];
+          if (validatedOccurrences.length !== cardIds.length) {
+            fail(`${entryPath}.occurrences`, 'count must match cardIds');
+          }
+          if (!hasSameStringMultiset(cardIds, validatedOccurrences.map(occurrence => occurrence.cardId))) {
+            fail(`${entryPath}.occurrences`, 'card multiset must match cardIds');
+          }
+          const indexes = new Set<number>();
+          validatedOccurrences.forEach((occurrence, index) => {
+            if (occurrence.index >= deckSnapshot.length) {
+              fail(`${entryPath}.occurrences[${index}].index`, 'must reference deckSnapshot');
+            }
+            if (indexes.has(occurrence.index)) {
+              fail(`${entryPath}.occurrences[${index}].index`, 'must be unique');
+            }
+            indexes.add(occurrence.index);
+            if (deckSnapshot[occurrence.index] !== occurrence.cardId) {
+              fail(`${entryPath}.occurrences[${index}]`, 'must match deckSnapshot occurrence');
+            }
+          });
+        }
+        if (item.ctx === undefined) fail(entryPath, 'ctx is required');
+        effectCtx(item.ctx, `${entryPath}.ctx`, mode);
         if (item.continuation !== undefined) continuation(item.continuation, `${entryPath}.continuation`, mode);
       });
       return;
@@ -1021,6 +1555,13 @@ export function assertPendingRuntimeValue(
           fail(entryPath, 'deckSnapshot and occurrences are required');
         }
         if (hasSnapshot) stringArray(item.deckSnapshot, `${entryPath}.deckSnapshot`);
+        if (item.occurrenceWitness === undefined) fail(entryPath, 'occurrenceWitness is required');
+        boundOccurrenceWitness(
+          item.occurrenceWitness,
+          `${entryPath}.occurrenceWitness`,
+          item.player as 'self' | 'opp',
+          'deck',
+        );
         const validatedOccurrences: Array<{ cardId: string; index: number }> = [];
         if (hasOccurrences) {
           array(item.occurrences, `${entryPath}.occurrences`).forEach((raw, index) => {

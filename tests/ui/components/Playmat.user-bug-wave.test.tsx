@@ -8,8 +8,9 @@ import { DeckRevealOverlay } from '@/ui/components/DeckRevealOverlay';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { useGameStateStore, type PendingEffectPick } from '@/ui/state/store';
 import { useEvidenceFlipPickerStore } from '@/ui/hooks/useEvidenceFlipPicker';
-import { useStackedCardCostPickerStore } from '@/ui/hooks/useStackedCardCostPicker';
+import { useStackedCardCostPicker, useStackedCardCostPickerStore } from '@/ui/hooks/useStackedCardCostPicker';
 import { useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
+import { useSceneSwitchPickerStore } from '@/ui/hooks/useSceneSwitchPickerStore';
 import type { ResolvedCardMeta } from '@/ui/components/SceneArea';
 import type { HandCardMeta } from '@/ui/components/HandZone';
 
@@ -71,6 +72,7 @@ describe('Playmat user bug wave', () => {
   let root: Root;
 
   beforeEach(() => {
+    delete (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide;
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -86,6 +88,7 @@ describe('Playmat user bug wave', () => {
     useEvidenceFlipPickerStore.getState()._reset();
     useStackedCardCostPickerStore.setState({ current: null, _resolver: null });
     useTargetPickerStore.getState()._reset();
+    useSceneSwitchPickerStore.getState()._close();
     dispatchEngineActionMock.mockClear();
     surfacePendingSideChannelsMock.mockClear();
   });
@@ -93,6 +96,8 @@ describe('Playmat user bug wave', () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    useSceneSwitchPickerStore.getState()._close();
+    delete (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide;
   });
 
   it('keeps a manually opened self remove-area browser visible', () => {
@@ -164,6 +169,168 @@ describe('Playmat user bug wave', () => {
 
     expect(container.querySelector('.card-list-modal')).not.toBeNull();
     expect(container.querySelector('[data-testid="deck-reveal-overlay"]')).toBeNull();
+  });
+
+  it('routes a future deck scene-entry choice through the full-scene switch picker', async () => {
+    const state = createEmptyGameState();
+    state.players.self.scene = Array.from({ length: 5 }, (_, index) => ({
+      uid: `full-scene-${index}`,
+      cardId: 'D08001',
+      state: 'active' as const,
+      isNamed: false,
+      enterOrder: index + 1,
+      setCards: [],
+      stackedCards: 0,
+      keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null,
+      lpOverride: null,
+      turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+      declaredUseCount: {},
+    }));
+    const selectedUid = 'card:self:deck:D01012_MATCH#2';
+    useGameStateStore.setState({
+      gameState: state,
+      pendingEffectPick: pending({
+        candidates: [{ uid: selectedUid, cardId: 'D01012_MATCH', player: 'self', kind: 'card', area: 'deck', index: 2 }],
+        sceneEnterSwitchPlayer: 'self',
+      }),
+      pendingDeckReveal: {
+        player: 'self',
+        revealed: ['X1', 'X2', 'D01012_MATCH'],
+        matched: null,
+        awaitingPick: true,
+      },
+    });
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+
+    const selected = container.querySelector<HTMLButtonElement>(`[data-testid="card-list-pick-${selectedUid}"]`);
+    expect(selected).toBeInstanceOf(HTMLButtonElement);
+    await act(async () => {
+      selected!.click();
+      await Promise.resolve();
+    });
+    expect(useSceneSwitchPickerStore.getState().current).toMatchObject({
+      cardId: 'D01012_MATCH',
+      candidates: state.players.self.scene.map(({ uid, cardId }) => ({ uid, cardId })),
+    });
+    expect(dispatchEngineActionMock).not.toHaveBeenCalled();
+
+    const victim = container.querySelector<HTMLElement>('[data-testid="scene-card-pick-full-scene-2"]');
+    expect(victim).not.toBeNull();
+    await act(async () => { victim!.click(); });
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'effectPickResolve',
+      pickedUid: selectedUid,
+      switchRemoveUid: 'full-scene-2',
+    });
+  });
+
+  it('does not ask for an extra switch when the selected sceneRemove creates room before entry', async () => {
+    const state = createEmptyGameState();
+    state.players.self.scene = Array.from({ length: 5 }, (_, index) => ({
+      uid: `remove-before-entry-${index}`,
+      cardId: 'D08001',
+      state: 'active' as const,
+      isNamed: false,
+      enterOrder: index + 1,
+      setCards: [],
+      stackedCards: 0,
+      keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null,
+      lpOverride: null,
+      turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+      declaredUseCount: {},
+    }));
+    const selectedUid = 'remove-before-entry-2';
+    useGameStateStore.setState({
+      gameState: state,
+      pendingEffectPick: pending({
+        atomVerb: 'sceneRemove',
+        candidates: [{ uid: selectedUid, cardId: 'D08001', player: 'self', kind: 'char', area: 'scene' }],
+      }),
+    });
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+
+    const selected = container.querySelector<HTMLElement>(`[data-testid="scene-card-pick-${selectedUid}"]`);
+    expect(selected).not.toBeNull();
+    await act(async () => {
+      selected!.click();
+      await Promise.resolve();
+    });
+    expect(useSceneSwitchPickerStore.getState().current).toBeNull();
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'effectPickResolve',
+      pickedUid: selectedUid,
+    });
+  });
+
+  it('routes a future opponent deck scene-entry choice through the opponent full-scene switch picker', async () => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'opp';
+    const state = createEmptyGameState();
+    state.players.opp.scene = Array.from({ length: 5 }, (_, index) => ({
+      uid: `opponent-switch-victim-${index}`,
+      cardId: 'D08001',
+      state: 'active' as const,
+      isNamed: false,
+      enterOrder: index + 1,
+      setCards: [],
+      stackedCards: 0,
+      keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null,
+      lpOverride: null,
+      turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+      declaredUseCount: {},
+    }));
+    const selectedUid = 'card:opp:deck:D01012_MATCH#2';
+    useGameStateStore.setState({
+      gameState: state,
+      pendingEffectPick: pending({
+        player: 'opp',
+        ownerPlayer: 'opp',
+        candidates: [{
+          uid: selectedUid,
+          cardId: 'D01012_MATCH',
+          player: 'opp',
+          kind: 'card',
+          area: 'deck',
+          index: 2,
+        }],
+        sceneEnterSwitchPlayer: 'opp',
+      }),
+      pendingDeckReveal: {
+        player: 'opp',
+        revealed: ['X1', 'X2', 'D01012_MATCH'],
+        matched: null,
+        awaitingPick: true,
+      },
+    });
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+
+    const selected = container.querySelector<HTMLButtonElement>(`[data-testid="card-list-pick-${selectedUid}"]`);
+    expect(selected).toBeInstanceOf(HTMLButtonElement);
+    await act(async () => {
+      selected!.click();
+      await Promise.resolve();
+    });
+    expect(useSceneSwitchPickerStore.getState().current).toMatchObject({
+      player: 'opp',
+      cardId: 'D01012_MATCH',
+      candidates: state.players.opp.scene.map(({ uid, cardId }) => ({ uid, cardId })),
+    });
+    expect(dispatchEngineActionMock).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(
+      container.querySelector('[data-testid="scene-card-pick-opponent-switch-victim-0"]'),
+    );
+
+    const victim = container.querySelector<HTMLElement>('[data-testid="scene-card-pick-opponent-switch-victim-2"]');
+    expect(victim).not.toBeNull();
+    expect(container.querySelector('[data-testid^="scene-card-pick-full-scene-"]')).toBeNull();
+    await act(async () => { victim!.click(); });
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'effectPickResolve',
+      pickedUid: selectedUid,
+      switchRemoveUid: 'opponent-switch-victim-2',
+    });
   });
 
   it('routes the second duplicate public remove pick through CardListModal to effectPickResolve', () => {
@@ -308,18 +475,37 @@ describe('Playmat user bug wave', () => {
     expect(container.querySelector('[data-testid="card-list-pick-detail-evidence:self:1"]')).toBeNull();
   });
 
-  it('opens stacked-cost CardList details only through its magnifier', () => {
-    useStackedCardCostPickerStore.setState({
-      current: { sourceName: 'stack', candidates: [{ instanceId: 'stack:0', cardId: 'D08003' }], nMin: 1, nMax: 1 },
-      _resolver: null,
+  it('shows B03006 stacked identities while selecting an exact non-first occurrence', async () => {
+    const choice = useStackedCardCostPicker().ask({
+      sourceName: 'B03006',
+      candidates: [
+        { instanceId: 'stack:0', cardId: 'D08003', ordinal: 1 },
+        { instanceId: 'stack:1', cardId: 'D08015', ordinal: 2 },
+      ],
+      nMin: 1,
+      nMax: 1,
     });
     act(() => root.render(<Playmat gameState={createEmptyGameState()} resolveCard={resolveCard} />));
 
-    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-detail-stack:0"]')!).click());
-    expect(container.querySelector('.card-expand-modal')).not.toBeNull();
-    act(() => (container.querySelector<HTMLButtonElement>('.card-expand-close')!).click());
-    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-stack:0"]')!).click());
-    expect(container.querySelector('.card-expand-modal')).toBeNull();
+    const html = container.innerHTML;
+    expect(html).toContain('D08003');
+    expect(html).toContain('D08015');
+    expect(container.querySelectorAll('[data-testid="selectable-card-tile-detail"]')).toHaveLength(2);
+    const candidates = [...container.querySelectorAll<HTMLButtonElement>('[data-instance-id^="stack:"]')];
+    expect(candidates.map((candidate) => candidate.getAttribute('aria-label'))).toEqual([
+      'D08003 1枚目を選択',
+      'D08015 2枚目を選択',
+    ]);
+    act(() => container.querySelector<HTMLDivElement>('[data-testid="stacked-card-cost-modal"]')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    expect(useStackedCardCostPickerStore.getState().current).not.toBeNull();
+    act(() => candidates[1]!.click());
+    expect(candidates[1]!.getAttribute('aria-pressed')).toBe('true');
+    expect(useStackedCardCostPickerStore.getState().current).not.toBeNull();
+    const confirm = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-confirm"]');
+    expect(confirm).not.toBeNull();
+    act(() => confirm!.click());
+    await expect(choice).resolves.toEqual({ kind: 'confirm', instanceIds: ['stack:1'] });
   });
 
   it('shows only face-up set identities and hides face-down identities from both owners', () => {
@@ -369,6 +555,41 @@ describe('Playmat user bug wave', () => {
     expect(container.querySelector('[data-testid="card-list-detail-OPP-SECRET-1"]')).toBeNull();
     act(() => (container.querySelector<HTMLButtonElement>('[data-testid="card-list-detail-OPP-PUBLIC-0"]')!).click());
     expect(container.querySelector('.card-expand-modal')).not.toBeNull();
+  });
+
+  it('lets either player inspect every exact stacked-card identity at any time', () => {
+    const state = createEmptyGameState();
+    state.players.self.scene = [{
+      cardId: 'SELF-HOST', uid: 'self-stack-host', state: 'active', isNamed: false, enterOrder: 0,
+      setCards: [],
+      stackedCards: [
+        { cardId: 'SELF-STACK-A', instanceId: 'stack:self:a' },
+        { cardId: 'back-card', instanceId: 'legacy:self:unknown' },
+        { cardId: 'SELF-STACK-B', instanceId: 'stack:self:b' },
+      ],
+      keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {},
+    }];
+    state.players.opp.scene = [{
+      cardId: 'OPP-HOST', uid: 'opp-stack-host', state: 'active', isNamed: false, enterOrder: 0,
+      setCards: [],
+      stackedCards: [{ cardId: 'OPP-STACK-A', instanceId: 'stack:opp:a' }],
+      keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {},
+    }];
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+
+    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="scene-stack-inspect-self-stack-host"]')!).click());
+    expect(container.textContent).toContain('SELF-STACK-A');
+    expect(container.textContent).toContain('SELF-STACK-B');
+    expect(container.textContent).not.toContain('back-card');
+    expect(container.querySelectorAll('[data-testid^="card-list-detail-SELF-STACK-"]')).toHaveLength(2);
+    expect(container.querySelector('[data-testid="card-list-facedown-stack-0"]')).not.toBeNull();
+    act(() => (container.querySelector<HTMLButtonElement>('.card-list-modal-close')!).click());
+
+    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="scene-stack-inspect-opp-stack-host"]')!).click());
+    expect(container.textContent).toContain('OPP-STACK-A');
+    expect(container.querySelector('[data-testid="card-list-detail-OPP-STACK-A-0"]')).not.toBeNull();
   });
 
   it('hosts hand sceneEnter in HandZone with exact duplicate occurrence candidates', () => {

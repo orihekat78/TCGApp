@@ -42,7 +42,7 @@ const a1: AbilityDef = {
         else: { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$matched.cardId', viaEffect: true, target: { query: { area: 'deck', side: 'self' } } } },
       },
       // 残りの公開カードをデッキの下に移す
-      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },
+      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed', order: 'preserve' } },
       // デッキをシャッフルする
       { kind: 'atom', verb: 'deckShuffle', args: { player: 'self' } },
     ],

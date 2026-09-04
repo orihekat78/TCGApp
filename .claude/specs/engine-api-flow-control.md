@@ -61,7 +61,8 @@ type ActionPhase =
   | 'declared'           // 宣言・スリープ化済
   | 'guard-window'       // ガード判定中
   | 'leave-resolution'   // 【現場リムーブ時】解決中 (ガードと コンタクト発生 の間)
-  | 'contact-pending'    // 「コンタクトしたとき」発火後、行動順確認前
+  | 'contact-pending'    // コンタクト開始前
+  | 'contact-order-pending' // 「コンタクトしたとき」効果の解決完了待ち。解決後APで行動順決定、参加者不在なら contact-end
   | 'action-1'           // 1番目行動
   | 'action-2'           // 2番目行動
   | 'action-1-redo'      // 1番目再行動 (1番目pass & 2番目行動時のみ)

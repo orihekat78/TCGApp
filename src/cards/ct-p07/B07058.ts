@@ -14,7 +14,7 @@
 //     viaEffect, bind:'$entered', target:pick(remove,self,filter{color:白,levelMax:3,kind:character},n:0-1)}
 //     (B05090 a1 = from:hand 版 / D10011 a1 = from:remove filter色levelMax の混成)。「1枚まで」=0OK。
 //   - 登場した「そのキャラ」へ適用 (entered 不在なら skip) = conditional boundMatchesFilter{$entered,kind:character}:
-//     · ターン終了時までAP＋3000 = charModifyAP{$entered.uid, +3000, turn} (B05090/D11016 同型 turn scope)
+//     · ターン終了時までAP＋3000 = charModifyAP{$entered.uid, +3000, turn} (B05090 同型)
 //     · 〚突撃［キャラ］〛を与える = charGrantKeyword{$entered.uid, '突撃[キャラ]', turn}
 //       (action.ts:55 が突撃[キャラ]を名乗り例外 + アクション[キャラ]許可で認識)
 //     · デッキ上から1枚裏向きでそのキャラにセット = charSetCard{$entered.uid, fromDeckTop, faceUp:false}

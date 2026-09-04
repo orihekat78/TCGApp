@@ -7,39 +7,29 @@
 //   【宣言】【スリープ】:相手のターン終了時までこのキャラは
 //     「相手の現場にいるキャラがアクションするとき、このキャラを指定できる場合、必ず指定する。」を持つ。
 //
-// NOTE (G24 dyn apMax='$self.ap'): TargetFilter.custom で動的比較を吸収。
+// G24: apMaxSource で解決時の実効APを参照する。
 
-import type { AbilityDef, CardDef, GameState } from '@/engine/types';
-import type { Candidate } from '@/engine/types';
-import { engine } from '@/engine';
+import type { AbilityDef, CardDef } from '@/engine/types';
 import { caseTraitConditioned } from '../_shared/index.js';
 
-// TargetFilter.custom: 動的 apMax (G24 — selfUid は engine.target に渡される source ref 経由想定)。
-// 現状 candidate に selfUid を含めないため、apMax=8000 固定で代用 (本カードAP=8000)。
-// TODO Phase 5+: targeting context に source uid を伝播し、engine.read.char.ap(s, sourceUid) を参照する。
+// apMaxSource は解決時の source uid から実効APを読む。継続効果・turn effectも含む。
 const a1Inner: AbilityDef = {
   id: 'a1',
   type: 'triggered',
   scope: 'on-scene',
   trigger: { hook: 'enter', selfOnly: true },
   effect: {
-    // このキャラのAP以下のAPのキャラを1枚まで選び、リムーブする (apMax は custom closure で動的比較)
+    // このキャラの実効AP以下のキャラを1枚まで選び、リムーブする。
     kind: 'atom', verb: 'sceneRemove',
     args: {
       player: 'self', max: 1, side: 'either', cause: 'effect',
-      filter: {
-        custom: (s: GameState, cand: Candidate) => {
-          if (cand.kind !== 'char') return false;
-          const tgtAp = engine.read.char.ap(s, cand.uid);
-          return tgtAp <= 8000;
-        },
-      },
+      filter: { kind: 'character', apMaxSource: true },
     },
   },
   description: '【登場時】このキャラのAP以下のAPのキャラを1枚まで選び、リムーブする。',
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };
-const a1 = caseTraitConditioned({ trait: '婚活', inner: a1Inner });
+const a1 = caseTraitConditioned({ trait: '婚活パーティー', inner: a1Inner });
 
 // a2 宣言+sleepSelf → 挑発: mustBeTargeted = true (opp-turn 終了まで)
 const a2: AbilityDef = {

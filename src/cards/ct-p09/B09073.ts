@@ -64,10 +64,10 @@ const a2: AbilityDef = {
       {
         kind: 'conditional',
         if: { kind: 'bound', key: '$matched', presence: 'matched' },
-        then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } },
+        then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId', deferRefresh: true } },
       },
       // 残りの公開カードをリムーブエリアに移す (X6。ここで初めてデッキから出る → 移送完了後 deck0 なら refresh)
-      { kind: 'atom', verb: 'boundToRemove', args: { player: 'self', bindKey: '$revealed' } },
+      { kind: 'atom', verb: 'boundToRemove', args: { player: 'self', bindKey: '$revealed', refreshAfter: true } },
       // レベル8以上のカードを手札に加えた場合、手札を1枚リムーブする
       {
         kind: 'conditional',

@@ -24,7 +24,8 @@ import {
 } from '@/ai/replay';
 import type { ReplayLogV1 } from '@/ai/replay';
 import type { Move } from '@/ai/move-enumerator';
-import type { AIPolicy } from '@/ai/policy';
+import { enumerateMoves } from '@/ai/move-enumerator';
+import { applyMove, type AIPolicy } from '@/ai/policy';
 import { computeStateAt } from '@/ui/hooks/useReplayDriver';
 import {
   _peekPendingEffectOptionalSide,
@@ -102,6 +103,99 @@ function resetForRun(): void {
 }
 
 describe('ScriptedPolicy', () => {
+  it('adapts a legacy B04048 move without a name to a legal nonmatching declaration', () => {
+    resetForRun();
+    const state = produce(createEmptyGameState(), draft => {
+      draft.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+      engine.mutate.scene.enter(draft, 'self', 'B04048', { active: true });
+      draft.players.self.deck = ['D11003', 'D11005', 'D11007'];
+      draft.players.opp.deck = ['D08003', 'D08005'];
+    });
+    const current = enumerateMoves(state, 'self').find((move): move is Extract<Move, { kind: 'declaredAbility' }> => (
+      move.kind === 'declaredAbility' && move.abilityId === 'a2'
+    ));
+    expect(current?.declaredName).toBeTruthy();
+    const { declaredName: _legacyMissing, ...recorded } = current!;
+    const chosen = new ScriptedPolicy('legacy-B04048', [recorded]).choose(state, [current!], 'self');
+    expect(chosen).toMatchObject({ kind: 'declaredAbility', uid: current!.uid, abilityId: 'a2' });
+    expect(chosen?.kind === 'declaredAbility' ? chosen.declaredName : undefined).toBeUndefined();
+  });
+
+  it.each([
+    { cardId: 'B09003', abilityId: 'a3', abilityIndex: 2, area: 'scene' as const },
+    { cardId: 'B09003P', abilityId: 'a3', abilityIndex: 2, area: 'scene' as const },
+    { cardId: 'B09108', abilityId: 'a2', abilityIndex: 1, area: 'partner-area' as const },
+    { cardId: 'B09108P', abilityId: 'a2', abilityIndex: 1, area: 'partner-area' as const },
+    { cardId: 'B09111', abilityId: 'a2', abilityIndex: 1, area: 'case' as const },
+    { cardId: 'B09111P', abilityId: 'a2', abilityIndex: 1, area: 'case' as const },
+    { cardId: 'B09112', abilityId: 'a2', abilityIndex: 1, area: 'case' as const },
+    { cardId: 'B09112P', abilityId: 'a2', abilityIndex: 1, area: 'case' as const },
+  ])('adapts a name-missing legacy $cardId/$abilityId printed move', (row) => {
+    resetForRun();
+    const uid = row.area === 'case' ? 'case:self' : row.area === 'partner-area' ? 'partnerMR:self' : 'legacy-host';
+    const state = produce(createEmptyGameState(), draft => {
+      draft.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+      if (row.area === 'case') {
+        draft.players.self.case.cardId = row.cardId;
+      } else {
+        const source = engine.mutate.scene.enter(draft, 'self', row.cardId, { active: true });
+        source.uid = uid;
+        if (row.area === 'partner-area') {
+          draft.players.self.partnerAreaMR = source;
+          draft.players.self.scene = [];
+        }
+      }
+      draft.players.self.deck = ['D11003', 'D11005'];
+    });
+    const recorded: Move = {
+      kind: 'declaredAbility', uid, abilityId: row.abilityId,
+      abilityOrigin: 'printed', abilityIndex: row.abilityIndex,
+    };
+    const current: Move = { ...recorded, declaredName: '毛利小五郎' };
+    const chosen = new ScriptedPolicy(`legacy-${row.cardId}`, [recorded]).choose(state, [current], 'self');
+
+    expect(chosen).toEqual(recorded);
+  });
+
+  it.each([
+    {
+      label: 'granted occurrence',
+      sourceCardId: 'B04048',
+      candidate: {
+        kind: 'declaredAbility', uid: 'legacy-host', abilityId: 'a2',
+        abilityOrigin: 'granted', abilityIndex: 0, declaredName: '毛利小五郎',
+      } as Move,
+    },
+    {
+      label: 'set-card occurrence',
+      sourceCardId: 'B04048',
+      candidate: {
+        kind: 'declaredAbility', uid: 'legacy-host', abilityId: 'a2',
+        setCardId: 'B07014', setCardInstanceId: 'set:legacy', declaredName: '毛利小五郎',
+      } as Move,
+    },
+    {
+      label: 'different host card',
+      sourceCardId: 'D11003',
+      candidate: {
+        kind: 'declaredAbility', uid: 'legacy-host', abilityId: 'a2',
+        abilityOrigin: 'printed', abilityIndex: 1, declaredName: '毛利小五郎',
+      } as Move,
+    },
+  ])('does not adapt a name-missing legacy move to $label', ({ sourceCardId, candidate }) => {
+    resetForRun();
+    const state = produce(createEmptyGameState(), draft => {
+      draft.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+      const source = engine.mutate.scene.enter(draft, 'self', sourceCardId, { active: true });
+      source.uid = 'legacy-host';
+      draft.players.self.deck = ['D11003', 'D11005'];
+    });
+    const recorded: Move = { kind: 'declaredAbility', uid: 'legacy-host', abilityId: 'a2' };
+
+    expect(() => new ScriptedPolicy('legacy-reject', [recorded]).choose(state, [candidate], 'self'))
+      .toThrow('recorded replay move is not legal');
+  });
+
   it('returns moves from queue in order', () => {
     const queue: Move[] = [{ kind: 'endTurn' }, { kind: 'endTurn' }];
     const p = new ScriptedPolicy('test', queue);
@@ -121,6 +215,49 @@ describe('ScriptedPolicy', () => {
     const p = new ScriptedPolicy('test', [{ kind: 'endTurn' }]);
     const legal: Move = { kind: 'partnerAbility', abilityId: 'a1' } as Move;
     expect(() => p.choose({} as GameState, [legal], 'self'))
+      .toThrow('recorded replay move is not legal');
+  });
+
+  it('maps a witness-free legacy declared move to the earliest exact host occurrence', () => {
+    const recorded = {
+      kind: 'declaredAbility', uid: 'host', abilityId: 'a1',
+    } as const;
+    const candidates: Move[] = [
+      {
+        ...recorded,
+        abilityOrigin: 'printed',
+        abilityIndex: 0,
+      },
+      {
+        ...recorded,
+        abilityOrigin: 'granted',
+        abilityIndex: 0,
+      },
+    ];
+    const p = new ScriptedPolicy('legacy-declared-host', [recorded]);
+
+    expect(p.choose({} as GameState, candidates, 'self')).toEqual(candidates[0]);
+  });
+
+  it('maps a witness-free legacy move to a granted host occurrence but never a set-card rider', () => {
+    const recorded = {
+      kind: 'declaredAbility', uid: 'host', abilityId: 'a1',
+    } as const;
+    const granted: Move = {
+      ...recorded,
+      abilityOrigin: 'granted',
+      abilityIndex: 2,
+    };
+    const rider: Move = {
+      ...recorded,
+      setCardId: 'SET-CARD',
+      setCardInstanceId: 'set:legacy:1',
+    };
+
+    expect(new ScriptedPolicy('legacy-declared-granted', [recorded])
+      .choose({} as GameState, [granted], 'self')).toEqual(granted);
+    expect(() => new ScriptedPolicy('legacy-declared-rider', [recorded])
+      .choose({} as GameState, [rider], 'self'))
       .toThrow('recorded replay move is not legal');
   });
 });
@@ -178,6 +315,96 @@ describe('recordMatch + replayLog', () => {
     expect(log.result.winner).toBe(result.winner);
     expect(log.result.reason).toBe(result.reason);
     expect(log.result.turns).toBe(result.turns);
+    Math.random = originalRandom;
+  });
+
+  it.each([1, 2] as const)('replays a V%s B04048 move recorded before declaredName entered Move', schemaVersion => {
+    const seed = `legacy-B04048-v${schemaVersion}`;
+    const initial = produce(setupGame(seed), draft => {
+      const owner = draft.turn.player;
+      draft.turn.phase = 'main';
+      draft.turn.isFirstPlayerFirstTurn = false;
+      engine.mutate.scene.enter(draft, owner, 'B04048', { active: true });
+    });
+    expect(enumerateMoves(initial, initial.turn.player).some(move => (
+      move.kind === 'declaredAbility' && move.abilityId === 'a2'
+    ))).toBe(true);
+    const prioritizingPolicy = (): AIPolicy => {
+      let declared = false;
+      return {
+        choose: (_state, candidates) => {
+          if (!declared) {
+            const move = candidates.find(candidate => (
+              candidate.kind === 'declaredAbility' && candidate.abilityId === 'a2'
+            ));
+            if (move) {
+              declared = true;
+              return move;
+            }
+          }
+          return candidates.find(candidate => candidate.kind === 'endTurn') ?? candidates[0] ?? null;
+        },
+      };
+    };
+    const { result, log } = recordMatch({
+      selfPolicy: prioritizingPolicy(),
+      oppPolicy: prioritizingPolicy(),
+      initialState: initial,
+      maxTurns: 1,
+    });
+    const legacyV2 = structuredClone(log);
+    const recorded = legacyV2.moves.find(entry => entry.move.kind === 'declaredAbility');
+    expect(recorded?.move).toMatchObject({ kind: 'declaredAbility', declaredName: expect.any(String) });
+    if (recorded?.move.kind !== 'declaredAbility') throw new Error('missing recorded B04048 declaration');
+    delete recorded.move.declaredName;
+    const legacyV1 = {
+      schemaVersion: 1 as const,
+      initialState: legacyV2.initialState,
+      moves: legacyV2.moves,
+      result: legacyV2.result,
+    } satisfies ReplayLogV1;
+    const legacy = schemaVersion === 1
+      ? legacyV1
+      : (() => {
+          resetForRun();
+          const captured = captureNondeterminism(() => replayLog(legacyV1));
+          return { ...legacyV1, schemaVersion: 2 as const, nondeterminism: captured.trace };
+        })();
+
+    resetForRun();
+    const oldDefinition = structuredClone(engine.read.def.card('B04048')!);
+    const oldAbility = oldDefinition.abilities.find(ability => ability.id === 'a2');
+    const oldDeclare = oldAbility?.effect?.kind === 'sequence' ? oldAbility.effect.steps[0] : undefined;
+    if (oldDeclare?.kind !== 'atom' || oldDeclare.verb !== 'declareName') {
+      throw new Error('missing legacy B04048 declaration descriptor');
+    }
+    delete (oldDeclare.args as { domain?: string }).domain;
+    engine.cards.register(oldDefinition);
+    const baseline = produce(legacyV1.initialState, draft => {
+      applyMove(draft, recorded.move, recorded.player);
+      engine.resolve.runAllUntilEmpty(draft);
+    });
+
+    resetForRun();
+    const replayed = replayLog(legacy);
+    expect(replayed).toMatchObject({
+      winner: result.winner,
+      reason: result.reason,
+      turns: result.turns,
+    });
+    resetForRun();
+    const declaredPrefix = legacy.moves.findIndex(entry => entry.move.kind === 'declaredAbility') + 1;
+    const replayState = computeStateAt(legacy, declaredPrefix);
+    const replayActions = replayState.log.map(entry => entry.action);
+    const declaredEntry = replayState.pendingEffects.find(entry => (
+      (entry.source.cardId === 'B04048' || entry.source.cardId === 'B04048P')
+      && entry.source.abilityId === 'a2'
+    ));
+    expect(declaredEntry?.state).toBe('resolved');
+    expect(replayState.players[recorded.player].hand).toEqual(baseline.players[recorded.player].hand);
+    expect(replayState.players[recorded.player].deck).toEqual(baseline.players[recorded.player].deck);
+    expect(replayActions).not.toContain('causal.declare');
+    expect(replayActions).not.toContain('effect:declareName');
     Math.random = originalRandom;
   });
 

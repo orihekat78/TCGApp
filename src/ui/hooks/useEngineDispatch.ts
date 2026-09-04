@@ -15,7 +15,7 @@ import { produce } from 'immer';
 import * as flow from '@/engine/flow/index.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { pendingOwnerOrderGroup, runAllUntilEmpty } from '@/engine/resolve/index.js';
-import { applyChooseInterceptResponse, applyDeckPlaceAndContinuation, applyDeckReorderAndContinuation, applyPickAndContinuation, applyPickSkipAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation, applyRepeatOptionalAndContinuation, applyRpsAndContinuation, applySetCardChoiceAndContinuation, applySetCardReplacement } from '@/engine/effect/apply-pick.js';
+import { applyChooseInterceptOrder, applyChooseInterceptResponse, applyDeckPlaceAndContinuation, applyDeckReorderAndContinuation, applyPickAndContinuation, applyPickSkipAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation, applyRepeatOptionalAndContinuation, applyRpsAndContinuation, applySetCardChoiceAndContinuation, applySetCardReplacementDetailed } from '@/engine/effect/apply-pick.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import type { GameState } from '@/engine/types/game-state.js';
 import { resolveActionAgainstChar, resolveActionAgainstCase } from '@/ai/action-resolution.js';
@@ -32,6 +32,7 @@ import {
   readPendingEffectChoiceAuthority,
   readPendingEffectOptionalAuthority,
   readPendingEffectPickAuthority,
+  readPendingMisreadAuthority,
   readPendingRpsAuthority,
   rebindPendingRuntimeStateOwner,
   restorePendingRuntimeState,
@@ -54,8 +55,8 @@ import {
   surfacePublicHandReveal as surfacePublicHandRevealFromStore,
 } from '@/ui/state/surface-pending.js';
 import { isAllowed } from './useEngineDispatch/can-check.js';
-import { _resumeDeferredReasoning } from '@/engine/flow/main/reasoning.js';
-import { _resolveMisreadPicks } from '@/engine/listeners/misread.js';
+import { _resolveDeferredMisread } from '@/engine/flow/main/reasoning.js';
+import type { PendingMisreadAuthority } from '@/engine/types/misread.js';
 import type { EngineAction, DispatchResult } from './useEngineDispatch/types.js';
 import { isReplayOwnedState } from '@/ui/services/replayOwnership';
 import {
@@ -132,6 +133,7 @@ function runEngineAction(
     rps: PendingRpsSide | null;
     deckReorder: PendingDeckReorderSide | null;
     deckPlace: PendingDeckPlaceSide | null;
+    misread: PendingMisreadAuthority | null;
   },
 ): void {
   switch (action.type) {
@@ -153,7 +155,7 @@ function runEngineAction(
       flow.handUseCard(draft, action.player, action.cardId, undefined, action.removeUid);
       return;
     case 'nextHint':
-      flow.runNextHint(draft, action.player, action.optionalCardId);
+      flow.runNextHint(draft, action.player, action.optionalCardId, action.switchRemoveUid);
       return;
     case 'partnerAbility':
       // Phase 2c (BUG-116 構造解消): cost+ctx 構築 + pay は engine 側 helper に一元化
@@ -162,7 +164,12 @@ function runEngineAction(
       return;
     case 'declaredAbility':
       // BUG-085 の costPaid/dyn 伝播は activateDeclaredAbility 内で維持される。
-      flow.activateDeclaredAbility(draft, action.uid, action.abilId, action.costParams);
+      flow.activateDeclaredAbility(draft, action.uid, action.abilId, action.costParams, {
+        setCardId: action.setCardId,
+        setCardInstanceId: action.setCardInstanceId,
+        abilityOrigin: action.abilityOrigin,
+        abilityIndex: action.abilityIndex,
+      });
       return;
     case 'assist':
       // flow.assist 未提供のため mutate を直叩き (src/ai/policy.ts:117 と同じ)
@@ -213,7 +220,14 @@ function runEngineAction(
       const ax = flow.action._getContext(draft, action.actionId);
       if (!ax) return;
       if (action.choice.kind === 'cutin') {
-        flow.contact.cutIn(draft, ax, action.player, action.choice.cardId);
+        flow.contact.cutIn(
+          draft,
+          ax,
+          action.player,
+          action.choice.cardId,
+          undefined,
+          action.choice.declaredName,
+        );
       } else if (action.choice.kind === 'disguise') {
         flow.contact.disguise(draft, ax, action.player, action.choice.cardId);
       } else {
@@ -270,18 +284,10 @@ function runEngineAction(
       const ax = flow.action._getContext(draft, pending.actionId);
       const stateOwnedPending = ax?.pendingLeaveIntercept;
       if (!ax?.apSnapshot || !stateOwnedPending) return;
-      const removal = mutate.scene.resolveLeaveIntercept(
-        draft,
-        stateOwnedPending.targetUid,
-        'contact-ap',
-        ax.apSnapshot.aUid,
-        undefined,
-        stateOwnedPending.interceptorUid,
-        action.accept,
-      );
-      delete ax.pendingLeaveIntercept;
-      flow.contact.judge(draft, ax, removal);
-      ax.judgeResolved = true;
+      if (!flow.contact.canResolveLeaveIntercept(draft, ax, action.accept)) {
+        throw new RejectedDecisionError();
+      }
+      flow.contact.resolveLeaveIntercept(draft, ax, action.accept);
       return;
     }
     case 'hiramekiResolve': {
@@ -302,6 +308,7 @@ function runEngineAction(
           chooseAtomTarget: isHumanHirameki ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
           runtimeAtomTargetPolicyKey: isHumanHirameki ? undefined : 'heuristic',
           humanChooser: isHumanHirameki,
+          switchRemoveUid: 'switchRemoveUid' in action ? action.switchRemoveUid : undefined,
         },
       );
       // The ActionContext remains open while the queued Hirameki effect resolves.
@@ -311,15 +318,9 @@ function runEngineAction(
       return;
     }
     case 'misreadResolve': {
-      const pending = useGameStateStore.getState().pendingMisread;
-      if (!pending) return;
-      _resolveMisreadPicks(draft, pending, action.picks);
-      _resumeDeferredReasoning(
-        draft,
-        pending.reasoningUid,
-        pending.reasoningPlayer,
-        pending.causalTrace,
-      );
+      const pending = authorities.misread;
+      if (!pending) throw new RejectedDecisionError();
+      _resolveDeferredMisread(draft, pending, action.picks);
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }
@@ -431,7 +432,7 @@ function runEngineAction(
     case 'setCardReplacementResolve': {
       const pending = useGameStateStore.getState().pendingSetCardReplacement;
       if (!pending) return;
-      if (!applySetCardReplacement(draft, toPendingSetCardReplacementSide(pending), action.targetUid)) {
+      if (!applySetCardReplacementDetailed(draft, toPendingSetCardReplacementSide(pending), action.targetUid).applied) {
         throw new RejectedDecisionError();
       }
       return;
@@ -440,6 +441,20 @@ function runEngineAction(
       const pending = useGameStateStore.getState().pendingChooseIntercept;
       if (!pending) return;
       applyChooseInterceptResponse(draft, pending, action.discardIndex);
+      return;
+    }
+    case 'chooseInterceptOrderResolve': {
+      const pending = useGameStateStore.getState().pendingChooseIntercept;
+      if (!pending) return;
+      applyChooseInterceptOrder(
+        draft,
+        pending,
+        action.protectorUid,
+        action.targetUid,
+        action.setCardInstanceId,
+        action.abilityOrigin,
+        action.abilityIndex,
+      );
       return;
     }
     case 'repeatOptionalResolve': {
@@ -538,7 +553,8 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     action.type === 'effectPickResolve' ? pendingPickBefore?.publicHandRevealToken
     : action.type === 'choiceResolve' ? store.pendingEffectChoice?.publicHandRevealToken
     : action.type === 'optionalResolve' ? store.pendingEffectOptional?.publicHandRevealToken
-    : action.type === 'chooseInterceptResolve' ? store.pendingChooseIntercept?.publicHandRevealToken
+    : action.type === 'chooseInterceptResolve' && store.pendingChooseIntercept?.kind !== 'order'
+      ? store.pendingChooseIntercept?.publicHandRevealToken
     : undefined;
   if (current === null) return { ok: false, reason: 'no-state' };
   if (isReplayOwnedState(current)) return { ok: false, reason: 'not-allowed' };
@@ -571,10 +587,14 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     deckPlace: action.type === 'deckPlaceResolve'
       ? readPendingDeckPlaceAuthority(current)
       : null,
+    misread: action.type === 'misreadResolve'
+      ? readPendingMisreadAuthority(current)
+      : null,
   };
   if (action.type === 'effectPickResolve'
     && publicHandRevealBefore?.lifetime === 'effect'
     && pendingPickBefore?.publicHandRevealToken === publicHandRevealBefore.resolutionToken
+    && publicHandRevealBefore.handSnapshot !== undefined
     && !sameCardMultiset(current.players[publicHandRevealBefore.owner].hand, publicHandRevealBefore.handSnapshot)) {
     // Serialized/stale UI may not apply a selection against a different hand.
     // Drop the exact resolver-owned decision by its stable token, then commit
@@ -597,7 +617,10 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
   if (action.type === 'effectPickResolve' && authorities.effectPick === null) {
     return { ok: false, reason: 'not-allowed' };
   }
-  if (!isAllowed(current, action, { concede: concedeAuthority })) return { ok: false, reason: 'not-allowed' };
+  if (!isAllowed(current, action, {
+    concede: concedeAuthority,
+    misread: authorities.misread,
+  })) return { ok: false, reason: 'not-allowed' };
 
   if (action.type === 'concede') {
     const pendingRuntimeBefore = snapshotPendingRuntimeState();
@@ -662,6 +685,15 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
         // Phase 5 listener が pendingEffects に積んだ effect を解決する。
         // AI orchestrator (src/ai/policy.ts) と同じ運用パターン。
         runAllUntilEmpty(draft);
+        // rules/07: 宣言時効果でactor/targetが離れた場合、guard入力を
+        // もう1回要求せず、その効果の完全解決直後にactionを終了する。
+        // decision/owner-order待ちではまだ効果解決中なのでreconcileしない。
+        const declarationEffectsSettled = draft.pendingRuntimeState === undefined
+          && !draft.pendingEffects.some((entry) => entry.state === 'pending' || entry.state === 'resolving');
+        if (declarationEffectsSettled && flow.action.abortMissingBeforeGuardActions(draft)) {
+          // action:end observerも同じdispatch内で解決する。
+          runAllUntilEmpty(draft);
+        }
       }),
     );
     if (!committed) {
@@ -698,6 +730,13 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     const contactStartAxId = _drainPendingContactStartAxId();
     if (contactStartAxId) {
       store.setActiveActionId(contactStartAxId);
+    }
+    const committedAfterAction = useGameStateStore.getState().gameState;
+    const activeActionId = useGameStateStore.getState().activeActionId;
+    if (activeActionId
+      && committedAfterAction
+      && !flow.action._getContext(committedAfterAction, activeActionId)) {
+      store.setActiveActionId(null);
     }
     // Commit 3a: evidence:remove-by-action listener が側チャネルにセットしていれば
     // Zustand pendingHirameki に転送。
@@ -762,7 +801,7 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
       store.setPendingSetCardReplacement(setCardReplacementSide);
     }
     const chooseInterceptSide = _drainPendingChooseInterceptSide();
-    if (action.type === 'chooseInterceptResolve') {
+    if (action.type === 'chooseInterceptResolve' || action.type === 'chooseInterceptOrderResolve') {
       store.setPendingChooseIntercept(chooseInterceptSide);
     } else if (chooseInterceptSide) {
       store.setPendingChooseIntercept(chooseInterceptSide);

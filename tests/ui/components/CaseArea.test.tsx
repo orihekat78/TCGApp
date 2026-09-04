@@ -41,7 +41,7 @@ describe('CaseArea', () => {
     expect(html).toMatch(/data-orientation="portrait"/);
     expect(html).toMatch(/class="case-title">テスト事件</);
     // Round 2: EVT・色 と Lv 表記は冗長としてユーザ指摘を受けて削除済。
-    // Round 3: case-stamp も削除 (edition tag は Playmat 側 .case-edition-tag に独立配置)。
+    // 旧 case-stamp は削除し、状態は事件ヘッダー内に所有させる。
     expect(html).not.toMatch(/EVT・/);
     expect(html).not.toMatch(/case-lv/);
     expect(html).not.toMatch(/case-stamp/);
@@ -78,6 +78,22 @@ describe('CaseArea', () => {
     },
   );
 
+  it('gives the whole incident area to candidate selection instead of rendering the detail control', () => {
+    const html = strip(renderToString(
+      <CaseArea
+        caseInfo={makeCase()}
+        turnOrder="first"
+        side="self"
+        isCandidate
+        onClick={() => undefined}
+        onExpand={() => undefined}
+      />,
+    ));
+
+    expect(html).toMatch(/case-area--candidate/);
+    expect(html).not.toMatch(/case-card-detail/);
+  });
+
   it('defaults to portrait orientation when caseInfo.orientation is undefined', () => {
     const html = strip(renderToString(
       <CaseArea caseInfo={makeCase()} turnOrder="first" side="self" />,
@@ -86,7 +102,7 @@ describe('CaseArea', () => {
     expect(html).toMatch(/data-orientation="portrait"/);
   });
 
-  it('Round 3: case-stamp 削除済 — 解決編表示は Playmat .case-edition-tag.resolved で担保', () => {
+  it('解決編の状態を事件ヘッダー内で所有する', () => {
     const html = strip(renderToString(
       <CaseArea
         caseInfo={makeCase({ status: '解決編' })}
@@ -94,10 +110,10 @@ describe('CaseArea', () => {
         side="self"
       />,
     ));
-    // case-stamp は完全削除されているはず
     expect(html).not.toMatch(/case-stamp/);
-    // 解決編 文字も CaseArea には出さない
-    expect(html).not.toMatch(/解決編/);
+    expect(html).toMatch(/zone-label[\s\S]*case-edition-tag resolved/);
+    expect(html).toMatch(/aria-label="事件状態: 解決編"/);
+    expect(html).toMatch(/>解決編<\/span>/);
   });
 
   it('shows 後攻 + 必要証拠 6 when turnOrder is second', () => {

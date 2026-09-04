@@ -11,7 +11,7 @@ import { create } from 'zustand';
 import { produce } from '@/engine/produce';
 import { mutate } from '@/engine/mutate';
 import type { GameState } from '@/engine/types/game-state';
-import type { CausalEffectTrace, EffectCtx } from '@/engine/types';
+import type { DeclaredAbilityHostOrigin, EffectCtx, PendingMisreadAuthority } from '@/engine/types';
 import type { ContinuationFrame, PendingEffectSource } from '@/engine/effect/pending-state';
 import { isCausalLogEntry } from '@/engine/log/causal.js';
 import {
@@ -22,6 +22,13 @@ import {
   snapshotPendingRuntimeState,
   withIsolatedPendingRuntimeState,
 } from '@/engine/effect/runtime-state.js';
+import {
+  checkpointLiveMisreadLease,
+  isLiveMisreadLeaseCheckpointCurrent,
+  resetLiveMisreadLease,
+  rollbackLiveMisreadLease,
+  type LiveMisreadLeaseCheckpoint,
+} from '@/engine/state/misread-authority.js';
 import { _drainPendingDeckRevealSide, _drainPendingPublicHandRevealSide } from '@/engine/effect/atom-handlers.js';
 import {
   collectPendingSideChannels,
@@ -38,17 +45,28 @@ import {
   areStoreRollbackParticipantsCurrent,
   checkpointStoreRollbackParticipants,
   markStoreRollbackHandled,
+  registerStoreRollbackParticipant,
   rollbackStoreRollbackParticipants,
   runStoreRollbackPublication,
   StoreRollbackHandledError,
 } from '@/ui/services/storeTransaction.js';
 import { notifyTerminalInteractionPublication } from '@/ui/services/terminalInteractionPublication.js';
 
+registerStoreRollbackParticipant({
+  checkpoint: checkpointLiveMisreadLease,
+  isCurrent: (checkpoint) => isLiveMisreadLeaseCheckpointCurrent(
+    checkpoint as LiveMisreadLeaseCheckpoint,
+  ),
+  rollback: (checkpoint) => rollbackLiveMisreadLease(
+    checkpoint as LiveMisreadLeaseCheckpoint,
+  ),
+});
+
 export type GameStateMutator = (state: GameState) => GameState;
 export type PendingDecisionIdentity = { decisionId: string };
 type PendingDecision<T> = T & PendingDecisionIdentity;
 export type SetGameStateOptions = {
-  /** Keep live resolver channels while committing the next state of one session. */
+  /** Keep exact live resolver channels while committing the next state of one process/session. */
   preserveRuntime?: boolean;
 };
 
@@ -240,19 +258,36 @@ export type PendingDeckReveal = {
   matched: string | null;
   /** BUG-132 GAP-1: chooseMatch pick 未解決中は overlay を hold (engine 側 PendingDeckRevealSide と同 shape) */
   awaitingPick?: boolean;
-  /** Pure reveal which returns every card to its original deck position. */
-  presentation?: 'reveal-return';
-  source?: { cardId?: string; abilityId?: string; uid?: string };
+  /** Presentation-only destination; does not authorize a deck mutation. */
+  presentation?: 'reveal-complete' | 'reveal-return' | 'reveal-to-bottom' | 'reveal-to-bottom-randomized';
+  source?: {
+    cardId?: string;
+    abilityId?: string;
+    uid?: string;
+    setCardId?: string;
+    setCardInstanceId?: string;
+    abilityOrigin?: 'printed' | 'granted';
+    abilityIndex?: number;
+  };
 };
 
 export type PendingPublicHandReveal = {
   owner: 'self' | 'opp';
   audience: 'all';
   cardIds: string[];
-  handSnapshot: string[];
+  handSnapshot?: string[];
   lifetime: 'effect' | 'presentation';
   resolutionToken: string;
-  source: { cardId?: string; abilityId?: string; uid?: string };
+  origin?: 'deck-selected-card';
+  source: {
+    cardId?: string;
+    abilityId?: string;
+    uid?: string;
+    setCardId?: string;
+    setCardInstanceId?: string;
+    abilityOrigin?: 'printed' | 'granted';
+    abilityIndex?: number;
+  };
 };
 
 export type PendingDeckReorder = {
@@ -292,6 +327,8 @@ export type PendingEffectPick = {
   }[];
   atomVerb: string;
   atomArgs: Record<string, unknown>;
+  /** Absolute side whose full scene needs a switch victim after this pick. */
+  sceneEnterSwitchPlayer?: 'self' | 'opp';
   nMin: number;
   nMax: number;
   requestedNMin?: number;
@@ -384,12 +421,29 @@ export type PendingSetCardReplacement = {
   source: PendingEffectSource & { uid: string };
 };
 
-/** Opponent may discard one hand occurrence to cancel the already-selected effect. */
-export type PendingChooseIntercept = {
+export type PendingChooseInterceptResponse = {
+  kind?: 'response';
+  resolution?: 'cancel' | 'discard-or-cancel';
+  player: 'self' | 'opp';
+  ownerPlayer?: 'self' | 'opp';
+  publicHandRevealToken?: string;
+  protector: {
+    uid: string;
+    cardId: string;
+    abilityId: string;
+    abilityOrigin?: DeclaredAbilityHostOrigin;
+    abilityIndex?: number;
+    setCardInstanceId?: string;
+  };
+  targetUid: string;
+};
+
+/** Owner orders simultaneous reactions; responder then chooses whether to discard. */
+export type PendingChooseIntercept = PendingChooseInterceptResponse | {
+  kind: 'order';
   player: 'self' | 'opp';
   publicHandRevealToken?: string;
-  protector: { uid: string; cardId: string; abilityId: string };
-  targetUid: string;
+  choices: PendingChooseInterceptResponse[];
 };
 
 /** Human decision window for B01092-style leave interception. */
@@ -427,6 +481,12 @@ export type PendingHirameki = {
     index: number;
     occurrenceWitness: string;
   };
+  /** Exact evidence card held by the owning ActionContext during resolution. */
+  heldEvidence?: {
+    token: string;
+    player: 'self' | 'opp';
+    cardId: string;
+  };
   /** State-owned action that must still be awaiting this decision. */
   actionId?: string;
   /** Exact public evidence-removal event that opened this decision. */
@@ -435,19 +495,8 @@ export type PendingHirameki = {
   gainDeferred?: boolean;
 };
 
-/** ミスリード保留 (Commit 3b) */
-export type PendingMisread = {
-  /** Player who chooses which misread abilities to activate. */
-  player: 'self' | 'opp';
-  /** 推理側 (LP-X 対象) の uid */
-  reasoningUid: string;
-  /** 推理側プレイヤー */
-  reasoningPlayer: 'self' | 'opp';
-  /** 発動候補 (反対側 active misread 持ち) */
-  candidates: { uid: string; x: number }[];
-  /** Causal graph paused while this decision is surfaced. */
-  causalTrace?: CausalEffectTrace;
-};
+/** ミスリード保留 (Commit 3b)。engine-owned authorityのpublic projection。 */
+export type PendingMisread = PendingMisreadAuthority;
 
 function setPendingDecision<T extends object>(
   set: (updater: (state: GameStateStore) => Partial<GameStateStore>) => void,
@@ -548,10 +597,11 @@ function latestOpenActionContext(
 }
 
 function assertPendingLeaveIntercept(
+  state: GameState,
   context: NonNullable<GameState['actionContexts']>[string] | undefined,
 ): void {
   const pending = context?.pendingLeaveIntercept as unknown;
-  if (pending === undefined) return;
+  if (!context || pending === undefined) return;
   if (pending === null || typeof pending !== 'object' || Array.isArray(pending)) {
     throw new Error('Invalid pendingLeaveIntercept: expected an object');
   }
@@ -568,6 +618,82 @@ function assertPendingLeaveIntercept(
   if (typeof context?.id !== 'string' || context.id.trim().length === 0) {
     throw new Error('Invalid pendingLeaveIntercept.actionId');
   }
+  const owners = Object.values(state.actionContexts ?? {}).filter((candidate) =>
+    candidate.pendingLeaveIntercept !== undefined || candidate.pendingLeaveInterceptReplacement !== undefined);
+  const defenderUid = context.guardUid ?? (context.target.kind === 'char' ? context.target.uid : undefined);
+  const snapshot = context.apSnapshot;
+  const target = state.players[value.player as 'self' | 'opp'].scene
+    .find((char) => char.uid === value.targetUid);
+  if (owners.length !== 1 || owners[0] !== context
+    || context.phase !== 'judge' || context.judgeResolved === true
+    || !snapshot || snapshot.aUid !== context.byUid
+    || snapshot.bUid !== value.targetUid || defenderUid !== snapshot.bUid
+    || value.player === context.byPlayer || !target) {
+    throw new Error('Invalid pendingLeaveIntercept: invalid contact ownership');
+  }
+}
+
+function assertPendingLeaveInterceptReplacement(
+  state: GameState,
+  context: NonNullable<GameState['actionContexts']>[string],
+): void {
+  const pending = context.pendingLeaveInterceptReplacement as unknown;
+  if (pending === undefined) return;
+  if (pending === null || typeof pending !== 'object' || Array.isArray(pending)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: expected an object');
+  }
+  const value = pending as Record<string, unknown>;
+  for (const field of ['targetUid', 'targetCardId', 'interceptorUid'] as const) {
+    if (typeof value[field] !== 'string' || value[field].trim().length === 0) {
+      throw new Error(`Invalid pendingLeaveInterceptReplacement.${field}`);
+    }
+  }
+  if (value.byUid !== undefined && (typeof value.byUid !== 'string' || value.byUid.trim().length === 0)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement.byUid');
+  }
+  if (typeof value.accept !== 'boolean'
+    || (value.stage !== 'interceptor-cost' && value.stage !== 'target-leave')
+    || context.pendingLeaveIntercept !== undefined
+    || context.phase !== 'judge'
+    || context.judgeResolved === true
+    || !context.apSnapshot) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: invalid ActionContext ownership');
+  }
+  const owners = Object.values(state.actionContexts ?? {}).filter((candidate) =>
+    candidate.pendingLeaveIntercept !== undefined || candidate.pendingLeaveInterceptReplacement !== undefined);
+  const defenderUid = context.guardUid ?? (context.target.kind === 'char' ? context.target.uid : undefined);
+  const targetPlayer = state.players.self.scene.some((char) => char.uid === value.targetUid) ? 'self'
+    : state.players.opp.scene.some((char) => char.uid === value.targetUid) ? 'opp' : null;
+  if (owners.length !== 1 || owners[0] !== context
+    || context.apSnapshot.aUid !== context.byUid
+    || context.apSnapshot.bUid !== value.targetUid
+    || defenderUid !== context.apSnapshot.bUid
+    || targetPlayer === null || targetPlayer === context.byPlayer) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: invalid contact ownership');
+  }
+  if (value.byUid !== context.apSnapshot.aUid
+    || (value.stage === 'interceptor-cost' && value.accept !== true)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: invalid contact stage authority');
+  }
+  if (value.accept === true
+    && (typeof value.interceptorCardId !== 'string' || value.interceptorCardId.trim().length === 0
+      || typeof value.interceptorAbilityId !== 'string' || value.interceptorAbilityId.trim().length === 0)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: accepted redirect requires an interceptor witness');
+  }
+  const target = state.players.self.scene.concat(state.players.opp.scene)
+    .find((char) => char.uid === value.targetUid);
+  if (!target || target.cardId !== value.targetCardId) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: target must remain in scene');
+  }
+  const interceptorPresent = state.players.self.scene.concat(state.players.opp.scene)
+    .some((char) => char.uid === value.interceptorUid);
+  if (value.stage === 'interceptor-cost') {
+    if (!interceptorPresent) {
+      throw new Error('Invalid pendingLeaveInterceptReplacement: interceptor cost target must remain in scene');
+    }
+  } else if (value.accept === true && interceptorPresent) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: accepted interceptor cost must remain paid');
+  }
 }
 
 export function prepareGameStateForStore(state: GameState): {
@@ -576,7 +702,10 @@ export function prepareGameStateForStore(state: GameState): {
 } {
   const gameState = produce(state, (draft) => mutate.char.ensureSetCardInstanceIds(draft));
   const openAction = latestOpenActionContext(gameState);
-  assertPendingLeaveIntercept(openAction);
+  for (const context of Object.values(gameState.actionContexts ?? {})) {
+    assertPendingLeaveIntercept(gameState, context);
+    assertPendingLeaveInterceptReplacement(gameState, context);
+  }
   const humanSideGlobal = globalThis as {
     __humanPlayerSide?: 'self' | 'opp' | null;
   };
@@ -658,15 +787,18 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
         : {}),
     };
     const previousRuntime = snapshotPendingRuntimeState();
+    const previousMisreadLease = checkpointLiveMisreadLease();
+    const replaceRuntime = options?.preserveRuntime !== true;
     let pendingSurface = surfaceSeed;
     try {
-      if (options?.preserveRuntime !== true) resetPendingRuntimeState();
+      if (replaceRuntime) resetPendingRuntimeState();
       if (gameState !== null && gameState.gameResult === undefined) {
         hydratePendingRuntimeState(gameState);
         pendingSurface = collectPendingSideChannels(surfaceSeed);
       }
     } catch (error) {
       restorePendingRuntimeState(previousRuntime);
+      rollbackLiveMisreadLease(previousMisreadLease);
       throw error;
     }
     set({
@@ -675,6 +807,7 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
       activeActionId: gameState?.gameResult === undefined ? openAction?.id ?? null : null,
     });
     if (gameState !== null) admitCommittedPresentation(gameState);
+    if (replaceRuntime) resetLiveMisreadLease();
     return true;
   },
   commitTerminalState: (state) => {
@@ -727,10 +860,12 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
     if (storeBefore.gameState?.gameResult === undefined) {
       notifyTerminalInteractionPublication();
     }
+    resetLiveMisreadLease();
     return true;
   },
   setReplayGameState: (state) => {
     if (state !== null && !validatePresentationCommit(state)) return;
+    resetLiveMisreadLease();
     set({
       ...MATCH_SESSION_RESET_STATE,
       gameState: state,
@@ -738,6 +873,7 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   },
   resetMatchSessionState: () => {
     resetPendingRuntimeState();
+    resetLiveMisreadLease();
     set(MATCH_SESSION_RESET_STATE);
   },
   dispatch: (mutator) => {

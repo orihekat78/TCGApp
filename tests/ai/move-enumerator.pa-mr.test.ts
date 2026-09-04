@@ -61,7 +61,10 @@ describe('enumerateMoves — partnerAreaMR declaredAbility (rules/18)', () => {
     registerCardDef(makeCard('MR1', { abilities: [makeDecl('a1', 'on-partner-area')] }));
     const s = makeBaseState('MR1');
     const moves = enumerateMoves(s, 'self');
-    expect(moves).toContainEqual({ kind: 'declaredAbility', uid: 'partnerMR:self', abilityId: 'a1' });
+    expect(moves).toContainEqual({
+      kind: 'declaredAbility', uid: 'partnerMR:self', abilityId: 'a1',
+      abilityOrigin: 'printed', abilityIndex: 0,
+    });
   });
 
   it('scope on-scene のみの PA-MR は列挙しない (decoy: engine scope gate)', () => {

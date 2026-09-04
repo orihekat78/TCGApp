@@ -8,6 +8,7 @@ import { engine } from '@/engine';
 import {
   registerMisreadListener,
   _drainPendingMisread,
+  _peekPendingMisread,
   _resetPendingMisread,
 } from '@/engine/listeners/misread';
 import { createEmptyGameState } from '@/engine/state-factory';
@@ -67,7 +68,7 @@ describe('misread listener (Commit 3b)', () => {
     misreadPlayer: 'self' | 'opp',
   ): GameState {
     const s = createEmptyGameState();
-    s.players[reasoningPlayer].scene = [makeChar('r1', 'TEST_REASONING')];
+    s.players[reasoningPlayer].scene = [makeChar('r1', 'TEST_REASONING', 'sleep')];
     s.players[misreadPlayer].scene = [makeChar('m1', 'TEST_MISREAD')];
     return s;
   }
@@ -91,13 +92,14 @@ describe('misread listener (Commit 3b)', () => {
     engine.event.emit(s, 'reasoning:before-add', { uid: 'r1', lpUsed: 1500 }, { player: 'opp', uid: 'r1' });
     // self.m1 はまだ active (UI 経由待ち)
     expect(s.players.self.scene.find((c) => c.uid === 'm1')?.state).toBe('active');
-    const pending = _drainPendingMisread();
+    const pending = _peekPendingMisread();
     expect(pending).not.toBeNull();
     expect(pending?.reasoningUid).toBe('r1');
     expect(pending?.reasoningPlayer).toBe('opp');
     expect(pending?.player).toBe('self');
     expect(pending?.candidates).toHaveLength(1);
     expect(pending?.candidates[0]).toEqual({ uid: 'm1', x: 2000 });
+    expect(() => _drainPendingMisread()).toThrow('unauthenticated runtime projection');
   });
 
   it('human=opp なら opp defender のミを人間決定にする', () => {
@@ -107,9 +109,10 @@ describe('misread listener (Commit 3b)', () => {
     engine.event.emit(s, 'reasoning:before-add', { uid: 'r1', lpUsed: 1500 }, { player: 'self', uid: 'r1' });
 
     expect(s.players.opp.scene.find((c) => c.uid === 'm1')?.state).toBe('active');
-    expect(_drainPendingMisread()).toMatchObject({
+    expect(_peekPendingMisread()).toMatchObject({
       player: 'opp', reasoningUid: 'r1', reasoningPlayer: 'self',
     });
+    expect(() => _drainPendingMisread()).toThrow('unauthenticated runtime projection');
   });
 
   it('human=null の観戦では両側ともAI同期解決する', () => {

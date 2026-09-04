@@ -13,6 +13,7 @@ import {
   resolveBindRef,
   hasNorMax,
   paShortFormAwait,
+  readHeldHiramekiSelfClaim,
   resolveBoundOccurrenceRef,
 } from './_shared.js';
 import { allCardNameComponentsForDef } from '../../target/card-def-registry.js';
@@ -27,6 +28,11 @@ import type { GameState, AtomVerb, EffectCtx, Candidate, Effect, PublicCausalZon
 import { recordEffectCausalOperation } from '../../log/effect-causal.js';
 import { advanceIndexedZoneEpoch } from '../../state/indexed-zone-epoch.js';
 import { isLiveCardOccurrenceWitness } from '../../target/card-occurrence.js';
+import {
+  advanceDeckEpochAndRebaseBindings,
+  isLiveDeckOccurrenceAuthority,
+} from '../deck-occurrence-authority.js';
+import { sceneEnterSwitchPickEffect } from '../scene-switch.js';
 
 function recordPublicZoneMove(
   s: GameState,
@@ -129,6 +135,62 @@ interface SelectedSceneOccurrence {
   index: number;
 }
 
+type InvokedEvidenceSelfClaimRead =
+  | { kind: 'absent' }
+  | { kind: 'invalid' }
+  | { kind: 'claim'; claim: { player: Player; cardId: string; index: number } };
+
+/**
+ * Direct Hirameki invocation (B06023/B06034/B06036) keeps the exact evidence
+ * occurrence in `$occurrence` instead of an ActionContext held-evidence slot.
+ * Revalidate that authority at the eventual self-entry step so effects such as
+ * B06025/B06027 can move their own evidence occurrence without retargeting an
+ * equal card ID after an indexed-zone change.
+ */
+function readInvokedEvidenceSelfClaim(
+  s: GameState,
+  ctx: EffectCtx,
+  expectedPlayer: Player,
+): InvokedEvidenceSelfClaimRead {
+  const payload = ctx.triggerPayload;
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)
+    || (payload as Record<string, unknown>).invoked !== true) {
+    return { kind: 'absent' };
+  }
+  const record = payload as Record<string, unknown>;
+  const bound = (ctx.bindings as Record<string, unknown>).occurrence;
+  if (!Array.isArray(bound) || bound.length !== 1
+    || bound[0] === null || typeof bound[0] !== 'object' || Array.isArray(bound[0])) {
+    return { kind: 'invalid' };
+  }
+  const occurrence = bound[0] as Record<string, unknown>;
+  const index = occurrence.index;
+  const cardId = occurrence.cardId;
+  const witness = occurrence.occurrenceWitness;
+  const uid = occurrence.uid;
+  if (occurrence.kind !== 'card'
+    || occurrence.area !== 'evidence'
+    || occurrence.player !== expectedPlayer
+    || typeof index !== 'number' || !Number.isSafeInteger(index) || index < 0
+    || typeof cardId !== 'string'
+    || typeof witness !== 'string'
+    || uid !== `evidence:${expectedPlayer}:${index}`
+    || record.uid !== uid
+    || record.cardId !== cardId
+    || record.player !== expectedPlayer
+    || record.area !== 'evidence'
+    || record.index !== index
+    || ctx.source.player !== expectedPlayer
+    || ctx.source.area !== 'evidence'
+    || ctx.source.uid !== uid
+    || ctx.source.cardId !== cardId
+    || !isLiveCardOccurrenceWitness(s, expectedPlayer, 'evidence', witness)
+    || s.players[expectedPlayer].evidence[index]?.cardId !== cardId) {
+    return { kind: 'invalid' };
+  }
+  return { kind: 'claim', claim: { player: expectedPlayer, cardId, index } };
+}
+
 function selectedSceneOccurrences(
   s: GameState,
   a: Record<string, unknown>,
@@ -159,7 +221,11 @@ function selectedSceneOccurrences(
     const key = `${value.player}:${area}:${value.index}`;
     if (seen.has(key)) return null;
     seen.add(key);
-    if (area === 'remove') {
+    if (area === 'deck') {
+      if (value.kind !== undefined && value.kind !== 'card') return null;
+      const deckOccurrence = value.kind === 'card' ? value : { ...value, kind: 'card' };
+      if (!isLiveDeckOccurrenceAuthority(s, player, deckOccurrence)) return null;
+    } else if (area === 'remove') {
       if (!isLiveCardOccurrenceWitness(s, player, area, value.occurrenceWitness)
         || s.players[player].remove[value.index] !== value.cardId) {
         return null;
@@ -241,7 +307,32 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
             });
             return;
           }
+          // A multi-entry switch is one authority-bearing decision. Validate the
+          // complete victim set before consuming any selected source occurrence;
+          // otherwise a forged/duplicate/stale later victim can partially move
+          // earlier cards and make the answer non-atomic.
+          const switchOverflow = Math.max(
+            0,
+            s.players[enterP].scene.length + cardIds.length - sceneCap(s, enterP),
+          );
+          const switchUidSet = new Set(switchUids);
+          const liveSwitchUids = new Set(s.players[enterP].scene.map((character) => character.uid));
+          const switchAuthorityIsLive = switchUids.length === switchOverflow
+            && switchUidSet.size === switchUids.length
+            && switchUids.every((uid) => typeof uid === 'string'
+              && !uid.startsWith('$')
+              && liveSwitchUids.has(uid));
+          if (!switchAuthorityIsLive) {
+            (ctx.dyn ??= {}).chainStepNoApply = true;
+            if (typeof a.bind === 'string') (ctx.bindings as Record<string, unknown>)[a.bind] = [];
+            mutate.log.append(s, {
+              ts: Date.now(), player: enterP, turn: s.turn.number,
+              action: 'effect:sceneEnter:switch-authority-stale',
+            });
+            return;
+          }
           let tookFromDeck = false;
+          const removedDeckOriginalIndexes: number[] = [];
           for (const [cardPosition, cid] of cardIds.entries()) {
             // 単一 path と同じ inline splice (remove/hand/deck のみ)。これがないと remove に残り複製登場 (D11014 a2 class bug)。
             const selectedOccurrence = selectedOccurrences?.[cardPosition];
@@ -274,6 +365,25 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
                   ? selectedIndex
                   : arr.indexOf(cid);
               if (i !== -1) {
+                let originalDeckIndex: number | undefined;
+                if (cardSourceArea === 'deck') {
+                  const explicitOriginalIndex = selectedOccurrence?.area === 'deck'
+                    ? selectedOccurrence.index
+                    : typeof originalSelectedIndex === 'number'
+                      && Number.isSafeInteger(originalSelectedIndex)
+                      && originalSelectedIndex >= 0
+                      && !removedDeckOriginalIndexes.includes(originalSelectedIndex)
+                      ? originalSelectedIndex
+                      : undefined;
+                  if (explicitOriginalIndex !== undefined) {
+                    originalDeckIndex = explicitOriginalIndex;
+                  } else {
+                    originalDeckIndex = i;
+                    for (const removedIndex of [...removedDeckOriginalIndexes].sort((left, right) => left - right)) {
+                      if (removedIndex <= originalDeckIndex) originalDeckIndex += 1;
+                    }
+                  }
+                }
                 arr.splice(i, 1);
                 if (cardSourceArea === 'remove') {
                   advanceIndexedZoneEpoch(s, fp, 'remove');
@@ -287,25 +397,7 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
                 // 生じない構成のため触らない)。array は差替え (凍結 bindings shallow-copy と非干渉)。
                 if (cardSourceArea === 'deck') {
                   tookFromDeck = true;
-                  for (const bk of Object.keys(ctx.bindings)) {
-                    const bArr = ctx.bindings[bk];
-                    if (!Array.isArray(bArr)) continue;
-                    const bi = bArr.findIndex(b => {
-                      const e = b as { kind?: string; area?: string; player?: string; cardId?: string; index?: number };
-                      return e.kind === 'card' && e.area === 'deck' && e.player === fp && e.cardId === cid
-                        && (typeof selectedIndex !== 'number' || e.index === selectedIndex);
-                    });
-                    const withoutEntered = bi !== -1 ? [...bArr.slice(0, bi), ...bArr.slice(bi + 1)] : bArr;
-                    // A bound deck window keeps snapshot indexes. Splicing a selected card shifts
-                    // every later live deck index; rebase them so subsequent window picks remain legal.
-                    ctx.bindings[bk] = withoutEntered.map(entry => {
-                      const card = entry as Candidate;
-                      if (card.kind === 'card' && card.area === 'deck' && card.player === fp && typeof card.index === 'number' && card.index > i) {
-                        return { ...card, index: card.index - 1 };
-                      }
-                      return entry;
-                    });
-                  }
+                  removedDeckOriginalIndexes.push(originalDeckIndex!);
                 }
                 if (cardSourceArea === 'remove' || cardSourceArea === 'hand') {
                   rebaseBoundCardIndexes(ctx, fp, cardSourceArea, i, cid);
@@ -365,6 +457,14 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
           // The reveal window remains deck until selected cards actually move.
           // Refresh only after the whole multi-transfer has completed so later
           // selected snapshot indexes are not invalidated by an early shuffle.
+          if (removedDeckOriginalIndexes.length > 0) {
+            advanceDeckEpochAndRebaseBindings(
+              s,
+              ctx,
+              sourcePlayer,
+              removedDeckOriginalIndexes,
+            );
+          }
           if ((srcArea === 'deck' || selectedOccurrences?.some(({ area }) => area === 'deck')) && tookFromDeck) {
             if (!refreshDeckForSceneEnter(s, ctx, sourcePlayer)) return;
           }
@@ -387,27 +487,23 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
           return;
         }
       }
-      // 2026-06-04 switch-on-effect-enter (rules/20 スイッチ): 現場満杯 (5枚) の効果登場の早期分岐。
-      //  - switchRemoveUid 指定済 (UI が満杯時に SceneSwitchPickerModal で退場キャラを収集) → skip せず
-      //    下の解決済 path で switchEnter する。
-      //  - 未指定の AI 経路 (humanSide でない側) → スイッチ選択 UI/heuristic 無しなので skip する
-      //    (rules: 0枚選択=合法な辞退。modal も無駄 pick cycle も出さない、smoke 不変)。
-      //  - 未指定の human 経路 → ここでは skip せず短縮形/await pick を通し、reanimate 対象を選ばせる。
-      //    解決時に UI が現場満杯を検知して switch 対象を収集 → switchRemoveUid 付きで再解決される。
-      {
-        const seFullP = resolvePlayer(a.player, ctx);
-        const seHasSwitch = typeof a.switchRemoveUid === 'string' && !(a.switchRemoveUid as string).startsWith('$');
-        const seHumanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
-        if (s.players[seFullP].scene.length >= sceneCap(s, seFullP) && !seHasSwitch && seFullP !== seHumanSide) {
-          mutate.log.append(s, { ts: Date.now(), player: seFullP, turn: s.turn.number, action: 'effect:sceneEnter:scene-full-skip' });
-          return;
-        }
-      }
       // PA 短縮形 (area からの登場): cardId 不在 + from + n|max で source area pick を構築し、
       // cardId='$pick.cardId' + target を付与して下記 $pick.cardId awaiting-pick 経路に合流させる。
       // sourceSplice (remove/evidence から実体除去) は解決後の本処理が target.query.area を見て行う。
       if (a.cardId === undefined && typeof a.from === 'string' && hasNorMax(a)) {
         const seP0 = resolvePlayer(a.player, ctx);
+        const seHumanSide = (globalThis as {
+          __humanPlayerSide?: 'self' | 'opp' | null;
+        }).__humanPlayerSide ?? null;
+        if (s.players[seP0].scene.length >= sceneCap(s, seP0)
+          && seP0 !== seHumanSide
+          && a.deferSceneSwitchChoice !== true) {
+          mutate.log.append(s, {
+            ts: Date.now(), player: seP0, turn: s.turn.number,
+            action: 'effect:sceneEnter:scene-full-skip',
+          });
+          return;
+        }
         // BUG-186 (夜間 W0 2026-07-11): side は相対値のまま渡す (sidesForQuery が owner 相対解釈)。
         // 旧実装は解決済み絶対値 seP0 を渡しており、owner='opp' で side が反転し候補 0 になっていた
         // (BUG-174 と同族。sceneToDeck/sceneSetState は相対渡しで正しい)。chooser は絶対値のままで正。
@@ -422,7 +518,36 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       // user_request 20260522_01 #12 fix: $matched.cardId 等の bind ref を解決
       // (D11019 deckRevealUntil → sceneEnter sequence で必要)
       const rawCardId = requireField<string>(a, 'cardId', 'string');
-      const cardId = resolveBindRef(rawCardId, ctx) as string;
+      const enterPlayer = resolvePlayer(a.player, ctx);
+      const targetSourceArea = ((a.target && typeof a.target === 'object')
+        ? ((a.target as { query?: { area?: string; side?: string } }).query?.area)
+        : undefined) as 'remove' | 'evidence' | 'file' | 'deck' | 'hand' | undefined;
+      const sourceSide = ((a.target && typeof a.target === 'object')
+        ? ((a.target as { query?: { side?: string } }).query?.side)
+        : undefined) as 'self' | 'opp' | undefined;
+      const mayConsumeHeldEvidence = rawCardId === '$occurrence.cardId'
+        && targetSourceArea === 'remove'
+        && sourceSide === 'self'
+        && (a as { sourceRequired?: unknown }).sourceRequired === true;
+      const heldClaimRead = mayConsumeHeldEvidence
+        ? readHeldHiramekiSelfClaim(ctx, enterPlayer)
+        : { kind: 'absent' as const };
+      const invokedEvidenceRead = mayConsumeHeldEvidence
+        ? readInvokedEvidenceSelfClaim(s, ctx, enterPlayer)
+        : { kind: 'absent' as const };
+      if (heldClaimRead.kind === 'invalid' || invokedEvidenceRead.kind === 'invalid') {
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+        mutate.log.append(s, {
+          ts: Date.now(), player: enterPlayer, turn: s.turn.number,
+          action: 'effect:sceneEnter:source-missing-skip', target: ctx.source.cardId,
+        });
+        return;
+      }
+      const heldClaim = heldClaimRead.kind === 'claim' ? heldClaimRead.claim : undefined;
+      const invokedEvidenceClaim = heldClaim === undefined && invokedEvidenceRead.kind === 'claim'
+        ? invokedEvidenceRead.claim
+        : undefined;
+      const cardId = heldClaim?.cardId ?? invokedEvidenceClaim?.cardId ?? resolveBindRef(rawCardId, ctx) as string;
       // D11014 a2 driver 2026-05-26: cardId が `$pick.*` で未解決かつ target に
       // pick query があれば tryRePickFromAtom で side-channel set (Pattern A 同型)。
       // handAddFromRemove と同 pattern。これがないと sceneEnter は silent no-op で
@@ -443,7 +568,6 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         // それ以外の未解決 bind ref は従来通り silent no-op (BUG-048 と同 pattern)
         return;
       }
-      const enterPlayer = resolvePlayer(a.player, ctx);
       const enteringDef = readDef.card(cardId);
       if (enteringDef?.kind === 'character' && (s.turnState[enterPlayer].useEnterBannedCardNames ?? []).some(name => enteringDef.names.includes(name))) {
         (ctx.dyn ??= {}).chainStepNoApply = true;
@@ -455,18 +579,38 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       // 無ければ skip (human が switch を辞退 / AI 経路)。room があれば通常 enter。
       const seSwitchRemoveUid = resolveBindRef(a.switchRemoveUid, ctx) as string | undefined;
       const seIsFull = s.players[enterPlayer].scene.length >= sceneCap(s, enterPlayer);
-      const seHasValidSwitch = typeof seSwitchRemoveUid === 'string' && !seSwitchRemoveUid.startsWith('$');
+      const seHasValidSwitch = typeof seSwitchRemoveUid === 'string'
+        && !seSwitchRemoveUid.startsWith('$')
+        && s.players[enterPlayer].scene.some(card => card.uid === seSwitchRemoveUid);
       if (seIsFull && !seHasValidSwitch) {
-        mutate.log.append(s, { ts: Date.now(), player: enterPlayer, turn: s.turn.number, action: 'effect:sceneEnter:scene-full-skip', target: cardId });
+        if (a.deferSceneSwitchChoice !== true) {
+          mutate.log.append(s, {
+            ts: Date.now(), player: enterPlayer, turn: s.turn.number,
+            action: 'effect:sceneEnter:scene-full-skip', target: cardId,
+          });
+          return;
+        }
+        // The player whose scene is full owns this second decision.  Do not
+        // attach its victim UID to an earlier cross-owner card selection.
+        tryRePickFromAtom(
+          s,
+          sceneEnterSwitchPickEffect(a, enterPlayer, ctx.source.player),
+          ctx,
+          {
+            byPlayer: enterPlayer,
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+          },
+        );
+        mutate.log.append(s, {
+          ts: Date.now(), player: enterPlayer, turn: s.turn.number,
+          action: 'effect:sceneEnter:awaiting-switch', target: cardId,
+        });
         return;
       }
       // D11014 a2 driver 2026-05-26: pick query で source area が指定されていれば、
       // そこから cardId 1 枚を取り除いてから scene へ。これがないと「リムーブから
       // 登場」が「リムーブに残ったまま scene にコピー登場」になる duplication bug。
       // handAddFromRemove と同 pattern (line 360-367)。
-      const targetSourceArea = ((a.target && typeof a.target === 'object')
-        ? ((a.target as { query?: { area?: string; side?: string } }).query?.area)
-        : undefined) as 'remove' | 'evidence' | 'file' | 'deck' | 'hand' | undefined;
       // A direct hand declaration can enter its own source without a target
       // picker (B06103/B06103P). Consume that exact source card once; do not
       // turn an on-hand effect into a duplicate scene character.
@@ -476,12 +620,9 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         && ctx.source.uid.startsWith('hand:')
         && ctx.source.cardId === cardId;
       const sourceArea = targetSourceArea ?? (declaredHandSource ? 'hand' : undefined);
-      const sourceSide = ((a.target && typeof a.target === 'object')
-        ? ((a.target as { query?: { side?: string } }).query?.side)
-        : undefined) as 'self' | 'opp' | undefined;
       let deckTakeFromPlayer: Player | undefined;
       let deckTakeOccurred = false;
-      let movedFromSource: { player: Player; area: 'remove' | 'hand' | 'deck' | 'partner' } | undefined;
+      let movedFromSource: { player: Player; area: 'remove' | 'hand' | 'deck' | 'partner' | 'evidence' } | undefined;
       // Cluster WB1 (2026-07-11, B09055「世良真純」): source area が union 配列 or 'partner-area' の場合 —
       //   「自分のパートナーエリアかリムーブエリアにある〚X〛を1枚まで登場」。handAddFromRemove の union
       //   splice と同流儀 (pick 済 cardId は一意 zone 由来)。候補列挙は area 配列 union が既対応
@@ -505,13 +646,22 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       const boundRemoveOccurrence = allowedSourceAreas.includes('remove')
         ? resolveBoundOccurrenceRef(rawCardId, s, ctx, selectedSourcePlayer, 'remove')
         : { kind: 'unbound' as const };
-      const invalidPhysicalSelection = selectedOccurrences === null
+      const boundDeckOccurrence = allowedSourceAreas.includes('deck')
+        ? resolveBoundOccurrenceRef(rawCardId, s, ctx, selectedSourcePlayer, 'deck')
+        : { kind: 'unbound' as const };
+      const invalidPhysicalSelection = heldClaim === undefined && invokedEvidenceClaim === undefined && (selectedOccurrences === null
         || boundRemoveOccurrence.kind === 'invalid'
+        || boundDeckOccurrence.kind === 'invalid'
         || (boundRemoveOccurrence.kind === 'live'
           && (boundRemoveOccurrence.cardId !== cardId
             || (selectedOccurrence !== undefined
               && (selectedOccurrence.area !== 'remove'
-                || selectedOccurrence.index !== boundRemoveOccurrence.index))));
+                || selectedOccurrence.index !== boundRemoveOccurrence.index))))
+        || (boundDeckOccurrence.kind === 'live'
+          && (boundDeckOccurrence.cardId !== cardId
+            || (selectedOccurrence !== undefined
+              && (selectedOccurrence.area !== 'deck'
+                || selectedOccurrence.index !== boundDeckOccurrence.index)))));
       if (invalidPhysicalSelection) {
         (ctx.dyn ??= {}).chainStepNoApply = true;
         mutate.log.append(s, {
@@ -523,8 +673,36 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       const physicalOccurrence = selectedOccurrence
         ?? (boundRemoveOccurrence.kind === 'live'
           ? { cardId, area: 'remove' as const, player: selectedSourcePlayer, index: boundRemoveOccurrence.index }
-          : undefined);
-      if (Array.isArray(rawSrcArea) || rawSrcArea === 'partner-area') {
+          : boundDeckOccurrence.kind === 'live'
+            ? { cardId, area: 'deck' as const, player: selectedSourcePlayer, index: boundDeckOccurrence.index }
+            : undefined);
+      if (heldClaim !== undefined) {
+        const evidence = mutate.evidence.takeHeldHiramekiEvidence(s, heldClaim);
+        if (!evidence) {
+          (ctx.dyn ??= {}).chainStepNoApply = true;
+          mutate.log.append(s, {
+            ts: Date.now(), player: enterPlayer, turn: s.turn.number,
+            action: 'effect:sceneEnter:source-missing-skip', target: cardId,
+          });
+          return;
+        }
+        movedFromSource = { player: heldClaim.player, area: 'evidence' };
+      } else if (invokedEvidenceClaim !== undefined) {
+        const evidence = s.players[invokedEvidenceClaim.player].evidence;
+        if (evidence[invokedEvidenceClaim.index]?.cardId !== invokedEvidenceClaim.cardId) {
+          (ctx.dyn ??= {}).chainStepNoApply = true;
+          mutate.log.append(s, {
+            ts: Date.now(), player: enterPlayer, turn: s.turn.number,
+            action: 'effect:sceneEnter:source-missing-skip', target: cardId,
+          });
+          return;
+        }
+        evidence.splice(invokedEvidenceClaim.index, 1);
+        advanceIndexedZoneEpoch(s, invokedEvidenceClaim.player, 'evidence');
+        // Direct invocation moves this occurrence from evidence to scene. It never
+        // enters the remove area, so evidence-removal observers must stay silent.
+        movedFromSource = { player: invokedEvidenceClaim.player, area: 'evidence' };
+      } else if (Array.isArray(rawSrcArea) || rawSrcArea === 'partner-area') {
         const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
         const areas = (Array.isArray(rawSrcArea) ? rawSrcArea : [rawSrcArea])
           .filter((x): x is 'remove' | 'partner-area' => x === 'remove' || x === 'partner-area');
@@ -629,6 +807,17 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         }
         if (idx !== -1) {
           arr.splice(idx, 1);
+          const rawBindDot = typeof rawCardId === 'string' ? rawCardId.indexOf('.') : -1;
+          const referencedBindKey = rawBindDot > 1 && rawCardId.startsWith('$')
+            ? rawCardId.slice(0, rawBindDot)
+            : undefined;
+          const preserveRemovedBindingKeysAsResolved = referencedBindKey === undefined
+            ? []
+            : [referencedBindKey, referencedBindKey.slice(1)]
+              .filter(bindKey => Object.hasOwn(ctx.bindings, bindKey));
+          advanceDeckEpochAndRebaseBindings(s, ctx, fromPlayer, [idx], {
+            preserveRemovedBindingKeysAsResolved,
+          });
           deckTakeFromPlayer = fromPlayer;
           deckTakeOccurred = true;
           movedFromSource = { player: fromPlayer, area: 'deck' };
@@ -816,6 +1005,7 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
         if (srCause === 'effect') {
           const srOwner: Player = s.players.self.scene.some(c => c.uid === srUid) ? 'self' : 'opp';
           if (ctx.source.player !== srOwner && readChar.charProtectedFrom(s, srUid, 'remove')) {
+            (ctx.dyn ??= {}).chainStepNoApply = true;
             mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid, result: 'blocked-protected' });
             return;
           }
@@ -825,6 +1015,7 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
           if (ctx.source.player !== srOwner
             && readDef.card(ctx.source.cardId ?? '')?.kind === 'event'
             && readChar.charProtectedFromOppEvent(s, srUid, 'remove')) {
+            (ctx.dyn ??= {}).chainStepNoApply = true;
             mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid, result: 'blocked-event-protected' });
             return;
           }
@@ -850,8 +1041,52 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
         ? {
             interceptorUid: (rawLeaveInterceptDecision as { interceptorUid: string }).interceptorUid,
             accept: (rawLeaveInterceptDecision as { accept: boolean }).accept,
+            ...((rawLeaveInterceptDecision as Record<string, unknown>).interceptorCostPaid === true
+              ? { interceptorCostPaid: true }
+              : {}),
           }
         : undefined;
+      const skipSetCardReplacementInstanceIds = Array.isArray(a.skipSetCardReplacementInstanceIds)
+        && a.skipSetCardReplacementInstanceIds.every((instanceId) => typeof instanceId === 'string')
+        ? [...a.skipSetCardReplacementInstanceIds] as string[]
+        : undefined;
+      const rawAfterSceneRemove = a.afterSceneRemove;
+      const afterSceneRemove = rawAfterSceneRemove !== null
+        && typeof rawAfterSceneRemove === 'object'
+        && !Array.isArray(rawAfterSceneRemove)
+        && typeof (rawAfterSceneRemove as Record<string, unknown>).uid === 'string'
+        && ['contact-ap', 'effect', 'switch', 'cost', 'misplay-overflow'].includes(
+          (rawAfterSceneRemove as Record<string, unknown>).cause as string,
+        )
+        ? (() => {
+            const after = rawAfterSceneRemove as Record<string, unknown>;
+            const rawDecision = after.leaveInterceptDecision;
+            const leaveIntercept = rawDecision !== null
+              && typeof rawDecision === 'object'
+              && !Array.isArray(rawDecision)
+              && typeof (rawDecision as Record<string, unknown>).interceptorUid === 'string'
+              && typeof (rawDecision as Record<string, unknown>).accept === 'boolean'
+              ? {
+                  interceptorUid: (rawDecision as { interceptorUid: string }).interceptorUid,
+                  accept: (rawDecision as { accept: boolean }).accept,
+                  ...((rawDecision as Record<string, unknown>).interceptorCostPaid === true
+                    ? { interceptorCostPaid: true }
+                    : {}),
+                }
+              : undefined;
+            const byPlayer: Player | undefined = after.byPlayer === 'self' || after.byPlayer === 'opp'
+              ? after.byPlayer
+              : undefined;
+            return {
+              uid: after.uid as string,
+              cause: after.cause as RemoveCause,
+              ...(typeof after.byUid === 'string' ? { byUid: after.byUid } : {}),
+              ...(byPlayer ? { byPlayer } : {}),
+              ...(leaveIntercept ? { leaveInterceptDecision: leaveIntercept } : {}),
+            };
+          })()
+        : undefined;
+      const srByUid = typeof a.byUid === 'string' ? a.byUid : undefined;
       const srOwner: Player | undefined = s.players.self.scene.some((card) => card.uid === srUid)
         ? 'self'
         : s.players.opp.scene.some((card) => card.uid === srUid)
@@ -860,16 +1095,17 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
       const srCardId = srOwner === undefined
         ? undefined
         : s.players[srOwner].scene.find((card) => card.uid === srUid)?.cardId;
-      const srRemoveCopiesBefore = srOwner !== undefined && srCardId !== undefined
-        ? s.players[srOwner].remove.filter((cardId) => cardId === srCardId).length
-        : 0;
-      const srPartnerAreaBefore = srOwner === undefined ? undefined : partnerAreaMrSignature(s, srOwner);
       const removeResult = mutate.scene.removeToRemove(
         s,
         srUid,
         (a.cause as RemoveCause) ?? 'effect',
-        undefined,
-        { byPlayer: ctx.source.player, leaveInterceptDecision },
+        srByUid,
+        {
+          byPlayer: ctx.source.player,
+          leaveInterceptDecision,
+          skipSetCardReplacementInstanceIds,
+          ...(afterSceneRemove ? { afterSceneRemove } : {}),
+        },
       );
       if (removeResult.deferred && removeResult.pendingLeaveIntercept) {
         const pending = removeResult.pendingLeaveIntercept;
@@ -890,10 +1126,15 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
           player: pending.player,
           sourcePlayer: ctx.source.player,
           source: {
-            cardId: ctx.source.cardId ?? '',
-            abilityId: ctx.source.abilityId ?? '',
-            uid: ctx.source.uid ?? '',
-            ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}),
+             cardId: ctx.source.cardId ?? '',
+             abilityId: ctx.source.abilityId ?? '',
+             uid: ctx.source.uid ?? '',
+            ...(ctx.source.area ? { area: ctx.source.area } : {}),
+            ...(ctx.source.setCardId !== undefined ? { setCardId: ctx.source.setCardId } : {}),
+            ...(ctx.source.setCardInstanceId !== undefined ? { setCardInstanceId: ctx.source.setCardInstanceId } : {}),
+            ...(ctx.source.abilityOrigin !== undefined ? { abilityOrigin: ctx.source.abilityOrigin } : {}),
+            ...(ctx.source.abilityIndex !== undefined ? { abilityIndex: ctx.source.abilityIndex } : {}),
+             ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}),
             ...(ctx.source.triggerBatch !== undefined ? { triggerBatch: ctx.source.triggerBatch } : {}),
             ...(ctx.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: ctx.source.ownerChosenOrder } : {}),
             ...(ctx.source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: ctx.source.ownerOrderConfirmed } : {}),
@@ -910,19 +1151,21 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
         return;
       }
       if (removeResult.deferred) return;
-      if (
+      const removedToRemove = (
         srOwner !== undefined
         && srCardId !== undefined
+        && !removeResult.deferred
         && !removeResult.prevented
+        && removeResult.removed.uid === srUid
+        && removeResult.removed.cardId === srCardId
         && !s.players[srOwner].scene.some((card) => card.uid === srUid)
-        && s.players[srOwner].remove.filter((cardId) => cardId === srCardId).length === srRemoveCopiesBefore + 1
-      ) {
+        && removeResult.redirectedToPartner !== true
+      );
+      const redirectedToPartner = removeResult.redirectedToPartner === true;
+      if (!removedToRemove) (ctx.dyn ??= {}).chainStepNoApply = true;
+      if (removedToRemove) {
         recordPublicZoneMove(s, ctx, srOwner, 'scene', srOwner, 'remove', 1);
-      } else if (
-        srOwner !== undefined
-        && !removeResult.prevented
-        && redirectedSceneCardToPartnerArea(s, srOwner, srCardId, srPartnerAreaBefore)
-      ) {
+      } else if (redirectedToPartner && srOwner !== undefined) {
         recordPublicZoneMove(s, ctx, srOwner, 'scene', srOwner, 'partner', 1);
       }
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid });
@@ -1002,7 +1245,7 @@ export function atomSceneToHand(s: GameState, a: Record<string, unknown>, ctx: E
         : s.players[sthOwner].scene.find((card) => card.uid === sthUid)?.cardId;
       const sthHandBefore = sthOwner === undefined ? 0 : s.players[sthOwner].hand.length;
       const sthPartnerAreaBefore = sthOwner === undefined ? undefined : partnerAreaMrSignature(s, sthOwner);
-      mutate.scene.toHand(s, sthUid);
+      mutate.scene.toHand(s, sthUid, { cause: 'effect', byPlayer: ctx.source.player });
       if (sthOwner !== undefined && s.players[sthOwner].hand.length === sthHandBefore + 1) {
         recordEffectCausalOperation(s, ctx, {
           actor: ctx.source.player,
@@ -1054,7 +1297,7 @@ export function atomSceneToDeck(s: GameState, a: Record<string, unknown>, ctx: E
         : s.players[stdOwner].scene.find((card) => card.uid === stdUid)?.cardId;
       const stdDeckBefore = stdOwner === undefined ? 0 : s.players[stdOwner].deck.length;
       const stdPartnerAreaBefore = stdOwner === undefined ? undefined : partnerAreaMrSignature(s, stdOwner);
-      mutate.scene.toDeck(s, stdUid, stdPos);
+      mutate.scene.toDeck(s, stdUid, stdPos, { cause: 'effect', byPlayer: ctx.source.player });
       if (stdOwner !== undefined && s.players[stdOwner].deck.length === stdDeckBefore + 1) {
         recordPublicZoneMove(s, ctx, stdOwner, 'scene', stdOwner, 'deck', 1);
       } else if (
@@ -1096,7 +1339,9 @@ export function atomSceneToEvidence(s: GameState, a: Record<string, unknown>, ct
         : s.players[steOwner].scene.find((card) => card.uid === steUid)?.cardId;
       const steEvidenceBefore = steOwner === undefined ? 0 : s.players[steOwner].evidence.length;
       const stePartnerAreaBefore = steOwner === undefined ? undefined : partnerAreaMrSignature(s, steOwner);
-      mutate.scene.toEvidence(s, steUid, steFaceUp, ctx.source.cardId);
+      mutate.scene.toEvidence(s, steUid, steFaceUp, ctx.source.cardId, {
+        cause: 'effect', byPlayer: ctx.source.player,
+      });
       if (steOwner !== undefined && s.players[steOwner].evidence.length === steEvidenceBefore + 1) {
         recordPublicZoneMove(s, ctx, steOwner, 'scene', steOwner, 'evidence', 1, 'evidence');
       } else if (

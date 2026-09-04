@@ -168,6 +168,7 @@ describe('wave3 G04 — misread:performed observer', () => {
       mrUid = mutate.scene.enter(d, 'opp', 'MR', {}).uid;
       obsUid = mutate.scene.enter(d, 'self', 'OBS', {}).uid;
       rUid = mutate.scene.enter(d, 'self', 'R', {}).uid;
+      mutate.scene.setState(d, rUid, 'sleep');
       event.emit(d, 'reasoning:before-add', { uid: rUid, lpUsed: 1000 }, { player: 'self', uid: rUid });
     });
     expect(firedBy(after, 'misread:performed', obsUid), 'self side:opp observer fires').toBe(true);

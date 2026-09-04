@@ -193,22 +193,31 @@ describe('B05015 a2 — 【ヒラメキ】リムーブの レベル6以下[小�
   }
   // 実 UI 発火経路: emit → pendingHirameki → hiramekiResolve(fire) → sceneEnter pick が
   // pendingEffectPick(EffectPickerModal) に surface → effectPickResolve で pick/decline。
-  function fireHirameki(s: GameState): void {
-    const { pending } = openCaseHirameki(s, 'B05015', { actorCardId: B05015.id });
+  function fireHirameki(s: GameState): string {
+    const { actionId, pending } = openCaseHirameki(s, 'B05015', { actorCardId: B05015.id });
     expect(pending, 'ヒラメキ optional hook 検出 → pending push').not.toBeNull();
     expect(pending.cardId).toBe('B05015');
     const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' });
     expect(r.ok, 'hiramekiResolve fire ok').toBe(true);
+    return actionId;
+  }
+
+  function finishCaseAction(actionId: string): void {
+    for (let i = 0; i < 2 && useGameStateStore.getState().activeActionId === actionId; i++) {
+      expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
+    }
+    expect(useGameStateStore.getState().activeActionId).toBeNull();
   }
 
   it('fire → pick で レベル6以下 小嶋元太(KOJI6) のみ登場 / Lv7 小嶋元太・非小嶋元太は remove に残る', () => {
-    fireHirameki(evidenceState());
+    const actionId = fireHirameki(evidenceState());
     // sceneEnter pick が EffectPickerModal に surface。候補は filter 実評価で KOJI6 のみに絞られている。
     const pick = useGameStateStore.getState().pendingEffectPick!;
     expect(pick, 'sceneEnter pick が surface').not.toBeNull();
     expect(pick.candidates.map((c) => c.cardId), 'filter 実評価: 候補は Lv6 小嶋元太 のみ (Lv7/非小嶋元太 除外)').toEqual([KOJI6]);
     const r2 = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: pick.candidates[0].uid });
     expect(r2.ok, JSON.stringify(r2)).toBe(true);
+    finishCaseAction(actionId);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.some((c) => c.cardId === KOJI6), 'Lv6 小嶋元太 が登場').toBe(true);
     expect(after.players.self.remove, 'KOJI6 は remove から抜けた').not.toContain(KOJI6);
@@ -217,12 +226,13 @@ describe('B05015 a2 — 【ヒラメキ】リムーブの レベル6以下[小�
   });
 
   it('decline (pickedUid=null) → 有効候補があっても何も登場しない (「1枚まで」= 0選択許容)', () => {
-    fireHirameki(evidenceState());
+    const actionId = fireHirameki(evidenceState());
     const pick = useGameStateStore.getState().pendingEffectPick!;
     expect(pick.candidates.map((c) => c.cardId)).toEqual([KOJI6]);
     expect(pick.nMin, '「1枚まで」→ 0 選択可 (nMin 0)').toBe(0);
     const r2 = dispatchCurrentDecision({ type: 'effectPickResolve', pickedUid: null });
     expect(r2.ok).toBe(true);
+    finishCaseAction(actionId);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.length, '0 選択 → 誰も登場しない').toBe(0);
     expect([...after.players.self.remove].sort(), 'remove は全て残存').toEqual([KOJI6, KOJI7, OTHER, 'B05015'].sort());

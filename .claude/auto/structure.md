@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 301
-- **ファイル数**: 6033
+- **ファイル数**: 6900
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -484,6 +484,87 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-301.md` — 手札使用とswitch対象選択のTOCTOU
     - `BUG-302.md` — 観戦時の非公開デッキ公開境界
     - `BUG-303.md` — 【ターン①】の両プレイヤー共通ターン境界
+    - `BUG-304.md` — sceneRemoveの実適用とchain gate
+    - `BUG-305.md` — 選択したデッキカードの公開境界
+    - `BUG-306.md` — 公開表示と非公開順序選択の直列化
+    - `BUG-307.md` — 後段登場のスイッチ権限
+    - `BUG-308.md` — デッキ選択occurrenceの後段保持
+    - `BUG-309.md` — 満員現場スイッチの操作権限
+    - `BUG-310.md` — 必須順序選択のEscape結果
+    - `BUG-311.md` — 強制公開サーチの不要な順序選択
+    - `BUG-312.md` — decision再開時のsource identity欠落
+    - `BUG-313.md` — PR135/PR141の第2能力欠落
+    - `BUG-314.md` — 公開残りだけのshuffle範囲誤り
+    - `BUG-315.md` — 推理・アクション共通能力の推理側発動時点
+    - `BUG-316.md` — 推理キャラ離場後のcontinuation終了
+    - `BUG-317.md` — B05062の色・条件filter誤り
+    - `BUG-318.md` — 登場監視のplayer導出漏れ
+    - `BUG-319.md` — choose-intercept複数コピー欠落
+    - `BUG-320.md` — triggered付与のID衝突
+    - `BUG-321.md` — 短縮形sceneEnterの満杯現場スイッチ欠落
+    - `BUG-322.md` — cutin使用反応の解決順逆転
+    - `BUG-323.md` — B09016の「いる場合」を解決時評価できない
+    - `BUG-324.md` — キャラ限定sceneEnterの対象種別漏れ
+    - `BUG-325.md` — B04030の怪盗キッド候補へ黒羽快斗が混入
+    - `BUG-326.md` — B08006の重なったカードの同一性喪失
+    - `BUG-327.md` — B02067/Pのイベント使用時セット能力欠落
+    - `BUG-328.md` — B02067/P複数セット時の能力個体識別欠落
+    - `BUG-329.md` — 旧セーブの能力使用回数を見失う
+    - `BUG-330.md` — main actionのturn/phase admission欠落
+    - `BUG-331.md` — Souza公開snapshot欠落
+    - `BUG-332.md` — 宣言時効果のowner-orderとaction step admission
+    - `BUG-333.md` — deck look remainder refresh checkpoint
+    - `BUG-334.md` — deck-window public continuation loss
+    - `BUG-335.md` — effect-entry source omissions
+    - `BUG-336.md` — B09056 printed choice collapse
+    - `BUG-337.md` — contact action slot reuse
+    - `BUG-338.md` — B08034 rarity mismatch
+    - `BUG-339.md` — selected deck card publication
+    - `BUG-340.md` — causal continuation authority
+    - `BUG-341.md` — inherent sleep entry
+    - `BUG-342.md` — Next Hint optional-card admission
+    - `BUG-343.md` — YAIBA incident trait backfill
+    - `BUG-344.md` — B02061 optional evidence transfer
+    - `BUG-345.md` — B02047 contact immunity duration
+    - `BUG-346.md` — disguise replaced effective values
+    - `BUG-347.md` — optional if-hand feasibility
+    - `BUG-348.md` — Contact participant exit termination
+    - `BUG-349.md` — remaining inherent sleep entries
+    - `BUG-350.md` — autonomous full-scene effect entry
+    - `BUG-351.md` — B03096 reasoning timing
+    - `BUG-352.md` — B08074 Investigation continuation
+    - `BUG-353.md` — BUG-353: stacked-card identities were incorrectly hidden
+    - `BUG-354.md` — BUG-354: failed or deferred stacking ran the wrong chain tail
+    - `BUG-355.md` — BUG-355: exact case-feature identity was shortened
+    - `BUG-356.md` — BUG-356: D11005 used a fixed AP removal threshold
+    - `BUG-357.md` — declared prewalk decision authority
+    - `BUG-358.md` — B04048 registered all-card name authority
+    - `BUG-359.md` — Wave105 registered all-card name authority
+    - `BUG-360.md` — Wave107 cut-in declared-name authority
+    - `BUG-361.md` — Direct invoked Hirameki evidence movement
+    - `BUG-362.md` — B06025 own-scene target authority
+    - `BUG-363.md` — B06027 direct-invoke full-scene switch
+    - `BUG-364.md` — B06068 keyword-loss temporal boundary
+    - `BUG-365.md` — B02030 Cut-In negation
+    - `BUG-366.md` — B02039 set-card proxy interception
+    - `BUG-367.md` — B03102 reasoning reaction timing
+    - `BUG-368.md` — B05092 zero-selection shuffle
+    - `BUG-369.md` — Human pre-guard action reconciliation
+    - `BUG-370.md` — Pending decision publication order
+    - `BUG-371.md` — B07033 FILE6 Disguise omission
+    - `BUG-372.md` — Simultaneous set-card observer loss
+    - `BUG-373.md` — B07034 face-down trigger gate
+    - `BUG-374.md` — B07043 semantic choice labels
+    - `BUG-375.md` — Public hand reveal presentation omission
+    - `BUG-376.md` — Granted hand Cut-In filter omission
+    - `BUG-377.md` — Per-character mill crosses refresh boundary
+    - `BUG-378.md` — B08022 handAddFromRemove owner omission
+    - `BUG-379.md` — B08034 reasoning timing hook mismatch
+    - `BUG-380.md` — B08054 host-leave set-card replacement missing
+    - `BUG-381.md` — revealFromHand public occurrence missing
+    - `BUG-382.md` — Declared cost reaction overtakes source effect
+    - `BUG-383.md` — Hand level snapshot is lost on removal
+    - `BUG-384.md` — B09063 blocked draw skips trigger use
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -796,6 +877,79 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-26-02-rule-manual-ver2.5.md`
     - `2026-07-26-03-ct-p10-wave.md`
     - `2026-08-09-01-private-hosted-basic-release-gates.md`
+    - `2026-08-16-01-bug313-pr-leave-reveal.md`
+    - `2026-08-22-01-qa-wave27-effect-entry.md`
+    - `2026-08-22-02-qa-wave28-effect-entry.md`
+    - `2026-08-22-03-qa-wave29-effect-entry.md`
+    - `2026-08-22-04-qa-wave30-deck-look-zero-choice.md`
+    - `2026-08-22-05-qa-wave31-effect-entry.md`
+    - `2026-08-22-06-qa-wave32-shuffle-romance.md`
+    - `2026-08-22-07-qa-wave33-stacked-card-semantics.md`
+    - `2026-08-22-08-qa-wave34-set-card-lifecycle.md`
+    - `2026-08-23-01-qa-wave35-ability-occurrences.md`
+    - `2026-08-23-02-qa-wave36-self-only-evidence.md`
+    - `2026-08-23-03-qa-wave37-self-only-evidence.md`
+    - `2026-08-23-04-qa-wave38-file-assist-continuous.md`
+    - `2026-08-23-05-qa-wave39-file-assist-enter.md`
+    - `2026-08-23-06-qa-wave40-file-assist-action.md`
+    - `2026-08-23-07-qa-wave41-file-assist-declared.md`
+    - `2026-08-23-08-qa-wave42-file-assist-declared-remainder.md`
+    - `2026-08-23-09-qa-wave43-file-assist-nondeclared.md`
+    - `2026-08-23-10-qa-wave44-b07093-a1.md`
+    - `2026-08-23-11-qa-wave45-bond-partner-exclusion.md`
+    - `2026-08-23-12-qa-wave46-end-phase-main-boundary.md`
+    - `2026-08-23-13-qa-wave47-investigation-found.md`
+    - `2026-08-23-14-qa-wave48-action-declare-direct.md`
+    - `2026-08-23-15-qa-wave49-action-decisions.md`
+    - `2026-08-23-16-qa-wave50-stack-vs-set.md` — QA Wave50: stacked cards are not set cards
+    - `2026-08-23-17-qa-wave51-refresh-timing.md` — QA Wave51: defer refresh to remainder movement
+    - `2026-08-23-18-qa-wave52-effect-entry-remediation.md` — QA Wave52: restore effect-entry sources
+    - `2026-08-23-19-qa-wave53-evidence-cost.md` — QA Wave53: certify exact-two evidence costs
+    - `2026-08-23-20-qa-wave54-effect-entry-direct.md` — QA Wave54: certify direct effect-entry routes
+    - `2026-08-23-21-qa-wave55-effect-entry-nested.md` — QA Wave55: certify nested and physical entries
+    - `2026-08-23-22-qa-wave56-disguise-definition.md` — QA Wave56: certify the disguise definition
+    - `2026-08-23-23-qa-wave57-evidence-position.md` — QA Wave57: certify arbitrary evidence positions
+    - `2026-08-23-24-qa-wave58-hand-owner-cost.md` — QA Wave58: certify owner-only hand costs
+    - `2026-08-23-25-qa-wave59-deck-owner-cost.md` — QA Wave59: certify owner deck-top-three costs
+    - `2026-08-23-26-qa-wave60-stun-definition.md` — QA Wave60: certify the stun definition
+    - `2026-08-23-27-qa-wave61-full-scene-entry.md` — QA Wave61: certify full-scene effect entry
+    - `2026-08-23-28-qa-wave62-set-privacy.md` — QA Wave62: certify face-down set privacy
+    - `2026-08-23-29-qa-wave63-full-scene-entry.md` — QA Wave63: certify full-scene effect entry
+    - `2026-08-23-30-qa-wave64-short-deck-three.md` — QA Wave64: certify short top-three deck looks
+    - `2026-08-23-31-qa-wave65-short-deck-four.md` — QA Wave65: certify short top-four deck looks
+    - `2026-08-24-01-qa-wave66-nonpositive-ap.md` — QA Wave66: certify nonpositive AP
+    - `2026-08-24-02-qa-wave67-evidence-positions.md` — QA Wave67: certify arbitrary evidence positions
+    - `2026-08-24-03-qa-wave68-owner-cost.md` — QA Wave68: certify owner-only exact-three costs
+    - `2026-08-24-04-qa-wave69-event-yaiba.md` — QA Wave69: certify Event YAIBA
+    - `2026-08-24-05-qa-wave70-incomplete-cost.md` — QA Wave70: certify incomplete exact-three costs
+    - `2026-08-24-06-qa-wave71-owner-cost.md` — QA Wave71: certify owner-only exact-one costs
+    - `2026-08-24-07-qa-wave72-partner-limit.md` — QA Wave72: certify unbounded partner area
+    - `2026-08-24-08-qa-wave73-incomplete-deck-cost.md` — QA Wave73: certify incomplete deck costs
+    - `2026-08-24-09-qa-wave74-self-selection.md` — QA Wave74: certify source self selection
+    - `2026-08-24-10-qa-wave75-effective-level.md` — QA Wave75: certify effective-level self count
+    - `2026-08-24-11-qa-wave76-self-selection.md` — QA Wave76: certify B06067 self selection
+    - `2026-08-24-12-qa-wave77-name-replacement.md` — QA Wave77: certify PR099 name replacement
+    - `2026-08-24-13-qa-wave78-set-event.md` — QA Wave78: certify set events without hosts
+    - `2026-08-24-14-qa-wave79-evidence.md` — QA Wave79: certify opponent evidence gain
+    - `2026-08-24-15-qa-wave80-disguise-entry.md` — QA Wave80: separate disguise from entry
+    - `2026-08-24-16-qa-wave81-disguise-duration.md` — QA Wave81: certify disguise observers and duration
+    - `2026-08-24-17-qa-wave82-multicolor-case.md` — QA Wave82: certify multicolor case membership
+    - `2026-08-24-18-qa-wave83-disguise-contract.md` — QA Wave83: certify disguise replacement contract
+    - `2026-08-24-19-qa-wave84-full-scene-event-entry.md` — QA Wave84: certify full-scene event entry
+    - `2026-08-24-20-qa-wave85-inherent-sleep-entry.md` — QA Wave85: fix and certify inherent sleep entry
+    - `2026-08-26-01-pending-decision-order.md`
+    - `2026-08-26-02-qa-waves166-167.md`
+    - `2026-08-26-03-qa-waves168-169.md`
+    - `2026-08-26-04-qa-waves170-171.md`
+    - `2026-08-26-05-qa-waves172-173.md`
+    - `2026-08-26-06-qa-waves176-177.md`
+    - `2026-08-26-07-qa-waves178-179.md`
+    - `2026-08-26-08-qa-waves180-181.md`
+    - `2026-08-26-09-qa-waves182-183.md`
+    - `2026-08-26-10-qa-waves184-185.md` — QA adjudication Waves184-185
+    - `2026-08-26-11-qa-waves186-187.md` — QA adjudication Waves186-187
+    - `2026-08-31-01-qa-waves188-189.md` — QA adjudication Waves188-189
+    - `2026-08-31-03-qa-wave192.md` — QA adjudication Wave192
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1479,6 +1633,94 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-28-you-vs-cpu-human-validation-row-055-attempt-3.md` — YOU-vs-CPU row 055 attempt 3
     - `2026-07-29-engine-adversarial.md` — Session memory
     - `2026-08-09-ui-quality-causal-public-match.md` — UI品質・因果表示プログラム（2026-08-02〜09）
+    - `2026-08-14-qa-engine-public-evidence.md` — QA engine and public-evidence decisions
+    - `2026-08-14-qa-wave13-match-cost.md` — QA Wave 13 and memory rotation
+    - `2026-08-21-engine-memory-rotation.md` — Engine memory rotation — 2026-08-21
+    - `2026-08-22-qa-waves17-26.md` — QA runtime Waves 17-26
+    - `2026-08-23-qa-memory-waves27-34.md` — QA runtime memory rotation: Waves27-34
+    - `2026-08-23-qa-wave35.md` — QA runtime Wave35 physical ability occurrence identity
+    - `2026-08-23-qa-waves36-37.md` — QA runtime Waves36-37 self-only evidence costs
+    - `2026-08-23-qa-waves38-39.md` — QA runtime Waves38-39 assisting partners in FILE conditions
+    - `2026-08-23-qa-waves40-41.md` — QA runtime Waves40-41 assisted FILE action and declared paths
+    - `2026-08-23-qa-waves42-43.md` — QA runtime Waves42-43 closing implemented assisted-FILE routes
+    - `2026-08-23-qa-waves44-45.md` — QA runtime Waves44-45 B07093 and Bond partner exclusion
+    - `2026-08-23-qa-waves46-47.md` — QA runtime Waves46-47 end phase and Investigation
+    - `2026-08-23-qa-waves48-49.md` — QA runtime Waves48-49 action declaration timing
+    - `2026-08-23-qa-waves50-51.md` — QA adjudication Waves50-51
+    - `2026-08-23-qa-waves52-53.md` — QA adjudication Waves52-53
+    - `2026-08-23-qa-waves54-55.md` — QA adjudication Waves54-55
+    - `2026-08-23-qa-waves56-57.md` — QA adjudication Waves56-57
+    - `2026-08-23-qa-waves58-59.md` — QA adjudication Waves58-59
+    - `2026-08-23-qa-waves60-61.md` — QA adjudication Waves60-61
+    - `2026-08-23-qa-waves62-63.md` — QA adjudication Waves62-63
+    - `2026-08-23-qa-waves64-65.md` — QA adjudication Waves64-65
+    - `2026-08-24-qa-waves66-67.md` — QA adjudication Waves66-67
+    - `2026-08-24-qa-waves68-69.md` — QA adjudication Waves68-69
+    - `2026-08-24-qa-waves70-71.md` — QA adjudication Waves70-71
+    - `2026-08-24-qa-waves72-73.md` — QA adjudication Waves72-73
+    - `2026-08-24-qa-waves74-75.md` — QA adjudication Waves74-75
+    - `2026-08-24-qa-waves76-77.md` — QA adjudication Waves76-77
+    - `2026-08-24-qa-waves78-79.md` — QA adjudication Waves78-79
+    - `2026-08-24-qa-waves80-81.md` — QA adjudication Waves80-81
+    - `2026-08-24-qa-waves82-83.md` — QA adjudication Waves82-83
+    - `2026-08-24-qa-waves84-85.md` — QA adjudication Waves84-85
+    - `2026-08-24-qa-waves86-87.md` — QA adjudication Waves86-87
+    - `2026-08-24-qa-waves88-89.md` — QA adjudication Waves88-89
+    - `2026-08-24-qa-waves90-91.md` — QA adjudication Waves90-91
+    - `2026-08-25-qa-waves100-101.md` — QA adjudication Waves100-101
+    - `2026-08-25-qa-waves102-103.md` — QA adjudication Waves102-103
+    - `2026-08-25-qa-waves104-105.md` — QA adjudication Waves104-105
+    - `2026-08-25-qa-waves106-107.md` — QA adjudication Waves106-107
+    - `2026-08-25-qa-waves108-109.md` — QA adjudication Waves108-109
+    - `2026-08-25-qa-waves110-111.md` — QA adjudication Waves110-111
+    - `2026-08-25-qa-waves112-113.md` — QA adjudication Waves112-113
+    - `2026-08-25-qa-waves114-115.md` — QA adjudication Waves114-115
+    - `2026-08-25-qa-waves116-117.md` — QA adjudication Waves116-117
+    - `2026-08-25-qa-waves118-119.md` — QA adjudication Waves118-119
+    - `2026-08-25-qa-waves120-121.md` — QA adjudication Waves120-121
+    - `2026-08-25-qa-waves122-123.md` — QA adjudication Waves122-123
+    - `2026-08-25-qa-waves124-125.md` — QA adjudication Waves124-125
+    - `2026-08-25-qa-waves126-127.md` — QA adjudication Waves126-127
+    - `2026-08-25-qa-waves128-129.md` — QA adjudication Waves128-129
+    - `2026-08-25-qa-waves130-131.md` — QA adjudication Waves130-131
+    - `2026-08-25-qa-waves132-133.md` — QA adjudication Waves132-133
+    - `2026-08-25-qa-waves134-135.md` — QA adjudication Waves134-135
+    - `2026-08-25-qa-waves136-137.md` — QA adjudication Waves136-137
+    - `2026-08-25-qa-waves138-139.md` — QA adjudication Waves138-139
+    - `2026-08-25-qa-waves140-141.md` — QA adjudication Waves140-141
+    - `2026-08-25-qa-waves142-143.md` — QA adjudication Waves142-143
+    - `2026-08-25-qa-waves144-145.md` — QA adjudication Waves144-145
+    - `2026-08-25-qa-waves146-147.md` — QA adjudication Waves146-147
+    - `2026-08-25-qa-waves148-149.md` — QA adjudication Waves148-149
+    - `2026-08-25-qa-waves150-151.md` — QA adjudication Waves150-151
+    - `2026-08-25-qa-waves152-153.md` — QA adjudication Waves152-153
+    - `2026-08-25-qa-waves154-155.md` — QA adjudication Waves154-155
+    - `2026-08-25-qa-waves156-157.md` — QA adjudication Waves156-157
+    - `2026-08-25-qa-waves158-159.md` — QA adjudication Waves158-159
+    - `2026-08-25-qa-waves92-93.md` — QA adjudication Waves92-93
+    - `2026-08-25-qa-waves94-95.md` — QA adjudication Waves94-95
+    - `2026-08-25-qa-waves96-97.md` — QA adjudication Waves96-97
+    - `2026-08-25-qa-waves98-99.md` — QA adjudication Waves98-99
+    - `2026-08-26-qa-waves160-161.md` — QA adjudication Waves160-161
+    - `2026-08-26-qa-waves162-163.md` — QA adjudication Waves162-163
+    - `2026-08-26-qa-waves164-165.md` — QA adjudication Waves164-165
+    - `2026-08-26-qa-waves166-167.md` — QA adjudication Waves166-167
+    - `2026-08-26-qa-waves168-169.md` — QA adjudication Waves168-169
+    - `2026-08-26-qa-waves170-171.md` — QA adjudication Waves170-171
+    - `2026-08-26-qa-waves172-173.md` — QA adjudication Waves172-173
+    - `2026-08-26-qa-waves174-175.md` — QA adjudication Waves174-175
+    - `2026-08-26-qa-waves176-177.md` — QA adjudication Waves176-177
+    - `2026-08-26-qa-waves178-179.md` — QA adjudication Waves178-179
+    - `2026-08-26-qa-waves180-181.md` — QA adjudication Waves180-181
+    - `2026-08-26-qa-waves182-183.md` — QA adjudication Waves182-183
+    - `2026-08-26-qa-waves184-185.md` — QA adjudication Waves184-185
+    - `2026-08-26-qa-waves186-187.md` — QA adjudication Waves186-187
+    - `2026-08-31-qa-wave192.md` — QA adjudication Wave192
+    - `2026-08-31-qa-waves188-189.md` — QA adjudication Waves188-189
+    - `2026-08-31-qa-waves190-191.md` — QA adjudication Waves190-191
+    - `2026-09-01-qa-waves195-196.md` — QA adjudication Waves195-196
+    - `2026-09-01-qa-waves197-198.md` — QA adjudication Waves197-198
+    - `2026-09-01-qa-waves199-200.md` — QA adjudication Waves199-200
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1529,7 +1771,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D11013.md` — D11013 萩原千速 (キャラ・カットイン)
       - `D11014.md` — D11014 横溝重悟 (キャラ・疾風+宣言)
       - `D11015.md` — D11015 目暮十三 (キャラ・アクション時+登場時)
-      - `D11016.md` — D11016 大江忍 (キャラ・ガード反撃)
+      - `D11016.md` — D11016 大江忍 (キャラ・指定対象ガード支援)
       - `D11017.md` — D11017 高木渉 (キャラ・カットイン)
       - `D11018.md` — D11018 佐藤美和子 (キャラ・カットイン簡易)
       - `D11019.md` — D11019 15の受難 (イベント)
@@ -1563,64 +1805,334 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `implementation-plan.md` — Codex Quality Implementation Plan
     - **`grounding/`**
       - `B01006.md` — B01006 / B01006P grounding
+      - `B01011.md` — B01011 grounding
       - `B01020.md` — B01020 毛利小五郎 grounding (2026-07-10, sonnet5)
+      - `B01022.md` — B01022 grounding
+      - `B01023.md` — B01023 grounding
+      - `B01023P.md` — B01023P grounding
+      - `B01039.md` — B01039 grounding
+      - `B01050.md` — B01050 grounding
+      - `B01052.md` — B01052 grounding
       - `B01057.md` — B01057 「最も出会いたくない…恋人ってトコロかな？」 grounding (2026-07-10, fable)
+      - `B01065.md` — B01065 grounding
+      - `B01069.md` — B01069 grounding
       - `B01070.md` — B01070 アンドレ・キャメル grounding (2026-07-10, sonnet5)
+      - `B01084.md` — B01084 / B01084P 降谷零 grounding
+      - `B01085.md` — B01085 安室透 grounding
       - `B01092.md` — B01092 松田陣平 grounding (2026-07-10, sonnet5)
+      - `B01095.md` — B01095 「僕の日本から…」 grounding
+      - `B02002.md` — B02002 江戸川コナン grounding
+      - `B02008.md` — B02008 grounding
+      - `B02014.md` — B02014 少年探偵団の活躍 grounding
+      - `B02019.md` — B02019 grounding
+      - `B02019P.md` — B02019P grounding
+      - `B02021.md` — B02021 grounding
       - `B02022.md` — B02022 鬼丸猛 grounding (2026-07-10, sonnet5)
       - `B02023.md` — B02023 遠山和葉 grounding
+      - `B02031.md` — B02031 grounding
+      - `B02038.md` — B02038 grounding
       - `B02039.md` — B02039 工藤優作 grounding (2026-07-10, fable)
-      - `B02067.md` — B02067 チョーカー型変声機 grounding (2026-07-10, sonnet5)
+      - `B02041.md` — B02041 / B02041P grounding
+      - `B02043.md` — B02043 grounding
+      - `B02044.md` — B02044 / B02044P grounding
+      - `B02045.md` — B02045 grounding
+      - `B02047.md` — B02047 grounding
+      - `B02052.md` — B02052 grounding
+      - `B02057.md` — B02057 / B02057P grounding
+      - `B02058.md` — B02058 / B02058P grounding
+      - `B02060.md` — B02060 grounding
+      - `B02061.md` — B02061 grounding
+      - `B02063.md` — B02063 羽田秀吉 grounding
+      - `B02067.md` — B02067 grounding
+      - `B02072.md` — B02072 / B02072P 降谷零 grounding
+      - `B02083.md` — B02083 grounding
+      - `B02086.md` — B02086 / B02086P grounding
+      - `B02088.md` — B02088 / B02088P grounding
+      - `B03013.md` — B03013 grounding
+      - `B03018.md` — B03018 grounding
+      - `B03019.md` — B03019 grounding
       - `B03020.md` — B03020 毛利蘭 grounding
       - `B03023.md` — B03023 脇田兼則 grounding
       - `B03030.md` — B03030 / B03030P grounding
       - `B03032.md` — B03032 grounding
       - `B03040.md` — B03040 和田進一 grounding (2026-07-10, sonnet5)
+      - `B03041.md` — B03041 grounding
+      - `B03041P.md` — B03041P grounding
       - `B03042.md` — B03042 grounding
+      - `B03050.md` — B03050 grounding
+      - `B03051.md` — B03051 grounding
+      - `B03052.md` — B03052 / B03052P grounding
+      - `B03062.md` — B03062 私はもう貴方のそばに… grounding
+      - `B03079.md` — B03079 grounding
+      - `B03084.md` — B03084 / B03084P 降谷零 grounding
+      - `B03085.md` — B03085 grounding
+      - `B03088.md` — B03088 grounding
+      - `B03094.md` — B03094 / B03094P grounding
+      - `B03095.md` — B03095 grounding
+      - `B03102.md` — B03102 grounding
       - `B03111.md` — B03111 バーボン grounding (2026-07-10, sonnet5)
+      - `B03112.md` — B03112 / B03112P grounding
+      - `B03120.md` — B03120 grounding
+      - `B03127.md` — B03127 grounding
+      - `B03129.md` — B03129 / B03129P grounding
       - `B04003.md` — B04003 工藤新一 grounding (2026-07-10, sonnet5)
       - `B04018.md` — B04018 / B04018P 遠山和葉 grounding (2026-08-13, gpt-5.6-terra high)
       - `B04018P.md` — B04018P 遠山和葉 grounding (2026-07-14, gpt-5.6-terra high)
+      - `B04023.md` — B04023 遠山銀司郎 grounding
       - `B04027.md` — B04027 grounding
       - `B04028.md` — B04028 grounding
       - `B04030.md` — B04030 grounding
+      - `B04032.md` — B04032 / B04032P 白馬探 grounding
+      - `B04046.md` — B04046 / B04046P grounding
       - `B04048.md` — B04048/B04048P 羽田秀𠮷 grounding (2026-07-10, fable)
       - `B04055.md` — B04055 grounding
       - `B04059.md` — B04059 水無怜奈 grounding
+      - `B04068.md` — B04068 安室透 grounding
       - `B04073.md` — B04073 千葉和伸 grounding (2026-07-10, sonnet5)
-      - `B05008.md` — B05008 / B05008P grounding
-      - `B05009.md` — B05009 毛利蘭 grounding (2026-07-10, sonnet5)
+      - `B04074.md` — B04074 / B04074P 降谷零 grounding
+      - `B04077.md` — B04077 / B04077P grounding
+      - `B04090.md` — B04090 ライ grounding
+      - `B05007.md` — B05007 妃英理 grounding
+      - `B05008.md` — B05008 / B05008P 灰原哀 grounding
+      - `B05009.md` — B05009 / B05009P 毛利蘭 grounding
+      - `B05015.md` — B05015 小嶋元次 grounding
+      - `B05016.md` — B05016 小嶋元太 grounding
+      - `B05021.md` — B05021 grounding
+      - `B05024.md` — B05024 grounding
       - `B05028P.md` — B05028P grounding
-      - `B05048.md` — B05048 grounding
-      - `B05063.md` — B05063/B05063P 園子のアブない夏物語 (事件) grounding (2026-07-10, fable)
+      - `B05047.md` — B05047 grounding
+      - `B05048.md` — B05048 黒羽快斗 grounding
+      - `B05051.md` — B05051 京極真 grounding
+      - `B05052.md` — B05052 工藤優作 grounding
+      - `B05055.md` — B05055 grounding
+      - `B05056.md` — B05056 grounding
+      - `B05062.md` — B05062 grounding
+      - `B05063.md` — B05063 grounding
+      - `B05077.md` — B05077 ジョディ・サンテミリオン grounding
       - `B05080.md` — B05080 timing grounding
+      - `B05083.md` — B05083 grounding
       - `B05086P.md` — grounding dossier: B05086P (自動生成 2026-07-13)
+      - `B05090.md` — B05090 grounding
+      - `B05091.md` — B05091 / B05091P 風見裕也 grounding
+      - `B05092.md` — B05092 grounding
+      - `B05094.md` — B05094 grounding
+      - `B05108.md` — B05108 バーボン grounding
       - `B06003.md` — B06003/B06003P 毛利蘭＆江戸川コナン (MR キャラ) grounding (2026-07-10, fable)
       - `B06005.md` — B06005 阿笠博士 (R/RP) grounding (2026-07-10, sonnet5)
-      - `B06020.md` — B06020 佐々木小次郎 grounding (2026-07-10, sonnet5)
+      - `B06006.md` — B06006 江戸川コナン grounding
+      - `B06008.md` — B06008 仮面ヤイバー grounding
+      - `B06012.md` — B06012 grounding
+      - `B06012P.md` — B06012P grounding
+      - `B06013.md` — B06013 grounding
+      - `B06017.md` — B06017 grounding
+      - `B06018.md` — B06018 grounding
+      - `B06020.md` — B06020 grounding
       - `B06027.md` — B06027 grounding
+      - `B06028.md` — B06028 grounding
+      - `B06034.md` — B06034 grounding
+      - `B06035.md` — B06035 grounding
+      - `B06036.md` — B06036 grounding
       - `B06042.md` — B06042 ここで会うたが百年目 (イベント) grounding (2026-07-10, sonnet5)
+      - `B06043.md` — B06043 / B06043P grounding
+      - `B06046.md` — B06046 鉄刃 grounding
+      - `B06047.md` — B06047 鉄刃 grounding
+      - `B06048.md` — B06048 峰さやか grounding
+      - `B06049.md` — B06049 佐々木小次郎 grounding
+      - `B06050.md` — B06050 grounding
+      - `B06051.md` — B06051 grounding
+      - `B06052.md` — B06052 grounding
+      - `B06053.md` — B06053 鉄刃 grounding
+      - `B06057.md` — B06057 ゲロ田ゲロ左エ門 grounding
+      - `B06058.md` — B06058 庄之介 grounding
+      - `B06062.md` — B06062 かみなり斬り grounding
+      - `B06063.md` — B06063 せんぷう剣 grounding
+      - `B06064.md` — B06064 刃新陰流風車 grounding
+      - `B06065.md` — B06065 grounding
       - `B06066.md` — B06066/B06066P 怪盗キッド＆白馬探 (MR キャラ) grounding (2026-07-10, fable)
-      - `B07008.md` — B07008 小嶋元太 grounding (2026-07-10, fable)
+      - `B06067.md` — B06067 grounding
+      - `B06072.md` — B06072 grounding
+      - `B06076.md` — B06076 ジェイムズ・ブラック grounding
+      - `B06087.md` — B06087 萩原千速 grounding
+      - `B06088.md` — B06088 grounding
+      - `B06090.md` — B06090 grounding
+      - `B06091.md` — B06091 大江忍 grounding
+      - `B06092.md` — B06092 金丸嶺太 grounding
+      - `B06093.md` — B06093 山村ミサオ grounding
+      - `B06095.md` — B06095 grounding
+      - `B06098.md` — B06098 ベルモット＆シェリー grounding
+      - `B06103.md` — B06103 ジン grounding
+      - `B06105.md` — B06105 grounding
+      - `B06109.md` — B06109 紅の修学旅行 grounding
+      - `B07001.md` — B07001 / B07001P / B07001P2 grounding
+      - `B07003.md` — B07003 / B07003P grounding
+      - `B07004.md` — B07004 / B07004P grounding
+      - `B07005.md` — B07005 grounding
+      - `B07008.md` — B07008 grounding
+      - `B07009.md` — B07009 / B07009P grounding
+      - `B07010.md` — B07010 grounding
+      - `B07011.md` — B07011 grounding
+      - `B07012.md` — B07012 / B07012P grounding
       - `B07013.md` — B07013 grounding
+      - `B07015.md` — B07015 / B07015P grounding
+      - `B07017.md` — B07017 / B07017P grounding
+      - `B07020.md` — B07020 / B07020P grounding
+      - `B07023.md` — B07023 / B07023P 光本兵我 grounding
+      - `B07024.md` — B07024 grounding
+      - `B07030.md` — B07030 grounding
       - `B07030P.md` — grounding dossier: B07030P (自動生成 2026-07-13)
       - `B07030P2.md` — grounding dossier: B07030P2 (自動生成 2026-07-13)
+      - `B07031.md` — B07031 / B07031P grounding
+      - `B07032.md` — B07032 / B07032P grounding
+      - `B07033.md` — B07033 / B07033P / B07033P2 grounding
+      - `B07034.md` — B07034 / B07034P grounding
+      - `B07035.md` — B07035 古畑恵 grounding
+      - `B07037.md` — B07037 grounding
+      - `B07039.md` — B07039 / B07039P grounding
+      - `B07043.md` — B07043 grounding
+      - `B07044.md` — B07044 grounding
+      - `B07045.md` — B07045 セリザベス女王 grounding
+      - `B07046.md` — B07046 grounding
+      - `B07047.md` — B07047 / B07047P grounding
+      - `B07048.md` — B07048 grounding
+      - `B07050.md` — B07050 grounding
+      - `B07051.md` — B07051 grounding
+      - `B07052.md` — B07052 grounding
+      - `B07053.md` — B07053 grounding
+      - `B07055.md` — B07055 / B07055P grounding
+      - `B07056.md` — B07056 / B07056P grounding
+      - `B07057.md` — B07057 / B07057P grounding
+      - `B07058.md` — B07058 / B07058P grounding
+      - `B07059.md` — B07059 grounding
+      - `B07061.md` — B07061 grounding
       - `B07061P.md` — grounding dossier: B07061P (自動生成 2026-07-13)
-      - `B07100.md` — B07100 コルン grounding (2026-07-10, fable)
-      - `B08003.md` — B08003 阿笠博士 (SR/SRP) grounding (2026-07-10, sonnet5)
+      - `B07062.md` — B07062 / B07062P grounding
+      - `B07063.md` — B07063 / B07063P grounding
+      - `B07065.md` — B07065 / B07065P grounding
+      - `B07066.md` — B07066 / B07066P grounding
+      - `B07068.md` — B07068 / B07068P grounding
+      - `B07069.md` — B07069 本堂瑛海 grounding
+      - `B07070.md` — B07070 grounding
+      - `B07072.md` — B07072 澁谷夏子 grounding
+      - `B07073.md` — B07073 / B07073P grounding
+      - `B07074.md` — B07074 grounding
+      - `B07075.md` — B07075 grounding
+      - `B07077.md` — B07077 grounding
+      - `B07079.md` — B07079 / B07079P grounding
+      - `B07082.md` — B07082 / B07082P grounding
+      - `B07085.md` — B07085 grounding
+      - `B07086.md` — B07086 grounding
+      - `B07087.md` — B07087 / B07087P grounding
+      - `B07088.md` — B07088 山村ミサオ grounding
+      - `B07089.md` — B07089 grounding
+      - `B07090.md` — B07090 / B07090P grounding
+      - `B07091.md` — B07091 / B07091P grounding
+      - `B07093.md` — B07093 / B07093P バーボン＆ライ grounding
+      - `B07094.md` — B07094 / B07094P grounding
+      - `B07096.md` — B07096 grounding
+      - `B07098.md` — B07098 / B07098P grounding
+      - `B07100.md` — B07100 コルン grounding
+      - `B07103.md` — B07103 / B07103P grounding
+      - `B07104.md` — B07104 / B07104P grounding
+      - `B08002.md` — B08002 / B08002P grounding
+      - `B08003.md` — B08003 / B08003P grounding
+      - `B08004.md` — B08004 / B08004P grounding
+      - `B08006.md` — B08006 小嶋元太 grounding
+      - `B08007.md` — B08007 円谷光彦 grounding
+      - `B08008.md` — B08008 吉田歩美 grounding
+      - `B08009.md` — B08009 grounding
+      - `B08010.md` — B08010 grounding
+      - `B08012.md` — B08012 / B08012P grounding
+      - `B08014.md` — B08014 / B08014P grounding
+      - `B08015.md` — B08015 若狭留美 grounding
+      - `B08016.md` — B08016 grounding
       - `B08017.md` — B08017 / B08017P grounding
-      - `B08019.md` — B08019 大岡紅葉＆伊織無我 (MR/MRP) grounding (2026-07-10, sonnet5)
-      - `B08047.md` — B08047/B08047P 沖矢昴 grounding (2026-07-10, fable)
+      - `B08019.md` — B08019 / B08019P grounding
+      - `B08020.md` — B08020 / B08020P grounding
+      - `B08021.md` — B08021 grounding
+      - `B08022.md` — B08022 grounding
+      - `B08024.md` — B08024 grounding
+      - `B08025.md` — B08025 / B08025P grounding
+      - `B08026.md` — B08026 grounding
+      - `B08027.md` — B08027 grounding
+      - `B08028.md` — B08028 grounding
+      - `B08029.md` — B08029 / B08029P grounding
+      - `B08030.md` — B08030 / B08030P grounding
+      - `B08032.md` — B08032 / B08032P grounding
+      - `B08033.md` — B08033 / B08033P grounding
+      - `B08034.md` — B08034 / B08034P grounding
+      - `B08035.md` — B08035 grounding
+      - `B08036.md` — B08036 grounding
+      - `B08037.md` — B08037 grounding
+      - `B08038.md` — B08038 grounding
+      - `B08043.md` — B08043 grounding
+      - `B08044.md` — B08044 / B08044P grounding
+      - `B08046.md` — B08046 grounding
+      - `B08047.md` — B08047 / B08047P grounding
+      - `B08048.md` — B08048 grounding
+      - `B08050.md` — B08050 宮野明美 grounding
+      - `B08051.md` — B08051 grounding
+      - `B08054.md` — B08054 grounding
+      - `B08055.md` — B08055 grounding
+      - `B08056.md` — B08056 宮野厚司 grounding
+      - `B08057.md` — B08057 grounding
+      - `B08059.md` — B08059 / B08059P grounding
+      - `B08060.md` — B08060 / B08060P grounding
+      - `B08062.md` — B08062 grounding
+      - `B08063.md` — B08063 / B08063P grounding
+      - `B08064.md` — B08064 grounding
+      - `B08065.md` — B08065 大和敢助 grounding
+      - `B08066.md` — B08066 / B08066P grounding
+      - `B08067.md` — B08067 / B08067P grounding
+      - `B08069.md` — B08069 grounding
+      - `B08071.md` — B08071 grounding
+      - `B08072.md` — B08072 grounding
+      - `B08073.md` — B08073 高木渉 grounding
       - `B08074.md` — B08074 降谷零 grounding
+      - `B08075.md` — B08075 / B08075P grounding
+      - `B08076.md` — B08076 揺れる警視庁 grounding
+      - `B08078.md` — B08078 / B08078P grounding
+      - `B08079.md` — B08079 / B08079P grounding
       - `B08081.md` — B08081 広田雅美 grounding (2026-07-10, sonnet5)
+      - `B08082.md` — B08082 grounding
+      - `B08083.md` — B08083 ラム grounding
+      - `B08085.md` — B08085 grounding
+      - `B08086.md` — B08086 grounding
+      - `B08087.md` — B08087 grounding
+      - `B08090.md` — B08090 grounding
+      - `B08091.md` — B08091 grounding
+      - `B08092.md` — B08092 / B08092P grounding
+      - `B08093.md` — B08093 / B08093P grounding
+      - `B08094.md` — B08094 / B08094P grounding
+      - `B09002.md` — B09002 / B09002P 工藤新一&毛利蘭 grounding
+      - `B09003.md` — B09003 / B09003P grounding
+      - `B09004.md` — B09004 / B09004P grounding
+      - `B09005.md` — B09005 grounding
+      - `B09007.md` — B09007 脇田兼則 grounding
+      - `B09010.md` — B09010 阿笠博士 grounding
       - `B09019.md` — B09019/B09019P 「くさるなよ！」 (イベント) grounding (2026-07-10, fable)
-      - `B09024.md` — grounding dossier: B09024（世良真純）
+      - `B09024.md` — B09024 服部平蔵 grounding
       - `B09033.md` — grounding dossier: B09033
       - `B09033P.md` — grounding dossier: B09033P
+      - `B09036.md` — B09036 怪盗キッド grounding
+      - `B09038.md` — B09038 / B09038P grounding
       - `B09047.md` — B09047 grounding
+      - `B09048.md` — B09048 grounding
+      - `B09049.md` — B09049 南條欽治 grounding
       - `B09052.md` — B09052 grounding
       - `B09052P.md` — B09052P grounding
-      - `B09112.md` — B09112 キッドVS安室 王妃の前髪 (事件) grounding (2026-07-10, sonnet5)
+      - `B09055.md` — B09055 世良真純 grounding
+      - `B09056.md` — B09056 赤井秀一 grounding
+      - `B09057.md` — B09057 grounding
+      - `B09060.md` — B09060 沖矢昴 grounding
+      - `B09065.md` — B09065 マーク grounding
+      - `B09073.md` — B09073 萩原研二 grounding
+      - `B09074.md` — B09074 / B09074P / B09074P2 grounding
+      - `B09078.md` — B09078 榎本梓 grounding
+      - `B09079.md` — B09079 佐藤美和子 grounding
+      - `B09106.md` — B09106 暗殺計画 grounding
+      - `B09109.md` — B09109 / B09109P grounding
+      - `B09111.md` — B09111 grounding
+      - `B09112.md` — B09112 grounding
       - `B10001.md` — B10001 grounding
       - `B10002.md` — B10002 grounding
       - `B10003.md` — B10003 工藤新一 grounding
@@ -1663,11 +2175,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B10038.md` — B10038
       - `B10039.md` — B10039 白馬探 grounding
       - `B10040.md` — B10040
+      - `B10045.md` — B10045 中森銀三 grounding
       - `B10046.md` — B10046
       - `B10047.md` — B10047 grounding
       - `B10050.md` — B10050 / B10050P grounding
       - `B10052.md` — B10052
       - `B10053.md` — B10053
+      - `B10054.md` — B10054 / B10054P grounding
       - `B10056.md` — B10056 勝又水菜
       - `B10057.md` — B10057
       - `B10060.md` — B10060 grounding
@@ -1683,14 +2197,20 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B10070.md` — B10070 grounding
       - `B10071.md` — B10071 grounding
       - `B10074.md` — B10074 grounding
+      - `B10077.md` — B10077 萩原研二 grounding
       - `B10081.md` — B10081 grounding
+      - `B10082.md` — B10082 grounding
+      - `B10083.md` — B10083 grounding
       - `B10084.md` — B10084 grounding
+      - `B10085.md` — B10085 grounding
       - `B10086.md` — B10086 grounding
       - `B10087.md` — B10087 grounding
       - `B10088.md` — B10088 grounding
+      - `B10089.md` — B10089 grounding
       - `B10090.md` — B10090 grounding
       - `B10091.md` — B10091 grounding
       - `B10094.md` — B10094 grounding
+      - `B10095.md` — B10095 ベルモット grounding
       - `B10096.md` — B10096 / B10096P 「何の真似だ…」
       - `B10097.md` — B10097 grounding
       - `B10098.md` — B10098 / B10098P grounding
@@ -1698,17 +2218,78 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B10100.md` — B10100 工藤新一NYの事件
       - `B10101.md` — B10101 / B10101P grounding
       - `B10102.md` — B10102 / B10102P grounding
+      - `BUG-311-forced-reveal-shuffle.md` — BUG-311 forced reveal / whole-deck shuffle grounding
+      - `D01012.md` — D01012 grounding
+      - `D02004.md` — D02004 服部平次 grounding
+      - `D02008.md` — D02008 服部平蔵 grounding
+      - `D02013.md` — D02013 grounding
+      - `D05007.md` — D05007 grounding
       - `D06003.md` — D06003 服部平次 grounding (2026-07-10, fable)
       - `D06004.md` — D06004 服部平次 grounding (2026-07-10, sonnet5)
       - `D06013.md` — D06013 白馬探 grounding (2026-07-10, sonnet 調査 + S2 session 裁定)
+      - `D06016.md` — D06016 grounding
       - `D06021.md` — D06021 服部平次 grounding (2026-07-10, sonnet5)
       - `D06023.md` — D06023 服部平次 grounding (2026-07-10, sonnet5)
-      - `D10022.md` — D10022 毛利蘭 grounding (2026-07-10, sonnet5)
+      - `D08005.md` — D08005 grounding
+      - `D08006.md` — D08006 grounding
+      - `D08021.md` — D08021 結成 少年探偵団 grounding
+      - `D08024.md` — D08024 grounding
+      - `D09008.md` — D09008 上原由衣 grounding
+      - `D09009.md` — D09009 上原由衣 grounding
+      - `D09014.md` — D09014 大和敢助 grounding
+      - `D09015.md` — D09015 大和敢助 grounding
+      - `D09016.md` — D09016 諸伏高明 grounding
+      - `D09017.md` — D09017 諸伏高明 grounding
+      - `D09025.md` — D09025 grounding
+      - `D09027.md` — D09027 grounding
+      - `D10005.md` — D10005 ハート姫（毛利蘭） grounding
+      - `D10006.md` — D10006 ハート姫（毛利蘭） grounding
+      - `D10007.md` — D10007 grounding
+      - `D10008.md` — D10008 grounding
+      - `D10009.md` — D10009 工藤新一 grounding
+      - `D10010.md` — D10010 工藤新一 grounding
+      - `D10011.md` — D10011 毛利小五郎 grounding
+      - `D10022.md` — D10022 毛利蘭 grounding
+      - `D10023.md` — D10023 工藤有希子 grounding
+      - `D10024.md` — D10024 grounding
+      - `D10026.md` — D10026 grounding
+      - `D11014.md` — D11014 grounding
+      - `D11021.md` — D11021 grounding
       - `PR022.md` — PR022 江戸川コナン
+      - `PR060.md` — PR060 grounding
+      - `PR064.md` — PR064 grounding
       - `PR099.md` — PR099 工藤有希子 grounding
+      - `PR100.md` — PR100 宮野厚司 grounding
+      - `PR105.md` — PR105 grounding
+      - `PR106.md` — PR106 宮野厚司 grounding
+      - `PR136.md` — PR136 伊織無我 grounding
+      - `PR137.md` — PR137 工藤優作 grounding
+      - `PR138.md` — PR138 grounding
+      - `PR142.md` — PR142 伊織無我 grounding
+      - `PR143.md` — PR143 工藤優作 grounding
+      - `PR144.md` — PR144 grounding
+      - `PR154.md` — PR154 grounding
+      - `PR173.md` — PR173 工藤有希子 grounding
+      - `PR179.md` — PR179 京極真 grounding
+      - `PR180.md` — PR180 grounding
+      - `PR185.md` — PR185 京極真 grounding
+      - `PR186.md` — PR186 grounding
+      - `PR196.md` — PR196 grounding
+      - `PR199.md` — PR199 江戸川コナン grounding
+      - `PR205.md` — PR205 江戸川コナン grounding
       - `PR234.md` — PR234 毛利蘭 grounding (2026-07-10, fable)
       - `PR240.md` — PR240 毛利蘭 grounding (2026-07-10, fable)
+      - `PR264.md` — PR264 grounding
       - `PR265.md` — PR265 風見裕也 grounding (2026-07-10, fable)
+      - `PR270.md` — PR270 grounding
+      - `PR280.md` — PR280 萩原千速 grounding
+      - `PR283.md` — PR283 上原由衣 grounding
+      - `PR289.md` — PR289 円谷光彦 grounding
+      - `PR291.md` — PR291 紫紅の爪 grounding
+      - `PR292.md` — PR292 grounding
+      - `PR295.md` — PR295 円谷光彦 grounding
+      - `PR297.md` — PR297 紫紅の爪 grounding
+      - `PR298.md` — PR298 grounding
       - `PR305.md` — PR305 萩原研二 grounding
       - `PR306.md` — PR306 grounding
       - `PR307.md` — PR307 grounding
@@ -1731,6 +2312,23 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `m3-pa-batch.md` — M3 前処理: PA(パートナーエリア) 宣言19+発動5 batch dossier
       - `m3-triage-registered.md` — M3 PA batch triage — 登録済 18 ID (2026-07-10)
       - `m3-triage-unregistered.md` — M3 未登録14 ID triage (2026-07-10, sonnet5)
+      - `wave192-authority.md` — Wave192 authority
+      - `waves182-183-authority.md` — Waves182-183 authority
+      - `waves184-185-authority.md` — Waves184-185 authority
+      - `waves186-187-authority.md` — Waves186-187 authority
+      - `waves188-189-authority.md` — Waves188-189 authority
+      - `waves190-191-authority.md` — Waves190-191 authority
+      - `waves64-65-authority.md` — Waves64-65 authority manifest
+      - `waves66-67-authority.md` — Waves66-67 authority manifest
+      - `waves68-69-authority.md` — Waves68-69 authority manifest
+      - `waves70-71-authority.md` — Waves70-71 authority manifest
+      - `waves72-73-authority.md` — Waves72-73 authority manifest
+      - `waves74-75-authority.md` — Waves74-75 authority manifest
+      - `waves76-77-authority.md` — Waves76-77 authority manifest
+      - `waves78-79-authority.md` — Waves78-79 authority manifest
+      - `waves80-81-authority.md` — Waves80-81 authority manifest
+      - `waves82-83-authority.md` — Waves82-83 authority
+      - `waves84-85-authority.md` — Waves84-85 authority
     - **`meta-ui/`**
       - `00-overview.md` — 00 — メタ UI 統合設計 概要
       - `01-project-setup.md` — 01 — meta-app プロジェクト構成
@@ -2119,6 +2717,14 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-08-12-authority-refresh.md` — Official Authority Refresh Implementation Plan
       - `2026-08-12-iphone-se3-landscape-implementation.md` — iPhone SE 3 Landscape UI Implementation Plan
       - `2026-08-12-match-surrender-implementation.md` — MATCH Surrender Implementation Plan
+      - `2026-08-21-qa-wave23-decision-persistence.md` — QA Wave 23 Decision Persistence Implementation Plan
+      - `2026-08-21-qa-wave24-sleep-cost-public.md` — QA Wave 24 Sleep-Cost Public Verification Plan
+      - `2026-08-21-qa-wave25-immediate-effects-public.md` — QA Wave 25 Immediate-Effect Public Verification Plan
+      - `2026-08-22-qa-wave26-misread-authority-public.md` — QA Wave 26 — Misread authority / public runtime
+      - `2026-08-22-qa-wave27-effect-entry-declared-public.md` — QA Wave 27 Effect-Entry Public Verification Plan
+      - `2026-08-22-qa-wave28-effect-entry-trigger-public.md` — QA Wave 28 Effect-Entry Trigger Public Plan
+      - `2026-08-22-qa-wave29-effect-entry-action-public.md` — QA Wave 29 Action-Entry Public Plan
+      - `2026-08-22-qa-wave30-deck-look-zero-choice-public.md` — QA Wave 30 Deck-Look Zero-Choice Public Plan
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
@@ -2473,6 +3079,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `.gitkeep`
     - `ability-ctx.ts` — ai.ability-ctx — Phase 8.8d: EffectCtx 構築ヘルパ
     - `action-resolution.ts` — ai.action-resolution — Phase 8.7c: アクション宣言の共通解決ヘルパ
+    - `cutin-declared-name.ts`
     - `headless-decision-context.ts` — AI simulation and replay are headless authorities. They must not inherit
     - `index.ts` — ai namespace barrel — Phase 6 Group A
     - `match.ts` — ai.match — AI vs AI single-match driver (Phase 6 Group C Task 6.5)
@@ -2952,7 +3559,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B02028.ts` — cards/ct-p02/B02028 大岡紅葉 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B02029.ts` — cards/ct-p02/B02029 沖田総司 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B02029P.ts` — cards/ct-p02/B02029P 沖田総司 (キャラ) — auto-generated; B02029 の絵柄違い (同 cardId)
-      - `B02030.ts` — cards/ct-p02/B02030 服部平蔵 (キャラ) — set-card batch #2 (a2 only)
+      - `B02030.ts` — cards/ct-p02/B02030 服部平蔵 (キャラ)
       - `B02031.ts` — cards/ct-p02/B02031 平次のバイク (event) — Task A green候補 (engine変更0)
       - `B02031P.ts` — cards/ct-p02/B02031P 平次のバイク (イベント パラレル) — B02031 の絵柄違い (同 cardId 0201)
       - `B02032.ts` — cards/ct-p02/B02032 「立てや坂田ァ!!」 (イベント) — catalog-reuse batch
@@ -3502,7 +4109,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B05060.ts` — cards/ct-p05/B05060 ファントム・レディ (character) — Task A green候補 (engine変更0)
       - `B05061.ts` — cards/ct-p05/B05061 終極 (event) — deck-mill-gated-chain wave (engine: mill gate f…
       - `B05061P.ts` — cards/ct-p05/B05061P 終極 (event, parallel) — deck-mill-gated-chain wave (2026-06-…
-      - `B05062.ts`
+      - `B05062.ts` — rules: 03-field-areas.md, 10-action-event.md, 14-refresh.…
       - `B05063.ts` — cards/ct-p05/B05063 園子のアブない夏物語 (事件) — M2後半 batch (2026-07-10, toHandOnTurnEnd fi…
       - `B05063P.ts` — cards/ct-p05/B05063P 園子のアブない夏物語 (事件 パラレル) — B05063 の絵柄違い (同 cardId 0565)
       - `B05064.ts` — cards/ct-p05/B05064 ジェイムズ・ブラック (パートナー) — auto-generated by scripts/gen-cards/…
@@ -3725,7 +4332,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06074P.ts` — cards/ct-p06/B06074P 沖矢昴＆世良真純 (キャラ パラレル) — B06074 の絵柄違い (同 cardId 0694)
       - `B06075.ts` — cards/ct-p06/B06075 宮野明美 (キャラ) — catalog-reuse batch
       - `B06075P.ts` — cards/ct-p06/B06075P 宮野明美 (キャラ) — catalog-reuse batch (variant of B06075)
-      - `B06076.ts` — cards/ct-p06/B06076 ジェイムズ・ブラック (キャラ) — bounce batch #2 (a1 only)
+      - `B06076.ts` — cards/ct-p06/B06076 ジェイムズ・ブラック (キャラ) — bounce batch #2 + declared backfill
       - `B06077.ts` — cards/ct-p06/B06077 ジョディ・スターリング (character) — Task A green候補 (engine変更0)
       - `B06077P.ts` — cards/ct-p06/B06077P ジョディ・スターリング (character) — Task A green候補 (engine変更0)
       - `B06078.ts` — cards/ct-p06/B06078 羽田秀𠮷 (character) — Task A green候補 (engine変更0)
@@ -3940,7 +4547,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B07091P.ts` — cards/ct-p07/B07091P 閉ざされた秘密 (事件) — catalog-reuse batch
       - `B07092.ts` — cards/ct-p07/B07092 ライ (パートナー) — auto-generated by scripts/gen-cards/…
       - `B07092P.ts` — cards/ct-p07/B07092P ライ (パートナー) — auto-generated by scripts/gen-cards/…
-      - `B07093.ts` — cards/ct-p07/B07093 バーボン＆ライ (キャラ MR) — engine#2 charModifyLevel batch #2 (a2 onl…
+      - `B07093.ts` — cards/ct-p07/B07093 バーボン＆ライ (キャラ MR) — printed a1/a2 + cut-in
       - `B07093P.ts` — cards/ct-p07/B07093P バーボン＆ライ (パラレル) — B07093 と同型
       - `B07094.ts` — cards/ct-p07/B07094 ジン (character) — Task A green候補 (engine変更0)
       - `B07094P.ts` — cards/ct-p07/B07094P ジン (character) — Task A green候補 (engine変更0)
@@ -4090,7 +4697,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08081.ts`
       - `B08081P.ts`
       - `B08082.ts` — cards/ct-p08/B08082 ピスコ (character) — Task A green候補 (engine変更0)
-      - `B08083.ts` — cards/ct-p08/B08083 ラム (キャラ) — engine#1 leave:to-remove batch #3 (a1 only)
+      - `B08083.ts` — cards/ct-p08/B08083 ラム (キャラ)
       - `B08084.ts` — cards/ct-p08/B08084 ウォッカ (キャラ) — engine-extension #1 leave:to-remove batch
       - `B08085.ts` — cards/ct-p08/B08085 シェリー (character) — engine拡張 wave (evidence-flip-faceup 有効化,…
       - `B08086.ts` — cards/ct-p08/B08086 テキーラ (character) — card-authoring wave17 ($self.…
@@ -4117,8 +4724,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B09005.ts` — cards/ct-p09/B09005 本堂瑛祐 (character) — attribution mini-wave ② costPaid (revealF…
       - `B09006.ts` — cards/ct-p09/B09006 毛利小五郎 (キャラ) — catalog-reuse batch
       - `B09006P.ts` — cards/ct-p09/B09006P 毛利小五郎 (キャラ) — catalog-reuse batch
-      - `B09007.ts` — cards/ct-p09/B09007 脇田兼則 (キャラ) — engine-extension #1 leave:to-remove batch #2 (a…
-      - `B09007P.ts` — cards/ct-p09/B09007P 脇田兼則 (キャラ パラレル) — engine-extension #1 leave:to-remove batch…
+      - `B09007.ts` — cards/ct-p09/B09007 脇田兼則 (キャラ)
+      - `B09007P.ts` — cards/ct-p09/B09007P 脇田兼則 (キャラ パラレル)
       - `B09008.ts` — cards/ct-p09/B09008 赤木英雄 (character) — Task A certify-harvest needsManual (engin…
       - `B09009.ts` — cards/ct-p09/B09009 赤木守 (キャラ) — engine拡張 wave#2 cluster13 (aura-grant, 2026-06-1…
       - `B09010.ts` — cards/ct-p09/B09010 阿笠博士 (キャラ) — engine拡張 wave#2 cluster14 (multi-card sceneEnte…
@@ -4534,13 +5141,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `PR132.ts` — cards/pr-01/PR132 諸伏景光 (character) — Task A green候補 (engine変更0)
       - `PR133.ts` — cards/pr-01/PR133 大和敢助 (キャラ) — auto-generated; B02076 の絵柄違い (同 cardId 0237)
       - `PR134.ts` — cards/pr-01/PR134 ベルモット (キャラ) — auto-generated; B05113 の絵柄違い (同 cardId)
-      - `PR135.ts` — cards/pr-01/PR135 灰原哀 (PR) — bounce batch #2 (a1 only)
+      - `PR135.ts` — cards/pr-01/PR135 灰原哀 (PR) — bounce + leave reveal-until
       - `PR136.ts` — cards/pr-01/PR136 伊織無我 (character) — engine mega-wave W1 exemplar (charSetCard d…
       - `PR137.ts` — cards/pr-01/PR137 工藤優作 (character) — Task A green候補 (engine変更0)
       - `PR138.ts` — cards/pr-01/PR138 ラム (character) — Task A green候補 (engine変更0)
       - `PR139.ts` — cards/pr-01/PR139 高木渉 (キャラ) — auto-generated; D05013 の絵柄違い (同 cardId)
       - `PR140.ts` — cards/pr-01/PR140 世良真純 (キャラ) — auto-generated; B01073 の絵柄違い (同 cardId)
-      - `PR141.ts` — cards/pr-01/PR141 灰原哀 (PR variant) — bounce batch #2 (a1 only)
+      - `PR141.ts` — cards/pr-01/PR141 灰原哀 (PR variant) — bounce + leave reveal-until
       - `PR142.ts` — cards/pr-01/PR142 伊織無我 (character) — PR136 の絵柄違い (同 cardNum 0621、engine mega-wav…
       - `PR143.ts` — cards/pr-01/PR143 工藤優作 (character) — Task A green候補 (engine変更0)
       - `PR144.ts` — cards/pr-01/PR144 ラム (character) — Task A green候補 (engine変更0)
@@ -4753,6 +5360,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `evaluate.ts` — engine.cost.canPay — Cost feasibility check (read-only)
       - `index.ts` — engine.cost — Cost evaluator barrel
       - `pay.ts` — engine.cost.pay — Cost payment (mutates draft)
+      - `player.ts`
       - `remove-set-card-eligible.ts` — An identity-dependent filter is intentionally never evaluated for hidden entries…
       - `remove-set-card-witness.ts`
     - **`dyn/`**
@@ -4770,8 +5378,11 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `apply-pick.ts` — engine.effect.apply-pick — pending effect-pick の解決 + continuation 実行を一箇所に集約。
       - `atom-handlers.ts` — engine.effect.runAtom — Atom Verb dispatcher
       - `atom-pick-spec.ts` — engine.effect.ATOM_PICK_SPEC — pick系 atom 短縮形の唯一の権威ソース。
+      - `autonomous-decision.ts`
+      - `choose-intercept-authority.ts`
       - `consult-choose-intercept.ts`
       - `consult-leave-intercept.ts` — engine.effect.consult-leave-intercept — 現場離脱の pre-splice consult (mega-wave W6 s…
+      - `deck-occurrence-authority.ts`
       - `declared-name-domain.ts` — Preserve legacy unrestricted AI behavior; constrained mandatory
       - `heuristic-atom-target.ts`
       - `index.ts` — engine.effect namespace barrel
@@ -4782,7 +5393,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `pick-selection.ts`
       - `resolve-picks.ts` — engine.effect.resolveEffectPicks — Phase 7-2 (BUG-035 fix) + Phase 7-3 (AI polic…
       - `resolver.ts` — engine.effect.run — Effect Descriptor 解釈器 (resolver)
-      - `runtime-state.ts` — Public decision admission is fail-closed. Dedicated hydrate/import paths
+      - `runtime-state.ts` — A headless/replay branch may reach terminal cleanup. Restore the
+      - `scene-switch.ts` — Both branches are alternatives. Authorize the first scene entry in each
+      - `source-identity.ts`
       - `validate-spec-files.ts` — engine.effect.validate-spec-files — Node 専用 ruleRefs 実在チェック
       - `validate.ts` — engine.effect.validate / engine.cards.validate — static lint pass (pure)
     - **`event/`**
@@ -4792,6 +5405,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`flow/`**
       - **`action/`**
         - `causal.ts`
+        - `contact-order-continuation.ts` — rules/08-contact §6: if either participant left while contact:start effects
         - `context-registry.ts`
         - `legacy-replay-compat.ts`
         - `order.ts` — engine.flow.action.order — computeOrder (rules/08)
@@ -4804,6 +5418,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
         - `declared-cost-params.ts`
         - `hand-use-card.ts` — engine.flow.main.handUseCard — 手札の使用 (rules/05 01.)
         - `index.ts` — engine.flow.main namespace barrel — メインフェイズ 6 行動 (rules/05)
+        - `main-action-window.ts`
         - `next-hint.ts` — engine.flow.main.runNextHint — ネクストヒント (rules/05 02., rules/12)
         - `partner-ability.ts` — engine.flow.main.usePartnerAbility — パートナー能力使用 (rules/05 03.)
         - `reasoning.ts` — engine.flow.main.doReasoning — 推理 (rules/05 05., rules/11)
@@ -4827,7 +5442,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `stunSemantics.ts` — engine.invariant.stunSemantics — スタン状態のセマンティクス確認
     - **`listeners/`**
       - `hirameki.ts` — Phase 8 完全クローズ Commit 3a: ヒラメキ listener
-      - `misread.ts`
+      - `misread.ts` — state:change listeners must see the whole simultaneous Misread commit.
       - `reserved-effects.ts` — reserved-effects listener — 離場後予約効果の発火 (mega-wave W6 step8, 2026-07-04, row75)
       - `triggered.ts` — Round 4b: triggered ability の汎用 listener
     - **`log/`**
@@ -4835,7 +5450,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `effect-causal.ts`
     - **`mutate/`**
       - `.gitkeep`
-      - `action-scopes.ts`
+      - `action-scopes.ts` — A terminal GameState cannot retain a resumable resolver authority. Direct
       - `case.ts` — engine.mutate.case — 事件カード操作プリミティブ
       - `char.ts` — engine.mutate.char — キャラ修正プリミティブ
       - `deck.ts` — engine.mutate.deck — デッキ操作プリミティブ
@@ -4871,6 +5486,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `stack.ts` — engine.resolve.* — Effect Stack
     - **`state/`**
       - `indexed-zone-epoch.ts`
+      - `misread-authority.ts` — The stack entry snapshots the trace before the human pause marks its live
     - **`target/`**
       - `.gitkeep`
       - `candidates.ts` — engine.target.candidates — enumerate target candidates per TargetingRef/…
@@ -4888,6 +5504,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `game-state.ts` — GameState 型定義
       - `hooks.ts` — HookName union 型定義
       - `index.ts` — engine/types barrel export
+      - `misread.ts`
       - `reserved-effect.ts` — ReservedEffectEntry — 離場後予約効果 (mega-wave W6 step8, 2026-07-04, row75)
       - `results.ts` — 戻り値型定義
     - `AGENTS.md` — Engine Instructions
@@ -5020,8 +5637,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useContactModalStore.ts` — Phase 8 完全クローズ Commit 2: コンタクトフロー用モーダル状態 store
       - `useCutinDemoDriver.ts` — 2026-05-27 カットイン効果検証 demo の完了検知 driver
       - `useDeckCount.ts` — Phase 7 Task 7.7: DeckArea selector hook
-      - `useDeclareNamePicker.ts` — CARD PHASE step12 batch2 (2026-07-04): declareName verb (「カード名を1つ指定し」B09108/…
-      - `useEffectPickFlowDriver.ts` — user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択 driver
+      - `useDeclareNamePicker.ts` — CARD PHASE step12 batch2 (2026-07-04): declareName verb (宣言能力 / カットイン)
+      - `useEffectPickFlowDriver.ts` — 公開UIの保留decisionをresolver順に監視するdriver。
       - `useEffectStack.ts` — Phase 7 Task 7.14: EffectStackPanel selector hook
       - `useEngineDispatch.ts` — Phase 8 Task 8.1: UI → engine action ディスパッチ基盤
       - `useEvidence.ts` — Phase 7 Task 7.9: EvidenceArea selector hook
@@ -5197,21 +5814,21 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`ct-p09/`**
       - `B09061.test.ts` — B09061 ジェイムズ・ブラック (ct-p09) — ENGINE0 wave 専用 test。
     - **`ct-p10/`**
-      - `B10006.test.ts`
+      - `B10006.test.ts` — qa: card:B10006:7e173f555d64430aabbf7aa5f215faef06d20d2da879f79a7bb3ce7495b43e61
       - `B10018.test.ts`
       - `B10038.test.ts`
       - `b10001-marker.test.ts`
-      - `b10004-declared-count.test.ts`
+      - `b10004-declared-count.test.ts` — qa: card:B10004:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
       - `b10015.test.ts`
       - `b10017-b10022.test.ts`
-      - `b10019.test.ts`
-      - `b10023-b10024.test.ts` — Keep one card after the draw: an empty deck would immediately refresh
+      - `b10019.test.ts` — qa: card:B10019:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a
+      - `b10023-b10024.test.ts` — qa: card:B10023:b28b7e81f684a02f22f62ec571f745928832a0832a16216b7f2c8646fe2fb9b7
       - `b10024.test.ts`
       - `b10025.test.ts`
       - `b10036-contact.test.ts`
-      - `b10039.test.ts`
+      - `b10039.test.ts` — qa: card:B10039:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd
       - `b10046.test.ts`
-      - `b10047-case-name.test.ts`
+      - `b10047-case-name.test.ts` — qa: card:B10047:18485b08aaf71c37dce1f7952b7f4382610c83a5c07f19db06d8ede4d712d9e5
       - `b10056.test.ts`
       - `b10060-usage-boundary.test.ts`
       - `b10069.test.ts`
@@ -5219,13 +5836,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `b10081-b10097-effective-level.test.ts`
       - `b10086-cutin-ban.test.ts`
       - `b10087.test.ts`
-      - `b10094.test.ts`
+      - `b10094.test.ts` — qa: card:B10094:95ec3884ba49f8e60c1e269a3273f9f94a4dffd72b44a5d9e4d15746b4058866
       - `b10096.test.ts`
       - `b10098.test.ts`
       - `b10099.test.ts`
-      - `b10100.test.ts`
+      - `b10100.test.ts` — qa: card:B10100:fa86da58031fb9ac89e29ca33154f7e33fdfcb57011d4dc5c56f55e70a74939f
       - `b10101-qa.test.ts`
-      - `contact-history-cards.test.ts`
+      - `contact-history-cards.test.ts` — qa: card:B10037:493f9def1e5c5cf3dd006d9db402e0eaf8b16963ea72011060c09a7e794c6d90
       - `early-cluster.test.ts`
       - `first-batch.test.ts`
       - `green-gap-candidates.test.ts`
@@ -5246,7 +5863,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `unblocked-blue-batch.test.ts`
       - `unblocked-deck-batch.test.ts`
       - `vanilla-keyword-cluster.test.ts`
-      - `yellow-combat-cluster.test.ts`
+      - `yellow-combat-cluster.test.ts` — qa: card:B10075:d49adc01f3ee4f568669b0e92c791822263b294d4e096979c9d328964c094c25
       - `yellow-deck-cluster.test.ts` — CT-P10 yellow deck cluster — production dispatch / real resolver coverage.
     - **`defer-unlock-miniwave/`**
       - `B04038.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
@@ -5427,27 +6044,244 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `invoke-hirameki.test.ts` — tests/cards/night-wC2b/invoke-hirameki
     - **`official-qa/`**
       - `B01006-B08017-target-protection-public.test.ts` — qa: card:B01006:b4700accb91f4e296c848f701b9e1cbef24d22b2f328348428dff879f61a302b
+      - `B01009-completion-public-wave143.test.ts` — qa: card:B01009:2ca5b478df684d0944e74fceb7664125a59a6e2a239ae9323d3477e04506cf07
       - `B01025-B01026-partner-abilities.test.ts` — Official Q&A: B01025/B01025P/B01026/B01026P
+      - `B01045-completion-public-wave144.test.ts` — qa: card:B01045:05863fa35054fd302da46dd33e377bfdcf15c8eb2fd6e3ba5d2ec04f14008de8
       - `B01077-empty-hand-event.test.ts` — qaId=card:B01077:d42cf418c120cd75f5388b9a434fa679d9f97908baa2ffb6eb9152c28dcb8e5…
       - `B02008-turn-limit-order-ap.test.ts` — qaId=card:B02008:3240a4626ffa31e953f10ca03af61b33b9d3367feeffa3bc87cd8b3c7be01d9…
       - `B02023-facedown-set-privacy.test.ts` — qa: card:B02023:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b
+      - `B02030-completion-public-wave145.test.ts` — qa: card:B02030:22477398ef5d506ba40697a07f730240d929ade78c8a7edaa6aeed9aeb97b358
+      - `B02058-completion-public-wave146.test.ts` — qa: card:B02058:762a82ad66fef61f8a12010f8d850cf7cca54916f71d63712f5f7227f290bd90
+      - `B02067-completion-public-wave147.test.ts` — qa: card:B02067:21d33c0a5eb6a0635654047e680572967ebce417be0fe911d4c8034e4df2390d
+      - `B02067-multi-set-intercept-public-wave34.test.ts` — Rules: 15-abilities-effects.md, 16-card-set.md, 17-icons.md.
+      - `B02088-completion-public-wave148.test.ts` — qa: card:B02088:4960b906976210e8a8d17152c0f10630265edca04f7db484487532b661306134
       - `B03002-B05005-next-hint-order-guard.test.ts` — Official Q&A certification: public dispatch paths only.
+      - `B03006-public-stack-lifecycle.test.ts` — qa: card:B03006:151b435edeb61c22d4471596da22371c8592c23c410528efb5e78938a1bb3b54
       - `B03020.test.ts` — qaId=card:B03020:7e1b89161d4cc08ba1dd9f60c2dd203d56a0d75ebc1fe8ce0ada2bb43af5a27…
       - `B03023.test.ts` — Official Q&A: B03023 脇田兼則
+      - `B03025-public-refresh-flow.test.ts` — qa: card:B03025:51de3c143838c348f32a12d2252063f7ac6b6d884ab75fc3ef24a003df5b1731
+      - `B03029-public-event-use.test.ts` — qa: card:B03029:83d447e04f250f995eb1040561f6f0f992b0be02cc6c13613c214b837568b222
+      - `B03094-completion-public-wave149.test.ts` — qa: card:B03094:3e54bbed10ce6842d1023560a2b7dd83568ca8dd44f892439011d6b3afb17059
+      - `B03102-completion-public-wave150.test.ts` — qa: card:B03102:0d310607ecb1545941beca62cb928c162123c380c3ec000be0d418c018300f0c
+      - `B03112-completion-public-wave151.test.ts` — qa: card:B03112:2c83e05699547a122e72d36589adce2d81152f65597bff1f1551047f02568ed9
+      - `B04003-choose-intercept-public.test.ts` — qa: card:B04003:29b8cf6699112a9cca3172f2425ac76e59a7d7337034c7b9985bbdab46e21912
       - `B04012-optional-decline.test.ts` — qa: card:B04012:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d
       - `B04015-B04028-action-hirameki.test.ts` — qa: card:B04015:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
       - `B04030.test.ts` — The opposing contact character has left, but Kaito remains in the scene.
+      - `B04048-completion-public-wave135.test.ts` — qa: card:B04048:56d8adf38bad4a8ad033c6796edb1ba33e5f92e244cf396f8b741f465350ee09
       - `B04059.test.ts` — B04059 水無怜奈 — official Q&A: scene-only additional card name.
       - `B04074.test.ts`
+      - `B05007-completion-public-wave129.test.ts` — qa: card:B05007:64c8ea1dbd685ed1a2d1338e4c52910b1b19f6cca7249f8e288576f37e426d44
+      - `B05058-completion-public-wave136.test.ts` — qa: card:B05058:005869b804a7f1211f4012d0d1923a1b445b97f955eaa4b6df86b2644fff0648
+      - `B05092-completion-public-wave152.test.ts` — qa: card:B05092:2bb0d1134005d964c09d50ab280f7c81db291b8893da82fac9b0e7feed9e55c8
       - `B05118-family-nonblack-partner.test.ts` — Official Q&A cluster: these seven cases share the same printed
+      - `B06020-completion-public-wave130.test.ts` — qa: card:B06020:d3b7730aa0d24dcbd34fa32b3419352d1238d398c3f73d60ca2d4f1125207a8c
+      - `B06023-completion-public-wave137.test.ts` — qa: card:B06023:0025cb3b7aecab7dca31296259c4dca893915c9eb6eecce256504c10d3ebd07d
+      - `B06034-completion-public-wave153.test.ts` — qa: card:B06034:69959d6bea858af0019b9119c1e8ca433349b7964059e710a523adc480d9e5e5
+      - `B06036-completion-public-wave138.test.ts` — qa: card:B06036:30a7759896adeb54b8229a3083eb1615ae39b079a34bba004f00f993c0a898c9
+      - `B06042-effect-contact-public.test.ts` — qa: card:B06042:51624536ab2df37b3ce09f45df7c715d9ac3c8bbb64d8ff36ed28ebcc48829d5
+      - `B06042-grant-lifecycle-public.test.ts` — qa: card:B06042:954b33bfb2a596a7ba88bb1d6476fd34416af93d38e8012a55157693df8c903a
+      - `B06046-completion-public-wave154.test.ts` — qa: card:B06046:3b1c6f4fbf55d8cf875921b50de0edf27064d4cef8ac4818301b6914eb9cdfe3
+      - `B06047-completion-public-wave155.test.ts` — qa: card:B06047:3632e94d50bc47ae346b59442957707c6dc4daeee6428f02d48162a52d31374f
+      - `B06049-B06050-completion-public-wave156.test.ts` — qa: card:B06049:1522823aa460aa0572f53f018bc39a9461f8b0b892d70825d15382c5c94a0818
+      - `B06052-B06053-completion-public-wave157.test.ts` — qa: card:B06052:7124f41d3267d0e2df2692070acfdd9e66fca11edbbbfb6b64ada8bee4c94b79
+      - `B06057-B06058-completion-public-wave158.test.ts` — qa: card:B06057:6ef75028554fc17862ec6d9114267258f52ac2a1d278a1c7fb0e61edc0d1d265
+      - `B06060-B06072-completion-public-wave160.test.ts` — qa: card:B06060:2ca5b478df684d0944e74fceb7664125a59a6e2a239ae9323d3477e04506cf07
+      - `B06062-B06064-completion-public-wave159.test.ts` — qa: card:B06062:0006b174016834d6e10769372f487ca740771f9f2b3e55d0e6b52a5c209b5c43
+      - `B06068-completion-public-wave139.test.ts` — qa: card:B06068:1a2a46c6c6f2d223c19bf80a2832fa8cc71d77c57cb5d6b98be4e42610903db0
+      - `B06074-completion-public-wave131.test.ts` — qa: card:B06074:2e622a225c9c5743d9f4eba3865e40ddb799ad15a2800aca084ac672a33c6b74
+      - `B06076-B06086-completion-public-wave161.test.ts` — qa: card:B06076:2bcbc572704a40c4bd313efcdb48dc88426ff84922e2c41ac0fcde537aec79ab
+      - `B06091-B06098-completion-public-wave162.test.ts` — qa: card:B06091:100adbbed925b66fdcb792ff3aa4a483640f287338264fc5c064d46af6177788
+      - `B06103-B06109-completion-public-wave163.test.ts` — qa: card:B06103:06421f8b3e73fe7e22aaac43188049be0f09de4bd944b4069b0a1c84ffcd7102
+      - `B07001-B07004-completion-public-wave164.test.ts` — qa: card:B07001:9008e450155fd9d8c51c93ed1ce6e7747a6d956514d5141c12b9e1499dee91e9
+      - `B07005-B07015-completion-public-wave165.test.ts` — qa: card:B07005:c596ae62d295a0df22c230a2cbc61a4567f85c825a50fd331245bee0fa8fa94c
+      - `B07017-B07030-completion-public-wave166.test.ts` — qa: card:B07017:077dd7a61a20a31e5929ca294e5fed39ecfd7fd9c913426e4dc297ce71780ae9
+      - `B07031-B07039-completion-public-wave167.test.ts` — qa: card:B07031:5a3bf6716303171e5a355286c8ea7863437a9946cab30a09b076210246f250d2
+      - `B07043-B07051-completion-public-wave168.test.ts` — qa: card:B07043:2936447fd71a80eedcaab6991807eb457d313818936c6e73c803d98f0b0c0ed5
+      - `B07052-B07056-completion-public-wave169.test.ts` — qa: card:B07052:6f98c3d7a03fcea61db5d9ae93b0a97ce83fd44eb79a4179dfe5b3072986d55a
+      - `B07057-B07068-completion-public-wave170.test.ts` — qa: card:B07057:ec2375a3f1cb75173b86dce90a88c98de54b4cb067e31cb4cab39e70cf95a397
+      - `B07066-declared-cost-optional.test.ts` — qa: card:B07066:939f5e30d9e32c8b233a160a6f70ebb932c71ce0971e6f66cfb3701d5fff76cd
+      - `B07069-B07079-completion-public-wave171.test.ts` — qa: card:B07069:2bcb59c4061b4f418e16db29d59e7a70e64ac2d3f6d1648c367d531fdb1d49f9
+      - `B07085-B07091-completion-public-wave172.test.ts` — qa: card:B07085:e8eb38fe4adaf20641339946d8691e2339623fbc925878d38fa4bcb0480efe04
+      - `B07094-B07098-completion-public-wave173.test.ts` — qa: card:B07094:46562cdd4a832c2c219c087a402e6bbdbbc11d0a33031b3b0cd7a267c29e0af3
+      - `B07100-B08003-completion-public-wave174.test.ts` — qa: card:B07100:8fa59c53057ee164d956e8a94719c89402a761c9093428f38822e073eaf28600
       - `B07102-refresh-includes-removed.test.ts` — qaId=card:B07102:99f16dd6a248501c9d63a44dd85b2d6097ef720865e4181d1b451669f04b05d…
+      - `B08004-B08016-completion-public-wave175.test.ts` — qa: card:B08004:1a671f1699203588abc9b63b4ed1d94a1f5f07bf485a87e3994b1ec8ac4c4733
+      - `B08019-B08022-completion-public-wave176.test.ts` — qa: card:B08019:c3e39b5f3aa8ed0eb6d3559b0878dcec5c606a324573fdbe79826a0a3408072f
+      - `B08025-B08030-completion-public-wave177.test.ts` — qa: card:B08025:84ecdea6c10bc908728749deacc797a85529c42aef7daa60ffe67827bc5ce34f
+      - `B08032-B08037-completion-public-wave178.test.ts` — qa: card:B08032:80a2cfb16a87e5d0d4da8698cb86f47b173740616dd1af4e02537a5deb1ade52
+      - `B08038-B08047-completion-public-wave179.test.ts` — qa: card:B08038:e47123f9e1245d63129ed54c2b95a76198d5f97abc9116047b1b635275aad06a
+      - `B08048-B08055-completion-public-wave180.test.ts` — qa: card:B08048:3053f6462e12a9e2865b2025bb9466d188a73da0b7fe642edc6b5118575c89e9
+      - `B08049-completion-public-wave132.test.ts` — qa: card:B08049:190baa1e1f03afa7d9e83de8ff7b5f6134452bd6b3a05caf22783df26c2a9ea8
+      - `B08054-host-leave-set-return-public-wave180.test.ts` — qa: card:B08054:94adce46750f1bdd020b0c468474dff27cf3ae1f8ff38f2afb3ac2efdc60af1c
+      - `B08057-B08059-completion-public-wave181.test.ts` — qa: card:B08057:291f87522e2089d9232b03fc488c0790757f2e96f260d1b155bbdd6f24c2678e
+      - `B08058-resolution-public-wave25.test.ts` — qa: card:B08058:2b4e49ff7d67dddeddd1fff86f17cd8814f42adc4f55ce818ce3626a24b4cdcf
+      - `B08060-B08062-completion-public-wave181.test.ts` — qa: card:B08060:1e6decec598c8178c0ef59895411a3e6043a00f96c40f3608c98b25e915c134b
+      - `B08062-B08066-completion-public-wave182.test.ts` — qa: card:B08062:da1937a11dcf309e17d182661b4159ebeb8de46a5d221c3e68a64c918142b883
+      - `B08067-B08073-completion-public-wave183.test.ts` — qa: card:B08067:39697486128060cc69b3013afbfa63811801fc44ee3420780fc81d03aeb87e02
+      - `B08075-B08079-completion-public-wave184.test.ts` — qa: card:B08075:08a66550cc5178b9dd1548e89a7ad24ec27bf692e40929f7b46c0ac0a0c13339
+      - `B08081-multi-intercept-public-wave25.test.ts` — qa: card:B08081:6b3d06f3573c39d85fe728b4613bf4458ef9a1849c52f036ac9bf48314a44dd7
+      - `B08082-B08091-completion-public-wave185.test.ts` — qa: card:B08082:08ef8905b5b4eb573b07e49f0d9dc2de389ef16dbaa5f7133ee5ae3eded6a568
+      - `B08087-B08091-leave-evidence-public.test.ts` — qa: card:B08087:1f49f9f42b38c241ebd655d06681a4cb1c6030ffaa8345da75416cb84193fc80
+      - `B08092-B08094-completion-public-wave186.test.ts` — qa: card:B08092:2acd62799ca89c8181d220a474927d8805e8f2fac855125cae4be29f07af6fa5
+      - `B09002-B09005-completion-public-wave187.test.ts` — qa: card:B09002:b4865a17eaa7c68418a6b7755125081b917cc5203b710a3ee92ce60bee4d42ac
+      - `B09006-B09015-completion-public-wave188.test.ts` — qa: card:B09006:2d9f6416a9eff00283168d4c98abf4724ce62c0471c67384b312b1d17e6b5148
+      - `B09016-B09024-completion-public-wave189.test.ts` — qa: card:B09016:8d2d79973300c910aa8b160f07aabc86cbdb7d97fa97745452c640db361be527
+      - `B09026-B09037-completion-public-wave190.test.ts` — qa: card:B09026:3b40e4f1bfa97db36362fad681b7510cb4024f54c57fd8fed3c92833f80261a0
+      - `B09038-B09055-completion-public-wave191.test.ts` — qa: card:B09038:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f
+      - `B09056-B09064-completion-public-wave192.test.ts` — qa: card:B09056:291fc09e63b332fbdca9e94aae30890f71c8741ec83bda8724ea0b58d7b8dfd9
+      - `B09073-B09080-completion-public-wave193.test.ts` — qa: card:B09073:6f84244014e18679f78a5ae0b96cec21787fc34c207c0c4ba6935a6b198b5b03
       - `B09090-PR286-entry-waiver.test.ts` — qaId=card:B09090:44ef9075cc50199818343279be5b6a42af1aeacb78a152cf75bdc37dc7b5f7e…
+      - `B09092-B09096-completion-wave195.test.ts` — qa: card:B09092:70f5af4b948092f863f1b2d28f8c91c4016f93c53f89de134024bbd39068daa3
+      - `B09092-completion-wave194.test.ts` — qa: card:B09092:0a7b79351a135f0b5277f183d8028ddc88073d99a54bf083bff74d1b3c1a1358
+      - `B09097-B09104-completion-wave196.test.ts` — qa: card:B09097:0237a0c142d5e7feca1b4e4a9e92d3bf06f73c90344a81fa1ae51d869726b9b3
+      - `B09105-completion-wave197.test.ts` — qa: card:B09105:c7ae8a0b8705f2f925f39f99642bb7a79d30f9cf38ac1993b68357ce50dd6d54
+      - `B09106-B09107-completion-wave198.test.ts` — qa: card:B09106:b7713abe7876ef1ad566c125fa172a4f2a13b192f2b22a4a2cea136020526dac
+      - `B09108-completion-wave199.test.ts` — qa: card:B09108:0643b41835d29ed2fe718d2fe0b916ea3a9086713081a1b6c5e9c0517dfe99a7
+      - `B09109-completion-public-wave128.test.ts` — qa: card:B09109:87aa9ca394d3b7a7faa9cc64726031a8e157f606ad5c5fab6f9690c1e7ed7c45
+      - `B09110-B09112-completion-wave200.test.ts` — qa: card:B09110:c6c48c4f8eb604b6a40d12fe2a7833e6d2add2d529e04b3e29c2843f0a5e305c
+      - `B10003-completion-public-wave140.test.ts` — qa: card:B10003:0194b74149e29b2d31fa5b6d2a9bf767dfd2a718b7ea50244905b5d5fb423e0b
+      - `B10036-completion-public-wave133.test.ts` — qa: card:B10036:0b75452df6157fca2faca3660e38d13be769a1eae20e32990c76ac7780cdac0b
+      - `B10065-completion-public-wave134.test.ts` — qa: card:B10065:132b6ee607cc3a33eb9e91d1f3bda4dc39dfcf54b0a2f045cc2168294ce8a923
+      - `B10071-public-wave25.test.ts` — qa: card:B10071:816d7965a6d1b8124bc6be2098194d8f3f19a88be3cdc253bf643cfdff0e1e69
+      - `B10087-public-wave25.test.ts` — qa: card:B10087:0c9d0e7ac8e1aeccc9186815ebf6f4fcbc776e2193db1d43e5cd7294a9e3a664
+      - `B10088-effect-entry-public-wave25.test.ts` — qa: card:B10088:00139d4a04a7b6b8457670c965d9b2c6ee827110a2321d40b2ba641c9a01b896
+      - `B10098-completion-public-wave141.test.ts` — qa: card:B10098:0022106a43764f3ac81c3e8d5e4d4c1f5bfc49acedbbfb228e454807752361d7
+      - `B10099-completion-public-wave142.test.ts` — qa: card:B10099:640df767ce1693a6c289ab1d9869c461083d1e678224db8ace1d58f9f308af94
+      - `B10101-granted-search-public-wave30.test.ts` — qa: card:B10101:10a900367f7fe2bb97f89519de6c2707375ecf532cb3d2dc8e368059e8f5470e
       - `D06003-D06024-public-path.test.ts` — qaId=card:D06003:e918d066190b75a908b8154f185c9c4291e8387cb2fc4797f5744acc49a362d…
       - `D10003-D10010-printing-copy-limit.test.ts` — qaId=card:D10003:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2…
+      - `action-declare-before-guard-public-wave48.test.ts` — qa: card:B01085:151b435edeb61c22d4471596da22371c8592c23c410528efb5e78938a1bb3b54
+      - `action-end-source-present-public-wave93.test.ts` — qa: card:B04030:76f3670ceb57dfb996531dae5f61c2fefd2e21bed4287242a3866a4218a951c3
+      - `b03050-contact-exit-public-wave83.test.ts` — qa: card:B03050:19fb99eecd85e2306c2887c5c7eb1210d8e663ec05473fb8f45d59e9f1475925
+      - `b06067-self-selection-public-wave76.test.ts` — qa: card:B06067:28660457e46b234b8eda0f8ef2c6f3353a37a1739cfebe4112b7bfffed415436
+      - `b07093-a1-public-wave44.test.ts` — qa: card:B07093:212da49cce2aca6921fdb352e94b610cbdeeebd02d0ab5c66e8200c0164c3a0e
+      - `b09054-declared-public-wave127.test.ts` — qa: card:B09054:be26cfbb13dc4cbade567e0e2119410a53a7352cbf2402270145178503d5061c
+      - `bond-partner-exclusion-public-wave45.test.ts` — qa: card:D10006:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0
+      - `bond-partner-exclusion-wave21.test.ts` — qa: card:B01087:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
       - `bond-partner-exclusion-wave9.test.ts` — qa: card:B02004:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4
+      - `bug-331-reveal-complete-public.test.ts`
+      - `case-cost-three-insufficient-public-wave70.test.ts` — qa: card:B05024:b2045bb3864646d52adf7eba7fd632862301fe361dfc43c09ef5282f07942610
+      - `case-cost-three-self-only-public-wave68.test.ts` — qa: card:B05024:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297
+      - `case-flip-two-complex-public-wave37.test.ts` — qa: card:B06095:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2
+      - `case-flip-two-declared-public-wave36.test.ts` — qa: card:B06013:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2
+      - `case-trait-konkatsu-public-wave90.test.ts` — qa: card:D11003:8a2311865e16f466ee83cb439f6283f6196812688ac3da8d1b8d1173290c37dc
+      - `case-trait-red-magic-public-wave110.test.ts` — qa: card:B07031:dcf72f7ad683c115b3f581b518e42b1c728f361ea984bfb38ac165c79eb83ce4
+      - `case-trait-yaiba-public-wave69.test.ts` — qa: card:B06018:9b784e18994d29858b6b12d02bf7ddc0e040914733a510db8aca6110febbb969
+      - `contact-order-ap-public-wave109.test.ts` — qa: card:D11007:31477ac476064f376e887ccbb69a33524e3c445608c9009f36c53aa4a9c3b2ba
+      - `contact-participant-exit-regression-wave83.test.ts` — Horizontal regression for rules/08 §6: either participant leaving ends contact.
+      - `contact-participant-public-wave94.test.ts` — qa: card:B08038:64b0dfa40059e5ed0dddfd2e25c4185a31f5b45ddba7798437a0e7508255c179
+      - `ct-p10-original-ability-rules.test.ts` — qa: card:B10050:98e82fae32a43d9b6de8c7fd8289dcf4565f2dada1498f0760f5ba9d0cf8ae17
+      - `ctp10-opponent-turn-cutin-public.test.ts` — qa: card:B10017:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
+      - `cutin-ap-text-filter-public-wave120.test.ts` — qa: card:D06003:4b3b3a6e577fa931249ccf431fb14ab9eeff47a1db16ec003d96edbf2af044dc
+      - `cutin-ineffective-observer-public-wave112.test.ts` — qa: card:B03112:ee9ce331a55bc2711aef71d24e94f8cd4cad8c33b1ec5e49f98bad15b291ad43
+      - `decision-persistence-wave23.test.ts` — qa: card:B03080:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
+      - `deck-look-bottom-family-public.test.ts` — qa: card:B01013:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5
+      - `deck-look-refresh-timing-public-wave51.test.ts` — qa: card:B05016:e7061b1c3b542622fb32f13182df05bfa258159452eb60cb75a2c492259385d4
+      - `deck-look-short-four-public-wave65.test.ts` — qa: card:B07073:257729bded9735287561b957a296000c9fdd1c284ccc9cac5e5c978452befe69
+      - `deck-look-short-three-public-wave64.test.ts` — qa: card:B06013:f8f6cc8737bb07a4334459a640a7b7600477d7bfa26bba8ca760517a6601ca7f
+      - `deck-look-zero-choice-public-wave30.test.ts` — qa: card:B04048:c2131ef2b4d611ed2fdcba93cb1619157aea6dcc39318ced5a4a6f69bc29faaf
       - `deck-refresh-wave8.test.ts` — qa: card:B04012:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4
+      - `deck-top-three-insufficient-public-wave73.test.ts` — qa: card:B06020:84ecdea6c10bc908728749deacc797a85529c42aef7daa60ffe67827bc5ce34f
+      - `deck-top-three-self-only-public-wave59.test.ts` — qa: card:B04077:1a92dcdf67120f7d76c881aa12661add73fc79ad2cefe30d1e4fbda6978a4758
+      - `declared-cost-one-self-only-public-wave71.test.ts` — qa: card:B07061:5ec9d86e896c25749cf5aab043bd9fa0c92af21362e720fe60944e7adeb237c6
+      - `declared-cost-scene-owner-public-wave92.test.ts` — qa: card:B04019:a1ea0a1b03ae906d9062ba5906497c7178e10970f12b5935b23937f559152d86
+      - `declared-one-hand-cost-public-wave115.test.ts` — qa: card:B01007:01bb734094827c257df91fd003da99ea0d4b837ed48b4cd5abecc6a860322d09
+      - `declared-repeat-public-wave102.test.ts` — qa: card:B05046:5f60f8b4db37b8f92d03a16be385db13124478a72d7648dca0c733585d01bc54
+      - `declared-sleep-cost-public-wave24.test.ts` — qa: card:B01063:f97b21e9e16f570fd0da6acab0a9cb6e819a6e4a010e86dddb5ff82c6d33902e
+      - `disguise-case-inheritance-public-waves82-83.test.ts` — qa: card:B02038:9a7ccef11a5002bcfc03a28064e814701347f8287061fa3575d710a68d789a48
+      - `disguise-definition-public-wave56.test.ts` — qa: card:B02041:bde0a3a5b0127797c2caad230a469d5a24f2a164829581273d0d8e77589383d6
+      - `disguise-not-entry-public-waves80-81.test.ts` — qa: card:B02038:768a20fc5e6e165184d999a8032847d4633ef46d0ac9edd814f3c4ebb18e8e72
+      - `effect-entry-action-public-wave29.test.ts` — qa: card:B03073:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effect-entry-action-public.test.ts` — qa: card:B02004:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effect-entry-declared-public-wave27.test.ts` — qa: card:B04018:a96985ed96d005b04cd0c44c2dadf206fac63c8bd49e8c42cef6ea4c73808dae
+      - `effect-entry-declared-public.test.ts` — qa: card:B04019:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effect-entry-direct-public-wave54.test.ts` — qa: card:B03062:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effect-entry-enter-trigger-public-wave31.test.ts` — qa: card:B03085:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effect-entry-enter-trigger-public-waves52-53.test.ts` — qa: card:B06047:a995d1c10d720a31ed82e873a38fc303c498ee2145d91386e258841a02350580
+      - `effect-entry-full-scene-public-wave61.test.ts` — qa: card:B04046:6b96389cc833a3fa159cdc9a1b55a5f5db61c7ee0131677aa3e999ce49bd2c2d
+      - `effect-entry-leave-public.test.ts` — qa: card:B02066:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effect-entry-nested-public-wave55.test.ts` — qa: card:B09056:33271f1e19ae0c4fa4f2f6b6aa1f038e58c6c82bef4e1d59394a5ddb47300767
+      - `effect-entry-public-wave3.test.ts` — qa: card:B02077:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effect-entry-sleep-state-wave85.test.ts` — qa: card:B01011:b294bc57d842a4b1a4aae0d72a5235a9ace1fc0a3c60e43df68c9e6c939153ce
+      - `effect-entry-trigger-order-public.test.ts` — qa: card:B07058:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effect-entry-trigger-public-wave2.test.ts` — qa: card:B04064:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effect-entry-trigger-public-wave28.test.ts` — qa: card:B03068:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+      - `effect-removal-not-contact-public-wave118.test.ts` — qa: card:B04089:0b6239f8b2e0d7252ecdbe7cdba6272d9a4d98a7a84f59d98bb3a2be00a36fc0
+      - `effective-level-self-count-public-wave75.test.ts` — qa: card:PR270:04195ab037741d2c4584dcf9e92a0a91822cf9490ff78ec9c83f83e52282be4a
+      - `end-phase-reactivation-public-wave46.test.ts` — qa: card:B07023:e95274eddf61476e68accaf6348cb07eefb9d8074484ed06055f5022530a1706
+      - `event-evidence-action-hirameki-public.test.ts` — qa: card:B04041:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c
+      - `evidence-position-public-wave57.test.ts` — qa: card:B07062:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a
+      - `evidence-position-public-wave67.test.ts` — qa: card:B06013:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a
+      - `f026-cutin-public.test.ts` — qa: card:B08085:f0267a26d9c5011ae2c2e4b82bf4f98a99ce33c5a2f747b8baacbca69be222c7
+      - `face-down-set-hidden-public-wave62.test.ts` — qa: card:B08033:d52596199be14d625d7776309eeaca145097a31eecca550237262ad7075cb2f4
+      - `face-down-set-move-private-public-wave121.test.ts` — qa: card:B10007:c93226a2bebd7c4a5a21e373534e75faba33cbe2ec6c147a0d4b0d4a745cec10
+      - `file-assist-action-public-wave40.test.ts` — qa: card:B04068:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
+      - `file-assist-continuous-public-wave38.test.ts` — qa: card:B02063:cbce41c9b0c72cca046ffb06c2b4ff9c3af679af4bcfb692fac12dc0b5998a23
+      - `file-assist-declared-public-wave41.test.ts` — qa: card:B08056:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
+      - `file-assist-declared-remaining-public-wave42.test.ts` — qa: card:B07069:cbce41c9b0c72cca046ffb06c2b4ff9c3af679af4bcfb692fac12dc0b5998a23
+      - `file-assist-enter-public-wave39.test.ts` — qa: card:B04023:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3
+      - `file-assist-nondeclared-public-wave43.test.ts` — qa: card:B06087:fe489ff3199dbdf91d8a4404721956da51ba17ccb819450ceed5b301f31fe7be
+      - `file-assisted-partner-count-public-wave89.test.ts` — qa: card:B04027:3d48fd2885346e1f56efcdd259b31a7a5e33cf94f53ca3cfa08175b86a749f26
+      - `file-assisted-partner-hand-public-wave89.test.ts` — qa: card:B03110:778145d226f364876d2f75e0d6bc0336b6c61bdfdd1822254bb244878b57c818
+      - `file-assisted-partner-remove-public-wave89.test.ts` — qa: card:B09003:47be099f12105fcb17bdc68f8bf3ebbe2d1d1100aa005a41d302a5df45f74ab5
+      - `file7-assisted-partner-public-wave98.test.ts` — qa: card:B04023:d0c74bb56871ed8c7a652acc4f63e492bee4dac3c03ede1fcc8e65fc8b8b4b2e
+      - `full-scene-effect-entry-public-wave63.test.ts` — qa: card:B05055:c51f6838f7814f2243bbe0560dc33c4dc896f1b0b13d486cd4223cb898983c95
+      - `full-scene-event-entry-public-wave84.test.ts` — qa: card:B05062:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398
+      - `hand-remove-self-only-public-wave58.test.ts` — qa: card:B07020:924a8b39ee3036e70eeeac9c3a5941e4faa4fec3ebc39e19ceb12b4b0f2419af
+      - `hirameki-decline-partner-area-public-wave95.test.ts` — qa: card:B07059:94d4fbcb6d6b527d8e1d1c0eaa9b309fe2198ea03d499bf7e02c1d5a00121143
+      - `hirameki-source-exclusion-public-wave104.test.ts` — qa: card:B05055:954d5e661b6a0db14e75a56af70b2eb74dcec6e8ac0f10646134ec418133b014
+      - `leave-refresh-source-public-wave111.test.ts` — qa: card:B08079:63af9346bf0cdf05f7fe697c62740abf76d9e08bc098d298f2d22eb00f875eea
+      - `leave-reveal-until-forced-public.test.ts` — qa: card:B02058:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
+      - `leave-trigger-opponent-turn-public.test.ts` — qa: card:B01065:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
+      - `leave-trigger-remove-retrieval-public.test.ts` — qa: card:B02004:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
+      - `leave-trigger-remove-then-draw-public.test.ts` — qa: card:D07014:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
+      - `leave-trigger-scene-target-public.test.ts` — qa: card:B03012:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
+      - `leave-trigger-top-one-public.test.ts` — qa: card:PR084:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
+      - `leave-trigger-top-three-public.test.ts` — qa: card:B03079:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
+      - `mill-three-short-deck-public-wave91.test.ts` — qa: card:B05068:22aaf9ba5e384ee444adeadb5ffb7b5c97b7a4e75ccbac8c297b8c86d3e85f3f
+      - `misread-multiple-public-wave108.test.ts` — qa: card:PR247:c61cc842e775e8f40c3ccc90d41e595b2e2e02184cc4d243534b3c2fdf721fdb
+      - `misread-multiple-public-wave116.test.ts` — qa: card:D06015:7917a528ebb99edb4efb1d6ed72558b874851a0c65d93d121901eb7488a29e03
+      - `misread-one-core-public-wave113.test.ts` — qa: card:D06015:4edfa42fd152dd43d08fd67f36ed96de6ed6daf323da7b0a6c8b4fa1084f3411
+      - `misread-public-runtime-wave18.test.ts` — qa: card:B04079:c61cc842e775e8f40c3ccc90d41e595b2e2e02184cc4d243534b3c2fdf721fdb
+      - `misread-public-runtime-wave26.test.ts` — qa: card:B04038:6d5a65b9e083c8565478cceec3269781a67a936789441e6c196e107f90e2e8c8
+      - `misread-reaction-order-wave26.test.ts` — qa: card:B05015:32589b2605a57e1fe89295b9b2340e6874cd6600ca6756e790b5fbcad58bae18
+      - `multi-component-name-consumers-public-wave107.test.ts` — qa: card:B09108:52e25d1fb9d3623390ecb00ccb1047978985d54514cf0287453e6c0e3105c82a
+      - `multi-component-name-public-wave107.test.ts` — qa: card:B09052:45a28272794215b6465b92629940788c48e8cb3de486869a26a5a34e1a4f6a73
+      - `multihook-timing-public.test.ts` — qa: card:D03007:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3
+      - `must-guard-public-wave100-101.test.ts` — qa: card:B09040:6b3466d6028ee8cf6bd4dc34f5b93627c4da5a38c1229747dde4f1ba5a8b8ee6
+      - `nonpositive-ap-public-wave66.test.ts` — qa: card:B02021:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb
+      - `opponent-event-removal-immunity-public-wave97.test.ts` — qa: card:B10010:8acc30fd02aa7a57c56a3a40704c2abd0853dd036d083f11f04b3cf0687a4e11
+      - `opponent-evidence-gain-public-wave79.test.ts` — qa: card:B01065:b34f939ceba2f547ad6f01ee968061869d0f8abc4e72fa0d51c20b0c14a53ee1
+      - `partner-area-unbounded-public-wave72.test.ts` — qa: card:B07030:dc07d737cba65ebccfc43e14a2de345262a316223691c7ff5eba2a0c7906bcc0
+      - `pr099-public-wave77.test.ts` — qa: card:PR099:2cca6007ab7f2137a43f145275f1d7dd6c33155f5c98d3179becb7d643a950fd
+      - `pr263-pr269-contact-exit-regression-wave83.test.ts` — Horizontal regression: a disguise rider removes the non-current contact particip…
+      - `registered-card-name-scope-public-wave105.test.ts` — qa: card:B09003:45a28272794215b6465b92629940788c48e8cb3de486869a26a5a34e1a4f6a73
+      - `same-card-multicopy-order-wave17.test.ts` — qaId=card:B02020:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c…
+      - `select-one-of-up-to-two-public-wave119.test.ts` — qa: card:B04027:9bafe2020798f633e8f0c109144c9d2df6edaeea89943b94f2424dbc601e886a
+      - `self-selection-public-wave74.test.ts` — qa: card:B03088:37d1a5bf035569e61acdccac31f828d38114d0105e6cbe77aa883552b82699c7
+      - `set-card-ability-occurrence-public-wave35.test.ts` — qa: card:B01057:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58
       - `set-card-host-absent.test.ts`
       - `set-card-host-owner-wave3.test.ts` — qaId=card:B02018:dc712167e0587386756f5293d40bf1766e89e09669554ebcde8e028749d962d…
+      - `set-card-lifecycle-public-wave34.test.ts` — qa: card:B01039:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
+      - `set-event-no-host-public-wave78.test.ts` — qa: card:B01039:40fe7fe9a42e0cc53a2d869e7307b57e578331caf3f51f4d26fa5840acaacc55
+      - `shippu-effect-entry-public.test.ts` — qa: card:B09070:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb
+      - `short-deck-reveal-hand-entry-public.test.ts` — rules: 15-abilities-effects.md, 17-icons.md, 20-color-and-switch.…
+      - `shuffle-romance-public-wave32.test.ts` — qa: card:B01023:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a
+      - `sleep-cost-related-entry-public-wave24.test.ts` — qa: card:B07015:90178c65731533021339234d85b8740114d42f59cdc8a453b6336bba3cd197e1
+      - `sleep-guard-priority-public-waves122-123.test.ts` — qa: card:B09028:323becb3ad65022766eb60c151e76088089be9650ea67e0f5c4c52d67147bc99
+      - `souza-found-public-wave47.test.ts` — qa: card:B01084:c6e5391785273827b8dabcd809585155ef42406b996be0913d033b9dcb43cbe6
+      - `stacked-card-semantics-public-wave33.test.ts` — qa: card:B06005:199a933934b344f7715091799edd9442eca983c85cb7953418d8f7e9f0d4f2a6
+      - `stun-action-target-public.test.ts` — qa: card:B01058:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40
+      - `stun-activation-to-sleep-wave22.test.ts` — qa: card:B04080:872de2079dce9150e76a70314a5d20400e542df72be79f07c2daed17f80158c3
+      - `stun-definition-public-wave60.test.ts` — qa: card:B02057:12d56922ac94e77d7ce7b7d2d7ff6c185065a32f7f91af0ec3483941263df031
+      - `stun-gate-sleep-target-public-wave117.test.ts` — qa: card:PR060:f0205ebe785380650d240fdf4799be132d63a973ea8eedc201b577d4d66bc433
+      - `turn-conditioned-cutin-expansion-public.test.ts` — qa: card:B05095:3ebc71d3fe967142af371f16682581bf9d44ac0db1c409f0d2a20d11ffeeae41
+      - `turn-conditioned-cutin-public.test.ts` — qa: card:B02007:e4a36acb6bbbb1c8b11eac5e65600d839bba033d5a2b7f0e5ecfc84bacd47a4c
+      - `turn1-resolution-time-state-public.test.ts` — rules: 07-action-flow.md, 10-action-event.md, 15-abilities-effects.md, 17-icons.…
+      - `unlimited-deck-rule-public-wave99.test.ts` — qa: card:B09100:d0e693e845a989227a1f748f447006aac04210c1d6e72bf100fe32eeff0b9b05
+      - `up-to-one-zero-choice-public.test.ts` — qa: card:B03007:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d
+      - `up-to-two-public-wave114.test.ts` — qa: card:B01022:9f6ab1b52677a41085f0ff92eeb2b7d34234ca1be8b9cb52cfd66f62b4062d2d
     - **`pr-01/`**
       - `PR100.test.ts`
       - `PR158.test.ts` — tests/cards/pr-01/PR158 犯人 (character, cutin remove-name scaling AP)
@@ -5457,13 +6291,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06036.test.ts` — s1-defer probe — B06036 鬼丸天下統一プロジェクト (case)
       - `B06105.test.ts` — s1-defer probe — B06105 ブラックインパクト！ (case)
       - `B07001.test.ts` — s1-defer probe — B07001 毛利蘭＆灰原哀 (MR, 青, cost-dyn traitCountAny + PA宣言)
-      - `B09039.test.ts` — tests/cards/s1-defer/B09039 中森青子 — S1 defer-unlock probe (owner='opp' 固定)
+      - `B09039.test.ts` — qa: card:B09039:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0
       - `B09105.test.ts` — tests/cards/s1-defer/B09105 キッ — S1 defer-unlock probe (owner='opp' 固定)
       - `B09109.test.ts` — s1-defer probe — B09109 怪盗キッド&安室透 (MR, 白+黄, deckRevealUntil chain + revealFromHa…
     - **`s2-deck/`**
       - `B01022.gen.test.ts` — tests/cards/s2-deck/B01022.gen — HAND-AUTHORED (S2 deck cluster, deck-window mul…
       - `B01093.gen.test.ts` — tests/cards/s2-deck/B01093.gen — HAND-AUTHORED (S2 deck cluster, 非所有者 chooser de…
-      - `B02072.gen.test.ts` — tests/cards/s2-deck/B02072.gen — HAND-AUTHORED (S2 deck cluster, souza dyn X + l…
+      - `B02072.gen.test.ts` — qa: card:B02072:d318ff70e45401b63348e1dc41c896a174b47ebc5076d2054aa468915f989c1a
       - `B08057.gen.test.ts` — tests/cards/s2-deck/B08057.gen — HAND-AUTHORED (S2 deck cluster, remove→deck-bot…
     - **`s2-protect/`**
       - `dbg2.test.ts`
@@ -5527,7 +6361,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `B05088.test.ts`
     - `B06005.test.ts`
     - `B06025.test.ts`
-    - `B06027.test.ts`
+    - `B06027.test.ts` — qa: card:B06027:9dd8f52aa8602ce40ade4ab560b3351e1d400f64e03787df0d7e58f0d4c8838a
     - `B06046.test.ts`
     - `B06047.test.ts`
     - `B06103.test.ts`
@@ -5538,7 +6372,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `B08008.test.ts`
     - `B08063.test.ts` — draw1後も非terminalにし、本テストのdistinct-name→discard契約だけを観測する。
     - `B08069.test.ts`
-    - `B08074.test.ts`
+    - `B08074.test.ts` — qa: card:B08074:3d0bb222ea57dce33046312e882396aa9a601d551a1b3a7fa7d6484884ed334e
     - `B08078.test.ts`
     - `B09036.test.ts`
     - `B09047.test.ts`
@@ -5567,12 +6401,14 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `bug-130-158-live-human-carrier.test.ts`
     - `bug-135-sequence-middle-skip.test.ts` — BUG-135 回帰ガード — sequence 中間の nMin=0 pick を human-decline したとき、後続の必須 remainder が
     - `bug-140-deferred-real-cards.test.ts` — BUG-140 reopened: deferred real-card abilities B05039 / B06035.
-    - `bug-145-self-sleep-gate.test.ts` — BUG-145 self-state micro-cluster (2026-06-15):
+    - `bug-145-self-sleep-gate.test.ts` — BUG-145 self-state micro-cluster (2026-06-15, BUG-313 follow-up):
     - `bug-163-b08079-henso.test.ts` — BUG-163: B08079/B08079P ピンガ — henso 列 (col13)【変装】【事件黒】【FILE7】の grounding 漏れ追補 pr…
     - `bug-165-pb-multipick-collapse.test.ts` — BUG-165 (2026-07-02, wave-10): PB generic multi-pick collapse — n≥2 の Pattern B…
     - `bug-169-face-down-set-card.test.ts`
     - `bug-195-event-remove-by-ap.test.ts` — BUG-195: eventRemoveByAP の単一 choice が sceneRemove pick を二重生成する回帰。
     - `bug-249-b03006-ordering.test.ts`
+    - `bug-311-forced-reveal-shuffle.test.ts` — BUG-311: 「残りをデッキ下へ移し、デッキをシャッフル」は並べ替え権を与えない。
+    - `bug-314-shuffled-remainder-only.test.ts` — BUG-314: 「残りをシャッフルしてデッキの下」は公開した残りだけを無作為化する。
     - `bug155-pick-filter-kind-2026-06-24.test.ts` — BUG-155 水平展開 sweep (2026-06-24, engine変更0) — pick系 atom/query の filter が公式テキストの
     - `bug159-b02010-colornot-2026-06-27.test.ts` — BUG-159 fix — B02010 灰原哀 a1「【青】以外の色を持つキャラ」を custom closure (none説) から
     - `cardphase3-cutin-observer.test.ts` — tests/cards/cardphase3-cutin-observer
@@ -5592,12 +6428,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `cluster3-action-triggers.test.ts` — cluster3 action-lifecycle trigger 15枚 — 構造アサーション (transcription 回帰保護)
     - `cluster4-remove-area-deckbottom.test.ts` — cluster4 — remove-area → deck-bottom 解禁6枚を実 engine 経路で駆動する挙動テスト
     - `cluster5-usage-restriction-behavioral.test.ts` — cluster5 — usage-restriction aura 3枚を実 engine 経路で駆動する挙動テスト
-    - `cluster6-event-use-ban-behavioral.test.ts` — cluster6 — usage-restriction (event-use ban) を実 engine 経路で駆動する挙動テスト
+    - `cluster6-event-use-ban-behavioral.test.ts` — qa: card:B09034:20c3c55ad1dcb3f8aeb0d5e61e281969a5cf678c581f643a252268467f8d37a6
     - `cluster7-hand-count-cards-behavioral.test.ts` — cluster7 — engine変更0 card-authoring 2枚 (B07067 沖矢昴 /…
     - `cluster8-hirameki-suppress.test.ts` — cluster8 — ヒラメキ抑止窓 (B06049 a2) を実 engine 経路で駆動する挙動テスト
     - `cluster9-setcard-leave.test.ts` — cluster9 — setcard:leave hook を実 engine 経路で駆動する挙動テスト (engine拡張 wave#2 cluster9,…
     - `continuation-nest-b06033.test.ts` — continuation-nest cluster — B06033/B06033P「わが味方となるべし!!」(緑 L6 event) の挙動テスト。
-    - `d10026-black-knight.test.ts`
+    - `d10026-black-knight.test.ts` — qa: card:D10026:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0
     - `deck-bottom-to-hand.test.ts` — engine additive (2026-06-29) — handAddFromDeckBottom verb (B03051 怪盗キッド)
     - `disguise-hook-batch.test.ts` — engine-extension disguise-hook batch (2026-06-06 タスクC) — 実カード経由 sanity test
     - `distinct-name-count.test.ts` — distinct-name-count — sceneHas が query.distinctNames を honor して「それぞれカード名の異なる
@@ -5643,6 +6479,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `evidence-top-to-hand.test.ts` — evidence-top-to-hand — evidenceToHand の新 fromTop フラグ (「証拠を上から1つ」= deterministic…
     - `generated-batch.test.ts` — tests/cards/generated-batch — 非MVP 単純カード + 複雑カットイン generator 出力の構造検証
     - `hagiwara-self-remove-observer.test.ts` — engine拡張 wave#2 cluster16 — 萩原千速 (PR280/B06087/B06087P) gate5 実機検証
+    - `hand-reveal-public-lifecycle-wave169.test.ts`
     - `hand-to-evidence.test.ts` — hand-to-evidence — 新 verb handToEvidence (手札→裏向き証拠) と evidence-swap chain の挙動テスト…
     - `hybrid-pilot-1.test.ts` — CARD PHASE hybrid-pilot-1 probe — compiler refuse-1行 hybrid 穴埋め 17枚
     - `leave-reanimate-foreach-batch.test.ts` — Task A batch#2 wave2 — leave→hand / reanimate / forEach-all クラスタ (engine変更0)
@@ -5665,7 +6502,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `pr307-310-runtime.test.ts`
     - `pr307-triggered-effect.test.ts`
     - `reasoning-hook-batch.test.ts` — engine-extension reasoning-hook batch (2026-06-06 タスクC) — 実カード経由 sanity test
-    - `reasoning-hook-batch3.test.ts` — engine-extension reasoning-hook batch #3 (2026-06-06 タスクC) — 実カード経由 sanity test
+    - `reasoning-hook-batch3.test.ts` — qa: card:B03096:586cbc6530a51d5bcfbe6b4b5eac53defa0f7184e31d96b19b4cdbfebca0b4b8
     - `registry.test.ts` — tests/cards/registry — registerAll + cross-set registry テスト
     - `reuse-batch.test.ts` — tests/cards/reuse-batch — catalog-reuse バッチ (手書き, card-condition-catalog 流用) の構造…
     - `s3-hand-cutin-aura.test.ts` — S3 hand-zone cutin aura — B06020 / B07003(+P) production probes.
@@ -5674,7 +6511,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `set-card-remove-enter.test.ts` — Hydrated legacy state has no occurrence IDs. Phase dispatch must backfill,
     - `setcard-enter.test.ts` — engine additive (2026-06-29) — setcard:enter hook + setCardMatches condition.
     - `setcard-removal-batch.test.ts` — engine-extension set-card 除去 batch (2026-06-06 タスクC) — charRemoveSetCard verb +…
-    - `step12-batch1.test.ts` — tests/cards/step12-batch1
+    - `step12-batch1.test.ts` — qa: card:B07015:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0
     - `step12-batch2.test.ts` — CARD PHASE step12 batch2 probe — B09108/B09108P 工藤新一&服部平次 (MR) / B09003/…
     - `step12-batch3-b06085.test.ts` — CARD PHASE step12 batch3 probe — B06085 松田陣平 + engine touch-up evidenceGain face…
     - `triggerchar-target-batch.test.ts` — engine-extension triggerChar→target batch (2026-06-06 タスクC) — $trigger.…
@@ -5755,6 +6592,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `partner-color-keyword.spec.ts` — Round 4f Phase 2: partnerColorKeyword 共通クラスを使う 5 カードを 1 spec で集約検証。
     - `B02023-facedown-set-privacy.spec.ts` — qa: card:B02023:7066f8a33831bd760fec4c8dcb62ddde100267dda13da44eaf70a3be425c607b
     - `audit-suspects-coverage.spec.ts` — E2E: 2026-06-05 監査 workflow が「静的には faithful・実機未確認」とした suspect の runtime カバレッジ。
+    - `b02061-opponent-evidence-wave79.spec.ts`
     - `b10094-mixed-source.spec.ts` — Two public equal PA cards prove that the UI retains occurrence identity.
     - `bug-006.spec.ts` — BUG-006: アクション[事件] で証拠が変動しない (rules/10)
     - `bug-029.spec.ts` — BUG-029: 現場カードがアクション/推理してもスリープにならない (UI 反映)
@@ -5777,14 +6615,17 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `bug-249-effect-order.spec.ts` — Keep reserve cards: both real effects consume a card, and normal engine
     - `bug-252-reveal-visibility-order.spec.ts` — setupGamePage already waited for the Vite dev bridge. Hash-only routing avoids
     - `bug-260-b04030-switch-overlay.spec.ts`
-    - `card-choice-details-real-flow.spec.ts` — The first of two cards becomes stable while the reveal phase still has
+    - `card-choice-details-real-flow.spec.ts` — qa: card:B08019:d52596199be14d625d7776309eeaca145097a31eecca550237262ad7075cb2f4
     - `card-expand-modal-priority.spec.ts`
     - `charge-keyword-badge.spec.ts` — E2E: 突撃バッジ (user 指摘, 2026-06-01)
     - `choice-picker.spec.ts` — BUG-108 E2E: ChoicePickerModal の実ブラウザ render + option click → picker resolve を検証…
     - `choose-intercept.spec.ts`
+    - `cutin-declared-name-wave107.spec.ts`
     - `cutin-handzone-pick.spec.ts` — User 要望: コンタクト中のカットイン選択を、テキストボタン modal ではなく HandZone pick mode
     - `deck-reveal-overlay-ui.spec.ts` — E2E: DeckRevealOverlay の演出 (user 指摘 #1, 2026-06-01)
     - `declared-source-hand-occurrence.spec.ts` — B06103's on-hand declared ability removes a same-colour character as
+    - `disguise-case-inheritance-waves82-83.spec.ts`
+    - `disguise-duration-waves80-81.spec.ts`
     - `disguise-hook-2026-06-06.spec.ts` — E2E: engine-extension disguise-hook batch (2026-06-06 タスクC) — text-faithfulness…
     - `effect-pick.spec.ts` — E2E regression: BUG-053 / BUG-054 — human player effect pick UI 経路
     - `engine-extensions-2026-06-05.spec.ts` — E2E verification for the 2026-06-05 engine-extension #1/#2 batches:
@@ -5793,6 +6634,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `full-match-human-vs-cpu.spec.ts` — Area-based selection uses direct manipulation rather than a modal.
     - `full-match.spec.ts`
     - `leave-intercept.spec.ts` — UI が guard 後を action-1 まで進める。以降のコンタクト選択と判定は公開 dispatch を通す。
+    - `leave-trigger-top-three-public.spec.ts`
     - `m3-pa-mr-declared.spec.ts` — E2E: M3 PA batch — パートナーエリア常駐 MR の宣言能力 human 経路 (実機クリック)
     - `match-visual-gates.spec.ts` — 現行の公開入口は段階移行中。どちらも利用者が押す「対戦を開始」操作であり、
     - `miniwave5-deck-place.spec.ts` — E2E: mini-wave #5 P2 — B05047「【登場時】自分のデッキのカードを上から2枚見て、好きな順番で
@@ -5805,10 +6647,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `pr099-declare-name-modal.spec.ts`
     - `private-hosted-static.spec.ts`
     - `public-hand-reveal-window.spec.ts` — The reveal stays usable above its linked effect picker. Card detail is
+    - `qa-waves168-169-visible-decisions.spec.ts`
     - `reasoning-hook-2026-06-06.spec.ts` — E2E: engine-extension reasoning-hook (2026-06-06 タスクC) の実機 text-faithfulness 検証。
     - `reasoning-hook-batch3-2026-06-06.spec.ts` — E2E: engine-extension reasoning-hook batch #3 (2026-06-06 タスクC) 実機 text-faithful…
+    - `registered-card-name-wave105.spec.ts`
     - `replay-ui.spec.ts` — Phase 9-G.2 (Cleanup 7-D): リプレイ UI E2E
     - `reuse-cards-2026-06-05.spec.ts` — E2E verification for the 2026-06-05 catalog-reuse cards (sequential hand-impl):
+    - `reveal-from-hand-cost.spec.ts`
     - `rps-decision.spec.ts`
     - `s2-deck-window-pick.spec.ts` — E2E: S2 deck cluster — B01022「少年探偵団」の human 実機検証 (T3 Playwright ゲート)。
     - `set-card-browse.spec.ts` — The name/text body is not another detail affordance. Browse begins only at 🔍.
@@ -5822,6 +6667,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `task5-flip-reflow.spec.ts` — E2E (Task5): 現場カードの reflow 移動トゥイーン (FLIP) の実機検証。
     - `triggerchar-target-2026-06-06.spec.ts` — E2E: triggerChar→target ($trigger.uid) の実機 text-faithfulness 検証。
     - `user-bug-wave-ui.spec.ts`
+    - `wave35-set-card-source-identity.spec.ts`
   - **`engine/`** — Engine ユニットテスト
     - **`adversarial/`**
       - `state-owned-runtime.test.ts`
@@ -5852,6 +6698,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `atom-souza.test.ts` — tests/engine/effect/atom-souza.test.ts — Phase 5 advance Souza atom unit test
       - `atom-target-normalize.test.ts` — BUG-074: evidenceToHand / handAddFromRemove の target が BUG-065 array 化と不整合で
       - `audit-leave-suspects.test.ts` — 監査 suspect (leave:to-remove family) の候補フィルタ text-faithfulness を engine レベルで検証。
+      - `autonomous-decision.test.ts`
       - `b04055-trigger-removed-trait-filter.test.ts` — B04055 engine primitive: a deck-reveal filter may compare the revealed
       - `bug-077-evidence-to-hand-e2e.test.ts` — BUG-077: D08013 a1 step 2 evidenceToHand end-to-end simulation
       - `bug-083-multi-entry-switch.test.ts` — BUG-083 characterization: 効果で複数キャラを同時登場させ現場上限 (5) を超える場合の挙動。
@@ -5863,7 +6710,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bug-114-discard-bind-dyn.test.ts` — BUG-114 primitive: discard で除去した手札カードを bind し、その level/AP を dyn で参照する。
       - `bug-121-sequence-choice.test.ts` — BUG-121 残課題解消: sequence 内の human 複数択 choice が、pre-choice step を二重実行せず
       - `bug-130-158-pattern-a-repause.test.ts` — The outer draw belongs after the nested decision, not merely after PB.
-      - `bug-132-gap-fixes.test.ts` — BUG-132 GAP-1/2 修正の pin test (engine拡張 wave#2, 2026-06-12)
+      - `bug-132-gap-fixes.test.ts` — qa: card:B08020:6ca13ec6fb35a17a1d4e9cce41f4a239d75c6760de2061c25511aec53cf9ea8f
       - `bug-134-cofire-pick-staleness.test.ts` — BUG-134 characterization / guard — 同一 hook (phase:end:start 等) で複数 triggered ent…
       - `bug-136-deck-reorder.test.ts` — BUG-136 — deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択。
       - `bug-138-drain-ownership.test.ts` — BUG-138 (engine拡張 wave#2 cluster2 X8): drainAiEffectPicks の pick 所有権
@@ -5872,6 +6719,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bug-190-191-b04026-flow.test.ts`
       - `bug-214-opp-owner-production.test.ts`
       - `bug-249-continuation-priority.test.ts`
+      - `bug-304-scene-remove-chain-gate.test.ts` — BUG-304 — a protected sceneRemove must gate a 「リムーブした場合」 chain.
+      - `bug-wave22-sequence-optional.test.ts`
       - `causal-bound-remove.test.ts`
       - `causal-char-mutations.test.ts`
       - `causal-core-zone-moves.test.ts`
@@ -5920,10 +6769,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `s2-b08057-primitives.test.ts` — S2 deck cluster (2026-07-10, B08057 宮野エレーナ a2): 3 additive primitive。
       - `s2-deck-window-pick.test.ts` — S2 deck cluster (2026-07-10): B01022「上から6枚見て lv4以下[少年探偵団] 2枚まで登場、残りシャッフルしてデッキ下」。
       - `s2-deckplace-chooser.test.ts` — S2 deck cluster (2026-07-10, B01093): deckPlaceSplitBound の選択者座標系是正。
+      - `scene-switch.test.ts`
       - `set-card-exact-remove.test.ts`
       - `short-form-characterization.test.ts` — 短縮形 characterization test (Phase2 refactor の動作不変オラクル)
       - `short-form-new-verbs.test.ts` — 新規 verb 短縮形 test (Phase2 Task2.4-2.7)
       - `stacked-card-pick.test.ts`
+      - `stacked-card-replacement-tail.test.ts`
       - `stacked-card-transfer.test.ts`
       - `start-contact-actor.test.ts`
       - `validate.test.ts` — engine.effect.validate / engine.cards.validate — tests
@@ -5938,12 +6789,15 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `cluster16-filter-predicate.test.ts` — engine cluster16 — filter-predicate 表現力完成 (card-name EXCLUSION + deckReveal cros…
     - **`flow/`**
       - **`action/`**
+        - `contact-participant-exit.test.ts` — rules: 08-contact §6 — either participant leaving ends contact before another ac…
         - `granted-pre-target.test.ts` — Sleep remains a normal rules/07 target; the grant adds no extra sleep target.
         - `state-machine.test.ts` — Phase 4 Group B Task 4.4 — flow.action state machine
         - `target-expander.test.ts` — Phase 4 Group C Task 4.8 — target expander (G29) + mustBeTargeted (G28)
       - **`main/`**
         - `action.test.ts` — Phase 4 Task 4.3 — flow.main.canAction*
         - `declared-ability.test.ts` — Phase 4 Task 4.3 — flow.main.useDeclaredAbility
+        - `declared-cost-trigger-b10006.test.ts`
+        - `declared-cost-trigger-order.test.ts`
         - `hand-use-card.test.ts` — Phase 4 Task 4.3 — flow.main.handUseCard
         - `next-hint.test.ts` — Phase 4 Task 4.3 — flow.main.runNextHint
         - `nexthint-ban.test.ts` — use-restriction — next-hint ban (setNextHintBan / turnState.…
@@ -5953,8 +6807,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
         - `reasoning.test.ts` — Phase 4 Task 4.3 — flow.main.doReasoning
       - `action-case.test.ts` — Phase 4 Group B Task 4.6 — flow.actionCase
       - `auto-phase.test.ts` — Phase 4 Task 4.2 — engine.flow.runAutoPhase
+      - `b08054-host-leave-replacement.test.ts`
       - `bug-112-offboard-declared-use.test.ts` — BUG-112: 「自身を場外へ移すコスト」(selfToDeckBottom 等) の宣言能力で incrDeclaredUseCount が
-      - `bug-140-cutin-batch.test.ts` — tests/engine/flow/bug-140-cutin-batch — BUG-140 補修 (2026-06-13) の cutin 挙動検証
+      - `bug-140-cutin-batch.test.ts` — qa: card:B03028:d5ed43d6e9854041a9d21e09941ee12b53c86ab6a330a20e63d83cef33a88a45
       - `bug-194-partner-ap.test.ts` — BUG-194: real partner is a contact actor and must share AP modifier/read/…
       - `bug-212-production-contact.test.ts`
       - `contact-causal.test.ts`
@@ -5980,6 +6835,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`listeners/`**
       - `bug-197-original-ability-suppression.test.ts` — BUG-197: "original abilities" means every printed ability entry, not only keywor…
       - `contact-leave-self-trigger-suppression.test.ts`
+      - `contact-participant-role-relative.test.ts`
       - `cutin-summon-misfire.test.ts` — tests/engine/listeners/cutin-summon-misfire — 【カットイン】が召喚時に誤発火しないこと
       - `declared-batch-seq.test.ts`
       - `granted-ability.test.ts` — Task D E4 (2026-06-12): charGrantAbility — triggered ability の動的付与
@@ -6072,6 +6928,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `card-probe-harness.ts` — tests/helpers/card-probe-harness.ts — 汎用 probe scenario runner ("probe compiler"…
     - `dispatch-current-decision.ts`
     - `fixtures.ts` — tests/helpers/fixtures.ts — テスト共通 fixture (refactor Phase 1c, 2026-06-12)
+    - `main-game-state.ts`
     - `open-case-hirameki.ts`
   - **`integration/`** — 統合テスト (engine + UI dispatch)
     - `.gitkeep`
@@ -6093,6 +6950,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `ReplayScreen.artifact-load-race.test.tsx`
     - `ResultScreen.mvp.test.tsx`
     - `SetupScreen.lifecycle.test.tsx`
+    - `TutorialBoardSnapshot.read-only.test.tsx`
     - `TutorialScreen.accessibility.test.tsx`
     - `TutorialScreen.canonical.test.ts`
     - `cardCatalog.runtime-boundary.test.ts`
@@ -6140,6 +6998,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `private-hosted-qualification-report.test.ts`
     - `private-hosted-release-basics.test.ts`
     - `private-hosted-runtime-boundary.test.ts`
+    - `repository-dist-lock.ts`
   - **`scripts/`**
     - `build-tcg-runtime-packet.test.ts`
     - `cards-authority-refresh.test.ts`
@@ -6179,7 +7038,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `CardExpandModal.priority.test.tsx`
       - `CardListModal.pick-detail.test.tsx`
       - `CardListModal.zero-pick.test.tsx`
-      - `CaseArea.stamp.test.tsx` — Phase 8.10h: CaseArea stamp-flip class application
+      - `CaseArea.stamp.test.tsx`
       - `CaseArea.test.tsx` — Phase 7 Task 7.6: CaseArea tests
       - `ConfirmModal.interaction.test.tsx` — @vitest-environment jsdom
       - `ConfirmModal.test.tsx` — Phase 8 Task 8.5: ConfirmModal 描画スナップショット
@@ -6196,12 +7055,15 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `EffectChoiceModalHost.test.tsx`
       - `EffectPickerModal.card-detail.test.tsx`
       - `EffectPickerModal.forced-selection.test.tsx`
+      - `EffectSourceIdentity.wave35.test.tsx`
+      - `EffectSourceLifecycle.wave35.test.tsx`
       - `EffectStackPanel.reorder.test.tsx` — Phase 8 完全クローズ Commit 5: EffectStackPanel reorder UI SSR test
       - `EffectStackPanel.test.tsx` — Phase 7 Task 7.14: EffectStackPanel tests
       - `EvidenceArea.test.tsx` — Phase 7 Task 7.9: EvidenceArea tests
       - `FileArea.test.tsx` — Phase 7 Task 7.8: FileArea tests
       - `GameSetupModal.test.tsx` — Task 8.4: GameSetupModal tests
       - `GuardPickerModal.test.tsx` — Phase 8.6α: GuardPickerModal tests
+      - `HandZone.keyboard.test.tsx` — @vitest-environment jsdom
       - `HandZone.test.tsx` — Phase 7 Task 7.11: HandZone tests
       - `HiramekiDemoBanner.test.tsx`
       - `HiramekiPickerModal.test.tsx` — Phase 8 完全クローズ Commit 3a: HiramekiPickerModal SSR test
@@ -6236,6 +7098,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bug-108-choice-picker.test.ts` — BUG-108: D11012 a1「LP＋1するか / AP＋2000する」の choice 択一 UI フロー統合テスト。
       - `bug-245-declared-ability-cost.test.ts` — Structural declaration discovery intentionally stays timing-agnostic.
       - `bug-250-empty-partner-actions.test.ts` — BUG-250: 未初期化パートナーを共通パートナーactionとして使用できてはならない。
+      - `bug-wave23-decision-owner-persistence.test.ts`
+      - `bug-wave23-side-channel-persistence.test.ts`
+      - `hand-use-card-switch-authority.test.ts`
       - `match-modal-inventory.txt`
       - `movePresentationDelay.test.ts`
       - `pending-provenance.test.ts`
@@ -6256,10 +7121,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useActionsPanelFlow.test.ts` — Phase 8 Task 8.5: ActionsPanel フロー (endTurn 最小配線)
       - `useCanEndTurnForUi.test.tsx`
       - `useConfirmation.test.ts` — Phase 8 Task 8.3: useConfirmation (Q9 厳格モード モーダル)
+      - `useContactFlowDriver.declared-name.test.ts`
       - `useContactFlowDriver.test.ts` — Phase 8 完全クローズ Commit 2: ContactFlowDriver smoke tests
       - `useCutinDemoDriver.test.tsx`
       - `useEffectPickFlowDriver.integration.test.tsx`
       - `useEffectPickFlowDriver.owner.test.tsx`
+      - `useEffectPickFlowDriver.public-ownership.test.ts`
       - `useEngineDispatch.action-fsm.test.ts` — Phase 8 完全クローズ Commit 2: per-step action dispatch tests
       - `useEngineDispatch.choice-rps-authority.test.ts`
       - `useEngineDispatch.decision-identity.test.ts`

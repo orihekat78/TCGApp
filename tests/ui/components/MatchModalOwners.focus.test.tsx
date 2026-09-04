@@ -67,7 +67,7 @@ const owners: OwnerCase[] = [
     name: 'DeckReorderModalHost', testId: 'deck-reorder-modal',
     create: () => {
       useGameStateStore.setState({ pendingDeckReorder: { player: 'self', cardIds: ['D08003', 'D11003'] } });
-      return { node: <DeckReorderModalHost />, escapeCalls: [[dispatchEngineActionMock, 0]] };
+      return { node: <DeckReorderModalHost />, escapeCalls: [[dispatchEngineActionMock, 1]] };
     },
   },
   {

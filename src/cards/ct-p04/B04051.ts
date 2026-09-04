@@ -61,7 +61,8 @@ const a1: AbilityDef = {
         verb: 'deckToBottomBound',
         args: {
           player: 'self',
-          bindKey: '$revealed'
+          bindKey: '$revealed',
+          order: 'preserve'
         }
       },
       {

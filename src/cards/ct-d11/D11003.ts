@@ -41,7 +41,7 @@ const a2Inner: AbilityDef = {
   description: '【宣言】【スリープ】AP6000以下のキャラを1枚まで選び、リムーブする。警察2枚以上で宣言可。',
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/21-declared-ability-cost.md'],
 };
-const a2 = caseTraitConditioned({ trait: '婚活', inner: a2Inner });
+const a2 = caseTraitConditioned({ trait: '婚活パーティー', inner: a2Inner });
 
 const a3: AbilityDef = {
   id: 'a3',

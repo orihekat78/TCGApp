@@ -44,6 +44,7 @@ function makeScene(opts: {
   let selfUid = '';
   let oppUid = '';
   const s = produce(initial, draft => {
+    draft.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     const s1 = mutate.scene.enter(draft, 'self', 'C1', { named: opts.selfNamed });
     selfUid = s1.uid;
     if (opts.selfState === 'sleep') mutate.scene.setState(draft, s1.uid, 'sleep');

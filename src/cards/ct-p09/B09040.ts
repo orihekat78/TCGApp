@@ -41,14 +41,18 @@ const a1: AbilityDef = {
   scope: 'on-scene',
   trigger: { hook: 'enter', selfOnly: true },
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'chain',
-      steps: [
-        { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
-        { kind: 'atom', verb: 'discard', args: { player: 'self', max: 1, filter: { kind: 'character', trait: '鈴木財閥' }, bind: '$discarded' } },
-        { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', filter: { kind: 'character', levelMax: { dyn: '$discarded.level' } } } },
-      ],
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain',
+        steps: [
+          { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
+          { kind: 'atom', verb: 'discard', args: { player: 'self', max: 1, filter: { kind: 'character', trait: '鈴木財閥' }, bind: '$discarded' } },
+          { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', filter: { kind: 'character', levelMax: { dyn: '$discarded.level' } } } },
+        ],
+      },
     },
   },
   description:

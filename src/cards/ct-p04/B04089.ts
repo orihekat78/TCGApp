@@ -22,10 +22,8 @@
 //       cause:'effect' 併記 = DSL 規約 (types/effect.ts:186)。コンタクト由来 (cause:'contact-ap') は非発火 = Q&A と整合。
 //       「自分の能力や効果によって」= 特定カード限定でないので by:'self' (contact-winner uid 自己限定) は使わない。
 //   - このキャラをスリープさせてもよい。そうした場合、… => effect optional{ chain[ sceneSetState{$self,sleep}, sceneRemove ] }。
-//       B04092 (同package 同 idiom) 準拠。「してもよい」= optional (opt-in/out)。「そうした場合」= sleep が適用された場合のみ
-//       後続 (chain は no-apply で break)。既にスリープなら払えず不発 = condition not(charStateIs self sleep) が発火自体を
-//       止める (BUG-145)。⚠ self が **スタン状態** の場合は condition を通過し sceneSetState は no-op (rules/03) だが
-//       chain break せず sceneRemove が誤実行される (shipped B04092/B07019 と同一既存挙動)。
+//       B04092 (同package 同 idiom) 準拠。「してもよい」= optional (opt-in/out)。「そうした場合」= sleep が適用された場合のみ後続。
+//       mandatory trigger はsleep/stunでも発動し、effect-time charStateIs(self,active) がoptional全体を抑止する (BUG-145)。
 //   - レベル7以下のキャラを1枚まで選び、リムーブする => sceneRemove 短縮形{player:'self', max:1, side:'either', filter:{levelMax:7}}。
 //       max:1 = 「1枚まで」(0 可、rules/15)。side:'either' = エリア指定なしの「キャラ」= どちらの現場でも選べる (rules/15)。D04002 idiom。
 
@@ -45,18 +43,20 @@ const a1: AbilityDef = {
       { kind: 'partnerColor', color: '黒' },
       { kind: 'turn', player: 'self' },
       { kind: 'removedCharMatches', side: 'opp', cause: 'effect', byPlayer: 'self' },
-      // BUG-145: 既にスリープなら「このキャラをスリープさせてもよい」が払えず不発 (B04092/B07019 idiom)
-      { kind: 'not', c: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'sleep' } },
     ],
   },
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'chain', // 「そうした場合」= sleep が適用された場合のみ sceneRemove へ (chain は no-apply で break)
-      steps: [
-        { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
-        { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', filter: { levelMax: 7 } } },
-      ],
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain', // 「そうした場合」= sleep が適用された場合のみ sceneRemove へ (chain は no-apply で break)
+        steps: [
+          { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
+          { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', filter: { levelMax: 7 } } },
+        ],
+      },
     },
   },
   description:

@@ -24,7 +24,7 @@ const a3: AbilityDef = {
     { kind: 'turn', player: 'self' },
     { kind: 'contactCharMatches', who: 'byUid', filter: { kind: 'character', color: '黒', levelMin: 8, cutinTextIncludes: '' } },
   ] },
-  effect: { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$trigger.cardId', from: 'remove', viaEffect: true, sourceRequired: true, target: { query: { area: 'remove', side: 'self' } } } },
+  effect: { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$trigger.cardId', from: 'remove', viaEffect: true, sourceRequired: true, deferSceneSwitchChoice: true, target: { query: { area: 'remove', side: 'self' } } } },
   description: '【カットイン】【パートナー黒】【自分ターン中】【カットイン】を持つレベル8以上の【黒】のキャラに【カットイン】した場合、このキャラをリムーブエリアから登場させる。',
   ruleRefs: ['rules/09-cutin-disguise.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };

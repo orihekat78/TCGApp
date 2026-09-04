@@ -12,7 +12,8 @@
   color: var(--text-primary, #e0ecf8);
 }
 
-.selectable-card-tile__select {
+.selectable-card-tile__select,
+.selectable-card-tile__content {
   min-block-size: 44px;
   min-height: 44px;
   min-width: 0;
@@ -27,8 +28,9 @@
   color: inherit;
   font: inherit;
   text-align: left;
-  cursor: pointer;
 }
+
+.selectable-card-tile__select { cursor: pointer; }
 
 .selectable-card-tile__select:hover,
 .selectable-card-tile__select:focus-visible {
@@ -105,7 +107,8 @@
   color: var(--text-muted, #7090b5);
 }
 
-.selectable-card-tile--hidden .selectable-card-tile__select {
+.selectable-card-tile--hidden .selectable-card-tile__select,
+.selectable-card-tile--hidden .selectable-card-tile__content {
   grid-column: 1;
 }
 

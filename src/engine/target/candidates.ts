@@ -567,9 +567,18 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
       }
       case 'deck': {
         const deck = state.players[side].deck;
+        const occurrenceWitness = cardOccurrenceWitness(state, side, 'deck');
         for (let i = 0; i < deck.length; i++) {
           const cardId = deck[i];
-          const cand: Candidate = { kind: 'card', cardId, area: 'deck', player: side, index: i };
+          const cand: Candidate = {
+            kind: 'card',
+            uid: cardOccurrenceUid(side, 'deck', cardId, i),
+            cardId,
+            area: 'deck',
+            player: side,
+            index: i,
+            occurrenceWitness,
+          };
           if (matchesFiltersByCardId(state, cardId, query, cand)) out.push(cand);
         }
         break;

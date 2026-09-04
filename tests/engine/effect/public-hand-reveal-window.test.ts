@@ -29,6 +29,7 @@ import { _drainPendingChooseInterceptSide, _pushPendingEffectPickSideForTest, re
 import { persistPendingRuntimeState, readPendingEffectPickAuthority } from '@/engine/effect/runtime-state';
 import { dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
+import { event } from '@/engine/event';
 import { sceneChar } from '../../helpers/fixtures';
 import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
 
@@ -38,6 +39,83 @@ describe('public hand reveal window', () => {
     resetPendingEffectSession();
     resetDefRegistry();
     useGameStateStore.setState({ gameState: null, pendingPublicHandReveal: null, pendingEffectPick: null });
+  });
+
+  it('publishes only the selected deck card without emitting the hand-reveal hook', () => {
+    const state = createEmptyGameState();
+    state.players.self.deck = ['SELECTED', 'PRIVATE-REMAINDER'];
+    state.players.self.hand = ['PRIVATE-HAND'];
+    const ctx = {
+      source: { player: 'self' as const, cardId: 'SOURCE', abilityId: 'a1', uid: 'source#1' },
+      bindings: {},
+    };
+    let handRevealEvents = 0;
+    const stopListening = event.on('hand:reveal', () => { handRevealEvents += 1; });
+
+    runEffect(state, {
+      kind: 'atom',
+      verb: 'handAddFromDeck',
+      args: {
+        player: 'self',
+        cardId: 'SELECTED',
+        presentation: 'public-selected-card',
+      },
+    }, ctx);
+    stopListening();
+
+    const reveal = _drainPendingPublicHandRevealSide();
+    expect(reveal).toMatchObject({
+      owner: 'self',
+      audience: 'all',
+      cardIds: ['SELECTED'],
+      lifetime: 'presentation',
+      origin: 'deck-selected-card',
+      source: { cardId: 'SOURCE', abilityId: 'a1', uid: 'source#1' },
+    });
+    expect(reveal).not.toHaveProperty('handSnapshot');
+    expect(reveal?.cardIds).not.toContain('PRIVATE-REMAINDER');
+    expect(reveal?.cardIds).not.toContain('PRIVATE-HAND');
+    expect(handRevealEvents).toBe(0);
+    expect(ctx.causal).toBeUndefined();
+    expect(state.players.self.deck).toEqual(['PRIVATE-REMAINDER']);
+    expect(state.players.self.hand).toEqual(['PRIVATE-HAND', 'SELECTED']);
+  });
+
+  it('publishes an opponent-owned selected deck card without exposing the opponent remainder', () => {
+    const state = createEmptyGameState();
+    state.players.opp.deck = ['OPP-SELECTED', 'OPP-PRIVATE-REMAINDER'];
+    state.players.opp.hand = ['OPP-PRIVATE-HAND'];
+    let handRevealEvents = 0;
+    const stopListening = event.on('hand:reveal', () => { handRevealEvents += 1; });
+
+    runEffect(state, {
+      kind: 'atom',
+      verb: 'handAddFromDeck',
+      args: {
+        player: 'self',
+        cardId: 'OPP-SELECTED',
+        presentation: 'public-selected-card',
+      },
+    }, {
+      source: { player: 'opp', cardId: 'OPP-SOURCE', abilityId: 'a1', uid: 'opp-source#1' },
+      bindings: {},
+    });
+    stopListening();
+
+    const reveal = _drainPendingPublicHandRevealSide();
+    expect(reveal).toMatchObject({
+      owner: 'opp',
+      audience: 'all',
+      cardIds: ['OPP-SELECTED'],
+      lifetime: 'presentation',
+      origin: 'deck-selected-card',
+      source: { cardId: 'OPP-SOURCE', abilityId: 'a1', uid: 'opp-source#1' },
+    });
+    expect(JSON.stringify(reveal)).not.toContain('OPP-PRIVATE-REMAINDER');
+    expect(JSON.stringify(reveal)).not.toContain('OPP-PRIVATE-HAND');
+    expect(handRevealEvents).toBe(0);
+    expect(state.players.opp.deck).toEqual(['OPP-PRIVATE-REMAINDER']);
+    expect(state.players.opp.hand).toEqual(['OPP-PRIVATE-HAND', 'OPP-SELECTED']);
   });
 
   it('queues an effect-lifetime opponent reveal with ordered duplicate identities', () => {
@@ -190,7 +268,7 @@ describe('public hand reveal window', () => {
     }
   });
 
-  it('never opens a public window for a reveal-from-hand cost', () => {
+  it('opens a cost-completion presentation for only the selected hand card', () => {
     const state = createEmptyGameState();
     state.players.self.hand = ['COST-CARD'];
     const cost: Cost = {
@@ -199,12 +277,15 @@ describe('public hand reveal window', () => {
     };
 
     pay(state, cost, {
-      source: { player: 'self', cardId: 'SOURCE', area: 'scene' },
+      source: { player: 'self', cardId: 'SOURCE', abilityId: 'a1', area: 'scene' },
       bindings: {},
       picked: [{ kind: 'card', cardId: 'COST-CARD', player: 'self', area: 'hand', index: 0 }],
     });
 
-    expect(_drainPendingPublicHandRevealSide()).toBeNull();
+    expect(_drainPendingPublicHandRevealSide()).toMatchObject({
+      owner: 'self', audience: 'all', cardIds: ['COST-CARD'], lifetime: 'presentation',
+      source: { cardId: 'SOURCE' },
+    });
   });
 
   it('does not serialize revealed card IDs into the game log', () => {

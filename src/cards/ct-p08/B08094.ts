@@ -91,7 +91,7 @@ const a2: AbilityDef = {
       {
         kind: 'conditional',
         if: { kind: 'bound', key: '$matched', presence: 'matched' },
-        then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } },
+        then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId', presentation: 'public-selected-card' } },
       },
       // 残りを好きな順番でデッキの下に移す
       { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },

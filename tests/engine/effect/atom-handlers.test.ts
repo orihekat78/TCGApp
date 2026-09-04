@@ -6,6 +6,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { runAtom } from '@/engine/effect/atom-handlers';
+import { deckOccurrenceAuthority } from '@/engine/effect/deck-occurrence-authority';
 import { event } from '@/engine/event/index';
 import { startCausalSession } from '@/engine/log/causal';
 import type { GameState, SceneCharacter, Candidate } from '@/engine/types';
@@ -710,6 +711,34 @@ describe('engine.effect.runAtom', () => {
       });
       expect(Array.isArray(result.players.self.scene[0].stackedCards) ? result.players.self.scene[0].stackedCards.length : result.players.self.scene[0].stackedCards).toBe(3);
     });
+
+    it('gates a fromSelf continuation when the source left before the host choice resumed', () => {
+      const host = makeChar({ uid: 'host' });
+      const state = withScene(createEmptyGameState(), 'self', [host]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'stale-source', cardId: 'B06008' }, dyn: {} });
+
+      const result = produce(state, draft => {
+        runAtom(draft, 'charStackCard', { fromSelf: true, uid: 'host' }, ctx);
+      });
+
+      expect(ctx.dyn?.chainStepNoApply).toBe(true);
+      expect(result.players.self.scene[0]?.stackedCards).toEqual(0);
+      expect(result.log.some(entry => entry.action === 'effect:charStackCard:self-under')).toBe(false);
+    });
+
+    it('gates a fromScene continuation when the selected character left before resume', () => {
+      const host = makeChar({ uid: 'host' });
+      const state = withScene(createEmptyGameState(), 'self', [host]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'host', cardId: 'D10009' }, dyn: {} });
+
+      const result = produce(state, draft => {
+        runAtom(draft, 'charStackCard', { fromScene: true, uid: 'stale-selected', hostUid: 'host' }, ctx);
+      });
+
+      expect(ctx.dyn?.chainStepNoApply).toBe(true);
+      expect(result.players.self.scene[0]?.stackedCards).toEqual(0);
+      expect(result.log.some(entry => entry.action === 'effect:charStackCard:scene-under')).toBe(false);
+    });
   });
 
   // --- パートナー / 事件 ---
@@ -934,8 +963,8 @@ describe('engine.effect.runAtom', () => {
       s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['A', 'B', 'BASE'] } } };
       // Candidate の card バリアントに適合する shape — 型キャスト不要
       const cards: Candidate[] = [
-        { kind: 'card', cardId: 'A', area: 'deck', player: 'self' },
-        { kind: 'card', cardId: 'B', area: 'deck', player: 'self' },
+        deckOccurrenceAuthority(s, 'self', 0)!,
+        deckOccurrenceAuthority(s, 'self', 1)!,
       ];
       const ctx = makeCtx({ bindings: { rest: cards } });
       const result = produce(s, draft => {
@@ -944,20 +973,43 @@ describe('engine.effect.runAtom', () => {
       expect(result.players.self.deck).toEqual(['BASE', 'A', 'B']);
     });
 
-    it('BUG-132 GAP-1 防御: deck に無い id は bottom に複製しない (splice 成功分のみ移動)', () => {
+    it('does not mint authority for a witnessless indexed deck binding', () => {
+      const state = createEmptyGameState();
+      state.players.self.deck = ['A', 'BASE'];
+      const authority = deckOccurrenceAuthority(state, 'self', 0)!;
+      const { occurrenceWitness: _discarded, ...witnessless } = authority;
+      const ctx = makeCtx({ bindings: { rest: [witnessless] } });
+
+      const result = produce(state, draft => {
+        runAtom(
+          draft,
+          'deckToBottomBound',
+          { player: 'self', bindKey: 'rest', order: 'preserve' },
+          ctx,
+        );
+      });
+
+      expect(result.players.self.deck).toEqual(['A', 'BASE']);
+      expect(result.log.at(-1)).toMatchObject({
+        action: 'effect:deckToBottomBound',
+        result: 'stale-selection',
+      });
+    });
+
+    it('BUG-132 GAP-1 防御: stale occurrence があれば bottom move 全体を fail closed にする', () => {
       // chooseMatch の pick await 中に他 entry が deck を消費した場合の window 侵食対策。
       // 旧実装は splice 失敗でも無条件 push し、手札に移ったカードが deck にも複製されていた。
       let s = createEmptyGameState();
       s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['A', 'BASE'] } } };
       const cards: Candidate[] = [
-        { kind: 'card', cardId: 'A', area: 'deck', player: 'self' },
+        deckOccurrenceAuthority(s, 'self', 0)!,
         { kind: 'card', cardId: 'GONE', area: 'deck', player: 'self' }, // deck に存在しない
       ];
       const ctx = makeCtx({ bindings: { rest: cards } });
       const result = produce(s, draft => {
         runAtom(draft, 'deckToBottomBound', { player: 'self', bindKey: 'rest' }, ctx);
       });
-      expect(result.players.self.deck).toEqual(['BASE', 'A']);
+      expect(result.players.self.deck).toEqual(['A', 'BASE']);
     });
   });
 

@@ -58,6 +58,8 @@ const a1: AbilityDef = {
             cardId: '$trigger.cardId', // 除去された自カード (leave:to-remove payload.cardId)
             enterSleep: true,
             viaEffect: true,
+            sourceRequired: true,
+            deferSceneSwitchChoice: true,
             bind: '$revived', // 登場後 uid を捕捉 (後続 trait-flip 用)
             target: {
               kind: 'pick',

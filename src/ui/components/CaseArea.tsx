@@ -55,6 +55,8 @@ const TURN_LABEL: Record<'first' | 'second', string> = {
 export function CaseArea(props: CaseAreaProps): JSX.Element {
   const { caseInfo, turnOrder, side, isCandidate, onClick, onExpand } = props;
   const rootClass = `case-area side-${side}${isCandidate ? ' case-area--candidate' : ''}`;
+  const editionStatus = caseInfo?.status ?? '未開始';
+  const editionClassName = `case-edition-tag${editionStatus === '解決編' ? ' resolved' : ''}`;
   const effectiveClick = isCandidate && onClick ? onClick : undefined;
   const interactiveProps = effectiveClick
     ? { onClick: effectiveClick, style: { cursor: 'pointer' as const } }
@@ -79,6 +81,9 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
         <div className="zone case-zone">
           <div className="zone-label">
             <span>事件</span>
+            <span className={editionClassName} aria-label={`事件状態: ${editionStatus}`}>
+              {editionStatus}
+            </span>
           </div>
           <div className="case-empty" aria-label="事件未開始">未開始</div>
         </div>
@@ -86,9 +91,7 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
     );
   }
 
-  // Round 3: status は Playmat 側 case-edition-tag で表示するため CaseArea では未使用に
   const { title, color, requiredEvidence } = caseInfo;
-  // Round 3: isResolved は case-stamp 削除に伴い未使用に。Playmat の case-edition-tag 側で使用。
   const orientation = caseInfo.orientation ?? detectedOrientation ?? 'portrait';
 
   // タイトル中の \n を <br /> に変換
@@ -109,6 +112,9 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
       <div className="zone case-zone">
         <div className="zone-label">
           <span>事件</span>
+          <span className={editionClassName} aria-label={`事件状態: ${editionStatus}`}>
+            {editionStatus}
+          </span>
         </div>
 
         <div className="case-card-shell">
@@ -119,10 +125,9 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
           >
             <CardArt cardId={caseInfo.cardId} alt="" className="case-bg" />
             <div className="case-title">{titleNodes}</div>
-            {/* Round 2: EVT-色 + Lv 表記は冗長 (タイトルとカード画像で十分判別可能) → 削除済
-                Round 3: case-stamp も削除。事件編/解決編 は Playmat 側の余白に独立 tag で表示。 */}
+            {/* EVT-色 + Lv 表記は冗長なため削除済み。事件状態は zone header が所有する。 */}
           </div>
-          {onExpand && (
+          {onExpand && !isCandidate && (
             <button
               type="button"
               className="case-card-detail"

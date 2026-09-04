@@ -71,17 +71,21 @@ const a2: AbilityDef = {
   condition: { kind: 'fileAtLeast', n: 5 },
   // このキャラをスリープさせてもよい。そうした場合、相手の現場のレベル8以下を1枚まで手札に移す
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'sequence',
-      steps: [
-        { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
-        {
-          kind: 'atom',
-          verb: 'sceneToHand',
-          args: { player: 'self', side: 'opp', max: 1, filter: { levelMax: 8, kind: 'character' } },
-        },
-      ],
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'sequence',
+        steps: [
+          { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
+          {
+            kind: 'atom',
+            verb: 'sceneToHand',
+            args: { player: 'self', side: 'opp', max: 1, filter: { levelMax: 8, kind: 'character' } },
+          },
+        ],
+      },
     },
   },
   description:

@@ -23,7 +23,8 @@ import {
   startStandaloneCausalTrace,
 } from '../../log/effect-causal.js';
 import { eventUseAllowed, handUseCharRestrictAllows, nextHintColorIgnoreAllowed, effectiveHandLevel } from './hand-use-card.js';
-
+import { isMainActionWindow } from './main-action-window.js';
+import { sceneCap } from '../../read/scene-cap.js';
 type Player = 'self' | 'opp';
 
 /**
@@ -35,7 +36,7 @@ export function canStartNextHint(state: GameState, p: Player): boolean {
   // wave use-restrict (2026-06-30): 「このターン中、自分はネクストヒントできない」(B06104/P・B09019/P・B09105/P)。
   // setNextHintBan verb がセット、resetTurnFlags でクリア。ネクストヒント全体 (step1 FILE→手札 含む) を不可にする
   // (eventUseBanned が step2 の event のみ gate するのと異なる)。手札の使用 (rules/05 01.) は別経路ゆえ無影響。
-  if (state.turnState[p].nextHintBanned) return false;
+  if (!isMainActionWindow(state, p) || state.turnState[p].nextHintBanned) return false;
   const file = state.players[p].file;
   if (file.length === 0) return false;
   // アシストパートナー以外のカードが 1 枚以上あれば OK
@@ -86,6 +87,86 @@ function colorAllowed(state: GameState, p: Player, cardId: string): boolean {
   return true;
 }
 
+function nextHintOptionalCardBaseError(
+  state: GameState,
+  p: Player,
+  cardId: string,
+): string | null {
+  const projected = projectedNextHintState(state, p);
+  if (!projected || !projected.players[p].hand.includes(cardId)) {
+    return `runNextHint: ${cardId} not in ${p} hand`;
+  }
+  const definition = readDef.card(cardId);
+  if (definition?.kind !== 'character' && definition?.kind !== 'event') {
+    return `runNextHint: ${cardId} must be character or event`;
+  }
+  if (!colorAllowed(projected, p, cardId)) {
+    return `runNextHint: ${cardId} color violates case`;
+  }
+  if (definition?.kind === 'character'
+    && (projected.turnState[p].useEnterBannedCardNames ?? [])
+      .some(name => definition.names.includes(name))) {
+    return `runNextHint: ${cardId} use/enter banned this turn`;
+  }
+  const level = effectiveHandLevel(projected, p, cardId);
+  if (level !== undefined && level > projected.players[p].file.length) {
+    return `runNextHint: ${cardId} level ${level} > FILE ${projected.players[p].file.length}`;
+  }
+  if (definition?.kind === 'event' && projected.turnState[p].eventUseBanned) {
+    return `runNextHint: ${cardId} event-use banned this turn`;
+  }
+  if (definition?.kind === 'event' && !eventUseAllowed(projected, p, cardId)) {
+    return `runNextHint: ${cardId} event-use condition not met`;
+  }
+  if (definition?.kind === 'character' && !handUseCharRestrictAllows(projected, p, cardId)) {
+    return `runNextHint: ${cardId} hand-use restricted by case`;
+  }
+  return null;
+}
+
+function nextHintOptionalCardError(
+  state: GameState,
+  p: Player,
+  cardId: string,
+  switchRemoveUid?: string,
+): string | null {
+  const baseError = nextHintOptionalCardBaseError(state, p, cardId);
+  if (baseError) return baseError;
+  const projected = projectedNextHintState(state, p)!;
+  const definition = readDef.card(cardId)!;
+  if (definition.kind === 'character') {
+    const requiresSwitch = projected.players[p].scene.length >= sceneCap(projected, p);
+    if (requiresSwitch && switchRemoveUid === undefined) {
+      return `runNextHint: ${cardId} switch victim required`;
+    }
+    if (requiresSwitch
+      && !projected.players[p].scene.some(character => character.uid === switchRemoveUid)) {
+      return `runNextHint: ${cardId} invalid switch victim ${switchRemoveUid ?? ''}`;
+    }
+    if (!requiresSwitch && switchRemoveUid !== undefined) {
+      return `runNextHint: ${cardId} switch not allowed`;
+    }
+  } else if (switchRemoveUid !== undefined) {
+    return `runNextHint: ${cardId} switch not allowed`;
+  }
+  return null;
+}
+
+/** UI picker preflight before a required full-scene switch victim is chosen. */
+export function canOfferNextHintOptionalCard(state: GameState, p: Player, cardId: string): boolean {
+  return nextHintOptionalCardBaseError(state, p, cardId) === null;
+}
+
+/** Public-dispatch preflight for the optional card used in Next Hint step 2. */
+export function canUseNextHintOptionalCard(
+  state: GameState,
+  p: Player,
+  cardId: string,
+  switchRemoveUid?: string,
+): boolean {
+  return nextHintOptionalCardError(state, p, cardId, switchRemoveUid) === null;
+}
+
 /**
  * runNextHint — ネクストヒントを実行する。
  *
@@ -95,9 +176,17 @@ function colorAllowed(state: GameState, p: Player, cardId: string): boolean {
  *   → 判定はカード使用の **時点** の FILE 枚数を見るが、手札に加わったカードは
  *     FILE から既に取り除かれているので自然に正しくなる
  */
-export function runNextHint(state: GameState, p: Player, optionalCardId?: string): void {
+export function runNextHint(
+  state: GameState,
+  p: Player,
+  optionalCardId?: string,
+  switchRemoveUid?: string,
+): void {
   if (!canStartNextHint(state, p)) {
     throw new Error(`runNextHint: not startable for ${p}`);
+  }
+  if (optionalCardId === undefined && switchRemoveUid !== undefined) {
+    throw new Error('runNextHint: switch not allowed without optional card');
   }
   // 1. FILE 最上部を手札へ (アシストパートナーは除く)
   // Round 3: FileCard.card-back に cardId を保持するよう拡張済 → 実 cardId を手札に push
@@ -108,31 +197,9 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
   // FILE, set a flag, append a log, or trigger file:pop listeners.
   let optionalDef: ReturnType<typeof readDef.card>;
   if (optionalCardId !== undefined) {
-    const projected = projectedNextHintState(state, p);
-    if (!projected || !projected.players[p].hand.includes(optionalCardId)) {
-      throw new Error(`runNextHint: ${optionalCardId} not in ${p} hand`);
-    }
-    if (!colorAllowed(projected, p, optionalCardId)) {
-      throw new Error(`runNextHint: ${optionalCardId} color violates case`);
-    }
-    const d = readDef.card(optionalCardId);
-    optionalDef = d;
-    if (d?.kind === 'character' && (projected.turnState[p].useEnterBannedCardNames ?? []).some(name => d.names.includes(name))) {
-      throw new Error(`runNextHint: ${optionalCardId} use/enter banned this turn`);
-    }
-    const nhLvl = effectiveHandLevel(projected, p, optionalCardId);
-    if (nhLvl !== undefined && nhLvl > projected.players[p].file.length) {
-      throw new Error(`runNextHint: ${optionalCardId} level ${nhLvl} > FILE ${projected.players[p].file.length}`);
-    }
-    if (optionalDef?.kind === 'event' && projected.turnState[p].eventUseBanned) {
-      throw new Error(`runNextHint: ${optionalCardId} event-use banned this turn`);
-    }
-    if (optionalDef?.kind === 'event' && !eventUseAllowed(projected, p, optionalCardId)) {
-      throw new Error(`runNextHint: ${optionalCardId} event-use condition not met`);
-    }
-    if (optionalDef?.kind === 'character' && !handUseCharRestrictAllows(projected, p, optionalCardId)) {
-      throw new Error(`runNextHint: ${optionalCardId} hand-use restricted by case`);
-    }
+    const error = nextHintOptionalCardError(state, p, optionalCardId, switchRemoveUid);
+    if (error) throw new Error(error);
+    optionalDef = readDef.card(optionalCardId);
   }
 
   const causalTrace = startStandaloneCausalTrace(state, {
@@ -205,13 +272,31 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
     // 手札の使用とは異なり、ネクストヒントによる登場は **手動プレイ** = viaEffect:false。
     // rules/17 — enter Hook を emit して 【登場時】 listener を起動する。
     if (d && d.kind === 'character') {
+      const sceneBefore = new Set(state.players[p].scene.map(character => character.uid));
       // 手札から除去 (refactor 1a 2026-06-12: mutate 層経由。indexOf+splice と同一挙動)
       mutate.hand.remove(state, p, [optionalCardId]);
       // 現場登場 (名乗り状態 = rules/12 同ターン登場)
-      const newChar = mutate.scene.enter(state, p, optionalCardId, {
-        named: true,
-        viaEffect: false,
-      });
+      const newChar = switchRemoveUid === undefined
+        ? mutate.scene.enter(state, p, optionalCardId, {
+            named: true,
+            viaEffect: false,
+          })
+        : mutate.scene.switchEnter(state, p, optionalCardId, switchRemoveUid, {
+            named: true,
+            viaEffect: false,
+          });
+      const removedFromScene = [...sceneBefore].filter(
+        uid => !state.players[p].scene.some(character => character.uid === uid),
+      ).length;
+      if (removedFromScene > 0) {
+        recordCausalTraceOperation(state, causalTrace, {
+          actor: p,
+          kind: 'zone-move',
+          source: { kind: 'zone', side: p, zone: 'scene' },
+          targets: [{ kind: 'zone', side: p, zone: 'remove' }],
+          outcome: { type: 'move', from: 'scene', to: 'remove', count: removedFromScene },
+        });
+      }
       recordCausalTraceOperation(state, causalTrace, {
         actor: p,
         kind: 'zone-move',

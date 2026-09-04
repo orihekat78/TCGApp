@@ -1,6 +1,7 @@
 // engine.effect.atom-handlers/char — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
 import { mutate } from '../../mutate/index.js';
 import { scene as readScene } from '../../read/scene.js';
+import { char as readChar } from '../../read/char.js';
 import { tryRePickFromAtom } from '../resolve-picks.js';
 import { isShortFormDelta } from '../atom-pick-spec.js';
 import { removeExcludedSourceCardId } from '../../read/effect-source.js';
@@ -9,6 +10,8 @@ import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, CausalOutcome, PublicCausalZone } from '../../types/index.js';
 import { recordEffectCausalOperation } from '../../log/effect-causal.js';
 import { advanceIndexedZoneEpoch } from '../../state/indexed-zone-epoch.js';
+import { advanceDeckEpochAndRebaseBindings } from '../deck-occurrence-authority.js';
+import { _peekPendingSetCardReplacementSide } from '../pending-state.js';
 
 function sceneOwnerOf(s: GameState, uid: string): Player | undefined {
   if (s.players.self.scene.some((card) => card.uid === uid)) return 'self';
@@ -220,11 +223,10 @@ export function atomCharGrantKeyword(s: GameState, a: Record<string, unknown>, c
       const grantKw = a.kw as string;
       const grantScope = (a.scope as 'turn' | 'contact' | 'permanent' | undefined) ?? 'permanent';
       const grantChar = readScene.byUid(s, grantUid);
-      const keywordAlreadyGranted = grantScope === 'permanent'
-        ? grantChar?.keywordOverrides.granted.includes(grantKw) === true
-        : ((grantChar?.turnEffects.grantedKeywords as string[] | undefined) ?? []).includes(grantKw);
+      const effectiveBefore = grantChar ? readChar.hasKeyword(s, grantUid, grantKw) : false;
       mutate.char.grantKeyword(s, grantUid, grantKw, grantScope);
-      if (grantChar !== null && !keywordAlreadyGranted) {
+      const effectiveAfter = grantChar ? readChar.hasKeyword(s, grantUid, grantKw) : false;
+      if (grantChar && effectiveBefore !== effectiveAfter) {
         recordSceneValueChange(s, ctx, grantUid, { type: 'state', state: 'success' });
       }
       // BUG-073: effect log
@@ -241,15 +243,14 @@ export function atomCharRevokeKeyword(s: GameState, a: Record<string, unknown>, 
       // charRevokeKeyword 使用は0件ゆえ既定挙動は不変 (回帰0)。turn は revokedKeywords へ積み read.char.keywords が減算。
       const revokeScope = (a.scope as 'turn' | 'permanent' | undefined) ?? 'permanent';
       const revokeChar = readScene.byUid(s, revokeUid);
-      const keywordWillChange = revokeScope === 'turn'
-        ? !((revokeChar?.turnEffects.revokedKeywords as string[] | undefined) ?? []).includes(revokeKw)
-        : revokeChar?.keywordOverrides.granted.includes(revokeKw) === true;
+      const effectiveBefore = revokeChar ? readChar.hasKeyword(s, revokeUid, revokeKw) : false;
       if (revokeScope === 'turn') {
         mutate.char.revokeKeywordTurn(s, revokeUid, revokeKw);
       } else {
         mutate.char.revokeKeyword(s, revokeUid, revokeKw);
       }
-      if (revokeChar !== null && keywordWillChange) {
+      const effectiveAfter = revokeChar ? readChar.hasKeyword(s, revokeUid, revokeKw) : false;
+      if (revokeChar && effectiveBefore !== effectiveAfter) {
         recordSceneValueChange(s, ctx, revokeUid, { type: 'state', state: 'success' });
       }
       // BUG-073: effect log
@@ -341,11 +342,11 @@ export function atomCharGrantAbility(s: GameState, a: Record<string, unknown>, c
       const baseGrantedId = typeof spec.id === 'string'
         ? spec.id
         : `granted:${ctx.source.cardId ?? '?'}:${ctx.source.abilityId ?? '?'}`;
-      // gap③ (2026-07-11): declared grant のみ、同一 host へ base id 衝突で複数付与された場合に
-      // #N suffix を付し【ターン1】(declaredUseCount) を独立カウントさせる (公式Q&A B06042「同じキャラに
-      // 2回使用 → それぞれ1回ずつ計2回使える」)。triggered grant は従来 id 維持 (byte 不変)。
+      // gap③ / BUG-320: declared/triggered grant は、同一 host へ base id 衝突で複数付与された場合に
+      // #N suffix を付ける。宣言と発動の【ターン1】はどちらも host uid + ability id で記録されるため、
+      // 付与ごとの runtime identity が必要。continuous grant は回数identityを消費しないため従来idを維持。
       let grantedId = baseGrantedId;
-      if (grantedType === 'declared') {
+      if (grantedType === 'declared' || grantedType === 'triggered') {
         let existingGranted: unknown;
         for (const pl of ['self', 'opp'] as const) {
           const host = s.players[pl].scene.find((c) => c.uid === cgaUid);
@@ -614,6 +615,7 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
           });
         }
         scCardId = s.players[sscP].deck.shift()!;
+        advanceDeckEpochAndRebaseBindings(s, ctx, sscP, [0]);
         if (setCardOwner !== undefined) deckSetSides = { deck: sscP, setCard: setCardOwner };
         // Keep the transfer atomic to observers: setCard emits setcard:enter,
         // then the completed take may refresh and emit remove:exit.
@@ -685,8 +687,17 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
         const selfUid = ctx.source.uid;
         if (typeof selfUid !== 'string') return;
         const sourceOwner = sceneOwnerOf(s, selfUid);
-        const moved = mutate.scene.toStack(s, selfUid, hostUid);
-        if (moved && sourceOwner !== undefined) recordStackMove(s, ctx, sourceOwner, 'scene', hostUid, 1);
+        const replacementBefore = _peekPendingSetCardReplacementSide();
+        const moved = mutate.scene.toStack(s, selfUid, hostUid, {
+          cause: 'effect', byPlayer: ctx.source.player,
+        });
+        const replacementAfter = _peekPendingSetCardReplacementSide();
+        if (!moved) {
+          if (replacementAfter && replacementAfter !== replacementBefore) return;
+          (ctx.dyn ??= {}).chainStepNoApply = true;
+          return;
+        }
+        if (sourceOwner !== undefined) recordStackMove(s, ctx, sourceOwner, 'scene', hostUid, 1);
         mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charStackCard:self-under', target: hostUid, result: selfUid });
         return;
       }
@@ -714,8 +725,17 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
         const hostUid = typeof a.hostUid === 'string' ? a.hostUid : ctx.source.uid;
         if (typeof hostUid !== 'string') return;
         const sourceOwner = sceneOwnerOf(s, movedUid);
-        const moved = mutate.scene.toStack(s, movedUid, hostUid);
-        if (moved && sourceOwner !== undefined) recordStackMove(s, ctx, sourceOwner, 'scene', hostUid, 1);
+        const replacementBefore = _peekPendingSetCardReplacementSide();
+        const moved = mutate.scene.toStack(s, movedUid, hostUid, {
+          cause: 'effect', byPlayer: ctx.source.player,
+        });
+        const replacementAfter = _peekPendingSetCardReplacementSide();
+        if (!moved) {
+          if (replacementAfter && replacementAfter !== replacementBefore) return;
+          (ctx.dyn ??= {}).chainStepNoApply = true;
+          return;
+        }
+        if (sourceOwner !== undefined) recordStackMove(s, ctx, sourceOwner, 'scene', hostUid, 1);
         mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charStackCard:scene-under', target: hostUid, result: movedUid });
         return;
       }

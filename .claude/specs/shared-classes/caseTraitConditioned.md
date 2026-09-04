@@ -6,7 +6,7 @@
 
 ```typescript
 export function caseTraitConditioned(opts: {
-  trait: string;                           // 例: '婚活'
+  trait: string;                           // 例: '婚活パーティー'
   inner: AbilityDef;                       // 解放する能力
 }): AbilityDef
 ```
@@ -33,8 +33,8 @@ inner の condition に `caseTrait` を AND で追加した新しい AbilityDef 
 
 | Card | trait | inner |
 |------|-------|-------|
-| D11003/D11004 | 婚活 | 【宣言】【スリープ】 AP6000以下リム + 警察2枚条件 |
-| D11005/D11006 | 婚活 | 【登場時】 自AP以下リム |
+| D11003/D11004 | 婚活パーティー | 【宣言】【スリープ】 AP6000以下リム + 警察2枚条件 |
+| D11005/D11006 | 婚活パーティー | 【登場時】 自AP以下リム |
 
 ## 互換性
 

@@ -10,8 +10,17 @@
 //   - 'endTurn' は常に列挙される (プレイヤーは常にターン終了可)
 //   - actionAgainstChar は flow.action.candidates も併用し、G29 拡張対象も含める
 
-import type { GameState, CardDef, AbilityDef } from '@/engine/types';
+import type {
+  GameState,
+  CardDef,
+  AbilityDef,
+  DeclaredAbilityHostOrigin,
+} from '@/engine/types';
 import { engine } from '@/engine';
+import {
+  declaredNameCandidates,
+  findDeclareNameSpec,
+} from '@/engine/effect/declared-name-domain';
 import { makePartnerAbilCtx } from './ability-ctx.js';
 
 type Player = 'self' | 'opp';
@@ -25,7 +34,16 @@ export type Move =
   | { kind: 'handUseCardSwitch'; cardId: string; removeUid: string }
   | { kind: 'startNextHint' }
   | { kind: 'partnerAbility'; abilityId: string }
-  | { kind: 'declaredAbility'; uid: string; abilityId: string }
+  | {
+      kind: 'declaredAbility';
+      uid: string;
+      abilityId: string;
+      setCardId?: string;
+      setCardInstanceId?: string;
+      abilityOrigin?: DeclaredAbilityHostOrigin;
+      abilityIndex?: number;
+      declaredName?: string;
+    }
   | { kind: 'reasoning'; uid: string }
   | { kind: 'actionAgainstChar'; byUid: string; targetUid: string }
   | { kind: 'actionAgainstCase'; byUid: string; targetPlayer: 'self' | 'opp' }
@@ -77,10 +95,38 @@ function partnerDeclaredAbilities(state: GameState, p: Player): AbilityDef[] {
 /**
  * scene キャラの declared abilities を取得
  */
-function charDeclaredAbilities(cardId: string): AbilityDef[] {
-  const def: CardDef | undefined = engine.cards.get(cardId);
-  if (!def) return [];
-  return def.abilities.filter((a): a is AbilityDef => isAbilityDef(a) && a.type === 'declared');
+function appendDeclaredAbilityMoves(
+  moves: Move[],
+  state: GameState,
+  uid: string,
+  cardId: string,
+  area: 'scene' | 'case' | 'partner-area' | 'hand' | 'evidence' | 'file',
+): void {
+  for (const occurrence of engine.flow.findDeclaredAbilityOccurrences(state, uid, cardId, area)) {
+    const sourceRef = engine.flow.declaredAbilityOccurrenceSourceRef(occurrence);
+    let declaredName: string | undefined;
+    try {
+      const spec = findDeclareNameSpec(occurrence.ability.effect);
+      if (spec && !spec.optional && spec.domain !== 'unrestricted') {
+        const names = declaredNameCandidates(spec.domain);
+        declaredName = names[0];
+      }
+    } catch {
+      continue;
+    }
+    const costParams = declaredName === undefined ? undefined : { declaredName };
+    if (!engine.flow.canActivateDeclaredAbility(state, uid, occurrence.ability.id, costParams, {
+      allowImplicitPhysicalCostSelection: true,
+      sourceRef,
+    })) continue;
+    moves.push({
+      kind: 'declaredAbility',
+      uid,
+      abilityId: occurrence.ability.id,
+      ...sourceRef,
+      ...(declaredName === undefined ? {} : { declaredName }),
+    });
+  }
 }
 
 /**
@@ -152,11 +198,7 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
   // 6. declaredAbility (scene 順 × ability 順)
   // Phase 8.8d: 同じく cost.canPay フィルタ
   for (const c of state.players[byPlayer].scene) {
-    // gap② (2026-07-11, B06042): 印字 declared + charGrantAbility 付与 declared (BUG-084 UI/AI 対称)。
-    for (const ab of [...charDeclaredAbilities(c.cardId), ...engine.flow.grantedDeclaredAbilitiesOf(c)]) {
-      if (!engine.flow.canActivateDeclaredAbility(state, c.uid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) continue;
-      moves.push({ kind: 'declaredAbility', uid: c.uid, abilityId: ab.id });
-    }
+    appendDeclaredAbilityMoves(moves, state, c.uid, c.cardId, 'scene');
   }
 
   // 6b. 事件カードの declaredAbility (uid 'case:self'/'case:opp')
@@ -166,10 +208,7 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
     const caseCardId = state.players[byPlayer].case.cardId;
     if (caseCardId) {
       const caseUid = `case:${byPlayer}`;
-      for (const ab of charDeclaredAbilities(caseCardId)) {
-        if (!engine.flow.canActivateDeclaredAbility(state, caseUid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) continue;
-        moves.push({ kind: 'declaredAbility', uid: caseUid, abilityId: ab.id });
-      }
+      appendDeclaredAbilityMoves(moves, state, caseUid, caseCardId, 'case');
     }
   }
 
@@ -180,10 +219,7 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
     const mr = state.players[byPlayer].partnerAreaMR;
     if (mr) {
       const mrUid = mr.uid;
-      for (const ab of charDeclaredAbilities(mr.cardId)) {
-        if (!engine.flow.canActivateDeclaredAbility(state, mrUid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) continue;
-        moves.push({ kind: 'declaredAbility', uid: mrUid, abilityId: ab.id });
-      }
+      appendDeclaredAbilityMoves(moves, state, mrUid, mr.cardId, 'partner-area');
     }
   }
 
@@ -193,29 +229,18 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
   // per cardId, admitted by the same cost/timing/ownership boundary.
   for (const [index, cardId] of state.players[byPlayer].hand.entries()) {
     const handUid = `hand:${byPlayer}:${index}`;
-    for (const ab of charDeclaredAbilities(cardId)) {
-      if (!engine.flow.canActivateDeclaredAbility(state, handUid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) continue;
-      moves.push({ kind: 'declaredAbility', uid: handUid, abilityId: ab.id });
-    }
+    appendDeclaredAbilityMoves(moves, state, handUid, cardId, 'hand');
   }
 
   for (const [index, entry] of state.players[byPlayer].evidence.entries()) {
     if (!entry.faceUp) continue;
     const uid = `evidence:${byPlayer}:${index}`;
-    for (const ab of charDeclaredAbilities(entry.cardId)) {
-      if (engine.flow.canActivateDeclaredAbility(state, uid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) {
-        moves.push({ kind: 'declaredAbility', uid, abilityId: ab.id });
-      }
-    }
+    appendDeclaredAbilityMoves(moves, state, uid, entry.cardId, 'evidence');
   }
   for (const [index, entry] of state.players[byPlayer].file.entries()) {
     if (entry.type !== 'card-back' || entry.faceUp !== true) continue;
     const uid = `file:${byPlayer}:${index}`;
-    for (const ab of charDeclaredAbilities(entry.cardId)) {
-      if (engine.flow.canActivateDeclaredAbility(state, uid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) {
-        moves.push({ kind: 'declaredAbility', uid, abilityId: ab.id });
-      }
-    }
+    appendDeclaredAbilityMoves(moves, state, uid, entry.cardId, 'file');
   }
 
   const partnerUid = byPlayer === 'self' ? 'partner:self' : 'partner:opp';

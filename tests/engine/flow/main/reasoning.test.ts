@@ -38,6 +38,7 @@ function makeStateWithChar(opts: { named?: boolean; state?: 'active' | 'sleep' |
   const initial = createEmptyGameState();
   let uid = '';
   const s = produce(initial, draft => {
+    draft.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     const c = mutate.scene.enter(draft, 'self', 'C1', { named: opts.named });
     uid = c.uid;
     if (opts.state === 'sleep') {
@@ -105,6 +106,7 @@ describe('engine.flow.main.doReasoning', () => {
     const initial = createEmptyGameState();
     let uid = '';
     const s = produce(initial, draft => {
+      draft.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
       const c = mutate.scene.enter(draft, 'self', 'C1', {});
       uid = c.uid;
       // override LP to -2
@@ -129,6 +131,7 @@ describe('engine.flow.main.doReasoning', () => {
     const initial = createEmptyGameState();
     let uid = '';
     const s = produce(initial, draft => {
+      draft.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
       const c = mutate.scene.enter(draft, 'self', 'C1', {});
       uid = c.uid;
       draft.players.self.deck = Array.from({ length: 10 }, (_, i) => `d-${i}`);
@@ -190,6 +193,7 @@ describe('engine.flow.main.doReasoning', () => {
     const initial = createEmptyGameState();
     let uid2 = '';
     const s2 = produce(initial, draft => {
+      draft.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
       const c = mutate.scene.enter(draft, 'self', 'C1', {});
       uid2 = c.uid;
       const target = draft.players.self.scene.find(c => c.uid === uid2)!;
@@ -217,6 +221,7 @@ describe('engine.flow.main.doReasoning', () => {
     registerCardDef(makeCard('P-SELF', { lp: 4, kind: 'partner' }));
     const initial = createEmptyGameState();
     const s = produce(initial, draft => {
+      draft.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
       mutate.partner.init(draft, 'self', 'P-SELF');
       draft.players.self.deck = Array.from({ length: 10 }, (_, i) => `d-${i}`);
     });

@@ -226,6 +226,22 @@ describe('engine.dyn.eval', () => {
       expect(evalDyn(s, '$self.oppSceneCount', makeCtx({ source: { player: 'self', area: 'scene', uid: 'u1' } }))).toBe(0);
     });
 
+    it('$self.sceneCount counts the source owner scene and composes with opponent count', () => {
+      registerCardDef(defOf({ id: 'C001' }));
+      let s = withScene(createEmptyGameState(), 'self', [
+        makeChar({ uid: 'u1', cardId: 'C001' }),
+        makeChar({ uid: 'u2', cardId: 'C001' }),
+      ]);
+      s = withScene(s, 'opp', [makeChar({ uid: 'o1', cardId: 'C001' })]);
+
+      const selfCtx = makeCtx({ source: { player: 'self', area: 'hand' } });
+      const oppCtx = makeCtx({ source: { player: 'opp', area: 'hand' } });
+      expect(evalDyn(s, '$self.sceneCount', selfCtx)).toBe(2);
+      expect(evalDyn(s, '$self.sceneCount', oppCtx)).toBe(1);
+      expect(evalDyn(s, '($self.sceneCount + $self.oppSceneCount) * 2', selfCtx)).toBe(6);
+      expect(evalDyn(createEmptyGameState(), '$self.sceneCount', selfCtx)).toBe(0);
+    });
+
     // engine additive wave (2026-07-02): $self.removeNameCount.<name> — ctx.source.player の
     // リムーブエリアで指定カード名を持つカード数 (PR158/PR164 犯人 カットイン「〚カード名［犯人］〛1枚につき AP+2000
     // （このカードも含める）」)。カットイン自身は resolve 時点で既に remove 内 (contact.ts emit→discardToRemove→resolve)

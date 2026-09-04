@@ -3,7 +3,16 @@
 export { canHandUseCard, canHandUseCardSwitch, handUseCard } from './hand-use-card.js';
 export { canStartNextHint, runNextHint } from './next-hint.js';
 export { canPartnerAbility, usePartnerAbility } from './partner-ability.js';
-export { canDeclaredAbility, canActivateDeclaredAbility, useDeclaredAbility, grantedDeclaredAbilitiesOf } from './declared-ability.js';
+export {
+  canDeclaredAbility,
+  canActivateDeclaredAbility,
+  useDeclaredAbility,
+  grantedDeclaredAbilitiesOf,
+  declaredAbilityOccurrenceSourceRef,
+  findDeclaredAbilityOccurrence,
+  findDeclaredAbilityOccurrences,
+} from './declared-ability.js';
+export type { DeclaredAbilityOccurrence, DeclaredAbilitySourceRef } from './declared-ability.js';
 // Phase 2c (BUG-116 構造解消): cost+ctx 構築 + pay を engine 側に一元化した activate 系
 export { activateDeclaredAbility, activatePartnerAbility } from './ability-activate.js';
 export type { AbilityCostParams } from './ability-activate.js';
@@ -13,7 +22,15 @@ export { canAction, canActionAgainstChar, canActionAgainstCase } from './action.
 import { canHandUseCard, canHandUseCardSwitch, handUseCard } from './hand-use-card.js';
 import { canStartNextHint, runNextHint } from './next-hint.js';
 import { canPartnerAbility, usePartnerAbility } from './partner-ability.js';
-import { canDeclaredAbility, canActivateDeclaredAbility, useDeclaredAbility, grantedDeclaredAbilitiesOf } from './declared-ability.js';
+import {
+  canDeclaredAbility,
+  canActivateDeclaredAbility,
+  useDeclaredAbility,
+  grantedDeclaredAbilitiesOf,
+  declaredAbilityOccurrenceSourceRef,
+  findDeclaredAbilityOccurrence,
+  findDeclaredAbilityOccurrences,
+} from './declared-ability.js';
 import { activateDeclaredAbility, activatePartnerAbility } from './ability-activate.js';
 import { canReason, doReasoning } from './reasoning.js';
 import { canAction, canActionAgainstChar, canActionAgainstCase } from './action.js';
@@ -30,6 +47,9 @@ export const main = {
   canActivateDeclaredAbility,
   useDeclaredAbility,
   grantedDeclaredAbilitiesOf,
+  declaredAbilityOccurrenceSourceRef,
+  findDeclaredAbilityOccurrence,
+  findDeclaredAbilityOccurrences,
   activateDeclaredAbility,
   activatePartnerAbility,
   canReason,

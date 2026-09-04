@@ -24,11 +24,11 @@ const a2: AbilityDef = {
   effect: {
     kind: 'chain',
     steps: [
-      { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', cause: 'effect', gateOnMissing: true, filter: { kind: 'character' } } },
+      { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'self', cause: 'effect', gateOnMissing: true, filter: { kind: 'character' } } },
       { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$occurrence.cardId', selectedCardIndex: '$occurrence.index', exactSelectedCardIndex: true, sourceRequired: true, target: { kind: 'pick', query: { area: 'remove', side: 'self' }, n: { min: 1, max: 1 }, chooser: 'self' } } },
     ],
   },
-  description: '【ヒラメキ】現場にいるキャラを1枚まで選び、リムーブしてもよい。リムーブした場合、このキャラを登場させる。',
+  description: '【ヒラメキ】自分の現場にいるキャラを1枚まで選び、リムーブしてもよい。リムーブした場合、このキャラを登場させる。',
   ruleRefs: ['rules/10-action-event.md', 'rules/03-field-areas.md', 'rules/15-abilities-effects.md'],
 };
 

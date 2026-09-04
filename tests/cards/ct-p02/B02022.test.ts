@@ -3,7 +3,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { engine } from '@/engine';
 import { produce } from '@/engine/produce';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../../helpers/main-game-state';
 import { B02022 } from '@/cards/ct-p02/B02022';
 import { B02022P } from '@/cards/ct-p02/B02022P';
 import type { CardDef } from '@/engine/types';

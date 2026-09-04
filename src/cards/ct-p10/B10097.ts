@@ -19,8 +19,8 @@ const a2: AbilityDef = {
   trigger: { hook: 'phase:end:start' }, condition: { kind: 'turn', player: 'self' },
   effect: { kind: 'sequence', steps: [
     { kind: 'atom', verb: 'deckRevealUntil', args: { chooseMatch: 'upTo', player: 'self', maxN: 3, filter: { cardName: revealNames }, bind: '$revealed', bindMatch: '$matched' } },
-    { kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' }, then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId', bind: '$added' } } },
-    { kind: 'atom', verb: 'boundToRemove', args: { player: 'self', bindKey: '$revealed' } },
+    { kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' }, then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId', bind: '$added', deferRefresh: true } } },
+    { kind: 'atom', verb: 'boundToRemove', args: { player: 'self', bindKey: '$revealed', refreshAfter: true } },
     { kind: 'conditional', if: { kind: 'boundMatchesFilter', bindKey: '$added', filter: { levelMin: 5 } }, then: { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } } },
   ] },
   description: '自分のターン終了時、自分のデッキのカードを上から3枚見る。その中から〚カード名［工藤新一］〛か〚［毛利蘭］〛を1枚まで公開して手札に加え、残りをリムーブエリアに移す。レベル5以上のカードを手札に加えた場合、手札を1枚リムーブする。この能力はパートナーエリアでも発動する。',

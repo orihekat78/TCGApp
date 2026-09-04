@@ -13,7 +13,10 @@ import {
   type PendingEffectPickSide,
   type PendingRpsSide,
 } from './pending-state.js';
+import { findLiveHandLeaveInterceptor, isOptionalHandLeaveInterceptAbility } from './consult-leave-intercept.js';
 import {
+  _drainPendingDeckPlaceSide,
+  _drainPendingDeckReorderSide,
   _peekPendingDeckPlaceSide,
   _peekPendingDeckReorderSide,
   type PendingDeckPlaceSide,
@@ -24,7 +27,32 @@ import {
   assertPendingRuntimeValue,
 } from './pending-runtime-schema.js';
 import type { GameState } from '../types/game-state.js';
+import type { CausalEffectTrace, DeclaredAbilityHostOrigin } from '../types/effect-ctx.js';
+import type { PendingMisreadAuthority } from '../types/misread.js';
+import { validateGameCausalState } from '../log/causal.js';
 import { isDraft, original } from '../produce.js';
+import { def as readDef } from '../read/def.js';
+import {
+  hasValidTurnScopedUse,
+  readDeclaredAbilityUseCountRecord,
+} from './source-identity.js';
+import {
+  chooseInterceptReactionKey,
+  readChooseInterceptBatchAuthority,
+  readChooseInterceptBatchCancellation,
+  readChooseInterceptBatchSelection,
+} from './choose-intercept-authority.js';
+import {
+  assertLiveMisreadLease,
+  assertPendingMisreadAuthority,
+  bindLiveMisreadLeaseRuntime,
+  checkpointLiveMisreadLease,
+  clearLiveMisreadLease,
+  consumeLiveMisreadLease,
+  isLiveMisreadLeaseCheckpointCurrent,
+  matchesPendingMisreadAuthority,
+  rollbackLiveMisreadLease,
+} from '../state/misread-authority.js';
 
 const TRANSACTIONAL_PENDING_KEYS = [
   '__pendingActionExpansion',
@@ -58,6 +86,7 @@ const TRANSACTIONAL_PENDING_KEYS = [
   '__pendingSetCardChoiceGuard',
   '__pendingSetCardChoiceResume',
   '__pendingSetCardChoiceSide',
+  '__pendingSetCardReplacementContinuation',
   '__pendingSetCardReplacementGuard',
   '__pendingSetCardReplacementSide',
   '__pendingRuntimeStateMarker',
@@ -274,6 +303,12 @@ const PENDING_GLOBAL_ACCESS: Record<PendingKey, PendingGlobalAccess> = {
     set value(value) { Object.defineProperty(pendingGlobals, "__pendingSetCardChoiceSide", ownPendingData(value)); },
     remove() { delete pendingGlobals.__pendingSetCardChoiceSide; },
   },
+  __pendingSetCardReplacementContinuation: {
+    get present() { return hasOwnPendingGlobal("__pendingSetCardReplacementContinuation"); },
+    get value() { return Object.getOwnPropertyDescriptor(pendingGlobals, "__pendingSetCardReplacementContinuation")?.value; },
+    set value(value) { Object.defineProperty(pendingGlobals, "__pendingSetCardReplacementContinuation", ownPendingData(value)); },
+    remove() { delete pendingGlobals.__pendingSetCardReplacementContinuation; },
+  },
   __pendingSetCardReplacementGuard: {
     get present() { return hasOwnPendingGlobal("__pendingSetCardReplacementGuard"); },
     get value() { return Object.getOwnPropertyDescriptor(pendingGlobals, "__pendingSetCardReplacementGuard")?.value; },
@@ -308,6 +343,60 @@ export type PendingRuntimeSnapshot = ReadonlyArray<{
   present: boolean;
   value: unknown;
 }>;
+
+/**
+ * Visit binding records retained by live resolver side channels.
+ *
+ * Deck occurrence epochs are renewed after every sanctioned deck mutation.
+ * Continuations stored outside GameState must therefore be rebased in the
+ * same atomic step as the active EffectCtx. Only properties explicitly named
+ * `bindings` (plus the dedicated *Bindings slots) are surfaced; public
+ * decision candidates and deck snapshots remain immutable stale authorities.
+ */
+export function visitPendingRuntimeBindingRecords(
+  visitor: (bindings: Record<string, unknown>) => void,
+): void {
+  const visited = new WeakSet<object>();
+  const visitedBindings = new WeakSet<object>();
+  const visitBindings = (value: unknown): void => {
+    if (value === null || typeof value !== 'object' || Array.isArray(value)) return;
+    if (visitedBindings.has(value)) return;
+    visitedBindings.add(value);
+    visitor(value as Record<string, unknown>);
+  };
+  const visit = (value: unknown): void => {
+    if (value === null || typeof value !== 'object') return;
+    if (visited.has(value)) return;
+    visited.add(value);
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item);
+      return;
+    }
+    const record = value as Record<string, unknown>;
+    if (Object.prototype.hasOwnProperty.call(record, 'bindings')) {
+      visitBindings(record.bindings);
+    }
+    for (const nested of Object.values(record)) visit(nested);
+  };
+
+  for (const key of TRANSACTIONAL_PENDING_KEYS) {
+    if (key === '__pendingRuntimeStateMarker') continue;
+    const access = pendingGlobalAccess(key);
+    if (!access.present) continue;
+    if (key.endsWith('Bindings')) visitBindings(access.value);
+    visit(access.value);
+  }
+}
+
+/** True only when the ambient resolver cache belongs to this exact GameState. */
+export function ownsLivePendingRuntimeBindings(state: GameState): boolean {
+  const currentMarker = marker();
+  const persisted = state.pendingRuntimeState;
+  if (currentMarker === undefined) return persisted === undefined;
+  return persisted !== undefined
+    && currentMarker.token === persisted.token
+    && currentMarker.owner === persistedOwner(persisted);
+}
 
 /** Capture every module side channel participating in one public dispatch. */
 export function snapshotPendingRuntimeState(): PendingRuntimeSnapshot {
@@ -398,6 +487,327 @@ function applyPendingRuntimeSnapshot(
   }
 }
 
+type PersistedChooseInterceptResponse = {
+  kind?: 'response';
+  resolution?: 'cancel' | 'discard-or-cancel';
+  player: 'self' | 'opp';
+  ownerPlayer?: 'self' | 'opp';
+  publicHandRevealToken?: string;
+  protector: {
+    uid: string;
+    cardId: string;
+    abilityId: string;
+    abilityOrigin?: DeclaredAbilityHostOrigin;
+    abilityIndex?: number;
+    setCardInstanceId?: string;
+  };
+  targetUid: string;
+};
+
+type PersistedChooseInterceptSide = PersistedChooseInterceptResponse | {
+  kind: 'order';
+  player: 'self' | 'opp';
+  publicHandRevealToken?: string;
+  choices: PersistedChooseInterceptResponse[];
+};
+
+type PersistedChooseInterceptResume = {
+  pending: PendingEffectPickSide;
+  pickedUid: string;
+  pickedUids?: string[];
+  batchToken?: number;
+  effectCancelled?: boolean;
+  guard?: PersistedChooseInterceptSide;
+  remainingGuards?: PersistedChooseInterceptResponse[];
+};
+
+function invalidChooseIntercept(message: string): never {
+  throw new Error(`Invalid pendingChooseIntercept: ${message}`);
+}
+
+function persistedChooseInterceptOwner(
+  response: PersistedChooseInterceptResponse,
+): 'self' | 'opp' {
+  return response.ownerPlayer ?? (response.player === 'self' ? 'opp' : 'self');
+}
+
+function assertPersistedChooseInterceptResponse(
+  state: GameState,
+  resume: PersistedChooseInterceptResume,
+  response: PersistedChooseInterceptResponse,
+): void {
+  const owner = persistedChooseInterceptOwner(response);
+  if (owner === response.player) invalidChooseIntercept('response owner must oppose the responder');
+  const pickedUids = resume.pickedUids ?? [resume.pickedUid];
+  if (!pickedUids.includes(response.targetUid)) {
+    invalidChooseIntercept('target must belong to the persisted selected set');
+  }
+  const candidate = resume.pending.candidates.find(item => (
+    item.uid === response.targetUid && item.player === owner
+  ));
+  const target = state.players[owner].scene.find(char => char.uid === response.targetUid);
+  if (!candidate || !target || target.cardId !== candidate.cardId) {
+    invalidChooseIntercept('target must match a current selected scene candidate');
+  }
+
+  const resolution = response.resolution ?? 'discard-or-cancel';
+  if (resolution === 'cancel') {
+    const instanceId = response.protector.setCardInstanceId;
+    const setCard = response.protector.uid === target.uid && instanceId
+      ? target.setCards.find(entry => (
+        entry.faceUp
+        && entry.cardId === response.protector.cardId
+        && entry.instanceId === instanceId
+      ))
+      : undefined;
+    const ability = readDef.card(response.protector.cardId)?.abilities.find(item => (
+      item.id === response.protector.abilityId
+      && item.type === 'triggered'
+      && item.scope === 'on-set-host'
+      && item.trigger?.hook === ('effect:choose-intercept' as never)
+    ));
+    const use = ability ? setCard?.abilityUseCounts?.[ability.id] : undefined;
+    if (!setCard
+      || !ability
+      || !hasValidTurnScopedUse(use, state.turn.number)) {
+      invalidChooseIntercept('cancel witness must match a used face-up set-card ability');
+    }
+    return;
+  }
+
+  const protector = state.players[owner].scene.find(char => (
+    char.uid === response.protector.uid && char.cardId === response.protector.cardId
+  ));
+  const abilities = readDef.card(response.protector.cardId)?.abilities ?? [];
+  const hasExactAbility = response.protector.abilityOrigin !== undefined
+    && response.protector.abilityIndex !== undefined;
+  const ability = hasExactAbility
+    ? response.protector.abilityOrigin === 'printed'
+      ? abilities[response.protector.abilityIndex!]
+      : undefined
+    : abilities.find(item => item.id === response.protector.abilityId);
+  const validAbility = ability?.id === response.protector.abilityId
+    && ability.type === 'triggered'
+    && ability.scope === 'on-scene'
+    && ability.trigger?.hook === ('effect:choose-intercept-discard' as never);
+  const used = protector ? readDeclaredAbilityUseCountRecord(protector.declaredUseCount, response.protector.abilityId, {
+    abilityOrigin: response.protector.abilityOrigin,
+    abilityIndex: response.protector.abilityIndex,
+  }) : 0;
+  if (!protector || !validAbility || used < 1) {
+    invalidChooseIntercept('protector witness must match a used scene interception ability');
+  }
+}
+
+function assertPersistedChooseInterceptAuthority(
+  state: GameState,
+  side: PersistedChooseInterceptSide,
+  resume: PersistedChooseInterceptResume,
+): void {
+  if (!resume.guard || !samePlainRuntimeValue(side, resume.guard)) {
+    invalidChooseIntercept('side must match its trusted resume guard');
+  }
+  const remaining = resume.remainingGuards;
+  if (!remaining) {
+    invalidChooseIntercept('the simultaneous reaction batch is required');
+  }
+  if (typeof resume.batchToken !== 'number'
+    || !Number.isSafeInteger(resume.batchToken)
+    || resume.batchToken < 1) {
+    invalidChooseIntercept('a physical batch authority token is required');
+  }
+  const selectedUids = resume.pickedUids ?? [resume.pickedUid];
+  const authoritativeSelection = readChooseInterceptBatchSelection(state, resume.batchToken);
+  if (selectedUids.length === 0
+    || selectedUids[0] !== resume.pickedUid
+    || new Set(selectedUids).size !== selectedUids.length
+    || authoritativeSelection === undefined
+    || authoritativeSelection.length !== selectedUids.length
+    || authoritativeSelection.some((uid, index) => uid !== selectedUids[index])) {
+    invalidChooseIntercept('selected targets must exactly match the physical batch authority');
+  }
+  const unresolved = side.kind === 'order' ? remaining : [side, ...remaining];
+  const authoritative = readChooseInterceptBatchAuthority(state, resume.batchToken);
+  const unresolvedKeys = unresolved.map(chooseInterceptReactionKey).sort();
+  const authoritativeKeys = authoritative.map(chooseInterceptReactionKey).sort();
+  if (authoritativeKeys.length === 0
+    || authoritativeKeys.length !== unresolvedKeys.length
+    || authoritativeKeys.some((key, index) => key !== unresolvedKeys[index])) {
+    invalidChooseIntercept('unresolved reactions must exactly match the physical batch authority');
+  }
+  const authoritativeCancellation = readChooseInterceptBatchCancellation(state, resume.batchToken);
+  if (authoritativeCancellation === undefined
+    || authoritativeCancellation !== (resume.effectCancelled === true)) {
+    invalidChooseIntercept('source cancellation must exactly match the physical batch authority');
+  }
+  remaining.forEach(response => assertPersistedChooseInterceptResponse(state, resume, response));
+
+  if (side.kind === 'order') {
+    if (remaining.length < 2) {
+      invalidChooseIntercept('order authority requires at least two reactions');
+    }
+    const turnOwnerPresent = remaining.some(response => (
+      persistedChooseInterceptOwner(response) === state.turn.player
+    ));
+    const expectedOwner = turnOwnerPresent
+      ? state.turn.player
+      : persistedChooseInterceptOwner(remaining[0]!);
+    const expectedChoices = remaining.filter(response => (
+      persistedChooseInterceptOwner(response) === expectedOwner
+    ));
+    if (side.player !== expectedOwner || !samePlainRuntimeValue(side.choices, expectedChoices)) {
+      invalidChooseIntercept('order choices must match the priority owner reaction batch');
+    }
+    return;
+  }
+
+  assertPersistedChooseInterceptResponse(state, resume, side);
+  const available = [side, ...remaining];
+  const turnOwnerPresent = available.some(response => (
+    persistedChooseInterceptOwner(response) === state.turn.player
+  ));
+  const expectedOwner = turnOwnerPresent
+    ? state.turn.player
+    : persistedChooseInterceptOwner(available[0]!);
+  if (persistedChooseInterceptOwner(side) !== expectedOwner
+    || remaining.some(response => samePlainRuntimeValue(response, side))) {
+    invalidChooseIntercept('response must be the selected priority reaction');
+  }
+}
+
+function assertPendingMisreadRuntimeMatchesState(
+  state: GameState,
+  snapshot: ReadonlyArray<{ key: PendingKey; present: boolean; value: unknown }>,
+): void {
+  const misreadEntry = snapshot.find(entry => entry.key === '__pendingMisread' && entry.present);
+  const misreadSide = misreadEntry?.value !== null && misreadEntry?.value !== undefined
+    ? misreadEntry.value as PendingMisreadAuthority
+    : null;
+  const misreadAuthority = state.pendingMisreadAuthority;
+  if (misreadSide !== null && misreadAuthority === undefined) {
+    throw new Error('Invalid pendingMisread: GameState authority required');
+  }
+  if (misreadSide === null && misreadAuthority !== undefined) {
+    throw new Error('Invalid pendingMisread: persisted runtime projection required');
+  }
+  if (misreadSide !== null && misreadAuthority !== undefined) {
+    if (!samePlainRuntimeValue(misreadSide, misreadAuthority)
+      || !matchesPendingMisreadAuthority(misreadSide, misreadAuthority)) {
+      throw new Error('Invalid pendingMisread: runtime projection must exactly match GameState authority');
+    }
+    assertPendingMisreadAuthority(state, misreadAuthority);
+  }
+}
+
+export function pendingSourceMatchesEffectEntry(
+  state: GameState,
+  entry: GameState['pendingEffects'][number],
+  source: Record<string, unknown>,
+  includeAbilityOccurrenceIdentity: boolean,
+): boolean {
+  if (typeof source.cardId !== 'string' || typeof source.abilityId !== 'string') return false;
+  if (entry.source.cardId !== source.cardId || entry.source.abilityId !== source.abilityId) return false;
+  if (source.player !== undefined && entry.source.player !== source.player) return false;
+  if (source.uid !== undefined && entry.source.uid !== source.uid) return false;
+  if (source.area !== undefined && (entry.source.area ?? 'scene') !== source.area) return false;
+  if (source.resolutionKind !== undefined && entry.source.resolutionKind !== source.resolutionKind) return false;
+  if (source.triggerBatch !== undefined && entry.triggerBatch !== source.triggerBatch) return false;
+  if (source.ownerChosenOrder !== undefined && entry.ownerChosenOrder !== source.ownerChosenOrder) return false;
+  if (source.ownerOrderConfirmed !== undefined
+    && entry.ownerOrderConfirmed !== source.ownerOrderConfirmed) return false;
+  if (source.declaredBatch !== undefined && entry.declaredBatch !== source.declaredBatch) return false;
+  if (source.causalTrace !== undefined) {
+    const trace = source.causalTrace as Partial<CausalEffectTrace> | null;
+    if (trace === null || typeof trace !== 'object' || Array.isArray(trace)
+      || typeof trace.rootEventId !== 'string' || typeof trace.tailEventId !== 'string'
+      || trace.awaitingResume !== true || trace.completed === true
+      || entry.causalTrace?.rootEventId !== trace.rootEventId
+      || !causalTailDescendsFrom(state, entry.causalTrace.tailEventId, trace.tailEventId)) {
+      return false;
+    }
+  }
+  if (!includeAbilityOccurrenceIdentity) return true;
+  return entry.source.setCardId === source.setCardId
+    && entry.source.setCardInstanceId === source.setCardInstanceId
+    && entry.source.abilityOrigin === source.abilityOrigin
+    && entry.source.abilityIndex === source.abilityIndex;
+}
+
+function causalTailDescendsFrom(state: GameState, ancestorId: string, tailId: string): boolean {
+  const entries = validateGameCausalState(state);
+  const byId = new Map(entries.map(entry => [entry.eventId, entry]));
+  if (!byId.has(ancestorId) || !byId.has(tailId)) return false;
+  const pending = [tailId];
+  const visited = new Set<string>();
+  while (pending.length > 0) {
+    const eventId = pending.pop()!;
+    if (eventId === ancestorId) return true;
+    if (visited.has(eventId)) continue;
+    visited.add(eventId);
+    const entry = byId.get(eventId);
+    if (!entry) continue;
+    if (entry.parentEventId) pending.push(entry.parentEventId);
+  }
+  return false;
+}
+
+/**
+ * A persisted public source may be standalone (low-level/runtime probes), but
+ * once its non-occurrence lineage identifies a queued/resolving effect, its
+ * exact set-card pair or host-origin/index witness must identify that same
+ * authority. This rejects a complete witness swapped to a simultaneous sibling
+ * while preserving legacy saves that predate a direct stack link.
+ */
+function assertPendingAbilitySourceAuthority(
+  state: GameState,
+  value: unknown,
+  key: PendingKey,
+): void {
+  const visited = new WeakSet<object>();
+  const visit = (candidate: unknown): void => {
+    if (candidate === null || typeof candidate !== 'object') return;
+    if (visited.has(candidate)) return;
+    visited.add(candidate);
+    if (Array.isArray(candidate)) {
+      candidate.forEach(visit);
+      return;
+    }
+    const record = candidate as Record<string, unknown>;
+    const rawSource = record.source;
+    if (rawSource !== null && typeof rawSource === 'object' && !Array.isArray(rawSource)) {
+      const source = rawSource as Record<string, unknown>;
+      const hasSetCardWitness = typeof source.setCardId === 'string'
+        && source.setCardId.length > 0
+        && typeof source.setCardInstanceId === 'string'
+        && source.setCardInstanceId.length > 0;
+      const hasHostWitness = typeof source.abilityOrigin === 'string'
+        && typeof source.abilityIndex === 'number';
+      if (hasSetCardWitness || hasHostWitness) {
+        const active = state.pendingEffects.filter(entry => (
+          entry.state === 'pending' || entry.state === 'resolving'
+        ));
+        let lineage = active.filter(entry => pendingSourceMatchesEffectEntry(state, entry, source, false));
+        if (lineage.length === 0) {
+          lineage = state.pendingEffects.filter(entry => pendingSourceMatchesEffectEntry(state, entry, source, false));
+        }
+        const resolving = lineage.filter(entry => entry.state === 'resolving');
+        const authority = resolving.length > 0 ? resolving : lineage;
+        if (authority.length === 0 && active.length > 0) {
+          const identity = hasSetCardWitness ? 'set-card' : 'declared-ability host';
+          throw new Error(`Invalid ${key}: ${identity} source has no GameState authority`);
+        }
+        if (authority.length > 0
+          && !authority.some(entry => pendingSourceMatchesEffectEntry(state, entry, source, true))) {
+          const identity = hasSetCardWitness ? 'set-card' : 'declared-ability host';
+          throw new Error(`Invalid ${key}: ${identity} source does not match GameState authority`);
+        }
+      }
+    }
+    Object.values(record).forEach(visit);
+  };
+  visit(value);
+}
+
 function assertPendingRuntimeMatchesState(
   state: GameState,
   snapshot: ReadonlyArray<{ key: PendingKey; present: boolean; value: unknown }>,
@@ -405,6 +815,64 @@ function assertPendingRuntimeMatchesState(
   for (const entry of snapshot) {
     if (entry.present && entry.key !== '__pendingRuntimeStateMarker') {
       assertPendingDeclaredNameAuthority(state, entry.value, entry.key);
+      assertPendingAbilitySourceAuthority(state, entry.value, entry.key);
+    }
+  }
+  const hirameki = snapshot.find(entry => entry.key === '__pendingHirameki' && entry.present);
+  if (hirameki && hirameki.value !== null) {
+    const pending = hirameki.value as {
+      player: 'self' | 'opp';
+      cardId: string;
+      abilityId: string;
+      effectValid?: boolean;
+      gainDeferred?: boolean;
+      actorUid?: string;
+      actionId?: string;
+      causalCorrelationEventId?: string;
+      heldEvidence?: {
+        token: string;
+        player: 'self' | 'opp';
+        cardId: string;
+      };
+    };
+    if (pending.heldEvidence !== undefined) {
+      const actionId = pending.actionId;
+      const ax = typeof actionId === 'string'
+        ? state.actionContexts?.[actionId]
+        : undefined;
+      const owned = ax?.pendingHiramekiEvidenceRemoval;
+      if (!ax
+        || !owned
+        || ax.byUid !== pending.actorUid
+        || ax.phase !== 'judge'
+        || ax.judgeResolved !== true
+        || ax.target.kind !== 'case'
+        || ax.target.player !== pending.player
+        || ax.deferredCaseEvidenceGain !== true
+        || pending.gainDeferred !== true
+        || pending.causalCorrelationEventId !== undefined
+        || pending.heldEvidence.player !== pending.player
+        || pending.heldEvidence.cardId !== pending.cardId
+        || owned.token !== pending.heldEvidence.token
+        || owned.player !== pending.heldEvidence.player
+        || owned.evidence.cardId !== pending.heldEvidence.cardId
+        || owned.abilityId !== pending.abilityId
+        || owned.effectValid !== pending.effectValid
+        || owned.decisionResolved !== false) {
+        throw new Error('Invalid pendingHirameki: held evidence must match its ActionContext');
+      }
+    }
+  }
+  const deckReorder = snapshot.find(entry => entry.key === '__pendingDeckReorderSide' && entry.present);
+  if (deckReorder && deckReorder.value !== null) {
+    const pending = deckReorder.value as {
+      player: 'self' | 'opp';
+      deckSnapshot: string[];
+    };
+    const deck = state.players[pending.player].deck;
+    if (deck.length !== pending.deckSnapshot.length
+        || deck.some((cardId, index) => cardId !== pending.deckSnapshot[index])) {
+      throw new Error('Invalid pendingDeckReorder: deckSnapshot must match current player deck');
     }
   }
   const deckPlace = snapshot.find(entry => entry.key === '__pendingDeckPlaceSide' && entry.present);
@@ -419,6 +887,163 @@ function assertPendingRuntimeMatchesState(
       throw new Error('Invalid pendingDeckPlace: deckSnapshot must match current player deck');
     }
   }
+  const chooseInterceptSide = snapshot.find(entry => (
+    entry.key === '__pendingChooseInterceptSide' && entry.present && entry.value !== null
+  ));
+  const chooseInterceptResume = snapshot.find(entry => (
+    entry.key === '__pendingChooseInterceptResume' && entry.present && entry.value !== null
+  ));
+  if (Boolean(chooseInterceptSide) !== Boolean(chooseInterceptResume)) {
+    invalidChooseIntercept('side and resume must exist together');
+  }
+  if (chooseInterceptSide && chooseInterceptResume) {
+    assertPersistedChooseInterceptAuthority(
+      state,
+      chooseInterceptSide.value as PersistedChooseInterceptSide,
+      chooseInterceptResume.value as PersistedChooseInterceptResume,
+    );
+  }
+  assertPendingMisreadRuntimeMatchesState(state, snapshot);
+  const replacementContinuation = snapshot.find(entry =>
+    entry.key === '__pendingSetCardReplacementContinuation' && entry.present && entry.value !== null);
+  if (replacementContinuation) {
+    const replacementSide = snapshot.find(entry =>
+      entry.key === '__pendingSetCardReplacementSide' && entry.present && entry.value !== null);
+    const replacementGuard = snapshot.find(entry =>
+      entry.key === '__pendingSetCardReplacementGuard' && entry.present && entry.value !== null);
+    if (!replacementSide || !replacementGuard) {
+      throw new Error('Invalid pendingSetCardReplacementContinuation: matching side and trusted guard are required');
+    }
+    if (!samePlainRuntimeValue(replacementSide.value, replacementGuard.value)) {
+      throw new Error('Invalid pendingSetCardReplacementContinuation: side must match trusted replacement guard');
+    }
+  }
+  const contactOwners = Object.values(state.actionContexts ?? {}).filter((context) =>
+    context.pendingLeaveIntercept !== undefined || context.pendingLeaveInterceptReplacement !== undefined);
+  const contactReplacementOwners = contactOwners.filter((context) =>
+    context.pendingLeaveInterceptReplacement !== undefined);
+  if (contactReplacementOwners.length === 0) return;
+  if (contactReplacementOwners.length !== 1 || contactOwners.length !== 1) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: exactly one ActionContext owner is required');
+  }
+  const contact = contactReplacementOwners[0]!;
+  const pending = contact.pendingLeaveInterceptReplacement!;
+  const defenderUid = contact.guardUid ?? (contact.target.kind === 'char' ? contact.target.uid : undefined);
+  const targetPlayer = state.players.self.scene.some((char) => char.uid === pending.targetUid) ? 'self'
+    : state.players.opp.scene.some((char) => char.uid === pending.targetUid) ? 'opp' : null;
+  if (contact.phase !== 'judge' || contact.judgeResolved === true
+    || !contact.apSnapshot || contact.apSnapshot.aUid !== contact.byUid
+    || contact.apSnapshot.bUid !== pending.targetUid || defenderUid !== contact.apSnapshot.bUid
+    || targetPlayer === null || targetPlayer === contact.byPlayer) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: replacement does not own its unresolved contact');
+  }
+  const replacementSide = snapshot.find((entry) =>
+    entry.key === '__pendingSetCardReplacementSide' && entry.present && entry.value !== null);
+  const replacementGuard = snapshot.find((entry) =>
+    entry.key === '__pendingSetCardReplacementGuard' && entry.present && entry.value !== null);
+  if (!replacementSide || !replacementGuard) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: matching replacement side and guard are required');
+  }
+  if (!samePlainRuntimeValue(replacementSide.value, replacementGuard.value)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: side must match trusted replacement guard');
+  }
+  if (replacementContinuation) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: effect continuation cannot share contact replacement authority');
+  }
+  const guard = replacementGuard.value as {
+    fromUid?: unknown;
+    resume?: {
+      kind?: unknown;
+      cause?: unknown;
+      byUid?: unknown;
+      byPlayer?: unknown;
+      leaveInterceptDecision?: {
+        interceptorUid?: unknown;
+        accept?: unknown;
+        interceptorCostPaid?: unknown;
+      };
+      afterSceneRemove?: {
+        uid?: unknown;
+        cause?: unknown;
+        byUid?: unknown;
+        byPlayer?: unknown;
+        leaveInterceptDecision?: {
+          interceptorUid?: unknown;
+          accept?: unknown;
+          interceptorCostPaid?: unknown;
+        };
+      };
+    };
+  };
+  const expectedUid = pending.stage === 'interceptor-cost'
+    ? pending.interceptorUid
+    : pending.targetUid;
+  if (guard.fromUid !== expectedUid) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: replacement guard does not match its current stage');
+  }
+  const resume = guard.resume;
+  type ContactDecision = {
+    interceptorUid?: unknown;
+    accept?: unknown;
+    interceptorCostPaid?: unknown;
+  } | undefined;
+  const exactDecision = (
+    decision: ContactDecision,
+    accept: boolean,
+    costPaid: boolean,
+  ): boolean => decision?.interceptorUid === pending.interceptorUid
+    && decision.accept === accept
+    && (decision.interceptorCostPaid === true) === costPaid;
+  if (!resume || resume.kind !== 'scene-remove') {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: replacement resume must remain a contact scene removal');
+  }
+  const contactAttacker = contact.apSnapshot?.aUid;
+  if (typeof contactAttacker !== 'string' || pending.byUid !== contactAttacker) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: replacement owner must retain the contact attacker');
+  }
+  if (pending.stage === 'interceptor-cost') {
+    const after = resume.afterSceneRemove;
+    const target = state.players[targetPlayer].scene.find((char) => char.uid === pending.targetUid);
+    const witness = target
+      ? findLiveHandLeaveInterceptor(state, target, targetPlayer, pending.interceptorUid, contactAttacker)
+      : null;
+    if (pending.accept !== true
+      || typeof pending.interceptorCardId !== 'string'
+      || typeof pending.interceptorAbilityId !== 'string'
+      || witness?.cardId !== pending.interceptorCardId
+      || witness?.abilityId !== pending.interceptorAbilityId
+      || resume.cause !== 'cost'
+      || resume.byUid !== undefined
+      || resume.byPlayer !== undefined
+      || resume.leaveInterceptDecision !== undefined
+      || !after
+      || after.uid !== pending.targetUid
+      || after.cause !== 'contact-ap'
+      || after.byUid !== contactAttacker
+      || after.byPlayer !== contact.byPlayer
+      || !exactDecision(after.leaveInterceptDecision, true, true)) {
+      throw new Error('Invalid pendingLeaveInterceptReplacement: guardian resume no longer matches its accepted contact cost');
+    }
+    return;
+  }
+  if (resume.cause !== 'contact-ap'
+    || resume.byUid !== contactAttacker
+    || resume.byPlayer !== contact.byPlayer
+    || resume.afterSceneRemove !== undefined
+    || !exactDecision(resume.leaveInterceptDecision, pending.accept, pending.accept)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: target resume no longer matches its contact decision');
+  }
+  if (pending.accept === true
+    && (typeof pending.interceptorCardId !== 'string'
+      || typeof pending.interceptorAbilityId !== 'string'
+      || !isOptionalHandLeaveInterceptAbility(pending.interceptorCardId, pending.interceptorAbilityId))) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: persisted interceptor witness is not an optional hand redirect');
+  }
+  if (pending.accept === true
+    && state.players.self.scene.concat(state.players.opp.scene)
+      .some((char) => char.uid === pending.interceptorUid)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: accepted interceptor cost must remain paid');
+  }
 }
 
 /** Restore consumed holders, queues, and newly-created decisions after failure. */
@@ -430,8 +1055,11 @@ export function restorePendingRuntimeState(
 }
 
 /** Clear every live resolver side channel before installing another authority. */
-export function resetPendingRuntimeState(): void {
+export function resetPendingRuntimeState(
+  options: { preserveLiveMisreadLease?: boolean } = {},
+): void {
   for (const key of TRANSACTIONAL_PENDING_KEYS) pendingGlobalAccess(key).remove();
+  if (options.preserveLiveMisreadLease !== true) clearLiveMisreadLease();
 }
 
 function recordValue(value: unknown): Record<string, unknown> | null {
@@ -483,12 +1111,21 @@ export function withIsolatedPendingRuntimeState<T>(
   run: () => T,
 ): T {
   const callerRuntime = snapshotPendingRuntimeState();
+  const callerMisreadLease = checkpointLiveMisreadLease();
   try {
-    resetPendingRuntimeState();
+    resetPendingRuntimeState({ preserveLiveMisreadLease: true });
     hydratePendingRuntimeState(authority);
     return run();
   } finally {
-    restorePendingRuntimeState(callerRuntime);
+    try {
+      restorePendingRuntimeState(callerRuntime);
+    } finally {
+      // A headless/replay branch may reach terminal cleanup. Restore the
+      // caller's live lease unless that branch crossed a real epoch boundary.
+      if (isLiveMisreadLeaseCheckpointCurrent(callerMisreadLease)) {
+        rollbackLiveMisreadLease(callerMisreadLease);
+      }
+    }
   }
 }
 
@@ -599,6 +1236,199 @@ export function readPendingDeckPlaceAuthority(
   });
 }
 
+/** Read one Misread prompt only while its exact GameState authority exists. */
+export function readPendingMisreadAuthority(
+  state: GameState,
+): PendingMisreadAuthority | null {
+  return readPendingAuthority(state, () => {
+    const access = pendingGlobalAccess('__pendingMisread');
+    if (!access.present || access.value === null || access.value === undefined) return null;
+    return toPlainDeep(access.value) as PendingMisreadAuthority;
+  });
+}
+
+/** Consume the exact persisted Misread projection paired with GameState authority. */
+export function consumePersistedMisreadAuthority(
+  state: GameState,
+  pending: PendingMisreadAuthority,
+): boolean {
+  const persisted = state.pendingRuntimeState;
+  const owned = state.pendingMisreadAuthority;
+  if (!persisted || !owned || !matchesPendingMisreadAuthority(owned, pending)) return false;
+  const entry = persisted.snapshot.find(candidate => candidate.key === '__pendingMisread');
+  if (!entry?.present || !samePlainRuntimeValue(entry.value, pending)) return false;
+  consumeLiveMisreadLease(
+    state,
+    owned,
+    persisted.token,
+    persistedOwner(persisted),
+  );
+
+  const currentMarker = marker();
+  const ownsLiveRuntime = currentMarker?.token === persisted.token
+    && currentMarker.owner === persistedOwner(persisted);
+  if (ownsLiveRuntime) {
+    const access = pendingGlobalAccess('__pendingMisread');
+    if (access.present && samePlainRuntimeValue(access.value, pending)) access.value = null;
+  }
+
+  const next: PersistedPendingRuntimeState = {
+    token: persisted.token,
+    snapshot: persisted.snapshot.filter(candidate => candidate.key !== '__pendingMisread'),
+  };
+  state.pendingRuntimeState = next;
+  if (ownsLiveRuntime) setMarker({ token: next.token, owner: persistedOwner(next) });
+  return true;
+}
+
+function samePlainRuntimeValue(
+  left: unknown,
+  right: unknown,
+  seen = new WeakMap<object, WeakSet<object>>(),
+): boolean {
+  if (Object.is(left, right)) return true;
+  if (left === null || right === null || typeof left !== 'object' || typeof right !== 'object') return false;
+  const previous = seen.get(left);
+  if (previous?.has(right)) return true;
+  if (previous) previous.add(right);
+  else seen.set(left, new WeakSet([right]));
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return Array.isArray(left)
+      && Array.isArray(right)
+      && left.length === right.length
+      && left.every((value, index) => samePlainRuntimeValue(value, right[index], seen));
+  }
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  return leftKeys.length === rightKeys.length
+    && leftKeys.every(key => Object.prototype.hasOwnProperty.call(right, key)
+      && samePlainRuntimeValue(
+        (left as Record<string, unknown>)[key],
+        (right as Record<string, unknown>)[key],
+        seen,
+      ));
+}
+
+/**
+ * Consume the exact persisted FIFO head represented by an engine-owned pick.
+ * Public projections are deep clones, so reference identity is insufficient.
+ */
+export function consumePersistedEffectPickAuthority(
+  state: GameState,
+  pending: PendingEffectPickSide,
+): boolean {
+  const persisted = state.pendingRuntimeState;
+  if (!persisted) return false;
+  const queueEntry = persisted.snapshot.find(candidate => candidate.key === '__pendingEffectPickQueue');
+  const sideEntry = persisted.snapshot.find(candidate => candidate.key === '__pendingEffectPickSide');
+  const queue = queueEntry?.present && Array.isArray(queueEntry.value)
+    ? queueEntry.value
+    : undefined;
+  const queueMatches = queue !== undefined
+    && queue.length > 0
+    && samePlainRuntimeValue(queue[0], pending);
+  const sideMatches = sideEntry?.present === true
+    && samePlainRuntimeValue(sideEntry.value, pending);
+  if (!queueMatches && !sideMatches) return false;
+  if (queueMatches && sideEntry?.present === true && !sideMatches) return false;
+
+  const remaining = queueMatches ? queue!.slice(1) : [];
+  const currentMarker = marker();
+  const ownsLiveRuntime = currentMarker?.token === persisted.token
+    && currentMarker.owner === persistedOwner(persisted);
+  if (ownsLiveRuntime && samePlainRuntimeValue(_peekPendingEffectPickSide(), pending)) {
+    _drainPendingEffectPickSide();
+  }
+
+  const next: PersistedPendingRuntimeState = {
+    token: persisted.token,
+    snapshot: persisted.snapshot.map(entry => {
+      if (entry.key === '__pendingEffectPickQueue' && queueMatches) {
+        return { ...entry, present: true, value: remaining };
+      }
+      if (entry.key === '__pendingEffectPickSide' && entry.present && sideMatches) {
+        return { ...entry, present: true, value: remaining[0] ?? null };
+      }
+      return entry;
+    }),
+  };
+  state.pendingRuntimeState = next;
+  if (ownsLiveRuntime) setMarker({ token: next.token, owner: persistedOwner(next) });
+  return true;
+}
+
+type PersistedDeckDecision = PendingDeckReorderSide | PendingDeckPlaceSide;
+type PersistedDeckDecisionKey = '__pendingDeckReorderSide' | '__pendingDeckPlaceSide';
+
+function sameStringArray(left: readonly string[] | undefined, right: readonly string[] | undefined): boolean {
+  return left !== undefined
+    && right !== undefined
+    && left.length === right.length
+    && left.every((value, index) => value === right[index]);
+}
+
+function sameDeckOccurrences(
+  left: readonly { cardId: string; index: number }[] | undefined,
+  right: readonly { cardId: string; index: number }[] | undefined,
+): boolean {
+  return left !== undefined
+    && right !== undefined
+    && left.length === right.length
+    && left.every((value, index) => value.cardId === right[index]?.cardId && value.index === right[index]?.index);
+}
+
+function samePersistedDeckDecision(
+  key: PersistedDeckDecisionKey,
+  value: unknown,
+  pending: PersistedDeckDecision,
+): boolean {
+  if (value === null || typeof value !== 'object') return false;
+  const current = value as Partial<PersistedDeckDecision> & { ownerPlayer?: unknown };
+  if (current.player !== pending.player
+    || current.occurrenceWitness !== pending.occurrenceWitness
+    || !sameStringArray(current.cardIds, pending.cardIds)
+    || !sameStringArray(current.deckSnapshot, pending.deckSnapshot)
+    || !sameDeckOccurrences(current.occurrences, pending.occurrences)) return false;
+  return key !== '__pendingDeckPlaceSide'
+    || current.ownerPlayer === (pending as PendingDeckPlaceSide).ownerPlayer;
+}
+
+/**
+ * Consume one resolver-owned deck decision after its response has passed every
+ * live-state check. Invalid answers leave the exact persisted prompt retryable.
+ */
+export function consumePersistedDeckDecisionAuthority(
+  state: GameState,
+  key: PersistedDeckDecisionKey,
+  pending: PersistedDeckDecision,
+): boolean {
+  const persisted = state.pendingRuntimeState;
+  if (!persisted) return false;
+  const entry = persisted.snapshot.find(candidate => candidate.key === key);
+  if (!entry?.present || !samePersistedDeckDecision(key, entry.value, pending)) return false;
+
+  const currentMarker = marker();
+  const ownsLiveRuntime = currentMarker?.token === persisted.token
+    && currentMarker.owner === persistedOwner(persisted);
+  if (ownsLiveRuntime) {
+    const live = key === '__pendingDeckReorderSide'
+      ? _peekPendingDeckReorderSide()
+      : _peekPendingDeckPlaceSide();
+    if (samePersistedDeckDecision(key, live, pending)) {
+      if (key === '__pendingDeckReorderSide') _drainPendingDeckReorderSide();
+      else _drainPendingDeckPlaceSide();
+    }
+  }
+
+  const next: PersistedPendingRuntimeState = {
+    token: persisted.token,
+    snapshot: persisted.snapshot.filter(candidate => candidate.key !== key),
+  };
+  state.pendingRuntimeState = next;
+  if (ownsLiveRuntime) setMarker({ token: next.token, owner: persistedOwner(next) });
+  return true;
+}
+
 function marker(): PendingRuntimeMarker {
   const access = pendingGlobalAccess('__pendingRuntimeStateMarker');
   return access.present ? access.value as PendingRuntimeMarker : undefined;
@@ -657,6 +1487,16 @@ export function persistPendingRuntimeState(state: GameState): void {
     { persisted: true },
   );
   assertPendingRuntimeMatchesState(state, preparedSnapshot);
+  // A paused effect may have originated from an Immer-drafted stack entry.
+  // Persisting already produces plain values for GameState, but the ambient
+  // resolver cache would otherwise retain the original draft reference and
+  // become revoked when the dispatch produce() finishes. Install a separate
+  // plain copy so the live cache remains readable and mutable without sharing
+  // objects that GameState finalization may freeze.
+  applyPendingRuntimeSnapshot(preparedSnapshot.map((entry) => ({
+    ...entry,
+    value: entry.present ? toPlainDeep(entry.value) : undefined,
+  })));
   const persisted: PersistedPendingRuntimeState = {
     token,
     snapshot: preparedSnapshot
@@ -666,6 +1506,14 @@ export function persistPendingRuntimeState(state: GameState): void {
   state.pendingRuntimeSeq = Math.max(state.pendingRuntimeSeq ?? 0, token);
   state.pendingRuntimeState = persisted;
   setMarker({ token, owner: persistedOwner(persisted) });
+  if (state.pendingMisreadAuthority !== undefined) {
+    bindLiveMisreadLeaseRuntime(
+      state,
+      state.pendingMisreadAuthority,
+      token,
+      persistedOwner(persisted),
+    );
+  }
 }
 
 /**
@@ -676,18 +1524,53 @@ export function hydratePendingRuntimeState(state: GameState): boolean {
   const persisted = state.pendingRuntimeState;
   assertPendingRuntimeSequence(state.pendingRuntimeSeq);
   if (persisted !== undefined) assertPendingRuntimeToken(persisted.token);
-  if (!persisted) return false;
+  if (!persisted) {
+    if (state.pendingMisreadAuthority !== undefined) {
+      throw new Error('Invalid pendingMisread: persisted runtime projection required');
+    }
+    return false;
+  }
   const preparedSnapshot = preparePendingRuntimeSnapshot(
     persisted.snapshot as PendingRuntimeSnapshot,
     { persisted: true },
   );
   const currentMarker = marker();
+  // A same-owner live resolver can legitimately mutate its ActionContext
+  // before the next pause replaces the persisted snapshot. Preserve that
+  // transition while always authenticating Misread, whose resume lease is
+  // intentionally stricter than the legacy runtime marker.
+  assertPendingMisreadRuntimeMatchesState(state, preparedSnapshot);
+  if (state.pendingMisreadAuthority !== undefined) {
+    assertLiveMisreadLease(
+      state,
+      state.pendingMisreadAuthority,
+      persisted.token,
+      persistedOwner(persisted),
+    );
+  }
   if (currentMarker?.token === persisted.token
       && currentMarker.owner === persistedOwner(persisted)) return false;
   assertPendingRuntimeMatchesState(state, preparedSnapshot);
   applyPendingRuntimeSnapshot(preparedSnapshot);
   setMarker({ token: persisted.token, owner: persistedOwner(persisted) });
   return true;
+}
+
+/**
+ * Make one GameState the active resolver authority.
+ *
+ * An unmarked live channel was created by the current resolver call and must
+ * remain available until its first pause is persisted. A marker, however,
+ * proves that the live cache belongs to a previously persisted GameState; a
+ * clean authority must not inherit that cache.
+ */
+export function activatePendingRuntimeState(state: GameState): void {
+  if (state.pendingRuntimeState !== undefined) {
+    hydratePendingRuntimeState(state);
+    return;
+  }
+  assertPendingRuntimeSequence(state.pendingRuntimeSeq);
+  if (marker() !== undefined) resetPendingRuntimeState();
 }
 
 /** Remove a completed continuation from both GameState and the live cache. */

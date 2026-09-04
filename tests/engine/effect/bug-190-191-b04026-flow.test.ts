@@ -3,6 +3,7 @@ import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { run as runEffect } from '@/engine/effect/resolver';
 import { applyPickAndContinuation, applyPickSkipAndContinuation } from '@/engine/effect/apply-pick';
+import { deckOccurrenceAuthority } from '@/engine/effect/deck-occurrence-authority';
 import { _drainPendingDeckRevealSide } from '@/engine/effect/atom-handlers';
 import { persistPendingRuntimeState, resetPendingRuntimeState } from '@/engine/effect/runtime-state';
 import { register as registerCardDef, _resetRegistry as resetCardDefRegistry } from '@/engine/read/def';
@@ -71,13 +72,13 @@ function enqueueDeckReorder(
   occurrences: Array<{ cardId: string; index: number }>,
 ): void {
   const ctx = effectCtx();
-  ctx.bindings.$rest = occurrences.map(({ cardId, index }): Candidate => ({
-    kind: 'card',
-    cardId,
-    area: 'deck',
-    player: 'self',
-    index,
-  }));
+  ctx.bindings.$rest = occurrences.map(({ cardId, index }): Candidate => {
+    const authority = deckOccurrenceAuthority(state, 'self', index);
+    if (!authority || authority.cardId !== cardId) {
+      throw new Error(`missing deck occurrence authority for ${cardId} at ${index}`);
+    }
+    return authority;
+  });
   runEffect(state, {
     kind: 'atom',
     verb: 'deckToBottomBound',
@@ -166,12 +167,11 @@ describe('BUG-191 B04026 reorder continuation', () => {
     persistPendingRuntimeState(state);
     state.players.self.deck = ['TAIL', 'RED-A', 'RED-B'];
 
-    const surfaced = surfacePersistedDeckReorder(state);
-    const result = dispatchEngineAction(bindPendingDecision(surfaced, { type: 'deckReorderResolve', order: ['RED-B', 'RED-A'] }));
-
-    expect(result.ok).toBe(false);
-    expect(useGameStateStore.getState().gameState!.players.self.deck).toEqual(['TAIL', 'RED-A', 'RED-B']);
-    expect(useGameStateStore.getState().pendingDeckReorder).toEqual(surfaced);
+    expect(() => surfacePersistedDeckReorder(state)).toThrow(
+      /pendingDeckReorder: deckSnapshot must match current player deck/,
+    );
+    expect(state.players.self.deck).toEqual(['TAIL', 'RED-A', 'RED-B']);
+    expect(useGameStateStore.getState().pendingDeckReorder).toBeNull();
   });
 });
 

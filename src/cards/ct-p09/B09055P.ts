@@ -11,7 +11,7 @@
 //   - a2 効果「このキャラをリムーブし、PAかリムーブの[赤井秀一&世良真純]1枚まで登場」=>
 //     sequence[ sceneRemove{uid:'$self', cause:'effect'},
 //               sceneEnter{cardId:'$pick.cardId', target:{query:{area:['partner-area','remove'], side:'self',
-//                          filter:{cardName:'赤井秀一&世良真純'}}, n:{min:0,max:1}, chooser:'self'}} ]。
+//                          filter:{kind:'character',cardName:'赤井秀一&世良真純'}}, n:{min:0,max:1}, chooser:'self'}} ]。
 //     ★ area:['partner-area','remove'] = union pick。Cluster WB1 で sceneEnter の union/partner-area
 //     splice を解禁 (candidates.ts の area 配列 union + partnerAreaCards 列挙は既存)。MR 重複登場処理は
 //     engine (applyMrEntryRemoval) 委譲 (rules/18)。「まで」= 0枚可 (rules/15)。
@@ -86,7 +86,7 @@ const a2: AbilityDef = {
             query: {
               area: ['partner-area', 'remove'],
               side: 'self',
-              filter: { cardName: '赤井秀一&世良真純' }
+              filter: { kind: 'character', cardName: '赤井秀一&世良真純' }
             },
             n: { min: 0, max: 1 },
             chooser: 'self'

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `513705418ed4`
+> Source hash: `42259a667b43`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,712 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# QA adjudication Wave192
+
+- Moved eight CT-P09 Q&A rows from test-gap to aligned; coverage is 2180/2964.
+- Added public owner mirrors for zero removal, full-scene switch, short-deck
+  refresh stop, owner-only scene cost, and dual-trait cost rewards.
+- Fixed B09063 so a blocked draw still consumes its 【ターン1】 trigger use.
+- Focused 351 tests, TypeScript, scoped lint, and QA merge pass.
+
+# QA adjudication Waves188-189
+
+- Moved sixteen CT-P09 Q&A rows from test-gap to aligned; coverage is 2156/2964.
+- Added public owner mirrors for optional independence, continuous state, switch
+  timing, LP/AP lifetime, Misread/disguise/contact/FILE semantics, granted
+  triggers, simultaneous leave snapshots, and reveal-cost presentation lifetime.
+- No production code changed; focused 34, TypeScript, scoped lint, and QA gates pass.
+
+# QA adjudication Waves186-187
+
+- Moved sixteen CT-P08/CT-P09 official Q&A rows from
+  `test-missing/test-gap` to `matched/aligned`; coverage is now 2140/2964.
+- Added public owner-mirror proofs for dynamic event sequencing, inactive
+  printed ability presence, MR replacement, simultaneous order, refresh-safe
+  FILE-name snapshots, reveal origin, bond-loss timing, and FILE flip no-op.
+- Added exact human `revealFromHand` cost selection and cost-completion public
+  presentation while preserving AI/legacy fallback.
+- Fixed declared hand-reveal reactions to wait for the current effect without
+  changing ordinary cost-trigger owner ordering; added rollback and B10006
+  horizontal regression proof.
+- Retired stale B08093/B09003/B09004/B09005 DEFER records and MR timing comment.
+
+# QA adjudication Waves184-185
+
+- Moved eighteen CT-P08 official Q&A rows from `test-missing/test-gap` to
+  `matched/aligned`; coverage is now 2124/2964.
+- Added public owner-mirror proofs for ordered optional event choices,
+  resolution-time name checks, refresh-safe leave invocation, continuous AP,
+  forced event targets, naming-state action limits, and full-scene switching.
+- Retired stale B08075/B08078/B08082/B08086/B08087/B08091 DEFER records.
+- Corrected the B08034 E2E deck fixture to reflect that its reasoning trigger
+  resolves before reasoning evidence is gained.
+- Production CardDefs and engine required no behavior changes.
+
+---
+date: 2026-08-26
+category: cards
+title: QA Waves182-183 public certification
+---
+
+- Aligned eighteen CT-P08 Q&A rows across B08062-B08073 with public owner,
+  MR timing, continuous aura, reveal lifetime, cost, Cut-In, and end-phase proofs.
+- Proved B08066's remove-area cost triggers both shipped B05087/B05088
+  `remove:exit` observers and retired the stale pre-consumer DEFER record.
+- Proved two B08069 physical declarations create independent turn-end reserves,
+  and separated B08073 trigger-time Bond from resolution-time scene checks.
+- Re-grounded the selected subset against current local raw data; all thirty
+  target Q&A identities and answers still match the reviewed tracked snapshot.
+
+---
+date: 2026-08-26
+category: cards
+title: QA Waves180-181 and B08054 host-leave replacement
+---
+
+- Aligned sixteen CT-P08 Q&A rows across B08048-B08062 with public action,
+  switch, remove-cost, Cut-In, deck-cost, continuous-aura, and event proofs.
+- Implemented B08054's synchronous face-down set-card return when an opponent
+  effect or contact makes its host leave, while preserving the host destination.
+- Preserved old-save compatibility by carrying optional leave attribution through
+  B02052 resumes and failing closed when legacy attribution is absent (BUG-380).
+- Redacted private face-down identities from queued set-leave observer payloads;
+  real B02020 pending and replay projections now preserve owner-only visibility.
+- Retired stale B08057/B08059 DEFER notes after current production-path proofs.
+
+---
+date: 2026-08-26
+category: cards
+title: QA Waves178-179 and B08034 reasoning timing
+---
+
+- Aligned sixteen CT-P08 Q&A rows across B08032-B08047 with public owner,
+  boundary, occurrence, refresh, contact, evidence, and action-gate proofs.
+- Fixed B08034/B08034P reasoning reactions to resolve after sleep and before
+  Mislead/evidence instead of at `reasoning:end` (BUG-379).
+- Corrected stale hash descriptions and DEFER rows for already shipped card
+  primitives; coverage is now 2072 matched / 892 test-missing.
+- Added Wave180-181 grounding. B08054's missing set-card leave replacement is a
+  confirmed separate T3 implementation requirement before its QA row can align.
+
+---
+date: 2026-08-26
+title: CT-P08 Q&A Waves176-177を完了
+type: fix
+scope: cards
+---
+
+## QA coverage
+
+B08017からB08030まで16件の公式Q&Aへ、両owner、全printing、
+公開dispatch、境界値、任意辞退、hidden情報を含む証跡を追加した。
+
+## Result
+
+- B08022のマロちゃん回収に欠けていたowner指定を修正した。
+- MR入替、deck look、Bond、owner cost、remove transfer、evidence multi-pick、
+  Assist解決の現行実装を公開経路で認定した。
+
+---
+date: 2026-08-26
+title: CT-P07 Q&A Waves172-173を完了
+type: fix
+scope: cards
+---
+
+## QA coverage
+
+B07085からB07098/Pまで19件の公式Q&Aへ、両owner、全printing、
+public dispatch、境界値、原子的rejectを含む証跡を追加した。
+
+## Result
+
+- 既存engine/card定義が全19 rulingを満たし、production gapはなかった。
+- 強制公開、独立任意分岐、証拠コスト、turn-end、effective level、
+  switch/contact、short-deck refreshを公開経路で固定した。
+
+---
+date: 2026-08-26
+title: CT-P07 Q&A Waves170-171を完了
+type: fix
+scope: cards
+---
+
+## QA coverage
+
+B07057/PからB07079/Pまで19件の公式Q&Aへ、両owner、全printing、
+実dispatch、条件境界と原子的rejectを含む証跡を追加した。
+
+## Result
+
+- 既存engine/card定義が全19 rulingを満たし、production gapはなかった。
+- hand/FILE/evidence costのowner制約、full-scene switch、effective LP/level、
+  entry/contact/disguiseの解決順をpublic経路で固定した。
+
+---
+date: 2026-08-26
+title: CT-P07 Q&A Waves168-169を完了
+type: fix
+scope: cards-engine-ui
+---
+
+## QA coverage
+
+B07043からB07056/Pまで18件の公式Q&Aへ、両owner、全printing、
+実dispatch、条件破壊decoyを含む証跡を追加した。
+
+## Corrections
+
+- choice DSLへ任意の意味ラベルを追加し、B07043の3宣言名を表示する。
+- B07053の選択カードを公開し、解決後に閉じられるpresentationへ配線する。
+- 同型の手札公開6 printingも公開presentationへ統一する。
+
+---
+date: 2026-08-26
+title: CT-P07 Q&A Waves166-167を完了
+type: fix
+scope: cards-engine
+---
+
+## QA coverage
+
+B07017/PからB07039/Pまで18件の公式Q&Aへ、両ownerと物理printingを
+含むpublic dispatch証跡を追加した。
+
+## Corrections
+
+- B07033/P/P2へ欠落していたFILE6変装能力をappend-onlyで追加した。
+- B07034/Pを裏向きset card離場だけに限定した。
+- 同時リムーブ開始時のsetcard observer authorityを保持し、処理順による
+  observer消失を防いだ。内部snapshotはtrigger queue前に除去する。
+
+---
+date: 2026-08-26
+title: parent effectのdecisionをchild triggerより先に解決
+type: fix
+scope: engine
+---
+
+## BUG-370
+
+triggerBatchを持たないparent continuationのmandatory pick中でもstack drainが
+child triggerを進め、child optionalを先行解決できた。
+
+pending pickをhard boundaryにし、同一authorityのdeferred entryと
+`resumesCurrentEffect` carrierだけを通す。
+parent完了後は既存のturn-player/owner-orderでchild effectsを解決する。
+
+# QA Wave85: fix and certify inherent sleep entry
+
+- Certify B01050, B01052, B03120, PR180, and PR186; reauthenticate B01011's
+  false-green control with effect-entry timing evidence.
+- Fix BUG-349 by migrating B01011/B01050/B01052/B03120 and horizontal D06016
+  from delayed sleep effects to `CardDef.entersSleep`.
+- Prove sleep before `enter`, zero false `state:change`, genuine enter riders,
+  public effect entry, full-scene switch, owner orientation, and save hydration.
+
+# QA Wave84: certify full-scene event entry
+
+- Certify five gaps across B07090/P, D08024, D09025, PR291, and PR297;
+  reauthenticate B05062 and B08029/P controls against an exactly full scene.
+- Prove public event use, valid own-scene switch, zero entry, owner orientation,
+  physical parity, forged victim rejection, save hydration, and enter hooks.
+- Preserve each printed continuation: AP grants, Assault grants, partner-area
+  movement, and sleeping hand entry.
+- Fix BUG-350 so autonomous direct `sceneEnter` selections supply the required
+  own-scene switch victim instead of silently skipping the chosen entrant.
+
+# QA Wave83: certify disguise replacement contract
+
+- Certify B03050, B03051, and B03052 gaps and reauthenticate B03129 control.
+- Prove physical hand-to-scene exchange, old-face deck bottom, same UID/action
+  participant, inherited state/effects/set/stack occurrences, owner/save, gates,
+  source negatives, and cut-in exclusivity.
+- Fix BUG-348 so any contact participant departure ends before another action or
+  AP judge across public UI, AI, save, guarded, partner, and effect contacts.
+- Drain contact-end effects before action-end in synchronous AI resolution.
+
+# QA Wave82: certify multicolor case membership
+
+- Certify five gaps across B02038/P, B02041/P, B02043, B02044/P, and B02047;
+  reauthenticate B02045's false-green matched control.
+- Prove D06019 green+white and white-only positives, red+blue and FILE-minus-one
+  atomic negatives, owner orientation, physical parity, and rider separation.
+- Confirm partner color gates B02041/P's rider but not its disguise icon.
+
+# QA Wave81: certify disguise observers and duration
+
+- Certify B02043, B02045, B02047, and B03050 without merging Wave80's distinct
+  question hash.
+- Fix BUG-345 by scoping B02047 contact immunity to one action; prove a second
+  same-turn contact removes it normally.
+- Fix BUG-346 by freezing the replaced character's effective AP/LP/level before
+  disguise, preserving continuous and aura values without new-card pollution.
+
+# QA Wave80: separate disguise from entry
+
+- Certify B02038/P, B02044/P, and B02086/P against the exact shared ruling.
+- Prove every physical's public disguise suppresses both its own entry rider and
+  an external entry observer; ordinary hand entry remains the positive control.
+- Fix BUG-347 so empty-hand B02086 decisions take the printed immunity branch,
+  including restored pending decisions whose hand became empty.
+
+# QA Wave79: certify opponent evidence gain
+
+- Certify B01065/P, B01069, and B02061 hidden opponent-evidence transfer.
+- Fix BUG-344 by making B02061 a real optional with `evidenceGain n:1`.
+- Cover public accept/decline, self/opp, exact-one deck-out, save, CPU, Hirameki,
+  and desktop/mobile B02061 interaction with valid and decoy targets.
+
+# QA Wave78: certify set events without hosts
+
+- Certify B01039, B02031/P, B02052/P, and B02067/P.
+- Prove mandatory eligible-host selection, legal no-host use, physical occurrence
+  identity, atomic rejection, owner orientation, save, host leave, and CPU.
+- Bind B01039/B02031 host consumers and preserve existing B02052/B02067 controls.
+
+# QA Wave77: certify PR099 name replacement
+
+- Certify PR099 with PR105 as a matched behavior control.
+- Prove hidden deck-top set, exact-one deck-out timing, Assault grant, optional
+  registered-name replacement, split-name matching, and atomic invalid names.
+- Cover public self/opp, expiry, save hydration, action legality, privacy, and CPU.
+
+# QA Wave76: certify B06067 self selection
+
+- Certify B06067/P exact hand-occurrence cost and either-side Police selection.
+- Prove the source is eligible, invalid costs are atomic, and active targets can
+  be acted against through the public dispatcher.
+- Cover contact cause/source exclusions, turn cap, expiry, save, owner, and CPU.
+
+# QA Wave75: certify effective-level self count
+
+- Certify PR270 with matched physical twin PR264 as control.
+- Count the entering source at effective level 7 on a resolved case before its
+  exact scene gate evaluates.
+- Cover count boundaries, owner isolation, expiry, public actions, and CPU entry.
+
+# QA Wave74: certify source self selection
+
+- Certify B03088 and B03095 across three physical printings.
+- Prove public self/opp decisions include the eligible physical source while
+  excluding level, trait, side, and bond decoys.
+- Cover zero choice, carrier order, expiry, Hirameki decline, trigger cap, and CPU.
+
+# QA Wave73: certify incomplete deck costs
+
+- Certify six target records across nine physical printings.
+- Reject owner deck sizes zero, one, and two transactionally; never supplement
+  payment from the opponent deck.
+- Cover owner=`opp`, CPU, every printing, and B10085 refresh/penalty/draw order.
+
+# QA Wave72: certify unbounded partner area
+
+- Certify six target records across ten physical printings.
+- Append cards above eight existing partner-area cards for self/opp owners while
+  preserving source removal, identity, order, and opposing zones.
+- Cover four public dispatch routes, hydration, CPU, and forged/stale decisions.
+
+# QA Wave71: certify owner-only exact-one costs
+
+- Certify six records across ten physical printings.
+- Flip an arbitrary owner evidence occurrence without changing identity/order;
+  reject opponent-only, wrong-count, duplicate, range, and face-up choices.
+- Cover owner=`opp`, CPU positive/negative paths, and save hydration.
+
+# QA Wave70: certify incomplete exact-three costs
+
+- Certify six records across eleven physical printings.
+- Reject flipping all two or zero own face-down evidence before any effect,
+  turn-use count, or public decision changes.
+- Prove opponent evidence cannot supplement payment for self/opp owners or CPU.
+
+# QA Wave69: certify Event YAIBA
+
+- Certify six records across eleven physical printings through real public
+  entry, hand, Next Hint, Hirameki, cut-in, and contact routes.
+- Restore official YAIBA incident traits on B06036/P and B06065/P (BUG-343).
+- Make Next Hint optional-card admission transactional, support full-scene
+  switch selection, unify picker/engine preflight, and record victim removal
+  in the public causal trace (BUG-342).
+
+# QA Wave68: certify owner-only exact-three costs
+
+- Certify six target records and replace B05063 horizontal evidence across
+  thirteen physical printings.
+- Pay exactly three nonadjacent facedown evidence owned by the ability source;
+  opponent evidence can never substitute for a short payment.
+- Preserve identity, origin, order, hydration, forced refresh, and real CPU
+  owner=`opp` behavior while malformed selections reject atomically.
+
+# QA Wave67: certify arbitrary evidence positions
+
+- Certify six records across twelve base/P physical printings.
+- Accept exact nonadjacent own positions without changing identity or order.
+- Reject wrong counts, duplicate, out-of-range, and face-up choices atomically.
+- Extend BUG-339 publication to the newly grounded B09112/P deck selection.
+
+# QA Wave66: certify nonpositive AP
+
+- Certify seven target records and retain B02008 horizontal evidence.
+- Drive every printed AP effect through public declared, entry, disguise,
+  leave, Shippu, and case-cost routes.
+- Prove zero/negative AP keeps the same scene occurrence through save, replay,
+  and turn cleanup without a removal event.
+
+# QA Wave65: certify short top-four deck looks
+
+- Certify eight target records plus B08071/B10096 across nineteen physical sources.
+- Exercise real enter, event-option, self-removal, mill, grant, and contact routes.
+- Preserve private remainder identity while publishing every selected card.
+- Fix BUG-340 continuation authority with active descendant causal traces.
+
+# QA Wave64: certify short top-three deck looks
+
+- Certify eight target records plus B07066 across thirteen physical sources.
+- Keep short look windows private; publish only the selected card and refresh at movement.
+- Cover decline, no-match, two-card remainder, deck-out, and CPU-owner symmetry.
+- Fix BUG-339/341 selected-card presentation and inherent PR180/186 sleep entry.
+
+# QA Wave63: certify full-scene effect entry
+
+- Certify eight records and eleven physical sources through public decisions.
+- Switch out every ability source while paid work and entry effects continue.
+- Cover hand/remove/deck origins, sleep state, zero entry, and owner symmetry.
+- Prove source leave precedes entrant entry and reject forged victims atomically.
+
+# QA Wave62: certify face-down set privacy
+
+- Certify nine records and sixteen physical sources through public set routes.
+- Hide owner/opponent identities in picks, cost UI, replay projection, and DOM.
+- Reveal only after removal; reject malformed exact costs transactionally.
+- Fix BUG-338 by restoring B08034's official `R` rarity metadata.
+
+# QA Wave61: certify full-scene effect entry
+
+- Certify seven records and thirteen physical sources through public hand use.
+- Switch out each newly entered source while its fired effect finishes normally.
+- Cover typed decoys, zero entry, decline, owner symmetry, and forged victims.
+
+# QA Wave60: certify the stun definition
+
+- Certify seven records and eight physical sources through public decisions.
+- Prove active/sleep/stun transitions, persistence, and activation replacement.
+- Cover action admission plus sleep-or-stun gates without changing production.
+
+# QA Wave59: certify owner deck-top-three costs
+
+- Certify seven records and eleven physical sources through public declarations.
+- Preserve exact owner top-three identity/order while isolating opponent zones.
+- Cover short decks, exact-three refresh, compound sleep, and printed effects.
+
+# QA Wave58: certify owner-only hand costs
+
+- Certify seven records and ten physical sources through public declarations.
+- Prove exact one-card owner-hand payment and asymmetric opponent isolation.
+- Reject five malformed forms and unavailable compound sleep atomically.
+
+# QA Wave57: certify arbitrary evidence positions
+
+- Certify eight case records and all fifteen base/parallel physical sources.
+- Accept non-sorted, nonadjacent evidence indices without identity or order change.
+- Reject five malformed payment classes atomically and reach each printed effect.
+
+# QA Wave56: certify the disguise definition
+
+- Certify eight physical disguise sources through the public contact window.
+- Preserve state, modifiers, name, set cards, and stacked-card occurrences.
+- Fix BUG-337 so one contact opportunity cannot use cut-in and disguise twice.
+
+# QA Wave55: certify nested and physical entries
+
+- Certify eight nested, contact, clone, and partner-area entry sources.
+- Restore B09056/P's printed two-choice behavior and inapplicable no-op branch.
+- Make autonomous choices skip known-false conditional options without UI leakage.
+
+# QA Wave54: certify direct effect-entry routes
+
+- Certify nine event, contact, Hirameki, end-turn, and declared entry sources.
+- Prove typed targets, forced/no-match deck paths, costs, switch, and ordering.
+- Resolve every chosen entrant's own normal enter ability through public dispatch.
+
+# QA Wave53: certify exact-two evidence costs
+
+- Certify nine declared abilities that require two face-down evidence.
+- Prove mixed-state rejection is transactional and does not consume turn use.
+- Prove nonadjacent face-down selections work without flipping opponent evidence.
+
+# QA Wave52: restore effect-entry sources
+
+- Implement the missing B06047, B08083, and B09007/P entry routes.
+- Prove each effect-entered character resolves its own normal enter ability.
+- Keep B06047 a1 fail-closed until a cross-hand YAIBA level aura exists.
+
+# QA Wave51: defer refresh to remainder movement
+
+- Certify ten deck-look refresh-timing records at deck sizes one through three.
+- Fix 23 shipped descriptors and two deck-window continuation defects.
+- Make B09078/B07015 refresh before their conditional discard tails.
+
+# QA Wave50: stacked cards are not set cards
+
+- Certify ten exact official-QA records through public stack routes.
+- Add the missing B09048 declared-cost path and explicit `setCards=[]` checks.
+- Preserve physical identity, count, host-leave, and existing Wave33 semantics.
+
+## QA Wave 49 — Pre-guard action decisions
+
+- Certified five official action-trigger timing records with decisions or grants.
+- B02014 grants both Assault[case] and draw-on-action through one public pick.
+- B05048 and D09016/D09017 keep guard blocked through mandatory effect decisions.
+- D08021 resolves its five-stack draw/evidence owner order before guard.
+- BUG-332 blocks guard, contact, advance, and judge while owner order is pending.
+- Effect-order confirmation remains usable and guard succeeds immediately afterward.
+- Advanced coverage from 1,317 to 1,322 matched; test-missing falls to 1,642.
+
+## QA Wave 48 — Direct action-declare timing
+
+- Certified seven official action-trigger timing records.
+- Public declarations prove target selection and actor sleep before each trigger.
+- B01085 Investigation, B02002/D02004 AP, and D02008 cut-in ban settle before guard.
+- D02008 remains effective through the real opponent contact cut-in window.
+- D09008/D09009/PR283 draw before guard independently of their FILE rulings.
+- No card-definition change was required.
+- Advanced coverage from 1,310 to 1,317 matched; test-missing falls to 1,647.
+
+## QA Wave 47 — Investigation defines the found-card set
+
+- Certified eight official found-card records across CT-P01–P04 and CT-P08.
+- Public routes prove the exact Investigation reveal is the downstream bound set.
+- Threshold, name, level-sum, level-in-bound, and trait-count consumers stay aligned.
+- BUG-331 publishes Souza reveals as public/all without affecting AI-only simulation.
+- Human-defender reveal and exact reorder authorities coexist through JSON restore.
+- `reveal-to-bottom` removes the false shuffle phase from Souza and B08074 UI.
+- Central bottom-operation marking fixes the same presentation on 140 abilities.
+- Six revealed-remainder randomizers use a distinct mode, not whole-deck shuffle.
+- Matched-only empty remainders use `reveal-complete` and claim no destination.
+- Deck-bottom movement and defender-owned order remain authoritative engine state.
+- Advanced coverage from 1,302 to 1,310 matched; test-missing falls to 1,654.
+
+## QA Wave 46 — End-phase activation stays outside main actions
+
+- Certified twelve official end-phase reactivation records across CT-P07–P10.
+- Real public `endTurn` paths cover direct, picked, optional, zero, PA, and PA-MR sources.
+- Active characters cannot reason or act again before their next self main phase.
+- Stun-to-active replacement produces sleep on direct-self and picked-target routes.
+- BUG-330 adds one shared main-action admission boundary for turn owner and phase.
+- Reasoning, action, hand use, next hint, declared, and partner ability share the gate.
+- Opponent-turn and unresolved end-phase decisions reject every covered action unchanged.
+- Advanced coverage from 1,290 to 1,302 matched; test-missing falls to 1,662.
+
+## QA Wave 45 — Bond excludes the partner area
+
+- Certified twelve official Bond-definition records across CT-P05, CT-D10, and PR.
+- Every negative control places the exact named witness only in the partner area.
+- Every positive control moves that name to self scene and uses the real card ability.
+- Public paths cover declared costs, effect targetability, contact removal, and turn end.
+- Effective AP, LP, and keyword reads cover the continuous Bond cards.
+- B05048 combines canonical condition evaluation with public aura candidate filtering.
+- No production change or engine gap was required for Wave45.
+- Advanced coverage from 1,278 to 1,290 matched; test-missing falls to 1,674.
+
+## QA Wave 44 — B07093 first declared ability
+
+- Implemented the missing printed a1 for B07093/B07093P without new engine primitives.
+- Preserved old save/replay authority by appending a1 after shipped a2/a3 indices.
+- Added public hand/remove choice, zero, filters, turn one, FILE6/7, and partner controls.
+- Proved full-scene self-switch, enter trigger, AP+4000, Assault, and exact deck bottom.
+- Proved public disguise inheritance and public early-leave rider cancellation.
+- Replayed exact and witness-free a2 moves through V1/V2 and dispatched a2 from PA-MR.
+- Certified all five remaining B07093 official QA records.
+- Advanced coverage from 1,273 to 1,278 matched; test-missing falls to 1,686.
+
+## QA Wave 43 — assisted FILE in contact observers and cut-ins
+
+- Certified B06087 and PR280 through public assist and full contact AP-removal timing.
+- Proved their optional is absent before judgment, appears after contact removal, and completes self-removal plus legal Police entry.
+- Certified PR100 and PR106 through public assist and real cut-in use.
+- Below FILE4, cut-in use remains legal but text does nothing; at FILE4 the optional chain runs.
+- Exact cut-in paths pop only an ordinary FILE card, preserve the assisted partner, and enter a valid level-five 宮野志保.
+- Added pinned grounding decisions for all four cards; no production change found.
+- Shared FILE(X) coverage is now 40 of 41 records; only deferred B07093 remains.
+- Advanced total coverage from 1,269 to 1,273 matched records; test-missing falls from 1,695 to 1,691.
+
+## QA Wave 42 — remaining declared assisted-FILE rulings
+
+- Certified nine official QA records across B07069, B08004, B08007, B09055, B09060, PR179, PR185, PR199, and PR205.
+- Used public assist plus below/exact declared dispatch with a sufficient opponent FILE.
+- Exercised composite costs, stun/bond/remove gates, stack count, union-source entry, cost-paid traits, reveal, and choices.
+- Proved B07069 removes an ordinary FILE card while preserving the assisted partner.
+- Added no-stack, wrong-case, low-remove, wrong-partner, no-student, incomplete-cost, and turn-limit controls.
+- Every rejection preserves player state and opens no decisions.
+- Added pinned grounding decisions for all nine cards; no production change found.
+- Advanced coverage from 1,260 to 1,269 matched records; test-missing falls from 1,704 to 1,695.
+
+## QA Wave 41 — assisting partners in declared FILE gates
+
+- Certified five official QA records for B08056, B09010, B09036, B10095, and D10011.
+- Proved public declared dispatch rejects transactionally below each assist-derived threshold.
+- Completed named hand entry, zero-candidate multi-entry plus FILE removal, and same-name picker paths.
+- Completed B10095 self-removal/re-entry and D10011 deck-bottom/re-entry costs through public picks.
+- Preserved the assisted partner when B09010 removed the top ordinary FILE card.
+- Added pinned grounding decisions, including the current resolved B09036 implementation and SHA-pinned CT-P10 source.
+- No engine or card-definition change was required.
+- Advanced coverage from 1,255 to 1,260 matched records; test-missing falls from 1,709 to 1,704.
+
+## QA Wave 40 — assisting partners across action lifecycle FILE gates
+
+- Certified six official QA records for B04068, B05108, D09016, D09017, PR289, and PR295.
+- Used public assist, action declaration, guard, contact, judge, and action-end dispatches.
+- Separated action-declare prompts from action-end prompts.
+- Proved threshold-minus-two plus partner stays inactive and threshold-minus-one activates exactly.
+- Exercised optional, mandatory discard, stacked-count, AP-binding, and turn-one paths.
+- Kept the opponent at a sufficient FILE count to detect wrong-owner reads.
+- Added pinned grounding decisions for all six cards; no production change found.
+- Advanced coverage from 1,249 to 1,255 matched records; test-missing falls from 1,715 to 1,709.
+
+## QA Wave 39 — assisting partners in FILE-gated enter effects
+
+- Certified five official QA records for B04023, D09014, D09015, PR137, and PR143.
+- Ran public `assist` followed by public `handUseCard` at FILE6 and FILE7.
+- B04023 surfaces its optional only at FILE7; D09014/D09015 surface their sleep picker only at FILE7.
+- PR137/PR143 keep choice 0 selectable below threshold as an official no-op and expose its optional only at FILE7.
+- Resolved every choice, optional, and picker through bound public decision actions.
+- Kept B04023's independent next-hint reduction ruling test-missing.
+- Added pinned grounding decisions for all five cards; no production change found.
+- Advanced coverage from 1,244 to 1,249 matched records; test-missing falls from 1,720 to 1,715.
+
+## QA Wave 38 — assisting partners in continuous FILE conditions
+
+- Certified five official QA records for B02063, B08065, D09008, D09009, and PR283.
+- Used the public `assist` dispatcher instead of constructing the acting player's assisted FILE state.
+- Proved threshold-minus-one card backs plus the partner activates each FILE condition.
+- Proved threshold-minus-two plus the partner remains inactive.
+- Kept the opponent at a sufficient FILE count to detect wrong-owner reads.
+- Observed real LP/AP continuous values, including B08065's turn and trait-count gates.
+- Added pinned grounding decisions for all five cards; no engine gap or production change found.
+- Advanced coverage from 1,239 to 1,244 matched records; test-missing falls from 1,725 to 1,720.
+
+## QA Wave 37 — self-only evidence costs, complex cases
+
+- Certified six official QA records for B06095, B09111, B09112, B10082, B10101, and B10102.
+- Reused the public self-only evidence-cost matrix across cards with declaration, reveal, refresh, grant, and dynamic-count tails.
+- Kept the Q&A claim narrow: the matched ruling is the inability to pay a declared cost with opponent evidence.
+- Recorded rejection states transactionally: evidence faces, printed ability count, and pending decisions remain unchanged.
+- Proved exact-two payment and a turn-one repeat rejection while two unused self evidence cards remain payable.
+- Cleared the initial independent-review BLOCK by adding the missing owner/opponent asymmetric boundary.
+- Advanced official-QA coverage from 1,233 to 1,239 matched records; test-missing falls from 1,731 to 1,725.
+
+## QA Wave 36 — self-only evidence costs
+
+- Certified six official QA records for B06013, B06065, B07062, B08094, B10034, and D10026.
+- Exercised each printed case ability through the public `declaredAbility` dispatcher.
+- Proved incident-side rejection and resolved-side acceptance for the printed `a2` ability.
+- Added asymmetric fixtures where the opponent has two facedown evidence cards.
+- Proved one self evidence plus two opponent evidence cannot pay the cost.
+- Rejected three selected evidence indices without paying a partial cost or consuming the ability.
+- Flipped exactly two of four self evidence cards and left every opponent evidence card facedown.
+- Rejected a second valid two-card payment after the turn-one limit without changing state.
+- Advanced official-QA coverage from 1,227 to 1,233 matched records; test-missing falls from 1,737 to 1,731.
+
+## QA Wave 35 — physical ability occurrences
+
+- Certified nine additional official QA records for physical set-card ability origins.
+- Kept duplicate B01057/P and B05117/P triggered riders independently ordered and resolved.
+- Kept B07014/P and B10017/P declared riders independently selectable, payable, and limited.
+- Carried exact set-card or host occurrence identity through engine, pending state, AI, replay, UI, and JSON.
+- Rejected missing, stale, cross-host, mixed, and forged occurrence authority transactionally.
+- Preserved old saves by inheriting ambiguous bare counters fail-closed and seeding exact counters from them.
+- Rejected malformed host, physical set-card, and replacement use counts without reopening turn limits.
+- Backfilled legacy set-card instance IDs before AI enumeration and preserved legacy PA-MR counters.
+- Suppressed legacy set-card leave triggers that lack enough physical identity to resolve safely.
+- Replaced raw counter-key and internal-ID UI assertions with public readers and public card labels.
+- Advanced official-QA coverage from 1,218 to 1,227 matched records; test-missing falls from 1,746 to 1,737.
+
+## QA Wave 34 — set-card public lifecycle
+
+- Certified twelve official QA records across twenty-three printings through public-dispatch lifecycle cases.
+- Proved event use creates a `charSetCard` decision, attaches the physical event face up, and keeps it out of remove until its host leaves.
+- Proved host removal sends both the character and attached event to remove and leaves no orphan set-card state.
+- Fixed B02067/P so their printed event-use line can set the event on one red character.
+- Preserved B02067's shipped `a1` choose-intercept ID while restoring the omitted set ability as `a0`.
+- Derived B02067P from B02067 and verified eleven parallel-printing pairs remain mechanically identical.
+- Fixed duplicate B02067/P set cards so each physical card grants and consumes its own `turn1` choose-intercept occurrence.
+- Carried set-card instance identity through pending state, JSON restoration, authority checks, dispatcher actions, and UI choices.
+- Rejected missing or mismatched set-card identities transactionally and retained deterministic legacy-state backfill.
+- Horizontally scanned every event CardDef with set text or on-set scope; no second missing `charSetCard` path remains.
+- Recorded generic triggered and declared `on-set-host` occurrence identity as the next separate engine wave.
+- Advanced exact official-QA coverage from 1,206 to 1,218 matched records; test-missing falls from 1,758 to 1,746.
+
+## QA Wave 33 — stacked-card semantics and physical identity
+
+- Certified twelve official QA records across sixteen printings through fourteen public-dispatch regression cases.
+- Proved stacked cards remain outside the scene-character population and expose only their count to rules evaluation.
+- Proved stacked names, traits, colors, abilities, enter hooks, and leave hooks do not participate in gameplay.
+- Covered partner-area declaration, hand-use entry, declared costs, normal action completion, and end-phase removal routes.
+- Preserved exact selected card IDs through JSON round-trip and host departure while keeping legacy count-only stacks compatible.
+- Fixed `handStackUnder` so a revealed hand card no longer becomes `back-card` in authoritative GameState.
+- Kept B08002's distinct answer hash as an independent manual-semantic adjudication despite sharing the question family.
+- Deferred authorization-clone identity hardening, multi-candidate stack-cost selection, and public stacked-card UI/replay visibility to separate follow-up work.
+- Advanced exact official-QA coverage from 1,194 to 1,206 matched records; test-missing falls from 1,770 to 1,758.
+
+## QA Wave 32 — Shuffle Romance and contact-host direction
+
+- Certified eleven official QA records across B01023/P, D10024, B03041/P, and B06012/P through twenty-five public-dispatch regression cases.
+- Proved private deck looks, zero selection, short-deck and refresh boundaries, mandatory/no-host set branches, face-up attachment, host-leave cleanup, and replay redaction.
+- Fixed set-host contact triggers to match the exact host as either participant, so opponent-caused contacts resolve before cut-in without creating observer-wide matches.
+- Applied the same directional correction to the horizontally equivalent B03041/P and B06012/P printings.
+- Deferred contact action-order confirmation in a GameState phase until every `contact:start` effect drains, including human decision pauses, so post-effect AP determines order.
+- Ended contact immediately without setting action order when a start effect removes either participant, matching the existing B04046/P removal family.
+- Grounded all seven affected printings against pinned official TSV rows without adding a card DSL primitive.
+- Advanced exact official-QA coverage from 1,183 to 1,194 matched records; test-missing falls from 1,781 to 1,770.
+
+## QA Wave 31 — effect-entry enter triggers
+
+- Added public-runtime witnesses for eight official QA records covering characters entered by abilities and effects.
+- Proved normal 【登場時】 triggers fire after real `sceneEnter` resolution for remove-area and hand sources.
+- Covered target filters, source ownership/splice, sleep entry, self-sleep, optional decline, zero discard/entry, causal order, and cleanup.
+- Grounded B03085, B06018, B06052, B06090, B09048, B09057, PR138, and PR144 against pinned official TSV rows.
+- No shipped CardDef or engine change was required.
+- Advanced exact official-QA coverage from 1,175 to 1,183 matched records; test-missing falls from 1,789 to 1,781.
+
+## QA Wave 30 — deck-look zero-choice verification
+
+- Added public-runtime witnesses for seventeen deck-look abilities that permit selecting up to one matching card.
+- Proved an eligible match may be declined, no card enters hand, and every mandatory bottom/remove continuation completes.
+- Covered real enter, declared, partner-enter, leave, and phase-end routes with costs, conditions, and authority cleanup.
+- Fixed B10068/B10101 hidden-information leakage: look windows stay private, only a selected card is public, and decline publishes nothing.
+- Advanced exact official-QA coverage from 1,158 to 1,175 matched records.
+
+## QA Wave 29 — action-triggered effect-entry verification
+
+- Added public-runtime witnesses for eight action-triggered abilities that enter characters from deck or hand.
+- Proved normal entry triggers, exact source costs and disposition, filter boundaries, zero/decline branches, causal order, and authority cleanup.
+- Fixed B04030/P so its printed `怪盗キッド` filter no longer accepts a pure `黒羽快斗` card.
+- Advanced exact official-QA coverage from 1,150 to 1,158 matched records.
+
+## QA Wave 28 — triggered effect-entry verification
+
+- Added public-runtime witnesses for eight triggered abilities that enter characters from hand or remove.
+- Proved each entered target's normal entry trigger, exact source ownership, state, filter decoys, source splice, causal log order, and authority cleanup.
+- Covered explicit decline, draw-created candidates, required continuations, and the distinct hand/remove zero-candidate contracts without production changes.
+- Advanced exact official-QA coverage from 1,142 to 1,150 matched records.
+
+## QA Wave 27 — effect-driven entry verification
+
+- Added public-runtime witnesses for eight declared abilities that enter characters from hand or remove.
+- Proved the entered character's normal entry trigger, real costs and filters, decoy exclusion, and complete authority cleanup.
+- Fixed `B08056` and `B09055/P/P2` so same-name events cannot enter through character-only effects (`BUG-324`).
+- Covered explicit decline, zero-candidate auto-skip, and same-owner simultaneous trigger ordering.
+- Advanced exact official-QA coverage from 1,134 to 1,142 matched records.
+
+## BUG-313 — PR135/PR141 現場リムーブ時能力の復元
+
+- PR135/PR141へ、相手ターン中の自己離場で阿笠博士まで公開するa2を追加。
+- 一致カードの強制取得、残りの順序保持、デッキshuffleを公式文どおり実装。
+- public dispatchで発火制約、match/no-match、owner mirror、短いデッキrefreshを回帰。
+- 6件の公式QAをexact evidenceへ接続し、BUG-311静的familyを34定義へ拡張。
 
 ---
 date: 2026-08-09
@@ -5485,30 +6191,29 @@ needsManual 5件 closure の調査を起点に、`赤魔術` が **構造化 tra
   にも波及する latent (DEFERRED-INDEX)。(2) charRemoveSetCard `n:N` は候補<N 時に available へ clamp する
   (「合わせて2枚」を 1枚しか持たず opt-in した場合の挙動は公式 Q&A 未裁定)。
 
-## BUG-145 — self-sleep optional gate (`charStateIs` 条件 + 11 能力)
+## BUG-145 — self-sleep optional gate (`charStateIs`、45印刷)
 
 - **engine**: `Condition` union に `charStateIs{ref:TargetingRef, state:'active'|'sleep'|'stun'}` を追加
   (effect.ts union + cond/eval.ts case + CONDITION_KIND_MAP + taskA-validate-specs.cjs CONDS の 4点同期)。
   `ref` 解決は apAtLeast/stackedCountAtLeast と同流儀 (resolveCharsForRef → charRead.state、複数解決は .some)。
-- **修正対象**: 「このキャラをスリープさせ(…)てもよい。そうした場合、X」型の能力は、解決時に self が既に
-  スリープなら optional 自体を行えない (公式qAndA PR138/PR144/B04049「スリープさせることができないので行えません」、一般裁定)。
-  各能力に ability.condition `not{charStateIs(ref:self, state:'sleep')}` を AND する。triggered.ts は
-  condition=false なら effect を walk する前に continue するため、self が sleep のとき能力は非所持扱い (rules/17) で
-  optional surface も出ない (effect 側 `conditional` ラップでは optional prompt が surface してしまうため不採用)。
-- **水平展開**: BUG-145 起票時は PR138 1枚のみだったが、同構造 (self-sleep が optional の先頭 gating clause) を
-  全 24 self-sleep カードから機械抽出 → **11 能力** を gate:
+- **修正対象**: 「このキャラをスリープさせ(…)てもよい。そうした場合、X」型は必ず発動し、解決時に
+  self が active の場合だけ optional を行える。現行実装は
+  `conditional if charStateIs(self,active) then optional(...)` とし、sleep/stunでもtriggerをqueueする。
+  BUG-161前の旧ability.condition方式は発動自体を落としていたため廃止した。
+- **水平展開**: BUG-145 起票時は PR138 1枚のみ。全CardDefの実行時構造走査で同構造を **45印刷** へ拡張:
   - enter: PR138・PR144 (黒ずくめ reanimate, qAndA 明示) / B04049 (FBI remove, qAndA 明示) /
     B09058・B09058P (赤井家 reanimate) / B09057 (黒 summon) / B08058・B08058P (FILE8 deck-bottom)
   - ターン終了時 (self が既にスリープの到達性高): B06102 (キャンティ active) / B09065 (FBI active)
-  - action:declare【ターン1】: B09013 a2 (毛利小五郎/AP8000 reanimate)
-  既存 condition (partnerColor/turn/fileAtLeast) は and:[既存, gate] にマージし維持。
-- **裁定の精度**: gate は `sleep` のみを対象 (Q&A が禁ずるのは already-sleep のみ)。`active` で gate する案
-  (DEFERRED 当初案) は stun を不当に巻き込むため不採用。stun での登場は現プールに存在せず実害差なし。
-- **gate**: tsc / validate-specs 73-0 / sync-whitelists / full vitest **2148**(+35 専用 test) /
+  - enter/contact/効果登場/remove observer: B04089/P・B04092・B04093・B06090/P・B07019・B07068/P・
+    B09056/P・B10070/P・D10005・D10006
+  - 追加横断: B05007/P・B07008・B08064・B09038/P・B09040/P・B10005/P・B10023/P・B10029・B10079
+  既存 condition (partnerColor/turn/fileAtLeast) は listener-time condition として維持。
+- **裁定の精度**: sleep/stunはいずれもselfをsleepへ実移動できないためoptional不可。
+  「sleep中のselfをstunにする」別効果の裁定とは区別する。
+- **gate**: tsc / validate-specs 73-0 / sync-whitelists / full vitest **2148**(+34 専用 test) /
   smoke:1000 = baseline 不変 (winsA=498、already-sleep は random play 不到達の証跡) / playwright 119。
-- 専用 test `tests/cards/bug-145-self-sleep-gate.test.ts` (35件): charStateIs プリミティブ / 11 能力の
-  self-sleep→condition=false (gate closed) ・active→true (gate open) / AND-merge 非破壊 / 実パイプライン
-  (enter hook emit で sleep→pendingEffects 空, active→queue)。
+- 専用 test `tests/cards/bug-145-self-sleep-gate.test.ts`: charStateIs primitive / 45印刷の完全なeffect-time active gate集合 /
+  sleep・stunでもqueue / 解決前state遷移 / sequence tail抑止 / printed condition非破壊。
 
 # cluster8 — ヒラメキ抑止窓 (action-scoped hirameki suppress) 1枚
 
@@ -8635,7 +9340,8 @@ scope: engine
 
 ## D11007 a3 過剰発火の修正 (BUG-098)
 
-BUG-097 (D11016 guardedBySelf) の水平展開で検出。`contactOpponentApHigher`
+当時のBUG-097解釈 (D11016 guardedBySelf) の水平展開で検出。2026-08-26にD11016の
+解釈は訂正されたが、D11007の当事者照合バグと本修正は独立して有効。`contactOpponentApHigher`
 ([cond/eval.ts](../src/engine/cond/eval.ts)) は contact の aUid/bUid の AP だけを見て、D11007 自身が
 コンタクト当事者かを確認していなかった。`contact:start` は全コンタクトで emit されるため、D11007 が
 関与しない任意のコンタクト (defender>attacker) でも a3 が発火していた。
@@ -8657,6 +9363,11 @@ scope: engine
 ---
 
 ## MVP 監査で確定した triggered ability 2バグの修正
+
+> 2026-08-26訂正: B06091公式Q&Aにより、D11016は「自身がガード」ではなく
+> 「自身を指定したアクションがガードされたとき」と判明。以下のBUG-097記述は当時の解釈であり、
+> D11016/B06091は`triggerCharMatches(payloadKey:'targetUid')`へ修正済み。
+> `guardedBySelf`自体はB09014の「このキャラがガードしたとき」に使用する。
 
 6レンズ MVP デッドコード監査で確定:
 

@@ -35,8 +35,8 @@ test('B03111 public hand reveal remains visible beside its linked picker and res
 
   const firstDetail = reveal.getByTestId('public-hand-reveal-detail-0');
   const secondDetail = reveal.getByTestId('public-hand-reveal-detail-1');
-  await expect(firstDetail).toHaveAccessibleName(/occurrence 1/);
-  await expect(secondDetail).toHaveAccessibleName(/occurrence 2/);
+  await expect(firstDetail).toHaveAccessibleName(/詳細（1枚目）/);
+  await expect(secondDetail).toHaveAccessibleName(/詳細（2枚目）/);
   await expect(firstDetail).toBeFocused();
 
   // The reveal stays usable above its linked effect picker. Card detail is

@@ -36,6 +36,7 @@ import type { CutInDisguiseCandidate } from '../components/CutInDisguisePickerMo
 import { pendingOwnerOrderGroup } from '@/engine/resolve/index.js';
 import { selectAutonomousDecisionBlocked } from '@/ui/state/autonomousDecisionGate.js';
 import { cardOccurrenceUid } from '@/engine/target/card-occurrence.js';
+import { chooseAiCutInDeclaredName } from '@/ai/cutin-declared-name.js';
 
 type Player = 'self' | 'opp';
 
@@ -208,17 +209,25 @@ function runOneStep(state: GameState, ax: ActionContext, spectatorMode: boolean)
     case 'action-1':
     case 'action-2':
     case 'action-1-redo': {
+      const acted = ax.phase === 'action-1'
+        ? ax.firstActed
+        : ax.phase === 'action-2'
+          ? ax.secondActed
+          : ax.firstRedoActed;
+      // A public effect may pause after the contact choice has already been
+      // committed. Resume by advancing that answered window, and terminate
+      // immediately if either participant left, before reopening any modal.
+      if (acted !== undefined || flow.action.hasMissingContactParticipant(state, ax)) {
+        dispatchEngineAction({ type: 'actionAdvance', actionId: ax.id });
+        return;
+      }
       const which: 'firstUid' | 'secondUid' = ax.phase === 'action-2' ? 'secondUid' : 'firstUid';
       const uid = ax[which];
       const decider = uid ? ownerOfUid(state, uid) : null;
       if (!uid || !decider) {
-        // fallback: pass + advance
-        dispatchEngineAction({
-          type: 'actionContact',
-          actionId: ax.id,
-          player: ax.byPlayer,
-          choice: { kind: 'pass' },
-        });
+        // A contact participant may have left while its action effect resolved.
+        // The canonical advance gate allows this missing-participant terminal
+        // transition without fabricating a pass for the wrong owner.
         dispatchEngineAction({ type: 'actionAdvance', actionId: ax.id });
         return;
       }
@@ -274,7 +283,18 @@ function chooseAiContact(
     flow.contact.canCutIn(state, ax, player, c),
   );
   const cutinChoice = ai.chooseCutIn?.(state, ax, player, cutinCands) ?? null;
-  if (cutinChoice) return { kind: 'cutin', cardId: cutinChoice };
+  if (cutinChoice) {
+    const declaredName = chooseAiCutInDeclaredName(state, ax, player, cutinChoice);
+    const spec = flow.contact.cutInDeclaredNameSpec(state, ax, player, cutinChoice);
+    if (spec && !spec.optional && spec.domain !== 'unrestricted' && declaredName === undefined) {
+      return { kind: 'pass' };
+    }
+    return {
+      kind: 'cutin',
+      cardId: cutinChoice,
+      ...(declaredName === undefined ? {} : { declaredName }),
+    };
+  }
   const disgCands = state.players[player].hand.filter((c) =>
     flow.contact.canDisguise(state, ax, player, c),
   );

@@ -7,7 +7,13 @@
 //   getter/setter/drain/peek/clear/take。walk (resolve-picks) と continuation (apply-pick) の共有状態。
 //   本ファイルは leaf (resolve-picks/apply-pick/resolver を import しない)。
 
-import type { CausalEffectTrace, Effect, EffectCtx, EffectResolutionKind } from '../types/index.js';
+import type {
+  CausalEffectTrace,
+  DeclaredAbilityHostOrigin,
+  Effect,
+  EffectCtx,
+  EffectResolutionKind,
+} from '../types/index.js';
 
 type Player = 'self' | 'opp';
 
@@ -15,6 +21,12 @@ export type PendingEffectSource = {
   cardId: string;
   abilityId: string;
   uid?: string;
+  /** Exact face-up set-card occurrence that supplied this ability. */
+  setCardId?: string;
+  setCardInstanceId?: string;
+  /** Stable definition witness for a host-owned declared ability. */
+  abilityOrigin?: DeclaredAbilityHostOrigin;
+  abilityIndex?: number;
   /** Exact source area; needed when a decision resumes an occurrence-bound effect. */
   area?: EffectCtx['source']['area'];
   /** Resolving-card lifecycle marker. Must survive human decision pauses. */
@@ -148,6 +160,8 @@ export type PendingEffectPickSide = {
   atomVerb: string;
   /** atom args (uid='$pick' 含む、resolve 後に上書きされる) */
   atomArgs: Record<string, unknown>;
+  /** Safe UI hint: this pick resumes into a scene entry for this absolute side. */
+  sceneEnterSwitchPlayer?: Player;
   /** 任意効果の min/max (n.min === 0 なら skip 可) */
   nMin: number;
   nMax: number;
@@ -217,12 +231,32 @@ export type PendingEffectPickSide = {
   skipResolvesAtom?: boolean;
 };
 
-export type PendingChooseInterceptSide = {
+export type PendingChooseInterceptResponseSide = {
+  kind?: 'response';
+  /** B02067 cancels unconditionally; B04003/B08081 let the responder pay. */
+  resolution?: 'cancel' | 'discard-or-cancel';
   player: Player;
+  ownerPlayer?: Player;
   publicHandRevealToken?: string;
-  protector: { uid: string; cardId: string; abilityId: string };
+  protector: {
+    uid: string;
+    cardId: string;
+    abilityId: string;
+    abilityOrigin?: DeclaredAbilityHostOrigin;
+    abilityIndex?: number;
+    setCardInstanceId?: string;
+  };
   targetUid: string;
 };
+
+export type PendingChooseInterceptOrderSide = {
+  kind: 'order';
+  player: Player;
+  publicHandRevealToken?: string;
+  choices: PendingChooseInterceptResponseSide[];
+};
+
+export type PendingChooseInterceptSide = PendingChooseInterceptResponseSide | PendingChooseInterceptOrderSide;
 
 export type ChooseInterceptResume = {
   pending: PendingEffectPickSide;
@@ -230,12 +264,33 @@ export type ChooseInterceptResume = {
   pickedUids?: string[];
   switchRemoveUid?: string;
   switchRemoveUids?: string[];
+  /** Physical GameState witness token for the exact unresolved reaction batch. */
+  batchToken?: number;
+  /** The original selecting effect is negated; already-triggered siblings still resolve. */
+  effectCancelled?: boolean;
   guard?: PendingChooseInterceptSide;
+  remainingGuards?: PendingChooseInterceptResponseSide[];
 };
+
+function cloneChooseInterceptSide(side: PendingChooseInterceptSide): PendingChooseInterceptSide {
+  if (side.kind === 'order') {
+    return {
+      ...side,
+      choices: side.choices.map(choice => ({ ...choice, protector: { ...choice.protector } })),
+    };
+  }
+  return { ...side, protector: { ...side.protector } };
+}
 
 export function pushPendingChooseInterceptSide(v: PendingChooseInterceptSide, resume: ChooseInterceptResume): void {
   globalThis.__pendingChooseInterceptSide = v;
-  globalThis.__pendingChooseInterceptResume = { ...resume, guard: { ...v, protector: { ...v.protector } } };
+  globalThis.__pendingChooseInterceptResume = {
+    ...resume,
+    guard: cloneChooseInterceptSide(v),
+    ...(resume.remainingGuards
+      ? { remainingGuards: resume.remainingGuards.map(guard => ({ ...guard, protector: { ...guard.protector } })) }
+      : {}),
+  };
 }
 
 export function _drainPendingChooseInterceptSide(): PendingChooseInterceptSide | null {
@@ -246,6 +301,7 @@ export function _drainPendingChooseInterceptSide(): PendingChooseInterceptSide |
 
 export function _takePendingChooseInterceptResume(): ChooseInterceptResume | null {
   const v = globalThis.__pendingChooseInterceptResume ?? null;
+  globalThis.__pendingChooseInterceptSide = null;
   globalThis.__pendingChooseInterceptResume = null;
   return v;
 }
@@ -484,17 +540,46 @@ export type PendingSetCardReplacementSide = {
   candidates: { uid: string; cardId: string }[];
   source: PendingEffectSource & { uid: string };
   resume?:
-    | { kind: 'scene-remove'; cause: 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow'; byUid?: string; byPlayer?: Player }
-    | { kind: 'scene-to-deck'; pos: 'bottom' | 'top' }
-    | { kind: 'scene-to-hand' }
-    | { kind: 'scene-to-evidence'; faceUp: boolean; sourceCardId?: string }
-    | { kind: 'scene-to-stack'; hostUid: string };
+    | {
+        kind: 'scene-remove';
+        cause: 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow';
+        byUid?: string;
+        byPlayer?: Player;
+        leaveInterceptDecision?: { interceptorUid: string; accept: boolean; interceptorCostPaid?: boolean };
+        /** Complete this nested removal, then resume the intercepted host removal. */
+        afterSceneRemove?: {
+          uid: string;
+          cause: 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow';
+          byUid?: string;
+          byPlayer?: Player;
+          leaveInterceptDecision?: { interceptorUid: string; accept: boolean; interceptorCostPaid?: boolean };
+        };
+      }
+    | {
+        kind: 'scene-to-deck'; pos: 'bottom' | 'top';
+        cause?: 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow'; byUid?: string; byPlayer?: Player;
+      }
+    | {
+        kind: 'scene-to-hand';
+        cause?: 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow'; byUid?: string; byPlayer?: Player;
+      }
+    | {
+        kind: 'scene-to-evidence'; faceUp: boolean; sourceCardId?: string;
+        cause?: 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow'; byUid?: string; byPlayer?: Player;
+      }
+    | {
+        kind: 'scene-to-stack'; hostUid: string;
+        cause?: 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow'; byUid?: string; byPlayer?: Player;
+      };
 };
 export function pushPendingSetCardReplacementSide(v: PendingSetCardReplacementSide): void {
   const g = globalThis as {
     __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null;
     __pendingSetCardReplacementGuard?: PendingSetCardReplacementSide | null;
+    __pendingSetCardReplacementContinuation?: ContinuationFrame | null;
   };
+  // A newly-minted prompt never inherits an older decision's continuation.
+  g.__pendingSetCardReplacementContinuation = null;
   g.__pendingSetCardReplacementSide = v;
   g.__pendingSetCardReplacementGuard = toPlainDeep(v) as PendingSetCardReplacementSide;
 }
@@ -508,6 +593,19 @@ export function _peekPendingSetCardReplacementSide(): PendingSetCardReplacementS
 /** Resolver-owned authorization snapshot. The UI projection is never authoritative. */
 export function _peekPendingSetCardReplacementGuard(): PendingSetCardReplacementSide | null {
   return (globalThis as { __pendingSetCardReplacementGuard?: PendingSetCardReplacementSide | null }).__pendingSetCardReplacementGuard ?? null;
+}
+/** Engine-only continuation owned by the suspended host-leave atom. */
+export function setPendingSetCardReplacementContinuation(frame: ContinuationFrame): void {
+  (globalThis as { __pendingSetCardReplacementContinuation?: ContinuationFrame | null }).__pendingSetCardReplacementContinuation = frame;
+}
+export function _peekPendingSetCardReplacementContinuation(): ContinuationFrame | null {
+  return (globalThis as { __pendingSetCardReplacementContinuation?: ContinuationFrame | null }).__pendingSetCardReplacementContinuation ?? null;
+}
+export function _takePendingSetCardReplacementContinuation(): ContinuationFrame | null {
+  const g = globalThis as { __pendingSetCardReplacementContinuation?: ContinuationFrame | null };
+  const value = g.__pendingSetCardReplacementContinuation ?? null;
+  g.__pendingSetCardReplacementContinuation = null;
+  return value;
 }
 /** Consume the exact trusted replacement and its presentation side together. */
 export function _takePendingSetCardReplacementGuard(): PendingSetCardReplacementSide | null {
@@ -539,9 +637,11 @@ export function _clearPendingSetCardReplacementSide(): void {
   const g = globalThis as {
     __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null;
     __pendingSetCardReplacementGuard?: PendingSetCardReplacementSide | null;
+    __pendingSetCardReplacementContinuation?: ContinuationFrame | null;
   };
   g.__pendingSetCardReplacementSide = null;
   g.__pendingSetCardReplacementGuard = null;
+  g.__pendingSetCardReplacementContinuation = null;
 }
 export type PendingSetCardChoiceSide = {
   player: Player;
@@ -618,11 +718,16 @@ export function setPendingSetCardChoiceRemainder(remainder: Effect[], kind: 'seq
         uid: source?.uid ?? '',
         abilityId: source?.abilityId ?? '',
         player: g.__pendingSetCardChoiceGuard?.player ?? 'self',
-        area: 'scene',
+        area: source?.area ?? 'scene',
+        ...(source?.setCardId !== undefined ? { setCardId: source.setCardId } : {}),
+        ...(source?.setCardInstanceId !== undefined ? { setCardInstanceId: source.setCardInstanceId } : {}),
+        ...(source?.abilityOrigin ? { abilityOrigin: source.abilityOrigin } : {}),
+        ...(source?.abilityIndex !== undefined ? { abilityIndex: source.abilityIndex } : {}),
         ...(source?.resolutionKind ? { resolutionKind: source.resolutionKind } : {}),
         ...(source?.triggerBatch !== undefined ? { triggerBatch: source.triggerBatch } : {}),
         ...(source?.ownerChosenOrder !== undefined ? { ownerChosenOrder: source.ownerChosenOrder } : {}),
         ...(source?.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: source.ownerOrderConfirmed } : {}),
+        ...(source?.declaredBatch !== undefined ? { declaredBatch: source.declaredBatch } : {}),
       },
       bindings: {},
     },
@@ -749,6 +854,17 @@ export function getPendingOptionalResume(): Effect | null {
 export function setPendingOptionalContinuation(continuation: ContinuationFrame): void {
   (globalThis as { __pendingEffectOptionalContinuation?: ContinuationFrame | null }).__pendingEffectOptionalContinuation = continuation;
 }
+/** Append an outer composite frame without replacing an inner optional continuation. */
+export function appendPendingOptionalContinuation(continuation: ContinuationFrame): void {
+  const g = globalThis as { __pendingEffectOptionalContinuation?: ContinuationFrame | null };
+  if (!g.__pendingEffectOptionalContinuation) {
+    g.__pendingEffectOptionalContinuation = continuation;
+    return;
+  }
+  let tail = g.__pendingEffectOptionalContinuation;
+  while (tail.outer) tail = tail.outer;
+  tail.outer = continuation;
+}
 export function _takePendingOptionalContinuation(): ContinuationFrame | null {
   const g = globalThis as { __pendingEffectOptionalContinuation?: ContinuationFrame | null };
   const value = g.__pendingEffectOptionalContinuation ?? null;
@@ -778,6 +894,7 @@ export function resetPendingEffectSession(): void {
     __pendingSetCardChoiceContinuation?: ContinuationFrame | null;
     __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null;
     __pendingSetCardReplacementGuard?: PendingSetCardReplacementSide | null;
+    __pendingSetCardReplacementContinuation?: ContinuationFrame | null;
   };
   g.__pendingEffectOptionalCostPaid = null;
   g.__pendingSetCardChoiceSide = null;
@@ -787,6 +904,7 @@ export function resetPendingEffectSession(): void {
   g.__pendingSetCardChoiceContinuation = null;
   g.__pendingSetCardReplacementSide = null;
   g.__pendingSetCardReplacementGuard = null;
+  g.__pendingSetCardReplacementContinuation = null;
   delete (globalThis as { __pendingRuntimeStateMarker?: unknown }).__pendingRuntimeStateMarker;
 }
 

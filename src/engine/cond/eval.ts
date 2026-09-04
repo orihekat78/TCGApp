@@ -116,7 +116,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       // 例 D08026=古城 は caseTraits:['古城'] / traits:[])。旧実装は d?.traits (キャラ特徴用) のみ
       // 参照しており、caseTraits だけに特徴を持つ事件 (古城) で【事件古城】が永久不発火だった
       // (field-drop, BUG-117/118/122/123 と同族)。caseTraits + traits の union で評価
-      // (D11021=婚活 は両方に持つため後方互換 / 古城系 gating を解禁)。
+      // (D11021=婚活パーティー は両方に持つため後方互換 / 古城系 gating を解禁)。
       const traits = [...(d?.caseTraits ?? []), ...(d?.traits ?? [])];
       return traits.includes(cond.trait);
     }
@@ -302,14 +302,20 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       return v === cond.v;
     }
     case 'declaredUseUnder': {
-      const used = charRead.declaredUseCount(state, cond.uid, cond.abilityId);
+      const used = charRead.declaredUseCount(state, cond.uid, cond.abilityId, {
+        abilityOrigin: cond.abilityOrigin,
+        abilityIndex: cond.abilityIndex,
+      });
       return used < cond.max;
     }
     case 'sourceDeclaredUseCount': {
       const uid = ctx.source.uid;
       const abilityId = ctx.source.abilityId;
       if (typeof uid !== 'string' || typeof abilityId !== 'string') return false;
-      const used = charRead.declaredUseCount(state, uid, abilityId);
+      const used = charRead.declaredUseCount(state, uid, abilityId, {
+        abilityOrigin: ctx.source.abilityOrigin,
+        abilityIndex: ctx.source.abilityIndex,
+      });
       return cond.cmp === 'eq' ? used === cond.n : used >= cond.n;
     }
     case 'bound': {
@@ -468,20 +474,24 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       return false;
     }
     case 'contactOpponentApHigher': {
-      // D11007 a3: contact:start payload から aUid (attacker) / bUid (defender) を取得。
-      // 自分 (ctx.source.uid) が攻撃者 (aUid) として、相手 (bUid) の AP が自分より高いコンタクトのみ true。
+      // D11007 a3: contact:start payload から自分と相手の participant uid を取得。
+      // 通常アクションの攻撃側だけでなく、効果で自分ターン中に発生した contact の
+      // bUid 側でも「このキャラより AP の高いキャラ」を同じ相対契約で評価する。
       // BUG-098: 旧実装は自分の関与を確認せず、任意のコンタクト (defender>attacker) で過剰発火していた。
-      // 【自分ターン中】= 自分が攻撃するので攻撃者 (aUid) 限定で十分 (rules/07-08)。
       const payload = ctx.triggerPayload as { aUid?: string; bUid?: string } | undefined;
       if (!payload?.aUid || !payload?.bUid) return false;
-      if (payload.aUid !== ctx.source.uid) return false; // 自分が攻撃者のコンタクトのみ
-      const aAp = charRead.ap(state, payload.aUid);
-      const bAp = charRead.ap(state, payload.bUid);
-      return bAp > aAp;
+      const selfUid = ctx.source.uid;
+      const otherUid = payload.aUid === selfUid
+        ? payload.bUid
+        : payload.bUid === selfUid
+          ? payload.aUid
+          : undefined;
+      if (!selfUid || !otherUid) return false;
+      return charRead.ap(state, otherUid) > charRead.ap(state, selfUid);
     }
     case 'guardedBySelf': {
-      // D11016 a1: action:guarded payload.guardUid が自分 (ctx.source.uid) と一致するとき true
-      // (「このキャラがガードしたとき」= 自分のガードのみ発火、rules/07。BUG-097)
+      // B09014 a1: action:guarded payload.guardUid が自分 (ctx.source.uid) と一致するとき true
+      // (「このキャラがガードしたとき」= 自分のガードのみ発火、rules/07)
       const guardUid = (ctx.triggerPayload as { guardUid?: string } | undefined)?.guardUid;
       return guardUid === ctx.source.uid;
     }
@@ -801,6 +811,10 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const cand: Candidate = { kind: 'char', uid: pl.setCardId, cardId: pl.setCardId, player: ctx.source.player };
       return matchOneFilter(state, pl.setCardId, cond.filter, null, cand);
     }
+    case 'setCardFaceIs': {
+      const pl = ctx.triggerPayload as { faceUp?: unknown } | undefined;
+      return typeof pl?.faceUp === 'boolean' && pl.faceUp === cond.faceUp;
+    }
     // engine additive wave-3 (2026-06-30): cutin:used payload の使用カットイン (cardId) を filter 評価 (B09086)。
     // setCardMatches と同式 — set card 同様 cutin カードは scene char ではないため matchOneFilter の char 引数は null。
     case 'triggerCutinMatches': {
@@ -834,12 +848,16 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     }
     // engine mega-wave W3 (2026-07-03, r51): disguise:into payload.replacedChar (入替え元 snapshot) を
     // filter 評価 (B02047「【変装時】LP2以上の【白】のキャラと入れ替わった場合」)。removedCharMatches の
-    // removedFilter と同型 — snapshot は turnEffects を保持 (effective 値判定、公式Q&A「効果を解決する
-    // 時点の増減した状態」)。uid は sentinel (`::disguise-replaced`) で scene 不在 → 新カード自身の
-    // continuous/aura が混入しない。
+    // removedFilter と同型。uid は sentinel (`::disguise-replaced`) で scene 不在にし、新カード自身の
+    // continuous/aura を混入させない。入替え直前の有効 AP/LP/level は payload.replacedEffective に固定し、
+    // sentinel による旧カード側 continuous/aura 欠落も防ぐ。
     case 'disguiseReplacedMatches': {
       const pl = ctx.triggerPayload as
-        | { player?: 'self' | 'opp'; replacedChar?: SceneCharacter }
+        | {
+            player?: 'self' | 'opp';
+            replacedChar?: SceneCharacter;
+            replacedEffective?: { ap?: number; lp?: number; level?: number };
+          }
         | undefined;
       if (!pl?.replacedChar || (pl.player !== 'self' && pl.player !== 'opp')) return false;
       const sameSide = pl.player === ctx.source.player;
@@ -847,7 +865,21 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       if (cond.side === 'opp' && sameSide) return false;
       const rc = pl.replacedChar;
       const cand: Candidate = { kind: 'char', uid: rc.uid, cardId: rc.cardId, player: pl.player };
-      return matchOneFilter(state, rc.cardId, cond.filter, rc, cand);
+      const effective = pl.replacedEffective;
+      if (!effective) return matchOneFilter(state, rc.cardId, cond.filter, rc, cand);
+      const {
+        apMin, apMax, lpMin, lpMax, levelMin, levelMax, levelIn,
+        ...nonNumericFilter
+      } = cond.filter;
+      if (!matchOneFilter(state, rc.cardId, nonNumericFilter, rc, cand)) return false;
+      if (apMin !== undefined && (effective.ap === undefined || effective.ap < apMin)) return false;
+      if (apMax !== undefined && (effective.ap === undefined || effective.ap > apMax)) return false;
+      if (lpMin !== undefined && (effective.lp === undefined || effective.lp < lpMin)) return false;
+      if (lpMax !== undefined && (effective.lp === undefined || effective.lp > lpMax)) return false;
+      if (levelMin !== undefined && (effective.level === undefined || effective.level < levelMin)) return false;
+      if (levelMax !== undefined && (effective.level === undefined || effective.level > levelMax)) return false;
+      if (levelIn !== undefined && (effective.level === undefined || !levelIn.includes(effective.level))) return false;
+      return true;
     }
     // engine mega-wave W3 (2026-07-03, r17): hand:removed payload.byPlayer (リムーブを起こした側) を
     // カード所有者 (ctx.source.player) 視点で side 判定 (B05115「相手の能力や効果によって」= side:'opp')。
@@ -1072,6 +1104,7 @@ const CONDITION_KIND_MAP = {
   selfSelectedByOwnMrThisTurn: true, // engine mega-wave W6 step6 (2026-07-04, r79): MR 選択追跡 (B08014)
   paMrColorCountMin: true, // engine mega-wave W6 step6 (2026-07-04, r79): PA-MR 色数 gate (B09047)
   setCardMatches: true, // engine additive (2026-06-29, B06046)
+  setCardFaceIs: true,
   triggerCutinMatches: true, // engine additive wave-3 (2026-06-30, B09086): cutin:used 使用cutin filter
   charTurnEffect: true, // Task D E4 (2026-06-12)
   triggerActionKind: true, // engine拡張 wave#2 cluster3 (2026-06-13)

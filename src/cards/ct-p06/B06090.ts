@@ -14,21 +14,14 @@ const a1: AbilityDef = {
     hook: 'enter',
     selfOnly: true
   },
-  condition: {
-    kind: 'not',
-    c: {
-      kind: 'charStateIs',
-      ref: {
-        kind: 'self'
-      },
-      state: 'sleep'
-    }
-  },
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'chain',
-      steps: [
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain',
+        steps: [
         {
           kind: 'atom',
           verb: 'sceneSetState',
@@ -52,7 +45,8 @@ const a1: AbilityDef = {
             }
           }
         }
-      ]
+        ]
+      }
     }
   },
   description: '【登場時】このキャラをスリープさせてもよい。そうした場合、自分のリムーブエリアにあるレベル5以下の〚特徴［喫茶ポアロ］〛のキャラを1枚まで選び、登場させる。',

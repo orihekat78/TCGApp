@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { produce } from 'immer';
 import { B09033 } from '@/cards/ct-p09/B09033';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../helpers/main-game-state';
 import { event } from '@/engine/event';
 import { register, _resetRegistry } from '@/engine/read/def';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
@@ -154,6 +154,7 @@ describe('B09033 「ひょっとしたら…」', () => {
   it('owner=opp / human=self: 初回windowはAIが選び、反復任意だけauto-declineして残りをbottomへ置く', () => {
     resetB09033(H1, H2);
     const state = createEmptyGameState();
+    state.turn.player = 'opp';
     state.players.opp.deck = [H1.id, H2.id];
     state.players.opp.hand = [B09033.id];
     state.players.opp.case.colors = ['緑'];

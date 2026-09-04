@@ -123,6 +123,11 @@ function walk(node: unknown, path: string, errors: string[], warnings: string[])
         errors.push(`${path}.options: choice must have at least 1 option`);
         return;
       }
+      const labels = obj['labels'];
+      if (labels !== undefined && (!Array.isArray(labels) || labels.length !== options.length
+        || labels.some(label => typeof label !== 'string' || !label.trim()))) {
+        errors.push(`${path}.labels: expected one non-empty label per option`);
+      }
       options.forEach((o, i) => walk(o, `${path}.options[${i}]`, errors, warnings));
       return;
     }
@@ -223,8 +228,9 @@ function walk(node: unknown, path: string, errors: string[], warnings: string[])
         const domain = args?.['domain'];
         if (domain !== undefined
           && domain !== 'unrestricted'
+          && domain !== 'registered-card-name'
           && domain !== 'registered-character-card-name') {
-          errors.push(`${path}.args.domain: declareName requires unrestricted|registered-character-card-name`);
+          errors.push(`${path}.args.domain: declareName requires unrestricted|registered-card-name|registered-character-card-name`);
         }
       }
       // args is otherwise treated opaquely here; per-verb arg validation belongs to runAtom.

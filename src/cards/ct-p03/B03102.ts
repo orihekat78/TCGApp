@@ -4,8 +4,9 @@
 // 公式テキスト:
 //   自分の現場にいるレベル4以下の〚特徴［警察］〛のキャラが推理したとき、ターン終了時までこのキャラをAP＋1000する。
 //
-// a1: 推理反応 (reasoning:end、非 selfOnly = 自分の現場の別キャラ含む)。matcherCondition で
+// a1: 推理反応 (reasoning:after-sleep、非 selfOnly = 自分の現場の別キャラ含む)。matcherCondition で
 //     「推理したキャラが自分側 (side:'self') の [警察] Lv4以下」を gate。効果はこのキャラ自身を AP+1000 turn。
+//     公式Q&Aどおり、推理キャラのスリープ直後、ミスリードと証拠獲得より前に発動する。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 
@@ -14,7 +15,7 @@ const a1: AbilityDef = {
   type: 'triggered',
   scope: 'on-scene',
   trigger: {
-    hook: 'reasoning:end',
+    hook: 'reasoning:after-sleep',
     // 推理したキャラ (payload) が自分側の [警察] Lv4以下のとき発火 (rules/11)
     matcherCondition: { kind: 'triggerCharMatches', side: 'self', filter: { trait: '警察', levelMax: 4 } },
   },

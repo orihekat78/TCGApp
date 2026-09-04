@@ -85,6 +85,30 @@ describe('EffectPickerModal card details', () => {
     expect(hidden.innerHTML).not.toContain('D08003');
   });
 
+  it('shows exact stacked-card identities and detail controls', () => {
+    const current = useGameStateStore.getState().pendingEffectPick!;
+    act(() => {
+      useGameStateStore.setState({
+        pendingEffectPick: {
+          ...current,
+          atomVerb: 'stackedCardPick',
+          candidates: [
+            { uid: 'stack:host:a', cardId: 'D08003', player: 'self' },
+            { uid: 'stack:host:b', cardId: 'D08015', player: 'self' },
+          ],
+        },
+      });
+      root.render(<EffectPickerModal />);
+    });
+
+    const candidates = [...container.querySelectorAll<HTMLButtonElement>('[data-testid^="effect-pick-cand-stack:host:"]')];
+    expect(candidates).toHaveLength(2);
+    expect(candidates.map((candidate) => candidate.getAttribute('data-card-id'))).toEqual(['D08003', 'D08015']);
+    expect(candidates[0]?.textContent).toContain('D08003');
+    expect(candidates[1]?.textContent).toContain('D08015');
+    expect(container.querySelectorAll('[data-testid^="effect-pick-detail-stack:host:"]')).toHaveLength(2);
+  });
+
   it('opens public details from context menu without selecting', () => {
     act(() => root.render(<EffectPickerModal />));
 

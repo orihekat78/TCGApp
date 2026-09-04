@@ -14,9 +14,12 @@ import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { runNextHintFlow } from '@/ui/hooks/useActionsPanelFlow';
 import { useGameStateStore } from '@/ui/state/store';
 import { useNextHintPickerStore, useNextHintPicker } from '@/ui/hooks/useNextHintPicker';
+import { useSceneSwitchPickerStore } from '@/ui/hooks/useSceneSwitchPickerStore';
 import { registerAll } from '@/cards';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { def as readDef } from '@/engine/read/def';
 import type { GameState, FileCard } from '@/engine/types/game-state';
+import { makeChar } from '../../helpers/fixtures';
 
 // D08017 = 青 / character / Lv2 (cutin)。FILE 3 枚 → postPopCount=2、Lv2 ≤ 2 で候補化。
 const FILE_CARD = 'D08017';
@@ -38,6 +41,7 @@ describe('runNextHintFlow (step2 picker)', () => {
   beforeEach(() => {
     useGameStateStore.setState({ gameState: null });
     useNextHintPickerStore.getState()._reset();
+    useSceneSwitchPickerStore.getState()._close();
   });
 
   it('picker を開き、FILE-top を候補に含む', async () => {
@@ -62,6 +66,111 @@ describe('runNextHintFlow (step2 picker)', () => {
     expect(after.turnState.self.nextHintUsed).toBe(true);
     // handUseUsed は消費しない (NH は別経路)
     expect(after.turnState.self.handUseUsed).toBe(false);
+  });
+
+  it('満杯の現場でキャラを選ぶと switch victim picker を経由して原子的に実行する', async () => {
+    const s = setupWithFile();
+    s.players.self.scene = Array.from({ length: 5 }, (_, index) => makeChar({
+      cardId: `NH-OLD-${index}`,
+      uid: `nh-old-${index}`,
+      enterOrder: index + 1,
+    }));
+    useGameStateStore.setState({ gameState: s });
+    const promise = runNextHintFlow({ player: 'self' });
+
+    useNextHintPicker().acceptUse(FILE_CARD);
+    await Promise.resolve();
+    const switchPicker = useSceneSwitchPickerStore.getState().current;
+    expect(switchPicker).toMatchObject({ player: 'self', cardId: FILE_CARD });
+    expect(switchPicker?.candidates.map(card => card.uid)).toEqual([
+      'nh-old-0', 'nh-old-1', 'nh-old-2', 'nh-old-3', 'nh-old-4',
+    ]);
+    useSceneSwitchPickerStore.getState()._close();
+    switchPicker?.resolve('nh-old-2');
+
+    expect(await promise).toEqual({ ok: true });
+    const after = useGameStateStore.getState().gameState!;
+    expect(after.players.self.file).toHaveLength(2);
+    expect(after.players.self.scene).toHaveLength(5);
+    expect(after.players.self.scene.some(card => card.uid === 'nh-old-2')).toBe(false);
+    expect(after.players.self.scene.some(card => card.cardId === FILE_CARD && card.isNamed)).toBe(true);
+  });
+
+  it('switch victim picker のキャンセルは Next Hint 全体を無変更で取り消す', async () => {
+    const s = setupWithFile();
+    s.players.self.scene = Array.from({ length: 5 }, (_, index) => makeChar({
+      cardId: `NH-CANCEL-${index}`,
+      uid: `nh-cancel-${index}`,
+      enterOrder: index + 1,
+    }));
+    useGameStateStore.setState({ gameState: s });
+    const before = useGameStateStore.getState().gameState;
+    const promise = runNextHintFlow({ player: 'self' });
+
+    useNextHintPicker().acceptUse(FILE_CARD);
+    await Promise.resolve();
+    const switchPicker = useSceneSwitchPickerStore.getState().current;
+    expect(switchPicker).not.toBeNull();
+    useSceneSwitchPickerStore.getState()._close();
+    switchPicker?.resolve(null);
+
+    expect(await promise).toEqual({ ok: false, reason: 'cancelled' });
+    expect(useGameStateStore.getState().gameState).toBe(before);
+  });
+
+  it('case card は Next Hint の使用候補に含めない', async () => {
+    const s = setupWithFile();
+    s.players.self.hand = ['D08020'];
+    useGameStateStore.setState({ gameState: s });
+    const promise = runNextHintFlow({ player: 'self' });
+
+    expect(useNextHintPickerStore.getState().current?.candidates.some(candidate => (
+      candidate.cardId === 'D08020'
+    ))).toBe(false);
+    useNextHintPicker().acceptCancel();
+    expect(await promise).toEqual({ ok: false, reason: 'cancelled' });
+  });
+
+  it('事件の手札使用制限に反するキャラは候補に含めない', async () => {
+    const s = setupWithFile();
+    s.players.self.case = {
+      ...s.players.self.case,
+      cardId: 'B05120',
+      colors: ['青', '緑', '白', '赤', '黄'],
+      status: '解決編',
+    };
+    s.players.self.file = Array.from({ length: 9 }, () => ({
+      type: 'card-back' as const,
+      cardId: FILE_CARD,
+    }));
+    s.players.self.hand = ['B06072'];
+    useGameStateStore.setState({ gameState: s });
+    const promise = runNextHintFlow({ player: 'self' });
+
+    expect(useNextHintPickerStore.getState().current?.candidates.some(candidate => (
+      candidate.cardId === 'B06072'
+    ))).toBe(false);
+    useNextHintPicker().acceptCancel();
+    expect(await promise).toEqual({ ok: false, reason: 'cancelled' });
+  });
+
+  it('このターン使用/登場禁止の名前を持つキャラは候補に含めない', async () => {
+    const s = setupWithFile();
+    s.players.self.file = Array.from({ length: 9 }, () => ({
+      type: 'card-back' as const,
+      cardId: FILE_CARD,
+    }));
+    s.players.self.hand = ['B06072'];
+    s.players.self.case.colors = ['青', '緑', '白', '赤', '黄'];
+    s.turnState.self.useEnterBannedCardNames = [...(readDef.card('B06072')?.names ?? [])];
+    useGameStateStore.setState({ gameState: s });
+    const promise = runNextHintFlow({ player: 'self' });
+
+    expect(useNextHintPickerStore.getState().current?.candidates.some(candidate => (
+      candidate.cardId === 'B06072'
+    ))).toBe(false);
+    useNextHintPicker().acceptCancel();
+    expect(await promise).toEqual({ ok: false, reason: 'cancelled' });
   });
 
   // BUG-087: rules/12「1で手札に加えたカードは2の判定時のFILE枚数に数えない」

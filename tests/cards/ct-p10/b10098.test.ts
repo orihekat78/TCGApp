@@ -11,7 +11,7 @@ import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/l
 import { _resetRegistry, register } from '@/engine/read/def';
 import { char as readChar } from '@/engine/read/char';
 import { runAllUntilEmpty } from '@/engine/resolve';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../../helpers/main-game-state';
 import { sceneChar } from '../../helpers/fixtures';
 import type { CardDef, GameState } from '@/engine/types';
 

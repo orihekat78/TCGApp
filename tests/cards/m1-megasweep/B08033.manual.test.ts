@@ -174,7 +174,7 @@ describe('B08033 a1 — 登場時 charSetCard forEach (自現場キャラ数だ�
 // ============================================================
 describe('B08033 a2 — 宣言 (partnerColor白 / cost removeSetCard n2 / 白キャラ AP+2000 + 突撃[キャラ])', () => {
   const declareCtx = (uid: string): EffectCtx =>
-    ({ source: { cardId: 'B08033', uid, abilityId: 'a2', player: 'self', area: 'scene' }, bindings: {} });
+    ({ source: { cardId: 'B08033', uid, abilityId: 'a2', abilityOrigin: 'printed', abilityIndex: 1, player: 'self', area: 'scene' }, bindings: {} });
 
   it('S3 gate: partnerColor白 を canDeclaredAbility が実 gate / cost removeSetCard n2 を canPay が実 gate', () => {
     // condition off-variant: パートナー非白 → 宣言不可
@@ -230,7 +230,9 @@ describe('B08033 a2 — 宣言 (partnerColor白 / cost removeSetCard n2 / 白キ
     expect(readChar.ap(s, 'r1'), '赤 decoy AP 不変').toBe(3000);
     expect(readChar.keywords(s, 'r1'), '赤 decoy 突撃なし').not.toContain('突撃[キャラ]');
     // 【ターン2】: 1回使用済 → まだ宣言可 (n:2)。cost 在庫は無いので canDeclaredAbility は true (cost 別 gate)
-    expect(readChar.declaredUseCount(s, 'yuki', 'a2'), '1回発動でカウント1').toBe(1);
+    expect(readChar.declaredUseCount(s, 'yuki', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    }), '1回発動でカウント1').toBe(1);
     expect(canDeclaredAbility(s, 'yuki', 'a2'), 'limit turn 2 → 1回後もまだ宣言可').toBe(true);
   });
 
@@ -253,7 +255,9 @@ describe('B08033 a2 — 宣言 (partnerColor白 / cost removeSetCard n2 / 白キ
     expect(readChar.ap(s, 'w1'), 'decline: AP 不変').toBe(3000);
     expect(readChar.keywords(s, 'w1'), 'decline: 突撃なし').not.toContain('突撃[キャラ]');
     expect(s.players.self.scene.find((c) => c.uid === 'yuki')!.setCards.length, 'cost は支払済 (裏向き2枚除去)').toBe(0);
-    expect(readChar.declaredUseCount(s, 'yuki', 'a2'), '辞退でも発動済み扱いでカウント').toBe(1);
+    expect(readChar.declaredUseCount(s, 'yuki', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    }), '辞退でも発動済み扱いでカウント').toBe(1);
   });
 
   it('S6 owner=opp (BUG-174): opp の B08033 が opp ターンに宣言 → opp の裏向き除去 & opp 白キャラ強化 (反転しない)', () => {

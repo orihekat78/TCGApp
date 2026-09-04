@@ -564,6 +564,7 @@
    黄色 border + hover scale で「ここを選択」ヒントを視覚化。CardListModal の
    .card-list-item--pickable と統一感を持たせる。 */
 .hand-zone .hand-card--pickable {
+  min-width: calc(45px * var(--playmat-inverse-scale, 1));
   border: 2px solid #ffd966 !important;
   box-shadow: 0 0 10px rgba(255, 217, 102, 0.5);
   cursor: pointer;
@@ -572,6 +573,13 @@
 .hand-zone .hand-card--pickable:hover {
   transform: translateY(-4px) scale(1.04);
   box-shadow: 0 0 14px rgba(255, 217, 102, 0.8);
+}
+
+.hand-zone .hand-card--pickable:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 0 14px rgba(255, 217, 102, 0.9);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -648,6 +656,23 @@
   font-size: 12px;
   cursor: pointer;
   transition: background 120ms ease, border-color 120ms ease;
+}
+.hand-zone-pick-skip-btn,
+.hand-zone-pick-confirm-btn,
+.hand-zone-pick-cancel-btn {
+  box-sizing: border-box;
+  /* One logical extra pixel absorbs transformed sub-pixel rounding at 851x393. */
+  min-width: calc(45px * var(--playmat-inverse-scale, 1));
+  min-height: calc(45px * var(--playmat-inverse-scale, 1));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.hand-zone-pick-skip-btn:focus-visible,
+.hand-zone-pick-confirm-btn:focus-visible,
+.hand-zone-pick-cancel-btn:focus-visible {
+  outline: calc(2px * var(--playmat-inverse-scale, 1)) solid #fff;
+  outline-offset: calc(-2px * var(--playmat-inverse-scale, 1));
 }
 .hand-zone-pick-skip-btn:hover {
   background: rgba(80, 80, 80, 0.8);

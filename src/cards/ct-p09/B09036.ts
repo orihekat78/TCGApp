@@ -13,7 +13,7 @@ const a1: AbilityDef = {
   effect: {
     kind: 'optional', effect: {
       kind: 'chain', steps: [
-        { kind: 'atom', verb: 'handReveal', args: { player: 'self', max: 1, filter: { kind: 'character', levelMax: 8 }, bind: 'revealed' } },
+        { kind: 'atom', verb: 'handReveal', args: { player: 'self', audience: 'all', lifetime: 'presentation', max: 1, filter: { kind: 'character', levelMax: 8 }, bind: 'revealed' } },
         { kind: 'atom', verb: 'charSetTurnEffect', args: { uid: '$self', key: 'nameOverride', val: '$revealed.cardName' } },
       ],
     },

@@ -35,7 +35,7 @@ const a1: AbilityDef = {
       // それ(レベル7)を必ず手札に加える
       { kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' }, then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } } },
       // 残りの公開したカードをデッキの下に移す
-      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },
+      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed', order: 'preserve' } },
       // デッキをシャッフルする
       { kind: 'atom', verb: 'deckShuffle', args: { player: 'self' } },
       // カードを手札に加えた場合、手札を1枚リムーブする

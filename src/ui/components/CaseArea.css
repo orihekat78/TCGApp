@@ -25,9 +25,6 @@
   --case-text-secondary: var(--text-secondary, #b8d4f0);
   --case-text-muted:     var(--text-muted, #7090b5);
   --case-accent-gold:    var(--accent-gold, #ffd700);
-  --case-editing-color:  var(--case-editing, #3366ff);
-  --case-resolved-color: var(--case-resolved, #ee2255);
-
   font-family: var(--font-jp, "Hiragino Sans", "Noto Sans JP", sans-serif);
   color: var(--case-text-primary);
 }
@@ -43,7 +40,10 @@
   align-items: center;
   gap: 4px;
   position: relative;
-  overflow: visible; /* スタンプがはみ出すので隠さない */
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  overflow: visible;
 }
 
 .case-area .zone-label {
@@ -94,25 +94,51 @@
 
 .case-area .case-card-shell {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
+  .case-area .case-card-shell {
+    flex-direction: row;
+    justify-content: center;
+  }
 }
 
 .case-area .case-card-shell > .case-card-detail {
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
+  flex: 0 0 calc(44px * var(--playmat-inverse-scale, 1));
+  width: calc(44px * var(--playmat-inverse-scale, 1));
+  height: calc(44px * var(--playmat-inverse-scale, 1));
   padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.case-area .case-card-detail > span {
+  display: grid;
+  width: calc(26px * var(--playmat-inverse-scale, 1));
+  height: calc(26px * var(--playmat-inverse-scale, 1));
+  place-items: center;
   border: 1px solid rgba(150, 175, 210, 0.42);
   border-radius: 50%;
   background: rgba(8, 18, 36, 0.72);
-  color: #fff;
-  cursor: pointer;
-  font-size: 12px;
+  font-size: calc(10px * var(--playmat-inverse-scale, 1));
 }
-.case-area .case-card-shell > .case-card-detail:hover {
+.case-area .case-card-detail:hover > span,
+.case-area .case-card-detail:focus-visible > span {
   border-color: rgba(210, 230, 255, 0.82);
   background: rgba(24, 50, 82, 0.92);
+}
+.case-area .case-card-detail:focus-visible {
+  outline: calc(2px * var(--playmat-inverse-scale, 1)) solid rgba(210, 230, 255, 0.92);
+  outline-offset: calc(-2px * var(--playmat-inverse-scale, 1));
+  border-radius: 50%;
 }
 .case-area .case-card.portrait {
   width: var(--case-card-w);
@@ -196,42 +222,6 @@
   color: color-mix(in oklch, var(--case-accent-gold) 90%, white 10%);
 }
 
-/* ---- 検事印スタンプ ---- */
-.case-area .case-stamp {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  transform: rotate(8deg);
-  background: #fff;
-  color: var(--case-editing-color);
-  font-size: 8.5px;
-  font-weight: 900;
-  padding: 2px 6px;
-  border: 2px solid var(--case-editing-color);
-  border-radius: 2px;
-  letter-spacing: 0.05em;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-  z-index: 3;
-  white-space: nowrap;
-  font-family: var(--font-jp, "Hiragino Sans", "Noto Sans JP", sans-serif);
-}
-.case-area .case-card.portrait .case-stamp {
-  font-size: 8.5px;
-  padding: 1px 4px;
-}
-/* Phase 8.10h: 解決編スタンプの反転アニメーション (事件編→解決編 で発火) */
-@keyframes case-stamp-flip {
-  0%   { transform: rotateY(180deg) scale(0.55); opacity: 0; }
-  55%  { transform: rotateY(20deg)  scale(1.18); opacity: 1; }
-  100% { transform: rotateY(0deg)   scale(1);    opacity: 1; }
-}
-.case-area .case-stamp.resolved {
-  animation: case-stamp-flip 0.6s ease-out both;
-  color: var(--case-resolved-color);
-  border-color: var(--case-resolved-color);
-  transform: rotate(-6deg);
-}
-
 /* ---- 必要証拠 ---- */
 .case-area .evidence-required {
   font-size: 10px;
@@ -246,18 +236,6 @@
   font-size: 13px;
   font-weight: 800;
   margin: 0 2px;
-}
-
-/* ---- 相手側: スタンプの傾き方向のみ反転 ---- */
-.case-area.side-opp .case-stamp {
-  top: auto;
-  bottom: -4px;
-  right: auto;
-  left: -4px;
-  transform: rotate(-8deg);
-}
-.case-area.side-opp .case-stamp.resolved {
-  transform: rotate(6deg);
 }
 
 /* ---- 未開始 (caseInfo=null) ---- */

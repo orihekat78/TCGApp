@@ -375,4 +375,92 @@ describe('useContactFlowDriver — _runDriverStep', () => {
       candidates: [{ uid: 'card:self:hand:D08017#0', cardId: 'D08017', kind: 'cutin' }],
     });
   });
+
+  it('ends contact instead of opening action-2 when the current participant already left', () => {
+    const s = createEmptyGameState();
+    s.turn = { number: 2, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.opp.scene = [makeChar('o1', 'active')];
+    s.players.self.scene = [makeChar('s1', 'sleep')];
+    useGameStateStore.setState({ gameState: s });
+    dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'o1', targetUid: 's1' });
+    const axId = useGameStateStore.getState().activeActionId!;
+    const ax = updateActionContext(axId, (context) => {
+      context.phase = 'action-1';
+      context.firstUid = 's1';
+      context.secondUid = 'o1';
+    });
+    useGameStateStore.setState({
+      gameState: produce(useGameStateStore.getState().gameState!, (draft) => {
+        draft.players.self.scene = [];
+      }),
+    });
+
+    _runDriverStep(useGameStateStore.getState().gameState!, ax);
+
+    expect(getActionContext(axId)?.phase).toBe('contact-end');
+    expect(getActionContext(axId)?.firstUid).toBeUndefined();
+    expect(getActionContext(axId)?.secondUid).toBeUndefined();
+    expect(useContactModalStore.getState().cutInDisguise).toBeNull();
+  });
+
+  it('ends contact when the other participant left after the current actor already acted', () => {
+    const s = createEmptyGameState();
+    s.turn = { number: 2, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.self.scene = [makeChar('s1', 'active')];
+    s.players.opp.scene = [makeChar('o1', 'sleep')];
+    useGameStateStore.setState({ gameState: s });
+    dispatchEngineAction({ type: 'actionDeclareChar', byUid: 's1', targetUid: 'o1' });
+    const axId = useGameStateStore.getState().activeActionId!;
+    const ax = updateActionContext(axId, (context) => {
+      context.phase = 'action-1';
+      context.firstUid = 's1';
+      context.secondUid = 'o1';
+      context.firstActed = true;
+    });
+    useGameStateStore.setState({
+      gameState: produce(useGameStateStore.getState().gameState!, (draft) => {
+        draft.players.opp.scene = [];
+      }),
+    });
+
+    _runDriverStep(useGameStateStore.getState().gameState!, ax);
+
+    expect(getActionContext(axId)?.phase).toBe('contact-end');
+    expect(getActionContext(axId)?.firstUid).toBeUndefined();
+    expect(getActionContext(axId)?.secondUid).toBeUndefined();
+    expect(useContactModalStore.getState().cutInDisguise).toBeNull();
+  });
+
+  it.each([
+    { phase: 'action-1' as const, expected: 'action-2', apply: (ax: ActionContext) => { ax.firstActed = true; } },
+    {
+      phase: 'action-2' as const,
+      expected: 'judge',
+      apply: (ax: ActionContext) => { ax.firstActed = true; ax.secondActed = true; },
+    },
+    {
+      phase: 'action-1-redo' as const,
+      expected: 'judge',
+      apply: (ax: ActionContext) => { ax.firstActed = false; ax.secondActed = true; ax.firstRedoActed = true; },
+    },
+  ])('advances a resumed acted $phase instead of reopening its modal', ({ phase, expected, apply }) => {
+    const s = createEmptyGameState();
+    s.turn = { number: 2, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.self.scene = [makeChar('s1', 'active')];
+    s.players.opp.scene = [makeChar('o1', 'sleep')];
+    useGameStateStore.setState({ gameState: s });
+    dispatchEngineAction({ type: 'actionDeclareChar', byUid: 's1', targetUid: 'o1' });
+    const axId = useGameStateStore.getState().activeActionId!;
+    const ax = updateActionContext(axId, (context) => {
+      context.phase = phase;
+      context.firstUid = 's1';
+      context.secondUid = 'o1';
+      apply(context);
+    });
+
+    _runDriverStep(useGameStateStore.getState().gameState!, ax);
+
+    expect(getActionContext(axId)?.phase).toBe(expected);
+    expect(useContactModalStore.getState().cutInDisguise).toBeNull();
+  });
 });

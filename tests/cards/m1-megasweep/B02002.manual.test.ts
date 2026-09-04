@@ -17,7 +17,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { produce } from '@/engine/produce';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../../helpers/main-game-state';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
@@ -47,7 +47,7 @@ function base(): GameState {
   s.players.opp.case = { cardId: 'co', status: '事件編', requiredEvidence: 6, colors: ['赤'], declaredUseCount: {} };
   s.players.self.deck.push('d1', 'd2', 'd3', 'd4', 'd5');
   s.players.opp.deck.push('e1', 'e2', 'e3');
-  s.turn = { number: 3, player: 'self' } as GameState['turn'];
+  s.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
   return s;
 }
 
@@ -155,7 +155,7 @@ describe('B02002 §5 — owner=opp (BUG-174): 所有者反転でも opp 現場�
     registerCardDef(plain('TGT'));
     registerTriggeredListener();
     const s = base();
-    s.turn = { number: 4, player: 'opp' } as GameState['turn'];
+    s.turn = { number: 4, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
     s.players.opp.scene.push(makeChar({ uid: 'konan', cardId: 'B02002', state: 'active' }));
     s.players.opp.scene.push(makeChar({ uid: 'red', cardId: 'RED', state: 'active' }));
     s.players.opp.scene.push(makeChar({ uid: 'grn', cardId: 'GRN', state: 'active' }));

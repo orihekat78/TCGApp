@@ -159,6 +159,32 @@ describe('engine.effect.resolveEffectPicks', () => {
     _clearPendingEffectOptionalSide();
   });
 
+  it('optional if-hand: human zero hand takes else without surfacing an impossible decision', () => {
+    _clearPendingEffectOptionalSide();
+    const state = stateWithSelfChar('self-1');
+    state.players.self.hand = [];
+    const fallback: Effect = { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } };
+    const effect: Effect = {
+      kind: 'optional', aiRun: 'if-hand', effect: PICK_ATOM, else: fallback,
+    };
+    expect(resolveEffectPicks(state, effect, ctxSelf(), {
+      humanChooser: true, byPlayer: 'self', source: { cardId: 'X', abilityId: 'a1' },
+    })).toEqual(fallback);
+    expect(_peekPendingEffectOptionalSide()).toBeNull();
+  });
+
+  it('optional if-hand: resumed true rechecks a now-empty hand and takes else', () => {
+    const state = stateWithSelfChar('self-1');
+    state.players.self.hand = [];
+    const fallback: Effect = { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } };
+    const effect: Effect = {
+      kind: 'optional', aiRun: 'if-hand', effect: PICK_ATOM, else: fallback,
+    };
+    const ctx = ctxSelf();
+    ctx.dyn = { optionalRun: true };
+    expect(resolveEffectPicks(state, effect, ctx)).toEqual(fallback);
+  });
+
   it('parallel: 各 step を再帰的に処理', () => {
     const s = stateWithSelfChar('self-1');
     const effect: Effect = { kind: 'parallel', steps: [PICK_ATOM, PICK_ATOM] };
@@ -173,6 +199,31 @@ describe('engine.effect.resolveEffectPicks', () => {
     const effect: Effect = { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } } as Effect;
     const resolved = resolveEffectPicks(s, effect, ctxSelf());
     expect(resolved).toStrictEqual(effect); // 不変
+  });
+
+  it('mill.n dyn remains runtime-bound while non-mill dyn stays pre-walk literalized', () => {
+    const s = stateWithSelfChar('self-1');
+    s.players.opp.scene.push(
+      { ...s.players.self.scene[0]!, uid: 'opp-1', enterOrder: 2 },
+      { ...s.players.self.scene[0]!, uid: 'opp-2', enterOrder: 3 },
+    );
+    const mill: Effect = {
+      kind: 'atom', verb: 'mill',
+      args: { player: 'self', n: { dyn: '$self.oppSceneCount * 2' } },
+    };
+    const modify: Effect = {
+      kind: 'atom', verb: 'charModifyAP',
+      args: { uid: 'self-1', delta: { dyn: '$self.oppSceneCount * 1000' }, scope: 'turn' },
+    };
+
+    const resolvedMill = resolveEffectPicks(s, mill, ctxSelf()) as { args: { n: unknown } };
+    const resolvedModify = resolveEffectPicks(s, modify, ctxSelf()) as { args: { delta: unknown } };
+
+    expect(resolvedMill.args.n, 'atomMill owns runtime dyn evaluation').toEqual({
+      dyn: '$self.oppSceneCount * 2',
+    });
+    expect(resolvedModify.args.delta, 'other atom dyn keeps the existing eager snapshot contract')
+      .toBe(2000);
   });
 
   it('深いネスト (sequence → choice → atom $pick) を再帰処理', () => {

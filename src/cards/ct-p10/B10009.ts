@@ -8,7 +8,7 @@ const a1 = partnerColorKeyword({ color: '青', kw: '突撃', abilityId: 'a1' });
 const a2: AbilityDef = {
   id: 'a2', type: 'triggered', scope: 'on-scene', trigger: { hook: 'enter', selfOnly: true },
   effect: { kind: 'optional', effect: { kind: 'chain', steps: [
-    { kind: 'atom', verb: 'handReveal', args: { player: 'self', max: 1, bind: '$revealed', filter: { kind: 'character', cardName: '毛利蘭' } } },
+    { kind: 'atom', verb: 'handReveal', args: { player: 'self', audience: 'all', lifetime: 'presentation', max: 1, bind: '$revealed', filter: { kind: 'character', cardName: '毛利蘭' } } },
     { kind: 'conditional', if: { kind: 'boundAnyMatchesFilter', bindKey: '$revealed', filter: { kind: 'character', cardName: '毛利蘭' } }, then: { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$self', kw: '突撃', scope: 'turn' } } },
   ] } },
   description: '【パートナー青】【登場時】手札から〚カード名［毛利蘭］〛を1枚公開してもよい。そうした場合、ターン終了時までこのキャラは〚突撃〛（名乗り状態でもアクションできる）を持つ。',

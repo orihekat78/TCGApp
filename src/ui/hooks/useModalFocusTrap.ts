@@ -19,10 +19,12 @@ const FOCUSABLE_SELECTOR = [
 export function useModalFocusTrap({
   active,
   initialFocusSelector,
+  fallbackFocusSelector,
   onEscape,
 }: {
   active: boolean;
   initialFocusSelector?: string;
+  fallbackFocusSelector?: string;
   onEscape?: () => void;
 }): RefObject<HTMLDivElement | null> {
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -79,9 +81,20 @@ export function useModalFocusTrap({
       document.removeEventListener('keydown', onKeyDown, { capture: true });
       const returnFocus = returnFocusRef.current;
       returnFocusRef.current = null;
-      if (canRestoreModalFocus(returnFocus)) returnFocus.focus();
+      if (canRestoreModalFocus(returnFocus)) {
+        returnFocus.focus();
+        return;
+      }
+      const fallbackFocus = fallbackFocusSelector
+        ? document.querySelector<HTMLElement>(fallbackFocusSelector)
+        : null;
+      if (fallbackFocus?.isConnected
+        && !fallbackFocus.matches('[hidden], [inert], [aria-hidden="true"]')
+        && fallbackFocus.closest('[hidden], [inert], [aria-hidden="true"]') === null) {
+        fallbackFocus.focus();
+      }
     };
-  }, [active, initialFocusSelector]);
+  }, [active, fallbackFocusSelector, initialFocusSelector]);
 
   return dialogRef;
 }

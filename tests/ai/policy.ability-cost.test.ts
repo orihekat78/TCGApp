@@ -14,7 +14,7 @@ import { _resetActionContexts } from '@/engine/flow/action/state-machine';
 import { _resetTargetExpanders } from '@/engine/flow/action/target-expander';
 import { event } from '@/engine/event/index';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
-import type { CardDef, Cost, GameState } from '@/engine/types';
+import type { AbilityDef, CardDef, Cost, GameState } from '@/engine/types';
 
 import { applyMove } from '@/ai/policy';
 import { enumerateMoves } from '@/ai/move-enumerator';
@@ -117,5 +117,45 @@ describe('Phase 8.8d: AI cost integration', () => {
     if (declMoves[0]?.kind === 'declaredAbility') {
       expect(declMoves[0].abilityId).toBe('a1');
     }
+  });
+
+  it('enumerates one canonical AI name independently of hidden deck order and applies it', () => {
+    registerCardDef(makeCard('AI-NAME', { names: ['Alpha Target'] }));
+    registerCardDef(makeCard('AI-ZETA', { names: ['Zeta Target'] }));
+    const ability: AbilityDef = {
+      id: 'a1', type: 'declared', scope: 'on-scene',
+      effect: {
+        kind: 'sequence',
+        steps: [
+          {
+            kind: 'atom', verb: 'declareName',
+            args: { bind: 'named', domain: 'registered-character-card-name' },
+          },
+          { kind: 'atom', verb: 'noop', args: {} },
+        ],
+      },
+      description: 'AI declares one registered character name', ruleRefs: [],
+    };
+    registerCardDef(makeCard('ZZ-AI-SOURCE', { names: ['ZZ Source'], abilities: [ability] }));
+    const stateFor = (deck: string[]) => produce(setupBase(), draft => {
+      mutate.scene.enter(draft, 'self', 'ZZ-AI-SOURCE', { active: true });
+      draft.players.self.deck = deck;
+    });
+    const forward = stateFor(['AI-NAME', 'AI-ZETA']);
+    const reverse = stateFor(['AI-ZETA', 'AI-NAME']);
+    const uid = forward.players.self.scene[0]!.uid;
+    const declaredMove = (state: GameState) => enumerateMoves(state, 'self').find(candidate => (
+      candidate.kind === 'declaredAbility' && candidate.abilityId === 'a1'
+    ));
+    const forwardMove = declaredMove(forward);
+    const reverseMove = declaredMove(reverse);
+    expect(forwardMove?.kind === 'declaredAbility' ? forwardMove.declaredName : undefined)
+      .toBe(reverseMove?.kind === 'declaredAbility' ? reverseMove.declaredName : undefined);
+    expect(forwardMove).toMatchObject({
+      kind: 'declaredAbility', uid, abilityId: 'a1', declaredName: 'Alpha Target',
+    });
+
+    const after = produce(forward, draft => applyMove(draft, forwardMove!, 'self'));
+    expect(after.log.at(-1)?.action).toBe('declaredAbility');
   });
 });

@@ -36,6 +36,7 @@ import { drainAiEffectPicks, _drainAllEffectPicksForTest, applyOptionalAndContin
 import { _peekPendingEffectOptionalSide, _clearPendingEffectOptionalSide, _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { char as readChar } from '@/engine/read/char';
+import { mutate } from '@/engine/mutate';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import type { GameState, SceneCharacter, CardDef } from '@/engine/types';
 import { sceneChar as baseScene } from '../../helpers/fixtures';
@@ -115,6 +116,22 @@ describe('B06068 京極真 a1 — 相手キャラ contact 除去 → しても�
     expect(kyo.state, 'アクティブ化').toBe('active');
     expect(readChar.hasKeyword(s, 'kyo', '突撃[キャラ]'), '突撃[キャラ]を失う (turn)').toBe(false);
     expect(readChar.hasKeyword(s, 'kyo', '突撃[事件]'), '突撃[事件]を得る (turn)').toBe(true);
+  });
+
+  it('解決前に外部付与された突撃[キャラ]も失う', () => {
+    setHuman('self');
+    const s = produce(board(), (d) => {
+      mutate.char.grantKeyword(d, 'kyo', '突撃[キャラ]', 'turn');
+      emitRemoval(d);
+      runAllUntilEmpty(d);
+      const pending = _peekPendingEffectOptionalSide();
+      expect(pending).not.toBeNull();
+      applyOptionalAndContinuation(d, pending!, true);
+      _drainAllEffectPicksForTest(d);
+      runAllUntilEmpty(d);
+    });
+
+    expect(readChar.hasKeyword(s, 'kyo', '突撃[キャラ]')).toBe(false);
   });
 
   it('しない (human 辞退) → 手札・状態・キーワード 不変', () => {

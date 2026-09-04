@@ -5,8 +5,8 @@
 //     a1 「このキャラはスリープ状態で登場する。」
 //     a2 「【ヒラメキ】（証拠からリムーブされるときに発動する）カードを1枚引く。」
 //
-// 自己スリープ登場は engine変更0 = enter(selfOnly) → sceneSetState{uid:'$self', state:'sleep'}
-// (D03011/D11016/B01028 の uid:'$self' state変更パターンの sleep 版)。
+// 自己スリープ登場は CardDef.entersSleep=true。mutate.scene.enter が enter hook より前に
+// sleep で生成するため、observer や同時【登場時】能力へ一時 active を公開しない。
 // 公式 Q&A: 「能力や効果によって登場する場合でもスリープ状態で登場しますか？ → はい」。
 //   'enter' hook は通常プレイ (handUseCard) / ネクストヒント / 効果登場 (sceneEnter) の
 //   全経路で emit されるため、selfOnly 'enter' で全登場経路を捕捉できることを確認する。
@@ -35,7 +35,7 @@ describe('Task A batch#2 — B01011 自己スリープ登場 + ヒラメキdraw'
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   });
 
-  it('card def: 青Lv4 AP2000 LP2 / a1 enter→self sleep / a2 ヒラメキ draw', () => {
+  it('card def: 青Lv4 AP2000 LP2 / inherent sleep entry / sparse a2 ヒラメキ draw', () => {
     expect(B01011.kind).toBe('character');
     expect(B01011.colors).toEqual(['青']);
     const ch = B01011 as CardDef & { ap: number; lp: number; level: number; traits: string[] };
@@ -44,11 +44,9 @@ describe('Task A batch#2 — B01011 自己スリープ登場 + ヒラメキdraw'
     expect(ch.lp).toBe(2);
     expect(ch.traits).toEqual(['探偵', '毛利探偵事務所', '少年探偵団']);
 
-    const [a1, a2] = B01011.abilities as AbilityDef[];
-    // a1: 登場時 (selfOnly) に自分自身をスリープ化
-    expect(a1.type).toBe('triggered');
-    expect(a1.trigger).toMatchObject({ hook: 'enter', selfOnly: true });
-    expect(a1.effect).toMatchObject({ kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } });
+    expect(B01011.entersSleep).toBe(true);
+    expect(B01011.abilities.map(ability => ability.id)).toEqual(['a2']);
+    const [a2] = B01011.abilities as AbilityDef[];
     // a2: 【ヒラメキ】 1ドロー (D08013 a2 同型)
     expect(a2.type).toBe('triggered');
     expect(a2.trigger).toMatchObject({ hook: 'evidence:remove-by-action', optional: true });

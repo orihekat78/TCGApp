@@ -48,7 +48,7 @@ function state(cardId: string, player: 'self' | 'opp' = 'self'): GameState {
   return s;
 }
 
-function resolvePendingTarget(s: GameState): void {
+function resolvePendingTarget(s: GameState, expectedCardName = '対象'): void {
   runAllUntilEmpty(s);
   const pending = _drainPendingEffectPickSide();
   expect(pending, 'real card effect must surface a human pick').not.toBeNull();
@@ -56,7 +56,7 @@ function resolvePendingTarget(s: GameState): void {
   applyPickAndContinuation(s, pending!, 'target');
   const targetPlayer = pending!.candidates.find(candidate => candidate.uid === 'target')!.player;
   expect(pending!.continuation?.ctx.bindings['$picked'], 'human carrier must write the selected char binding').toEqual([
-    { kind: 'char', uid: 'target', cardId: 'WHITE-TARGET', player: targetPlayer },
+    { kind: 'char', uid: 'target', cardId: 'WHITE-TARGET', cardName: expectedCardName, player: targetPlayer },
   ]);
 }
 
@@ -85,6 +85,19 @@ describe('BUG-130/158 live human carrier reuse', () => {
       expect(read.char.ap(s, 'target')).toBe(4000);
     });
   }
+
+  it('binds the current turn name override instead of the printed name', () => {
+    const s = state('B02046');
+    const target = s.players.self.scene.find(char => char.uid === 'target')!;
+    target.turnEffects.nameOverride = '江戸川コナン';
+    event.emit(
+      s,
+      'enter',
+      { uid: 'actor', player: 'self', viaEffect: false },
+      { player: 'self', uid: 'actor', cardId: 'B02046' },
+    );
+    resolvePendingTarget(s, '江戸川コナン');
+  });
 
   it('declining the optional pick neither sets nor applies the rider', () => {
     const s = state('B02046');

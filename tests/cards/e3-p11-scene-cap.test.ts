@@ -17,7 +17,7 @@ import { evalCond } from '@/engine/cond/eval';
 import { mutate } from '@/engine/mutate/index';
 import { canHandUseCard, canHandUseCardSwitch } from '@/engine/flow/main/hand-use-card';
 import { sceneAtMost5 } from '@/engine/invariant/sceneAtMost5';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../helpers/main-game-state';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import type { CardDef, Condition, GameState, SceneCharacter } from '@/engine/types';

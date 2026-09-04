@@ -7,6 +7,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { bindPendingDecision, dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { B01092 } from '@/cards/ct-p01/B01092';
+import { register as registerCardDef } from '@/engine/read/def';
 import { event } from '@/engine/event';
 import { gameResult } from '@/engine/mutate/gameResult';
 import { startCausalSession } from '@/engine/log/causal';
@@ -155,24 +157,26 @@ describe('useEngineDispatch — per-step action FSM', () => {
   });
 
   it('restores and resolves a state-owned leave-intercept decision exactly once', () => {
+    registerCardDef(B01092);
     const base = makeBattle();
-    base.players.opp.scene[0]!.cardId = 'DEFENDER';
-    base.players.opp.scene.push({
+    base.turn.player = 'opp';
+    base.players.self.scene[0]!.cardId = 'DEFENDER';
+    base.players.self.scene.push({
       ...makeChar('interceptor', 'active'),
-      cardId: 'INTERCEPTOR',
+      cardId: 'B01092',
     });
     base.actionContextSeq = 1;
     base.actionContexts = {
       ax_1: {
         id: 'ax_1',
-        byUid: 's1',
-        byPlayer: 'self',
-        target: { kind: 'char', uid: 't1' },
+        byUid: 't1',
+        byPlayer: 'opp',
+        target: { kind: 'char', uid: 's1' },
         phase: 'judge',
-        apSnapshot: { aUid: 's1', aAP: 5000, bUid: 't1', bAP: 1000 },
+        apSnapshot: { aUid: 't1', aAP: 5000, bUid: 's1', bAP: 1000 },
         pendingLeaveIntercept: {
-          player: 'opp',
-          targetUid: 't1',
+          player: 'self',
+          targetUid: 's1',
           interceptorUid: 'interceptor',
         },
         startedAt: { turn: 2, nano: 1 },
@@ -186,8 +190,8 @@ describe('useEngineDispatch — per-step action FSM', () => {
 
     expect(useGameStateStore.getState().activeActionId).toBe('ax_1');
     expect(pending).toMatchObject({
-      player: 'opp',
-      targetUid: 't1',
+      player: 'self',
+      targetUid: 's1',
       interceptorUid: 'interceptor',
       actionId: 'ax_1',
     });
@@ -209,9 +213,9 @@ describe('useEngineDispatch — per-step action FSM', () => {
       judgeResolved: true,
     });
     expect(flow.action._getContext(resolved, 'ax_1')?.pendingLeaveIntercept).toBeUndefined();
-    expect(resolved.players.opp.scene.map((card) => card.uid)).toEqual([]);
-    expect(resolved.players.opp.hand).toContain('DEFENDER');
-    expect(resolved.players.opp.remove).toContain('INTERCEPTOR');
+    expect(resolved.players.self.scene.map((card) => card.uid)).toEqual([]);
+    expect(resolved.players.self.hand).toContain('DEFENDER');
+    expect(resolved.players.self.remove).toContain('B01092');
     expect(resolved.log.filter((entry) => entry.action === 'contact-judge')).toHaveLength(1);
     expect(resolved.log.find((entry) => entry.action === 'contact-judge')?.result).toContain('MISS');
   });

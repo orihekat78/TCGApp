@@ -14,12 +14,13 @@
 // rules: 21-declared-ability-cost.md (コスト「自分の」省略), 15/25 (cost→effect 解決順)
 // spec: .claude/specs/engine-additive-handreveal-design.md
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { afterEach, describe, it, expect, beforeEach } from 'vitest';
 import { produce } from '@/engine/produce';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { canPay } from '@/engine/cost/evaluate';
 import { pay } from '@/engine/cost/pay';
+import { _drainPendingPublicHandRevealSide, resetPendingAtomSession } from '@/engine/effect/atom-handlers';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { CardDef, GameState, EffectCtx, Cost } from '@/engine/types';
 
@@ -46,11 +47,60 @@ function handState(hand: string[]): GameState {
 }
 
 beforeEach(() => {
+  resetPendingAtomSession();
   resetDefRegistry();
   _resetUidCounter();
   registerCardDef(pchar('BLUE1', ['青']));
   registerCardDef(pchar('BLUE2', ['青']));
   registerCardDef(pchar('RED1', ['赤']));
+});
+
+afterEach(() => {
+  resetPendingAtomSession();
+});
+
+describe('revealFromHand public occurrence witness', () => {
+  it('uses the explicitly selected second hand occurrence and presents only it through cost completion', () => {
+    const state = handState(['BLUE1', 'BLUE2', 'RED1']);
+    const ctx = ctxBare();
+    ctx.dyn = { costParams: { revealFromHand: { indices: [1] } } };
+    let result: ReturnType<typeof pay> | undefined;
+
+    const after = produce(state, draft => { result = pay(draft, COST(1), ctx); });
+    const paid = result!.paidItems.find(item => item.kind === 'revealFromHand')!
+      .details as { ids: string[] };
+    expect(paid.ids).toEqual(['BLUE2']);
+    expect(after.players.self.hand).toEqual(['BLUE1', 'BLUE2', 'RED1']);
+    expect(_drainPendingPublicHandRevealSide()).toMatchObject({
+      owner: 'self', audience: 'all', cardIds: ['BLUE2'], lifetime: 'presentation',
+      source: { cardId: 'X', abilityId: 'a1' },
+    });
+  });
+
+  it.each([
+    { label: 'duplicate', indices: [0, 0], cost: COST(2) },
+    { label: 'out-of-range', indices: [99], cost: COST(1) },
+    { label: 'ineligible', indices: [2], cost: COST(1) },
+  ])('rejects an invalid $label witness atomically', ({ indices, cost }) => {
+    const state = handState(['BLUE1', 'BLUE2', 'RED1']);
+    const ctx = ctxBare();
+    ctx.dyn = { costParams: { revealFromHand: { indices } } };
+
+    expect(() => produce(state, draft => { pay(draft, cost, ctx); })).toThrow();
+    expect(state.players.self.hand).toEqual(['BLUE1', 'BLUE2', 'RED1']);
+    expect(_drainPendingPublicHandRevealSide()).toBeNull();
+  });
+
+  it('does not enqueue an invalid public projection without ability provenance', () => {
+    const state = handState(['BLUE1']);
+    const ctx: EffectCtx = {
+      source: { cardId: 'X', uid: 'u-x', player: 'self', area: 'scene' }, bindings: {},
+    };
+
+    produce(state, draft => { pay(draft, COST(1), ctx); });
+
+    expect(_drainPendingPublicHandRevealSide()).toBeNull();
+  });
 });
 
 describe('revealFromHand §1-3 — canPay gating (filter 一致 ≥ n)', () => {

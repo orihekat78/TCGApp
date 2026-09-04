@@ -10,13 +10,13 @@ import type { GameStateLike } from '../helpers';
 //   - ruleRefs に rules/17-icons.md を追加 (重複除去)
 //
 // 対象カード:
-//   - D11003 a2 (declared, sleepSelf + sceneHas 警察 ≥2 + 婚活 trait wrap)
-//   - D11005 a1 (triggered enter, sceneRemove + 婚活 trait wrap)
+//   - D11003 a2 (declared, sleepSelf + sceneHas 警察 ≥2 + 婚活パーティー trait wrap)
+//   - D11005 a1 (triggered enter, sceneRemove + 婚活パーティー trait wrap)
 //
 // 検証層:
-//   1. cardDef.abilities に対象 ability が存在し、description に【事件婚活】 prefix
-//   2. ability.condition は { kind: 'and', cs: [{ kind: 'caseTrait', trait: '婚活' }, ...] }
-//   3. cond.eval で婚活 trait 持ち事件 (D11021) → true、なし事件 (D08026) → false (negative)
+//   1. cardDef.abilities に対象 ability が存在し、description に【事件婚活パーティー】 prefix
+//   2. ability.condition は { kind: 'and', cs: [{ kind: 'caseTrait', trait: '婚活パーティー' }, ...] }
+//   3. cond.eval で婚活パーティー trait 持ち事件 (D11021) → true、なし事件 (D08026) → false (negative)
 //
 // 注: effect 実行 (choice/sceneRemove pick) は engine 統合テストで検証済。本 E2E では
 // wrapper 構造 + condition resolve 経路を集中確認。
@@ -54,14 +54,14 @@ async function evalAbility(
         return { abilityExists: false, descriptionHasCaseTraitPrefix: false, conditionShape: 'none' as const, conditionMet: false };
       }
       const desc = ability.description ?? '';
-      const descPrefix = /^【事件婚活】/.test(desc);
+      const descPrefix = /^【事件婚活パーティー】/.test(desc);
       let shape: 'caseTrait' | 'and-with-caseTrait' | 'other' | 'none' = 'none';
       const cond = ability.condition;
       if (!cond) {
         shape = 'none';
-      } else if (cond.kind === 'caseTrait' && cond.trait === '婚活') {
+      } else if (cond.kind === 'caseTrait' && cond.trait === '婚活パーティー') {
         shape = 'caseTrait';
-      } else if (cond.kind === 'and' && cond.cs?.some((c) => c.kind === 'caseTrait' && c.trait === '婚活')) {
+      } else if (cond.kind === 'and' && cond.cs?.some((c) => c.kind === 'caseTrait' && c.trait === '婚活パーティー')) {
         shape = 'and-with-caseTrait';
       } else {
         shape = 'other';
@@ -75,15 +75,15 @@ async function evalAbility(
 
 const CARDS: ReadonlyArray<{ cardId: string; abilityId: string; kind: string }> = [
   { cardId: 'D11003', abilityId: 'a2', kind: 'declared + 警察≥2' },
-  { cardId: 'D11005', abilityId: 'a1', kind: 'triggered-enter + AP≤8000' },
+  { cardId: 'D11005', abilityId: 'a1', kind: 'triggered-enter + AP≤source effective AP' },
 ];
 
 test.describe('caseTraitConditioned — 事件特徴で条件発動 (2 カード集約)', () => {
   for (const { cardId, abilityId, kind } of CARDS) {
-    test(`${cardId} ${abilityId} (${kind}): self.case=D11021 (婚活) → condition true`, async ({ page }) => {
+    test(`${cardId} ${abilityId} (${kind}): self.case=D11021 (婚活パーティー) → condition true`, async ({ page }) => {
       const { errors } = await setupGamePage(page);
 
-      // sample state: self.case.cardId = 'D11021' (婚活 trait 持ち) は既定
+      // sample state: self.case.cardId = 'D11021' (婚活パーティー trait 持ち) は既定
       // D11003/D11005 は traits ['警察', '神奈川県警']、self.scene に置く (sceneHas '警察' ≥2 のため D11003 a2 では 2 枚必要)
       await buildGameState(
         page,
@@ -108,14 +108,14 @@ test.describe('caseTraitConditioned — 事件特徴で条件発動 (2 カード
       const result = await evalAbility(page, cardId, abilityId, 'self', 'self-1');
 
       expect(result.abilityExists, 'ability is defined').toBe(true);
-      expect(result.descriptionHasCaseTraitPrefix, '【事件婚活】 prefix in description').toBe(true);
-      expect(['caseTrait', 'and-with-caseTrait'], 'condition wraps caseTrait 婚活').toContain(result.conditionShape);
-      expect(result.conditionMet, 'condition is met (婚活 trait 持ち事件 + AND inner satisfied)').toBe(true);
+      expect(result.descriptionHasCaseTraitPrefix, '【事件婚活パーティー】 prefix in description').toBe(true);
+      expect(['caseTrait', 'and-with-caseTrait'], 'condition wraps caseTrait 婚活パーティー').toContain(result.conditionShape);
+      expect(result.conditionMet, 'condition is met (婚活パーティー trait 持ち事件 + AND inner satisfied)').toBe(true);
 
       expectNoConsoleErrors(errors);
     });
 
-    test(`${cardId} ${abilityId} (${kind}): self.case=別事件 (婚活なし) → condition false (negative)`, async ({ page }) => {
+    test(`${cardId} ${abilityId} (${kind}): self.case=別事件 (婚活パーティーなし) → condition false (negative)`, async ({ page }) => {
       const { errors } = await setupGamePage(page);
 
       await buildGameState(
@@ -133,7 +133,7 @@ test.describe('caseTraitConditioned — 事件特徴で条件発動 (2 カード
             ch2.state = 'active';
             ch2.isNamed = false;
           }
-          // self.case を CT-D08「青の古城探索事件」(D08026, 婚活 trait なし) に差し替え
+          // self.case を CT-D08「青の古城探索事件」(D08026, 婚活パーティー trait なし) に差し替え
           (gs.players.self as unknown as { case: { cardId: string } }).case.cardId = 'D08026';
         },
         { cardId },
@@ -142,8 +142,8 @@ test.describe('caseTraitConditioned — 事件特徴で条件発動 (2 カード
       const result = await evalAbility(page, cardId, abilityId, 'self', 'self-1');
 
       expect(result.abilityExists, 'ability is defined').toBe(true);
-      expect(['caseTrait', 'and-with-caseTrait'], 'condition wraps caseTrait 婚活').toContain(result.conditionShape);
-      expect(result.conditionMet, '別事件 (婚活なし) のため condition false').toBe(false);
+      expect(['caseTrait', 'and-with-caseTrait'], 'condition wraps caseTrait 婚活パーティー').toContain(result.conditionShape);
+      expect(result.conditionMet, '別事件 (婚活パーティーなし) のため condition false').toBe(false);
 
       expectNoConsoleErrors(errors);
     });

@@ -1,28 +1,32 @@
-# Next Task: Conan TCG expert-play method
+# Next Task: official-Q&A boundary required
 
-Use the ready-to-paste task brief:
-`.claude/sessions/2026-07-27-conan-tcg-play-method-next-task-prompt.md`.
+Work only in `C:\Users\arumi\OneDrive\デスクトップ\conan\.claude\worktrees\qa-wave10-clean`.
 
-## Separate campaign checkpoint
+Wave253 completed the supplied final `test-missing` PR batch. B04056's two
+foreign Q&A entries are excluded by the durable source-correction record. Do
+not select, ground, test, certify, annotate, or modify any further Q&A row
+until a new fixed candidate list is supplied.
 
-- The YOU-vs-CPU human validation campaign is intentionally paused after row
-  025. Rows 001--025 are complete; row 026 is the next queued row.
-- Do not resume row 026 as a substitute for the play-method task. First make
-  the expert method explicit and evidence-based, then decide the restart gate.
-- BUG-272, BUG-273, and BUG-274 fixed reported input-stop paths. Focused 42 UI
-  tests and `npm run typecheck` passed. The exact live-browser Escape-cancel
-  regression remains pending because no controllable browser tab was available.
-- When the campaign resumes, start through `#setup`, use public UI/public
-  information only, and open a new browser only after two consecutive runtime
-  connection failures. See the loop recovery record for the exact protocol.
+## Completed boundary
 
-## Records
+- Normalized-Q&A SHA-256:
+  `61d7d180f627037a210384dfb0f6dedfe37be3ff064eb8fe409891453c661932`.
+- Wave253 certified exactly 12 supplied rows across 8 PR cards.
+- B04056 keeps its raw official Q&A. The two entries matching B04055 are
+  excluded only from the test corpus by `qa-source-corrections.json`.
+- Evidence: `.claude/sessions/2026-09-03-qa-wave253.md` and
+  `.claude/sessions/2026-09-03-qa-authority-b04056.md`.
+- Production card, engine, GameState, resolver, security, save, and visible UI
+  sources are unchanged.
 
-- Campaign plan:
-  `.claude/specs/plans/2026-07-27-you-vs-cpu-human-validation-plan.md`
-- Worklist:
-  `.claude/sessions/2026-07-27-you-vs-cpu-human-validation-worklist.csv`
-- Pause handoff:
-  `.claude/sessions/2026-07-27-you-vs-cpu-human-validation-pause-and-play-method-handoff.md`
-- Recovery state:
-  `.claude/sessions/2026-07-27-you-vs-cpu-human-validation-loop-recovery.md`
+## Required gate
+
+1. Inspect live model and reasoning metadata before repository work.
+2. Keep the pinned source and supplied candidate boundary exact.
+3. Preserve `pnpm-lock.yaml`, `pnpm-workspace.yaml`, raw
+   `ct-d01-api.json` drift, `tests/cards/ct-p10/B10006.test.ts`, and all
+   unrelated dirty paths.
+4. Never use `stash`, `reset`, `clean`, or `checkout` restoration.
+5. Do not regenerate the Q&A snapshot or hand-edit `.claude/auto/`.
+
+Broad Vitest remains blocked by inherited `CARDS_DATA_BUSY`; it is not a pass.

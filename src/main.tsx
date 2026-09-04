@@ -17,8 +17,10 @@ if (import.meta.env.DEV || import.meta.env.VITE_E2E_BRIDGE === 'true') {
   (globalThis as unknown as { __game?: unknown }).__game = {
     store: useGameStateStore,
     getState: () => useGameStateStore.getState(),
-    setGameState: (gs: ReturnType<typeof createSampleGameState>) =>
-      useGameStateStore.getState().setGameState(gs),
+    setGameState: (
+      gs: ReturnType<typeof createSampleGameState>,
+      options?: { preserveRuntime?: boolean },
+    ) => useGameStateStore.getState().setGameState(gs, options),
     createSampleGameState,
     dispatch: dispatchEngineAction,
     flow: engine.flow,

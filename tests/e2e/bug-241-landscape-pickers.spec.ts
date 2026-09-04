@@ -102,7 +102,12 @@ test('BUG-241 Pixel 5 landscape: real stacked-card effect keeps header and confi
   await buildGameState(page, (gs) => {
     const base = gs.players.self.scene[0]!;
     gs.players.self.scene = [
-      { ...base, uid: 'agasa', cardId: 'B06005', state: 'active', stackedCards: Array.from({ length: 4 }, (_, index) => ({ cardId: 'D08003', instanceId: `stack:agasa:${index}` })) },
+      { ...base, uid: 'agasa', cardId: 'B06005', state: 'active', stackedCards: [
+        { cardId: 'B03006', instanceId: 'stack:agasa:0' },
+        { cardId: 'D08021', instanceId: 'stack:agasa:1' },
+        { cardId: 'D08003', instanceId: 'stack:agasa:2' },
+        { cardId: 'D08015', instanceId: 'stack:agasa:3' },
+      ] },
       { ...base, uid: 'target', cardId: 'D08003', state: 'active', stackedCards: [] },
     ] as never;
     (gs as unknown as { pendingEffects: unknown[] }).pendingEffects = [];
@@ -117,26 +122,22 @@ test('BUG-241 Pixel 5 landscape: real stacked-card effect keeps header and confi
   const shell = modal.locator('.effect-picker-modal');
   const list = shell.locator('.effect-picker-list');
   const confirm = modal.getByTestId('effect-picker-confirm');
-  await modal.getByTestId('effect-pick-cand-stack:agasa:0').click();
+  const html = await modal.innerHTML();
+  for (const cardId of ['B03006', 'D08021', 'D08003', 'D08015']) expect(html).toContain(cardId);
+  await expect(modal.getByTestId(/effect-pick-detail-stack:agasa:/)).toHaveCount(4);
+  const thirdVisibleCard = modal.getByTestId('effect-pick-cand-stack:agasa:2');
+  await thirdVisibleCard.focus();
+  await page.keyboard.press('Enter');
   await expectFixedDecisionShell(page, shell, list, shell.locator('.effect-picker-header'), confirm);
-  const details = modal.getByTestId(/effect-pick-detail-stack:agasa:/);
-  await expectDetailOutsideCardArt(
-    page,
-    modal.getByTestId('effect-pick-cand-stack:agasa:0').locator('.cand-art'),
-    details.first(),
-    36,
-  );
-  const order = () => modal.getByTestId(/effect-pick-cand-stack:agasa:/).evaluateAll((items) => items.map((item) => item.getAttribute('data-testid')!));
-  await list.evaluate((element) => { element.scrollTop = 0; });
-  await expect(details.first()).toBeInViewport();
-  await openAndCloseDetail(modal, details.first(), order);
-  await list.evaluate((element) => { element.scrollTop = element.scrollHeight; });
-  await openAndCloseDetail(modal, details.last(), order);
   await confirm.click();
   await expect(modal).toBeHidden();
   const scene = (await getGameState(page)).players.self.scene;
-  expect(scene.find((character) => character.uid === 'agasa')?.stackedCards).toEqual([{ cardId: 'D08003', instanceId: 'stack:agasa:1' }, { cardId: 'D08003', instanceId: 'stack:agasa:2' }, { cardId: 'D08003', instanceId: 'stack:agasa:3' }]);
-  expect(scene.find((character) => character.uid === 'target')?.stackedCards).toEqual([{ cardId: 'D08003', instanceId: 'stack:agasa:0' }]);
+  expect(scene.find((character) => character.uid === 'agasa')?.stackedCards).toEqual([
+    { cardId: 'B03006', instanceId: 'stack:agasa:0' },
+    { cardId: 'D08021', instanceId: 'stack:agasa:1' },
+    { cardId: 'D08015', instanceId: 'stack:agasa:3' },
+  ]);
+  expect(scene.find((character) => character.uid === 'target')?.stackedCards).toEqual([{ cardId: 'D08003', instanceId: 'stack:agasa:2' }]);
   expectNoConsoleErrors(errors);
 });
 

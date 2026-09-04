@@ -1,3 +1,5 @@
+// qa: card:B09034:20c3c55ad1dcb3f8aeb0d5e61e281969a5cf678c581f643a252268467f8d37a6
+// qa: card:B09034:a7771f2644d23eaf4da0251ea0685ad85ad2e5fa92629f796c18dd589ee751fd
 // cluster6 — usage-restriction (event-use ban) を実 engine 経路で駆動する挙動テスト
 // (engine拡張 wave#2 cluster6, 2026-06-14)。B09034/B09034P は非 MVP のため smoke:1000 では踏めない
 // (BUG-132 教訓: smoke green は no-op 回帰のみ保証 / 新挙動は専用テストで実証) ため必須。
@@ -5,7 +7,8 @@
 // 検証 (公式テキスト + qAndA と 1対1):
 //   M3 setEventUseBan (turnState.eventUseBanned):
 //     - 手札の使用ゲート (canHandUseCard) で event のみ阻止 / キャラは阻止しない
-//     - ネクストヒント (runNextHint) で event 使用は throw / キャラは不可ではない (step1 FILE→手札は阻害なし)
+//     - ネクストヒント (runNextHint) で event 使用は FILE 変更前に拒否 / キャラは阻害しない
+//     - 能力・効果の useEventFromHand も event のみ阻止する
 //     - 【カットイン】(canCutIn) は ban の影響を受けない (qAndA: カットインは制限外)
 //     - 【ヒラメキ】(B09034 a2 handAddFromRemove) は ban 中でも event を回収できる (qAndA: ヒラメキは制限外)
 //     - ban は resetTurnFlags (ターン境界) で解除される
@@ -105,19 +108,33 @@ describe('cluster6 — event-use ban (setEventUseBan / turnState.eventUseBanned)
     expect(canHandUseCard(s2, 'self', 'TESTEV'), '相手の ban は自分に無関係').toBe(true);
   });
 
+  it('useEventFromHand effect route is rejected atomically while banned', () => {
+    const s = createEmptyGameState();
+    turnSelfMain(s);
+    s.players.self.hand = ['TESTEV'];
+    s.turnState.self.eventUseBanned = true;
+    const before = structuredClone(s);
+
+    runEffect(s, {
+      kind: 'atom', verb: 'useEventFromHand', args: { player: 'self', target: ['TESTEV'] },
+    } as never, aiCtx('B07015', 'a1'));
+
+    expect(s).toEqual(before);
+  });
+
   // ---- ネクストヒントゲート ----
   // 注: runNextHint は mutate.file.popTop が Immer current() を呼ぶため、draft (produce) 内で駆動する。
-  it('runNextHint: ban 中の event 使用は ban gate で throw / キャラは throw せず登場 (step1 は gate 対象外)', () => {
+  it('runNextHint: ban 中の event 使用は FILE 変更前に拒否 / キャラは throw せず登場', () => {
     const evBase = createEmptyGameState();
     turnSelfMain(evBase);
     evBase.players.self.hand = ['TESTEV'];
     evBase.players.self.file = [FB, FB, FB]; // postPopCount=2 ≥ level1
     evBase.turnState.self.eventUseBanned = true;
 
-    // event: ban gate で throw。メッセージで ban 由来を確認 (= step1 pop + 色 + level を通過した step2 の throw、
-    //   popTop の current() や level throw ではない) → step1/前段は阻害されていないことの裏付け。
+    const eventBefore = structuredClone(evBase);
     expect(() => produce(evBase, (d) => { runNextHint(d, 'self', 'TESTEV'); }), 'ban event NH は ban gate で throw')
       .toThrow(/event-use banned/);
+    expect(evBase).toEqual(eventBefore);
 
     // character: ban 中でも throw せず登場 (step1 FILE pop + step2 character 登場いずれも阻害なし)
     const chBase = createEmptyGameState();

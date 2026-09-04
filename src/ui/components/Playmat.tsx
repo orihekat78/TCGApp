@@ -16,6 +16,7 @@ import type { GameState } from '@/engine/types/game-state.js';
 import type { ReplayViewerMode } from '@/ai/replay/state-frame.js';
 import { SceneArea, type ResolvedCardMeta } from './SceneArea.js';
 import { isSceneDirectPick } from '@/ui/services/scenePick.js';
+import { effectSourceDisplayName } from '@/ui/services/uidNames.js';
 import { PartnerArea } from './PartnerArea.js';
 import { DeckArea } from './DeckArea.js';
 import { RemoveArea } from './RemoveArea.js';
@@ -72,7 +73,9 @@ import { useNextHintPickerStore, useNextHintPicker } from '@/ui/hooks/useNextHin
 import { useSceneSwitchPickerStore } from '../hooks/useSceneSwitchPickerStore.js';
 import { currentInteractionEpoch, isCurrentLiveInteraction } from '../services/terminalInteractionGate.js';
 import { ChoicePickerModal } from './ChoicePickerModal.js';
+import { SelectableCardTile } from './SelectableCardTile.js';
 import { useChoicePicker, useChoicePickerStore } from '../hooks/useChoicePicker.js';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap.js';
 import { DeclareCardNameModal } from './DeclareCardNameModal.js';
 import { useDeclareNamePicker, useDeclareNamePickerStore } from '../hooks/useDeclareNamePicker.js';
 import { useEvidenceFlipPickerStore, useEvidenceFlipPicker } from '../hooks/useEvidenceFlipPicker.js';
@@ -86,9 +89,11 @@ import { getHumanDecisionSide } from '@/ui/services/humanDecisionOwner.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { char as readChar } from '@/engine/read/char.js';
 import { sceneCap } from '@/engine/read/scene-cap.js'; // engine E3 P11 (2026-07-02): 現場登場上限 (既定5、case override 可)
+import { isSceneEnterSwitchPickArgs } from '@/engine/effect/scene-switch.js';
 // D08021 driver 2026-05-26: distinctNames 制約 (rules/19) を multi-pick UI で
 // 適用するため、name component 計算 helper を import。
 import { allCardNameComponentsForDef } from '@/engine/target/card-def-registry.js';
+import { declaredNameCandidates } from '@/engine/effect/declared-name-domain.js';
 import './Playmat.css';
 
 // engine の `players[side].case.colors` (日本語色名) を CaseInfo.color (英名) に変換
@@ -124,6 +129,37 @@ type CandidateProps = {
   onPartnerMRClick?: () => void;
 };
 
+type CutInDeclaredNameResult =
+  | { cancelled: true }
+  | { cancelled: false; declaredName?: string };
+
+async function collectCutInDeclaredName(
+  state: GameState,
+  actionId: string,
+  player: 'self' | 'opp',
+  cardId: string,
+): Promise<CutInDeclaredNameResult> {
+  const action = engineFlow.action._getContext(state, actionId);
+  if (!action) return { cancelled: true };
+  const spec = engineFlow.contact.cutInDeclaredNameSpec(state, action, player, cardId);
+  if (!spec) return { cancelled: false };
+  const sourceName = readDef.card(cardId)?.names?.[0] ?? cardId;
+  const interactionEpoch = currentInteractionEpoch();
+  const result = await useDeclareNamePicker().ask({
+    sourceName,
+    prompt: `${sourceName}：${spec.description}`,
+    candidateNames: declaredNameCandidates(spec.domain),
+    optional: spec.optional,
+    domain: spec.domain,
+  });
+  if (!isCurrentLiveInteraction(interactionEpoch)) return { cancelled: true };
+  if (result.kind === 'cancel') return { cancelled: true };
+  return {
+    cancelled: false,
+    ...(result.kind === 'declare' ? { declaredName: result.name } : {}),
+  };
+}
+
 type PlayerMatProps = CandidateProps & {
   side: 'self' | 'opp';
   state: GameState | null;
@@ -134,9 +170,11 @@ type PlayerMatProps = CandidateProps & {
   /** Round 4l (BUG-001): カード単体クリックで拡大 modal を開く callback */
   onExpand?: (cardId: string) => void;
   onSetInspect?: (side: 'self' | 'opp', uid: string) => void;
+  onStackInspect?: (side: 'self' | 'opp', uid: string) => void;
   /** User vision (拡張 4): scene キャラ pick mode (sceneRemove 等の effect 対象選択) */
   pickCharUids?: ReadonlySet<string>;
   onPickChar?: (uid: string) => void;
+  autoFocusPickUid?: string;
   /**
    * 2026-05-30 user_request: ネクストヒントのピッカー表示中、FILE 表示枚数を -1 して
    * 「step1 で引いた後」の実効枚数を見せる (self のみ true)。
@@ -212,12 +250,16 @@ function sceneVerbBanner(verb: string | undefined): string {
   }
 }
 
+function effectPickBanner(sourceName: string | null, instruction: string): string {
+  return sourceName ? `${sourceName}: ${instruction}` : instruction;
+}
+
 function PlayerMat({
   side, state, resolveCard, resolveCase,
   candidateUids, onUnitClick, isPartnerCandidate, onPartnerClick,
   isPartnerMRCandidate, onPartnerMRClick,
-  isCaseCandidate, onCaseClick, onAreaClick, onExpand, onSetInspect,
-  pickCharUids, onPickChar, nextHintDrawPreview = false,
+  isCaseCandidate, onCaseClick, onAreaClick, onExpand, onSetInspect, onStackInspect,
+  pickCharUids, onPickChar, autoFocusPickUid, nextHintDrawPreview = false,
   activeCardUid, activeCardLabel,
 }: PlayerMatProps & {
   isCaseCandidate?: boolean;
@@ -270,11 +312,6 @@ function PlayerMat({
           onClick={onCaseClick}
           onExpand={onExpand}
         />
-        {/* Round 3: 事件編/解決編 を 事件↔証拠 余白に独立表示 (事件カード上の case-stamp は削除済)
-            caseInfo null (ゲーム未開始時) は空 placeholder 表示 */}
-        <div className={`case-edition-tag${caseInfo?.status === '解決編' ? ' resolved' : ''}`} aria-label={`事件状態: ${caseInfo?.status ?? '未開始'}`}>
-          {caseInfo?.status ?? '未開始'}
-        </div>
         <EvidenceArea
           count={evidenceCount}
           requiredEvidence={requiredEvidence}
@@ -291,8 +328,10 @@ function PlayerMat({
           onUnitClick={onUnitClick}
           onExpand={onExpand}
           onSetInspect={(character) => onSetInspect?.(side, character.uid)}
+          onStackInspect={(character) => onStackInspect?.(side, character.uid)}
           pickCharUids={pickCharUids}
           onPickChar={onPickChar}
+          autoFocusPickUid={autoFocusPickUid}
           resolveKeywords={(uid) => (state ? readChar.keywords(state, uid) : [])}
           resolveCharStats={(uid) => (state ? { ap: readChar.ap(state, uid), lp: readChar.lp(state, uid) } : undefined)}
           activeCardUid={activeCardUid}
@@ -391,6 +430,10 @@ export function Playmat({
     if (terminalRef.current) return;
     setAreaModal({ kind: 'set', side, origin: 'browse', hostUid });
   };
+  const inspectStackedCards = (side: 'self' | 'opp', hostUid: string): void => {
+    if (terminalRef.current) return;
+    setAreaModal({ kind: 'stack', side, origin: 'browse', hostUid });
+  };
   const openCardExpand = (cardId: string): void => {
     if (!terminalRef.current) expandModal.open(cardId);
   };
@@ -409,6 +452,8 @@ export function Playmat({
   const pendingPickForArea = useGameStateStore((s) => s.pendingEffectPick);
   const pendingDeckReveal = useGameStateStore((s) => s.pendingDeckReveal);
   const pendingDeckReorder = useGameStateStore((s) => s.pendingDeckReorder);
+  const playmatSpectatorMode = useGameStateStore((s) => s.spectatorMode);
+  const humanDecisionSide = getHumanDecisionSide(playmatSpectatorMode);
   const pickerPhase = useTargetPickerStore((s) => s.phase);
   const { pick: pickTarget, confirm: confirmTarget, cancel: cancelTarget } = useTargetPicker();
   useEffect(() => {
@@ -443,7 +488,7 @@ export function Playmat({
   const activeCardUid = storeActiveCardUid ?? effectCardUid;
   const activeCardLabel = storeActiveCardUid ? storeActiveCardLabel : effectCardUid ? '効果解決' : null;
   const isDiscardPick =
-    pendingPickForArea?.player === 'self' && pendingPickForArea.atomVerb === 'discard';
+    pendingPickForArea?.player === humanDecisionSide && pendingPickForArea.atomVerb === 'discard';
   // 2026-05-28: ネクストヒント step2 pick。useNextHintPicker store に current が
   // set されている間、HandZone を expand + pick mode (FILE-top + 使用可能手札を黄色枠)。
   const nextHintPick = useNextHintPickerStore((s) => s.current);
@@ -465,14 +510,30 @@ export function Playmat({
     ? `カットイン可能 ${cutinCount}枚（パス可）— ${cutInStore.actorLabel}${cutInStore.actorName ? `（${cutInStore.actorName}）` : ''}`
     : undefined;
   const handleCutinPick = (uid: string): void => {
-    const cur = useContactModalStore.getState().cutInDisguise;
-    if (!cur) return;
-    const cardId = cardIdFromOccurrenceUid(uid);
-    if (!cardId) return;
-    useContactModalStore.getState()._setCutInDisguise(null);
-    setHandExpanded(false);
-    dispatchEngineAction({ type: 'actionContact', actionId: cur.actionId, player: cur.player, choice: { kind: 'cutin', cardId } });
-    dispatchEngineAction({ type: 'actionAdvance', actionId: cur.actionId });
+    void (async () => {
+      const cur = useContactModalStore.getState().cutInDisguise;
+      if (!cur) return;
+      const cardId = cardIdFromOccurrenceUid(uid);
+      if (!cardId) return;
+      const state = useGameStateStore.getState().gameState;
+      if (!state) return;
+      const declaration = await collectCutInDeclaredName(state, cur.actionId, cur.player, cardId);
+      if (declaration.cancelled) return;
+      if (useContactModalStore.getState().cutInDisguise?.actionId !== cur.actionId) return;
+      useContactModalStore.getState()._setCutInDisguise(null);
+      setHandExpanded(false);
+      dispatchEngineAction({
+        type: 'actionContact',
+        actionId: cur.actionId,
+        player: cur.player,
+        choice: {
+          kind: 'cutin',
+          cardId,
+          ...(declaration.declaredName === undefined ? {} : { declaredName: declaration.declaredName }),
+        },
+      });
+      dispatchEngineAction({ type: 'actionAdvance', actionId: cur.actionId });
+    })();
   };
   const handleCutinPass = (): void => {
     const cur = useContactModalStore.getState().cutInDisguise;
@@ -483,7 +544,7 @@ export function Playmat({
     dispatchEngineAction({ type: 'actionAdvance', actionId: cur.actionId });
   };
   const pickAreaKind: CardListKind | null = (() => {
-    if (!pendingPickForArea || pendingPickForArea.player !== 'self') return null;
+    if (!pendingPickForArea || pendingPickForArea.player !== humanDecisionSide) return null;
     if (pendingPickForArea.atomVerb === 'deckRevealUntil') return 'deck';
     if (pendingPickForArea.atomVerb === 'evidenceToHand') return 'evidence';
     if (pendingPickForArea.atomVerb === 'handAddFromRemove') {
@@ -574,9 +635,10 @@ export function Playmat({
   const declaredSourceNeedsModal = declaredSourcePick.some((candidate) => candidate.areaLabel === 'Evidence' || candidate.areaLabel === 'FILE');
   const pickModalKind: CardListKind | null = pickAreaKind ?? (declaredSourceNeedsModal ? 'selection' : null);
   const pickModalSide: 'self' | 'opp' = (() => {
-    if (pickAreaKind !== 'partner-area') return 'self';
     const players = [...new Set((pendingPickForArea?.candidates ?? []).map((candidate) => candidate.player))];
-    return players.length === 1 ? players[0]! : 'self';
+    if (players.length === 1) return players[0]!;
+    if (pickAreaKind === 'deck' && pendingDeckReveal) return pendingDeckReveal.player;
+    return pendingPickForArea?.player ?? humanDecisionSide ?? 'self';
   })();
   useEffect(() => {
     if (pickModalKind === null) return;
@@ -616,7 +678,7 @@ export function Playmat({
     if (isCutinPick) setHandExpanded(true);
   }, [isCutinPick]);
   const isHandSceneEnterPick = (() => {
-    if (pendingPickForArea?.player !== 'self' || pendingPickForArea.atomVerb !== 'sceneEnter') return false;
+    if (pendingPickForArea?.player !== humanDecisionSide || pendingPickForArea.atomVerb !== 'sceneEnter') return false;
     const args = pendingPickForArea.atomArgs as { target?: { query?: { area?: string } } };
     return args.target?.query?.area === 'hand';
   })();
@@ -627,6 +689,9 @@ export function Playmat({
   // verb 白名簿 (旧: sceneRemove/charModifyAP) ではなく候補ベース述語 isSceneDirectPick を
   // EffectPickerModal と **共有** し、sceneSetState/charGrantKeyword/charSetCard/charSetTurnEffect/sceneToHand
   // + 将来 verb を自動被覆 (n.max>1 や非scene混在は false → EffectPickerModal フォールバック)。
+  const pendingPickSourceName = pendingPickForArea
+    ? effectSourceDisplayName(pendingPickForArea.source, { gameState })
+    : null;
   const isScenePick = isSceneDirectPick(pendingPickForArea, gameState);
   // W2b (P50/r27): mustBeSelectedByOppEvent forced 集合 — forced が居る pick では
   // forced 以外を click 不可化し (「必ず選ぶ」)、skip (選ばない) も封じる。
@@ -664,14 +729,15 @@ export function Playmat({
       { type: 'effectPickResolve', pickedUid: uid },
     ));
   } : undefined;
-  // rules/20 §スイッチ: switch victim (常に self 現場) も現場直接クリックで収集 (旧 SceneSwitchPickerModal 廃止)。
-  // useSceneSwitchPickerStore.current が active な間、self 現場の候補を effect-pickable 化し
+  // rules/20 §スイッチ: switch victim を対象 player の現場から直接クリックで収集 (旧 SceneSwitchPickerModal 廃止)。
+  // useSceneSwitchPickerStore.current が active な間、対象現場の候補を effect-pickable 化し
   // click で resolve+close。辞退 (キャンセル) = resolve(null)。effect-pick とは構造的に排他
   // (switch 中は pending=null or sceneEnter で isScenePick=false)。
   const switchPicker = useSceneSwitchPickerStore((s) => s.current);
   const switchActive = switchPicker !== null;
   const switchVictimBlocked = useGameStateStore(selectSwitchVictimBlocked);
-  const switchVictimUidsSelf = new Set<string>(switchPicker?.candidates.map((c) => c.uid) ?? []);
+  const switchPlayer = switchPicker?.player;
+  const switchVictimUids = new Set<string>(switchPicker?.candidates.map((c) => c.uid) ?? []);
   const handleSwitchVictim = (uid: string): void => {
     if (selectSwitchVictimBlocked(useGameStateStore.getState())) return;
     const c = useSceneSwitchPickerStore.getState().current;
@@ -680,6 +746,7 @@ export function Playmat({
     c.resolve(uid);
   };
   const handleSwitchCancel = (): void => {
+    if (selectSwitchVictimBlocked(useGameStateStore.getState())) return;
     const c = useSceneSwitchPickerStore.getState().current;
     if (!c) return;
     useSceneSwitchPickerStore.getState()._close();
@@ -689,6 +756,7 @@ export function Playmat({
     if (replayReadOnly || !switchActive) return;
     const onKeyDown = (event: KeyboardEvent): void => {
       if (event.key !== 'Escape') return;
+      if (selectSwitchVictimBlocked(useGameStateStore.getState())) return;
       event.preventDefault();
       const current = useSceneSwitchPickerStore.getState().current;
       if (!current) return;
@@ -698,12 +766,14 @@ export function Playmat({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [replayReadOnly, switchActive]);
-  // MUX (設計 v2): self/opp 現場の pick prop は switch 中なら switch victim を優先 (victim は常に self)。
+  // MUX (設計 v2): self/opp 現場の pick prop は switch 中なら対象 side の switch victim を優先。
   const switchPickEnabled = switchActive && !switchVictimBlocked;
-  const selfScenePickUids = switchPickEnabled ? switchVictimUidsSelf : switchActive ? EMPTY_UID_SET : scenePickUidsSelf;
-  const oppScenePickUids = switchActive ? EMPTY_UID_SET : scenePickUidsOpp;
-  const selfOnPickChar = switchPickEnabled ? handleSwitchVictim : switchActive ? undefined : handleScenePick;
-  const oppOnPickChar = switchActive ? undefined : handleScenePick;
+  const selfSwitchEnabled = switchPickEnabled && switchPlayer === 'self';
+  const oppSwitchEnabled = switchPickEnabled && switchPlayer === 'opp';
+  const selfScenePickUids = selfSwitchEnabled ? switchVictimUids : switchActive ? EMPTY_UID_SET : scenePickUidsSelf;
+  const oppScenePickUids = oppSwitchEnabled ? switchVictimUids : switchActive ? EMPTY_UID_SET : scenePickUidsOpp;
+  const selfOnPickChar = selfSwitchEnabled ? handleSwitchVictim : switchActive ? undefined : handleScenePick;
+  const oppOnPickChar = oppSwitchEnabled ? handleSwitchVictim : switchActive ? undefined : handleScenePick;
 
   // switch-on-effect-enter (rules/20 §スイッチ): リムーブ等からの効果登場 (sceneEnter) で現場が満杯
   // (5枚) のとき、reanimate 対象を選んだ後に SceneSwitchPickerModal で退場キャラを収集してから resolve。
@@ -720,9 +790,16 @@ export function Playmat({
       ? currentPending === pend
       : currentPending?.decisionId === pend.decisionId;
     if (!isCurrent) return;
-    if (pend && pend.atomVerb === 'sceneEnter' && gs && gs.players[pend.player].scene.length >= sceneCap(gs, pend.player)) {
+    const switchPlayer = isSceneEnterSwitchPickArgs(pend.atomArgs)
+      ? undefined
+      : pend.atomVerb === 'sceneEnter'
+        ? pend.player
+        : pend.sceneEnterSwitchPlayer === pend.player
+          ? pend.sceneEnterSwitchPlayer
+          : undefined;
+    if (switchPlayer && gs && gs.players[switchPlayer].scene.length >= sceneCap(gs, switchPlayer)) {
       const reanimateCardId = pend.candidates.find((c) => c.uid === uid)?.cardId ?? '';
-      const sceneChars = gs.players[pend.player].scene.map((c) => ({
+      const sceneChars = gs.players[switchPlayer].scene.map((c) => ({
         uid: c.uid,
         cardId: c.cardId,
         name: readDef.card(c.cardId)?.names?.[0] ?? c.cardId,
@@ -735,7 +812,7 @@ export function Playmat({
       setSwitchSessionActive(true);
       const interactionEpoch = currentInteractionEpoch();
       const removeUid = await new Promise<string | null>((resolve) => {
-        useSceneSwitchPickerStore.getState()._open({ cardId: reanimateCardId, newCardName, candidates: sceneChars, resolve });
+        useSceneSwitchPickerStore.getState()._open({ player: switchPlayer, cardId: reanimateCardId, newCardName, candidates: sceneChars, resolve });
       });
       if (!isCurrentLiveInteraction(interactionEpoch)) {
         setSwitchSessionActive(false);
@@ -1052,8 +1129,12 @@ export function Playmat({
             onAreaClick={replayReadOnly || terminal ? undefined : handleAreaClick}
             onExpand={replayReadOnly || terminal ? undefined : openCardExpand}
             onSetInspect={replayReadOnly || terminal ? undefined : inspectSetCards}
+            onStackInspect={terminal ? undefined : inspectStackedCards}
             pickCharUids={replayReadOnly ? EMPTY_UID_SET : oppScenePickUids}
             onPickChar={replayReadOnly ? undefined : oppOnPickChar}
+            autoFocusPickUid={replayReadOnly || switchPlayer !== 'opp'
+              ? undefined
+              : switchPicker?.candidates[0]?.uid}
             activeCardUid={activeCardUid}
             activeCardLabel={activeCardLabel}
           />
@@ -1078,8 +1159,12 @@ export function Playmat({
             onAreaClick={replayReadOnly || terminal ? undefined : handleAreaClick}
             onExpand={replayReadOnly || terminal ? undefined : openCardExpand}
             onSetInspect={replayReadOnly || terminal ? undefined : inspectSetCards}
+            onStackInspect={terminal ? undefined : inspectStackedCards}
             pickCharUids={replayReadOnly ? EMPTY_UID_SET : selfScenePickUids}
             onPickChar={replayReadOnly ? undefined : selfOnPickChar}
+            autoFocusPickUid={replayReadOnly || switchPlayer !== 'self'
+              ? undefined
+              : switchPicker?.candidates[0]?.uid}
             // 2026-05-30: ネクストヒント中は FILE 表示を引いた後の枚数 (-1) にして誤解を防ぐ
             nextHintDrawPreview={replayReadOnly ? false : isNextHintPick}
             activeCardUid={activeCardUid}
@@ -1116,11 +1201,16 @@ export function Playmat({
             isCutinPick
               ? cutinBannerText
               : isHandSceneEnterPick
-              ? pendingPickForArea?.candidates.length === 0
-                ? '登場できる対象はありません（「登場しない」を選択）'
-                : '手札から条件を満たすキャラを1枚まで登場させてください'
+              ? effectPickBanner(
+                  pendingPickSourceName,
+                  pendingPickForArea?.candidates.length === 0
+                    ? '登場できる対象はありません（「登場しない」を選択）'
+                    : '手札から条件を満たすキャラを1枚まで登場させてください',
+                )
               : isNextHintPick
               ? `使うカードを選択（黄枠 / レベル${nextHintPick!.postPopCount}以下）`
+              : isDiscardPick
+              ? effectPickBanner(pendingPickSourceName, '手札からリムーブするカードを選んでください')
               : undefined
           }
           pickSkipLabel={isCutinPick ? 'パス' : isHandSceneEnterPick ? '登場しない' : isNextHintPick ? '使用しない' : undefined}
@@ -1191,7 +1281,7 @@ export function Playmat({
         {/* Round 2: FILE/証拠/リムーブ クリック → 内容確認モーダル
             証拠 / FILE は engine 上裏向きなので faceDownCount で枚数のみ表示。
             リムーブは表向きなので cards (cardId[]) で実カード表示。 */}
-        {!replayReadOnly && !terminal && areaModal && gameState && pendingDeckReorder === null && (() => {
+        {!terminal && areaModal && gameState && pendingDeckReorder === null && (() => {
           const player = gameState.players[areaModal.side];
           // Round 3: FILE 内アシスト中パートナーのみ表向き表示 (ユーザ指示)
           //   - file の中身を 「assisted-partner cards (表向き)」 と 「card-back count (裏向き)」 に分割
@@ -1200,7 +1290,16 @@ export function Playmat({
           let faceDownCount = 0;
           // BUG-085: 証拠は faceUp が混在し得る。表向きは公開表示する。
           let faceUpEvidence: { index: number; cardId: string; faceState?: '表向き' | '裏向き' }[] | undefined;
-          if (areaModal.kind === 'set') {
+          if (areaModal.kind === 'stack') {
+            const host = player.scene.find((character) => character.uid === areaModal.hostUid);
+            if (Array.isArray(host?.stackedCards)) {
+              const known = host.stackedCards.filter(entry => entry.cardId !== 'back-card' && entry.cardId !== 'card-back');
+              cards = known.map(entry => entry.cardId);
+              faceDownCount = host.stackedCards.length - known.length;
+            } else {
+              faceDownCount = typeof host?.stackedCards === 'number' ? host.stackedCards : 0;
+            }
+          } else if (areaModal.kind === 'set') {
             const host = player.scene.find((character) => character.uid === areaModal.hostUid);
             const setCards = host?.setCards ?? [];
             faceDownCount = setCards.length;
@@ -1247,7 +1346,7 @@ export function Playmat({
           // User vision: pending pick が当該 area なら pick mode で開く
           const isPickModeForThisArea =
             (declaredSourcePick.length > 0 && areaModal.kind === 'selection' && areaModal.origin === 'pick') ||
-            (pendingPickForArea?.player === 'self' &&
+            (pendingPickForArea?.player === humanDecisionSide &&
             ((pendingPickForArea.atomVerb === 'evidenceToHand' && areaModal.kind === 'evidence') ||
               (pendingPickForArea.atomVerb === 'handAddFromRemove' && areaModal.kind === pickAreaKind) ||
               (pendingPickForArea.atomVerb === 'deckRevealUntil' && areaModal.kind === 'deck') ||
@@ -1288,20 +1387,30 @@ export function Playmat({
               pickSessionKey={isPickModeForThisArea ? (declaredSourcePick.length > 0 ? pickerPhase : pendingPickForArea) : undefined}
               pickBannerText={
                 isPickModeForThisArea && pendingPickForArea?.atomVerb === 'deckRevealUntil'
-                  ? pendingPickForArea.candidates.length === 0
-                    ? '公開した3枚に対象カードはありません（「選ばない」を選択）'
-                    : '公開されたカードをすべて確認し、黄色枠の対象を1枚まで選んでください'
+                  ? effectPickBanner(
+                      pendingPickSourceName,
+                      pendingPickForArea.candidates.length === 0
+                        ? '公開した3枚に対象カードはありません（「選ばない」を選択）'
+                        : '公開されたカードをすべて確認し、黄色枠の対象を1枚まで選んでください',
+                    )
                   : isPickModeForThisArea && pendingPickForArea?.atomVerb === 'sceneEnter'
-                  ? (areaModal.kind === 'deck'
-                      // S2 B01022: deck-window 用文言 (公開カードから登場。「〜まで」= 0枚可 rules/15)
-                      ? `公開されたカードから${(pendingPickForArea.nMax ?? 1) > 1 ? `${pendingPickForArea.nMax}枚まで` : '1枚'}選んで現場に登場させてください`
-                      : (pendingPickForArea.nMax ?? 1) > 1
-                      ? `リムーブから${pendingPickForArea.nMax}枚まで選んで現場に登場させてください`
-                      : 'リムーブから1枚選んで現場に登場させてください')
+                  ? effectPickBanner(
+                      pendingPickSourceName,
+                      areaModal.kind === 'deck'
+                        // S2 B01022: deck-window 用文言 (公開カードから登場。「〜まで」= 0枚可 rules/15)
+                        ? `公開されたカードから${(pendingPickForArea.nMax ?? 1) > 1 ? `${pendingPickForArea.nMax}枚まで` : '1枚'}選んで現場に登場させてください`
+                        : (pendingPickForArea.nMax ?? 1) > 1
+                        ? `リムーブから${pendingPickForArea.nMax}枚まで選んで現場に登場させてください`
+                        : 'リムーブから1枚選んで現場に登場させてください',
+                    )
                   : isPickModeForThisArea && pendingPickForArea?.atomVerb === 'charStackCard'
-                  ? `リムーブから${pendingPickForArea.nMax}枚まで選んでこのキャラの下に重ねてください`
+                  ? effectPickBanner(pendingPickSourceName, `リムーブから${pendingPickForArea.nMax}枚まで選んでこのキャラの下に重ねてください`)
                   : isPickModeForThisArea && pendingPickForArea?.atomVerb === 'partnerAreaRemove'
-                  ? `パートナーエリアから${pendingPickForArea.nMax}枚選んでリムーブしてください`
+                  ? effectPickBanner(pendingPickSourceName, `パートナーエリアから${pendingPickForArea.nMax}枚選んでリムーブしてください`)
+                  : isPickModeForThisArea && pendingPickForArea?.atomVerb === 'evidenceToHand'
+                  ? effectPickBanner(pendingPickSourceName, '証拠から1枚選んで手札に加えてください')
+                  : isPickModeForThisArea && pendingPickForArea?.atomVerb === 'handAddFromRemove'
+                  ? effectPickBanner(pendingPickSourceName, '公開エリアから1枚選んで手札に加えてください')
                   : undefined
               }
               onPick={isPickModeForThisArea ? (uid) => {
@@ -1362,6 +1471,7 @@ export function Playmat({
                         .map((c) => ({ uid: c.uid, cardId: c.cardId, name: readDef.card(c.cardId)?.names?.[0] ?? c.cardId, state: c.state, isNamed: c.isNamed }));
                       const v = await new Promise<string | null>((resolve) => {
                         useSceneSwitchPickerStore.getState()._open({
+                          player: pendE.player,
                           cardId: '', newCardName: `登場${uids.length}枚 — 退場 ${i + 1}/${overflow}`, candidates: sceneChars, resolve,
                         });
                       });
@@ -1419,13 +1529,14 @@ export function Playmat({
           );
         })()}
         {/* Round 4l (BUG-001): カード拡大表示 modal */}
-        {!replayReadOnly && !terminal && <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />}
+        {!terminal && <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />}
         {/* User vision (拡張 5 chain): SceneArea pick mode で skip 可能 (max:N) の場合
             scene キャラを click せず「リムーブしない」できるよう overlay ボタン表示 */}
         {!replayReadOnly && isScenePick && (
           <div className="scene-pick-skip-overlay" role="status">
             {/* banner は verb 別 (画面処理=カードテキスト文言、設計 v2)。新規5verb は全て nMin=0 → 常時表示 */}
             <span className="scene-pick-skip-banner">
+              {pendingPickSourceName ? `${pendingPickSourceName}: ` : ''}
               {sceneVerbBanner(pendingPickForArea?.atomVerb)}
             </span>
             {(pendingPickForArea?.nMin ?? 1) === 0 && scenePickForced.length === 0 && (
@@ -1455,8 +1566,9 @@ export function Playmat({
             </span>
             <button
               type="button"
-              className="scene-pick-skip-btn"
+              className="scene-pick-skip-btn switch-victim-cancel"
               onClick={handleSwitchCancel}
+              disabled={switchVictimBlocked}
               data-testid="switch-victim-cancel"
             >
               キャンセル
@@ -1522,6 +1634,7 @@ function PlaymatGuardPickerModal(): JSX.Element | null {
 function PlaymatHiramekiPickerModal(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingHirameki);
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
+  const switchPicker = useSceneSwitchPickerStore((s) => s.current);
   const humanPlayer = getHumanDecisionSide(spectatorMode);
   if (!pending || pending.player !== humanPlayer) {
     return (
@@ -1535,6 +1648,52 @@ function PlaymatHiramekiPickerModal(): JSX.Element | null {
       />
     );
   }
+  const fire = async (): Promise<void> => {
+    const store = useGameStateStore.getState();
+    const currentPending = store.pendingHirameki;
+    const state = store.gameState;
+    const isCurrent = pending.decisionId === undefined
+      ? currentPending === pending
+      : currentPending?.decisionId === pending.decisionId;
+    if (!state || !currentPending || !isCurrent) return;
+
+    const requirement = engineFlow.actionCase.readHiramekiSceneSwitchRequirement(state, currentPending);
+    if (!requirement) {
+      dispatchEngineAction(bindPendingDecision(
+        currentPending,
+        { type: 'hiramekiResolve', choice: 'fire' },
+      ));
+      return;
+    }
+
+    const interactionEpoch = currentInteractionEpoch();
+    const removeUid = await new Promise<string | null>((resolve) => {
+      useSceneSwitchPickerStore.getState()._open({
+        player: requirement.player,
+        cardId: requirement.cardId,
+        newCardName: readDef.card(requirement.cardId)?.names?.[0] ?? requirement.cardId,
+        candidates: requirement.candidates.map(card => ({
+          uid: card.uid,
+          cardId: card.cardId,
+          name: readDef.card(card.cardId)?.names?.[0] ?? card.cardId,
+          state: card.state,
+          isNamed: card.isNamed,
+        })),
+        resolve,
+      });
+    });
+    if (!isCurrentLiveInteraction(interactionEpoch) || removeUid === null) return;
+
+    const latestPending = useGameStateStore.getState().pendingHirameki;
+    const isStillCurrent = currentPending.decisionId === undefined
+      ? latestPending === currentPending
+      : latestPending?.decisionId === currentPending.decisionId;
+    if (!latestPending || !isStillCurrent) return;
+    dispatchEngineAction(bindPendingDecision(
+      latestPending,
+      { type: 'hiramekiResolve', choice: 'fire', switchRemoveUid: removeUid },
+    ));
+  };
   const def = readDef.card(pending.cardId);
   const cardName = def?.names?.[0] ?? pending.cardId;
   const ability = def?.abilities.find(
@@ -1543,14 +1702,11 @@ function PlaymatHiramekiPickerModal(): JSX.Element | null {
   const abilityText = ability?.description ?? 'ヒラメキ能力';
   return (
     <HiramekiPickerModal
-      open={true}
+      open={switchPicker === null}
       cardId={pending.cardId}
       cardName={cardName}
       abilityText={abilityText}
-      onFire={() => dispatchEngineAction(bindPendingDecision(
-        pending,
-        { type: 'hiramekiResolve', choice: 'fire' },
-      ))}
+      onFire={() => { void fire(); }}
       onSkip={() => dispatchEngineAction(bindPendingDecision(
         pending,
         { type: 'hiramekiResolve', choice: 'skip' },
@@ -1622,10 +1778,15 @@ function PlaymatMisreadPickerModal(): JSX.Element | null {
 function PlaymatCutInDisguisePickerModal(): JSX.Element | null {
   const current = useContactModalStore((s) => s.cutInDisguise);
   const gameState = useGameStateStore((s) => s.gameState);
+  const declaredNameRequest = useDeclareNamePickerStore((s) => s.current);
+  const restoreCutInFocusRef = useRef<{ actionId: string; occurrenceUid: string } | null>(null);
+  useEffect(() => {
+    if (current === null) restoreCutInFocusRef.current = null;
+  }, [current]);
   // 変装候補があるときだけ modal を出す。cutin のみ (MVP は常にこちら) は Playmat の
   // HandZone pick mode (黄色枠) で処理するため modal は閉じたまま。
   const hasDisguise = (current?.candidates ?? []).some((c) => c.kind === 'disguise');
-  if (!current || !hasDisguise) {
+  if (!current || !hasDisguise || declaredNameRequest !== null) {
     return (
       <CutInDisguisePickerModal
         open={false}
@@ -1652,17 +1813,41 @@ function PlaymatCutInDisguisePickerModal(): JSX.Element | null {
       actorName={current.actorName}
       candidates={current.candidates}
       handCards={handCards}
-      onPickCutIn={(cardId) => {
-        close();
-        dispatchEngineAction({
-          type: 'actionContact',
-          actionId: current.actionId,
-          player: current.player,
-          choice: { kind: 'cutin', cardId },
-        });
-        dispatchAdvance();
+      initialFocusOccurrenceUid={
+        restoreCutInFocusRef.current?.actionId === current.actionId
+          ? restoreCutInFocusRef.current.occurrenceUid
+          : undefined
+      }
+      onPickCutIn={(cardId, occurrenceUid) => {
+        restoreCutInFocusRef.current = { actionId: current.actionId, occurrenceUid };
+        void (async () => {
+          if (!gameState) return;
+          const declaration = await collectCutInDeclaredName(
+            gameState,
+            current.actionId,
+            current.player,
+            cardId,
+          );
+          if (declaration.cancelled) return;
+          if (useContactModalStore.getState().cutInDisguise?.actionId !== current.actionId) return;
+          close();
+          dispatchEngineAction({
+            type: 'actionContact',
+            actionId: current.actionId,
+            player: current.player,
+            choice: {
+              kind: 'cutin',
+              cardId,
+              ...(declaration.declaredName === undefined
+                ? {}
+                : { declaredName: declaration.declaredName }),
+            },
+          });
+          dispatchAdvance();
+        })();
       }}
       onPickDisguise={(cardId) => {
+        restoreCutInFocusRef.current = null;
         close();
         dispatchEngineAction({
           type: 'actionContact',
@@ -1673,6 +1858,7 @@ function PlaymatCutInDisguisePickerModal(): JSX.Element | null {
         dispatchAdvance();
       }}
       onPass={() => {
+        restoreCutInFocusRef.current = null;
         close();
         dispatchEngineAction({
           type: 'actionContact',
@@ -1807,6 +1993,9 @@ function PlaymatHandCostPickerModal(): JSX.Element | null {
   const expandModal = useCardExpandModal();
   const current = useHandCostPickerStore((s) => s.current);
   if (!current) return null;
+  const nMax = current.nMax ?? current.n;
+  const actionLabel = current.action === 'reveal' ? '公開する' : 'リムーブする';
+  const countLabel = current.n === nMax ? `${current.n}枚` : `${current.n}〜${nMax}枚`;
   const pickCands = current.candidates.map((candidate) => ({
     uid: `hand:${current.side}:${candidate.index}`,
     cardId: candidate.cardId,
@@ -1826,13 +2015,13 @@ function PlaymatHandCostPickerModal(): JSX.Element | null {
         onExpand={expandModal.open}
         pickCands={pickCands}
         pickSessionKey={current}
-        pickBannerText={`${current.sourceName}: リムーブする手札を${current.n}枚選んでください`}
+        pickBannerText={`${current.sourceName}: ${actionLabel}手札を${countLabel}選んでください`}
         onPick={(uid) => {
           const index = parseIndex(uid);
           if (index !== null) useHandCostPicker().confirm([index]);
         }}
         pickNMin={current.n}
-        pickNMax={current.n}
+        pickNMax={nMax}
         onPickMulti={(uids) => {
           const indices = uids.map(parseIndex).filter((index): index is number => index !== null);
           useHandCostPicker().confirm(indices);
@@ -1844,30 +2033,92 @@ function PlaymatHandCostPickerModal(): JSX.Element | null {
 }
 
 function PlaymatStackedCardCostPickerModal(): JSX.Element | null {
-  const expandModal = useCardExpandModal();
   const current = useStackedCardCostPickerStore((s) => s.current);
   if (!current) return null;
-  const pickCands = current.candidates.map((candidate) => ({
-    uid: candidate.instanceId,
-    cardId: candidate.cardId,
-    player: 'self' as const,
-  }));
+  const sessionKey = current.candidates.map((candidate) => candidate.instanceId).join('\u0000');
+  return <PlaymatStackedCardCostPickerDialog key={sessionKey} request={current} />;
+}
+
+function PlaymatStackedCardCostPickerDialog({
+  request,
+}: {
+  request: NonNullable<ReturnType<typeof useStackedCardCostPicker>['current']>;
+}): JSX.Element {
+  const expandModal = useCardExpandModal();
+  const [selected, setSelected] = useState<string[]>([]);
+  const dialogRef = useModalFocusTrap({
+    active: true,
+    onEscape: () => useStackedCardCostPicker().cancel(),
+  });
+  const canConfirm = selected.length >= request.nMin && selected.length <= request.nMax;
+
+  const select = (instanceId: string): void => {
+    setSelected((previous) => previous.includes(instanceId)
+      ? previous.filter((id) => id !== instanceId)
+      : request.nMax === 1
+        ? [instanceId]
+        : previous.length < request.nMax ? [...previous, instanceId] : previous);
+  };
+
   return (
     <>
-    <CardListModal
-      kind="remove"
-      side="self"
-      cards={current.candidates.map((candidate) => candidate.cardId)}
-      onClose={() => useStackedCardCostPicker().cancel()}
-      onExpand={expandModal.open}
-      pickCands={pickCands}
-      pickSessionKey={current}
-      pickBannerText={`${current.sourceName}: このキャラの下のカードを${current.nMin}枚選んでください`}
-      onPick={(instanceId) => useStackedCardCostPicker().confirm([instanceId])}
-      pickNMin={current.nMin}
-      pickNMax={current.nMax}
-      onPickMulti={(instanceIds) => useStackedCardCostPicker().confirm(instanceIds)}
-    />
+    <div
+      ref={dialogRef}
+      className="cp-overlay"
+      role="dialog"
+      data-match-modal-registered="true"
+      aria-modal="true"
+      aria-labelledby="stacked-card-cost-title"
+      data-testid="stacked-card-cost-modal"
+    >
+      <div className="cp-modal">
+        <div className="cp-header">
+          <h2 id="stacked-card-cost-title">重ねたカード</h2>
+          <p className="cp-sub">{`${request.sourceName}: 下のカードを${request.nMin}枚選んでください`}</p>
+        </div>
+        <div className="cp-body">
+          <ul className="cp-list">
+            {request.candidates.map((candidate) => (
+              <li
+                key={candidate.instanceId}
+                className={`cp-choice-row${selected.includes(candidate.instanceId) ? ' cp-choice-row--selected' : ''}`}
+              >
+                <SelectableCardTile
+                  cardId={candidate.cardId}
+                  instanceId={candidate.instanceId}
+                  hidden={candidate.hidden === true}
+                  hiddenLabel={`${request.sourceName}の下のカード ${candidate.ordinal}`}
+                  occurrenceLabel={`${candidate.ordinal}枚目`}
+                  selectTestId={`card-list-pick-${candidate.instanceId}`}
+                  selected={selected.includes(candidate.instanceId)}
+                  onSelect={select}
+                  onExpand={candidate.hidden === true ? undefined : expandModal.open}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="cp-actions">
+          <button
+            type="button"
+            className="cp-btn cp-btn-cancel"
+            data-testid="stacked-card-cost-cancel"
+            onClick={() => useStackedCardCostPicker().cancel()}
+          >
+            キャンセル
+          </button>
+          <button
+            type="button"
+            className="cp-btn"
+            data-testid="card-list-pick-confirm"
+            disabled={!canConfirm}
+            onClick={() => useStackedCardCostPicker().confirm(selected)}
+          >
+            {`確定 (${selected.length})`}
+          </button>
+        </div>
+      </div>
+    </div>
     <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
     </>
   );

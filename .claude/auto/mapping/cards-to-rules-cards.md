@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `c0f3a719a794`
+> Source hash: `667f65a1c1a4`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **2234** ファイル（[全体 index](./index.md)）
+このグループ: **2235** ファイル（[全体 index](./index.md)）
 
 ## cards/_shared (12)
 
@@ -481,7 +481,7 @@
 | [`src/cards/ct-p02/B02028.ts`](../../../src/cards/ct-p02/B02028.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
 | [`src/cards/ct-p02/B02029.ts`](../../../src/cards/ct-p02/B02029.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
 | [`src/cards/ct-p02/B02029P.ts`](../../../src/cards/ct-p02/B02029P.ts) | _(参照なし)_ |
-| [`src/cards/ct-p02/B02030.ts`](../../../src/cards/ct-p02/B02030.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`16-card-set.md`](../../rules/16-card-set.md) / [`17-icons.md`](../../rules/17-icons.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
+| [`src/cards/ct-p02/B02030.ts`](../../../src/cards/ct-p02/B02030.ts) | [`08-contact.md`](../../rules/08-contact.md) / [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`16-card-set.md`](../../rules/16-card-set.md) / [`17-icons.md`](../../rules/17-icons.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/cards/ct-p02/B02031.ts`](../../../src/cards/ct-p02/B02031.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`16-card-set.md`](../../rules/16-card-set.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
 | [`src/cards/ct-p02/B02031P.ts`](../../../src/cards/ct-p02/B02031P.ts) | _(参照なし)_ |
 | [`src/cards/ct-p02/B02032.ts`](../../../src/cards/ct-p02/B02032.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
@@ -1028,7 +1028,7 @@
 | [`src/cards/ct-p05/B05060.ts`](../../../src/cards/ct-p05/B05060.ts) | [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/cards/ct-p05/B05061.ts`](../../../src/cards/ct-p05/B05061.ts) | [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) / [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/cards/ct-p05/B05061P.ts`](../../../src/cards/ct-p05/B05061P.ts) | _(参照なし)_ |
-| [`src/cards/ct-p05/B05062.ts`](../../../src/cards/ct-p05/B05062.ts) | _(参照なし)_ |
+| [`src/cards/ct-p05/B05062.ts`](../../../src/cards/ct-p05/B05062.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
 | [`src/cards/ct-p05/B05063.ts`](../../../src/cards/ct-p05/B05063.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) |
 | [`src/cards/ct-p05/B05063P.ts`](../../../src/cards/ct-p05/B05063P.ts) | _(参照なし)_ |
 | [`src/cards/ct-p05/B05064.ts`](../../../src/cards/ct-p05/B05064.ts) | _(参照なし)_ |
@@ -1166,7 +1166,7 @@
 | [`src/cards/ct-p06/B06024.ts`](../../../src/cards/ct-p06/B06024.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
 | [`src/cards/ct-p06/B06025.ts`](../../../src/cards/ct-p06/B06025.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/cards/ct-p06/B06026.ts`](../../../src/cards/ct-p06/B06026.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`03-field-areas.md`](../../rules/03-field-areas.md) / [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`17-icons.md`](../../rules/17-icons.md) |
-| [`src/cards/ct-p06/B06027.ts`](../../../src/cards/ct-p06/B06027.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
+| [`src/cards/ct-p06/B06027.ts`](../../../src/cards/ct-p06/B06027.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
 | [`src/cards/ct-p06/B06028.ts`](../../../src/cards/ct-p06/B06028.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/cards/ct-p06/B06028P.ts`](../../../src/cards/ct-p06/B06028P.ts) | _(参照なし)_ |
 | [`src/cards/ct-p06/B06029.ts`](../../../src/cards/ct-p06/B06029.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`06-card-types.md`](../../rules/06-card-types.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
@@ -1204,7 +1204,7 @@
 | [`src/cards/ct-p06/B06045P.ts`](../../../src/cards/ct-p06/B06045P.ts) | _(参照なし)_ |
 | [`src/cards/ct-p06/B06046.ts`](../../../src/cards/ct-p06/B06046.ts) | _(参照なし)_ |
 | [`src/cards/ct-p06/B06046P.ts`](../../../src/cards/ct-p06/B06046P.ts) | _(参照なし)_ |
-| [`src/cards/ct-p06/B06047.ts`](../../../src/cards/ct-p06/B06047.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`16-card-set.md`](../../rules/16-card-set.md) / [`17-icons.md`](../../rules/17-icons.md) |
+| [`src/cards/ct-p06/B06047.ts`](../../../src/cards/ct-p06/B06047.ts) | [`12-next-hint.md`](../../rules/12-next-hint.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`16-card-set.md`](../../rules/16-card-set.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 | [`src/cards/ct-p06/B06048.ts`](../../../src/cards/ct-p06/B06048.ts) | [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/cards/ct-p06/B06048P.ts`](../../../src/cards/ct-p06/B06048P.ts) | [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/cards/ct-p06/B06049.ts`](../../../src/cards/ct-p06/B06049.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`07-action-flow.md`](../../rules/07-action-flow.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
@@ -1464,8 +1464,8 @@
 | [`src/cards/ct-p07/B07091P.ts`](../../../src/cards/ct-p07/B07091P.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/cards/ct-p07/B07092.ts`](../../../src/cards/ct-p07/B07092.ts) | _(参照なし)_ |
 | [`src/cards/ct-p07/B07092P.ts`](../../../src/cards/ct-p07/B07092P.ts) | _(参照なし)_ |
-| [`src/cards/ct-p07/B07093.ts`](../../../src/cards/ct-p07/B07093.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`18-mr.md`](../../rules/18-mr.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
-| [`src/cards/ct-p07/B07093P.ts`](../../../src/cards/ct-p07/B07093P.ts) | _(参照なし)_ |
+| [`src/cards/ct-p07/B07093.ts`](../../../src/cards/ct-p07/B07093.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`18-mr.md`](../../rules/18-mr.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) |
+| [`src/cards/ct-p07/B07093P.ts`](../../../src/cards/ct-p07/B07093P.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`18-mr.md`](../../rules/18-mr.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) |
 | [`src/cards/ct-p07/B07094.ts`](../../../src/cards/ct-p07/B07094.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 | [`src/cards/ct-p07/B07094P.ts`](../../../src/cards/ct-p07/B07094P.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 | [`src/cards/ct-p07/B07095.ts`](../../../src/cards/ct-p07/B07095.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
@@ -1639,7 +1639,7 @@
 | [`src/cards/ct-p09/B09005.ts`](../../../src/cards/ct-p09/B09005.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/cards/ct-p09/B09006.ts`](../../../src/cards/ct-p09/B09006.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/cards/ct-p09/B09006P.ts`](../../../src/cards/ct-p09/B09006P.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
-| [`src/cards/ct-p09/B09007.ts`](../../../src/cards/ct-p09/B09007.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
+| [`src/cards/ct-p09/B09007.ts`](../../../src/cards/ct-p09/B09007.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
 | [`src/cards/ct-p09/B09007P.ts`](../../../src/cards/ct-p09/B09007P.ts) | _(参照なし)_ |
 | [`src/cards/ct-p09/B09008.ts`](../../../src/cards/ct-p09/B09008.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`16-card-set.md`](../../rules/16-card-set.md) / [`17-icons.md`](../../rules/17-icons.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
 | [`src/cards/ct-p09/B09009.ts`](../../../src/cards/ct-p09/B09009.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
@@ -2055,7 +2055,7 @@
 | [`src/cards/pr-01/PR132.ts`](../../../src/cards/pr-01/PR132.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/cards/pr-01/PR133.ts`](../../../src/cards/pr-01/PR133.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR134.ts`](../../../src/cards/pr-01/PR134.ts) | _(参照なし)_ |
-| [`src/cards/pr-01/PR135.ts`](../../../src/cards/pr-01/PR135.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
+| [`src/cards/pr-01/PR135.ts`](../../../src/cards/pr-01/PR135.ts) | [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/cards/pr-01/PR136.ts`](../../../src/cards/pr-01/PR136.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`16-card-set.md`](../../rules/16-card-set.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/cards/pr-01/PR137.ts`](../../../src/cards/pr-01/PR137.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
 | [`src/cards/pr-01/PR138.ts`](../../../src/cards/pr-01/PR138.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
@@ -2242,12 +2242,13 @@
 | [`src/cards/pr-01/PR319.ts`](../../../src/cards/pr-01/PR319.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/cards/pr-01/PR320.ts`](../../../src/cards/pr-01/PR320.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 
-## ai (20)
+## ai (21)
 
 | ソース | 参照ルール |
 | ------ | --------- |
 | [`src/ai/ability-ctx.ts`](../../../src/ai/ability-ctx.ts) | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/ai/action-resolution.ts`](../../../src/ai/action-resolution.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) |
+| [`src/ai/cutin-declared-name.ts`](../../../src/ai/cutin-declared-name.ts) | _(参照なし)_ |
 | [`src/ai/headless-decision-context.ts`](../../../src/ai/headless-decision-context.ts) | _(参照なし)_ |
 | [`src/ai/index.ts`](../../../src/ai/index.ts) | _(参照なし)_ |
 | [`src/ai/match.ts`](../../../src/ai/match.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`04-game-setup.md`](../../rules/04-game-setup.md) / [`05-turn-phases.md`](../../rules/05-turn-phases.md) |

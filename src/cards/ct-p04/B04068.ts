@@ -14,7 +14,7 @@
 //   - 〜手札に加えてもよい。そうした場合、… => optional{chain[...]} (B04023 a1 同型。「してもよい」=任意 rules/15)
 //   - 自分のFILEエリアにあるカードを上から1枚手札に加える => filePopToHand{player:'self'} (Task D E3 BUG-128 修正済:
 //     実 cardId を手札へ + 'file:pop' emit。FILE空/アシストパートナーのみ → __chainStepNoApply = chain break — 公式Q&A 通り)
-//   - ターン終了時までこのキャラをAP＋2000し => charModifyAP{uid:'$self',delta:2000,scope:'turn'} (D11016 同型)
+//   - ターン終了時までこのキャラをAP＋2000し => charModifyAP{uid:'$self',delta:2000,scope:'turn'}
 //   - 手札からレベル7以下の〚特徴［喫茶ポアロ］〛のキャラを1枚まで登場させる => sceneEnter PA短縮形
 //     {from:'hand',max:1,filter:{kind:'character',trait:'喫茶ポアロ',levelMax:7}} (B09025/B04007 同型。
 //     現場満杯時のスイッチは sceneEnter handler が処理 — 公式Q&A/rules/20。効果による登場は事件の色制限を受けない rules/20)

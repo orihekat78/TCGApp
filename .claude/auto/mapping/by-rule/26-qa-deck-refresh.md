@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `6417c7792b15`
+> Source hash: `9a1464700f55`
 
 公式ルール [`26-qa-deck-refresh.md`](../../../rules/26-qa-deck-refresh.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -24,7 +24,7 @@
 - [`PR265`](../by-spec/grounding--PR265.md)
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 
-## 📄 参照ソース (223)
+## 📄 参照ソース (224)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/ct-d01/D01012.ts`](../../../../src/cards/ct-d01/D01012.ts)
@@ -46,4 +46,4 @@
 - [`src/cards/ct-d08/D08026.ts`](../../../../src/cards/ct-d08/D08026.ts)
 - [`src/cards/ct-d10/D10003.ts`](../../../../src/cards/ct-d10/D10003.ts)
 - [`src/cards/ct-d10/D10004.ts`](../../../../src/cards/ct-d10/D10004.ts)
-- _...ほか 203 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 204 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

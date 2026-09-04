@@ -42,7 +42,7 @@ const a1: AbilityDef = {
         if: { kind: 'bound', key: '$matched', presence: 'matched' },
         then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } },
       },
-      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },
+      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed', order: 'preserve' } },
       { kind: 'atom', verb: 'deckShuffle', args: { player: 'self' } },
       {
         kind: 'atom',

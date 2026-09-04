@@ -10,12 +10,12 @@
 //   - 【宣言】【ターン1】 => type:'declared' + limit{kind:'turn', n:1}
 //   - 〚手札を1枚リムーブする〛 => cost pay[removeFromHand{target pick hand self (filter 無=任意札) n{1,1} chooser self, n:1}]
 //       (D02013 a1 removeFromHand cost VERBATIM。「手札を1枚」= filter 無し。canPay = 手札1枚以上で成立。
-//        pay が ctx.costPaid['removeFromHand']={ids, level:印字値} を記録、cost/pay.ts:104-105)
+//        pay が ctx.costPaid['removeFromHand']={ids, level:離脱直前の実効値} を記録、cost/pay.ts)
 //   - リムーブしたカードのレベル以下のレベルの〚特徴［探偵］〛のキャラを1枚まで選び =>
 //       sceneSetState pick {side:'either', filter:{trait:'探偵', levelMax:{dyn:'$cost.removeFromHand.level'}}, n{0,1}}
 //       ($cost.removeFromHand.level = dyn/eval.ts:597 generic drillDown。filter 内 {dyn} は resolve-picks.ts:140
 //        resolveFilterDynObj が pick 解決時に literal 化。エリア指定なし=either、「1枚まで」=0枚可 rules/15。
-//        Q&A「効果解決時点の（増減後）レベルを参照」= dyn は解決時評価で自然整合)
+//        Q&A「効果解決時点の（増減後）レベルを参照」= cost支払い直前snapshotを後続dynが読む)
 //   - スタンさせる => sceneSetState{state:'stun'} (D03002/B06078 a2 の $pick+target 形。
 //        rules/24: スタン状態は3つ目の状態、以後アクティブ化は代わりにスリープ = engine mutate.scene.setState('stun') が担保)
 

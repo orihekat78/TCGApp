@@ -3,6 +3,7 @@
 // ⚠ 各関数は Immer draft 前提 (produce 内部で呼び出す)
 
 import type { GameState } from '@/engine/types';
+import { incrementDeclaredAbilityUseCountRecord } from '../effect/source-identity.js';
 
 type Player = 'self' | 'opp';
 
@@ -39,20 +40,26 @@ function grantCharacterTraitAllAreasTurn(s: GameState, p: Player, trait: string)
  * player: BUG-112 — selfToDeckBottom 等で source が場外へ出ているとき (scene/case 不在) の
  *   fallback 記録先 player。場上で見つかれば不要 (char object に記録)。
  */
-function incrDeclaredUseCount(s: GameState, uid: string, abilId: string, player?: Player): void {
+function incrDeclaredUseCount(
+  s: GameState,
+  uid: string,
+  abilId: string,
+  player?: Player,
+  source?: { abilityOrigin?: 'printed' | 'granted'; abilityIndex?: number },
+): void {
   // BUG-067: 事件カード (case:self / case:opp) の declared ability にも対応
   if (uid === 'case:self' || uid === 'case:opp') {
     const p: Player = uid === 'case:self' ? 'self' : 'opp';
     const c = s.players[p].case;
-    const current = c.declaredUseCount[abilId] ?? 0;
-    c.declaredUseCount[abilId] = current + 1;
+    c.declaredUseCount ??= {};
+    incrementDeclaredAbilityUseCountRecord(c.declaredUseCount, abilId, source);
     return;
   }
   for (const p of ['self', 'opp'] as const) {
     const char = s.players[p].scene.find(c => c.uid === uid);
     if (char) {
-      const current = char.declaredUseCount[abilId] ?? 0;
-      char.declaredUseCount[abilId] = current + 1;
+      char.declaredUseCount ??= {};
+      incrementDeclaredAbilityUseCountRecord(char.declaredUseCount, abilId, source);
       return;
     }
   }
@@ -60,8 +67,9 @@ function incrDeclaredUseCount(s: GameState, uid: string, abilId: string, player?
   // (read.char.declaredUseCount が scene.byUid 経由で同 slot を読む)。これ無しだと once-per-game 化。
   for (const p of ['self', 'opp'] as const) {
     const slot = s.players[p].partnerAreaMR;
-    if (slot && slot.uid === uid) {
-      slot.declaredUseCount[abilId] = (slot.declaredUseCount[abilId] ?? 0) + 1;
+    if (slot && (slot.uid === uid || uid === `partnerMR:${p}`)) {
+      slot.declaredUseCount ??= {};
+      incrementDeclaredAbilityUseCountRecord(slot.declaredUseCount, abilId, source);
       return;
     }
   }
@@ -71,8 +79,7 @@ function incrDeclaredUseCount(s: GameState, uid: string, abilId: string, player?
   // turnState は resetTurnFlags でターン境界クリアされるため【ターン①】の turn-scope と整合。
   if (player) {
     const rec = s.turnState[player].declaredAbilityUseCount as Record<string, number>;
-    const key = `${uid}:${abilId}`;
-    rec[key] = (rec[key] ?? 0) + 1;
+    incrementDeclaredAbilityUseCountRecord(rec, abilId, source, `${uid}:`);
   }
 }
 

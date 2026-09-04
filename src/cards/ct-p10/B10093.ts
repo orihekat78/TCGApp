@@ -4,7 +4,7 @@ import type { AbilityDef, CardDef } from '@/engine/types';
 const a1: AbilityDef = {
   id: 'a1', type: 'triggered', scope: 'on-scene', condition: { kind: 'caseColor', color: ['青', '黒'], combine: 'and' }, trigger: { hook: 'enter', selfOnly: true },
   effect: { kind: 'chain', steps: [
-    { kind: 'atom', verb: 'handReveal', args: { player: 'self', max: 1, filter: { kind: 'character', cardName: ['工藤新一', '毛利蘭'] } } },
+    { kind: 'atom', verb: 'handReveal', args: { player: 'self', audience: 'all', lifetime: 'presentation', max: 1, filter: { kind: 'character', cardName: ['工藤新一', '毛利蘭'] } } },
     { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
   ] },
   description: '手札から工藤新一か毛利蘭を1枚公開してもよい。そうした場合、1枚引く。',

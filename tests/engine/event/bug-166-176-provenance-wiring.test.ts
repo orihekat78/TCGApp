@@ -3,14 +3,17 @@ import {
   applyChoiceAndContinuation,
   applyOptionalAndContinuation,
   applyPickAndContinuation,
+  applyPickSkipAndContinuation,
   applyRepeatOptionalAndContinuation,
   applyRpsAndContinuation,
   applySetCardChoiceAndContinuation,
 } from '@/engine/effect/apply-pick';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks';
 import { run as runEffect } from '@/engine/effect/resolver';
+import { _drainPendingDeckRevealSide } from '@/engine/effect/atom-handlers/_shared';
 import {
   _clearPendingEffectChoiceSide,
+  _clearPendingEffectPickQueue,
   _drainPendingEffectChoiceSide,
   _drainPendingEffectOptionalSide,
   _drainPendingEffectPickSide,
@@ -83,6 +86,8 @@ describe('BUG-166/176 production provenance wiring', () => {
     _resetRegistry();
     _resetUidCounter();
     _clearPendingEffectChoiceSide();
+    _clearPendingEffectPickQueue();
+    while (_drainPendingDeckRevealSide()) { /* clear presentation FIFO */ }
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   });
 
@@ -109,6 +114,37 @@ describe('BUG-166/176 production provenance wiring', () => {
     expect(state.players.self.hand).toEqual([]);
     expect(state.players.self.remove).toEqual(['NORMAL']);
     expect(state.gameResult).toMatchObject({ winner: 'opp', reason: 'deck-out' });
+  });
+
+  it('choice resume preserves the full source tuple into its next human decision', () => {
+    const effect: Effect = {
+      kind: 'choice',
+      chooser: 'self',
+      options: [
+        {
+          kind: 'atom', verb: 'sceneSetState', args: {
+            uid: '$pick', state: 'sleep',
+            target: { kind: 'pick', query: { area: 'scene', side: 'self' }, n: { min: 0, max: 1 }, chooser: 'self' },
+          },
+        },
+        { kind: 'parallel', steps: [] },
+      ],
+    };
+    register(card('NORMAL', 'event', [ownEventAbility(effect)]));
+    register(card('TARGET', 'character'));
+    registerTriggeredListener();
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    const state = legalEventState('NORMAL');
+    mutate.scene.enter(state, 'self', 'TARGET', {});
+
+    handUseCard(state, 'self', 'NORMAL');
+    runAllUntilEmpty(state);
+    applyChoiceAndContinuation(state, _drainPendingEffectChoiceSide()!, 0);
+
+    expect(_drainPendingEffectPickSide()).toMatchObject({
+      player: 'self', ownerPlayer: 'self',
+      source: { uid: 'hand:self:NORMAL', cardId: 'NORMAL', abilityId: 'a1', area: 'hand', resolutionKind: 'normal-event' },
+    });
   });
 
   it('contact cut-in is queued as cutin and may refresh from its own remove card', () => {
@@ -238,8 +274,23 @@ describe('BUG-166/176 production provenance wiring', () => {
     const optional = _drainPendingEffectOptionalSide();
     expect(optional?.source.resolutionKind).toBe('normal-event');
     applyOptionalAndContinuation(optionalState, optional!, true);
+    expect(optionalState.pendingEffects.find((entry) => entry.triggeredBy.hook === 'effect:optional-resolved')?.source).toEqual({
+      player: 'self', uid: 'event:self', cardId: 'NORMAL', abilityId: 'a1', area: 'hand', resolutionKind: 'normal-event',
+    });
     expect(optionalState.players.self.remove).toEqual(['NORMAL']);
     expect(optionalState.gameResult).toMatchObject({ reason: 'deck-out' });
+
+    const declinedState = createEmptyGameState();
+    resolveEffectPicks(
+      declinedState,
+      { kind: 'optional', chooser: 'owner', effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 0 } } },
+      source,
+      { humanChooser: true, humanPlayer: 'self', byPlayer: 'self', source: { cardId: 'NORMAL', abilityId: 'a1' } },
+    );
+    applyOptionalAndContinuation(declinedState, _drainPendingEffectOptionalSide()!, false);
+    expect(declinedState.pendingEffects.find((entry) => entry.triggeredBy.hook === 'effect:optional-resolved')?.source).toEqual({
+      player: 'self', uid: 'event:self', cardId: 'NORMAL', abilityId: 'a1', area: 'hand', resolutionKind: 'normal-event',
+    });
 
     const repeatState = createEmptyGameState();
     repeatState.players.self.remove = ['NORMAL'];
@@ -266,15 +317,31 @@ describe('BUG-166/176 production provenance wiring', () => {
       player: 'self',
       candidates: [{ uid: 'dummy', cardId: 'HOST', player: 'self' }],
       atomVerb: 'draw',
-      atomArgs: { player: 'self', n: 1 },
+      atomArgs: { player: 'self', n: 0 },
       nMin: 1,
       nMax: 1,
-      source: { cardId: 'NORMAL', abilityId: 'a1', resolutionKind: 'normal-event' },
+      source: { cardId: 'NORMAL', uid: 'event:self', abilityId: 'a1', area: 'hand', resolutionKind: 'normal-event' },
     });
     const pick = _drainPendingEffectPickSide();
     applyPickAndContinuation(pickState, pick!, 'dummy');
-    expect(pickState.players.self.remove).toEqual(['NORMAL']);
-    expect(pickState.gameResult).toMatchObject({ reason: 'deck-out' });
+    expect(pickState.pendingEffects.find((entry) => entry.triggeredBy.hook === 'effect:pick-resolved')?.source).toEqual({
+      player: 'self', uid: 'event:self', cardId: 'NORMAL', abilityId: 'a1', area: 'hand', resolutionKind: 'normal-event',
+    });
+
+    const skipState = createEmptyGameState();
+    _pushPendingEffectPickSideForTest({
+      player: 'self',
+      candidates: [{ uid: 'dummy', cardId: 'HOST', player: 'self' }],
+      atomVerb: 'draw',
+      atomArgs: { player: 'self', n: 0 },
+      nMin: 0,
+      nMax: 1,
+      source: { cardId: 'NORMAL', uid: 'event:self', abilityId: 'a2', area: 'evidence', resolutionKind: 'hirameki' },
+    });
+    applyPickSkipAndContinuation(skipState, _drainPendingEffectPickSide()!);
+    expect(skipState.pendingEffects.find((entry) => entry.triggeredBy.hook === 'effect:pick-resolved')?.source).toEqual({
+      player: 'self', uid: 'event:self', cardId: 'NORMAL', abilityId: 'a2', area: 'evidence', resolutionKind: 'hirameki',
+    });
 
     const setState = createEmptyGameState();
     setState.players.self.remove = ['NORMAL'];
@@ -296,5 +363,54 @@ describe('BUG-166/176 production provenance wiring', () => {
     applySetCardChoiceAndContinuation(setState, pendingSet!, pendingSet!.entries[0]!.instanceId);
     expect(setState.players.self.remove).toEqual(['NORMAL']);
     expect(setState.gameResult).toMatchObject({ reason: 'deck-out' });
+  });
+
+  it('keeps same-card reveal windows distinct by ability after real choice resumes', () => {
+    const revealOption: Effect = {
+      kind: 'atom', verb: 'deckRevealUntil', args: {
+        player: 'self', maxN: 1, chooseMatch: 'upTo', filter: { kind: 'character' },
+        bind: '$revealed', bindMatch: '$matched', visibility: 'public', viewer: 'all',
+      },
+    };
+    register(card('TOP', 'character'));
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    const state = createEmptyGameState();
+    state.players.self.deck = ['TOP'];
+    const effect: Effect = { kind: 'choice', chooser: 'self', options: [revealOption, { kind: 'parallel', steps: [] }] };
+    const queueChoice = (abilityId: string) => event.queue(
+      state,
+      effect,
+      {
+        player: 'self', uid: 'hand:self:DUAL', cardId: 'DUAL', abilityId,
+        area: 'hand', resolutionKind: 'normal-event',
+      },
+      'effect:declared',
+    );
+
+    queueChoice('a1');
+    runAllUntilEmpty(state);
+    const firstChoice = _drainPendingEffectChoiceSide()!;
+    expect(firstChoice.source.abilityId).toBe('a1');
+    applyChoiceAndContinuation(state, firstChoice, 0);
+    const firstPick = _drainPendingEffectPickSide()!;
+    expect(firstPick.source.abilityId).toBe('a1');
+    applyPickAndContinuation(state, firstPick, firstPick.candidates[0]!.uid);
+
+    queueChoice('a2');
+    runAllUntilEmpty(state);
+    const secondChoice = _drainPendingEffectChoiceSide()!;
+    expect(secondChoice.source.abilityId).toBe('a2');
+    applyChoiceAndContinuation(state, secondChoice, 0);
+    const secondPick = _drainPendingEffectPickSide()!;
+    expect(secondPick.source.abilityId).toBe('a2');
+    applyPickAndContinuation(state, secondPick, secondPick.candidates[0]!.uid);
+
+    const firstReveal = _drainPendingDeckRevealSide();
+    const secondReveal = _drainPendingDeckRevealSide();
+    expect(firstReveal?.source).toEqual({ cardId: 'DUAL', uid: 'hand:self:DUAL', abilityId: 'a1' });
+    expect(secondReveal?.source).toEqual({ cardId: 'DUAL', uid: 'hand:self:DUAL', abilityId: 'a2' });
+    expect(firstReveal).not.toHaveProperty('awaitingPick');
+    expect(secondReveal).not.toHaveProperty('awaitingPick');
+    expect(_drainPendingDeckRevealSide()).toBeNull();
   });
 });

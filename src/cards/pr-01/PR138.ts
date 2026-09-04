@@ -13,18 +13,18 @@ const a1: AbilityDef = {
   id: 'a1',
   type: 'triggered',
   scope: 'on-scene',
-  // BUG-145 (2026-06-15): already-sleep なら「このキャラをスリープさせ…てもよい」は行えない (公式qAndA PR138/PR144/B04049)。
-  // ability.condition で gate → self が sleep のとき能力非所持扱い = optional surface も出さない (rules/17)。
-  condition: { kind: 'not', c: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'sleep' } },
   trigger: {
     hook: 'enter',
     selfOnly: true
   },
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'chain',
-      steps: [
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain',
+        steps: [
         {
           kind: 'atom',
           verb: 'sceneSetState',
@@ -56,7 +56,8 @@ const a1: AbilityDef = {
             }
           }
         }
-      ]
+        ]
+      }
     }
   },
   description: '【登場時】このキャラをスリープさせ、手札を1枚リムーブしてもよい。そうした場合、リムーブのレベル6以下の〚特徴［黒ずくめの組織］〛のキャラを1枚まで選び、登場させる。',

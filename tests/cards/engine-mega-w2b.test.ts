@@ -13,7 +13,7 @@ import { resolveEffectPicks, _clearPendingEffectPickQueue, _drainPendingEffectPi
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../helpers/main-game-state';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { mutate } from '@/engine/mutate/index';
 import { char as readChar } from '@/engine/read/char';
@@ -385,9 +385,12 @@ describe('B09040 鈴木園子 — exemplar', () => {
     const v3 = mutate.scene.enter(s, 'opp', 'VICT3', {});
     const v4 = mutate.scene.enter(s, 'opp', 'VICT4', {});
     const a1 = (B09040.abilities ?? []).find(a => a.id === 'a1')!;
-    // optional wrapper の中身 (opt-in 後の chain) を直接駆動 (optional 機構は B04049 系で既検証)
-    const inner = (a1.effect as { kind: string; effect: Effect }).effect;
-    expect((a1.effect as { kind: string }).kind).toBe('optional');
+    // resolution-time active gate と optional の内側を直接駆動 (optional 機構は B04049 系で既検証)
+    const gated = a1.effect as { kind: string; if: unknown; then: { kind: string; effect: Effect } };
+    expect(gated.kind).toBe('conditional');
+    expect(gated.if).toEqual({ kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' });
+    expect(gated.then.kind).toBe('optional');
+    const inner = gated.then.effect;
     const c: EffectCtx = { source: { cardId: 'B09040', uid: sonoko.uid, abilityId: 'a1', player: 'self', area: 'scene' }, bindings: {} } as EffectCtx;
     runEffect(s, inner, c);
     runAllUntilEmpty(s);

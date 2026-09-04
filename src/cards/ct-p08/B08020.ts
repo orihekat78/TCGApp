@@ -46,7 +46,7 @@ const a1: AbilityDef = {
         then: {
           kind: 'sequence',
           steps: [
-            { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } },
+            { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId', presentation: 'public-selected-card' } },
             { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } },
           ],
         },

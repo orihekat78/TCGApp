@@ -5,6 +5,7 @@ import type { Candidate } from './candidate.js';
 
 export type DeclaredNameDomain =
   | 'unrestricted'
+  | 'registered-card-name'
   | 'registered-character-card-name';
 
 /**
@@ -15,6 +16,9 @@ export type DeclaredNameDomain =
  * lifecycle distinction, so every use path writes it explicitly.
  */
 export type EffectResolutionKind = 'normal-event' | 'hirameki' | 'cutin';
+
+/** Stable authority for one host-owned declared-ability definition. */
+export type DeclaredAbilityHostOrigin = 'printed' | 'granted';
 
 export type ContactCtx = {
   byUid: string;
@@ -34,6 +38,14 @@ export type CausalEffectTrace = {
 export type EffectCtx = {
   source: {
     cardId?: string;
+    /** Printed identity of the physical set card that granted this ability. */
+    setCardId?: string;
+    /** Runtime identity of that exact set-card occurrence. */
+    setCardInstanceId?: string;
+    /** Definition collection that supplied a host-owned declared ability. */
+    abilityOrigin?: DeclaredAbilityHostOrigin;
+    /** Original zero-based index inside that definition collection. */
+    abilityIndex?: number;
     uid?: string;
     abilityId?: string;
     player: 'self' | 'opp';

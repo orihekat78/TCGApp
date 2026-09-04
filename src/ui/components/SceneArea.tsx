@@ -56,6 +56,8 @@ export type SceneAreaProps = {
   onExpand?: (cardId: string) => void;
   /** Requests a privacy-filtered browse view of cards set under a character. */
   onSetInspect?: (character: SceneCharacter) => void;
+  /** Requests the public browse view of cards stacked under a character. */
+  onStackInspect?: (character: SceneCharacter) => void;
   /**
    * Effect pick mode (User vision: SceneArea も pick UI として流用)。
    * 候補 uid 集合。空でなければ各 char が pick 対象として黄色枠 + click 可能化。
@@ -64,6 +66,8 @@ export type SceneAreaProps = {
   pickCharUids?: ReadonlySet<string>;
   /** Pick mode で char が選択されたとき (uid 通知) */
   onPickChar?: (uid: string) => void;
+  /** Exact pick target that receives focus when a direct-pick session opens. */
+  autoFocusPickUid?: string;
   /**
    * BUG-092/093: char uid → 有効キーワード (read.char.keywords)。突撃/迅速 等のバッジ表示に使う。
    * 省略時はバッジ非表示。
@@ -91,12 +95,17 @@ type SceneCharacterCardProps = {
   /** Round 4l (BUG-001): 候補でないとき click で expand modal を開く */
   onExpand?: (cardId: string) => void;
   onSetInspect?: () => void;
+  onStackInspect?: () => void;
   /** Phase 8.10g-2: ゴースト (fade-out 中) の場合 true → .removing クラスを付与 */
   isGhost?: boolean;
   /** Pick mode (effect pick) — true で黄色枠 + cursor pointer。onPickClick 経由で発火 */
   isPickable?: boolean;
   /** Pick mode で click → onPickClick (uid 通知) */
   onPickClick?: () => void;
+  /** Direct-pick mode entry moves keyboard focus to this exact card target. */
+  focusPick?: boolean;
+  /** One-based visible scene position, used to distinguish duplicate card names. */
+  pickOrdinal?: number;
   /** BUG-092/093: このキャラの有効キーワード一覧 (突撃/迅速 バッジ表示用) */
   chargeKeywords?: readonly string[];
   /** BUG-110: 修正反映後の有効 AP/LP (省略時は ch.apOverride ?? meta.ap) */
@@ -107,7 +116,8 @@ type SceneCharacterCardProps = {
   activeLabel?: string | null;
 };
 
-function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, onSetInspect, isGhost, isPickable, onPickClick, chargeKeywords, stats, isActive, activeLabel }: SceneCharacterCardProps): JSX.Element {
+function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, onSetInspect, onStackInspect, isGhost, isPickable, onPickClick, focusPick, pickOrdinal, chargeKeywords, stats, isActive, activeLabel }: SceneCharacterCardProps): JSX.Element {
+  const pickButtonRef = useRef<HTMLButtonElement>(null);
   const charges = CHARGE_BADGES.filter((b) => (chargeKeywords ?? []).includes(b.kw));
   // BUG-110: カード下の数値は「修正反映後の有効値」(read.char.ap/lp) を表示する。
   // base (印字値 meta.ap/lp) と異なれば .modified を付けて着色し、AP＋XXXX/LP＋X の反映を視認可能にする。
@@ -131,6 +141,12 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, onSetIns
 
   const setCount = ch.setCards.length;
   const browseSetCards = setCount > 0 && onSetInspect !== undefined;
+  const stackCount = Array.isArray(ch.stackedCards) ? ch.stackedCards.length : ch.stackedCards;
+  const pickHandler = !isGhost && isPickable ? onPickClick : undefined;
+
+  useEffect(() => {
+    if (focusPick) pickButtonRef.current?.focus();
+  }, [focusPick]);
 
   return (
     <div
@@ -144,8 +160,8 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, onSetIns
       onClick={
         isGhost
           ? undefined
-          : isPickable && onPickClick
-            ? onPickClick  // Pick mode 優先 (effect 対象選択)
+          : pickHandler
+            ? undefined
             : isCandidate && onClick
               ? onClick
               : undefined
@@ -153,6 +169,19 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, onSetIns
       style={((isCandidate || isPickable) && !isGhost) ? { cursor: 'pointer' } : undefined}
       aria-hidden={isGhost ? 'true' : undefined}
     >
+      {pickHandler ? (
+        <button
+          ref={pickButtonRef}
+          type="button"
+          className="scene-card-pick-button"
+          data-testid={`scene-card-pick-${ch.uid}`}
+          aria-label={`${meta.name}を選択（現場${pickOrdinal ?? 1}枚目）`}
+          onClick={(event) => {
+            event.stopPropagation();
+            pickHandler();
+          }}
+        />
+      ) : null}
       <div className="color-stripe" />
       {isActive && activeLabel ? (
         <div className="card-activity-chip">{activeLabel}</div>
@@ -205,15 +234,28 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, onSetIns
           +{setCount}
         </button>
       )}
-      {(Array.isArray(ch.stackedCards) ? ch.stackedCards.length : ch.stackedCards) > 0 && (
-        <div className="stack-badge">×{(Array.isArray(ch.stackedCards) ? ch.stackedCards.length : ch.stackedCards) + 1}</div>
-      )}
+      {stackCount > 0 && !isGhost && (onStackInspect ? (
+          <button
+            type="button"
+            className="stack-badge"
+            data-testid={`scene-stack-inspect-${ch.uid}`}
+            aria-label={`重ねたカード ${stackCount}枚を確認`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onStackInspect();
+            }}
+          >
+            ×{stackCount + 1}
+          </button>
+        ) : (
+          <div className="stack-badge">×{stackCount + 1}</div>
+        ))}
     </div>
   );
 }
 
 export function SceneArea(props: SceneAreaProps): JSX.Element {
-  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick, onExpand, onSetInspect, pickCharUids, onPickChar, resolveKeywords, resolveCharStats, activeCardUid, activeCardLabel } = props;
+  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick, onExpand, onSetInspect, onStackInspect, pickCharUids, onPickChar, autoFocusPickUid, resolveKeywords, resolveCharStats, activeCardUid, activeCardLabel } = props;
 
   // enterOrder 昇順で並べ替えて表示順を安定させる
   const sorted = [...characters].sort((a, b) => a.enterOrder - b.enterOrder);
@@ -259,7 +301,7 @@ export function SceneArea(props: SceneAreaProps): JSX.Element {
         </span>
       </div>
       <div className="scene-slots">
-        {filled.map((ch) => {
+        {filled.map((ch, index) => {
           const isCandidate = candidateUids?.has(ch.uid) ?? false;
           const isPickable = pickCharUids?.has(ch.uid) ?? false;
           return (
@@ -271,8 +313,11 @@ export function SceneArea(props: SceneAreaProps): JSX.Element {
               onClick={onUnitClick ? () => onUnitClick(ch.uid) : undefined}
               onExpand={onExpand}
               onSetInspect={onSetInspect ? () => onSetInspect(ch) : undefined}
+              onStackInspect={onStackInspect ? () => onStackInspect(ch) : undefined}
               isPickable={isPickable}
               onPickClick={isPickable && onPickChar ? () => onPickChar(ch.uid) : undefined}
+              focusPick={isPickable && ch.uid === autoFocusPickUid}
+              pickOrdinal={index + 1}
               chargeKeywords={resolveKeywords?.(ch.uid)}
               stats={resolveCharStats?.(ch.uid)}
               isActive={activeCardUid != null && ch.uid === activeCardUid}

@@ -116,7 +116,16 @@ describe('B10072 アラン・カッセル', () => {
         { kind: 'zone', cardId: wrongTrait.id, zone: 'deck', side: 'self', present: true },
       ],
     });
-    expect(after.players.self.hand).toHaveLength(0);
+    // qa: card:B10072:2db8ec1f638c08e23b42d65f6f30eefe718d29bc0803d402cea6f45014edb6fa
+    expect({
+      hand: after.players.self.hand,
+      deck: [...after.players.self.deck].sort(),
+      shuffled: after.log.some(entry => entry.action === 'effect:deckShuffle'),
+    }).toEqual({
+      hand: [],
+      deck: ['ALAN_ZERO_LEVEL', 'ALAN_ZERO_TRAIT', 'B10072', '__DECK_S_0'].sort(),
+      shuffled: true,
+    });
   });
 
   it('hirameki can sleep one real scene character, or choose zero', () => {

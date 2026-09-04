@@ -38,13 +38,90 @@ function getHumanPlayerSide(): Player | null {
 export type LeaveInterceptVerdict =
   | { kind: 'hand'; interceptorUid: string }
   | { kind: 'pending'; interceptorUid: string }
-  | { kind: 'kept-in-scene'; consumedSetCards: string[] }
+  | {
+      kind: 'kept-in-scene';
+      consumedSetCards: Array<{ cardId: string; setCardInstanceId: string }>;
+    }
   | null;
+
+/**
+ * Deterministic replacement of a leaving host's face-down set-card cleanup.
+ * This does not redirect or prevent the host leave itself.
+ */
+export function consultHostLeaveSetCardReplacement(
+  state: GameState,
+  char: SceneCharacter,
+  player: Player,
+  cause: string,
+  byUid?: string,
+  byPlayer?: Player,
+): boolean {
+  const attributed = cause === 'contact-ap'
+    || (cause === 'effect' && byPlayer !== undefined && byPlayer !== player);
+  if (!attributed || readChar.originalAbilitiesDisabled(state, char.uid)) return false;
+  const card = readDef.card(char.cardId);
+  if (!card) return false;
+  const payload = { uid: char.uid, cause, byUid, ownerPlayer: player };
+  for (const ability of card.abilities as AbilityDef[]) {
+    if (ability.type !== 'triggered'
+      || ability.trigger?.hook !== 'leave:intercept'
+      || ability.trigger.optional === true
+      || (ability.scope !== undefined && ability.scope !== 'on-scene' && ability.scope !== 'always')
+      || ability.hostLeaveSetCardReplacement?.kind !== 'face-down-to-owner-hand') continue;
+    const ctx = {
+      source: { cardId: char.cardId, uid: char.uid, abilityId: ability.id, player, area: 'scene' as const },
+      bindings: {},
+      triggerPayload: payload,
+    };
+    if (ability.trigger.matcherCondition && !evalCond(state, ability.trigger.matcherCondition, ctx as never)) continue;
+    if (ability.condition && !evalCond(state, ability.condition, ctx as never)) continue;
+    return true;
+  }
+  return false;
+}
 
 function destinationOf(ability: AbilityDef): string | undefined {
   const eff = ability.effect as { kind?: string; verb?: string; args?: { destination?: string } } | undefined;
   if (eff && eff.kind === 'atom' && eff.verb === 'leaveInterceptRedirect') return eff.args?.destination;
   return undefined;
+}
+
+/** Definition-level identity check for a persisted optional hand redirect. */
+export function isOptionalHandLeaveInterceptAbility(cardId: string, abilityId: string): boolean {
+  const ability = readDef.card(cardId)?.abilities.find((candidate) => candidate.id === abilityId);
+  if (!ability || ability.type !== 'triggered') return false;
+  const trigger = ability.trigger;
+  return trigger?.hook === 'leave:intercept'
+    && trigger.optional === true
+    && (ability.scope === undefined || ability.scope === 'on-scene' || ability.scope === 'always')
+    && destinationOf(ability) === 'hand';
+}
+
+/** Recompute one exact live optional interceptor before accepting its public answer. */
+export function findLiveHandLeaveInterceptor(
+  state: GameState,
+  target: SceneCharacter,
+  player: Player,
+  interceptorUid: string,
+  byUid?: string,
+): { cardId: string; abilityId: string } | null {
+  const interceptor = state.players[player].scene.find((char) => char.uid === interceptorUid);
+  if (!interceptor || interceptor.uid === target.uid || readChar.originalAbilitiesDisabled(state, interceptor.uid)) return null;
+  const def = readDef.card(interceptor.cardId);
+  if (!def) return null;
+  const payload = { uid: target.uid, cause: 'contact-ap', byUid, ownerPlayer: player };
+  for (const ability of def.abilities as AbilityDef[]) {
+    if (!isOptionalHandLeaveInterceptAbility(interceptor.cardId, ability.id)) continue;
+    const baseCtx = {
+      source: { cardId: interceptor.cardId, uid: interceptor.uid, abilityId: ability.id, player, area: 'scene' as const },
+      bindings: {},
+      triggerPayload: payload,
+    };
+    if (ability.trigger?.matcherCondition && !evalCond(state, ability.trigger.matcherCondition, baseCtx as never)) continue;
+    if (ability.condition && !evalCond(state, ability.condition, baseCtx as never)) continue;
+    return { cardId: interceptor.cardId, abilityId: ability.id };
+  }
+  return null;
 }
 
 export function consultLeaveIntercept(
@@ -61,9 +138,9 @@ export function consultLeaveIntercept(
   const payload = { uid: char.uid, cause, byUid, ownerPlayer: player };
 
   // (1) 強制 set-card rider (B01039 型、on-set-host) — faceUp のみ (rules/16 裏向きは非イベント)
-  const consumed: string[] = [];
+  const consumed: Array<{ cardId: string; setCardInstanceId: string }> = [];
   for (const entry of char.setCards) {
-    if (!entry.faceUp) continue;
+    if (!entry.faceUp || !entry.instanceId) continue;
     const def = readDef.card(entry.cardId);
     if (!def) continue;
     for (const ability of def.abilities as AbilityDef[]) {
@@ -72,14 +149,22 @@ export function consultLeaveIntercept(
       if (!trig || trig.hook !== 'leave:intercept' || trig.optional) continue;
       if (ability.scope !== 'on-set-host') continue;
       const baseCtx = {
-        source: { cardId: entry.cardId, uid: char.uid, abilityId: ability.id, player, area: 'scene' as const },
+        source: {
+          cardId: entry.cardId,
+          uid: char.uid,
+          abilityId: ability.id,
+          player,
+          area: 'scene' as const,
+          setCardId: entry.cardId,
+          setCardInstanceId: entry.instanceId,
+        },
         bindings: {},
         triggerPayload: payload,
       };
       if (trig.matcherCondition && !evalCond(state, trig.matcherCondition, baseCtx as never)) continue;
       if (ability.condition && !evalCond(state, ability.condition, baseCtx as never)) continue;
       if (destinationOf(ability) !== 'kept-in-scene') continue;
-      consumed.push(entry.cardId);
+      consumed.push({ cardId: entry.cardId, setCardInstanceId: entry.instanceId });
       break; // 1 entry につき 1 判定
     }
   }

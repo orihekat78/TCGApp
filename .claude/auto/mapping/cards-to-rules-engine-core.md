@@ -2,13 +2,13 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `c0f3a719a794`
+> Source hash: `667f65a1c1a4`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **38** ファイル（[全体 index](./index.md)）
+このグループ: **39** ファイル（[全体 index](./index.md)）
 
-## engine/types (10)
+## engine/types (11)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -20,6 +20,7 @@
 | [`src/engine/types/game-state.ts`](../../../src/engine/types/game-state.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`03-field-areas.md`](../../rules/03-field-areas.md) / [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`14-refresh.md`](../../rules/14-refresh.md) |
 | [`src/engine/types/hooks.ts`](../../../src/engine/types/hooks.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`11-reasoning.md`](../../rules/11-reasoning.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/types/index.ts`](../../../src/engine/types/index.ts) | _(参照なし)_ |
+| [`src/engine/types/misread.ts`](../../../src/engine/types/misread.ts) | _(参照なし)_ |
 | [`src/engine/types/reserved-effect.ts`](../../../src/engine/types/reserved-effect.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/engine/types/results.ts`](../../../src/engine/types/results.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 

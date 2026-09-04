@@ -19,19 +19,20 @@ import { declaredNameCandidates } from '@/engine/effect/declared-name-domain.js'
 import { def as readDef } from '@/engine/read/def.js';
 import { alternativeCostProviders } from '@/engine/cost/alternative.js';
 import { eligibleRemoveSetCards } from '@/engine/cost/remove-set-card-eligible.js';
-import { nextHintEventUseAllowed } from '@/engine/flow/main/next-hint.js';
-import { nextHintColorIgnoreAllowed, effectiveHandLevel } from '@/engine/flow/main/hand-use-card.js'; // W2 P09/r26 色 bypass 鏡像 (NH: B03126 両経路 + B02087 NH 限定 A3) + mini-wave#4 hand level
+import { canOfferNextHintOptionalCard } from '@/engine/flow/main/next-hint.js';
+import { effectiveHandLevel } from '@/engine/flow/main/hand-use-card.js';
+import { sceneCap } from '@/engine/read/scene-cap.js';
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
-import type { Candidate, Effect, GameState } from '@/engine/types';
+import { FILE_CARD_BACK_PLACEHOLDER, type Candidate, type Effect } from '@/engine/types';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
-import { costToText, findFlipFaceUpCost, findRemoveFromHandCost, findRemoveStackedCardsCost, findRemoveSetCardCost, findChoiceCostAtPath, completeCostChoicePaths, findDeclareNameAtom, choiceOptionLabel, makeAbilityCtx } from './cost.js';
+import { costToText, findFlipFaceUpCost, findRemoveFromHandCost, findRevealFromHandCost, findRemoveStackedCardsCost, findRemoveSetCardCost, findCharacterStateCost, findChoiceCostAtPath, completeCostChoicePaths, findDeclareNameAtom, choiceOptionLabel, makeAbilityCtx } from './cost.js';
 import type { Player } from './cost.js';
 import {
   ACTION_CASE_TARGET_OPP,
   enumReasoningCandidates,
   enumPartnerAbilityIds,
   enumDeclaredAbilitySources,
-  enumDeclaredAbilityIdsFor,
+  enumDeclaredAbilityChoicesFor,
   enumActionSourceCandidates,
   enumActionTargetCandidates,
   canAssistForUi,
@@ -157,24 +158,16 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
   // file.length 判定と一致)。旧実装は nonAssistedCount (パートナー除外) を使い、アシスト中は
   // 閾値が 1 少なくなって level=FILE枚数 のカードが候補から漏れていた (BUG-087 の base 誤り)。
   const postPopCount = file.length - 1;
-  const caseColors = state.players[p].case.colors;
-
   /** level ≤ postPopCount かつ 色 ⊆ 事件色 の キャラ/イベント のみ候補化 */
   const toCandidate = (cardId: string, source: 'file' | 'hand'): NextHintCandidate | null => {
     const d = readDef.card(cardId);
     if (!d) return null;
     if (d.kind !== 'character' && d.kind !== 'event') return null;
-    // イベント使用不可 (B09034 §M3): ban 中の event は候補から除外 (engine runNextHint の throw と整合)。
-    //   rules/25 公式 Q&A: ネクストヒントの event 使用も不可。キャラは制限外。
-    if (d.kind === 'event' && state.turnState[p].eventUseBanned) return null;
-    if (d.kind === 'event' && !nextHintEventUseAllowed(state, p, cardId)) return null;
-    // 色制限 (rules/20): カードの全色が事件色に含まれる (色なしは常に OK)。
-    // W2 P09/r26: colorIgnore bypass — engine (next-hint colorAllowed) と鏡像 (B03126 両経路 / B02087 NH 限定 A3)。
-    if (d.colors.length > 0 && !d.colors.every((c) => caseColors.includes(c))
-      && !nextHintColorIgnoreAllowed(state, p, cardId)) return null;
+    // Engineと同じpost-pop preflight。色/level/event条件/使用禁止/事件の
+    // 手札使用制限を一括判定し、満杯時のswitch victimだけは次pickerで選ぶ。
+    if (!canOfferNextHintOptionalCard(state, p, cardId)) return null;
     // レベル ≤ postPopCount (rules/12)
-    // mini-wave #4: 手札内 continuous level modifier (B01009/B09095) — engine gate (next-hint.ts
-    //   effectiveHandLevel) と鏡像。表示 level も有効値 (公式 QA: 手札にある間はそのレベル)。
+    // 表示levelも有効値 (公式 QA: 手札にある間はそのレベル)。
     const lvl = effectiveHandLevel(state, p, cardId);
     if (lvl !== undefined && lvl > postPopCount) return null;
     return {
@@ -199,6 +192,34 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
 
   if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
   if (choice.kind === 'use') {
+    const chosenDef = readDef.card(choice.cardId);
+    if (chosenDef?.kind === 'character' && state.players[p].scene.length >= sceneCap(state, p)) {
+      const sceneChars = state.players[p].scene.map(character => ({
+        uid: character.uid,
+        cardId: character.cardId,
+        name: readDef.card(character.cardId)?.names?.[0] ?? character.cardId,
+        state: character.state,
+        isNamed: character.isNamed,
+      }));
+      const interactionEpoch = currentInteractionEpoch();
+      const switchRemoveUid = await new Promise<string | null>(resolve => {
+        useSceneSwitchPickerStore.getState()._open({
+          player: p,
+          cardId: choice.cardId,
+          newCardName: chosenDef.names?.[0] ?? choice.cardId,
+          candidates: sceneChars,
+          resolve,
+        });
+      });
+      if (!isCurrentLiveInteraction(interactionEpoch)) return { ok: false, reason: 'not-allowed' };
+      if (switchRemoveUid === null) return { ok: false, reason: 'cancelled' };
+      return dispatchEngineAction({
+        type: 'nextHint',
+        player: p,
+        optionalCardId: choice.cardId,
+        switchRemoveUid,
+      });
+    }
     return dispatchEngineAction({ type: 'nextHint', player: p, optionalCardId: choice.cardId });
   }
   // skip: step1 のみ (FILE→手札、使用しない)
@@ -289,52 +310,6 @@ export async function runPartnerAbilityFlow(opts: { player: Player }): Promise<F
  * Phase 8.8b スコープ外: case 由来の declared ability (engine 未対応) /
  * パートナーエリアの MR (rules/18) — 8.8a partnerAbility 経由なので別フロー
  */
-/**
- * BUG-172: 宣言能力 source uid → cardId 解決 (scene / case / partnerMR / hand)。
- * ability 択一 modal (複数宣言能力持ち) の説明文表示と、後段の cost/confirm 表示が同じ解決を使う。
- * M3 PA batch (2026-07-10): partnerMR: (rules/18) + hand: (B06103, W6 step11) prefix を追加。
- */
-function resolveDeclaredSourceCardId(state: GameState, sourceUid: string): string | null {
-  if (sourceUid === 'case:self' || sourceUid === 'case:opp') {
-    return state.players[sourceUid === 'case:self' ? 'self' : 'opp'].case.cardId ?? null;
-  }
-  if (sourceUid === 'partnerMR:self' || sourceUid === 'partnerMR:opp') {
-    const p = sourceUid === 'partnerMR:self' ? 'self' : 'opp';
-    return state.players[p].partnerAreaMR?.cardId ?? null;
-  }
-  for (const p of ['self', 'opp'] as const) {
-    const mr = state.players[p].partnerAreaMR;
-    if (mr?.uid === sourceUid) return mr.cardId;
-  }
-  if (sourceUid.startsWith('hand:')) {
-    // hand sentinel `hand:${player}:${cardId}` — findCardOnBoard と同じ split 規約
-    const [, hp, ...rest] = sourceUid.split(':');
-    const token = rest.join(':');
-    const hCardId = (hp === 'self' || hp === 'opp') && /^\d+$/.test(token)
-      ? state.players[hp].hand[Number(token)]
-      : token;
-    if ((hp === 'self' || hp === 'opp') && state.players[hp].hand.includes(hCardId)) return hCardId;
-    return null;
-  }
-  const areaSource = /^(evidence|file):(self|opp):(\d+)$/.exec(sourceUid);
-  if (areaSource) {
-    const [, area, playerText, indexText] = areaSource;
-    const player = playerText as Player;
-    const index = Number(indexText);
-    if (area === 'evidence') {
-      const entry = state.players[player].evidence[index];
-      return entry?.faceUp ? entry.cardId : null;
-    }
-    const entry = state.players[player].file[index];
-    return entry?.type === 'card-back' && entry.faceUp === true ? entry.cardId : null;
-  }
-  for (const p of ['self', 'opp'] as const) {
-    const c = state.players[p].scene.find((x) => x.uid === sourceUid);
-    if (c) return c.cardId;
-  }
-  return null;
-}
-
 export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<FlowResult> {
   const state0 = useGameStateStore.getState().gameState;
   if (state0 === null) return { ok: false, reason: 'no-state' };
@@ -353,12 +328,12 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   // 2) ability 選択
   const stateAfterSrc = useGameStateStore.getState().gameState;
   if (stateAfterSrc === null) return { ok: false, reason: 'no-state' };
-  const abilIds = enumDeclaredAbilityIdsFor(stateAfterSrc, sourceUid);
-  if (abilIds.length === 0) return { ok: false, reason: 'not-allowed' };
+  const abilityChoices = enumDeclaredAbilityChoicesFor(stateAfterSrc, sourceUid);
+  if (abilityChoices.length === 0) return { ok: false, reason: 'not-allowed' };
 
-  let chosenAbilId: string;
-  if (abilIds.length === 1) {
-    chosenAbilId = abilIds[0];
+  let chosenAbilityChoice: typeof abilityChoices[number];
+  if (abilityChoices.length === 1) {
+    chosenAbilityChoice = abilityChoices[0];
   } else {
     // BUG-172 (2026-07-04, step12 batch2): 旧実装は picker.start({candidates: abilIds,
     // purpose:'declared-ability:ability'}) だったが、Playmat の picking UI は盤面 uid の
@@ -366,16 +341,29 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     // していた (宣言能力 2 つ持ちの human 経路は B09108 が初実戦 — 既出荷 B05028/B05045/B06069
     // も同 latent)。ChoicePickerModal (BUG-108 の択一 modal) を能力説明文で流用する。
     const srcName = uidToDisplayName(useGameStateStore.getState().gameState!, sourceUid);
-    const srcCardId = resolveDeclaredSourceCardId(useGameStateStore.getState().gameState!, sourceUid);
-    const srcDef = srcCardId ? engine.cards.get(srcCardId) : null;
-    const options = abilIds.map((id, index) => {
-      const ab = srcDef?.abilities.find((a) => a.id === id);
-      return { index, label: ab?.description ?? `能力 (${id})` };
+    const options = abilityChoices.map((choice, index) => {
+      const occurrenceLabel = choice.setCardId
+        ? `\n発生元: ${cardIdToDisplayName(choice.setCardId)}（${index + 1}件目）`
+        : '';
+      return { index, label: `${choice.description}${occurrenceLabel}` };
     });
     const choice = await useChoicePicker().ask({ sourceName: srcName, options });
     if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
-    chosenAbilId = abilIds[choice.index];
+    chosenAbilityChoice = abilityChoices[choice.index];
   }
+  const chosenAbilId = chosenAbilityChoice.abilId;
+  const chosenSourceRef = {
+    ...(chosenAbilityChoice.setCardId ? { setCardId: chosenAbilityChoice.setCardId } : {}),
+    ...(chosenAbilityChoice.setCardInstanceId
+      ? { setCardInstanceId: chosenAbilityChoice.setCardInstanceId }
+      : {}),
+    ...(chosenAbilityChoice.abilityOrigin
+      ? { abilityOrigin: chosenAbilityChoice.abilityOrigin }
+      : {}),
+    ...(chosenAbilityChoice.abilityIndex !== undefined
+      ? { abilityIndex: chosenAbilityChoice.abilityIndex }
+      : {}),
+  };
 
   // 3) cost 情報を取得して confirm (user_request 20260522_01 #5: case 対応)
   // Phase 2c: cost+ctx 構築 + pay は dispatcher (engine.flow.activateDeclaredAbility) 側へ
@@ -439,15 +427,31 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
       }
     }
   }
-  const charDef = cardId ? engine.cards.get(cardId) : null;
-  const chosenAbil = charDef?.abilities.find((a) => a.id === chosenAbilId);
+  const chosenOccurrence = cardId ? flow.findDeclaredAbilityOccurrence(
+    stateAfterSrc,
+    sourceUid,
+    cardId,
+    sourceArea,
+    chosenAbilId,
+    chosenSourceRef,
+  ) : undefined;
+  const chosenAbil = chosenOccurrence?.ability;
   const cost = chosenAbil?.cost;
   // mega-wave W5 (r37): {dyn} n コスト (B04088 removeDeckTop $self.oppSceneCount*2) を実数表示。
   // evalDyn の oppSceneCount は ctx.source.player のみ参照 (uid 不要な dyn でも source 完備で渡す)。
   const costText = cost
     ? costToText(cost, {
         state: stateAfterSrc,
-        ctx: { source: { player: owner ?? 'self', uid: sourceUid, cardId: cardId ?? undefined, area: sourceArea }, bindings: {} },
+        ctx: {
+          source: {
+            player: owner ?? 'self',
+            uid: sourceUid,
+            cardId: cardId ?? undefined,
+            area: sourceArea,
+            ...chosenSourceRef,
+          },
+          bindings: {},
+        },
       })
     : '無し';
   let costParams: AbilityCostParams | undefined;
@@ -479,6 +483,7 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
       cardId,
       abilityId: chosenAbilId,
       area: sourceArea,
+      ...chosenSourceRef,
     });
     const providers = alternativeCostProviders(altState, altCtx, chosenAbil!);
     const normalPayable = engine.cost.canPay(altState, cost, altCtx);
@@ -518,15 +523,21 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     if (stackedState === null) return { ok: false, reason: 'no-state' };
     const source = stackedState.players[owner].scene.find((char) => char.uid === sourceUid);
     const entries = source?.stackedCards;
-    if (!Array.isArray(entries) || entries.length < removeStackedCost.n) {
+    const stackedCount = Array.isArray(entries) ? entries.length : (typeof entries === 'number' ? entries : 0);
+    if (stackedCount < removeStackedCost.n) {
       return { ok: false, reason: 'not-allowed' };
     }
     // With exactly n entries no choice exists; omit params so human and AI use
     // the same deterministic engine fallback. Otherwise retain exact identities.
-    if (entries.length > removeStackedCost.n) {
+    if (Array.isArray(entries) && entries.length > removeStackedCost.n) {
       const choice = await useStackedCardCostPicker().ask({
         sourceName,
-        candidates: entries.map(({ instanceId, cardId }) => ({ instanceId, cardId })),
+        candidates: entries.map(({ instanceId, cardId }, index) => ({
+          instanceId,
+          cardId,
+          ordinal: index + 1,
+          hidden: cardId === FILE_CARD_BACK_PLACEHOLDER || cardId === 'back-card',
+        })),
         nMin: removeStackedCost.n,
         nMax: removeStackedCost.n,
       });
@@ -582,7 +593,7 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   if (!useAlternativeCost && removeHandCost && owner === 'self' && cardId) {
     const handState = useGameStateStore.getState().gameState;
     if (handState === null) return { ok: false, reason: 'no-state' };
-    const allowed = engine.target.candidates(handState, removeHandCost.target, makeAbilityCtx({ player: owner, uid: sourceUid, cardId, abilityId: chosenAbilId, area: sourceArea }))
+    const allowed = engine.target.candidates(handState, removeHandCost.target, makeAbilityCtx({ player: owner, uid: sourceUid, cardId, abilityId: chosenAbilId, area: sourceArea, ...chosenSourceRef }))
       .filter((candidate): candidate is Candidate & { kind: 'card'; index: number } => candidate.kind === 'card' && typeof candidate.index === 'number');
     if (allowed.length < removeHandCost.n) return { ok: false, reason: 'not-allowed' };
     const choice = await useHandCostPicker().ask({
@@ -597,6 +608,36 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
       || new Set(choice.indices).size !== choice.indices.length
       || choice.indices.some(index => !allowedIndices.has(index))) return { ok: false, reason: 'not-allowed' };
     costParams = { ...(costParams ?? {}), removeFromHand: { indices: choice.indices } };
+  }
+
+  const revealHandCost = findRevealFromHandCost(cost, costParams?.costChoicePath ?? costParams?.costChoice);
+  if (!useAlternativeCost && revealHandCost && owner === 'self' && cardId) {
+    const handState = useGameStateStore.getState().gameState;
+    if (handState === null) return { ok: false, reason: 'no-state' };
+    const allowed = engine.target.candidates(handState, revealHandCost.target, makeAbilityCtx({
+      player: owner, uid: sourceUid, cardId, abilityId: chosenAbilId, area: sourceArea, ...chosenSourceRef,
+    })).filter((candidate): candidate is Candidate & { kind: 'card'; index: number } => (
+      candidate.kind === 'card' && typeof candidate.index === 'number'
+    ));
+    const nMin = typeof revealHandCost.n === 'number' ? revealHandCost.n : revealHandCost.n.min;
+    const rawMax = typeof revealHandCost.n === 'number' ? revealHandCost.n : revealHandCost.n.max;
+    const nMax = Math.min(rawMax, allowed.length);
+    if (allowed.length < nMin) return { ok: false, reason: 'not-allowed' };
+    const choice = await useHandCostPicker().ask({
+      side: owner,
+      sourceName,
+      candidates: allowed.map(candidate => ({ index: candidate.index, cardId: candidate.cardId })),
+      n: nMin,
+      nMax,
+      action: 'reveal',
+    });
+    if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
+    const allowedIndices = new Set(allowed.map(candidate => candidate.index));
+    if (choice.indices.length < nMin
+      || choice.indices.length > nMax
+      || new Set(choice.indices).size !== choice.indices.length
+      || choice.indices.some(index => !allowedIndices.has(index))) return { ok: false, reason: 'not-allowed' };
+    costParams = { ...(costParams ?? {}), revealFromHand: { indices: choice.indices } };
   }
 
   // 3.6) 夜間 W0 (2026-07-11, B09027): cost kind:'choice' (「AかBを1枚リムーブする」択一コスト) の
@@ -614,6 +655,7 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
       cardId,
       abilityId: chosenAbilId,
       area: sourceArea,
+      ...chosenSourceRef,
     });
     const path: number[] = [];
     for (;;) {
@@ -652,6 +694,64 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     };
   }
 
+  // Exact active-character cost selection. Keep this after cost-choice
+  // resolution so only the selected payment branch can open a picker.
+  const characterStateCost = findCharacterStateCost(
+    cost,
+    costParams?.costChoicePath ?? costParams?.costChoice,
+  );
+  if (!useAlternativeCost && characterStateCost && owner === 'self' && cardId) {
+    const characterState = useGameStateStore.getState().gameState;
+    if (characterState === null) return { ok: false, reason: 'no-state' };
+    const min = characterStateCost.target.kind === 'pick' ? characterStateCost.target.n.min : 1;
+    const max = characterStateCost.target.kind === 'pick' ? characterStateCost.target.n.max : 1;
+    // Every shipped sleepChar/stunChar declaration currently pays exactly one.
+    // Preserve legacy engine fallback for other cardinalities until they gain a
+    // dedicated multi-select interaction.
+    if (min === 1 && max === 1) {
+      const characterCtx = makeAbilityCtx({
+        player: owner,
+        uid: sourceUid,
+      cardId,
+      abilityId: chosenAbilId,
+      area: sourceArea,
+      ...chosenSourceRef,
+      });
+      const active = engine.target.candidates(characterState, characterStateCost.target, characterCtx)
+        .filter((candidate): candidate is Candidate & { kind: 'char' } => {
+          if (candidate.kind !== 'char') return false;
+          return characterState.players[candidate.player].scene
+            .some(char => char.uid === candidate.uid && char.state === 'active');
+        });
+      if (active.length === 0) return { ok: false, reason: 'not-allowed' };
+      const chosen = active.length === 1
+        ? active[0]!
+        : await (async () => {
+          const choice = await useChoicePicker().ask({
+            sourceName,
+            options: active.map((candidate, index) => {
+              const sceneIndex = characterState.players[candidate.player].scene
+                .findIndex(char => char.uid === candidate.uid);
+              const sideLabel = candidate.player === owner
+                ? ''
+                : candidate.player === 'self' ? '自分の' : '相手の';
+              return {
+                index,
+                label: `${uidToDisplayName(characterState, candidate.uid)}（${sideLabel}現場${sceneIndex + 1}）`,
+              };
+            }),
+          });
+          return choice.kind === 'cancel' ? null : active[choice.index];
+        })();
+      if (chosen === null) return { ok: false, reason: 'cancelled' };
+      if (chosen === undefined) return { ok: false, reason: 'not-allowed' };
+      costParams = {
+        ...(costParams ?? {}),
+        [characterStateCost.kind]: { uids: [chosen.uid] },
+      };
+    }
+  }
+
   // 3.6b) BUG-248: removeSetCard コストは、host だけでなく物理 set-card occurrence を
   // 人間に明示選択させる。裏向き entry の cardId は request/store/UI に渡さない。
   // choice cost は 3.6 で branch 確定後なので、選んだ branch だけを対象にする。
@@ -659,7 +759,7 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   if (!useAlternativeCost && removeSetCost && owner === 'self' && cardId) {
     const setState = useGameStateStore.getState().gameState;
     if (setState === null) return { ok: false, reason: 'no-state' };
-    const setCtx = makeAbilityCtx({ player: owner, uid: sourceUid, cardId, abilityId: chosenAbilId, area: sourceArea });
+    const setCtx = makeAbilityCtx({ player: owner, uid: sourceUid, cardId, abilityId: chosenAbilId, area: sourceArea, ...chosenSourceRef });
     const candidates = eligibleRemoveSetCards(setState, removeSetCost, setCtx)
       .filter(({ entry }) => typeof entry.instanceId === 'string')
       .map(({ host, entry }, ordinal) => {
@@ -699,7 +799,10 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   //   AI 経路の択一は BUG-109 (PA 短縮形 AI no-op) と併せて別途対応 (現状 default 0)。
   const effect = chosenAbil?.effect as Effect | undefined;
   if (effect && effect.kind === 'choice' && effect.options.length > 1 && owner === 'self' && cardId) {
-    const options = effect.options.map((o, index) => ({ index, label: choiceOptionLabel(o) }));
+    const options = effect.options.map((o, index) => ({
+      index,
+      label: effect.labels?.[index] ?? choiceOptionLabel(o),
+    }));
     const choice = await useChoicePicker().ask({ sourceName, options });
     if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
     costParams = { ...(costParams ?? {}), choiceIndex: choice.index };
@@ -735,6 +838,7 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     type: 'declaredAbility',
     uid: sourceUid,
     abilId: chosenAbilId,
+    ...chosenSourceRef,
     ...(costParams ? { costParams } : {}),
   });
 }
@@ -882,6 +986,7 @@ export async function runHandUseFlow(opts: {
   const interactionEpoch = currentInteractionEpoch();
   const removeUid = await new Promise<string | null>((resolve) => {
     useSceneSwitchPickerStore.getState()._open({
+      player: opts.player,
       cardId: opts.cardId,
       newCardName,
       candidates: sceneChars,

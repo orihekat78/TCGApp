@@ -11,7 +11,11 @@ import type { Move } from '../move-enumerator.js';
 import type { GameState } from '@/engine/types';
 import { replayNondeterminism } from './nondeterminism.js';
 import { decodeReplayLog } from './decode.js';
-import { withLegacyReplayHiramekiCompatibility } from '@/engine/flow/action/legacy-replay-compat.js';
+import { withLegacyReplayCompatibility } from '@/engine/flow/action/legacy-replay-compat.js';
+import {
+  registeredCardNameMigrationFor,
+  type RegisteredCardNameMigration,
+} from '@/engine/effect/declared-name-domain.js';
 
 type Player = 'self' | 'opp';
 
@@ -32,12 +36,13 @@ export class ScriptedPolicy implements AIPolicy {
     this.queue = [...moves];
   }
 
-  choose(_state: GameState, candidates: Move[], _byPlayer: Player): Move | null {
+  choose(state: GameState, candidates: Move[], _byPlayer: Player): Move | null {
     if (this.queue.length === 0) {
       throw new Error('replay move queue exhausted');
     }
     const recorded = this.queue[0];
-    const legal = candidates.find((candidate) => movesEqual(candidate, recorded));
+    const legal = candidates.find((candidate) => movesEqual(candidate, recorded))
+      ?? adaptLegacyRegisteredCardName(state, recorded, candidates);
     if (!legal) {
       throw new Error(`recorded replay move is not legal: ${JSON.stringify(recorded)}`);
     }
@@ -63,8 +68,107 @@ function canonical(value: unknown): unknown {
   return value;
 }
 
+type DeclaredAbilityMove = Extract<Move, { kind: 'declaredAbility' }>;
+
+function isWitnessFreeLegacyDeclaredMove(move: DeclaredAbilityMove): boolean {
+  return move.setCardId === undefined
+    && move.setCardInstanceId === undefined
+    && move.abilityOrigin === undefined
+    && move.abilityIndex === undefined;
+}
+
+function isExactHostDeclaredMove(move: DeclaredAbilityMove): boolean {
+  return move.setCardId === undefined
+    && move.setCardInstanceId === undefined
+    && (move.abilityOrigin === 'printed' || move.abilityOrigin === 'granted')
+    && Number.isSafeInteger(move.abilityIndex)
+    && (move.abilityIndex as number) >= 0;
+}
+
+function withoutDeclaredOccurrence(move: DeclaredAbilityMove): Omit<
+  DeclaredAbilityMove,
+  'setCardId' | 'setCardInstanceId' | 'abilityOrigin' | 'abilityIndex'
+> {
+  const {
+    setCardId: _setCardId,
+    setCardInstanceId: _setCardInstanceId,
+    abilityOrigin: _abilityOrigin,
+    abilityIndex: _abilityIndex,
+    ...base
+  } = move;
+  return base;
+}
+
 function movesEqual(a: Move, b: Move): boolean {
-  return JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
+  if (JSON.stringify(canonical(a)) === JSON.stringify(canonical(b))) return true;
+  if (a.kind !== 'declaredAbility' || b.kind !== 'declaredAbility') return false;
+  const legacyHostPair = (
+    isWitnessFreeLegacyDeclaredMove(a) && isExactHostDeclaredMove(b)
+  ) || (
+    isWitnessFreeLegacyDeclaredMove(b) && isExactHostDeclaredMove(a)
+  );
+  if (!legacyHostPair) return false;
+  return JSON.stringify(canonical(withoutDeclaredOccurrence(a)))
+    === JSON.stringify(canonical(withoutDeclaredOccurrence(b)));
+}
+
+function withoutDeclaredName(move: DeclaredAbilityMove): Omit<DeclaredAbilityMove, 'declaredName'> {
+  const { declaredName: _declaredName, ...base } = move;
+  return base;
+}
+
+function isExactPrintedMigrationOccurrence(
+  move: DeclaredAbilityMove,
+  migration: RegisteredCardNameMigration,
+): boolean {
+  return move.setCardId === undefined
+    && move.setCardInstanceId === undefined
+    && move.abilityOrigin === 'printed'
+    && move.abilityIndex === migration.abilityIndex;
+}
+
+function replayDeclaredSource(
+  state: GameState,
+  uid: string,
+): { cardId: string; area: 'scene' | 'partner-area' | 'case' } | undefined {
+  if (uid === 'case:self' || uid === 'case:opp') {
+    const player = uid === 'case:self' ? 'self' : 'opp';
+    const cardId = state.players[player].case.cardId;
+    return cardId ? { cardId, area: 'case' } : undefined;
+  }
+  for (const player of ['self', 'opp'] as const) {
+    const partnerMR = state.players[player].partnerAreaMR;
+    if (partnerMR && (partnerMR.uid === uid || uid === `partnerMR:${player}`)) {
+      return { cardId: partnerMR.cardId, area: 'partner-area' };
+    }
+    const scene = state.players[player].scene.find(card => card.uid === uid);
+    if (scene) return { cardId: scene.cardId, area: 'scene' };
+  }
+  return undefined;
+}
+
+function adaptLegacyRegisteredCardName(
+  state: GameState,
+  recorded: Move,
+  candidates: Move[],
+): Move | undefined {
+  if (recorded.kind !== 'declaredAbility'
+    || recorded.declaredName !== undefined) return undefined;
+  const namedCandidates = candidates.filter((move): move is DeclaredAbilityMove => (
+    move.kind === 'declaredAbility'
+    && move.declaredName !== undefined
+    && movesEqual(withoutDeclaredName(move) as Move, recorded)
+  ));
+  if (namedCandidates.length === 0) return undefined;
+  const source = replayDeclaredSource(state, recorded.uid);
+  const migration = registeredCardNameMigrationFor(source?.cardId, recorded.abilityId);
+  if (!source || !migration || source.area !== migration.area) return undefined;
+  if (!isWitnessFreeLegacyDeclaredMove(recorded)
+    && !isExactPrintedMigrationOccurrence(recorded, migration)) {
+    return undefined;
+  }
+  const candidate = namedCandidates.find(move => isExactPrintedMigrationOccurrence(move, migration));
+  return candidate ? withoutDeclaredName(candidate) as Move : undefined;
 }
 
 /**
@@ -85,7 +189,7 @@ export function replayLog(input: unknown): MatchResult {
     ? Math.max(0, log.result.turns - 1)
     : log.result.turns;
   let replayMoveIndex = 0;
-  const run = (): MatchResult => withLegacyReplayHiramekiCompatibility(() => runMatch({
+  const run = (): MatchResult => withLegacyReplayCompatibility(() => runMatch({
     selfPolicy,
     oppPolicy,
     initialState: log.initialState,

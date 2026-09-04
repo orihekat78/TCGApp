@@ -272,6 +272,37 @@ describe('W6b step8 (row75): reservedEffects queue', () => {
     expect(s.reservedEffects).toHaveLength(0); // 単発消費
   });
 
+  it('keeps the exact set-card occurrence through reservation and delayed queueing', () => {
+    const state = reserveBase();
+    const source = rctx();
+    source.source.setCardId = 'SET-SOURCE';
+    source.source.setCardInstanceId = 'set:reserved:2';
+
+    runEffect(state, RESERVE_TURNEND, source);
+
+    expect(state.reservedEffects[0]?.source).toMatchObject({
+      player: 'self',
+      cardId: 'ARMER',
+      abilityId: 'a1',
+      uid: 'armer',
+      area: 'scene',
+      setCardId: 'SET-SOURCE',
+      setCardInstanceId: 'set:reserved:2',
+    });
+
+    event.emit(state, 'phase:end:start', { player: 'self' }, undefined);
+
+    expect(state.pendingEffects[0]?.source).toMatchObject({
+      player: 'self',
+      cardId: 'ARMER',
+      abilityId: 'a1',
+      uid: 'armer',
+      area: 'remove',
+      setCardId: 'SET-SOURCE',
+      setCardInstanceId: 'set:reserved:2',
+    });
+  });
+
   it('§8-2 filter 不一致 (COP5 のみ) → 0-pick で clean 不発 + entry は消費', () => {
     const base = reserveBase();
     base.players.self.hand = ['COP5'];
@@ -764,13 +795,25 @@ describe('W6b step10 (row9): leave:intercept pre-splice consult (B01092 hand / B
   it('§11-4 on-set-host rider declared: faceUp rider が host から宣言可能・効果も解決', () => {
     const s0 = createEmptyGameState();
     s0.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
-    s0.players.self.scene = [sceneChar('PLAIN7', 'host', { setCards: [{ cardId: 'RIDERDECL', faceUp: true }] })];
+    s0.players.self.scene = [sceneChar('PLAIN7', 'host', {
+      setCards: [{ cardId: 'RIDERDECL', faceUp: true, instanceId: 'set:riderdecl' }],
+    })];
     s0.players.self.remove = ['COP4'];
     s0.players.self.deck = ['MOB7', 'MOB7'];
     expect(findDeclaredAbility(s0, 'host', 'PLAIN7', 'scene', 'r1')).toBeTruthy();
-    expect(canDeclaredAbility(s0, 'host', 'r1')).toBe(true);
+    const sourceRef = { setCardId: 'RIDERDECL', setCardInstanceId: 'set:riderdecl' };
+    expect(canDeclaredAbility(s0, 'host', 'r1', sourceRef)).toBe(true);
     const s1 = produce(s0, (d) => {
-      useDeclaredAbility(d, 'host', 'r1');
+      useDeclaredAbility(d, 'host', 'r1', {
+        source: {
+          cardId: 'PLAIN7',
+          uid: 'host',
+          abilityId: 'r1',
+          player: 'self',
+          area: 'scene',
+          ...sourceRef,
+        },
+      });
       runAllUntilEmpty(d);
       drainAiEffectPicks(d, new HeuristicPolicy());
       runAllUntilEmpty(d);

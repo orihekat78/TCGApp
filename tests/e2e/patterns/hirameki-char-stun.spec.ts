@@ -38,6 +38,18 @@ import type { GameStateLike } from '../helpers';
 
 type FileCardLike = { type: 'card-back'; cardId: string };
 
+async function setupManualHiramekiPage(page: Page) {
+  const setup = await setupGamePage(page);
+  await page.evaluate(() => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    const store = (window as unknown as {
+      __game: { store: { getState: () => { setAiPaused: (value: boolean) => void } } };
+    }).__game.store.getState();
+    store.setAiPaused(true);
+  });
+  return setup;
+}
+
 async function probeCharStunAbility(
   page: Page,
   cardId: string,
@@ -167,6 +179,9 @@ type FixtureArg = { evidenceCardId: string };
 function applyFixture(gs: GameStateLike, arg: FixtureArg): void {
   // Round 4j-fix 反転 pattern: opp が attacker、self が hirameki owner
   // → useHiramekiFlowDriver は pending.player='self' で early return → test が pending 観測可能
+  (gs as unknown as { turn: Record<string, unknown> }).turn = {
+    number: 3, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false,
+  };
   const self = gs.players.self as unknown as {
     partner: { cardId: string; state: string; location: string };
     hand: string[];
@@ -212,7 +227,7 @@ const CARDS = [
 test.describe('hiramekiCharStun — shape + fire/skip path (2 カード集約, BUG-035 既知挙動)', () => {
   for (const { cardId, abilityId, kind } of CARDS) {
     test(`${cardId} ${abilityId} (${kind}): shape (icon-flash / on-evidence / choice → atom sceneSetState sleep)`, async ({ page }) => {
-      const { errors } = await setupGamePage(page);
+      const { errors } = await setupManualHiramekiPage(page);
       await buildCausalGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
 
       const probe = await probeCharStunAbility(page, cardId, abilityId);
@@ -234,7 +249,7 @@ test.describe('hiramekiCharStun — shape + fire/skip path (2 カード集約, B
     });
 
     test(`${cardId} ${abilityId} (${kind}): fire path → 敵 scene state sleep (Phase 7-3 chooseAtomTarget)`, async ({ page }) => {
-      const { errors } = await setupGamePage(page);
+      const { errors } = await setupManualHiramekiPage(page);
       await buildCausalGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
 
       await dispatchActionCase(page);
@@ -275,7 +290,7 @@ test.describe('hiramekiCharStun — shape + fire/skip path (2 カード集約, B
     });
 
     test(`${cardId} ${abilityId} (${kind}): skip path → scene state 不変`, async ({ page }) => {
-      const { errors } = await setupGamePage(page);
+      const { errors } = await setupManualHiramekiPage(page);
       await buildCausalGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
 
       await dispatchActionCase(page);
@@ -296,7 +311,7 @@ test.describe('hiramekiCharStun — shape + fire/skip path (2 カード集約, B
 
   // negative: D08015 (icon-flash 非持ち) → pendingHirameki null
   test('non-hirameki card (D08015): abilities に icon-flash 非含有 + dispatch しても pendingHirameki null', async ({ page }) => {
-    const { errors } = await setupGamePage(page);
+    const { errors } = await setupManualHiramekiPage(page);
     await buildCausalGameState<FixtureArg>(page, applyFixture, { evidenceCardId: 'D08015' });
 
     expect(await hasIconFlashAbility(page, 'D08015'), 'D08015 は icon-flash 非持ち').toBe(false);

@@ -18,6 +18,7 @@ import { CardExpandModal } from './CardExpandModal.js';
 import { PublicHandRevealCards } from './PublicHandRevealWindow.js';
 import { shouldRenderEffectPicker } from '@/ui/services/effectPickerVisibility.js';
 import { effectivePendingPickRange, pendingPickSelectionViolation } from '@/engine/effect/pick-selection.js';
+import { effectSourceDisplayName } from '@/ui/services/uidNames.js';
 import {
   canRestoreModalFocus,
   isTopmostMatchModalRoot,
@@ -125,9 +126,7 @@ export function EffectPickerModal(): JSX.Element | null {
     ? publicHandReveal
     : null;
 
-  const sourceName = pending.source.cardId
-    ? readDef.card(pending.source.cardId)?.names?.[0] ?? pending.source.cardId
-    : '効果';
+  const sourceName = effectSourceDisplayName(pending.source, { gameState });
   // W2b (P50/r27): mustBeSelectedByOppEvent forced 集合 — forced 以外は click 不可、skip 封じ。
   const forced = (pending.forcedUids ?? []).filter((u) => pending.candidates.some((c) => c.uid === u));
   const effectiveRange = effectivePendingPickRange(pending);
@@ -187,15 +186,19 @@ export function EffectPickerModal(): JSX.Element | null {
    * 見えてしまう問題。証拠 candidate (uid='evidence:<side>:<idx>') について
    * gameState から faceUp を確認し、裏向きなら「(非公開)」表示にする。
    */
-  const candDisplayName = (c: { uid: string; cardId: string; hidden?: boolean }): string => {
-    if (c.hidden === true) return '(非公開)';
+  const isOpaqueCandidate = (c: { uid: string; hidden?: boolean }): boolean => {
+    if (c.hidden === true) return true;
     const evMatch = c.uid.match(/^evidence:(self|opp):(\d+)$/);
-    if (evMatch && gameState) {
-      const evPlayer = evMatch[1] as 'self' | 'opp';
-      const evIdx = parseInt(evMatch[2]!, 10);
-      const evCard = gameState.players[evPlayer]?.evidence?.[evIdx];
-      if (evCard && !evCard.faceUp) return '(非公開)';
-    }
+    if (!evMatch || !gameState) return false;
+    const evPlayer = evMatch[1] as 'self' | 'opp';
+    const evIdx = parseInt(evMatch[2]!, 10);
+    return gameState.players[evPlayer]?.evidence?.[evIdx]?.faceUp === false;
+  };
+  const candDisplayName = (
+    c: { uid: string; cardId: string; hidden?: boolean },
+    index: number,
+  ): string => {
+    if (isOpaqueCandidate(c)) return `非公開カード ${index + 1}`;
     return readDef.card(c.cardId)?.names?.[0] ?? c.cardId;
   };
 
@@ -228,10 +231,10 @@ export function EffectPickerModal(): JSX.Element | null {
         )}
         <ul className="effect-picker-list">
           {pending.candidates.map((c, index) => {
-            const name = candDisplayName(c);
+            const name = candDisplayName(c, index);
             // 同名カード識別のためカード画像を表示 (Recognition over Recall)。
             // 裏向き証拠 ('(非公開)') は実画像を出さず placeholder にフォールバックさせる。
-            const hidden = name === '(非公開)';
+            const hidden = isOpaqueCandidate(c);
             // W2b (P50/r27): forced が居るとき forced 以外は選択不可 (「必ず選ぶ」)
             const forcedBlocked = !forced.includes(c.uid)
               && forced.length > 0
@@ -253,6 +256,10 @@ export function EffectPickerModal(): JSX.Element | null {
                     expandModal.open(c.cardId);
                   }}
                   data-testid={`effect-pick-cand-${c.uid}`}
+                  data-card-id={hidden ? undefined : c.cardId}
+                  aria-label={hidden
+                    ? `${c.player === 'self' ? '自分' : '相手'}の非公開カード ${index + 1}枚目を${selected ? '選択解除' : '選択'}`
+                    : undefined}
                   aria-pressed={isMulti ? selected : undefined}
                 >
                   <CardArt cardId={hidden ? null : c.cardId} alt={name} className="cand-art" />

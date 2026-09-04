@@ -3,6 +3,7 @@ import { registerAll } from '@/cards';
 import { B02051 } from '@/cards/ct-p02/B02051';
 import { B09049 } from '@/cards/ct-p09/B09049';
 import { applyPickAndContinuation, applyPickSkipAndContinuation } from '@/engine/effect/apply-pick';
+import { deckOccurrenceAuthority } from '@/engine/effect/deck-occurrence-authority';
 import { _clearPendingEffectPickQueue, _drainPendingEffectPickSide } from '@/engine/effect/pending-state';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks';
 import { run as runEffect } from '@/engine/effect/resolver';
@@ -133,9 +134,11 @@ describe('continuation chain gate — real card carriers', () => {
     const target = sceneChar(ORDER_OBSERVER.id, 'observer-target');
     state.players.self.scene = [target];
     state.players.self.deck = ['D08015', 'D08016'];
+    const moveAuthority = deckOccurrenceAuthority(state, 'self', 0);
+    if (!moveAuthority) throw new Error('missing D08015 deck occurrence authority');
     const ctx: EffectCtx = {
       source: { player: 'self', area: 'hand', cardId: 'TEST_ORDER_SOURCE', abilityId: 'a1' },
-      bindings: { '$move': [{ cardId: 'D08015' }] },
+      bindings: { '$move': [moveAuthority] },
     };
     const effect: Effect = {
       kind: 'sequence',

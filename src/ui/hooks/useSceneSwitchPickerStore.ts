@@ -29,6 +29,8 @@ export type SceneSwitchCharView = {
 };
 
 export type SceneSwitchPickerOpen = {
+  /** Absolute side whose scene supplies the switch victim. */
+  player: 'self' | 'opp';
   cardId: string;
   newCardName: string;
   candidates: readonly SceneSwitchCharView[];

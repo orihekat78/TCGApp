@@ -6,7 +6,7 @@
 //     〚カード名［妃英理］〛かレベル5以下の〚特徴［毛利探偵事務所］〛のキャラを1枚まで選び、登場させる。
 //   【相手ターン中】【現場リムーブ時】自分のリムーブエリアにある〚カード名［工藤新一］〛を1枚まで選び、手札に加える。
 //
-// a1: 【絆工藤新一】(bond condition) + 【ターン1】+ multi-hook (reasoning:end + action:declare, selfOnly)。
+// a1: 【絆工藤新一】(bond condition) + 【ターン1】+ multi-hook (reasoning:after-sleep + action:declare, selfOnly)。
 //   効果は enter-from-remove: リムーブの[妃英理]Lv5以下 / [毛利探偵事務所]Lv5以下のキャラを1枚まで登場 (D08024 同型)。
 // a2: 【相手ターン中】(turn:opp condition) + 【現場リムーブ時】(leave:to-remove selfOnly) →
 //   リムーブの[工藤新一]を1枚まで手札 (handAddFromRemove)。B04030 + handAddFromRemove 同型。
@@ -20,7 +20,7 @@ const a1: AbilityDef = {
   limit: { kind: 'turn', n: 1 },
   condition: { kind: 'bond', cardName: '工藤新一' }, // 【絆工藤新一】
   // このキャラが推理 or アクションしたとき (selfOnly、共有【ターン1】)
-  trigger: { hook: 'reasoning:end', hooks: ['action:declare'], selfOnly: true },
+  trigger: { hook: 'reasoning:after-sleep', hooks: ['action:declare'], selfOnly: true },
   effect: {
     // リムーブから [妃英理]Lv5以下 か [毛利探偵事務所]Lv5以下 のキャラを1枚まで登場
     kind: 'atom',

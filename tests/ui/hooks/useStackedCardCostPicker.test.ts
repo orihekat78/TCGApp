@@ -7,7 +7,10 @@ import {
 
 const request: StackedCardCostRequest = {
   sourceName: '阿笠博士',
-  candidates: [{ instanceId: 'a', cardId: 'A' }, { instanceId: 'b', cardId: 'B' }],
+  candidates: [
+    { instanceId: 'a', cardId: 'A', ordinal: 1 },
+    { instanceId: 'b', cardId: 'B', ordinal: 2 },
+  ],
   nMin: 1,
   nMax: 1,
 };

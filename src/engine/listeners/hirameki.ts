@@ -40,6 +40,12 @@ export type PendingHiramekiSide = {
     index: number;
     occurrenceWitness: string;
   };
+  /** Exact ActionContext-owned evidence card while it is between zones. */
+  heldEvidence?: {
+    token: string;
+    player: 'self' | 'opp';
+    cardId: string;
+  };
   /** State-owned action that must still be awaiting this decision. */
   actionId?: string;
   /** Exact public evidence-removal event that opened this decision. */

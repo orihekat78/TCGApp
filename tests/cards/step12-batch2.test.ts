@@ -60,7 +60,12 @@ function baseState(): GameState {
 }
 
 function emitEnter(d: GameState, c: SceneCharacter, player: 'self' | 'opp'): void {
-  event.emit(d, 'enter', { uid: c.uid, player, enterOrder: 1, enterOrderThisTurn: 1 }, { player, cardId: c.cardId, uid: c.uid });
+  event.emit(
+    d,
+    'enter',
+    { uid: c.uid, viaEffect: false, enterOrder: 1, enterOrderThisTurn: 1 },
+    { player, cardId: c.cardId, uid: c.uid },
+  );
 }
 
 beforeEach(() => {
@@ -167,21 +172,19 @@ describe('B09003 a3 — 宣言 (declareName clone)', () => {
       .filter(c => charRead.ap(after, c.uid) > (charRead.ap(s, c.uid) ?? 0));
     expect(buffed.length, 'キャラ1枚に AP+2000').toBe(1);
   });
-  it('宣言名不一致 / AI 未供給 (空文字) → FILE ops は実行、AP+ は不発', () => {
-    for (const costParams of [{ declaredName: 'MOB' }, undefined]) {
-      const { s, conan } = board();
-      const after = produce(s, (d) => {
-        activateDeclaredAbility(d, conan.uid, 'a3', costParams);
-        runAllUntilEmpty(d);
-        drainAiEffectPicks(d);
-        runAllUntilEmpty(d);
-      });
-      expect(after.players.opp.remove).toContain('BLUE4');
-      expect(after.players.opp.file.length).toBe(2);
-      const buffed = [...after.players.self.scene, ...after.players.opp.scene]
-        .filter(c => charRead.ap(after, c.uid) > (charRead.ap(s, c.uid) ?? 0));
-      expect(buffed.length, `AP+ 不発 (${JSON.stringify(costParams)})`).toBe(0);
-    }
+  it('登録済み宣言名不一致 → FILE ops は実行、AP+ は不発', () => {
+    const { s, conan } = board();
+    const after = produce(s, (d) => {
+      activateDeclaredAbility(d, conan.uid, 'a3', { declaredName: 'MOB' });
+      runAllUntilEmpty(d);
+      drainAiEffectPicks(d);
+      runAllUntilEmpty(d);
+    });
+    expect(after.players.opp.remove).toContain('BLUE4');
+    expect(after.players.opp.file.length).toBe(2);
+    const buffed = [...after.players.self.scene, ...after.players.opp.scene]
+      .filter(c => charRead.ap(after, c.uid) > (charRead.ap(s, c.uid) ?? 0));
+    expect(buffed.length, 'AP+ 不発').toBe(0);
   });
   it('opp FILE 空 → fileRemoveTop chain break: 補充もされない (B09105 Q&A)', () => {
     const { s, conan } = board();

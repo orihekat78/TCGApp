@@ -121,6 +121,7 @@ function HandCard({
   pickable,
   pickSelected,
 }: HandCardProps): JSX.Element {
+  const isKeyboardPick = Boolean(pickable && onClick && !disabled);
   const classes = [
     'hand-card',
     `color-${card.color}`,
@@ -149,8 +150,17 @@ function HandCard({
             : undefined
       }
       aria-disabled={(disabled && onExpand === undefined) || undefined}
+      aria-label={isKeyboardPick ? `${card.name}を選択` : undefined}
+      aria-pressed={isKeyboardPick ? Boolean(pickSelected) : undefined}
       data-action-disabled={disabled || undefined}
+      role={isKeyboardPick ? 'button' : undefined}
+      tabIndex={isKeyboardPick ? 0 : undefined}
       onClick={disabled ? undefined : onClick}
+      onKeyDown={isKeyboardPick ? (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        onClick?.();
+      } : undefined}
     >
       <div className="cost">{card.cost}</div>
       <div className="type-badge">{card.type}</div>
@@ -441,7 +451,7 @@ export function HandZone(props: HandZoneProps): JSX.Element {
                 onClick={canPick
                   ? () => (isMultiPick ? togglePickSelected(pickUid) : onPickCard!(pickUid))
                   : undefined}
-                onExpand={onCardExpand}
+                onExpand={canPick ? undefined : onCardExpand}
                 pickable={canPick}
                 pickSelected={isSelected}
               />

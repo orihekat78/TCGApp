@@ -183,6 +183,91 @@ describe('useGameStateStore', () => {
     }
   });
 
+  it('commits a direct terminal write after disposing its held Hirameki runtime authority', () => {
+    const state = createEmptyGameState();
+    state.actionContexts = {
+      pending: {
+        id: 'pending',
+        byUid: 'ACTOR#1',
+        byPlayer: 'self',
+        target: { kind: 'case', player: 'opp' },
+        phase: 'judge',
+        judgeResolved: true,
+        deferredCaseEvidenceGain: true,
+        pendingHiramekiEvidenceRemoval: {
+          token: 'hirameki:pending:opp',
+          player: 'opp',
+          abilityId: 'a1',
+          effectValid: true,
+          decisionResolved: false,
+          evidence: {
+            cardId: 'HELD-HIRAMEKI',
+            faceUp: true,
+            origin: { turn: 1, via: 'action-case' },
+          },
+        },
+        startedAt: { turn: 1, nano: 1 },
+      },
+    };
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingHirameki',
+        present: true,
+        value: {
+          player: 'opp',
+          cardId: 'HELD-HIRAMEKI',
+          abilityId: 'a1',
+          effectValid: true,
+          actorUid: 'ACTOR#1',
+          actionId: 'pending',
+          heldEvidence: {
+            token: 'hirameki:pending:opp',
+            player: 'opp',
+            cardId: 'HELD-HIRAMEKI',
+          },
+          gainDeferred: true,
+        },
+      }],
+    };
+    state.pendingTurnTransition = {
+      endingPlayer: 'self',
+      stage: 'after-end-start',
+      startNextTurn: true,
+    };
+    state.pendingReasoningContinuation = { token: 7, uid: 'ACTOR#1', player: 'self' };
+    state.pendingEffects = (['pending', 'resolving'] as const).map((entryState, index) => ({
+      id: `terminal-${entryState}`,
+      source: { player: 'self' as const, cardId: 'SOURCE', abilityId: 'a1' },
+      triggeredBy: { hook: 'manual' },
+      triggeredAt: { turn: 1, phase: 'main', nano: index + 1 },
+      effect: { kind: 'atom' as const, verb: 'noop' as const, args: {} },
+      state: entryState,
+    }));
+    state.reservedEffects = (['next-match', 'turn-end'] as const).map((mode, index) => ({
+      id: `reserved-${mode}`,
+      trigger: { hook: `reserved:${mode}`, mode, player: 'self', armedTurn: 1 },
+      effect: { kind: 'atom' as const, verb: 'noop' as const, args: {} },
+      source: { player: 'self' as const, cardId: `RESERVED-${index}` },
+    }));
+
+    gameResult.set(state, 'opp', 'deck-out');
+
+    expect(useGameStateStore.getState().commitTerminalState(state)).toBe(true);
+    expect(useGameStateStore.getState().gameState).toMatchObject({
+      gameResult: { winner: 'opp', reason: 'deck-out' },
+      actionContexts: {},
+    });
+    expect(useGameStateStore.getState().gameState?.players.opp.remove)
+      .toEqual(['HELD-HIRAMEKI']);
+    expect(useGameStateStore.getState().gameState?.pendingRuntimeState).toBeUndefined();
+    expect(useGameStateStore.getState().gameState?.pendingTurnTransition).toBeUndefined();
+    expect(useGameStateStore.getState().gameState?.pendingReasoningContinuation).toBeUndefined();
+    expect(useGameStateStore.getState().gameState?.pendingEffects.map(entry => entry.state))
+      .toEqual(['cancelled', 'cancelled']);
+    expect(useGameStateStore.getState().gameState?.reservedEffects).toEqual([]);
+  });
+
   it('rolls back the live replay recorder when a natural terminal publish listener throws', () => {
     const sessionId = 'terminal-replay-rollback';
     const initial = createEmptyGameState();

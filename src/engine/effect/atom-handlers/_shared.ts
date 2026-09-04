@@ -12,6 +12,7 @@ import { cardOccurrenceUid, isLiveCardOccurrenceWitness } from '../../target/car
 import { defHasKeyword, defHasNoOriginalAbilityExceptIcons } from '../../read/keyword.js';
 import { allCardNameComponentsForDef } from '../../target/card-def-registry.js';
 import { effectiveKeywordForCard, effectiveTraitNames, printedKeywordForCard } from '../../target/candidates.js';
+import { assertCompleteSetCardSource } from '../source-identity.js';
 
 declare global {
 
@@ -19,21 +20,103 @@ declare global {
   var __pendingPublicHandRevealSide: PublicHandRevealSide | PublicHandRevealSide[] | null | undefined;
 }
 
+export type PublicEffectSource = {
+  cardId?: string;
+  abilityId?: string;
+  uid?: string;
+  setCardId?: string;
+  setCardInstanceId?: string;
+  abilityOrigin?: EffectCtx['source']['abilityOrigin'];
+  abilityIndex?: number;
+};
+
+export type PendingDeckRevealPresentation =
+  | 'reveal-complete'
+  | 'reveal-return'
+  | 'reveal-to-bottom'
+  | 'reveal-to-bottom-randomized';
+
+/** Preserve exact public effect provenance at presentation/persistence boundaries. */
+export function publicEffectSource(ctx: EffectCtx): PublicEffectSource {
+  assertCompleteSetCardSource(ctx.source);
+  return {
+    ...(ctx.source.cardId !== undefined ? { cardId: ctx.source.cardId } : {}),
+    ...(ctx.source.abilityId !== undefined ? { abilityId: ctx.source.abilityId } : {}),
+    ...(ctx.source.uid !== undefined ? { uid: ctx.source.uid } : {}),
+    ...(ctx.source.setCardId !== undefined ? { setCardId: ctx.source.setCardId } : {}),
+    ...(ctx.source.setCardInstanceId !== undefined ? { setCardInstanceId: ctx.source.setCardInstanceId } : {}),
+    ...(ctx.source.abilityOrigin !== undefined ? { abilityOrigin: ctx.source.abilityOrigin } : {}),
+    ...(ctx.source.abilityIndex !== undefined ? { abilityIndex: ctx.source.abilityIndex } : {}),
+  };
+}
+
 export type PublicHandRevealSide = {
   owner: 'self' | 'opp';
   audience: 'all';
   /** Ordered occurrences. Duplicate cardIds intentionally remain distinct. */
   cardIds: string[];
-  handSnapshot: string[];
+  /** Required only when the pending authority is tied to the full hand. */
+  handSnapshot?: string[];
   lifetime: 'effect' | 'presentation';
   resolutionToken: string;
-  source: { cardId?: string; abilityId?: string; uid?: string };
+  /** A selected deck card is public without revealing the rest of the hand. */
+  origin?: 'deck-selected-card';
+  source: PublicEffectSource;
 };
 
-export function publicHandRevealToken(s: GameState, ctx: EffectCtx): string {
+export type PendingPublicHandRevealSnapshot = {
+  present: boolean;
+  value: PublicHandRevealSide | PublicHandRevealSide[] | null | undefined;
+};
+
+function clonePublicHandRevealSide(value: PublicHandRevealSide): PublicHandRevealSide {
+  return {
+    ...value,
+    cardIds: [...value.cardIds],
+    ...(value.handSnapshot ? { handSnapshot: [...value.handSnapshot] } : {}),
+    source: { ...value.source },
+  };
+}
+
+/** Snapshot only this FIFO without validating unrelated pending-runtime channels. */
+export function _snapshotPendingPublicHandRevealSide(): PendingPublicHandRevealSnapshot {
+  const root = globalThis as {
+    __pendingPublicHandRevealSide?: PublicHandRevealSide | PublicHandRevealSide[] | null;
+  };
+  const present = Object.prototype.hasOwnProperty.call(root, '__pendingPublicHandRevealSide');
+  const current = root.__pendingPublicHandRevealSide;
+  return {
+    present,
+    value: Array.isArray(current)
+      ? current.map(clonePublicHandRevealSide)
+      : current ? clonePublicHandRevealSide(current) : current,
+  };
+}
+
+/** Restore the exact pre-activation FIFO, including absent-vs-null ownership. */
+export function _restorePendingPublicHandRevealSide(
+  snapshot: PendingPublicHandRevealSnapshot,
+): void {
+  const root = globalThis as {
+    __pendingPublicHandRevealSide?: PublicHandRevealSide | PublicHandRevealSide[] | null;
+  };
+  if (!snapshot.present) {
+    delete root.__pendingPublicHandRevealSide;
+    return;
+  }
+  root.__pendingPublicHandRevealSide = Array.isArray(snapshot.value)
+    ? snapshot.value.map(clonePublicHandRevealSide)
+    : snapshot.value ? clonePublicHandRevealSide(snapshot.value) : snapshot.value;
+}
+
+export function allocatePublicHandRevealToken(s: GameState): string {
   const next = (s.publicHandRevealSeq ?? 0) + 1;
   s.publicHandRevealSeq = next;
-  const token = `public-hand-reveal:${next}`;
+  return `public-hand-reveal:${next}`;
+}
+
+export function publicHandRevealToken(s: GameState, ctx: EffectCtx): string {
+  const token = allocatePublicHandRevealToken(s);
   (ctx.causal ??= {}).publicHandRevealToken = token;
   return token;
 }
@@ -92,10 +175,10 @@ export type PendingDeckRevealSide = {
    * pick 解決の再入時に確定 matched で再 set される (awaitingPick 無し → 通常演出)。
    */
   awaitingPick?: boolean;
-  /** A plain reveal returns every card to its original deck position. */
-  presentation?: 'reveal-return';
+  /** Presentation-only destination. Investigation moves the public window to deck bottom without shuffling. */
+  presentation?: PendingDeckRevealPresentation;
   /** Stable resolver source identity; prevents an unrelated reveal replacing this one. */
-  source?: { cardId?: string; abilityId?: string; uid?: string };
+  source?: PublicEffectSource;
 };
 
 export function _drainPendingDeckRevealSide(): PendingDeckRevealSide | null {
@@ -138,7 +221,11 @@ export function queuePendingDeckRevealSide(next: PendingDeckRevealSide): void {
     && candidate.awaitingPick === true
     && candidate.source?.cardId === next.source?.cardId
     && candidate.source?.abilityId === next.source?.abilityId
-    && candidate.source?.uid === next.source?.uid;
+    && candidate.source?.uid === next.source?.uid
+    && candidate.source?.setCardId === next.source?.setCardId
+    && candidate.source?.setCardInstanceId === next.source?.setCardInstanceId
+    && candidate.source?.abilityOrigin === next.source?.abilityOrigin
+    && candidate.source?.abilityIndex === next.source?.abilityIndex;
   if (!current) {
     root.__pendingDeckRevealSide = next;
   } else if (Array.isArray(current)) {
@@ -150,6 +237,34 @@ export function queuePendingDeckRevealSide(next: PendingDeckRevealSide): void {
   } else {
     root.__pendingDeckRevealSide = [current, next];
   }
+}
+
+/** Attach presentation semantics only after the matching engine operation is admitted. */
+export function markPendingDeckRevealPresentation(
+  player: 'self' | 'opp',
+  source: PublicEffectSource,
+  presentation: PendingDeckRevealPresentation | undefined,
+): boolean {
+  const channel = (globalThis as {
+    __pendingDeckRevealSide?: PendingDeckRevealSide | PendingDeckRevealSide[] | null;
+  }).__pendingDeckRevealSide;
+  if (!channel || Object.values(source).every((value) => value === undefined)) return false;
+  const entries = Array.isArray(channel) ? channel : [channel];
+  for (let index = entries.length - 1; index >= 0; index -= 1) {
+    const candidate = entries[index]!;
+    if (candidate.player !== player || !candidate.source) continue;
+    if (candidate.source.cardId !== source.cardId
+      || candidate.source.abilityId !== source.abilityId
+      || candidate.source.uid !== source.uid
+      || candidate.source.setCardId !== source.setCardId
+      || candidate.source.setCardInstanceId !== source.setCardInstanceId
+      || candidate.source.abilityOrigin !== source.abilityOrigin
+      || candidate.source.abilityIndex !== source.abilityIndex) continue;
+    if (presentation === undefined) delete candidate.presentation;
+    else candidate.presentation = presentation;
+    return true;
+  }
+  return false;
 }
 
 // BUG-136: deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択 side-channel
@@ -169,6 +284,8 @@ export type PendingDeckReorderSide = {
   deckSnapshot?: string[];
   /** snapshot上の物理occurrence。重複cardIdを別コピーとして保持。 */
   occurrences?: Array<{ cardId: string; index: number }>;
+  /** Deck epoch at the decision boundary. Missing legacy authorities fail closed. */
+  occurrenceWitness: string;
   /** 後続効果と共有する保存ctx。 */
   ctx?: EffectCtx;
   /** resolverが同梱するsequence/chain remainder。 */
@@ -228,6 +345,8 @@ export type PendingDeckPlaceSide = {
   deckSnapshot: string[];
   /** Exact deck occurrences shown by the effect, including duplicate card IDs. */
   occurrences: Array<{ cardId: string; index: number }>;
+  /** Deck epoch at the decision boundary. Missing legacy authorities fail closed. */
+  occurrenceWitness: string;
   /** Effect authority retained until the human answer resumes resolution. */
   ctx: EffectCtx;
   /** Saved sequence/chain remainder owned by this decision. */
@@ -436,6 +555,66 @@ export function targetFilterToPredicateWithCtx(state: GameState | undefined, fil
 
 export type Player = 'self' | 'opp';
 
+export type HeldHiramekiSelfClaim = {
+  actionId: string;
+  token: string;
+  player: Player;
+  cardId: string;
+  abilityId: string;
+};
+
+export type HeldHiramekiSelfClaimRead =
+  | { kind: 'absent' }
+  | { kind: 'invalid' }
+  | { kind: 'claim'; claim: HeldHiramekiSelfClaim };
+
+/**
+ * Read the exact ActionContext-owned evidence card used by a Hirameki effect.
+ * Only a non-held source may use the legacy remove-area fallback.  A source
+ * that already claims Hirameki evidence authority must fail closed when its
+ * payload is missing or malformed, so an equal remove-area card cannot be used.
+ */
+export function readHeldHiramekiSelfClaim(
+  ctx: EffectCtx,
+  expectedPlayer: Player,
+): HeldHiramekiSelfClaimRead {
+  const isHeldSource = ctx.source.resolutionKind === 'hirameki'
+    && ctx.source.area === 'evidence';
+  const payload = ctx.triggerPayload;
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) {
+    return { kind: isHeldSource ? 'invalid' : 'absent' };
+  }
+  const record = payload as Record<string, unknown>;
+  const held = record.heldEvidence;
+  if (held === undefined) return { kind: isHeldSource ? 'invalid' : 'absent' };
+  if (held === null || typeof held !== 'object' || Array.isArray(held)) {
+    return { kind: 'invalid' };
+  }
+  const heldRecord = held as Record<string, unknown>;
+  const actionId = record.actionId;
+  const token = heldRecord.token;
+  const player = heldRecord.player;
+  const cardId = heldRecord.cardId;
+  const abilityId = ctx.source.abilityId;
+  if (typeof actionId !== 'string'
+    || typeof token !== 'string'
+    || player !== expectedPlayer
+    || record.player !== expectedPlayer
+    || typeof cardId !== 'string'
+    || typeof abilityId !== 'string'
+    || ctx.source.player !== expectedPlayer
+    || ctx.source.area !== 'evidence'
+    || ctx.source.resolutionKind !== 'hirameki'
+    || ctx.source.uid !== token
+    || ctx.source.cardId !== cardId) {
+    return { kind: 'invalid' };
+  }
+  return {
+    kind: 'claim',
+    claim: { actionId, token, player: expectedPlayer, cardId, abilityId },
+  };
+}
+
 /**
  * 必須スカラーフィールドの実行時検証。
  * 呼び出し元が typo などで undefined を渡した場合に mutate 層へ伝搬する前に検知する。
@@ -558,7 +737,7 @@ export function resolveBoundOccurrenceRef(
   s: GameState,
   ctx: EffectCtx,
   player: Player,
-  area: 'remove' | 'evidence',
+  area: 'deck' | 'remove' | 'evidence',
 ): BoundOccurrenceRef {
   if (typeof value !== 'string' || !value.startsWith('$')) return { kind: 'unbound' };
   const dot = value.indexOf('.');
@@ -575,7 +754,9 @@ export function resolveBoundOccurrenceRef(
     index?: unknown;
     occurrenceWitness?: unknown;
   };
-  if (physical.area !== 'remove' && physical.area !== 'evidence') return { kind: 'unbound' };
+  if (physical.area !== 'deck' && physical.area !== 'remove' && physical.area !== 'evidence') {
+    return { kind: 'unbound' };
+  }
   if (physical.player !== player
     || physical.area !== area
     || typeof physical.cardId !== 'string'
@@ -593,7 +774,9 @@ export function resolveBoundOccurrenceRef(
   if (physical.uid !== undefined && physical.uid !== expectedUid) return { kind: 'invalid' };
   const liveCardId = area === 'remove'
     ? s.players[player].remove[physical.index]
-    : s.players[player].evidence[physical.index]?.cardId;
+    : area === 'deck'
+      ? s.players[player].deck[physical.index]
+      : s.players[player].evidence[physical.index]?.cardId;
   return liveCardId === physical.cardId
     ? { kind: 'live', cardId: physical.cardId, index: physical.index }
     : { kind: 'invalid' };

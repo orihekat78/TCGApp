@@ -37,6 +37,9 @@
   flex-direction: column;
   gap: 4px;
   position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
@@ -58,7 +61,14 @@
 }
 .file-area .file-strip-header .progress-7 {
   display: flex;
+  margin-left: auto;
   gap: 2px;
+}
+.file-area .file-strip-header .file-count {
+  color: var(--file-text-second);
+  font-family: var(--font-mono, "Cascadia Code", monospace);
+  letter-spacing: 0.05em;
+  margin-left: 4px;
 }
 .file-area .file-strip-header .progress-7 span {
   width: 12px;

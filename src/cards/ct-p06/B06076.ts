@@ -1,4 +1,4 @@
-// cards/ct-p06/B06076 ジェイムズ・ブラック (キャラ) — bounce batch #2 (a1 only)
+// cards/ct-p06/B06076 ジェイムズ・ブラック (キャラ) — bounce batch #2 + declared backfill
 // rules: 15-abilities-effects.md, 17-icons.md, 21-declared-ability-cost.md
 //
 // 公式テキスト:
@@ -7,7 +7,8 @@
 //     この能力は相手の手札が4枚以上ある場合に宣言できる。
 //
 // a1: 【解決編】 enter + 相手 levelMax:5 1枚 sceneToHand
-// a2: DEFERRED (custom condition: 相手手札 4 枚以上 — custom check が必要)
+// a3: 【宣言】【スリープ】。相手手札4枚以上を handAtLeast で使用条件にする。
+//     出荷済み a1/a2 の physical ability index を維持するため末尾へ追加する。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 
@@ -38,6 +39,17 @@ const a2: AbilityDef = {
   ruleRefs: ['rules/10-action-event.md', 'rules/14-refresh.md'],
 };
 
+const a3: AbilityDef = {
+  id: 'a3',
+  type: 'declared',
+  scope: 'on-scene',
+  condition: { kind: 'handAtLeast', player: 'opp', n: 4 },
+  cost: { kind: 'sleepSelf' },
+  effect: { kind: 'atom', verb: 'discard', args: { player: 'opp', n: 1 } },
+  description: '【宣言】【スリープ】：相手は手札を1枚リムーブする。この能力は相手の手札が4枚以上ある場合に宣言できる。',
+  ruleRefs: ['rules/15-abilities-effects.md', 'rules/21-declared-ability-cost.md'],
+};
+
 export const B06076: CardDef = {
   id: 'B06076',
   no: '0696/B06076',
@@ -48,6 +60,6 @@ export const B06076: CardDef = {
   traits: ['FBI'], keywords: [],
   rarity: 'R',
   imageUrl: '1754285244546149.jpg',
-  abilities: [a1, a2],
+  abilities: [a1, a2, a3],
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/21-declared-ability-cost.md'],
 };

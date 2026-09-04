@@ -4,7 +4,7 @@
 //   【登場時】このキャラをスリープさせてもよい。そうした場合、手札からレベル6以下の【黒】のキャラを1枚まで登場させる。\n【パートナー赤】【宣言】【ターン1】〚現場にいるレベル6以上の【黒】のキャラを1枚リムーブエリアに移す〛：カードを1枚引く。このキャラをアクティブにし、ターン終了時まで〚突撃［キャラ］〛を持つ。この能力は〚痕跡［発見済み］〛の（このゲーム中に相手がリフレッシュしていた）場合に宣言できる。
 // 句マッピング:
 //   - 【登場時】 => type:'triggered', scope:'on-scene', trigger:{hook:'enter', selfOnly:true} [hook 'enter' selfOnly — src/cards/ct-p05/B05090.ts a1 (trigger{hook:'enter',selfOnly:true}); B04049 a1 同型; capability-map hooks ref: enter emitted by atom-handlers sceneEnter, selfOnly=source.uid]
-//   - このキャラをスリープさせてもよい。そうした場合、… => effect: {kind:'optional', effect:{kind:'chain', steps:[ sceneSetState{uid:'$self',state:'sleep'}, sceneEnter… ]}} [EXACT structural twin src/cards/ct-p04/B04049.ts a1: {kind:'optional',effect:{kind:'chain',steps:[ {sceneSetState uid:'$self',state:'sleep'}, … ]}} (text 'このキャラをスリープさせ…してもよい。そうした場合'). self-sleep via sceneSetState{uid:'$self',state:'sleep'} also in src/cards/ct-p01/B01011.ts:25. brief: 「してもよい。そうした場合」=optional, prefix=chain (前段 no-op→後段skip). chain won't break on sleep (self is always a candidate)]
+//   - このキャラをスリープさせてもよい。そうした場合、… => effect: {kind:'optional', effect:{kind:'chain', steps:[ sceneSetState{uid:'$self',state:'sleep'}, sceneEnter… ]}} [EXACT structural twin src/cards/ct-p04/B04049.ts a1: {kind:'optional',effect:{kind:'chain',steps:[ {sceneSetState uid:'$self',state:'sleep'}, … ]}} (text 'このキャラをスリープさせ…してもよい。そうした場合'). brief: 「してもよい。そうした場合」=optional, prefix=chain (前段 no-op→後段skip). chain won't break on sleep (self is always a candidate)]
 //   - 手札からレベル6以下の【黒】のキャラを1枚まで登場させる => atom sceneEnter {player:'self', cardId:'$pick.cardId', from:'hand', viaEffect:true, target:{kind:'pick', query:{area:'hand', side:'self', filter:{color:'黒', levelMax:6, kind:'character'}}, n:{min:0,max:1}, chooser:'self'}} [EXACT shape src/cards/ct-p05/B05090.ts a1 step1 (sceneEnter from:'hand' filter:{color:'黄',levelMax:4,kind:'character'}, n{min:0,max:1}); B09025.ts a1 (sceneEnter from:'hand' cardName filter); capability-map atom sceneEnter from='hand' short-form pick; color/levelMax/kind all honored on hand pick via matchOneFilter (TargetFilter ref). '1枚まで'→nMin:0 (0-pick legal)]
 //   - 【パートナー赤】 => condition: {kind:'partnerColor', color:'赤'} (AND-ed) [src/cards/ct-p03/B03067.ts a3 condition:{kind:'partnerColor',color:'赤'} on declared ability; capability-map cond 'partnerColor' = owner partner CardDef.colors intersects; BUG-099: declared-ability.ts:90-95 gates declarability via evalCond(condition)]
 //   - 【宣言】 => type:'declared', scope:'on-scene' [src/cards/ct-p03/B03067.ts a3 (type:'declared', 【パートナー赤】【宣言】【ターン1】); capability-map §3 declared = player-declared, cost paid then effect]
@@ -21,18 +21,18 @@ const a1: AbilityDef = {
   id: 'a1',
   type: 'triggered',
   scope: 'on-scene',
-  // BUG-145 (2026-06-15): already-sleep なら「このキャラをスリープさせ…てもよい」は行えない (公式qAndA PR138/PR144/B04049)。
-  // ability.condition で gate → self が sleep のとき能力非所持扱い = optional surface も出さない (rules/17)。
-  condition: { kind: 'not', c: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'sleep' } },
   trigger: {
     hook: 'enter',
     selfOnly: true
   },
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'chain',
-      steps: [
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain',
+        steps: [
         {
           kind: 'atom',
           verb: 'sceneSetState',
@@ -68,7 +68,8 @@ const a1: AbilityDef = {
             }
           }
         }
-      ]
+        ]
+      }
     }
   },
   description: '【登場時】このキャラをスリープさせてもよい。そうした場合、手札からレベル6以下の【黒】のキャラを1枚まで登場させる。',

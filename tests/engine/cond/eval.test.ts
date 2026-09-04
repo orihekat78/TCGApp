@@ -134,11 +134,11 @@ describe('engine.cond.eval', () => {
       expect(evalCond(s, { kind: 'caseTrait', trait: '婚活' }, makeCtx()), '非該当 trait は false').toBe(false);
     });
 
-    it('backward-compat: trait stored in traits (例 D11021=婚活 は両フィールド)', () => {
-      registerCardDef(defOf({ id: 'CASE_KON', kind: 'case', traits: ['婚活'], caseTraits: ['婚活'] }));
+    it('backward-compat: trait stored in traits (例 D11021=婚活パーティー は両フィールド)', () => {
+      registerCardDef(defOf({ id: 'CASE_KON', kind: 'case', traits: ['婚活パーティー'], caseTraits: ['婚活パーティー'] }));
       let s = createEmptyGameState();
       s = { ...s, players: { ...s.players, self: { ...s.players.self, case: { ...s.players.self.case, cardId: 'CASE_KON' } } } };
-      expect(evalCond(s, { kind: 'caseTrait', trait: '婚活' }, makeCtx())).toBe(true);
+      expect(evalCond(s, { kind: 'caseTrait', trait: '婚活パーティー' }, makeCtx())).toBe(true);
     });
 
     it('no match when case has no such trait', () => {

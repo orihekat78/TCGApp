@@ -29,6 +29,10 @@ describe('DeclareCardNameModal declared-name domain', () => {
         ap: 1000,
         lp: 1,
       } as CardDef));
+    register({
+      id: 'MODAL_EVENT', no: 'MODAL_EVENT', kind: 'event', names: ['事件名'],
+      colors: ['blue'], traits: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [],
+    } as CardDef);
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -94,6 +98,32 @@ describe('DeclareCardNameModal declared-name domain', () => {
     expect(confirm.disabled).toBe(false);
     act(() => confirm.click());
     expect(onConfirm).toHaveBeenCalledWith('任意のカード名');
+  });
+
+  it('labels and canonicalizes the constrained all-card domain', () => {
+    const onConfirm = vi.fn();
+    act(() => root.render(
+      <DeclareCardNameModal
+        open
+        prompt="カード名を指定"
+        candidateNames={['毛利小五郎', '事件名']}
+        domain="registered-card-name"
+        onConfirm={onConfirm}
+      />,
+    ));
+    enter('事件');
+    const guidance = container.querySelector<HTMLElement>('[data-testid="declare-card-name-domain-guidance"]')!;
+    const confirm = container.querySelector<HTMLButtonElement>('[data-testid="declare-card-name-confirm"]')!;
+    expect(guidance.textContent).toContain('登録済みのカード名');
+    expect(guidance.textContent).not.toContain('キャラクターカード名');
+    expect(confirm.disabled).toBe(false);
+    act(() => confirm.click());
+    expect(onConfirm).toHaveBeenCalledWith('事件名');
+
+    enter('未登録のカード名');
+    const alert = container.querySelector<HTMLElement>('[role="alert"]')!;
+    expect(alert.textContent).toContain('登録済みのカード名');
+    expect(alert.textContent).not.toContain('キャラクターカード名');
   });
   it('exposes the constrained registered-name domain, linked prompt, and full browse list', () => {
     act(() => root.render(

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `6417c7792b15`
+> Source hash: `9a1464700f55`
 
 公式ルール [`04-game-setup.md`](../../../rules/04-game-setup.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

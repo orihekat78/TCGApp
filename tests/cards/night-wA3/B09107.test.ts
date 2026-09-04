@@ -18,6 +18,7 @@ import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import { canDeclaredAbility } from '@/engine/flow/main/declared-ability';
 import { activateDeclaredAbility } from '@/engine/flow/main/ability-activate';
 import { cost as engineCost } from '@/engine/cost/index';
+import { canPayAtomically } from '@/engine/cost/pay';
 import { B09107 } from '@/cards/ct-p09/B09107';
 import type { CardDef, GameState, EffectCtx, EvidenceCard } from '@/engine/types';
 
@@ -98,6 +99,17 @@ describe('removeDeckAll cost', () => {
     expect(after.players.opp.deck.length, 'opp: refresh で4枚戻る').toBe(4);
     expect(after.players.opp.remove.length).toBe(0);
     expect(after.players.self.evidence.length, 'opp の refresh → self が証拠+1').toBe(1);
+  });
+  it('atomic preflight: owner=opp の removeDeckAll は opp のリムーブをrefreshして後続コストへ渡す', () => {
+    const state = base({ side: 'opp', deck: 0 });
+    state.players.opp.remove = [D(0), D(1)];
+    expect(canPayAtomically(state, {
+      kind: 'pay',
+      items: [
+        { kind: 'removeDeckAll', player: 'self' },
+        { kind: 'removeDeckTop', player: 'self', n: 1 },
+      ],
+    }, ctxOf('opp'))).toBe(true);
   });
 });
 

@@ -158,12 +158,6 @@ function redactHostedCards(character: SceneCharacter): void {
           instanceId: `hidden-set:${index}`,
         }
   ));
-  if (Array.isArray(character.stackedCards)) {
-    character.stackedCards = character.stackedCards.map((_entry, index) => ({
-      cardId: FILE_CARD_BACK_PLACEHOLDER,
-      instanceId: `hidden-stack:${index}`,
-    }));
-  }
 }
 
 function redactPlayer(player: PlayerState, revealHand: boolean): void {

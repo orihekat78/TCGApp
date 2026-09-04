@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { mutate } from '@/engine/mutate';
 import { runAtom } from '@/engine/effect/atom-handlers';
+import { resetPendingRuntimeState } from '@/engine/effect/runtime-state';
+import { runAllUntilEmpty } from '@/engine/resolve';
 import { event } from '@/engine/event';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _resetActionContexts } from '@/engine/flow/action/state-machine';
@@ -17,10 +19,19 @@ import { dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/use
 import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types';
 import { driveOppTurn, _resetIsDriving } from '@/ui/hooks/useOppTurnDriver';
 import { useGameStateStore } from '@/ui/state/store';
-import { _clearPendingEffectChoiceSide, _peekPendingEffectChoiceSide, pushPendingEffectChoiceSide, type PendingEffectChoiceSide } from '@/engine/effect/pending-state';
+import {
+  _clearPendingEffectChoiceSide,
+  _peekPendingEffectChoiceSide,
+  pushPendingEffectChoiceSide,
+  setPendingChoiceBindings,
+  setPendingChoiceResume,
+  type PendingEffectChoiceSide,
+} from '@/engine/effect/pending-state';
 import { _clearPendingEffectPickQueue, _peekPendingEffectPickSide, _pushPendingEffectPickSideForTest, type PendingEffectPickSide } from '@/engine/effect/resolve-picks';
 import { registerAll } from '@/cards';
 import type { PendingDeckPlaceSide } from '@/engine/effect/atom-handlers/_shared';
+import { cardOccurrenceWitness } from '@/engine/target/card-occurrence';
+import { deckOccurrenceAuthority } from '@/engine/effect/deck-occurrence-authority';
 
 type HumanSide = 'self' | 'opp' | null;
 const g = globalThis as {
@@ -56,9 +67,13 @@ function cpuReorderCard(): CardDef {
       effect: {
         kind: 'custom',
         fn: (state, ctx) => {
-          ctx.bindings['$humanWindow'] = ['H-A', 'H-B'].map((cardId, index) => ({
-            kind: 'card', cardId, area: 'deck', player: 'self', index,
-          }));
+          ctx.bindings['$humanWindow'] = ['H-A', 'H-B'].map((cardId, index) => {
+            const authority = deckOccurrenceAuthority(state, 'self', index);
+            if (!authority || authority.cardId !== cardId) {
+              throw new Error(`missing deck occurrence authority for ${cardId} at ${index}`);
+            }
+            return authority;
+          });
           // Source is opp, so relative opp is the human self player's deck.
           runAtom(state, 'deckToBottomBound', { player: 'opp', bindKey: '$humanWindow' }, ctx);
         },
@@ -246,7 +261,7 @@ describe('CPU pause for human-owned deck decisions', () => {
     expect(step.nextState.players.opp.hand).toContain('CPU-DRAW');
   });
 
-  it('does not surface a CPU-owned effect pick into the human UI store', () => {
+  it('surfaces a CPU-owned effect pick for autonomous public reconciliation', () => {
     const pending: PendingEffectPickSide = {
       player: 'opp',
       ownerPlayer: 'opp',
@@ -261,11 +276,11 @@ describe('CPU pause for human-owned deck decisions', () => {
 
     surfacePendingSideChannels();
 
-    expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
-    expect(_peekPendingEffectPickSide()).toMatchObject({ player: 'opp' });
+    expect(useGameStateStore.getState().pendingEffectPick).toMatchObject({ player: 'opp' });
+    expect(_peekPendingEffectPickSide()).toBeNull();
   });
 
-  it('does not surface a CPU-owned effect choice into the human UI store', () => {
+  it('surfaces a CPU-owned effect choice for autonomous public reconciliation', () => {
     const pending: PendingEffectChoiceSide = {
       player: 'opp',
       source: { player: 'opp', cardId: 'CPU-CHOICE', abilityId: 'a1' },
@@ -275,8 +290,85 @@ describe('CPU pause for human-owned deck decisions', () => {
 
     surfacePendingSideChannels();
 
-    expect(useGameStateStore.getState().pendingEffectChoice).toBeNull();
-    expect(_peekPendingEffectChoiceSide()).toMatchObject({ player: 'opp' });
+    expect(useGameStateStore.getState().pendingEffectChoice).toMatchObject({ player: 'opp' });
+    expect(_peekPendingEffectChoiceSide()).toBeNull();
+  });
+
+  it('hydrates and resolves a non-human decision before choosing any move', () => {
+    const state = createEmptyGameState();
+    state.turn.player = 'opp';
+    state.turn.phase = 'main';
+    state.players.opp.deck = ['DECISION-DRAW', 'RESERVE'];
+    const pending: PendingEffectChoiceSide = {
+      player: 'opp',
+      source: { player: 'opp', cardId: 'CPU-CHOICE', abilityId: 'a1', uid: 'choice-source' },
+      options: [{ index: 0, verb: 'draw', args: { player: 'self', n: 1 } }],
+    };
+    pushPendingEffectChoiceSide(pending);
+    setPendingChoiceResume({
+      kind: 'choice',
+      chooser: 'owner',
+      options: [{ kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } }],
+    });
+    setPendingChoiceBindings({});
+    runAllUntilEmpty(state);
+    expect(state.pendingRuntimeState).toBeDefined();
+    resetPendingRuntimeState();
+    const restored = JSON.parse(JSON.stringify(state)) as GameState;
+    let chooseCalls = 0;
+    const policy: AIPolicy = {
+      name: 'observe-reconciled-state',
+      choose: (current, candidates) => {
+        chooseCalls += 1;
+        expect(current.players.opp.hand).toEqual(['DECISION-DRAW']);
+        return candidates.find(move => move.kind === 'endTurn') ?? null;
+      },
+    };
+
+    const step = stepTurn(restored, policy, 'opp');
+
+    expect(chooseCalls).toBe(1);
+    expect(step.move).toMatchObject({ kind: 'endTurn' });
+    expect(step.nextState.players.opp.hand).toEqual(['DECISION-DRAW']);
+    expect(step.nextState.pendingRuntimeState).toBeUndefined();
+    expect(_peekPendingEffectChoiceSide()).toBeNull();
+  });
+
+  it('rebinds the supplied state before checking an ambient human decision', () => {
+    const stateA = createEmptyGameState();
+    const pending: PendingEffectChoiceSide = {
+      player: 'self',
+      source: { player: 'self', cardId: 'CPU-CHOICE', abilityId: 'a1', uid: 'choice-source' },
+      options: [{ index: 0, verb: 'noop', args: {} }],
+    };
+    pushPendingEffectChoiceSide(pending);
+    setPendingChoiceResume({
+      kind: 'choice', chooser: 'owner',
+      options: [{ kind: 'atom', verb: 'noop', args: {} }],
+    });
+    setPendingChoiceBindings({});
+    runAllUntilEmpty(stateA);
+    expect(stateA.pendingRuntimeState).toBeDefined();
+    expect(_peekPendingEffectChoiceSide()).toMatchObject({ player: 'self' });
+
+    const stateB = createEmptyGameState();
+    stateB.turn.player = 'opp';
+    stateB.turn.phase = 'main';
+    let chooseCalls = 0;
+    const policy: AIPolicy = {
+      name: 'clean-state-end-turn',
+      choose: (_state, candidates) => {
+        chooseCalls += 1;
+        return candidates.find(move => move.kind === 'endTurn') ?? null;
+      },
+    };
+
+    const step = stepTurn(stateB, policy, 'opp');
+
+    expect(chooseCalls).toBe(1);
+    expect(step.move).toMatchObject({ kind: 'endTurn' });
+    expect(step.paused).toBeUndefined();
+    expect(step.nextState.pendingRuntimeState).toBeUndefined();
   });
 
   it('uses deckPlace ownerPlayer, not the target deck player, for the human pause gate', () => {
@@ -288,6 +380,7 @@ describe('CPU pause for human-owned deck decisions', () => {
       cardIds: ['X', 'Y'],
       deckSnapshot: ['X', 'Y'],
       occurrences: [{ cardId: 'X', index: 0 }, { cardId: 'Y', index: 1 }],
+      occurrenceWitness: cardOccurrenceWitness(state, 'opp', 'deck'),
       ctx: {
         source: { player: 'self', area: 'scene', cardId: 'TEST', abilityId: 'a1' },
         bindings: {},

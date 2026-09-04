@@ -60,13 +60,21 @@ beforeEach(() => {
 });
 
 // evidence:remove-by-action を emit → pendingHirameki を store に載せ hiramekiResolve(fire) を dispatch。
-function fireHirameki(s: GameState, ownerCardId: string, actorUid = 'atk'): void {
-  const { pending } = openCaseHirameki(s, ownerCardId, { actorUid });
+function fireHirameki(s: GameState, ownerCardId: string, actorUid = 'atk'): string {
+  const { actionId, pending } = openCaseHirameki(s, ownerCardId, { actorUid });
   expect(pending, 'ヒラメキ optional hook 検出').not.toBeNull();
   const r = dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' });
   expect(r.ok, 'hiramekiResolve fire ok').toBe(true);
+  return actionId;
 }
 const store = () => useGameStateStore.getState();
+
+function finishCaseAction(actionId: string): void {
+  for (let step = 0; step < 2 && store().activeActionId === actionId; step += 1) {
+    expect(dispatchEngineAction({ type: 'actionAdvance', actionId })).toEqual({ ok: true });
+  }
+  expect(store().activeActionId).toBeNull();
+}
 
 describe('B09081 a1 enter trigger', () => {
   it('enters the same Chien Rokue card that its own cost just discarded', () => {
@@ -158,9 +166,10 @@ describe('B06032 ヒラメキ (human) — 手札1リムーブ→[YAIBA]Lv5をス
 
   it('run:false (decline) → discard なし・登場なし (「してもよい」= 0 選択)', () => {
     setHuman('self');
-    fireHirameki(boardResolved(), 'B06032');
+    const actionId = fireHirameki(boardResolved(), 'B06032');
     expect(dispatchCurrentDecision({ type: 'optionalResolve', run: false }).ok).toBe(true);
     expect(store().pendingEffectPick, 'pick は surface しない').toBeNull();
+    finishCaseAction(actionId);
     const after = store().gameState!;
     expect(after.players.self.scene.some((c) => c.cardId === 'YAIBA5'), '登場なし').toBe(false);
     expect(after.players.self.hand, 'HAND1 は手札に残存').toContain('HAND1');
@@ -225,7 +234,12 @@ describe('B08006 a2 ヒラメキ — アクション中のキャラをスタン'
       actorUid: 'atk',
       actionId: opened.actionId,
     });
-    expect(opened.pending.causalCorrelationEventId, 'CASE 証拠除去との因果相関を持つ').toEqual(expect.any(String));
+    expect(opened.pending.causalCorrelationEventId).toBeUndefined();
+    expect(opened.pending.heldEvidence).toEqual(expect.objectContaining({
+      token: `hirameki:${opened.actionId}:self`,
+      player: 'self',
+      cardId: 'B08006',
+    }));
     expect(dispatchCurrentDecision({ type: 'hiramekiResolve', choice: 'fire' })).toEqual({ ok: true });
     const after = store().gameState!;
     expect(after.players.opp.scene.find(c => c.uid === 'atk')?.state, 'B08006 のヒラメキで action actor をスタン').toBe('stun');

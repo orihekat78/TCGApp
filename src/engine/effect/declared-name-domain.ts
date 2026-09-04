@@ -4,10 +4,96 @@ import { allCardNameComponentsForDef } from '../target/card-def-registry.js';
 
 export const DECLARED_NAME_DOMAINS = [
   'unrestricted',
+  'registered-card-name',
   'registered-character-card-name',
 ] as const;
 
 export type { DeclaredNameDomain } from '../types/index.js';
+
+export type RegisteredCardNameMigration = {
+  cardId: string;
+  abilityId: string;
+  abilityIndex: number;
+  area: 'scene' | 'partner-area' | 'case';
+  legacyCostShape?: 'flip-face-up-evidence-2';
+};
+
+const REGISTERED_CARD_NAME_MIGRATIONS: readonly RegisteredCardNameMigration[] = [
+  { cardId: 'B04048', abilityId: 'a2', abilityIndex: 1, area: 'scene' },
+  { cardId: 'B04048P', abilityId: 'a2', abilityIndex: 1, area: 'scene' },
+  { cardId: 'B09003', abilityId: 'a3', abilityIndex: 2, area: 'scene' },
+  { cardId: 'B09003P', abilityId: 'a3', abilityIndex: 2, area: 'scene' },
+  { cardId: 'B09108', abilityId: 'a2', abilityIndex: 1, area: 'partner-area' },
+  { cardId: 'B09108P', abilityId: 'a2', abilityIndex: 1, area: 'partner-area' },
+  { cardId: 'B09111', abilityId: 'a2', abilityIndex: 1, area: 'case' },
+  { cardId: 'B09111P', abilityId: 'a2', abilityIndex: 1, area: 'case' },
+  {
+    cardId: 'B09112', abilityId: 'a2', abilityIndex: 1, area: 'case',
+    legacyCostShape: 'flip-face-up-evidence-2',
+  },
+  {
+    cardId: 'B09112P', abilityId: 'a2', abilityIndex: 1, area: 'case',
+    legacyCostShape: 'flip-face-up-evidence-2',
+  },
+];
+
+export function registeredCardNameMigrationFor(
+  cardId: string | undefined,
+  abilityId: string | undefined,
+): RegisteredCardNameMigration | undefined {
+  return REGISTERED_CARD_NAME_MIGRATIONS.find(candidate => (
+    candidate.cardId === cardId && candidate.abilityId === abilityId
+  ));
+}
+
+type RegisteredCardNameMigrationSource = {
+  cardId?: unknown;
+  abilityId?: unknown;
+  area?: unknown;
+  setCardId?: unknown;
+  setCardInstanceId?: unknown;
+  abilityOrigin?: unknown;
+  abilityIndex?: unknown;
+};
+
+function migrationForSource(
+  source: RegisteredCardNameMigrationSource,
+): RegisteredCardNameMigration | undefined {
+  return registeredCardNameMigrationFor(
+    typeof source.cardId === 'string' ? source.cardId : undefined,
+    typeof source.abilityId === 'string' ? source.abilityId : undefined,
+  );
+}
+
+function hasRegisteredCardNameMigrationAuthority(
+  source: RegisteredCardNameMigrationSource,
+  migration: RegisteredCardNameMigration | undefined,
+): migration is RegisteredCardNameMigration {
+  return migration !== undefined
+    && source.area === migration.area
+    && source.setCardId === undefined
+    && source.setCardInstanceId === undefined;
+}
+
+export function isRegisteredCardNameMigrationSource(
+  source: RegisteredCardNameMigrationSource,
+): boolean {
+  const migration = migrationForSource(source);
+  return hasRegisteredCardNameMigrationAuthority(source, migration)
+    && source.abilityOrigin === 'printed'
+    && source.abilityIndex === migration.abilityIndex;
+}
+
+export function isLegacyRegisteredCardNameMigrationSource(
+  source: RegisteredCardNameMigrationSource,
+): boolean {
+  const migration = migrationForSource(source);
+  if (!hasRegisteredCardNameMigrationAuthority(source, migration)) return false;
+  const witnessFree = source.abilityOrigin === undefined && source.abilityIndex === undefined;
+  const exactPrinted = source.abilityOrigin === 'printed'
+    && source.abilityIndex === migration.abilityIndex;
+  return witnessFree || exactPrinted;
+}
 
 export type DeclareNameSpec = {
   bind: string;
@@ -17,6 +103,7 @@ export type DeclareNameSpec = {
 
 export function declaredNameDomain(value: unknown): DeclaredNameDomain {
   if (value === undefined || value === 'unrestricted') return 'unrestricted';
+  if (value === 'registered-card-name') return value;
   if (value === 'registered-character-card-name') return value;
   throw new Error(`invalid declared-name domain: ${String(value)}`);
 }
@@ -75,7 +162,7 @@ export function findDeclareNameSpec(effect: Effect | undefined): DeclareNameSpec
 
 export function declaredNameCandidates(domain: DeclaredNameDomain): string[] {
   const defs = _allRegistered().filter((card) => (
-    domain === 'unrestricted' || card.kind === 'character'
+    domain !== 'registered-character-card-name' || card.kind === 'character'
   ));
   return [...new Set(
     defs.flatMap((card) => allCardNameComponentsForDef(card))

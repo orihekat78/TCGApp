@@ -136,6 +136,124 @@ describe('decision modal hosts', () => {
     unmount(root, container);
   });
 
+  it('lets the ability owner choose which simultaneous intercept resolves first', () => {
+    useGameStateStore.setState({
+      pendingChooseIntercept: {
+        kind: 'order',
+        player: 'self',
+        choices: [
+          {
+            protector: { uid: 'protector-1', cardId: 'B01001', abilityId: 'a1' },
+            targetUid: 'target-1',
+          },
+          {
+            protector: { uid: 'protector-2', cardId: 'B01001', abilityId: 'a1' },
+            targetUid: 'target-2',
+          },
+        ],
+      },
+    });
+    const { container, root } = renderHost(ChooseInterceptModalHost);
+
+    expect(container.querySelector('[data-testid="choose-intercept-order-modal"]')).not.toBeNull();
+    expect(container.textContent).toContain('同時に発動した能力の解決順を選んでください');
+    const second = container.querySelector<HTMLButtonElement>(
+      '[data-testid="choose-intercept-order-protector-2-target-2"]',
+    );
+    expect(second).toBeInstanceOf(HTMLButtonElement);
+    act(() => second!.click());
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'chooseInterceptOrderResolve', protectorUid: 'protector-2', targetUid: 'target-2',
+    });
+    unmount(root, container);
+  });
+
+  it('keeps same-host set-card reactions occurrence-distinct and dispatches the chosen physical ID', () => {
+    useGameStateStore.setState({
+      pendingChooseIntercept: {
+        kind: 'order',
+        player: 'self',
+        choices: [
+          {
+            resolution: 'cancel',
+            protector: {
+              uid: 'host-1', cardId: 'B01001', abilityId: 'a1', setCardInstanceId: 'set:41',
+            },
+            targetUid: 'host-1',
+          },
+          {
+            resolution: 'cancel',
+            protector: {
+              uid: 'host-1', cardId: 'B01001', abilityId: 'a1', setCardInstanceId: 'set:42',
+            },
+            targetUid: 'host-1',
+          },
+        ],
+      },
+    });
+    const { container, root } = renderHost(ChooseInterceptModalHost);
+
+    expect([...container.querySelectorAll<HTMLElement>('[data-instance-id]')]
+      .map((tile) => tile.dataset.instanceId)).toEqual(['set:41', 'set:42']);
+    const second = container.querySelector<HTMLButtonElement>(
+      '[data-testid="choose-intercept-order-host-1-host-1-set:42"]',
+    );
+    expect(second).toBeInstanceOf(HTMLButtonElement);
+    act(() => second!.click());
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'chooseInterceptOrderResolve',
+      protectorUid: 'host-1',
+      targetUid: 'host-1',
+      setCardInstanceId: 'set:42',
+    });
+    unmount(root, container);
+  });
+
+  it('keeps same-host declared reactions occurrence-distinct and dispatches the exact definition index', () => {
+    useGameStateStore.setState({
+      pendingChooseIntercept: {
+        kind: 'order',
+        player: 'self',
+        choices: [
+          {
+            protector: {
+              uid: 'protector-1', cardId: 'B01001', abilityId: 'a1',
+              abilityOrigin: 'printed', abilityIndex: 0,
+            },
+            targetUid: 'target-1',
+          },
+          {
+            protector: {
+              uid: 'protector-1', cardId: 'B01001', abilityId: 'a1',
+              abilityOrigin: 'printed', abilityIndex: 1,
+            },
+            targetUid: 'target-1',
+          },
+        ],
+      },
+    });
+    const { container, root } = renderHost(ChooseInterceptModalHost);
+
+    expect([...container.querySelectorAll<HTMLElement>('[data-instance-id]')]
+      .map((tile) => tile.dataset.instanceId)).toEqual([
+        'protector-1:printed:0',
+        'protector-1:printed:1',
+      ]);
+    const second = container.querySelector<HTMLButtonElement>(
+      '[data-testid="choose-intercept-order-protector-1-target-1-printed:1"]',
+    );
+    expect(second).toBeInstanceOf(HTMLButtonElement);
+    act(() => second!.click());
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'chooseInterceptOrderResolve',
+      protectorUid: 'protector-1',
+      targetUid: 'target-1',
+      abilityOrigin: 'printed',
+      abilityIndex: 1,
+    });
+    unmount(root, container);
+  });
+
   it('resolves a set-card replacement from its native candidate selector and keeps details in the pending modal', () => {
     useGameStateStore.setState({
       pendingSetCardReplacement: {

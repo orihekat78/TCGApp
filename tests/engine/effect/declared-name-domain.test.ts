@@ -65,6 +65,422 @@ describe('registered character declared-name domain', () => {
     expect(resolveDeclaredName('registered-character-card-name', '事件名')).toBeNull();
   });
 
+  it('canonicalizes a unique registered name across card kinds', () => {
+    const domain = 'registered-card-name';
+    expect(resolveDeclaredName(domain, '事件')).toBe('事件名');
+    expect(declaredNameCandidates(domain)).toContain('事件名');
+  });
+
+  it('accepts the registered-card-name domain during static validation', () => {
+    const result = validate({
+      kind: 'atom',
+      verb: 'declareName',
+      args: { bind: 'named', domain: 'registered-card-name' },
+    } as unknown as Effect);
+    expect(result).toEqual({ ok: true });
+  });
+
+  it('hydrates an exact legacy unrestricted queue for an explicitly migrated card-name ability', () => {
+    const currentEffect = {
+      kind: 'sequence',
+      steps: [
+        { kind: 'atom', verb: 'declareName', args: { bind: 'named', domain: 'registered-card-name' } },
+        { kind: 'atom', verb: 'noop', args: {} },
+      ],
+    } as Effect;
+    const legacyEffect: Effect = {
+      kind: 'sequence',
+      steps: [
+        { kind: 'atom', verb: 'declareName', args: { bind: 'named' } },
+        { kind: 'atom', verb: 'noop', args: {} },
+      ],
+    };
+    register({
+      ...card('B04048', 'character', ['羽田秀𠮷']),
+      abilities: [{
+        id: 'a2', type: 'declared', scope: 'on-scene', effect: currentEffect,
+        description: 'registered card-name migration fixture', ruleRefs: [],
+      }],
+    });
+    const state = createEmptyGameState();
+    event.queue(
+      state,
+      legacyEffect,
+      { player: 'self', area: 'scene', cardId: 'B04048', abilityId: 'a2', uid: 'B04048#legacy' },
+      'test',
+    );
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingRpsContinuation',
+        present: true,
+        value: {
+          remainder: [],
+          ctx: {
+            source: {
+              player: 'self', area: 'scene', cardId: 'B04048', abilityId: 'a2', uid: 'B04048#legacy',
+            },
+            bindings: {},
+            dyn: { declaredName: 'Legacy Free Text' },
+            declaredNames: { named: 'Legacy Free Text' },
+          },
+          kind: 'sequence',
+        },
+      }],
+    };
+
+    expect(() => hydratePendingRuntimeState(state)).not.toThrow();
+  });
+
+  it.each([
+    { cardId: 'B09003', abilityId: 'a3', abilityIndex: 2, area: 'scene' as const, kind: 'character' as const },
+    { cardId: 'B09003P', abilityId: 'a3', abilityIndex: 2, area: 'scene' as const, kind: 'character' as const },
+    { cardId: 'B09108', abilityId: 'a2', abilityIndex: 1, area: 'partner-area' as const, kind: 'character' as const },
+    { cardId: 'B09108P', abilityId: 'a2', abilityIndex: 1, area: 'partner-area' as const, kind: 'character' as const },
+    { cardId: 'B09111', abilityId: 'a2', abilityIndex: 1, area: 'case' as const, kind: 'case' as const },
+    { cardId: 'B09111P', abilityId: 'a2', abilityIndex: 1, area: 'case' as const, kind: 'case' as const },
+  ])('hydrates an exact pre-domain queue for $cardId/$abilityId', (row) => {
+    const currentEffect = {
+      kind: 'sequence',
+      steps: [
+        { kind: 'atom', verb: 'declareName', args: { bind: 'named', domain: 'registered-card-name' } },
+        { kind: 'atom', verb: 'noop', args: {} },
+      ],
+    } as Effect;
+    const legacyEffect: Effect = {
+      kind: 'sequence',
+      steps: [
+        { kind: 'atom', verb: 'declareName', args: { bind: 'named' } },
+        { kind: 'atom', verb: 'noop', args: {} },
+      ],
+    };
+    const abilities = Array.from({ length: row.abilityIndex }, (_value, index) => ({
+      id: `legacy-dummy-${index}`, type: 'declared' as const, scope: 'always' as const,
+      effect: { kind: 'atom' as const, verb: 'noop', args: {} },
+      description: 'migration index fixture', ruleRefs: [],
+    }));
+    abilities.push({
+      id: row.abilityId, type: 'declared', scope: 'always', effect: currentEffect,
+      description: 'registered card-name migration fixture', ruleRefs: [],
+    });
+    register({ ...card(row.cardId, row.kind, [row.cardId]), abilities });
+    const state = createEmptyGameState();
+    const source = {
+      player: 'self' as const, area: row.area, cardId: row.cardId, abilityId: row.abilityId,
+      abilityOrigin: 'printed' as const, abilityIndex: row.abilityIndex, uid: `${row.cardId}#legacy`,
+    };
+    event.queue(state, legacyEffect, source, 'test');
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingRpsContinuation', present: true,
+        value: {
+          remainder: [], kind: 'sequence',
+          ctx: {
+            source, bindings: {}, dyn: { declaredName: 'Legacy Free Text' },
+            declaredNames: { named: 'Legacy Free Text' },
+            declaredNameDomains: { named: 'unrestricted' },
+          },
+        },
+      }],
+    };
+
+    expect(() => hydratePendingRuntimeState(state)).not.toThrow();
+  });
+
+  it.each([
+    { label: 'wrong area', sourcePatch: { area: 'case' }, runtimeSourcePatch: {} },
+    {
+      label: 'granted witness',
+      sourcePatch: { abilityOrigin: 'granted', abilityIndex: 1 },
+      runtimeSourcePatch: {},
+    },
+    {
+      label: 'wrong printed index',
+      sourcePatch: { abilityOrigin: 'printed', abilityIndex: 9 },
+      runtimeSourcePatch: {},
+    },
+    {
+      label: 'set-card witness',
+      sourcePatch: {
+        abilityOrigin: undefined, abilityIndex: undefined,
+        setCardId: 'B07014', setCardInstanceId: 'set:forged',
+      },
+      runtimeSourcePatch: {},
+    },
+    {
+      label: 'cross-print runtime source',
+      sourcePatch: {},
+      runtimeSourcePatch: { cardId: 'B04048P', uid: 'B04048P#forged' },
+    },
+  ])('rejects a B04048 legacy migration with $label', ({ sourcePatch, runtimeSourcePatch }) => {
+    const currentEffect = {
+      kind: 'sequence',
+      steps: [
+        { kind: 'atom', verb: 'declareName', args: { bind: 'named', domain: 'registered-card-name' } },
+        { kind: 'atom', verb: 'noop', args: {} },
+      ],
+    } as Effect;
+    const legacyEffect: Effect = {
+      kind: 'sequence',
+      steps: [
+        { kind: 'atom', verb: 'declareName', args: { bind: 'named' } },
+        { kind: 'atom', verb: 'noop', args: {} },
+      ],
+    };
+    register({
+      ...card('B04048', 'character', ['羽田秀𠮷']),
+      abilities: [{
+        id: 'a2', type: 'declared', scope: 'on-scene', effect: currentEffect,
+        description: 'registered card-name migration fixture', ruleRefs: [],
+      }],
+    });
+    const source = {
+      player: 'self' as const, area: 'scene' as const, cardId: 'B04048', abilityId: 'a2',
+      abilityOrigin: 'printed' as const, abilityIndex: 1, uid: 'B04048#legacy',
+      ...sourcePatch,
+    };
+    const runtimeSource = { ...source, ...runtimeSourcePatch };
+    const state = createEmptyGameState();
+    event.queue(state, legacyEffect, source, 'test');
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingRpsContinuation', present: true,
+        value: {
+          remainder: [], kind: 'sequence',
+          ctx: {
+            source: runtimeSource, bindings: {}, dyn: { declaredName: 'Legacy Free Text' },
+            declaredNames: { named: 'Legacy Free Text' },
+            declaredNameDomains: { named: 'unrestricted' },
+          },
+        },
+      }],
+    };
+
+    expect(() => hydratePendingRuntimeState(state)).toThrow(/queued declaration|migration|lineage/i);
+  });
+
+  it.each([
+    {
+      label: 'mismatched evidence indices',
+      costParams: { flipFaceUpEvidence: { indices: [0, 2] } },
+      omitCostParams: false,
+    },
+    {
+      label: 'extra cost authority',
+      costParams: { flipFaceUpEvidence: { indices: [0, 1] }, forged: true },
+      omitCostParams: false,
+    },
+    {
+      label: 'missing evidence cost authority',
+      costParams: undefined,
+      omitCostParams: true,
+    },
+  ])('rejects B09112 legacy declared-name dyn with $label', ({ costParams, omitCostParams }) => {
+    const currentEffect = {
+      kind: 'sequence',
+      steps: [
+        { kind: 'atom', verb: 'declareName', args: { bind: 'named', domain: 'registered-card-name' } },
+        { kind: 'atom', verb: 'noop', args: {} },
+      ],
+    } as Effect;
+    const legacyEffect: Effect = {
+      kind: 'sequence',
+      steps: [
+        { kind: 'atom', verb: 'declareName', args: { bind: 'named' } },
+        { kind: 'atom', verb: 'noop', args: {} },
+      ],
+    };
+    register({
+      ...card('B09112', 'case', ['キッドVS安室 王妃の前髪']),
+      abilities: [
+        {
+          id: 'a1', type: 'triggered', scope: 'always',
+          effect: { kind: 'atom', verb: 'noop', args: {} },
+          description: 'migration index fixture', ruleRefs: [],
+        },
+        {
+          id: 'a2', type: 'declared', scope: 'always', effect: currentEffect,
+          description: 'registered card-name migration fixture', ruleRefs: [],
+        },
+      ],
+    });
+    const source = {
+      player: 'self' as const, area: 'case' as const, cardId: 'B09112', abilityId: 'a2',
+      abilityOrigin: 'printed' as const, abilityIndex: 1, uid: 'case:self',
+    };
+    const state = createEmptyGameState();
+    event.queue(state, legacyEffect, source, 'test');
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingRpsContinuation', present: true,
+        value: {
+          remainder: [], kind: 'sequence',
+          ctx: {
+            source,
+            bindings: {},
+            dyn: {
+              declaredName: 'Legacy Free Text',
+              runtimeHumanPlayer: 'self',
+              runtimePickOwnerKnown: true,
+              ...(omitCostParams ? {} : { costParams }),
+            },
+            declaredNames: { named: 'Legacy Free Text' },
+            declaredNameDomains: { named: 'unrestricted' },
+            costPaid: {
+              flipFaceUpEvidence: {
+                count: 2,
+                ids: ['E0', 'E1'],
+                occurrences: [
+                  { kind: 'card', player: 'self', area: 'evidence', index: 0, cardId: 'E0' },
+                  { kind: 'card', player: 'self', area: 'evidence', index: 1, cardId: 'E1' },
+                ],
+              },
+            },
+          },
+        },
+      }],
+    };
+
+    expect(() => hydratePendingRuntimeState(state)).toThrow(/legacy declared name|dyn|cost/i);
+  });
+
+  it.each([
+    {
+      label: 'altered queued effect',
+      legacyEffect: {
+        kind: 'sequence',
+        steps: [
+          { kind: 'atom', verb: 'declareName', args: { bind: 'named' } },
+          { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+        ],
+      } as Effect,
+      ctxPatch: {
+        dyn: { declaredName: 'Legacy Free Text' },
+        declaredNames: { named: 'Legacy Free Text' },
+      },
+      error: /queued declaration lineage/i,
+    },
+    {
+      label: 'dyn-only authority',
+      legacyEffect: {
+        kind: 'sequence',
+        steps: [
+          { kind: 'atom', verb: 'declareName', args: { bind: 'named' } },
+          { kind: 'atom', verb: 'noop', args: {} },
+        ],
+      } as Effect,
+      ctxPatch: { dyn: { declaredName: 'Legacy Free Text' } },
+      error: /declaredNames/i,
+    },
+    {
+      label: 'extra declared-name key',
+      legacyEffect: {
+        kind: 'sequence',
+        steps: [
+          { kind: 'atom', verb: 'declareName', args: { bind: 'named' } },
+          { kind: 'atom', verb: 'noop', args: {} },
+        ],
+      } as Effect,
+      ctxPatch: {
+        dyn: { declaredName: 'Legacy Free Text' },
+        declaredNames: { named: 'Legacy Free Text', extra: 'forged' },
+      },
+      error: /exactly|declaredNames/i,
+    },
+    {
+      label: 'mismatched dyn value',
+      legacyEffect: {
+        kind: 'sequence',
+        steps: [
+          { kind: 'atom', verb: 'declareName', args: { bind: 'named' } },
+          { kind: 'atom', verb: 'noop', args: {} },
+        ],
+      } as Effect,
+      ctxPatch: {
+        dyn: { declaredName: 'Other Value' },
+        declaredNames: { named: 'Legacy Free Text' },
+      },
+      error: /matching legacy declared name|dyn/i,
+    },
+    {
+      label: 'wrong legacy domain map',
+      legacyEffect: {
+        kind: 'sequence',
+        steps: [
+          { kind: 'atom', verb: 'declareName', args: { bind: 'named' } },
+          { kind: 'atom', verb: 'noop', args: {} },
+        ],
+      } as Effect,
+      ctxPatch: {
+        dyn: { declaredName: 'Legacy Free Text' },
+        declaredNames: { named: 'Legacy Free Text' },
+        declaredNameDomains: { named: 'registered-character-card-name' },
+      },
+      error: /declaredNameDomains|unrestricted|not allowed/i,
+    },
+    {
+      label: 'extra legacy domain key',
+      legacyEffect: {
+        kind: 'sequence',
+        steps: [
+          { kind: 'atom', verb: 'declareName', args: { bind: 'named' } },
+          { kind: 'atom', verb: 'noop', args: {} },
+        ],
+      } as Effect,
+      ctxPatch: {
+        dyn: { declaredName: 'Legacy Free Text' },
+        declaredNames: { named: 'Legacy Free Text' },
+        declaredNameDomains: { named: 'unrestricted', extra: 'unrestricted' },
+      },
+      error: /exactly|declaredNameDomains/i,
+    },
+  ])('rejects a forged migrated legacy queue with $label', ({ legacyEffect, ctxPatch, error }) => {
+    const currentEffect = {
+      kind: 'sequence',
+      steps: [
+        { kind: 'atom', verb: 'declareName', args: { bind: 'named', domain: 'registered-card-name' } },
+        { kind: 'atom', verb: 'noop', args: {} },
+      ],
+    } as Effect;
+    register({
+      ...card('B04048', 'character', ['羽田秀𠮷']),
+      abilities: [{
+        id: 'a2', type: 'declared', scope: 'on-scene', effect: currentEffect,
+        description: 'registered card-name migration fixture', ruleRefs: [],
+      }],
+    });
+    const state = createEmptyGameState();
+    event.queue(
+      state,
+      legacyEffect,
+      { player: 'self', area: 'scene', cardId: 'B04048', abilityId: 'a2', uid: 'B04048#legacy' },
+      'test',
+    );
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingRpsContinuation',
+        present: true,
+        value: {
+          remainder: [],
+          ctx: {
+            source: {
+              player: 'self', area: 'scene', cardId: 'B04048', abilityId: 'a2', uid: 'B04048#legacy',
+            },
+            bindings: {},
+            ...ctxPatch,
+          },
+          kind: 'sequence',
+        },
+      }],
+    };
+
+    expect(() => hydratePendingRuntimeState(state)).toThrow(error);
+  });
+
   it('writes the canonical declared name back to dyn before later atoms consume it', () => {
     const state = createEmptyGameState();
     const ctx: EffectCtx = {
@@ -304,6 +720,7 @@ describe('registered character declared-name domain', () => {
 
   it.each([
     { cardId: 'B04048', abilityId: 'a2', area: 'scene' as const },
+    { cardId: 'B04048P', abilityId: 'a2', area: 'scene' as const },
     { cardId: 'B01095', abilityId: 'a1', area: 'hand' as const },
   ])('admits pre-domain unrestricted declaration maps for $cardId/$abilityId', ({ cardId, abilityId, area }) => {
     _resetRegistry();
@@ -314,9 +731,17 @@ describe('registered character declared-name domain', () => {
     if (!ability?.effect) throw new Error(`missing ${cardId} ${abilityId} effect`);
 
     const state = createEmptyGameState();
+    const queuedEffect = structuredClone(ability.effect) as Effect;
+    if (cardId === 'B04048' || cardId === 'B04048P') {
+      const firstStep = queuedEffect.kind === 'sequence' ? queuedEffect.steps[0] : undefined;
+      if (firstStep?.kind !== 'atom' || firstStep.verb !== 'declareName') {
+        throw new Error('missing B04048 legacy declareName step');
+      }
+      delete (firstStep.args as { domain?: string }).domain;
+    }
     event.queue(
       state,
-      ability.effect,
+      queuedEffect,
       { player: 'self', area, cardId, abilityId, uid: `${cardId}#legacy` },
       'test',
     );
@@ -759,6 +1184,54 @@ describe('registered character declared-name domain', () => {
     };
 
     expect(() => hydratePendingRuntimeState(state)).not.toThrow();
+  });
+
+  it('does not borrow constrained declaration authority from a different set-card occurrence', () => {
+    const constrainedEffect: Effect = {
+      kind: 'atom',
+      verb: 'declareName',
+      args: { bind: 'named', domain: 'registered-character-card-name' },
+    };
+    register(card('HOST', 'character', ['Host']));
+    const state = createEmptyGameState();
+    event.queue(state, constrainedEffect, {
+      player: 'self',
+      area: 'scene',
+      cardId: 'HOST',
+      abilityId: 'set-rider',
+      uid: 'host',
+      setCardId: 'SET',
+      setCardInstanceId: 'set:1',
+    }, 'test');
+    state.pendingRuntimeState = {
+      token: 1,
+      snapshot: [{
+        key: '__pendingRpsContinuation',
+        present: true,
+        value: {
+          remainder: [],
+          ctx: {
+            source: {
+              player: 'self',
+              area: 'scene',
+              cardId: 'HOST',
+              abilityId: 'set-rider',
+              uid: 'host',
+              setCardId: 'SET',
+              setCardInstanceId: 'set:2',
+            },
+            bindings: {},
+            dyn: { declaredName: '毛利小五郎' },
+            declaredNames: { named: '毛利小五郎' },
+            declaredNameDomains: { named: 'registered-character-card-name' },
+          },
+          kind: 'sequence',
+        },
+      }],
+    };
+
+    expect(() => hydratePendingRuntimeState(state))
+      .toThrow(/no matching queued declaration lineage/i);
   });
 
   it('rejects printed constrained state when the only exact-source queued entry is a resumed remainder', () => {

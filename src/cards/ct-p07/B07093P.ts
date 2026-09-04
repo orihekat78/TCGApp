@@ -1,6 +1,101 @@
 // cards/ct-p07/B07093P バーボン＆ライ (パラレル) — B07093 と同型
+// rules: 03-field-areas.md, 05-turn-phases.md, 13-keywords.md, 15-abilities-effects.md,
+// 17-icons.md, 18-mr.md, 19-special-rules.md, 20-color-and-switch.md,
+// 21-declared-ability-cost.md, 23-qa-disguise-cutin.md
 
 import type { AbilityDef, CardDef } from '@/engine/types';
+
+// Compatibility: append a1 after the already-shipped a2/a3 occurrences.
+// Their physical indices remain 0/1 for old saves and V1/V2 replay moves.
+const a1: AbilityDef = {
+  id: 'a1',
+  type: 'declared',
+  scope: 'on-scene',
+  condition: {
+    kind: 'and',
+    cs: [
+      { kind: 'partnerColor', color: '黒' },
+      { kind: 'fileAtLeast', n: 7 },
+    ],
+  },
+  limit: { kind: 'turn', n: 1 },
+  effect: {
+    kind: 'choice',
+    chooser: 'self',
+    options: [
+      {
+        kind: 'sequence',
+        steps: [
+          {
+            kind: 'atom',
+            verb: 'sceneEnter',
+            args: {
+              player: 'self',
+              cardId: '$pick.cardId',
+              from: 'hand',
+              viaEffect: true,
+              bind: '$matched',
+              target: {
+                kind: 'pick',
+                query: {
+                  area: 'hand',
+                  side: 'self',
+                  filter: { trait: '黒ずくめの組織', levelMax: 4, kind: 'character' },
+                },
+                n: { min: 0, max: 1 },
+                chooser: 'self',
+              },
+            },
+          },
+          { kind: 'atom', verb: 'charModifyAP', args: { uid: '$matched.uid', delta: 4000, scope: 'turn' } },
+          { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$matched.uid', kw: '突撃', scope: 'turn' } },
+          { kind: 'atom', verb: 'charSetTurnEffect', args: { uid: '$matched.uid', key: 'toDeckBottomOnTurnEnd', val: true } },
+        ],
+      },
+      {
+        kind: 'sequence',
+        steps: [
+          {
+            kind: 'atom',
+            verb: 'sceneEnter',
+            args: {
+              player: 'self',
+              cardId: '$pick.cardId',
+              from: 'remove',
+              viaEffect: true,
+              bind: '$matched',
+              target: {
+                kind: 'pick',
+                query: {
+                  area: 'remove',
+                  side: 'self',
+                  filter: { trait: '黒ずくめの組織', levelMax: 4, kind: 'character' },
+                },
+                n: { min: 0, max: 1 },
+                chooser: 'self',
+              },
+            },
+          },
+          { kind: 'atom', verb: 'charModifyAP', args: { uid: '$matched.uid', delta: 4000, scope: 'turn' } },
+          { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$matched.uid', kw: '突撃', scope: 'turn' } },
+          { kind: 'atom', verb: 'charSetTurnEffect', args: { uid: '$matched.uid', key: 'toDeckBottomOnTurnEnd', val: true } },
+        ],
+      },
+    ],
+  },
+  description:
+    '【パートナー黒】【FILE7】【宣言】【ターン1】手札からレベル4以下の〚特徴［黒ずくめの組織］〛のキャラを1枚まで登場させるか、自分のリムーブエリアにあるレベル4以下の〚特徴［黒ずくめの組織］〛のキャラを1枚まで選び、登場させる。ターン終了時までそのキャラをAP＋4000し、〚突撃〛と「ターン終了時、このキャラを現場からデッキの下に移す。」を与える。',
+  ruleRefs: [
+    'rules/03-field-areas.md',
+    'rules/05-turn-phases.md',
+    'rules/13-keywords.md',
+    'rules/15-abilities-effects.md',
+    'rules/17-icons.md',
+    'rules/20-color-and-switch.md',
+    'rules/21-declared-ability-cost.md',
+    'rules/23-qa-disguise-cutin.md',
+  ],
+};
 
 const a2: AbilityDef = {
   id: 'a2',
@@ -37,6 +132,6 @@ export const B07093P: CardDef = {
   traits: ['黒ずくめの組織'], keywords: [],
   rarity: 'MRP',
   imageUrl: '1763546840464776.jpg',
-  abilities: [a2, a3],
+  abilities: [a2, a3, a1], // printed order differs intentionally; physical occurrence identity is stable
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/18-mr.md', 'rules/19-special-rules.md'],
 };

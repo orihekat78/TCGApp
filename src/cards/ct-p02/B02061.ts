@@ -6,8 +6,9 @@
 //     ターン終了時まで〚突撃［事件］〛（登場したターンからすぐに事件を指定してアクションできる）を与える。
 //   【ヒラメキ】（証拠からリムーブされるときに発動する）カードを1枚引く。
 //
-// a1: 【登場時】 chain (してもよい。そうした場合) — step1: 相手に証拠を1つ与える (evidenceGain opp, max:1 で skip 可) /
-//     step2: このキャラ以外の【赤】を1枚まで選び 突撃[事件] を付与 (turn)。D08003 a1 chain 同型。
+// a1: 【登場時】 optional sequence (してもよい。そうした場合) — step1: 相手に証拠を1つ与える
+//     (evidenceGain opp, n:1) / step2: このキャラ以外の【赤】を1枚まで選び 突撃[事件] を付与 (turn)。
+//     evidenceGain は pick atom ではないため、任意性は outer optional が担う (B01065/B01069 同型)。
 // a2: 【ヒラメキ】 evidence:remove-by-action で1ドロー — D08013 a2 同型
 
 import type { AbilityDef, CardDef } from '@/engine/types';
@@ -18,13 +19,14 @@ const a1: AbilityDef = {
   scope: 'on-scene',
   trigger: { hook: 'enter', selfOnly: true },
   effect: {
-    kind: 'chain',
-    steps: [
-      // 相手に証拠を1つ与えてもよい (max:1 で skip 可能、skip 時は chain break)
-      { kind: 'atom', verb: 'evidenceGain', args: { player: 'opp', max: 1 } },
-      // そうした場合、このキャラ以外の【赤】を1枚まで選び、ターン終了時まで〚突撃［事件］〛を与える
-      { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$pick', kw: '突撃[事件]', scope: 'turn', target: { kind: 'pick', query: { area: 'scene', side: 'self', filter: { color: '赤' }, excludeSelf: true }, n: { min: 0, max: 1 }, chooser: 'self' } } },
-    ],
+    kind: 'optional',
+    effect: {
+      kind: 'sequence',
+      steps: [
+        { kind: 'atom', verb: 'evidenceGain', args: { player: 'opp', n: 1 } },
+        { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$pick', kw: '突撃[事件]', scope: 'turn', target: { kind: 'pick', query: { area: 'scene', side: 'self', filter: { color: '赤' }, excludeSelf: true }, n: { min: 0, max: 1 }, chooser: 'self' } } },
+      ],
+    },
   },
   description:
     '【登場時】相手に証拠を1つ与えてもよい。そうした場合、このキャラ以外の【赤】のキャラを1枚まで選び、ターン終了時まで〚突撃［事件］〛を与える。',

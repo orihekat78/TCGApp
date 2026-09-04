@@ -7,6 +7,7 @@ const {
   mutateCardsDataRoot,
 } = require("./official-api.cjs");
 const { compareOrdinal, isQaShaped, loadRawQaCards, normalizeQaCards } = require("./qa-normalize.cjs");
+const { applyQaSourceCorrections, readQaSourceCorrections } = require('./qa-source-corrections.cjs');
 
 const RAW_KIND = {
   "パートナー": "partner",
@@ -104,13 +105,14 @@ function sameCardNums(rawCardNums, tsvCardNums) {
     && rawCardNums.length === tsvCardNums.length;
 }
 
-function normalizedFaqMetadataFromCards(cards) {
+function normalizedFaqMetadataFromCards(cards, excludedQaIds = new Set()) {
   const qaCards = (cards ?? []).filter((card) => isQaShaped(card.q_a ?? card.qAndA));
-  return normalizeQaCards(qaCards);
+  return applyQaSourceCorrections(normalizeQaCards(qaCards), excludedQaIds);
 }
 
 function normalizedFaqMetadata(root) {
-  return normalizedFaqMetadataFromCards(loadRawQaCards(root));
+  const baseDir = path.join(root, '.claude', 'specs', 'cards-data');
+  return normalizedFaqMetadataFromCards(loadRawQaCards(root), readQaSourceCorrections(baseDir));
 }
 
 function normalizedFaqMetadataFromBaseDir(baseDir) {
@@ -124,11 +126,11 @@ function normalizedFaqMetadataFromBaseDir(baseDir) {
       cards.push(...raw.data);
     }
   }
-  return normalizedFaqMetadataFromCards(cards);
+  return normalizedFaqMetadataFromCards(cards, readQaSourceCorrections(baseDir));
 }
 
-function normalizedFaqHashFromCards(cards) {
-  return sha256(JSON.stringify(normalizedFaqMetadataFromCards(cards)));
+function normalizedFaqHashFromCards(cards, excludedQaIds = new Set()) {
+  return sha256(JSON.stringify(normalizedFaqMetadataFromCards(cards, excludedQaIds)));
 }
 
 function generateCardsDataStatusFromBaseDir(baseDir, source = {}) {

@@ -102,6 +102,61 @@ describe('DeckRevealOverlay card details', () => {
     expect(container.querySelector('.deck-reveal-match-badge')).toBeNull();
   });
 
+  it('uses the Investigation presentation without a false shuffle phase', () => {
+    vi.useFakeTimers();
+    useGameStateStore.setState({
+      pendingDeckReveal: {
+        player: 'opp', visibility: 'public', viewer: 'all',
+        revealed: ['D08015'], matched: null,
+        presentation: 'reveal-to-bottom',
+      },
+    });
+    act(() => root.render(<DeckRevealOverlay />));
+    act(() => vi.advanceTimersByTime(1000));
+
+    expect(container.querySelector('[data-testid="deck-reveal-header"]')?.textContent).toContain('デッキの下へ');
+    expect(container.querySelector('[data-testid="deck-reveal-shuffle"]')).toBeNull();
+    act(() => vi.advanceTimersByTime(1100));
+    expect(container.querySelector('[data-testid="deck-reveal-shuffle"]')).toBeNull();
+    expect(container.querySelector('.deck-reveal-match-badge')).toBeNull();
+  });
+
+  it('describes randomized revealed cards without claiming a whole-deck shuffle', () => {
+    vi.useFakeTimers();
+    useGameStateStore.setState({
+      pendingDeckReveal: {
+        player: 'self', visibility: 'public', viewer: 'all',
+        revealed: ['D08015'], matched: null,
+        presentation: 'reveal-to-bottom-randomized',
+      },
+    });
+    act(() => root.render(<DeckRevealOverlay />));
+    act(() => vi.advanceTimersByTime(1000));
+
+    const header = container.querySelector('[data-testid="deck-reveal-header"]')?.textContent ?? '';
+    expect(header).toContain('公開したカード');
+    expect(header).toContain('デッキの下');
+    expect(header).not.toContain('デッキをシャッフル中');
+    expect(container.querySelector('[data-testid="deck-reveal-shuffle"]')).toBeNull();
+  });
+
+  it('dismisses a matched-only reveal without claiming a return, bottom move, or shuffle', () => {
+    vi.useFakeTimers();
+    useGameStateStore.setState({
+      pendingDeckReveal: {
+        player: 'self', visibility: 'public', viewer: 'all',
+        revealed: ['D08015'], matched: 'D08015', presentation: 'reveal-complete',
+      },
+    });
+    act(() => root.render(<DeckRevealOverlay />));
+    expect(container.querySelector('[data-testid="deck-reveal-header"]')?.textContent).toContain('公開中');
+    act(() => vi.advanceTimersByTime(999));
+    expect(container.querySelector('[data-testid="deck-reveal-overlay"]')).not.toBeNull();
+    act(() => vi.advanceTimersByTime(1));
+    expect(container.querySelector('[data-testid="deck-reveal-overlay"]')).toBeNull();
+    expect(container.querySelector('[data-testid="deck-reveal-shuffle"]')).toBeNull();
+  });
+
   it('shows a terminal reveal without stagger and dismisses it within three seconds', () => {
     vi.useFakeTimers();
     const terminal = createEmptyGameState();

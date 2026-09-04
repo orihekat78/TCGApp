@@ -31,6 +31,12 @@ function makeCtx(entry: ReservedEffectEntry, payload: unknown): EffectCtx {
       player: entry.trigger.player,
       cardId: entry.source.cardId,
       uid: entry.source.uid,
+      abilityId: entry.source.abilityId,
+      setCardId: entry.source.setCardId,
+      setCardInstanceId: entry.source.setCardInstanceId,
+      abilityOrigin: entry.source.abilityOrigin,
+      abilityIndex: entry.source.abilityIndex,
+      resolutionKind: entry.source.resolutionKind,
       area: 'remove', // 源カードは離場済み想定 (resolvePlayer('self') 等は player だけを見る)
     },
     bindings: {},
@@ -68,7 +74,12 @@ function makeReservedHandler(hookName: string) {
       event.queue(
         state,
         effectCopy,
-        { player: owner, uid: entry.source.uid, cardId: entry.source.cardId, abilityId: 'reserved' },
+        {
+          ...entry.source,
+          player: owner,
+          area: 'remove',
+          abilityId: entry.source.abilityId ?? 'reserved',
+        },
         hookName,
         payload,
         undefined,

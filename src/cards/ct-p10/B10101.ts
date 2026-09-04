@@ -13,13 +13,13 @@ const lookFourForAssault: Effect = {
       kind: 'atom',
       verb: 'deckRevealUntil',
       args: {
-        player: 'self', maxN: 4, chooseMatch: 'upTo', visibility: 'public', viewer: 'all',
+        player: 'self', maxN: 4, chooseMatch: 'upTo',
         filter: { kind: 'character', keywordFromPrintOrConditionIcon: '突撃' }, bind: '$revealed', bindMatch: '$matched',
       },
     },
     {
       kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' },
-      then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } },
+      then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId', presentation: 'public-selected-card' } },
     },
     { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },
   ],

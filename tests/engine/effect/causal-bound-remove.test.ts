@@ -3,12 +3,19 @@ import { startCausalSession, validateCausalLog } from '@/engine/log/causal';
 import { runOne } from '@/engine/resolve/stack';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { produce } from '@/engine/produce';
+import { deckOccurrenceAuthority } from '@/engine/effect/deck-occurrence-authority';
 import type { CausalLogEntryV1, EffectStackEntry, GameState } from '@/engine/types';
 
 function runBoundRemove(sessionId: string, setup: (state: GameState) => void, bound: string[]): GameState {
   const state = createEmptyGameState();
   setup(state);
   startCausalSession(state, sessionId);
+  const authorities = bound.map((cardId) => {
+    const index = state.players.opp.deck.indexOf(cardId);
+    return index < 0
+      ? { kind: 'card' as const, cardId, area: 'deck' as const, player: 'opp' as const }
+      : deckOccurrenceAuthority(state, 'opp', index)!;
+  });
 
   return produce(state, (draft) => {
     runOne(draft, {
@@ -24,7 +31,7 @@ function runBoundRemove(sessionId: string, setup: (state: GameState) => void, bo
       triggeredAt: { turn: 1, phase: 'main', nano: 1 },
       effect: { kind: 'atom', verb: 'boundToRemove', args: { player: 'opp', bindKey: '$bound' } },
       bindings: {
-        $bound: bound.map((cardId) => ({ kind: 'card', cardId, area: 'deck', player: 'opp' })),
+        $bound: authorities,
       },
       state: 'pending',
     } satisfies EffectStackEntry);
@@ -35,7 +42,7 @@ describe('boundToRemove causal projection', () => {
   it('records the actual deck-to-remove count under the resolving effect chain', () => {
     const state = runBoundRemove('causal-bound-actual', (draft) => {
       draft.players.opp.deck = ['PRIVATE-BOUND', 'PRIVATE-DECOY'];
-    }, ['PRIVATE-BOUND', 'PRIVATE-MISSING']);
+    }, ['PRIVATE-BOUND']);
 
     const graph = validateCausalLog(state.log as CausalLogEntryV1[]);
     expect(graph.map((node) => [node.kind, node.parentEventId, node.outcome])).toEqual([

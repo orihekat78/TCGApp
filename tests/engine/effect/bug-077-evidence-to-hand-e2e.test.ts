@@ -7,7 +7,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { runAtom } from '@/engine/effect/atom-handlers';
 import { createEmptyGameState } from '@/engine/state-factory';
-import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
+import { _clearPendingEffectPickQueue, _drainPendingEffectPickSide } from '@/engine/effect/resolve-picks';
 import { register as registerCardDef, _resetRegistry } from '@/engine/read/def';
 import { D08013, D08015, D08018 } from '@/cards/ct-d08';
 import { D11003, D11007 } from '@/cards/ct-d11';
@@ -112,7 +112,7 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
       },
       ctxSelf(),
     );
-    const side = (globalThis as { __pendingEffectPickSide?: { atomVerb: string; atomArgs: Record<string, unknown>; candidates: { uid: string; cardId: string }[]; source: { cardId: string; abilityId: string }; player: 'self' | 'opp' } | null }).__pendingEffectPickSide;
+    const side = _drainPendingEffectPickSide();
     expect(side).toBeTruthy();
 
     // Phase D: useEngineDispatch.ts:effectPickResolve のロジック完全再現

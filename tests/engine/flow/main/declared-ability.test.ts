@@ -11,6 +11,7 @@ import { event } from '@/engine/event/index';
 import { mutate } from '@/engine/mutate/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
+import { char as readChar } from '@/engine/read/char';
 import { runAllUntilEmpty } from '@/engine/resolve';
 import { startCausalSession, validateCausalLog } from '@/engine/log/causal';
 import {
@@ -73,8 +74,7 @@ describe('engine.flow.main.useDeclaredAbility', () => {
     const after = produce(s, draft => {
       useDeclaredAbility(draft, uid, 'A');
     });
-    const c = after.players.self.scene.find(c => c.uid === uid)!;
-    expect(c.declaredUseCount['A']).toBe(1);
+    expect(readChar.declaredUseCount(after, uid, 'A')).toBe(1);
   });
 
   it('useDeclaredAbility で effect:declared が emit される', () => {
@@ -120,11 +120,28 @@ describe('engine.flow.main.useDeclaredAbility', () => {
     }
 
     it('useDeclaredAbility が case:self に対して動作 (case.declaredUseCount を increment)', () => {
+      registerCardDef({
+        id: 'TEST_CASE_A',
+        no: 'TEST',
+        kind: 'case',
+        names: ['テスト事件'],
+        colors: ['青'],
+        level: 0,
+        traits: [],
+        abilities: [{
+          id: 'A',
+          type: 'declared',
+          scope: 'always',
+          effect: { kind: 'atom', verb: 'noop', args: {} },
+          description: 'test',
+          ruleRefs: [],
+        }],
+      } as unknown as CardDef);
       const s = makeStateWithCase('TEST_CASE_A');
       const after = produce(s, draft => {
         useDeclaredAbility(draft, 'case:self', 'A');
       });
-      expect(after.players.self.case.declaredUseCount['A']).toBe(1);
+      expect(readChar.declaredUseCount(after, 'case:self', 'A')).toBe(1);
     });
 
     it('case ability の limit:turn:1 を canDeclaredAbility が enforce', () => {
@@ -257,7 +274,7 @@ describe('engine.flow.main.useDeclaredAbility', () => {
         useDeclaredAbility(draft, 'case:self', 'A');
         useDeclaredAbility(draft, 'case:self', 'A');
       });
-      expect(after.players.self.case.declaredUseCount['A']).toBe(2);
+      expect(readChar.declaredUseCount(after, 'case:self', 'A')).toBe(2);
       expect(canDeclaredAbility(after, 'case:self', 'A')).toBe(true);
     });
   });

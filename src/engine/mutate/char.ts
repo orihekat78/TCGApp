@@ -9,6 +9,11 @@ import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 import { evalCond } from '../cond/eval.js';
 import { matchOneFilter } from '../target/candidates.js';
 import { pushPendingSetCardReplacementSide, type PendingSetCardReplacementSide } from '../effect/pending-state.js';
+import {
+  incrementTurnScopedUseCount,
+  readTurnScopedUseCount,
+} from '../effect/source-identity.js';
+import { activeSetHostKeywordSourceKeys } from '../read/char.js';
 
 type Player = 'self' | 'opp';
 // engine拡張 wave#2 cluster3 (2026-06-13): 'action' = 「アクション終了時まで」(rules/08 §6-7)。
@@ -114,6 +119,13 @@ function grantKeyword(s: GameState, uid: string, kw: string, scope: ModScope = '
   const found = findChar(s, uid);
   if (!found) return;
 
+  const revoked = (found.char.turnEffects['revokedKeywords'] as string[] | undefined) ?? [];
+  if (revoked.includes(kw)) {
+    const postBoundary = (found.char.turnEffects['postRevokeGrantedKeywords'] as string[] | undefined) ?? [];
+    if (!postBoundary.includes(kw)) postBoundary.push(kw);
+    found.char.turnEffects['postRevokeGrantedKeywords'] = postBoundary;
+  }
+
   if (scope === 'permanent') {
     const granted = found.char.keywordOverrides.granted;
     if (!granted.includes(kw)) {
@@ -148,12 +160,24 @@ function revokeKeyword(s: GameState, uid: string, kw: string): void {
  * grantedKeywords (付与) の鏡像。clearTurnEffects('turn') で清掃される (rules/19 §「失う」効果はターン scope)。
  */
 function revokeKeywordTurn(s: GameState, uid: string, kw: string): void {
+  ensureSetCardInstanceIds(s);
   const found = findChar(s, uid);
   if (!found) return;
+  const setSourceKeys = activeSetHostKeywordSourceKeys(s, uid, kw);
   const te = found.char.turnEffects;
   const cur = (te['revokedKeywords'] as string[] | undefined) ?? [];
   if (!cur.includes(kw)) cur.push(kw);
   te['revokedKeywords'] = cur;
+  const postBoundary = ((te['postRevokeGrantedKeywords'] as string[] | undefined) ?? [])
+    .filter(keyword => keyword !== kw);
+  if (postBoundary.length > 0) te['postRevokeGrantedKeywords'] = postBoundary;
+  else delete te['postRevokeGrantedKeywords'];
+  const rawBoundaries = te['revokedSetKeywordSources'];
+  const boundaries = rawBoundaries !== null && typeof rawBoundaries === 'object' && !Array.isArray(rawBoundaries)
+    ? rawBoundaries as Record<string, unknown>
+    : {};
+  boundaries[kw] = setSourceKeys;
+  te['revokedSetKeywordSources'] = boundaries;
 }
 
 /**
@@ -266,6 +290,8 @@ function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn' 
     delete te['grantedKeywords'];
     // engine additive (2026-06-29): revokeKeywordTurn が積んだ「ターン終了時まで失う」キーワード (B06068)。
     delete te['revokedKeywords'];
+    delete te['postRevokeGrantedKeywords'];
+    delete te['revokedSetKeywordSources'];
     // engine A1 wave (2026-07-11): scope:'turn' の trait 付与/剥奪 (grantTrait/revokeTrait)。
     // '_permanent' 版は「ターン終了時に切れない」ため **ここでは消さない** (B05101、grantedTraits_permanent /
     // revokedTraits_permanent は apMod_permanent と同じ生存 key)。BUG-119 教訓: 新 turn キーは必ずここに列挙。
@@ -362,22 +388,44 @@ function grantAbility(s: GameState, uid: string, ability: object): void {
 function ensureSetCardInstanceIds(s: GameState): void {
   const used = new Set<string>();
   let seq = s.setCardInstanceSeq ?? 1;
+  const reserve = (id: unknown): void => {
+    if (typeof id !== 'string' || id.length === 0) return;
+    used.add(id);
+    const match = /^set:(\d+)$/.exec(id);
+    if (match) seq = Math.max(seq, Number(match[1]) + 1);
+  };
   for (const player of ['self', 'opp'] as const) {
     for (const char of s.players[player].scene) {
+      if (!Array.isArray(char.setCards)) char.setCards = [];
       for (const entry of char.setCards) {
         const id = entry.instanceId;
         if (typeof id !== 'string' || id.length === 0 || used.has(id)) {
           entry.instanceId = undefined;
           continue;
         }
-        used.add(id);
-        const match = /^set:(\d+)$/.exec(id);
-        if (match) seq = Math.max(seq, Number(match[1]) + 1);
+        reserve(id);
       }
     }
   }
+  const seen = new WeakSet<object>();
+  const reserveReferencedIds = (value: unknown): void => {
+    if (value === null || typeof value !== 'object' || seen.has(value)) return;
+    seen.add(value);
+    if (Array.isArray(value)) {
+      for (const item of value) reserveReferencedIds(item);
+      return;
+    }
+    for (const [key, item] of Object.entries(value)) {
+      if (key === 'setCardInstanceId') reserve(item);
+      else reserveReferencedIds(item);
+    }
+  };
+  reserveReferencedIds(s.pendingEffects);
+  reserveReferencedIds(s.reservedEffects);
+  reserveReferencedIds(s.pendingRuntimeState);
   for (const player of ['self', 'opp'] as const) {
     for (const char of s.players[player].scene) {
+      if (!Array.isArray(char.setCards)) char.setCards = [];
       for (const entry of char.setCards) {
         if (entry.instanceId) continue;
         let id = `set:${seq++}`;
@@ -406,7 +454,7 @@ function setCard(s: GameState, uid: string, cardId: string, faceUp: boolean): vo
     s,
     'setcard:enter',
     { player, hostUid: char.uid, hostCardId: char.cardId, setCardId: cardId, setCardInstanceId: instanceId, faceUp, cause: 'effect' },
-    { player, uid: char.uid, cardId: char.cardId },
+    { player, uid: char.uid, cardId: char.cardId, setCardId: cardId, setCardInstanceId: instanceId },
   );
 }
 
@@ -446,9 +494,20 @@ function eligibleSetCardReplacement(s: GameState, player: Player, fromUid: strin
   if (!card) return null;
   for (const ability of card.abilities as AbilityDef[]) {
     if (ability.type !== 'triggered' || ability.scope !== 'on-set-self' || ability.trigger?.hook !== 'setcard:leave' || !ability.setCardRemovalReplacement) continue;
-    const used = entry.replacementUseCounts?.[ability.id];
-    if (ability.limit?.kind === 'turn' && used?.turn === s.turn.number && used.count >= ability.limit.n) continue;
-    const ctx = { source: { cardId: entry.cardId, uid: fromUid, abilityId: ability.id, player, area: 'scene' as const }, bindings: {} };
+    const used = readTurnScopedUseCount(entry.replacementUseCounts?.[ability.id], s.turn.number);
+    if (ability.limit?.kind === 'turn' && used >= ability.limit.n) continue;
+    const ctx = {
+      source: {
+        cardId: entry.cardId,
+        uid: fromUid,
+        abilityId: ability.id,
+        player,
+        area: 'scene' as const,
+        setCardId: entry.cardId,
+        setCardInstanceId: entry.instanceId,
+      },
+      bindings: {},
+    };
     if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
     const candidates = replacementCandidates(s, player, fromUid, ability);
     if (candidates.length > 0) return { ability, candidates };
@@ -468,8 +527,7 @@ function findActorTurnEffects(s: GameState, uid: string): Record<string, unknown
 
 function markSetCardReplacementUsed(s: GameState, entry: SetCardReplacementEntry, abilityId: string): void {
   const counts = (entry.replacementUseCounts ??= {});
-  const previous = counts[abilityId];
-  counts[abilityId] = { turn: s.turn.number, count: previous?.turn === s.turn.number ? previous.count + 1 : 1 };
+  counts[abilityId] = incrementTurnScopedUseCount(counts[abilityId], s.turn.number);
 }
 
 function moveSetCardEntry(s: GameState, fromUid: string, toUid: string, instanceId: string, abilityId: string): boolean {
@@ -483,7 +541,7 @@ function moveSetCardEntry(s: GameState, fromUid: string, toUid: string, instance
   if (!entry) return false;
   markSetCardReplacementUsed(s, entry, abilityId);
   to.char.setCards.push(entry);
-  event.emit(s, 'setcard:enter', { player: from.player, hostUid: to.char.uid, hostCardId: to.char.cardId, setCardId: entry.cardId, setCardInstanceId: entry.instanceId, faceUp: entry.faceUp, cause: 'replacement' }, { player: from.player, uid: to.char.uid, cardId: to.char.cardId });
+  event.emit(s, 'setcard:enter', { player: from.player, hostUid: to.char.uid, hostCardId: to.char.cardId, setCardId: entry.cardId, setCardInstanceId: entry.instanceId, faceUp: entry.faceUp, cause: 'replacement' }, { player: from.player, uid: to.char.uid, cardId: to.char.cardId, setCardId: entry.cardId, setCardInstanceId: entry.instanceId });
   return true;
 }
 
@@ -492,10 +550,50 @@ function maybeReplaceSetCardRemoval(s: GameState, player: Player, fromUid: strin
   if (!eligible || !entry.instanceId) return false;
   const human = (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide ?? null;
   if (human === player && allowHuman) {
-    pushPendingSetCardReplacementSide({ player, fromUid, setCardInstanceId: entry.instanceId, candidates: eligible.candidates, source: { cardId: entry.cardId, abilityId: eligible.ability.id, uid: fromUid } });
+    pushPendingSetCardReplacementSide({
+      player,
+      fromUid,
+      setCardInstanceId: entry.instanceId,
+      candidates: eligible.candidates,
+      source: {
+        cardId: entry.cardId,
+        abilityId: eligible.ability.id,
+        uid: fromUid,
+        setCardId: entry.cardId,
+        setCardInstanceId: entry.instanceId,
+      },
+    });
     return true;
   }
   return moveSetCardEntry(s, fromUid, eligible.candidates[0]!.uid, entry.instanceId, eligible.ability.id);
+}
+
+/** Record use against one exact physical set-card occurrence. */
+function incrSetCardAbilityUseCount(
+  s: GameState,
+  hostUid: string,
+  setCardInstanceId: string,
+  abilityId: string,
+): boolean {
+  ensureSetCardInstanceIds(s);
+  const found = findChar(s, hostUid);
+  const entry = found?.char.setCards.find((candidate) => candidate.instanceId === setCardInstanceId);
+  if (!entry) return false;
+  entry.abilityUseCounts ??= {};
+  entry.abilityUseCounts[abilityId] = incrementTurnScopedUseCount(
+    entry.abilityUseCounts[abilityId],
+    s.turn.number,
+  );
+  return true;
+}
+
+/** Read-only batch admission check: would this host open a human replacement? */
+function wouldDeferSetCardReplacementForHostLeave(s: GameState, uid: string): boolean {
+  const found = findChar(s, uid);
+  if (!found) return false;
+  const human = (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide ?? null;
+  if (human !== found.player) return false;
+  return found.char.setCards.some((entry) => eligibleSetCardReplacement(s, found.player, uid, entry) !== null);
 }
 
 /** Suspend a human-owned replacement before the host itself is removed. */
@@ -503,6 +601,7 @@ function deferSetCardReplacementForHostLeave(
   s: GameState,
   uid: string,
   resume: NonNullable<PendingSetCardReplacementSide['resume']>,
+  excludedInstanceIds: readonly string[] = [],
 ): boolean {
   ensureSetCardInstanceIds(s);
   const found = findChar(s, uid);
@@ -510,9 +609,23 @@ function deferSetCardReplacementForHostLeave(
   const human = (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide ?? null;
   if (human !== found.player) return false;
   for (const entry of found.char.setCards) {
+    if (entry.instanceId && excludedInstanceIds.includes(entry.instanceId)) continue;
     const eligible = eligibleSetCardReplacement(s, found.player, uid, entry);
     if (!eligible || !entry.instanceId) continue;
-    pushPendingSetCardReplacementSide({ player: found.player, fromUid: uid, setCardInstanceId: entry.instanceId, candidates: eligible.candidates, source: { cardId: entry.cardId, abilityId: eligible.ability.id, uid }, resume });
+    pushPendingSetCardReplacementSide({
+      player: found.player,
+      fromUid: uid,
+      setCardInstanceId: entry.instanceId,
+      candidates: eligible.candidates,
+      source: {
+        cardId: entry.cardId,
+        abilityId: eligible.ability.id,
+        uid,
+        setCardId: entry.cardId,
+        setCardInstanceId: entry.instanceId,
+      },
+      resume,
+    });
     return true;
   }
   return false;
@@ -543,6 +656,9 @@ function canResolveSetCardRemovalReplacement(
     candidate.instanceId === pending.setCardInstanceId
     && candidate.cardId === pending.source.cardId);
   if (!entry) return false;
+  if ((pending.source.setCardId !== undefined || pending.source.setCardInstanceId !== undefined)
+    && (pending.source.setCardId !== entry.cardId
+      || pending.source.setCardInstanceId !== entry.instanceId)) return false;
   const eligible = eligibleSetCardReplacement(s, found.player, pending.fromUid, entry);
   if (!eligible || eligible.ability.id !== pending.source.abilityId) return false;
   if (eligible.candidates.length !== pending.candidates.length) return false;
@@ -651,7 +767,7 @@ function transferStackedCards(
 /**
  * setCards と stackedCards のクリーンアップ (離場時)
  * setCards → リムーブエリアへ
- * stackedCards → 枚数分の back-card としてリムーブエリアへ
+ * stackedCards → 実カードIDをリムーブエリアへ（旧count形式だけback-card）
  */
 function removeAllSetAndStacked(s: GameState, uid: string): void {
   const found = findChar(s, uid);
@@ -665,7 +781,7 @@ function removeAllSetAndStacked(s: GameState, uid: string): void {
   if (char.setCards.length > 0) advanceIndexedZoneEpoch(s, player, 'remove');
   char.setCards = [];
 
-  // stackedCards 分の back-card をリムーブエリアへ
+  // stackedCards は実カードIDをリムーブエリアへ（旧count形式だけback-card）
   if (Array.isArray(char.stackedCards)) {
     s.players[player].remove.push(...char.stackedCards.map(entry => entry.cardId));
     if (char.stackedCards.length > 0) advanceIndexedZoneEpoch(s, player, 'remove');
@@ -726,7 +842,7 @@ function removeOneSetCard(
     s,
     'setcard:leave',
     { player, hostUid: char.uid, hostCardId: char.cardId, setCardId: entry.cardId, setCardInstanceId: entry.instanceId, faceUp: entry.faceUp, cause },
-    { player, uid: char.uid, cardId: char.cardId },
+    { player, uid: char.uid, cardId: char.cardId, setCardId: entry.cardId, setCardInstanceId: entry.instanceId },
   );
   return entry.cardId;
 }
@@ -783,7 +899,7 @@ function moveOneSetCard(
         cause: 'move',
         destination,
       },
-      { player: from.player, uid: from.char.uid, cardId: from.char.cardId },
+      { player: from.player, uid: from.char.uid, cardId: from.char.cardId, setCardId: moved.cardId, setCardInstanceId: moved.instanceId },
     );
   }
   return { cardId: moved.cardId, player: from.player };
@@ -836,11 +952,13 @@ export const char = {
   removeAllSetAndStacked,
   removeOneSetCard,
   replaceEligibleSetCardsBeforeHostLeaves,
+  wouldDeferSetCardReplacementForHostLeave,
   deferSetCardReplacementForHostLeave,
   canResolveSetCardRemovalReplacement,
   resolveSetCardRemovalReplacement,
   takeOneSetCard,
   moveOneSetCard,
   ensureSetCardInstanceIds,
+  incrSetCardAbilityUseCount,
   disguiseInto,
 };

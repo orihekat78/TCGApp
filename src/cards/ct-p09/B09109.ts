@@ -53,7 +53,7 @@ const a1: AbilityDef = {
       // ターン終了時まで「ターン終了時、このキャラを現場からデッキの下に移す。」を与える (rider)
       { kind: 'atom', verb: 'charSetTurnEffect', args: { uid: '$entered.uid', key: 'toDeckBottomOnTurnEnd', val: true } },
       // 残りの公開したカードをデッキの下に移す (matched 無しなら全公開分)
-      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: 'restRevealed' } },
+      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: 'restRevealed', order: 'preserve' } },
       // デッキをシャッフルする
       { kind: 'atom', verb: 'deckShuffle', args: { player: 'self' } },
     ],

@@ -69,6 +69,9 @@ export function DeclareCardNameModal(props: DeclareCardNameModalProps): JSX.Elem
   const promptId = 'declare-card-name-prompt';
   const listboxId = 'declare-card-name-options';
   const invalid = domain !== 'unrestricted' && trimmed !== '' && resolvedName === null;
+  const domainGuidance = domain === 'registered-character-card-name'
+    ? '登録済みのキャラクターカード名'
+    : '登録済みのカード名';
   const describedBy = [
     promptId,
     ...(domain === 'unrestricted' ? [] : [domainGuidanceId]),
@@ -124,7 +127,7 @@ export function DeclareCardNameModal(props: DeclareCardNameModalProps): JSX.Elem
             role="status"
             aria-live="polite"
           >
-            登録済みのキャラクターカード名から選択してください。{candidateNames.length}件を検索・閲覧できます。
+            {domainGuidance}から選択してください。{candidateNames.length}件を検索・閲覧できます。
           </p>
         )}
         <input
@@ -159,7 +162,7 @@ export function DeclareCardNameModal(props: DeclareCardNameModalProps): JSX.Elem
         )}
         {invalid && (
           <p className="declare-card-name-invalid" role="alert">
-            登録済みのキャラクターカード名を候補から選択してください。
+            {domainGuidance}を候補から選択してください。
           </p>
         )}
         <p className="declare-card-name-count" data-testid="declare-card-name-count">

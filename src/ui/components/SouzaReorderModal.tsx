@@ -96,7 +96,6 @@ export function SouzaReorderModal(props: SouzaReorderModalProps): JSX.Element | 
                     cardId={card.cardId}
                     instanceId={card.occurrenceId}
                     occurrenceLabel={publicCardOccurrenceLabel(order.map((item) => item.cardId), card.cardId, i)}
-                    onSelect={() => {}}
                     onExpand={expandModal.open}
                   />
                   <span className="souza-name souza-row-label">{card.name}</span>

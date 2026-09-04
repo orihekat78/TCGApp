@@ -3,7 +3,7 @@ import { registerAll } from '@/cards/index';
 import { event } from '@/engine/event';
 import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/listeners/triggered';
 import { _resetRegistry as resetDefRegistry } from '@/engine/read/def';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../helpers/main-game-state';
 import { runAllUntilEmpty } from '@/engine/resolve';
 import { declare, _resetActionContexts } from '@/engine/flow/action/state-machine';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';

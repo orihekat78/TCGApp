@@ -63,8 +63,10 @@ const ENGINE_INTERNAL_CHANNELS = new Set<string>([
   'SetCardChoiceGuard',
   'SetCardChoiceContinuation',
   // Replacement decisions expose only their projected prompt.  The canonical
-  // guard stays engine-owned so mutable UI candidates cannot become authority.
+  // guard and continuation stay engine-owned so mutable UI candidates cannot
+  // become authority and the paused effect tail is never surfaced separately.
   'SetCardReplacementGuard',
+  'SetCardReplacementContinuation',
   // mega-wave W6 step9 (2026-07-04, row65): startContact atom → ActionContext.id の片道通知。
   // 専用 store field を持たず dispatch drain → store.setActiveActionId(id) 直結 (useContactFlowDriver が
   // 既存の activeActionId 監視で拾う = 専用 Modal/Overlay 不要)。標準 4 点配線の対象外。

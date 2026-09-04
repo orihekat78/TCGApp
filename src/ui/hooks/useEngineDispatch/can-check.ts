@@ -1,9 +1,11 @@
 // useEngineDispatch/can-check.ts — Phase 3d 分割 (isAllowed 前段ガード, body 無改変移送, 2026-06-22)
 import * as flow from '@/engine/flow/index.js';
+import { canUseNextHintOptionalCard } from '@/engine/flow/main/next-hint.js';
 import { game as readGame } from '@/engine/read/game.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { _getResolutionLock } from '@/engine/event/registry.js';
 import type { GameState } from '@/engine/types/game-state.js';
+import type { PendingMisreadAuthority } from '@/engine/types/misread.js';
 import type { EngineAction } from './types.js';
 import { canEndTurnByContract } from '../useActionsPanelFlow/end-turn-contract.js';
 import { _canResolveMisreadPicks } from '@/engine/listeners/misread.js';
@@ -28,6 +30,9 @@ import {
 } from '@/engine/effect/runtime-state.js';
 import { canApplyPendingPickSelection } from '@/engine/effect/pick-selection.js';
 import { cardOccurrenceUid, cardOccurrenceWitness } from '@/engine/target/card-occurrence.js';
+import { sceneCap } from '@/engine/read/scene-cap.js';
+import { isSceneEnterSwitchPickArgs } from '@/engine/effect/scene-switch.js';
+import { matchesPendingMisreadAuthority } from '@/engine/state/misread-authority.js';
 
 // ---- can-check (前段ガード) ----
 
@@ -42,9 +47,7 @@ function matchesPendingDecision(
 
 function matchesHiramekiCheckpoint(state: GameState, pending: PendingHirameki): boolean {
   if (!pending.actionId
-    || !pending.causalCorrelationEventId
-    || !pending.actorUid
-    || !pending.occurrence) return false;
+    || !pending.actorUid) return false;
 
   const ax = flow.action._getContext(state, pending.actionId);
   if (!ax
@@ -55,10 +58,19 @@ function matchesHiramekiCheckpoint(state: GameState, pending: PendingHirameki): 
     || ax.byUid !== pending.actorUid
     || ax.byPlayer === pending.player
     || ax.deferredCaseEvidenceGain !== true
-    || pending.gainDeferred !== true
-    || ax.causalTrace?.tailEventId !== pending.causalCorrelationEventId) {
+    || pending.gainDeferred !== true) {
     return false;
   }
+
+  if (pending.heldEvidence !== undefined) {
+    return pending.occurrence === undefined
+      && pending.causalCorrelationEventId === undefined
+      && flow.actionCase.matchesHiramekiCheckpoint(state, ax, pending);
+  }
+
+  if (!pending.causalCorrelationEventId
+    || ax.causalTrace?.tailEventId !== pending.causalCorrelationEventId
+    || !pending.occurrence) return false;
 
   const occurrence = pending.occurrence;
   if (occurrence.player !== pending.player
@@ -94,7 +106,10 @@ export type ConcedeAuthority = { allowed: boolean };
 export function isAllowed(
   state: GameState,
   action: EngineAction,
-  authority?: { concede?: ConcedeAuthority },
+  authority?: {
+    concede?: ConcedeAuthority;
+    misread?: PendingMisreadAuthority | null;
+  },
 ): boolean {
   if (state.gameResult !== undefined) return false;
   if (isNewPrimaryAction(action) && hasExclusivePublicActionContext(state)) return false;
@@ -106,13 +121,29 @@ export function isAllowed(
     case 'handUseCard':
       return flow.canHandUseCard(state, action.player, action.cardId);
     case 'handUseCardSwitch':
-      return flow.canHandUseCardSwitch(state, action.player, action.cardId);
+      return flow.canHandUseCardSwitch(state, action.player, action.cardId)
+        && state.players[action.player].scene.some((char) => char.uid === action.removeUid);
     case 'nextHint':
-      return flow.canStartNextHint(state, action.player);
+      return flow.canStartNextHint(state, action.player)
+        && (action.optionalCardId === undefined
+          ? action.switchRemoveUid === undefined
+          : canUseNextHintOptionalCard(
+              state,
+              action.player,
+              action.optionalCardId,
+              action.switchRemoveUid,
+            ));
     case 'partnerAbility':
       return flow.canPartnerAbility(state, action.player, action.abilId);
     case 'declaredAbility':
-      return flow.canActivateDeclaredAbility(state, action.uid, action.abilId, action.costParams);
+      return flow.canActivateDeclaredAbility(state, action.uid, action.abilId, action.costParams, {
+        sourceRef: {
+          setCardId: action.setCardId,
+          setCardInstanceId: action.setCardInstanceId,
+          abilityOrigin: action.abilityOrigin,
+          abilityIndex: action.abilityIndex,
+        },
+      });
     case 'assist':
       return readGame.canPartnerAssist(state, action.player);
     case 'solveCase':
@@ -130,7 +161,7 @@ export function isAllowed(
       const ax = flow.action._getContext(state, action.actionId);
       if (!ax) return false;
       if (ax.phase !== 'guard-window') return false;
-      if (hasBlockingResolutionPrompt()) return false;
+      if (hasBlockingResolutionPrompt(state)) return false;
       const excludedUid = ax.target.kind === 'char' ? ax.target.uid : undefined;
       const required = flow.guard.mustGuardCandidates(state, ax.byUid, excludedUid);
       if (action.guarderUid === null) {
@@ -143,7 +174,14 @@ export function isAllowed(
     case 'actionContact': {
       const ax = flow.action._getContext(state, action.actionId);
       if (!ax) return false;
+      if (hasBlockingResolutionPrompt(state)) return false;
       if (ax.phase !== 'action-1' && ax.phase !== 'action-2' && ax.phase !== 'action-1-redo') return false;
+      const alreadyActed = ax.phase === 'action-1'
+        ? ax.firstActed !== undefined
+        : ax.phase === 'action-2'
+          ? ax.secondActed !== undefined
+          : ax.firstRedoActed !== undefined;
+      if (alreadyActed) return false;
       const currentUid = ax.phase === 'action-2' ? ax.secondUid : ax.firstUid;
       if (!currentUid || ownerOfUid(state, currentUid) !== action.player) return false;
       if (action.choice.kind === 'pass') return true;
@@ -153,18 +191,18 @@ export function isAllowed(
     }
     case 'actionAdvance': {
       const ax = flow.action._getContext(state, action.actionId);
-      if (!ax || hasBlockingResolutionPrompt()) return false;
+      if (!ax || hasBlockingResolutionPrompt(state)) return false;
       switch (ax.phase) {
         case 'leave-resolution':
         case 'contact-pending':
         case 'contact-end':
           return true;
         case 'action-1':
-          return ax.firstActed !== undefined;
+          return ax.firstActed !== undefined || flow.action.hasMissingContactParticipant(state, ax);
         case 'action-2':
-          return ax.secondActed !== undefined;
+          return ax.secondActed !== undefined || flow.action.hasMissingContactParticipant(state, ax);
         case 'action-1-redo':
-          return ax.firstRedoActed !== undefined;
+          return ax.firstRedoActed !== undefined || flow.action.hasMissingContactParticipant(state, ax);
         case 'judge':
           return ax.judgeResolved === true;
         default:
@@ -176,18 +214,28 @@ export function isAllowed(
       return !!ax
         && ax.phase === 'judge'
         && ax.judgeResolved !== true
-        && !hasBlockingResolutionPrompt();
+        && !hasBlockingResolutionPrompt(state);
     }
     case 'hiramekiResolve': {
       // pendingHirameki が set されているときのみ有効
       const pending = useGameStateStore.getState().pendingHirameki;
       return matchesPendingDecision(pending, action)
-        && matchesHiramekiCheckpoint(state, pending!);
+        && matchesHiramekiCheckpoint(state, pending!)
+        && flow.actionCase.isValidHiramekiSceneSwitchChoice(
+          state,
+          pending!,
+          action.choice,
+          'switchRemoveUid' in action ? action.switchRemoveUid : undefined,
+        );
     }
     case 'misreadResolve': {
       const pending = useGameStateStore.getState().pendingMisread;
+      const owned = authority?.misread;
       return matchesPendingDecision(pending, action)
-        && _canResolveMisreadPicks(state, pending!, action.picks);
+        && owned !== null
+        && owned !== undefined
+        && matchesPendingMisreadAuthority(pending!, owned)
+        && _canResolveMisreadPicks(state, owned, action.picks);
     }
     case 'optionalResolve': {
       // 2026-06-06 タスクC: pendingEffectOptional が set されているときのみ有効
@@ -225,7 +273,29 @@ export function isAllowed(
         );
     }
     case 'chooseInterceptResolve': {
-      return matchesPendingDecision(useGameStateStore.getState().pendingChooseIntercept, action);
+      const pending = useGameStateStore.getState().pendingChooseIntercept;
+      return pending?.kind !== 'order' && matchesPendingDecision(pending, action);
+    }
+    case 'chooseInterceptOrderResolve': {
+      const pending = useGameStateStore.getState().pendingChooseIntercept;
+      const hasOrigin = action.abilityOrigin !== undefined;
+      const hasIndex = action.abilityIndex !== undefined;
+      const candidates = pending?.kind === 'order'
+        ? pending.choices.filter(choice => (
+            choice.protector.uid === action.protectorUid
+            && choice.targetUid === action.targetUid
+            && choice.protector.setCardInstanceId === action.setCardInstanceId
+          ))
+        : [];
+      return pending?.kind === 'order'
+        && matchesPendingDecision(pending, action)
+        && hasOrigin === hasIndex
+        && (hasOrigin
+          ? candidates.some(choice => (
+              choice.protector.abilityOrigin === action.abilityOrigin
+              && choice.protector.abilityIndex === action.abilityIndex
+            ))
+          : candidates.length === 1);
     }
     case 'repeatOptionalResolve': {
       return matchesPendingDecision(useGameStateStore.getState().pendingEffectRepeatOptional, action);
@@ -250,14 +320,64 @@ export function isAllowed(
     }
     case 'effectPickResolve': {
       // BUG-054: pendingEffectPick が set されているときのみ有効
+      const rawAction = action as unknown as Record<string, unknown>;
+      const hasPickedUids = Object.prototype.hasOwnProperty.call(rawAction, 'pickedUids');
+      const hasSwitchRemoveUid = Object.prototype.hasOwnProperty.call(rawAction, 'switchRemoveUid');
+      const hasSwitchRemoveUids = Object.prototype.hasOwnProperty.call(rawAction, 'switchRemoveUids');
+      if ((typeof rawAction.pickedUid !== 'string' && rawAction.pickedUid !== null)
+        || (hasPickedUids && (!Array.isArray(rawAction.pickedUids)
+          || rawAction.pickedUids.length === 0
+          || !rawAction.pickedUids.every((uid) => typeof uid === 'string')))
+        || (rawAction.pickedUid === null && hasPickedUids)
+        || (hasSwitchRemoveUid && hasSwitchRemoveUids)
+        || (hasSwitchRemoveUid && (typeof rawAction.switchRemoveUid !== 'string' || hasPickedUids))
+        || (hasSwitchRemoveUids && (!hasPickedUids
+          || !Array.isArray(rawAction.switchRemoveUids)
+          || rawAction.switchRemoveUids.length === 0
+          || !rawAction.switchRemoveUids.every((uid) => typeof uid === 'string')))) {
+        return false;
+      }
       const pendingAuthority = readPendingEffectPickAuthority(state);
-      return matchesPendingDecision(useGameStateStore.getState().pendingEffectPick, action)
+      const selectionAllowed = matchesPendingDecision(useGameStateStore.getState().pendingEffectPick, action)
         && pendingAuthority !== null
         && canApplyPendingPickSelection(
-          pendingAuthority,
+          pendingAuthority!,
           action.pickedUid,
           'pickedUids' in action ? action.pickedUids : undefined,
         );
+      if (!selectionAllowed || pendingAuthority === null) return false;
+      const isSwitchVictimPick = isSceneEnterSwitchPickArgs(pendingAuthority.atomArgs);
+      const switchPlayer = isSwitchVictimPick
+        ? undefined
+        : pendingAuthority.atomVerb === 'sceneEnter'
+          ? pendingAuthority.player
+          : pendingAuthority.sceneEnterSwitchPlayer === pendingAuthority.player
+            ? pendingAuthority.sceneEnterSwitchPlayer
+            : undefined;
+      const requiredSwitchCount = switchPlayer === undefined || action.pickedUid === null
+        ? 0
+        : pendingAuthority.atomVerb === 'sceneEnter' && 'pickedUids' in action
+          ? Math.max(
+              0,
+              state.players[switchPlayer].scene.length
+                + action.pickedUids.length
+                - sceneCap(state, switchPlayer),
+            )
+          : state.players[switchPlayer].scene.length >= sceneCap(state, switchPlayer) ? 1 : 0;
+      if ('switchRemoveUids' in action) {
+        if (switchPlayer === undefined || requiredSwitchCount < 1) return false;
+        const victims = action.switchRemoveUids;
+        const liveUids = new Set(state.players[switchPlayer].scene.map((character) => character.uid));
+        return victims.length === requiredSwitchCount
+          && new Set(victims).size === victims.length
+          && victims.every((uid) => liveUids.has(uid));
+      }
+      if ('switchRemoveUid' in action) {
+        return switchPlayer !== undefined
+          && requiredSwitchCount === 1
+          && state.players[switchPlayer].scene.some((character) => character.uid === action.switchRemoveUid);
+      }
+      return requiredSwitchCount === 0;
     }
     case 'setEffectOrder': {
       // resolution lock 中は禁止
@@ -300,9 +420,11 @@ function ownerOfUid(state: GameState, uid: string): 'self' | 'opp' | null {
   return null;
 }
 
-function hasBlockingResolutionPrompt(): boolean {
+function hasBlockingResolutionPrompt(state: GameState): boolean {
   const store = useGameStateStore.getState();
   if (_getResolutionLock().locked) return true;
+  const human = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+  if (pendingOwnerOrderGroup(state, human).length > 0) return true;
   return store.pendingHirameki !== null
     || store.pendingMisread !== null
     || store.pendingEffectPick !== null

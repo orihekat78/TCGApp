@@ -22,7 +22,7 @@ import { declare, passGuard, snapshotAP, _resetActionContexts } from '@/engine/f
 import { judge } from '@/engine/flow/contact';
 import { mutate } from '@/engine/mutate/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../helpers/main-game-state';
 import { registerAll } from '@/cards/index';
 import { B06087 } from '@/cards/ct-p06/B06087';
 import type {

@@ -87,7 +87,8 @@ export const B06036: CardDef = {
   kind: 'case',
   names: ['鬼丸天下統一プロジェクト'],
   colors: ['緑'],
-  caseTraits: [],
+  // 公式API category1=YAIBA。case TSVのcategory dropをCardDefで永続backfill。
+  caseTraits: ['YAIBA'],
   traits: [],
   rarity: 'C',
   imageUrl: '1754285189468269.jpg',

@@ -1,3 +1,4 @@
+// qa: card:B09039:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0
 // tests/cards/s1-defer/B09039 中森青子 — S1 defer-unlock probe (owner='opp' 固定)
 //
 // a1【登場時】handAddFromRemove の area union (remove ∪ partner-area) + filter{trait ビッグジュエル, kind event}。
@@ -26,6 +27,7 @@ import { activateDeclaredAbility } from '@/engine/flow/main/ability-activate';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { sceneChar } from '../../helpers/fixtures';
 import { B09039 } from '@/cards/ct-p09/B09039';
+import { B07059 } from '@/cards/ct-p07/B07059';
 import type { CardDef, EffectCtx, GameState } from '@/engine/types';
 
 function ch(id: string, over: Partial<CardDef> = {}): CardDef {
@@ -45,6 +47,10 @@ const W3 = 'W3';          // 白 レベル3 キャラ (a2 handAdd 対象)
 const W4 = 'W4';          // 白 レベル4 キャラ (levelMax:3 超過 decoy)
 const BLK3 = 'BLK3';      // 黒 レベル3 キャラ (色違い decoy)
 const SENT = 'SENT';      // 手札 sentinel キャラ (event でない → useEventFromHand 非対象)
+const WHITE_PARTNER: CardDef = {
+  id: 'WHITE_PARTNER', no: 'WHITE_PARTNER', kind: 'partner', names: ['WHITE_PARTNER'],
+  colors: ['白'], lp: 1, traits: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [],
+};
 
 beforeEach(() => {
   event._resetRegistry();
@@ -53,6 +59,8 @@ beforeEach(() => {
   _clearPendingEffectPickQueue();
   resetDefRegistry();
   registerCardDef(B09039);
+  registerCardDef(B07059);
+  registerCardDef(WHITE_PARTNER);
   registerCardDef(ev(BJ5, { level: 5, traits: ['ビッグジュエル'] }));
   registerCardDef(ev(BJ_EV, { level: 3, traits: ['ビッグジュエル'] }));
   registerCardDef(ev(BJ_PA, { level: 3, traits: ['ビッグジュエル'] }));
@@ -206,4 +214,15 @@ describe('B09039 a2 — chain gate paths (owner=opp)', () => {
       expect(_drainPendingEffectPickSide()).toBeNull();
     },
   );
+
+  it('resolves B07059 after the B09039 remainder and moves the used event to partner area', () => {
+    const s = driveA2((state) => {
+      state.players.opp.hand = [B07059.id];
+      state.players.opp.partner.cardId = WHITE_PARTNER.id;
+    });
+
+    expect(s.players.opp.partnerAreaCards, B09039.id).toContain(B07059.id);
+    expect(s.players.opp.hand).not.toContain(B07059.id);
+    expect(s.players.opp.remove).not.toContain(B07059.id);
+  });
 });

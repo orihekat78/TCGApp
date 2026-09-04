@@ -45,10 +45,13 @@ const a1: AbilityDef = {
   trigger: { hook: 'enter', selfOnly: true }, // 【登場時】
   // このキャラをスリープさせてもよい。そうした場合、手札からLv6以下の[工藤新一]/[毛利探偵事務所]を1枚まで登場させ、1枚引く。
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'sequence',
-      steps: [
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'sequence',
+        steps: [
         // このキャラをスリープさせ、
         { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
         // 手札からレベル6以下の[工藤新一]かレベル6以下の[毛利探偵事務所]のキャラを1枚まで登場させ、
@@ -67,8 +70,9 @@ const a1: AbilityDef = {
           },
         },
         // カードを1枚引く。(公式Q&A: 登場0枚でも必ず引く → sequence の独立 tail)
-        { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
-      ],
+          { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+        ],
+      },
     },
   },
   description:

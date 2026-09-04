@@ -30,11 +30,11 @@
 //     step2: 「『ターン終了時、このキャラを現場からデッキの下に移す。』を与える」= charSetTurnEffect
 //            {uid:'$picked.uid', key:'toDeckBottomOnTurnEnd'} — endTurn consume が scene.toDeck(bottom)
 //            (リムーブでない → 【現場リムーブ時】不発動。公式Q&A: 変装には引き継がれる = turnEffects 自動 rules/23)
-//     ⚠「この能力はパートナーエリアでも宣言できる」句は partner-area キャラ slot 不存在で vacuous
-//       (B07093 a2 出荷前例に従い本体句のみ実装。DEFERRED-INDEX 注記対象)
+//     「この能力はパートナーエリアでも宣言できる」= scope:'on-partner-area'
+//       (現場とPA常駐MRの両方で使用可)。
 //   a3: 【カットイン】AP＋2000 = D01011 同型
 //   ※ MR能力①② (rules/18) は engine/mr-partner-area-core (2026-06-23) で配線済 (isMR=rarity 消費)。
-//     本カードを含むデッキでは MR①②が実発火。card固有「PAでも宣言」句の scope 補正は Phase 4 wave で対応 (BUG-154)
+//     本カードを含むデッキではMR①②が実発火し、card固有PA宣言scopeもM3 PA batchで配線済み。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 

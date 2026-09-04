@@ -10,7 +10,8 @@
 //   【カットイン】AP＋2000
 //
 // 句マッピング: B08032.ts と同一 (a1: removeFromHand cost → actionTargetsActive / a2: turn1 京極真 AP+1000、
-//   パートナーエリア句は vacuous / a3: カットイン AP+2000)。P 版差分は rarity / imageUrl / no のみ。
+//   パートナーエリア句はscope:'on-partner-area'で配線済み / a3: カットイン AP+2000)。
+//   P 版差分は rarity / imageUrl / no のみ。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 

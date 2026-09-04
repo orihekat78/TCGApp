@@ -16,7 +16,8 @@ const a1: AbilityDef = {
   effect: {
     kind: 'choice', chooser: 'self', options: [
       { kind: 'sequence', steps: [
-        { kind: 'atom', verb: 'bindPick', args: { player: 'self', max: 1, side: 'self', filter: { cardName: '江戸川コナン' }, bind: '$conan' } },
+        { kind: 'atom', verb: 'bindPick', args: { player: 'self', max: 1, side: 'self', state: ['active'], filter: { cardName: '江戸川コナン' }, bind: '$conan' } },
+        { kind: 'atom', verb: 'sceneSetState', args: { uid: '$conan.uid', state: 'sleep' } },
         { kind: 'conditional', if: { kind: 'bound', key: '$conan', presence: 'exists' }, then: allThree },
       ] },
       { kind: 'atom', verb: 'sceneSetState', args: { player: 'self', max: 1, side: 'either', state: 'stun', filter: { trait: '怪盗' } } },

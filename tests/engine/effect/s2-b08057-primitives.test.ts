@@ -10,6 +10,7 @@ import { register as registerCardDef, _resetRegistry as resetDefRegistry } from 
 import { mutate } from '@/engine/mutate/index';
 import { runAtom } from '@/engine/effect/atom-handlers';
 import { evalCond } from '@/engine/cond/eval';
+import { deckOccurrenceAuthority } from '@/engine/effect/deck-occurrence-authority';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import type { CardDef, GameState, EffectCtx, Candidate, Condition } from '@/engine/types';
 
@@ -26,6 +27,13 @@ function base(): GameState {
 function ctxFor(s: GameState): EffectCtx {
   const c = mutate.scene.enter(s, 'self', 'HOST', {});
   return { source: { player: 'self', uid: c.uid, cardId: 'HOST' }, bindings: {}, dyn: {} } as unknown as EffectCtx;
+}
+function deckBindings(s: GameState, indexes: number[]): Candidate[] {
+  return indexes.map(index => {
+    const authority = deckOccurrenceAuthority(s, 'self', index);
+    if (!authority) throw new Error(`missing deck occurrence authority at ${index}`);
+    return authority;
+  });
 }
 beforeEach(() => {
   resetDefRegistry(); _resetUidCounter();
@@ -84,7 +92,7 @@ describe('P3: deckBottomReorderBound', () => {
   it('human 所有 + 2枚以上 → __pendingDeckReorderSide が bound の cardIds で立つ', () => {
     const s = base(); const ctx = ctxFor(s);
     s.players.self.deck = ['HOST', 'L5', 'L4']; // bottom block = [L5, L4] (移動済想定)
-    (ctx.bindings as Record<string, Candidate[]>)['$moved'] = ['L5', 'L4'].map(id => ({ kind: 'card', cardId: id, area: 'deck', player: 'self' } as unknown as Candidate));
+    (ctx.bindings as Record<string, Candidate[]>)['$moved'] = deckBindings(s, [1, 2]);
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
     runAtom(s, 'deckBottomReorderBound' as never, { player: 'self', bindKey: '$moved' }, ctx);
     const pend = (globalThis as { __pendingDeckReorderSide?: { player: string; cardIds: string[] } | null }).__pendingDeckReorderSide;
@@ -95,11 +103,11 @@ describe('P3: deckBottomReorderBound', () => {
   it('AI (非 human) → no-op / bound 1 枚以下 → no-op (順序が無意味)', () => {
     const s = base(); const ctx = ctxFor(s);
     s.players.self.deck = ['HOST', 'L5', 'L4'];
-    (ctx.bindings as Record<string, Candidate[]>)['$moved'] = ['L5', 'L4'].map(id => ({ kind: 'card', cardId: id, area: 'deck', player: 'self' } as unknown as Candidate));
+    (ctx.bindings as Record<string, Candidate[]>)['$moved'] = deckBindings(s, [1, 2]);
     runAtom(s, 'deckBottomReorderBound' as never, { player: 'self', bindKey: '$moved' }, ctx); // human=null
     expect((globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide).toBeNull();
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
-    (ctx.bindings as Record<string, Candidate[]>)['$moved'] = [{ kind: 'card', cardId: 'L5', area: 'deck', player: 'self' } as unknown as Candidate];
+    (ctx.bindings as Record<string, Candidate[]>)['$moved'] = deckBindings(s, [1]);
     runAtom(s, 'deckBottomReorderBound' as never, { player: 'self', bindKey: '$moved' }, ctx);
     expect((globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide).toBeNull();
   });

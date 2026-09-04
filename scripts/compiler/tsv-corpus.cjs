@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const { isQaShaped, normalizeQaCards } = require('../cards/qa-normalize.cjs');
+const { applyQaSourceCorrections, readQaSourceCorrections } = require('../cards/qa-source-corrections.cjs');
 const { withCardsDataSnapshot } = require('../cards/official-api.cjs');
 
 // kind ごとの TSV 列構成 (2026-07-02 実測):
@@ -94,7 +95,10 @@ function loadQaCorpusUnlocked(root, base = cardsDataDir(root)) {
   const cards = fs.readdirSync(rawDir).sort()
     .filter((file) => file.endsWith('-api.json'))
     .flatMap((file) => JSON.parse(fs.readFileSync(path.join(rawDir, file), 'utf8')).data ?? []);
-  return normalizeQaCards(cards.filter((card) => isQaShaped(card.q_a ?? card.qAndA)));
+  return applyQaSourceCorrections(
+    normalizeQaCards(cards.filter((card) => isQaShaped(card.q_a ?? card.qAndA))),
+    readQaSourceCorrections(base),
+  );
 }
 
 function loadQaCorpus(root, base = cardsDataDir(root)) {

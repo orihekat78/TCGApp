@@ -86,6 +86,7 @@ describe('B10006', () => {
     runAutoPhase(state, 'self');
     expect(c.state).toBe('sleep');
     mutate.scene.setState(state, c.uid, 'active');
+    // qa: card:B10006:7e173f555d64430aabbf7aa5f215faef06d20d2da879f79a7bb3ce7495b43e61
     expect(c.state).toBe('active');
   });
 
@@ -115,7 +116,9 @@ describe('B10006', () => {
 
     for (const id of ['ran-0', 'ran-1']) {
       expect(charRead.ap(state, id)).toBe(8000);
-      expect(state.players.self.scene.find((char) => char.uid === id)!.declaredUseCount.a3).toBe(2);
+      expect(charRead.declaredUseCount(state, id, 'a3', {
+        abilityOrigin: 'printed', abilityIndex: 2,
+      })).toBe(2);
     }
   });
 
@@ -139,6 +142,8 @@ describe('B10006', () => {
     const original = liveState(['KAITO']);
     reveal(original, 'KAITO');
     expect(charRead.ap(original, 'ran-0')).toBe(6000);
-    expect(original.players.self.scene[0]!.declaredUseCount.a3).toBeUndefined();
+    expect(charRead.declaredUseCount(original, 'ran-0', 'a3', {
+      abilityOrigin: 'printed', abilityIndex: 2,
+    })).toBe(0);
   });
 });

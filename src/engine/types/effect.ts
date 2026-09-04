@@ -3,7 +3,7 @@
 // rules: 11-reasoning.md, 13-keywords.md, 14-refresh.md, 21-declared-ability-cost.md
 
 import type { GameState, TurnScopedFlags } from './game-state.js';
-import type { EffectCtx } from './effect-ctx.js';
+import type { DeclaredAbilityHostOrigin, EffectCtx } from './effect-ctx.js';
 
 // ---------- Condition ----------
 
@@ -74,7 +74,14 @@ export type Condition =
   | { kind: 'triggerPlayerIs'; side: 'self' | 'opp' }
   | { kind: 'scratchTrace'; player: 'self' | 'opp'; v: '発見済' | '未発見' }
   | { kind: 'flag'; player: 'self' | 'opp'; key: keyof TurnScopedFlags; v: boolean }
-  | { kind: 'declaredUseUnder'; uid: string; abilityId: string; max: number }
+  | {
+      kind: 'declaredUseUnder';
+      uid: string;
+      abilityId: string;
+      abilityOrigin?: DeclaredAbilityHostOrigin;
+      abilityIndex?: number;
+      max: number;
+    }
   | { kind: 'sourceDeclaredUseCount'; cmp: 'eq' | 'ge'; n: number }
   | { kind: 'bound'; key: string; presence?: 'exists' | 'matched' }
   // Triggered observers can queue before their source leaves.  Resolution-time
@@ -136,7 +143,7 @@ export type Condition =
   // D11007 a3: contact:start hook 発火時、attacker (aUid) より defender (bUid) の方が AP が高い場合
   // payload は ctx.triggerPayload に詰められ、listener から評価される (TriggerDef.matcherCondition 経由)
   | { kind: 'contactOpponentApHigher' }
-  // D11016 a1: action:guarded payload.guardUid === ctx.source.uid (このキャラがガードしたとき、rules/07)
+  // B09014 a1: action:guarded payload.guardUid === ctx.source.uid (このキャラがガードしたとき、rules/07)
   | { kind: 'guardedBySelf' }
   // engine defer-unlock mini-wave (2026-07-09): コンタクト参加キャラを TargetFilter で評価
   // (B02006/B02080/PR278/D11013)。who は p-相対 (buildContactBindings): byUid=自コンタクトキャラ /
@@ -232,6 +239,8 @@ export type Condition =
   // 裏向きセット (faceUp!==true) は情報を持たない (rules/16) → 必ず false。set card は scene char では
   // ないため matchOneFilter の char 引数は null (CardDef の印字属性のみ評価)。
   | { kind: 'setCardMatches'; filter: TargetFilter }
+  // setcard:leave/enter payload の表裏を厳密に照合する。payload 欠落は false。
+  | { kind: 'setCardFaceIs'; faceUp: boolean }
   // engine additive wave-3 (2026-06-30): cutin:used payload の使用カットイン (cardId) を filter 評価。
   // 「(使用した)〚カード名/特徴〛のカットインのとき」(B09086 = [諸伏景光]/[長野県警] で分岐)。setCardMatches と
   // 同式で matchOneFilter の char 引数は null (CardDef 印字属性のみ)。triggerPlayerIs(側) との複合は and で書く。
@@ -680,7 +689,7 @@ export type Cost =
   // engine A3 wave (2026-07-11, B09107 犯人たちの犯行): 〚デッキのカードをすべてリムーブする〛コスト。
   //   n 固定でない全部リムーブ (removeDeckTop の n=deck.length を宣言時に評価できないため専用 kind)。
   //   canPay = 恒真 (0 枚でも宣言可、公式Q&A「決めた枚数の残りはリムーブしない」の全部版)。
-  //   refresh は removeDeckTop と同 posture (即時 refresh せず、draw 時 lazy) — 本カード効果は deck 非参照。
+  //   公式Q&Aに従い、全除去直後・能力効果の解決前に即時 refresh する。
   | { kind: 'removeDeckAll'; player: 'self' }
   | { kind: 'discardEvidence'; n: number }
   | { kind: 'selfToDeckBottom' }
@@ -770,8 +779,14 @@ export type Effect =
   }
   | { kind: 'sequence'; steps: Effect[] }
   | { kind: 'parallel'; steps: Effect[] }
-  | { kind: 'choice'; options: Effect[]; chooser: 'self' | 'opp' | 'owner' }
-  | { kind: 'optional'; effect: Effect; chooser?: 'owner' | 'opp-of-owner'; else?: Effect; aiRun?: 'if-hand' }
+  | {
+    kind: 'choice';
+    options: Effect[];
+    chooser: 'self' | 'opp' | 'owner';
+    /** Player-facing labels for semantically opaque nested options. */
+    labels?: string[];
+  }
+  | { kind: 'optional'; effect: Effect; chooser?: 'owner' | 'opp-of-owner'; else?: Effect; aiRun?: 'if-hand' | 'always' }
   | { kind: 'conditional'; if: Condition; then: Effect; else?: Effect }
   | { kind: 'forEach'; over: TargetingRef; do: Effect }
   | { kind: 'repeatOptional'; max: number; body: Effect }
@@ -790,5 +805,5 @@ export type Effect =
 export type DeckToBottomBoundArgs = {
   player?: unknown;
   bindKey?: string;
-  order?: 'arbitrary' | 'preserve';
+  order?: 'arbitrary' | 'preserve' | 'shuffle';
 };

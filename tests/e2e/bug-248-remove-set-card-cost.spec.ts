@@ -7,6 +7,18 @@ async function setHumanSelf(page: Page): Promise<void> {
   });
 }
 
+async function declaredUseCount(page: Page, uid: string, abilityId: string): Promise<number> {
+  return page.evaluate(([sourceUid, sourceAbilityId]) => {
+    const game = (window as unknown as {
+      __game: {
+        getState: () => { gameState: unknown };
+        read: { char: { declaredUseCount: (state: unknown, uid: string, abilityId: string) => number } };
+      };
+    }).__game;
+    return game.read.char.declaredUseCount(game.getState().gameState, sourceUid, sourceAbilityId);
+  }, [uid, abilityId] as const);
+}
+
 function applyB02023Fixture(state: GameStateLike): void {
   const makeChar = (cardId: string, uid: string, setCards: unknown[] = []) => ({
     cardId, uid, state: 'active', isNamed: false, enterOrder: 1, setCards, stackedCards: 0,
@@ -156,7 +168,7 @@ test('BUG-248: B02023 cost picker cancels, reopens, and pays the selected physic
   };
   expect(self.remove).toContain('D08007');
   expect(self.scene.find((char) => char.uid === 'host')!.setCards.map((entry) => entry.instanceId)).toEqual(['set:host:first']);
-  expect(self.scene.find((char) => char.uid === 'kazuha')!.declaredUseCount.a2).toBe(1);
+  expect(await declaredUseCount(page, 'kazuha', 'a2')).toBe(1);
   expectNoConsoleErrors(errors);
 });
 
@@ -202,7 +214,7 @@ test('BUG-248: n=2 cost requires two selections and pays both exact cards for B0
   const game = await getGameState(page);
   const self = game.players.self as unknown as { remove: string[]; scene: Array<{ uid: string; declaredUseCount: Record<string, number> }> };
   expect(self.remove).toEqual(expect.arrayContaining(['D08003', 'D08007']));
-  expect(self.scene.find((char) => char.uid === 'source')?.declaredUseCount.a2).toBe(1);
+  expect(await declaredUseCount(page, 'source', 'a2')).toBe(1);
   expectNoConsoleErrors(errors);
 });
 
@@ -238,7 +250,7 @@ test('BUG-248 defensive harness: a synthetic stale printed selection never falls
   const rejectedSelf = rejected.players.self as unknown as { remove: string[]; scene: Array<{ uid: string; declaredUseCount: Record<string, number> }> };
   expect(rejectedSelf.remove).toEqual([]);
   expect(rejectedSelf.scene.some((entry) => entry.uid === 'provider')).toBe(true);
-  expect(rejectedSelf.scene.find((entry) => entry.uid === 'source')?.declaredUseCount.a2).toBeUndefined();
+  expect(await declaredUseCount(page, 'source', 'a2')).toBe(0);
 
   await buildGameState(page, applyB07048AlternativeFixture);
   await page.locator('[data-action-id="declared-ability"]').click();
@@ -248,7 +260,7 @@ test('BUG-248 defensive harness: a synthetic stale printed selection never falls
   const alternative = await getGameState(page);
   const alternativeSelf = alternative.players.self as unknown as { scene: Array<{ uid: string; declaredUseCount: Record<string, number> }> };
   expect(alternativeSelf.scene.some((entry) => entry.uid === 'provider')).toBe(false);
-  expect(alternativeSelf.scene.find((entry) => entry.uid === 'source')?.declaredUseCount.a2).toBe(1);
+  expect(await declaredUseCount(page, 'source', 'a2')).toBe(1);
 
   expectNoConsoleErrors(errors);
 });
@@ -269,6 +281,6 @@ test('BUG-248: B07048 exposes explicit B05033 alternative when its printed n=2 c
   const self = after.players.self as unknown as { scene: Array<{ uid: string; declaredUseCount: Record<string, number> }> };
   expect(self.scene.some((entry) => entry.uid === 'provider')).toBe(true);
   expect(self.scene.some((entry) => entry.uid === 'provider-two')).toBe(false);
-  expect(self.scene.find((entry) => entry.uid === 'source')?.declaredUseCount.a2).toBe(1);
+  expect(await declaredUseCount(page, 'source', 'a2')).toBe(1);
   expectNoConsoleErrors(errors);
 });

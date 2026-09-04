@@ -37,6 +37,20 @@ test.describe('BUG-260 B04030 full-scene choice switch', () => {
     expectNoConsoleErrors(errors);
   });
 
+  test('851x393 keeps victim cards tappable and the explicit cancel target at least 44px', async ({ page }) => {
+    await page.setViewportSize({ width: 851, height: 393 });
+    const { errors } = await setupGamePage(page);
+    await openB04030EnterChoice(page);
+
+    const cancelBox = await page.getByTestId('switch-victim-cancel').boundingBox();
+    expect(cancelBox?.width).toBeGreaterThanOrEqual(44);
+    expect(cancelBox?.height).toBeGreaterThanOrEqual(44);
+    await page.getByTestId('scene-card-pick-b04030-victim-0').click();
+    await expect(page.getByTestId('switch-victim-overlay')).toBeHidden();
+
+    expectNoConsoleErrors(errors);
+  });
+
   test('switch cancellation remains explicit and outside clicks do not close it', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await openB04030EnterChoice(page);

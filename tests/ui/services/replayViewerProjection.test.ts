@@ -22,7 +22,10 @@ function sceneCharacter(): SceneCharacter {
       { cardId: 'SELF-HIDDEN-SET', faceUp: false, instanceId: 'set:hidden' },
       { cardId: 'PUBLIC-FACE-UP-SET', faceUp: true, instanceId: 'set:public' },
     ],
-    stackedCards: [{ cardId: 'SELF-HIDDEN-STACK', instanceId: 'stack:hidden' }],
+    stackedCards: [
+      { cardId: 'PUBLIC-STACKED-CARD', instanceId: 'stack:public' },
+      { cardId: 'back-card', instanceId: 'legacy:stack:unknown' },
+    ],
     keywordOverrides: { granted: [], disabledOriginal: false },
     apOverride: null,
     lpOverride: null,
@@ -75,6 +78,14 @@ function privateState() {
   state.pendingRuntimeState = {
     token: 1,
     snapshot: [{ key: '__privateReplayDecision', present: true, value: 'RUNTIME-SECRET' }],
+  };
+  state.pendingReasoningContinuation = { token: 1, uid: 'scene:self:1', player: 'self' };
+  state.pendingMisreadAuthority = {
+    continuationToken: 1,
+    player: 'opp',
+    reasoningUid: 'scene:self:1',
+    reasoningPlayer: 'self',
+    candidates: [{ uid: 'scene:opp:1', x: 1 }],
   };
   state.pendingEffects.push({
     id: 'runtime-custom-effect',
@@ -150,7 +161,7 @@ describe('projectReplayStateForViewer', () => {
     for (const secret of [
       'SELF-HAND-SECRET', 'OPP-HAND-SECRET', 'SELF-DECK-SECRET', 'OPP-DECK-SECRET',
       'SELF-HIDDEN-EVIDENCE', 'SELF-HIDDEN-SOURCE', 'SELF-HIDDEN-FILE',
-      'SELF-HIDDEN-SET', 'SELF-HIDDEN-STACK',
+      'SELF-HIDDEN-SET',
       'SELF-LOG-SECRET', 'OPP-LOG-SECRET',
       'SELF-RESULT-SECRET', 'OPP-RESULT-SECRET', 'RUNTIME-SECRET',
     ]) {
@@ -161,11 +172,17 @@ describe('projectReplayStateForViewer', () => {
     expect(projected.players.opp.hand).toEqual([FILE_CARD_BACK_PLACEHOLDER]);
     expect(serialized).toContain('PUBLIC-ASSISTED-PARTNER');
     expect(serialized).toContain('PUBLIC-FACE-UP-SET');
+    expect(serialized).toContain('PUBLIC-STACKED-CARD');
+    expect(projected.players.self.scene[0]?.stackedCards).toEqual([
+      { cardId: 'PUBLIC-STACKED-CARD', instanceId: 'stack:public' },
+      { cardId: 'back-card', instanceId: 'legacy:stack:unknown' },
+    ]);
     expect(projected.pendingEffects).toEqual([]);
     expect(projected.reservedEffects).toEqual([]);
     expect(projected.actionContexts).toEqual({});
     expect(projected.pendingRuntimeState).toBeUndefined();
     expect(projected.pendingReasoningContinuation).toBeUndefined();
+    expect(projected.pendingMisreadAuthority).toBeUndefined();
   });
 
   it('keeps only the solo owner hand and owner-private legacy detail', () => {
@@ -178,11 +195,12 @@ describe('projectReplayStateForViewer', () => {
     for (const secret of [
       'OPP-HAND-SECRET', 'SELF-DECK-SECRET', 'OPP-DECK-SECRET', 'OPP-LOG-SECRET',
       'OPP-RESULT-SECRET', 'SELF-HIDDEN-EVIDENCE', 'SELF-HIDDEN-FILE',
-      'SELF-HIDDEN-SET', 'SELF-HIDDEN-STACK', 'RUNTIME-SECRET',
+      'SELF-HIDDEN-SET', 'RUNTIME-SECRET',
     ]) {
       expect(serialized).not.toContain(secret);
     }
     expect(serialized).toContain('PUBLIC-ASSISTED-PARTNER');
+    expect(serialized).toContain('PUBLIC-STACKED-CARD');
   });
 
   it('keeps historical assisted-partner FILE refs public after auto-phase return without exposing forged hidden refs', () => {

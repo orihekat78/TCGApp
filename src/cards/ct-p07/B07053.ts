@@ -37,6 +37,8 @@ const a2: AbilityDef = {
         verb: 'handReveal',
         args: {
           player: 'self',
+          audience: 'all',
+          lifetime: 'presentation',
           max: 1,
           filter: {
             cardName: [

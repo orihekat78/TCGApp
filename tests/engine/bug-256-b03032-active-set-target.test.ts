@@ -11,7 +11,7 @@ import { canActionAgainstChar } from '@/engine/flow/main/action';
 import { mutate } from '@/engine/mutate';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { def, register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../helpers/main-game-state';
 import type { CardDef, GameState } from '@/engine/types';
 
 function character(id: string): CardDef {
@@ -128,6 +128,7 @@ describe('BUG-256 B03032 set-card active target exception', () => {
     let attackerUid = '';
     let selfSetTargetUid = '';
     const state = produce(createEmptyGameState(), draft => {
+      draft.turn.player = 'opp';
       attackerUid = mutate.scene.enter(draft, 'opp', 'B03032', {}).uid;
       const selfSetTarget = mutate.scene.enter(draft, 'self', 'TargetFaceDown', {});
       selfSetTarget.setCards.push({ cardId: 'back-card', faceUp: false });

@@ -42,7 +42,7 @@ function addSetCard(state: GameState, instance: number): void {
 }
 
 function canActivate(state: GameState): boolean {
-  return canActivateDeclaredAbility(state, 'host', 'a2', undefined, { allowImplicitRemoveSetCard: true });
+  return canActivateDeclaredAbility(state, 'host', 'a2', undefined, { allowImplicitPhysicalCostSelection: true });
 }
 
 function activateWithZeroTarget(state: GameState, instance: number): void {
@@ -69,24 +69,69 @@ describe('CT-P10 B10004 declared-use evidence threshold', () => {
     const state = stateFor();
 
     activateWithZeroTarget(state, 1);
-    expect(readChar.declaredUseCount(state, 'host', 'a2')).toBe(1);
+    expect(readChar.declaredUseCount(state, 'host', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    })).toBe(1);
     expect(state.players.self.evidence).toHaveLength(0);
 
     activateWithZeroTarget(state, 2);
-    expect(readChar.declaredUseCount(state, 'host', 'a2')).toBe(2);
+    expect(readChar.declaredUseCount(state, 'host', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    })).toBe(2);
     expect(state.players.self.evidence).toHaveLength(0);
 
     activateWithZeroTarget(state, 3);
-    expect(readChar.declaredUseCount(state, 'host', 'a2')).toBe(3);
+    expect(readChar.declaredUseCount(state, 'host', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    })).toBe(3);
     expect(state.players.self.evidence).toHaveLength(1);
 
     addSetCard(state, 4);
     expect(canActivate(state)).toBe(false);
   });
 
+  it('fails closed when a legacy JSON save has only the pre-occurrence use-count key', () => {
+    const state = stateFor();
+    addSetCard(state, 1);
+    state.players.self.scene[0]!.declaredUseCount = { a2: 3 };
+
+    const restored = JSON.parse(JSON.stringify(state)) as GameState;
+    expect(readChar.declaredUseCount(restored, 'host', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    })).toBe(3);
+    expect(canActivate(restored)).toBe(false);
+  });
+
+  it('continues a legacy JSON use count without losing the third-use effect', () => {
+    const state = stateFor();
+    state.players.self.scene[0]!.declaredUseCount = { a2: 2 };
+    const restored = JSON.parse(JSON.stringify(state)) as GameState;
+
+    activateWithZeroTarget(restored, 3);
+
+    expect(readChar.declaredUseCount(restored, 'host', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    })).toBe(3);
+    expect(readChar.declaredUseCount(restored, 'host', 'a2')).toBe(3);
+    expect(restored.players.self.evidence).toHaveLength(1);
+  });
+
+  it.each([-1, 0.5, Number.MAX_SAFE_INTEGER + 1])(
+    'fails closed for malformed legacy JSON use count %s',
+    (invalidCount) => {
+      const state = stateFor();
+      addSetCard(state, 1);
+      state.players.self.scene[0]!.declaredUseCount = { a2: invalidCount };
+      const restored = JSON.parse(JSON.stringify(state)) as GameState;
+
+      expect(canActivate(restored)).toBe(false);
+    },
+  );
+
   it('counts an assisted partner toward FILE5 and requires another soccer player', () => {
     const assisted = stateFor();
     addSetCard(assisted, 1);
+    // qa: card:B10004:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b
     expect(canActivate(assisted)).toBe(true);
 
     const noAssist = stateFor(B10004, false);

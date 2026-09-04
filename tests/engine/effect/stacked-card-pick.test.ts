@@ -43,7 +43,10 @@ describe('stackedCardPick', () => {
     start(state, ctx, hostUid);
     const pending = _drainPendingEffectPickSide();
     expect(pending).toMatchObject({ player: 'opp', ownerPlayer: 'self', nMin: 0, nMax: 2 });
-    expect(pending?.candidates.map(c => c.uid)).toEqual(['stack:host:a', 'stack:host:b']);
+    expect(pending?.candidates).toEqual([
+      { uid: 'stack:host:a', cardId: 'STACK2', player: 'opp', hidden: false },
+      { uid: 'stack:host:b', cardId: 'STACK5', player: 'opp', hidden: false },
+    ]);
     applyPickAndContinuation(state, pending!, 'stack:host:a', ['stack:host:a', 'stack:host:b']);
     expect((ctx.bindings as Record<string, unknown>)['$stack']).toEqual([
       { kind: 'stacked', hostUid, cardId: 'STACK2', instanceId: 'stack:host:a' },

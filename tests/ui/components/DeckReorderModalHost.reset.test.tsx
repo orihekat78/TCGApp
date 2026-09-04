@@ -52,6 +52,25 @@ describe('DeckReorderModalHost consecutive decisions', () => {
     expect(container.querySelector('[data-testid="deck-reorder-row-1"]')?.textContent).toContain('B');
   });
 
+  it('makes Escape and the visible fallback confirm the original order', () => {
+    const decisionId = useGameStateStore.getState().pendingDeckReorder!.decisionId;
+    act(() => root.render(<DeckReorderModalHost />));
+    act(() => {
+      (container.querySelector('[data-testid="deck-reorder-down-0"]') as HTMLButtonElement).click();
+    });
+    expect(container.querySelector('[data-testid="deck-reorder-row-0"]')?.textContent).toContain('B');
+    expect(container.querySelector('[data-testid="deck-reorder-original-btn"]')?.textContent).toContain('元の順で確定');
+
+    act(() => document.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Escape', bubbles: true, cancelable: true,
+    })));
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'deckReorderResolve',
+      decisionId,
+      order: ['A', 'B', 'C'],
+    });
+  });
+
   it('keeps duplicate occurrence identity and local order after card details close', () => {
     useGameStateStore.getState().setPendingDeckReorder({
       player: 'self',
@@ -59,6 +78,9 @@ describe('DeckReorderModalHost consecutive decisions', () => {
     });
     const decisionId = useGameStateStore.getState().pendingDeckReorder!.decisionId;
     act(() => root.render(<DeckReorderModalHost />));
+    expect(document.activeElement).toBe(
+      container.querySelectorAll<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]')[0],
+    );
 
     const before = [...container.querySelectorAll<HTMLElement>('[data-instance-id]')]
       .map((tile) => tile.dataset.instanceId);
@@ -75,18 +97,24 @@ describe('DeckReorderModalHost consecutive decisions', () => {
     expect(tiles).toHaveLength(3);
     expect(new Set(tiles.map((tile) => tile.dataset.instanceId)).size).toBe(3);
     expect(container.querySelectorAll('.selectable-card-tile img')).toHaveLength(3);
+    expect(container.querySelectorAll('.selectable-card-tile__select')).toHaveLength(0);
     expect(container.querySelector<HTMLImageElement>('[data-card-id="UNKNOWN-CARD"] img')?.src)
       .toBe(getCardImagePlaceholder());
     expect(container.querySelector('button button')).toBeNull();
     const duplicateTiles = tiles.filter((tile) => tile.dataset.cardId === 'DUPLICATE-CARD');
     const duplicateDetails = [...container.querySelectorAll<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]')]
       .filter((detail) => detail.parentElement?.querySelector('[data-card-id="DUPLICATE-CARD"]'));
-    expect(duplicateTiles.map((tile) => tile.getAttribute('aria-label'))).toEqual(['DUPLICATE-CARD 1枚目を選択', 'DUPLICATE-CARD 2枚目を選択']);
+    expect(duplicateTiles.map((tile) => tile.textContent)).toEqual([
+      'DUPLICATE-CARDDUPLICATE-CARD',
+      'DUPLICATE-CARDDUPLICATE-CARD',
+    ]);
     expect(duplicateDetails.map((detail) => detail.getAttribute('aria-label'))).toEqual(['DUPLICATE-CARD 1枚目の詳細を表示', 'DUPLICATE-CARD 2枚目の詳細を表示']);
-    expect([...duplicateTiles, ...duplicateDetails].map((element) => element.getAttribute('aria-label')).join(' ')).not.toContain('DUPLICATE-CARD#');
+    expect(duplicateDetails.map((element) => element.getAttribute('aria-label')).join(' ')).not.toContain('DUPLICATE-CARD#');
 
     const details = container.querySelectorAll<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]');
     expect(details).toHaveLength(3);
+    expect(container.querySelector('[data-testid="deck-reorder-live-status"]')?.textContent)
+      .toBe('UNKNOWN-CARDを2番目へ移動しました');
     act(() => details[1]!.click());
     expect(container.querySelector('[aria-label^="カード拡大表示:"]')).not.toBeNull();
     act(() => (container.querySelector('.card-expand-close') as HTMLButtonElement).click());

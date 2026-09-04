@@ -61,25 +61,25 @@ const a2: AbilityDef = {
   trigger: { hook: 'enter', selfOnly: true },
   // 【FILE8】 (rules/17。アシスト中のパートナーも数える = 公式Q&A)
   condition: {
-    kind: 'and',
-    // BUG-145 (2026-06-15): 既存条件 AND not{charStateIs self sleep} (already-sleep gate, 公式qAndA B04049)
-    cs: [
-      { kind: 'fileAtLeast', n: 8 },
-      { kind: 'not', c: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'sleep' } },
-    ],
+    kind: 'fileAtLeast',
+    n: 8,
   },
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'chain',
-      steps: [
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain',
+        steps: [
         // このキャラをスリープさせ
         { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
         // 手札を1枚リムーブしてもよい
         { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } },
         // そうした場合、レベル8以下のスリープ状態かスタン状態のキャラを1枚まで選び、デッキの下に移す
         { kind: 'atom', verb: 'sceneToDeck', args: { player: 'self', side: 'either', max: 1, filter: { levelMax: 8 }, state: ['sleep', 'stun'], pos: 'bottom' } },
-      ],
+        ],
+      },
     },
   },
   description: '【FILE8】【登場時】このキャラをスリープさせ、手札を1枚リムーブしてもよい。そうした場合、レベル8以下のスリープ状態かスタン状態のキャラを1枚まで選び、デッキの下に移す。',

@@ -8,6 +8,7 @@
 
 import type { JSX } from 'react';
 import type { EffectStackEntry } from '@/engine/types/effect-stack.js';
+import { effectSourceDisplayName } from '@/ui/services/uidNames.js';
 import './EffectStackPanel.css';
 
 export type EffectStackPanelProps = {
@@ -45,6 +46,7 @@ export function EffectStackPanel({ entries, open, onReorder, reorderPlayer, onCo
   // Playmat passes pendingOwnerOrderGroup's canonical engine sequence.
   // Preserve it for rows and confirmation payloads.
   const renderEntries = pendingEntries;
+  const renderSources = renderEntries.map(entry => entry.source);
 
   // Phase 8 完全クローズ Commit 5: 同 owner の reorder 対象集計。
   // 同 owner かつ pending 状態の entries が 2 件以上のとき、各エントリに ▲▼ を表示。
@@ -73,6 +75,7 @@ export function EffectStackPanel({ entries, open, onReorder, reorderPlayer, onCo
               const ownerIdx = canReorder ? ownerEntries.indexOf(e.id) : -1;
               const canUp = canReorder && ownerIdx > 0;
               const canDown = canReorder && ownerIdx >= 0 && ownerIdx < ownerEntries.length - 1;
+              const sourceName = effectSourceDisplayName(e.source, { siblingSources: renderSources });
               return (
                 <div
                   key={e.id}
@@ -89,8 +92,8 @@ export function EffectStackPanel({ entries, open, onReorder, reorderPlayer, onCo
                   {e.source.description !== undefined && (
                     <span className="entry-description">{e.source.description}</span>
                   )}
-                  {e.source.cardId !== undefined && (
-                    <span className="entry-source">[{e.source.cardId}]</span>
+                  {(e.source.setCardId !== undefined || e.source.cardId !== undefined) && (
+                    <span className="entry-source">[{sourceName}]</span>
                   )}
                   <span className="entry-turn">T{e.triggeredAt.turn}</span>
                   {e.ownerChosenOrder !== undefined && (
@@ -101,7 +104,7 @@ export function EffectStackPanel({ entries, open, onReorder, reorderPlayer, onCo
                       <button
                         type="button"
                         className="reorder-btn"
-                        aria-label="上へ"
+                        aria-label={`${sourceName}を上へ`}
                         disabled={!canUp}
                         onClick={() => onReorder?.(e.id, ownerIdx - 1)}
                         data-testid={`reorder-up-${e.id}`}
@@ -111,7 +114,7 @@ export function EffectStackPanel({ entries, open, onReorder, reorderPlayer, onCo
                       <button
                         type="button"
                         className="reorder-btn"
-                        aria-label="下へ"
+                        aria-label={`${sourceName}を下へ`}
                         disabled={!canDown}
                         onClick={() => onReorder?.(e.id, ownerIdx + 1)}
                         data-testid={`reorder-down-${e.id}`}

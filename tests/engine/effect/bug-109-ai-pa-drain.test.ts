@@ -6,6 +6,7 @@
 
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { run as runEffect } from '@/engine/effect/resolver';
+import { runAllUntilEmpty } from '@/engine/resolve';
 import { resolveEffectPicks, _clearPendingEffectPickQueue, _peekPendingEffectPickQueueLength } from '@/engine/effect/resolve-picks';
 import { drainAiEffectPicks } from '@/engine/effect/apply-pick';
 import { createEmptyGameState } from '@/engine/state-factory';
@@ -120,5 +121,57 @@ describe('BUG-109: AI 経路の PA 短縮形 pick drain (drainAiEffectPicks)', (
     expect(readChar.ap(s, 'enemy1')).toBe(apBefore - 1000);
     expect(readChar.ap(s, 'enemy2')).toBe(apBefore - 1000);
     expect(s.players.self.hand, 'continuation は1回だけ実行').toEqual(['D08001']);
+  });
+
+  it('chooserが相手でも登場先ownerの満杯sceneからswitch victimを選ぶ', () => {
+    const s = createEmptyGameState();
+    s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.self.scene = [
+      sceneChar('D08005', 'self-victim'),
+      sceneChar('D08005', 'self-2'),
+      sceneChar('D08005', 'self-3'),
+      sceneChar('D08005', 'self-4'),
+      sceneChar('D08005', 'self-5'),
+    ];
+    s.players.self.remove = ['D08013'];
+    s.players.opp.scene = [sceneChar('D11015', 'opp-keep')];
+    const ctx = {
+      source: { player: 'self', cardId: 'D08024', uid: 'source', abilityId: 'a1', area: 'scene' },
+      bindings: {},
+    } as EffectCtx;
+    const effect = {
+      kind: 'atom',
+      verb: 'sceneEnter',
+      args: {
+        player: 'self',
+        cardId: '$pick.cardId',
+        from: 'remove',
+        viaEffect: true,
+        target: {
+          kind: 'pick',
+          query: { area: 'remove', side: 'self', filter: { kind: 'character' } },
+          n: { min: 1, max: 1 },
+          chooser: 'opp-of-owner',
+        },
+      },
+    } as const;
+    const decisionPlayers: string[] = [];
+
+    runEffect(s, effect as never, ctx);
+    drainAiEffectPicks(s, {
+      chooseAtomTarget: (_state, _verb, _args, candidates, byPlayer) => {
+        decisionPlayers.push(byPlayer);
+        return candidates.find(candidate => candidate.cardId === 'D08013')
+          ?? candidates.find(candidate => candidate.uid === 'self-victim')
+          ?? null;
+      },
+    });
+    runAllUntilEmpty(s);
+
+    expect(decisionPlayers).toEqual(['opp', 'self']);
+    expect(s.players.self.scene).toHaveLength(5);
+    expect(s.players.self.scene.some(character => character.cardId === 'D08013')).toBe(true);
+    expect(s.players.self.scene.some(character => character.uid === 'self-victim')).toBe(false);
+    expect(s.players.opp.scene.map(character => character.uid)).toEqual(['opp-keep']);
   });
 });

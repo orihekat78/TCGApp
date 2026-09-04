@@ -1,7 +1,7 @@
 // 戻り値型定義
 // rules: 07-action-flow.md, 08-contact.md, 14-refresh.md, 21-declared-ability-cost.md
 
-import type { CardId, GameState } from './game-state.js';
+import type { CardId, EvidenceCard, GameState } from './game-state.js';
 import type { HookName } from './hooks.js';
 import type { CausalEffectTrace } from './effect-ctx.js';
 
@@ -18,6 +18,8 @@ export type RemoveResult = {
    */
   prevented?: boolean;
   redirectedTo?: 'hand' | 'kept-in-scene';
+  /** The leaving MR character entered its partner area instead of its requested destination. */
+  redirectedToPartner?: boolean;
   /** A human optional leave intercept is awaiting a decision; no removal happened. */
   deferred?: boolean;
   pendingLeaveIntercept?: { player: 'self' | 'opp'; targetUid: string; interceptorUid: string };
@@ -55,7 +57,7 @@ export type ValidationResult =
 export type GameResult = { winner: 'self' | 'opp'; reason: 'evidence' | 'deck-out' | 'concede' | 'alt-lose' };
 
 export type ActionPhase =
-  | 'declared' | 'guard-window' | 'leave-resolution' | 'contact-pending'
+  | 'declared' | 'guard-window' | 'leave-resolution' | 'contact-pending' | 'contact-order-pending'
   | 'action-1' | 'action-2' | 'action-1-redo' | 'judge' | 'contact-end' | 'action-end';
 
 export type ActionContext = {
@@ -87,6 +89,20 @@ export type ActionContext = {
     targetUid: string;
     interceptorUid: string;
   };
+  /**
+   * Engine-owned continuation for a B02052 replacement opened while a public
+   * leave-intercept contact answer is resolving. Never surface this directly.
+   */
+  pendingLeaveInterceptReplacement?: {
+    targetUid: string;
+    targetCardId: string;
+    interceptorUid: string;
+    interceptorCardId?: string;
+    interceptorAbilityId?: string;
+    byUid?: string;
+    accept: boolean;
+    stage: 'interceptor-cost' | 'target-leave';
+  };
   /** 1コンタクト1枚 (rules/09): プレイヤー単位で cutIn 使用済みフラグ */
   cutInUsed?: { self?: boolean; opp?: boolean };
   /** 防御側のコンタクト免疫 (turnEffects から snapshot) */
@@ -103,6 +119,22 @@ export type ActionContext = {
   causalTrace?: CausalEffectTrace;
   /** Complete this case action's evidence gain after its Hirameki decision/effect. */
   deferredCaseEvidenceGain?: boolean;
+  /**
+   * Exact evidence card suspended while its optional Hirameki resolves. The
+   * card belongs to this action until the effect finishes, then moves to the
+   * remove area unless that effect moved the held card elsewhere.
+   */
+  pendingHiramekiEvidenceRemoval?: {
+    token: string;
+    player: 'self' | 'opp';
+    evidence: EvidenceCard;
+    /** Exact optional Hirameki ability selected when the hold was opened. */
+    abilityId?: string;
+    /** Condition result frozen at the opening checkpoint. */
+    effectValid?: boolean;
+    /** False until the public fire/skip answer has passed authority checks. */
+    decisionResolved: boolean;
+  };
   /** Exact event used to correlate contact:start and its triggered children. */
   contactCausalEventId?: string;
   /** Exact terminal contact result/cancellation event. */

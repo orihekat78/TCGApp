@@ -33,13 +33,26 @@ describe('startHiramekiDemoSession', () => {
         cardId: 'B04028',
         abilityId: 'a2',
         gainDeferred: true,
-        occurrence: expect.any(Object),
-        causalCorrelationEventId: expect.any(String),
+        heldEvidence: {
+          token: expect.any(String),
+          player: 'self',
+          cardId: 'B04028',
+        },
+        occurrence: undefined,
+        causalCorrelationEventId: undefined,
       });
       expect(flow.action._getContext(state, actionId)).toMatchObject({
         phase: 'judge',
         judgeResolved: true,
         deferredCaseEvidenceGain: true,
+        pendingHiramekiEvidenceRemoval: {
+          token: pending!.heldEvidence!.token,
+          player: 'self',
+          evidence: { cardId: 'B04028' },
+          abilityId: 'a2',
+          effectValid: true,
+          decisionResolved: false,
+        },
       });
       expect(useGameStateStore.getState()).toMatchObject({
         hiramekiDemoMode: 'playing',
@@ -58,6 +71,7 @@ describe('startHiramekiDemoSession', () => {
       expect(flow.action._getContext(after, actionId)).toBeUndefined();
       expect(after.players.self.evidence).toHaveLength(choice === 'fire' ? 1 : 0);
       expect(after.players.opp.evidence).toHaveLength(1);
+      expect(after.players.self.remove).toContain('B04028');
     },
   );
 });

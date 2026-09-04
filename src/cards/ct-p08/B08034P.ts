@@ -8,6 +8,6 @@ export const B08034P: CardDef = {
   ...B08034,
   id: 'B08034P',
   no: '0873/B08034P',
-  rarity: 'CP',
+  rarity: 'RP',
   imageUrl: '1770878966463233.jpg',
 };

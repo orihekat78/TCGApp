@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-state.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:state`
-> Source hash: `5a5f2dd71dcb`
+> Source hash: `e508dc625cc3`
 
 `src/engine/types/game-state.ts` から抽出した GameState の構造図。
 
@@ -15,7 +15,7 @@ classDiagram
   class GameState {
     +turn: «object×4»
     +players: «object×2»
-    +indexedZoneEpochs?: «object×4»
+    +indexedZoneEpochs?: «object×6»
     +pendingEffects: EffectStackEntry[]
     +actionContexts?: Record<string, ActionContext>
     +actionContextSeq?: number
@@ -28,11 +28,13 @@ classDiagram
     +declaredBatchSeq?: number
     +pendingReasoningContinuation?: ReasoningContinuation
     +reasoningContinuationSeq?: number
+    +pendingMisreadAuthority?: PendingMisreadAuthority
     +effectTriggerBatchContext?: number
     +effectTriggerBatchConfirmedContext?: boolean
     +setCardInstanceSeq?: number
     +reservedEffectSeq?: number
     +publicHandRevealSeq?: number
+    +chooseInterceptBatchSeq?: number
     +reservedEffects: ReservedEffectEntry[]
     +scratchTrace: «object×2»
     +turnState: «object×2»
@@ -107,6 +109,7 @@ classDiagram
     +cardId: string
     +faceUp: boolean
     +instanceId?: string
+    +abilityUseCounts?: Record<string, { turn: number; count: number…
     +replacementUseCounts?: Record<string, { turn: number; count: number…
   }
   class EvidenceOrigin {

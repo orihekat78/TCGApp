@@ -59,8 +59,8 @@ function bondName(card: CardDef): string {
 function stateFor(targetOwner: Player, protectedCard: CardDef, options: {
   bond?: string;
   bearer?: CardDef;
-  state?: 'active' | 'sleep';
-  set?: { faceUp: boolean; state: 'active' | 'sleep' };
+  state?: 'active' | 'sleep' | 'stun';
+  set?: { faceUp: boolean; state: 'active' | 'sleep' | 'stun' };
 } = {}): GameState {
   const state = createEmptyGameState();
   state.turn = { number: 4, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
@@ -215,12 +215,23 @@ describe('B08017 official Q&A set-host target protection', () => {
     expect(dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'attacker', targetUid: 'protected' }), `${QA.B08017}: ${B08017.id}/protected`).toEqual({ ok: true });
   });
 
-  it(`${QA.B08017}: active host and face-down set leave the host selectable`, () => {
+  it(`${QA.B08017}: active/stunned host and face-down set leave the host selectable`, () => {
     const protectedCard = def('PROTECTED', [auraName(B08017)]);
     register(protectedCard);
-    for (const set of [{ faceUp: true, state: 'active' as const }, { faceUp: false, state: 'sleep' as const }]) {
+    for (const set of [{ faceUp: true, state: 'active' as const }, { faceUp: false, state: 'sleep' as const }, { faceUp: true, state: 'stun' as const }]) {
       install(stateFor('opp', protectedCard, { set }));
-      expect(dispatchD02015(QA.B08017).candidates.map((candidate) => candidate.uid), `${QA.B08017}: ${B08017.id}/protected`).toContain('protected');
+      expect(dispatchD02015(QA.B08017).candidates.map((candidate) => candidate.uid), `B08017 host=${set.state} faceUp=${set.faceUp} leaves Ai selectable`).toContain('protected');
     }
+  });
+});
+
+// qa: card:B08017:10b387786ab0605083805e1deebdd4a91ceb1adad240f341046c8e8d79295290
+// qa: card:B08017:b203c71c5a2ca8e57b36312ceddefe99ca091d50acdc98837bcbc27a0703471a
+// qa: card:B08017:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+
+describe('B03030 Wave216 card-bound target protection', () => {
+  it('keeps the bonded card out of opponent-effect choices while leaving normal action targeting intact', () => {
+    // qa: card:B03030:b203c71c5a2ca8e57b36312ceddefe99ca091d50acdc98837bcbc27a0703471a
+    expectProtectedBy(B03030, QA.B03030, { bond: true });
   });
 });

@@ -36,6 +36,18 @@ import type { GameStateLike } from '../helpers';
 
 type FileCardLike = { type: 'card-back'; cardId: string };
 
+async function setupManualHiramekiPage(page: Page) {
+  const setup = await setupGamePage(page);
+  await page.evaluate(() => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    const store = (window as unknown as {
+      __game: { store: { getState: () => { setAiPaused: (value: boolean) => void } } };
+    }).__game.store.getState();
+    store.setAiPaused(true);
+  });
+  return setup;
+}
+
 async function probeAbility(
   page: Page,
   cardId: string,
@@ -135,6 +147,9 @@ function applyFixture(gs: GameStateLike, arg: FixtureArg): void {
   // 設計: opp を attacker、self を hirameki owner にすることで useHiramekiFlowDriver の
   // 自動 resolve (opp owner 時 AI 自動 fire/skip) を回避し、test が pending を観測してから
   // 明示的に hiramekiResolve dispatch できる。
+  (gs as unknown as { turn: Record<string, unknown> }).turn = {
+    number: 3, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false,
+  };
   const self = gs.players.self as unknown as {
     partner: { cardId: string; state: string; location: string };
     hand: string[];
@@ -171,7 +186,7 @@ const CARDS = [
 test.describe('hiramekiDraw — shape + fire/skip path (2 カード集約)', () => {
   for (const { cardId, abilityId, kind } of CARDS) {
     test(`${cardId} ${abilityId} (${kind}): shape (icon-flash / on-evidence / atom-draw n=1, args.player='self')`, async ({ page }) => {
-      const { errors } = await setupGamePage(page);
+      const { errors } = await setupManualHiramekiPage(page);
       await buildCausalGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
 
       const probe = await probeAbility(page, cardId, abilityId);
@@ -188,7 +203,7 @@ test.describe('hiramekiDraw — shape + fire/skip path (2 カード集約)', () 
     });
 
     test(`${cardId} ${abilityId} (${kind}): fire path → opp.hand +1 (Round 4j-fix BUG-034 検証)`, async ({ page }) => {
-      const { errors } = await setupGamePage(page);
+      const { errors } = await setupManualHiramekiPage(page);
       await buildCausalGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
 
       await dispatchActionCase(page);
@@ -212,7 +227,7 @@ test.describe('hiramekiDraw — shape + fire/skip path (2 カード集約)', () 
     });
 
     test(`${cardId} ${abilityId} (${kind}): skip path → opp.hand 不変`, async ({ page }) => {
-      const { errors } = await setupGamePage(page);
+      const { errors } = await setupManualHiramekiPage(page);
       await buildCausalGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
 
       await dispatchActionCase(page);
@@ -233,7 +248,7 @@ test.describe('hiramekiDraw — shape + fire/skip path (2 カード集約)', () 
 
   // negative: 非 hirameki カード (D08015) は abilities に type:'icon-flash' を含まない
   test('non-hirameki card (D08015): abilities に icon-flash 非含有 + dispatch しても pendingHirameki null', async ({ page }) => {
-    const { errors } = await setupGamePage(page);
+    const { errors } = await setupManualHiramekiPage(page);
     await buildCausalGameState<FixtureArg>(page, applyFixture, { evidenceCardId: 'D08015' });
 
     expect(await hasIconFlashAbility(page, 'D08015'), 'D08015 は icon-flash 非持ち').toBe(false);

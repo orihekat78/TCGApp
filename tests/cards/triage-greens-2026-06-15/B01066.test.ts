@@ -16,7 +16,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { produce } from '@/engine/produce';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../../helpers/main-game-state';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
@@ -51,7 +51,7 @@ function base(): GameState {
     { cardId: 'ev-opp-1', faceUp: false, origin: { turn: 1, via: 'action-case' } },
     { cardId: 'ev-opp-2', faceUp: false, origin: { turn: 1, via: 'action-case' } },
   );
-  s.turn = { number: 2, player: 'self' } as GameState['turn'];
+  s.turn = { number: 2, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
   return s;
 }
 

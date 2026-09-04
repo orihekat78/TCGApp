@@ -1,10 +1,15 @@
-// Phase 8.10h: CaseArea stamp-flip class application
-// Round 3: case-stamp は事件カードから削除 (edition tag が Playmat 側に独立配置)。
-//   旧 test (stamp class application) は意味を失ったため skip 化 + 説明コメント残置。
-//   regression 担保は Playmat 側の .case-edition-tag.resolved class test で代替予定。
+import { renderToString } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
+import { CaseArea } from '@/ui/components/CaseArea';
 
-import { describe, it } from 'vitest';
+describe('CaseArea — 事件状態の所有', () => {
+  it('事件未開始の状態も空の事件ヘッダー内に表示する', () => {
+    const html = renderToString(
+      <CaseArea caseInfo={null} turnOrder="first" side="self" />,
+    );
 
-describe.skip('CaseArea — 解決編 stamp class (Round 3 で削除)', () => {
-  it.skip('case-stamp 自体が削除済 — Playmat.case-edition-tag.resolved で代替テスト', () => {});
+    expect(html).toContain('class="case-edition-tag"');
+    expect(html).toContain('aria-label="事件状態: 未開始"');
+    expect(html).not.toContain('case-stamp');
+  });
 });

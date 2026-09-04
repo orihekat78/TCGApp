@@ -1,5 +1,5 @@
-// cards/ct-p02/B02030 服部平蔵 (キャラ) — set-card batch #2 (a2 only)
-// rules: 15-abilities-effects.md, 16-card-set.md, 17-icons.md, 21-declared-ability-cost.md
+// cards/ct-p02/B02030 服部平蔵 (キャラ)
+// rules: 08-contact.md, 09-cutin-disguise.md, 15-abilities-effects.md, 16-card-set.md, 17-icons.md, 21-declared-ability-cost.md
 //
 // 公式テキスト:
 //   相手が【カットイン】を使用したとき、自分の現場にいるキャラにセットされているカードを
@@ -7,10 +7,43 @@
 //   【宣言】【ターン1】自分の現場にいるキャラを1枚まで選び、自分のデッキのカードを
 //     上から1枚裏向きでセットする。
 //
-// a1: DEFERRED (相手 カットイン反応 + 効果 negate — replace 系 / negate kind 未対応)
-// a2: declared turn1 + 自陣 1pick + 自デッキ上端裏向きセット (B02023 同型)
-
 import type { AbilityDef, CardDef } from '@/engine/types';
+
+const a1: AbilityDef = {
+  id: 'a1',
+  type: 'triggered',
+  scope: 'on-scene',
+  trigger: {
+    hook: 'cutin:used',
+    matcherCondition: { kind: 'triggerPlayerIs', side: 'opp' },
+  },
+  effect: {
+    kind: 'optional',
+    aiRun: 'always',
+    effect: {
+      kind: 'chain',
+      steps: [
+        {
+          kind: 'atom',
+          verb: 'charRemoveSetCard',
+          args: {
+            player: 'self', side: 'self', n: 2, minimumPolicy: 'exact',
+            filter: { hasSetCards: true },
+          },
+        },
+        {
+          kind: 'negate',
+          trigger: {
+            on: 'effect-resolution',
+            matcher: { resolutionKind: 'cutin', declaredBatch: '$trigger.declaredBatch' },
+          },
+        },
+      ],
+    },
+  },
+  description: '相手が【カットイン】を使用したとき、自分の現場のセットカードを合わせて2枚リムーブしてもよい。そうした場合、その【カットイン】の効果を無効にする。',
+  ruleRefs: ['rules/08-contact.md', 'rules/09-cutin-disguise.md', 'rules/15-abilities-effects.md', 'rules/16-card-set.md'],
+};
 
 const a2: AbilityDef = {
   id: 'a2',
@@ -36,6 +69,6 @@ export const B02030: CardDef = {
   traits: ['警察', '大阪府警'], keywords: [],
   rarity: 'C',
   imageUrl: '1721357211024602.jpg',
-  abilities: [a2],
-  ruleRefs: ['rules/15-abilities-effects.md', 'rules/16-card-set.md', 'rules/17-icons.md', 'rules/21-declared-ability-cost.md'],
+  abilities: [a1, a2],
+  ruleRefs: ['rules/08-contact.md', 'rules/09-cutin-disguise.md', 'rules/15-abilities-effects.md', 'rules/16-card-set.md', 'rules/17-icons.md', 'rules/21-declared-ability-cost.md'],
 };

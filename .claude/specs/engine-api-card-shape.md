@@ -39,7 +39,7 @@ type PartnerDef = CardDef & {
 type CaseDef = CardDef & {
   kind: 'case';
   caseLevel: number;                  // 必要証拠数の基準 (実際は先攻7/後攻6)
-  caseTraits: string[];               // 例: ["古城", "婚活"]
+  caseTraits: string[];               // 例: ["古城", "婚活パーティー"]
 };
 
 type EventDef = CardDef & {

@@ -61,11 +61,14 @@ describe('CT-P10 B10101 狙われた唇', () => {
     mutate.case.toResolved(state, 'self');
     settle(state);
 
+    // qa: card:B10101:0fade7ea1c8ab6c20539a9e00411f4a1438268092d409f38ba0f302b3fc83af9
+    // qa: card:B10101:3d2620d5280c7dd0be027568ef506702b96a53e467b84d22ded4aad72b2feeba
+    // qa: card:B10101:42b4d321f0944b4037dd2ca163b0a52c8a59e69bc129cd1cd6dc581361b03724
     expect(state.players.self.hand).toEqual([]);
     expect(state.players.self.remove).toContain('B10101_FILLER');
   });
 
-  it('declared ability has the exact evidence cost, color target, and public top-four reveal', () => {
+  it('declared ability has the exact evidence cost, color target, and private top-four look', () => {
     const a2 = B10101.abilities[1]!;
     expect(a2).toMatchObject({
       type: 'declared', scope: 'always', limit: { kind: 'turn', n: 1 },
@@ -75,7 +78,9 @@ describe('CT-P10 B10101 狙われた唇', () => {
     const effect = a2.effect as { args?: { filter?: unknown; ability?: { effect?: { steps?: Array<{ verb?: string; args?: unknown }> } } } };
     expect(effect.args?.filter).toMatchObject({ kind: 'character', color: ['緑', '白'] });
     const reveal = effect.args?.ability?.effect?.steps?.[0];
-    expect(reveal).toMatchObject({ verb: 'deckRevealUntil', args: { player: 'self', maxN: 4, chooseMatch: 'upTo', visibility: 'public', viewer: 'all', filter: { kind: 'character', keywordFromPrintOrConditionIcon: '突撃' } } });
+    expect(reveal).toMatchObject({ verb: 'deckRevealUntil', args: { player: 'self', maxN: 4, chooseMatch: 'upTo', filter: { kind: 'character', keywordFromPrintOrConditionIcon: '突撃' } } });
+    expect(reveal?.args).not.toHaveProperty('visibility');
+    expect(reveal?.args).not.toHaveProperty('viewer');
   });
 
   it('grants the contact-remove trigger and only finds the exact 突撃 keyword', () => {

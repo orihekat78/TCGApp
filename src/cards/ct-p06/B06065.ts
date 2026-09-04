@@ -79,7 +79,8 @@ export const B06065: CardDef = {
   colors: [
     '白'
   ],
-  caseTraits: [],
+  // 公式API category1=YAIBA。case TSVのcategory dropをCardDefで永続backfill。
+  caseTraits: ['YAIBA'],
   traits: [],
   rarity: 'C',
   imageUrl: '1754285220551800.jpg',

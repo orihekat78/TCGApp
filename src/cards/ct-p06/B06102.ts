@@ -21,21 +21,17 @@ const a1: AbilityDef = {
     hook: 'phase:end:start'
   },
   condition: {
-    kind: 'and',
-    // BUG-145 (2026-06-15): 既存条件 AND not{charStateIs self sleep} (already-sleep gate, 公式qAndA B04049)
-    cs: [
-      {
-        kind: 'turn',
-        player: 'self'
-      },
-      { kind: 'not', c: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'sleep' } },
-    ],
+    kind: 'turn',
+    player: 'self'
   },
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'chain',
-      steps: [
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain',
+        steps: [
         {
           kind: 'atom',
           verb: 'sceneSetState',
@@ -57,7 +53,8 @@ const a1: AbilityDef = {
             }
           }
         }
-      ]
+        ]
+      }
     }
   },
   description: '自分のターン終了時、このキャラをスリープさせてもよい。そうした場合、自分の現場にいる[カード名 キャンティ]を1枚まで選び、アクティブにする。',

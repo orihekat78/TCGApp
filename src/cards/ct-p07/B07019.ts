@@ -7,10 +7,10 @@
 //   そうした場合、レベル7以下のキャラを1枚まで選び、リムーブする。
 // 公式Q&A: 【緑】イベント効果でスリープ状態で登場した場合「このキャラをスリープさせてもよい」は行えない (A: いいえ)。
 //
-// engine拡張 wave#2 cluster11 (2026-06-15, BUG-146 coupled) — B04049 idiom (optional{chain[...]}):
-//   - gate = 解決編 AND 【緑】イベント効果による登場 (enterSource{event,緑}) AND not(charStateIs self sleep)。
-//     最後の gate は BUG-145 の self-sleep can't-pay (公式Q&A 上記) — 既にスリープなら能力 非所持扱い (rules/17)。
-//   - effect = optional (してもよい) + chain (「そうした場合」= sleep が適用された場合のみ後続 remove へ進む)。
+// engine拡張 wave#2 cluster11 (2026-06-15, BUG-146 coupled) — B04049 idiom:
+//   - listener gate = 解決編 AND 【緑】イベント効果による登場 (enterSource{event,緑})。
+//   - mandatory triggerはsleep/stunでも発動し、effect-time active conditionalがoptional全体を抑止 (BUG-145)。
+//   - effect = conditional(active) → optional + chain (「そうした場合」= sleep適用時のみ後続remove)。
 //   - self-sleep step は **cost ではなく effect atom** sceneSetState{uid:'$self'} (sleepSelf は cost union)。
 //   - remove は PA短縮形 (side:'either' / 「1枚まで」= max:1 で 0 可)。
 
@@ -26,19 +26,21 @@ const a1: AbilityDef = {
     cs: [
       { kind: 'caseStatus', status: '解決編' }, // 【解決編】
       { kind: 'enterSource', viaEffect: true, sourceFilter: { kind: 'event', color: '緑' } }, // 【緑】イベント効果で登場
-      // BUG-145: 既にスリープなら「このキャラをスリープさせてもよい」が払えず全効果不発 (公式Q&A 上記)
-      { kind: 'not', c: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'sleep' } },
     ],
   },
   // このキャラをスリープさせてもよい。そうした場合、レベル7以下のキャラを1枚まで選び、リムーブする。
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'chain', // 「そうした場合」= sleep が適用された場合のみ remove へ (chain は no-apply で break)
-      steps: [
-        { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
-        { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', cause: 'effect', filter: { levelMax: 7 } } },
-      ],
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain', // 「そうした場合」= sleep が適用された場合のみ remove へ (chain は no-apply で break)
+        steps: [
+          { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
+          { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', cause: 'effect', filter: { levelMax: 7 } } },
+        ],
+      },
     },
   },
   description: '【解決編】【登場時】【緑】イベント効果で登場した場合、このキャラをスリープしてもよい。そうしたらレベル7以下を1枚までリムーブ。',

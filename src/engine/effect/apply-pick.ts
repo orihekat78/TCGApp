@@ -10,11 +10,25 @@
 //   - `drainAiEffectPicks` は __pendingEffectPickQueue を heuristic で順次解決する (CPU 経路には
 //     human modal が無いため、PA 短縮形 atom の pick が drain されず no-op になる BUG-109 を解消)。
 
-import type { CausalEffectTrace, GameState, Effect, EffectCtx, Candidate, Condition } from '../types/index.js';
+import type { CausalEffectTrace, DeclaredAbilityHostOrigin, GameState, Effect, EffectCtx, Candidate, Condition, RemoveResult } from '../types/index.js';
 import type { PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide, ContinuationFrame } from './resolve-picks.js';
 import { resolveEffectPicks, rememberedRuntimeAtomTargetPolicy, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume, _takePendingOptionalBindings, _takePendingOptionalCostPaid } from './resolve-picks.js';
-import { findChooseIntercept } from './consult-choose-intercept.js';
+import { findChooseInterceptReactions, isTrustedSetCardOccurrenceSelection } from './consult-choose-intercept.js';
+import {
+  clearChooseInterceptBatchAuthority,
+  consumeChooseInterceptBatchAuthority,
+  createChooseInterceptBatchAuthority,
+  markChooseInterceptBatchCancelled,
+} from './choose-intercept-authority.js';
 import { bindingKeysReadByCondition } from '../cond/binding-keys.js';
+import {
+  isSceneEnterSwitchPickArgs,
+  isValidSceneEnterSwitchPickAuthority,
+  resolveSceneEnterSwitchPickArgs,
+  withContinuationSceneEnterSwitchChoice,
+  withSceneEnterSwitchChoice,
+} from './scene-switch.js';
+import { sceneCap } from '../read/scene-cap.js';
 import {
   bindEffectCausalTrace,
   cloneCausalEffectTrace,
@@ -27,23 +41,6 @@ import {
 } from '../log/effect-causal.js';
 
 type Player = 'self' | 'opp';
-
-function withChoiceSwitch(effect: Effect, switchRemoveUid: string | undefined): Effect {
-  if (!switchRemoveUid) return effect;
-  if (effect.kind === 'atom') {
-    return effect.verb === 'sceneEnter'
-      ? { ...effect, args: { ...(effect.args as Record<string, unknown>), switchRemoveUid } }
-      : effect;
-  }
-  if (effect.kind === 'sequence' || effect.kind === 'parallel') {
-    return { ...effect, steps: effect.steps.map(step => withChoiceSwitch(step, switchRemoveUid)) };
-  }
-  if (effect.kind === 'conditional') {
-    return { ...effect, then: withChoiceSwitch(effect.then, switchRemoveUid), ...(effect.else ? { else: withChoiceSwitch(effect.else, switchRemoveUid) } : {}) };
-  }
-  if (effect.kind === 'optional') return { ...effect, effect: withChoiceSwitch(effect.effect, switchRemoveUid) };
-  return effect;
-}
 
 function resumedEntryExtras(source: {
   triggerBatch?: number;
@@ -62,16 +59,60 @@ function resumedEntryExtras(source: {
   };
 }
 
+function resumedEntrySource(
+  source: {
+    uid?: string;
+    cardId: string;
+    abilityId: string;
+    setCardId?: string;
+    setCardInstanceId?: string;
+    abilityOrigin?: EffectCtx['source']['abilityOrigin'];
+    abilityIndex?: number;
+    area?: EffectCtx['source']['area'];
+    resolutionKind?: EffectCtx['source']['resolutionKind'];
+  },
+  player: Player,
+) {
+  return {
+    player,
+    ...(source.uid !== undefined ? { uid: source.uid } : {}),
+    cardId: source.cardId,
+    abilityId: source.abilityId,
+    ...(source.setCardId !== undefined ? { setCardId: source.setCardId } : {}),
+    ...(source.setCardInstanceId !== undefined ? { setCardInstanceId: source.setCardInstanceId } : {}),
+    ...(source.abilityOrigin !== undefined ? { abilityOrigin: source.abilityOrigin } : {}),
+    ...(source.abilityIndex !== undefined ? { abilityIndex: source.abilityIndex } : {}),
+    ...(source.area ? { area: source.area } : {}),
+    ...(source.resolutionKind ? { resolutionKind: source.resolutionKind } : {}),
+  };
+}
+
 import { run as runEffect } from './resolver.js';
 import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 import { cardOccurrenceUid, cardOccurrenceWitness, isLiveCardOccurrenceWitness } from '../target/card-occurrence.js';
+import {
+  advanceDeckEpochAndRebaseBindings,
+  deckOccurrenceRelocations,
+  isLiveDeckWindowAuthority,
+} from './deck-occurrence-authority.js';
+import {
+  consumePersistedDeckDecisionAuthority,
+  consumePersistedEffectPickAuthority,
+} from './runtime-state.js';
 import { mutate } from '../mutate/index.js';
+import {
+  canAdvanceLeaveInterceptReplacement,
+  advanceLeaveInterceptReplacement,
+  advanceLeaveInterceptReplacementAfterResume,
+  finalizeLeaveInterceptReplacement,
+} from '../flow/contact.js';
 import {
   _takePendingChooseInterceptResume,
   _peekPendingChooseInterceptResume,
   _takePendingEffectRepeatOptionalResume,
   _drainPendingEffectChoiceSide,
   _drainPendingEffectPickSide,
+  removePendingEffectPickSide,
   _drainPendingEffectOptionalSide,
   _drainPendingEffectRepeatOptionalSide,
   _peekPendingEffectChoiceSide,
@@ -82,6 +123,8 @@ import {
   _takePendingOptionalContinuation,
   pushPendingChooseInterceptSide,
   type PendingChooseInterceptSide,
+  type PendingChooseInterceptResponseSide,
+  type ChooseInterceptResume,
   type PendingEffectRepeatOptionalSide,
   type PendingRpsSide,
   type RpsHand,
@@ -91,22 +134,27 @@ import {
   pushPendingRpsSide,
   setPendingRpsResume,
   appendPendingRpsContinuation,
-  setPendingChoiceContinuation,
-  setPendingOptionalContinuation,
+  appendPendingChoiceContinuation,
+  appendPendingOptionalContinuation,
   setPendingEffectRepeatOptionalContinuation,
   getPendingChoiceResume,
   _takePendingSetCardChoiceResume,
   _peekPendingSetCardChoiceSide,
   _peekPendingSetCardChoiceResume,
+  _peekPendingSetCardReplacementSide,
+  _peekPendingSetCardReplacementContinuation,
   _peekPendingSetCardReplacementGuard,
   _restorePendingSetCardReplacementSide,
+  _takePendingSetCardReplacementContinuation,
   _takePendingSetCardReplacementGuard,
   appendPendingSetCardChoiceContinuation,
+  setPendingSetCardReplacementContinuation,
   type PendingSetCardChoiceSide,
   type PendingSetCardReplacementSide,
 } from './pending-state.js';
 
-function consumeQueuedPick(pending: PendingEffectPickSide): void {
+function consumeQueuedPick(state: GameState, pending: PendingEffectPickSide): void {
+  consumePersistedEffectPickAuthority(state, pending);
   if (_peekPendingEffectPickSide() === pending) _drainPendingEffectPickSide();
 }
 
@@ -121,10 +169,17 @@ function consumeQueuedOptional(pending: PendingEffectOptionalSide): void {
 function consumeQueuedRepeatOptional(pending: PendingEffectRepeatOptionalSide): void {
   if (_peekPendingEffectRepeatOptionalSide() === pending) _drainPendingEffectRepeatOptionalSide();
 }
+
+function isLiveDeckRevealWindow(state: GameState, pending: PendingEffectPickSide): boolean {
+  if (pending.atomVerb !== 'deckRevealUntil') return true;
+  const args = pending.atomArgs as Record<string, unknown>;
+  const player = args.__windowPlayer ?? pending.player;
+  return (player === 'self' || player === 'opp')
+    && isLiveDeckWindowAuthority(state, player, args);
+}
 import { hand } from '../mutate/hand.js';
 import { char as charMutator } from '../mutate/char.js';
 import { scene as sceneMutator } from '../mutate/scene.js';
-import { deck as deckMutator } from '../mutate/deck.js';
 import {
   _attachPendingDeckPlaceContinuation,
   _attachPendingDeckReorderContinuation,
@@ -196,7 +251,7 @@ export function applyRpsAndContinuation(state: GameState, pending: PendingRpsSid
   const resume = _takePendingRpsResume();
   if (!resume || resume.effect.kind !== 'rps') return;
   const ctx: EffectCtx = {
-    source: { cardId: pending.source.cardId, uid: pending.source.uid, abilityId: pending.source.abilityId, player: pending.ownerPlayer, area: pending.source.area ?? 'scene', ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}), ...(pending.source.triggerBatch !== undefined ? { triggerBatch: pending.source.triggerBatch } : {}), ...(pending.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: pending.source.ownerChosenOrder } : {}), ...(pending.source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: pending.source.ownerOrderConfirmed } : {}), ...(pending.source.declaredBatch !== undefined ? { declaredBatch: pending.source.declaredBatch } : {}) },
+    source: { ...resumedEntrySource(pending.source, pending.ownerPlayer), area: pending.source.area ?? 'scene', ...(pending.source.triggerBatch !== undefined ? { triggerBatch: pending.source.triggerBatch } : {}), ...(pending.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: pending.source.ownerChosenOrder } : {}), ...(pending.source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: pending.source.ownerOrderConfirmed } : {}), ...(pending.source.declaredBatch !== undefined ? { declaredBatch: pending.source.declaredBatch } : {}) },
     bindings: resume.bindings as EffectCtx['bindings'],
   };
   const decisionTrace = restoreEffectCausalTrace(ctx, pending.source.causalTrace);
@@ -264,6 +319,16 @@ export function applySetCardChoiceAndContinuation(state: GameState, pending: Pen
       abilityId: canonical.source.abilityId,
       player: canonical.player,
       area: canonical.source.area ?? 'scene',
+      ...(canonical.source.setCardId !== undefined ? { setCardId: canonical.source.setCardId } : {}),
+      ...(canonical.source.setCardInstanceId !== undefined
+        ? { setCardInstanceId: canonical.source.setCardInstanceId }
+        : {}),
+      ...(canonical.source.abilityOrigin !== undefined
+        ? { abilityOrigin: canonical.source.abilityOrigin }
+        : {}),
+      ...(canonical.source.abilityIndex !== undefined
+        ? { abilityIndex: canonical.source.abilityIndex }
+        : {}),
       ...(canonical.source.resolutionKind ? { resolutionKind: canonical.source.resolutionKind } : {}),
       ...(canonical.source.triggerBatch !== undefined ? { triggerBatch: canonical.source.triggerBatch } : {}),
       ...(canonical.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: canonical.source.ownerChosenOrder } : {}),
@@ -370,39 +435,175 @@ function matchesSetCardReplacementGuard(
   return JSON.stringify(projected) === JSON.stringify(project(pending));
 }
 
-export function applySetCardReplacement(state: GameState, pending: PendingSetCardReplacementSide, toUid: string | null): boolean {
-  if (stopIfGameAlreadyEnded(state) || !canApplySetCardReplacement(state, pending, toUid)) return false;
+export type ApplySetCardReplacementResult = {
+  applied: boolean;
+  contactActionId?: string;
+  contactFinalized?: boolean;
+};
+
+/** Apply one replacement and report any engine-owned contact continuation. */
+export function applySetCardReplacementDetailed(
+  state: GameState,
+  pending: PendingSetCardReplacementSide,
+  toUid: string | null,
+): ApplySetCardReplacementResult {
+  if (stopIfGameAlreadyEnded(state) || !canApplySetCardReplacement(state, pending, toUid)) return { applied: false };
+  const prospectiveGuard = _peekPendingSetCardReplacementGuard();
+  if (!prospectiveGuard || !canAdvanceLeaveInterceptReplacement(state, prospectiveGuard)) return { applied: false };
   const guard = _takePendingSetCardReplacementGuard();
-  if (!guard) return false;
+  if (!guard) return { applied: false };
   const applied = charMutator.resolveSetCardRemovalReplacement(state, guard, toUid);
   if (!applied) {
     _restorePendingSetCardReplacementSide(null, guard);
-    return false;
+    return { applied: false };
   }
+  // The contact owns stage admission; a guardian stage can advance only after
+  // the resumed removal reports that the guardian actually left.
+  const contact = advanceLeaveInterceptReplacement(state, guard);
+  const finishContact = (targetRemoval: RemoveResult | null = null): ApplySetCardReplacementResult => ({
+    applied: true,
+    ...(contact ? { contactActionId: contact.actionId } : {}),
+    ...(contact && targetRemoval !== null
+      ? { contactFinalized: finalizeLeaveInterceptReplacement(state, contact.actionId, targetRemoval) }
+      : {}),
+  });
+  const continuation = _takePendingSetCardReplacementContinuation();
+  if (guard.resume?.kind === 'scene-remove' && continuation) {
+    // Persistence breaks the original shared-ctx object identity between the
+    // paused atom and its enclosing chain. Re-link only the chain-gate dyn so
+    // a resumed no-op still suppresses that chain tail after JSON hydration.
+    if (continuation.outer?.kind === 'chain') {
+      const sharedDyn = {
+        ...(continuation.outer.ctx.dyn ?? {}),
+        ...(continuation.ctx.dyn ?? {}),
+      };
+      continuation.ctx.dyn = sharedDyn;
+      continuation.outer.ctx.dyn = sharedDyn;
+    }
+    const resumeAtom: Effect = {
+      kind: 'atom',
+      verb: 'sceneRemove',
+      args: {
+        uid: guard.fromUid,
+        cause: guard.resume.cause,
+        ...(guard.resume.byUid ? { byUid: guard.resume.byUid } : {}),
+        ...(guard.resume.leaveInterceptDecision
+          ? { leaveInterceptDecision: guard.resume.leaveInterceptDecision }
+          : {}),
+        ...(guard.resume.afterSceneRemove
+          ? { afterSceneRemove: guard.resume.afterSceneRemove }
+          : {}),
+        skipSetCardReplacementInstanceIds: [guard.setCardInstanceId],
+      },
+    };
+    const afterSceneRemove = guard.resume.afterSceneRemove;
+    const outer = afterSceneRemove
+      ? {
+          remainder: [{
+            kind: 'atom' as const,
+            verb: 'sceneRemove' as const,
+            args: {
+              uid: afterSceneRemove.uid,
+              cause: afterSceneRemove.cause,
+              ...(afterSceneRemove.byUid ? { byUid: afterSceneRemove.byUid } : {}),
+              ...(afterSceneRemove.leaveInterceptDecision
+                ? { leaveInterceptDecision: afterSceneRemove.leaveInterceptDecision }
+                : {}),
+            },
+          }],
+          ctx: continuation.ctx,
+          kind: 'sequence' as const,
+          outer: continuation.outer,
+        }
+      : continuation.outer;
+    runContinuationChain(state, {
+      remainder: [resumeAtom],
+      ctx: continuation.ctx,
+      kind: 'sequence',
+      outer,
+    });
+    return finishContact();
+  }
+  const replacementBeforeResume = _peekPendingSetCardReplacementSide();
+  let targetRemoval: RemoveResult | null = null;
   if (guard.resume) {
     switch (guard.resume.kind) {
       case 'scene-remove':
-        sceneMutator.removeToRemove(state, guard.fromUid, guard.resume.cause, guard.resume.byUid, {
+        {
+          const resumed = sceneMutator.removeToRemove(state, guard.fromUid, guard.resume.cause, guard.resume.byUid, {
           byPlayer: guard.resume.byPlayer,
+          leaveInterceptDecision: guard.resume.leaveInterceptDecision,
+          afterSceneRemove: guard.resume.afterSceneRemove,
           skipSetCardReplacementInstanceIds: [guard.setCardInstanceId],
-        });
+          });
+          if (contact?.stage === 'interceptor-cost') {
+            advanceLeaveInterceptReplacementAfterResume(state, contact.actionId, resumed);
+          }
+          // Direct mutation callers have no effect-chain outer frame. Preserve
+          // the guardian-cost continuation explicitly in that path too.
+          const after = guard.resume.afterSceneRemove;
+          if (after && !resumed.deferred && !resumed.prevented && resumed.removed.cardId !== '') {
+            targetRemoval = sceneMutator.removeToRemove(state, after.uid, after.cause, after.byUid, {
+              byPlayer: after.byPlayer,
+              leaveInterceptDecision: after.leaveInterceptDecision,
+            });
+          }
+          if (contact?.stage === 'target-leave') targetRemoval = resumed;
+        }
         break;
       case 'scene-to-deck':
-        sceneMutator.toDeck(state, guard.fromUid, guard.resume.pos);
+        sceneMutator.toDeck(state, guard.fromUid, guard.resume.pos, {
+          cause: guard.resume.cause,
+          byUid: guard.resume.byUid,
+          byPlayer: guard.resume.byPlayer,
+        });
         break;
       case 'scene-to-hand':
-        sceneMutator.toHand(state, guard.fromUid);
+        sceneMutator.toHand(state, guard.fromUid, {
+          cause: guard.resume.cause,
+          byUid: guard.resume.byUid,
+          byPlayer: guard.resume.byPlayer,
+        });
         break;
       case 'scene-to-evidence':
-        sceneMutator.toEvidence(state, guard.fromUid, guard.resume.faceUp, guard.resume.sourceCardId);
+        sceneMutator.toEvidence(state, guard.fromUid, guard.resume.faceUp, guard.resume.sourceCardId, {
+          cause: guard.resume.cause,
+          byUid: guard.resume.byUid,
+          byPlayer: guard.resume.byPlayer,
+        });
         break;
       case 'scene-to-stack':
-        sceneMutator.toStack(state, guard.fromUid, guard.resume.hostUid);
+        sceneMutator.toStack(state, guard.fromUid, guard.resume.hostUid, {
+          cause: guard.resume.cause,
+          byUid: guard.resume.byUid,
+          byPlayer: guard.resume.byPlayer,
+        });
         break;
     }
   }
-  runAllUntilEmpty(state);
-  return true;
+  const replacementAfterResume = _peekPendingSetCardReplacementSide();
+  // A completed target removal settles the contact synchronously. contact:judge
+  // listeners must enter the queue before this resolver drains it, otherwise a
+  // direct public replacement leaves those observers behind (or observes an
+  // unresolved contact).
+  const contactResult = finishContact(targetRemoval);
+  if (continuation && replacementAfterResume && replacementAfterResume !== replacementBeforeResume) {
+    setPendingSetCardReplacementContinuation(continuation);
+    runAllUntilEmpty(state);
+    return contactResult;
+  }
+  if (continuation) runContinuationChain(state, continuation.outer);
+  else runAllUntilEmpty(state);
+  return contactResult;
+}
+
+/** Compatibility API for existing engine callers. */
+export function applySetCardReplacement(
+  state: GameState,
+  pending: PendingSetCardReplacementSide,
+  toUid: string | null,
+): boolean {
+  return applySetCardReplacementDetailed(state, pending, toUid).applied;
 }
 
 /**
@@ -607,11 +808,11 @@ function appendDecisionContinuation(
 ): void {
   if (!continuation) return;
   if (kind === 'choice') {
-    setPendingChoiceContinuation(continuation);
+    appendPendingChoiceContinuation(continuation);
     return;
   }
   if (kind === 'optional') {
-    setPendingOptionalContinuation(continuation);
+    appendPendingOptionalContinuation(continuation);
     return;
   }
   setPendingEffectRepeatOptionalContinuation(continuation);
@@ -624,6 +825,7 @@ type ContinuationPendingBaseline = {
   choice: ReturnType<typeof _peekPendingEffectChoiceSide>;
   rps: ReturnType<typeof _peekPendingRpsSide>;
   setCard: ReturnType<typeof _peekPendingSetCardChoiceSide>;
+  setCardReplacement: ReturnType<typeof _peekPendingSetCardReplacementSide>;
   optional: ReturnType<typeof _peekPendingEffectOptionalSide>;
   repeat: ReturnType<typeof _peekPendingEffectRepeatOptionalSide>;
 };
@@ -637,6 +839,7 @@ function snapshotContinuationPending(): ContinuationPendingBaseline {
     choice: _peekPendingEffectChoiceSide(),
     rps: _peekPendingRpsSide(),
     setCard: _peekPendingSetCardChoiceSide(),
+    setCardReplacement: _peekPendingSetCardReplacementSide(),
     optional: _peekPendingEffectOptionalSide(),
     repeat: _peekPendingEffectRepeatOptionalSide(),
   };
@@ -673,6 +876,7 @@ function runContinuationChain(
     const choiceBefore = before.choice;
     const rpsBefore = before.rps;
     const setCardBefore = before.setCard;
+    const setCardReplacementBefore = before.setCardReplacement;
     const optionalBefore = before.optional;
     const repeatBefore = before.repeat;
     let nextFrame = f.outer;
@@ -716,6 +920,7 @@ function runContinuationChain(
     const choiceAfter = _peekPendingEffectChoiceSide();
     const rpsAfter = _peekPendingRpsSide();
     const setCardAfter = _peekPendingSetCardChoiceSide();
+    const setCardReplacementAfter = _peekPendingSetCardReplacementSide();
     const optionalAfter = _peekPendingEffectOptionalSide();
     const repeatAfter = _peekPendingEffectRepeatOptionalSide();
     if (reorderAfter && reorderAfter !== reorderBefore) {
@@ -757,6 +962,15 @@ function runContinuationChain(
     if (setCardAfter && setCardAfter !== setCardBefore) {
       if (nextFrame) appendPendingSetCardChoiceContinuation(nextFrame);
       delete (f.ctx.dyn as Record<string, unknown> | undefined)?.['setCardChoicePending'];
+      return;
+    }
+    if (setCardReplacementAfter && setCardReplacementAfter !== setCardReplacementBefore) {
+      setPendingSetCardReplacementContinuation({
+        remainder: [],
+        ctx: f.ctx,
+        kind: 'sequence',
+        ...(nextFrame ? { outer: nextFrame } : {}),
+      });
       return;
     }
     f = nextFrame;
@@ -820,6 +1034,32 @@ function hasSameCardMultiset(expected: readonly string[], actual: readonly strin
   return true;
 }
 
+function advanceDeckDecisionEpochAndRebaseContexts(
+  state: GameState,
+  pendingCtx: EffectCtx,
+  continuation: ContinuationFrame | undefined,
+  player: Player,
+  occurrences: readonly { cardId: string; index: number }[],
+  placements: readonly { cardId: string; index: number }[],
+  insertedBeforeSurvivors = 0,
+): void {
+  const additionalContexts: EffectCtx[] = [];
+  for (let frame = continuation; frame; frame = frame.outer) {
+    additionalContexts.push(frame.ctx);
+  }
+  advanceDeckEpochAndRebaseBindings(
+    state,
+    pendingCtx,
+    player,
+    occurrences.map(occurrence => occurrence.index),
+    {
+      insertedBeforeSurvivors,
+      relocatedOccurrences: deckOccurrenceRelocations(occurrences, placements),
+      additionalContexts,
+    },
+  );
+}
+
 /** Confirm a human deck-bottom order, then resume the saved effect continuation. */
 export function applyDeckReorderAndContinuation(
   state: GameState,
@@ -829,49 +1069,53 @@ export function applyDeckReorderAndContinuation(
   if (stopIfGameAlreadyEnded(state)) return;
   assertSameCardMultiset(pending.cardIds, order);
   const deck = state.players[pending.player].deck;
-  const legacyBottomBlock = !pending.deckSnapshot || !pending.occurrences;
 
   // Validate the untrusted response and current deck before emitting a causal decision.
-  if (legacyBottomBlock) {
-    const n = pending.cardIds.length;
-    if (n < 2 || deck.length < n) throw new Error('deckReorderResolve: stale bottom block');
-    const bottom = deck.slice(deck.length - n);
-    assertSameCardMultiset(pending.cardIds, bottom);
-  } else {
-    if (deck.length !== pending.deckSnapshot!.length
-      || deck.some((cardId, index) => cardId !== pending.deckSnapshot![index])) {
-      throw new Error('deckReorderResolve: stale deck snapshot');
+  if (!pending.deckSnapshot || !pending.occurrences || !pending.ctx
+    || typeof pending.occurrenceWitness !== 'string'
+    || !isLiveCardOccurrenceWitness(state, pending.player, 'deck', pending.occurrenceWitness)) {
+    throw new Error('deckReorderResolve: stale deck occurrence authority');
+  }
+  const occurrences = pending.occurrences;
+  const pendingCtx = pending.ctx;
+  if (deck.length !== pending.deckSnapshot.length
+    || deck.some((cardId, index) => cardId !== pending.deckSnapshot![index])) {
+    throw new Error('deckReorderResolve: stale deck snapshot');
+  }
+  if (occurrences.length !== pending.cardIds.length) {
+    throw new Error('deckReorderResolve: stale occurrence count');
+  }
+  const indexes = new Set<number>();
+  for (const occurrence of occurrences) {
+    if (!Number.isInteger(occurrence.index)
+      || occurrence.index < 0
+      || occurrence.index >= deck.length
+      || indexes.has(occurrence.index)
+      || deck[occurrence.index] !== occurrence.cardId) {
+      throw new Error('deckReorderResolve: stale or duplicate occurrence');
     }
-    if (pending.occurrences!.length !== pending.cardIds.length) {
-      throw new Error('deckReorderResolve: stale occurrence count');
-    }
-    const indexes = new Set<number>();
-    for (const occurrence of pending.occurrences!) {
-      if (!Number.isInteger(occurrence.index)
-        || occurrence.index < 0
-        || occurrence.index >= deck.length
-        || indexes.has(occurrence.index)
-        || deck[occurrence.index] !== occurrence.cardId) {
-        throw new Error('deckReorderResolve: stale or duplicate occurrence');
-      }
-      indexes.add(occurrence.index);
-    }
+    indexes.add(occurrence.index);
   }
 
   const causalCtx = pending.continuation?.ctx ?? pending.ctx;
   const storedTrace = pending.ctx?.causal?.trace ?? pending.continuation?.ctx.causal?.trace;
   const decisionTrace = causalCtx ? restoreEffectCausalTrace(causalCtx, storedTrace) : undefined;
+  consumePersistedDeckDecisionAuthority(state, '__pendingDeckReorderSide', pending);
   recordEffectCausalDecision(state, decisionTrace, pending.player);
   withStructuredCausalResolution(state, () => {
-    if (legacyBottomBlock) {
-      const n = pending.cardIds.length;
-      for (let i = 0; i < n; i++) deck[deck.length - n + i] = order[i]!;
-    } else {
-      for (const occurrence of [...pending.occurrences!].sort((a, b) => b.index - a.index)) {
-        deck.splice(occurrence.index, 1);
-      }
-      deckMutator.toBottom(state, pending.player, [...order]);
+    for (const occurrence of [...occurrences].sort((a, b) => b.index - a.index)) {
+      deck.splice(occurrence.index, 1);
     }
+    deck.push(...order);
+    const firstPlacedIndex = deck.length - order.length;
+    advanceDeckDecisionEpochAndRebaseContexts(
+      state,
+      pendingCtx,
+      pending.continuation,
+      pending.player,
+      occurrences,
+      order.map((cardId, offset) => ({ cardId, index: firstPlacedIndex + offset })),
+    );
     if (pending.continuation) runContinuationChain(state, pending.continuation, decisionTrace);
     else runAllUntilEmpty(state);
   }, decisionTrace);
@@ -887,7 +1131,9 @@ export function applyDeckPlaceAndContinuation(
 ): boolean {
   if (stopIfGameAlreadyEnded(state)) return false;
   if (!hasSameCardMultiset(pending.cardIds, [...top, ...bottom])) return false;
-  if (!pending.deckSnapshot || !pending.occurrences || !pending.ctx) return false;
+  if (!pending.deckSnapshot || !pending.occurrences || !pending.ctx
+    || typeof pending.occurrenceWitness !== 'string'
+    || !isLiveCardOccurrenceWitness(state, pending.player, 'deck', pending.occurrenceWitness)) return false;
 
   const deck = state.players[pending.player].deck;
   if (deck.length !== pending.deckSnapshot.length
@@ -908,13 +1154,27 @@ export function applyDeckPlaceAndContinuation(
   const causalCtx = pending.continuation?.ctx ?? pending.ctx;
   const storedTrace = pending.ctx.causal?.trace ?? pending.continuation?.ctx.causal?.trace;
   const decisionTrace = restoreEffectCausalTrace(causalCtx, storedTrace);
+  consumePersistedDeckDecisionAuthority(state, '__pendingDeckPlaceSide', pending);
   recordEffectCausalDecision(state, decisionTrace, pending.ownerPlayer);
   withStructuredCausalResolution(state, () => {
     for (const occurrence of [...pending.occurrences!].sort((a, b) => b.index - a.index)) {
       deck.splice(occurrence.index, 1);
     }
-    deckMutator.toTop(state, pending.player, [...top]);
-    deckMutator.toBottom(state, pending.player, [...bottom]);
+    deck.unshift(...top);
+    deck.push(...bottom);
+    const bottomStart = deck.length - bottom.length;
+    advanceDeckDecisionEpochAndRebaseContexts(
+      state,
+      pending.ctx,
+      pending.continuation,
+      pending.player,
+      pending.occurrences,
+      [
+        ...top.map((cardId, index) => ({ cardId, index })),
+        ...bottom.map((cardId, offset) => ({ cardId, index: bottomStart + offset })),
+      ],
+      top.length,
+    );
     if (pending.continuation) runContinuationChain(state, pending.continuation, decisionTrace);
     else runAllUntilEmpty(state);
   }, decisionTrace);
@@ -948,10 +1208,24 @@ export function applyPickAndContinuation(
       abilityId: pending.source.abilityId,
       player: pending.player,
       area: pending.source.area ?? 'scene',
+      ...(pending.source.setCardId !== undefined ? { setCardId: pending.source.setCardId } : {}),
+      ...(pending.source.setCardInstanceId !== undefined ? { setCardInstanceId: pending.source.setCardInstanceId } : {}),
+      ...(pending.source.abilityOrigin !== undefined ? { abilityOrigin: pending.source.abilityOrigin } : {}),
+      ...(pending.source.abilityIndex !== undefined ? { abilityIndex: pending.source.abilityIndex } : {}),
       ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
     },
     bindings: {},
   };
+  const sceneEnterSwitchPick = isSceneEnterSwitchPickArgs(pending.atomArgs);
+  if (sceneEnterSwitchPick
+    && !isValidSceneEnterSwitchPickAuthority(
+      pending.atomArgs,
+      pending.player,
+      pending.ownerPlayer,
+      interceptCtx.source.player,
+    )) {
+    throw new Error('sceneEnter switch pick: invalid authority');
+  }
   // Stacked-card candidates are identities, not card IDs. Revalidate their host
   // before any intercept is consumed or any causal decision is committed.
   let resolvedStackHostUid: string | undefined;
@@ -971,20 +1245,36 @@ export function applyPickAndContinuation(
   const commitDecision = (): void => {
     if (!causalDecisionAlreadyRecorded) recordEffectCausalDecision(state, decisionTrace, pending.player);
   };
+  if (!isLiveDeckRevealWindow(state, pending)) {
+    consumeQueuedPick(state, pending);
+    commitDecision();
+    mutate.log.append(state, {
+      ts: Date.now(), player: pending.player, turn: state.turn.number,
+      action: 'effect:pick', result: 'stale-selection',
+    });
+    completeEffectCausalTrace(state, decisionTrace, interceptCtx.source.player, 'fizzle', { type: 'state', state: 'fizzled' });
+    return;
+  }
   const selectedIndexedOccurrencesAreLive = (pickedUids ?? [pickedUid]).every((uid) => {
     const candidate = findPendingPickCandidate(pending, uid);
-    if (!candidate || (candidate.area !== 'evidence' && candidate.area !== 'remove')) return candidate !== undefined;
+    if (!candidate || (candidate.area !== 'deck' && candidate.area !== 'evidence'
+      && candidate.area !== 'remove' && candidate.area !== 'hand')) {
+      return candidate !== undefined;
+    }
     const index = candidate.index;
-    if (typeof index !== 'number' || !Number.isInteger(index)
-      || !isLiveCardOccurrenceWitness(state, candidate.player, candidate.area, candidate.occurrenceWitness)) return false;
+    if (typeof index !== 'number' || !Number.isInteger(index)) return false;
+    if (candidate.area === 'hand') return state.players[candidate.player].hand[index] === candidate.cardId;
+    if (!isLiveCardOccurrenceWitness(state, candidate.player, candidate.area, candidate.occurrenceWitness)) return false;
     return candidate.area === 'evidence'
       ? state.players[candidate.player].evidence[index]?.cardId === candidate.cardId
-      : state.players[candidate.player].remove[index] === candidate.cardId;
+      : candidate.area === 'deck'
+        ? state.players[candidate.player].deck[index] === candidate.cardId
+        : state.players[candidate.player].remove[index] === candidate.cardId;
   });
   if (!selectedIndexedOccurrencesAreLive) {
     // Resolve only the stale decision.  Never let a replacement occurrence
     // reach choose-intercept, atom execution, or a paused continuation.
-    consumeQueuedPick(pending);
+    consumeQueuedPick(state, pending);
     commitDecision();
     mutate.log.append(state, {
       ts: Date.now(), player: pending.player, turn: state.turn.number,
@@ -996,7 +1286,7 @@ export function applyPickAndContinuation(
   if (isStaleEffectEventUsePick(state, pending, pickedUid, pickedUids)) {
     // Consume only the stale UI decision.  In particular, do not create
     // bindings, logs, hooks, queued atoms, or continuation-side effects.
-    consumeQueuedPick(pending);
+    consumeQueuedPick(state, pending);
     commitDecision();
     completeEffectCausalTrace(state, decisionTrace, interceptCtx.source.player, 'fizzle', { type: 'state', state: 'fizzled' });
     return;
@@ -1008,8 +1298,25 @@ export function applyPickAndContinuation(
     const selected = findPendingPickCandidate(pending, pickedUid);
     if (selected?.kind === 'card' && selected.area === 'hand'
       && !state.players[selected.player].hand.includes(selected.cardId)) {
-      consumeQueuedPick(pending);
+    consumeQueuedPick(state, pending);
       commitDecision();
+      completeEffectCausalTrace(state, decisionTrace, interceptCtx.source.player, 'fizzle', { type: 'state', state: 'fizzled' });
+      return;
+    }
+  }
+  if (sceneEnterSwitchPick) {
+    const selected = findPendingPickCandidate(pending, pickedUid);
+    const isLiveVictim = selected?.kind === 'char'
+      && selected.player === pending.player
+      && state.players[pending.player].scene.some((card) => card.uid === selected.uid)
+      && state.players[pending.player].scene.length >= sceneCap(state, pending.player);
+    if (!isLiveVictim) {
+      consumeQueuedPick(state, pending);
+      commitDecision();
+      mutate.log.append(state, {
+        ts: Date.now(), player: pending.player, turn: state.turn.number,
+        action: 'effect:pick', result: 'stale-selection',
+      });
       completeEffectCausalTrace(state, decisionTrace, interceptCtx.source.player, 'fizzle', { type: 'state', state: 'fizzled' });
       return;
     }
@@ -1024,40 +1331,67 @@ export function applyPickAndContinuation(
         && ((pending.atomArgs as { faceDownOnly?: boolean }).faceDownOnly !== true || !entry.faceUp);
     });
     if (!allCurrent) {
-      consumeQueuedPick(pending);
+    consumeQueuedPick(state, pending);
       commitDecision();
       completeEffectCausalTrace(state, decisionTrace, interceptCtx.source.player, 'fizzle', { type: 'state', state: 'fizzled' });
       return;
     }
   }
-  consumeQueuedPick(pending);
+    consumeQueuedPick(state, pending);
   commitDecision();
-  if (!skipChooseIntercept) {
+  const selectsSetCardOccurrence = isTrustedSetCardOccurrenceSelection(
+    state,
+    pending.atomVerb,
+    pending.atomArgs,
+    interceptCtx.source,
+  );
+  if (!skipChooseIntercept && !sceneEnterSwitchPick && !selectsSetCardOccurrence) {
+    const guards: PendingChooseInterceptResponseSide[] = [];
     for (const uid of pickedUids ?? [pickedUid]) {
-      const intercept = findChooseIntercept(state, uid, interceptCtx);
-      if (intercept.kind === 'cancel') {
-        completeEffectCausalTrace(state, decisionTrace, interceptCtx.source.player, 'cancel', { type: 'state', state: 'negated' });
-        return;
-      }
-      if (intercept.kind === 'discard-or-cancel') {
-        markEffectCausalAwaitingResume(decisionTrace);
-        const resumedPending: PendingEffectPickSide = decisionTrace
-          ? {
-            ...pending,
-            source: { ...pending.source, causalTrace: cloneCausalEffectTrace(decisionTrace) },
-          }
-          : pending;
-        pushPendingChooseInterceptSide(
-          {
-            player: intercept.responder,
-            ...(pending.publicHandRevealToken ? { publicHandRevealToken: pending.publicHandRevealToken } : {}),
-            protector: { uid: intercept.protectorUid, cardId: intercept.protectorCardId, abilityId: intercept.abilityId },
-            targetUid: uid,
+      const reactions = findChooseInterceptReactions(state, uid, interceptCtx);
+      if (reactions.length > 0) {
+        guards.push(...reactions.map(reaction => ({
+          kind: 'response' as const,
+          resolution: reaction.resolution,
+          player: reaction.responder,
+          ownerPlayer: reaction.ownerPlayer,
+          ...(pending.publicHandRevealToken ? { publicHandRevealToken: pending.publicHandRevealToken } : {}),
+          protector: {
+            uid: reaction.protectorUid,
+            cardId: reaction.protectorCardId,
+            abilityId: reaction.abilityId,
+            ...(reaction.abilityOrigin !== undefined
+              ? { abilityOrigin: reaction.abilityOrigin, abilityIndex: reaction.abilityIndex }
+              : {}),
+            ...(reaction.setCardInstanceId
+              ? { setCardInstanceId: reaction.setCardInstanceId }
+              : {}),
           },
-          { pending: resumedPending, pickedUid, pickedUids, switchRemoveUid, switchRemoveUids },
-        );
-        return;
+          targetUid: uid,
+        })));
       }
+    }
+    if (guards.length > 0) {
+      const resumedPending: PendingEffectPickSide = decisionTrace
+        ? { ...pending, source: { ...pending.source, causalTrace: cloneCausalEffectTrace(decisionTrace) } }
+        : pending;
+      const interceptResume: ChooseInterceptResume = {
+        pending: resumedPending,
+        pickedUid,
+        pickedUids,
+        switchRemoveUid,
+        switchRemoveUids,
+        batchToken: createChooseInterceptBatchAuthority(state, guards, pickedUids ?? [pickedUid]),
+        remainingGuards: guards,
+      };
+      const surfaceResult = surfaceNextChooseIntercept(state, interceptResume);
+      if (surfaceResult === 'pending') {
+        markEffectCausalAwaitingResume(decisionTrace);
+        markEffectCausalAwaitingResume(resumedPending.source.causalTrace);
+      } else {
+        cancelChooseIntercept(state, interceptResume);
+      }
+      return;
     }
   }
   // ---- resolved atom を build (Pattern A: uid='$pick' → uid 置換 / Pattern B: cardId(s)/target 置換) ----
@@ -1077,35 +1411,46 @@ export function applyPickAndContinuation(
   };
   let resolvedAtom: Effect;
   if (isPatternA) {
-    const { target: _omit, ...restArgs } = pending.atomArgs;
-    void _omit;
-    // engine-extension #3 (2026-06-05): multi-target Pattern A
-    // pickedUids が複数なら各 uid に atom を per-char 適用する sequence にまとめる。
-    // 単一なら従来通り (sequence wrap せずに atom のまま runEffect / event.queue)。
-    const uids = (pickedUids && pickedUids.length > 1) ? pickedUids : [pickedUid];
-    const setCardSelections = pending.atomVerb === 'charRemoveSetCard'
-      ? uids.map(uid => findPendingPickCandidate(pending, uid))
-      : [];
-    if (setCardSelections.length > 0 && setCardSelections.every(candidate => candidate?.hostUid && candidate.setCardInstanceId)) {
-      const atoms: Effect[] = setCardSelections.map(candidate => ({
-        kind: 'atom' as const,
-        verb: pending.atomVerb as never,
-        args: {
-          ...restArgs,
-          uid: candidate!.hostUid,
-          setCardInstanceId: candidate!.setCardInstanceId,
-        },
-      }));
-      resolvedAtom = atoms.length === 1 ? atoms[0]! : { kind: 'sequence', steps: atoms };
-    } else if (uids.length === 1) {
-      resolvedAtom = { kind: 'atom', verb: pending.atomVerb as never, args: w6TagMr({ ...restArgs, uid: uids[0]! }, [uids[0]!]) };
+    const restoredSwitchArgs = sceneEnterSwitchPick
+      ? resolveSceneEnterSwitchPickArgs(pending.atomArgs, pickedUid)
+      : null;
+    if (sceneEnterSwitchPick) {
+      if (restoredSwitchArgs === null) {
+        completeEffectCausalTrace(state, decisionTrace, interceptCtx.source.player, 'fizzle', { type: 'state', state: 'fizzled' });
+        return;
+      }
+      resolvedAtom = { kind: 'atom', verb: 'sceneEnter', args: restoredSwitchArgs };
     } else {
-      const atoms: Effect[] = uids.map((u) => ({
-        kind: 'atom' as const,
-        verb: pending.atomVerb as never,
-        args: w6TagMr({ ...restArgs, uid: u }, [u]),
-      }));
-      resolvedAtom = { kind: 'sequence', steps: atoms };
+      const { target: _omit, ...restArgs } = pending.atomArgs;
+      void _omit;
+      // engine-extension #3 (2026-06-05): multi-target Pattern A
+      // pickedUids が複数なら各 uid に atom を per-char 適用する sequence にまとめる。
+      // 単一なら従来通り (sequence wrap せずに atom のまま runEffect / event.queue)。
+      const uids = (pickedUids && pickedUids.length > 1) ? pickedUids : [pickedUid];
+      const setCardSelections = pending.atomVerb === 'charRemoveSetCard'
+        ? uids.map(uid => findPendingPickCandidate(pending, uid))
+        : [];
+      if (setCardSelections.length > 0 && setCardSelections.every(candidate => candidate?.hostUid && candidate.setCardInstanceId)) {
+        const atoms: Effect[] = setCardSelections.map(candidate => ({
+          kind: 'atom' as const,
+          verb: pending.atomVerb as never,
+          args: {
+            ...restArgs,
+            uid: candidate!.hostUid,
+            setCardInstanceId: candidate!.setCardInstanceId,
+          },
+        }));
+        resolvedAtom = atoms.length === 1 ? atoms[0]! : { kind: 'sequence', steps: atoms };
+      } else if (uids.length === 1) {
+        resolvedAtom = { kind: 'atom', verb: pending.atomVerb as never, args: w6TagMr({ ...restArgs, uid: uids[0]! }, [uids[0]!]) };
+      } else {
+        const atoms: Effect[] = uids.map((u) => ({
+          kind: 'atom' as const,
+          verb: pending.atomVerb as never,
+          args: w6TagMr({ ...restArgs, uid: u }, [u]),
+        }));
+        resolvedAtom = { kind: 'sequence', steps: atoms };
+      }
     }
   } else {
     const resolvedCardId = resolveCardIdFromPickUid(pickedUid, state, pending);
@@ -1201,16 +1546,25 @@ export function applyPickAndContinuation(
   // ---- continuation (中断中 sequence/chain の残り step) を保存 ctx で実行 ----
   // BUG-111: continuation は pick 本体 (pending.continuation) に同梱されている (別 FIFO peek を廃止)。
   // これにより continuation を持たない pick が他 pick の continuation を誤消費する desync を排除。
-  const chainCont = pending.continuation;
+  const chainCont = pending.continuation && pending.atomVerb !== 'sceneEnter'
+    ? withContinuationSceneEnterSwitchChoice(pending.continuation, switchRemoveUid)
+    : pending.continuation;
   if (chainCont) {
     decisionTrace = restoreEffectCausalTrace(chainCont.ctx, decisionTrace);
     // BUG-107: resolved atom と remainder を同一保存 ctx で runEffect → plain bindings を共有
     // (event.queue 経由は entry.bindings が Immer draft に取り込まれ bind が消えるため不可)。
     withStructuredCausalResolution(state, () => {
-      runEffect(state, resolvedAtom as never, chainCont.ctx);
+      // The selected atom can itself open a human decision. Wrap it so the
+      // continuation boundary snapshots before that atom and pauses the saved
+      // tail behind the newly-created decision.
+      runContinuationChain(state, {
+        remainder: [resolvedAtom],
+        ctx: chainCont.ctx,
+        kind: 'sequence',
+        outer: chainCont,
+      }, decisionTrace);
     // BUG-111 #2: multi-step remainder の wrap は origin kind で行う (sequence は chain-gate を持たない)。
     // BUG-111 family (nest): head → outer の順に frame 連鎖を実行 (再 pause は新 pick へ引継ぎ)。
-      runContinuationChain(state, chainCont, decisionTrace);
     }, decisionTrace);
     completeEffectCausalTrace(state, decisionTrace, chainCont.ctx.source.player);
   } else {
@@ -1220,11 +1574,7 @@ export function applyPickAndContinuation(
       // BUG-175: source.player は能力所有者 (chooser を渡すと相対 arg が二重反転 — B04058
       // 「相手は手札を1枚リムーブする」で self 手札を discard する誤り)。ownerPlayer 不在の
       // 旧 pending は player と同値 (chooser==owner) のため fallback で byte 等価。
-      {
-        player: pending.ownerPlayer ?? pending.player,
-        cardId: pending.source.cardId,
-        ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
-      },
+      resumedEntrySource(pending.source, pending.ownerPlayer ?? pending.player),
       'effect:pick-resolved',
       { picked: pickedUid, source: pending.source },
       undefined,
@@ -1234,6 +1584,165 @@ export function applyPickAndContinuation(
   }
 }
 
+function chooseInterceptOwner(guard: PendingChooseInterceptResponseSide): Player {
+  return guard.ownerPlayer ?? (guard.player === 'self' ? 'opp' : 'self');
+}
+
+function chooseInterceptResolution(
+  guard: PendingChooseInterceptResponseSide,
+): 'cancel' | 'discard-or-cancel' {
+  return guard.resolution ?? 'discard-or-cancel';
+}
+
+function chooseInterceptCausalContext(resume: ChooseInterceptResume): EffectCtx {
+  return resume.pending.continuation?.ctx ?? {
+    source: {
+      cardId: resume.pending.source.cardId,
+      uid: resume.pending.source.uid ?? '',
+      abilityId: resume.pending.source.abilityId,
+      player: resume.pending.ownerPlayer ?? resume.pending.player,
+      area: resume.pending.source.area ?? 'scene',
+      ...(resume.pending.source.setCardId !== undefined ? { setCardId: resume.pending.source.setCardId } : {}),
+      ...(resume.pending.source.setCardInstanceId !== undefined
+        ? { setCardInstanceId: resume.pending.source.setCardInstanceId }
+        : {}),
+      ...(resume.pending.source.abilityOrigin !== undefined
+        ? { abilityOrigin: resume.pending.source.abilityOrigin }
+        : {}),
+      ...(resume.pending.source.abilityIndex !== undefined
+        ? { abilityIndex: resume.pending.source.abilityIndex }
+        : {}),
+      ...(resume.pending.source.resolutionKind
+        ? { resolutionKind: resume.pending.source.resolutionKind }
+        : {}),
+    },
+    bindings: {},
+  };
+}
+
+function cancelChooseIntercept(
+  state: GameState,
+  resume: ChooseInterceptResume,
+): void {
+  clearChooseInterceptBatchAuthority(state, resume.batchToken);
+  const causalCtx = chooseInterceptCausalContext(resume);
+  const decisionTrace = restoreEffectCausalTrace(
+    causalCtx,
+    resume.pending.source.causalTrace ?? causalCtx.causal?.trace,
+  );
+  completeEffectCausalTrace(
+    state,
+    decisionTrace,
+    causalCtx.source.player,
+    'cancel',
+    { type: 'state', state: 'negated' },
+  );
+}
+
+type ChooseInterceptSurfaceResult = 'none' | 'pending';
+
+function surfaceNextChooseIntercept(
+  state: GameState,
+  resume: ChooseInterceptResume,
+): ChooseInterceptSurfaceResult {
+  while (true) {
+    const guards = resume.remainingGuards ?? [];
+    if (guards.length === 0) return 'none';
+    const turnOwner = guards.find(guard => chooseInterceptOwner(guard) === state.turn.player);
+    const ownerPlayer = turnOwner ? state.turn.player : chooseInterceptOwner(guards[0]!);
+    const ownerChoices = guards.filter(guard => chooseInterceptOwner(guard) === ownerPlayer);
+    if (ownerChoices.length === 1) {
+      const next = ownerChoices[0]!;
+      if (chooseInterceptResolution(next) === 'cancel') {
+        markChooseInterceptBatchCancelled(state, resume.batchToken);
+        consumeChooseInterceptBatchAuthority(state, resume.batchToken, next);
+        resume.remainingGuards = guards.filter(guard => guard !== next);
+        resume.effectCancelled = true;
+        continue;
+      }
+      pushPendingChooseInterceptSide(next, {
+        ...resume,
+        remainingGuards: guards.filter(guard => guard !== next),
+      });
+      return 'pending';
+    }
+    pushPendingChooseInterceptSide({
+      kind: 'order',
+      player: ownerPlayer,
+      choices: ownerChoices,
+    }, resume);
+    return 'pending';
+  }
+}
+
+/** Choose which same-owner simultaneous immediate reaction resolves next. */
+export function applyChooseInterceptOrder(
+  state: GameState,
+  pending: PendingChooseInterceptSide,
+  protectorUid: string,
+  targetUid: string,
+  setCardInstanceId?: string,
+  abilityOrigin?: DeclaredAbilityHostOrigin,
+  abilityIndex?: number,
+): void {
+  if (stopIfGameAlreadyEnded(state)) return;
+  if (pending.kind !== 'order') throw new Error('chooseIntercept: expected order decision');
+  const resume = _peekPendingChooseInterceptResume();
+  if (!resume || !resume.guard || !sameChooseInterceptSide(resume.guard, pending)) {
+    throw new Error('chooseIntercept: stale order');
+  }
+  if ((abilityOrigin === undefined) !== (abilityIndex === undefined)) {
+    throw new Error('chooseIntercept: partial ability occurrence');
+  }
+  const visibleCandidates = pending.choices.filter(choice => (
+    choice.protector.uid === protectorUid
+    && choice.targetUid === targetUid
+    && choice.protector.setCardInstanceId === setCardInstanceId
+  ));
+  const visible = abilityOrigin !== undefined
+    ? visibleCandidates.find(choice => (
+        choice.protector.abilityOrigin === abilityOrigin
+        && choice.protector.abilityIndex === abilityIndex
+      ))
+    : visibleCandidates.length === 1 ? visibleCandidates[0] : undefined;
+  const selected = (resume.remainingGuards ?? []).find(guard => (
+    visible !== undefined && sameChooseInterceptResponse(guard, visible)
+  ));
+  if (!selected) throw new Error('chooseIntercept: invalid order choice');
+  const consumed = _takePendingChooseInterceptResume();
+  if (!consumed) return;
+  const causalCtx = chooseInterceptCausalContext(consumed);
+  const decisionTrace = restoreEffectCausalTrace(
+    causalCtx,
+    consumed.pending.source.causalTrace ?? causalCtx.causal?.trace,
+  );
+  recordEffectCausalDecision(state, decisionTrace, pending.player);
+  const resumedPending: PendingEffectPickSide = decisionTrace
+    ? { ...consumed.pending, source: { ...consumed.pending.source, causalTrace: cloneCausalEffectTrace(decisionTrace) } }
+    : consumed.pending;
+  const nextResume: ChooseInterceptResume = {
+    ...consumed,
+    pending: resumedPending,
+    remainingGuards: (consumed.remainingGuards ?? []).filter(guard => guard !== selected),
+  };
+  if (chooseInterceptResolution(selected) === 'cancel') {
+    markChooseInterceptBatchCancelled(state, consumed.batchToken);
+    consumeChooseInterceptBatchAuthority(state, consumed.batchToken, selected);
+    nextResume.effectCancelled = true;
+    const surfaceResult = surfaceNextChooseIntercept(state, nextResume);
+    if (surfaceResult === 'pending') {
+      markEffectCausalAwaitingResume(decisionTrace);
+      markEffectCausalAwaitingResume(resumedPending.source.causalTrace);
+    } else {
+      cancelChooseIntercept(state, nextResume);
+    }
+    return;
+  }
+  markEffectCausalAwaitingResume(decisionTrace);
+  markEffectCausalAwaitingResume(resumedPending.source.causalTrace);
+  pushPendingChooseInterceptSide(selected, nextResume);
+}
+
 /** Resolve the dedicated discard-or-cancel response. Not discarding cancels the selected effect. */
 export function applyChooseInterceptResponse(
   state: GameState,
@@ -1241,33 +1750,44 @@ export function applyChooseInterceptResponse(
   discardIndex: number | null,
 ): void {
   if (stopIfGameAlreadyEnded(state)) return;
+  if (pending.kind === 'order') throw new Error('chooseIntercept: expected response decision');
   const resume = _peekPendingChooseInterceptResume();
   if (!resume) return;
-  const cards = state.players[pending.player].hand;
   if (resume.guard && !sameChooseInterceptSide(resume.guard, pending)) {
     throw new Error('chooseIntercept: stale response');
   }
+  if (chooseInterceptResolution(pending) === 'cancel' && discardIndex !== null) {
+    throw new Error('chooseIntercept: unconditional cancel cannot discard');
+  }
+  const cards = state.players[pending.player].hand;
   if (discardIndex !== null
     && (!Number.isInteger(discardIndex) || discardIndex < 0 || discardIndex >= cards.length)) {
     throw new Error('chooseIntercept: invalid discard occurrence');
   }
   const consumed = _takePendingChooseInterceptResume();
   if (!consumed) return;
-  const causalCtx = consumed.pending.continuation?.ctx ?? {
-    source: {
-      cardId: consumed.pending.source.cardId,
-      uid: consumed.pending.source.uid ?? '',
-      abilityId: consumed.pending.source.abilityId,
-      player: consumed.pending.ownerPlayer ?? consumed.pending.player,
-      area: consumed.pending.source.area ?? 'scene',
-      ...(consumed.pending.source.resolutionKind ? { resolutionKind: consumed.pending.source.resolutionKind } : {}),
-    },
-    bindings: {},
-  };
+  const cancelsEffect = chooseInterceptResolution(pending) === 'cancel' || discardIndex === null;
+  if (cancelsEffect) markChooseInterceptBatchCancelled(state, consumed.batchToken);
+  consumeChooseInterceptBatchAuthority(state, consumed.batchToken, pending);
+  const causalCtx = chooseInterceptCausalContext(consumed);
   const decisionTrace = restoreEffectCausalTrace(causalCtx, consumed.pending.source.causalTrace ?? causalCtx.causal?.trace);
   recordEffectCausalDecision(state, decisionTrace, pending.player);
-  if (discardIndex === null) {
-    completeEffectCausalTrace(state, decisionTrace, causalCtx.source.player, 'cancel', { type: 'state', state: 'negated' });
+  const resumedPending: PendingEffectPickSide = decisionTrace
+    ? { ...consumed.pending, source: { ...consumed.pending.source, causalTrace: cloneCausalEffectTrace(decisionTrace) } }
+    : consumed.pending;
+  if (cancelsEffect) {
+    const nextResume: ChooseInterceptResume = {
+      ...consumed,
+      pending: resumedPending,
+      effectCancelled: true,
+    };
+    const surfaceResult = surfaceNextChooseIntercept(state, nextResume);
+    if (surfaceResult === 'pending') {
+      markEffectCausalAwaitingResume(decisionTrace);
+      markEffectCausalAwaitingResume(resumedPending.source.causalTrace);
+    } else {
+      cancelChooseIntercept(state, nextResume);
+    }
     return;
   }
   const cardId = cards[discardIndex]!;
@@ -1280,12 +1800,27 @@ export function applyChooseInterceptResponse(
       targets: [{ kind: 'zone', side: pending.player, zone: 'remove' }],
       outcome: { type: 'move', from: 'hand', to: 'remove', count: 1 },
     });
-    const resumedPending: PendingEffectPickSide = decisionTrace
+    const paymentPending: PendingEffectPickSide = decisionTrace
       ? { ...consumed.pending, source: { ...consumed.pending.source, causalTrace: cloneCausalEffectTrace(decisionTrace) } }
       : consumed.pending;
+    const nextResume: ChooseInterceptResume = {
+      ...consumed,
+      pending: paymentPending,
+    };
+    const surfaceResult = surfaceNextChooseIntercept(state, nextResume);
+    if (surfaceResult === 'pending') {
+      markEffectCausalAwaitingResume(decisionTrace);
+      markEffectCausalAwaitingResume(paymentPending.source.causalTrace);
+      return;
+    }
+    if (nextResume.effectCancelled === true) {
+      cancelChooseIntercept(state, nextResume);
+      return;
+    }
+    clearChooseInterceptBatchAuthority(state, nextResume.batchToken);
     applyPickAndContinuation(
       state,
-      resumedPending,
+      paymentPending,
       consumed.pickedUid,
       consumed.pickedUids,
       consumed.switchRemoveUid,
@@ -1296,13 +1831,32 @@ export function applyChooseInterceptResponse(
   }, decisionTrace);
 }
 
-function sameChooseInterceptSide(left: PendingChooseInterceptSide, right: PendingChooseInterceptSide): boolean {
+function sameChooseInterceptResponse(
+  left: PendingChooseInterceptResponseSide,
+  right: PendingChooseInterceptResponseSide,
+): boolean {
   return left.player === right.player
+    && chooseInterceptResolution(left) === chooseInterceptResolution(right)
+    && chooseInterceptOwner(left) === chooseInterceptOwner(right)
     && left.targetUid === right.targetUid
     && left.publicHandRevealToken === right.publicHandRevealToken
     && left.protector.uid === right.protector.uid
     && left.protector.cardId === right.protector.cardId
-    && left.protector.abilityId === right.protector.abilityId;
+    && left.protector.abilityId === right.protector.abilityId
+    && left.protector.abilityOrigin === right.protector.abilityOrigin
+    && left.protector.abilityIndex === right.protector.abilityIndex
+    && left.protector.setCardInstanceId === right.protector.setCardInstanceId;
+}
+
+function sameChooseInterceptSide(left: PendingChooseInterceptSide, right: PendingChooseInterceptSide): boolean {
+  if (left.kind === 'order' || right.kind === 'order') {
+    return left.kind === 'order'
+      && right.kind === 'order'
+      && left.player === right.player
+      && left.choices.length === right.choices.length
+      && left.choices.every((choice, index) => sameChooseInterceptResponse(choice, right.choices[index]!));
+  }
+  return sameChooseInterceptResponse(left, right);
 }
 
 /**
@@ -1321,9 +1875,19 @@ export function applyPickSkipAndContinuation(
   if (pending.nMin > 0) {
     throw new Error(`${pending.atomVerb}: below-minimum selection`);
   }
-  consumeQueuedPick(pending);
   const head = pending.continuation;
   let decisionTrace = cloneCausalEffectTrace(pending.source.causalTrace);
+  if (!isLiveDeckRevealWindow(state, pending)) {
+    consumeQueuedPick(state, pending);
+    recordEffectCausalDecision(state, decisionTrace, pending.player);
+    mutate.log.append(state, {
+      ts: Date.now(), player: pending.player, turn: state.turn.number,
+      action: 'effect:pick', result: 'stale-selection',
+    });
+    completeEffectCausalTrace(state, decisionTrace, pending.ownerPlayer ?? pending.player, 'fizzle', { type: 'state', state: 'fizzled' });
+    return;
+  }
+    consumeQueuedPick(state, pending);
   recordEffectCausalDecision(state, decisionTrace, pending.player);
   if (head) decisionTrace = restoreEffectCausalTrace(head.ctx, decisionTrace);
   // BUG-111 #2 (2026-06-16): runDeclinedAtom で declined head atom を再実行するか分岐する。
@@ -1342,18 +1906,17 @@ export function applyPickSkipAndContinuation(
       // applyPickAndContinuation と同一の保存 ctx 共有 (BUG-107) — 空 bind が remainder から見える
       withStructuredCausalResolution(state, () => {
         runEffect(state, resolvedAtom as never, head.ctx);
-        runAllUntilEmpty(state);
+        // BUG-334: deckRevealUntil only resolves its held window bindings.
+        // Draining here can advance a pending end-turn transition and remove a
+        // partner-area source before the saved sequence remainder runs.
+        if (pending.atomVerb !== 'deckRevealUntil') runAllUntilEmpty(state);
       }, decisionTrace);
     } else {
       event.queue(
         state,
         resolvedAtom as never,
         // BUG-175: decline 経路も同一座標系 (所有者) で再実行する
-        {
-          player: pending.ownerPlayer ?? pending.player,
-          cardId: pending.source.cardId,
-          ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
-        },
+        resumedEntrySource(pending.source, pending.ownerPlayer ?? pending.player),
         'effect:pick-resolved',
         { picked: null, source: pending.source },
         undefined,
@@ -1421,6 +1984,10 @@ export function applyChoiceAndContinuation(
       abilityId: pending.source.abilityId,
       player: sourcePlayer,
       area: pending.source.area ?? 'scene',
+      ...(pending.source.setCardId !== undefined ? { setCardId: pending.source.setCardId } : {}),
+      ...(pending.source.setCardInstanceId !== undefined ? { setCardInstanceId: pending.source.setCardInstanceId } : {}),
+      ...(pending.source.abilityOrigin !== undefined ? { abilityOrigin: pending.source.abilityOrigin } : {}),
+      ...(pending.source.abilityIndex !== undefined ? { abilityIndex: pending.source.abilityIndex } : {}),
       ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
     },
     bindings: resumeBindings as EffectCtx['bindings'],
@@ -1436,7 +2003,7 @@ export function applyChoiceAndContinuation(
   const decisionTrace = restoreEffectCausalTrace(ctx, pending.source.causalTrace);
   recordEffectCausalDecision(state, decisionTrace, pending.player);
   const pendingBeforeResolve = snapshotContinuationPending();
-  const resolved = withChoiceSwitch(resolveEffectPicks(state, resumeEffect, ctx, {
+  const resolved = withSceneEnterSwitchChoice(resolveEffectPicks(state, resumeEffect, ctx, {
     byPlayer: pending.player,
     humanChooser: true,
     source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId },
@@ -1451,12 +2018,7 @@ export function applyChoiceAndContinuation(
   event.queue(
     state,
     resolved as never,
-    {
-      player: sourcePlayer,
-      uid: pending.source.uid,
-      cardId: pending.source.cardId,
-      ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
-    },
+    resumedEntrySource(pending.source, sourcePlayer),
     'effect:choice-resolved',
     { choiceIndex, source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId } },
     // BUG-114: 復元した contact bindings を queue の bindings 引数 (6th) に渡し、entry → runtime ctx.bindings
@@ -1504,6 +2066,10 @@ export function applyOptionalAndContinuation(
       abilityId: pending.source.abilityId,
       player: pending.ownerPlayer ?? pending.player,
       area: pending.source.area ?? 'scene',
+      ...(pending.source.setCardId !== undefined ? { setCardId: pending.source.setCardId } : {}),
+      ...(pending.source.setCardInstanceId !== undefined ? { setCardInstanceId: pending.source.setCardInstanceId } : {}),
+      ...(pending.source.abilityOrigin !== undefined ? { abilityOrigin: pending.source.abilityOrigin } : {}),
+      ...(pending.source.abilityIndex !== undefined ? { abilityIndex: pending.source.abilityIndex } : {}),
       ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
     },
     bindings: {},
@@ -1546,12 +2112,7 @@ export function applyOptionalAndContinuation(
   event.queue(
     state,
     resolved as never,
-    {
-      player: pending.ownerPlayer ?? pending.player,
-      uid: pending.source.uid,
-      cardId: pending.source.cardId,
-      ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
-    },
+    resumedEntrySource(pending.source, pending.ownerPlayer ?? pending.player),
     'effect:optional-resolved',
     optTriggerPayload ?? { run, source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId } },
     // engine wave-18: 復元した contact bindings を queue 6th arg で entry → runtime ctx.contact へ伝達
@@ -1663,6 +2224,58 @@ function chooseAiPick(
   */
 }
 
+/** Supply the mandatory own-scene victim(s) after an autonomous scene-entry selection. */
+function chooseAiSceneEnterSwitchVictims(
+  state: GameState,
+  pending: PendingEffectPickSide,
+  selectedCount: number,
+  policy?: { chooseAtomTarget?: AtomTargetChooser },
+): string[] {
+  if (pending.atomVerb !== 'sceneEnter'
+    || isSceneEnterSwitchPickArgs(pending.atomArgs)
+    || selectedCount < 1) return [];
+  const owner = pending.ownerPlayer ?? pending.player;
+  const relativeEnterPlayer = (pending.atomArgs as { player?: unknown }).player;
+  const enterPlayer = relativeEnterPlayer === 'self'
+    ? owner
+    : relativeEnterPlayer === 'opp'
+      ? (owner === 'self' ? 'opp' : 'self')
+      : null;
+  if (enterPlayer === null) return [];
+  const required = Math.max(
+    0,
+    state.players[enterPlayer].scene.length + selectedCount - sceneCap(state, enterPlayer),
+  );
+  if (required === 0) return [];
+  const candidates: Candidate[] = state.players[enterPlayer].scene.map(character => ({
+    kind: 'char',
+    uid: character.uid,
+    cardId: character.cardId,
+    player: enterPlayer,
+  }));
+  if (candidates.length < required) return [];
+
+  const selected: string[] = [];
+  for (let index = 0; index < required; index += 1) {
+    const remaining = candidates.filter(candidate => (
+      candidate.kind === 'char' && !selected.includes(candidate.uid)
+    ));
+    const chosen = policy?.chooseAtomTarget?.(
+      state,
+      pending.atomVerb,
+      { ...pending.atomArgs, __sceneEnterSwitchVictim: true },
+      remaining,
+      enterPlayer,
+    );
+    const preferred = (chosen as { uid?: string } | null | undefined)?.uid;
+    const victim = remaining.find(candidate => candidate.kind === 'char' && candidate.uid === preferred)
+      ?? remaining[0];
+    if (!victim || victim.kind !== 'char') return [];
+    selected.push(victim.uid);
+  }
+  return selected;
+}
+
 /**
  * AI/CPU 経路で __pendingEffectPickQueue を順次 drain する。PA 短縮形 atom 等が runtime に
  * tryRePickFromAtom で積んだ pick を heuristic 解決し、continuation も進める (BUG-109)。
@@ -1693,7 +2306,9 @@ export function drainAiEffectPicks(
       i++; // human 所有 → 温存 (同一所有者内の FIFO 順は維持される)
       continue;
     }
-    q.splice(i, 1); // 解決対象を queue から取り出す (humanSide null なら i=0 のままで従来 shift と同一)
+    // Exact removal also synchronizes the legacy single-slot mirror.  Direct
+    // splice left a false persisted pending after the final autonomous pick.
+    removePendingEffectPickSide(pending);
     const { pickedUid, pickedUids } = chooseAiPick(state, pending, policy);
     if (pickedUid === null) {
       // cluster14: skipResolvesAtom 付き pending (0枚=「〜まで」で必須 continuation あり、B09010 の
@@ -1714,7 +2329,21 @@ export function drainAiEffectPicks(
       // 候補 0 + continuation 無し → 純粋 skip。
       continue;
     }
-    applyPickAndContinuation(state, pending, pickedUid, pickedUids);
+    const switchVictims = chooseAiSceneEnterSwitchVictims(
+      state,
+      pending,
+      pickedUids?.length ?? 1,
+      policy,
+    );
+    const multiSceneEnter = (pending.atomArgs as { cardIds?: unknown }).cardIds === '$pick.cardIds';
+    applyPickAndContinuation(
+      state,
+      pending,
+      pickedUid,
+      pickedUids,
+      !multiSceneEnter && switchVictims.length === 1 ? switchVictims[0] : undefined,
+      multiSceneEnter && switchVictims.length > 0 ? switchVictims : undefined,
+    );
     if (state.gameResult !== undefined) break;
   }
 }

@@ -14,8 +14,8 @@
 //   - a2「【解決編】【宣言】【ターン1】〚裏向きの証拠を2つ表向きにする〛」=> declared, condition caseStatus 解決編,
 //     limit turn1, cost flipFaceUpEvidence{n:{min:2,max:2}} (B09111 a2 同型。「2つ表向きにできない場合は使用不可」
 //     = canPay 床)。
-//   - a2「カード名を1つ指定し」=> declareName{bind:'named'} (W6 step1 verb、UI=DeclareCardNameModal→
-//     AbilityCostParams.declaredName、AI=未供給→空文字→後段 maxN=0/filter 不一致)。
+//   - a2「カード名を1つ指定し」=> declareName{bind:'named',domain:'registered-card-name'}
+//     (UI=DeclareCardNameModal、AI=登録名を決定的供給、Wave107)。
 //   - a2「自分の現場にいる指定したカード名のキャラ1枚につき、自分のデッキのカードを上から1枚見る」=>
 //     deckRevealUntil{player:'self', maxN:{dyn:'$declared.named.sceneNameCount'}, ...} (WB2 engine: maxN {dyn}
 //     dispatch-time 解決 + pre-walk $declared deferral。sceneNameCount = ctx.source.player の現場で宣言名を
@@ -52,8 +52,8 @@ const a2: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      // カード名を1つ指定 (供給 = declaredName costParam / AI 未供給 → 空文字)
-      { kind: 'atom', verb: 'declareName', args: { bind: 'named' } },
+      // カード名を1つ指定 (登録済み全カード名から供給)
+      { kind: 'atom', verb: 'declareName', args: { bind: 'named', domain: 'registered-card-name' } },
       // 指定名キャラ1枚につきデッキ上から1枚見る (maxN = 現場の指定名キャラ数、{dyn} dispatch 解決)。
       //   その中の指定名キャラ 1 枚を $matched、残りを $revealed に bind。
       {
@@ -72,7 +72,15 @@ const a2: AbilityDef = {
       {
         kind: 'conditional',
         if: { kind: 'bound', key: '$matched', presence: 'matched' },
-        then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } },
+        then: {
+          kind: 'atom',
+          verb: 'handAddFromDeck',
+          args: {
+            player: 'self',
+            cardId: '$matched.cardId',
+            presentation: 'public-selected-card',
+          },
+        },
       },
       // 残りを好きな順番でデッキの下へ
       { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },

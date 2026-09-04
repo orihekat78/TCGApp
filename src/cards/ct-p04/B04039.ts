@@ -4,7 +4,7 @@
 // 公式テキスト:
 //   【ターン1】自分の現場にいる〚カード名［白馬探］〛が推理かアクションしたとき、カードを1枚引く。
 //
-// a1: 非 selfOnly。reasoning:end + action:declare の multi-hook を matcherCondition triggerCharMatches で gate。
+// a1: 非 selfOnly。reasoning:after-sleep + action:declare の multi-hook を matcherCondition triggerCharMatches で gate。
 //   「自分側の[白馬探]が推理 or アクションしたとき」。action:declare payload も uid/player を持つよう拡張済のため
 //   triggerCharMatches が両 hook で機能する。limit turn:1 は ability.id 単位 → 共有【ターン1】。
 
@@ -16,7 +16,7 @@ const a1: AbilityDef = {
   scope: 'on-scene',
   limit: { kind: 'turn', n: 1 },
   trigger: {
-    hook: 'reasoning:end',
+    hook: 'reasoning:after-sleep',
     hooks: ['action:declare'],
     // 自分側の[白馬探]が推理 or アクションしたとき (rules/11, 22, 19 分割名対応)
     matcherCondition: { kind: 'triggerCharMatches', side: 'self', filter: { cardName: '白馬探' } },

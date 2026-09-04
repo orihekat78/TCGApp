@@ -7,6 +7,11 @@ scope: engine
 
 ## MVP 監査で確定した triggered ability 2バグの修正
 
+> 2026-08-26訂正: B06091公式Q&Aにより、D11016は「自身がガード」ではなく
+> 「自身を指定したアクションがガードされたとき」と判明。以下のBUG-097記述は当時の解釈であり、
+> D11016/B06091は`triggerCharMatches(payloadKey:'targetUid')`へ修正済み。
+> `guardedBySelf`自体はB09014の「このキャラがガードしたとき」に使用する。
+
 6レンズ MVP デッドコード監査で確定:
 
 - **BUG-096 (デッドコード)**: triggered ability の `limit:{kind:'turn',n}` (【ターン①】) が engine 未 enforcement。

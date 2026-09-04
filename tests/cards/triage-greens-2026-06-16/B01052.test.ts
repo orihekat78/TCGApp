@@ -14,13 +14,14 @@
 // 実 engine flow で駆動 (verb を直接呼ばない):
 //   handUseCard(self, 'B01052') で B01052 を手札 → 現場に登場させ、enter hook を emit する
 //   (= 公式の「手札の使用」経路。enter-sleep-self-batch.test.ts と同じ機構)。
-//   triggered listener が selfOnly 'enter' を a1 / a2 両方に dispatch し、runAllUntilEmpty で解決。
+//   CardDef.entersSleep が enter emit 前に sleep を確定し、triggered listener は genuine a2 のみを
+//   selfOnly 'enter' で dispatchして runAllUntilEmpty で解決。
 //   a2 の deckRevealUntil は chooseMatch なし = forced reveal (tier-1, pick は surface しない)
 //   ため、検証は runAllUntilEmpty 後の **盤面 state** で行う (pickQueue ではない)。
 //
 // 検証する filter / 条件 (BUG-117/118 lesson — DSL に書いても engine が評価する保証はない):
-//   (a1)    sceneSetState{uid:'$self', state:'sleep'} を engine が実評価 — B01052 自身が
-//           sleep 状態で現場に登場する (active で登場しない)。
+//   (entry) CardDef.entersSleep を engine が実評価 — B01052 自身が最初から sleep 状態で
+//           現場に登場する (observerへactiveを公開しない)。
 //   (a2-i)  deckRevealUntil filter{kind:character, levelMax:6} に **合致**する top deck カード
 //           (level5 character) → sceneEnter で現場へ登場 (handAddFromDeck else は不発、相互排他)。
 //   (a2-ii) DECOY (levelMax:6 違反): top deck = level7 の character → 「それ以外」= 手札へ。
@@ -46,7 +47,7 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
-import { pendingOwnerOrderGroup, runAllUntilEmpty } from '@/engine/resolve/stack';
+import { runAllUntilEmpty } from '@/engine/resolve/stack';
 import { handUseCard } from '@/engine/flow/main/hand-use-card';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import type { PendingEffectPickSide } from '@/engine/effect/resolve-picks';
@@ -62,15 +63,6 @@ type G = {
 const g = globalThis as G;
 const pickQueue = (): PendingEffectPickSide[] => g.__pendingEffectPickQueue ?? [];
 const setHuman = (s: 'self' | 'opp' | null) => { g.__humanPlayerSide = s; };
-function confirmOwnerOrder(s: GameState): GameState {
-  return produce(s, (d) => {
-    const group = pendingOwnerOrderGroup(d, 'self');
-    expect(group, 'same-timing enter effects pause before forced reveal').toHaveLength(2);
-    group.forEach((entry, order) => { entry.ownerChosenOrder = order; entry.ownerOrderConfirmed = true; });
-    runAllUntilEmpty(d);
-  });
-}
-
 // 合成 def 群 (id prefix DEC_B01052_ で衝突回避)。abilities 空 = 登場しても再帰トリガー無し。
 const FB = { type: 'card-back' as const, cardId: 'FB' };
 
@@ -127,8 +119,8 @@ describe('B01052 工藤優作 — gate5 runtime behavior', () => {
     setHuman(null);
   });
 
-  // ===== a1: 自己スリープ登場 =====
-  it('a1: handUseCard で B01052 が現場に登場し、a1 で sleep 状態になる (active で登場しない)', () => {
+  // ===== inherent sleep entry =====
+  it('entersSleep: handUseCard で B01052 が sleep 状態のまま現場に登場する', () => {
     let s = baseForHandUse(['d1', 'd2']); // deck top は a2 で公開されるが abilities 空なので無害
     registerCardDef(charDef('d1', 5)); // top=level5 char (a2 で登場するが a1 検証には無関係)
     s = produce(s, (d) => {
@@ -137,7 +129,7 @@ describe('B01052 工藤優作 — gate5 runtime behavior', () => {
     });
     const me = s.players.self.scene.find((c) => c.cardId === 'B01052');
     expect(me, 'B01052 が現場に登場').toBeTruthy();
-    expect(me?.state, 'a1: sleep 状態で登場 (active ではない)').toBe('sleep');
+    expect(me?.state, 'sleep 状態で登場 (active ではない)').toBe('sleep');
     expect(s.players.self.hand, '手札から消費').not.toContain('B01052');
   });
 
@@ -203,20 +195,16 @@ describe('B01052 工藤優作 — gate5 runtime behavior', () => {
       handUseCard(d, 'self', 'B01052');
       runAllUntilEmpty(d);
     });
-    s = confirmOwnerOrder(s);
     expect(pickQueue().length, 'deckRevealUntil は chooseMatch 無し forced reveal → pick 無し').toBe(0);
     // 結果は盤面で確定済み (C_LV5 が登場)。
     expect(s.players.self.scene.some((c) => c.cardId === C_LV5), 'forced: level5 char は登場').toBe(true);
   });
 
   // ===== descriptor 構造 sanity =====
-  it('descriptor: a1=triggered enter(selfOnly) sceneSetState self->sleep, a2=triggered enter(selfOnly) sequence(deckRevealUntil->2 conditional)', () => {
-    const [a1, a2] = B01052.abilities;
-    // a1
-    expect(a1.type).toBe('triggered');
-    expect(a1.trigger).toMatchObject({ hook: 'enter', selfOnly: true });
-    expect(a1.effect).toMatchObject({ kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } });
-    // a2
+  it('descriptor: inherent sleep entry + sparse a2 enter sequence(deckRevealUntil->2 conditional)', () => {
+    expect(B01052.entersSleep).toBe(true);
+    expect(B01052.abilities.map(ability => ability.id)).toEqual(['a2']);
+    const [a2] = B01052.abilities;
     expect(a2.type).toBe('triggered');
     expect(a2.trigger).toMatchObject({ hook: 'enter', selfOnly: true });
     const eff = a2.effect as { kind: string; steps: Array<Record<string, unknown>> };

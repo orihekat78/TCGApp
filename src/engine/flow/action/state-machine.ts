@@ -2,15 +2,19 @@
 // spec: .claude/specs/engine-api-flow-control.md
 // rules: 07-action-flow.md, 08-contact.md, 22-qa-action-contact.md
 //
-// 9 フェーズ:
-//   declared → guard-window → leave-resolution → contact-pending →
+// 状態遷移:
+//   declared → guard-window → leave-resolution → contact-pending → contact-order-pending →
 //   action-1 → action-2 → (action-1-redo if applicable) → judge → contact-end → action-end
 //
 // ActionContext は GameState に保持する。save/replay/produce rollback の境界を越えても
 // 進行中アクションと採番が一致し、別matchへmodule-global stateが漏れない。
 //
 // 注意: caller は produce(state, draft => { flow.action.declare(draft, ...); ... }) で呼ぶ。
-
+import {
+  continuePendingContactOrder,
+  endContactIfParticipantMissing,
+  hasMissingContactParticipant,
+} from './contact-order-continuation.js';
 import type { GameState, ActionContext, ActionPhase } from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
 import { clearActionScopedState, clearContactScopedState } from '../../mutate/action-scopes.js';
@@ -20,7 +24,7 @@ import { def as readDef } from '../../read/def.js';
 import { canActionAgainstChar, canActionAgainstCase } from '../main/action.js';
 import { canGuard, mustGuardCandidates } from '../guard.js';
 import { buildContactBindings } from '../contact.js';
-import { gainSelfEvidence } from '../action-case.js';
+import { finalizePendingHiramekiEvidenceRemoval, gainSelfEvidence } from '../action-case.js';
 import { computeOrder } from './order.js';
 import { contextForState } from './context-registry.js';
 import { withStructuredCausalResolution } from '../../log/effect-causal.js';
@@ -258,7 +262,8 @@ export function declare(state: GameState, byUid: string, target: Target): Action
  * contact-pending 以降 (contact:start emit / buildContactBindings / computeOrder / cutin / 変装 /
  * AP 判定) は既存 advance を無改造で再利用 (「【カットイン】や【変装】も使用できます」)。
  *
- * @returns 生成した ax ('action-1' 着地済)。actor/target 不在は null (rules/15 0枚選択と同 posture)
+ * @returns 生成した ax。contact:start 効果なしなら action-1、効果解決待ちは
+ * contact-order-pending。actor/target 不在は null (rules/15 0枚選択と同 posture)
  */
 export function startFromEffect(state: GameState, byUid: string, targetUid: string): ActionContext | null {
   const byPlayer = findActorPlayer(state, byUid);
@@ -508,6 +513,17 @@ export function abortIfMissing(state: GameState, ax: ActionContext): boolean {
   return false;
 }
 
+/** Reconcile normal actions after every declaration-effect resolution boundary. */
+export function abortMissingBeforeGuardActions(state: GameState): boolean {
+  let aborted = false;
+  const guardWindows = Object.values(state.actionContexts ?? {})
+    .filter((context) => context.phase === 'guard-window');
+  for (const context of guardWindows) {
+    if (abortIfMissing(state, context)) aborted = true;
+  }
+  return aborted;
+}
+
 /**
  * advance — フェーズ遷移
  *
@@ -516,6 +532,12 @@ export function abortIfMissing(state: GameState, ax: ActionContext): boolean {
 export function advance(state: GameState, ax: ActionContext): void {
   ax = contextForState(state, ax);
   const phase = ax.phase;
+
+  // rules/08 §6: an effect used in any contact action window may move either
+  // participant out of the field. End before exposing the next action window
+  // or AP judge. The pre-order path uses the same canonical presence check.
+  if ((phase === 'action-1' || phase === 'action-2' || phase === 'action-1-redo')
+    && endContactIfParticipantMissing(state, ax)) return;
 
   if (phase === 'declared') {
     ax.phase = 'guard-window';
@@ -575,23 +597,10 @@ export function advance(state: GameState, ax: ActionContext): void {
       causalCorrelationEventId: ax.contactCausalEventId,
     });
 
-    // 行動順 (AP は snapshot 後だが、ここでは未スナップショットでも先に order を計算)
-    // -> snapshotAP は judge 直前。ここでは即時 AP 参照で十分
-    const aAP = readEffectiveAp(state, aUid);
-    const bAP = readEffectiveAp(state, bUid);
-    const order = computeOrder(aAP, bAP, { aUid, bUid });
-    ax.firstUid = order.firstUid;
-    ax.secondUid = order.secondUid;
-
-    event.emit(
-      state,
-      'contact:order-set',
-      { firstUid: order.firstUid, secondUid: order.secondUid },
-      { player: ax.byPlayer, uid: ax.byUid },
-      { causalCorrelationEventId: ax.contactCausalEventId },
-    );
-
-    ax.phase = 'action-1';
+    // 「コンタクトしたとき」効果をすべて解決してから、その結果の AP で行動順を決める。
+    // 効果が人間の選択で止まる場合も GameState 上の phase から resolver が再開する。
+    ax.phase = 'contact-order-pending';
+    continuePendingContactOrder(state);
     return;
   }
 
@@ -625,6 +634,15 @@ export function advance(state: GameState, ax: ActionContext): void {
   }
 
   if (phase === 'contact-end') {
+    if (ax.pendingHiramekiEvidenceRemoval?.decisionResolved === false) return;
+    // An optional Hirameki keeps the removed evidence card owned by this
+    // ActionContext until its effect (including nested public decisions) has
+    // finished. Commit that exact card before the normal case evidence gain.
+    withStructuredCausalResolution(
+      state,
+      () => finalizePendingHiramekiEvidenceRemoval(state, ax),
+      ax.causalTrace,
+    );
     if (ax.deferredCaseEvidenceGain) {
       withStructuredCausalResolution(state, () => gainSelfEvidence(state, ax), ax.causalTrace);
       delete ax.deferredCaseEvidenceGain;
@@ -669,10 +687,12 @@ export const action = {
   passGuard,
   advance,
   abortIfMissing,
+  abortMissingBeforeGuardActions,
   abortForTerminal,
   isMissingBeforeGuard,
   snapshotAP,
   computeOrder,
+  hasMissingContactParticipant,
   candidates: targetCandidates,
   mustTargetCandidates,
   registerTargetExpander,

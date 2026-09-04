@@ -1,3 +1,13 @@
+// qa: card:B07015:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0
+// qa: card:B07015:deda73104a7b26ec808c70c48c7b6fb20185b35abd4c60bb8f662253163f6d32
+// qa: card:B08026:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0
+// qa: card:B08026:deda73104a7b26ec808c70c48c7b6fb20185b35abd4c60bb8f662253163f6d32
+// qa: card:B08026:88657e7fe4ee5ed1d0b324779359cc70d3c0a927452f6d1836b6e38115d6c85d
+// qa: card:B08026:b4bf4cb52317e58384fb94eec13cba7f5715743eeebd64c3e143c32bf16f668e
+// qa: card:B05042:b3ddda908a9f512806c78210f38e86cb77d2ddf015a14dc9b90c8cdc73fabcff
+// qa: card:D10005:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0
+// qa: card:B07026:aa6cee9184eb750b4bbdf101a1f9e34f98db2949c94973f4c6381b3e616c6ae3
+// qa: card:B07026:e2083b017bfa1ea6d00eeefc6f22cfd8f3659e5ed90b0033c3b72877f355391a
 // tests/cards/step12-batch1
 // CARD PHASE step12 batch1 probe — mega-wave W1-W6 解禁 consumer 13枚の実 def 第2gate 再certify
 // (engine 変更 0)。実 CardDef を registry に登録し、production 経路 (candidates / cost.canPay /
@@ -12,11 +22,12 @@ import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/l
 import { registerReservedEffectListener, _resetReservedEffectsRegistered } from '@/engine/listeners/reserved-effects';
 import { register as registerCardDef, _resetRegistry } from '@/engine/read/def';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
-import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
+import { _clearPendingEffectPickQueue, _peekPendingEffectPickQueueLength, resolveEffectPicks } from '@/engine/effect/resolve-picks';
+import { _drainPendingEffectPickSide } from '@/engine/effect/pending-state';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { mutate as mutateAll } from '@/engine/mutate/index';
 import { run as runEffect } from '@/engine/effect/resolver';
-import { drainAiEffectPicks, _drainAllEffectPicksForTest } from '@/engine/effect/apply-pick';
+import { applyPickAndContinuation, drainAiEffectPicks, _drainAllEffectPicksForTest } from '@/engine/effect/apply-pick';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { endTurn, startTurn } from '@/engine/flow/turn';
 import { runAutoPhase } from '@/engine/flow/auto-phase';
@@ -39,9 +50,12 @@ import { B08069 } from '@/cards/ct-p08/B08069';
 import { B03126 } from '@/cards/ct-p03/B03126';
 import { B02088 } from '@/cards/ct-p02/B02088';
 import { B07026 } from '@/cards/ct-p07/B07026';
+import { B07015 } from '@/cards/ct-p07/B07015';
 import { B05042 } from '@/cards/ct-p05/B05042';
 import { B08026 } from '@/cards/ct-p08/B08026';
+import { B08020 } from '@/cards/ct-p08/B08020';
 import { D10005 } from '@/cards/ct-d10/D10005';
+import { D10006 } from '@/cards/ct-d10/D10006';
 import { B07014 } from '@/cards/ct-p07/B07014';
 import { B01039 } from '@/cards/ct-p01/B01039';
 import { B09070 } from '@/cards/ct-p09/B09070';
@@ -59,7 +73,7 @@ const mkPartner = (id: string, color: string): CardDef => ({
 } as unknown as CardDef);
 const ev = (cardId: string): EvidenceCard => ({ cardId, faceUp: false, origin: { turn: 1, via: 'effect' } });
 
-const ALL_REAL = [B04072, B03046, B08014, B09090, B01058, B08069, B03126, B02088, B07026, B05042, B08026, D10005, B07014, B01039, B09070];
+const ALL_REAL = [B04072, B03046, B08014, B09090, B01058, B08069, B03126, B02088, B07015, B07026, B05042, B08020, B08026, D10005, D10006, B07014, B01039, B09070];
 const FIXTURES: CardDef[] = [
   mkChar('MOB'), mkChar('MOB2'),
   mkChar('ATK', { ap: 5000 }),
@@ -84,6 +98,7 @@ const FIXTURES: CardDef[] = [
   mkChar('KANACOP7', { traits: ['神奈川県警'], level: 7 }),
   { id: 'GEV5', no: 'GEV5', kind: 'event', names: ['GEV5'], colors: ['緑'], level: 5, traits: [], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [] },
   { id: 'GEV7', no: 'GEV7', kind: 'event', names: ['GEV7'], colors: ['緑'], level: 7, traits: [], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [] },
+  { id: 'AUTH_EVENT', no: 'AUTH_EVENT', kind: 'event', names: ['AUTH_EVENT'], colors: ['緑'], level: 5, traits: [], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [], useCondition: { kind: 'fileAtLeast', n: 1 } },
   { id: 'SHUFEV', no: 'SHUFEV', kind: 'event', names: ['シャッフルロマンス'], colors: ['青'], level: 3, traits: [], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [] },
   { id: 'SHUFCASE', no: 'SHUFCASE', kind: 'case', names: ['SHUFCASE'], colors: ['青'], caseTraits: ['シャッフルロマンス'], traits: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [] } as unknown as CardDef,
 ];
@@ -412,14 +427,24 @@ describe('step12 B02088 犯人', () => {
     const han = mutateAll.scene.enter(s, 'self', 'B02088', {});
     const mob = mutateAll.scene.enter(s, 'self', 'MOB', {});
     s = produce(s, (d) => {
-      event.emit(d, 'enter', { uid: mob.uid, player: 'self', enterOrder: 1, enterOrderThisTurn: 1 }, { player: 'self', cardId: 'MOB', uid: mob.uid });
+      event.emit(
+        d,
+        'enter',
+        { uid: mob.uid, viaEffect: false, enterOrder: 1, enterOrderThisTurn: 1 },
+        { player: 'self', cardId: 'MOB', uid: mob.uid },
+      );
       runAllUntilEmpty(d);
     });
     expect(s.players.self.scene.some(c => c.uid === han.uid), '他名 = 残る').toBe(true);
     // B03126 も names ['犯人'] — 同名 enter
     const han2 = produce(s, (d) => {
       const c = mutateAll.scene.enter(d, 'self', 'B03126', {});
-      event.emit(d, 'enter', { uid: c.uid, player: 'self', enterOrder: 2, enterOrderThisTurn: 2 }, { player: 'self', cardId: 'B03126', uid: c.uid });
+      event.emit(
+        d,
+        'enter',
+        { uid: c.uid, viaEffect: false, enterOrder: 2, enterOrderThisTurn: 2 },
+        { player: 'self', cardId: 'B03126', uid: c.uid },
+      );
       runAllUntilEmpty(d);
     });
     expect(han2.players.self.scene.some(c => c.uid === han.uid), '同名〚犯人〛登場 = 自身リムーブ').toBe(false);
@@ -473,6 +498,7 @@ describe('step12 B02088 犯人', () => {
     });
     expect(s2.players.self.scene.some(c => c.cardId === 'B02088'), 'フル = 登場しない').toBe(false);
     expect(s2.players.self.remove, 'リムーブに残る').toContain('B02088');
+    expect(_peekPendingEffectPickQueueLength(), '空きがない場合は switch decision を作らない').toBe(0);
   });
 });
 
@@ -520,6 +546,26 @@ describe('step12 B07026 相応しいお方', () => {
     s.players.self.partner.cardId = 'PBLUE';
     expect(evalCond(s, a1.condition!, ctx)).toBe(false);
   });
+
+  it('real B07015 effect-use marks provenance and B07026 performs its mandatory draw', () => {
+    let s = baseState();
+    s.players.self.partner.cardId = 'PGREEN';
+    const source = mutateAll.scene.enter(s, 'self', B07015.id, { active: true });
+    s.players.self.hand = [B07026.id];
+    s.players.self.deck = ['MOB', 'MOB2'];
+    const sourceAbility = B07015.abilities.find((ability) => ability.id === 'a1')!;
+
+    s = produce(s, (d) => {
+      pay(d, sourceAbility.cost!, ctxFor('self', source.uid, B07015.id, 'a1'));
+      useDeclaredAbility(d, source.uid, 'a1');
+      runAllUntilEmpty(d);
+      drainAiEffectPicks(d, new HeuristicPolicy());
+      runAllUntilEmpty(d);
+    });
+
+    expect(s.players.self.remove).toContain(B07026.id);
+    expect(s.players.self.hand).toHaveLength(1);
+  });
 });
 
 // ============== B05042 ラブリースポット — deckRevealUntil + useEventFromHand ==============
@@ -563,6 +609,27 @@ describe('step12 B05042 ラブリースポット', () => {
     expect(s.players.self.hand, 'lv7 は手札に加わるが使用されない').toContain('GEV7');
     expect(s.players.self.remove).not.toContain('GEV7');
   });
+
+  it('event-not-found still continues to a pre-existing eligible event in hand', () => {
+    let s = baseState();
+    s.players.self.partner.cardId = 'PGREEN';
+    s.players.self.hand = [B07026.id];
+    s.players.self.deck = ['MOB', 'MOB2'];
+    s = produce(s, (d) => {
+      runEffect(d, a1.effect as Effect, {
+        source: { player: 'self', cardId: B05042.id, abilityId: 'a1', area: 'hand' },
+        bindings: {},
+        triggerPayload: { kind: 'event-use' },
+      } as unknown as EffectCtx);
+      runAllUntilEmpty(d);
+      drainAiEffectPicks(d, new HeuristicPolicy());
+      runAllUntilEmpty(d);
+    });
+
+    expect(s.players.self.remove).toContain(B07026.id);
+    expect(s.players.self.hand).toHaveLength(1);
+    expect(s.refreshCount.self).toBe(0);
+  });
 });
 
 // ============== B08026 大滝悟郎 — deckLook5 upTo + bond-declared useEventFromHand ==============
@@ -589,6 +656,58 @@ describe('step12 B08026 大滝悟郎', () => {
     expect(s.players.self.remove, 'lv6以下イベント使用 (GEV5)').toContain('GEV5');
     expect(s.players.self.hand, 'lv7 は使用不可で手札に残る').toContain('GEV7');
   });
+
+  it('a2 effect-use emits the event-use trigger for B08020 after paying the self-removal cost', () => {
+    setHuman('self');
+    let s = baseState();
+    const ohtaki = mutateAll.scene.enter(s, 'self', B08026.id, { active: true });
+    mutateAll.scene.enter(s, 'self', 'HATTORI', {});
+    mutateAll.scene.enter(s, 'self', B08020.id, {});
+    mutateAll.scene.enter(s, 'opp', 'AP8K', {});
+    s.players.self.hand = ['GEV5'];
+    const ability = B08026.abilities.find((entry) => entry.id === 'a2')!;
+
+    s = produce(s, (d) => {
+      pay(d, ability.cost!, ctxFor('self', ohtaki.uid, B08026.id, 'a2'));
+      useDeclaredAbility(d, ohtaki.uid, 'a2', {
+        source: { cardId: B08026.id, uid: ohtaki.uid, abilityId: 'a2', player: 'self', area: 'scene' },
+      });
+      runAllUntilEmpty(d);
+    });
+    const eventPick = _drainPendingEffectPickSide()!;
+    expect(eventPick.source).toMatchObject({ cardId: B08026.id, abilityId: 'a2' });
+    const eventCandidate = eventPick.candidates.find((candidate) => candidate.cardId === 'GEV5')!;
+    s = produce(s, (d) => { applyPickAndContinuation(d, eventPick, eventCandidate.uid); });
+
+    const observerPick = _drainPendingEffectPickSide()!;
+    expect(observerPick.source).toMatchObject({ cardId: B08020.id, abilityId: 'a2' });
+    expect(s.players.self.remove).toEqual(expect.arrayContaining([B08026.id, 'GEV5']));
+  });
+});
+
+describe('step12 effect-use printed authorization', () => {
+  it.each([
+    [B07015, 'a1'],
+    [B08026, 'a2'],
+  ] as const)('%s excludes an event whose printed use condition is unmet', (source, abilityId) => {
+    const candidates = (fileCount: number) => {
+      const state = baseState();
+      state.players.self.hand = ['AUTH_EVENT'];
+      state.players.self.file = Array.from({ length: fileCount }, () => ({ type: 'card-back' as const }));
+      const ability = source.abilities.find((entry) => entry.id === abilityId)!;
+      const ctx = ctxFor('self', 'source', source.id, abilityId);
+      const selected = resolveEffectPicks(state, ability.effect!, ctx, {
+        byPlayer: 'self', humanChooser: true, humanPlayer: 'self',
+        source: { cardId: source.id, abilityId },
+      });
+      runEffect(state, selected, ctx);
+      return _drainPendingEffectPickSide()?.candidates.map((candidate) => candidate.cardId) ?? [];
+    };
+
+    expect({ blocked: candidates(0), allowed: candidates(1) }, 'B07015/B08026 printed useCondition').toEqual({
+      blocked: [], allowed: ['AUTH_EVENT'],
+    });
+  });
 });
 
 // ============== D10005 ハート姫（毛利蘭） — caseTrait + optional revive + useEventFromHand ==============
@@ -597,15 +716,17 @@ describe('step12 D10005 ハート姫（毛利蘭）', () => {
   const a1 = D10005.abilities!.find(a => a.id === 'a1')!;
   const a2 = D10005.abilities!.find(a => a.id === 'a2')!;
 
-  it('a1 condition: 事件特徴 + 非スリープ gate', () => {
+  it('a1 listener conditionは事件特徴のみ、self activeはeffect解決時に判定', () => {
     const s = baseState();
     const hime = mutateAll.scene.enter(s, 'self', 'D10005', { active: true });
     const ctx = ctxFor('self', hime.uid, 'D10005', 'a1');
     expect(evalCond(s, a1.condition!, ctx), '事件特徴なし = 不成立').toBe(false);
     s.players.self.case.cardId = 'SHUFCASE'; // caseTraits:['シャッフルロマンス'] (CardDef.caseTraits 読み)
-    expect(evalCond(s, a1.condition!, ctx), '特徴あり + active = 成立').toBe(true);
+    expect(evalCond(s, a1.condition!, ctx), '特徴あり = listener成立').toBe(true);
     mutateAll.scene.setState(s, hime.uid, 'sleep');
-    expect(evalCond(s, a1.condition!, ctx), 'スリープ済 = 不成立 (Q&A)').toBe(false);
+    expect(evalCond(s, a1.condition!, ctx), 'sleepでもmandatory trigger成立').toBe(true);
+    const gate = (a1.effect as { if: Condition }).if;
+    expect(evalCond(s, gate, ctx), 'effect解決時はactiveでないためoptional抑止').toBe(false);
   });
 
   it('a1 chain: sleep + discard → リムーブの lv8以下スペイドのみ登場 (lv9 同名 decoy 除外)', () => {
@@ -613,7 +734,7 @@ describe('step12 D10005 ハート姫（毛利蘭）', () => {
     const hime = mutateAll.scene.enter(s, 'self', 'D10005', { active: true });
     s.players.self.hand = ['MOB'];
     s.players.self.remove = ['SPADE8', 'SPADE9', 'MOB2'];
-    const chain = (a1.effect as { kind: string; effect: Effect }).effect; // optional 内 chain
+    const chain = (a1.effect as { then: { effect: Effect } }).then.effect; // conditional → optional 内 chain
     s = produce(s, (d) => {
       runEffect(d, chain, ctxFor('self', hime.uid, 'D10005', 'a1'));
       runAllUntilEmpty(d);
@@ -640,6 +761,24 @@ describe('step12 D10005 ハート姫（毛利蘭）', () => {
     });
     expect(s.players.self.remove, '名指しイベント使用').toContain('SHUFEV');
     expect(s.players.self.hand, '他イベントは残る').toContain('GEV5');
+  });
+});
+
+describe('step12 D10006 alternate printing', () => {
+  it('uses and resolves Shuffle Romance through its printed declared ability', () => {
+    let s = baseState();
+    const hime = mutateAll.scene.enter(s, 'self', D10006.id, { active: true });
+    mutateAll.scene.enter(s, 'self', 'SHINICHI', {});
+    s.players.self.hand = ['SHUFEV', 'GEV5'];
+    s = produce(s, (d) => {
+      useDeclaredAbility(d, hime.uid, 'a2');
+      runAllUntilEmpty(d);
+      drainAiEffectPicks(d, new HeuristicPolicy());
+      runAllUntilEmpty(d);
+    });
+
+    expect(s.players.self.remove, D10006.id).toContain('SHUFEV');
+    expect(s.players.self.hand).toContain('GEV5');
   });
 });
 
@@ -682,9 +821,22 @@ describe('step12 B07014 弁当型携帯FAX', () => {
     s = produce(s, (d) => { d.players.self.remove = ['MOB', 'GEV5']; });
     const found = findDeclaredAbility(s, hostUid, 'BLUEHOST', 'scene', 'a3');
     expect(found, 'rider a3 が host から見える').toBeTruthy();
-    expect(canDeclaredAbility(s, hostUid, 'a3')).toBe(true);
+    const setCard = s.players.self.scene
+      .find(c => c.uid === hostUid)!
+      .setCards.find(entry => entry.cardId === B07014.id)!;
+    const sourceRef = {
+      setCardId: setCard.cardId,
+      setCardInstanceId: setCard.instanceId!,
+    };
+    expect(canDeclaredAbility(s, hostUid, 'a3')).toBe(false);
+    expect(canDeclaredAbility(s, hostUid, 'a3', sourceRef)).toBe(true);
     s = produce(s, (d) => {
-      useDeclaredAbility(d, hostUid, 'a3');
+      useDeclaredAbility(d, hostUid, 'a3', {
+        source: {
+          player: 'self', uid: hostUid, cardId: 'BLUEHOST', abilityId: 'a3', area: 'scene',
+          ...sourceRef,
+        },
+      });
       runAllUntilEmpty(d);
       drainAiEffectPicks(d, new HeuristicPolicy());
       runAllUntilEmpty(d);

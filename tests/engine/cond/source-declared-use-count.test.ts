@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { evalCond } from '@/engine/cond/eval';
+import { declaredAbilityUseCountKey } from '@/engine/effect/source-identity';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { Condition, EffectCtx, GameState, SceneCharacter } from '@/engine/types';
 
@@ -34,9 +35,52 @@ describe('sourceDeclaredUseCount condition', () => {
     expect(JSON.parse(JSON.stringify(eq3))).toEqual(eq3);
   });
 
+  it('reads only the exact host occurrence carried by the runtime source', () => {
+    const printedKey = declaredAbilityUseCountKey('a1', {
+      abilityOrigin: 'printed',
+      abilityIndex: 1,
+    });
+    const grantedKey = declaredAbilityUseCountKey('a1', {
+      abilityOrigin: 'granted',
+      abilityIndex: 0,
+    });
+    const state = stateWithUses({ a1: 9, [printedKey]: 3, [grantedKey]: 5 });
+    const exactCtx: EffectCtx = {
+      ...sourceCtx,
+      source: {
+        ...sourceCtx.source,
+        abilityOrigin: 'printed',
+        abilityIndex: 1,
+      },
+    };
+    const eq3 = { kind: 'sourceDeclaredUseCount', cmp: 'eq', n: 3 } as unknown as Condition;
+    const ge4 = { kind: 'sourceDeclaredUseCount', cmp: 'ge', n: 4 } as unknown as Condition;
+
+    expect(evalCond(state, eq3, exactCtx)).toBe(true);
+    expect(evalCond(state, ge4, exactCtx)).toBe(false);
+  });
+
   it('keeps declaredUseUnder compatible for explicitly addressed counts', () => {
     const state = stateWithUses({ a1: 3 });
     expect(evalCond(state, { kind: 'declaredUseUnder', uid: 'source', abilityId: 'a1', max: 4 }, sourceCtx)).toBe(true);
     expect(evalCond(state, { kind: 'declaredUseUnder', uid: 'source', abilityId: 'a1', max: 3 }, sourceCtx)).toBe(false);
+  });
+
+  it('lets declaredUseUnder address one exact colliding host occurrence', () => {
+    const printedKey = declaredAbilityUseCountKey('a1', {
+      abilityOrigin: 'printed',
+      abilityIndex: 1,
+    });
+    const state = stateWithUses({ a1: 9, [printedKey]: 3 });
+    const exact = {
+      kind: 'declaredUseUnder',
+      uid: 'source',
+      abilityId: 'a1',
+      abilityOrigin: 'printed',
+      abilityIndex: 1,
+      max: 4,
+    } as unknown as Condition;
+
+    expect(evalCond(state, exact, sourceCtx)).toBe(true);
   });
 });

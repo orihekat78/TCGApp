@@ -1,4 +1,4 @@
-// CARD PHASE step12 batch2 (2026-07-04): declareName verb (「カード名を1つ指定し」B09108/B09003/PR105)
+// CARD PHASE step12 batch2 (2026-07-04): declareName verb (宣言能力 / カットイン)
 // の宣言名入力 picker 用 store + Promise hook。
 //
 // rules: 15-abilities-effects.md (「〜する」=必須 / 「〜してもよい」=skip 可)
@@ -7,14 +7,14 @@
 // 設計:
 //   - declareName atom を effect に含む宣言能力で、宣言するカード名 (自由文字列) を user に
 //     入力させるための modal state を保持する。
-//   - runDeclaredAbilityFlow が確認モーダル accept 後 (choice picker 後) に ask() → Promise を await。
+//   - 宣言能力とカットインの public flow が dispatch 前に ask() → Promise を await。
 //   - user が DeclareCardNameModal で名前確定 → declare(name) で resolve、× 不可 (confirm 済のため
 //     cancel は能力使用全体の取り消し)。「してもよい」句 (atom args.optional) のみ skip を許可。
 //   - 確定名は AbilityCostParams.declaredName → ctx.dyn.declaredName → atomDeclareName が
 //     ctx.declaredNames[bind] へ書く (供給チャネルは engine W6 step1 で配線済)。
 //   - skip 時は declaredName 未供給 = atom が空文字 fallback → 消費側 (nameOverride /
 //     boundNameMatchesDeclared) が no-op/false に落ちる (engine 設計済の decline 経路)。
-//   - AI 経路は本 hook を通らず常に未供給 (= 常に decline、atom コメント準拠)。
+//   - AI 経路は本 hook を通らず、constrained domain の登録名を決定的に供給。
 
 import { create } from 'zustand';
 import { areTerminalInteractionsBlocked } from '@/ui/services/terminalInteractionGate.js';

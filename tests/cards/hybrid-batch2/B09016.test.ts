@@ -27,10 +27,7 @@
 //   state.turn.player==='self' で成立 (=owner の相手ターン)。sceneHas side:'self' も owner='opp' の
 //   自陣 = state.players.opp.scene を走査する。
 //
-// 「相手ターン中」の自然到達性: AI defender emit は「self が推理」時のみ発火 = 通常 self のターン
-//   (turn:self)。opp 自身のターンに self が推理する状況は通常フローでは起きない (opp のターンは
-//   opp が推理し defender=self=人間経路になる)。よって turn 条件が false になる系 (ケース6) は
-//   turn.player を強制的に 'opp' に置いて条件ゲートのみを isolate して pin する (下記コメント参照)。
+// BUG-330: opp 自身のターンに self が推理する状態は公開/直接engineの両方で拒否する。
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { produce } from 'immer';
@@ -43,7 +40,7 @@ import {
 } from '@/engine/listeners/misread';
 import { _resetRegistry as resetCardDefRegistry, register as registerCardDef } from '@/engine/read/def';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../../helpers/main-game-state';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { doReasoning } from '@/engine/flow/main/reasoning';
 import { char as readChar } from '@/engine/read/char';
@@ -158,12 +155,10 @@ describe('B09016 a2 — このキャラがミスリードしたとき自己ア�
     expect(stateOf(after, 'mitsu'), '2 回目は limit で不発 → sleep').toBe('sleep');
   });
 
-  it('turn ゲート: turn.player=opp (owner=opp の自ターン相当) → 【相手ターン中】不成立で sleep のまま', () => {
-    // 構造的注記: AI defender emit は self 推理時のみ発火し、通常 self のターン。turn 条件が
-    // false になる状況は通常フローでは到達しないため、turn.player を 'opp' に強制して turn 条件
-    // ゲート単体を pin する (sceneHas は成立させ、差分が turn 条件のみになるよう COMP_OK を置く)。
-    const after = fireMisread(board('COMP_OK', 'opp'));
-    expect(stateOf(after, 'mitsu'), 'turn{opp} 不成立 → 再アクティブしない').toBe('sleep');
-    expect(readChar.lp(after, 'r1'), 'ミスリードLP-1は推理終了時に消える').toBe(1);
+  it('owner=opp の自ターン中は self の推理自体をmain-action admissionで拒否する', () => {
+    const state = board('COMP_OK', 'opp');
+    const before = structuredClone(state);
+    expect(() => fireMisread(state)).toThrow(/doReasoning: not allowed/);
+    expect(state).toEqual(before);
   });
 });

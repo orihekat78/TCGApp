@@ -32,6 +32,8 @@ describe('FileArea', () => {
     expect(html).toMatch(/zone file-strip/);
     expect(html).toMatch(/file-strip-header/);
     expect(html).toMatch(/<span>FILE<\/span>/);
+    expect(html.match(/>FILE<\/span>/g)).toHaveLength(1);
+    expect(html).not.toMatch(/zone-label/);
   });
 
   it('shows empty state when count is 0 (no card-back, count=0)', () => {
@@ -39,7 +41,7 @@ describe('FileArea', () => {
       <FileArea cards={[]} side="self" />,
     ));
     expect(html).toMatch(/data-count="0"/);
-    expect(html).toMatch(/class="count">0</);
+    expect(html).toMatch(/class="file-count">0</);
     expect(html).toMatch(/class="count-overlay">0</);
     expect(html).toMatch(/card-back empty/);
     // 7マス進捗はすべて空
@@ -52,7 +54,7 @@ describe('FileArea', () => {
       <FileArea cards={cards} side="self" />,
     ));
     expect(html).toMatch(/data-count="4"/);
-    expect(html).toMatch(/class="count">4</);
+    expect(html).toMatch(/class="file-count">4</);
     expect(html).toMatch(/class="count-overlay">4</);
     // 7マス進捗で 4 filled
     expect(html.match(/class="filled"/g)?.length).toBe(4);

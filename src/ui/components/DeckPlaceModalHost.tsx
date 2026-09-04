@@ -112,7 +112,6 @@ function DeckPlaceModalInner({
                   cardId={row.cardId}
                   instanceId={row.occurrenceId}
                   occurrenceLabel={publicCardOccurrenceLabel(rows.map((item) => item.cardId), row.cardId, i)}
-                  onSelect={() => {}}
                   onExpand={expandModal.open}
                 />
                 <div className="souza-row-controls">

@@ -109,6 +109,30 @@ describe('CT-P10 contact and CutIn turn-history cards', () => {
     expect(sourceIsAttacker.pendingEffects).toHaveLength(0);
   });
 
+  it('B10037 evaluates the attacker after contact AP modifiers are applied', () => {
+    const firesFor = (baseAp: number, contactBoost: number): boolean => {
+      const state = createEmptyGameState();
+      state.players.self.scene = [
+        sceneChar('B10037', 'kyogoku'),
+        sceneChar('HISTORY_OTHER_9999', 'boosted', {
+          apOverride: baseAp,
+          turnEffects: {
+            contactImmune: false,
+            removeOnTurnEnd: false,
+            apMod_contact: contactBoost,
+          },
+        }),
+      ];
+      state.players.opp.scene = [sceneChar('HISTORY_VICTIM', 'victim')];
+      mutate.scene.removeToRemove(state, 'victim', 'contact-ap', 'boosted');
+      return state.pendingEffects.some(effect => effect.source?.uid === 'kyogoku');
+    };
+
+    // qa: card:B10037:493f9def1e5c5cf3dd006d9db402e0eaf8b16963ea72011060c09a7e794c6d90
+    expect(firesFor(9999, 1), 'AP9999 + contact AP1 = AP10000').toBe(true);
+    expect(firesFor(9998, 1), 'contact modifier after AP remains below 10000').toBe(false);
+  });
+
   it('B10091 grants Assault at four black CutIn characters and only bottom-decks on the entry-history turn', () => {
     const continuous = B10091.abilities[0]!;
     expect(continuous).toMatchObject({

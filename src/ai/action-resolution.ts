@@ -23,6 +23,7 @@ import {
 import { drainAiEffectPicks } from '@/engine/effect/apply-pick.js';
 import type { GameState, ActionContext } from '@/engine/types';
 import type { AIPolicy } from './policy.js';
+import { chooseAiCutInDeclaredName } from './cutin-declared-name.js';
 
 type Player = 'self' | 'opp';
 
@@ -74,6 +75,42 @@ function ownerOfUid(s: GameState, uid: string): Player | null {
   return null;
 }
 
+function currentActionContext(state: GameState, actionId: string): ActionContext | undefined {
+  return engine.flow.action._getContext(state, actionId);
+}
+
+/**
+ * Effect resolution can replace the state-owned ActionContext. Re-read it before
+ * continuing the synchronous AI/UI sequence, and close an early-ended contact.
+ */
+function resumeContactAt(
+  state: GameState,
+  actionId: string,
+  expectedPhases: readonly ActionContext['phase'][],
+  attackerPolicy?: AIPolicy,
+  defenderPolicy?: AIPolicy,
+): ActionContext | undefined {
+  let current = currentActionContext(state, actionId);
+  if (!current) return undefined;
+  if (current.phase === 'contact-end') {
+    // contact:end observers resolve before action:end and before the serialized
+    // context is deleted. Re-read after draining because an effect may replace
+    // or terminate the state-owned ActionContext.
+    drainActionEffects(state, current, attackerPolicy, defenderPolicy);
+    current = currentActionContext(state, actionId);
+    if (!current || current.phase !== 'contact-end') return undefined;
+    engine.flow.action.advance(state, current);
+    drainActionEffects(state, current, attackerPolicy, defenderPolicy);
+    return undefined;
+  }
+  if (!expectedPhases.includes(current.phase)) {
+    throw new Error(
+      `resolveContactSequence: expected ${expectedPhases.join(' or ')}, got ${current.phase}`,
+    );
+  }
+  return current;
+}
+
 /**
  * Phase 8.7d: action-1 / action-2 phase の cutin 判定を解決する。
  *
@@ -93,12 +130,14 @@ function resolveCutInForPhase(
   const flagKey: 'firstActed' | 'secondActed' = which === 'firstUid' ? 'firstActed' : 'secondActed';
   const uid = ax[which];
   if (!uid) {
-    ax[flagKey] = false;
+    const current = currentActionContext(state, ax.id);
+    if (current) current[flagKey] = false;
     return;
   }
   const player = ownerOfUid(state, uid);
   if (!player) {
-    ax[flagKey] = false;
+    const current = currentActionContext(state, ax.id);
+    if (current) current[flagKey] = false;
     return;
   }
   const policy = uid === ax.byUid ? attackerPolicy : defenderPolicy;
@@ -110,10 +149,15 @@ function resolveCutInForPhase(
     );
     const cutinChoice = policy.chooseCutIn(state, ax, player, cutinCands);
     if (cutinChoice !== null) {
-      engine.flow.contact.cutIn(state, ax, player, cutinChoice);
-      drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
-      ax[flagKey] = true;
-      return;
+      const declaredName = chooseAiCutInDeclaredName(state, ax, player, cutinChoice);
+      const spec = engine.flow.contact.cutInDeclaredNameSpec(state, ax, player, cutinChoice);
+      if (!spec || spec.optional || spec.domain === 'unrestricted' || declaredName !== undefined) {
+        engine.flow.contact.cutIn(state, ax, player, cutinChoice, undefined, declaredName);
+        drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
+        const current = currentActionContext(state, ax.id);
+        if (current) current[flagKey] = true;
+        return;
+      }
     }
   }
 
@@ -126,14 +170,16 @@ function resolveCutInForPhase(
     if (disgChoice !== null) {
       engine.flow.contact.disguise(state, ax, player, disgChoice);
       drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
-      ax[flagKey] = true;
+      const current = currentActionContext(state, ax.id);
+      if (current) current[flagKey] = true;
       return;
     }
   }
 
   // 3) どちらも選ばれなければ pass
   engine.flow.contact.pass(state, ax, player);
-  ax[flagKey] = false;
+  const current = currentActionContext(state, ax.id);
+  if (current) current[flagKey] = false;
 }
 
 /** Drive every contact phase shared by character targets and guarded cases. */
@@ -143,26 +189,43 @@ function resolveContactSequence(
   attackerPolicy?: AIPolicy,
   defenderPolicy?: AIPolicy,
 ): void {
+  const actionId = ax.id;
   engine.flow.action.advance(state, ax); // leave-resolution → contact-pending
   engine.flow.action.advance(state, ax); // contact-pending → action-1
   drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
 
-  resolveCutInForPhase(state, ax, attackerPolicy, defenderPolicy, 'firstUid');
-  engine.flow.action.advance(state, ax); // action-1 → action-2
+  let current = resumeContactAt(state, actionId, ['action-1'], attackerPolicy, defenderPolicy);
+  if (!current) return;
+  resolveCutInForPhase(state, current, attackerPolicy, defenderPolicy, 'firstUid');
+  current = resumeContactAt(state, actionId, ['action-1'], attackerPolicy, defenderPolicy);
+  if (!current) return;
+  engine.flow.action.advance(state, current); // action-1 → action-2
 
-  resolveCutInForPhase(state, ax, attackerPolicy, defenderPolicy, 'secondUid');
-  engine.flow.action.advance(state, ax); // action-2 → judge (or action-1-redo)
+  current = resumeContactAt(state, actionId, ['action-2'], attackerPolicy, defenderPolicy);
+  if (!current) return;
+  resolveCutInForPhase(state, current, attackerPolicy, defenderPolicy, 'secondUid');
+  current = resumeContactAt(state, actionId, ['action-2'], attackerPolicy, defenderPolicy);
+  if (!current) return;
+  engine.flow.action.advance(state, current); // action-2 → judge (or action-1-redo)
 
-  if (ax.phase === 'action-1-redo') {
-    resolveCutInForPhase(state, ax, attackerPolicy, defenderPolicy, 'firstUid');
-    engine.flow.action.advance(state, ax); // action-1-redo → judge
+  current = resumeContactAt(state, actionId, ['judge', 'action-1-redo'], attackerPolicy, defenderPolicy);
+  if (!current) return;
+  if (current.phase === 'action-1-redo') {
+    resolveCutInForPhase(state, current, attackerPolicy, defenderPolicy, 'firstUid');
+    current = resumeContactAt(state, actionId, ['action-1-redo'], attackerPolicy, defenderPolicy);
+    if (!current) return;
+    engine.flow.action.advance(state, current); // action-1-redo → judge
   }
 
-  engine.flow.action.snapshotAP(state, ax);
-  engine.flow.contact.judge(state, ax);
-  drainActionEffects(state, ax, attackerPolicy, defenderPolicy);
-  engine.flow.action.advance(state, ax); // judge → contact-end
-  engine.flow.action.advance(state, ax); // contact-end → action-end
+  current = resumeContactAt(state, actionId, ['judge'], attackerPolicy, defenderPolicy);
+  if (!current) return;
+  engine.flow.action.snapshotAP(state, current);
+  engine.flow.contact.judge(state, current);
+  drainActionEffects(state, current, attackerPolicy, defenderPolicy);
+  current = resumeContactAt(state, actionId, ['judge'], attackerPolicy, defenderPolicy);
+  if (!current) return;
+  engine.flow.action.advance(state, current); // judge → contact-end
+  resumeContactAt(state, actionId, [], attackerPolicy, defenderPolicy); // contact-end → action-end
 }
 
 /**

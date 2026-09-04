@@ -459,10 +459,18 @@
   font-weight: 800;
   background: color-mix(in oklch, var(--color-purple) 75%, white 15%);
   color: #fff;
+  border: 0;
   padding: 0 3px;
   border-radius: 2px;
   line-height: 1.3;
-  z-index: 2;
+  z-index: 4;
+  cursor: pointer;
+}
+
+.scene-area .card .stack-badge:hover,
+.scene-area .card .stack-badge:focus-visible {
+  outline: 2px solid #ffd966;
+  outline-offset: 1px;
 }
 
 /* Phase 8.10c: 新規 mount 時の登場アニメ keyframe */
@@ -498,6 +506,25 @@
 .scene-area .card.effect-pickable:hover {
   transform: translateY(-4px) scale(1.04);
   box-shadow: 0 0 18px rgba(255, 217, 102, 0.9);
+}
+
+.scene-area .card .scene-card-pick-button {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.scene-area .card .scene-card-pick-button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(255, 217, 102, 0.7);
 }
 
 /* Task2: アクティブカード「ぴこんポップ」(MasterDuel風 — 効果発動 / CPU 操作中のカードがその場で軽く浮く)。

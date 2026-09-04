@@ -203,4 +203,25 @@ describe('SceneArea', () => {
     expect(html).toMatch(/1 \/ 3/);
     expect(html.match(/slot-empty/g)?.length).toBe(2);
   });
+
+  it('renders direct-pick targets as labelled native buttons with distinct scene positions', () => {
+    const chars: SceneCharacter[] = [
+      makeChar({ cardId: 'c-blue', uid: 'pick-1', enterOrder: 0 }),
+      makeChar({ cardId: 'c-blue', uid: 'pick-2', enterOrder: 1 }),
+    ];
+    const html = strip(renderToString(
+      <SceneArea
+        characters={chars}
+        side="self"
+        resolveCard={resolveCard}
+        pickCharUids={new Set(['pick-1', 'pick-2'])}
+        onPickChar={() => {}}
+        autoFocusPickUid="pick-1"
+      />,
+    ));
+    expect(html).toContain('data-testid="scene-card-pick-pick-1"');
+    expect(html).toMatch(/aria-label="[^"]*現場1枚目/);
+    expect(html).toContain('data-testid="scene-card-pick-pick-2"');
+    expect(html).toMatch(/aria-label="[^"]*現場2枚目/);
+  });
 });

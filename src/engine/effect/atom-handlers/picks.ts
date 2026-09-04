@@ -5,14 +5,34 @@ import { pushPendingEffectPickSide } from '../pending-state.js';
 import { preparePendingPickRange } from '../pick-selection.js';
 import { candidates as targetCandidates } from '../../target/candidates.js';
 import { removeExcludedSourceCardId } from '../../read/effect-source.js';
-import { targetFilterToPredicateWithCtx, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait, resolveDeltaToNumber, queuePendingDeckRevealSide } from './_shared.js';
+import { targetFilterToPredicateWithCtx, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait, publicEffectSource, resolveDeltaToNumber, queuePendingDeckRevealSide, markPendingDeckRevealPresentation } from './_shared.js';
 import type { PendingDeckPlaceSide, PendingDeckReorderSide } from './_shared.js';
-import type { GameState, EffectCtx, Candidate, AtomVerb, TargetingRef } from '../../types/index.js';
+import { FILE_CARD_BACK_PLACEHOLDER, type GameState, type EffectCtx, type Candidate, type AtomVerb, type TargetingRef } from '../../types/index.js';
 import type { TargetFilter } from '../../types/effect.js';
 import { ensureEffectCausalTrace, markEffectCausalAwaitingResume, recordEffectCausalOperation } from '../../log/effect-causal.js';
+import {
+  advanceDeckEpochAndRebaseBindings,
+  deckOccurrenceAuthority,
+  deckOccurrenceRelocations,
+  isLiveDeckOccurrenceAuthority,
+  isLiveDeckWindowAuthority,
+  type DeckOccurrenceAuthority,
+} from '../deck-occurrence-authority.js';
+import { cardOccurrenceWitness } from '../../target/card-occurrence.js';
 
 type DeckRevealVisibility = 'public' | 'private';
 type DeckRevealViewer = 'self' | 'opp' | 'all';
+
+function resolveBoundDeckOccurrences(
+  state: GameState,
+  player: 'self' | 'opp',
+  bound: Candidate[],
+): DeckOccurrenceAuthority[] | null {
+  const exact = bound.filter((candidate): candidate is DeckOccurrenceAuthority => (
+    isLiveDeckOccurrenceAuthority(state, player, candidate)
+  ));
+  return exact.length === bound.length ? exact : null;
+}
 
 function resolveDeckRevealAccess(
   a: Record<string, unknown>,
@@ -64,7 +84,12 @@ export function atomStackedCardPick(s: GameState, a: Record<string, unknown>, ct
   if (!owner) return;
   const pending = preparePendingPickRange({
     player: resolvePlayer(a.player, ctx), ownerPlayer: ctx.source.player,
-    candidates: mutate.char.stackedCardEntries(s, hostUid).map(entry => ({ uid: entry.instanceId, cardId: entry.cardId, player: owner })),
+    candidates: mutate.char.stackedCardEntries(s, hostUid).map(entry => ({
+      uid: entry.instanceId,
+      cardId: entry.cardId,
+      player: owner,
+      hidden: entry.cardId === FILE_CARD_BACK_PLACEHOLDER || entry.cardId === 'back-card',
+    })),
     atomVerb: 'stackedCardPick', atomArgs: toPlainDeep(a), nMin: min, nMax: max,
     source: pendingSource(s, ctx, {
       cardId: ctx.source.cardId ?? '',
@@ -119,13 +144,32 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
       // window は first-run の snapshot (__windowIds) を使う — pick await 中の deck 変動に影響されない。
       if (a.__windowIds !== undefined) {
         const windowIds = a.__windowIds as string[];
+        if (!isLiveDeckWindowAuthority(s, p, a)) {
+          mutate.log.append(s, {
+            ts: Date.now(), player: p, turn: s.turn.number,
+            action: 'effect:deckRevealUntil', result: 'stale-selection',
+          });
+          return;
+        }
+        const windowOccurrences = a.__windowOccurrences as DeckOccurrenceAuthority[];
         const declined = a.__declined === true;
         const chosen = declined
           ? null
           : Array.isArray(a.target) ? ((a.target as string[])[0] ?? null) : null;
+        const selectedIndex = declined ? null : a.selectedCardIndex;
+        const selectedOccurrence = selectedIndex === null
+          ? null
+          : windowOccurrences.find(occurrence => occurrence.index === selectedIndex && occurrence.cardId === chosen) ?? null;
+        if (!declined && selectedOccurrence === null) {
+          mutate.log.append(s, {
+            ts: Date.now(), player: p, turn: s.turn.number,
+            action: 'effect:deckRevealUntil', result: 'stale-selection',
+          });
+          return;
+        }
         if (bindMatchKey) {
           ctx.bindings[bindMatchKey] = chosen
-            ? [{ kind: 'card', cardId: chosen, area: 'deck', player: p }]
+            ? [selectedOccurrence!]
             : [];
         }
         if (bindKey) {
@@ -133,16 +177,9 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
           // ⚠ 本再入 path (chooseMatch) は bindMatchKey===undefined gate (下の初回 path、mini-wave #5 ①)
           //   の対象外で matched を常時除外する。bind-only + chooseMatch:'upTo' の組合せカードは現状 0 件
           //   (grep 実測) — 将来組む場合は初回/再入で $bind の内容が食い違うため gate をここにも要移植。
-          let restIds: string[];
-          if (chosen === null) {
-            restIds = windowIds;
-          } else {
-            const idx = windowIds.indexOf(chosen);
-            restIds = idx === -1 ? windowIds : [...windowIds.slice(0, idx), ...windowIds.slice(idx + 1)];
-          }
-          ctx.bindings[bindKey] = restIds.map<Candidate>(id => ({
-            kind: 'card', cardId: id, area: 'deck', player: p,
-          }));
+          ctx.bindings[bindKey] = selectedOccurrence === null
+            ? [...windowOccurrences]
+            : windowOccurrences.filter(occurrence => occurrence.index !== selectedOccurrence.index);
         }
         // overlay: 確定 matched で再 set (awaitingPick 無し → hold 解除、通常演出で完了)
         if (revealAccess.humanCanSee) {
@@ -152,8 +189,8 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
             viewer: revealAccess.viewer,
             revealed: [...windowIds],
             matched: chosen,
-            presentation: a.presentation === 'reveal-return' ? 'reveal-return' : undefined,
-            source: { cardId: ctx.source.cardId, abilityId: ctx.source.abilityId, uid: ctx.source.uid },
+            presentation: deckRevealPresentation(a.presentation),
+            source: publicEffectSource(ctx),
           });
         }
         mutate.log.append(s, {
@@ -206,23 +243,34 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
       // owner (効果所有者) が human のときのみ pick を surface。AI は従来 path (先頭 match 自動取得 =
       // 合法手内の固定戦略、rules/15 の選択『権』であり義務でない。smoke baseline 不変)。
       // 「まで」無し forced 型 (B01048 等 10枚) は chooseMatch を持たず本分岐に入らない (従来動作が正)。
+      const windowWitness = cardOccurrenceWitness(s, p, 'deck');
+      const windowOccurrences = revealed.map((_, position) => {
+        const index = fromBottom ? deck.length - 1 - position : position;
+        const occurrence = deckOccurrenceAuthority(s, p, index, windowWitness);
+        if (occurrence === null) throw new Error('deckRevealUntil: missing revealed occurrence');
+        return occurrence;
+      });
       if (a.chooseMatch === 'upTo' && maxN !== undefined) {
         const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
         const owner = ctx.source.player;
         if (humanSide !== null && owner === humanSide) {
           // window 内の全 match を候補化 (従来は先頭 1 件のみ機械束縛 — identity 選択も surface)
-          const matchCands = revealed
-            .map((cardId, i) => ({ cardId, i }))
-            .filter(({ cardId }) => filter(cardId));
+          const matchCands = windowOccurrences.filter(({ cardId }) => filter(cardId));
           const pendingPick = preparePendingPickRange({
             player: owner,
             ownerPlayer: owner, // BUG-175: 座標系明示 (本 site は chooser==owner ゆえ挙動不変)
-            candidates: matchCands.map(({ cardId, i }) => ({ uid: `${cardId}#${i}`, cardId, player: p })),
+            candidates: matchCands,
             atomVerb: 'deckRevealUntil',
             // 再入用に window snapshot を同梱 (deck 再走査しない)。chooseMatch 等の元 args も保持。
             // BUG-132: toPlainDeep — drafted entry.effect 由来の nested object (filter 等) を
             // plain 化して produce 境界を安全に跨ぐ (revoked-proxy crash 防止)
-            atomArgs: toPlainDeep({ ...(a as Record<string, unknown>), __windowIds: [...revealed] }),
+            atomArgs: toPlainDeep({
+              ...(a as Record<string, unknown>),
+              __windowIds: [...revealed],
+              __windowOccurrences: windowOccurrences,
+              __windowWitness: windowWitness,
+              __windowPlayer: p,
+            }),
             nMin: 0, // 「まで」= 0枚可。候補0でも確認/skip decisionを明示する。
             nMax: 1,
             source: pendingSource(s, ctx, {
@@ -241,8 +289,8 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
               revealed: [...revealed],
               matched: null,
               awaitingPick: true,
-              presentation: a.presentation === 'reveal-return' ? 'reveal-return' : undefined,
-              source: { cardId: ctx.source.cardId, abilityId: ctx.source.abilityId, uid: ctx.source.uid },
+              presentation: deckRevealPresentation(a.presentation),
+              source: publicEffectSource(ctx),
             });
           }
           mutate.log.append(s, {
@@ -269,34 +317,28 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
         // matched 除外時は位置配列を並行 slice する (indexOf 再利用だと同 cardId 重複で取り違える)。
         // index は reveal 時点の snapshot — 後続 atom が deck を mutate したら失効 (fromGroupCards の
         // pick 列挙は splice 前に行われるため B01022 系 flow では常に有効)。
-        const posToDeckIdx = (k: number): number => (fromBottom ? deck.length - 1 - k : k);
-        const allIdxs = revealed.map((_, k) => posToDeckIdx(k));
-        let restIds: string[];
-        let restIdxs: number[];
+        const matchedOccurrence = matched === null
+          ? undefined
+          : windowOccurrences.find(occurrence => filter(occurrence.cardId));
+        let restOccurrences: DeckOccurrenceAuthority[];
         if (matched === null || bindMatchKey === undefined) {
-          restIds = revealed;
-          restIdxs = allIdxs;
+          restOccurrences = windowOccurrences;
         } else if (maxN === undefined) {
-          restIds = revealed.slice(0, -1);
-          restIdxs = allIdxs.slice(0, -1);
+          restOccurrences = windowOccurrences.slice(0, -1);
         } else {
           // 最初の matched 出現を 1 件だけ除く (同 cardId 複数あっても 1 件のみ拾われる前提)
-          const idx = revealed.indexOf(matched);
-          restIds = idx === -1 ? revealed : [...revealed.slice(0, idx), ...revealed.slice(idx + 1)];
-          restIdxs = idx === -1 ? allIdxs : [...allIdxs.slice(0, idx), ...allIdxs.slice(idx + 1)];
+          restOccurrences = matchedOccurrence === undefined
+            ? windowOccurrences
+            : windowOccurrences.filter(occurrence => occurrence.uid !== matchedOccurrence.uid);
         }
-        ctx.bindings[bindKey] = restIds.map<Candidate>((id, k) => ({
-          kind: 'card',
-          cardId: id,
-          area: 'deck',
-          player: p,
-          index: restIdxs[k]!,
-        }));
+        ctx.bindings[bindKey] = restOccurrences.map(occurrence => ({ ...occurrence }));
       }
       if (bindMatchKey) {
-        const mPos = matched !== null ? revealed.indexOf(matched) : -1;
-        ctx.bindings[bindMatchKey] = matched
-          ? [{ kind: 'card', cardId: matched, area: 'deck', player: p, index: fromBottom ? deck.length - 1 - mPos : mPos }]
+        const matchedOccurrence = matched === null
+          ? undefined
+          : windowOccurrences.find(occurrence => filter(occurrence.cardId));
+        ctx.bindings[bindMatchKey] = matchedOccurrence
+          ? [{ ...matchedOccurrence }]
           : [];
       }
       // user_request 20260522_01 #12 BUG-061: UI 演出側チャネル
@@ -310,8 +352,8 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
           viewer: revealAccess.viewer,
           revealed: [...revealed],
           matched,
-          presentation: a.presentation === 'reveal-return' ? 'reveal-return' : undefined,
-          source: { cardId: ctx.source.cardId, abilityId: ctx.source.abilityId, uid: ctx.source.uid },
+          presentation: deckRevealPresentation(a.presentation),
+          source: publicEffectSource(ctx),
         });
       }
       // BUG-073: effect log
@@ -327,29 +369,22 @@ export function atomDeckToBottomBound(s: GameState, a: Record<string, unknown>, 
       const p = resolvePlayer(a.player, ctx);
       const bindKey = a.bindKey as string;
       const bound = ctx.bindings[bindKey];
-      if (!bound || bound.length === 0) return;
+      if (!bound || bound.length === 0) { markPendingDeckRevealPresentation(p, publicEffectSource(ctx), 'reveal-complete'); return; }
       // Candidate から cardId を抽出 → デッキ下へ
-      const ids = bound.map(c => {
-        const cAny = c as unknown as { cardId?: string };
-        return cAny.cardId ?? '';
-      }).filter(id => id !== '');
       const deck = s.players[p].deck;
       // Resolve exact occurrences without mutating. Prefer bound snapshot indexes when
       // still valid; otherwise consume the first unused matching occurrence.
-      const used = new Set<number>();
-      const occurrences: Array<{ cardId: string; index: number }> = [];
-      for (const [position, id] of ids.entries()) {
-        const candidate = bound[position] as unknown as { index?: number };
-        const hinted = candidate.index;
-        const index = typeof hinted === 'number' && !used.has(hinted) && deck[hinted] === id
-          ? hinted
-          : deck.findIndex((cardId, i) => cardId === id && !used.has(i));
-        if (index === -1) continue;
-        used.add(index);
-        occurrences.push({ cardId: id, index });
+      const occurrences = resolveBoundDeckOccurrences(s, p, bound);
+      if (occurrences === null) {
+        mutate.log.append(s, {
+          ts: Date.now(), player: p, turn: s.turn.number,
+          action: 'effect:deckToBottomBound', result: 'stale-selection',
+        });
+        return;
       }
       const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
-      const order = a.order === 'preserve' ? 'preserve' : 'arbitrary';
+      const order = a.order === 'preserve' || a.order === 'shuffle' ? a.order : 'arbitrary';
+      markPendingDeckRevealPresentation(p, publicEffectSource(ctx), order === 'shuffle' ? 'reveal-to-bottom-randomized' : 'reveal-to-bottom');
       if (order === 'arbitrary' && occurrences.length >= 2 && p === humanSide) {
         const trace = ensureEffectCausalTrace(s, ctx);
         markEffectCausalAwaitingResume(trace);
@@ -357,7 +392,8 @@ export function atomDeckToBottomBound(s: GameState, a: Record<string, unknown>, 
           player: p,
           cardIds: occurrences.map(entry => entry.cardId),
           deckSnapshot: [...deck],
-          occurrences,
+          occurrences: occurrences.map(({ cardId, index }) => ({ cardId, index })),
+          occurrenceWitness: cardOccurrenceWitness(s, p, 'deck'),
           ctx: toPlainDeep(ctx),
         };
         mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckToBottomBound', result: `await ${occurrences.length}` });
@@ -366,11 +402,24 @@ export function atomDeckToBottomBound(s: GameState, a: Record<string, unknown>, 
       // AI / spectator / single-card path remains synchronous.
       for (const entry of [...occurrences].sort((a, b) => b.index - a.index)) deck.splice(entry.index, 1);
       const splicedIds = occurrences.map(entry => entry.cardId);
-      mutate.deck.toBottom(s, p, splicedIds);
+      if (order === 'shuffle') {
+        const random = ctx.rng ?? Math.random;
+        for (let index = splicedIds.length - 1; index > 0; index--) {
+          const swapIndex = Math.floor(random() * (index + 1));
+          [splicedIds[index], splicedIds[swapIndex]] = [splicedIds[swapIndex]!, splicedIds[index]!];
+        }
+      }
+      deck.push(...splicedIds);
+      const firstPlacedIndex = deck.length - splicedIds.length;
+      advanceDeckEpochAndRebaseBindings(s, ctx, p, occurrences.map(entry => entry.index), {
+        relocatedOccurrences: deckOccurrenceRelocations(
+          occurrences,
+          splicedIds.map((cardId, offset) => ({ cardId, index: firstPlacedIndex + offset })),
+        ),
+      });
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckToBottomBound', result: String(splicedIds.length) });
       return;
     }
-
 // mini-wave #5 P2 (2026-07-10): 「見た各カードを、好きな順番でデッキの上か下に移す」(B05047)。
 // bound window (deckRevealUntil 公開分、まだ deck 元位置に居る) を対象に:
 // - human 所有: __pendingDeckPlaceSide を立てて await (deckReorder 同型 side-channel)。カードは
@@ -383,25 +432,9 @@ export function atomDeckPlaceSplitBound(s: GameState, a: Record<string, unknown>
       const bindKey = a.bindKey as string;
       const bound = ctx.bindings[bindKey];
       if (!bound || bound.length === 0) return;
-      const ids = bound.map(c => {
-        const cAny = c as unknown as { cardId?: string };
-        return cAny.cardId ?? '';
-      }).filter(id => id !== '');
-      if (ids.length === 0) return;
       const deck = s.players[p].deck;
-      const used = new Set<number>();
-      const occurrences: Array<{ cardId: string; index: number }> = [];
-      for (const [position, id] of ids.entries()) {
-        const candidate = bound[position] as unknown as { index?: number };
-        const hinted = candidate.index;
-        const index = typeof hinted === 'number' && !used.has(hinted) && deck[hinted] === id
-          ? hinted
-          : deck.findIndex((cardId, i) => cardId === id && !used.has(i));
-        if (index === -1) continue;
-        used.add(index);
-        occurrences.push({ cardId: id, index });
-      }
-      if (occurrences.length !== ids.length) return;
+      const occurrences = resolveBoundDeckOccurrences(s, p, bound);
+      if (occurrences === null) return;
       const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
       // S2 B01093 (2026-07-10): 選択者 = ability owner (印字「自分が上か下かを選ぶ」)。gate を
       // 対象デッキ所有者 (p) から owner 絶対座標に是正 — B01093 は p='opp' (相手デッキ) でも
@@ -417,13 +450,14 @@ export function atomDeckPlaceSplitBound(s: GameState, a: Record<string, unknown>
           ownerPlayer: ownerAbs,
           deckSnapshot: [...deck],
           occurrences,
+          occurrenceWitness: cardOccurrenceWitness(s, p, 'deck'),
           ctx: toPlainDeep(ctx),
         };
-        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckPlaceSplitBound', result: `await ${ids.length}` });
+        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckPlaceSplitBound', result: `await ${occurrences.length}` });
         return;
       }
       // AI 恒等: deck に既に元順で存在するため mutation 不要
-      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckPlaceSplitBound', result: `identity ${ids.length}` });
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckPlaceSplitBound', result: `identity ${occurrences.length}` });
       return;
     }
 
@@ -438,9 +472,23 @@ export function atomDeckBottomReorderBound(s: GameState, a: Record<string, unkno
       const p = resolvePlayer(a.player, ctx);
       const bound = ctx.bindings[a.bindKey as string];
       if (!bound || !Array.isArray(bound) || bound.length === 0) return;
-      const ids = bound
-        .map(c => (c as unknown as { cardId?: string }).cardId ?? '')
-        .filter(id => id !== '');
+      const deck = s.players[p].deck;
+      const resolvedOccurrences = resolveBoundDeckOccurrences(s, p, bound);
+      const occurrences = resolvedOccurrences === null
+        ? []
+        : [...resolvedOccurrences].sort((left, right) => left.index - right.index);
+      const firstIndex = deck.length - occurrences.length;
+      if (resolvedOccurrences === null
+        || firstIndex < 0
+        || occurrences.some((occurrence, offset) => occurrence.index !== firstIndex + offset)) {
+        mutate.log.append(s, {
+          ts: Date.now(), player: p, turn: s.turn.number,
+          action: 'effect:deckBottomReorderBound', result: 'stale-selection',
+        });
+        return;
+      }
+      const ids = occurrences.map(occurrence => occurrence.cardId);
+      const witness = cardOccurrenceWitness(s, p, 'deck');
       const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
       if (ids.length >= 2 && p === humanSide) {
         const trace = ensureEffectCausalTrace(s, ctx);
@@ -448,6 +496,9 @@ export function atomDeckBottomReorderBound(s: GameState, a: Record<string, unkno
         (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = {
           player: p,
           cardIds: [...ids],
+          deckSnapshot: [...deck],
+          occurrences: occurrences.map(({ cardId, index }) => ({ cardId, index })),
+          occurrenceWitness: witness,
           ctx: toPlainDeep(ctx),
         };
         mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckBottomReorderBound', result: `await ${ids.length}` });
@@ -492,18 +543,24 @@ export function atomBoundToRemove(s: GameState, a: Record<string, unknown>, ctx:
         refreshAndRecord(removeBeforeRefresh, refreshesBefore);
         return;
       }
-      const ids = bound.map(c => {
-        const cAny = c as unknown as { cardId?: string };
-        return cAny.cardId ?? '';
-      }).filter(id => id !== '');
       const deck = s.players[p].deck;
-      const splicedIds: string[] = [];
-      for (const id of ids) {
-        const idx = deck.indexOf(id);
-        if (idx !== -1) {
-          deck.splice(idx, 1);
-          splicedIds.push(id);
-        }
+      const occurrences = resolveBoundDeckOccurrences(s, p, bound);
+      if (occurrences === null) {
+        mutate.log.append(s, {
+          ts: Date.now(), player: p, turn: s.turn.number,
+          action: 'effect:boundToRemove', result: 'stale-selection',
+        });
+        return;
+      }
+      const splicedIds = occurrences.map(occurrence => occurrence.cardId);
+      const removedIndexes = occurrences.map(occurrence => occurrence.index);
+      for (const index of [...removedIndexes].sort((left, right) => right - left)) {
+        deck.splice(index, 1);
+      }
+      if (removedIndexes.length > 0) {
+        advanceDeckEpochAndRebaseBindings(s, ctx, p, removedIndexes, {
+          preserveRemovedBindingKeysAsResolved: [bindKey],
+        });
       }
       const removeBeforeRefresh = s.players[p].remove.length;
       const refreshesBefore = s.refreshCount[p] ?? 0;
@@ -549,17 +606,50 @@ export function atomSouza(s: GameState, a: Record<string, unknown>, ctx: EffectC
         });
         return;
       }
+      const previousWitness = cardOccurrenceWitness(s, player, 'deck');
+      const movedOccurrences = Array.from({ length: count }, (_, index) => (
+        deckOccurrenceAuthority(s, player, index, previousWitness)!
+      ));
       const top = deck.splice(0, count);
       // engine additive wave (2026-06-29d): souza bind — 「発見された」(=公開した) カードを ctx.bindings へ
       // 束ねる (B01084「レベル5以上のカードが発見された場合」等)。consumer は既存 boundMatchesFilter
       // (bound[0]、捜査1=X1 で単一)。bind 未指定なら従来通り束ねない (回帰0)。card area の Candidate
       // (cardId のみ参照、deckToBottomBound と同型)。⚠ X>1 の「いずれか発見」は boundMatchesFilter が
       // bound[0] のみ評価するため未対応 (将来 any-match cond の follow-up、現需要 B01084/B01095 は X=1)。
+      deck.push(...top);
+      const firstMovedIndex = deck.length - top.length;
+      advanceDeckEpochAndRebaseBindings(
+        s,
+        ctx,
+        player,
+        Array.from({ length: count }, (_, index) => index),
+        {
+          relocatedOccurrences: deckOccurrenceRelocations(
+            movedOccurrences,
+            top.map((cardId, offset) => ({ cardId, index: firstMovedIndex + offset })),
+          ),
+        },
+      );
+      const witness = cardOccurrenceWitness(s, player, 'deck');
+      const occurrences = top.map((_, offset) => (
+        deckOccurrenceAuthority(s, player, firstMovedIndex + offset, witness)!
+      ));
       const souzaBindKey = a.bind as string | undefined;
       if (souzaBindKey) {
-        ctx.bindings[souzaBindKey] = top.map<Candidate>(id => ({ kind: 'card', cardId: id, area: 'deck', player }));
+        ctx.bindings[souzaBindKey] = occurrences;
       }
-      mutate.deck.toBottom(s, player, top);
+      const humanSideS = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+      if (humanSideS !== null) {
+        queuePendingDeckRevealSide({
+          player,
+          visibility: 'public',
+          viewer: 'all',
+          revealed: [...top],
+          matched: null,
+          presentation: 'reveal-to-bottom',
+          source: publicEffectSource(ctx),
+        });
+      }
       mutate.log.append(s, {
         ts: Date.now(),
         player,
@@ -570,14 +660,16 @@ export function atomSouza(s: GameState, a: Record<string, unknown>, ctx: EffectC
       });
       // BUG-136 水平展開: 捜査X も「(defender の)好きな順番でデッキの下に移す」(rules/13)。
       // deckToBottomBound と同じく defender が human & 2 枚以上のとき順序選択 modal を surface。
-      const humanSideS = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
       if (count >= 2 && player === humanSideS) {
         const trace = ensureEffectCausalTrace(s, ctx);
         markEffectCausalAwaitingResume(trace);
         (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = {
           player,
           cardIds: [...top],
-          ...(trace ? { ctx: toPlainDeep(ctx) } : {}),
+          deckSnapshot: [...deck],
+          occurrences: occurrences.map(({ cardId, index }) => ({ cardId, index })),
+          occurrenceWitness: witness,
+          ctx: toPlainDeep(ctx),
         };
       }
       return;
@@ -638,4 +730,8 @@ export function atomBindPick(s: GameState, a: Record<string, unknown>, ctx: Effe
   if (typeof bpUid !== 'string' || bpUid.startsWith('$')) return;
   // binding は preamble で書込済。可観測性のため log のみ残す。
   mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:bindPick', target: bpUid });
+}
+
+function deckRevealPresentation(value: unknown): 'reveal-return' | 'reveal-to-bottom' | undefined {
+  return value === 'reveal-return' || value === 'reveal-to-bottom' ? value : undefined;
 }

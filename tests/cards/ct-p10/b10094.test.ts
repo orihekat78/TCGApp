@@ -75,6 +75,7 @@ describe('B10094 犯人', () => {
     for (const [state, uid] of [[scene, 'scene-src'], [evidence, 'evidence:self:0'], [file, 'file:self:0']] as const) {
       expect(canActivateDeclaredAbility(state, uid, 'a1')).toBe(true);
       const { activated, pick } = activateAndGetPick(state, uid);
+      // qa: card:B10094:95ec3884ba49f8e60c1e269a3273f9f94a4dffd72b44a5d9e4d15746b4058866
       expect(activated.players.self.remove).toContain('B10094');
       expect(pick?.source).toMatchObject({ cardId: 'B10094', abilityId: 'a1' });
     }
@@ -100,6 +101,7 @@ describe('B10094 犯人', () => {
 
     applyPickAndContinuation(activated, pick!, selected.uid);
 
+    // qa: card:B10094:ac6deca54abb40e5febfb9c134935a67110fe6ce124bd3a654a18364afaf1ff1
     expect(activated.players.opp.partnerAreaCards).toEqual(['PA_EVENT', 'PA_CHAR', 'PA_OTHER']);
     expect(activated.players.opp.remove).toEqual(['PA_EVENT']);
     expect(leaveHooks).toEqual([]);
@@ -138,9 +140,9 @@ describe('B10094 犯人', () => {
     });
     expect(enumDeclaredAbilitySources(sources, 'self')).toEqual(['scene-src', 'evidence:self:0', 'file:self:0']);
     expect(enumerateMoves(sources, 'self').filter(move => move.kind === 'declaredAbility')).toEqual([
-      { kind: 'declaredAbility', uid: 'scene-src', abilityId: 'a1' },
-      { kind: 'declaredAbility', uid: 'evidence:self:0', abilityId: 'a1' },
-      { kind: 'declaredAbility', uid: 'file:self:0', abilityId: 'a1' },
+      { kind: 'declaredAbility', uid: 'scene-src', abilityId: 'a1', abilityOrigin: 'printed', abilityIndex: 0 },
+      { kind: 'declaredAbility', uid: 'evidence:self:0', abilityId: 'a1', abilityOrigin: 'printed', abilityIndex: 0 },
+      { kind: 'declaredAbility', uid: 'file:self:0', abilityId: 'a1', abilityOrigin: 'printed', abilityIndex: 0 },
     ]);
   });
 });

@@ -113,6 +113,34 @@ describe('engine.effect.run', () => {
       expect(result.players.self.scene[0].turnEffects['apMod_turn']).toBe(7);
     });
 
+    it('keeps option 0 when its false conditional has a meaningful else branch', () => {
+      const s = newStateWithChar();
+      const eff: Effect = {
+        kind: 'choice', chooser: 'owner', options: [
+          {
+            kind: 'conditional', if: { kind: 'false' },
+            then: { kind: 'atom', verb: 'charModifyAP', args: { uid: 'A#1', delta: 1, scope: 'turn' } },
+            else: { kind: 'atom', verb: 'charModifyAP', args: { uid: 'A#1', delta: 7, scope: 'turn' } },
+          },
+          { kind: 'atom', verb: 'charModifyAP', args: { uid: 'A#1', delta: 99, scope: 'turn' } },
+        ],
+      };
+      const result = produce(s, draft => run(draft, eff, newCtx()));
+      expect(result.players.self.scene[0].turnEffects['apMod_turn']).toBe(7);
+    });
+
+    it('falls back to option 0 when every conditional option is false', () => {
+      const s = newStateWithChar();
+      const eff: Effect = {
+        kind: 'choice', chooser: 'owner', options: [
+          { kind: 'conditional', if: { kind: 'false' }, then: { kind: 'atom', verb: 'charModifyAP', args: { uid: 'A#1', delta: 1, scope: 'turn' } } },
+          { kind: 'conditional', if: { kind: 'false' }, then: { kind: 'atom', verb: 'charModifyAP', args: { uid: 'A#1', delta: 99, scope: 'turn' } } },
+        ],
+      };
+      const result = produce(s, draft => run(draft, eff, newCtx()));
+      expect(result.players.self.scene[0].turnEffects['apMod_turn']).toBeUndefined();
+    });
+
     it('throws on out-of-range choiceIndex', () => {
       const s = newStateWithChar();
       const eff: Effect = {
@@ -297,7 +325,7 @@ describe('engine.effect.run', () => {
     });
   });
 
-  describe('replace / negate (forbidden)', () => {
+  describe('replace / negate immediate-resolution boundaries', () => {
     it('throws when run is called on replace', () => {
       const s = createEmptyGameState();
       const eff: Effect = {
@@ -309,10 +337,10 @@ describe('engine.effect.run', () => {
         produce(s, draft => {
           run(draft, eff, newCtx());
         });
-      }).toThrow(/replace\/negate are immediate-resolution/);
+      }).toThrow(/replace is immediate-resolution/);
     });
 
-    it('throws when run is called on negate', () => {
+    it('rejects an unsupported negate descriptor', () => {
       const s = createEmptyGameState();
       const eff: Effect = {
         kind: 'negate',
@@ -322,7 +350,39 @@ describe('engine.effect.run', () => {
         produce(s, draft => {
           run(draft, eff, newCtx());
         });
-      }).toThrow(/replace\/negate are immediate-resolution/);
+      }).toThrow(/unsupported negate descriptor/);
+    });
+
+    it('cancels only the matching pending Cut-In declaration batch', () => {
+      const s = createEmptyGameState();
+      s.pendingEffects = [{
+        id: 'cutin-own',
+        source: {
+          player: 'opp', cardId: 'CUTIN', abilityId: 'cutin-a1',
+          area: 'hand', resolutionKind: 'cutin',
+        },
+        triggeredBy: { hook: 'effect:declared' },
+        triggeredAt: { turn: 1, phase: 'main', nano: 1 },
+        effect: { kind: 'atom', verb: 'noop', args: {} },
+        state: 'pending',
+        declaredBatch: 7,
+      }];
+      const eff: Effect = {
+        kind: 'negate',
+        trigger: {
+          on: 'effect-resolution',
+          matcher: { resolutionKind: 'cutin', declaredBatch: '$trigger.declaredBatch' },
+        },
+      };
+      const after = produce(s, draft => {
+        run(draft, eff, {
+          ...newCtx(),
+          triggerPayload: {
+            player: 'opp', cardId: 'CUTIN', declaredBatch: 7,
+          },
+        });
+      });
+      expect(after.pendingEffects[0]?.state).toBe('cancelled');
     });
   });
 });

@@ -79,13 +79,16 @@ describe('BUG-194 partner effective AP', () => {
     const ax = context('contact-pending');
 
     const out = produce(s, (draft) => {
-      advance(draft, ax);
-      snapshotAP(draft, ax);
+      draft.actionContexts ??= {};
+      draft.actionContexts[ax.id] = ax;
+      advance(draft, draft.actionContexts[ax.id]);
+      snapshotAP(draft, draft.actionContexts[ax.id]);
     });
+    const liveAx = out.actionContexts![ax.id]!;
 
     expect(out.players.self.partner.turnEffects?.['apMod_contact']).toBe(-2000);
-    expect(ax.firstUid).toBe('partner:self');
-    expect(ax.apSnapshot).toEqual({
+    expect(liveAx.firstUid).toBe('partner:self');
+    expect(liveAx.apSnapshot).toEqual({
       aUid: 'partner:self',
       aAP: 1000,
       bUid: 'partner:opp',

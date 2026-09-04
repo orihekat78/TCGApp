@@ -29,7 +29,7 @@ const a1: AbilityDef = {
           // AP8000以下のキャラを1枚まで選び、リムーブする
           { kind: 'atom', verb: 'sceneRemove', args: { uid: '$pick', target: { kind: 'pick', query: { area: 'scene', side: 'either', filter: { apMax: 8000 } }, n: { min: 0, max: 1 }, chooser: 'self' } } },
           // 自分のリムーブエリアにある[マロちゃん]を1枚まで選び、手札に加える
-          { kind: 'atom', verb: 'handAddFromRemove', args: { target: { kind: 'pick', query: { area: 'remove', side: 'self', filter: { cardName: 'マロちゃん' } }, n: { min: 0, max: 1 }, chooser: 'self' } } },
+          { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', target: { kind: 'pick', query: { area: 'remove', side: 'self', filter: { cardName: 'マロちゃん' } }, n: { min: 0, max: 1 }, chooser: 'self' } } },
         ],
       },
     ],

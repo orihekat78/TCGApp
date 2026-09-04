@@ -113,6 +113,10 @@ function solveCase(s: GameState, p: Player): void {
  * real partner singleton / partnerAreaMR には一切触れない。
  * @returns 移動が実行されたか
  */
+function addAreaCard(s: GameState, p: Player, cardId: string): void {
+  (s.players[p].partnerAreaCards ??= []).push(cardId);
+}
+
 function addAreaCardFromRemove(s: GameState, p: Player, cardId: string, exactIndex?: number): boolean {
   const list = s.players[p].remove;
   const idx = typeof exactIndex === 'number'
@@ -122,7 +126,7 @@ function addAreaCardFromRemove(s: GameState, p: Player, cardId: string, exactInd
   list.splice(idx, 1);
   advanceIndexedZoneEpoch(s, p, 'remove');
   removeMut.emitExit(s, p, cardId);
-  (s.players[p].partnerAreaCards ??= []).push(cardId);
+  addAreaCard(s, p, cardId);
   return true;
 }
 
@@ -176,6 +180,7 @@ export const partner = {
   assist,
   returnFromFile,
   solveCase,
+  addAreaCard,
   addAreaCardFromRemove,
   removeAreaCardsToRemove,
   removeAreaCardToRemoveAt,

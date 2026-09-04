@@ -8,7 +8,7 @@
 //   §b PR042 enterSleep → 2体スリープ登場。
 //   §c room1 + enter2 (victim 1) → 1体通常 + 1体 switch、scene=5・victim 離場。
 //   §d full + enter2 (victim 2) → 2体 switch、scene=5・victim 2体離場 (throw 無)。
-//   §e full + enter2 (victim 無 / AI) → 入る分のみ (per-card skip、throw 無)。
+//   §e AI full/room1 + enter2 → overflow数ぶんvictimを自動選択し、2体とも登場。
 //   §f AI distinctNames: 同名2 + 別名1 → 別名2体 (rules/19 split-name dedup)。
 //   §g B09010 0枚 decline (remove に有効候補無) でも FILE 上1リムーブ実行 (skipResolvesAtom)。
 //   §i exact vs ≤ level: Lv3[少年探偵団] decoy は B09010(Lv4 EXACT)非対象 / PR042(≤4)対象。
@@ -152,18 +152,54 @@ describe('cluster14 §c/§d — switch victim (explicit resolved)', () => {
     });
     expect(s.players.self.scene.some((c) => c.uid === 'kasa#1'), '阿笠自身が switch で離場').toBe(false);
   });
+
+  it.each([
+    ['forged victim', ['v1', 'forged-victim']],
+    ['duplicate victim', ['v1', 'v1']],
+    ['missing overflow victim', ['v1']],
+  ] as const)('%s は登場元を消費する前に全体を fail-closed', (_label, switchRemoveUids) => {
+    const s = runResolvedEnter([SBT4a, SBT4b], [...switchRemoveUids], (st) => {
+      st.players.self.scene = [
+        sceneChar('B09010', 'kasa#1'),
+        sceneChar(SBT3, 'v1'),
+        sceneChar(SBT3, 'v2'),
+        sceneChar(SBT3, 'v3'),
+        sceneChar(SBT3, 'v4'),
+      ];
+      st.players.self.remove = [SBT4a, SBT4b];
+    });
+    expect(s.players.self.scene.map((c) => c.uid)).toEqual(['kasa#1', 'v1', 'v2', 'v3', 'v4']);
+    expect(s.players.self.remove).toEqual([SBT4a, SBT4b]);
+  });
 });
 
-describe('cluster14 §e — full + victim 無 (AI) → per-card skip (throw 無)', () => {
-  it('現場満杯で AI が victim を持たない → 登場 0 (crash しない)', () => {
+describe('cluster14 §e — AI multi-entry supplies exact switch victim count', () => {
+  it('現場満杯 + 2体登場 → AI がvictim 2体を選び、2体とも登場', () => {
     const s = runAbility('B09010', 'a1', (st) => {
       st.players.self.scene = [sceneChar('B09010', 'kasa#1'), sceneChar(SBT3, 'x1'), sceneChar(SBT3, 'x2'), sceneChar(SBT3, 'x3'), sceneChar(SBT3, 'x4')];
       st.players.self.remove = [SBT4a, SBT4b];
       st.players.self.file = [FB, FB];
     });
-    expect(s.players.self.scene.length, 'scene=5 維持 (登場できず)').toBe(5);
-    expect(s.players.self.scene.filter((c) => c.cardId === SBT4a || c.cardId === SBT4b).length, '0体登場').toBe(0);
+    expect(s.players.self.scene.length, 'scene=5 維持').toBe(5);
+    expect(s.players.self.scene.filter((c) => c.cardId === SBT4a || c.cardId === SBT4b).length, '2体登場').toBe(2);
+    expect(s.players.self.scene.filter((c) => ['kasa#1', 'x1', 'x2', 'x3', 'x4'].includes(c.uid)).length, '元sceneは3体残る').toBe(3);
+    expect(s.players.self.remove.filter((cardId) => cardId === 'B09010' || cardId === SBT3).length, 'victim 2体がremove').toBe(2);
+    expect(s.players.self.remove, '後続FILE上1もリムーブ').toContain('D08017');
     expect(s.players.self.file.length, 'FILE上1リムーブは実行').toBe(1);
+  });
+
+  it('現場4体 + 2体登場 → multi authorityでvictim 1体だけ選び、2体とも登場', () => {
+    const s = runAbility('B09010', 'a1', (st) => {
+      st.players.self.scene = [sceneChar('B09010', 'kasa#1'), sceneChar(SBT3, 'x1'), sceneChar(SBT3, 'x2'), sceneChar(SBT3, 'x3')];
+      st.players.self.remove = [SBT4a, SBT4b];
+      st.players.self.file = [FB, FB];
+    });
+    expect(s.players.self.scene).toHaveLength(5);
+    expect(s.players.self.scene.filter((c) => c.cardId === SBT4a || c.cardId === SBT4b)).toHaveLength(2);
+    expect(s.players.self.scene.filter((c) => ['kasa#1', 'x1', 'x2', 'x3'].includes(c.uid))).toHaveLength(3);
+    expect(s.players.self.remove.filter((cardId) => cardId === 'B09010' || cardId === SBT3)).toHaveLength(1);
+    expect(s.players.self.remove).toContain('D08017');
+    expect(s.players.self.file).toHaveLength(1);
   });
 });
 

@@ -9,7 +9,7 @@
 // a1: 無条件キーワード 〚突撃〛 → keywords:['突撃']。
 // a2: 常時有効 — 【パートナー赤】【自分ターン中】 AP＋1000 (continuousModifier.apDelta / D08005 a1 同型)。
 // a3: 宣言能力 — 【パートナー赤】【ターン1】cost removeFromScene{pick: cardName[赤井秀一|ライ] levelMin7 side self}。
-//     効果 sceneSetState active self (uid:'$self' / D11016 同型)。
+//     効果 sceneSetState active self (uid:'$self')。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 

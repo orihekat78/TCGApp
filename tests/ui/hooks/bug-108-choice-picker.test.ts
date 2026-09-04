@@ -14,11 +14,30 @@ import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { produce } from '@/engine/produce';
 import { registerAll } from '@/cards';
+import { register } from '@/engine/read/def';
 import { char as readChar } from '@/engine/read/char';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
-import type { GameState } from '@/engine/types';
+import type { CardDef, GameState } from '@/engine/types';
 import { sceneChar } from '../../helpers/fixtures';
 import { dispatchCurrentDecision } from '../../helpers/dispatch-current-decision';
+
+const LABELED_CHOICE: CardDef = {
+  id: 'BUG108_LABELED_CHOICE', no: 'TEST/BUG108_LABELED_CHOICE', kind: 'character',
+  names: ['選択ラベル確認'], colors: ['白'], level: 1, ap: 1000, lp: 1,
+  traits: [], keywords: [], rarity: 'T', imageUrl: '', ruleRefs: [],
+  abilities: [{
+    id: 'a1', type: 'declared', scope: 'on-scene',
+    effect: {
+      kind: 'choice', chooser: 'self', labels: ['黒羽盗一', '黒羽快斗', '怪盗キッド'],
+      options: [
+        { kind: 'atom', verb: 'noop', args: {} },
+        { kind: 'atom', verb: 'noop', args: {} },
+        { kind: 'atom', verb: 'noop', args: {} },
+      ],
+    },
+    description: '3つの名前から1つを指定する。', ruleRefs: ['rules/15-abilities-effects.md'],
+  }],
+};
 
 
 // D11012 (横溝重悟, 警察 Lv4 LP0) を source ('shigo') + 効果対象 ('target') の 2 体置く。
@@ -51,7 +70,10 @@ async function flush(): Promise<void> {
   await new Promise<void>((res) => setTimeout(res, 0));
 }
 
-beforeAll(() => registerAll());
+beforeAll(() => {
+  registerAll();
+  register(LABELED_CHOICE);
+});
 
 beforeEach(() => {
   useGameStateStore.setState({ gameState: null, pendingEffectPick: null });
@@ -123,5 +145,24 @@ describe('D11012 a1 — choice 択一 UI (BUG-108)', () => {
     await flush();
     const result = await promise;
     expect(result.ok).toBe(false);
+  });
+});
+
+describe('choice labels', () => {
+  it('uses explicit semantic labels for a declared top-level choice', async () => {
+    const state = createEmptyGameState();
+    state.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    state.players.self.scene = [sceneChar(LABELED_CHOICE.id, 'labeled-source')];
+    useGameStateStore.setState({ gameState: state });
+    const promise = runDeclaredAbilityFlow({ player: 'self' });
+
+    await pickPicker('labeled-source');
+    await acceptConfirmation();
+    expect(useChoicePickerStore.getState().current?.options.map(option => option.label))
+      .toEqual(['黒羽盗一', '黒羽快斗', '怪盗キッド']);
+
+    useChoicePicker().cancel();
+    await flush();
+    expect((await promise).ok).toBe(false);
   });
 });

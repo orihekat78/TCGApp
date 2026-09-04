@@ -7,7 +7,7 @@
 // rules: 07/09/15/17/22/25 + TSV qAndA (D06003: ウォッカ除外名指し / B07100: presence 静的判定)
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../helpers/main-game-state';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered, _setHumanPlayerSide } from '@/engine/listeners/triggered';
 import { register as registerCardDef, _resetRegistry } from '@/engine/read/def';
@@ -114,7 +114,7 @@ describe('D06003 a2 — production 経路 (flow.action.declare → 実 listener 
     registerCardDef(plain('TGT'));
     registerTriggeredListener();
     const s = createEmptyGameState();
-    s.turn = { number: 2, player: 'self' } as GameState['turn'];
+    s.turn = { number: 2, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     s.players.self.partner = { cardId: partnerCardId, state: 'active', location: 'partner-area' };
     s.players.opp.partner = { cardId: 'PRED', state: 'active', location: 'partner-area' };
     s.players.self.scene.push(makeChar({ uid: 'u-hattori', cardId: 'D06003', state: 'active' }));
@@ -217,7 +217,7 @@ describe('B07100 a1 — production 経路 (enter 実 hook emit → 実 listener 
     registerCardDef(plain('DKD'));
     registerTriggeredListener();
     const s = createEmptyGameState();
-    s.turn = { number: 2, player: 'self' } as GameState['turn'];
+    s.turn = { number: 2, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     s.players.self.partner = { cardId: partnerCardId, state: 'active', location: 'partner-area' };
     s.players.opp.partner = { cardId: 'PRED', state: 'active', location: 'partner-area' };
     s.players.opp.hand = [...oppHand];

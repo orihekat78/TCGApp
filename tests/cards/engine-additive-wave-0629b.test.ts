@@ -18,6 +18,7 @@ import { read } from '@/engine/read/index';
 import { char as mutateChar } from '@/engine/mutate/char';
 import { runAtom } from '@/engine/effect/index';
 import { matchOneFilter } from '@/engine/target/candidates';
+import { evalCond } from '@/engine/cond/eval';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { sceneChar, makeCtx } from '../helpers/fixtures';
@@ -132,15 +133,82 @@ describe('#2 printed-keyword turn-revoke — 突撃[キャラ] をターン終�
     expect(read.char.keywords(s, 't#1'), 'ターン終了清掃で印字 突撃[キャラ] が復活').toContain('突撃[キャラ]');
   });
 
-  it('再付与で復活 (B06068 Q&A) — 失った後に外部 turn-grant された 突撃[キャラ] は持つ', () => {
+  it('解決前の外部 turn-grant は失い、再付与で復活し、次のrevokeで再び失う', () => {
     const s = createEmptyGameState();
     turn(s, 'self');
     s.players.self.scene = [sceneChar('TOKKEKYA', 't#1')];
-    mutateChar.revokeKeywordTurn(s, 't#1', '突撃[キャラ]'); // 印字を失う
-    expect(read.char.keywords(s, 't#1'), '失った直後は持たない').not.toContain('突撃[キャラ]');
+    mutateChar.grantKeyword(s, 't#1', '突撃[キャラ]', 'turn');
+    mutateChar.revokeKeywordTurn(s, 't#1', '突撃[キャラ]');
+    expect(read.char.keywords(s, 't#1'), '解決前の外部付与も失う').not.toContain('突撃[キャラ]');
     mutateChar.grantKeyword(s, 't#1', '突撃[キャラ]', 'turn'); // 他カードが再付与 (turnGranted へ)
     expect(read.char.keywords(s, 't#1'), '外部 turn-grant は revoke と独立 → 再付与で復活 (公式Q&A)').toContain('突撃[キャラ]');
     expect(read.char.hasKeyword(s, 't#1', '突撃[キャラ]'), 'hasKeyword も true').toBe(true);
+    mutateChar.revokeKeywordTurn(s, 't#1', '突撃[キャラ]');
+    expect(read.char.hasKeyword(s, 't#1', '突撃[キャラ]')).toBe(false);
+  });
+
+  it('解決前のpermanent外部付与はターン中だけ失い、turn cleanupで復活する', () => {
+    const s = createEmptyGameState();
+    turn(s, 'self');
+    s.players.self.scene = [sceneChar('TOKKEKYA', 't#1', {
+      keywordOverrides: { granted: ['突撃[キャラ]'], disabledOriginal: false },
+    })];
+
+    mutateChar.revokeKeywordTurn(s, 't#1', '突撃[キャラ]');
+    expect(read.char.keywords(s, 't#1')).not.toContain('突撃[キャラ]');
+    mutateChar.clearTurnEffects(s, 't#1', 'turn');
+    expect(read.char.keywords(s, 't#1')).toContain('突撃[キャラ]');
+    expect(s.players.self.scene[0]!.turnEffects.revokedKeywords).toBeUndefined();
+    expect(s.players.self.scene[0]!.turnEffects.postRevokeGrantedKeywords).toBeUndefined();
+    expect(s.players.self.scene[0]!.turnEffects.revokedSetKeywordSources).toBeUndefined();
+  });
+
+  it('same-value permanent grant after revoke restores the keyword', () => {
+    const s = createEmptyGameState();
+    turn(s, 'self');
+    s.players.self.scene = [sceneChar('TOKKEKYA', 't#1', {
+      keywordOverrides: { granted: ['突撃[キャラ]'], disabledOriginal: false },
+    })];
+
+    mutateChar.revokeKeywordTurn(s, 't#1', '突撃[キャラ]');
+    expect(read.char.hasKeyword(s, 't#1', '突撃[キャラ]')).toBe(false);
+    mutateChar.grantKeyword(s, 't#1', '突撃[キャラ]', 'permanent');
+    expect(read.char.hasKeyword(s, 't#1', '突撃[キャラ]')).toBe(true);
+  });
+
+  it('legacy save with no temporal marker treats an external grant as pre-boundary', () => {
+    const s = createEmptyGameState();
+    turn(s, 'self');
+    s.players.self.scene = [sceneChar('TOKKEKYA', 't#1', {
+      turnEffects: {
+        contactImmune: false,
+        removeOnTurnEnd: false,
+        grantedKeywords: ['突撃[キャラ]'],
+        revokedKeywords: ['突撃[キャラ]'],
+      },
+    })];
+
+    expect(read.char.keywords(s, 't#1')).not.toContain('突撃[キャラ]');
+  });
+
+  it('effective keyword filters and conditions follow revoke then regrant', () => {
+    const s = createEmptyGameState();
+    turn(s, 'self');
+    s.players.self.scene = [sceneChar('TOKKEKYA', 't#1')];
+    const candidate: Candidate = { kind: 'char', uid: 't#1', cardId: 'TOKKEKYA', player: 'self' };
+    const condition = {
+      kind: 'sceneHas' as const,
+      query: { area: 'scene' as const, side: 'self' as const, filter: { keyword: '突撃[キャラ]' } },
+      nMin: 1,
+    };
+    const ctx = makeCtx({ source: { player: 'self', uid: 't#1', cardId: 'TOKKEKYA', area: 'scene' } });
+
+    mutateChar.revokeKeywordTurn(s, 't#1', '突撃[キャラ]');
+    expect(matchOneFilter(s, 'TOKKEKYA', { keyword: '突撃[キャラ]' }, s.players.self.scene[0], candidate)).toBe(false);
+    expect(evalCond(s, condition, ctx)).toBe(false);
+    mutateChar.grantKeyword(s, 't#1', '突撃[キャラ]', 'turn');
+    expect(matchOneFilter(s, 'TOKKEKYA', { keyword: '突撃[キャラ]' }, s.players.self.scene[0], candidate)).toBe(true);
+    expect(evalCond(s, condition, ctx)).toBe(true);
   });
 
   it('charRevokeKeyword verb (scope:turn) 経由でも同挙動', () => {

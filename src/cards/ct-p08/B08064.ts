@@ -14,10 +14,13 @@ const a1: AbilityDef = {
     selfOnly: true
   },
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'chain',
-      steps: [
+    kind: 'conditional',
+    if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain',
+        steps: [
         {
           kind: 'atom',
           verb: 'sceneSetState',
@@ -52,8 +55,9 @@ const a1: AbilityDef = {
               levelMax: 7
             }
           }
-        }
-      ]
+          }
+        ]
+      }
     }
   },
   description: '【登場時】このキャラをスリープさせ、手札から〚特徴［警視庁］〛のキャラを1枚公開してもよい。そうした場合、レベル7以下のキャラを1枚まで選び、リムーブする。',

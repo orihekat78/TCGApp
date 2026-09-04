@@ -450,7 +450,7 @@ import { B03096 } from '../ct-p03/B03096.js';
 import { B05019 } from '../ct-p05/B05019.js';
 // triggerChar→target batch: 「そのキャラ」($trigger.uid) を effect target に (B05080)
 import { B05080 } from '../ct-p05/B05080.js';
-// multi-hook 共有【ターン1】batch: 「推理かアクションしたとき」(reasoning:end + action:declare)
+// multi-hook 共有【ターン1】batch: 「推理かアクションしたとき」(reasoning:after-sleep + action:declare)
 import { D03007 } from '../ct-d03/D03007.js';
 import { B04039 } from '../ct-p04/B04039.js';
 import { B02004 } from '../ct-p02/B02004.js';
@@ -1822,7 +1822,7 @@ export const REUSE_CARDS: CardDef[] = [
   B05019,
   // triggerChar→target batch (「そのキャラ」= $trigger.uid)
   B05080,
-  // multi-hook 共有【ターン1】batch (「推理かアクションしたとき」= reasoning:end + action:declare)
+  // multi-hook 共有【ターン1】batch (「推理かアクションしたとき」= reasoning:after-sleep + action:declare)
   D03007, B04039, B02004, D10023, PR173,
   // set-card 除去 batch (charRemoveSetCard verb)
   B08034, B08034P,

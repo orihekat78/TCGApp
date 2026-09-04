@@ -23,6 +23,33 @@ does not access ignored raw Q&A packages.
 - Preserve canonical item and evidence ordering. Run `npm run qa:adjudication:merge`
   and `npm run lint:qa` before handoff.
 
+## Execution cadence
+
+- Batch ordinary T1/T2 items by shared rule primitive, not one exact Q&A group
+  per implementation wave. Target 20-30 aligned items per wave; keep unrelated
+  semantics in separate matrices.
+- Use smaller 5-15 item waves when public decisions, save hydration, card
+  interactions, or new fixture shapes need individual judgment. Isolate T3
+  engine/resolver/GameState defects as their own wave.
+- Every ordinary wave runs only its focused behavioral tests and a narrow QA
+  shape check. Reuse the checkpoint's fresh authority snapshot for both waves.
+- After two implementation waves, run both typechecks, focused ESLint,
+  adjudication merge/lint, generated-Q&A check, and diff-check once; then create
+  one coherent commit and push it once.
+- Run full Vitest, full ESLint, smoke, and Playwright once per ten waves, and
+  immediately for T3 engine/security/save/public-UI changes or publication.
+- Certification-only waves normally use no review agent. Production changes,
+  unresolved conflicts, or T3 may use independent read-only reviewers when
+  parallel work helps, with a strict maximum of three subagents.
+- Do not repeat a green unchanged gate inside one checkpoint. Re-estimate the
+  remaining effort after each ten-wave full-gate checkpoint.
+
+Current 2026-08-25 snapshot: 1065 test-missing items / 943 exact groups, with
+821 singleton groups. Revised remaining effort is 54-115 working hours; the
+center estimate is about 85 hours. Risk-aware batching implies roughly 34-74
+implementation waves, not one wave per exact group. Prefer complete-card batches
+of 5-15 related Q&A items when exact groups are mostly singleton or pairs.
+
 ## Privacy
 
 - Never copy raw question or answer bodies, individual official URLs, or local

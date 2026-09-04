@@ -27,6 +27,7 @@ import type {
 import type { EffectStackEntry } from '@/engine/types/effect-stack';
 import { makeChar as baseChar } from '../../helpers/fixtures';
 import { register as engineRegisterCardDef } from '@/engine/read/def';
+import { char as readChar } from '@/engine/read/char';
 import { useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
 import { appendCausal, isCausalLogEntry, startCausalSession } from '@/engine/log/causal';
 import { snapshotPendingRuntimeState } from '@/engine/effect/runtime-state';
@@ -66,7 +67,11 @@ function makeChar(uid: string, cardId = 'cX'): SceneCharacter {
 function makePendingEffect(id: string, state: EffectStackEntry['state']): EffectStackEntry {
   return {
     id,
-    source: { player: 'self' },
+    source: {
+      player: 'self',
+      cardId: 'surrender-test-card',
+      abilityId: 'surrender-test-ability',
+    },
     triggeredBy: { hook: 'surrender-test' },
     triggeredAt: { turn: 1, phase: 'main', nano: id === 'pending' ? 1 : 2 },
     effect: { kind: 'atom', verb: 'noop', args: {} },
@@ -181,6 +186,90 @@ describe('dispatchEngineAction (pure function)', () => {
       expect(after.turnState.self.nextHintUsed).toBe(true);
     });
 
+    it('nextHint: rejects a non-character/event optional card before public mutation', () => {
+      engineRegisterCardDef({
+        id: 'NH-CASE', no: 'NH-CASE', kind: 'case', names: ['NH-CASE'], colors: [], caseLevel: 7,
+        caseTraits: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [],
+      } as never);
+      const init = withMainPhase(createEmptyGameState());
+      init.players.self.file = [
+        { type: 'card-back', cardId: 'FILE-A' },
+        { type: 'card-back', cardId: 'FILE-B' },
+      ];
+      init.players.self.hand = ['NH-CASE'];
+      useGameStateStore.setState({ gameState: init });
+      const before = useGameStateStore.getState().gameState;
+
+      expect(dispatchEngineAction({
+        type: 'nextHint', player: 'self', optionalCardId: 'NH-CASE',
+      })).toEqual({ ok: false, reason: 'not-allowed' });
+      expect(useGameStateStore.getState().gameState).toBe(before);
+    });
+
+    it.each(['self', 'opp'] as const)('nextHint: %s requires and validates a switch victim for a full-scene character', player => {
+      engineRegisterCardDef({
+        id: 'NH-CHAR', no: 'NH-CHAR', kind: 'character', names: ['NH-CHAR'], colors: [], level: 1,
+        ap: 1000, lp: 1, traits: [], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [],
+      } as never);
+      const init = withMainPhase(createEmptyGameState());
+      init.turn.player = player;
+      init.players[player].file = [
+        { type: 'card-back', cardId: 'FILE-A' },
+        { type: 'card-back', cardId: 'FILE-B' },
+      ];
+      init.players[player].hand = ['NH-CHAR'];
+      init.players[player].scene = Array.from({ length: 5 }, (_, index) => makeChar(`nh-old-${index}`));
+      useGameStateStore.setState({ gameState: init });
+      const before = useGameStateStore.getState().gameState;
+
+      expect(dispatchEngineAction({
+        type: 'nextHint', player, optionalCardId: 'NH-CHAR',
+      })).toEqual({ ok: false, reason: 'not-allowed' });
+      expect(useGameStateStore.getState().gameState).toBe(before);
+      expect(dispatchEngineAction({
+        type: 'nextHint', player, optionalCardId: 'NH-CHAR', switchRemoveUid: 'other-side-card',
+      })).toEqual({ ok: false, reason: 'not-allowed' });
+      expect(useGameStateStore.getState().gameState).toBe(before);
+
+      expect(dispatchEngineAction({
+        type: 'nextHint', player, optionalCardId: 'NH-CHAR', switchRemoveUid: 'nh-old-2',
+      })).toEqual({ ok: true });
+      const after = useGameStateStore.getState().gameState!;
+      expect(after.players[player].scene).toHaveLength(5);
+      expect(after.players[player].scene.some(card => card.uid === 'nh-old-2')).toBe(false);
+      expect(after.players[player].scene.some(card => card.cardId === 'NH-CHAR')).toBe(true);
+    });
+
+    it('nextHint: rejects switch metadata for skip, event, or a non-full character', () => {
+      engineRegisterCardDef({
+        id: 'NH-EVENT', no: 'NH-EVENT', kind: 'event', names: ['NH-EVENT'], colors: [], level: 1,
+        traits: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [],
+      } as never);
+      engineRegisterCardDef({
+        id: 'NH-ROOM-CHAR', no: 'NH-ROOM-CHAR', kind: 'character', names: ['NH-ROOM-CHAR'], colors: [], level: 1,
+        ap: 1000, lp: 1, traits: [], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [],
+      } as never);
+      for (const optionalCardId of [undefined, 'NH-EVENT', 'NH-ROOM-CHAR'] as const) {
+        const init = withMainPhase(createEmptyGameState());
+        init.players.self.file = [
+          { type: 'card-back', cardId: 'FILE-A' },
+          { type: 'card-back', cardId: 'FILE-B' },
+        ];
+        init.players.self.hand = optionalCardId === undefined ? [] : [optionalCardId];
+        init.players.self.scene = [makeChar('nh-room-victim')];
+        useGameStateStore.setState({ gameState: init });
+        const before = useGameStateStore.getState().gameState;
+
+        expect(dispatchEngineAction({
+          type: 'nextHint',
+          player: 'self',
+          optionalCardId,
+          switchRemoveUid: 'nh-room-victim',
+        })).toEqual({ ok: false, reason: 'not-allowed' });
+        expect(useGameStateStore.getState().gameState).toBe(before);
+      }
+    });
+
     it('partnerAbility: appends a partnerAbility log entry', () => {
       const init = withMainPhase(createEmptyGameState());
       init.players.self.partner = { cardId: 'P1', state: 'active', location: 'partner-area' };
@@ -216,7 +305,7 @@ describe('dispatchEngineAction (pure function)', () => {
       });
       expect(result.ok).toBe(true);
       const after = useGameStateStore.getState().gameState!;
-      expect(after.players.self.scene[0]?.declaredUseCount['A1']).toBe(1);
+      expect(readChar.declaredUseCount(after, 'c1', 'A1')).toBe(1);
       expect(after.log.at(-1)?.action).toBe('declaredAbility');
     });
 
@@ -275,7 +364,8 @@ describe('dispatchEngineAction (pure function)', () => {
             present: true,
             value: {
               owner: 'self', audience: 'all', cardIds: ['D08001'], handSnapshot: ['D08001'],
-              lifetime: 'presentation', resolutionToken: 'public-hand-reveal:1', source: {},
+              lifetime: 'presentation', resolutionToken: 'public-hand-reveal:1',
+              source: { cardId: 'surrender-test-card', abilityId: 'surrender-test-ability' },
             },
           },
         ],

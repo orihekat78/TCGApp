@@ -25,10 +25,10 @@ import { evalCond } from '../cond/eval.js';
 import { bindingKeysReadByCondition } from '../cond/binding-keys.js';
 import { def as readDef } from '../read/def.js';
 import { char as readChar } from '../read/char.js';
-import type { GameState, Effect, EffectCtx, TargetingRef, Condition } from '../types/index.js';
+import type { GameState, Effect, EffectCtx, TargetingRef, Condition, AtomVerb } from '../types/index.js';
 import type { Candidate } from '../types/candidate.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from './atom-pick-spec.js';
-import { findChooseIntercept } from './consult-choose-intercept.js';
+import { findChooseInterceptReactions, isTrustedSetCardOccurrenceSelection } from './consult-choose-intercept.js';
 import { hand } from '../mutate/hand.js';
 import { run as runEffect } from './resolver.js';
 import { eventUseAllowed } from '../flow/main/hand-use-card.js';
@@ -44,6 +44,13 @@ import {
   recordEffectCausalDecision,
   recordEffectCausalOperation,
 } from '../log/effect-causal.js';
+import {
+  isSceneEnterSwitchPickArgs,
+  isValidSceneEnterSwitchPickAuthority,
+  resolveSceneEnterSwitchPickArgs,
+  sceneEnterOwnsNextPick,
+} from './scene-switch.js';
+import { assertCompleteSetCardSource } from './source-identity.js';
 
 type Player = 'self' | 'opp';
 
@@ -55,11 +62,16 @@ function containsSceneEnter(effect: Effect): boolean {
   return false;
 }
 
-export function pendingSource<T extends { cardId: string; abilityId: string }>(state: GameState, ctx: EffectCtx, source: T) {
+export function pendingSource<T extends { uid?: string; cardId: string; abilityId: string }>(state: GameState, ctx: EffectCtx, source: T) {
   const trace = ensureEffectCausalTrace(state, ctx);
   markEffectCausalAwaitingResume(trace);
   return {
     ...source,
+    ...(source.uid === undefined && ctx.source.uid !== undefined ? { uid: ctx.source.uid } : {}),
+    ...(ctx.source.setCardId !== undefined ? { setCardId: ctx.source.setCardId } : {}),
+    ...(ctx.source.setCardInstanceId !== undefined ? { setCardInstanceId: ctx.source.setCardInstanceId } : {}),
+    ...(ctx.source.abilityOrigin !== undefined ? { abilityOrigin: ctx.source.abilityOrigin } : {}),
+    ...(ctx.source.abilityIndex !== undefined ? { abilityIndex: ctx.source.abilityIndex } : {}),
     ...(ctx.source.area ? { area: ctx.source.area } : {}),
     ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}),
     ...(ctx.source.triggerBatch !== undefined ? { triggerBatch: ctx.source.triggerBatch } : {}),
@@ -118,13 +130,19 @@ function conditionHasMissingBinding(cond: Condition, bindings: EffectCtx['bindin
  * costPaid が乗っている useDeclaredAbility の resolveEffectPicks 初期 walk) でしか
  * 解決できない。
  *
- * `{ dyn }` 値を持つ atom が現状 caseDeclaredEvidenceFlip のみのため、他カードへの
- * 影響はゼロ (dyn 値が無い args はそのまま同一参照を返す)。
+ * Runtime dyn を正式に解決できる atom 引数は consumer 側の契約として raw のまま残す。
+ * `mill.n` は atomMill が実行時 state と bindings から数値化するため、sequence 前段の
+ * 盤面変更より前に snapshot してはならない。他の dyn は従来どおりここで確定する。
  */
+const RUNTIME_DYN_ARG_KEYS: Partial<Record<AtomVerb, ReadonlySet<string>>> = {
+  mill: new Set(['n']),
+};
+
 function resolveDynArgs(
   state: GameState,
   args: Record<string, unknown>,
   ctx: EffectCtx,
+  verb: AtomVerb,
 ): Record<string, unknown> {
   let mutated = false;
   const out: Record<string, unknown> = {};
@@ -135,6 +153,10 @@ function resolveDynArgs(
       'dyn' in v &&
       typeof (v as { dyn: unknown }).dyn === 'string'
     ) {
+      if (RUNTIME_DYN_ARG_KEYS[verb]?.has(k)) {
+        out[k] = v;
+        continue;
+      }
       // M2後半 (2026-07-10, PR265): `$bound.<key>.*` 参照で <key> が初期 walk 時点で未 bind の場合は
       // literal 化を保留する ({dyn} のまま残す)。chain/sequence 前段 (deckRevealUntil 等) が bind を
       // 書くのは実行時であり、walk 時に evalDyn すると NaN が焼き込まれる (walk-literalize 罠 —
@@ -390,9 +412,11 @@ function runtimeHumanDecisionPlayer(ctx: EffectCtx, opts: ResolveEffectPicksOpts
 }
 
 import {
-  pushPendingEffectPickSide, toPlainDeep, _peekPendingEffectChoiceSide, getPendingChoiceResume,
+  pushPendingEffectPickSide, toPlainDeep, _peekPendingEffectChoiceSide,
   setPendingChoiceResume, pushPendingEffectChoiceSide, setPendingChoiceBindings,
-  pushPendingEffectOptionalSide, setPendingOptionalResume, setPendingOptionalBindings,
+  appendPendingChoiceContinuation,
+  pushPendingEffectOptionalSide, _peekPendingEffectOptionalSide, appendPendingOptionalContinuation,
+  setPendingOptionalResume, setPendingOptionalBindings,
   setPendingOptionalCostPaid,
   type ContinuationFrame,
   type PendingEffectPickSide,
@@ -547,6 +571,7 @@ function substituteAtomPick(
     n?: unknown; max?: unknown; filter?: unknown;
   } & Record<string, unknown>;
   const verbStr = typeof atom.verb === 'string' ? atom.verb : '';
+  const atomVerb = verbStr as AtomVerb;
   // 物理動作 atom 短縮形: { player, n or max, filter? } で target 未指定なら
   // verb 既定 area を使って pick query を engine が補完する。
   // - n: number → { min: n, max: n } 固定
@@ -572,9 +597,19 @@ function substituteAtomPick(
     // 非 pick atom (uid=$contact.byUid 等で target なし) でも {dyn} arg は literal 化する。
     // 例: D08007 cutin の delta:{dyn:'$self.sceneTrait.少年探偵団 * 1000'} (pick 不在だが dyn 評価が必要)。
     // resolveDynArgs は {dyn} object のみ変換し、それ以外は同一参照を返すため既存 atom は no-op。
-    const dynResolved = resolveDynArgs(state, args, ctx);
+    const dynResolved = resolveDynArgs(state, args, ctx, atomVerb);
     if (dynResolved === args) return atom as Effect;
     return { kind: 'atom', verb: atom.verb as never, args: dynResolved } as Effect;
+  }
+
+  // A fixed scene-entry card can carry a pick-shaped target solely as exact
+  // source-zone provenance.  It is not another player decision.  Rewriting
+  // that target to an array drops area/side/occurrence authority before the
+  // runtime handler can validate and consume the selected physical card.
+  if (verbStr === 'sceneEnter'
+    && !isSceneEnterSwitchPickArgs(args)
+    && !sceneEnterOwnsNextPick(args)) {
+    return atom as Effect;
   }
 
   // BUG-065: 2 つの effect 記述形式を区別して解決:
@@ -825,7 +860,7 @@ function substituteAtomPick(
       // pendingEffectPick として human-pick 境界へ運ぶ。
       // BUG-132: deep-plain 化 — runtime 経路 (drafted entry.effect 由来) の nested object が
       // draft proxy のまま produce 境界を跨ぐと次 produce の finalize で revoked-proxy crash。
-      atomArgs: toPlainDeep(resolveDynArgs(state, { ...args }, ctx)),
+      atomArgs: toPlainDeep(resolveDynArgs(state, { ...args }, ctx, atomVerb)),
       nMin: targetRef.n?.min ?? 1,
       nMax: targetRef.n?.max ?? 1,
       source: pendingSource(state, ctx, opts.source ?? { cardId: '', abilityId: '' }),
@@ -842,6 +877,15 @@ function substituteAtomPick(
       // cluster14: atom が skipResolvesAtom:true を持つ場合 (B09010「2枚まで登場」+ 後続 FILE上1リムーブ)、
       //   0枚 decline を applyPickSkipAndContinuation で解決し remainder を実行する (deckRevealUntil と同契約)。
       skipResolvesAtom: (args as { skipResolvesAtom?: boolean }).skipResolvesAtom === true,
+      ...(isSceneEnterSwitchPickArgs(args)
+        ? {
+            continuation: {
+              remainder: [],
+              ctx: toPlainDeep(ctx) as EffectCtx,
+              kind: 'sequence' as const,
+            },
+          }
+        : {}),
       // W2b (P50/r27): mustBeSelectedByOppEvent forced 集合。UI (auto-select+lock/restrict) と
       // chooseAiPick が honor。空なら undefined (従来 pending と byte 等価)。
       ...(forcedUids.length > 0 ? { forcedUids } : {}),
@@ -883,10 +927,58 @@ function substituteAtomPick(
 
   if (isPatternA) {
     if (picked.kind !== 'char') return atom as Effect;
-    const intercept = findChooseIntercept(state, picked.uid, ctx);
-    const decisionTrace = intercept.kind === 'none' ? undefined : ensureEffectCausalTrace(state, ctx);
+    if (isSceneEnterSwitchPickArgs(args)) {
+      if (!isValidSceneEnterSwitchPickAuthority(
+        args,
+        byPlayer,
+        ctx.source.player,
+        ctx.source.player,
+      )) {
+        return { kind: 'parallel', steps: [] };
+      }
+      const restored = resolveSceneEnterSwitchPickArgs(args, picked.uid);
+      if (restored === null) return { kind: 'parallel', steps: [] };
+      return {
+        kind: 'atom',
+        verb: 'sceneEnter',
+        args: markAutonomousPick(
+          resolveDynArgs(state, restored, ctx, 'sceneEnter') as Record<string, unknown>,
+        ),
+      };
+    }
+    const interceptReactions = isTrustedSetCardOccurrenceSelection(state, atom.verb, args, ctx.source)
+      ? []
+      : findChooseInterceptReactions(state, picked.uid, ctx);
+    const decisionTrace = interceptReactions.length === 0 ? undefined : ensureEffectCausalTrace(state, ctx);
     if (decisionTrace !== undefined) recordEffectCausalDecision(state, decisionTrace, byPlayer);
-    if (intercept.kind === 'cancel') {
+    let effectCancelled = false;
+    for (const reaction of interceptReactions) {
+      if (reaction.resolution === 'cancel') {
+        // Simultaneous mandatory reactions have already triggered.  Cancelling
+        // the selected effect must not erase sibling response resolutions.
+        effectCancelled = true;
+        continue;
+      }
+      recordEffectCausalDecision(state, decisionTrace, reaction.responder);
+      const card = state.players[reaction.responder].hand[0];
+      if (!card) {
+        // Only declining (or being unable to pay) negates the selected effect.
+        // Continue so every already-triggered sibling response still resolves.
+        effectCancelled = true;
+        continue;
+      }
+      // Paying the printed cost protects the selected effect: remove one
+      // hand occurrence.  Another simultaneous response may still cancel it.
+      hand.discardToRemove(state, reaction.responder, [card], { byPlayer: reaction.responder });
+      recordEffectCausalOperation(state, ctx, {
+        actor: reaction.responder,
+        kind: 'discard',
+        source: { kind: 'zone', side: reaction.responder, zone: 'hand' },
+        targets: [{ kind: 'zone', side: reaction.responder, zone: 'remove' }],
+        outcome: { type: 'move', from: 'hand', to: 'remove', count: 1 },
+      });
+    }
+    if (effectCancelled) {
       (ctx.dyn ??= {}).chooseIntercepted = true;
       completeEffectCausalTrace(
         state,
@@ -897,42 +989,15 @@ function substituteAtomPick(
       );
       return { kind: 'parallel', steps: [] };
     }
-    if (intercept.kind === 'discard-or-cancel') {
-      recordEffectCausalDecision(state, decisionTrace, intercept.responder);
-      const card = state.players[intercept.responder].hand[0];
-      if (card) {
-        // Paying the printed cost protects the selected effect: remove one
-        // hand occurrence, then continue resolving the original atom.
-        hand.discardToRemove(state, intercept.responder, [card], { byPlayer: intercept.responder });
-        recordEffectCausalOperation(state, ctx, {
-          actor: intercept.responder,
-          kind: 'discard',
-          source: { kind: 'zone', side: intercept.responder, zone: 'hand' },
-          targets: [{ kind: 'zone', side: intercept.responder, zone: 'remove' }],
-          outcome: { type: 'move', from: 'hand', to: 'remove', count: 1 },
-        });
-      } else {
-        // Only declining (or being unable to pay) negates the selected effect.
-        (ctx.dyn ??= {}).chooseIntercepted = true;
-        completeEffectCausalTrace(
-          state,
-          decisionTrace,
-          ctx.source.player,
-          'cancel',
-          { type: 'state', state: 'negated' },
-        );
-        return { kind: 'parallel', steps: [] };
-      }
-    }
     const { target: _omit, ...restArgs } = args;
     void _omit;
     return {
       kind: 'atom',
       verb: atom.verb as never,
       // BUG-085: AI / heuristic 経路 (human-pick 境界なし) でも { dyn } を literal 化する。
-      args: intercept.kind === 'none'
-        ? markAutonomousPick(w6TagMr(resolveDynArgs(state, { ...restArgs, uid: picked.uid }, ctx) as Record<string, unknown>, [picked.uid]))
-        : w6TagMr(resolveDynArgs(state, { ...restArgs, uid: picked.uid }, ctx) as Record<string, unknown>, [picked.uid]),
+      args: interceptReactions.length === 0
+        ? markAutonomousPick(w6TagMr(resolveDynArgs(state, { ...restArgs, uid: picked.uid }, ctx, atomVerb) as Record<string, unknown>, [picked.uid]))
+        : w6TagMr(resolveDynArgs(state, { ...restArgs, uid: picked.uid }, ctx, atomVerb) as Record<string, unknown>, [picked.uid]),
     } as Effect;
   }
 
@@ -984,7 +1049,7 @@ function substituteAtomPick(
     return {
       kind: 'atom',
       verb: atom.verb as never,
-      args: markAutonomousPick(resolveDynArgs(state, { ...args, occurrence }, ctx)),
+      args: markAutonomousPick(resolveDynArgs(state, { ...args, occurrence }, ctx, atomVerb)),
     } as Effect;
   }
 
@@ -1042,7 +1107,7 @@ function substituteAtomPick(
           }
           return [];
         }),
-      }, ctx)),
+      }, ctx, atomVerb)),
     } as Effect;
   }
   // BUG-106 (D11014 a2 / D11019 a1 driver): single-pick contract (cardId:'$pick.cardId')。
@@ -1081,7 +1146,7 @@ function substituteAtomPick(
                 ?? cardOccurrenceWitness(state, picked.player, 'evidence'),
             }] }
             : {}),
-      }, ctx)),
+      }, ctx, atomVerb)),
     } as Effect;
   }
   const selectedIndexedOccurrenceOf = (candidate: Candidate) => {
@@ -1153,7 +1218,7 @@ function substituteAtomPick(
         ...args,
         target: pickValues,
         ...selectedOccurrencePart,
-      }, ctx) as Record<string, unknown>, w6CharUidsG)),
+      }, ctx, atomVerb) as Record<string, unknown>, w6CharUidsG)),
     } as Effect;
   }
   const pickValue = pickValueOf(picked);
@@ -1167,7 +1232,7 @@ function substituteAtomPick(
         ...args,
         target: [pickValue],
         ...(indexedOccurrence === null ? {} : { selectedCardOccurrences: [indexedOccurrence] }),
-      }, ctx) as Record<string, unknown>,
+      }, ctx, atomVerb) as Record<string, unknown>,
       picked.kind === 'char' ? [picked.uid] : [],
     )),
   } as Effect;
@@ -1179,6 +1244,7 @@ export function resolveEffectPicks(
   ctx: EffectCtx,
   opts: ResolveEffectPicksOpts = {},
 ): Effect {
+  assertCompleteSetCardSource(ctx.source);
   if (opts._fromAtomHandler !== true) {
     rememberRuntimeAtomTargetPolicy(
       ctx,
@@ -1199,11 +1265,10 @@ export function resolveEffectPicks(
     case 'atom':
       return substituteAtomPick(state, effect, ctx, opts);
     case 'sequence': {
-      // BUG-121 (残課題解消): sequence 内で human choice が pause したら、後続 step (remainder) を
-      // 再開 holder に wrap して walk を打ち切る。これにより runtime では pre-choice step のみ実行され、
-      // choiceResolve 再開時に holder (= {sequence:[choice, ...remainder]}) を再 walk して
-      // option + remainder を実行する (pre-choice step の二重実行を防ぐ)。任意深度のネストに対応
-      // (内側 sequence が holder を更新済 → 外側はさらに自身の remainder を wrap)。
+      // sequence 内で human choice が pause したら、後続 step は continuation に保存して walk を
+      // 打ち切る。choice 本体だけを resume holder に残すことで、選択 option を実行してから次の
+      // decision を surface する。holder に remainder まで wrap すると再 walk が次の choice を先に
+      // publish し、stack が選択 option の実行前に pause する。
       const seqOut: Effect[] = [];
       for (let i = 0; i < effect.steps.length; i++) {
         const runtimePickPause = opts._runtimePickPause ?? { encountered: false };
@@ -1213,6 +1278,7 @@ export function resolveEffectPicks(
         }).__pendingEffectPickQueue;
         const pickCountBefore = pendingQueue?.length ?? 0;
         const choiceBefore = _peekPendingEffectChoiceSide() !== null;
+        const optionalBefore = _peekPendingEffectOptionalSide() !== null;
         seqOut.push(resolveEffectPicks(state, effect.steps[i]!, ctx, {
           ...opts,
           _hasPriorSequenceStep: opts._hasPriorSequenceStep === true || i > 0,
@@ -1233,8 +1299,15 @@ export function resolveEffectPicks(
         if (!choiceBefore && choiceAfter) {
           const remainder = effect.steps.slice(i + 1);
           if (remainder.length > 0) {
-            const cur = getPendingChoiceResume();
-            if (cur) setPendingChoiceResume({ kind: 'sequence', steps: [cur, ...remainder] });
+            appendPendingChoiceContinuation({ remainder, ctx, kind: 'sequence' });
+          }
+          return { kind: 'sequence', steps: seqOut };
+        }
+        const optionalAfter = _peekPendingEffectOptionalSide() !== null;
+        if (!optionalBefore && optionalAfter) {
+          const remainder = effect.steps.slice(i + 1);
+          if (remainder.length > 0) {
+            appendPendingOptionalContinuation({ remainder, ctx, kind: 'sequence' });
           }
           return { kind: 'sequence', steps: seqOut };
         }
@@ -1309,7 +1382,8 @@ export function resolveEffectPicks(
       // walk 中に bake)。resolver.run の choice も choiceIndex を読むが、effect は event.queue →
       // entryToCtx で ctx.dyn が落ちるため runtime には届かない。ctx.dyn を保持する resolveEffectPicks
       // (declared-ability / triggered の初期 walk) でここで解決する。
-      // 未指定 / 範囲外なら全 option を walk し、resolver.run の default (=0) に委ねる。
+      // 未指定 / 範囲外なら全 option を walk し、resolver.run の autonomous
+      // applicable-branch selectionに委ねる（unconditional choiceはindex 0互換）。
       const rawIdx = (ctx.dyn as { choiceIndex?: unknown } | undefined)?.choiceIndex;
       if (
         typeof rawIdx === 'number' && Number.isInteger(rawIdx)
@@ -1336,7 +1410,7 @@ export function resolveEffectPicks(
       // (空 parallel) を返して runtime に届けない (どの option も実行しない)。choiceResolve dispatch
       // 後に applyChoiceAndContinuation が readDef から元 effect を復元し choiceIndex 付きで再 walk する。
       //   - choiceIndex 指定済 (declared 経路) は上の unwrap 分岐で処理済 → ここに来ない (無傷)
-      //   - humanChooser=false (AI / hirameki) は従来通り全 walk → resolver.run default 0 (無傷)
+      //   - humanChooser=false (AI / hirameki) は全 walk → resolver.run autonomous selection
       //   - options.length===1 (構造的単一 choice: B02046/B04071/D11014 等) は従来通り (無傷)
       //   - chooser==='opp' (相手が選ぶ) は human modal に出さない (従来通り)
       if (
@@ -1356,6 +1430,7 @@ export function resolveEffectPicks(
           }),
           options: effect.options.map((o, i) => ({
             index: i,
+            label: effect.labels?.[i],
             verb: o.kind === 'atom' ? (o.verb as string) : undefined,
             args: o.kind === 'atom' ? (o.args as Record<string, unknown>) : undefined,
             sceneEnter: containsSceneEnter(o),
@@ -1371,6 +1446,7 @@ export function resolveEffectPicks(
       return {
         kind: 'choice',
         chooser: effect.chooser,
+        ...(effect.labels ? { labels: effect.labels } : {}),
         options: effect.options.map((o) => resolveEffectPicks(state, o, ctx, opts)),
       };
     }
@@ -1379,12 +1455,20 @@ export function resolveEffectPicks(
       //   - ctx.dyn.optionalRun 指定済 (optionalResolve 再開) → その値で確定 (consume 後 delete で leak 防止)。
       //   - humanChooser → pendingEffectOptional を surface して pause (no-op return)。
       //   - AI / non-human → skip (optional は自己コストを含むことが多く既定で使わない)。
+      const ownerPlayer = ctx.source.player;
+      const decisionPlayer = effect.chooser === 'opp-of-owner'
+        ? (ownerPlayer === 'self' ? 'opp' : 'self')
+        : ownerPlayer;
+      // `if-hand` is also the feasibility contract for human decisions.  A
+      // zero-card hand cannot choose the discard branch; resolve the printed
+      // else branch directly instead of surfacing/accepting an impossible yes.
+      const canRun = effect.aiRun !== 'if-hand' || state.players[decisionPlayer].hand.length > 0;
       const dynRun = (ctx.dyn as { optionalRun?: unknown } | undefined)?.optionalRun;
       if (typeof dynRun === 'boolean') {
         // 消費した optionalRun は同一 ctx の後続/ネスト optional へ leak させない (choiceIndex と同方針)
         delete (ctx.dyn as { optionalRun?: unknown }).optionalRun;
         const closesPublicHandReveal = peekPublicHandRevealToken(ctx) !== undefined;
-        const branch = dynRun
+        const branch = dynRun && canRun
           ? resolveEffectPicks(state, effect.effect, ctx, opts)
           : effect.else ? resolveEffectPicks(state, effect.else, ctx, opts) : { kind: 'parallel' as const, steps: [] };
         // As with a selected choice, only a resumed public hand-reveal window
@@ -1397,10 +1481,9 @@ export function resolveEffectPicks(
             }
           : branch;
       }
-      const ownerPlayer = ctx.source.player;
-      const decisionPlayer = effect.chooser === 'opp-of-owner'
-        ? (ownerPlayer === 'self' ? 'opp' : 'self')
-        : ownerPlayer;
+      if (!canRun) {
+        return effect.else ? resolveEffectPicks(state, effect.else, ctx, opts) : { kind: 'parallel', steps: [] };
+      }
       const humanPlayer = humanDecisionPlayer(opts);
       if (humanPlayer === decisionPlayer) {
         const srcUid = (ctx.source as { uid?: string } | undefined)?.uid ?? '';
@@ -1426,7 +1509,8 @@ export function resolveEffectPicks(
         setPendingOptionalCostPaid((ctx as { costPaid?: Record<string, unknown> }).costPaid);
         return { kind: 'parallel', steps: [] };
       }
-      if (effect.aiRun === 'if-hand' && state.players[decisionPlayer].hand.length > 0) {
+      if (effect.aiRun === 'always'
+        || (effect.aiRun === 'if-hand' && state.players[decisionPlayer].hand.length > 0)) {
         return resolveEffectPicks(state, effect.effect, ctx, opts);
       }
       return effect.else ? resolveEffectPicks(state, effect.else, ctx, opts) : { kind: 'parallel', steps: [] };

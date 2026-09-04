@@ -10,7 +10,7 @@ TypeScript 関数で書く場合 (最終手段) は `{ kind: 'custom', fn: (s, c
 type Effect =
   | { kind: 'sequence'; steps: Effect[] }                  // 順次
   | { kind: 'parallel'; steps: Effect[] }                  // 同時 (副作用なし統合)
-  | { kind: 'choice'; options: Effect[]; chooser: 'self'|'opp'|'owner' }
+  | { kind: 'choice'; options: Effect[]; chooser: 'self'|'opp'|'owner'; labels?: string[] }
   | { kind: 'optional'; effect: Effect }                   // 「〜してもよい」
   | { kind: 'conditional'; if: Condition; then: Effect; else?: Effect }
   | { kind: 'forEach'; over: Targeting; do: Effect }

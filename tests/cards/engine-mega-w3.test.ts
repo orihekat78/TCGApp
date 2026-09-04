@@ -66,6 +66,13 @@ const WATCHER = mkChar('WATCHER', {
 const PLAIN = mkChar('PLAIN');
 // ---- r51 合成 def ----
 const REP_W2 = mkChar('REP_W2', { colors: ['白'], lp: 2 });
+const REP_W1_CONTINUOUS = mkChar('REP_W1_CONTINUOUS', {
+  colors: ['白'], lp: 1,
+  abilities: [{
+    id: 'lp-plus-one', type: 'continuous', scope: 'on-scene',
+    continuousModifier: { lpDelta: 1 }, description: '', ruleRefs: [],
+  } as never],
+});
 const REP_K1 = mkChar('REP_K1', { colors: ['黒'], lp: 1 });
 // ---- r12 合成 def ----
 const LEAVER = mkChar('LEAVER', {
@@ -137,7 +144,7 @@ beforeEach(() => {
   og.__pendingEffectOptionalSide = null; og.__pendingEffectOptionalResume = null; og.__pendingEffectOptionalBindings = null;
   useGameStateStore.getState().setPendingEffectOptional?.(null as never);
   setHuman(null);
-  for (const d of [RETREAT, INCOMING_VERMOUTH, INCOMING_OTHER, WATCHER, PLAIN, REP_W2, REP_K1,
+  for (const d of [RETREAT, INCOMING_VERMOUTH, INCOMING_OTHER, WATCHER, PLAIN, REP_W2, REP_W1_CONTINUOUS, REP_K1,
     LEAVER, LEAVER_OPPTURN, LEAVE_OBSERVER, HAND_OBS, REVEAL_OBS, SHINICHI, SHINICHI_KYOGOKU, RAN_CARD, MOB]) registerCardDef(d);
   registerCardDef(B03052); registerCardDef(B03052P); registerCardDef(B02047);
   registerCardDef(B05115); registerCardDef(B09004);
@@ -235,9 +242,12 @@ describe('r51 disguise:into payload.replacedChar + disguiseReplacedMatches', () 
   });
 
   it('B02047 exemplar: LP2白と入替 → contactImmune / 黒LP1と入替 → 付与なし', () => {
-    for (const [fromId, expectImmune] of [['REP_W2', true], ['REP_K1', false]] as const) {
+    for (const [fromId, expectImmune] of [
+      ['REP_W2', true], ['REP_W1_CONTINUOUS', true], ['REP_K1', false],
+    ] as const) {
       _resetUidCounter();
       const s = contactBase(fromId, ['B02047']);
+      if (fromId === 'REP_W1_CONTINUOUS') expect(readChar.lp(s, 'atk')).toBe(2);
       s.players.self.case.colors = ['白'];
       s.players.self.file = Array.from({ length: 6 }, () => ({ type: 'card-back' as const, cardId: 'MOB' }));
       const after = produce(s, (d) => {
@@ -246,7 +256,11 @@ describe('r51 disguise:into payload.replacedChar + disguiseReplacedMatches', () 
       });
       const ch = after.players.self.scene.find(c => c.uid === 'atk')!;
       expect(ch.cardId).toBe('B02047');
-      expect(ch.turnEffects['contactImmune'] === true, `${fromId} → immune=${expectImmune}`).toBe(expectImmune);
+      expect(readChar.hasTextAbility(after, 'atk', 'contactImmune'), `${fromId} → immune=${expectImmune}`)
+        .toBe(expectImmune);
+      expect(ch.turnEffects['contactImmune_action'] === true, `${fromId} → action-scoped immune=${expectImmune}`)
+        .toBe(expectImmune);
+      expect(ch.turnEffects.contactImmune).toBe(false);
     }
   });
 });

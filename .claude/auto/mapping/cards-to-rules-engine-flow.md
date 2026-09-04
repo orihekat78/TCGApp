@@ -2,13 +2,13 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `c0f3a719a794`
+> Source hash: `667f65a1c1a4`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **188** ファイル（[全体 index](./index.md)）
+このグループ: **197** ファイル（[全体 index](./index.md)）
 
-## engine/effect (24)
+## engine/effect (29)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -21,8 +21,11 @@
 | [`src/engine/effect/atom-handlers/picks.ts`](../../../src/engine/effect/atom-handlers/picks.ts) | _(参照なし)_ |
 | [`src/engine/effect/atom-handlers/scene.ts`](../../../src/engine/effect/atom-handlers/scene.ts) | _(参照なし)_ |
 | [`src/engine/effect/atom-pick-spec.ts`](../../../src/engine/effect/atom-pick-spec.ts) | _(参照なし)_ |
+| [`src/engine/effect/autonomous-decision.ts`](../../../src/engine/effect/autonomous-decision.ts) | _(参照なし)_ |
+| [`src/engine/effect/choose-intercept-authority.ts`](../../../src/engine/effect/choose-intercept-authority.ts) | _(参照なし)_ |
 | [`src/engine/effect/consult-choose-intercept.ts`](../../../src/engine/effect/consult-choose-intercept.ts) | _(参照なし)_ |
 | [`src/engine/effect/consult-leave-intercept.ts`](../../../src/engine/effect/consult-leave-intercept.ts) | _(参照なし)_ |
+| [`src/engine/effect/deck-occurrence-authority.ts`](../../../src/engine/effect/deck-occurrence-authority.ts) | _(参照なし)_ |
 | [`src/engine/effect/declared-name-domain.ts`](../../../src/engine/effect/declared-name-domain.ts) | _(参照なし)_ |
 | [`src/engine/effect/heuristic-atom-target.ts`](../../../src/engine/effect/heuristic-atom-target.ts) | _(参照なし)_ |
 | [`src/engine/effect/index.ts`](../../../src/engine/effect/index.ts) | _(参照なし)_ |
@@ -34,15 +37,18 @@
 | [`src/engine/effect/resolve-picks.ts`](../../../src/engine/effect/resolve-picks.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/effect/resolver.ts`](../../../src/engine/effect/resolver.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
 | [`src/engine/effect/runtime-state.ts`](../../../src/engine/effect/runtime-state.ts) | _(参照なし)_ |
+| [`src/engine/effect/scene-switch.ts`](../../../src/engine/effect/scene-switch.ts) | _(参照なし)_ |
+| [`src/engine/effect/source-identity.ts`](../../../src/engine/effect/source-identity.ts) | _(参照なし)_ |
 | [`src/engine/effect/validate-spec-files.ts`](../../../src/engine/effect/validate-spec-files.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/effect/validate.ts`](../../../src/engine/effect/validate.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 
-## engine/flow (22)
+## engine/flow (24)
 
 | ソース | 参照ルール |
 | ------ | --------- |
 | [`src/engine/flow/action-case.ts`](../../../src/engine/flow/action-case.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`10-action-event.md`](../../rules/10-action-event.md) |
 | [`src/engine/flow/action/causal.ts`](../../../src/engine/flow/action/causal.ts) | _(参照なし)_ |
+| [`src/engine/flow/action/contact-order-continuation.ts`](../../../src/engine/flow/action/contact-order-continuation.ts) | _(参照なし)_ |
 | [`src/engine/flow/action/context-registry.ts`](../../../src/engine/flow/action/context-registry.ts) | _(参照なし)_ |
 | [`src/engine/flow/action/legacy-replay-compat.ts`](../../../src/engine/flow/action/legacy-replay-compat.ts) | _(参照なし)_ |
 | [`src/engine/flow/action/order.ts`](../../../src/engine/flow/action/order.ts) | [`08-contact.md`](../../rules/08-contact.md) |
@@ -58,6 +64,7 @@
 | [`src/engine/flow/main/declared-cost-params.ts`](../../../src/engine/flow/main/declared-cost-params.ts) | _(参照なし)_ |
 | [`src/engine/flow/main/hand-use-card.ts`](../../../src/engine/flow/main/hand-use-card.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`17-icons.md`](../../rules/17-icons.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
 | [`src/engine/flow/main/index.ts`](../../../src/engine/flow/main/index.ts) | _(参照なし)_ |
+| [`src/engine/flow/main/main-action-window.ts`](../../../src/engine/flow/main/main-action-window.ts) | _(参照なし)_ |
 | [`src/engine/flow/main/next-hint.ts`](../../../src/engine/flow/main/next-hint.ts) | _(参照なし)_ |
 | [`src/engine/flow/main/partner-ability.ts`](../../../src/engine/flow/main/partner-ability.ts) | [`06-card-types.md`](../../rules/06-card-types.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/engine/flow/main/reasoning.ts`](../../../src/engine/flow/main/reasoning.ts) | _(参照なし)_ |
@@ -78,7 +85,7 @@
 | [`src/engine/invariant/scratchTraceMonotonic.ts`](../../../src/engine/invariant/scratchTraceMonotonic.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/engine/invariant/stunSemantics.ts`](../../../src/engine/invariant/stunSemantics.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) |
 
-## engine (他) (35)
+## engine (他) (37)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -93,6 +100,7 @@
 | [`src/engine/cost/evaluate.ts`](../../../src/engine/cost/evaluate.ts) | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/engine/cost/index.ts`](../../../src/engine/cost/index.ts) | _(参照なし)_ |
 | [`src/engine/cost/pay.ts`](../../../src/engine/cost/pay.ts) | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
+| [`src/engine/cost/player.ts`](../../../src/engine/cost/player.ts) | _(参照なし)_ |
 | [`src/engine/cost/remove-set-card-eligible.ts`](../../../src/engine/cost/remove-set-card-eligible.ts) | _(参照なし)_ |
 | [`src/engine/cost/remove-set-card-witness.ts`](../../../src/engine/cost/remove-set-card-witness.ts) | _(参照なし)_ |
 | [`src/engine/dyn/eval.ts`](../../../src/engine/dyn/eval.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
@@ -112,6 +120,7 @@
 | [`src/engine/rng.ts`](../../../src/engine/rng.ts) | _(参照なし)_ |
 | [`src/engine/state-factory.ts`](../../../src/engine/state-factory.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`03-field-areas.md`](../../rules/03-field-areas.md) / [`04-game-setup.md`](../../rules/04-game-setup.md) |
 | [`src/engine/state/indexed-zone-epoch.ts`](../../../src/engine/state/indexed-zone-epoch.ts) | _(参照なし)_ |
+| [`src/engine/state/misread-authority.ts`](../../../src/engine/state/misread-authority.ts) | _(参照なし)_ |
 | [`src/engine/target/candidates.ts`](../../../src/engine/target/candidates.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 | [`src/engine/target/card-def-registry.ts`](../../../src/engine/target/card-def-registry.ts) | _(参照なし)_ |
 | [`src/engine/target/card-occurrence.ts`](../../../src/engine/target/card-occurrence.ts) | _(参照なし)_ |

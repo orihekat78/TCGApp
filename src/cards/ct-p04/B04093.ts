@@ -29,20 +29,20 @@ const a1: AbilityDef = {
       kind: 'or'
     }
   },
-  condition: {
-    c: {
+  effect: {
+    kind: 'conditional',
+    if: {
       kind: 'charStateIs',
       ref: {
         kind: 'self'
       },
-      state: 'sleep'
+      state: 'active'
     },
-    kind: 'not'
-  },
-  effect: {
-    effect: {
-      kind: 'chain',
-      steps: [
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain',
+        steps: [
         {
           args: {
             state: 'sleep',
@@ -61,9 +61,9 @@ const a1: AbilityDef = {
           kind: 'atom',
           verb: 'charModifyAP'
         }
-      ]
-    },
-    kind: 'optional'
+        ]
+      }
+    }
   },
   description: '自分の現場にいるこのキャラ以外のキャラがコンタクトしたとき、このキャラをスリープさせてもよい。そうした場合、コンタクト中のキャラを1枚まで選び、このコンタクト中、AP＋1000する。',
   ruleRefs: [

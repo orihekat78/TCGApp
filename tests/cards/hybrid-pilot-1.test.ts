@@ -161,9 +161,9 @@ describe('B02049 a1 — 怪盗 action:declare 観測 AP+1000', () => {
 // B04058/PR028/PR032 — 【ターン1】アクション[事件]証拠獲得 → optional self-sleep → 相手手札1リムーブ
 // ============================================================
 describe('B04058 a1 — evidence:gain(action-case) → してもよい[self sleep + opp discard1]', () => {
-  function board() {
+  function board(state: 'active' | 'sleep' | 'stun' = 'active') {
     const s = base();
-    s.players.self.scene = [sc('B04058', 'jd'), sc('PLAIN', 'actor')];
+    s.players.self.scene = [sc('B04058', 'jd', state), sc('PLAIN', 'actor')];
     s.players.opp.scene = [sc('PLAIN', 'oactor')];
     s.players.opp.hand = ['FILL', 'FILL'];
     return s;
@@ -200,16 +200,24 @@ describe('B04058 a1 — evidence:gain(action-case) → してもよい[self slee
     expect(s.players.self.scene.find(c => c.uid === 'jd')!.state).toBe('active');
     expect(s.players.opp.hand.length).toBe(2);
   });
-  it('相手の獲得 (player:opp) → 不発 / B04058 スリープ中 → 不発 (BUG-145 gate)', () => {
+  it('相手の獲得 (player:opp) → 不発・【ターン1】未消費', () => {
     setHuman('self');
     const s1 = gain(board(), 'oactor', 'opp');
     expect(_peekPendingEffectOptionalSide(), '相手獲得では surface しない').toBeNull();
-    void s1;
-    const b = board();
-    b.players.self.scene = [sc('B04058', 'jd', 'sleep'), sc('PLAIN', 'actor')];
-    const s2 = gain(b, 'actor', 'self');
-    expect(_peekPendingEffectOptionalSide(), 'sleep 中は発動しない (ターン1未消費)').toBeNull();
-    void s2;
+    expect(readChar.declaredUseCount(s1, 'jd', 'a1')).toBe(0);
+  });
+
+  it.each(['sleep', 'stun'] as const)('%s 中も発動済み・【ターン1】消費、後で active になっても再発動しない', (state) => {
+    setHuman('self');
+    const first = gain(board(state), 'actor', 'self');
+    expect(_peekPendingEffectOptionalSide(), `${state} 中は optional を実行不能`).toBeNull();
+    expect(readChar.declaredUseCount(first, 'jd', 'a1'), `${state} 中でも発動済み`).toBe(1);
+
+    const second = gain(produce(first, (d) => {
+      d.players.self.scene.find((c) => c.uid === 'jd')!.state = 'active';
+    }), 'actor', 'self');
+    expect(_peekPendingEffectOptionalSide(), '同ターンの再発動なし').toBeNull();
+    expect(readChar.declaredUseCount(second, 'jd', 'a1')).toBe(1);
   });
 });
 

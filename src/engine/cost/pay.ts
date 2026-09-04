@@ -10,11 +10,11 @@
 //   - canPay() should be called first; pay() throws if a step cannot be paid.
 
 import type { GameState, Cost, EffectCtx, PayResult, Candidate, TargetingRef } from '@/engine/types';
-import { candidates } from '@/engine/target/candidates.js';
+import { candidates, effectiveLevelForCandidate } from '@/engine/target/candidates.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { canPay } from './evaluate.js';
 import { resolveDynNumber } from '@/engine/dyn/eval.js';
-// attribution mini-wave (2026-07-10): costPaid 導出値 (level/kind) の印字値参照。dyn/eval.ts と同一 import 元。
+// attribution mini-wave (2026-07-10): costPaid 導出値の静的 kind/name 参照。level は離脱前に snapshot する。
 import { def as readDef } from '@/engine/read/def.js';
 import { readRemoveSetCardWitness } from './remove-set-card-witness.js';
 import { eligibleRemoveSetCards } from './remove-set-card-eligible.js';
@@ -24,6 +24,12 @@ import { _abortEventJournal, _beginEventJournal, _commitEventJournal, _withEvent
 import { produce } from '@/engine/produce.js';
 import { cardOccurrenceWitness } from '@/engine/target/card-occurrence.js';
 import { advanceIndexedZoneEpoch } from '@/engine/state/indexed-zone-epoch.js';
+import { resolveCostPlayer } from './player.js';
+import {
+  allocatePublicHandRevealToken,
+  publicEffectSource,
+  queuePendingPublicHandRevealSide,
+} from '@/engine/effect/atom-handlers/_shared.js';
 
 /**
  * Pay a Cost. Mutates the draft in place.
@@ -63,6 +69,25 @@ export function pay(state: GameState, cost: Cost, ctx: EffectCtx): PayResult {
     payInner(state, cost, ctx, result);
     _commitEventJournal(journal);
     journal = null;
+    for (const paid of result.paidItems) {
+      if (paid.kind !== 'revealFromHand') continue;
+      const ids = (paid.details as { ids?: unknown }).ids;
+      if (!Array.isArray(ids) || ids.length === 0 || !ids.every(id => typeof id === 'string')) continue;
+      const source = publicEffectSource(ctx);
+      // Direct engine-cost probes and legacy callers may not identify an
+      // ability. Keep payment/hook semantics, but never enqueue a projection
+      // that cannot pass the persisted public-source schema.
+      if (!source.cardId || !source.abilityId) continue;
+      queuePendingPublicHandRevealSide({
+        owner: ctx.source.player,
+        audience: 'all',
+        cardIds: ids,
+        handSnapshot: [...state.players[ctx.source.player].hand],
+        lifetime: 'presentation',
+        resolutionToken: allocatePublicHandRevealToken(state),
+        source,
+      });
+    }
     return result;
   } catch (error) {
     if (journal !== null) _abortEventJournal(journal);
@@ -199,8 +224,7 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
     case 'sleepChar':
     case 'stunChar': {
       const min = cost.target.kind === 'pick' ? cost.target.n.min : 1;
-      const eligible = selectRangeCostCandidates(state, cost.target, ctx).filter((candidate): candidate is Candidate & { kind: 'char' } =>
-        candidate.kind === 'char' && findChar(state, candidate.uid)?.state === 'active');
+      const eligible = selectActiveCharRangeCostCandidates(state, cost.target, ctx, cost.kind);
       if (eligible.length < min) return false;
       for (const candidate of eligible) {
         findChar(state, candidate.uid)!.state = cost.kind === 'sleepChar' ? 'sleep' : 'stun';
@@ -208,10 +232,12 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       return true;
     }
     case 'removeFromHand': {
-      const ids = selectRemoveFromHandCandidates(state, cost, ctx).map(c => c.cardId);
+      const targets = selectRemoveFromHandCandidates(state, cost, ctx);
+      const ids = targets.map(c => c.cardId);
       if (ids.length !== cost.n) return false;
+      const level = targets[0] ? effectiveLevelForCandidate(state, targets[0]) : undefined;
       removeHand(ids, true);
-      recordCostPaid(ctx, 'removeFromHand', { ids, level: readDef.card(ids[0])?.level });
+      recordCostPaid(ctx, 'removeFromHand', { ids, level });
       return true;
     }
     case 'revealFromHand': {
@@ -225,7 +251,10 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
     case 'revealHandToDeckTop': {
       const ids = selected(cost.target, cost.n).filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card').map(c => c.cardId);
       if (ids.length !== cost.n) return false;
-      removeHand(ids); state.players[p].deck.unshift(...ids); return true;
+      removeHand(ids);
+      state.players[p].deck.unshift(...ids);
+      if (ids.length > 0) advanceIndexedZoneEpoch(state, p, 'deck');
+      return true;
     }
     case 'removeFromScene': {
       const uids = selected(cost.target, cost.n).filter((c): c is Candidate & { kind: 'char' } => c.kind === 'char').map(c => c.uid);
@@ -261,17 +290,21 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       stacked.push({ cardId: 'back-card', instanceId: `auth:hand:${card.cardId}` }); host.stackedCards = stacked; return true;
     }
     case 'removeDeckTop': {
-      const removed = state.players[cost.player].deck.splice(0, resolveDynNumber(cost.n, state, ctx));
-      addToRemove(state, cost.player, removed);
+      const player = resolveCostPlayer(cost.player, ctx);
+      const removed = state.players[player].deck.splice(0, resolveDynNumber(cost.n, state, ctx));
+      addToRemove(state, player, removed);
+      if (removed.length > 0) advanceIndexedZoneEpoch(state, player, 'deck');
       const prior = (ctx.costPaid?.['removeDeckTop'] as { ids?: string[] } | undefined)?.ids ?? [];
       recordCostPaid(ctx, 'removeDeckTop', { ids: [...prior, ...removed] });
-      if (removed.length > 0) simulateRefreshAfterTake(state, cost.player);
+      if (removed.length > 0) simulateRefreshAfterTake(state, player);
       return true;
     }
     case 'removeDeckAll': {
-      const removed = state.players[cost.player].deck.splice(0);
-      addToRemove(state, cost.player, removed);
-      simulateRefreshAfterTake(state, cost.player);
+      const player = resolveCostPlayer(cost.player, ctx);
+      const removed = state.players[player].deck.splice(0);
+      addToRemove(state, player, removed);
+      if (removed.length > 0) advanceIndexedZoneEpoch(state, player, 'deck');
+      simulateRefreshAfterTake(state, player);
       return true;
     }
     case 'discardEvidence': {
@@ -286,7 +319,10 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       const found = detachScene(ctx.source.uid!, true); if (!found) return false;
       if (readDef.isMR(found.char.cardId) && state.turn.player !== found.player) {
         state.players[found.player].partnerAreaMR = { ...found.char, uid: `partnerMR:${found.player}`, isNamed: false, setCards: [], stackedCards: [] };
-      } else state.players[found.player].deck.push(found.char.cardId);
+      } else {
+        state.players[found.player].deck.push(found.char.cardId);
+        advanceIndexedZoneEpoch(state, found.player, 'deck');
+      }
       return true;
     }
     case 'selfToRemove': {
@@ -426,6 +462,7 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       if (uids.length !== cost.n || new Set(uids).size !== uids.length || uids.some(uid => !allowed.has(uid))) return false;
       const ids: string[] = [];
       for (const uid of uids) { const found = detachScene(uid); if (!found || found.player !== p) return false; state.players[p].deck.push(found.char.cardId); ids.push(found.char.cardId); }
+      if (ids.length > 0) advanceIndexedZoneEpoch(state, p, 'deck');
       recordCostPaid(ctx, 'sceneToDeckBottom', { ids, level: readDef.card(ids[0])?.level });
       return true;
     }
@@ -436,7 +473,9 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       const allowed = candidates(state, cost.target, ctx).filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card').map(c => c.cardId);
       if (ids.length !== cost.n || !isMultisetSubset(ids, allowed)) return false;
       for (const id of ids) { const index = state.players[p].remove.indexOf(id); if (index < 0) return false; state.players[p].remove.splice(index, 1); advanceIndexedZoneEpoch(state, p, 'remove'); }
-      state.players[p].deck.push(...ids); return true;
+      state.players[p].deck.push(...ids);
+      if (ids.length > 0) advanceIndexedZoneEpoch(state, p, 'deck');
+      return true;
     }
     case 'partnerAreaRemove': {
       const explicit = readPartnerAreaRemoveIds(ctx);
@@ -499,6 +538,7 @@ function simulateRefreshAfterTake(state: GameState, player: 'self' | 'opp'): voi
     return;
   }
   state.players[player].deck.push(...state.players[player].remove);
+  advanceIndexedZoneEpoch(state, player, 'deck');
   state.players[player].remove = [];
   advanceIndexedZoneEpoch(state, player, 'remove');
   state.refreshCount[player] = (state.refreshCount[player] ?? 0) + 1;
@@ -591,7 +631,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
     //   (2) maxN — ctx.picked 配線後はその選択を優先 (Infinity)、未配線時は pick の n.max ぶんだけ sleep。
     //   「どの active を sleep するか」の player-choice は全 target-pick cost 共通の pre-existing 制約 (別 initiative)。
     case 'sleepChar': {
-      const targets = selectRangeCostCandidates(state, cost.target, ctx);
+      const targets = selectActiveCharRangeCostCandidates(state, cost.target, ctx, cost.kind);
       let slept = 0;
       for (const cand of targets) {
         if (cand.kind !== 'char') continue;
@@ -611,7 +651,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
     //   (2) ctx.picked 未配線 (sleepChar 由来の over-pay = BUG-156) の現状で、pick の n.max ぶんだけ stun し
     //       複数 active 候補の全スタン (「1枚」違反) を防ぐ。ctx.picked 配線後はその選択を優先 (maxN=∞)。
     case 'stunChar': {
-      const targets = selectRangeCostCandidates(state, cost.target, ctx);
+      const targets = selectActiveCharRangeCostCandidates(state, cost.target, ctx, cost.kind);
       let stunned = 0;
       for (const cand of targets) {
         if (cand.kind !== 'char') continue;
@@ -630,6 +670,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
       const targets = selectRemoveFromHandCandidates(state, cost, ctx);
       const ids = targets.map(c => c.cardId);
       if (ids.length !== cost.n) throw new Error('cost.pay: removeFromHand is not payable');
+      const level = targets[0] ? effectiveLevelForCandidate(state, targets[0]) : undefined;
       // Exact occurrence witnesses are removed by index, preserving duplicate
       // hand-card identity. Legacy/AI fallback still uses the old id path.
       const explicit = readRemoveFromHandIndices(ctx);
@@ -645,9 +686,9 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
       acc.paidItems.push({ kind: 'removeFromHand', details: { ids } });
       // attribution mini-wave (2026-07-10): costRemovedMatches{key:'removeFromHand'} (B09060) と
       // dyn $cost.removeFromHand.level (B09050「リムーブしたカードとレベルが同じか低い」) が読む。
-      // level は先頭 1 枚の印字値 (対象カードは n=1 のみ。removeDeckTop の ids 記録と同型)。
+      // level は手札を離れる直前の実効値 (対象カードは n=1 のみ)。
       if (!ctx.costPaid) ctx.costPaid = {};
-      ctx.costPaid['removeFromHand'] = { ids, level: readDef.card(ids[0])?.level };
+      ctx.costPaid['removeFromHand'] = { ids, level };
       return;
     }
     // engine additive wave (2026-06-28): revealFromHand — 手札公開 presence-check cost (B08093 a1)。
@@ -658,10 +699,8 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
       // (公開は多いほど利益 = AI fallback 最大公開)。number は従来 pickCandidates と同一挙動。
       const rfhMin = typeof cost.n === 'number' ? cost.n : cost.n.min;
       const rfhMax = typeof cost.n === 'number' ? cost.n : cost.n.max;
-      const targets = selectRangeCostCandidates(state, cost.target, ctx);
-      const ids = targets
-        .filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card')
-        .map(c => c.cardId);
+      const targets = selectRevealFromHandCandidates(state, cost, ctx);
+      const ids = targets.map(c => c.cardId);
       if (ids.length < rfhMin || ids.length > rfhMax) throw new Error('cost.pay: revealFromHand is not payable');
       // W3 (r18): コスト経路の公開も hand:reveal を emit (B09004「【宣言】能力のコストによって」)
       mutate.hand.emitReveal(state, ctx.source.player, ids, { byPlayer: ctx.source.player, cause: 'cost' });
@@ -739,7 +778,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
       if (!cardCand || !hostCand) throw new Error('cost.pay: handStackUnder is not payable');
       mutate.hand.emitReveal(state, ctx.source.player, [cardCand.cardId], { byPlayer: ctx.source.player, cause: 'cost' });
       mutate.hand.remove(state, ctx.source.player, [cardCand.cardId]);
-      mutate.char.stackCard(state, hostCand.uid, 1);
+      mutate.char.stackCard(state, hostCand.uid, 1, [cardCand.cardId]);
       acc.paidItems.push({ kind: 'handStackUnder', details: { cardId: cardCand.cardId, hostUid: hostCand.uid } });
       return;
     }
@@ -931,7 +970,8 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
     case 'removeDeckTop': {
       // mega-wave W5 (r37): n は number | {dyn} — canPay と同一式で解決 (evaluate.ts と対)。
       const rdN = resolveDynNumber(cost.n, state, ctx);
-      const removed = mutate.deck.removeFromTop(state, cost.player, rdN);
+      const player = resolveCostPlayer(cost.player, ctx);
+      const removed = mutate.deck.removeFromTop(state, player, rdN);
       acc.paidItems.push({ kind: 'removeDeckTop', details: { removed } });
       // engine additive wave (2026-06-29d): costRemovedMatches cond (B03003/B04077/B06078
       // 「コストによって〚X〛がリムーブされた場合」) が参照する除去 cardId を ctx.costPaid へ記録。
@@ -942,7 +982,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
       // BUG-180: exact payment has no next deck operation to trigger the old
       // pre-take guard. The paid cards are already in remove and participate in
       // this immediate refresh (rules/14, rules/21, rules/26).
-      if (removed.length > 0) mutate.deck.refreshAfterTake(state, cost.player);
+      if (removed.length > 0) mutate.deck.refreshAfterTake(state, player);
       return;
     }
     // engine A3 wave (2026-07-11, B09107): デッキ全部リムーブ。removeFromTop(deck.length) で全除去。
@@ -952,7 +992,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
     //   なるため rules/14 の refresh をここで即時発火する (mill の BUG-137 guard と同 idiom)。
     //   リムーブエリア 0 (=支払前の deck が空で removed も 0) なら refresh 不能 → 支払者敗北 (rules/14)。
     case 'removeDeckAll': {
-      const p = ctx.source.player;
+      const p = resolveCostPlayer(cost.player, ctx);
       const removed = mutate.deck.removeFromTop(state, p, state.players[p].deck.length);
       acc.paidItems.push({ kind: 'removeDeckAll', details: { removed } });
       mutate.deck.refreshAfterTake(state, p);
@@ -1196,6 +1236,66 @@ function selectRangeCostCandidates(state: GameState, ref: TargetingRef, ctx: Eff
   return allowed.slice(0, max);
 }
 
+/** Human reveal costs carry exact hand indices; AI/legacy callers keep fallback selection. */
+function selectRevealFromHandCandidates(
+  state: GameState,
+  cost: Extract<Cost, { kind: 'revealFromHand' }>,
+  ctx: EffectCtx,
+): Array<Candidate & { kind: 'card'; index: number }> {
+  const min = typeof cost.n === 'number' ? cost.n : cost.n.min;
+  const max = typeof cost.n === 'number' ? cost.n : cost.n.max;
+  const indices = readRevealFromHandIndices(ctx);
+  if (indices === undefined) {
+    return selectRangeCostCandidates(state, cost.target, ctx)
+      .filter((candidate): candidate is Candidate & { kind: 'card'; index: number } => (
+        candidate.kind === 'card' && typeof candidate.index === 'number'
+      ));
+  }
+  if (indices.length < min || indices.length > max || new Set(indices).size !== indices.length) return [];
+  const allowed = candidates(state, cost.target, ctx)
+    .filter((candidate): candidate is Candidate & { kind: 'card'; index: number } => (
+      candidate.kind === 'card'
+      && candidate.player === ctx.source.player
+      && typeof candidate.index === 'number'
+    ));
+  return indices.map(index => allowed.find(candidate => candidate.index === index))
+    .filter((candidate): candidate is Candidate & { kind: 'card'; index: number } => candidate !== undefined);
+}
+
+/** Sleep/stun costs choose only payable active characters before applying n.max. */
+function selectActiveCharRangeCostCandidates(
+  state: GameState,
+  ref: TargetingRef,
+  ctx: EffectCtx,
+  kind: 'sleepChar' | 'stunChar',
+): Array<Candidate & { kind: 'char' }> {
+  const min = ref.kind === 'pick' ? ref.n.min : 1;
+  const max = ref.kind === 'pick' ? ref.n.max : 1;
+  const allowed = candidates(state, ref, ctx).filter(
+    (candidate): candidate is Candidate & { kind: 'char' } =>
+      candidate.kind === 'char' && findChar(state, candidate.uid)?.state === 'active',
+  );
+  const explicitUids = readCharacterStateCostUids(ctx, kind);
+  if (explicitUids !== undefined) {
+    if (explicitUids === null
+      || explicitUids.length < min
+      || explicitUids.length > max
+      || new Set(explicitUids).size !== explicitUids.length) return [];
+    const allowedByUid = new Map(allowed.map(candidate => [candidate.uid, candidate]));
+    const selected = explicitUids.map(uid => allowedByUid.get(uid));
+    return selected.every((candidate): candidate is Candidate & { kind: 'char' } => candidate !== undefined)
+      ? selected
+      : [];
+  }
+  if (ctx.picked !== undefined) {
+    if (ctx.picked.length < min || ctx.picked.length > max) return [];
+    return candidateMultisetSubset(ctx.picked, allowed)
+      ? ctx.picked.filter((candidate): candidate is Candidate & { kind: 'char' } => candidate.kind === 'char')
+      : [];
+  }
+  return allowed.slice(0, max);
+}
+
 function candidateMultisetSubset(selected: readonly Candidate[], allowed: readonly Candidate[]): boolean {
   const counts = new Map<string, number>();
   for (const candidate of allowed) {
@@ -1328,9 +1428,42 @@ function readRemoveFromHandIndices(ctx: EffectCtx): number[] | undefined {
     : [];
 }
 
-function hasCostParam(ctx: EffectCtx, key: string): boolean {
+function readRevealFromHandIndices(ctx: EffectCtx): number[] | undefined {
   const params = ctx.dyn?.['costParams'] as Record<string, unknown> | undefined;
-  return params !== undefined && Object.prototype.hasOwnProperty.call(params, key);
+  const selected = params?.['revealFromHand'] as { indices?: unknown } | undefined;
+  if (selected === undefined) return undefined;
+  return Array.isArray(selected.indices)
+    && selected.indices.every(index => typeof index === 'number' && Number.isInteger(index) && index >= 0)
+    ? selected.indices
+    : [];
+}
+
+/** Read an explicit human sleep/stun payment witness without falling back on malformed input. */
+function readCharacterStateCostUids(
+  ctx: EffectCtx,
+  kind: 'sleepChar' | 'stunChar',
+): string[] | null | undefined {
+  const rawParams = ctx.dyn?.['costParams'];
+  if (rawParams !== undefined && !isPlainRecord(rawParams)) return null;
+  const params = rawParams as Record<string, unknown> | undefined;
+  if (params === undefined || !Object.prototype.hasOwnProperty.call(params, kind)) return undefined;
+  const selected = params[kind];
+  if (selected === null || typeof selected !== 'object' || Array.isArray(selected)) return null;
+  const uids = (selected as Record<string, unknown>)['uids'];
+  return Array.isArray(uids) && uids.every(uid => typeof uid === 'string') ? uids : null;
+}
+
+function hasCostParam(ctx: EffectCtx, key: string): boolean {
+  const params = ctx.dyn?.['costParams'];
+  if (params === undefined) return false;
+  if (!isPlainRecord(params)) return true;
+  return Object.prototype.hasOwnProperty.call(params, key);
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
 }
 
 function isMultisetSubset(selected: readonly string[], available: readonly string[]): boolean {

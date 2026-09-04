@@ -57,7 +57,8 @@ const a1: AbilityDef = {
           verb: 'handAddFromDeck',
           args: {
             player: 'self',
-            cardId: '$matched.cardId'
+            cardId: '$matched.cardId',
+            deferRefresh: true
           }
         }
       },
@@ -66,7 +67,8 @@ const a1: AbilityDef = {
         verb: 'boundToRemove',
         args: {
           player: 'self',
-          bindKey: '$revealed'
+          bindKey: '$revealed',
+          refreshAfter: true
         }
       },
       {

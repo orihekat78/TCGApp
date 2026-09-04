@@ -18,19 +18,22 @@ import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { bindPendingDecision } from '@/ui/hooks/useEngineDispatch/types.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { isHumanDecisionOwner } from '@/ui/services/humanDecisionOwner.js';
+import { effectSourceDisplayName } from '@/ui/services/uidNames.js';
 import { useModalFocusTrap } from '@/ui/hooks/useModalFocusTrap.js';
 import { LinkedPublicHandReveal } from './PublicHandRevealWindow.js';
 import './ChoicePickerModal.css';
 
 export function EffectOptionalModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingEffectOptional);
+  const gameState = useGameStateStore((s) => s.gameState);
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const isOpen = Boolean(pending && isHumanDecisionOwner(pending.player, spectatorMode));
   const dialogRef = useModalFocusTrap({ active: isOpen });
   if (!pending || !isOpen) return null;
 
-  const def = pending.source.cardId ? readDef.card(pending.source.cardId) : undefined;
-  const sourceName = def?.names?.[0] ?? pending.source.cardId ?? '効果';
+  const sourceCardId = pending.source.setCardId ?? pending.source.cardId;
+  const def = sourceCardId ? readDef.card(sourceCardId) : undefined;
+  const sourceName = effectSourceDisplayName(pending.source, { gameState });
   const desc = def?.abilities?.find((a) => a.id === pending.source.abilityId)?.description ?? '';
 
   const resolve = (run: boolean): void => {

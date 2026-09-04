@@ -42,24 +42,27 @@ function discardToRemove(
   p: Player,
   ids: CardId[],
   attribution?: { byPlayer?: Player; viaCost?: boolean },
-): void {
-  if (attribution?.viaCost !== true) {
-    for (const id of ids) {
-      if (s.players[p].hand.includes(id)) {
+): CardId[] {
+  const removed: CardId[] = [];
+  for (const id of ids) {
+    const index = s.players[p].hand.indexOf(id);
+    if (index === -1) continue;
+    if (attribution?.viaCost !== true) {
         event.emit(
           s,
           'hand:removed',
           { player: p, cardId: id, byPlayer: attribution?.byPlayer ?? p },
           { player: p, cardId: id },
         );
-      }
     }
+    s.players[p].hand.splice(index, 1);
+    removed.push(id);
   }
-  remove(s, p, ids);
-  if (ids.length > 0) {
-    s.players[p].remove.push(...ids);
+  if (removed.length > 0) {
+    s.players[p].remove.push(...removed);
     advanceIndexedZoneEpoch(s, p, 'remove');
   }
+  return removed;
 }
 
 /**
@@ -78,6 +81,7 @@ function emitReveal(s: GameState, p: Player, ids: CardId[], attribution?: { byPl
 function toDeckBottom(s: GameState, p: Player, ids: CardId[]): void {
   remove(s, p, ids);
   s.players[p].deck.push(...ids);
+  if (ids.length > 0) advanceIndexedZoneEpoch(s, p, 'deck');
 }
 
 export const hand = {

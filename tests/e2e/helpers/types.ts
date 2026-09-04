@@ -3,8 +3,9 @@
 
 export type GameWindow = {
   __game: {
+    store: { getState: () => unknown };
     getState: () => { gameState: unknown; activeActionId: string | null };
-    setGameState: (gs: unknown) => void;
+    setGameState: (gs: unknown, options?: { preserveRuntime?: boolean }) => boolean;
     createSampleGameState: () => unknown;
     dispatch: (action: unknown) => unknown;
     getActionContext: (id: string) => {
@@ -18,12 +19,18 @@ export type GameWindow = {
     } | null;
     flow: unknown;
     testApi: Promise<{
+      deckOccurrenceAuthority: (
+        state: unknown,
+        player: 'self' | 'opp',
+        index: number,
+      ) => { kind: 'card'; cardId: string; area: 'deck'; player: 'self' | 'opp'; index: number } | null;
       persistPendingRuntimeState: (state: unknown) => void;
       produce: (state: unknown, recipe: (draft: unknown) => void) => unknown;
       resetPendingRuntimeState: () => void;
       resetPresentationQueue: (sessionId: string) => void;
       runAtom: (state: unknown, verb: string, args: unknown, ctx: unknown) => void;
       startCausalSession: (state: unknown, sessionId: string) => void;
+      surfacePendingSideChannels: (getStore: () => unknown) => void;
     }>;
     read: {
       char: {

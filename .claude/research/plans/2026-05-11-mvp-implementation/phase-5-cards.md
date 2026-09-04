@@ -75,7 +75,7 @@ cards-analysis に従い:
 | D11013 | 5.6s | cutinFixedAP + cutinConditionalDraw |
 | D11014 | 5.6t | shippuTargetAPMinus + declaredHandRemoveReanimate |
 | D11015 | 5.6u | triggerOnAttack + enterConditionalGrant |
-| D11016 | 5.6v | guardCounterReact |
+| D11016 | 5.6v | guardedSelectedSourceReact |
 | D11017/18 | 5.6w | cutinFixedAP |
 
 各 task: ability dsl テスト (能力単体動作) + 1ゲーム内挙動テスト

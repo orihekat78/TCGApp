@@ -14,7 +14,7 @@ const a2: AbilityDef = {
   effect: {
     kind: 'sequence', steps: [
       { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', maxN: 4, chooseMatch: 'upTo', filter: { kind: 'character' }, filterAny: [{ cardName: '工藤新一' }, { cardName: '毛利蘭' }], bind: '$revealed', bindMatch: '$matched' } },
-      { kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' }, then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } } },
+      { kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' }, then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId', presentation: 'public-selected-card' } } },
       { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },
       { kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' }, then: { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } } },
     ],

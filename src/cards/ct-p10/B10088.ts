@@ -12,7 +12,7 @@ const a1: AbilityDef = {
         kind: 'sequence', steps: [
           { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', maxN: 3, filter: {}, bind: '$removed' } },
           { kind: 'atom', verb: 'boundToRemove', args: { player: 'self', bindKey: '$removed' } },
-          { kind: 'conditional', if: { kind: 'boundMatchCountAtLeast', bindKey: '$removed', filter: { color: '黒', keyword: 'カットイン' }, n: 3 }, then: { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', from: 'remove', viaEffect: true, max: 1, filter: { kind: 'character', color: '黒', levelMax: 3 } } } },
+          { kind: 'conditional', if: { kind: 'boundMatchCountAtLeast', bindKey: '$removed', filter: { color: '黒', keyword: 'カットイン' }, n: 3 }, then: { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', from: 'remove', viaEffect: true, max: 1, filter: { kind: 'character', color: '黒', levelMax: 3 }, sourceRequired: true, deferSceneSwitchChoice: true } } },
         ],
       },
     },

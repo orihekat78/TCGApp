@@ -107,7 +107,7 @@ function scanUnsupportedKinds(effect, found) {
 // auto atoms (draw/mill/...) collected separately for outcome assertions.
 // ---------------------------------------------------------------------------
 const BINDING_COND_KINDS = new Set(['bound', 'boundMatchesFilter']);
-function walkPrompts(effect, prompts, autos, underCond) {
+function walkPrompts(effect, prompts, autos, underCond, optionalAncestors = [], optionalCounter = { value: 0 }) {
   if (!effect || typeof effect !== 'object') return;
   switch (effect.kind) {
     case 'atom': {
@@ -115,30 +115,49 @@ function walkPrompts(effect, prompts, autos, underCond) {
       const args = effect.args || {};
       if (PICK_VERBS.has(verb)) {
         const nMin = typeof args.n === 'number' ? args.n : 0; // max-form => nMin 0
-        prompts.push({ type: 'pick', verb, args, filter: args.filter || null, nMin });
+        prompts.push({
+          type: 'pick', verb, args, filter: args.filter || null, nMin,
+          optionalDepth: optionalAncestors.length, optionalAncestors,
+        });
       } else if (!underCond) {
         // autos under a conditional (draw gated by boundMatchesFilter 等) は happy-path で発火保証できない
         // ため outcome アサートしない (weak)。非 conditional の auto (optional 内 draw 等) のみ pin する。
-        autos.push({ verb, args });
+        autos.push({ verb, args, optionalDepth: optionalAncestors.length, optionalAncestors });
       }
       break;
     }
     case 'sequence':
     case 'chain':
     case 'parallel':
-      (effect.steps || []).forEach((s) => walkPrompts(s, prompts, autos, underCond));
+      (effect.steps || []).forEach((s) => walkPrompts(
+        s, prompts, autos, underCond, optionalAncestors, optionalCounter,
+      ));
       break;
-    case 'optional':
-      prompts.push({ type: 'optional' });
-      walkPrompts(effect.effect, prompts, autos, underCond);
+    case 'optional': {
+      const optionalId = optionalCounter.value++;
+      prompts.push({
+        type: 'optional',
+        optionalDepth: optionalAncestors.length,
+        optionalAncestors,
+        optionalId,
+      });
+      walkPrompts(
+        effect.effect,
+        prompts,
+        autos,
+        underCond,
+        [...optionalAncestors, optionalId],
+        optionalCounter,
+      );
       break;
+    }
     case 'conditional': {
       // binding-dependent 条件 (boundMatchesFilter/bound) は happy-path で in-filter を選ぶと不成立に
       // なりがち → then 枝は発火しない前提で walk しない (over-script 回避)。
       const ifKind = effect.if && effect.if.kind;
       if (BINDING_COND_KINDS.has(ifKind)) break;
       // board 条件 (enterCountAtMost 等): setup で真化する前提で then を walk (pick は surface する)。
-      walkPrompts(effect.then, prompts, autos, true);
+      walkPrompts(effect.then, prompts, autos, true, optionalAncestors, optionalCounter);
       break;
     }
     default:
@@ -205,6 +224,7 @@ function deriveScenarios(cardId, ability, staticData, mode) {
   for (const p of prompts) {
     if (p.type !== 'pick') continue;
     const slot = pickIdx++;
+    p.pickPlanIndex = slot;
     const { inProps, decoys } = deriveFromFilter(p.filter);
     const args = p.args || {};
     let zone, side;
@@ -551,26 +571,39 @@ function deriveScenarios(cardId, ability, staticData, mode) {
   if (hasOptional) {
     const script = [];
     const expect = [];
-    // picks before the optional prompt -> skip; the optional -> decline; nothing after surfaces
-    let recIdx = 0;
+    const declinedOptionalId = prompts[optionalIndex].optionalId;
+    // Prompts before the optional still surface. Declining suppresses only its inner prompts;
+    // sequence-tail prompts at the same depth continue normally.
     for (let i = 0; i < optionalIndex; i++) {
-      if (prompts[i].type === 'pick') { script.push('pick:skip'); recIdx++; }
+      if (prompts[i].type === 'pick') script.push('pick:skip');
     }
     script.push('optional:decline');
-    // assert the optional's inner picks did NOT fire: their in-filter targets unchanged
-    for (const pl of pickPlans.slice(recIdx)) {
-      if (pl.verb === 'sceneRemove' || pl.verb === 'sceneToHand' || pl.verb === 'sceneToDeck') {
-        expect.push({ kind: 'zone', cardId: pl.inId, zone: 'scene', side: pl.side, present: true });
-      } else if (pl.verb === 'sceneSetState') {
-        expect.push({ kind: 'state', uid: pl.inUid, state: 'active' });
-      } else if (pl.verb === 'partnerAreaRemove') {
-        expect.push({ kind: 'zone', cardId: pl.inId, zone: 'partner-area', side: 'self', present: true });
-      } else if (pl.verb === 'discard') {
-        expect.push({ kind: 'zone', cardId: pl.inId, zone: 'hand', side: 'self', present: true });
+    for (let i = optionalIndex + 1; i < prompts.length; i++) {
+      const prompt = prompts[i];
+      const suppressed = prompt.optionalAncestors.includes(declinedOptionalId);
+      if (prompt.type === 'optional') {
+        if (!suppressed) script.push('optional:take');
+        continue;
+      }
+      const pl = pickPlans[prompt.pickPlanIndex];
+      if (suppressed) {
+        if (pl.verb === 'sceneRemove' || pl.verb === 'sceneToHand' || pl.verb === 'sceneToDeck') {
+          expect.push({ kind: 'zone', cardId: pl.inId, zone: 'scene', side: pl.side, present: true });
+        } else if (pl.verb === 'sceneSetState') {
+          expect.push({ kind: 'state', uid: pl.inUid, state: 'active' });
+        } else if (pl.verb === 'partnerAreaRemove') {
+          expect.push({ kind: 'zone', cardId: pl.inId, zone: 'partner-area', side: 'self', present: true });
+        } else if (pl.verb === 'discard') {
+          expect.push({ kind: 'zone', cardId: pl.inId, zone: 'hand', side: 'self', present: true });
+        }
+      } else {
+        script.push({ pickCardId: pl.inId });
+        for (const d of pl.decoys) expect.push({ kind: 'candidatesExclude', pickIndex: pl.slot, cardId: d.id });
+        expect.push(...outcomeAsserts(pl));
       }
     }
     // draw inside optional must not happen
-    for (const au of autos) if (au.verb === 'draw' && typeof au.args.n === 'number') expect.push({ kind: 'deckDelta', side: 'self', n: 0 });
+    for (const au of autos) if (au.optionalAncestors.includes(declinedOptionalId) && au.verb === 'draw' && typeof au.args.n === 'number') expect.push({ kind: 'deckDelta', side: 'self', n: 0 });
     if (!expect.length) expect.push({ kind: 'deckDelta', side: 'self', n: 0 });
     scenarios.push({ name: `${cardId} optional-decline (inner effect does not fire)`, setup: cloneSetup(), drive: driveObj(), script, expect });
   }

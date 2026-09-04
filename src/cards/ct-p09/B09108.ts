@@ -67,7 +67,7 @@ const a2: AbilityDef = {
   effect: {
     kind: 'chain',
     steps: [
-      { kind: 'atom', verb: 'declareName', args: { bind: 'named' } },
+      { kind: 'atom', verb: 'declareName', args: { bind: 'named', domain: 'registered-card-name' } },
       { kind: 'atom', verb: 'fileRemoveTop', args: { player: 'opp', n: 1, bind: 'removed' } },
       { kind: 'atom', verb: 'fileAdd', args: { player: 'opp', n: 1 } },
       {

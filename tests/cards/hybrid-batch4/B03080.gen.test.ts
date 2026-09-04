@@ -108,10 +108,10 @@ const SCENARIOS: ProbeScenario[] = [
       "cardId": "B03080"
     },
     "script": [
+      "optional:take",
       {
         "pickCardId": "__IN_0"
-      },
-      "optional:take"
+      }
     ],
     "expect": [
       {
@@ -136,8 +136,7 @@ const SCENARIOS: ProbeScenario[] = [
   {
     "name": "B03080 optional-decline (inner effect does not fire)",
     "setup": {
-      "selfScene": [],
-      "oppScene": [
+      "selfScene": [
         {
           "cardId": "__IN_0",
           "uid": "__INU_0",
@@ -154,6 +153,7 @@ const SCENARIOS: ProbeScenario[] = [
           "state": "active"
         }
       ],
+      "oppScene": [],
       "hand": [
         "B03080"
       ],
@@ -170,13 +170,21 @@ const SCENARIOS: ProbeScenario[] = [
       "cardId": "B03080"
     },
     "script": [
-      "optional:decline"
+      "optional:decline",
+      {
+        "pickCardId": "__IN_0"
+      }
     ],
     "expect": [
       {
-        "kind": "deckDelta",
-        "side": "self",
-        "n": 0
+        "kind": "candidatesExclude",
+        "pickIndex": 0,
+        "cardId": "__DE_0_color"
+      },
+      {
+        "kind": "candidatesExclude",
+        "pickIndex": 0,
+        "cardId": "__DE_0_kind"
       }
     ]
   }

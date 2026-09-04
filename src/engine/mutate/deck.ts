@@ -46,6 +46,7 @@ function draw(
     }
     // 上から 1 枚引く
     const card = s.players[p].deck.shift()!;
+    advanceIndexedZoneEpoch(s, p, 'deck');
     s.players[p].hand.push(card);
     drawn.push(card);
     onStep?.({ kind: 'draw', count: 1 });
@@ -74,12 +75,14 @@ function reveal(s: GameState, p: Player, n: number): CardId[] {
 function toBottom(s: GameState, p: Player, ids: CardId[], _order: OrderMode = 'given'): void {
   const ordered = _order === 'reverse' ? [...ids].reverse() : ids;
   s.players[p].deck.push(...ordered);
+  if (ordered.length > 0) advanceIndexedZoneEpoch(s, p, 'deck');
 }
 
 /** 指定カードをデッキの上へ追加 */
 function toTop(s: GameState, p: Player, ids: CardId[], _order: OrderMode = 'given'): void {
   const ordered = _order === 'reverse' ? [...ids].reverse() : ids;
   s.players[p].deck.unshift(...ordered);
+  if (ordered.length > 0) advanceIndexedZoneEpoch(s, p, 'deck');
 }
 
 /** デッキ上から n 枚をリムーブエリアへ。不足時は可能な分のみ (rules/26) */
@@ -88,7 +91,10 @@ function removeFromTop(s: GameState, p: Player, n: number): CardId[] {
   const count = Math.min(n, d.length);
   const removed = d.splice(0, count);
   s.players[p].remove.push(...removed);
-  if (removed.length > 0) advanceIndexedZoneEpoch(s, p, 'remove');
+  if (removed.length > 0) {
+    advanceIndexedZoneEpoch(s, p, 'deck');
+    advanceIndexedZoneEpoch(s, p, 'remove');
+  }
   return removed;
 }
 
@@ -102,6 +108,7 @@ function shuffle(s: GameState, p: Player, rng?: () => number): void {
     d[i] = d[j];
     d[j] = tmp;
   }
+  if (d.length >= 2) advanceIndexedZoneEpoch(s, p, 'deck');
 }
 
 /**
@@ -136,6 +143,7 @@ function refresh(s: GameState, p: Player, resolvingCardId?: CardId): RefreshResu
 
   // リムーブ → デッキへ移動してシャッフル
   s.players[p].deck.push(...refreshable);
+  advanceIndexedZoneEpoch(s, p, 'deck');
   s.players[p].remove = preserved === undefined ? [] : [preserved];
   advanceIndexedZoneEpoch(s, p, 'remove');
   shuffle(s, p);

@@ -18,7 +18,7 @@
 //     type='triggered' (条件発動) のみを対象とする
 //   - 'effect:declared' hook では payload.cardId を見て on-hand のカード自身を判定
 //     (event card 自身が「使われた」とき発動する eventRemoveByAP 等の pattern)
-//   - selfOnly: scene/partner では source.uid が一致、hand では payload.cardId が一致
+//   - selfOnly: scene/partner では hook が示す本人、hand では payload.cardId が一致
 
 import { event } from '../event/registry.js';
 import { def as readDef } from '../read/def.js';
@@ -28,10 +28,16 @@ import { effectiveCutinAbilities } from '../read/hand-cutin.js';
 import { effectiveTriggeredAuraAbilities } from '../read/triggered-aura.js';
 import { char as charMutator } from '../mutate/char.js'; // W6 step4 (r58/B09090): per-char 疾風 flag + waive 消費
 import { flag } from '../mutate/flag.js';            // BUG-096: declaredUseCount 流用
+import { evidence as evidenceMutator } from '../mutate/evidence.js';
 import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from '../effect/resolve-picks.js';
+import { drainAiEffectPicks } from '../effect/apply-pick.js';
 import { cardOccurrenceUid } from '../target/card-occurrence.js';
-import { _setDeferredEntryPickResolver } from '../resolve/stack.js';
+import {
+  incrementDeclaredAbilityUseCountRecord,
+  readDeclaredAbilityUseCountRecord,
+} from '../effect/source-identity.js';
+import { _setDeferredEntryPickResolver, _setImmediateReactionDecisionResolver } from '../resolve/stack.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import type { GameState, AbilityDef, AbilityScope, Effect, EffectCtx, EffectResolutionKind, EffectStackEntry } from '../types/index.js';
 // 2026-05-27 Option C: ヒラメキは triggered hook='evidence:remove-by-action' + optional:true
@@ -56,6 +62,50 @@ export function _setHumanPlayerSide(side: 'self' | 'opp' | null): void {
 }
 
 type Player = 'self' | 'opp';
+
+function effectContainsNegate(effect: Effect | undefined): boolean {
+  if (!effect) return false;
+  switch (effect.kind) {
+    case 'negate':
+      return true;
+    case 'sequence':
+    case 'parallel':
+    case 'chain':
+      return effect.steps.some(effectContainsNegate);
+    case 'choice':
+      return effect.options.some(effectContainsNegate);
+    case 'optional':
+      return effectContainsNegate(effect.effect) || effectContainsNegate(effect.else);
+    case 'conditional':
+      return effectContainsNegate(effect.then) || effectContainsNegate(effect.else);
+    case 'forEach':
+      return effectContainsNegate(effect.do);
+    case 'repeatOptional':
+      return effectContainsNegate(effect.body);
+    case 'replace':
+      return effectContainsNegate(effect.with);
+    default:
+      return false;
+  }
+}
+
+type TriggeredAbilityOccurrence = {
+  ability: AbilityDef;
+  abilityOrigin?: 'printed' | 'granted';
+  abilityIndex?: number;
+  setCardId?: string;
+  setCardInstanceId?: string;
+};
+
+function hostAbilityWitness(occurrence: TriggeredAbilityOccurrence):
+  | { abilityOrigin: 'printed' | 'granted'; abilityIndex: number }
+  | undefined {
+  if (occurrence.abilityOrigin === undefined || occurrence.abilityIndex === undefined) return undefined;
+  return {
+    abilityOrigin: occurrence.abilityOrigin,
+    abilityIndex: occurrence.abilityIndex,
+  };
+}
 
 // refactor 2b (2026-06-12): export 化 — scripts/taskA-validate-specs.cjs HOOKS との同期を
 // tests/engine/sync-taskA-whitelists.test.ts が機械検証するため。
@@ -172,6 +222,50 @@ type CardLocation = {
   area: 'scene' | 'partner-area' | 'case' | 'hand' | 'evidence';
 };
 
+type SimultaneousSetCardObserver = {
+  player: Player;
+  uid: string;
+  cardId: string;
+  abilityIndices: number[];
+  declaredUseCount: Record<string, number>;
+};
+
+function simultaneousSetCardObservers(payload: unknown): SimultaneousSetCardObserver[] {
+  const raw = (payload as { simultaneousSetCardObservers?: unknown } | undefined)
+    ?.simultaneousSetCardObservers;
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((entry): entry is SimultaneousSetCardObserver => {
+    if (!entry || typeof entry !== 'object') return false;
+    const candidate = entry as Partial<SimultaneousSetCardObserver>;
+    return (candidate.player === 'self' || candidate.player === 'opp')
+      && typeof candidate.uid === 'string'
+      && typeof candidate.cardId === 'string'
+      && Array.isArray(candidate.abilityIndices)
+      && candidate.abilityIndices.every(index => Number.isInteger(index) && index >= 0)
+      && !!candidate.declaredUseCount
+      && typeof candidate.declaredUseCount === 'object';
+  });
+}
+
+function withoutSimultaneousSetCardObservers(payload: unknown): unknown {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return payload;
+  const { simultaneousSetCardObservers: _internal, ...publicPayload } = payload as Record<string, unknown>;
+  return publicPayload;
+}
+
+/** A face-down set returned to a private hand has no public identity. */
+function withoutPrivateSetCardLeaveIdentity(payload: unknown): unknown {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return payload;
+  const value = payload as Record<string, unknown>;
+  if (value.faceUp === true || value.destination !== 'hand') return payload;
+  const {
+    setCardId: _setCardId,
+    setCardInstanceId: _setCardInstanceId,
+    ...publicPayload
+  } = value;
+  return publicPayload;
+}
+
 function collectCardsInPlay(state: GameState): CardLocation[] {
   const result: CardLocation[] = [];
   for (const p of ['self', 'opp'] as const) {
@@ -247,6 +341,7 @@ function scopeAllowsArea(scope: AbilityScope | undefined, area: CardLocation['ar
 }
 
 function selfOnlyMatches(
+  hookName: TriggeredHook,
   card: CardLocation,
   payload: unknown,
   source: unknown,
@@ -261,8 +356,61 @@ function selfOnlyMatches(
     const sourcePlayer = (source as { player?: string } | undefined)?.player;
     return payloadCardId === card.cardId && sourcePlayer === card.player;
   }
+  if (hookName === 'contact:start') {
+    const contact = contactStartPayload(payload);
+    return contact !== null && (contact.aUid === card.uid || contact.bUid === card.uid);
+  }
   // scene/partner/case は source.uid で一致確認
   return sourceUid === card.uid;
+}
+
+type ContactStartPayload = Record<string, unknown> & { aUid: string; bUid: string };
+
+function contactStartPayload(payload: unknown): ContactStartPayload | null {
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) return null;
+  const record = payload as Record<string, unknown>;
+  return typeof record.aUid === 'string' && typeof record.bUid === 'string'
+    ? record as ContactStartPayload
+    : null;
+}
+
+/**
+ * A self contact trigger reads aUid/byUid as itself and bUid/targetUid as the
+ * other participant. The emitted event remains attacker-relative for
+ * observers; only the queued occurrence owned by the bUid participant is
+ * rebased.
+ */
+function participantRelativeContactContext(
+  hookName: TriggeredHook,
+  card: CardLocation,
+  selfOnly: boolean,
+  payload: unknown,
+  bindings: EffectCtx['bindings'],
+): { payload: unknown; bindings: EffectCtx['bindings'] } {
+  const contact = hookName === 'contact:start' && selfOnly
+    ? contactStartPayload(payload)
+    : null;
+  if (contact === null || contact.bUid !== card.uid) return { payload, bindings };
+
+  const relativePayload = { ...contact, aUid: contact.bUid, bUid: contact.aUid };
+  const contactBindings = bindings.contact;
+  if (!Array.isArray(contactBindings)) return { payload: relativePayload, bindings };
+
+  const relativeBindings = contactBindings.map((binding) => {
+    if (binding === null || typeof binding !== 'object' || Array.isArray(binding)) return binding;
+    const record = binding as unknown as Record<string, unknown>;
+    if (record.byUid !== contact.aUid || record.targetUid !== contact.bUid) return binding;
+    return {
+      ...record,
+      byUid: contact.bUid,
+      byPlayer: card.player,
+      targetUid: contact.aUid,
+    };
+  });
+  return {
+    payload: relativePayload,
+    bindings: { ...bindings, contact: relativeBindings } as EffectCtx['bindings'],
+  };
 }
 
 // BUG-132 GAP-2 (2026-06-12): effect:declared の emit 1 回 = 1 batch の連番カウンタ。
@@ -284,17 +432,28 @@ function handleHook(
   payload: unknown,
   source: unknown,
 ): void {
+  const simultaneousObservers = hookName === 'setcard:leave'
+    ? simultaneousSetCardObservers(payload)
+    : [];
+  if (simultaneousObservers.length > 0) {
+    // Internal batch authority is consumed synchronously. Never persist scene
+    // snapshots or hidden set-card identities on queued trigger payloads.
+    payload = withoutSimultaneousSetCardObservers(payload);
+  }
+  // Physical set-card identity is part of a triggered occurrence. Legacy and
+  // hand-authored states may not have been hydrated through the normal loader.
+  charMutator.ensureSetCardInstanceIds(state);
   const inheritedBindings = ((source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings ?? {}) as EffectCtx['bindings'];
   const hookBindings = triggerBindingsForHook(hookName, state, payload);
   // Hook-owned names win over an emitter-provided binding.  An enter event
   // cannot spoof the live entrant that gates and later resolves its effect.
   const queuedBindings = { ...inheritedBindings, ...hookBindings } as EffectCtx['bindings'];
-  const abilityDeclaredBatch = (payload as { declaredBatch?: unknown } | undefined)?.declaredBatch;
+  const observerDeclaredBatch = (payload as { declaredBatch?: unknown } | undefined)?.declaredBatch;
   const declaredBatch = hookName === 'effect:declared'
     ? nextDeclaredBatch(state)
-    : hookName === 'ability:declared'
-      && (typeof abilityDeclaredBatch === 'number' || typeof abilityDeclaredBatch === 'string')
-      ? abilityDeclaredBatch
+    : (hookName === 'ability:declared' || hookName === 'cutin:used')
+      && (typeof observerDeclaredBatch === 'number' || typeof observerDeclaredBatch === 'string')
+      ? observerDeclaredBatch
       : undefined;
   // mega-wave W6 step4 (2026-07-04, B09090/P16): 疾風条件 waive の消費。
   // 「このターン中、**次に**自分の現場に登場したキャラは【疾風】の条件を無視できる」— armed 中の
@@ -313,14 +472,37 @@ function handleHook(
       }
     }
   }
-  for (const card of collectCardsInPlay(state)) {
+  const cards = collectCardsInPlay(state);
+  const observerByKey = new Map(simultaneousObservers.map(observer => [
+    `${observer.player}:${observer.uid}`,
+    observer,
+  ]));
+  for (const observer of simultaneousObservers) {
+    const key = `${observer.player}:${observer.uid}`;
+    if (!cards.some(card => card.area === 'scene' && `${card.player}:${card.uid}` === key)) {
+      cards.push({
+        player: observer.player,
+        uid: observer.uid,
+        cardId: observer.cardId,
+        area: 'scene',
+      });
+    }
+  }
+  for (const card of cards) {
     const def = readDef.card(card.cardId);
     if (!def) continue;
+    const liveSceneHost = card.area === 'scene'
+      ? state.players[card.player].scene.find(c => c.uid === card.uid)
+      : undefined;
+    const simultaneousObserver = card.area === 'scene'
+      ? observerByKey.get(`${card.player}:${card.uid}`)
+      : undefined;
+    const detachedObserver = !liveSceneHost ? simultaneousObserver : undefined;
     // Task D E4 (2026-06-12): granted triggered ability (charGrantAbility) の合算走査。
     // scene のキャラのみ turnEffects.grantedAbilities を持ちうる。granted 配列が無ければ
     // 追加コストほぼゼロ (def.abilities そのまま)。limit は granted id で declaredUseCount が機能。
     const grantedHost = card.area === 'scene'
-      ? state.players[card.player].scene.find(c => c.uid === card.uid)
+      ? liveSceneHost
       : card.area === 'partner-area' && card.uid === `partnerMR:${card.player}`
         ? state.players[card.player].partnerAreaMR
         : undefined;
@@ -330,36 +512,65 @@ function handleHook(
     // 「セットされているキャラが…したとき」)。裏向き (faceUp:false) は情報を持たない (rules/16) → 除外。
     // selfOnly は host uid 照合 (selfOnlyMatches が card.uid を使う)。card.area==='scene' のみ (set 先は現場)。
     // gate=scope==='on-set-host' (新 scope、既存カード未宣言 → 回帰0)。set card の on-scene triggered は漏れない。
-    const riderAbilities: AbilityDef[] = [];
+    const riderAbilities: TriggeredAbilityOccurrence[] = [];
     if (card.area === 'scene') {
-      const hostChar = state.players[card.player].scene.find(c => c.uid === card.uid);
+      const hostChar = liveSceneHost;
       for (const entry of hostChar?.setCards ?? []) {
         if (!entry.faceUp) continue;
         const sd = readDef.card(entry.cardId);
         if (!sd) continue;
         for (const ability of (sd.abilities ?? []) as AbilityDef[]) {
-          if (ability.type === 'triggered' && ability.scope === 'on-set-host') riderAbilities.push(ability);
+          if (ability.type === 'triggered' && ability.scope === 'on-set-host') {
+            riderAbilities.push({
+              ability,
+              setCardId: entry.cardId,
+              ...(entry.instanceId ? { setCardInstanceId: entry.instanceId } : {}),
+            });
+          }
         }
       }
     }
     const handCutinAbilities = card.area === 'hand'
       ? effectiveCutinAbilities(state, card.player, card.cardId).filter(a => !(def.abilities as AbilityDef[]).includes(a))
       : [];
-    const triggeredAuraAbilities = card.area === 'scene'
+    const triggeredAuraAbilities = card.area === 'scene' && liveSceneHost
       ? effectiveTriggeredAuraAbilities(state, {
           player: card.player,
           uid: card.uid,
           cardId: card.cardId,
-          char: state.players[card.player].scene.find(c => c.uid === card.uid)!,
+          char: liveSceneHost,
         })
       : [];
     const printedAbilities = readChar.originalAbilitiesDisabled(state, card.uid)
       ? []
       : (def.abilities as AbilityDef[]);
-    const abilityList = ((Array.isArray(grantedRaw) && grantedRaw.length > 0) || riderAbilities.length > 0 || handCutinAbilities.length > 0 || triggeredAuraAbilities.length > 0)
-      ? [...printedAbilities, ...(Array.isArray(grantedRaw) ? (grantedRaw as AbilityDef[]) : []), ...riderAbilities, ...handCutinAbilities, ...triggeredAuraAbilities]
-      : printedAbilities;
-    for (const ability of abilityList) {
+    const abilityList: TriggeredAbilityOccurrence[] = detachedObserver
+      ? detachedObserver.abilityIndices.flatMap(abilityIndex => {
+          const ability = (def.abilities as AbilityDef[])[abilityIndex];
+          return ability ? [{
+            ability,
+            abilityOrigin: 'printed' as const,
+            abilityIndex,
+          }] : [];
+        })
+      : [
+      ...printedAbilities.map((ability, abilityIndex) => ({
+        ability,
+        abilityOrigin: 'printed' as const,
+        abilityIndex,
+      })),
+      ...(Array.isArray(grantedRaw) ? (grantedRaw as AbilityDef[]).map((ability, abilityIndex) => ({
+        ability,
+        abilityOrigin: 'granted' as const,
+        abilityIndex,
+      })) : []),
+      ...riderAbilities,
+      ...handCutinAbilities.map((ability) => ({ ability })),
+      ...triggeredAuraAbilities.map((ability) => ({ ability })),
+    ];
+    for (const occurrence of abilityList) {
+      const ability = occurrence.ability;
+      const abilityWitness = hostAbilityWitness(occurrence);
       if (ability.type !== 'triggered') continue;
       const trig = ability.trigger;
       // multi-hook (2026-06-06 タスクC): trig.hook OR trig.hooks のいずれかが一致で発火。
@@ -401,19 +612,33 @@ function handleHook(
         description: ability.description,
         player: card.player,
         area: card.area,
+        ...(abilityWitness ?? {}),
+        ...(occurrence.setCardId !== undefined ? { setCardId: occurrence.setCardId } : {}),
+        ...(occurrence.setCardInstanceId !== undefined
+          ? { setCardInstanceId: occurrence.setCardInstanceId }
+          : {}),
         ...(resolutionKind ? { resolutionKind } : {}),
       } as const;
       // scope check
       if (!scopeAllowsArea(ability.scope, card.area)) continue;
       // selfOnly check
-      if (trig.selfOnly && !selfOnlyMatches(card, payload, source)) continue;
+      if (trig.selfOnly && !selfOnlyMatches(hookName, card, payload, source)) continue;
+      const occurrenceContext = participantRelativeContactContext(
+        hookName,
+        card,
+        trig.selfOnly === true,
+        payload,
+        queuedBindings,
+      );
+      const occurrencePayload = occurrenceContext.payload;
+      const occurrenceBindings = occurrenceContext.bindings;
       // matcher check (カード側で custom 判定)
-      if (trig.matcher && !trig.matcher(payload, state)) continue;
+      if (trig.matcher && !trig.matcher(occurrencePayload, state)) continue;
       // engine mega-wave W4 (2026-07-03, r83): emit source.bindings を gate 評価 ctx にも貫通する。
       // enter:group の boundAnyMatchesFilter{bindKey:'enterGroup'} を ability.condition (=発動条件、
       // rules/24: 条件不成立なら「発動」自体しない=【ターン1】未消費) で評価するため。
       // 既存 emit は bindings を渡さない → {} で従来と byte 同一。
-      const gateBindings = queuedBindings;
+      const gateBindings = occurrenceBindings;
       // D11007 v2 (Phase 2): matcherCondition (declarative 版 matcher)
       // payload を ctx.triggerPayload に詰めて evalCond に渡す
       if (trig.matcherCondition) {
@@ -428,7 +653,7 @@ function handleHook(
           const ctxMc = {
             source: abilitySource,
             bindings: gateBindings,
-            triggerPayload: payload,
+            triggerPayload: occurrencePayload,
           };
           if (!evalCond(state, trig.matcherCondition, ctxMc)) continue;
         }
@@ -439,7 +664,7 @@ function handleHook(
         const ctx = {
           source: abilitySource,
           bindings: gateBindings,
-          triggerPayload: payload,
+          triggerPayload: occurrencePayload,
         };
         if (!evalCond(state, ability.condition, ctx)) continue;
       }
@@ -449,7 +674,18 @@ function handleHook(
       // declared フロー (declared-ability.ts:82-84) と同じ declaredUseCount を流用
       // (SceneCharacter.declaredUseCount、resetTurnFlags がターン境界で reset、rules/17)。
       if (ability.limit?.kind === 'turn') {
-        if (readChar.declaredUseCount(state, card.uid, ability.id) >= ability.limit.n) continue;
+        const liveUsed = occurrence.setCardInstanceId
+          ? readChar.setCardAbilityUseCount(state, card.uid, occurrence.setCardInstanceId, ability.id)
+          : readChar.declaredUseCount(state, card.uid, ability.id, abilityWitness);
+        const detachedUsed = detachedObserver && !occurrence.setCardInstanceId
+          ? readDeclaredAbilityUseCountRecord(
+              detachedObserver.declaredUseCount,
+              ability.id,
+              abilityWitness,
+            )
+          : 0;
+        const used = detachedObserver ? detachedUsed : liveUsed;
+        if (used >= ability.limit.n) continue;
       }
       // engine additive wave-8 (2026-07-02, P15): 疾風 (enter + enterOrderEquals) が発動した時点で、
       // 発動キャラの owner 側 turnState.shippuFiredThisTurn を立てる。全 gate (selfOnly/matcher/
@@ -474,7 +710,7 @@ function handleHook(
       // walk 時 (resolveEffectPicks) の resolveCtx.bindings にも載せる — optional{...} が $contact.* /
       // ctx.contact (inContact pick, B04092 キャンティ) を surface 時に captur するため (choice の BUG-114 対称、
       // setPendingOptionalBindings)。既存 non-optional 効果の pick/$contact は従来通り runtime (entryToCtx) 解決。
-      const sourceBindings = queuedBindings;
+      const sourceBindings = occurrenceBindings;
       // user_request 20260522_01 #6/#2 + BUG-054 + BUG-065-followup:
       // human player owned effect は humanChooser=true で resolveEffectPicks に
       // 渡し、$pick 検出時に side-channel `__pendingEffectPickSide` を set。
@@ -494,39 +730,58 @@ function handleHook(
       // resolveDeferredEntryPicks) で解決時盤面の候補を参照する (rules/15 §解決時参照、
       // B07016/B08020 a2「（イベントを解決してからキャラを選ぶ）」)。selfOnly entry
       // (イベント自効果 / カットイン自効果 / scene rider) は従来通り queue 時解決。
-      const isDeclaredReaction = (hookName === 'effect:declared' || hookName === 'ability:declared')
-        && trig.selfOnly !== true;
+      const isDeclaredReaction = (
+        (hookName === 'effect:declared' || hookName === 'ability:declared')
+          && trig.selfOnly !== true
+      ) || (hookName === 'cutin:used' && declaredBatch !== undefined);
       const resolvedEffect = ability.effect;
+      const isImmediateDeclaredReaction = isDeclaredReaction
+        && hookName === 'cutin:used'
+        && effectContainsNegate(resolvedEffect);
+      const cutinDeclaredName = hookName === 'effect:declared'
+        && resolutionKind === 'cutin'
+        && typeof (occurrencePayload as { declaredName?: unknown } | undefined)?.declaredName === 'string'
+        ? (occurrencePayload as { declaredName: string }).declaredName
+        : undefined;
       // queue (side-channel set されていても skip しない、pre-pick step 実行のため)。
       // sourceBindings (contact bindings) は上で算出済 → entry に永続化 (runtime $contact.byUid 解決)。
+      const queuedTriggerPayload = hookName === 'setcard:leave'
+        ? withoutPrivateSetCardLeaveIdentity(occurrencePayload)
+        : occurrencePayload;
       event.queue(
         state,
         resolvedEffect,
-        {
-          player: card.player,
-          uid: card.uid,
-          cardId: card.cardId,
-          abilityId: ability.id,
-          description: ability.description,
-          ...(resolutionKind ? { resolutionKind } : {}),
-        },
+        abilitySource,
         hookName,
-        payload,
+        queuedTriggerPayload,
         sourceBindings,
         // BUG-132 GAP-2: effect:declared のみ batch 連番 + 反応マーカーを entry に付与
         {
           deferredPicks: true,
+          ...(cutinDeclaredName === undefined ? {} : { dyn: { declaredName: cutinDeclaredName } }),
           ...(declaredBatch !== undefined
           ? {
               declaredBatch,
               ...(isDeclaredReaction ? { declaredReaction: { abilityId: ability.id } } : {}),
+              ...(isImmediateDeclaredReaction ? { immediateDeclaredReaction: true as const } : {}),
             }
           : {}),
         },
       );
       // BUG-096: 発火を記録 (limit:{turn} のカウント。limit 無しは no-op)
       if (ability.limit?.kind === 'turn') {
-        flag.incrDeclaredUseCount(state, card.uid, ability.id);
+        if (occurrence.setCardInstanceId) {
+          charMutator.incrSetCardAbilityUseCount(state, card.uid, occurrence.setCardInstanceId, ability.id);
+        } else {
+          flag.incrDeclaredUseCount(state, card.uid, ability.id, card.player, abilityWitness);
+          if (simultaneousObserver) {
+            incrementDeclaredAbilityUseCountRecord(
+              simultaneousObserver.declaredUseCount,
+              ability.id,
+              abilityWitness,
+            );
+          }
+        }
       }
     }
   }
@@ -554,10 +809,20 @@ function resolveDeferredEntryPicks(state: GameState, entry: EffectStackEntry, re
   return resolved;
 }
 
+function resolveImmediateAutonomousDecisions(state: GameState, entry: EffectStackEntry): void {
+  const humanSide = getHumanPlayerSide();
+  if (humanSide !== null && entry.source.player === humanSide) return;
+  const aiPolicy = new HeuristicPolicy();
+  drainAiEffectPicks(state, {
+    chooseAtomTarget: aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+  });
+}
+
 let _registered = false;
 
 export function _resetTriggeredRegistered(): void {
   _registered = false;
+  _setImmediateReactionDecisionResolver(null);
 }
 
 export function registerTriggeredListener(): void {
@@ -565,6 +830,7 @@ export function registerTriggeredListener(): void {
   _registered = true;
   // BUG-132 GAP-2: 遅延 pick resolver を stack へ注入 (登録は冪等)
   _setDeferredEntryPickResolver(resolveDeferredEntryPicks);
+  _setImmediateReactionDecisionResolver(resolveImmediateAutonomousDecisions);
   for (const hook of TRIGGERED_HOOKS) {
     if (hook === 'evidence:remove-by-action') {
       // 2026-05-27 Option C: ヒラメキ統合経路。in-play scan ではなく payload の cardId から
@@ -601,7 +867,7 @@ export function registerTriggeredListener(): void {
       //    handleSetcardLeaveSelf (virtual location、faceUp gate) で処理。
       //  - 在場キャラの「セットカードが離れたとき」観測 (B07034/B02020): 通常 in-play scan (handleHook)。
       event.on(hook, (state, payload, source) => {
-        handleSetcardLeaveSelf(state, payload, source);
+        handleSetcardLeaveSelf(state, withoutSimultaneousSetCardObservers(payload), source);
         handleHook('setcard:leave', state, payload, source);
       });
       continue;
@@ -634,6 +900,11 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
     byUid?: string;
     actionId?: string;
     causalCorrelationEventId?: string;
+    heldEvidence?: {
+      token?: string;
+      player?: 'self' | 'opp';
+      cardId?: string;
+    };
     occurrence?: {
       uid?: string;
       player?: 'self' | 'opp';
@@ -688,6 +959,28 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
 
     if (trig.optional) {
       const occurrence = p.occurrence;
+      const heldEvidence = p.heldEvidence;
+      const exactHeldEvidence = heldEvidence
+        && typeof heldEvidence.token === 'string'
+        && heldEvidence.player === p.player
+        && heldEvidence.cardId === p.ev.cardId
+        ? {
+          token: heldEvidence.token,
+          player: heldEvidence.player,
+          cardId: heldEvidence.cardId,
+        }
+        : undefined;
+      if (heldEvidence !== undefined) {
+        if (!exactHeldEvidence
+          || typeof p.actionId !== 'string'
+          || !evidenceMutator.bindHeldHiramekiAuthority(
+            state,
+            p.actionId,
+            exactHeldEvidence.token,
+            ability.id,
+            effectValid,
+          )) continue;
+      }
       // ヒラメキ semantics: fire/skip 選択を UI に委譲
       // (旧 hirameki.ts listener と同等の動作)
       pushPendingHirameki({
@@ -701,6 +994,7 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
         actorUid: p.byUid,
         actionId: p.actionId,
         causalCorrelationEventId: p.causalCorrelationEventId,
+        heldEvidence: exactHeldEvidence,
         occurrence: occurrence
           && occurrence.player === p.player
           && occurrence.cardId === p.ev.cardId
@@ -771,14 +1065,18 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
   // のため in-play scan (handleHook) からは見えない — payload.removedChar (splice 前 snapshot、
   // setCards 保持) から entry 単位で def を引く (公式Q&A: 2枚セット→2つ発動)。裏向きは不発 (rules/16)。
   // source = host (uid/cardId/player) — rider の「このキャラ (host) がリムーブされたとき」座標系。
-  const riderAbilities: AbilityDef[] = [];
-  const removedChar = (payload as { removedChar?: { setCards?: { cardId: string; faceUp: boolean }[]; turnEffects?: Record<string, unknown>; keywordOverrides?: { disabledOriginal?: boolean } } } | undefined)?.removedChar;
+  const riderAbilities: TriggeredAbilityOccurrence[] = [];
+  const removedChar = (payload as { removedChar?: { setCards?: { cardId: string; faceUp: boolean; instanceId?: string }[]; turnEffects?: Record<string, unknown>; keywordOverrides?: { disabledOriginal?: boolean } } } | undefined)?.removedChar;
   for (const entry of removedChar?.setCards ?? []) {
     if (entry.faceUp !== true) continue;
     const setDef = readDef.card(entry.cardId);
     for (const ab of (setDef?.abilities ?? []) as AbilityDef[]) {
       if (ab.type === 'triggered' && ab.scope === 'on-set-host' && ab.trigger?.hook === 'leave:to-remove') {
-        riderAbilities.push(ab);
+        riderAbilities.push({
+          ability: ab,
+          setCardId: entry.cardId,
+          ...(entry.instanceId ? { setCardInstanceId: entry.instanceId } : {}),
+        });
       }
     }
   }
@@ -789,8 +1087,12 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
   // は grantedAbilities を合算するが離場カード自身は collectCardsInPlay に出ないため self-leave grant は
   // この経路でのみ拾える。裏向き/JSON descriptor そのまま (validate が function 不可を静的保証)。
   const grantedSelf = removedChar?.turnEffects?.['grantedAbilities'];
-  const grantedSelfAbilities: AbilityDef[] = Array.isArray(grantedSelf)
-    ? (grantedSelf as AbilityDef[]).filter(ab => ab.type === 'triggered' && ab.trigger?.hook === 'leave:to-remove')
+  const grantedSelfAbilities: TriggeredAbilityOccurrence[] = Array.isArray(grantedSelf)
+    ? (grantedSelf as AbilityDef[]).flatMap((ability, abilityIndex) => (
+      ability.type === 'triggered' && ability.trigger?.hook === 'leave:to-remove'
+        ? [{ ability, abilityOrigin: 'granted' as const, abilityIndex }]
+        : []
+    ))
     : [];
   const batchAuraAbilities = (payload as { triggeredAuraAbilities?: unknown } | undefined)?.triggeredAuraAbilities;
   const auraAbilities = Array.isArray(batchAuraAbilities)
@@ -801,13 +1103,25 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
   const printedAbilities = readChar.originalAbilitiesDisabledOn(removedChar)
     ? []
     : (def.abilities as AbilityDef[]);
-  for (const ability of [...printedAbilities, ...riderAbilities, ...grantedSelfAbilities, ...auraAbilities]) {
+  const abilityOccurrences: TriggeredAbilityOccurrence[] = [
+    ...printedAbilities.map((ability, abilityIndex) => ({
+      ability,
+      abilityOrigin: 'printed' as const,
+      abilityIndex,
+    })),
+    ...riderAbilities,
+    ...grantedSelfAbilities,
+    ...auraAbilities.map((ability) => ({ ability })),
+  ];
+  for (const occurrence of abilityOccurrences) {
+    const ability = occurrence.ability;
+    const abilityWitness = hostAbilityWitness(occurrence);
     if (ability.type !== 'triggered') continue;
     const trig = ability.trigger;
     if (!trig || trig.hook !== 'leave:to-remove') continue;
     // rider (on-set-host) は host 現場離場 = scope 成立済みなので area gate を通す (host 印字は従来どおり)。
     if (ability.scope !== 'on-set-host' && !scopeAllowsArea(ability.scope, card.area)) continue;
-    if (trig.selfOnly && !selfOnlyMatches(card, payload, source)) continue;
+    if (trig.selfOnly && !selfOnlyMatches('leave:to-remove', card, payload, source)) continue;
     if (trig.matcher && !trig.matcher(payload, state)) continue;
     const baseCtx = {
       source: {
@@ -816,6 +1130,11 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
         abilityId: ability.id,
         player: card.player,
         area: card.area,
+        ...(abilityWitness ?? {}),
+        ...(occurrence.setCardId !== undefined ? { setCardId: occurrence.setCardId } : {}),
+        ...(occurrence.setCardInstanceId !== undefined
+          ? { setCardInstanceId: occurrence.setCardInstanceId }
+          : {}),
       },
       bindings: {},
       triggerPayload: payload,
@@ -828,7 +1147,18 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
     event.queue(
       state,
       ability.effect,
-      { player: card.player, uid: card.uid, cardId: card.cardId, abilityId: ability.id, description: ability.description },
+      {
+        player: card.player,
+        uid: card.uid,
+        cardId: card.cardId,
+        abilityId: ability.id,
+        description: ability.description,
+        ...(abilityWitness ?? {}),
+        ...(occurrence.setCardId !== undefined ? { setCardId: occurrence.setCardId } : {}),
+        ...(occurrence.setCardInstanceId !== undefined
+          ? { setCardInstanceId: occurrence.setCardInstanceId }
+          : {}),
+      },
       'leave:to-remove',
       payload,
       sourceBindings,
@@ -862,7 +1192,7 @@ function handleDisguiseReplacedSelf(state: GameState, payload: unknown, source: 
     const trig = ability.trigger;
     if (!trig || trig.hook !== 'disguise:replaced') continue;
     if (!scopeAllowsArea(ability.scope, card.area)) continue;
-    if (trig.selfOnly && !selfOnlyMatches(card, payload, source)) continue;
+    if (trig.selfOnly && !selfOnlyMatches('disguise:replaced', card, payload, source)) continue;
     if (trig.matcher && !trig.matcher(payload, state)) continue;
     const baseCtx = {
       source: {
@@ -895,10 +1225,10 @@ function handleDisguiseReplacedSelf(state: GameState, payload: unknown, source: 
 /**
  * engine additive A2 (2026-07-11, B02084 安室の愛車): setcard:leave の **セットカード自身** 用
  * virtual-location handler。handleLeaveToRemoveSelf / handleDisguiseReplacedSelf と同構造。
- * setcard:leave payload = { player, hostUid, hostCardId, setCardId, faceUp, cause }。離場した
+ * setcard:leave payload = { player, hostUid, hostCardId, setCardId, setCardInstanceId, faceUp, cause }。離場した
  * セットカードは collectCardsInPlay に出ない → payload.setCardId から def を引き、scope:'on-set-self' +
  * hook:'setcard:leave' の triggered を発火。faceUp:false は情報を持たない (rules/16 / B02084 Q&A) → 不発。
- * source uid は自己参照しない ability 用に host uid を借りる (line2 は remove-area pick で自 uid 不要)。
+ * source uid は $self の host 参照用。setCardId + setCardInstanceId が物理能力 occurrence を識別する。
  */
 function handleOnSetSelfPhaseEndStart(state: GameState, payload: unknown, source: unknown): void {
   charMutator.ensureSetCardInstanceIds(state);
@@ -912,11 +1242,23 @@ function handleOnSetSelfPhaseEndStart(state: GameState, payload: unknown, source
           if (ability.type !== 'triggered' || ability.scope !== 'on-set-self') continue;
           const trigger = ability.trigger;
           if (!trigger || trigger.hook !== 'phase:end:start') continue;
-          if (trigger.selfOnly && !selfOnlyMatches({ player, uid: host.uid, cardId: setCard.cardId, area: 'scene' }, payload, source)) continue;
+          if (trigger.selfOnly && !selfOnlyMatches('phase:end:start', { player, uid: host.uid, cardId: setCard.cardId, area: 'scene' }, payload, source)) continue;
           if (trigger.matcher && !trigger.matcher(payload, state)) continue;
-          const triggerPayload = { ...(payload as Record<string, unknown>), setCardInstanceId: setCard.instanceId };
+          const triggerPayload = {
+            ...(payload as Record<string, unknown>),
+            setCardId: setCard.cardId,
+            setCardInstanceId: setCard.instanceId,
+          };
           const ctx: EffectCtx = {
-            source: { cardId: setCard.cardId, uid: host.uid, abilityId: ability.id, player, area: 'scene' },
+            source: {
+              cardId: setCard.cardId,
+              uid: host.uid,
+              abilityId: ability.id,
+              player,
+              area: 'scene',
+              setCardId: setCard.cardId,
+              setCardInstanceId: setCard.instanceId,
+            },
             bindings: {}, triggerPayload,
           };
           if (trigger.matcherCondition && !evalCond(state, trigger.matcherCondition, ctx)) continue;
@@ -925,7 +1267,15 @@ function handleOnSetSelfPhaseEndStart(state: GameState, payload: unknown, source
           event.queue(
             state,
             ability.effect,
-            { player, uid: host.uid, cardId: setCard.cardId, abilityId: ability.id, description: ability.description },
+            {
+              player,
+              uid: host.uid,
+              cardId: setCard.cardId,
+              abilityId: ability.id,
+              description: ability.description,
+              setCardId: setCard.cardId,
+              setCardInstanceId: setCard.instanceId,
+            },
             'phase:end:start',
             triggerPayload,
             undefined,
@@ -939,10 +1289,11 @@ function handleOnSetSelfPhaseEndStart(state: GameState, payload: unknown, source
 
 function handleSetcardLeaveSelf(state: GameState, payload: unknown, _source: unknown): void {
   const pl = payload as
-    | { player?: Player; setCardId?: string; faceUp?: boolean; hostUid?: string }
+    | { player?: Player; setCardId?: string; setCardInstanceId?: string; faceUp?: boolean; hostUid?: string }
     | undefined;
   if (!pl || !pl.player || !pl.setCardId) return;
   if (pl.faceUp !== true) return; // 裏向きセットは情報を持たない (rules/16, B02084 Q&A)
+  if (typeof pl.setCardInstanceId !== 'string' || pl.setCardInstanceId.length === 0) return;
   const def = readDef.card(pl.setCardId);
   if (!def) return;
   const card: CardLocation = {
@@ -964,6 +1315,8 @@ function handleSetcardLeaveSelf(state: GameState, payload: unknown, _source: unk
         abilityId: ability.id,
         player: card.player,
         area: card.area,
+        setCardId: pl.setCardId,
+        ...(pl.setCardInstanceId ? { setCardInstanceId: pl.setCardInstanceId } : {}),
       },
       bindings: {},
       triggerPayload: payload,
@@ -975,7 +1328,15 @@ function handleSetcardLeaveSelf(state: GameState, payload: unknown, _source: unk
     event.queue(
       state,
       ability.effect,
-      { player: card.player, uid: card.uid, cardId: card.cardId, abilityId: ability.id, description: ability.description },
+      {
+        player: card.player,
+        uid: card.uid,
+        cardId: card.cardId,
+        abilityId: ability.id,
+        description: ability.description,
+        setCardId: pl.setCardId,
+        ...(pl.setCardInstanceId ? { setCardInstanceId: pl.setCardInstanceId } : {}),
+      },
       'setcard:leave',
       payload,
       undefined,

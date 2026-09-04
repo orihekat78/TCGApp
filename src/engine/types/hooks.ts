@@ -47,7 +47,8 @@ export type HookName =
   // engine additive wave-3 (2026-06-30): カットインを使用したとき (rules/09 §カットイン)。
   // flow/contact.cutIn が effect:declared(自効果) の直後に per-use emit。第三者キャラ (在場 observer) が
   // 「(自分/相手が)カットインを使用したとき」を観測する用 (B02080/B09086/B04090)。
-  //   payload: { player(=cutin 使用側), cardId(=使用カットイン) }
+  //   payload: { player(=cutin 使用側), cardId(=使用カットイン),
+  //              declaredBatch(=先行するカットイン自効果との順序 gate) }
   //   source : { player, cardId, bindings(=contact bindings、$contact.byUid 用) }
   // 既存 effect:declared(optional=cutin 自効果ゲート) とは別 hook = 自効果と第三者観測を分離。
   | 'cutin:used'
@@ -74,15 +75,16 @@ export type HookName =
   | 'leave:to-partner-area'
   // engine拡張 wave#2 cluster9 (2026-06-15): 裏向き/表向きセットカードが現場から離れたとき
   // (rules/16 セット解除)。per-occurrence (1枚につき1回) emit。
-  //   payload: { player(=host owner, 'self'|'opp'), hostUid, hostCardId, setCardId, faceUp, cause }
-  //   source : { player, uid(=hostUid), cardId(=hostCardId) }
+  //   payload: { player(=host owner), hostUid, hostCardId, setCardId, setCardInstanceId, faceUp, cause,
+  //              destination?:'remove'|'hand' }
+  //   source : { player, uid(=hostUid), cardId(=hostCardId), setCardId, setCardInstanceId }
   // listener は triggerPlayerIs で自/相手側を判定 (host uid を持つが set card 自体に ability は無い)。
   // B07034/B07034P/PR231 a1 (side:self) + B02020/B02020P a1 (side:opp) が購読。
   | 'setcard:leave'
   // engine additive (2026-06-29): カード1枚が host キャラにセットされたとき (rules/16 セット)。
   // setcard:leave の対。mutate/char.ts setCard (=set-card-add の唯一の書込点) が push 後に per-occurrence emit。
-  //   payload: { player(=host owner), hostUid, hostCardId, setCardId, faceUp, cause }
-  //   source : { player, uid(=hostUid), cardId(=hostCardId) }
+  //   payload: { player(=host owner), hostUid, hostCardId, setCardId, setCardInstanceId, faceUp, cause }
+  //   source : { player, uid(=hostUid), cardId(=hostCardId), setCardId, setCardInstanceId }
   // host が listener (selfOnly: source.uid===host.uid)。set card 自体に ability は無い。裏向きセット
   // (faceUp:false) は情報を持たない (rules/16) → setCardMatches 条件は faceUp!==true を弾く。
   // B02018「このキャラにカードがセットされるたび」/ B06046「〚特徴[YAIBA]〛のカードがセットされるたび」用。

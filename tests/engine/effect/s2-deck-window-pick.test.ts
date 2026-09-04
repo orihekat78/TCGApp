@@ -12,6 +12,7 @@ import { register as registerCardDef, _resetRegistry as resetDefRegistry } from 
 import { mutate } from '@/engine/mutate/index';
 import { runAtom } from '@/engine/effect/atom-handlers';
 import { candidates } from '@/engine/target/candidates';
+import { cardOccurrenceWitness } from '@/engine/target/card-occurrence';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import type { CardDef, GameState, EffectCtx, Candidate, TargetingRef } from '@/engine/types';
 
@@ -149,5 +150,37 @@ describe('E4: sceneEnter cardIds-multi deck-splice の stale-bind prune', () => 
     }, ctx);
     expect(asCards((ctx.bindings as Record<string, Candidate[]>)['$revealed']).length).toBe(2);
     expect(s.players.self.deck).toEqual(['DT1', 'NX']);
+  });
+});
+
+describe('E5: multi sceneEnter renews exact deck authority', () => {
+  it('renews the surviving window once after two physical occurrences enter', () => {
+    const s = base(); const ctx = ctxFor(s);
+    s.players.self.deck = ['DT1', 'DT1', 'NX', 'EV', 'DT1'];
+    runAtom(s, 'deckRevealUntil' as never, { player: 'self', maxN: 4, bind: '$revealed' }, ctx);
+    const beforeWitness = cardOccurrenceWitness(s, 'self', 'deck');
+    const revealed = (ctx.bindings as Record<string, Candidate[]>)['$revealed'];
+
+    runAtom(s, 'sceneEnter' as never, {
+      player: 'self',
+      cardIds: ['DT1', 'DT1'],
+      selectedCardOccurrences: structuredClone(revealed.slice(0, 2)),
+      target: {
+        kind: 'pick',
+        query: { area: 'deck', side: 'self', fromGroupCards: '$revealed' },
+        n: { min: 0, max: 2 },
+        chooser: 'owner',
+      },
+    }, ctx);
+
+    const afterWitness = cardOccurrenceWitness(s, 'self', 'deck');
+    const remaining = (ctx.bindings as Record<string, Candidate[]>)['$revealed'];
+    expect(afterWitness).not.toBe(beforeWitness);
+    expect(remaining.map(({ cardId, index }) => `${cardId}#${index}`)).toEqual(['NX#0', 'EV#1']);
+    expect(remaining.every(({ occurrenceWitness }) => occurrenceWitness === afterWitness)).toBe(true);
+
+    runAtom(s, 'deckToBottomBound' as never, { player: 'self', bindKey: '$revealed' }, ctx);
+    expect(s.players.self.deck[0]).toBe('DT1');
+    expect(s.players.self.deck.slice(1).sort()).toEqual(['EV', 'NX']);
   });
 });

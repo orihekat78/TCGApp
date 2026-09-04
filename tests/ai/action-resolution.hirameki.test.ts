@@ -381,7 +381,7 @@ describe('resolveActionAgainstCase Hirameki checkpoint', () => {
     },
   );
 
-  it('restores strict Hirameki checkpoint admission after legacy playback', () => {
+  it('rejects a forged public checkpoint while preserving direct AI authority after legacy playback', () => {
     replayLog(hiramekiReplayV1());
     const initial = createHiramekiDemoState('D11009');
     useGameStateStore.setState({ gameState: initial });
@@ -400,7 +400,7 @@ describe('resolveActionAgainstCase Hirameki checkpoint', () => {
     expect(useGameStateStore.getState().pendingHirameki).toEqual(pending);
     expect(useGameStateStore.getState().gameState).toEqual(before);
 
-    expect(() => produce(initial, (draft) => {
+    const resolved = produce(initial, (draft) => {
       resolveActionAgainstCase(
         draft,
         HIRAMEKI_DEMO_OPP_ATTACKER_UID,
@@ -408,7 +408,10 @@ describe('resolveActionAgainstCase Hirameki checkpoint', () => {
         hiramekiPolicy(true).policy,
         passPolicy('attacker'),
       );
-    })).toThrow('Hirameki checkpoint does not match active action');
+    });
+
+    expect(resolved.players.self.remove).toContain('D11009');
+    expectClosedCheckpoint(resolved);
   });
 
   it('MCTS tree expansion consumes D11009 before evaluating the child state', () => {

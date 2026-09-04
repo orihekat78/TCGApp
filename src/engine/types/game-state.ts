@@ -38,6 +38,8 @@ export type SetCardEntry = {
   faceUp: boolean;
   /** Runtime occurrence identity. Optional for saved states and legacy fixtures. */
   instanceId?: string;
+  /** Per-occurrence ability history. Turn numbers make expiry implicit. */
+  abilityUseCounts?: Record<string, { turn: number; count: number }>;
   /** Per-occurrence replacement history. Turn numbers make expiry implicit. */
   replacementUseCounts?: Record<string, { turn: number; count: number }>;
 };
@@ -130,7 +132,7 @@ export type TurnScopedFlags = {
   /**
    * 「このターン中、自分はイベントを使用できない」(rules/25 §B08020 周辺 / B09034 公式 Q&A)。
    * setEventUseBan verb がセットし、turn:start の resetTurnFlags でクリア。
-   * undefined/false = 制限なし。ゲート対象は「手札の使用」と「ネクストヒント」の event のみ
+   * undefined/false = 制限なし。ゲート対象は「手札の使用」「ネクストヒント」「イベントを使用する効果」の event
    * (公式 Q&A: 【カットイン】【ヒラメキ】は本制限を受けない)。enterCountThisTurn と同じ
    * optional-flag 前例に倣い state-factory / fixtures では未初期化。
    */
@@ -138,7 +140,7 @@ export type TurnScopedFlags = {
   /**
    * 「このターン中、自分はネクストヒントできない」(B06104/P・B09019/P・B09105/P、wave use-restrict 2026-06-30)。
    * setNextHintBan verb がセットし、turn:start の resetTurnFlags でクリア。undefined/false = 制限なし。
-   * eventUseBanned は手札使用/ネクストヒントの **event のみ** を gate するのに対し、本フラグは
+   * eventUseBanned は手札使用/ネクストヒント/効果使用の **event のみ** を gate するのに対し、本フラグは
    * **ネクストヒント全体** (step1 FILE→手札 含む) を canStartNextHint で不可にする (rules/12 §「ネクストヒントできない」)。
    * 手札の使用 (rules/05 01.) は別行動なので阻害しない。enterCountThisTurn と同じ optional-flag 前例に倣い未初期化。
    */
@@ -316,6 +318,7 @@ export type CausalLogStateV1 = {
 // 単なる Effect ではなく、発火元・発火タイミング・解決状態を含むラッパー。
 // spec: .claude/specs/engine-api-resolver.md
 import type { EffectStackEntry, ReasoningContinuation } from './effect-stack.js';
+import type { PendingMisreadAuthority } from './misread.js';
 import type { ReservedEffectEntry } from './reserved-effect.js';
 import type { TargetFilter } from './effect.js'; // engine A3 wave (2026-07-11): actionCutinBanOppFilter (B05007)
 import type { ActionContext } from './results.js';
@@ -333,8 +336,8 @@ export type GameState = {
    * saves; resumable physical selections fail closed until this exists.
    */
   indexedZoneEpochs?: {
-    self: { evidence: number; remove: number };
-    opp: { evidence: number; remove: number };
+    self: { deck: number; evidence: number; remove: number };
+    opp: { deck: number; evidence: number; remove: number };
   };
   pendingEffects: EffectStackEntry[];
   /** Serializable in-flight action state. Optional only for legacy saves. */
@@ -357,8 +360,9 @@ export type GameState = {
   /** Monotonic identity for a serializable human-decision continuation. */
   pendingRuntimeSeq?: number;
   /**
-   * Human-decision side channels paused by the resolver. The runtime globals
-   * are only a live-process cache; this snapshot is the save/replay authority.
+   * Human-decision side channels paused by the resolver. Most channels are
+   * serializable authority. A paused Misread additionally requires its exact
+   * process-local live lease, so JSON/replay/cross-session restore fails closed.
    */
   pendingRuntimeState?: {
     token: number;
@@ -376,10 +380,12 @@ export type GameState = {
   effectTriggerBatchSeq?: number;
   /** Persisted declaration-causality sequence; survives save/reload. */
   declaredBatchSeq?: number;
-  /** Engine-only single-use authority for the current reasoning continuation. */
+  /** Physical reasoning anchor retained until its paused Misread is consumed. */
   pendingReasoningContinuation?: ReasoningContinuation;
   /** Monotonic token allocator for reasoning continuations. */
   reasoningContinuationSeq?: number;
+  /** Single-use authority transferred from a paused reasoning continuation. */
+  pendingMisreadAuthority?: PendingMisreadAuthority;
   /**
    * Transient nesting context while a hook listener is running.  This is
    * deliberately state-owned (rather than a module singleton) so nested
@@ -394,6 +400,8 @@ export type GameState = {
   reservedEffectSeq?: number;
   /** Persisted allocator for public-hand reveal resolution tokens. */
   publicHandRevealSeq?: number;
+  /** Persisted allocator for physical choose-intercept reaction witnesses. */
+  chooseInterceptBatchSeq?: number;
   /**
    * 離場後予約効果 queue (mega-wave W6 step8, row75)。コストで源カードが盤面を離れる
    * 「ターン終了時〜」(B08069) /「このターン中、次に〜したとき」(B01058) をカード位置非依存で保持。

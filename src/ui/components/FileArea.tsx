@@ -120,6 +120,11 @@ export function FileArea(props: FileAreaProps): JSX.Element {
       data-side={side}
       data-count={count}
       onClick={onClick}
+      onKeyDown={onClick ? (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        onClick();
+      } : undefined}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       aria-label={onClick ? `${side === 'self' ? '自分の' : '相手の'}FILE エリアを開く (${count} 枚)` : undefined}
@@ -128,6 +133,7 @@ export function FileArea(props: FileAreaProps): JSX.Element {
       {/* 7マス進捗 + ラベル */}
       <div className="file-strip-header">
         <span>FILE</span>
+        <span className="file-count">{count}</span>
         <div
           className={`progress-7${count >= threshold ? ' complete' : ''}`}
           role="progressbar"
@@ -139,12 +145,6 @@ export function FileArea(props: FileAreaProps): JSX.Element {
             <span key={i} className={on ? 'filled' : ''} />
           ))}
         </div>
-      </div>
-
-      {/* zone-label (mock 互換 — file-strip-header と兼用する場合に備えて残す) */}
-      <div className="zone-label">
-        <span>FILE</span>
-        <span className="count">{count}</span>
       </div>
 
       {/* スタック表示 */}

@@ -88,8 +88,13 @@ export function DeckRevealOverlay(): JSX.Element | null {
     // pick 解決の再入で awaitingPick 無しの pending が再 set され通常演出で完了する。
     // S2 B01022: deck-window pick 未解決中も同様に hold (上記 deckWindowPickActive)。
     const revealMs = pending.revealed.length * 500 + 500;
-    const toBottomMs = pending.presentation === 'reveal-return' ? 700 : 1100;
-    const shuffleMs = pending.presentation === 'reveal-return' ? 0 : 1000;
+    const completesAfterReveal = pending.presentation === 'reveal-complete';
+    const returnsToOriginalPosition = pending.presentation === 'reveal-return';
+    const skipsShuffle = completesAfterReveal || returnsToOriginalPosition
+      || pending.presentation === 'reveal-to-bottom'
+      || pending.presentation === 'reveal-to-bottom-randomized';
+    const toBottomMs = completesAfterReveal ? 0 : returnsToOriginalPosition ? 700 : 1100;
+    const shuffleMs = skipsShuffle ? 0 : 1000;
     const totalMs = terminal
       ? Math.min(3_000, revealMs + toBottomMs + shuffleMs)
       : revealMs + toBottomMs + shuffleMs;
@@ -114,15 +119,17 @@ export function DeckRevealOverlay(): JSX.Element | null {
     timeline.startedAt = Date.now();
     const toBottomDelay = terminal ? -1 : remainingMs - toBottomMs - shuffleMs;
     const shuffleDelay = terminal ? -1 : remainingMs - shuffleMs;
-    const t1 = toBottomDelay > 0
-      ? setTimeout(() => setPhase(pending.presentation === 'reveal-return' ? 'return' : 'toBottom'), toBottomDelay)
+    const t1 = toBottomMs > 0 && toBottomDelay > 0
+      ? setTimeout(() => setPhase(returnsToOriginalPosition ? 'return' : 'toBottom'), toBottomDelay)
       : undefined;
-    const t2 = shuffleDelay > 0
+    const t2 = !skipsShuffle && shuffleDelay > 0
       ? setTimeout(() => setPhase('shuffle'), shuffleDelay)
       : undefined;
-    if (!terminal && toBottomDelay <= 0 && shuffleDelay > 0) setPhase(pending.presentation === 'reveal-return' ? 'return' : 'toBottom');
-    if (!terminal && pending.presentation === 'reveal-return' && toBottomDelay <= 0) setPhase('return');
-    if (!terminal && shuffleDelay <= 0 && pending.presentation !== 'reveal-return') setPhase('shuffle');
+    if (!terminal && toBottomMs > 0 && toBottomDelay <= 0 && (skipsShuffle || shuffleDelay > 0)) {
+      setPhase(returnsToOriginalPosition ? 'return' : 'toBottom');
+    }
+    if (!terminal && returnsToOriginalPosition && toBottomDelay <= 0) setPhase('return');
+    if (!terminal && !skipsShuffle && shuffleDelay <= 0) setPhase('shuffle');
     const t3 = setTimeout(dismiss, remainingMs);
     return () => {
       if (t1 !== undefined) clearTimeout(t1);
@@ -147,7 +154,9 @@ export function DeckRevealOverlay(): JSX.Element | null {
     : phase === 'return'
       ? '公開したカードを元のデッキへ戻しています…'
     : phase === 'toBottom'
-      ? '残りのカードをデッキの下へ…'
+      ? pending.presentation === 'reveal-to-bottom-randomized'
+        ? '公開したカードを無作為な順でデッキの下へ…'
+        : '残りのカードをデッキの下へ…'
       : 'デッキをシャッフル中…';
 
   return (

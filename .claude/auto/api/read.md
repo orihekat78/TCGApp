@@ -22,7 +22,7 @@
 
 | 名前 | メンバー |
 | ---- | -------- |
-| `char` | `ap`, `auraUntargetableByAction`, `charProtectedFrom`, `charProtectedFromOppEvent`, `charUntargetableByOppEffect`, `charUntargetableByOppEvent`, `colors`, `declaredUseCount`, `filteredAssaultKeywords`, `hasKeyword`, `hasTextAbility`, `isNamed`, `keywords`, `level`, `lp`, `names`, `noAutoActivateLocked`, `originalAbilitiesDisabled`, `originalAbilitiesDisabledOn`, `restrictsOpponent`, `selfContinuousFlag`, `setCards`, `setCardsDetailed`, `stackedCount`, `state`, `traits`, `turnEffect` |
+| `char` | `ap`, `auraUntargetableByAction`, `charProtectedFrom`, `charProtectedFromOppEvent`, `charUntargetableByOppEffect`, `charUntargetableByOppEvent`, `colors`, `declaredUseCount`, `filteredAssaultKeywords`, `hasKeyword`, `hasTextAbility`, `isNamed`, `keywords`, `level`, `lp`, `names`, `noAutoActivateLocked`, `originalAbilitiesDisabled`, `originalAbilitiesDisabledOn`, `restrictsOpponent`, `selfContinuousFlag`, `setCardAbilityUseCount`, `setCards`, `setCardsDetailed`, `stackedCount`, `state`, `traits`, `turnEffect` |
 | `def` | `allTraits`, `byColor`, `byTrait`, `card`, `isMR` |
 | `game` | `canPartnerAssist`, `canPartnerSolveCase`, `canWin`, `cannotSolveCase`, `evidenceShortfall`, `partnerAssistFileThreshold`, `partnerSolveOverride`, `refreshCount`, `result` |
 | `log` | `byPlayer`, `byTurn`, `search`, `tail` |

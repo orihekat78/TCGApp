@@ -6,6 +6,7 @@ import { canActivateDeclaredAbility, findDeclaredAbility } from '@/engine/flow/m
 import { canPayAtomically } from '@/engine/cost/pay';
 import { eligibleRemoveSetCards } from '@/engine/cost/remove-set-card-eligible';
 import { _resetRegistry, register } from '@/engine/read/def';
+import { char as readChar } from '@/engine/read/char';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { sceneChar } from '../../helpers/fixtures';
 import type { CardDef } from '@/engine/types';
@@ -40,6 +41,7 @@ describe('B10017 キック力増強シューズ', () => {
       { cardId: 'BELT', faceUp: true, instanceId: 'set:belt' },
     ] })];
     const exact = { removeSetCard: { hostUids: ['host'], instanceIds: ['set:belt'] } };
+    const sourceRef = { setCardId: 'B10017', setCardInstanceId: 'set:rider' };
 
     const ability = findDeclaredAbility(state, 'host', 'HATTORI', 'scene', 'a2');
     expect(ability).toBeDefined();
@@ -52,12 +54,13 @@ describe('B10017 キック力増強シューズ', () => {
       expect.objectContaining({ entry: expect.objectContaining({ instanceId: 'set:belt' }) }),
     ]));
     expect(canPayAtomically(state, ability!.cost!, paymentCtx)).toBe(true);
-    expect(canActivateDeclaredAbility(state, 'host', 'a2', exact)).toBe(true);
-    activateDeclaredAbility(state, 'host', 'a2', exact);
+    expect(canActivateDeclaredAbility(state, 'host', 'a2', exact, { sourceRef })).toBe(true);
+    activateDeclaredAbility(state, 'host', 'a2', exact, sourceRef);
 
     expect(state.players.self.remove).toEqual(['BELT']);
     expect(state.players.self.scene[0]!.setCards.map((entry) => entry.instanceId)).toEqual(['set:rider']);
-    expect(state.players.self.scene[0]!.declaredUseCount.a2).toBe(1);
+    expect(state.players.self.scene[0]!.setCards[0]!.abilityUseCounts?.a2).toEqual({ turn: 2, count: 1 });
+    expect(state.players.self.scene[0]!.declaredUseCount.a2).toBeUndefined();
   });
 });
 describe('B10022 遠山和葉', () => {
@@ -90,6 +93,9 @@ describe('B10022 遠山和葉', () => {
 
     expect(state.players.self.remove).toEqual(['HATTORI-SET', 'POLICE-SET']);
     expect(state.players.self.scene.find((char) => char.uid === 'other')!.setCards).toHaveLength(1);
-    expect(state.players.self.scene.find((char) => char.uid === 'kazuha')!.declaredUseCount.a2).toBe(1);
+    expect(readChar.declaredUseCount(state, 'kazuha', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    })).toBe(1);
+    expect(state.players.self.scene.find((char) => char.uid === 'kazuha')!.declaredUseCount.a2).toBeUndefined();
   });
 });

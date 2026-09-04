@@ -130,6 +130,7 @@ function freshGame(): GameState {
     setup.reveal(draft);
     setup.startGame(draft);
     runAutoPhase(draft, 'self');
+    draft.turn.phase = 'main';
   });
 }
 

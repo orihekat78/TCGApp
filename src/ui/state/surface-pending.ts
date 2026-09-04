@@ -6,8 +6,6 @@ import {
   _drainPendingEffectChoiceSide,
   _drainPendingEffectOptionalSide,
   _drainPendingEffectPickSide,
-  _peekPendingEffectChoiceSide,
-  _peekPendingEffectPickSide,
 } from '@/engine/effect/resolve-picks';
 import {
   _drainPendingChooseInterceptSide,
@@ -166,22 +164,13 @@ export function surfacePendingSideChannels(getStore: GetStore): void {
   }
 
   store = getStore();
-  const effectPick = _peekPendingEffectPickSide();
-  const humanSide = (globalThis as {
-    __humanPlayerSide?: 'self' | 'opp' | null;
-  }).__humanPlayerSide ?? null;
-  if (store.pendingEffectPick === null
-    && effectPick !== null
-    && (humanSide === null || effectPick.player === humanSide)) {
+  if (store.pendingEffectPick === null) {
     const side = _drainPendingEffectPickSide();
     if (side) store.setPendingEffectPick(side);
   }
 
   store = getStore();
-  const effectChoice = _peekPendingEffectChoiceSide();
-  if (store.pendingEffectChoice === null
-    && effectChoice !== null
-    && (humanSide === null || effectChoice.player === humanSide)) {
+  if (store.pendingEffectChoice === null) {
     const side = _drainPendingEffectChoiceSide();
     if (side) store.setPendingEffectChoice(side);
   }

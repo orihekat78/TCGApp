@@ -5,6 +5,7 @@ import { mutate } from '@/engine/mutate/index';
 import { runAtom, _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
 import { run as runEffect } from '@/engine/effect/resolver';
 import { applyDeckReorderAndContinuation } from '@/engine/effect/apply-pick';
+import { deckOccurrenceAuthority } from '@/engine/effect/deck-occurrence-authority';
 import type { Candidate, CardDef, Effect, EffectCtx, GameState } from '@/engine/types';
 import type { PendingEffectPickSide } from '@/engine/effect/pending-state';
 
@@ -61,9 +62,11 @@ describe('post-fix deck reorder continuation', () => {
     const ctx = ctxFor(state);
     mutate.scene.enter(state, 'opp', 'L1', {});
     state.players.self.deck = ['HOST', 'L5', 'L4', 'L1'];
-    ctx.bindings['$moved'] = ['L5', 'L4', 'L1'].map(cardId => ({
-      kind: 'card', cardId, area: 'deck', player: 'self',
-    } as Candidate));
+    ctx.bindings['$moved'] = [1, 2, 3].map(index => {
+      const authority = deckOccurrenceAuthority(state, 'self', index);
+      if (!authority) throw new Error(`missing deck occurrence authority at ${index}`);
+      return authority;
+    });
     const effect: Effect = {
       kind: 'sequence',
       steps: [

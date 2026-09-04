@@ -7,10 +7,91 @@ import { event } from '../event/index.js'; // engine additive wave-3: evidence:r
 import { remove as removeMut } from './remove.js'; // engine additive wave-4: remove:exit emit (remove→証拠 離脱)
 import { deck as deckMut } from './deck.js';
 import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
-import type { GameState, EvidenceCard, EvidenceOrigin, CardId } from '@/engine/types';
+import type { ActionContext, GameState, EvidenceCard, EvidenceOrigin, CardId } from '@/engine/types';
 
 type Player = 'self' | 'opp';
 export type DeckToEvidenceStep = { kind: 'move' | 'refresh'; count: number };
+
+function holdTopForHirameki(
+  s: GameState,
+  p: Player,
+  ax: ActionContext,
+): ActionContext['pendingHiramekiEvidenceRemoval'] | undefined {
+  if (ax.pendingHiramekiEvidenceRemoval !== undefined) {
+    throw new Error(`evidence.holdTopForHirameki: action ${ax.id} already owns held evidence`);
+  }
+  const evidence = s.players[p].evidence;
+  if (evidence.length === 0) return undefined;
+  const snapshot = current(evidence[evidence.length - 1]) as EvidenceCard;
+  evidence.pop();
+  advanceIndexedZoneEpoch(s, p, 'evidence');
+  const held = {
+    token: `hirameki:${ax.id}:${p}`,
+    player: p,
+    evidence: snapshot,
+    decisionResolved: false,
+  } as const;
+  ax.pendingHiramekiEvidenceRemoval = held;
+  return held;
+}
+
+function finalizeHeldHiramekiEvidence(
+  s: GameState,
+  ax: ActionContext,
+): EvidenceCard | undefined {
+  const held = ax.pendingHiramekiEvidenceRemoval;
+  if (!held) return undefined;
+  delete ax.pendingHiramekiEvidenceRemoval;
+  s.players[held.player].remove.push(held.evidence.cardId);
+  advanceIndexedZoneEpoch(s, held.player, 'remove');
+  event.emit(s, 'evidence:removed', { player: held.player });
+  return held.evidence;
+}
+
+function bindHeldHiramekiAuthority(
+  s: GameState,
+  actionId: string,
+  token: string,
+  abilityId: string,
+  effectValid: boolean,
+): boolean {
+  const held = s.actionContexts?.[actionId]?.pendingHiramekiEvidenceRemoval;
+  if (!held
+    || held.token !== token
+    || held.decisionResolved !== false
+    || (held.abilityId !== undefined && held.abilityId !== abilityId)
+    || (held.effectValid !== undefined && held.effectValid !== effectValid)) return false;
+  held.abilityId = abilityId;
+  held.effectValid = effectValid;
+  return true;
+}
+
+function takeHeldHiramekiEvidence(
+  s: GameState,
+  claim: {
+    actionId: string;
+    token: string;
+    player: Player;
+    cardId: string;
+    abilityId: string;
+  },
+): EvidenceCard | undefined {
+  const ax = s.actionContexts?.[claim.actionId];
+  const held = ax?.pendingHiramekiEvidenceRemoval;
+  if (!ax
+    || ax.target.kind !== 'case'
+    || ax.target.player !== claim.player
+    || !held
+    || held.token !== claim.token
+    || held.player !== claim.player
+    || held.evidence.cardId !== claim.cardId
+    || held.abilityId !== claim.abilityId
+    || held.effectValid !== true
+    || held.decisionResolved !== true) return undefined;
+  delete ax.pendingHiramekiEvidenceRemoval;
+  event.emit(s, 'evidence:removed', { player: held.player });
+  return held.evidence;
+}
 
 /**
  * デッキ上から n 枚を証拠エリアに追加 (rules/11 推理, rules/10 アクション[事件])
@@ -33,6 +114,7 @@ function addFromDeck(
     // initial/cross-refresh behavior here so every evidence path has one owner.
     if (d.length === 0 && !deckMut.refreshAfterTake(s, p, resolvingCardId, (count) => onStep?.({ kind: 'refresh', count }))) break;
     const cardId = d.shift()!;
+    advanceIndexedZoneEpoch(s, p, 'deck');
     s.players[p].evidence.push({ cardId, faceUp, origin });
     advanceIndexedZoneEpoch(s, p, 'evidence');
     added++;
@@ -172,13 +254,20 @@ function toDeckTop(s: GameState, p: Player, n: number): number {
   }
   taken.reverse(); // [deck[0], deck[1], ...] 元の deck 順に復元
   s.players[p].deck.unshift(...taken);
-  if (taken.length > 0) advanceIndexedZoneEpoch(s, p, 'evidence');
+  if (taken.length > 0) {
+    advanceIndexedZoneEpoch(s, p, 'deck');
+    advanceIndexedZoneEpoch(s, p, 'evidence');
+  }
   return taken.length;
 }
 
 export const evidence = {
   addFromDeck,
   gainCard,
+  holdTopForHirameki,
+  bindHeldHiramekiAuthority,
+  finalizeHeldHiramekiEvidence,
+  takeHeldHiramekiEvidence,
   removeTop,
   removeAt,
   flipFaceUp,

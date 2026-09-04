@@ -34,6 +34,7 @@ import { produce } from 'immer';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
+import { char as readChar } from '@/engine/read/char';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { drainAiEffectPicks, applyPickAndContinuation, applyPickSkipAndContinuation } from '@/engine/effect/apply-pick';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
@@ -95,7 +96,7 @@ const COST: Cost = (B06013.abilities[1].cost)!;
 function runDeclared(state: GameState, indices: number[]): GameState {
   return produce(state, (d) => {
     const ctx: EffectCtx = {
-      source: { cardId: 'B06013', uid: 'case:self', abilityId: 'a2', player: 'self', area: 'case' },
+      source: { cardId: 'B06013', uid: 'case:self', abilityId: 'a2', abilityOrigin: 'printed', abilityIndex: 1, player: 'self', area: 'case' },
       bindings: {},
       dyn: { costParams: { flipFaceUpEvidence: { indices } } },
     };
@@ -236,7 +237,9 @@ describe('B06013 厄介な難事件 — gate5 runtime behavior', () => {
     expect(after.players.self.deck[after.players.self.deck.length - 1] === DECK_DECOY
       || after.players.self.deck.includes(DECK_DECOY), 'decoy はデッキ下へ移動').toBe(true);
     // 【ターン1】消費
-    expect(after.players.self.case.declaredUseCount['a2'], '【ターン1】消費').toBe(1);
+    expect(readChar.declaredUseCount(after, 'case:self', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    }), '【ターン1】消費').toBe(1);
     // 手札は工藤新一 1枚のみ (decoy は入っていない)
     expect(after.players.self.hand.filter((c) => c === DECK_KUDO).length, '工藤新一ちょうど1枚').toBe(1);
   });
@@ -253,7 +256,9 @@ describe('B06013 厄介な難事件 — gate5 runtime behavior', () => {
     expect(inHand(after, DECK_DECOY), '非該当のみ → 手札 add なし').toBe(false);
     expect(after.players.self.hand.length, '手札は1枚も増えない').toBe(0);
     expect(after.players.self.deck.length, 'デッキ枚数不変 (全部デッキ下)').toBe(before);
-    expect(after.players.self.case.declaredUseCount['a2'], '0枚取得でも【ターン1】消費 (rules/24)').toBe(1);
+    expect(readChar.declaredUseCount(after, 'case:self', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    }), '0枚取得でも【ターン1】消費 (rules/24)').toBe(1);
   });
 
   // ===== a2 NEGATIVE (「1枚まで」=0枚可, human decline): 該当があっても手札に加えない =====
@@ -267,7 +272,7 @@ describe('B06013 厄介な難事件 — gate5 runtime behavior', () => {
     // pay + useDeclared + runAllUntilEmpty (human 経路: pick を surface して pause)
     s = produce(s, (d) => {
       const ctx: EffectCtx = {
-        source: { cardId: 'B06013', uid: 'case:self', abilityId: 'a2', player: 'self', area: 'case' },
+        source: { cardId: 'B06013', uid: 'case:self', abilityId: 'a2', abilityOrigin: 'printed', abilityIndex: 1, player: 'self', area: 'case' },
         bindings: {},
         dyn: { costParams: { flipFaceUpEvidence: { indices: [0, 1] } } },
       };
@@ -290,7 +295,9 @@ describe('B06013 厄介な難事件 — gate5 runtime behavior', () => {
     expect(inHand(after, DECK_KUDO), 'decline: 工藤新一は手札に入らない').toBe(false);
     expect(inDeck(after, DECK_KUDO), '工藤新一は残りとしてデッキへ').toBe(true);
     // 【ターン1】は 0枚取得 (decline) でも消費 (rules/24)
-    expect(after.players.self.case.declaredUseCount['a2'], 'decline でも【ターン1】消費 (rules/24)').toBe(1);
+    expect(readChar.declaredUseCount(after, 'case:self', 'a2', {
+      abilityOrigin: 'printed', abilityIndex: 1,
+    }), 'decline でも【ターン1】消費 (rules/24)').toBe(1);
   });
 
   // ===== a2 NEGATIVE 対: human take — pick で取得すれば手札に入る (decline channel の対) =====
@@ -302,7 +309,7 @@ describe('B06013 厄介な難事件 — gate5 runtime behavior', () => {
     });
     s = produce(s, (d) => {
       const ctx: EffectCtx = {
-        source: { cardId: 'B06013', uid: 'case:self', abilityId: 'a2', player: 'self', area: 'case' },
+        source: { cardId: 'B06013', uid: 'case:self', abilityId: 'a2', abilityOrigin: 'printed', abilityIndex: 1, player: 'self', area: 'case' },
         bindings: {},
         dyn: { costParams: { flipFaceUpEvidence: { indices: [0, 1] } } },
       };

@@ -6,6 +6,7 @@ import type { Player } from './_shared.js';
 import type { GameState, EffectCtx, LogEntry, Effect, Condition } from '../../types/index.js';
 import { recordEffectCausalOperation } from '../../log/effect-causal.js';
 import { declaredNameDomain, resolveDeclaredName } from '../declared-name-domain.js';
+import { isLegacyReplayRegisteredCardNameSource } from '../../flow/action/legacy-replay-compat.js';
 
 export function atomPartnerAssist(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       const paP = resolvePlayer(a.player, ctx);
@@ -368,9 +369,8 @@ export function atomReserveEffect(s: GameState, a: Record<string, unknown>, ctx:
         },
         effect: reEffect,
         source: {
+          ...ctx.source,
           player: reP,
-          ...(ctx.source.uid !== undefined ? { uid: ctx.source.uid } : {}),
-          ...(ctx.source.cardId !== undefined ? { cardId: ctx.source.cardId } : {}),
         },
       });
       mutate.log.append(s, { ts: Date.now(), player: reP, turn: s.turn.number, action: 'effect:reserveEffect', target: reHook });
@@ -414,9 +414,14 @@ export function atomDeclareName(s: GameState, a: Record<string, unknown>, ctx: E
       // 消費側 (boundNameMatchesDeclared / $declared.*.sceneNameCount) が false/0 に落ちるだけで throw しない
       // (AI 未対応・smoke 経路の defensive 契約)。状態変化なし (zone/char 不変)。
       const bindKey = a.bind as string;
-      const domain = declaredNameDomain(a.domain);
+      const configuredDomain = declaredNameDomain(a.domain);
       const raw = ctx.dyn?.['declaredName'];
       const supplied = typeof raw === 'string' ? raw.trim() : '';
+      const domain = supplied === ''
+        && configuredDomain === 'registered-card-name'
+        && isLegacyReplayRegisteredCardNameSource(ctx.source)
+        ? 'unrestricted'
+        : configuredDomain;
       const resolvedName = supplied === '' ? null : resolveDeclaredName(domain, supplied);
       if (supplied !== '' && resolvedName === null) {
         throw new Error(`effect:declareName rejected ${domain} value`);

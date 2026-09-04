@@ -4,7 +4,7 @@ const a1: AbilityDef = {
   id: 'a1', type: 'declared', scope: 'on-scene',
   condition: { kind: 'bond', cardName: '黒羽盗一' }, limit: { kind: 'turn', n: 1 }, cost: { kind: 'sleepSelf' },
   effect: { kind: 'chain', steps: [
-    { kind: 'atom', verb: 'bindPick', args: { player: 'self', side: 'either', max: 1, bind: '$host', filter: { hasSetCards: true } } },
+    { kind: 'atom', verb: 'bindPick', args: { player: 'self', side: 'either', max: 1, bind: '$host', filter: { hasSetCards: true }, selectionSubject: 'set-card' } },
     { kind: 'setCardToEvidence', hostUid: '$host.uid' },
     { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', side: 'either', max: 1 } },
   ] },

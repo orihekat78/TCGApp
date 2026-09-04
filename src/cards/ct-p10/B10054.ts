@@ -9,7 +9,7 @@ const a1: AbilityDef = {
   effect: { kind: 'sequence', steps: [
     { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', chooseMatch: 'upTo', maxN: 4, filter: { color: ['赤', '黄'] }, bind: '$revealed', bindMatch: '$matched' } },
     { kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' }, then: { kind: 'sequence', steps: [
-      { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } },
+      { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId', presentation: 'public-selected-card' } },
       { kind: 'conditional', if: { kind: 'boundMatchesFilter', bindKey: '$matched', filter: { levelMax: 6 } }, then: { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } } },
     ] } },
     { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },

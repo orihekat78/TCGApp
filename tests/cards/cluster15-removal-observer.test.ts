@@ -15,7 +15,7 @@ import { declare, passGuard, snapshotAP, _resetActionContexts } from '@/engine/f
 import { judge } from '@/engine/flow/contact';
 import { mutate } from '@/engine/mutate/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../helpers/main-game-state';
 import { registerAll } from '@/cards/index';
 import type { GameState, CardDef, AbilityDef } from '@/engine/types';
 

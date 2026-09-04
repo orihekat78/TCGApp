@@ -3,14 +3,15 @@ import { produce } from '@/engine/produce';
 import { runAtom } from '@/engine/effect/atom-handlers';
 import { event } from '@/engine/event';
 import { doReasoning } from '@/engine/flow/main/reasoning';
+import { startCausalSession, validateCausalLog } from '@/engine/log/causal';
 import { mutate } from '@/engine/mutate';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { _resetRegistry as resetDefRegistry, register as registerCardDef } from '@/engine/read/def';
 import { runAllUntilEmpty } from '@/engine/resolve';
-import type { CardDef, GameState } from '@/engine/types';
+import type { CardDef, CausalLogEntryV1, GameState } from '@/engine/types';
 
 const REASONER: CardDef = {
-  id: 'CONTINUATION_REASONER', no: 'CONTINUATION_REASONER', kind: 'character',
+  id: 'CONTINUATION-REASONER', no: 'CONTINUATION-REASONER', kind: 'character',
   names: ['Continuation reasoner'], colors: ['blue'], level: 1, ap: 1000, lp: 2,
   traits: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [],
 };
@@ -30,6 +31,18 @@ describe('reasoning continuation boundary', () => {
     registerCardDef(REASONER);
   });
 
+  it('stores the continuation anchor and stack witness as independent equal values', () => {
+    const { state, uid } = stateWithActiveReasoner();
+    doReasoning(state, uid);
+    const continuation = state.pendingReasoningContinuation;
+    const witness = state.pendingEffects.find((entry) => (
+      entry.reasoningContinuation?.token === continuation?.token
+    ))?.reasoningContinuation;
+
+    expect(witness).toEqual(continuation);
+    expect(witness).not.toBe(continuation);
+  });
+
   it('forged active-character continuation atom cannot gain evidence or log reasoning', () => {
     const { state, uid } = stateWithActiveReasoner();
     expect(() => produce(state, (draft) => {
@@ -42,14 +55,54 @@ describe('reasoning continuation boundary', () => {
     expect(state.log.some((entry) => entry.action === 'reasoning')).toBe(false);
   });
 
-  it('verified continuation rejects a reasoner forged back to active before it resolves', () => {
+  it.each(['active', 'stun'] as const)(
+    'verified continuation rejects a reasoner changed to %s before it resolves',
+    (stateName) => {
+      const { state, uid } = stateWithActiveReasoner();
+      doReasoning(state, uid);
+      mutate.scene.setState(state, uid, stateName);
+
+      expect(() => runAllUntilEmpty(state)).toThrow(/target is not the sleeping reasoner/);
+      expect(state.players.self.evidence).toHaveLength(0);
+      expect(state.log.some((entry) => entry.action === 'reasoning')).toBe(false);
+    },
+  );
+
+  it('verified continuation rejects the sleeping reasoner moved to the wrong player scene', () => {
     const { state, uid } = stateWithActiveReasoner();
     doReasoning(state, uid);
-    mutate.scene.setState(state, uid, 'active');
+    const index = state.players.self.scene.findIndex((card) => card.uid === uid);
+    const [moved] = state.players.self.scene.splice(index, 1);
+    state.players.opp.scene.push(moved!);
 
     expect(() => runAllUntilEmpty(state)).toThrow(/target is not the sleeping reasoner/);
     expect(state.players.self.evidence).toHaveLength(0);
     expect(state.log.some((entry) => entry.action === 'reasoning')).toBe(false);
+  });
+
+  it('verified continuation ends without evidence when an after-sleep reaction removes the reasoner', () => {
+    const { state, uid } = stateWithActiveReasoner();
+    let reasoningEndCount = 0;
+    event.on('reasoning:end', () => { reasoningEndCount += 1; });
+    startCausalSession(state, 'reasoning-cancel');
+
+    doReasoning(state, uid);
+    mutate.scene.removeToRemove(state, uid, 'switch');
+
+    expect(() => runAllUntilEmpty(state)).not.toThrow();
+    expect(state.players.self.scene.some((card) => card.uid === uid)).toBe(false);
+    expect(state.players.self.remove).toContain(REASONER.id);
+    expect(state.players.self.evidence).toHaveLength(0);
+    expect(state.log.some((entry) => entry.action === 'reasoning')).toBe(false);
+    expect(reasoningEndCount).toBe(0);
+    expect(state.pendingReasoningContinuation).toBeUndefined();
+    const graph = validateCausalLog(state.log as CausalLogEntryV1[]);
+    expect(graph.map((entry) => [entry.kind, entry.parentEventId, entry.outcome])).toEqual([
+      ['declare', undefined, { type: 'state', state: 'active' }],
+      ['sleep', 'reasoning-cancel:1', { type: 'state', state: 'sleep' }],
+      ['cancel', 'reasoning-cancel:2', { type: 'state', state: 'cancelled' }],
+    ]);
+    expect(graph.some((entry) => entry.kind === 'summary')).toBe(false);
   });
 
   it('continuation token is single-use after the verified completion', () => {

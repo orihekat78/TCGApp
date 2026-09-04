@@ -13,8 +13,8 @@
 //     自分の事件が特徴[シャッフルロマンス]を持つ場合に有効)。
 //   - 「このキャラをスリープさせ、手札を1枚リムーブしてもよい。そうした場合〜」=>
 //     optional{chain[sceneSetState self sleep, discard 1, sceneEnter from:remove]} (PR144 structural twin)。
-//     公式Q&A「スリープ状態で登場した場合は行えない」= condition not{charStateIs self sleep}
-//     (BUG-145 idiom、PR138/PR144/B04049 同型)。
+//     公式Q&A「スリープ状態で登場した場合は行えない」= mandatory trigger後、effect-time
+//     charStateIs(self,active) conditionalがoptional全体を抑止 (BUG-145、PR138/PR144/B04049同型)。
 //   - 「リムーブエリアにあるレベル8以下の〚カード名［黒衣の騎士・スペイド］〛を1枚まで選び、登場」=>
 //     sceneEnter{from:'remove', max:1, filter:{cardName:'黒衣の騎士・スペイド', levelMax:8,
 //     kind:'character'}} (cardName filter は分割名 any-match rules/19 — 手札からリムーブした
@@ -32,13 +32,15 @@ const a1: AbilityDef = caseTraitConditioned({
     id: 'a1',
     type: 'triggered',
     scope: 'on-scene',
-    condition: { kind: 'not', c: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'sleep' } },
     trigger: { hook: 'enter', selfOnly: true },
     effect: {
-      kind: 'optional',
-      effect: {
-        kind: 'chain',
-        steps: [
+      kind: 'conditional',
+      if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+      then: {
+        kind: 'optional',
+        effect: {
+          kind: 'chain',
+          steps: [
           { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
           { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } },
           {
@@ -52,7 +54,8 @@ const a1: AbilityDef = caseTraitConditioned({
               filter: { cardName: '黒衣の騎士・スペイド', levelMax: 8, kind: 'character' },
             },
           },
-        ],
+          ],
+        },
       },
     },
     description:

@@ -1,6 +1,7 @@
+// qa: card:B03096:586cbc6530a51d5bcfbe6b4b5eac53defa0f7184e31d96b19b4cdbfebca0b4b8
 // engine-extension reasoning-hook batch #3 (2026-06-06 タスクC) — 実カード経由 sanity test
 //
-// 検証: reasoning:end トリガで multi-target pick (B05039) / 捜査1=deckRevealUntil(opp) 代替 (B03096)
+// 検証: reasoning:end の multi-target pick (B05039) / reasoning:after-sleep の捜査1 (B03096)
 //   が忠実に解決されること。PA 短縮形 pick は runtime に __pendingEffectPickQueue へ積まれ、
 //   CPU 経路は drainAiEffectPicks が heuristic 解決する (BUG-109 / disguise-hook batch 同型)。
 
@@ -107,9 +108,9 @@ describe('engine-extension reasoning-hook batch #3 (2026-06-06)', () => {
 
   // ---- B03096: 捜査1 (deckRevealUntil opp) + レベル8発見で自分1ドロー ----
 
-  it('card def: trigger.hook=reasoning:end / triggerCharMatches side:self + limit turn:1', () => {
+  it('card def: trigger.hook=reasoning:after-sleep / triggerCharMatches side:self + limit turn:1', () => {
     expect(B03096.abilities[0].trigger).toMatchObject({
-      hook: 'reasoning:end',
+      hook: 'reasoning:after-sleep',
       matcherCondition: { kind: 'triggerCharMatches', side: 'self' },
     });
     expect(B03096.abilities[0].limit).toMatchObject({ kind: 'turn', n: 1 });
@@ -118,11 +119,19 @@ describe('engine-extension reasoning-hook batch #3 (2026-06-06)', () => {
   it('B03096: 推理時 相手デッキ上=Lv8 → 自分1ドロー + その札は相手デッキ下へ', () => {
     const policy = new HeuristicPolicy();
     registerCardDef(synthChar('L8X', 8, 8000));
+    let beforeAdd: { hand: string[]; oppDeck: string[]; evidenceCount: number } | undefined;
+    event.on('reasoning:before-add', (state) => {
+      beforeAdd = {
+        hand: [...state.players.self.hand],
+        oppDeck: [...state.players.opp.deck],
+        evidenceCount: state.players.self.evidence.length,
+      };
+    });
 
     let s: GameState = createEmptyGameState();
     s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     s.players.self.scene = [sceneChar('B03096', 'mgr#1')];
-    // self deck: [推理LP1, 発見ドロー, terminal回避フィラー]
+    // after-sleep の発見ドローが先頭、その後の推理証拠が2枚目を使う。
     s.players.self.deck = ['D08005', 'D08013', 'D08009'];
     // opp deck top = Lv8 (発見 = 条件成立)
     s.players.opp.deck = ['L8X', 'OPPF2', 'OPPF3'];
@@ -132,9 +141,19 @@ describe('engine-extension reasoning-hook batch #3 (2026-06-06)', () => {
       drainAiEffectPicks(d, policy);
     });
 
-    expect(s.players.self.hand, 'Lv8発見で自分が1ドロー (D08013)').toContain('D08013');
+    expect(s.players.self.hand, 'Lv8発見で証拠獲得前に自分が1ドロー (D08005)').toContain('D08005');
+    expect(s.players.self.evidence.some((card) => card.cardId === 'D08013'), 'その後に推理証拠を得る').toBe(true);
+    expect(beforeAdd, 'B03096 はミスリード/証拠獲得窓より前に解決済み').toEqual({
+      hand: expect.arrayContaining(['D08005']),
+      oppDeck: ['OPPF2', 'OPPF3', 'L8X'],
+      evidenceCount: 0,
+    });
     expect(s.players.opp.deck[0], '公開した Lv8 は相手デッキ上に残らない').not.toBe('L8X');
     expect(s.players.opp.deck[s.players.opp.deck.length - 1], '公開した Lv8 は相手デッキ下へ').toBe('L8X');
+    const investigationIndex = s.log.findIndex((entry) => entry.action === 'souza');
+    const drawIndex = s.log.findIndex((entry) => entry.action === 'effect:draw');
+    expect(investigationIndex, '捜査1の公開・デッキ下移動を完了する').toBeGreaterThanOrEqual(0);
+    expect(drawIndex, '発見後のドローは捜査1の完了後に解決する').toBeGreaterThan(investigationIndex);
   });
 
   it('B03096: 推理時 相手デッキ上=Lv7 (<8) → ドローなし / その札は相手デッキ下へ', () => {

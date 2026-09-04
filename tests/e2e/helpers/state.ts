@@ -63,36 +63,49 @@ async function surfaceDeckDecision(
 ): Promise<void> {
   await page.evaluate(async ({ verb, ids }) => {
     const w = window as unknown as GameWindow;
-    const { runAtom, produce, persistPendingRuntimeState, resetPendingRuntimeState } = await w.__game.testApi;
+    const {
+      deckOccurrenceAuthority,
+      runAtom,
+      produce,
+      persistPendingRuntimeState,
+      resetPendingRuntimeState,
+      surfacePendingSideChannels,
+    } = await w.__game.testApi;
     const current = w.__game.getState().gameState as {
       players: { self: { deck: string[] } };
     };
     const used = new Set<number>();
-    const occurrences = ids.map((cardId) => {
+    const occurrenceSpecs = ids.map((cardId) => {
       const index = current.players.self.deck.findIndex((deckCardId, deckIndex) => (
         deckCardId === cardId && !used.has(deckIndex)
       ));
       if (index < 0) throw new Error(`deck decision fixture card is absent: ${cardId}`);
       used.add(index);
-      return { kind: 'card', cardId, area: 'deck', player: 'self', index };
+      return { cardId, index };
     });
-    const ctx = {
-      source: {
-        player: 'self',
-        cardId: 'D08020',
-        uid: 'e2e-deck-decision-source',
-        abilityId: 'fixture',
-        area: 'scene',
-      },
-      bindings: { '$e2eDeckCards': occurrences },
-    };
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
     resetPendingRuntimeState();
     const next = produce(current, (draft) => {
+      const occurrences = occurrenceSpecs.map(({ cardId, index }) => {
+        const occurrence = deckOccurrenceAuthority(draft, 'self', index);
+        if (!occurrence) throw new Error(`deck decision fixture authority is stale: ${cardId}`);
+        return occurrence;
+      });
+      const ctx = {
+        source: {
+          player: 'self',
+          cardId: 'D08020',
+          uid: 'e2e-deck-decision-source',
+          abilityId: 'fixture',
+          area: 'scene',
+        },
+        bindings: { '$e2eDeckCards': occurrences },
+      };
       runAtom(draft, verb, { player: 'self', bindKey: '$e2eDeckCards' }, ctx);
       persistPendingRuntimeState(draft);
     });
-    w.__game.setGameState(next);
+    w.__game.setGameState(next, { preserveRuntime: true });
+    surfacePendingSideChannels(w.__game.store.getState);
   }, { verb: atomVerb, ids: cardIds });
 }
 
@@ -160,8 +173,8 @@ export async function dispatchUnguardedCaseAction(
       type: 'actionDeclareCase',
       byUid: attackerUid,
       targetPlayer: target,
-    }) as { ok: boolean; reason?: string };
-    if (!declared.ok) throw new Error(`actionDeclareCase failed: ${declared.reason ?? 'unknown'}`);
+    }) as { ok: boolean; reason?: string; detail?: string };
+    if (!declared.ok) throw new Error(`actionDeclareCase failed: ${declared.reason ?? 'unknown'}${declared.detail ? `: ${declared.detail}` : ''}`);
 
     const actionId = w.__game.getState().activeActionId;
     if (!actionId) throw new Error('activeActionId not set after actionDeclareCase');
@@ -169,14 +182,16 @@ export async function dispatchUnguardedCaseAction(
     const guarded = w.__game.dispatch({ type: 'actionGuard', actionId, guarderUid: null }) as {
       ok: boolean;
       reason?: string;
+      detail?: string;
     };
-    if (!guarded.ok) throw new Error(`actionGuard failed: ${guarded.reason ?? 'unknown'}`);
+    if (!guarded.ok) throw new Error(`actionGuard failed: ${guarded.reason ?? 'unknown'}${guarded.detail ? `: ${guarded.detail}` : ''}`);
 
     const judged = w.__game.dispatch({ type: 'actionJudge', actionId }) as {
       ok: boolean;
       reason?: string;
+      detail?: string;
     };
-    if (!judged.ok) throw new Error(`actionJudge failed: ${judged.reason ?? 'unknown'}`);
+    if (!judged.ok) throw new Error(`actionJudge failed: ${judged.reason ?? 'unknown'}${judged.detail ? `: ${judged.detail}` : ''}`);
     return actionId;
   }, { attackerUid: byUid, target: targetPlayer });
 }

@@ -4,7 +4,7 @@
 //   【パートナー黒】【登場時】すべてのキャラをスリープさせる。\n【相手ターン中】【現場リムーブ時】すべてのキャラをスリープさせる。
 //   【ヒラメキ】（証拠からリムーブされるときに発動する）キャラを1枚まで選び、スリープさせる。
 // 句マッピング:
-//   - 【パートナー黒】【登場時】すべてのキャラをスリープ => partnerColor黒 + enter(selfOnly)→forEach over:all(scene,either)→sceneSetState{$each.uid,sleep} [B06071 (forEach over:all primitive-tested) + B01011 a1 hook]
+//   - 【パートナー黒】【登場時】すべてのキャラをスリープ => partnerColor黒 + enter(selfOnly)→forEach over:all(scene,either)→sceneSetState{$each.uid,sleep} [B06071 (forEach over:all primitive-tested) + B01013 a1 hook]
 //   - 【相手ターン中】【現場リムーブ時】すべてのキャラをスリープ => turn:opp + leave:to-remove(selfOnly)→同 forEach [B02004 a2 hook + B06071]
 //   - 【ヒラメキ】キャラを1枚まで選びスリープ => evidence:remove-by-action(optional)→sceneSetState pick [D03013 a2 同型]
 

@@ -30,7 +30,7 @@ import { register as registerCardDef, _resetRegistry as resetDefRegistry } from 
 import { mutate } from '@/engine/mutate/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { _resetUidCounter } from '@/engine/mutate/scene';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../../helpers/main-game-state';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { _peekPendingHirameki, _resetPendingHirameki } from '@/engine/listeners/hirameki';
 import {
@@ -115,7 +115,7 @@ beforeEach(() => {
 describe('B01045 a2【ターン1】相手の現場キャラが推理/アクション → mill5してもよい→そのキャラ 元LP/元AP を0 (ターン終了時まで)', () => {
   // B01045 (自現場) + REASONER (opp現場)。自ターン中 (相手キャラの推理に反応)。
   function board(): { s: GameState; reasoner: string } {
-    const s = base('self');
+    const s = base('opp');
     mutate.scene.enter(s, 'self', 'B01045', {});
     const reasoner = mutate.scene.enter(s, 'opp', 'REASONER', {}).uid;
     return { s, reasoner };
@@ -216,7 +216,7 @@ describe('B01045 a2【ターン1】相手の現場キャラが推理/アクシ�
 
 describe('B01045 actual reasoning completion', () => {
   function board(): { s: GameState; reasoner: string } {
-    const s = base('self');
+    const s = base('opp');
     mutate.scene.enter(s, 'self', 'B01045', {});
     const reasoner = mutate.scene.enter(s, 'opp', 'REASONER', {}).uid;
     return { s, reasoner };
@@ -248,7 +248,7 @@ describe('B01045 actual reasoning completion', () => {
   });
 
   it('partner reasoning does not open this character-only optional', () => {
-    const s = base('self');
+    const s = base('opp');
     mutate.scene.enter(s, 'self', 'B01045', {});
     mutate.partner.init(s, 'opp', 'REASONER');
 
@@ -364,7 +364,7 @@ describe('BUG-179 regression B03096 a1 (side:self, filter:{}) — 自 PARTNER �
 
   it('positive: 自現場キャラ推理 → souza 実行 (opp デッキ上 OTOP が下へ移動)', () => {
     const { s, reasoner } = board();
-    emitReasoningEnd(s, 'self', reasoner);
+    emitReasoningAfterSleep(s, 'self', reasoner);
     runAllUntilEmpty(s);
     expect(s.players.opp.deck[0], 'OTOP はもうデッキ上ではない').not.toBe('OTOP');
     expect(s.players.opp.deck[s.players.opp.deck.length - 1], 'OTOP がデッキ最下部へ').toBe('OTOP');
@@ -372,7 +372,7 @@ describe('BUG-179 regression B03096 a1 (side:self, filter:{}) — 自 PARTNER �
 
   it('negative(BUG-179): 自 PARTNER 推理 (uid=partner:self) → 発火しない (opp デッキ据置)', () => {
     const { s } = board();
-    emitReasoningEnd(s, 'self', 'partner:self');
+    emitReasoningAfterSleep(s, 'self', 'partner:self');
     runAllUntilEmpty(s);
     expect(s.players.opp.deck[0], 'souza 走らず OTOP デッキ上のまま').toBe('OTOP');
     expect(s.pendingEffects.length, 'pendingEffect も増えない').toBe(0);

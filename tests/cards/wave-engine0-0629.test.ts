@@ -39,7 +39,10 @@ function findArgs(eff: EffectDescriptor | undefined, verb: string): Record<strin
     const r = findArgs(e[k] as EffectDescriptor | undefined, verb);
     if (r) return r;
   }
-  for (const st of (e.steps as EffectDescriptor[] | undefined) ?? []) {
+  for (const st of [
+    ...((e.steps as EffectDescriptor[] | undefined) ?? []),
+    ...((e.options as EffectDescriptor[] | undefined) ?? []),
+  ]) {
     const r = findArgs(st, verb);
     if (r) return r;
   }
@@ -209,22 +212,28 @@ describe('B06077', () => {
 // ───────── B09056 赤井秀一 — 事件赤&黒 登場時 自sleep→Lv8以下リムーブ→痕跡分岐 ─────────
 describe('B09056', () => {
   const a1 = () => ab(B09056, 'a1');
-  it('a1 構造: enter selfOnly + cond and[caseColor赤&黒, partnerColor赤, not self-sleep] + optional', () => {
+  it('a1 構造: enter selfOnly + printed case/partner gates + resolution-time active conditional', () => {
     expect(a1().trigger).toMatchObject({ hook: 'enter', selfOnly: true });
     const cs = (a1().condition as { cs: Record<string, unknown>[] }).cs;
     expect(cs[0]).toMatchObject({ kind: 'caseColor', color: ['赤', '黒'], combine: 'and' });
     expect(cs[1]).toMatchObject({ kind: 'partnerColor', color: '赤' });
-    expect(cs[2]).toMatchObject({ kind: 'not', c: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'sleep' } });
-    expect(a1().effect).toMatchObject({ kind: 'optional' });
+    expect(cs).toHaveLength(2);
+    expect(a1().effect).toMatchObject({
+      kind: 'conditional',
+      if: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+      then: { kind: 'optional' },
+    });
   });
-  it('a1 sequence: sceneSetState $self sleep → sceneRemove Lv8以下 → conditional(scratchTrace発見済)', () => {
+  it('a1 sequence: sceneSetState sleep → sceneRemove Lv8以下 → printed trace choice', () => {
     expect(findArgs(a1().effect, 'sceneSetState')).toMatchObject({ uid: '$self', state: 'sleep' });
     expect(findArgs(a1().effect, 'sceneRemove')).toMatchObject({ player: 'self', max: 1, side: 'either', cause: 'effect', filter: { levelMax: 8 } });
-    // 痕跡分岐: then=sceneEnter(remove黒Lv3 sleep), else=forEach opp-scene mill2
+    // 痕跡2択: option0=sceneEnter(remove黒Lv3 sleep), option1=opp-scene count×2 aggregate mill
     expect(findArgs(a1().effect, 'sceneEnter')).toMatchObject({ player: 'self', from: 'remove', max: 1, viaEffect: true, enterSleep: true, filter: { color: '黒', levelMax: 3, kind: 'character' } });
-    expect(findArgs(a1().effect, 'mill')).toMatchObject({ player: 'opp', n: 2 });
+    expect(findArgs(a1().effect, 'mill')).toMatchObject({
+      player: 'opp', n: { dyn: '$self.oppSceneCount * 2' },
+    });
   });
-  it('a1 ability-gate evalCond: 事件{赤,黒}+partner赤+self非sleep=true / mono赤=false / partner青=false / self=sleepなら=false', () => {
+  it('a1 listener gate: 事件{赤,黒}+partner赤ならself状態に依存せずtrue / printed gate不一致はfalse', () => {
     const cond = a1().condition as Condition;
     const setup = (caseColors: string[], partner: string, selfState: 'active' | 'sleep') => {
       s = createEmptyGameState();
@@ -236,14 +245,19 @@ describe('B09056', () => {
     expect(setup(['赤', '黒'], '赤', 'active')).toBe(true);
     expect(setup(['赤'], '赤', 'active')).toBe(false);       // 事件 黒欠 (and)
     expect(setup(['赤', '黒'], '青', 'active')).toBe(false);  // partner色違い
-    expect(setup(['赤', '黒'], '赤', 'sleep')).toBe(false);   // not self-sleep gate (BUG-145 既sleep安全)
+    expect(setup(['赤', '黒'], '赤', 'sleep')).toBe(true);    // mandatory trigger; self-stateは解決時判定
   });
-  it('a1 scratchTrace 分岐 evalCond: 発見済=then / 未発見=else', () => {
-    const ifCond = (findArgs(a1().effect, 'sceneSetState') ? (a1().effect as { effect: { steps: { kind: string; if?: Condition }[] } }).effect.steps.find((x) => x.kind === 'conditional')!.if! : undefined) as Condition;
+  it('a1 scratchTrace choice conditions remain mutually exclusive', () => {
+    const steps = (a1().effect as {
+      then: { effect: { steps: Array<{ kind: string; options?: Array<{ if: Condition }> }> } };
+    }).then.effect.steps;
+    const options = steps.find(step => step.kind === 'choice')!.options!;
+    const found = options[0]!.if;
+    const unfound = options[1]!.if;
     s.scratchTrace = { self: '発見済', opp: '未発見' };
-    expect(evalCond(s, ifCond, makeCtx())).toBe(true);
+    expect([evalCond(s, found, makeCtx()), evalCond(s, unfound, makeCtx())]).toEqual([true, false]);
     s.scratchTrace = { self: '未発見', opp: '発見済' };
-    expect(evalCond(s, ifCond, makeCtx())).toBe(false);
+    expect([evalCond(s, found, makeCtx()), evalCond(s, unfound, makeCtx())]).toEqual([false, true]);
   });
   it('a1 sceneEnter filter matchOneFilter: 黒Lv3=true / 黒Lv4除外 / 赤Lv3除外', () => {
     const f = findArgs(a1().effect, 'sceneEnter')!.filter as TargetFilter;

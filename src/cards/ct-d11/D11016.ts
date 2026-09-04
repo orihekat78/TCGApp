@@ -16,20 +16,22 @@ const a1: AbilityDef = {
   limit: { kind: 'turn', n: 1 },
   trigger: {
     hook: 'action:guarded',
-    // このキャラがガードしたとき (payload.guardUid === 自分) のみ発火 (rules/07、BUG-097)。
-    // matcher closure は card.uid を参照不可のため matcherCondition で declarative に自己判定。
-    matcherCondition: { kind: 'guardedBySelf' },
+    // このキャラ「が指定されたアクション」を別キャラがガードしたとき。
+    // action:guarded の元対象 targetUid を physical source uid と照合する (B06091 公式Q&A)。
+    matcherCondition: {
+      kind: 'triggerCharMatches', payloadKey: 'targetUid', side: 'self', filter: {}, requireSource: true,
+    },
   },
   effect: {
     kind: 'sequence',
     steps: [
       // ガードしたキャラをアクティブにし
-      { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'active' } },
+      { kind: 'atom', verb: 'sceneSetState', args: { uid: '$trigger.guardUid', state: 'active' } },
       // ターン終了時までAP＋2000する
-      { kind: 'atom', verb: 'charModifyAP',  args: { uid: '$self', delta: 2000, scope: 'turn' } },
+      { kind: 'atom', verb: 'charModifyAP', args: { uid: '$trigger.guardUid', delta: 2000, scope: 'turn' } },
     ],
   },
-  description: '【相手ターン中】【ターン1】ガードしたとき、ガードしたキャラをアクティブにしAP＋2000。',
+  description: '【相手ターン中】【ターン1】このキャラが指定されたアクションをガードしたとき、ガードしたキャラをアクティブにしAP＋2000。',
   ruleRefs: ['rules/07-action-flow.md', 'rules/08-contact.md', 'rules/15-abilities-effects.md'],
 };
 

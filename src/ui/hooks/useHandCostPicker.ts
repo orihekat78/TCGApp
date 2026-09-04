@@ -6,6 +6,8 @@ export type HandCostRequest = {
   sourceName: string;
   candidates: Array<{ index: number; cardId: string }>;
   n: number;
+  nMax?: number;
+  action?: 'remove' | 'reveal';
 };
 export type HandCostChoice = { kind: 'confirm'; indices: number[] } | { kind: 'cancel' };
 

@@ -16,6 +16,7 @@ import type { CardDef, CausalLogEntryV1, GameState } from '@/engine/types';
 function makeStateWithPartner(opts: { state?: 'active' | 'sleep' | 'stun'; location?: 'partner-area' | 'file-area' | 'mr-removed' } = {}): GameState {
   const initial = createEmptyGameState();
   return produce(initial, draft => {
+    draft.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     mutate.partner.init(draft, 'self', 'P-SELF');
     draft.players.self.partner.state = opts.state ?? 'active';
     draft.players.self.partner.location = opts.location ?? 'partner-area';
@@ -31,6 +32,20 @@ describe('engine.flow.main.usePartnerAbility', () => {
   it('パートナーが active かつ partner-area → canPartnerAbility=true', () => {
     const s = makeStateWithPartner({ state: 'active', location: 'partner-area' });
     expect(canPartnerAbility(s, 'self', 'ABIL1')).toBe(true);
+  });
+
+  it.each([
+    { player: 'opp' as const, phase: 'main' as const },
+    { player: 'self' as const, phase: 'end' as const },
+  ])('self の main 外 ($player/$phase) は can=false かつ direct use を拒否する', ({ player, phase }) => {
+    const state = produce(makeStateWithPartner(), draft => {
+      draft.turn = { ...draft.turn, player, phase };
+    });
+
+    expect(canPartnerAbility(state, 'self', 'ABIL1')).toBe(false);
+    expect(() => produce(state, draft => {
+      usePartnerAbility(draft, 'self', 'ABIL1');
+    })).toThrow(/not allowed/);
   });
 
   it('パートナーが sleep → false', () => {
@@ -120,6 +135,7 @@ describe('engine.flow.main.usePartnerAbility', () => {
     event.on('evidence:removed', () => ({ kind: 'atom', verb: 'noop', args: {} }));
     event.on('effect:declared', () => ({ kind: 'atom', verb: 'noop', args: {} }));
     const state = produce(createEmptyGameState(), (draft) => {
+      draft.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
       mutate.partner.init(draft, 'self', cardId);
       draft.players.self.evidence.push({
         cardId: 'PRIVATE-PARTNER-COST',

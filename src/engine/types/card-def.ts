@@ -11,6 +11,11 @@ export type SetCardRemovalReplacement = {
   filter: TargetFilter;
 };
 
+/** Immediate replacement of the leaving host's ordinary set-card cleanup. */
+export type HostLeaveSetCardReplacement = {
+  kind: 'face-down-to-owner-hand';
+};
+
 export type AlternativeCostProvider = { targetFilter: TargetFilter };
 
 // ---------- AbilityType ----------
@@ -50,8 +55,8 @@ export type AbilityScope =
   //       (B05117 等)。handleLeaveToRemoveSelf が removedChar snapshot の setCards を走査する追加修正が要。
   //   (3) aura (apDeltaAura*/auraFilter*) / opponentRestrict を rider で付与する形は未 honor (read.char.auraDelta/restrictsOpponent は
   //       setCards を走査しない) → silent no-op。現リダーカードは全て self-buff ゆえ未踏。
-  //   (4) authoring hazard: rider triggered の limit{turn} は (hostUid, ability.id) でキー。host 印字能力や同名 rider 2枚と
-  //       id 衝突するとカウンタ共有。rider ability.id は card-unique に命名すること (例 'set_t1')。
+  //   (4) rider triggered の一般経路は host の declaredUseCount を使う。effect:choose-intercept は同一 rider の物理カードごとに
+  //       SetCardEntry.abilityUseCounts を持ち、同名 rider が複数ある場合も各 occurrence の【ターンN】を独立管理する。
   | 'on-set-host'        // セットされているキャラ (host) に付与 (rules/16, 装備イベント) — READ 側 infra のみ
   // engine additive A2 (2026-07-11, B02084 安室の愛車): セットカード **自身** が、host からリムーブ
   // エリアへ置かれたときに反応する triggered 用 (「キャラにセットされていたこのイベントがリムーブ
@@ -79,7 +84,7 @@ export type TriggerDef = {
    * 2026-06-06 タスクC: 追加 hook (multi-hook trigger)。`hook` に加えてここに列挙した hook の
    * いずれでも発火する。limit:{kind:'turn'} は ability.id 単位の declaredUseCount で数えるため、
    * 複数 hook を跨いだ **共有【ターンN】** が自動的に成立する (例: D03007「推理かアクションしたとき」
-   * 【ターン1】= reasoning:end と action:declare のどちらか 1 回)。selfOnly / matcherCondition は
+   * 【ターン1】= reasoning:after-sleep と action:declare のどちらか 1 回)。selfOnly / matcherCondition は
    * 全 hook に共通適用される (action:declare payload も uid/player を持つよう拡張済)。
    */
   hooks?: HookName[];
@@ -116,6 +121,12 @@ export type ContinuousDelta =
 
 // engine mega-wave W4 (2026-07-03, r62 G32): filter 付き突撃 grant の 1 entry (B07096「突撃[レベル4以下のキャラ]」)。
 export type FilteredAssaultGrant = { targetKind: 'char' | 'case'; filter: TargetFilter };
+
+/** Static identity axes allowed for a scene aura that changes hand-card level. */
+export type HandLevelAuraFilter = Pick<
+  TargetFilter,
+  'cardId' | 'cardName' | 'cardNameNot' | 'trait' | 'traitAll' | 'color' | 'colorNot' | 'kind'
+>;
 
 export type ContinuousModifier = {
   /** A scene character may be removed instead of paying a declared ability's printed cost. */
@@ -273,6 +284,12 @@ export type ContinuousModifier = {
   //   filterAny (OR、per-char 判定 = 両該当でも 1 枚は 1 で二重計上なし) に一致する自現場キャラ数 × delta を
   //   effectiveHandLevel が加算する (honor site は同 helper 1 箇所で閉じる — scene 側 level 読みは不変)。
   lvlDeltaInHandPer?: { delta: number; filterAny: TargetFilter[] };
+  /**
+   * Each active friendly scene bearer adds `delta` to matching cards in its
+   * owner's hand. The restricted filter deliberately excludes effective-level
+   * axes, preventing recursive `effectiveHandLevel` evaluation.
+   */
+  handLevelAura?: { filter: HandLevelAuraFilter; delta: number };
   // S3 hand-zone cutin aura (2026-07-12, B06020/B07003): bearer が手札にある間、同じ owner の
   // 手札で filter に一致するカードへ固定 AP cutin を付与する。read.hand-cutin が CardDef を変更せず
   // synthetic on-hand ability として合成し、flow.contact / triggered listener が同じ集合を参照する。
@@ -359,6 +376,8 @@ export type AbilityDef = {
   limit?: AbilityLimit;                    // 【ターン①】等
   /** Pre-removal replacement for a face-up set-card occurrence. */
   setCardRemovalReplacement?: SetCardRemovalReplacement;
+  /** Pre-cleanup replacement owned by the leaving host itself. */
+  hostLeaveSetCardReplacement?: HostLeaveSetCardReplacement;
   effect?: Effect;                         // Descriptor (DSL) — continuous 以外
   continuousModifier?: ContinuousModifier; // type='continuous' 時のみ (G23)
   description: string;                     // 公式テキスト (エラッタ後)
@@ -404,6 +423,6 @@ export type CardDef = {
 
   // kind-specific optional fields
   caseLevel?: number;                      // kind:'case' — 事件レベル (rules/01)
-  caseTraits?: string[];                   // kind:'case' — 例: ["古城", "婚活"]
+  caseTraits?: string[];                   // kind:'case' — 例: ["古城", "婚活パーティー"]
   keywords?: string[];                     // kind:'character' — 迅速/突撃[X]等 (rules/13)
 };

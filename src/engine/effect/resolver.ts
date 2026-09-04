@@ -4,12 +4,11 @@
 // rules: 15-abilities-effects.md, 25-qa-effects-resolution.md
 //
 // 設計メモ:
-//   - replace / negate は "発動時に即解決" の例外 (rules/15) であり、
-//     emit 時の handler が直接 engine.resolve.replace / cancel を呼ぶ。
-//     よって engine.effect.run でこれらが渡された場合は明示的に throw する
-//     (誤用検知)。
-//   - choice の選択は ctx.dyn.choiceIndex (number) で行う。未指定なら 0。
-//     UI からの選択ルーティングは Phase 7 で実装する。
+//   - replace は "発動時に即解決" の例外 (rules/15) であり、effect.run では禁止。
+//   - negate は human decision を挟む即時反応を表現するため、同じ declaredBatch の
+//     未解決 Cut-In 自効果だけを cancel する限定 descriptor を許可する。
+//   - choice の明示選択は ctx.dyn.choiceIndex (number)。未指定のautonomous
+//     経路は先頭の適用可能optionを使い、通常のunconditional choiceはindex 0互換。
 //   - optional の実行は ctx.dyn.optionalRun (boolean) で行う。未指定 / false なら skip。
 //   - forEach は over を engine.target.resolve で展開し、各候補を
 //     ctx.bindings['$each'] に単一要素配列として束ねて do を実行する。
@@ -24,20 +23,66 @@ import { char as charMutator } from '../mutate/char.js'; // W6 step6 (r79): _mrS
 import { advanceIndexedZoneEpoch } from '../state/indexed-zone-epoch.js';
 import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from './resolve-picks.js';
+import { assertCompleteSetCardSource } from './source-identity.js';
 import { resolve as resolveTarget } from '../target/resolve.js';
 import { _attachPendingDeckPlaceContinuation, _attachPendingDeckReorderContinuation, _peekPendingDeckPlaceSide, _peekPendingDeckReorderSide, peekPublicHandRevealToken, resolveBindRef, takePublicHandRevealToken } from './atom-handlers/_shared.js';
-import { _peekPendingEffectChoiceSide, _peekPendingEffectOptionalSide, _peekPendingEffectRepeatOptionalSide, _peekPendingRpsSide, _peekPendingSetCardChoiceSide, appendPendingChoiceContinuation, appendPendingRpsContinuation, pushPendingEffectRepeatOptionalSide, setPendingEffectRepeatOptionalRemainder, pushPendingRpsSide, setPendingRpsResume, pushPendingSetCardChoiceSide, setPendingSetCardChoiceResume, appendPendingSetCardChoiceContinuation, pushPendingEffectChoiceSide, setPendingChoiceBindings, setPendingChoiceResume, type PendingEffectPickSide, type RpsHand } from './pending-state.js';
+import { _peekPendingEffectChoiceSide, _peekPendingEffectOptionalSide, _peekPendingEffectRepeatOptionalSide, _peekPendingRpsSide, _peekPendingSetCardChoiceSide, _peekPendingSetCardReplacementSide, _peekPendingSetCardReplacementContinuation, appendPendingChoiceContinuation, appendPendingRpsContinuation, pushPendingEffectRepeatOptionalSide, setPendingEffectRepeatOptionalRemainder, pushPendingRpsSide, setPendingRpsResume, pushPendingSetCardChoiceSide, setPendingSetCardChoiceResume, appendPendingSetCardChoiceContinuation, setPendingSetCardReplacementContinuation, pushPendingEffectChoiceSide, setPendingChoiceBindings, setPendingChoiceResume, type PendingEffectPickSide, type RpsHand } from './pending-state.js';
 import { toPlainDeep } from './pending-state.js';
+import { continuationMayEnterSceneForPlayer } from './scene-switch.js';
 import {
   adoptEffectCausalTrace,
   cloneCausalEffectTrace,
   ensureEffectCausalTrace,
   handoffPausedEffectCausalTrace,
   markEffectCausalAwaitingResume,
+  recordEffectCausalOperation,
 } from '../log/effect-causal.js';
+
+type Player = 'self' | 'opp';
+
+function negateDeclaredCutinEffect(
+  state: GameState,
+  effect: Extract<Effect, { kind: 'negate' }>,
+  ctx: EffectCtx,
+): void {
+  const matcher = effect.trigger.on === 'effect-resolution'
+    ? effect.trigger.matcher as { resolutionKind?: unknown; declaredBatch?: unknown }
+    : undefined;
+  if (matcher?.resolutionKind !== 'cutin' || matcher.declaredBatch !== '$trigger.declaredBatch') {
+    throw new Error('unsupported negate descriptor');
+  }
+  const payload = ctx.triggerPayload as {
+    player?: unknown;
+    cardId?: unknown;
+    declaredBatch?: unknown;
+  } | undefined;
+  const batch = payload?.declaredBatch;
+  if ((typeof batch !== 'number' && typeof batch !== 'string')
+    || (payload?.player !== 'self' && payload?.player !== 'opp')
+    || typeof payload.cardId !== 'string') return;
+  const targets = state.pendingEffects.filter(entry =>
+    entry.state === 'pending'
+    && entry.declaredReaction === undefined
+    && entry.declaredBatch === batch
+    && entry.source.player === payload.player
+    && entry.source.cardId === payload.cardId
+    && entry.source.resolutionKind === 'cutin');
+  if (targets.length !== 1) return;
+  targets[0]!.state = 'cancelled';
+  recordEffectCausalOperation(state, ctx, {
+    actor: ctx.source.player,
+    kind: 'negate',
+    tags: ['cutin'],
+    source: { kind: 'player', side: ctx.source.player },
+    targets: [{ kind: 'zone', side: payload.player, zone: 'remove' }],
+    outcome: { type: 'state', state: 'negated' },
+  });
+}
 
 function decisionSource(ctx: EffectCtx): {
   cardId: string; abilityId: string; uid: string;
+  setCardId?: string; setCardInstanceId?: string;
+  abilityOrigin?: EffectCtx['source']['abilityOrigin']; abilityIndex?: number;
   area?: EffectCtx['source']['area'];
   resolutionKind?: EffectCtx['source']['resolutionKind'];
   triggerBatch?: number; ownerChosenOrder?: number; ownerOrderConfirmed?: boolean;
@@ -46,6 +91,10 @@ function decisionSource(ctx: EffectCtx): {
     cardId: ctx.source.cardId ?? '',
     abilityId: ctx.source.abilityId ?? '',
     uid: ctx.source.uid ?? '',
+    ...(ctx.source.setCardId !== undefined ? { setCardId: ctx.source.setCardId } : {}),
+    ...(ctx.source.setCardInstanceId !== undefined ? { setCardInstanceId: ctx.source.setCardInstanceId } : {}),
+    ...(ctx.source.abilityOrigin !== undefined ? { abilityOrigin: ctx.source.abilityOrigin } : {}),
+    ...(ctx.source.abilityIndex !== undefined ? { abilityIndex: ctx.source.abilityIndex } : {}),
     ...(ctx.source.area ? { area: ctx.source.area } : {}),
     ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}),
     ...(ctx.source.triggerBatch !== undefined ? { triggerBatch: ctx.source.triggerBatch } : {}),
@@ -56,12 +105,24 @@ function decisionSource(ctx: EffectCtx): {
 }
 
 function sameDecisionSource(
-  side: { source: { cardId: string; abilityId: string; uid?: string } },
+  side: { source: {
+    cardId: string;
+    abilityId: string;
+    uid?: string;
+    setCardId?: string;
+    setCardInstanceId?: string;
+    abilityOrigin?: EffectCtx['source']['abilityOrigin'];
+    abilityIndex?: number;
+  } },
   ctx: EffectCtx,
 ): boolean {
   return side.source.cardId === (ctx.source.cardId ?? '')
     && side.source.abilityId === (ctx.source.abilityId ?? '')
-    && (side.source.uid ?? '') === (ctx.source.uid ?? '');
+    && (side.source.uid ?? '') === (ctx.source.uid ?? '')
+    && side.source.setCardId === ctx.source.setCardId
+    && side.source.setCardInstanceId === ctx.source.setCardInstanceId
+    && side.source.abilityOrigin === ctx.source.abilityOrigin
+    && side.source.abilityIndex === ctx.source.abilityIndex;
 }
 
 /** Causal display state belongs to one branch only; sibling branches never inherit it. */
@@ -108,7 +169,8 @@ function pauseRuntimeHumanChoice(state: GameState, eff: Extract<Effect, { kind: 
   const human = dyn?.runtimePickOwnerKnown === true
     ? dyn.runtimeHumanPlayer
     : (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide;
-  if ((human !== 'self' && human !== 'opp') || eff.options.length < 2 || eff.chooser === 'opp') return false;
+  if ((human !== 'self' && human !== 'opp') || human !== ctx.source.player
+    || eff.options.length < 2 || eff.chooser === 'opp') return false;
   const trace = ensureEffectCausalTrace(state, ctx);
   markEffectCausalAwaitingResume(trace);
   const publicHandRevealToken = takePublicHandRevealToken(ctx);
@@ -121,6 +183,7 @@ function pauseRuntimeHumanChoice(state: GameState, eff: Extract<Effect, { kind: 
     },
     options: eff.options.map((option, index) => ({
       index,
+      label: eff.labels?.[index],
       verb: option.kind === 'atom' ? option.verb : undefined,
       args: option.kind === 'atom' ? option.args as Record<string, unknown> : undefined,
     })),
@@ -133,18 +196,46 @@ function pauseRuntimeHumanChoice(state: GameState, eff: Extract<Effect, { kind: 
 
 const continuationCtxSnapshots = new WeakMap<object, EffectCtx>();
 
-function attachContinuation(pick: { continuation?: ContinuationFrame }, frame: ContinuationFrame): void {
+function attachContinuation(
+  pick: { player?: Player; continuation?: ContinuationFrame; sceneEnterSwitchPlayer?: Player },
+  frame: ContinuationFrame,
+): void {
   // UI dispatch runs the resolver inside Immer. A continuation that crosses the
   // produce boundary must not retain revoked drafts. Plain engine callers rely on
   // the original ctx/bindings identity, so preserve it when no draft is present.
   const safeFrame = snapshotContinuationFrame(frame);
   if (!pick.continuation) {
     pick.continuation = safeFrame;
-    return;
+  } else {
+    let tail = pick.continuation;
+    while (tail.outer) tail = tail.outer;
+    tail.outer = safeFrame;
   }
-  let tail = pick.continuation;
-  while (tail.outer) tail = tail.outer;
-  tail.outer = safeFrame;
+  const entersSelf = continuationMayEnterSceneForPlayer(pick.continuation, 'self');
+  const entersOpp = continuationMayEnterSceneForPlayer(pick.continuation, 'opp');
+  const switchPlayer = entersSelf !== entersOpp ? (entersSelf ? 'self' : 'opp') : undefined;
+  // One bundled answer can carry a switch victim only when the same player
+  // owns both decisions. Cross-owner entry pauses later as its own scene pick.
+  if (switchPlayer === pick.player) pick.sceneEnterSwitchPlayer = switchPlayer;
+  else delete pick.sceneEnterSwitchPlayer;
+}
+
+/**
+ * Autonomous choices preserve the historical first-option default unless that
+ * option is a top-level conditional known to be false and has no else branch.
+ * This lets CPU/headless flows select the first applicable printed branch while keeping ordinary
+ * unconditional choices byte-compatible. If every branch is inapplicable,
+ * option 0 remains the deliberate no-op fallback.
+ */
+function autonomousChoiceIndex(
+  state: GameState,
+  eff: Extract<Effect, { kind: 'choice' }>,
+  ctx: EffectCtx,
+): number {
+  const applicable = eff.options.findIndex(option => (
+    option.kind !== 'conditional' || option.else !== undefined || evalCond(state, option.if, ctx)
+  ));
+  return applicable >= 0 ? applicable : 0;
 }
 
 function appendSetCardContinuation(remainder: Effect[], ctx: EffectCtx, kind: 'sequence' | 'chain'): void {
@@ -152,6 +243,31 @@ function appendSetCardContinuation(remainder: Effect[], ctx: EffectCtx, kind: 's
   const resumeCtx = toPlainDeep(ctx) as EffectCtx;
   if (resumeCtx.dyn) delete (resumeCtx.dyn as Record<string, unknown>).setCardChoicePending;
   appendPendingSetCardChoiceContinuation({ remainder, ctx: resumeCtx, kind });
+}
+
+function attachSetCardReplacementContinuation(
+  remainder: Effect[],
+  ctx: EffectCtx,
+  kind: 'sequence' | 'chain',
+): void {
+  const outer = remainder.length > 0
+    ? snapshotContinuationFrame({ remainder, ctx, kind })
+    : undefined;
+  const existing = _peekPendingSetCardReplacementContinuation();
+  if (existing) {
+    if (!outer) return;
+    let tail = existing;
+    while (tail.outer) tail = tail.outer;
+    tail.outer = outer;
+    return;
+  }
+  const holder = snapshotContinuationFrame({
+    remainder: [],
+    ctx,
+    kind: 'sequence',
+    ...(outer ? { outer } : {}),
+  });
+  setPendingSetCardReplacementContinuation(holder);
 }
 
 function snapshotContinuationFrame(frame: ContinuationFrame): ContinuationFrame {
@@ -194,6 +310,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
   // A terminal result takes effect immediately, including in the middle of a
   // sequence. Recursive calls for later steps must therefore become no-ops.
   if (state.gameResult !== undefined) return;
+  assertCompleteSetCardSource(ctx.source);
 
   switch (eff.kind) {
     case 'sequence': {
@@ -213,6 +330,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         const choiceBefore = _peekPendingEffectChoiceSide();
         const rpsBefore = _peekPendingRpsSide();
         const setCardBefore = _peekPendingSetCardChoiceSide();
+        const setCardReplacementBefore = _peekPendingSetCardReplacementSide();
         run(state, eff.steps[i]!, ctx);
         transferPublicHandRevealToPendingDecision(ctx);
         if (_peekPendingEffectChoiceSide() !== choiceBefore) {
@@ -229,6 +347,10 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         if (_peekPendingSetCardChoiceSide() !== setCardBefore) {
           appendSetCardContinuation(eff.steps.slice(i + 1), ctx, 'sequence');
           delete ctx.dyn?.setCardChoicePending;
+          return;
+        }
+        if (_peekPendingSetCardReplacementSide() !== setCardReplacementBefore) {
+          attachSetCardReplacementContinuation(eff.steps.slice(i + 1), ctx, 'sequence');
           return;
         }
         const repeatAfter = _peekPendingEffectRepeatOptionalSide() !== null;
@@ -291,6 +413,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         const choiceBefore = _peekPendingEffectChoiceSide();
         const rpsBefore = _peekPendingRpsSide();
         const setCardBefore = _peekPendingSetCardChoiceSide();
+        const setCardReplacementBefore = _peekPendingSetCardReplacementSide();
         run(state, step, ctx);
         transferPublicHandRevealToPendingDecision(ctx);
         if (_peekPendingEffectChoiceSide() !== choiceBefore) {
@@ -307,6 +430,10 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         if (_peekPendingSetCardChoiceSide() !== setCardBefore) {
           appendSetCardContinuation(eff.steps.slice(i + 1), ctx, 'chain');
           delete ctx.dyn?.setCardChoicePending;
+          return;
+        }
+        if (_peekPendingSetCardReplacementSide() !== setCardReplacementBefore) {
+          attachSetCardReplacementContinuation(eff.steps.slice(i + 1), ctx, 'chain');
           return;
         }
         const reorderAfter = _peekPendingDeckReorderSide();
@@ -367,6 +494,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         const choiceBefore = _peekPendingEffectChoiceSide();
         const rpsBefore = _peekPendingRpsSide();
         const setCardBefore = _peekPendingSetCardChoiceSide();
+        const setCardReplacementBefore = _peekPendingSetCardReplacementSide();
         run(state, eff.steps[i]!, branchCtx);
         transferPublicHandRevealToPendingDecision(branchCtx);
         const remainder = eff.steps.slice(i + 1);
@@ -386,6 +514,11 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
           handoffParallelPause(ctx, branchCtx);
           appendSetCardContinuation(remainder, branchScopedCtx(ctx), 'sequence');
           delete branchCtx.dyn?.setCardChoicePending;
+          return;
+        }
+        if (_peekPendingSetCardReplacementSide() !== setCardReplacementBefore) {
+          handoffParallelPause(ctx, branchCtx);
+          attachSetCardReplacementContinuation(remainder, branchScopedCtx(ctx), 'sequence');
           return;
         }
         const reorderAfter = _peekPendingDeckReorderSide();
@@ -421,9 +554,12 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
     }
     case 'choice': {
       if (pauseRuntimeHumanChoice(state, eff, ctx)) return;
-      // ctx.dyn.choiceIndex で選択する。未指定 / 非数なら 0 を採用。
+      // Explicit human/declared choice wins. Autonomous flow skips a known
+      // inapplicable top-level conditional, otherwise preserves option 0.
       const raw = ctx.dyn?.choiceIndex;
-      const idx = typeof raw === 'number' && Number.isInteger(raw) ? raw : 0;
+      const idx = typeof raw === 'number' && Number.isInteger(raw)
+        ? raw
+        : autonomousChoiceIndex(state, eff, ctx);
       if (idx < 0 || idx >= eff.options.length) {
         throw new Error(`effect.run: choice index ${idx} out of range [0, ${eff.options.length})`);
       }
@@ -712,10 +848,12 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
       return;
     }
     case 'replace':
-    case 'negate':
       throw new Error(
-        'replace/negate are immediate-resolution; not runnable via effect.run — see resolver stack handling',
+        'replace is immediate-resolution; not runnable via effect.run — see resolver stack handling',
       );
+    case 'negate':
+      negateDeclaredCutinEffect(state, eff, ctx);
+      return;
     case 'atom': {
       // mega-wave W6 step6 (2026-07-04, r79/B08014): MR の「選ぶ」効果で解決された現場キャラへ
       // selectedByOwnMr を実行 **前** に記録する (atom 自体が対象を移動/除去しても標識は先に立つ)。

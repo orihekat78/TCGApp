@@ -14,10 +14,16 @@ import { mutate } from '../mutate/index.js';
 import { event } from '../event/index.js';
 import { def as readDef } from '../read/def.js';
 import { char as readChar } from '../read/char.js';
-import { toPlainDeep } from '../effect/pending-state.js';
+import { _peekPendingSetCardReplacementSide, toPlainDeep } from '../effect/pending-state.js';
+import { findLiveHandLeaveInterceptor } from '../effect/consult-leave-intercept.js';
 import { effectiveCutinAbilities } from '../read/hand-cutin.js';
 import { evalCond } from '../cond/eval.js';
 import { matchOneFilter } from '../target/candidates.js'; // engine A3 wave (2026-07-11): B05007 filtered action-scoped cutin ban
+import {
+  findDeclareNameSpec,
+  resolveDeclaredName,
+  type DeclareNameSpec,
+} from '../effect/declared-name-domain.js';
 import { computeOrder as _computeOrder } from './action/order.js';
 import { contextForState } from './action/context-registry.js';
 import {
@@ -143,6 +149,54 @@ function sideHasActionCutinBan(state: GameState, side: Player): boolean {
   return state.players[side].scene.some(c => c.turnEffects['cutinBanOpp_action'] === true);
 }
 
+function selectedCutInAbility(
+  state: GameState,
+  player: Player,
+  cardId: string,
+  abilityId?: string,
+): AbilityDef | undefined {
+  const abilities = effectiveCutinAbilities(state, player, cardId);
+  return abilityId ? abilities.find(ability => ability.id === abilityId) : abilities[0];
+}
+
+function activeCutInAbility(
+  state: GameState,
+  ax: ActionContext,
+  player: Player,
+  cardId: string,
+  abilityId?: string,
+): AbilityDef | undefined {
+  ax = contextForState(state, ax);
+  const ability = selectedCutInAbility(state, player, cardId, abilityId);
+  if (!ability) return undefined;
+  const payload = { cardId, abilityId: 'cutin', cutinAbilityId: ability.id };
+  const ctx: EffectCtx = {
+    source: { player, cardId, abilityId: ability.id, area: 'hand' },
+    bindings: buildContactBindings(ax, player) as EffectCtx['bindings'],
+    triggerPayload: payload,
+  };
+  const trigger = ability.trigger;
+  if (trigger?.matcher && !trigger.matcher(payload, state)) return undefined;
+  if (trigger?.matcherCondition && !evalCond(state, trigger.matcherCondition, ctx)) return undefined;
+  if (ability.condition && !evalCond(state, ability.condition, ctx)) return undefined;
+  return ability;
+}
+
+/** Name input required by the selected cut-in's currently effective text. */
+export function cutInDeclaredNameSpec(
+  state: GameState,
+  ax: ActionContext,
+  player: Player,
+  cardId: string,
+  abilityId?: string,
+): (DeclareNameSpec & { abilityId: string; description: string }) | null {
+  const ability = activeCutInAbility(state, ax, player, cardId, abilityId);
+  const spec = findDeclareNameSpec(ability?.effect);
+  return ability && spec
+    ? { ...spec, abilityId: ability.id, description: ability.description }
+    : null;
+}
+
 /**
  * cutIn — カットイン実行
  *
@@ -158,7 +212,14 @@ function sideHasActionCutinBan(state: GameState, side: Player): boolean {
  * その中で cutin Effect を pendingEffects に push した後、
  * engine.resolve.runAllUntilEmpty() を駆動すること。
  */
-export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: string, cutinAbilityId?: string): void {
+export function cutIn(
+  state: GameState,
+  ax: ActionContext,
+  p: Player,
+  cardId: string,
+  cutinAbilityId?: string,
+  declaredName?: string,
+): void {
   ax = contextForState(state, ax);
   if (!canCutIn(state, ax, p, cardId)) {
     throw new Error(`flow.contact.cutIn: cannot cut in cardId=${cardId} for ${p}`);
@@ -174,11 +235,18 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
   // と渡り、atom-handler の resolveBindRef が `$contact.byUid` を解決できる。
   // BUG-104: p 視点の contact bindings (攻撃側/防御側 cutin で $contact.byUid が正しく解決)。
   const contactBindings = buildContactBindings(ax, p);
-  const cutinAbilities = effectiveCutinAbilities(state, p, cardId);
-  const selected = cutinAbilityId
-    ? cutinAbilities.find(a => a.id === cutinAbilityId)
-    : cutinAbilities[0];
+  const selected = selectedCutInAbility(state, p, cardId, cutinAbilityId);
   if (!selected) throw new Error(`flow.contact.cutIn: cutin ability not found cardId=${cardId}`);
+  const declareSpec = cutInDeclaredNameSpec(state, ax, p, cardId, selected.id);
+  let canonicalDeclaredName: string | undefined;
+  if (declareSpec && typeof declaredName === 'string' && declaredName.trim() !== '') {
+    canonicalDeclaredName = resolveDeclaredName(declareSpec.domain, declaredName) ?? undefined;
+    if (canonicalDeclaredName === undefined) {
+      throw new Error('flow.contact.cutIn: declared name is not registered or identifiable');
+    }
+  } else if (declareSpec && !declareSpec.optional && declareSpec.domain !== 'unrestricted') {
+    throw new Error('flow.contact.cutIn: registered declared name is required');
+  }
   const cutinDecisionEventId = recordActionCausalOperation(state, ax, {
     actor: p,
     kind: 'use',
@@ -187,16 +255,28 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
     targets: [{ kind: 'zone', side: p, zone: 'hand' }],
     outcome: { type: 'state', state: 'active' },
   });
-  event.emit(state, 'effect:declared', { cardId, abilityId: 'cutin', cutinAbilityId: selected.id }, {
+  event.emit(state, 'effect:declared', {
+    cardId,
+    abilityId: 'cutin',
+    cutinAbilityId: selected.id,
+    ...(canonicalDeclaredName === undefined ? {} : { declaredName: canonicalDeclaredName }),
+  }, {
     player: p, cardId, bindings: contactBindings, resolutionKind: 'cutin' as const,
   }, {
     causalCorrelationEventId: cutinDecisionEventId,
   });
+  // B10087 official Q&A: the used cut-in's own effect resolves before any
+  // "when a cut-in is used" observer. effect:declared allocates this batch
+  // even when the selected cut-in text is currently invalid/no-op. Carry the
+  // same provenance into cutin:used so stack.next() can enforce the pairwise
+  // own-effect -> observer gate while preserving normal owner ordering among
+  // observers after that effect has finished.
+  const cutinDeclaredBatch = state.declaredBatchSeq;
   // engine additive wave-3 (2026-06-30): カットイン使用を第三者キャラが観測する専用 hook (rules/09)。
   // effect:declared(自効果ゲート) とは別 hook = 自効果と第三者観測を分離。payload.player で側、payload.cardId で
   // 使用カットインの名/特徴 (triggerCutinMatches) を判定。source.bindings に contact を渡し observer effect の
   // $contact.byUid 解決を可能にする (B02080「そのキャラを AP+1000」)。新 hook = 既存カード未宣言 → 挙動不変。
-  event.emit(state, 'cutin:used', { player: p, cardId }, {
+  event.emit(state, 'cutin:used', { player: p, cardId, declaredBatch: cutinDeclaredBatch }, {
     player: p, cardId, bindings: contactBindings,
   }, {
     causalCorrelationEventId: cutinDecisionEventId,
@@ -295,10 +375,16 @@ export function disguise(state: GameState, ax: ActionContext, p: Player, cardId:
   // cardId を書換えるため shallow copy で凍結)。uid は sentinel 化 — targetUid slot はこの後も同 uid の
   // まま新カードが residence するため、素の uid だと disguiseReplacedMatches の filter 評価
   // (matchOneFilter → continuousDeltaSafe 等が scene.byUid) が「新カード自身の継続効果」を誤参照する。
-  // sentinel は scene に実在しない → continuous/aura 軸 0 (removedCharMatches と同じ既知 limitation、
-  // turnEffects/override 軸は snapshot が保持し正確)。
+  // sentinel は scene に実在しないため、入替え前に有効 AP/LP/level も別 snapshot へ固定する。
+  // disguiseReplacedMatches はこの数値 snapshot を使い、新カード側の continuous/aura 混入と
+  // 旧カード側の continuous/aura 欠落を同時に防ぐ。
   // toPlainDeep (BUG-132 posture): shallow copy だと nested field (setCards/turnEffects/keywordOverrides)
   // が Immer draft proxy のまま emit payload に残り、produce finalize 後に revoked-proxy crash する。
+  const replacedEffective = {
+    ap: readChar.ap(state, targetUid),
+    lp: readChar.lp(state, targetUid),
+    level: readChar.level(state, targetUid),
+  };
   const replacedChar: SceneCharacter = toPlainDeep({ ...targetChar, uid: `${targetUid}::disguise-replaced` });
 
   // 元 cardId を デッキ下へ (refactor 1a 2026-06-12: mutate 層経由に統一。挙動は push と同一)
@@ -346,11 +432,11 @@ export function disguise(state: GameState, ax: ActionContext, p: Player, cardId:
     // side 判定するため payload.player 必須 (cutin:used は既に持つ)。source.bindings.contact は observer
     // effect の inContact pick ($contact 参加者) 解決用。既存 disguise:into consumer (selfOnly の【変装時】系
     // B02038/B02044 等) は player/bindings を読まない → 挙動不変 (baseline smoke 不変)。
-    // W3 (r51): payload に replacedChar (入替え元 snapshot) を追加。既存 consumer は未読 → 挙動不変。
+    // W3 (r51): payload に replacedChar、BUG-346: replacedEffective を追加。
     event.emit(
       state,
       'disguise:into',
-      { uid: targetUid, fromCardId, newCardId: cardId, player: p, replacedChar },
+      { uid: targetUid, fromCardId, newCardId: cardId, player: p, replacedChar, replacedEffective },
       { player: p, uid: targetUid, bindings: buildContactBindings(ax, p) },
       { causalCorrelationEventId: disguiseDecisionEventId },
     );
@@ -501,6 +587,216 @@ export function judge(
 }
 
 /**
+ * Apply the public B01092 answer. The contact context, rather than the UI,
+ * owns a nested B02052 pause opened by either the guardian cost or target
+ * leave. This is intentionally separate from the resolver continuation.
+ */
+export function resolveLeaveIntercept(
+  state: GameState,
+  ax: ActionContext,
+  accept: boolean,
+): JudgeResult {
+  ax = contextForState(state, ax);
+  const ownership = pendingLeaveInterceptContactOwner(state, ax);
+  if (!ownership || !canResolveLeaveIntercept(state, ax, accept)) {
+    throw new Error('flow.contact.resolveLeaveIntercept: stale leave-intercept authority');
+  }
+  const { pending, target } = ownership;
+  const snapshot = ax.apSnapshot!;
+  const interceptorWitness = accept
+    ? findLiveHandLeaveInterceptor(state, target, pending.player, pending.interceptorUid, snapshot.aUid)
+    : null;
+  if (accept && !interceptorWitness) {
+    throw new Error('flow.contact.resolveLeaveIntercept: interceptor is no longer a legal hand redirect');
+  }
+  const removal = mutate.scene.resolveLeaveIntercept(
+    state,
+    pending.targetUid,
+    'contact-ap',
+    snapshot.aUid,
+    ax.byPlayer,
+    pending.interceptorUid,
+    accept,
+  );
+  if (removal.deferred) {
+    const replacement = _peekPendingSetCardReplacementSide();
+    if (!replacement) {
+      throw new Error('flow.contact.resolveLeaveIntercept: deferred removal lacks replacement authority');
+    }
+    const stage = replacement.fromUid === pending.interceptorUid
+      ? 'interceptor-cost'
+      : replacement.fromUid === pending.targetUid
+        ? 'target-leave'
+        : null;
+    if (!stage) {
+      throw new Error('flow.contact.resolveLeaveIntercept: replacement authority belongs to neither contact character');
+    }
+    ax.pendingLeaveInterceptReplacement = {
+      targetUid: pending.targetUid,
+      targetCardId: target.cardId,
+      interceptorUid: pending.interceptorUid,
+      ...(interceptorWitness ? {
+        interceptorCardId: interceptorWitness.cardId,
+        interceptorAbilityId: interceptorWitness.abilityId,
+      } : {}),
+      byUid: snapshot.aUid,
+      accept,
+      stage,
+    };
+    delete ax.pendingLeaveIntercept;
+    return {
+      attackerAP: snapshot.aAP,
+      defenderAP: snapshot.bAP,
+      defenderRemoved: false,
+      attackerRemoved: false,
+      deferred: true,
+    };
+  }
+  delete ax.pendingLeaveIntercept;
+  const result = judge(state, ax, removal);
+  ax.judgeResolved = true;
+  return result;
+}
+
+/** State-owned admission check for one public leave-intercept answer. */
+export function canResolveLeaveIntercept(state: GameState, ax: ActionContext, accept: boolean): boolean {
+  ax = contextForState(state, ax);
+  const ownership = pendingLeaveInterceptContactOwner(state, ax);
+  if (!ownership) return false;
+  const { pending, target } = ownership;
+  if (!accept) return true;
+  return findLiveHandLeaveInterceptor(state, target, pending.player, pending.interceptorUid, ax.apSnapshot!.aUid) !== null;
+}
+
+/**
+ * A persisted leave decision belongs only to its exact unresolved contact.
+ * Do not let an imported target/player turn a decline into removal of a
+ * different scene character.
+ */
+function pendingLeaveInterceptContactOwner(
+  state: GameState,
+  ax: ActionContext,
+): { pending: NonNullable<ActionContext['pendingLeaveIntercept']>; target: SceneCharacter } | null {
+  const pending = ax.pendingLeaveIntercept;
+  if (!pending) return null;
+  const owner = contactTargetOwner(state, ax, pending.targetUid);
+  return owner?.player === pending.player && owner.target ? { pending, target: owner.target } : null;
+}
+
+/** Exact unresolved contact target, including the guard substitution. */
+function contactTargetOwner(
+  state: GameState,
+  ax: ActionContext,
+  targetUid: string,
+  allowRemovedTarget = false,
+): { player: Player; target?: SceneCharacter } | null {
+  const snapshot = ax.apSnapshot;
+  const owners = Object.values(state.actionContexts ?? {})
+    .filter((candidate) => candidate.pendingLeaveIntercept !== undefined
+      || candidate.pendingLeaveInterceptReplacement !== undefined);
+  const defenderUid = ax.guardUid ?? (ax.target.kind === 'char' ? ax.target.uid : undefined);
+  if (!snapshot || owners.length !== 1 || owners[0] !== ax
+    || ax.phase !== 'judge' || ax.judgeResolved === true
+    || snapshot.aUid !== ax.byUid || snapshot.bUid !== targetUid
+    || defenderUid !== snapshot.bUid) return null;
+  const selfTarget = state.players.self.scene.find((char) => char.uid === targetUid);
+  const oppTarget = state.players.opp.scene.find((char) => char.uid === targetUid);
+  if (selfTarget) return ax.byPlayer === 'self' ? null : { player: 'self', target: selfTarget };
+  if (oppTarget) return ax.byPlayer === 'opp' ? null : { player: 'opp', target: oppTarget };
+  return allowRemovedTarget ? { player: ax.byPlayer === 'self' ? 'opp' : 'self' } : null;
+}
+
+type ContactReplacementGuard = {
+  fromUid: string;
+  source: { cardId: string };
+};
+
+/** Public replacement admission is state-owned; accepted guardian costs cannot reappear. */
+export function canAdvanceLeaveInterceptReplacement(
+  state: GameState,
+  guard: ContactReplacementGuard,
+): boolean {
+  const owners = Object.values(state.actionContexts ?? {}).filter((candidate) =>
+    candidate.pendingLeaveInterceptReplacement !== undefined);
+  if (owners.length === 0) return true;
+  if (owners.length !== 1) return false;
+  const ax = owners[0]!;
+  const pending = ax.pendingLeaveInterceptReplacement!;
+  const expectedUid = pending.stage === 'interceptor-cost'
+    ? pending.interceptorUid
+    : pending.targetUid;
+  if (!contactTargetOwner(state, ax, pending.targetUid) || guard.fromUid !== expectedUid) return false;
+  return pending.stage !== 'target-leave' || pending.accept !== true
+    || !state.players.self.scene.concat(state.players.opp.scene)
+      .some((char) => char.uid === pending.interceptorUid);
+}
+
+/** Validate the exact action that owns this resolver answer before resume. */
+export function advanceLeaveInterceptReplacement(
+  state: GameState,
+  guard: ContactReplacementGuard,
+): { actionId: string; stage: 'interceptor-cost' | 'target-leave' } | null {
+  const owners = Object.values(state.actionContexts ?? {}).filter((candidate) =>
+    candidate.pendingLeaveInterceptReplacement !== undefined);
+  if (owners.length === 0) return null;
+  if (owners.length !== 1) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: exactly one ActionContext owner is required');
+  }
+  const ax = owners[0]!;
+  const pending = ax.pendingLeaveInterceptReplacement!;
+  if (!contactTargetOwner(state, ax, pending.targetUid)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: replacement does not own its unresolved contact');
+  }
+  const expectedUid = pending.stage === 'interceptor-cost'
+    ? pending.interceptorUid
+    : pending.targetUid;
+  if (guard.fromUid !== expectedUid) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: replacement guard does not match its current stage');
+  }
+  if (pending.stage === 'target-leave' && pending.accept === true
+    && state.players.self.scene.concat(state.players.opp.scene)
+      .some((char) => char.uid === pending.interceptorUid)) {
+    throw new Error('Invalid pendingLeaveInterceptReplacement: accepted interceptor cost must remain paid');
+  }
+  return { actionId: ax.id, stage: pending.stage };
+}
+
+/** Move guardian cost -> target leave only after the guardian really left. */
+export function advanceLeaveInterceptReplacementAfterResume(
+  state: GameState,
+  actionId: string,
+  guardianRemoval: RemoveResult,
+): boolean {
+  const pending = state.actionContexts?.[actionId]?.pendingLeaveInterceptReplacement;
+  const ax = state.actionContexts?.[actionId];
+  if (!pending || !ax || !contactTargetOwner(state, ax, pending.targetUid)
+    || pending.stage !== 'interceptor-cost' || guardianRemoval.deferred
+    || guardianRemoval.prevented || guardianRemoval.removed.uid !== pending.interceptorUid
+    || guardianRemoval.removed.cardId === '') return false;
+  pending.stage = 'target-leave';
+  return true;
+}
+
+/** Finalize the contact only after its target actually left the scene. */
+export function finalizeLeaveInterceptReplacement(
+  state: GameState,
+  actionId: string,
+  targetRemoval: RemoveResult | null,
+): boolean {
+  const ax = state.actionContexts?.[actionId];
+  const pending = ax?.pendingLeaveInterceptReplacement;
+  if (!ax || !pending || pending.stage !== 'target-leave' || !ax.apSnapshot
+    || !targetRemoval || targetRemoval.deferred
+    || targetRemoval.removed.uid !== pending.targetUid
+    || targetRemoval.removed.cardId !== pending.targetCardId
+    || !contactTargetOwner(state, ax, pending.targetUid, true)) return false;
+  delete ax.pendingLeaveInterceptReplacement;
+  judge(state, ax, targetRemoval);
+  ax.judgeResolved = true;
+  return true;
+}
+
+/**
  * 最終 AP 判定用の side format。state-machine.ts の formatContactSide と同形だが
  * (1) contact.ts が partner uid を受け取らない (snapshotAP 経由で uid を保持)、
  * (2) judge 時点の最終 AP を引数で受け取る、点が異なる。
@@ -541,9 +837,16 @@ export function computeOrder(
 export const contact = {
   canCutIn,
   cutIn,
+  cutInDeclaredNameSpec,
   canDisguise,
   disguise,
   pass,
   judge,
+  canResolveLeaveIntercept,
+  resolveLeaveIntercept,
+  canAdvanceLeaveInterceptReplacement,
+  advanceLeaveInterceptReplacement,
+  advanceLeaveInterceptReplacementAfterResume,
+  finalizeLeaveInterceptReplacement,
   computeOrder,
 };

@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { engine } from '@/engine';
 import { produce } from '@/engine/produce';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../../helpers/main-game-state';
 import { mustTargetCandidates } from '@/engine/flow/action/target-expander';
 import { D08026 } from '@/cards/ct-d08/D08026';
 import { D11005 } from '@/cards/ct-d11/D11005';

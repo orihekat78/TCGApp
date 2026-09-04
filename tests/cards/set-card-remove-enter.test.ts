@@ -29,7 +29,18 @@ describe('B06012 self set-card removal', () => {
       scope: 'on-hand', effect: { kind: 'atom', verb: 'charSetCard', args: { fromSelf: true, n: 1, filter: { color: '青', kind: 'character' } } },
     });
     expect(B06012.abilities[1]).toMatchObject({
-      scope: 'on-set-host', type: 'triggered', trigger: { hook: 'contact:start', selfOnly: true },
+      scope: 'on-set-host',
+      type: 'triggered',
+      trigger: {
+        hook: 'contact:start',
+        matcherCondition: {
+          kind: 'or',
+          cs: [
+            { kind: 'triggerCharMatches', payloadKey: 'aUid', requireSource: true },
+            { kind: 'triggerCharMatches', payloadKey: 'bUid', requireSource: true },
+          ],
+        },
+      },
       condition: { kind: 'charMatches', ref: { kind: 'self' }, filter: { trait: '少年探偵団' } },
     });
     expect(B06012.abilities[2]).toMatchObject({

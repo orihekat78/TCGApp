@@ -12,7 +12,7 @@ const a2: AbilityDef = {
   effect: { kind: 'chain', steps: [
     { kind: 'atom', verb: 'bindPick', args: { cardIds: '$pick.cardIds', bind: '$chosen', target: { kind: 'pick', chooser: 'opp-of-owner', n: { min: 1, max: 1 }, query: { area: 'remove', side: 'self', fromCostPaidCards: 'removeStackedCards', filter: { kind: 'character' } } } } },
     { kind: 'conditional', if: { kind: 'boundMatchesFilter', bindKey: '$chosen', filter: { kind: 'character', levelMax: 8, trait: '少年探偵団' } }, then: { kind: 'sequence', steps: [
-      { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$chosen.cardId', from: 'remove', sourceRequired: true, viaEffect: true, selectedCardIndex: '$chosen.index', target: { kind: 'pick', chooser: 'self', n: { min: 1, max: 1 }, query: { area: 'remove', side: 'self', fromGroupCards: '$chosen' } } } },
+      { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$chosen.cardId', from: 'remove', sourceRequired: true, viaEffect: true, deferSceneSwitchChoice: true, selectedCardIndex: '$chosen.index', target: { kind: 'pick', chooser: 'self', n: { min: 1, max: 1 }, query: { area: 'remove', side: 'self', fromGroupCards: '$chosen' } } } },
       { kind: 'atom', verb: 'sceneRemove', args: { uid: '$self', cause: 'effect' } },
       { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } },
     ] } },

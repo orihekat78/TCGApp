@@ -115,6 +115,41 @@ beforeEach(() => {
 });
 
 describe('runDeclaredAbilityFlow', () => {
+  it('preflights a mandatory all-card declaration before opening its name modal', async () => {
+    registerCardDef(makeCard('EventName', { kind: 'event', names: ['固有事件名'] }));
+    registerCardDef(makeCard('Source', {
+      abilities: [{
+        id: 'a1', type: 'declared', scope: 'on-scene',
+        effect: {
+          kind: 'atom', verb: 'declareName',
+          args: { bind: 'named', domain: 'registered-card-name' },
+        },
+        description: 'カード名を指定', ruleRefs: [],
+      }],
+    }));
+    const state = produce(setupBase(), draft => {
+      mutate.scene.enter(draft, 'self', 'Source', { active: true });
+    });
+    useGameStateStore.setState({ gameState: state });
+    const uid = state.players.self.scene.find(card => card.cardId === 'Source')!.uid;
+
+    const promise = runDeclaredAbilityFlow({ player: 'self' });
+    const phase = useTargetPickerStore.getState().phase;
+    expect(phase).toMatchObject({
+      phase: 'picking', purpose: 'declared-ability:source', candidates: [uid],
+    });
+    await pickAndConfirmPicker(uid);
+    await acceptConfirmation();
+    const request = useDeclareNamePickerStore.getState().current;
+    expect(request?.domain).toBe('registered-card-name');
+    expect(request?.candidateNames).toContain('固有事件名');
+    const resolver = useDeclareNamePickerStore.getState()._resolver!;
+    useDeclareNamePickerStore.getState()._setCurrent(null);
+    useDeclareNamePickerStore.getState()._setResolver(null);
+    resolver({ kind: 'declare', name: '固有事件名' });
+    expect((await promise).ok).toBe(true);
+  });
+
   it('offers only registered character names for a constrained declaration', async () => {
     registerCardDef(makeCard('Allowed', { names: ['毛利小五郎'] }));
     registerCardDef(makeCard('EventName', { kind: 'event', names: ['黒の組織の事件'] }));
@@ -190,6 +225,148 @@ describe('runDeclaredAbilityFlow', () => {
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.some((c) => c.uid === providerUid)).toBe(false);
     expect(after.players.self.scene.find((c) => c.uid === targetUid)?.state).toBe('active');
+  });
+
+  it('lets the player choose the exact active character used for a sleepChar cost', async () => {
+    registerCardDef(makeCard('SleepSource', {
+      abilities: [{
+        id: 'a1', type: 'declared', scope: 'on-scene', description: '', ruleRefs: [],
+        cost: {
+          kind: 'sleepChar',
+          target: {
+            kind: 'pick',
+            query: { area: 'scene', side: 'self', filter: { trait: 'payer' } },
+            n: { min: 1, max: 1 },
+            chooser: 'self',
+          },
+        },
+        effect: { kind: 'atom', verb: 'noop', args: {} },
+      }],
+    }));
+    registerCardDef(makeCard('FirstPayer', { names: ['Payer'], traits: ['payer'] }));
+    registerCardDef(makeCard('ChosenPayer', { names: ['Payer'], traits: ['payer'] }));
+    const state = produce(setupBase(), (draft) => {
+      mutate.scene.enter(draft, 'self', 'SleepSource', { active: true });
+      mutate.scene.enter(draft, 'self', 'FirstPayer', { active: true });
+      mutate.scene.enter(draft, 'self', 'ChosenPayer', { active: true });
+    });
+    useGameStateStore.setState({ gameState: state });
+    const sourceUid = state.players.self.scene.find((card) => card.cardId === 'SleepSource')!.uid;
+    const firstUid = state.players.self.scene.find((card) => card.cardId === 'FirstPayer')!.uid;
+    const chosenUid = state.players.self.scene.find((card) => card.cardId === 'ChosenPayer')!.uid;
+
+    const promise = runDeclaredAbilityFlow({ player: 'self' });
+    await pickAndConfirmPicker(sourceUid);
+    await acceptConfirmation();
+
+    const paymentChoice = useChoicePickerStore.getState().current;
+    expect(paymentChoice?.options).toEqual([
+      { index: 0, label: 'Payer（現場2）' },
+      { index: 1, label: 'Payer（現場3）' },
+    ]);
+    await chooseAbilityOption(1);
+
+    expect((await promise).ok).toBe(true);
+    const after = useGameStateStore.getState().gameState!;
+    expect(after.players.self.scene.find((card) => card.uid === firstUid)?.state).toBe('active');
+    expect(after.players.self.scene.find((card) => card.uid === chosenUid)?.state).toBe('sleep');
+  });
+
+  it('resolves a chosen stunChar branch with the exact second same-name payer', async () => {
+    registerCardDef(makeCard('ChoiceSource', {
+      abilities: [{
+        id: 'a1', type: 'declared', scope: 'on-scene', description: '', ruleRefs: [],
+        cost: {
+          kind: 'choice',
+          items: [
+            { kind: 'sleepChar', target: { kind: 'pick', query: { area: 'scene', side: 'self', filter: { trait: 'payer' } }, n: { min: 1, max: 1 }, chooser: 'self' } },
+            { kind: 'stunChar', target: { kind: 'pick', query: { area: 'scene', side: 'self', filter: { trait: 'payer' } }, n: { min: 1, max: 1 }, chooser: 'self' } },
+          ],
+        },
+        effect: { kind: 'atom', verb: 'noop', args: {} },
+      }],
+    }));
+    registerCardDef(makeCard('FirstChoicePayer', { names: ['Payer'], traits: ['payer'] }));
+    registerCardDef(makeCard('SecondChoicePayer', { names: ['Payer'], traits: ['payer'] }));
+    const state = produce(setupBase(), (draft) => {
+      mutate.scene.enter(draft, 'self', 'ChoiceSource', { active: true });
+      mutate.scene.enter(draft, 'self', 'FirstChoicePayer', { active: true });
+      mutate.scene.enter(draft, 'self', 'SecondChoicePayer', { active: true });
+    });
+    useGameStateStore.setState({ gameState: state });
+    const sourceUid = state.players.self.scene.find((card) => card.cardId === 'ChoiceSource')!.uid;
+    const firstUid = state.players.self.scene.find((card) => card.cardId === 'FirstChoicePayer')!.uid;
+    const secondUid = state.players.self.scene.find((card) => card.cardId === 'SecondChoicePayer')!.uid;
+
+    const promise = runDeclaredAbilityFlow({ player: 'self' });
+    await pickAndConfirmPicker(sourceUid);
+    await acceptConfirmation();
+    await chooseAbilityOption(1);
+    expect(useChoicePickerStore.getState().current?.options).toEqual([
+      { index: 0, label: 'Payer（現場2）' },
+      { index: 1, label: 'Payer（現場3）' },
+    ]);
+    await chooseAbilityOption(1);
+
+    expect((await promise).ok).toBe(true);
+    const after = useGameStateStore.getState().gameState!;
+    expect(after.players.self.scene.find((card) => card.uid === firstUid)?.state).toBe('active');
+    expect(after.players.self.scene.find((card) => card.uid === secondUid)?.state).toBe('stun');
+  });
+
+  it('rejects an out-of-range character-cost picker index instead of treating it as cancellation', async () => {
+    registerCardDef(makeCard('InvalidChoiceSource', {
+      abilities: [{
+        id: 'a1', type: 'declared', scope: 'on-scene', description: '', ruleRefs: [],
+        cost: { kind: 'sleepChar', target: { kind: 'pick', query: { area: 'scene', side: 'self', filter: { trait: 'payer' } }, n: { min: 1, max: 1 }, chooser: 'self' } },
+        effect: { kind: 'atom', verb: 'noop', args: {} },
+      }],
+    }));
+    registerCardDef(makeCard('InvalidChoicePayerA', { traits: ['payer'] }));
+    registerCardDef(makeCard('InvalidChoicePayerB', { traits: ['payer'] }));
+    const state = produce(setupBase(), (draft) => {
+      mutate.scene.enter(draft, 'self', 'InvalidChoiceSource', { active: true });
+      mutate.scene.enter(draft, 'self', 'InvalidChoicePayerA', { active: true });
+      mutate.scene.enter(draft, 'self', 'InvalidChoicePayerB', { active: true });
+    });
+    useGameStateStore.setState({ gameState: state });
+    const sourceUid = state.players.self.scene.find((card) => card.cardId === 'InvalidChoiceSource')!.uid;
+
+    const promise = runDeclaredAbilityFlow({ player: 'self' });
+    await pickAndConfirmPicker(sourceUid);
+    await acceptConfirmation();
+    expect(useChoicePickerStore.getState().current?.options).toHaveLength(2);
+    await chooseAbilityOption(999);
+
+    await expect(promise).resolves.toEqual({ ok: false, reason: 'not-allowed' });
+    expect(useGameStateStore.getState().gameState).toEqual(state);
+  });
+
+  it('keeps a character-cost picker cancellation distinct from an invalid choice', async () => {
+    registerCardDef(makeCard('CancelChoiceSource', {
+      abilities: [{
+        id: 'a1', type: 'declared', scope: 'on-scene', description: '', ruleRefs: [],
+        cost: { kind: 'stunChar', target: { kind: 'pick', query: { area: 'scene', side: 'self', filter: { trait: 'payer' } }, n: { min: 1, max: 1 }, chooser: 'self' } },
+        effect: { kind: 'atom', verb: 'noop', args: {} },
+      }],
+    }));
+    registerCardDef(makeCard('CancelChoicePayerA', { traits: ['payer'] }));
+    registerCardDef(makeCard('CancelChoicePayerB', { traits: ['payer'] }));
+    const state = produce(setupBase(), (draft) => {
+      mutate.scene.enter(draft, 'self', 'CancelChoiceSource', { active: true });
+      mutate.scene.enter(draft, 'self', 'CancelChoicePayerA', { active: true });
+      mutate.scene.enter(draft, 'self', 'CancelChoicePayerB', { active: true });
+    });
+    useGameStateStore.setState({ gameState: state });
+    const sourceUid = state.players.self.scene.find((card) => card.cardId === 'CancelChoiceSource')!.uid;
+
+    const promise = runDeclaredAbilityFlow({ player: 'self' });
+    await pickAndConfirmPicker(sourceUid);
+    await acceptConfirmation();
+    await cancelAbilityChoice();
+
+    await expect(promise).resolves.toEqual({ ok: false, reason: 'cancelled' });
+    expect(useGameStateStore.getState().gameState).toEqual(state);
   });
 
   it('not-allowed when no scene char has declared abilities', async () => {

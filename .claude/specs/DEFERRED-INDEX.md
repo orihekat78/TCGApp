@@ -52,7 +52,7 @@ setActionCutinBanFilter・$removed dyn・charRemoveSetCard/sceneRemove bind。
 | B09078 | 1 window から dual-filter 二重 pick + reveal-to-remove 複合 |
 | B09039 a2 | handAddFromRemove 0-add 時の chainStepNoApply gate 不在 (過剰 discard) |
 | B08002 a2 (card のみ — $removed dyn は出荷済) | dual-pick (remove-card + scene-host≠source) 不在 |
-| B08078 | 他カード ability の外部 hook 発火機構不在 (removeKeywordAtLeast cond 単体は trivial だが exemplar 不可) |
+| ~~B08078~~ | ✅ `removeFilterAtLeast` + `invokeLeaveToRemoveOfCard` は出荷済み。Wave184でnested optional、条件不成立no-op、draw起因refresh後のsnapshot invokeをpublic認定 |
 | B05097 は choice{mill 0..N} 代替で出荷済 — count-picker primitive は不要になった |
 
 ## ★夜間 Wave B 上書き節 (2026-07-11 night-run — 同上、本節優先)
@@ -76,8 +76,8 @@ hiramekiResolve humanChooser (hirameki 内 optional の human surface 実バグ�
 **DEFER**: B07001 (cost-removed trait-count dyn 不在 — costRemovedMatches は threshold のみ) /
 B09109 a2 (revealFromHand costPaid cardName + resolveBindRef $cost 非対応)。
 **NIT (記録)**: B09081 a2「1枚まで」が optional 諾否に折込 (B03085/B05111 踏襲、候補常 1 体)。
-**Wave C 残 (次 session 候補)**: ~~B05093~~ **SHIPPED (WC2a)** / B02086 依然 DEFER (optional chooser+else+AI-drain infra 別途要、上記 B02086 行参照) / B06023+B06036+B06034 (hirameki invoke-by-cardId) / B06020+B07003 (hand-zone
-cutin aura) / B03042 B04055 B09033 PR279 B03093 / 重: B02022 B05033 B08003 /
+**Wave C 残 (次 session 候補)**: ~~B05093~~ **SHIPPED (WC2a)** / B02086 依然 DEFER (optional chooser+else+AI-drain infra 別途要、上記 B02086 行参照) / ~~B06023+B06036+B06034~~ **SHIPPED (WC2b/Wave138/153)** / B06020+B07003 (hand-zone
+cutin aura) / B03042 B04055 B09033 PR279 B03093 / 重: B02022 B05033 /
 T3: B06025 B08059 B02039 B01082 D06013 B09024 / Wave D `untargetableByOppEffect` 実装・gate中。
 
 ## 公式 defer 宣言済 (専用ファイルあり)
@@ -91,7 +91,7 @@ T3: B06025 B08059 B02039 B01082 D06013 B09024 / Wave D `untargetableByOppEffect`
 
 | 繰越元 | 内容 | 状況 |
 |--------|------|------|
-| Cleanup Phase 中/大規模 #1 | 動的式評価括弧 | `src/engine/dyn/eval.ts:13,145` TODO Phase 5 |
+| ~~Cleanup Phase 中/大規模 #1~~ | ✅ 動的式の標準優先順位・括弧は出荷済。Wave174で直接unitと記録を再固定 | ✅ 解消 |
 | Cleanup Phase 中/大規模 #2 | AI コスト選択ロジック拡張 | undocumented (S148 session log のみ) |
 | Cleanup Phase 中/大規模 #3 | AI ヒューリスティック「有用カード操作」(大) | undocumented |
 | Cleanup Phase 中/大規模 #6 | Playmat レスポンシブレイアウト | undocumented |
@@ -154,7 +154,7 @@ cluster16 G1 `cardNameNot` で解消済**。出荷 changelog: [2026-06-16-08](..
 | `setcard:enter` hook + `setCardMatches` cond | mutate/char.ts setCard が push 後 emit (set-card-add の唯一書込点)。host-self=selfOnly。set card filter は faceUp===true のみ (rules/16 裏向き=情報無) | B02018 (host-self, face-down) / B06046・B06046P (〚特徴YAIBA〛filter, face-up set) |
 | `enterCountAtMost` cond | turnState[p].enterCountThisTurn ≤ n の player-resolved 直読 (removeCountAtLeast 同型) | B09089 (「このターン自分の現場に登場していない場合」, sole gate) |
 | `handAddFromDeckBottom` verb | デッキ末尾 (=下) 1枚を手札へ。take 前後で deck0 refresh (rules/14, B03051 Q&A) | B03051 (sole gate) |
-| `$self.oppSceneCount` dyn | resolveSelf に opp 現場枚数 prop (continuous AP aura 足場、static length 読み) | B08086 (sole gate) |
+| `$self.oppSceneCount` dyn | resolveSelf に opp 現場枚数 prop (continuous AP aura 足場、static length 読み) | ✅ B08086出荷済み。Wave185で0/1/3枚・owner mirror・turn/partner decoyをpublic認定 |
 | selfToEvidence gainCard idx===-1 harden | fromArea='remove' で source 不在なら証拠化せず return (B06026 Q&A / rules/14)。全 shipped selfToEvidence=event 同期解決で分岐未踏=挙動不変 | B06026 (a2 の必要条件、char-leave 経路は card session で要検証) |
 
 **latent 概念 (review 記録、現状 unhit)**: (1) enterCountAtMost は STABLE cond ゆえ pre-walk eval → 同一 sequence で
@@ -177,9 +177,9 @@ opus 4-lens 敵対 review = 全 ship:true / blocker 0。
 
 | companion (未実装、follow-up wave) | 解禁待ちカード |
 |------|------|
-| **ability-presence filter** (TargetFilter「【現場リムーブ時】を持つ」) | B08082 a1 / B08093 a1 |
+| ~~**ability-presence filter** (TargetFilter「【現場リムーブ時】を持つ」)~~ | ✅ `defHasKeyword` 出荷済み。B08082はWave185、B08093はWave186でinactive印字能力の候補化をpublic認定 |
 | **$revealed 色読み condition** (公開カードの色分岐。bound は {cardId}[] 足場済、boundMatchesFilter は bound[0] のみ) | B07022 第2句 |
-| **UI awaiting-pick label + AI pick heuristic** (非ブロッカー、removeSetCard UI picker と同じ defer) | B08082/B07022 (atom pick) / B08093 (cost pick) — カード出荷 session で **Playwright 実機 probe 必須** (memory: carrier-reuse human-path-empirical、AI-pass=false-green) |
+| **UI awaiting-pick label + AI pick heuristic** | B07022 atom pickのみ残。B08093 cost pickはWave186でexact hand occurrence選択とcost公開windowを出荷・public認定 |
 
 ※ handReveal 単独ではカード出荷不可。各カードは上記 companion が残 gate。
 
@@ -241,11 +241,11 @@ relative-AP (B09096) は本 session で **stale 訂正** (engine変更0 と判�
 | auraGrant (AP/LP buff) | **✅ 解消 (2026-06-15 cluster13)**: continuous OWNER-ONLY 制約を解除し、他キャラへの数値 aura (apDeltaAura/lpDeltaAura + auraFilter + auraExcludeSelf) を board-scan reader で実装。11 printings 出荷 | 完了 — branch engine/wave2-cluster13-aura-grant |
 | auraGrant (triggered 付与) | 常時 aura で他キャラに **triggered 能力テキスト**を付与 (B09024 a1「他キャラに【現場リムーブ時】を与える」) | **✅ 解消 (2026-07-13, uncommitted)**: `triggeredAbilityAura` reader は付与元UIDを合成ability IDへ含め、各abilityを一度だけqueueする。batch remove の発火時点snapshotも実装。 |
 | partner-area 構造 | ビッグジュエル B07045 / MR 列挙 B09047 / MR能力①② (rules/18) | **Phase1 engine core 実装済 (2026-06-23, engine/mr-partner-area-core)**: partnerAreaMR slot + MR①②(全 leave verb / enter-removal) + PA-MR reader spine (byUid/continuous/declared/auto活性) + canDeclaredAbility PA scope gate。4-lens 敵対review=REVISE 反映。残: Phase2=UI / 3=AI / 4=card wave (SOLE 15)。未解決4件+暫定5件=[BUG-154](../bugs/BUG-154.md)。設計=[design](engine-mr-partner-area-design.md)+[cohort](engine-mr-partner-area-cohort.md)。**ビッグジュエル列挙: wave-12 (2026-07-02) で PA 一般カード枠 spine (partnerAreaCards + toPartnerArea + candidates 列挙) 出荷済** — 残 = PA→remove 移動 verb (B07037) + PA 読み Condition (B07045/PR263)、下段 wave12-pa-cards 節参照 |
-| 「パートナーエリアでも宣言できる/発動する」句 | B07079/P・B08032/P・B09054/P + B07093/B05066 | **engine 配線済 (2026-06-23)**: MR①② は本5枚で有効化。PA 常駐 MR の宣言能力 (scope on-partner-area) は使用可。card固有 scope 補正は Phase 4 wave で per-card 対応 |
-| name-designation | 「カード名を1つ指定し」UI+条件 (B09003/B09108/B09111/B09052) | 宣言 UI surface + designated-name 比較 condition |
+| ~~「パートナーエリアでも宣言できる/発動する」句~~ | B07079/P・B08032/P・B09054/P + B07093/B05066 | **✅ 解消**: `scope:'on-partner-area'` を各CardDefへ配線済み。Wave178でB08032の現場自己選択も公開認定 |
+| name-designation | B09111/B09052の個別残課題 | B09003/B09108/PR105の宣言UI・比較条件は出荷済み。Wave187でB09003のrefresh後name snapshotをpublic認定 |
 | ~~multi-card sceneEnter~~ | **✅ 解消 (2026-06-15 cluster14)**: sceneEnter に cardIds:'$pick.cardIds' 契約 + switchRemoveUids[] (現場満杯 switch) を additive 拡張。distinctNames AI dedup + skipResolvesAtom (0枚でも後続 step 解決)。B09010/P + PR042/PR046 計 4 printings 出荷 | 完了 — branch engine/wave2-cluster14-multi-sceneenter。残 B01022 (multi-match deckRevealUntil) / B05117 (persistent set-granted leave ability) は別 gate |
 | ~~nested filter dyn~~ | **✅ 解消 (2026-06-15 cluster12)**: pick query filter 内の {dyn} (levelMax 等) を substituteAtomPick chokepoint で解決。B08060 + 「小さくなった名探偵」family 15 printings 出荷。残 B05102/B09052 は **別 gate** (B05102=hirameki self-to-hand / B09052=rename verb + name-designation) のため対象外 | 完了 — branch engine/wave2-cluster12-nested-filter-dyn |
-| until-N discard / reveal verb 等 | B07076/B07100/B08047 a2/B08093 a1 | **hand-reveal verb = 出荷済 (2026-06-28、下記 §handReveal)**。残 = 可変 count atom (B07076/B07100/B08047 a2) / B08093 a1 は ability-presence filter 待ち |
+| until-N discard / reveal verb 等 | B07076 | **B08047 a2は`removeFromHandDownTo`で解消しWave179認定**。B07100はWave174、B08093 ability-presence/reveal costはWave186で解消。残=B07076 effect variant |
 
 ## Task A green候補 wave#2 defer (2026-06-12, cards/wave2-handauthor)
 
@@ -254,7 +254,7 @@ relative-AP (B09096) は本 session で **stale 訂正** (engine変更0 と判�
 | ~~B08020/P~~ | **✅ 再採用済 (2026-06-12 engine拡張 wave#2)**: BUG-132 GAP-1/2 修正 (chooseMatch decline channel + declaredBatch gate/遅延 pick) 後に hand-author で出荷。実機 decoy 検証済 (a1 色+kind filter / decline / a2 解決順+AP filter) | 完了 — branch engine/wave2-bug132 |
 | ~~B07052~~ | **✅ 解決済 (2026-06-15 赤魔術 family)**: 「赤魔術 はどのカードにも無い」は **stale 誤認**。一次 API の `category1/2/3` (特徴の正本) に 赤魔術 が実在 (B07055/B07058 event, B07062 case)。TSV 抽出が event/case の category-trait を全件 drop していたのが真因 (field-drop, BUG-124 同族)。per-card で trait 補完 → B07052 実装 + B07062 latent 解消 | 完了 — branch cards/akamajutsu-trait (changelog 2026-06-15-04)。残課題は下記 known-gap |
 | ~~B02026~~ | ✅ **出荷済 (2026-06-21、`cards/wave-dsl-reauthor`)**。a1 に空 `filter:{}` を付与 (eval.ts:298 が filter 存在時のみ scene 走査 → partner 除外、kind:character 不要)。敵対verify 2/2 ship・decoy 1対1。changelog 2026-06-21-01 | ✅ 出荷済 |
-| B07104 | refuted(fatal): 【パートナー黒】を step1 のみ conditional 化 (全 ability gate が正) + PA pick 非終端 step で二重 grant desync | ability.condition 化 + PA ordering 対応 |
+| ~~B07104~~ | ✅ ability.conditionとPA orderingは出荷済。Wave174でaggregate mill、短デッキrefresh停止、AI実行時countをBUG-377として修正・認定 | ✅ 解消 |
 | B09038 | 🟢 **解禁 (BUG-111 #2 修正済)** — ~~refuted(fatal) ×2~~。a2 末尾の無条件 draw (「登場させ…セットし、カードを1枚引く」) が 0-enter human-decline で continuation [conditional,draw] ごと drop。draw を pick 前に reorder すると引いたカードが登場対象になり意味論非等価 → 不可 | BUG-111: 0-pick decline 時の必須末尾 step 保持 (engine) |
 | ~~B09097 / B09097P~~ | ✅ **出荷済 (2026-06-21、`cards/wave-dsl-reauthor`)**。bare-chain `discard{max:1}`(min:0=decline可、shipped twin B04056/D08003 と同型) で再author。DEFER note の optional ラップは不要 (敵対verify が「AI-policy divergence only / 有益効果の greedy-accept 妥当」と nit-ship 判定)。decoy 1対1。changelog 2026-06-21-01 | ✅ 出荷済 |
 
@@ -271,8 +271,8 @@ relative-AP (B09096) は本 session で **stale 訂正** (engine変更0 と判�
 
 | rep | 理由 (支配 gate) | 解禁条件 |
 |-----|------------------|---------|
-| B08078/P | a2「リムーブしたカードの【現場リムーブ時】の効果を発動させてもよい」= 他カード hook 効果の外部発火機構が engine に不存在 (grep 0 hit、cluster2 最難)。a1 は X1+sceneHas で可能だが partial 出荷はしない | 外部発火機構の設計 (独立クラスタ) |
-| B08082 | a1 = **handReveal verb 出荷済 (2026-06-28) + colorNot 出荷済 (session60)** → 残 gate は **ability-presence filter (「【現場リムーブ時】を持つ」)** のみ。a2 (discard+colorNot+chain) は既に buildable | ability-presence filter |
+| ~~B08078/P~~ | ✅ `invokeLeaveToRemoveOfCard` とremove能力presence条件は出荷済み。Wave184で無効能力no-op・refresh後invokeをpublic認定 | ✅ 解消 |
+| ~~B08082~~ | ✅ handReveal + ability-presence filter + colorNot chain出荷済み。Wave185でinactive印字能力を公開可能とpublic認定 | ✅ 解消 |
 | B03133 | handAddFromRemove が単一 target のみ (「2枚まで手札に加える」不可) | multi-target handAddFromRemove |
 | B06020 | **triage 誤分類** (cutin-subtype filter ではなく「手札 zone への continuous aura 付与」+ startContact stub)。a1 = hand aura (continuous は owner/scene 限定)、a2 = startContact placeholder | hand-zone aura + startContact 実装 (wave#1 繰越 auraGrant と同族) |
 | ~~B07098/P~~ | ~~「リムーブエリアにある【カットイン】を持つ【黒】のカード1枚につき AP+1000」の remove-area keyword-count dyn 不在~~ | ✅ **解禁** (2026-06-15 triage-greens batch): count-dyn ではなく `forEach over:{all, query:{area:'remove', filter:{keyword:'カットイン', color:'黒'}}}` で per-card AP+1000 (engine `target/candidates.ts:160` remove 列挙 + color/keyword filter + BUG-122)。runtime decoy test 44 assertions green |
@@ -282,7 +282,7 @@ relative-AP (B09096) は本 session で **stale 訂正** (engine変更0 と判�
 
 | 項目 | 内容 | 状況 |
 |------|------|------|
-| 付与能力の presence | B07100 qAndA は「付与も持つ」だが defHasKeyword は CardDef 静的のみ (turnEffects 付与分は不参加)。cluster2 出荷 10枚には grant 源が共存しないため実害なし | B07100 (handReveal gate) 出荷時に state-aware reader へ拡張 |
+| ~~付与能力の presence~~ | ✅ Wave174 BUG-376。off-scene handのCut-In filterを`effectiveCutinAbilities`へ統一し、B07003の動的付与と無効条件付き印字Cut-Inを認定 | ✅ 解消 |
 | 能力無効化中の presence | rules/19 文理は「持たない」だが既存 4 アイコンも static 判定 (無効化中も match)。直接 Q&A なし | 要公式照会 (talk002) |
 | 疾風×名乗り例外の rules 不整合 | rules/03・06 は疾風を名乗り例外に列挙、rules/13 は迅速/突撃のみ。engine は疾風の naming-exception 未実装 | 公式 PDF 再確認 (impl lens F9、独立タスク) |
 | ~~BUG-140 残 74枚~~ | **✅ 補修済 (2026-06-13 BUG-140 wave)**: 52 ファイル直接 patch + 22 spread 継承。`npm run lint:icon-abilities` 化 (CI 規約 8 本目)。DEFER 2 枚は下記 | 完了 — branch fix/bug-140-icon-abilities |
@@ -292,13 +292,13 @@ relative-AP (B09096) は本 session で **stale 訂正** (engine変更0 と判�
 | rep | 理由 (支配 gate) | 解禁条件 |
 |-----|------------------|---------|
 | B05039 | cutin「〚特徴［探偵］〛のキャラに【カットイン】した場合、カードを1枚引く」— コンタクト対象キャラ ($contact.byUid) の特徴を評価する Condition が union に不在 (triggerCharMatches は trigger payload uid 限定)。AP+1000 のみの partial 出荷は語義不一致のため見送り | contact-char trait condition 追加 (lint allowlist `B05039:cutin` と同期) |
-| B06035 | hirameki「【事件YAIBA】【解決編】手札を1枚リムーブしてもよい。そうした場合、キャラを1枚まで選び、リムーブする」— hirameki fire 経路 (hiramekiResolve の chooseAtomTarget auto-resolve) 内での chain (してもよい→そうした場合) + caseTrait/caseStatus 条件 gate の挙動が未確証 | fire 経路の chain/condition 検証後に再採用 (lint allowlist `B06035:hirameki` と同期) |
+| ~~B06035~~ | **✅ 解決済 (2026-08-24 Wave69)**: public Hirameki fire/skip、caseTrait/caseStatus、invalid text no-op、save hydrationを実証 | 完了。実在YAIBA事件B06036/P・B06065/Pのtrait backfillもBUG-343で固定 |
 
 ## engine拡張 wave#2 cluster3 (action-lifecycle trigger) defer (2026-06-13, engine/wave2-action-triggers)
 
 | rep | 理由 (支配 gate) | 解禁条件 |
 |-----|------------------|---------|
-| B06049 | a2「アクション終了時まで相手の【ヒラメキ】は発動しない」= ヒラメキ抑止機構 + side-level「アクション終了時まで」flag が engine に不存在 (hirameki.ts / handleEvidenceRemovedHook に抑止参照点なし、turnEffects は per-char)。a1 突撃句は X8(enter+sceneHas) で可能だが partial 出荷はしない (cluster 方針) | ヒラメキ抑止窓 (side-level action-scope flag) の設計 (独立クラスタ) |
+| ~~B06049~~ | ✅ **出荷済**。a1 は enter 時 `sceneHas` snapshot から turn-scope `突撃` を付与。a2 は `setHiramekiSuppress` → opponent `turnState`、triggered listener抑止、action-end清掃を配線済み。Wave156 public proofでa1の非遡及・付与後持続を両owner確認。 | ✅ resolved |
 
 ### cluster3 で記録した既知ギャップ (カード defer ではない)
 
@@ -320,7 +320,7 @@ relative-AP (B09096) は本 session で **stale 訂正** (engine変更0 と判�
 
 | 項目 | 内容 | 状況 |
 |------|------|------|
-| B08066 leave:remove-area 反応 | 公式Q&A は removeAreaToDeckBottom cost で《諸伏高明/0585》《大和敢助/0586》の「リムーブエリアから離れたとき」発動を要求。engine に `leave:remove-area` hook 不在 (TRIGGERED_HOOKS は leave:to-remove=現場→remove のみ) + 反応元 B05087/B05088 未実装のため安全に DEFER (盤面に反応カードなし) | それら実装時に leave:remove-area hook 追加 + removeAreaToDeckBottom pay の emit 再配線 (B05088 が同 cost 共有) |
+| ~~B08066 leave:remove-area 反応~~ | ✅ `remove:exit`、`mutate.remove.removeFromHere`、B05087/B05088は出荷済み。Wave182でB08066 costから両observerの同時発動・owner-orderをpublic認定 | ✅ 解消 |
 | removeAreaToDeckBottom UI picker | first-n fallback (sceneToDeckBottom 同 posture)。複数候補時に人間が選べない (UX 制限、rules 誤りではない) | costParams.removeAreaToDeckBottom.ids 配線済 → RemoveAreaCostPickerModal を drop-in 追加 (engine 変更不要) |
 
 ## ✅ self-state micro-cluster (BUG-145, 2026-06-15 修正済) — self-sleep optional gate
@@ -402,7 +402,7 @@ cluster11 候補 B01014/B01015/B01021 + B07019 を実装着手。新 condition `
 
 | 項目 | 内容 | 状況 |
 |------|------|------|
-| TSV 抽出の event/case category-drop (systemic) | cards-data の TSV は **event/case の `category1/2/3` (= 特徴) を全件 drop** している (event.tsv/case.tsv に features 列が無い)。一次 API `_raw/*.json` の `category` が特徴の正本。**実測 blast-radius (2026-06-15-2 triage, 決定論 audit)**: 実装済 event 76 / case 65 を API category と全件突合 → dropped-trait は **case 0件 / event 1件 (B06035 の YAIBA、既に hirameki fire-path 理由で DEFER 済)**。MVP deck (D08/D11) は手書きで API 以前のため対象外 (D08026=古城/D11021=婚活 正常)。**= 現出荷カードへの live 影響ほぼ 0**。systemic fix は future-proof のみ (per-card certify が新規実装時に捕捉、赤魔術 family が実証) | **低 urgency に格下げ**。必要なら TSV gen 側で category→traits/caseTraits を carry (全 event/case def に影響→smoke/挙動の広域確認が要る、別タスク) |
+| TSV 抽出の event/case category-drop (systemic) | cards-data TSVはevent/caseのcategory1/2/3をdropするため、一次APIを特徴の正本とする。2026-08-24再監査でB06035 eventとB06036/B06065 case（計5 base/P印刷）を確認し、全CardDefへYAIBAをbackfill済み | parser全体変更は広域影響のため継続backlog。per-card groundingでraw API照合を必須化し、BUG-343 testが現YAIBA事件4印刷を固定 |
 | charRemoveSetCard `n:N` の候補不足時 clamp | PA短縮形 pick の **強制ちょうど N 枚は `n:N` (number)**、`max:N` は 0..N。候補が N 未満のとき `n:N` は available 数へ clamp。さらに certify が **AI/CPU 経路 (resolve-picks Pattern A) は picked 1体のみ解決** し chain が reanimate/bonus へ進む点を指摘 (家族共通)。B07055 a1・**B07031 a2 (B07031P 同、2026-07-02 P clone 出荷)** が同構造 | HUMAN 経路 (apply-pick per-uid) と test (drain pickedUids) は計2枚で正。両カードとも非MVP=smoke/CPU 不在で live 影響なし。strict 化は engine backlog (公式 Q&A 未裁定) |
 
 ## ✅ cluster12 (nested-filter-dyn) — FILE枚数以下レベルの登場 15枚 出荷 (2026-06-15, engine/wave2-cluster12-nested-filter-dyn)
@@ -442,7 +442,7 @@ window4 残 8 rep を per-card certify (opus grounding→敵対 verify)。green 
 | rep | 理由 (支配 gate) | 解禁条件 |
 |------|------|------|
 | B03056 | **refuted(fatal)**: a2 が `conditional{if: sceneHas(探偵 sleep nMin:3), then: optional{...}}` 構造。engine の resolveEffectPicks walk が conditional.if 評価**前**に optional を human へ eager surface し、resume 時に conditional ラッパを落とすため、3枚未満でも証拠獲得+自己リムーブが発火 (敵対 verifier が実証: evidence 0→1, self removed, cond false)。**新規 gate: conditional-gated-optional surfacing**。a1 (登場時 deck-look) は green | optional surface の conditional 再ゲート (engine) or 条件を ability.condition / optional 自身の gate へ再構成 |
-| B08033 | yellow: ability2 のコスト「現場のキャラにセットされた裏向きカードを合わせて2枚リムーブ」= **set-card-removal COST kind 不在** (Cost union に該当なし、charRemoveSetCard は EFFECT verb のみ)。effect 化は意味論違反 (canPay gate 喪失)。a1 (登場時 set) は green | 新 Cost kind `removeSetCardFromScene{n}` を cost/evaluate+pay へ配線 (engine) |
+| ~~B08033~~ | **✅ 解消**: `removeSetCard n:2` costをengine/UIへ配線済み。Wave178で自分の2 hostから1枚ずつ払う公式経路を認定 | — |
 | B05027 | yellow: **MR partner-area structure** gate。ability2「この能力はパートナーエリアでも発動する」= 40枚デッキ MR が partner-area 常駐する GameState slot 不在 (collectCardsInPlay は scene+本体partnerのみ列挙)。MR能力①② (rules/18) も未配線 | partner-area card slot + MR enumeration (XL) |
 | B01057 | yellow: event-self-set (charSetCard は fromDeckTop のみ) + **set-card→host triggered 能力付与** gate + 付与する【現場リムーブ時】が granted-ability validator 棄却 (handleLeaveToRemoveSelf は turnEffects.grantedAbilities 非走査) | set-card→host 能力付与機構 (engine) |
 | B02031 | yellow: event-self-set + **set-card→host へ 突撃[キャラ]+action-target拡張の継続付与** gate (read/char は set card を ability/keyword 付与源に読まない) | set-card→host 付与 + action-eligibility 拡張 |
@@ -458,18 +458,18 @@ window5 = fresh green候補 20 rep を per-card certify (opus grounding→敵対
 > ([BUG-111.md](../bugs/BUG-111.md) / [bug-111-human-decline-fix-design.md](bug-111-human-decline-fix-design.md))。
 > - **B05028 = 誤診断**: chain over-fire は再現せず (5 シナリオ独立検証)。**修正不要で出荷可能** → 解禁。
 > - **B09038 = 修正で解禁**: sequence mandatory-tail (draw) の human-decline drop を修正。→ 解禁。
-> - **B09056 = DEFER 継続**: 実バグ (sequence under-fire) は修正済だが、末尾が 2択 `choice` で choice-in-continuation の
->   eager-surface (BUG-145 系) が fragile。choice surface 整備は別 engine 課題のため保留。
+> - **B09056 = ✅ 解消 (2026-08-23, BUG-336)**: choice-in-continuation 基盤は既に修正済み。
+>   公式Q&Aどおり常時2択を提示し、不成立optionをno-opにするCardDefへ修正・public検証。
 > 解禁 2 枚 (B05028/B09038) は後続バッチで card-wave 出荷。
 出荷 = B01065/B02038/B03031/B05024/B07041/B01076/B02041/B04051/B07057/PR237 (+各 P/clone)。残 (refuted 2 + gate5-defer 1 + yellow 7) は下記 (再選定防止)。
 
 | rep | 種別 | 理由 (支配 gate) | 解禁条件 |
 |------|------|------|------|
 | B05028 | 🟢 **解禁 (誤診断、上記解決参照)** | ~~宣言a1 chain[charRemoveSetCard, sceneRemove] の「そうした場合」が human-decline 経路で破綻。~~ (2026-06-16: 再現せず誤診断と判明、修正不要で出荷可能)set-card holder 在 + step1 を 0枚 decline すると step2 sceneRemove が**発火してしまう** (applyPickSkipAndContinuation が chain 残りを無条件実行、decline した charRemoveSetCard が `__chainStepNoApply` を立てない)。no-candidate 経路は substituteAtomPick で正しく break するが **candidate在+decline** が壊れる。AI は greedy で decline せず仮面化 → certify+敵対verify 見落とし、**gate5 実機テストが検出** | BUG-111: candidate在 pick の human-decline でも chain-gated continuation を drop (engine) |
-| B09056 | DEFER 継続 (choice-surface gap、BUG-111 underfire は修正済) | optional{sequence[自sleep, sceneRemove(0-pick), **必須choice**]}。レベル8以下 removal 候補在 + 0枚 decline で末尾の必須 choice (痕跡分岐: 黒復活/相手mill) が drop。「リムーブし、以下から1つ選んで行う」= choice は常時発火が正 | 同上 (BUG-111) |
+| ~~B09056~~ | ✅ 解消 (BUG-336) | optional→0枚remove→必須choiceをpublic経路で保持。痕跡不成立optionも選択可/no-op、成立optionのsleep entryまで検証。 | — |
 | ~~B04042/B04042P/B04084~~ | ✅ 出荷済 (2026-07-13) | `aggregateLevelMax` を resolver/human UI/AI の3経路に追加。B04084 は remove occurrence bind + active 1枚 / sleep remainder split entry。重複、0選択、budget、production dispatch を probe。| — |
 | B06032 | yellow | 【ヒラメキ】本体が top-level optional{chain[discard1, sceneEnter from:remove]} を要するが、hiramekiResolve 経路が humanChooser なしで resolveEffectPicks を呼ぶため top-level optional が常に skip → 再生効果が無音 no-op (BUG-145 同族) | hirameki 経路の top-level optional honor (engine) |
-| B08038 | yellow | 「この効果によって特徴[高校生]/[鈴木財閥]がリムーブされた場合」= **removed-by-this-effect** 条件。mill verb は bind せず、removeTraitAtLeast は remove パイル累積を見るため中盤で誤発火 (false-positive AP+1000) | mill bind + removed-by-this-effect condition (engine) |
+| ~~B08038~~ | ✅ 解消 | `mill bind:'$milled'` + `boundAnyMatchesFilter`を出荷済み。Wave179でdeck1 gate、2枚一致でも+1000一回、効果生成contactを認定 | — |
 | ~~PR236~~ | ✅ 出荷済 | **出荷済 (2026-06-21、`cards/wave-distinct-name-count`)**。`sceneHas` eval を `query.distinctNames` honor に拡張 (1分岐 additive、新 Condition kind 無)。PR236/PR242 (大和敢助 declared a2 宣言ゲート) + B08067/B08067P (諸伏高明 enter conditional) 計 **4 刷**。詳細下記「distinct-name-count cluster」 | — |
 | ~~B03033~~ | ✅ **engine 解禁** | 「相手の現場のセット済キャラを AP-1000」= cross-side 数値 aura。2026-06-29 `apDeltaAuraOpp`/`lpDeltaAuraOpp`/`auraFilterOpp` で解決 (`engine/bulk-additive-0629b`)。カードは card-wave で出荷 |
 | ~~B06033~~ | **✅ 出荷 (2026-06-22 continuation-nest)** | continuation を linked list 化 (`ContinuationFrame.outer?`) して chain (内側)→sequence (外側) の継続上書きを解消 (BUG-111 #3、resolver attachContinuation + apply-pick runContinuationChain)。B06033/B06033P 出荷 (ALL_CARDS→1374)。decoy `continuation-nest-b06033.test.ts` (9) | ~~continuation-nest~~ ✅ 解消 |
@@ -487,7 +487,7 @@ changelog [2026-06-21-02](../changelog-entries/2026-06-21-02-cluster-distinct-na
 
 | rep | DEFER 理由 (残存 gate) | 解禁条件 |
 |-----|----------------------|---------|
-| B08063 (黒田兵衛) | a1「現場にいるこのキャラは〚特徴［長野県警］〛を持つ」= **self-trait-grant continuous** が engine 不在 (ContinuousModifier は ap/lpDelta/grantKeywords のみ、trait 付与機構なし)。a2 は distinct-name-count で解禁済だが partial 出荷せず | self-trait-grant (継続 trait 付与) 機構の追加 (別 micro-cluster) |
+| ~~B08063 (黒田兵衛)~~ | ✅ `continuousModifier.grantTraits`で現場限定self traitを出荷済み。Wave182で必須turn-end処理と変装先への非継承をpublic認定 | ✅ 解消 |
 
 ### 同セッションで scope した未着手 micro-cluster (engine変更0 枯渇後の次弾候補、要別判断)
 
@@ -582,7 +582,7 @@ sweep landscape の「hand→deck-bottom verb 無」note は **stale** (wave1 �
 | PR265 | DEFER | 登場時「加えたカードの**レベル分**デッキ上からリムーブ」= bound カードの level を動的 N とする mill。deckRemoveTop は静的 N のみ + 解決編宣言 mill-by-level | dynamic-count (bound-card-level) mill (engine) |
 | ~~B07066~~ | **出荷済** (㉖) | enter-observer remove (B04017同型) + 宣言 sleepChar cost→look-3 (B05078同型)。engine変更0 | — |
 | ~~PR194~~ | **出荷済** (㉖) | 宣言 removeFromScene{self} cost→look-2 forced-top (filter省略=match-all、B01048同型)。engine変更0 | — |
-| B08075 | DEFER | event「以下から**3つまで選んで行う** (上から順)」。bare `sequence[opt1,opt2,opt3]` 化は **opt3 (look-4→残りデッキ下) が 0-take でも deck並べ替え副作用 → unskippable (fatal)**。正しい model = sequence-of-`optional` だが (a) subset-of-options 前例なし (b) CPU 全 skip=完全no-op (c) optional+pick 合成 B09056系 fragility | multi-select-options engine 機構 or optional+pick 合成検証 |
+| ~~B08075~~ | ✅ 出荷済 | 3独立optionalの印字順sequence、各1回、全skip/部分実行、opt3取得0をWave184 public認定 | ✅ 解消 |
 
 > 補足 (再選定防止): named-next の **contact-removal-by-self 族は B04004/B04004P も 2026-06-21 出荷済** (a3 actor+target gate を
 > matcherCondition で再author、上表参照)。残 4 (B09022/B05009/B06068/PR136) は contact trigger 以外の gate
@@ -612,11 +612,12 @@ changelog [2026-06-23-02](../changelog-entries/2026-06-23-02-wave-evidence-flip.
 | rep | DEFER 理由 (残存 gate) | 解禁条件 |
 |-----|----------------------|---------|
 | ~~B05013 / B06017 / B06017P / B06019~~ | ✅ **出荷済 (2026-06-23、下記「evidence-flip-facedown wave」)**。`evidenceFlipDown` verb 追加で解禁 | — |
-| B06026 / B07099 / B08087 / B08091 | facedown hira は green だが二次 gate で全体 DEFER: B06026=【現場リムーブ時】event-as-evidence / B07099=自己 effect-leave trigger / B08087=【現場リムーブ時】+ 強制選択 / B08091=recruit (facedown 無し、誤グルーピング) | 各二次 gate (leave hook / event→証拠 / forced-target) |
+| B06026 / B07099 | facedown hira は green だが二次 gate で全体 DEFER: B06026=【現場リムーブ時】event-as-evidence / B07099=自己 effect-leave trigger | 各二次 gate (leave hook / event→証拠) |
+| ~~B08087 / B08091~~ | ✅ forced event target / remove-area recruit出荷済み。Wave185で実event-use強制選択とfull-scene self-switchをpublic認定 | ✅ 解消 |
 | ~~B06086 / B06086P~~ | ✅ **出荷済 (2026-07-04 hybrid-pilot-1)**。W5 evidenceFlip cardIds+bind (declined=[] 書込) + `and[bound{$flipSelf,matched}, bound{$flipOpp,matched}]` conditional で count-flipped を表現 — 旧 gap は W5 で解消済だった | ✅ 出荷済 |
-| B08028 | 日向幸: 宣言 cost[このキャラ以外をリムーブエリアへ] + 「自分の裏向き証拠を**好きな数**選び表向き、**表向きにした枚数と同じ数まで**相手の裏向き証拠を選び表向き」= variable-count pick + dynamic-linked second pick + cost closure | variable-count pick + flip-count-linked pick (engine) |
+| ~~B08028~~ | ✅ variable-count evidence multi-pick、flip-count bind、dynamic second maxは出荷済。Wave177で先行一括flipと任意位置を公開認定 | ✅ 解消 |
 | B05079 | 世良真純: hira は pick-faceup で green だが main「相手は【ヒラメキ】を発動できない」= continuous opp-ability-deny gate ゆえ全体 DEFER | opp-ability-deny continuous (engine) |
-| B06034 | 鬼丸城: pick-faceup + 「【ヒラメキ】持ち〚YAIBA〛が表向きになった場合 その【ヒラメキ】を発動」= hirameki-cascade gate | reveal-triggered hirameki cascade (engine) |
+| ~~B06034~~ | ✅ `evidenceFlip` occurrence bind + `invokeHiramekiOfCard`を出荷済み。Wave153で移動・抑止貫通・無効条件・self flipを公開再確認。 | ✅ 出荷済 |
 | PR279 | 萩原千速: 疾風 pick-faceup は green だが「相手のイベントの効果によってリムーブされない」= continuous removal-immunity gate ゆえ全体 DEFER | event-effect removal-immunity continuous (engine) |
 
 > 注: 事件カードの【宣言】cost「〚裏向きの証拠をN つ表向きにする〛」(B05063/B06036/B06043/B06065/B06095/B06105/
@@ -636,7 +637,7 @@ B06019 クモ男 (【事件編】discard 緑YAIBA→draw2 chain + ヒラメキ)�
 single・multi・dup-cardId・0枚・裏向きtarget-noop / 順番不変 / enter multi-pick e2e / conditional・caseStatus gate /
 legacy faceup 回帰) + 敵対 faithfulness review (opus 4 lens)。changelog
 [2026-06-23-03](../changelog-entries/2026-06-23-03-wave-evidence-flip-facedown.md)。残 facedown 族 (B06026/B07099/
-B08087/B08091) は上記 faceup section の表参照 (二次 gate で DEFER)。
+B08087/B08091) は上記faceup節の旧記録。両カードとも出荷済みで、Wave185にてforced event target / remove-area recruitをpublic認定済み。
 
 ## engine拡張 wave deck-mill-gated-chain (gated-mill chain, 2026-06-23, cards/wave-deck-mill-gated-chain)
 
@@ -686,7 +687,7 @@ B05035 遠山和葉 は当初出荷候補だったが、敵対 review が else-s
 |-----|----------------------|---------|
 | B07065 (世良真純＆メアリー, 全体) | MR カード (rules/18 §MR①② が engine 未配線) + 複数名カード名 (rules/19 split-name)。両 hard gap | MR①②配線 (rules/18) + 複数名ルール |
 | B07068 (羽田秀吉, 全体) | a1「登場させたキャラ…をアクティブにする」= sceneEnter で登場した $entered キャラを後続 step で参照する binding token が engine 不在 (実装0件)。主能力ゆえ a2 ヒラメキ単体では薄く全体 DEFER | sceneEnter に entered-char binding ($entered) 追加 (engine) |
-| B07100 (コルン, 全体) | 【登場時】「相手は手札を公開…カットイン持ち lv≤8 を1枚選び相手がリムーブ」= 相手手札の reveal + filter 選択 + 相手手札からの removal 機構が engine 不在 (opponentHand/handReveal verb ゼロ、S12456 確認済) | opp-hand reveal + filtered removal verb (engine) |
+| ~~B07100 (コルン, 全体)~~ | ✅ 相手手札公開、owner選択、cross-side removalは既出荷。Wave174で残る動的Cut-In presenceをBUG-376として修正し全Q&A認定 | ✅ 解消 |
 | ~~PR099 a2~~ **✅出荷済 (2026-08-13)** | 登録済みキャラ CardDef の名前 component を列挙する constrained declaration domain、任意skip、`nameOverride` 完全置換を共有実装。PR105 と同一descriptor | ✅完了 |
 | ~~B05030 a2~~ **✅出荷済 (2026-06-28 session64 setCardCount dyn)** | 【自分ターン中】「セットされているカード1枚につき AP+1000」= set-card 枚数スケールの継続 AP 修飾。`$self.setCardCount` dyn token が engine 不在 (resolveSelf は sceneTrait/faceUpEvidence/fileCount のみ) で a1 のみ partial-ship だった。**session64 で resolveSelf に `setCardCount` 分岐を additive 追加** (`scene.byUid(state,uid).setCards.length`、静的 field ゆえ ap/lp 再帰なし) → a2 解禁し fully faithful 化。D08005 a1 (faceUpEvidence) 同型の継続修飾 | ✅完了 (setCardCount dyn) |
 | ~~B05035 (遠山和葉, 全体)~~ **✅出荷済 (2026-06-23 wave bug153-setcard-host-check)** | 【登場時】reveal-1 + cardName[服部平次/遠山和葉] OR + 任意手札追加 / 加えねば裏向きセット。当初は else-set の `charSetCard{fromDeckTop}` が host 離場時に公開カード消失 (**BUG-153** 共有 engine 順序バグ、公式Q&A『離場時はデッキ上に戻す』違反) で DEFER していたが、**BUG-153 を engine additive 修正** (host 存在チェック→shift 順) し再出荷。ALL_CARDS 1409→1410 | ✅完了 (BUG-153 修正済) |
@@ -731,10 +732,10 @@ classify workflow GREEN候補のうち、実 engine 型直読で false-green と
 | rep | DEFER 理由 (engine gap) | 解禁条件 |
 |-----|----------------------|---------|
 | ~~B08050 (【解決編】継続レベル+3)~~ | ✅ **出荷済** (card wave engine-unlocked-0624, 2026-06-24): `ContinuousModifier.lvlDelta` (a206e9dc) + 登場時 deck-look (deckRevealUntil match-all → handAdd → boundToRemove + boundMatchesFilter `cardNameNot` discard)。condition=caseStatus解決編 (自己参照なし) で latch 問題と無縁。spec: [engine-additive-wave-2026-06-24.md](engine-additive-wave-2026-06-24.md) | — |
-| **B08059 / B08059P (【自分ターン中】現場lv7×2 → 自レベル+1)** | ⚠ **再 DEFER** (engine additive wave で誤って「解禁」と記載): lvlDelta 機構自体は a206e9dc で追加済だが、本カードの条件「現場にレベル7のキャラ2枚以上」は **このキャラ自身(lv6+1=7)を数に含める latch** (公式QA「このキャラを含めレベル7のキャラが2枚」)。`_inContinuousDelta` guard ([candidates.ts:24](../../src/engine/target/candidates.ts#L24)) が depth-2 で全 delta を base 化するため、自己条件評価中は諸星=base6 と数えられ、**他lv7が1枚に減った瞬間 latch が外れる** (engine実測: 諸星+1lv7 で read.char.level=6、QA要求=7)。engine wave の敵対 review は「無限ループ無し」のみ検証し QA fidelity を見落とした。faithful 化には guard に自己 delta 例外 (固定点/self-include) を入れる engine 変更が必要 | continuous 条件の **self-counting** 対応 (recursion guard の自己 delta 例外、要 engine 変更・要設計) |
-| ~~B08023 / B08023P~~ / B08033 (1pick→2atom 同キャラ) | ✅ **B08023/P 出荷済** (card wave engine-unlocked-0624, 2026-06-24): **短縮形** carrier-reuse (charSetCard{player,max,filter,bind:'$picked'}、明示 uid:'$pick'+target は human 経路で rider 不発 = [BUG-158](../bugs/BUG-158.md))。【登場時】choice×3 (伊織無我 setCard+AP/突撃 / 相手 setCard+sleep、opt3 は charSetCard{player:'opp'} = B02020/B05028 同型)。⚠ **B08033 a2 は別 gate (set-card-removal COST kind, 下記) 併発で依然 DEFER** | (B08023) ✅ 出荷済 / (B08033 a2) set-card-removal cost 待ち |
-| **B08004 / B08004P (stun cost コナン)** | ⚠ **再 DEFER** (stunChar は解禁したが第2 gate が残存): Cost `stunChar` (a206e9dc) で「現場のアクティブ灰原哀1枚スタン」コスト自体は表現可。だが宣言ゲート「自分のリムーブエリアに**【黒】のキャラ**が3枚以上」は **remove-area を 色 AND 種別(character) で数える** 必要があり、`removeColorAtLeast` ([cond/eval.ts:192](../../src/engine/cond/eval.ts#L192)) は色のみで kind を見ない (黒イベントを誤計上)。remove-area の kind 付き count 条件が engine 未対応。errata 2026-03-02 現場条件は stunChar の scene-scoped target で充足済 | remove-area の color+kind (or TargetFilter) count 条件追加 (要 engine 変更、additive) |
-| B08019 (partner-area declare, 非MR) | a2「この能力はパートナーエリアでも宣言できる」だが `scope` 単値で `on-scene`+`on-partner-area` 併記不可。非MR char は partner-area 不達 → on-scene のみでは under-faithful。加えて「&」名・cutin の複合 | scope 複数値 (array) 対応 or 該当 char の partner-area 到達経路確定 |
+| ~~B08059 / B08059P (【自分ターン中】現場lv7×2 → 自レベル+1)~~ | ✅ `levelFilterOverride`でself-inclusive latchを修正済み。Wave181で自己包含latchと開始済みaction継続をpublic認定 | ✅ 解消 |
+| ~~B08023 / B08023P / B08033~~ (1pick→2atom 同キャラ) | ✅ B08023/P carrier-reuseとB08033 `removeSetCard` cost/同一target riderは出荷済み。Wave178でB08033 split-host costとAP/Assault tailを公開認定 | ✅ 解消 |
+| ~~B08004 / B08004P (stun cost コナン)~~ | ✅ `removeColorAtLeast.cardKind:'character'`と`stunChar`は出荷済。Wave175で自分のactive灰原哀限定、黒イベント非計上、owner相対costを認定 | ✅ 解消 |
+| ~~B08019 (partner-area declare)~~ | ✅ 当該カードはMR。`scope:'always'`でscene/PA宣言を共有し、Wave176で現行descriptorを再認定 | ✅ 解消 |
 
 ## wave novel-0624 由来 (2026-06-24)
 
@@ -772,7 +773,7 @@ yellow 10 + 自己review DEFER 1 を記録。full blocker は `.tmp/certify/<rep
 | rep | 状況 / 解禁条件 |
 |-----|------|
 | ~~B07048 (白馬探)~~ | ✅ **出荷済 (2026-06-27、wave colornot-removeset-0627)**: a1 charSetCard($self, fromDeckTop) + a2【パートナー白】【宣言】【ターン1】cost=`removeSetCard n2` → draw1+discard1。removeSetCard cost の **初 production カード**。手author + 専用test (canPay/構造 1対1)、opus 4-lens 敵対 review ship:true。⚠ **残 follow-up (UI human-choice fidelity gap、非出荷ブロッカー)**: removeSetCard は UI declared-ability flow (`ui/hooks/useActionsPanelFlow/flows.ts`) に host-picker 未配線 → human 経路は costParams 不在で **self-scene 順 fallback** (先頭から n=2 裏向きセットを除去)。公式 qa は「複数 host から1枚ずつ」選択可だが human は host を選べない (どの setcard:leave / 現場リムーブ時 observer が発火するか選べない)。既存 `sceneToDeckBottom` も同型の no-picker fallback で **precedent 一致**。多 host 裏向きセット盤面が現実化したら flipFaceUpEvidence picker を mirror して host-picker 追加 (engine/UI) |
-| B08033/P (工藤有希子) | DEFER 継続: a2 cost は解禁したが **登場時「現場キャラ1枚につき setCard」= forEach-own-scene-char loop verb 不在** (単一 charSetCard $self のみ proven)。両句 unlock 要 → forEach-char setCard verb (engine) |
+| ~~B08033/P (工藤有希子)~~ | ✅ `forEach` own-scene + `charSetCard`を出荷済み。Wave178で登場元自身の計数とshort-deck refresh継続を認定 |
 | B08041/P (高橋良一) | 登場時 charSetCard($self, proven) だが a2 が **cost で除去した set card の kind(char/event) で分岐** = cost-removed-card-kind conditional 不在 (裏向きカード kind 参照) → cost-removed-card-kind branch (engine) |
 | PR200/B05075 等 | set-card-count aura (合計2枚以上→突撃) / pick-target setCard / main-phase-start hook 等 別 gate → 各機構追加 (engine) |
 
@@ -785,18 +786,18 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 |-----|----------------------|---------|
 | ~~B06006 (江戸川コナン)~~ | ✅ **engine 解禁 (2026-06-28、engine/relative-ap-random-removal)**: `$self.stackedCount` dyn token を resolveSelf に追加 (`scene.byUid(uid)?.stackedCards ?? 0`、session64 `$self.setCardCount` 同型・static field 読み)。a2「下に重なるカード1枚につき AP+1000」= `continuousModifier{apDelta:{dyn:'$self.stackedCount * 1000'}}` で表現可。a1+a3 既GREEN → **全句 buildable** | ✅ **出荷済 (63000bc6、CARD PHASE #2、2026-07-03)**: a1=caseStatus解決編 grantKeywords突撃 / a2=apDelta dyn stackedCount / a3=chain[mill, charStackCard pick trait[探偵\|少年探偵団]配列any-match]。probe 10件 + engine変更0 |
 | B05115 (弁崎素江) | 「相手の能力/効果で手札からこのカードがリムーブされたとき」= hand-leave 反応 hook 不在 (HookName に leave:from-hand 無、hand discard は silent mutation、手札カードは collectCardsInPlay 非走査) | hand-removal observer hook + source-attribution (engine) |
-| B06023 / B06034 (金棒博士/鬼丸城) | hirameki-trigger-from-flip: cost flipFaceUpEvidence は count のみ記録 (flipカード identity 破棄)、flip契機 hook 不在、別カードの【ヒラメキ】効果を起動する verb 不在 (hirameki は evidence:remove-by-action 専属) | flip-evidence hook + cross-card hirameki invoke verb (engine) |
+| ~~B06023 / B06034 (金棒博士/鬼丸城)~~ | ✅ physical occurrence bindとcross-card `invokeHiramekiOfCard`をWC2bで出荷。Wave153でB06034 public event-useを再確認。 | ✅ 出荷済 |
 | B06026 (コウモリ男) | a1/a3 green。a2 = **✅ gainCard idx===-1 harden 出荷 (2026-06-29, engine/bulk-additive-0629)** (source 不在で証拠化せず return)。残: a2 の character-scoped 【現場リムーブ時】→selfToEvidence 経路 (leave:to-remove self-trigger) を card session で実機検証 (handleLeaveToRemoveSelf は配線済の見込み、未実証) | 残: char-leave selfToEvidence の card-author 検証 |
 | B06027 (カマキリ男等) | hirameki「このキャラをスリープ状態で登場」= 証拠リムーブ中の自身を現場再登場 primitive 不在 (evidence→scene verb 無、replacement 意味論) | evidence-transient self-reenter (engine、B06025 と同族) |
-| B06047 (鉄刃) | (2)「このキャラにカードがセットされたとき」= **✅ setcard:enter hook 出荷 (2026-06-29, engine/bulk-additive-0629)**。残 (1) 手札カードのレベル-1修正 (hand-use level gate は静的 def.level 読み、ContinuousModifier.lvlDelta は scene-char 専用) のため **継続 DEFER** | 残: hand-level modifier (engine) |
+| B06047 (鉄刃) | a2 YAIBA set→remove entry は Wave52/BUG-335 で出荷。残a1は現場sourceが手札の白YAIBAイベントへ与えるcross-hand level auraで、bearer-only hand modifierでは表現不可。誤self減算を除去しa1 slotをfail-closed保持 | 残: filtered cross-hand level aura (engine) |
 | B07008 (小嶋元太) | (1) 手札カードの per-count level 減 (cross-field UNION count[cardName 阿笠博士 + trait 少年探偵団] dyn 無、$self.sceneCardName 無) (2) in-hand level modifier (同上) | per-count union dyn + hand-level modifier (engine) |
 | B07013 (event 予告状) | sequence の chain-gate continuation 内 $picked carrier-reuse (un-stun を同一 picked stun-char に2回) = 最深 nesting。human dispatch path で rider 喪失の既知 false-green class (BUG-130/158)、要 human-path probe (+ event closure) | carrier-reuse human-path 実証 or event closure |
 | B07096 (ウォッカ) | 突撃[レベル4以下のキャラ] = filtered-突撃 variant (namedExceptionAllowed は exact-string only、組込み target filter付き突撃 grant 不可) + removed-char level filter trigger | filtered-keyword grant (engine) |
-| B08002 (コナン&灰原) | 「リムーブしたキャラのレベルと同じ枚数 mill」= removed-char-stat 動的 mill count (mill は静的 n、evalDyn placeholder に sceneRemove-char level root 無) | removed-char-level dyn (engine) |
+| ~~B08002 (コナン&灰原)~~ | ✅ `sceneRemove`の実効level snapshotと`$removed.level` dynは出荷済。Wave174で増減後level、短デッキ、refresh停止を認定 | ✅ 解消 |
 | B08006 (小嶋元太) | (1) cost「手札公開+選んだ青キャラの下に重ねる」= reveal+stack-under-chosen-host cost 不在 (2) hirameki「アクション中のキャラ」= action-context candidate filter 不在 | stack-cost + action-context targeting (engine) |
-| B08019 (大岡紅葉&伊織無我) | cross-side set-card removal の per-side quota (合わせて2枚・各side1枚) + aggregate-conditional draw primitive 不在 | per-side-quota scope-array (engine) |
+| ~~B08019 (大岡紅葉&伊織無我)~~ | ✅ `perSideMax:1` multi-pick、exact occurrence removal、draw chainは出荷済。Wave176 privacy実機も認定 | ✅ 解消 |
 | B08041 (高橋良一) | a2 cost で除去した裏向きセットカードの kind(char/event) 分岐 = cost-removed-card-kind conditional 不在 (PayResult を effect ctx に渡さない) | cost-removed-card-kind branch (engine) |
-| B08046 (赤井&ジョディ) | a2「コストでレベル8以上のキャラをリムーブした場合 draw」= cost-removed-card level condition 不在 (removeFromHand は costPaid 不記録) | cost-removed-card-stat condition (engine) |
+| ~~B08046 (赤井&ジョディ)~~ | ✅ `removeFromHand` cost attribution + `costRemovedMatches`を出荷済み。Wave179でa1のFBI source自己計数も認定 | — |
 | B05052 (工藤優作) | cost-level choice「手札 か セットカード を1枚リムーブ」の human-path branch 選択が UI 非対応 (cost.pay は costChoice 不在時 first-payable auto-pick、人間は set-card branch を選べない) | cost-level choice picker modal (UI/engine) |
 
 ## engine additive wave 0629b — cross-side aura / printed-keyword turn-revoke (2026-06-29)
@@ -873,13 +874,13 @@ ctx.contact を読まない = 挙動不変)。
 | primitive | 解禁 (card-wave) | 形 |
 |-----------|------------------|----|
 | `$self.level` dyn | 相対 level filter 系 (printedより少) | dyn/eval.ts resolveSelf case。filter {levelMin/levelMax:{dyn:'$self.level'}}。相対LP は既出荷 |
-| `drawUpToHandSize` verb | B08047 | 「手札 N 枚まで引く」draw(max(0,n−hand))。discard-down(B07076)/枚数return(B04048)は別 variant DEFER |
+| `drawUpToHandSize` verb | B08047 | ✅ a1出荷済み。a2も`removeFromHandDownTo`で解消し、Wave179でhand≤2のremove 0 + sleep支払いを認定。B07076/B04048は別variant |
 | `remove:exit` hook + `removeExitMatches` matcher | B05087/B05088 | リムーブエリア離脱 observer。全離脱経路 emit (emitExit 単一ソース)。原因非依存 |
 
-⚠ **card-wave 実装時に要対応の latent risk** (4-lens review 指摘、現 consumer 0 で挙動無害):
-- **B05087/B05088 (remove:exit) のコスト由来発火**: `remove.removeFromHere` の唯一の呼出は `removeAreaToDeckBottom` **コスト**経路 (cost/pay.ts)。engine は原因非依存に emit するが (rules/17 【現場リムーブ時】類推 = 方法問わず)、rules/21「コストで行ったこと ≠ 〜したとき」との関係で B05087/B05088 がコスト由来離脱を拾うべきかは **官報 Q&A で確定**してから出荷する。拾わない裁定なら matcher に cost-cause 除外 field を additive 追加。
+⚠ **card-wave follow-up** (4-lens review由来。consumerは現在出荷済み):
+- ~~**B05087/B05088 (remove:exit) のコスト由来発火**~~: ✅ B08066公式Q&Aが`removeAreaToDeckBottom`コストでも両能力の発動を要求。Wave182で`remove.removeFromHere`→`remove:exit`→両consumer同時発動をpublic認定。
 - **複数枚同時離脱の発火回数**: refresh で N 枚一致カードがデッキへ戻る場合、deck.refresh は離脱カード毎に remove:exit emit (per-card)。B05087/B05088 は【ターン1】のため実解決は1回だが、emit 回数と【ターン1】カウントの整合 (rules/24「発動したが解決できない場合もカウント」) を実機 test で確認。
-- **G16 相対 level の残カード**: `$self.level` は「このキャラのレベル(以下/同じ)」を解禁するが、B04074 (発見カードと同 level = $revealed-level-any、G17 と複合) / B08043 (現場最大LP以下 = sceneMaxLp dyn 不在) は別 dyn を要し本 wave 対象外 (genuine-absent、別 primitive)。
+- **G16 相対 level の残カード**: `$self.level` は「このキャラのレベル(以下/同じ)」を解禁。B08043の`sceneMaxLp`は出荷済みでWave179にて自現場0のfail-closedを認定。B04074は別dynとして残る。
 - **drawUpToHandSize の discard-down 方向**: B07076「手札が N 枚になるまでリムーブ」は hand-pick を要する別 variant (本 verb は draw-up のみ)。B04048「引いた枚数と同じ数をデッキ下」は引いた枚数の bind-return が必要 → 別 variant DEFER。
 
 ## wave engine/wave5-bound-handrestrict — additive 2件 出荷 (boundAnyMatchesFilter / handUseRestrictFilter) + DEFER (2026-07-01)
@@ -1047,12 +1048,12 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
 
 出荷済 = hook `disguise:replaced` + cond `disguiseReplacedByMatches` (B03052/P 被置換側反応、virtual-location handler `handleDisguiseReplacedSelf`) / `disguise:into` payload.replacedChar (sentinel uid snapshot) + cond `disguiseReplacedMatches` (B02047) / verb `invokeLeaveToRemoveOfCard` (effect/invoke-leave-to-remove.ts leaf、emit 非経由 = observer 波及なし、**engine-only**) / hook `hand:removed` (discardToRemove splice 前 emit + attribution{byPlayer,viaCost}) + cond `triggerByPlayerIs` (B05115) + sceneEnter `sourceRequired` arg / hook `hand:reveal` (mutate.hand.emitReveal 単一ソース、atomHandReveal + cost revealFromHand 両経路) + cond `triggerRevealMatches` (B09004)。
 
-- ★**DEFER: B08078 ジン** (r12 の実 consumer、engine-only 出荷) — a1【宣言】の宣言前提「自分のリムーブエリアに【現場リムーブ時】を持つキャラが2枚以上」= **remove-area の ability-presence 計数 Condition 不在** (removeTraitAtLeast の keyword/hook 版が要る)。a2 は本 wave の invokeLeaveToRemoveOfCard + keyword filter (`{keyword:'現場リムーブ時'}` B08016 precedent) + color 配列 any-match で部品は揃ったが、「発動させてもよい」= chain 内 optional の nested surface (BUG-161 系 pre-walk 過剰 surface) の実機検証が未踏。**partial 禁止 → カードは a1 Condition 追加後に一括 author**。
+- ★~~**DEFER: B08078 ジン**~~ — ✅ `removeFilterAtLeast`、keyword filter、`invokeLeaveToRemoveOfCard`を一括出荷済み。Wave184でnested optional、無効能力no-op、draw起因refresh後のbind保持をpublic認定。
 - ★**latent gap (engine-wide、W3 で実測発見)**: **cross-side 短縮形 pick の side/chooser 不整合** — buildShortFormPick は chooser (resolvePlayer 済の絶対値) を query.side に literal 代入するが、sidesForQuery は side を **ctx.source.player 相対**で解釈する。source と手札所有者が異なる短縮形 pick (「相手は手札から1枚選んでリムーブ」型) では候補が source 側に化ける / pending 適用時の再解釈でも反転。**現出荷カードは全て source=owner の同側 pick で未踏** (相手手札リムーブは B01077 discardRandom = pick 無し)。相手選択型 discard カード出荷時に buildShortFormPick の side を相対値で渡すよう要修正。
-- **B09004 a1 の「（現在の効果を解決してからリムーブする）」**は rules/25 未解決効果 queue の確認的注記として実装 (専用機構なし)。公開→即 discard の同一効果内 timing を厳密に問う裁定が将来出たら再確認。
+- ~~**B09004 a1 の「（現在の効果を解決してからリムーブする）」**~~ — ✅ Wave187でcost公開反応を宣言効果の`declaredBatch`へ帰属させ、現在の効果完了後に解決する順序をpublic認定。発動後の絆消失でも反応は維持。
 - **hand:removed は cutin 使用 discard でも emit** (byPlayer=使用者)。「イベント/カットインの使用によるリムーブ」を区別する将来カードは attribution 拡張 (viaUse marker) で対応。
 - **混成 review nits (megaw3、両 lens SHIP_WITH_NITS 0-blocker、latent 記録)**:
-  (1) invokeLeaveToRemoveOfCard の fabricated payload は {uid, cardId, player, invoked:true} のみ — removedCharMatches 系 matcherCondition (side/byUid 要求) を持つ【現場リムーブ時】は invoke 経由で常に false (現4カード B04004/B05032/B07097/B09071 は全て cause:'contact-ap' 要求 = 手札 invoke シナリオでは文言上も正しく不発)。B08078 author 時に対象候補カードの condition が payload field 依存でないか手動確認。
+  (1) invokeLeaveToRemoveOfCard の fabricated payload は {uid, cardId, player, invoked:true} のみ — removedCharMatches 系 matcherCondition (side/byUid 要求) を持つ【現場リムーブ時】は invoke 経由で常に false (現4カード B04004/B05032/B07097/B09071 は全て cause:'contact-ap' 要求 = 手札 invokeシナリオでは文言上も正しく不発)。Wave184はcondition-false発動選択→no-opを認定済み。将来payload依存consumer追加時は再確認。
   (2) discardToRemove の emit ガード (splice 前 includes) は ids に手札実在数超の重複 cardId が来ると emit 過剰 — 現 call site は全て実在カード由来で未踏 (防御的)。
   (3) revealHandToDeckTop cost の emitReveal 配線は nit 対応で追加済 (公開→デッキ上移動の前、on-hand 時点 emit)。
 
@@ -1060,12 +1061,12 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
 
 出荷済 = atom `bindPick` (pick-only bind、preamble writeback 依存) + filter `hasFaceDownSetCards` + charRemoveSetCard `faceDownOnly` arg / hook `enter:group` + TargetQuery `fromGroup` + gate ctx への emit bindings 貫通 + 凍結 bindings shallow-copy (stack.ts/triggered.ts) / mutate.scene `toStack` (非リムーブ離場、**MR 非redirect** = B09048 公式Q&A) + charStackCard `fromSelf` / cost `sceneStackUnderSelf`・`handStackUnder` / TargetQuery `perSideMax` (resolve validate + chooseAiPick greedy + pending 伝播) / ContinuousModifier `grantFilteredAssault` + read.char.filteredAssaultKeywords + action.ts namedExceptionAllowed 橋渡し (**bundled fix = BUG-168**、smoke re-baseline winsA 472) / opponentRestrict `remove|sleep|stun` + read.char.charProtectedFrom (per-target、on-set-host rider walk) + atomSceneRemove/SetState narrow-gate。exemplar **B08035・B01012・B06008/P・B09048・B08006・B07096・B05041/P** (9 printings)。
 
-- ★**DEFER: B08003 阿笠博士** (r83 第2 exemplar) — cost「このキャラの下に重なっているカードを3枚リムーブする」+ effect「相手はこのコストによってリムーブされたキャラの中から1枚選ぶ」は **stacked card の identity 不在** (SceneCharacter.stackedCards = number のみ、離場時 'back-card' placeholder) で表現不可。stacked-identity 化 = GameState 形状変更 (W6 級)。加えて opp-chooser pick + cost bind 伝播も未配線。設計 workflow の「removeSetCard cost に bind」案は **セット≠重ね (rules/16) の混同で誤り** — 採用しなかった。
-- ★**DEFER: B08019 大岡紅葉＆伊織無我** (r84 exemplar) — perSideMax engine 3経路は出荷済だが、**scene PA multi-pick の human UI が単発 dispatch collapse** (B02033/B07031/B07055 の「合わせて2枚」と同型の pre-existing gap — SceneArea は multi 収集を持たない)。partial 禁止 → UI multi 収集 + perSideMax disabled-state 配線と同時に card-phase で author。CardListModal への perSideMax disabled 配線も consumer 不在につき同時期へ。
+- ★~~**DEFER: B08003 阿笠博士**~~ — ✅ `stackedCardIds` identity、`removeStackedCards` costPaid、`opp-of-owner` chooser、cost group filter、scene switch continuationは出荷済。Wave174でdistinct-name、直前switch victim、満場switch、parent tail→entrant enter順を認定。
+- ★~~**DEFER: B08019 大岡紅葉＆伊織無我**~~ — ✅ EffectPicker multi収集と`perSideMax` UIは出荷済。Wave176で両side裏向きidentity非公開、exact removal、MR同時入替を再認定。
 - ★**DEFER: B08074 降谷零** (r62 第2候補) — 「〚特徴〛を1つ指定し」の trait-declare 宣言機構 + 捜査 bind 集合の指定特徴一致 **枚数** count evaluator (boundAnyMatchesFilter は bool) が不在。backlog の soleUnlock=2 は誤り (実質1)。新規 row「trait-declare + revealed-count carrier」として W5/W6 で起票。
 - ★**DEFER: B06005 阿笠博士 a1後段/a2** (r5 第2候補) — a1「重ねたキャラのレベルの合計以下」= bound 集合 levelSum dyn 不在 / a2「重なっているカードを2枚までそのキャラの下に重ねる」= host 間 stackedCards 転送 verb 不在 (scene-source とは別操作)。
 - **case 側 filtered-突撃** (grantFilteredAssault targetKind:'case') は type 上存在するが namedExceptionAllowed の case 分岐 dispatch 未実装 (consumer 未出現、「対応済」と誤記しないこと)。
-- **水平 latent (W4 で発見、既出荷カード)**: B05028/B08034/B03039 の印字「**裏向きで**セットされているカードを1枚リムーブ」が DSL では faceDownOnly 無し (hasSetCards + 末尾1枚 pop) — 表向きセット (B05041 型) と共存する盤面で表向きを誤 pop しうる。B05041 出荷で共存が現実化 → card-phase で faceDownOnly + hasFaceDownSetCards へ移行推奨 (B02033 は「裏向き」限定なしゆえ現状維持)。
+- **✅ 解消**: B05028/B08034/B03039は`faceDownOnly:true` + `hasFaceDownSetCards`へ移行済み。B02033は印字上「裏向き」限定なしのため現状維持。
 - **charStackCard sourceArea:'scene' 一般方向** (host 固定・scene 複数 pick) は cardIds=cardId 曖昧性 (同名重複) のため未実装 — fromSelf 方向のみ出荷。
 - **混成 review nits (megaw4、fable 裁定 SHIP_WITH_NITS 0-blocker、latent 記録)**:
   (1) charProtectedFrom の消費 gate は atomSceneRemove/atomSceneSetState の2箇所のみ — 相手発の別 atom 経由離場 (boundToRemove/invokeLeaveToRemoveOfCard 等) は素通り。現 pool に該当 consumer 不在 = narrow-gate 妥当、該当カード出荷時に gate 追加。
@@ -1079,7 +1080,7 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
 
 出荷済 = dyn root `$bound.<key>.count/level/cardName` (統合 resolveBound、uid=実効値/cardId=printed) + `resolveDynNumber`/`isDynObject` export (dyn/eval.ts、cost 層から使うため _shared でなくここ) / atomEvidenceFlip **multi (cardIds 契約) + bind writeback + dyn-max local literalize + __declined 空 bind** (r38、evidenceFlipDown clone) / TargetFilter `levelIn`+`levelInBound` (enumerateByQuery hoist、matchOneFilter は ctx 非依存維持) + atomDeckRevealUntil **dispatch-time filter dyn 解決** + resolveFilterDynObj export (r47) / Cost `removeDeckTop.n: number|{dyn}` + canPay/pay 解決 + costToText resolve 拡張 (r37)。exemplar **B08028・B04074/P・B04088/P** (5 printings)。
 
-- ★**DEFER: r43 self-latch (B08059 諸星大)** — 設計 workflow 自身が DEFER 推奨 (T3 / sole-unlock 1枚 / touched 6+ files = 骨格凍結「touched>3 見直し」抵触 / 持続 state selfLatch は mutate/scene 全 8 メソッド網羅 + turn 境界 safety net 要)。類似カード 3 枚未満のため保留。B04069 は再スコープで engine0 判明 (既存 sceneHas で card-phase authorable)。
+- ★~~**DEFER: r43 self-latch (B08059 諸星大)**~~ — ✅ `levelFilterOverride`による再帰安全なself-inclusive判定を出荷済み。旧stateful設計案は採用せず解消。
 - ★**DEFER: B09109 怪盗キッド&安室透** (r47 第2 exemplar) — a1 は本 wave で全部品出荷済 (chain[bindPick → deckRevealUntil dyn → sceneEnter $matched + toDeckBottomOnTurnEnd rider → deckToBottomBound → shuffle] を probe test で実機検証済、設計 spec の「rider 不在」主張は**偽** = B07079/PR181 出荷済)。**a2「カード名を公開したキャラのカード名に書き換える」= P12 charSetName 不在**で partial 禁止 → P12 出荷後に一括 author。cutIn AP+2000 は既存 idiom。
 - **$bound.<key>.cardName の複数名カード** (rules/19): 先頭 (複合名) のみ返す — 分割名 any-match が要る consumer (複合名キャラを chosen にした「同じカード名」) は配列対応を別途設計。B09109 QA に該当裁定なし (公式裁定が出たら再訪)。
 - **r38 の「好きな数」= max:99 リテラル** (B08028): 候補=裏向き証拠で自然 cap。max:'all' 表記は未導入 (evidenceFlip 系のみの需要で YAGNI)。
@@ -1102,7 +1103,7 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
   (2) ✅**即対応済**: useEventFromHand に kind guard (author が filter:{kind:'event'} 漏れでキャラが silent リムーブ行きになる footgun) + probe。
   (3) restrictsOpponent partner-bearer は sentinel uid (`partner:<side>`) + bindings/area 欠落 ctx で evalCond — **conditional partner aura を card-phase で出荷する時に sentinel 前提を再 certify** (生存条件 location==='partner-area' は公式Q&A 未確認の設計判断も同時に)。現行 partner def は opponentRestrict 全 token 未宣言 = live 影響 0 実証済。
   (4) auraUntargetableByAction bearerCtx は bindings:{} 固定 — bindings 依存 condition (boundNameMatchesDeclared 等) を aura condition に使う exemplar は不可 (常に false 側)。
-  (5) B08087 mustBeSelectedByOppEvent の forced-inclusion 判定 (resolve-picks) は payload.viaEffect を見ない — useEventFromHand 経由の効果起源イベント使用にも engage しうる (現 pool で共存カード 0 = latent)。consumer 出荷時に公式Q&A 突合して viaEffect 分岐の要否を判断。
+  (5) B08087 mustBeSelectedByOppEvent はWave185で手札からの実event-useとowner mirrorをpublic認定。payload.viaEffectを見ないため、将来useEventFromHand由来consumer追加時の境界は引き続き再確認。
   (6) names()/effectiveNameComponents の nameOverride は grantNames も落とす全置換 — 外部付与名が書き換えを生き残るかは公式Q&A 未確認 (PR105 出荷時に再照会)。
   (7) selectedByOwnMr の「MRの能力」判定は def.isMR(ctx.source.cardId) のみ — 変装で MR が名前を変えた場合 / charGrantAbility で非 MR に「選ぶ」を後付けした場合の境界は公式Q&A 未照会 (遭遇時に再照会、推測補完しない)。
   (8) noAutoActivateBySourceUid は単一 sourceUid 上書き — 複数 bearer 同時 lock は後勝ち (現 exemplar B01082 のみ = 非該当。複数 locker カード出荷時に配列化)。
@@ -1287,8 +1288,8 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | B01005 | next-hint 使用と手札使用の emit payload 同一で判別 hook 無し (flag:next-hint:used は TRIGGERED_HOOKS 未登録) + 使用カード level を引く $trigger.level dyn 不在 |
 | B01020 | 相手 actor 側 level-filter アクション禁止 aura 不在 (opponentRestrict に 'action' 無し、_canAction は opp 盤面 aura を走査しない。untargetableByAction は target 側で逆方向) |
 | ~~B01022~~ | **✅ 解消 (2026-07-10 S2)**: fromGroupCards TargetQuery + bind index 同梱 + stale-bind prune + CardListModal deck kind。B01022 出荷 |
-| B01045 | LP の turn-scope base override 不在 (AP 側 apOverride_turn のみ出荷。lpOverride_turn + observer 側 opt-mill cost 複合) |
-| B01054 | 同上 lpOverride_turn 不在 (【現場リムーブ時】pick + 元LP0 ターン終了時まで) |
+| ~~B01045~~ | **✅ 解消 (2026-07-10 miniwave-lp)**: `charOverrideLP scope:'turn'` と observer optional/mill gate を出荷。Wave144 public Q&A matrixで再確認。 |
+| ~~B01054~~ | **✅ 解消 (2026-07-10 miniwave-lp)**: 現場リムーブ時pickと `charOverrideLP scope:'turn'` を出荷。 |
 | ~~B01093~~ | **✅ 解消 (2026-07-10 S2)**: deckPlaceSplitBound chooser を ownerPlayer gate に是正 (BUG-175 パターン)。B01093 出荷 |
 | B02022 | mustBeTargeted taunt (指定できる場合必ず指定) primitive 不在 |
 | ~~B02072~~ | **✅ 解消 (2026-07-10 S2)**: 両 dyn とも既出荷 (sceneTrait / $bound.levelSum) の stale DEFER。souza x:{dyn} handler 数値化 (+5行) のみ追加。B02072/P 出荷 (chain 必須の罠 = probe pin 済) |
@@ -1302,7 +1303,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | ~~B08008~~ | ✅ 解消: picked blue host stack + gateOnEmpty + actionTargetsActive rider |
 | ~~B08057~~ | **✅ 解消 (2026-07-10 S2)**: removeAreaToDeckTop bindKey opt + boundCountCompare cond + deckBottomReorderBound atom (~60行 additive)。B08057 出荷 |
 | B08068 | levelMax = cost-revealed 枚数 + 盤面計数の合成 dyn 不在 |
-| B09005 | revealFromHand cost の公開カード名を effect 側で参照する $costRevealed bind 不在 + 相手 FILE top を表向きにする verb 不在 |
+| ~~B09005~~ | ✅ `costRevealedMatches` + `fileFlipTop`出荷済み。Wave187で既に表向きの最上位をno-opとし、下の裏向き札へ進まないことをpublic認定 |
 | B09019 | 「この効果によってキャラが5枚登場した場合」の effect 内登場数カウンタ不在 |
 | B09027 | VERIFY_NG: cost kind:'choice' の human 選択 UI 不在 (pay.ts は最初の payable branch 自動選択、costChoice 供給経路 0。shipped exemplar 0) |
 | B09055 | sceneEnter の partner-area source 不在 + 「PAかリムーブ」2 zone union pick 不在 |
@@ -1312,7 +1313,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | D10009 (+D10010) | scene-source キャラを host の下に重ねる effect verb 不在 (charStackCard は remove/hand/deck source のみ、sceneStackUnderSelf は cost 専用) + 重ねた場合の条件付き突撃[キャラ] 付与 |
 | PR234 (+PR240) | charSetCard pick 経路の faceUp 不在 (裏向きハードコード) + hand∪remove union source 不在 + setcard:leave の faceUp filter 不在 |
 
-**engine mini-wave 候補 cluster (頻度順)**: ①turn-scope LP override (B01045/B01054、apOverride_turn 対称で小粒) ②bound 集合 levelSum/計数 dyn (B04063/B02072/B08068/B03063) ③deck-reveal 拡張 (~~per-card placement B05047 / bottom-reveal B03049~~ ✅ mini-wave #5 出荷済。残 = multi-deploy B01022 (T3、grounding 済 = specs/miniwave5-deck-reveal-grounding.md P1 節)) ④cost choice UI (B09027、W 級 UI) ⑤faceUp setCard 系 (PR234 + B07034 済基盤)。
+**engine mini-wave 候補 cluster (頻度順)**: ~~①turn-scope LP override (B01045/B01054/B09011)~~ ✅ 2026-07-10出荷 ②bound 集合 levelSum/計数 dyn (B04063/B02072/B08068/B03063) ③deck-reveal 拡張 (~~per-card placement B05047 / bottom-reveal B03049~~ ✅ mini-wave #5 出荷済。残 = multi-deploy B01022 (T3、grounding 済 = specs/miniwave5-deck-reveal-grounding.md P1 節)) ④cost choice UI (B09027、W 級 UI) ⑤faceUp setCard 系 (PR234 + B07034 済基盤)。
 
 ## hybrid-batch4 由来 DEFER (2026-07-10、2行 40 unit 中 22 DEFER + 2 VERIFY_NG。file:line 根拠全文 = .tmp/_batch4_defers.txt)
 
@@ -1321,8 +1322,8 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | ~~B01009~~ | ✅ 出荷済 (2026-07-10 mini-wave #4: lvlOverrideInHand、B09095 と同 wave) |
 | B01070 | 「このキャラを指定してアクション」= target=self gate 不在 (triggerCharMatches に includeSource 系 field 無し、side:self では over-fire) |
 | B02013 | set-host への grantKeywords が closure 型で JSON 不可 (on-set-host 継続 rider の keyword 版) |
-| B02039 | set-card を表向き証拠として持ち主が得る verb 不在 |
-| B02067 | 「選ばれたとき無効にする」= choose-intercept + negate 機構不在 (B04003 と同 cluster) |
+| ~~B02039~~ | **✅ 解消**: `setCardToEvidence` と物理occurrence選択を出荷。Wave147でB02067 host-proxy境界を再確認。 |
+| ~~B02067~~ | **✅ 解消**: `effect:choose-intercept`、即時cancel、物理set occurrence単位のTurn1を出荷。Wave147公開matrixで再確認。 |
 | B02084 | セット状態のイベント自身の remove 到達 observer 不在 (PR234 line2 と同 cluster、faceUp filter も) |
 | B02086 | 【変装時】相手 discard 強制 or 無効化の相手選択分岐 (そうしなかった場合〜) 不在。**WC2a で再検証 → 依然 DEFER**: pick chooser:'opp-of-owner' は解決したが、B02086 は optional/choice の **chooser=opp + else 枝** (相手が discard する/しない を決め、しない場合 contactUnremovable 付与) を要する。optional 型に chooser も else も無く、optional/choice には pick と違い AI-drain (drainAiEffectPicks) が無い (resolve-picks:713 で AI skip 固定) → opp-decision infra 新設が別途必要。0-hand feasibility で choice 2択モデルも不可 |
 | B02087 | ネクストヒント限定の色無視 token 不在 (colorIgnoreOnHandUse は手札使用+NH 両経路で over-wide、QA は NH 限定) |
@@ -1330,11 +1331,11 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | B03028 | 「【緑】のイベントを使用したとき」= event-use の color filter matcher 不在 (matcherCondition に triggerCardMatches{color} は event-use payload 非対応) |
 | B03041 | イベント→host への triggered 能力付与機構不在 (grantAbility は declared 想定) |
 | B03078 | sleepGuard (スリープ状態でもガード可) の JSON token 不在 (closure 出荷 1 枚のみ) |
-| B03112 | leave:to-remove payload に効果 owner attribution 不在 (B03116/B04091 と同 cluster) |
-| B04003 | 「選ばれたとき〜無効にする」intercept (B02067 と同 cluster) + 相手 optional discard 分岐 |
+| ~~B03112~~ | **✅ 解消**: `leave:to-remove` の `byPlayer` owner attribution を出荷済み。Wave151公開matrixでown/opponent effectとswitch非発火を再確認。 |
+| ~~B04003~~ | **✅ 解消**: `effect:choose-intercept-discard` と相手discard-or-cancel分岐を出荷。 |
 | B05005 | ネクストヒント限定 trigger (B01005 cluster) + 使用カード color filter |
 | B05007 | 「このターン中〜アクションしたとき」の遅延 observer 設置 (turn-scoped conditional hook 付与) 不在 |
-| B05092 | 手札→デッキ下 N 枚 (好きな順) verb 不在 + 移した枚数 bind draw |
+| ~~B05092~~ | **✅ 解消**: `handToDeckBottom` + `shuffleThenDrawMoved`を出荷。Wave152でmulti/0枚shuffleと同数draw契約を公開再確認。 |
 | B05097 | player-chosen 可変枚数 deck-top リムーブ EFFECT 不在 (cost 側 r37 と対、QA=枚数先決め) |
 | B06003 | cost〚ターン終了時まで LP-2〛= self LP-delta cost primitive 不在 |
 | B06037 | VERIFY_NG: 「パートナーエリアでも宣言できる」= scope on-scene では PA 宣言不可 (PA宣言 batch 送り、DEFERRED-INDEX batch2 節と同 cluster) |
@@ -1343,16 +1344,16 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | B07003 | 手札内カードへのカットイン能力動的付与不在 (isCutInCard は印字判定) |
 | B07011 | じゃんけん RNG primitive 不在 (P48、既知) |
 
-**cluster 追記 (batch3 と合算した mini-wave 優先度)**: ~~⑥next-hint 判別~~ ✅ mini-wave #2 出荷済 ⑦「選ばれたとき無効」intercept (B02067/B04003) ~~⑧hand 内 continuous level~~ ✅ mini-wave #4 出荷済 (B01009/B09095。B07003 は cutin 動的付与 = 別機構で DEFER 継続)。
+**cluster 追記 (batch3 と合算した mini-wave 優先度)**: ~~⑥next-hint 判別~~ ✅ mini-wave #2 出荷済 ~~⑦「選ばれたとき無効」intercept (B02067/B04003)~~ ✅ 出荷済 ~~⑧hand 内 continuous level~~ ✅ mini-wave #4 出荷済 (B01009/B09095。B07003 は cutin 動的付与 = 別機構で DEFER 継続)。
 
 ## hybrid-batch5 由来 DEFER (2026-07-10、2行 pool 最終 14 unit 中 7 DEFER。全文 = .tmp/_batch5_defers.txt)
 
 | ID | blocker 要旨 |
 |---|---|
 | B07030 | remove→PA の pick 型 verb 不在 (toPartnerArea は self-only 決定論、pick 不可) |
-| B08017 / B08017P | **✅ IMPLEMENTED (2026-07-13, uncommitted)** — sleep hostのface-up set riderが自陣灰原哀へ `untargetableByOppEffectAura` を付与。 |
-| B08081 | 「選ばれたとき〜無効」intercept (B02067/B04003 cluster ⑦) + 相手 optional 分岐 |
-| B09011 | turn-scope LP override (B01045/B01054 cluster ①) の「元のLPを1」変種 + forEach all 適用 |
+| B08017 / B08017P | ✅ 出荷済。Wave176でsleep/active/stun、表裏set、相手効果、通常actionを公開認定。 |
+| ~~B08081~~ | **✅ 解消**: choose-interceptと相手discard-or-cancel分岐を出荷。 |
+| ~~B09011~~ | **✅ 解消 (2026-07-10 miniwave-lp)**: `forEach` + `charOverrideLP val:1 scope:'turn'` を出荷。 |
 | B09039 | PA∪remove union pick 不在 (B09055 と同 cluster) |
 | B09060 | 手札 cost リムーブの costRemovedMatches が hand-source 非対応 (removeDeckTop 専用) |
 | B09110 | 「同じカード名が出るまで公開」の動的 stop 条件 (リムーブしたキャラ名 bind) 不在 |
@@ -1365,15 +1366,15 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | ID | blocker 要旨 |
 |---|---|
 | B06012 | set event の「このイベントをリムーブしてもよい→登場」= 特定 set card 自己除去 verb 不在 (removeOneSetCard は末尾 pop のみ) |
-| B06047 | (詳細 = _batch6_defers.txt) |
-| B06064 | (同上) |
+| ~~B06047~~ | ✅ Wave155でfiltered cross-hand `handLevelAura`出荷。a2 set-trigger entryと合わせ全Q&A完了。 |
+| ~~B06064~~ | ✅ set event exact self-leave/host-leave listenerを出荷済み。Wave159でno-host/mandatory setと両leave経路をpublic証明。 |
 | B07033 | (同上) |
 | B09113 | (同上) |
 | B09067 | VERIFY_NG: bound-conditional (unstable if) の両枝に Pattern-A pick — BUG-161 pre-walk 過剰 queue hazard。短縮形化 or conditionIfIsStable 拡張後に再 author |
 
 **hybrid pipeline 完了宣言 (2026-07-10 朝)**: refuse-1/2/3/4行 全層掃き終わり。残 pool = DEFER cluster のみ
 (engine mini-wave 対象。優先 cluster = ①turn-scope LP override ②bound levelSum dyn ③deck-reveal 拡張
-④next-hint 判別 ⑤選ばれたとき無効 intercept ⑥hand 内 continuous ⑦set-card 操作系 ⑧cost choice UI)。
+④next-hint 判別 ~~⑤選ばれたとき無効 intercept~~ ✅ ⑥hand 内 continuous ⑦set-card 操作系 ⑧cost choice UI)。
 
 ## miniwave-lp nits (2026-07-10、opus 敵対 review SHIP_WITH_NITS)
 - **latent: misread listener × lpOverride_turn 共存** — listeners/misread.ts:128 は恒久 lpOverride を書く
@@ -1390,7 +1391,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
   literalize (空 bind → 0)。cross-step で「前段 pick の bind を後段 plain atom の dyn が読む」構成は
   **現状不可** — PB contract atom (walk skip) 内蔵 composite (shuffleThenDrawMoved 等) か dyn-max 対応
   atom (evidenceFlip 型) で書く。authoring 規約として finish.cjs lint 追加候補。
-- B08057 継続 DEFER: filtered remove→deck-bottom pick EFFECT verb + 「合わせて3枚移した場合」moved-count gate。
+- ~~B08057 継続 DEFER~~: ✅ `removeAreaToDeckTop` bind + moved-count gate + bound reorderを出荷済み。Wave181でowner deck限定costとcost由来候補をpublic認定。
 - B03110 gate 意味論 nit: FILE<2 で opt-in した場合「1枚だけ加える (rules/15 可能な限り)」読みも成立。
   現実装 = all-or-nothing (0枚)。board-wipe 発火条件は両読み同一。カード個別 QA 出現時に再確認。
 
@@ -1459,7 +1460,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 - **[LATENT] shuffleMoved は Math.random** (mutate.deck.shuffle と同 idiom) — seed 化する場合は両方同時に
 - **[REVIEW 追記 2026-07-10 夜] edge lens 検出分**: ①resolveDynArgs guard の regex `\$bound\.(\$?\w+)` は
   非 ASCII bind key を取り零す (現 corpus 全 ASCII で実害 0 — bind key ASCII 強制 lint が将来措置)
-  ②B08028 宣言 production 経路 probe 不在 (guard で dyn-max が復活 = 治る方向。probe 追加は次回)
+  ②~~B08028 宣言 production 経路 probe 不在~~ — Wave177で両ownerのcost→own multi→dyn-max opponent multiを公開認定
   ③handleLeaveToRemoveSelf は rider の【ターンN】limit を enforce しない (limit 付き rider 出現前に guard 要)
   ④selfLpDeltaTurn は ctx.source.uid 不在 (case/event scope) で pay throw — char 専用の authoring 規約
   ⑤union pick の恒久 fix = pick channel に zone 同梱 (synthetic uid を cardId#area#index 化)。
@@ -1475,9 +1476,15 @@ UI 基盤 (partnerMR source 列挙 + PA-MR tile + flows 解決) は出荷済。�
   候補列挙は zone 配列対応済だが **mutate 側 splice に partner-area 分岐が無い**。additive 1 点
 - **cluster 2: toPartnerArea の pick 対応** (B07030/B07061): 現 verb は self-only。remove→PA / PA→現場の
   pick 型変種。additive
-- **cluster 3: removed-card static snapshot root** (B08002 level / B09110 cardName 配列): `$discarded.*`
-  同型の「リムーブしたカード」参照 root 不在。B09109 は revealFromHand costPaid に cardName 1 行追加のみ
-- 単発: B07001 (charSetTurnEffect 経路は解禁済 — 再 ground 要) / B08019 (scope 配列) / B09027
+- **cluster 3: removed-card static snapshot root**: B08002 levelは`$removed.level`で解消済。
+  残りB09110 cardName配列のみ。B09109はrevealFromHand costPaidにcardName 1行追加のみ
+- 単発: B07001 (charSetTurnEffect 経路は解禁済 — 再 ground 要) / B09027。B08019 scope懸念はMR+`always`で解消済
   (cost kind:'choice' の UI ブランチ選択 modal — flows 3.7 effect-choice の cost 版) / B09110 / B09055
 - BUG-154 (mutate 層 PA-MR 非解決) は本 batch 出荷分では非該当を実測済。「PA 発動 + 自身 mutate」型が
   出たら先に engine probe
+
+## Wave180 confirmed gap (2026-08-26)
+
+| rep | 理由 | 解禁条件 |
+|-----|------|---------|
+| ~~B08054~~ | ✅ `hostLeaveSetCardReplacement`を同期pre-cleanup consultとして追加。host行先を維持し、相手effect/contact時だけ裏向きset occurrenceをowner handへ返す。旧saveのattribution欠落はfail-closed | ✅ Wave180 public/engine T3認定 |

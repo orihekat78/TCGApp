@@ -14,11 +14,23 @@
 import type { GameState, AbilityDef, EffectCtx } from '../../types/index.js';
 import { cost as engineCost } from '../../cost/index.js';
 import { def as readDef } from '../../read/def.js';
-import { canActivateDeclaredAbility, findCardOnBoard, useDeclaredAbility, findDeclaredAbility, resolveDeclaredPaymentPlan } from './declared-ability.js';
+import {
+  canActivateDeclaredAbility,
+  findCardOnBoard,
+  useDeclaredAbility,
+  findDeclaredAbilityOccurrence,
+  declaredAbilityOccurrenceSourceRef,
+  resolveDeclaredPaymentPlan,
+  type DeclaredAbilitySourceRef,
+} from './declared-ability.js';
 import { canPartnerAbility, usePartnerAbility } from './partner-ability.js';
 import { mutate } from '../../mutate/index.js';
 import { declaredCostParamsToDyn } from './declared-cost-params.js';
 import { _clearPendingSetCardReplacementSide } from '../../effect/pending-state.js';
+import {
+  _restorePendingPublicHandRevealSide,
+  _snapshotPendingPublicHandRevealSide,
+} from '../../effect/atom-handlers/_shared.js';
 import {
   completeEffectCausalTrace,
   currentEffectCausalCorrelationEventId,
@@ -39,8 +51,14 @@ type Player = 'self' | 'opp';
  */
 export interface AbilityCostParams {
   flipFaceUpEvidence?: { indices: number[] };
+  /** Exact public scene character UIDs selected for a sleepChar cost. */
+  sleepChar?: { uids: string[] };
+  /** Exact public scene character UIDs selected for a stunChar cost. */
+  stunChar?: { uids: string[] };
   /** Exact physical hand occurrences selected for a remove-from-hand cost. */
   removeFromHand?: { indices: number[] };
+  /** Exact physical hand occurrences selected for a reveal-from-hand cost. */
+  revealFromHand?: { indices: number[] };
   sceneToDeckBottom?: { uids: string[] };
   removeAreaToDeckBottom?: { ids: string[] }; // cluster4 (2026-06-14)
   partnerAreaRemove?: { ids: string[] };
@@ -80,6 +98,7 @@ export function activateDeclaredAbility(
   uid: string,
   abilId: string,
   costParams?: AbilityCostParams,
+  sourceRef?: DeclaredAbilitySourceRef,
 ): void {
   const found = findCardOnBoard(state, uid);
   if (!found) {
@@ -88,18 +107,31 @@ export function activateDeclaredAbility(
     useDeclaredAbility(state, uid, abilId);
     return;
   }
-  // Public UI dispatch authorizes through `isAllowed` first, where a human
-  // removeSetCard cost must carry an exact physical-instance witness.  This
-  // low-level mutator is also the deterministic AI/test resolver entrypoint;
-  // preserve its established implicit fallback after all normal cost checks.
-  // A supplied malformed witness still fails closed in canPayAtomically.
-  if (!canActivateDeclaredAbility(state, uid, abilId, costParams, { allowImplicitRemoveSetCard: true })) {
+  const publicHandRevealBeforeActivation = _snapshotPendingPublicHandRevealSide();
+  // Physical cost selection may use the deterministic engine fallback, but a
+  // set-card ability source is never inferred: its exact physical IDs are part
+  // of the public authorization witness.
+  if (!canActivateDeclaredAbility(state, uid, abilId, costParams, {
+    allowImplicitPhysicalCostSelection: true,
+    sourceRef,
+  })) {
     return;
   }
+  const occurrence = findDeclaredAbilityOccurrence(
+    state,
+    uid,
+    found.cardId,
+    found.area,
+    abilId,
+    sourceRef,
+  );
+  if (!occurrence) return;
+  const occurrenceSource = declaredAbilityOccurrenceSourceRef(occurrence);
   const dyn = declaredCostParamsToDyn(costParams);
   const ctx: EffectCtx = {
     source: {
       cardId: found.cardId,
+      ...occurrenceSource,
       uid,
       abilityId: abilId,
       player: found.player,
@@ -109,7 +141,7 @@ export function activateDeclaredAbility(
     ...(dyn ? { dyn } : {}),
   };
   // W6 step11 (row999 item4): rider declared (on-set-host) の cost も解決できるよう共有 helper 経由
-  const ability = findDeclaredAbility(state, uid, found.cardId, found.area, abilId);
+  const ability = occurrence.ability;
   const plan = ability?.cost
     ? resolveDeclaredPaymentPlan(state, ability, ctx, costParams, { allowLegacyInvalidAlternativeFallback: true })
     : undefined;
@@ -130,6 +162,7 @@ export function activateDeclaredAbility(
   const rootEventId = inheritedRootId ?? causalTrace?.rootEventId;
   try {
     withEffectCausalCorrelation(state, rootEventId, () => {
+      const pendingCountBeforeCost = state.pendingEffects.length;
       if (plan?.kind === 'alternative') {
         const removed = mutate.scene.removeToRemove(state, plan.providerUid, 'cost');
         if (removed.deferred || removed.prevented || removed.removed.uid !== plan.providerUid || !removed.removed.cardId) {
@@ -140,7 +173,39 @@ export function activateDeclaredAbility(
         engineCost.pay(state, ability.cost, ctx);
         ctx.costPaid ??= {};
       }
+      // A hand-reveal cost can release observers before the declared effect
+      // exists. Only those reactions carry the printed/current-effect-first
+      // precedence; other cost triggers retain normal simultaneous owner order.
+      const costTriggeredEffects = state.pendingEffects.splice(pendingCountBeforeCost);
+      const handRevealReactions = costTriggeredEffects.filter(
+        entry => entry.triggeredBy.hook === 'hand:reveal',
+      );
+      state.pendingEffects.push(...costTriggeredEffects.filter(
+        entry => entry.triggeredBy.hook !== 'hand:reveal',
+      ));
       useDeclaredAbility(state, uid, abilId, ctx);
+      if (handRevealReactions.length > 0) {
+        const declaredEntryIndex = state.pendingEffects.findIndex((entry, index) => (
+          index >= pendingCountBeforeCost
+          && entry.triggeredBy.hook === 'declaredAbility'
+          && entry.source.uid === uid
+          && entry.source.abilityId === abilId
+        ));
+        const declaredEntry = declaredEntryIndex >= 0
+          ? state.pendingEffects[declaredEntryIndex]
+          : undefined;
+        if (declaredEntry?.declaredBatch !== undefined) {
+          for (const reaction of handRevealReactions) {
+            reaction.declaredBatch = declaredEntry.declaredBatch;
+            reaction.declaredReaction ??= { abilityId: reaction.source.abilityId ?? '' };
+          }
+        }
+        state.pendingEffects.splice(
+          declaredEntryIndex >= 0 ? declaredEntryIndex + 1 : pendingCountBeforeCost,
+          0,
+          ...handRevealReactions,
+        );
+      }
     });
     completeEffectCausalTrace(state, causalTrace, found.player);
   } catch (error) {
@@ -152,6 +217,7 @@ export function activateDeclaredAbility(
       { type: 'state', state: 'cancelled' },
     );
     _clearPendingSetCardReplacementSide();
+    _restorePendingPublicHandRevealSide(publicHandRevealBeforeActivation);
     throw error;
   }
 }

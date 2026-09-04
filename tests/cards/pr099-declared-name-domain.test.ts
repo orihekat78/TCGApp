@@ -74,7 +74,7 @@ describe('PR099 registered-character name declaration', () => {
     const { state, uid } = board(PR099);
     expect(canActivateDeclaredAbility(state, uid, 'a2', { declaredName: '毛利' })).toBe(false);
     activateDeclaredAbility(state, uid, 'a2', { declaredName: '毛利' });
-    expect(readChar.declaredUseCount(state, uid, 'a2')).toBe(0);
+    expect(readChar.declaredUseCount(state, uid, 'a2', { abilityOrigin: 'printed', abilityIndex: 1 })).toBe(0);
     expect(state.pendingEffects).toHaveLength(0);
   });
 
@@ -85,7 +85,7 @@ describe('PR099 registered-character name declaration', () => {
     runAllUntilEmpty(state);
     expect(readChar.ap(state, uid)).toBe(6000);
     expect(readChar.names(state, uid)).toEqual([ALLOWED_NAME]);
-    expect(readChar.declaredUseCount(state, uid, 'a2')).toBe(1);
+    expect(readChar.declaredUseCount(state, uid, 'a2', { abilityOrigin: 'printed', abilityIndex: 1 })).toBe(1);
   });
 
   it('allows the optional declaration to be skipped while retaining AP+1000', () => {
@@ -104,7 +104,7 @@ describe('PR099 registered-character name declaration', () => {
     runAllUntilEmpty(state);
     expect(readChar.ap(state, uid)).toBe(6000);
     expect(readChar.names(state, uid)).toEqual(PR105.names);
-    expect(readChar.declaredUseCount(state, uid, 'a2')).toBe(1);
+    expect(readChar.declaredUseCount(state, uid, 'a2', { abilityOrigin: 'printed', abilityIndex: 1 })).toBe(1);
     expect(state.players.self.scene.find((candidate) => candidate.uid === uid)?.turnEffects?.nameOverride)
       .toBeUndefined();
   });
@@ -117,12 +117,12 @@ describe('PR099 registered-character name declaration', () => {
       const beforeLog = state.log.length;
       activateDeclaredAbility(state, uid, 'a2', { declaredName: invalidName });
       expect(readChar.ap(state, uid)).toBe(5000);
-      expect(readChar.declaredUseCount(state, uid, 'a2')).toBe(0);
+      expect(readChar.declaredUseCount(state, uid, 'a2', { abilityOrigin: 'printed', abilityIndex: 1 })).toBe(0);
       expect(state.pendingEffects).toHaveLength(0);
       expect(state.log).toHaveLength(beforeLog);
 
       useDeclaredAbility(state, uid, 'a2', { dyn: { declaredName: invalidName } });
-      expect(readChar.declaredUseCount(state, uid, 'a2')).toBe(0);
+      expect(readChar.declaredUseCount(state, uid, 'a2', { abilityOrigin: 'printed', abilityIndex: 1 })).toBe(0);
       expect(state.pendingEffects).toHaveLength(0);
       expect(state.log).toHaveLength(beforeLog);
     },

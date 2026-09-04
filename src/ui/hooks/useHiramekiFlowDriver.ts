@@ -14,6 +14,7 @@ import { dispatchEngineAction } from './useEngineDispatch.js';
 import { bindPendingDecision } from './useEngineDispatch/types.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import { getHumanDecisionSide } from '@/ui/services/humanDecisionOwner.js';
+import { actionCase } from '@/engine/flow/index.js';
 
 export function useHiramekiFlowDriver(enabled = true): void {
   const pending = useGameStateStore((s) => s.pendingHirameki);
@@ -35,9 +36,16 @@ export function useHiramekiFlowDriver(enabled = true): void {
     const fire = ai.chooseHiramekiTrigger
       ? ai.chooseHiramekiTrigger(gameState, { cardId: pending.cardId, abilityId: pending.abilityId })
       : true;
+    const switchRequirement = fire
+      ? actionCase.readHiramekiSceneSwitchRequirement(gameState, pending)
+      : null;
+    const switchRemoveUid = switchRequirement?.candidates[0]?.uid;
+    const choice = fire && (!switchRequirement || switchRemoveUid !== undefined) ? 'fire' : 'skip';
     dispatchEngineAction(bindPendingDecision(
       pending,
-      { type: 'hiramekiResolve', choice: fire ? 'fire' : 'skip' },
+      choice === 'fire'
+        ? { type: 'hiramekiResolve', choice, ...(switchRemoveUid ? { switchRemoveUid } : {}) }
+        : { type: 'hiramekiResolve', choice },
     ));
   }, [enabled, pending, gameState, spectatorMode]);
 }

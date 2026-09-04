@@ -14,6 +14,8 @@ import { _resetUidCounter } from '@/engine/mutate/scene';
 import { activateDeclaredAbility } from '@/engine/flow/main/ability-activate';
 import { sceneChar } from '../../helpers/fixtures';
 import { B09055 } from '@/cards/ct-p09/B09055';
+import { B09055P } from '@/cards/ct-p09/B09055P';
+import { B09055P2 } from '@/cards/ct-p09/B09055P2';
 import type { CardDef, GameState, SceneCharacter } from '@/engine/types';
 
 const setHuman = (s: 'self' | 'opp' | null) =>
@@ -25,8 +27,13 @@ function def(id: string, over: Partial<CardDef> = {}): CardDef {
 const PARTNER_R = def('PARTNER_R', { colors: ['赤'] });
 const AKAI = def('AKAI', { names: ['赤井秀一'] });                                       // cost fodder
 const AKAISERA = def('AKAISERA', { names: ['赤井秀一&世良真純', '赤井秀一', '世良真純'] }); // 登場対象 (split-name rules/19)
+const AKAISERA_EVENT_PA = def('AKAISERA_EVENT_PA', { kind: 'event', names: ['赤井秀一&世良真純'] });
+const AKAISERA_EVENT_REMOVE = def('AKAISERA_EVENT_REMOVE', { kind: 'event', names: ['赤井秀一&世良真純'] });
 const FB = { type: 'card-back' as const, cardId: 'FILL' };
-const ALL_DEFS = [B09055, def('FILL'), PARTNER_R, AKAI, AKAISERA, def('DECOY_PA_ONLY', { names: ['囮'] })];
+const ALL_DEFS = [
+  B09055, def('FILL'), PARTNER_R, AKAI, AKAISERA, AKAISERA_EVENT_PA, AKAISERA_EVENT_REMOVE,
+  def('DECOY_PA_ONLY', { names: ['囮'] }),
+];
 
 function base(): GameState {
   const s = createEmptyGameState();
@@ -51,6 +58,33 @@ beforeEach(() => {
 });
 
 describe('B09055 a2 — union source (PA / remove) から登場', () => {
+  it('同名 event は PA / remove のどちらからも登場候補にならず、mirror も character filter を保つ', () => {
+    const s = base();
+    s.players.self.partnerAreaCards = ['AKAISERA', 'AKAISERA_EVENT_PA'];
+    s.players.self.remove = ['AKAISERA_EVENT_REMOVE'];
+    activateDeclaredAbility(s, 'me', 'a2');
+    runAllUntilEmpty(s);
+    const pick = _drainPendingEffectPickSide();
+    const cands = pick!.candidates as Array<{ uid: string; cardId: string }>;
+    expect(cands.map(c => c.cardId), '登場候補は character の AKAISERA だけ').toEqual(['AKAISERA']);
+
+    for (const card of [B09055, B09055P, B09055P2]) {
+      expect(card.abilities.find(ability => ability.id === 'a2'), `${card.id} a2 mirror filter`).toMatchObject({
+        effect: {
+          kind: 'sequence',
+          steps: [
+            { kind: 'atom', verb: 'sceneRemove' },
+            {
+              kind: 'atom',
+              verb: 'sceneEnter',
+              args: { target: { query: { filter: { kind: 'character', cardName: '赤井秀一&世良真純' } } } },
+            },
+          ],
+        },
+      });
+    }
+  });
+
   it('PA のみに[赤井秀一&世良真純] → PA から splice して登場 / remove 不変', () => {
     const s = base();
     s.players.self.partnerAreaCards = ['AKAISERA'];

@@ -164,7 +164,9 @@ describe('policy.applyMove — actionAgainstChar with chooseGuard (Phase 8.7c)',
 // (human 経路 useEngineDispatch actionJudge と同型: case+guard成立 → 証拠変動なし + contact AP判定)。
 describe('policy.applyMove — actionAgainstCase with chooseGuard (BUG-144)', () => {
   function seedEvidence(draft: GameState, p: 'self' | 'opp', cardId: string): void {
-    draft.players[p].deck.push(cardId);
+    // Keep one card in deck after seeding. Exact exhaustion would correctly end
+    // the game during fixture setup, making the later action invalid.
+    draft.players[p].deck.push(cardId, `${cardId}-FILLER`);
     mutate.evidence.addFromDeck(draft, p, 1, false, { turn: 0, via: 'action-case' });
   }
 
@@ -204,7 +206,7 @@ describe('policy.applyMove — actionAgainstCase with chooseGuard (BUG-144)', ()
     const s = produce(makeBaseState(), (draft) => {
       mutate.scene.enter(draft, 'self', 'Attacker', { active: true });
       seedEvidence(draft, 'opp', 'EV-OPP');
-      draft.players.self.deck.push('EV-SELF');
+      draft.players.self.deck.push('EV-SELF', 'EV-SELF-FILLER');
     });
     const atkUid = s.players.self.scene.find((c) => c.cardId === 'Attacker')!.uid;
 
@@ -215,5 +217,7 @@ describe('policy.applyMove — actionAgainstCase with chooseGuard (BUG-144)', ()
     // ガード候補なし → passGuard → rules/10: 相手証拠 -1 + 自証拠 +1
     expect(after.players.opp.evidence.length).toBe(0);
     expect(after.players.self.evidence.length).toBe(1);
+    expect(after.gameResult).toBeUndefined();
+    expect(after.actionContexts).toEqual({});
   });
 });

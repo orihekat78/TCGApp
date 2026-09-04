@@ -12,11 +12,22 @@
 // resolver 由来のサブ効果) を許容するため string で受ける。
 
 import type { Effect, Condition } from './effect.js';
-import type { CausalEffectTrace, EffectResolutionKind } from './effect-ctx.js';
+import type {
+  CausalEffectTrace,
+  DeclaredAbilityHostOrigin,
+  EffectResolutionKind,
+} from './effect-ctx.js';
 
 export type EffectStackEntrySource = {
   uid?: string;
   cardId?: string;
+  /** Printed identity of the physical set card that granted this ability. */
+  setCardId?: string;
+  /** Runtime identity of that exact set-card occurrence. */
+  setCardInstanceId?: string;
+  /** Stable definition witness for a host-owned declared ability. */
+  abilityOrigin?: DeclaredAbilityHostOrigin;
+  abilityIndex?: number;
   abilityId?: string;
   description?: string;
   player: 'self' | 'opp';
@@ -115,7 +126,8 @@ export type EffectStackEntry = {
    */
   declaredBatch?: number | string;
   /**
-   * BUG-132 GAP-2: 第三者反応マーカー (own = trigger.selfOnly===true 以外に付与)。
+   * BUG-132 GAP-2: 第三者反応マーカー。effect/ability declaration の observer と、
+   * cutin:used observer に付与する。
    * - stack.next(): 同 batch の own entry が pending の間は選択不可 (pairwise gate。
    *   他 entry との所有者任意順 rules/15 §未解決 は不変 — 敵対レビュー rules lens 反映)
    * - stack.runOne(): pick/dyn 候補を解決時に substitute (rules/15 §解決時参照。
@@ -123,4 +135,11 @@ export type EffectStackEntry = {
    * abilityId は遅延 substitute の resolveCtx 再構築用。
    */
   declaredReaction?: { abilityId: string };
+  /**
+   * A reaction whose printed text negates the declaration currently waiting in
+   * the same batch. It resolves before that declaration's own effect; any
+   * paused continuation still uses `resumesCurrentEffect` as the higher
+   * authority. Currently emitted only for Cut-In negation.
+   */
+  immediateDeclaredReaction?: true;
 };

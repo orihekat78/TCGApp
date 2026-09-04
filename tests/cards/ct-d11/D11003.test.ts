@@ -28,10 +28,10 @@ describe('D11003 萩原千速 (疾風+宣言+ヒラメキ)', () => {
     expect(a1.effect?.kind).toBe('atom');
   });
 
-  it('a2 = caseTraitConditioned(婚活) wrapping declared sleepSelf + sceneHas警察>=2', () => {
+  it('a2 = caseTraitConditioned(婚活パーティー) wrapping declared sleepSelf + sceneHas警察>=2', () => {
     const a2 = D11003.abilities[1];
     expect(a2.type).toBe('declared');
-    expect(a2.description).toMatch(/事件婚活/);
+    expect(a2.description).toMatch(/事件婚活パーティー/);
     expect(a2.cost?.kind).toBe('sleepSelf');
     // outer caseTrait AND inner sceneHas
     expect(a2.condition?.kind).toBe('and');

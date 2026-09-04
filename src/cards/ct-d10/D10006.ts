@@ -14,28 +14,23 @@ const a1: AbilityDef = {
     selfOnly: true
   },
   condition: {
-    cs: [
-      {
-        kind: 'caseTrait',
-        trait: 'シャッフルロマンス'
-      },
-      {
-        c: {
-          kind: 'charStateIs',
-          ref: {
-            kind: 'self'
-          },
-          state: 'sleep'
-        },
-        kind: 'not'
-      }
-    ],
-    kind: 'and'
+    kind: 'caseTrait',
+    trait: 'シャッフルロマンス'
   },
   effect: {
-    effect: {
-      kind: 'chain',
-      steps: [
+    kind: 'conditional',
+    if: {
+      kind: 'charStateIs',
+      ref: {
+        kind: 'self'
+      },
+      state: 'active'
+    },
+    then: {
+      kind: 'optional',
+      effect: {
+        kind: 'chain',
+        steps: [
         {
           args: {
             state: 'sleep',
@@ -67,9 +62,9 @@ const a1: AbilityDef = {
           kind: 'atom',
           verb: 'sceneEnter'
         }
-      ]
-    },
-    kind: 'optional'
+        ]
+      }
+    }
   },
   description: '【事件シャッフルロマンス】【登場時】このキャラをスリープさせ、手札を1枚リムーブしてもよい。そうした場合、自分のリムーブエリアにあるレベル8以下の〚カード名［黒衣の騎士・スペイド］〛を1枚まで選び、登場させる。',
   ruleRefs: [

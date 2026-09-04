@@ -5,11 +5,20 @@ import type { AbilityDef, CardDef } from '@/engine/types';
 const a1: AbilityDef = {
   id: 'a1', type: 'triggered', scope: 'on-scene',
   trigger: { hook: 'enter', selfOnly: true },
-  condition: { kind: 'sceneHas', query: { area: 'scene', side: 'self', filter: { cardName: ['服部平次', '遠山和葉'] } }, nMin: 1 },
-  effect: { kind: 'optional', effect: { kind: 'chain', steps: [
-    { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
-    { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { color: '緑', kind: 'event' } } },
-  ] } },
+  effect: {
+    kind: 'conditional',
+    if: {
+      kind: 'and',
+      cs: [
+        { kind: 'charStateIs', ref: { kind: 'self' }, state: 'active' },
+        { kind: 'sceneHas', query: { area: 'scene', side: 'self', filter: { cardName: ['服部平次', '遠山和葉'] } }, nMin: 1 },
+      ],
+    },
+    then: { kind: 'optional', effect: { kind: 'chain', steps: [
+      { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
+      { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { color: '緑', kind: 'event' } } },
+    ] } },
+  },
   description: '【登場時】服部平次か遠山和葉がいれば、このキャラをスリープさせてもよい。そうした場合、リムーブの【緑】イベントを1枚まで手札に加える。',
   ruleRefs: ['rules/03-field-areas.md', 'rules/14-refresh.md', 'rules/15-abilities-effects.md'],
 };

@@ -31,7 +31,6 @@ import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { _drainAllEffectPicksForTest } from '@/engine/effect/apply-pick';
 import { resolveEffectPicks, _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import { createEmptyGameState } from '@/engine/state-factory';
-import { mutate } from '@/engine/mutate';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _drainPendingHirameki } from '@/engine/listeners/hirameki';
 import { removeOpponentEvidenceTop, resolveHiramekiDecision } from '@/engine/flow/action-case';
@@ -122,18 +121,21 @@ describe('e2e: action[事件] → removeTop → ヒラメキ resolve (§4)', () 
     // action[事件]: opp が self の事件を攻撃 → self 証拠 top (PR085) を removeTop + emit
     const ax = { id: 'act#1', byUid: 'opp:atk', byPlayer: 'opp', target: { kind: 'case', player: 'self' }, phase: 'resolve', startedAt: { turn: 3, nano: 0 } } as unknown as ActionContext;
     s = produce(s, (d) => {
-      removeOpponentEvidenceTop(d, ax);
+      d.actionContexts = { [ax.id]: ax };
+      removeOpponentEvidenceTop(d, d.actionContexts[ax.id]!);
     });
     // removeTop が PR085 を self.remove へ移動済 + listener が pendingHirameki を set
-    expect(s.players.self.remove).toContain('PR085');
+    expect(s.players.self.evidence.map((e) => e.cardId)).toEqual(['DECOY_EV']);
+    expect(s.players.self.remove).not.toContain('PR085');
     const pending = _drainPendingHirameki();
     expect(pending).not.toBeNull();
     expect(pending!.cardId).toBe('PR085');
     expect(pending!.player).toBe('self');
     expect(pending!.abilityId).toBe('a2');
+    expect(pending!.heldEvidence).toEqual({ token: 'hirameki:act#1:self', player: 'self', cardId: 'PR085' });
     // ヒラメキ fire: a2 effect を resolve (実 flow の hiramekiResolve と同じ ctx.source)
     s = produce(s, (d) => {
-      resolveHiramekiDecision(d, ax, pending!, 'fire', { humanChooser: false });
+      resolveHiramekiDecision(d, d.actionContexts?.[ax.id], pending!, 'fire', { humanChooser: false });
       runAllUntilEmpty(d);
     });
     expect(s.players.self.hand).toContain('PR085');              // PR085 が手札へ
@@ -227,17 +229,22 @@ describe('出荷カード構造 (§7)', () => {
       d.players.self.hand = [];
     });
     const ax = { id: 'act#duplicate', byUid: 'opp:atk', byPlayer: 'opp', target: { kind: 'case', player: 'self' }, phase: 'resolve', startedAt: { turn: 3, nano: 0 } } as unknown as ActionContext;
-    s = produce(s, (d) => { removeOpponentEvidenceTop(d, ax); });
+    s = produce(s, (d) => {
+      d.actionContexts = { [ax.id]: ax };
+      removeOpponentEvidenceTop(d, d.actionContexts[ax.id]!);
+    });
     const pending = _drainPendingHirameki();
-    expect(pending?.occurrence?.occurrenceWitness).toBe('occ:v1:self:remove:1');
+    expect(pending?.occurrence).toBeUndefined();
+    expect(pending?.heldEvidence).toEqual({
+      token: 'hirameki:act#duplicate:self', player: 'self', cardId: 'PR085',
+    });
 
     s = produce(s, (d) => {
-      mutate.remove.removeFromHere(d, 'self', ['PR085']);
-      resolveHiramekiDecision(d, ax, pending!, 'fire', { humanChooser: false });
+      resolveHiramekiDecision(d, d.actionContexts?.[ax.id], pending!, 'fire', { humanChooser: false });
       runAllUntilEmpty(d);
     });
 
-    expect(s.players.self.hand).toEqual([]);
+    expect(s.players.self.hand).toEqual(['PR085']);
     expect(s.players.self.remove).toEqual(['PR085']);
   });
 });

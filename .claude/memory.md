@@ -1,91 +1,117 @@
 # Session memory
 
-## 2026-07-29 Engine adversarial review
+## Durable records
 
-- Full record: `.claude/sessions/2026-07-29-engine-adversarial.md`.
+- Engine/release history: `.claude/sessions/2026-07-29-engine-adversarial.md`,
+  `.claude/sessions/2026-08-14-qa-engine-public-evidence.md`, and
+  `.claude/sessions/2026-08-21-engine-memory-rotation.md`.
+- QA Waves17-163: matching dated records under `.claude/sessions/`.
+- Throughput: focused per-wave proof, one gate/commit/push per two waves, broad
+  gates every ten waves or immediately for T3/publication.
+- Certification-only work uses no agents. Production/T3 uses at most three
+  read-only reviewers.
 
-## 2026-08-10: Private hosted production release
+## Next
 
-- Existing static app scope is preserved; no PvP, backend, account, telemetry,
-  bundled card art, or cross-device persistence was added.
-- Final qualification passed all 16 ordered gates on clean commit `9f608fd5`.
-  Required inspection is build, dependency, secret, and literal-destination checks;
-  advanced runtime-flow analysis remains optional.
-- Exact qualified staging payload deployed to Pages project
-  `conan-private-7302df07`, deployment `945de0aa-1af1-4836-86f1-b8048dc6d32e`.
-- Access protects stable root and wildcard deployment domains. Sole authentication
-  is One-time PIN; exact approved emails only, no Require/Exclude, session <=12h.
-- Operator config remains outside the repo and contains IDs/emails only. Temporary
-  setup token was revoked; no credential enters chat, Git, config, logs, or evidence.
-- Anonymous root/deployment probes redirect to Access. OTP login and game opening
-  were accepted on PC and smartphone.
-- Operational changes use the production runbook: qualify exact staging, probe both
-  domains, add/remove exact emails on both apps, contain before rollback or rights work.
+- Waves188-189 move sixteen B09006-B09024 rows to matched. Coverage is 2156
+  matched / 808 test-missing / 2964 total; 706 exact groups remain, including
+  604 singletons. No production code changed.
+- Public owner mirrors cover independent optional steps, continuous state,
+  full-scene switch, LP override lifetime, resolved guard AP, name branches,
+  Misread windows, Cut-In versus disguise, FILE no-op, contact attribution,
+  granted-trigger multiplicity/batch snapshot, and reveal-cost lifetime.
+- Focused 34, TypeScript, scoped ESLint, QA merge/generated docs/baseline lint pass.
+- The prior long-lived task ran Sol/ultra and reused about 0.65M input tokens per
+  turn. Continue in fresh Terra/high tasks, two waves per task, without agents
+  for certification-only work.
+- `pnpm exec` attempts an install and fails `ERR_PNPM_IGNORED_BUILDS`; use
+  worktree-local binaries without approving or changing dependencies.
+- Release-only dirty-worktree and pnpm-junction `jose` gates remain isolated;
+  do not relax the private-hosted security allowlist.
+- Generic policy-free sequence pre-walk can still preselect a later PA target
+  before an earlier PA mutation. B07104 heuristic and human paths avoid it;
+  investigate this engine-wide ordering risk when a future card exposes it.
+- Waves190-191 moved sixteen B09026-B09055 rows to matched. Coverage is 2172
+  matched / 792 test-missing / 2964 total. BUG-383 now snapshots effective
+  hand level before discard/cost payment and rejects stale hand picks.
+- Full Vitest reaches completion but internally recurs `CARDS_DATA_BUSY` with
+  one worker and no external holder. Native release prepare is clean; preserve
+  the lock and isolate test-host writer overlap separately.
+- Wave192 moved eight B09056-B09064 rows to matched. Coverage is 2180 matched /
+  784 test-missing / 2964 total. BUG-384 moves B09063's opponent-level blocker
+  from the pre-trigger gate into effect resolution so blocked draw still consumes
+  【ターン1】. Focused regression is 14 files / 351 tests.
+- Wave193 only starts with B09073-B09080 rows in the next-task prompt.
+- Local raw drift `ct-d01-api.json` remains separate from the tracked snapshot.
+- About 77 waves remain through Wave267.
+- Preserve untracked `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
+- Reconcile root AGENTS manual Ver2.4 versus rules INDEX Ver2.5 separately.
+- Waves193-194 moved sixteen B09073-B09092 rows to matched: 2196 matched /
+  768 test-missing / 2964 total. No production code changed.
+- Wave195 starts with the remaining B09092 row, then B09093-B09096; prompt is
+  updated. Broad gate remains Wave200.
 
-## 2026-08-10: UI quality and causal presentation
+## 2026-09-01: CT-P09 Q&A Waves195-196
 
-- Worktree: `.claude/worktrees/home-screen-only`; branch: `codex/home-screen-only`.
-- Preserve the existing playmat. Landscape mobile uses the desktop composition
-  at a responsive scale; do not introduce a separate mobile board or side buttons.
-- HOME, SETUP, CARDS, DECK, HISTORY, REPLAY, RESULT, TUTORIAL, SETTINGS, and
-  MATCH are implemented under one header and one standard appearance.
-- Shared causal presentation explains source, target, order, and result. Its
-  pause, step, and skip controls never dispatch engine actions or AI steps.
-- Replay artifacts are read-only projections. Loading or seeking Replay must not
-  hydrate live resolver continuations or start match drivers.
-- Human decision ownership and autonomous progression use shared selectors.
-  Preserve the parent effect pick/choice exception for scene-switch children.
-- Public full-match validation starts at `#setup`, uses rendered decisions only,
-  and derives the 30-turn cap from the public first/second-player chapter tag.
+- Certified sixteen B09092-B09104 rows as `matched/aligned` with two bounded
+  card-specific proof files (9 tests); production code is unchanged.
+- B09096's supplied candidate hash lacked its final `a`; the tracked snapshot
+  canonical ID was used and verified.
+- Preserve inherited lockfiles and B10006 test; raw ct-d01 drift excluded.
+- Horizontal review reused B09096 dynamic-AP, B09097 chain, and B09104
+  printed-ability test paths; no same-pattern production gap was found.
 
-## UI quality final evidence
+## 2026-09-01: CT-P09 Q&A Waves197-198
 
-- Vitest: 944 files / 7797 tests passed; 5 files / 197 tests skipped; 0 failed.
-- Typecheck, lint, production build, and meta build passed.
-- Root Playwright: 403 passed / 17 skipped; Meta Playwright: 178 passed.
-- Final UI/UX adversarial review: Critical / Important 0.
+- Certified four B09105, three B09106, and one B09107 Q&A rows as
+  `matched/aligned`; production code is unchanged.
+- Added two bounded proof files (5 tests). Focused Vitest, TypeScript, QA merge,
+  QA baseline lint, and generated QA trace all pass.
+- Horizontal review reused B09105 S1 defer, B09106 effect-entry, and B09107
+  alternate-defeat paths; no same-pattern production gap was found.
 
-## UI quality closeout
+## 2026-09-01: CT-P09 Q&A Waves199-200
 
-- UI defect records from the older branch were renumbered to `BUG-298` through
-  `BUG-302` during main integration because main already owned `BUG-277` through
-  `BUG-281`.
-- The real eight-person formative study is external and remains unexecuted.
-- Full session record: `.claude/sessions/2026-08-09-ui-quality-causal-public-match.md`.
+- Certified four B09108, one B09110, two B09111, and one B09112 Q&A rows as
+  `matched/aligned`; production code is unchanged.
+- Added two bounded proof files. Focused 5-test proof and 29-test relevant
+  runtime regression, TypeScript, QA merge, generated trace, and QA lint pass.
+- Broad Vitest was attempted with default and single-worker modes, but both hit
+  `CARDS_DATA_BUSY`; existing release checks also failed. Agent-owned trees were
+  terminated after ancestry verification. This gate remains unresolved.
+- Horizontal review reused B09110 enter/refresh, B09111 FILE-bound, B09112
+  dynamic deck-window, and registered-name consumer paths; no production gap.
 
-## 2026-08-12: Safari storage and HOME identity cards
+## 2026-09-01: QA Waves201-202
 
-- Queue IndexedDB writes from request success callbacks; Safari may deactivate a
-  read/write transaction before an awaited continuation resumes.
-- Apply the rule to cloud sync state and history Replay artifact persistence.
-- HOME identity art must use a route-scoped high-specificity `contain` rule so
-  lazy game-card CSS cannot crop partner or incident cards after navigation.
+- Certified four B09112/B09113 and five B10004/B10005/B10009 rows as
+  `matched/aligned`; production code is unchanged.
+- Added two bounded proof files. Focused 30 tests, TypeScript, QA merge,
+  regenerated trace/baseline, and QA lint pass.
+- Broad Vitest remains the inherited `CARDS_DATA_BUSY` harness blocker; not a pass.
+- Horizontal review reused named selection, evidence positions/no-op choice,
+  B10004 declared-count, B10005 end phase, and B10009 partner-color paths.
 
-## 2026-08-13: Global turn-boundary reset
+## 2026-09-01: QA Waves203-204
 
-- 【ターン①/②/③】and other turn-scope flags reset for both players at the start
-  of every turn, before `turn:start`; `startTurn` owns the canonical boundary.
-- Do not move this reset to `endTurn`: queued end-phase effects may still read the
-  ending turn's state before the next turn starts. See `BUG-303`.
+- Certified eight B10009-B10018 CT-P10 Q&A rows as `matched/aligned` with two
+  bounded direct proof files; production code is unchanged.
+- Focused 18 tests, TypeScript, QA merge, regenerated trace, QA lint, and
+  `git diff --check` pass. Broad Vitest remains the inherited `CARDS_DATA_BUSY`
+  harness blocker; it is not a pass.
+- Horizontal review covered effect-entry AP, bonded event-removal immunity,
+  Cut-In contact scope, continuous field traits, conditional 迅速, and event-use
+  set-card declaration paths; no production gap was found.
 
-## 2026-08-14: Ordered pending-pick provenance
+## 2026-09-02: QA Waves221-222 closure
 
-- Every bespoke `preparePendingPickRange` producer must use the canonical
-  `pendingSource` builder. Dropping batch/order provenance can resolve a sibling
-  effect early and leave a surfaced decision without runtime authority.
-- Public guard prechecks must preserve the core ordering: allow a null abort for
-  a missing action target, otherwise enforce the live `mustGuardCandidates` set.
-
-## 2026-08-14: Partner-area exclusion evidence
-
-- Prove partner exclusion with paired fixtures using the same printed name in
-  the partner area and the scene; a differently named scene target is a false green.
-- Choose-intercept currently excludes event sources. Do not certify broader
-  event semantics without separate official-rules adjudication.
-
-## 2026-08-14: Action-removal Hirameki evidence
-
-- Bind face-up evidence rulings to the public declare, guard, judge, and
-  Hirameki decision path; generic removal tests are insufficient.
-- Keep QA-bound assertions in dedicated files so unrelated test edits do not
-  silently invalidate line-based evidence references.
+- Certified exactly 43 former CT-P02 `test-missing` rows: Wave221 B02002-B02050
+  (23) and Wave222 B02051-B02087 (20). Every row has one direct assertion in
+  the two bounded certification tests; no production or raw-authority change.
+- The pinned normalized-Q&A hash remains
+  `9a36b5d40860f10a6688bb34d6e52c143b7a996d5f3f561486c6384907b723ec`.
+- Fresh closure check: 2 files / 4 tests, application and script TypeScript,
+  scoped ESLint, QA merge (`all-adjudicated=true`), and QA lint (0 issues) pass.
+  CT-P02 has zero `test-missing`; the global queue has `unreviewedCount=0`.
+- Broad Vitest was not run. `CARDS_DATA_BUSY` and release-test failures remain
+  unresolved. No further Q&A row may be selected without a new explicit boundary.

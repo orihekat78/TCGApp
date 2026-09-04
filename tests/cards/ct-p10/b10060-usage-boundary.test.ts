@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { B10060 } from '@/cards/ct-p10/B10060';
 import { canHandUseCard } from '@/engine/flow/main/hand-use-card';
 import { register, _resetRegistry } from '@/engine/read/def';
-import { createEmptyGameState } from '@/engine/state-factory';
+import { createMainGameState as createEmptyGameState } from '../../helpers/main-game-state';
 
 describe('CT-P10 B10060 hand-use level boundary', () => {
   beforeEach(() => {

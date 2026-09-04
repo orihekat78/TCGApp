@@ -5,27 +5,12 @@
 //   このキャラはスリープ状態で登場する。
 //   【ヒラメキ】（証拠からリムーブされるときに発動する）カードを1枚引く。
 //
-// a1: 「このキャラはスリープ状態で登場する。」(rules/03 スリープ状態)。
-//   engine変更0 = enter(selfOnly) → sceneSetState{uid:'$self', state:'sleep'}
-//   (D03011/D11016/B01028 a3 の uid:'$self' state変更パターンの sleep 版)。
-//   公式 Q&A: 「能力や効果によって登場する場合でもスリープ状態で登場しますか？ → はい」。
-//   'enter' hook は通常プレイ (handUseCard) / ネクストヒント / 効果登場 (sceneEnter) の
-//   全経路で emit されるため、selfOnly 'enter' で全登場経路を捕捉する。
+// 「このキャラはスリープ状態で登場する。」= CardDef.entersSleep:true。
+// mutate.scene.enter が enter hook より前に sleep で生成し、通常プレイ / ネクストヒント /
+// 効果登場の全経路で一時的な active 状態を公開しない。
 // a2: 【ヒラメキ】1ドロー (D08013 a2 同型 hirameki draw)。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
-
-const a1: AbilityDef = {
-  id: 'a1',
-  type: 'triggered',
-  scope: 'on-scene',
-  // 登場時 (このキャラ自身)
-  trigger: { hook: 'enter', selfOnly: true },
-  // このキャラ自身をスリープ状態にする (= スリープ状態で登場)
-  effect: { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'sleep' } },
-  description: 'このキャラはスリープ状態で登場する。',
-  ruleRefs: ['rules/03-field-areas.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md'],
-};
 
 const a2: AbilityDef = {
   id: 'a2',
@@ -47,11 +32,12 @@ export const B01011: CardDef = {
   level: 4,
   ap: 2000,
   lp: 2,
+  entersSleep: true,
   traits: ['探偵', '毛利探偵事務所', '少年探偵団'],
   keywords: [],
   rarity: 'C',
   imageUrl: '1714012985492767.jpg',
-  abilities: [a1, a2],
+  abilities: [a2],
   ruleRefs: [
     'rules/03-field-areas.md',
     'rules/05-turn-phases.md',

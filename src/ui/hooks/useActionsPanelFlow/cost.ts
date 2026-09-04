@@ -97,6 +97,7 @@ export function findFlipFaceUpCost(cost: Cost | undefined): FlipFaceUpCost | nul
 
 type RemoveStackedCardsCost = Extract<Cost, { kind: 'removeStackedCards' }>;
 type RemoveFromHandCost = Extract<Cost, { kind: 'removeFromHand' }>;
+type RevealFromHandCost = Extract<Cost, { kind: 'revealFromHand' }>;
 export function findRemoveStackedCardsCost(cost: Cost | undefined): RemoveStackedCardsCost | null {
   if (!cost) return null;
   if (cost.kind === 'removeStackedCards') return cost;
@@ -135,11 +136,62 @@ export function findRemoveFromHandCost(
 }
 
 type RemoveSetCardCost = Extract<Cost, { kind: 'removeSetCard' }>;
+type CharacterStateCost = Extract<Cost, { kind: 'sleepChar' | 'stunChar' }>;
 type ChoiceCost = Extract<Cost, { kind: 'choice' }>;
 type ChoicePath = readonly number[] | number | undefined;
 
 function normalizedChoicePath(path: ChoicePath): readonly number[] | undefined {
   return typeof path === 'number' ? [path] : path;
+}
+
+/** Return the sleep/stun item on the already selected cost-choice path. */
+export function findCharacterStateCost(
+  cost: Cost | undefined,
+  choicePath?: ChoicePath,
+): CharacterStateCost | null {
+  const choices = normalizedChoicePath(choicePath);
+  let cursor = 0;
+  const visit = (node: Cost): CharacterStateCost | null => {
+    if (node.kind === 'sleepChar' || node.kind === 'stunChar') return node;
+    if (node.kind === 'pay') {
+      for (const item of node.items) {
+        const found = visit(item);
+        if (found) return found;
+      }
+      return null;
+    }
+    if (node.kind !== 'choice') return null;
+    const selected = choices?.[cursor++];
+    return selected !== undefined && Number.isInteger(selected) && selected >= 0 && selected < node.items.length
+      ? visit(node.items[selected]!)
+      : null;
+  };
+  return cost ? visit(cost) : null;
+}
+
+/** Return the reveal-from-hand item on the already selected cost-choice path. */
+export function findRevealFromHandCost(
+  cost: Cost | undefined,
+  choicePath?: ChoicePath,
+): RevealFromHandCost | null {
+  const choices = normalizedChoicePath(choicePath);
+  let cursor = 0;
+  const visit = (node: Cost): RevealFromHandCost | null => {
+    if (node.kind === 'revealFromHand') return node;
+    if (node.kind === 'pay') {
+      for (const item of node.items) {
+        const found = visit(item);
+        if (found) return found;
+      }
+      return null;
+    }
+    if (node.kind !== 'choice') return null;
+    const selected = choices?.[cursor++];
+    return selected !== undefined && Number.isInteger(selected) && selected >= 0 && selected < node.items.length
+      ? visit(node.items[selected]!)
+      : null;
+  };
+  return cost ? visit(cost) : null;
 }
 
 /** Return the next unresolved choice on the exact engine payment path. */
@@ -240,6 +292,10 @@ export function makeAbilityCtx(opts: {
   cardId: string;
   abilityId: string;
   area: 'scene' | 'partner-area' | 'case' | 'hand' | 'evidence' | 'file';
+  setCardId?: string;
+  setCardInstanceId?: string;
+  abilityOrigin?: EffectCtx['source']['abilityOrigin'];
+  abilityIndex?: number;
 }): EffectCtx {
   return {
     source: {
@@ -248,6 +304,10 @@ export function makeAbilityCtx(opts: {
       abilityId: opts.abilityId,
       player: opts.player,
       area: opts.area,
+      ...(opts.setCardId ? { setCardId: opts.setCardId } : {}),
+      ...(opts.setCardInstanceId ? { setCardInstanceId: opts.setCardInstanceId } : {}),
+      ...(opts.abilityOrigin ? { abilityOrigin: opts.abilityOrigin } : {}),
+      ...(opts.abilityIndex !== undefined ? { abilityIndex: opts.abilityIndex } : {}),
     },
     bindings: {},
   };
