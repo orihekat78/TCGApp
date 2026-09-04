@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "excludedQaIds": [
+    "card:B04056:6540c29ef6f51c6b19fc83e88f6684e732d66da164b83e05faca1f9631b860aa",
+    "card:B04056:b1a78dda6c2d31a45705a12285751192452843bae26e9f69c5a290d9e425f011"
+  ]
+}

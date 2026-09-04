@@ -61,6 +61,9 @@ describe('CT-P10 B10101 狙われた唇', () => {
     mutate.case.toResolved(state, 'self');
     settle(state);
 
+    // qa: card:B10101:0fade7ea1c8ab6c20539a9e00411f4a1438268092d409f38ba0f302b3fc83af9
+    // qa: card:B10101:3d2620d5280c7dd0be027568ef506702b96a53e467b84d22ded4aad72b2feeba
+    // qa: card:B10101:42b4d321f0944b4037dd2ca163b0a52c8a59e69bc129cd1cd6dc581361b03724
     expect(state.players.self.hand).toEqual([]);
     expect(state.players.self.remove).toContain('B10101_FILLER');
   });

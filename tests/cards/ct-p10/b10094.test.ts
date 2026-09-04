@@ -101,6 +101,7 @@ describe('B10094 犯人', () => {
 
     applyPickAndContinuation(activated, pick!, selected.uid);
 
+    // qa: card:B10094:ac6deca54abb40e5febfb9c134935a67110fe6ce124bd3a654a18364afaf1ff1
     expect(activated.players.opp.partnerAreaCards).toEqual(['PA_EVENT', 'PA_CHAR', 'PA_OTHER']);
     expect(activated.players.opp.remove).toEqual(['PA_EVENT']);
     expect(leaveHooks).toEqual([]);

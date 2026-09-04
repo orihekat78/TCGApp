@@ -194,6 +194,7 @@ describe('B01081 — action:declare 観測 → choice deck 上下', () => {
       { byUid, target: { kind: 'case', player: 'opp' }, uid: byUid, player: 'self', targetUid: undefined },
       { player: 'self', uid: byUid });
 
+  // qa: card:B01081:1a293d2000990ba7ef908ea9eecd65c5db0b29b3ce8282f0fdb14352fda34adb
   it('positive: 黄P → choice(上) → lv7以下 tgt を選びデッキ上 / lv8 decoy は候補外', () => {
     const s = board();
     declare(s, 'act');
@@ -214,6 +215,7 @@ describe('B01081 — action:declare 観測 → choice deck 上下', () => {
     applyPickAndContinuation(s, pick!, tgt.uid);
     runAllUntilEmpty(s);
 
+    // qa: card:B01081:bbf035d318b99174302c36993983a94dfb9c3cdccbc9e7385e12bfd54e083fcf
     expect(s.players.opp.scene.some((c) => c.uid === 'tgt'), 'tgt は現場を離れる').toBe(false);
     expect(s.players.opp.deck[0], 'tgt(OPP1) は所有者(相手)デッキ上へ').toBe('OPP1');
   });

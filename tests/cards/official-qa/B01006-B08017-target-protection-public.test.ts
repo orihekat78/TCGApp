@@ -228,3 +228,10 @@ describe('B08017 official Q&A set-host target protection', () => {
 // qa: card:B08017:10b387786ab0605083805e1deebdd4a91ceb1adad240f341046c8e8d79295290
 // qa: card:B08017:b203c71c5a2ca8e57b36312ceddefe99ca091d50acdc98837bcbc27a0703471a
 // qa: card:B08017:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa
+
+describe('B03030 Wave216 card-bound target protection', () => {
+  it('keeps the bonded card out of opponent-effect choices while leaving normal action targeting intact', () => {
+    // qa: card:B03030:b203c71c5a2ca8e57b36312ceddefe99ca091d50acdc98837bcbc27a0703471a
+    expectProtectedBy(B03030, QA.B03030, { bond: true });
+  });
+});

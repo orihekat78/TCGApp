@@ -1,18 +1,8 @@
 {
-  "duplicates": {
-    "raw": [],
-    "tsv": []
-  },
-  "hashes": {
-    "normalizedFaq": "9a36b5d40860f10a6688bb34d6e52c143b7a996d5f3f561486c6384907b723ec",
-    "rawCardNums": "6f3ca95ca50041ee79478994cde9124cc18a743052d3a5a6fef564c791e95df4",
-    "tsvCardNums": "6f3ca95ca50041ee79478994cde9124cc18a743052d3a5a6fef564c791e95df4"
-  },
-  "kinds": {
-    "case": 135,
-    "character": 1591,
-    "event": 230,
-    "partner": 300
+  "schemaVersion": 1,
+  "source": {
+    "url": "https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/cards",
+    "fetchedAt": "2026-08-12T18:02:20.270Z"
   },
   "packages": {
     "count": 22,
@@ -41,13 +31,23 @@
       "pr-01": 320
     }
   },
+  "kinds": {
+    "case": 135,
+    "character": 1591,
+    "event": 230,
+    "partner": 300
+  },
   "printings": {
     "raw": 2256,
     "tsv": 2256
   },
-  "schemaVersion": 1,
-  "source": {
-    "fetchedAt": "2026-08-12T18:02:20.270Z",
-    "url": "https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/cards"
+  "duplicates": {
+    "raw": [],
+    "tsv": []
+  },
+  "hashes": {
+    "rawCardNums": "6f3ca95ca50041ee79478994cde9124cc18a743052d3a5a6fef564c791e95df4",
+    "tsvCardNums": "6f3ca95ca50041ee79478994cde9124cc18a743052d3a5a6fef564c791e95df4",
+    "normalizedFaq": "61d7d180f627037a210384dfb0f6dedfe37be3ff064eb8fe409891453c661932"
   }
 }

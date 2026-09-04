@@ -7,8 +7,11 @@ const blankOriginal = { kind: 'character' as const, hasNoOriginalAbilityExceptIc
 const a1: AbilityDef = {
   id: 'a1', type: 'triggered', scope: 'on-scene',
   trigger: { hook: 'phase:end:start' },
-  condition: { kind: 'sceneHas', query: { area: 'scene', side: 'self', filter: blankOriginal }, nMin: 1 },
-  effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+  effect: {
+    kind: 'conditional',
+    if: { kind: 'sceneHas', query: { area: 'scene', side: 'self', filter: blankOriginal }, nMin: 1 },
+    then: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+  },
   description: '自分のターン終了時、自分の現場に【カットイン】と【ヒラメキ】以外の元の能力を持たないキャラがいる場合、カードを1枚引く。',
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };

@@ -81,3 +81,37 @@
   terminated after ancestry verification. This gate remains unresolved.
 - Horizontal review reused B09110 enter/refresh, B09111 FILE-bound, B09112
   dynamic deck-window, and registered-name consumer paths; no production gap.
+
+## 2026-09-01: QA Waves201-202
+
+- Certified four B09112/B09113 and five B10004/B10005/B10009 rows as
+  `matched/aligned`; production code is unchanged.
+- Added two bounded proof files. Focused 30 tests, TypeScript, QA merge,
+  regenerated trace/baseline, and QA lint pass.
+- Broad Vitest remains the inherited `CARDS_DATA_BUSY` harness blocker; not a pass.
+- Horizontal review reused named selection, evidence positions/no-op choice,
+  B10004 declared-count, B10005 end phase, and B10009 partner-color paths.
+
+## 2026-09-01: QA Waves203-204
+
+- Certified eight B10009-B10018 CT-P10 Q&A rows as `matched/aligned` with two
+  bounded direct proof files; production code is unchanged.
+- Focused 18 tests, TypeScript, QA merge, regenerated trace, QA lint, and
+  `git diff --check` pass. Broad Vitest remains the inherited `CARDS_DATA_BUSY`
+  harness blocker; it is not a pass.
+- Horizontal review covered effect-entry AP, bonded event-removal immunity,
+  Cut-In contact scope, continuous field traits, conditional 迅速, and event-use
+  set-card declaration paths; no production gap was found.
+
+## 2026-09-02: QA Waves221-222 closure
+
+- Certified exactly 43 former CT-P02 `test-missing` rows: Wave221 B02002-B02050
+  (23) and Wave222 B02051-B02087 (20). Every row has one direct assertion in
+  the two bounded certification tests; no production or raw-authority change.
+- The pinned normalized-Q&A hash remains
+  `9a36b5d40860f10a6688bb34d6e52c143b7a996d5f3f561486c6384907b723ec`.
+- Fresh closure check: 2 files / 4 tests, application and script TypeScript,
+  scoped ESLint, QA merge (`all-adjudicated=true`), and QA lint (0 issues) pass.
+  CT-P02 has zero `test-missing`; the global queue has `unreviewedCount=0`.
+- Broad Vitest was not run. `CARDS_DATA_BUSY` and release-test failures remain
+  unresolved. No further Q&A row may be selected without a new explicit boundary.

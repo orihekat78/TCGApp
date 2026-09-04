@@ -5,6 +5,7 @@ const path = require("node:path");
 
 const { fetchAllCards, withCardsDataSnapshot } = require("./official-api.cjs");
 const { normalizedFaqHashFromCards } = require("./cards-data-status.cjs");
+const { readQaSourceCorrections } = require('./qa-source-corrections.cjs');
 
 function readLocalQaByCardNum(root, cardsDataDir = path.join(root, ".claude", "specs", "cards-data")) {
   const rawDir = path.join(cardsDataDir, "_raw");
@@ -79,7 +80,7 @@ function readTrackedStatus(root = path.resolve(__dirname, "..", "..")) {
 }
 
 /** Live, read-only comparison for scheduled/manual CI. It never refreshes raw or generated card data. */
-function compareLiveStatus({ officialCards, status }) {
+function compareLiveStatus({ officialCards, status, excludedQaIds = new Set() }) {
   const officialCardNums = officialCards.map((card) => String(card.card_num ?? "").trim());
   if (officialCardNums.some((cardNum) => !cardNum)) throw new Error("official live status includes a missing card_num");
   const expectedTotal = status?.printings?.raw;
@@ -87,7 +88,7 @@ function compareLiveStatus({ officialCards, status }) {
   const expectedNormalizedFaqHash = status?.hashes?.normalizedFaq;
   if (!Number.isInteger(expectedTotal) || typeof expectedCardNumsHash !== "string" || typeof expectedNormalizedFaqHash !== "string") throw new Error("invalid tracked cards-data status for live comparison");
   const officialCardNumsHash = cardNumHash(officialCardNums);
-  const officialNormalizedFaqHash = normalizedFaqHashFromCards(officialCards);
+  const officialNormalizedFaqHash = normalizedFaqHashFromCards(officialCards, excludedQaIds);
   const countChanged = officialCardNums.length !== expectedTotal;
   const cardNumHashChanged = officialCardNumsHash !== expectedCardNumsHash;
   const normalizedFaqHashChanged = officialNormalizedFaqHash !== expectedNormalizedFaqHash;
@@ -111,7 +112,10 @@ async function runLiveStatusCheck({ root = path.resolve(__dirname, "..", ".."), 
   const official = await fetchAllCards({ fetchImpl });
   return compareLiveStatus({
     officialCards: official.cards,
-    status: withCardsDataSnapshot({ baseDir, read: () => readTrackedStatus(root) }),
+    ...withCardsDataSnapshot({
+      baseDir,
+      read: () => ({ status: readTrackedStatus(root), excludedQaIds: readQaSourceCorrections(baseDir) }),
+    }),
   });
 }
 
